@@ -24,12 +24,14 @@ const canonType = (raw) => {
   return 'autre';
 };
 
+// Palette CHAUDE (directive LIRI : bannir bleu/violet/teal/or). Types distincts via
+// amber / vert / coral / terracotta / taupe (ex-#8B9CFF bleu & ex-#D4AF37 or supprimés).
 const TYPE_META = {
-  controle:   { label: 'Contrôle',   col: '#8B9CFF', bg: 'rgba(139,156,255,0.13)', bd: 'rgba(139,156,255,0.32)' },
-  devoir:     { label: 'Devoir',     col: '#7FD1C0', bg: 'rgba(127,209,192,0.13)', bd: 'rgba(127,209,192,0.32)' },
+  controle:   { label: 'Contrôle',   col: '#E0A458', bg: 'rgba(224,164,88,0.14)',  bd: 'rgba(224,164,88,0.32)' },
+  devoir:     { label: 'Devoir',     col: '#7BC47F', bg: 'rgba(123,196,127,0.13)', bd: 'rgba(123,196,127,0.32)' },
   examen:     { label: 'Examen',     col: '#F0936B', bg: 'rgba(240,147,107,0.13)', bd: 'rgba(240,147,107,0.32)' },
-  recitation: { label: 'Récitation', col: '#D4AF37', bg: 'rgba(212,175,55,0.14)',  bd: 'rgba(212,175,55,0.30)' },
-  autre:      { label: 'Autre',      col: '#9AA4B2', bg: 'rgba(154,164,178,0.12)', bd: 'rgba(154,164,178,0.30)' },
+  recitation: { label: 'Récitation', col: '#C97B54', bg: 'rgba(201,123,84,0.14)',  bd: 'rgba(201,123,84,0.32)' },
+  autre:      { label: 'Autre',      col: '#A9A29B', bg: 'rgba(169,162,155,0.12)', bd: 'rgba(169,162,155,0.30)' },
 };
 
 // Ordre des pastilles de filtre (jeu canonique demandé).
@@ -89,7 +91,7 @@ const TypeBadge = ({ bucket }) => {
 /* ─── Carte statistique ─── */
 const StatCard = ({ Icon, label, children, delay }) => (
   <div style={{
-    background: 'rgba(25,39,52,0.36)', border: `1px solid ${T.border}`, borderRadius: 16,
+    background: 'rgba(46,43,40,0.36)', border: `1px solid ${T.border}`, borderRadius: 16,
     padding: 18, display: 'flex', flexDirection: 'column', gap: 12, minHeight: 116,
     animation: `noFade .4s ease ${delay}ms both`,
   }}>
@@ -116,7 +118,7 @@ const GradeRow = ({ g, delay }) => {
       onMouseLeave={() => setHov(false)}
       style={{
         display: 'flex', alignItems: 'center', gap: 14, padding: '14px 16px',
-        background: hov ? 'rgba(25,39,52,0.6)' : 'rgba(25,39,52,0.34)',
+        background: hov ? 'rgba(46,43,40,0.6)' : 'rgba(46,43,40,0.34)',
         border: `1px solid ${hov ? T.goldMid : T.border}`, borderRadius: 14,
         transition: 'all 160ms ease', transform: hov ? 'translateY(-2px)' : 'none',
         animation: `noFade .4s ease ${delay}ms both`,

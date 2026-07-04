@@ -24,7 +24,7 @@ const VIEW_TABS = [
 function SlidePreviewCanvas({ elements, scale }) {
   return (
     <div
-      className="relative overflow-hidden rounded-lg border border-white/10 bg-[#0f1117]"
+      className="relative overflow-hidden rounded-lg border border-white/10 bg-[#262624]"
       style={{ width: DESIGN_WIDTH * scale, height: DESIGN_HEIGHT * scale }}
     >
       {elements.map((el) => {
@@ -63,7 +63,7 @@ function SlidePreviewCanvas({ elements, scale }) {
               style={{
                 ...base,
                 height: (el.height ?? 100) * scale,
-                background: el.type === 'image' ? `url(${el.data?.url}) center/cover` : (el.style?.fill ?? '#1e293b'),
+                background: el.type === 'image' ? `url(${el.data?.url}) center/cover` : (el.style?.fill ?? '#2b2520'),
                 border: el.style?.stroke ? `${(el.style.strokeWidth ?? 1) * scale}px solid ${el.style.stroke}` : undefined,
                 borderRadius: (el.style?.cornerRadius ?? 0) * scale,
               }}
@@ -188,7 +188,7 @@ export default function StudioLivePreviewPage() {
                   : 'border-white/8 bg-white/[0.02] hover:border-white/15',
               )}
             >
-              <div className="h-16 w-full rounded-md bg-[#0f1117]" />
+              <div className="h-16 w-full rounded-md bg-[#262624]" />
               <span className="truncate text-[10px] text-white/50">
                 {i + 1}. {slide.title}
               </span>

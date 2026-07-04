@@ -15,8 +15,9 @@ export declare class LiveController {
         data: {
             token: string;
             room: string;
-            role: "host" | "student";
+            role: "student" | "host";
             userId: string;
+            requestedRole: "student" | "host" | null;
         };
     }>;
     start(req: any, id: string): Promise<{
@@ -37,6 +38,27 @@ export declare class LiveController {
             stopped: boolean;
             recordingId: any;
             recording_active: boolean;
+        };
+    }>;
+    replayPublish(req: any, id: string): Promise<{
+        data: {
+            published: boolean;
+            reason: "no_recording";
+            workflow_status?: undefined;
+            forumPosted?: undefined;
+            state?: undefined;
+        } | {
+            published: boolean;
+            workflow_status: "published" | "pending_review";
+            forumPosted: boolean;
+            state: any;
+            reason?: undefined;
+        };
+    }>;
+    replayUnpublish(req: any, id: string): Promise<{
+        data: {
+            unpublished: boolean;
+            state: any;
         };
     }>;
 }

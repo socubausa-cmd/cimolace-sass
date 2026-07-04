@@ -1,9 +1,11 @@
 import { AuthService } from "../auth/auth.service";
 import { LiveKitService } from "../livekit/livekit.service";
+import { LiriEntitlementsService } from "../billing/liri-entitlements.service";
 export declare class LiveService {
     private auth;
     private liveKit;
-    constructor(auth: AuthService, liveKit: LiveKitService);
+    private entitlements;
+    constructor(auth: AuthService, liveKit: LiveKitService, entitlements: LiriEntitlementsService);
     private get supabase();
     createSession(tenantId: string, data: any): Promise<any>;
     findAll(tenantId: string): Promise<any[]>;
@@ -20,12 +22,46 @@ export declare class LiveService {
         recordingId: any;
         recording_active: boolean;
     }>;
-    generateToken(sessionId: string, userId: string, role: "host" | "student", tenantSlug?: string): Promise<{
+    private replayPublishStatus;
+    private isSessionEditor;
+    publishReplay(tenantId: string, sessionId: string, opts?: {
+        force?: "published" | "pending_review";
+        actorId?: string;
+    }): Promise<{
+        published: boolean;
+        reason: "no_recording";
+        workflow_status?: undefined;
+        forumPosted?: undefined;
+        state?: undefined;
+    } | {
+        published: boolean;
+        workflow_status: "published" | "pending_review";
+        forumPosted: boolean;
+        state: any;
+        reason?: undefined;
+    }>;
+    private canViewReplay;
+    resolveReplayPlaybackUrl(sessionId: string, userId: string): Promise<string>;
+    unpublishReplay(tenantId: string, sessionId: string, actorId?: string): Promise<{
+        unpublished: boolean;
+        state: any;
+    }>;
+    private static REPLAY_MARK;
+    private postReplayToForum;
+    private removeReplayFromForum;
+    private resolveLiveTopicId;
+    generateToken(sessionId: string, userId: string, requestedRole?: "host" | "student", tenant?: {
+        id?: string;
+        slug?: string;
+        userRole?: string | null;
+    }): Promise<{
         token: string;
         room: string;
-        role: "host" | "student";
+        role: "student" | "host";
         userId: string;
+        requestedRole: "student" | "host" | null;
     }>;
+    maybeStartRecording(tenantId: string, sessionId: string): Promise<void>;
     roomNameFor(tenantSlug: string, externalRef: string): string;
     issueTokenForSession(input: {
         tenantId: string;

@@ -1,6 +1,6 @@
 import { Feather } from '@expo/vector-icons';
 import { useMemo, useState } from 'react';
-import { Alert, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { LiriFonts as F, type LiriPalette } from '@/constants/liri-theme';
@@ -40,10 +40,11 @@ export default function ExportScreen() {
               </Pressable>
             );
           })}
-          <Pressable style={({ pressed }) => [s.cta, pressed && { opacity: 0.85 }]} onPress={() => Alert.alert('Export', `Génération ${sel.toUpperCase()} lancée (serveur).`)}>
-            <Feather name="download" size={18} color="#fff" />
-            <Text style={s.ctaTxt}>Exporter en {sel.toUpperCase()}</Text>
+          <Pressable style={[s.cta, s.ctaDisabled]} disabled accessibilityState={{ disabled: true }}>
+            <Feather name="clock" size={18} color="#fff" />
+            <Text style={s.ctaTxt}>Pipeline {sel.toUpperCase()} à connecter</Text>
           </Pressable>
+          <Text style={s.notice}>Aucun export n’est simulé : ce bouton sera activé lorsque le service serveur sera disponible.</Text>
         </ScrollView>
       </SafeAreaView>
     </View>
@@ -64,5 +65,7 @@ const makeStyles = (C: LiriPalette) => StyleSheet.create({
   label: { color: C.ink, fontSize: 15, fontWeight: '700', fontFamily: F.sans },
   desc: { color: C.faint, fontSize: 12.5, marginTop: 2, fontFamily: F.sans },
   cta: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, backgroundColor: C.coral, borderRadius: 16, paddingVertical: 15, marginTop: 12 },
+  ctaDisabled: { opacity: 0.55 },
   ctaTxt: { color: '#fff', fontSize: 15.5, fontWeight: '700', fontFamily: F.sans },
+  notice: { color: C.faint, fontSize: 12, lineHeight: 18, textAlign: 'center', marginTop: 10, fontFamily: F.sans },
 });

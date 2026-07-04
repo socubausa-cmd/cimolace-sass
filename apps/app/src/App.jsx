@@ -218,7 +218,6 @@ const VideoFormationsPage = lazy(() => import('@/pages/school/VideoFormationsPag
 const VideoPlayerPage = lazy(() => import('@/pages/VideoPlayerPage'));
 const FormationForumPage = lazy(() => import('@/pages/school/FormationForumPage'));
 const LessonPlayerPage = lazy(() => import('@/pages/school/LessonPlayerPage'));
-const VideoPostProductionPage = lazy(() => import('@/pages/VideoPostProductionPage'));
 const KnowledgeBaseManager = lazy(() => import('@/pages/KnowledgeBaseManager')); // --- Student School Life (NEW) ---
 const StudentSchoolLifePage = lazy(() => import('@/pages/school/student-school-life/StudentSchoolLifePage'));
 const StudentWeeklySchedulePage = lazy(() => import('@/pages/school/student-school-life/StudentWeeklySchedulePage'));
@@ -462,6 +461,15 @@ function OwnerDashboardLegacyRedirect() {
   const [sp] = useSearchParams();
   const q = sp.toString();
   return <Navigate to={`/liri/ecole${q ? `?${q}` : ''}`} replace />;
+}
+// Le Montage post-prod appartient au STUDIO LIRI (dans le portail). L'ancienne route
+// /owner-dashboard/* résout le tenant et renvoie vers son domaine (ex. prorascience.org
+// = chrome ISNA Academy externe) → on redirige vers /studio, en préservant le contentId.
+function OwnerPostProdRedirect() {
+  const { contentId } = useParams();
+  const [sp] = useSearchParams();
+  const q = sp.toString();
+  return <Navigate to={`/studio/post-production/${contentId}${q ? `?${q}` : ''}`} replace />;
 }
 const TenantAdminPayoutSettingsPage = lazy(() => import('@/pages/tenant/TenantAdminPayoutSettingsPage'));
 const TenantMembersPage = lazy(() => import('@/pages/tenant/TenantMembersPage'));
@@ -2300,11 +2308,8 @@ isLiriHostDevPreviewRoute;
               query préservée. Le vieux shell séparé « style isna » n'est plus monté. */}
           <Route path="/owner-dashboard" element={<OwnerDashboardLegacyRedirect />} />
 
-          <Route path="/owner-dashboard/post-production/:contentId" element={
-            <ProtectedOwnerRoute>
-              <VideoPostProductionPage />
-            </ProtectedOwnerRoute>
-          } />
+          {/* Redirigé vers le studio LIRI (dans le portail) — plus de bounce owner→domaine tenant (prorascience.org / ISNA). */}
+          <Route path="/owner-dashboard/post-production/:contentId" element={<OwnerPostProdRedirect />} />
 
           <Route path="/owner-dashboard/knowledge-base" element={
             <ProtectedOwnerRoute>

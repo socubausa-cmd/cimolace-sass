@@ -1,11 +1,15 @@
 import {
   IsIn,
+  IsInt,
   IsOptional,
   IsString,
   IsUUID,
+  Max,
   MaxLength,
+  Min,
   ValidateIf,
 } from 'class-validator';
+import { Type } from 'class-transformer';
 
 /**
  * DTO — création d'un Sujet (conversation kind='topic').
@@ -24,7 +28,7 @@ export class CreateTopicDto {
 
   /** Si visibility='context' : type de ressource rattachée. */
   @ValidateIf((o: CreateTopicDto) => o.visibility === 'context')
-  @IsIn(['video', 'live', 'class'])
+  @IsIn(['video', 'live', 'class', 'course'])
   contextType?: string;
 
   /** Si visibility='context' : identifiant de la ressource rattachée. */
@@ -40,12 +44,17 @@ export class CreateTopicDto {
  * (find-or-create) LE Sujet `kind='topic'`, visibility='context', du couple
  * (context_type, context_id). Pour context_type='video', `courseId` est requis :
  * il sert au contrôle d'accès « inscrit au cours » (EXISTS student_progress).
+ *
+ * context_type='course' (LOT 3) : Sujet du COURS lui-même (context_id = courses.id).
+ * Alimenté côté serveur à la finalisation d'une post-prod de cours (cf.
+ * CourseBuilderService.saveVersion → TopicsService.publishCourseContentTopic) ;
+ * c'est aussi la cible de l'unification du forum (questions de cours).
  */
 export class GetOrCreateContextTopicDto {
   /** Type de ressource rattachée (obligatoire). */
-  @IsIn(['video', 'live', 'class']) contextType: string;
+  @IsIn(['video', 'live', 'class', 'course']) contextType: string;
 
-  /** Identifiant de la ressource (= video_id = formation_day_contents.id). */
+  /** Identifiant de la ressource (= video_id = formation_day_contents.id, ou courses.id pour 'course'). */
   @IsUUID() contextId: string;
 
   /**
@@ -88,4 +97,17 @@ export class ListTopicsQueryDto {
   @IsOptional() @IsIn(['public', 'private', 'context']) visibility?: string;
   @IsOptional() @IsIn(['video', 'live', 'class']) contextType?: string;
   @IsOptional() @IsUUID() contextId?: string;
+}
+
+/**
+ * Query — lecture FORUM des Sujets publics (LOT 1).
+ * `limit` borne la réponse (1..200, défaut appliqué côté service si absent).
+ */
+export class ListForumTopicsQueryDto {
+  @IsOptional()
+  @Type(() => Number)
+  @IsInt()
+  @Min(1)
+  @Max(200)
+  limit?: number;
 }

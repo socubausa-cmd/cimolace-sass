@@ -16,6 +16,8 @@ exports.LiveController = void 0;
 const common_1 = require("@nestjs/common");
 const jwt_auth_guard_1 = require("../common/guards/jwt-auth.guard");
 const tenant_guard_1 = require("../common/guards/tenant.guard");
+const roles_guard_1 = require("../common/guards/roles.guard");
+const roles_decorator_1 = require("../common/decorators/roles.decorator");
 const live_service_1 = require("./live.service");
 let LiveController = class LiveController {
     constructor(svc) {
@@ -24,15 +26,18 @@ let LiveController = class LiveController {
     async create(req, b) { return { data: await this.svc.createSession(req.tenant.id, b) }; }
     async findAll(req) { return { data: await this.svc.findAll(req.tenant.id) }; }
     async findOne(req, id) { return { data: await this.svc.findOne(req.tenant.id, id) }; }
-    async token(req, id, b) { return { data: await this.svc.generateToken(id, req.user.id, b.role) }; }
+    async token(req, id, b) { return { data: await this.svc.generateToken(id, req.user.id, b?.role, req.tenant) }; }
     async start(req, id) { return { data: await this.svc.startSession(req.tenant.id, id) }; }
     async end(req, id) { return { data: await this.svc.endSession(req.tenant.id, id) }; }
     async recStart(req, id) { return { data: await this.svc.startRecording(req.tenant.id, id) }; }
     async recStop(req, id) { return { data: await this.svc.stopRecording(req.tenant.id, id) }; }
+    async replayPublish(req, id) { return { data: await this.svc.publishReplay(req.tenant.id, id, { force: "published", actorId: req.user.id }) }; }
+    async replayUnpublish(req, id) { return { data: await this.svc.unpublishReplay(req.tenant.id, id, req.user.id) }; }
 };
 exports.LiveController = LiveController;
 __decorate([
     (0, common_1.Post)(),
+    (0, roles_decorator_1.Roles)("owner", "admin", "teacher"),
     __param(0, (0, common_1.Req)()),
     __param(1, (0, common_1.Body)()),
     __metadata("design:type", Function),
@@ -65,6 +70,7 @@ __decorate([
 ], LiveController.prototype, "token", null);
 __decorate([
     (0, common_1.Post)(":id/start"),
+    (0, roles_decorator_1.Roles)("owner", "admin", "teacher"),
     __param(0, (0, common_1.Req)()),
     __param(1, (0, common_1.Param)("id")),
     __metadata("design:type", Function),
@@ -73,6 +79,7 @@ __decorate([
 ], LiveController.prototype, "start", null);
 __decorate([
     (0, common_1.Post)(":id/end"),
+    (0, roles_decorator_1.Roles)("owner", "admin", "teacher"),
     __param(0, (0, common_1.Req)()),
     __param(1, (0, common_1.Param)("id")),
     __metadata("design:type", Function),
@@ -81,6 +88,7 @@ __decorate([
 ], LiveController.prototype, "end", null);
 __decorate([
     (0, common_1.Post)(":id/recording/start"),
+    (0, roles_decorator_1.Roles)("owner", "admin", "teacher"),
     __param(0, (0, common_1.Req)()),
     __param(1, (0, common_1.Param)("id")),
     __metadata("design:type", Function),
@@ -89,15 +97,34 @@ __decorate([
 ], LiveController.prototype, "recStart", null);
 __decorate([
     (0, common_1.Post)(":id/recording/stop"),
+    (0, roles_decorator_1.Roles)("owner", "admin", "teacher"),
     __param(0, (0, common_1.Req)()),
     __param(1, (0, common_1.Param)("id")),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [Object, String]),
     __metadata("design:returntype", Promise)
 ], LiveController.prototype, "recStop", null);
+__decorate([
+    (0, common_1.Post)(":id/replay/publish"),
+    (0, roles_decorator_1.Roles)("owner", "admin", "teacher"),
+    __param(0, (0, common_1.Req)()),
+    __param(1, (0, common_1.Param)("id")),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, String]),
+    __metadata("design:returntype", Promise)
+], LiveController.prototype, "replayPublish", null);
+__decorate([
+    (0, common_1.Post)(":id/replay/unpublish"),
+    (0, roles_decorator_1.Roles)("owner", "admin", "teacher"),
+    __param(0, (0, common_1.Req)()),
+    __param(1, (0, common_1.Param)("id")),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, String]),
+    __metadata("design:returntype", Promise)
+], LiveController.prototype, "replayUnpublish", null);
 exports.LiveController = LiveController = __decorate([
     (0, common_1.Controller)("lives"),
-    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard, tenant_guard_1.TenantGuard),
+    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard, tenant_guard_1.TenantGuard, roles_guard_1.RolesGuard),
     __metadata("design:paramtypes", [live_service_1.LiveService])
 ], LiveController);
 //# sourceMappingURL=live.controller.js.map

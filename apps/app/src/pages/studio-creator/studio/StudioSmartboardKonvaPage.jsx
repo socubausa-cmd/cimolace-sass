@@ -153,14 +153,14 @@ const TOOLS = [
 ];
 
 const ACCENT = {
-  cyan:    { text: 'text-cyan-400',    bg: 'bg-cyan-500/15',    border: 'border-cyan-500/30',    glow: 'shadow-[0_0_14px_rgba(34,211,238,0.3)]'    },
-  violet:  { text: 'text-violet-400',  bg: 'bg-violet-500/15',  border: 'border-violet-500/30',  glow: 'shadow-[0_0_14px_rgba(167,139,250,0.3)]'   },
+  cyan:    { text: 'text-[#e3aa6b]',    bg: 'bg-[#e3aa6b]/15',    border: 'border-[#e3aa6b]/30',    glow: 'shadow-[0_0_14px_rgba(227,170,107,0.3)]'    },
+  violet:  { text: 'text-[#e08a5f]',  bg: 'bg-[#d97757]/15',  border: 'border-[#d97757]/30',  glow: 'shadow-[0_0_14px_rgba(236,174,144,0.3)]'   },
   amber:   { text: 'text-amber-400',   bg: 'bg-amber-500/15',   border: 'border-amber-500/30',   glow: 'shadow-[0_0_14px_rgba(251,191,36,0.3)]'    },
-  emerald: { text: 'text-emerald-400', bg: 'bg-emerald-500/15', border: 'border-emerald-500/30', glow: 'shadow-[0_0_14px_rgba(52,211,153,0.3)]'    },
+  emerald: { text: 'text-[#7bb06a]', bg: 'bg-[#5a8f52]/15', border: 'border-[#5a8f52]/30', glow: 'shadow-[0_0_14px_rgba(207,128,89,0.3)]'    },
   pink:    { text: 'text-pink-400',    bg: 'bg-pink-500/15',    border: 'border-pink-500/30',    glow: 'shadow-[0_0_14px_rgba(244,114,182,0.3)]'   },
-  blue:    { text: 'text-blue-400',    bg: 'bg-blue-500/15',    border: 'border-blue-500/30',    glow: 'shadow-[0_0_14px_rgba(96,165,250,0.3)]'    },
+  blue:    { text: 'text-[#daa07a]',    bg: 'bg-[#daa07a]/15',    border: 'border-[#daa07a]/30',    glow: 'shadow-[0_0_14px_rgba(218,160,122,0.3)]'    },
   orange:  { text: 'text-orange-400',  bg: 'bg-orange-500/15',  border: 'border-orange-500/30',  glow: 'shadow-[0_0_14px_rgba(251,146,60,0.3)]'    },
-  teal:    { text: 'text-teal-400',    bg: 'bg-teal-500/15',    border: 'border-teal-500/30',    glow: 'shadow-[0_0_14px_rgba(45,212,191,0.3)]'    },
+  teal:    { text: 'text-[#e0976a]',    bg: 'bg-[#e0976a]/15',    border: 'border-[#e0976a]/30',    glow: 'shadow-[0_0_14px_rgba(224,151,106,0.3)]'    },
   red:     { text: 'text-red-400',     bg: 'bg-red-500/15',     border: 'border-red-500/30',     glow: 'shadow-[0_0_14px_rgba(239,68,68,0.3)]'     },
 };
 
@@ -183,9 +183,9 @@ const DESIGNER_MODES = [
 /* ─── AI Hub — mode rapide (icône seulement, pas d'onglets) ─────── */
 const AI_QUICK_MODES = [
   { id: 'analyse',    icon: Sparkles,        label: 'Analyse',      color: 'text-amber-400',   dot: 'bg-amber-400'   },
-  { id: 'vision',     icon: Eye,             label: 'Vision',       color: 'text-cyan-400',    dot: 'bg-cyan-400'    },
-  { id: 'audio',      icon: Mic,             label: 'Audio',        color: 'text-blue-400',    dot: 'bg-blue-400'    },
-  { id: 'architect',  icon: Cpu,             label: 'Architect',    color: 'text-violet-400',  dot: 'bg-violet-400'  },
+  { id: 'vision',     icon: Eye,             label: 'Vision',       color: 'text-[#e0a458]',    dot: 'bg-[#e0a458]'    },
+  { id: 'audio',      icon: Mic,             label: 'Audio',        color: 'text-[#e0a458]',    dot: 'bg-[#e0a458]'    },
+  { id: 'architect',  icon: Cpu,             label: 'Architect',    color: 'text-[#e08a5f]',  dot: 'bg-[#e08a5f]'  },
 ];
 
 /* ─── Outils pédagogiques ────────────────────────────────────────── */
@@ -288,11 +288,11 @@ function QuickLauncherPanel({ isOpen, onClose, onCreate, onImportFile }) {
             exit={{ opacity: 0, y: -8, scale: 0.97 }}
             transition={{ duration: 0.14, ease: 'easeOut' }}
             className="fixed left-3 top-[44px] z-50 w-[480px] max-w-[calc(100vw-24px)] overflow-hidden rounded-2xl border border-white/[0.1] shadow-[0_12px_60px_rgba(0,0,0,0.75),0_0_0_1px_rgba(255,255,255,0.04)]"
-            style={{ background: '#12111a' }}
+            style={{ background: '#1f1e1c' }}
           >
             {/* Header */}
             <div className="flex items-center gap-2.5 border-b border-white/[0.07] px-4 py-3">
-              <span className="flex h-8 w-8 items-center justify-center rounded-xl border border-cyan-500/20 bg-cyan-500/15 text-cyan-400">
+              <span className="flex h-8 w-8 items-center justify-center rounded-xl border border-[#d4924a]/20 bg-[#d4924a]/15 text-[#e0a458]">
                 <Plus className="h-4 w-4" />
               </span>
               <div className="min-w-0 flex-1">
@@ -374,7 +374,7 @@ function QuickLauncherPanel({ isOpen, onClose, onCreate, onImportFile }) {
                   <button
                     type="button"
                     onClick={() => fileInputRef.current?.click()}
-                    className="flex flex-col items-center gap-2.5 rounded-xl border border-dashed border-white/[0.12] bg-white/[0.02] px-4 py-8 text-center transition-all hover:border-cyan-500/30 hover:bg-cyan-500/[0.04]"
+                    className="flex flex-col items-center gap-2.5 rounded-xl border border-dashed border-white/[0.12] bg-white/[0.02] px-4 py-8 text-center transition-all hover:border-[#d4924a]/30 hover:bg-[#d4924a]/[0.04]"
                   >
                     <UploadCloud className="h-9 w-9 text-white/15" />
                     <div>
@@ -499,7 +499,7 @@ function DesignerCloudToolbar() {
 
   return (
     <div className="hidden lg:flex items-center gap-1.5 shrink-0 max-w-[min(100%,440px)]">
-      <Cloud className="h-3.5 w-3.5 text-cyan-400/70 shrink-0" title="Workspace cloud" />
+      <Cloud className="h-3.5 w-3.5 text-[#e0a458]/70 shrink-0" title="Workspace cloud" />
       <input
         value={title}
         onChange={(e) => setCloudTitleDraft(e.target.value)}
@@ -511,7 +511,7 @@ function DesignerCloudToolbar() {
         type="button"
         onClick={() => void onSave()}
         disabled={busy}
-        className="flex shrink-0 items-center justify-center rounded-md border border-cyan-500/30 bg-cyan-500/15 px-2 py-0.5 text-[10px] font-semibold text-cyan-200 hover:bg-cyan-500/25 disabled:opacity-40"
+        className="flex shrink-0 items-center justify-center rounded-md border border-[#d4924a]/30 bg-[#d4924a]/15 px-2 py-0.5 text-[10px] font-semibold text-[#ecc98f] hover:bg-[#d4924a]/25 disabled:opacity-40"
         title="Enregistrer sur le cloud"
       >
         {busy ? <Loader2 className="h-3 w-3 animate-spin" /> : 'Sauver'}
@@ -551,10 +551,10 @@ function DesignerTopBar({
   const totalScenes = scenes.length;
 
   const modeColors = {
-    design: { active: 'bg-cyan-500/20 text-cyan-300 border-cyan-500/35 shadow-[0_0_12px_rgba(34,211,238,0.2)]',   dot: 'bg-cyan-400'   },
+    design: { active: 'bg-[#d4924a]/20 text-[#e6b566] border-[#d4924a]/35 shadow-[0_0_12px_rgba(227,170,107,0.2)]',   dot: 'bg-[#e0a458]'   },
     live:   { active: 'bg-red-500/20 text-red-300 border-red-500/35 shadow-[0_0_12px_rgba(239,68,68,0.2)]',       dot: 'bg-red-400 animate-pulse' },
     video:  { active: 'bg-amber-500/20 text-amber-300 border-amber-500/35 shadow-[0_0_12px_rgba(245,158,11,0.2)]',dot: 'bg-amber-400'  },
-    cinema: { active: 'bg-violet-500/20 text-violet-300 border-violet-500/35 shadow-[0_0_12px_rgba(139,92,246,0.2)]', dot: 'bg-violet-400' },
+    cinema: { active: 'bg-[#d97757]/20 text-[#e8a97f] border-[#d97757]/35 shadow-[0_0_12px_rgba(217,119,87,0.2)]', dot: 'bg-[#e08a5f]' },
   };
 
   return (
@@ -585,7 +585,7 @@ function DesignerTopBar({
               <span className="font-medium text-[var(--school-accent)]">Cinéma pédagogique</span>
             </>
           ) : (
-            <span className="text-cyan-400 font-medium">Designer</span>
+            <span className="text-[#e0a458] font-medium">Designer</span>
           )}
         </nav>
 
@@ -596,13 +596,13 @@ function DesignerTopBar({
               'h-6 w-6 flex items-center justify-center rounded-lg border shrink-0',
               cinemaPedagogy
                 ? 'bg-[color-mix(in_srgb,var(--school-accent)_15%,transparent)] border-[color-mix(in_srgb,var(--school-accent)_25%,transparent)]'
-                : 'bg-cyan-500/15 border-cyan-500/20',
+                : 'bg-[#d4924a]/15 border-[#d4924a]/20',
             )}
           >
             {cinemaPedagogy ? (
               <Film className="h-3 w-3 text-[var(--school-accent)]" />
             ) : (
-              <LayoutGrid className="h-3 w-3 text-cyan-400" />
+              <LayoutGrid className="h-3 w-3 text-[#e0a458]" />
             )}
           </div>
           <span className="text-[12px] font-semibold text-white/70 hidden lg:block">
@@ -701,7 +701,7 @@ function DesignerTopBar({
           className={cn(
             'flex items-center gap-1.5 rounded-lg border px-2.5 py-1 text-[11px] font-semibold transition-all shrink-0',
             quickLauncherOpen
-              ? 'border-cyan-500/35 bg-cyan-500/15 text-cyan-200 shadow-[0_0_12px_rgba(34,211,238,0.2)]'
+              ? 'border-[#d4924a]/35 bg-[#d4924a]/15 text-[#ecc98f] shadow-[0_0_12px_rgba(227,170,107,0.2)]'
               : 'border-white/[0.07] bg-white/[0.03] text-white/40 hover:bg-white/[0.07] hover:text-white/70',
           )}
         >
@@ -724,7 +724,7 @@ function DesignerTopBar({
                 className={cn(
                   'flex h-6 w-6 items-center justify-center rounded-md transition-all',
                   viewMode === m.id
-                    ? 'bg-cyan-500/20 text-cyan-400 shadow-[0_0_8px_rgba(34,211,238,0.25)]'
+                    ? 'bg-[#d4924a]/20 text-[#e0a458] shadow-[0_0_8px_rgba(227,170,107,0.25)]'
                     : 'text-white/30 hover:text-white/60'
                 )}
               >
@@ -794,8 +794,8 @@ function DesignerTopBar({
       <AnimatePresence>
         {inviteBanner && (
           <motion.div key="invite" initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }} className="overflow-hidden">
-            <div className="flex items-center gap-2 border-b border-cyan-500/20 bg-cyan-950/25 px-4 py-1.5 text-[11px] text-cyan-200/90">
-              <Info className="h-3.5 w-3.5 text-cyan-400 shrink-0" />{inviteBanner}
+            <div className="flex items-center gap-2 border-b border-[#d4924a]/20 bg-[#2e2016]/25 px-4 py-1.5 text-[11px] text-[#ecc98f]/90">
+              <Info className="h-3.5 w-3.5 text-[#e0a458] shrink-0" />{inviteBanner}
             </div>
           </motion.div>
         )}
@@ -808,9 +808,9 @@ function DesignerTopBar({
         )}
         {isnaImportSummary && (
           <motion.div key="isna-handoff" initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }} className="overflow-hidden">
-            <div className="flex items-center justify-between gap-3 border-b border-fuchsia-500/25 bg-fuchsia-950/30 px-4 py-1.5 text-[11px] text-fuchsia-100/90">
+            <div className="flex items-center justify-between gap-3 border-b border-[#d97757]/25 bg-[#2e1610]/30 px-4 py-1.5 text-[11px] text-[#f5d9cc]/90">
               <div className="flex min-w-0 items-center gap-2">
-                <Info className="h-3.5 w-3.5 shrink-0 text-fuchsia-300" />
+                <Info className="h-3.5 w-3.5 shrink-0 text-[#e8a97f]" />
                 <span className="truncate">
                   Résumé import : {isnaImportSummary.stepsCount} étape(s) · source {isnaImportSummary.source || '—'} · {isnaImportSummary.savedAtLabel || 'date inconnue'}
                 </span>
@@ -819,7 +819,7 @@ function DesignerTopBar({
                 <button
                   type="button"
                   onClick={onClearIsnaImport}
-                  className="rounded-md border border-fuchsia-400/35 bg-fuchsia-500/15 px-2 py-0.5 text-[10px] font-semibold text-fuchsia-100 transition hover:bg-fuchsia-500/25"
+                  className="rounded-md border border-[#e08a5f]/35 bg-[#d97757]/15 px-2 py-0.5 text-[10px] font-semibold text-[#f5d9cc] transition hover:bg-[#d97757]/25"
                 >
                   Vider l&apos;import
                 </button>
@@ -869,7 +869,7 @@ function ToolSidebar({ activeTool, onTool, designerMode = 'design', docType = nu
   return (
     <aside
       className="flex flex-col gap-0.5 w-12 flex-shrink-0 border-r border-white/[0.07] py-3 px-1.5"
-      style={{ background: '#12111a' }}
+      style={{ background: '#1f1e1c' }}
     >
       {tools.map(tool => {
         const Icon = tool.icon;
@@ -933,7 +933,7 @@ function DesignerQuickRail({
   if (!docType || fullscreen || designerMode !== 'design') return null;
   return (
     <aside
-      className="flex w-11 flex-shrink-0 flex-col items-center gap-1 border-l border-white/[0.06] bg-[#12111a] py-2"
+      className="flex w-11 flex-shrink-0 flex-col items-center gap-1 border-l border-white/[0.06] bg-[#1f1e1c] py-2"
       aria-label="Raccourcis studio"
     >
       {[
@@ -988,7 +988,7 @@ const BG_PRESETS = [
   { id: 'midnight',    label: 'Minuit',        value: '#0b0d1a',                              swatch: '#0b0d1a'   },
   { id: 'transparent', label: 'Transparent',   value: 'transparent',                          swatch: null        },
   { id: 'white',       label: 'Blanc',         value: '#ffffff',                              swatch: '#ffffff'   },
-  { id: 'slate',       label: 'Ardoise',       value: '#1e293b',                              swatch: '#1e293b'   },
+  { id: 'slate',       label: 'Ardoise',       value: '#2b2520',                              swatch: '#2b2520'   },
   { id: 'royal',       label: 'Royal',         value: 'linear-gradient(135deg,#0f0c29,#302b63,#24243e)', swatch: '#302b63' },
   { id: 'forest',      label: 'Forêt',         value: 'linear-gradient(135deg,#0f2027,#203a43,#2c5364)', swatch: '#203a43' },
   { id: 'gold',        label: 'Or',            value: 'linear-gradient(135deg,#1a1207,#2d1f0a,#D4AF37)', swatch: '#D4AF37' },
@@ -1386,12 +1386,12 @@ function ElementPanel({ obj, onClose }) {
     <p className="px-3 pt-3 pb-1 text-[9px] font-bold uppercase tracking-widest text-white/22">{children}</p>
   );
   const AiBtn = ({ label, sub }) => (
-    <button type="button" className="flex w-full items-center gap-2.5 rounded-xl border border-violet-500/15 bg-violet-500/[0.06] px-2.5 py-2 text-left transition-all hover:border-violet-500/25">
-      <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-violet-500/15">
-        <Sparkles className="h-3.5 w-3.5 text-violet-400" />
+    <button type="button" className="flex w-full items-center gap-2.5 rounded-xl border border-[#d97757]/15 bg-[#d97757]/[0.06] px-2.5 py-2 text-left transition-all hover:border-[#d97757]/25">
+      <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-[#d97757]/15">
+        <Sparkles className="h-3.5 w-3.5 text-[#e08a5f]" />
       </span>
       <div className="min-w-0 flex-1">
-        <p className="truncate text-[11px] font-medium text-violet-300">{label}</p>
+        <p className="truncate text-[11px] font-medium text-[#e8a97f]">{label}</p>
         {sub && <p className="truncate text-[9px] text-white/30">{sub}</p>}
       </div>
     </button>
@@ -1420,7 +1420,7 @@ function ElementPanel({ obj, onClose }) {
       exit={{ width: 0, opacity: 0 }}
       transition={{ duration: 0.18, ease: 'easeOut' }}
       className="flex flex-shrink-0 flex-col overflow-hidden border-r border-white/[0.07]"
-      style={{ background: '#13121e' }}
+      style={{ background: '#17150f' }}
     >
       {/* ── Header ── */}
       <div className="flex shrink-0 items-center gap-2 border-b border-white/[0.07] px-3 py-2.5">
@@ -1456,7 +1456,7 @@ function ElementPanel({ obj, onClose }) {
                 { lbl: '❝',   style: { fontSize: 16, fontWeight: 400, fontStyle: 'italic', lineHeight: 1.7, fill: '#c4bfd4' } },
               ].map(p => (
                 <button key={p.lbl} type="button" onClick={() => updateStyle(p.style)}
-                  className="flex h-7 min-w-[30px] items-center justify-center rounded-lg border border-white/[0.08] bg-white/[0.03] px-2 text-[10px] font-bold text-white/45 transition-all hover:border-cyan-500/30 hover:bg-cyan-500/10 hover:text-cyan-300">
+                  className="flex h-7 min-w-[30px] items-center justify-center rounded-lg border border-white/[0.08] bg-white/[0.03] px-2 text-[10px] font-bold text-white/45 transition-all hover:border-[#d4924a]/30 hover:bg-[#d4924a]/10 hover:text-[#e6b566]">
                   {p.lbl}
                 </button>
               ))}
@@ -1481,7 +1481,7 @@ function ElementPanel({ obj, onClose }) {
                     }
                     updateStyle({ fontFamily: `${fam}, system-ui, sans-serif` });
                   }}
-                  className="w-full appearance-none rounded-lg border border-white/[0.08] bg-white/[0.03] py-1.5 pl-2.5 pr-7 text-[11px] text-white/70 focus:border-cyan-500/30 focus:outline-none"
+                  className="w-full appearance-none rounded-lg border border-white/[0.08] bg-white/[0.03] py-1.5 pl-2.5 pr-7 text-[11px] text-white/70 focus:border-[#d4924a]/30 focus:outline-none"
                 >
                   {TEXT_FONTS.map(f => (
                     <option key={f.value} value={f.value}>{f.label} — {f.category}</option>
@@ -1499,7 +1499,7 @@ function ElementPanel({ obj, onClose }) {
                 <select
                   value={obj.style?.fontWeight ?? 400}
                   onChange={e => updateStyle({ fontWeight: Number(e.target.value) })}
-                  className="w-full appearance-none rounded-lg border border-white/[0.08] bg-white/[0.03] py-1.5 pl-2 pr-6 text-[10px] text-white/70 focus:border-cyan-500/30 focus:outline-none"
+                  className="w-full appearance-none rounded-lg border border-white/[0.08] bg-white/[0.03] py-1.5 pl-2 pr-6 text-[10px] text-white/70 focus:border-[#d4924a]/30 focus:outline-none"
                 >
                   {[
                     [100, '100 · Fin'],
@@ -1525,8 +1525,8 @@ function ElementPanel({ obj, onClose }) {
                   onClick={() => updateStyle({ fontWeight: (obj.style?.fontWeight ?? 400) >= 700 ? 400 : 700 })}
                   className={cn('flex h-8 w-8 items-center justify-center rounded-lg border text-[13px] font-black transition-all',
                     (obj.style?.fontWeight ?? 400) >= 700
-                      ? 'border-cyan-500/30 bg-cyan-500/15 text-cyan-300'
-                      : 'border-white/[0.08] bg-white/[0.03] text-white/50 hover:border-cyan-500/30 hover:bg-cyan-500/10 hover:text-cyan-300')}>
+                      ? 'border-[#d4924a]/30 bg-[#d4924a]/15 text-[#e6b566]'
+                      : 'border-white/[0.08] bg-white/[0.03] text-white/50 hover:border-[#d4924a]/30 hover:bg-[#d4924a]/10 hover:text-[#e6b566]')}>
                   B
                 </button>
                 {/* I */}
@@ -1534,8 +1534,8 @@ function ElementPanel({ obj, onClose }) {
                   onClick={() => updateStyle({ fontStyle: obj.style?.fontStyle === 'italic' ? 'normal' : 'italic' })}
                   className={cn('flex h-8 w-8 items-center justify-center rounded-lg border text-[12px] font-bold italic transition-all',
                     obj.style?.fontStyle === 'italic'
-                      ? 'border-cyan-500/30 bg-cyan-500/15 text-cyan-300'
-                      : 'border-white/[0.08] bg-white/[0.03] text-white/50 hover:border-cyan-500/30 hover:bg-cyan-500/10 hover:text-cyan-300')}>
+                      ? 'border-[#d4924a]/30 bg-[#d4924a]/15 text-[#e6b566]'
+                      : 'border-white/[0.08] bg-white/[0.03] text-white/50 hover:border-[#d4924a]/30 hover:bg-[#d4924a]/10 hover:text-[#e6b566]')}>
                   I
                 </button>
                 {/* U */}
@@ -1543,8 +1543,8 @@ function ElementPanel({ obj, onClose }) {
                   onClick={() => updateStyle({ textDecoration: obj.style?.textDecoration === 'underline' ? '' : 'underline' })}
                   className={cn('flex h-8 w-8 items-center justify-center rounded-lg border text-[12px] font-bold underline transition-all',
                     obj.style?.textDecoration === 'underline'
-                      ? 'border-cyan-500/30 bg-cyan-500/15 text-cyan-300'
-                      : 'border-white/[0.08] bg-white/[0.03] text-white/50 hover:border-cyan-500/30 hover:bg-cyan-500/10 hover:text-cyan-300')}>
+                      ? 'border-[#d4924a]/30 bg-[#d4924a]/15 text-[#e6b566]'
+                      : 'border-white/[0.08] bg-white/[0.03] text-white/50 hover:border-[#d4924a]/30 hover:bg-[#d4924a]/10 hover:text-[#e6b566]')}>
                   U
                 </button>
                 {/* S */}
@@ -1552,8 +1552,8 @@ function ElementPanel({ obj, onClose }) {
                   onClick={() => updateStyle({ textDecoration: obj.style?.textDecoration === 'line-through' ? '' : 'line-through' })}
                   className={cn('flex h-8 w-8 items-center justify-center rounded-lg border text-[12px] font-bold line-through transition-all',
                     obj.style?.textDecoration === 'line-through'
-                      ? 'border-cyan-500/30 bg-cyan-500/15 text-cyan-300'
-                      : 'border-white/[0.08] bg-white/[0.03] text-white/50 hover:border-cyan-500/30 hover:bg-cyan-500/10 hover:text-cyan-300')}>
+                      ? 'border-[#d4924a]/30 bg-[#d4924a]/15 text-[#e6b566]'
+                      : 'border-white/[0.08] bg-white/[0.03] text-white/50 hover:border-[#d4924a]/30 hover:bg-[#d4924a]/10 hover:text-[#e6b566]')}>
                   S
                 </button>
                 <div className="flex-1" />
@@ -1572,7 +1572,7 @@ function ElementPanel({ obj, onClose }) {
                     onClick={() => updateStyle({ align: al.id })}
                     className={cn('flex h-8 w-8 items-center justify-center rounded-lg border transition-all',
                       obj.style?.align === al.id
-                        ? 'border-cyan-500/30 bg-cyan-500/15 text-cyan-300'
+                        ? 'border-[#d4924a]/30 bg-[#d4924a]/15 text-[#e6b566]'
                         : 'border-white/[0.08] bg-white/[0.03] text-white/40 hover:text-white/70')}>
                     <al.Icon className="h-3.5 w-3.5" />
                   </button>
@@ -1595,7 +1595,7 @@ function ElementPanel({ obj, onClose }) {
                   <input type="range" min={sp.min} max={sp.max} step={sp.step}
                     value={sp.val}
                     onChange={e => updateStyle({ [sp.key]: Number(e.target.value) })}
-                    className="h-1 w-full appearance-none rounded-full bg-white/10 accent-cyan-400" />
+                    className="h-1 w-full appearance-none rounded-full bg-white/10 accent-[#e0a458]" />
                 </div>
               ))}
             </div>
@@ -1610,7 +1610,7 @@ function ElementPanel({ obj, onClose }) {
                     : { shadowColor: '#000000', shadowBlur: 8, shadowOffsetX: 2, shadowOffsetY: 3, shadowOpacity: 0.45 })}
                   className={cn('flex h-7 flex-1 items-center justify-center gap-1.5 rounded-lg border text-[10px] font-medium transition-all',
                     obj.style?.shadowColor
-                      ? 'border-cyan-500/30 bg-cyan-500/15 text-cyan-300'
+                      ? 'border-[#d4924a]/30 bg-[#d4924a]/15 text-[#e6b566]'
                       : 'border-white/[0.08] bg-white/[0.03] text-white/40 hover:text-white/70')}>
                   {obj.style?.shadowColor ? '● Activée' : '○ Activer'}
                 </button>
@@ -1632,7 +1632,7 @@ function ElementPanel({ obj, onClose }) {
                       </div>
                       <input type="range" min={s.min} max={s.max} step={s.step} value={s.val}
                         onChange={e => updateStyle({ [s.key]: Number(e.target.value) })}
-                        className="h-1 w-full appearance-none rounded-full bg-white/10 accent-cyan-400" />
+                        className="h-1 w-full appearance-none rounded-full bg-white/10 accent-[#e0a458]" />
                     </div>
                   ))}
                 </div>
@@ -1669,7 +1669,7 @@ function ElementPanel({ obj, onClose }) {
               <ColorSwatch value={obj.style?.fill} onChange={v => updateStyle({ fill: v })} title="Couleur de fond" />
               <div className="min-w-0 flex-1">
                 <p className="text-[10px] text-white/50">Couleur</p>
-                <p className="truncate font-mono text-[10px] text-white/30">{toHex(String(obj.style?.fill || '#7c3aed'))}</p>
+                <p className="truncate font-mono text-[10px] text-white/30">{toHex(String(obj.style?.fill || '#d97757'))}</p>
               </div>
               <button type="button" title="Aucun remplissage" onClick={() => updateStyle({ fill: 'transparent' })}
                 className="flex h-8 w-8 items-center justify-center rounded-lg border border-white/[0.08] text-[10px] text-white/30 transition-all hover:border-white/20 hover:text-white/60">
@@ -1691,7 +1691,7 @@ function ElementPanel({ obj, onClose }) {
                   <input type="range" min={0} max={80} step={1}
                     value={obj.style?.cornerRadius ?? 0}
                     onChange={e => updateStyle({ cornerRadius: Number(e.target.value) })}
-                    className="h-1 flex-1 appearance-none rounded-full bg-white/10 accent-violet-400" />
+                    className="h-1 flex-1 appearance-none rounded-full bg-white/10 accent-[#e08a5f]" />
                   <span className="w-9 text-right text-[10px] text-white/40">{obj.style?.cornerRadius ?? 0}px</span>
                 </div>
               </>
@@ -1722,7 +1722,7 @@ function ElementPanel({ obj, onClose }) {
                   </div>
                   <input type="range" min={0} max={2} step={0.05} value={adj.val}
                     onChange={e => updateStyle({ [adj.key]: Number(e.target.value) })}
-                    className="h-1 w-full appearance-none rounded-full bg-white/10 accent-emerald-400" />
+                    className="h-1 w-full appearance-none rounded-full bg-white/10 accent-[#7bb06a]" />
                 </div>
               ))}
             </div>
@@ -1855,10 +1855,10 @@ const FV_ORGANIZE = [
 ];
 
 const FV_BOOL_COLORS = {
-  emerald: 'border-emerald-500/30 bg-emerald-500/10 text-emerald-300 hover:bg-emerald-500/20',
+  emerald: 'border-[#5a8f52]/30 bg-[#5a8f52]/10 text-[#9cc48a] hover:bg-[#5a8f52]/20',
   rose:    'border-rose-500/30 bg-rose-500/10 text-rose-300 hover:bg-rose-500/20',
-  blue:    'border-blue-500/30 bg-blue-500/10 text-blue-300 hover:bg-blue-500/20',
-  violet:  'border-violet-500/30 bg-violet-500/10 text-violet-300 hover:bg-violet-500/20',
+  blue:    'border-[#d4924a]/30 bg-[#d4924a]/10 text-[#e6b566] hover:bg-[#d4924a]/20',
+  violet:  'border-[#d97757]/30 bg-[#d97757]/10 text-[#e8a97f] hover:bg-[#d97757]/20',
   amber:   'border-amber-500/30 bg-amber-500/10 text-amber-300 hover:bg-amber-500/20',
 };
 const FV_BOOL_COLORS_DISABLED = 'border-white/[0.06] bg-white/[0.02] text-white/20 cursor-not-allowed';
@@ -1885,7 +1885,7 @@ function FormesVectorPanel({ onClose }) {
 
   /* ── Ajout d'une forme ── */
   const handleShape = (id) => {
-    const base = { x: 100 + Math.random() * 80, y: 100 + Math.random() * 60, style: { fill: 'rgba(139,92,246,0.28)', stroke: '#7c3aed', strokeWidth: 2 } };
+    const base = { x: 100 + Math.random() * 80, y: 100 + Math.random() * 60, style: { fill: 'rgba(217,119,87,0.28)', stroke: '#d97757', strokeWidth: 2 } };
     switch (id) {
       case 'roundrect': addObject({ ...base, type: 'rect', width: 160, height: 120, style: { ...base.style, cornerRadius: 20 } }); break;
       case 'circle':    addObject({ ...base, type: 'circle', width: 120, height: 120 }); break;
@@ -1945,14 +1945,14 @@ function FormesVectorPanel({ onClose }) {
       exit={{ width: 0, opacity: 0 }}
       transition={{ duration: 0.18, ease: 'easeOut' }}
       className="flex flex-shrink-0 flex-col border-r border-white/[0.07] overflow-hidden"
-      style={{ background: '#13121e' }}
+      style={{ background: '#17150f' }}
     >
       {/* ── Header ── */}
       <div className="flex items-center gap-2 border-b border-white/[0.07] px-3 py-2.5 shrink-0">
-        <Hexagon className="h-3.5 w-3.5 text-violet-400" />
-        <span className="text-[12px] font-semibold text-violet-300">Formes & Vecteur</span>
+        <Hexagon className="h-3.5 w-3.5 text-[#e08a5f]" />
+        <span className="text-[12px] font-semibold text-[#e8a97f]">Formes & Vecteur</span>
         {activeVectorTool && (
-          <span className="ml-1 rounded-md border border-violet-500/25 bg-violet-500/15 px-1.5 py-0.5 text-[8px] font-bold text-violet-300 uppercase tracking-wide">
+          <span className="ml-1 rounded-md border border-[#d97757]/25 bg-[#d97757]/15 px-1.5 py-0.5 text-[8px] font-bold text-[#e8a97f] uppercase tracking-wide">
             {activeVectorTool}
           </span>
         )}
@@ -1965,10 +1965,10 @@ function FormesVectorPanel({ onClose }) {
 
       {/* ── Sélection active — badge ── */}
       {selCount > 0 && (
-        <div className="mx-3 mt-2 flex items-center gap-1.5 rounded-xl border border-violet-500/20 bg-violet-500/[0.07] px-2.5 py-1.5 shrink-0">
-          <div className="h-1.5 w-1.5 rounded-full bg-violet-400 shadow-[0_0_5px_rgba(167,139,250,0.8)]" />
-          <span className="text-[10px] text-violet-300/80 font-medium">{selCount} sélectionné{selCount > 1 ? 's' : ''}</span>
-          {selObj && <span className="ml-1 text-[9px] text-violet-400/60">· {ELEMENT_META[selObj.type]?.label}</span>}
+        <div className="mx-3 mt-2 flex items-center gap-1.5 rounded-xl border border-[#d97757]/20 bg-[#d97757]/[0.07] px-2.5 py-1.5 shrink-0">
+          <div className="h-1.5 w-1.5 rounded-full bg-[#e08a5f] shadow-[0_0_5px_rgba(236,174,144,0.8)]" />
+          <span className="text-[10px] text-[#e8a97f]/80 font-medium">{selCount} sélectionné{selCount > 1 ? 's' : ''}</span>
+          {selObj && <span className="ml-1 text-[9px] text-[#e08a5f]/60">· {ELEMENT_META[selObj.type]?.label}</span>}
         </div>
       )}
       <p className="mx-3 mt-2 text-[9px] leading-snug text-white/35 shrink-0">
@@ -1981,12 +1981,12 @@ function FormesVectorPanel({ onClose }) {
       <div className="flex-1 overflow-y-auto [scrollbar-width:thin] [scrollbar-color:rgba(255,255,255,0.07)_transparent] min-h-0">
 
         {/* ──────── FORMES DE BASE ──────── */}
-        <SecHead label="Formes de base" color="text-violet-400/70" />
+        <SecHead label="Formes de base" color="text-[#e08a5f]/70" />
         <div className="mx-3 grid grid-cols-3 gap-1 mb-1">
           {FV_SHAPES.map(sh => (
             <button key={sh.id} onClick={() => handleShape(sh.id)}
               title={sh.label + (sh.shortcut ? ` (${sh.shortcut})` : '')}
-              className="flex flex-col items-center justify-center gap-1 rounded-xl border border-white/[0.07] bg-white/[0.03] py-2 px-1 hover:border-violet-500/30 hover:bg-violet-500/10 transition-all active:scale-95">
+              className="flex flex-col items-center justify-center gap-1 rounded-xl border border-white/[0.07] bg-white/[0.03] py-2 px-1 hover:border-[#d97757]/30 hover:bg-[#d97757]/10 transition-all active:scale-95">
               <span className="text-[16px] leading-none text-white/60">{sh.shape}</span>
               <span className="text-[8px] text-white/35 truncate w-full text-center leading-tight">{sh.label}</span>
             </button>
@@ -1996,7 +1996,7 @@ function FormesVectorPanel({ onClose }) {
         <div className="mx-3 my-2.5 h-px bg-white/[0.05]" />
 
         {/* ──────── OUTILS DE TRACÉ ──────── */}
-        <SecHead icon={PenTool} label="Tracé & Plume" color="text-cyan-400/70" />
+        <SecHead icon={PenTool} label="Tracé & Plume" color="text-[#e0a458]/70" />
         <div className="mx-3 space-y-0.5 mb-1">
           {FV_PEN.map(t => {
             const Icon = t.icon;
@@ -2006,10 +2006,10 @@ function FormesVectorPanel({ onClose }) {
                 className={cn(
                   'flex w-full items-center gap-2 rounded-xl border px-2.5 py-1.5 transition-all',
                   isActive
-                    ? 'border-cyan-500/35 bg-cyan-500/15 text-cyan-300'
+                    ? 'border-[#d4924a]/35 bg-[#d4924a]/15 text-[#e6b566]'
                     : 'border-transparent hover:border-white/10 hover:bg-white/[0.04] text-white/55',
                 )}>
-                <Icon className={cn('h-3.5 w-3.5 shrink-0', isActive ? 'text-cyan-400' : 'text-white/35')} />
+                <Icon className={cn('h-3.5 w-3.5 shrink-0', isActive ? 'text-[#e0a458]' : 'text-white/35')} />
                 <div className="min-w-0 flex-1">
                   <p className="text-[11px] font-medium truncate">{t.label}</p>
                   <p className="text-[9px] text-white/25 truncate">{t.sub}</p>
@@ -2023,7 +2023,7 @@ function FormesVectorPanel({ onClose }) {
         </div>
 
         {/* ── Sélection directe ── */}
-        <SecHead icon={MousePointer2} label="Sélection directe" color="text-teal-400/70" />
+        <SecHead icon={MousePointer2} label="Sélection directe" color="text-[#e0a458]/70" />
         <div className="mx-3 mb-1">
           {FV_SELECT.map(t => {
             const Icon = t.icon;
@@ -2033,10 +2033,10 @@ function FormesVectorPanel({ onClose }) {
                 className={cn(
                   'flex w-full items-center gap-2 rounded-xl border px-2.5 py-2 transition-all',
                   isActive
-                    ? 'border-teal-500/35 bg-teal-500/15 text-teal-300'
+                    ? 'border-[#d4924a]/35 bg-[#d4924a]/15 text-[#e6b566]'
                     : 'border-white/[0.07] bg-white/[0.02] text-white/55 hover:bg-white/[0.05] hover:border-white/12',
                 )}>
-                <Icon className={cn('h-3.5 w-3.5 shrink-0', isActive ? 'text-teal-400' : 'text-white/35')} />
+                <Icon className={cn('h-3.5 w-3.5 shrink-0', isActive ? 'text-[#e0a458]' : 'text-white/35')} />
                 <div className="min-w-0 flex-1">
                   <p className="text-[11px] font-medium">{t.label}</p>
                   <p className="text-[9px] text-white/25">{t.sub}</p>
@@ -2075,7 +2075,7 @@ function FormesVectorPanel({ onClose }) {
         <div className="mx-3 my-2 h-px bg-white/[0.05]" />
 
         {/* ──────── ORGANISATION ──────── */}
-        <SecHead icon={Layers} label="Organisation & Découpage" color="text-emerald-400/70" />
+        <SecHead icon={Layers} label="Organisation & Découpage" color="text-[#7bb06a]/70" />
         <div className="mx-3 grid grid-cols-2 gap-1 mb-3">
           {FV_ORGANIZE.map(t => {
             const Icon = t.icon;
@@ -2086,7 +2086,7 @@ function FormesVectorPanel({ onClose }) {
                 className={cn(
                   'flex items-center gap-2 rounded-xl border px-2.5 py-2 transition-all',
                   enabled
-                    ? 'border-white/[0.08] bg-white/[0.03] text-white/60 hover:bg-emerald-500/10 hover:border-emerald-500/25 hover:text-emerald-300 active:scale-95'
+                    ? 'border-white/[0.08] bg-white/[0.03] text-white/60 hover:bg-[#5a8f52]/10 hover:border-[#5a8f52]/25 hover:text-[#9cc48a] active:scale-95'
                     : 'border-white/[0.04] bg-white/[0.01] text-white/20 cursor-not-allowed',
                 )}>
                 <Icon className={cn('h-3.5 w-3.5 shrink-0', enabled ? '' : 'opacity-30')} />
@@ -2103,11 +2103,11 @@ function FormesVectorPanel({ onClose }) {
         <div className="mx-3 mb-4">
           <button
             onClick={() => addLongiaMessage({ role: 'ai', text: 'Décrivez la forme ou le vecteur que vous souhaitez créer. Ex : "un hexagone avec dégradé bleu", "une flèche courbée pointant vers le haut"…' })}
-            className="flex w-full items-center gap-2 rounded-xl border border-violet-500/20 bg-violet-500/[0.07] px-3 py-2.5 hover:bg-violet-500/12 transition-colors">
-            <Sparkles className="h-4 w-4 text-violet-400 shrink-0" />
+            className="flex w-full items-center gap-2 rounded-xl border border-[#d97757]/20 bg-[#d97757]/[0.07] px-3 py-2.5 hover:bg-[#d97757]/12 transition-colors">
+            <Sparkles className="h-4 w-4 text-[#e08a5f] shrink-0" />
             <div>
-              <p className="text-[11px] font-semibold text-violet-300">IA Forme — LONGIA</p>
-              <p className="text-[9px] text-violet-400/60">Décrire ou générer une forme</p>
+              <p className="text-[11px] font-semibold text-[#e8a97f]">IA Forme — LONGIA</p>
+              <p className="text-[9px] text-[#e08a5f]/60">Décrire ou générer une forme</p>
             </div>
           </button>
         </div>
@@ -2132,7 +2132,7 @@ const DESIGNER_IA_IMAGE_PRESETS = [
   {
     label: 'MK5',
     prompt:
-      'Infographie pédagogique sombre : schéma clair or et bleu sur fond #0b0f1a, flux ou cycles, style académique premium, pas de texte dans l\'image.',
+      'Infographie pédagogique sombre : schéma clair or et bleu sur fond #262624, flux ou cycles, style académique premium, pas de texte dans l\'image.',
   },
   {
     label: 'Symbole',
@@ -2270,10 +2270,10 @@ function ContextualPanel({ tool, onClose }) {
       const t = typeMap[item.id] ?? 'rect';
       if (t === 'line') addObject({ type: 'line', x: 80, y: 200, width: 200, height: 4, content: { points: [0,0,200,0] }, style: { stroke: '#94a3b8', strokeWidth: 3 } });
       else if (t === 'arrow') addObject({ type: 'arrow', x: 80, y: 200, width: 200, height: 4, content: { points: [0,0,200,0] }, style: { stroke: '#94a3b8', fill: '#94a3b8', strokeWidth: 3, pointerLength: 10, pointerWidth: 10 } });
-      else addObject({ type: t, x: 100, y: 100, width: 160, height: 140, style: { fill: 'rgba(139,92,246,0.25)', stroke: '#7c3aed', strokeWidth: 2, cornerRadius: t === 'rect' ? 6 : 0 } });
+      else addObject({ type: t, x: 100, y: 100, width: 160, height: 140, style: { fill: 'rgba(217,119,87,0.25)', stroke: '#d97757', strokeWidth: 2, cornerRadius: t === 'rect' ? 6 : 0 } });
     }
     if (tool === 'animes' && item.id === 'html') {
-      addObject({ type: 'html', x: 120, y: 180, width: 360, height: 200, content: { html: '<!DOCTYPE html><html><body style="margin:0;background:#0b0f1a;display:flex;align-items:center;justify-content:center;height:100vh"><div style="width:60px;height:60px;border:3px solid rgba(212,175,55,.2);border-top-color:#D4AF37;border-radius:50%;animation:s 1s linear infinite"></div><style>@keyframes s{to{transform:rotate(360deg)}}</style></body></html>' } });
+      addObject({ type: 'html', x: 120, y: 180, width: 360, height: 200, content: { html: '<!DOCTYPE html><html><body style="margin:0;background:#262624;display:flex;align-items:center;justify-content:center;height:100vh"><div style="width:60px;height:60px;border:3px solid rgba(212,175,55,.2);border-top-color:#D4AF37;border-radius:50%;animation:s 1s linear infinite"></div><style>@keyframes s{to{transform:rotate(360deg)}}</style></body></html>' } });
     }
     if (tool === 'modeles' && item.id !== 'ai') {
       if (item.id === 'intro') {
@@ -2305,8 +2305,8 @@ function ContextualPanel({ tool, onClose }) {
       }
       if (item.id === 'compare') {
         addObjects([
-          mkRectObject({ x: 72, y: 100, width: 380, height: 220, style: { fill: 'rgba(96,165,250,0.12)', stroke: '#3b82f6', strokeWidth: 2 } }),
-          mkRectObject({ x: 480, y: 100, width: 380, height: 220, style: { fill: 'rgba(167,139,250,0.12)', stroke: '#7c3aed', strokeWidth: 2 } }),
+          mkRectObject({ x: 72, y: 100, width: 380, height: 220, style: { fill: 'rgba(218,160,122,0.12)', stroke: '#cf7a52', strokeWidth: 2 } }),
+          mkRectObject({ x: 480, y: 100, width: 380, height: 220, style: { fill: 'rgba(236,174,144,0.12)', stroke: '#d97757', strokeWidth: 2 } }),
           mkTextObject({ x: 92, y: 118, width: 320, height: 36, content: { text: 'Colonne A' }, style: { fontSize: 22, fontWeight: 600, fill: '#F7F2E8' } }),
           mkTextObject({ x: 500, y: 118, width: 320, height: 36, content: { text: 'Colonne B' }, style: { fontSize: 22, fontWeight: 600, fill: '#F7F2E8' } }),
           mkTextObject({ x: 92, y: 160, width: 340, height: 140, content: { text: 'Arguments, exemples…' }, style: { fontSize: 15, fill: '#c4bfd4', lineHeight: 1.5 } }),
@@ -2362,7 +2362,7 @@ function ContextualPanel({ tool, onClose }) {
       const typeMap2 = { rect: 'rect', circle: 'circle', triangle: 'triangle', arrow: 'arrow' };
       const t2 = typeMap2[item.id] ?? 'rect';
       if (t2 === 'arrow') addObject({ type: 'arrow', x: 80, y: 200, width: 200, height: 4, content: { points: [0,0,200,0] }, style: { stroke: '#94a3b8', fill: '#94a3b8', strokeWidth: 3, pointerLength: 10, pointerWidth: 10 } });
-      else addObject({ type: t2, x: 200, y: 200, width: 160, height: 140, style: { fill: 'rgba(96,165,250,0.2)', stroke: '#3b82f6', strokeWidth: 2 } });
+      else addObject({ type: t2, x: 200, y: 200, width: 160, height: 140, style: { fill: 'rgba(218,160,122,0.2)', stroke: '#cf7a52', strokeWidth: 2 } });
     }
   };
 
@@ -2373,7 +2373,7 @@ function ContextualPanel({ tool, onClose }) {
       exit={{ width: 0, opacity: 0 }}
       transition={{ duration: 0.18, ease: 'easeOut' }}
       className="flex flex-shrink-0 flex-col border-r border-white/[0.07] overflow-hidden"
-      style={{ background: '#13121e' }}
+      style={{ background: '#17150f' }}
     >
       {/* Header */}
       <div className="flex items-center gap-2 border-b border-white/[0.07] px-3 py-2.5 shrink-0">
@@ -2424,7 +2424,7 @@ function ContextualPanel({ tool, onClose }) {
       {tool === 'selection' && (
         <div className="flex-1 overflow-y-auto p-3 space-y-3">
           <p className="text-[10px] leading-relaxed text-white/50">
-            <span className="font-semibold text-teal-300/90">Multi-sélection :</span>{' '}
+            <span className="font-semibold text-[#e6b566]/90">Multi-sélection :</span>{' '}
             maintenez <kbd className="rounded border border-white/15 bg-white/[0.06] px-1 font-mono text-[9px]">⇧</kbd>{' '}
             ou <kbd className="rounded border border-white/15 bg-white/[0.06] px-1 font-mono text-[9px]">⌘</kbd>
             / <kbd className="rounded border border-white/15 bg-white/[0.06] px-1 font-mono text-[9px]">Ctrl</kbd> puis cliquez sur plusieurs objets.
@@ -2432,9 +2432,9 @@ function ContextualPanel({ tool, onClose }) {
           <button
             type="button"
             onClick={() => selectAllInActiveScene()}
-            className="w-full rounded-xl border border-teal-500/25 bg-teal-500/10 px-3 py-2.5 text-left transition-colors hover:bg-teal-500/15"
+            className="w-full rounded-xl border border-[#d4924a]/25 bg-[#d4924a]/10 px-3 py-2.5 text-left transition-colors hover:bg-[#d4924a]/15"
           >
-            <span className="text-[11px] font-semibold text-teal-200">Tout sélectionner</span>
+            <span className="text-[11px] font-semibold text-[#ecc98f]">Tout sélectionner</span>
             <span className="mt-0.5 block text-[9px] text-white/40">Tous les objets de la scène active</span>
           </button>
         </div>
@@ -2471,7 +2471,7 @@ function ContextualPanel({ tool, onClose }) {
         <div className="flex-1 overflow-y-auto p-2 space-y-1">
           {tool === 'images' && activeTab === 1 ? (
             <div className="space-y-2 px-0.5 pb-2">
-              <p className="text-[9px] font-semibold uppercase tracking-[0.12em] text-violet-300/80">
+              <p className="text-[9px] font-semibold uppercase tracking-[0.12em] text-[#e8a97f]/80">
                 Génération intégrée
               </p>
               <p className="text-[9px] leading-snug text-white/40">
@@ -2483,7 +2483,7 @@ function ContextualPanel({ tool, onClose }) {
                     key={p.label}
                     type="button"
                     onClick={() => setIaImagePrompt(p.prompt)}
-                    className="rounded-lg border border-violet-500/25 bg-violet-500/10 px-2 py-1 text-[9px] font-medium text-violet-200/90 hover:bg-violet-500/20"
+                    className="rounded-lg border border-[#d97757]/25 bg-[#d97757]/10 px-2 py-1 text-[9px] font-medium text-[#f0c4b3]/90 hover:bg-[#d97757]/20"
                   >
                     {p.label}
                   </button>
@@ -2508,7 +2508,7 @@ function ContextualPanel({ tool, onClose }) {
                 onChange={(e) => setIaImagePrompt(e.target.value)}
                 placeholder="Décrivez l'illustration…"
                 rows={4}
-                className="w-full resize-y rounded-xl border border-white/12 bg-black/45 px-2.5 py-2 text-[11px] text-white/85 placeholder:text-white/25 focus:border-violet-500/35 focus:outline-none"
+                className="w-full resize-y rounded-xl border border-white/12 bg-black/45 px-2.5 py-2 text-[11px] text-white/85 placeholder:text-white/25 focus:border-[#d97757]/35 focus:outline-none"
               />
               {iaImageErr ? (
                 <p className="text-[9px] leading-snug text-rose-400/90">{iaImageErr}</p>
@@ -2517,7 +2517,7 @@ function ContextualPanel({ tool, onClose }) {
                 type="button"
                 disabled={iaImageBusy || !iaImagePrompt.trim()}
                 onClick={() => void runDesignerIaImage()}
-                className="flex w-full items-center justify-center gap-1.5 rounded-xl border border-violet-400/35 bg-violet-900/35 py-2 text-[11px] font-semibold text-violet-100 disabled:opacity-45"
+                className="flex w-full items-center justify-center gap-1.5 rounded-xl border border-[#e08a5f]/35 bg-[#4a2116]/35 py-2 text-[11px] font-semibold text-[#f5d9cc] disabled:opacity-45"
               >
                 {iaImageBusy ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Sparkles className="h-3.5 w-3.5" />}
                 Générer &amp; placer
@@ -2650,7 +2650,7 @@ function ContextualPanel({ tool, onClose }) {
               <button key={item.id} onClick={() => handleAdd(item)}
                 className={cn(
                   'group flex w-full items-center gap-2.5 rounded-xl border border-transparent px-2.5 py-2 text-left transition-all hover:bg-white/[0.05] hover:border-white/10',
-                  item.ai && 'bg-violet-500/[0.06] border-violet-500/15 hover:border-violet-500/25',
+                  item.ai && 'bg-[#d97757]/[0.06] border-[#d97757]/15 hover:border-[#d97757]/25',
                 )}>
                 {item.shape && (
                   <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-white/[0.06] text-base text-white/70">
@@ -2658,8 +2658,8 @@ function ContextualPanel({ tool, onClose }) {
                   </span>
                 )}
                 {Icon && !item.shape && (
-                  <span className={cn('flex h-8 w-8 shrink-0 items-center justify-center rounded-lg', item.ai ? 'bg-violet-500/15' : 'bg-white/[0.06]')}>
-                    <Icon className={cn('h-4 w-4', item.ai ? 'text-violet-400' : 'text-white/50')} />
+                  <span className={cn('flex h-8 w-8 shrink-0 items-center justify-center rounded-lg', item.ai ? 'bg-[#d97757]/15' : 'bg-white/[0.06]')}>
+                    <Icon className={cn('h-4 w-4', item.ai ? 'text-[#e08a5f]' : 'text-white/50')} />
                   </span>
                 )}
                 {!item.shape && !item.icon && (
@@ -2668,7 +2668,7 @@ function ContextualPanel({ tool, onClose }) {
                   </span>
                 )}
                 <div className="min-w-0 flex-1">
-                  <p className={cn('text-[12px] font-medium truncate', item.ai ? 'text-violet-300' : 'text-white/75')}>{item.label}</p>
+                  <p className={cn('text-[12px] font-medium truncate', item.ai ? 'text-[#e8a97f]' : 'text-white/75')}>{item.label}</p>
                   {item.sub && <p className="text-[10px] text-white/30 truncate">{item.sub}</p>}
                 </div>
               </button>
@@ -2894,13 +2894,13 @@ function AIHub({ docType = null, designerMode = 'design', onClose = () => {} }) 
   return (
     <div className="pointer-events-none absolute inset-0 z-[36]">
       <div className="pointer-events-auto absolute right-3 top-3 flex max-w-[min(96vw,calc(100%-1.5rem))] flex-col items-end gap-2">
-        <div className="flex flex-wrap items-center justify-end gap-1 rounded-2xl border border-white/10 bg-[#12111a]/95 px-1.5 py-1 shadow-[0_8px_32px_rgba(0,0,0,0.5)] backdrop-blur-md">
+        <div className="flex flex-wrap items-center justify-end gap-1 rounded-2xl border border-white/10 bg-[#1f1e1c]/95 px-1.5 py-1 shadow-[0_8px_32px_rgba(0,0,0,0.5)] backdrop-blur-md">
           <div className="flex max-w-[min(100%,280px)] items-center gap-1.5 border-r border-white/[0.08] pr-2">
             <div className="relative h-7 w-7 shrink-0">
               <div className="flex h-7 w-7 items-center justify-center rounded-full bg-gradient-to-br from-amber-400/90 to-orange-600/80 shadow-[0_0_14px_rgba(245,158,11,0.35)]">
                 <Sparkles className="h-3.5 w-3.5 text-white" />
               </div>
-              <span className="absolute -bottom-0.5 -right-0.5 h-2 w-2 rounded-full border border-[#12111a] bg-emerald-400" />
+              <span className="absolute -bottom-0.5 -right-0.5 h-2 w-2 rounded-full border border-[#1f1e1c] bg-[#7bb06a]" />
             </div>
             <div className="min-w-0">
               <div className="flex flex-wrap items-center gap-1">
@@ -2968,7 +2968,7 @@ function AIHub({ docType = null, designerMode = 'design', onClose = () => {} }) 
               <button
                 type="button"
                 title="Œil sur l'activité — notifications temps réel (hub + LONGIA)"
-                className="relative flex h-8 w-8 items-center justify-center rounded-xl border border-cyan-500/25 bg-cyan-500/10 text-cyan-200/90 hover:bg-cyan-500/20"
+                className="relative flex h-8 w-8 items-center justify-center rounded-xl border border-[#d4924a]/25 bg-[#d4924a]/10 text-[#ecc98f]/90 hover:bg-[#d4924a]/20"
               >
                 <Eye className="h-3.5 w-3.5" />
                 {actionHistory.length > 0 || longiaMessages.length > 1 ? (
@@ -3107,7 +3107,7 @@ function AIHub({ docType = null, designerMode = 'design', onClose = () => {} }) 
               className={cn(
                 'flex w-full items-center justify-center gap-2 rounded-xl border py-2.5 text-[10px] font-semibold transition-colors',
                 selectedIds.length >= 2
-                  ? 'border-violet-500/35 bg-violet-500/12 text-violet-200 hover:bg-violet-500/18'
+                  ? 'border-[#d97757]/35 bg-[#d97757]/12 text-[#f0c4b3] hover:bg-[#d97757]/18'
                   : 'cursor-not-allowed border-white/10 text-white/25',
               )}
             >
@@ -3120,7 +3120,7 @@ function AIHub({ docType = null, designerMode = 'design', onClose = () => {} }) 
               className={cn(
                 'flex w-full items-center justify-center gap-2 rounded-xl border py-2.5 text-[10px] font-semibold transition-colors',
                 selectedIds.length
-                  ? 'border-cyan-500/35 bg-cyan-500/12 text-cyan-200 hover:bg-cyan-500/18'
+                  ? 'border-[#d4924a]/35 bg-[#d4924a]/12 text-[#ecc98f] hover:bg-[#d4924a]/18'
                   : 'cursor-not-allowed border-white/10 text-white/25',
               )}
             >
@@ -3133,7 +3133,7 @@ function AIHub({ docType = null, designerMode = 'design', onClose = () => {} }) 
               className={cn(
                 'flex w-full items-center justify-center gap-2 rounded-xl border py-2.5 text-[10px] font-semibold transition-colors',
                 selectedIds.length
-                  ? 'border-emerald-500/35 bg-emerald-500/12 text-emerald-200 hover:bg-emerald-500/18'
+                  ? 'border-[#5a8f52]/35 bg-[#5a8f52]/12 text-[#bcd9a4] hover:bg-[#5a8f52]/18'
                   : 'cursor-not-allowed border-white/10 text-white/25',
               )}
             >
@@ -3198,7 +3198,7 @@ function AIHub({ docType = null, designerMode = 'design', onClose = () => {} }) 
                   >
                     <span className="font-semibold text-white/65">{h.label}</span>
                     <span className="text-white/25"> · </span>
-                    <span className="text-violet-300/70">{h.actionId}</span>
+                    <span className="text-[#e8a97f]/70">{h.actionId}</span>
                     {h.detail ? <p className="mt-0.5 line-clamp-2 text-white/35">{h.detail}</p> : null}
                   </li>
                 ))}
@@ -3232,7 +3232,7 @@ function AIHub({ docType = null, designerMode = 'design', onClose = () => {} }) 
                     className={cn(
                       'flex flex-1 items-center justify-center gap-1 rounded-xl border py-1.5 text-[10px] font-medium transition-all',
                       id === 'projector'
-                        ? 'border-cyan-500/35 bg-cyan-500/15 text-cyan-300 shadow-[0_0_8px_rgba(34,211,238,0.12)]'
+                        ? 'border-[#d4924a]/35 bg-[#d4924a]/15 text-[#e6b566] shadow-[0_0_8px_rgba(227,170,107,0.12)]'
                         : 'border-white/[0.07] bg-white/[0.02] text-white/40 hover:bg-white/[0.05] hover:text-white/65',
                     )}
                   >
@@ -3264,7 +3264,7 @@ function AIHub({ docType = null, designerMode = 'design', onClose = () => {} }) 
             </div>
             <div>
               <div className="mb-1.5 flex items-center gap-1.5">
-                <GitBranch className="h-3 w-3 text-emerald-400/70" />
+                <GitBranch className="h-3 w-3 text-[#7bb06a]/70" />
                 <span className="text-[9px] font-bold uppercase tracking-widest text-white/25">Plan · {scenes.length} scènes</span>
               </div>
               <div className="space-y-1">
@@ -3276,14 +3276,14 @@ function AIHub({ docType = null, designerMode = 'design', onClose = () => {} }) 
                     className={cn(
                       'flex w-full items-center gap-2 rounded-xl border px-2.5 py-1.5 transition-colors',
                       scene.id === activeSceneId
-                        ? 'border-emerald-500/25 bg-emerald-500/[0.08] text-emerald-300'
+                        ? 'border-[#5a8f52]/25 bg-[#5a8f52]/[0.08] text-[#9cc48a]'
                         : 'border-white/[0.06] bg-white/[0.02] text-white/45 hover:bg-white/[0.05]',
                     )}
                   >
                     <span
                       className={cn(
                         'flex h-5 w-5 shrink-0 items-center justify-center rounded text-[9px] font-bold',
-                        scene.id === activeSceneId ? 'bg-emerald-500/20 text-emerald-300' : 'bg-white/[0.06] text-white/30',
+                        scene.id === activeSceneId ? 'bg-[#5a8f52]/20 text-[#9cc48a]' : 'bg-white/[0.06] text-white/30',
                       )}
                     >
                       {i + 1}
@@ -3299,12 +3299,12 @@ function AIHub({ docType = null, designerMode = 'design', onClose = () => {} }) 
             </div>
             <div>
               <div className="mb-1.5 flex items-center gap-1.5">
-                <ScrollText className="h-3 w-3 text-blue-400/70" />
+                <ScrollText className="h-3 w-3 text-[#e0a458]/70" />
                 <span className="text-[9px] font-bold uppercase tracking-widest text-white/25">Script · scène active</span>
               </div>
               {course && (course.slides || [])[activeSceneIdx] ? (
-                <div className="rounded-xl border border-blue-500/15 bg-blue-500/[0.05] p-2.5">
-                  <p className="mb-1 truncate text-[10px] font-semibold text-blue-300/80">
+                <div className="rounded-xl border border-[#d4924a]/15 bg-[#d4924a]/[0.05] p-2.5">
+                  <p className="mb-1 truncate text-[10px] font-semibold text-[#e6b566]/80">
                     {course.slides[activeSceneIdx]?.title || `Étape ${activeSceneIdx + 1}`}
                   </p>
                   <p className="line-clamp-3 text-[10px] leading-relaxed text-white/40">
@@ -3473,7 +3473,7 @@ function LongiaCompactDock({ rightOffsetPx = 0, onExpandHub }) {
 
   return (
     <div
-      className="pointer-events-auto absolute z-[25] flex max-w-[100vw] flex-col overflow-hidden rounded-l-2xl border border-amber-500/30 border-r-0 bg-gradient-to-b from-[#16151f] to-[#0a0a0f] shadow-[0_4px_40px_rgba(0,0,0,0.5)]"
+      className="pointer-events-auto absolute z-[25] flex max-w-[100vw] flex-col overflow-hidden rounded-l-2xl border border-amber-500/30 border-r-0 bg-gradient-to-b from-[#2b2926] to-[#1a1815] shadow-[0_4px_40px_rgba(0,0,0,0.5)]"
       style={{
         bottom: '3.5rem',
         right: rightOffsetPx,
@@ -3540,15 +3540,15 @@ function LongiaCompactDock({ rightOffsetPx = 0, onExpandHub }) {
         ))}
       </div>
       {chips.length > 0 ? (
-        <div className="shrink-0 border-t border-cyan-500/20 bg-black/25 px-2.5 py-1.5">
-          <p className="mb-1 text-[8px] font-bold uppercase tracking-wider text-cyan-400/75">Dernière réponse</p>
+        <div className="shrink-0 border-t border-[#d4924a]/20 bg-black/25 px-2.5 py-1.5">
+          <p className="mb-1 text-[8px] font-bold uppercase tracking-wider text-[#e0a458]/75">Dernière réponse</p>
           <div className="flex flex-wrap gap-1">
             {chips.map((s, i) => (
               <button
                 key={`short_${lastAi.id}_${i}`}
                 type="button"
                 onClick={() => handleLongiaChip(s, lastAi)}
-                className="rounded-md border border-cyan-500/35 bg-cyan-500/12 px-1.5 py-0.5 text-[9px] font-semibold text-cyan-100/90 hover:bg-cyan-500/20"
+                className="rounded-md border border-[#d4924a]/35 bg-[#d4924a]/12 px-1.5 py-0.5 text-[9px] font-semibold text-[#f0d9b8]/90 hover:bg-[#d4924a]/20"
               >
                 {s.label}
               </button>
@@ -3576,13 +3576,13 @@ function toHex(color) {
 }
 
 const TYPE_META = {
-  text:    { label: 'Texte',    icon: Type,     color: 'text-cyan-400',    bg: 'bg-cyan-500/10',    border: 'border-cyan-500/20'    },
-  rect:    { label: 'Rectangle',icon: Square,   color: 'text-violet-400',  bg: 'bg-violet-500/10',  border: 'border-violet-500/20'  },
-  circle:  { label: 'Cercle',   icon: Circle,   color: 'text-blue-400',    bg: 'bg-blue-500/10',    border: 'border-blue-500/20'    },
-  ellipse: { label: 'Ellipse',  icon: Disc,     color: 'text-blue-400',    bg: 'bg-blue-500/10',    border: 'border-blue-500/20'    },
+  text:    { label: 'Texte',    icon: Type,     color: 'text-[#e0a458]',    bg: 'bg-[#d4924a]/10',    border: 'border-[#d4924a]/20'    },
+  rect:    { label: 'Rectangle',icon: Square,   color: 'text-[#e08a5f]',  bg: 'bg-[#d97757]/10',  border: 'border-[#d97757]/20'  },
+  circle:  { label: 'Cercle',   icon: Circle,   color: 'text-[#e0a458]',    bg: 'bg-[#d4924a]/10',    border: 'border-[#d4924a]/20'    },
+  ellipse: { label: 'Ellipse',  icon: Disc,     color: 'text-[#e0a458]',    bg: 'bg-[#d4924a]/10',    border: 'border-[#d4924a]/20'    },
   line:    { label: 'Ligne',    icon: Minus,    color: 'text-white/60',    bg: 'bg-white/[0.06]',   border: 'border-white/15'       },
   arrow:   { label: 'Flèche',   icon: ArrowRight,color:'text-white/60',   bg: 'bg-white/[0.06]',   border: 'border-white/15'       },
-  image:   { label: 'Image',    icon: ImageIcon,color: 'text-emerald-400', bg: 'bg-emerald-500/10', border: 'border-emerald-500/20' },
+  image:   { label: 'Image',    icon: ImageIcon,color: 'text-[#7bb06a]', bg: 'bg-[#5a8f52]/10', border: 'border-[#5a8f52]/20' },
   html:    { label: 'Animé',    icon: Zap,      color: 'text-amber-400',   bg: 'bg-amber-500/10',   border: 'border-amber-500/20'   },
 };
 
@@ -3641,7 +3641,7 @@ function PropertiesBar() {
       className={cn(
         'flex h-7 w-7 shrink-0 items-center justify-center rounded-lg border text-[11px] transition-all',
         danger  ? 'border-white/[0.07] text-white/30 hover:border-red-500/30 hover:bg-red-500/10 hover:text-red-400'
-        : active ? 'border-cyan-500/30 bg-cyan-500/15 text-cyan-300'
+        : active ? 'border-[#d4924a]/30 bg-[#d4924a]/15 text-[#e6b566]'
                  : 'border-white/[0.07] text-white/40 hover:border-white/20 hover:text-white/70',
       )}
     >
@@ -3655,7 +3655,7 @@ function PropertiesBar() {
       value={value}
       onChange={e => onChange(Number(e.target.value))}
       className={cn(
-        'h-7 rounded-lg border border-white/[0.08] bg-white/[0.04] px-1.5 text-center text-[11px] text-white/70 focus:border-cyan-500/40 focus:outline-none shrink-0',
+        'h-7 rounded-lg border border-white/[0.08] bg-white/[0.04] px-1.5 text-center text-[11px] text-white/70 focus:border-[#d4924a]/40 focus:outline-none shrink-0',
         width,
         '[appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none',
       )}
@@ -3697,7 +3697,7 @@ function PropertiesBar() {
           onChange={e => updateStyle({ fontFamily: `${e.target.value}, system-ui, sans-serif` })}
           className="h-7 shrink-0 rounded-lg border border-white/[0.08] bg-white/[0.04] px-2 text-[11px] text-white/70 focus:outline-none"
         >
-          {GOOGLE_FONTS.map(f => <option key={f} value={f} style={{ background: '#12111a' }}>{f}</option>)}
+          {GOOGLE_FONTS.map(f => <option key={f} value={f} style={{ background: '#1f1e1c' }}>{f}</option>)}
         </select>
 
         {/* Taille */}
@@ -3706,7 +3706,7 @@ function PropertiesBar() {
           onChange={e => updateStyle({ fontSize: Number(e.target.value) })}
           className="h-7 w-14 shrink-0 rounded-lg border border-white/[0.08] bg-white/[0.04] px-1.5 text-[11px] text-white/70 focus:outline-none"
         >
-          {FONT_SIZES.map(s => <option key={s} value={s} style={{ background: '#12111a' }}>{s}</option>)}
+          {FONT_SIZES.map(s => <option key={s} value={s} style={{ background: '#1f1e1c' }}>{s}</option>)}
         </select>
 
         {/* Gras */}
@@ -3755,7 +3755,7 @@ function PropertiesBar() {
             className={cn(
               'shrink-0 rounded-lg border px-2.5 py-1 text-[10px] font-medium transition-all',
               (obj.style?.filter ?? 'none') === lut.css
-                ? 'border-cyan-500/35 bg-cyan-500/15 text-cyan-300'
+                ? 'border-[#d4924a]/35 bg-[#d4924a]/15 text-[#e6b566]'
                 : 'border-white/[0.07] text-white/40 hover:border-white/18 hover:bg-white/[0.05] hover:text-white/70',
             )}>
             {lut.label}
@@ -3765,7 +3765,7 @@ function PropertiesBar() {
         <Divider />
 
         <Lbl>Studio</Lbl>
-        <button type="button" className="shrink-0 flex items-center gap-1.5 rounded-lg border border-violet-500/25 bg-violet-500/[0.08] px-2.5 py-1 text-[10px] text-violet-300 hover:bg-violet-500/15 transition-colors">
+        <button type="button" className="shrink-0 flex items-center gap-1.5 rounded-lg border border-[#d97757]/25 bg-[#d97757]/[0.08] px-2.5 py-1 text-[10px] text-[#e8a97f] hover:bg-[#d97757]/15 transition-colors">
           <Wand2 className="h-3 w-3" /> Détourage
         </button>
         <button type="button" className="shrink-0 flex items-center gap-1.5 rounded-lg border border-pink-500/25 bg-pink-500/[0.08] px-2.5 py-1 text-[10px] text-pink-300 hover:bg-pink-500/15 transition-colors">
@@ -3821,7 +3821,7 @@ function PropertiesBar() {
         <button type="button" className="shrink-0 flex items-center gap-1.5 rounded-lg border border-white/[0.07] bg-white/[0.04] px-2.5 py-1 text-[10px] text-white/45 hover:text-white/70 hover:bg-white/[0.07] transition-colors">
           <ScanLine className="h-3 w-3" /> Tracé
         </button>
-        <button type="button" className="shrink-0 flex items-center gap-1.5 rounded-lg border border-violet-500/20 bg-violet-500/[0.07] px-2.5 py-1 text-[10px] text-violet-300 hover:bg-violet-500/12 transition-colors">
+        <button type="button" className="shrink-0 flex items-center gap-1.5 rounded-lg border border-[#d97757]/20 bg-[#d97757]/[0.07] px-2.5 py-1 text-[10px] text-[#e8a97f] hover:bg-[#d97757]/12 transition-colors">
           <SlidersHorizontal className="h-3 w-3" /> Déformer
         </button>
       </>}
@@ -3846,7 +3846,7 @@ function PropertiesBar() {
               onClick={() => updateStyle({ dash: s.dash })}
               className={cn(
                 'shrink-0 rounded-lg border px-2.5 py-1 text-[10px] font-mono transition-all',
-                isCurrent ? 'border-cyan-500/35 bg-cyan-500/15 text-cyan-300' : 'border-white/[0.07] text-white/40 hover:text-white/70',
+                isCurrent ? 'border-[#d4924a]/35 bg-[#d4924a]/15 text-[#e6b566]' : 'border-white/[0.07] text-white/40 hover:text-white/70',
               )}>
               {s.label}
             </button>
@@ -3866,13 +3866,13 @@ function PropertiesBar() {
         <button type="button" className="shrink-0 flex items-center gap-1.5 rounded-lg border border-amber-500/25 bg-amber-500/[0.08] px-2.5 py-1 text-[10px] text-amber-300 hover:bg-amber-500/15 transition-colors">
           <Zap className="h-3 w-3" /> Courbe
         </button>
-        <button type="button" className="shrink-0 flex items-center gap-1.5 rounded-lg border border-violet-500/25 bg-violet-500/[0.08] px-2.5 py-1 text-[10px] text-violet-300 hover:bg-violet-500/15 transition-colors">
+        <button type="button" className="shrink-0 flex items-center gap-1.5 rounded-lg border border-[#d97757]/25 bg-[#d97757]/[0.08] px-2.5 py-1 text-[10px] text-[#e8a97f] hover:bg-[#d97757]/15 transition-colors">
           <Box className="h-3 w-3" /> Keyframes
         </button>
         <button type="button" className="shrink-0 flex items-center gap-1.5 rounded-lg border border-white/[0.07] bg-white/[0.04] px-2.5 py-1 text-[10px] text-white/50 hover:text-white/70 transition-colors">
           <MessageSquare className="h-3 w-3" /> Éditer HTML
         </button>
-        <button type="button" className="shrink-0 flex items-center gap-1.5 rounded-lg border border-cyan-500/20 bg-cyan-500/[0.07] px-2.5 py-1 text-[10px] text-cyan-300 hover:bg-cyan-500/12 transition-colors">
+        <button type="button" className="shrink-0 flex items-center gap-1.5 rounded-lg border border-[#d4924a]/20 bg-[#d4924a]/[0.07] px-2.5 py-1 text-[10px] text-[#e6b566] hover:bg-[#d4924a]/12 transition-colors">
           <Sparkles className="h-3 w-3" /> IA → anim
         </button>
 
@@ -3891,7 +3891,7 @@ function PropertiesBar() {
         type="range" min={0} max={1} step={0.01}
         value={obj.opacity ?? 1}
         onChange={e => setObjectOpacity(obj.id, Number(e.target.value))}
-        className="h-1 w-16 shrink-0 cursor-pointer accent-cyan-400"
+        className="h-1 w-16 shrink-0 cursor-pointer accent-[#e0a458]"
       />
       <span className="w-7 shrink-0 text-[10px] text-white/35">{Math.round((obj.opacity ?? 1) * 100)}%</span>
 
@@ -3960,16 +3960,16 @@ function NewDocumentScreen({ onCreate }) {
         className="pointer-events-none absolute inset-10 rounded-3xl"
         animate={{
           borderColor: [
-            'rgba(34,211,238,0.05)',
-            'rgba(34,211,238,0.18)',
-            'rgba(139,92,246,0.15)',
-            'rgba(34,211,238,0.05)',
+            'rgba(227,170,107,0.05)',
+            'rgba(227,170,107,0.18)',
+            'rgba(217,119,87,0.15)',
+            'rgba(227,170,107,0.05)',
           ],
           boxShadow: [
-            '0 0 0px rgba(34,211,238,0)',
-            '0 0 40px rgba(34,211,238,0.07)',
-            '0 0 40px rgba(139,92,246,0.05)',
-            '0 0 0px rgba(34,211,238,0)',
+            '0 0 0px rgba(227,170,107,0)',
+            '0 0 40px rgba(227,170,107,0.07)',
+            '0 0 40px rgba(217,119,87,0.05)',
+            '0 0 0px rgba(227,170,107,0)',
           ],
         }}
         transition={{ duration: 5, repeat: Infinity, ease: 'easeInOut' }}
@@ -3982,7 +3982,7 @@ function NewDocumentScreen({ onCreate }) {
         {/* Titre */}
         <div className="text-center">
           <div className="mb-3 flex items-center justify-center gap-2">
-            <div className="flex h-9 w-9 items-center justify-center rounded-2xl bg-gradient-to-br from-cyan-500/40 to-violet-500/40 shadow-[0_0_20px_rgba(34,211,238,0.2)]">
+            <div className="flex h-9 w-9 items-center justify-center rounded-2xl bg-gradient-to-br from-[#d4924a]/40 to-[#d97757]/40 shadow-[0_0_20px_rgba(227,170,107,0.2)]">
               <Sparkles className="h-4 w-4 text-white/80" />
             </div>
           </div>
@@ -4072,7 +4072,7 @@ function NewDocumentScreen({ onCreate }) {
                   className={cn(
                     'flex items-center gap-2 rounded-xl border px-3 py-2 text-[11px] font-medium transition-all',
                     active
-                      ? 'border-cyan-500/35 bg-cyan-500/15 text-cyan-300 shadow-[0_0_10px_rgba(34,211,238,0.12)]'
+                      ? 'border-[#d4924a]/35 bg-[#d4924a]/15 text-[#e6b566] shadow-[0_0_10px_rgba(227,170,107,0.12)]'
                       : t.optional
                         ? 'border-dashed border-white/12 text-white/28 hover:border-white/28 hover:text-white/55'
                         : 'border-white/[0.07] bg-white/[0.03] text-white/42 hover:bg-white/[0.07] hover:text-white/70',
@@ -4086,16 +4086,16 @@ function NewDocumentScreen({ onCreate }) {
             })}
           </div>
           {selectedOutputs.includes('mobile') && (
-            <p className="mt-2.5 rounded-lg border border-cyan-500/15 bg-cyan-500/[0.04] px-2.5 py-2 text-[9px] leading-relaxed text-white/50">
-              <span className="font-semibold text-cyan-200/90">Aperçu invité (vertical)</span>
+            <p className="mt-2.5 rounded-lg border border-[#d4924a]/15 bg-[#d4924a]/[0.04] px-2.5 py-2 text-[9px] leading-relaxed text-white/50">
+              <span className="font-semibold text-[#ecc98f]/90">Aperçu invité (vertical)</span>
               {' '}
               — {mobileRead.hint} Zone scène ≈ {mobileRead.availableStage.width}×{mobileRead.availableStage.height} px, échelle
               ≈ {mobileRead.scaleContainPercent} % (canevas 1037×750 inchangé, mis à l'échelle en contain).
             </p>
           )}
           {selectedOutputs.includes('tablet') && (
-            <p className="mt-2.5 rounded-lg border border-violet-500/15 bg-violet-500/[0.04] px-2.5 py-2 text-[9px] leading-relaxed text-white/50">
-              <span className="font-semibold text-violet-200/90">Tablette</span>
+            <p className="mt-2.5 rounded-lg border border-[#d97757]/15 bg-[#d97757]/[0.04] px-2.5 py-2 text-[9px] leading-relaxed text-white/50">
+              <span className="font-semibold text-[#f0c4b3]/90">Tablette</span>
               {' '}
               — {tabletRead.hint} Zone scène ≈ {tabletRead.availableStage.width}×{tabletRead.availableStage.height} px, échelle
               ≈ {tabletRead.scaleContainPercent} %.
@@ -4106,7 +4106,7 @@ function NewDocumentScreen({ onCreate }) {
         {/* Bouton créer */}
         <button
           onClick={() => onCreate(selectedType, selectedOutputs)}
-          className="flex items-center gap-3 rounded-2xl bg-gradient-to-r from-cyan-500/75 to-violet-500/75 px-10 py-3.5 text-[14px] font-bold text-white shadow-[0_0_28px_rgba(34,211,238,0.2)] transition-all hover:shadow-[0_0_38px_rgba(34,211,238,0.35)] hover:scale-[1.03] active:scale-[0.99]"
+          className="flex items-center gap-3 rounded-2xl bg-gradient-to-r from-[#d4924a]/75 to-[#d97757]/75 px-10 py-3.5 text-[14px] font-bold text-white shadow-[0_0_28px_rgba(227,170,107,0.2)] transition-all hover:shadow-[0_0_38px_rgba(227,170,107,0.35)] hover:scale-[1.03] active:scale-[0.99]"
         >
           <Sparkles className="h-4.5 w-4.5" />
           Créer le document
@@ -4283,10 +4283,10 @@ function BottomBar({
   ]);
 
   const modeAccent = {
-    design: { border: 'border-cyan-500/30', bg: 'bg-cyan-500/15', text: 'text-cyan-400', glow: 'shadow-[0_0_8px_rgba(34,211,238,0.2)]' },
+    design: { border: 'border-[#d4924a]/30', bg: 'bg-[#d4924a]/15', text: 'text-[#e0a458]', glow: 'shadow-[0_0_8px_rgba(227,170,107,0.2)]' },
     live:   { border: 'border-red-500/30',  bg: 'bg-red-500/15',  text: 'text-red-400',  glow: 'shadow-[0_0_8px_rgba(239,68,68,0.2)]' },
     video:  { border: 'border-amber-500/30',bg: 'bg-amber-500/15',text: 'text-amber-400',glow: 'shadow-[0_0_8px_rgba(245,158,11,0.2)]' },
-    cinema: { border: 'border-violet-500/30',bg: 'bg-violet-500/15',text: 'text-violet-400',glow: 'shadow-[0_0_8px_rgba(139,92,246,0.2)]' },
+    cinema: { border: 'border-[#d97757]/30',bg: 'bg-[#d97757]/15',text: 'text-[#e08a5f]',glow: 'shadow-[0_0_8px_rgba(217,119,87,0.2)]' },
   };
   const accent = modeAccent[designerMode] ?? modeAccent.design;
 
@@ -4364,7 +4364,7 @@ function BottomBar({
         <button
           type="button"
           onClick={() => setMicActive(v => !v)}
-          className={cn('shrink-0 transition-colors', micActive ? 'text-blue-400' : 'text-white/20 hover:text-white/50')}
+          className={cn('shrink-0 transition-colors', micActive ? 'text-[#e0a458]' : 'text-white/20 hover:text-white/50')}
         >
           <Mic className="h-3 w-3" />
         </button>
@@ -4877,7 +4877,7 @@ export default function StudioSmartboardKonvaPage() {
     <div
       className="flex h-[100dvh] flex-col overflow-hidden"
       style={{
-        background: 'var(--school-background, #0F1117)',
+        background: '#262624',
         color: proColors.textPrimary,
         fontFamily: 'var(--school-font-family, Inter, system-ui, sans-serif)',
         ...cssVars,
@@ -4972,19 +4972,19 @@ export default function StudioSmartboardKonvaPage() {
         >
           {isnaImportSummary && !fullscreen ? (
             <div className="pointer-events-none absolute right-3 top-3 z-30">
-              <div className="pointer-events-auto w-[320px] rounded-xl border border-fuchsia-500/30 bg-[#120c1f]/90 p-3 text-[11px] text-fuchsia-100 shadow-[0_10px_30px_rgba(0,0,0,0.35)] backdrop-blur">
+              <div className="pointer-events-auto w-[320px] rounded-xl border border-[#d97757]/30 bg-[#120c1f]/90 p-3 text-[11px] text-[#f5d9cc] shadow-[0_10px_30px_rgba(0,0,0,0.35)] backdrop-blur">
                 <div className="mb-1 flex items-center gap-2">
-                  <Info className="h-3.5 w-3.5 text-fuchsia-300" />
-                  <p className="font-semibold text-fuchsia-100">Import source actif</p>
+                  <Info className="h-3.5 w-3.5 text-[#e8a97f]" />
+                  <p className="font-semibold text-[#f5d9cc]">Import source actif</p>
                 </div>
-                <p className="text-fuchsia-100/85">
+                <p className="text-[#f5d9cc]/85">
                   {isnaImportSummary.stepsCount} etape(s) importe(e)s · source {isnaImportSummary.source || 'isna'}
                 </p>
-                <p className="mt-0.5 text-fuchsia-200/70">{isnaImportSummary.savedAtLabel || 'date inconnue'}</p>
+                <p className="mt-0.5 text-[#f0c4b3]/70">{isnaImportSummary.savedAtLabel || 'date inconnue'}</p>
                 <div className="mt-2 flex flex-wrap gap-2">
                   <Link
                     to={isnaImportSummary.runId ? `/studio/constructeur-isna?runId=${encodeURIComponent(isnaImportSummary.runId)}` : '/studio/constructeur-isna'}
-                    className="rounded-md border border-fuchsia-400/35 bg-fuchsia-500/15 px-2 py-1 text-[10px] font-semibold text-fuchsia-100 transition hover:bg-fuchsia-500/25"
+                    className="rounded-md border border-[#e08a5f]/35 bg-[#d97757]/15 px-2 py-1 text-[10px] font-semibold text-[#f5d9cc] transition hover:bg-[#d97757]/25"
                   >
                     Retour au run d&apos;origine
                   </Link>
@@ -5012,7 +5012,7 @@ export default function StudioSmartboardKonvaPage() {
                 key="exit-fs"
                 initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0, transition: { delay: 0.3 } }} exit={{ opacity: 0, y: -8 }}
                 onClick={() => setFullscreen(false)}
-                className="absolute top-3 right-3 z-50 flex items-center gap-1.5 rounded-lg border border-white/15 bg-[#0F1117]/80 px-3 py-1.5 text-[11px] text-white/60 backdrop-blur hover:border-cyan-500/30 hover:text-cyan-400 transition-all"
+                className="absolute top-3 right-3 z-50 flex items-center gap-1.5 rounded-lg border border-white/15 bg-[#262624]/80 px-3 py-1.5 text-[11px] text-white/60 backdrop-blur hover:border-[#d4924a]/30 hover:text-[#e0a458] transition-all"
               >
                 <Minimize2 className="h-3.5 w-3.5" /> Quitter plein écran
               </motion.button>
@@ -5059,7 +5059,7 @@ export default function StudioSmartboardKonvaPage() {
               >
                 <Suspense
                   fallback={
-                    <div className="flex flex-1 items-center justify-center text-[12px] text-white/30" style={{ background: '#12111a' }}>
+                    <div className="flex flex-1 items-center justify-center text-[12px] text-white/30" style={{ background: '#1f1e1c' }}>
                       Chargement du Studio Document…
                     </div>
                   }
@@ -5087,10 +5087,10 @@ export default function StudioSmartboardKonvaPage() {
 
           {docType && !fullscreen && collabPresence.enabled && (collabPresence.members?.length ?? 0) > 0 ? (
             <div
-              className="pointer-events-auto absolute bottom-14 right-4 z-[32] flex max-w-[min(92vw,420px)] items-center gap-2 rounded-2xl border border-white/10 bg-[#0a0b0f]/90 px-2 py-1.5 shadow-[0_8px_32px_rgba(0,0,0,0.45)] backdrop-blur-md"
+              className="pointer-events-auto absolute bottom-14 right-4 z-[32] flex max-w-[min(92vw,420px)] items-center gap-2 rounded-2xl border border-white/10 bg-[#1f1e1c]/90 px-2 py-1.5 shadow-[0_8px_32px_rgba(0,0,0,0.45)] backdrop-blur-md"
               title={collabPresence.roomId ? `Room ${collabPresence.roomId}` : undefined}
             >
-              <Users className="h-3.5 w-3.5 shrink-0 text-emerald-400/80" aria-hidden />
+              <Users className="h-3.5 w-3.5 shrink-0 text-[#7bb06a]/80" aria-hidden />
               <span className="hidden text-[9px] font-semibold uppercase tracking-wider text-white/45 sm:inline">En ligne</span>
               <div className="flex min-w-0 flex-1 items-center justify-end gap-1 overflow-x-auto [scrollbar-width:none]">
                 {collabPresence.members.slice(0, 14).map((m) => (
@@ -5141,7 +5141,7 @@ export default function StudioSmartboardKonvaPage() {
                 fallback={
                   <aside
                     className="flex h-full min-h-0 w-[min(100vw,460px)] flex-shrink-0 items-center justify-center border-l border-white/[0.07]"
-                    style={{ background: '#12111a' }}
+                    style={{ background: '#1f1e1c' }}
                   >
                     <span className="text-[11px] text-white/35">Chargement post-production…</span>
                   </aside>
@@ -5172,7 +5172,7 @@ export default function StudioSmartboardKonvaPage() {
             title={aiHubOpen ? 'Fermer LONGIA' : 'Ouvrir LONGIA'}
             className={cn(
               'absolute right-0 top-1/2 z-20 flex h-12 w-5 -translate-y-1/2 items-center justify-center rounded-l-xl border border-white/10 text-white/30 transition-all hover:text-amber-400',
-              aiHubOpen ? 'bg-[#12111a] border-r-0' : 'bg-[#0F1117]',
+              aiHubOpen ? 'bg-[#1f1e1c] border-r-0' : 'bg-[#262624]',
             )}
             style={{
               right: postProdOpen ? postProdDockWidth : 0,

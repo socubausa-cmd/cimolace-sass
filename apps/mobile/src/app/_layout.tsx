@@ -56,6 +56,8 @@ function AppTabs() {
       <Tabs.Screen name="bibliotheque" options={{ title: 'Biblio.', tabBarIcon: tab('book-open') }} />
       <Tabs.Screen name="brain" options={{ title: 'Brain', tabBarIcon: tab('zap') }} />
       {/* Secondaires — accessibles via liens, masqués de la barre (comme le web) */}
+      <Tabs.Screen name="formations" options={{ href: null }} />
+      <Tabs.Screen name="formation/[courseId]" options={fullScreen} />
       <Tabs.Screen name="integrations" options={{ href: null }} />
       <Tabs.Screen name="reglages" options={{ href: null }} />
       <Tabs.Screen name="live-room" options={fullScreen} />
@@ -74,6 +76,9 @@ function AppTabs() {
       <Tabs.Screen name="profil" options={{ href: null }} />
       <Tabs.Screen name="messages" options={{ href: null }} />
       <Tabs.Screen name="vie-scolaire" options={{ href: null }} />
+      <Tabs.Screen name="calendrier-annuel" options={{ href: null }} />
+      <Tabs.Screen name="rendez-vous" options={{ href: null }} />
+      <Tabs.Screen name="ma-classe" options={{ href: null }} />
       <Tabs.Screen name="commerce" options={{ href: null }} />
       <Tabs.Screen name="waiting-room" options={{ href: null }} />
       <Tabs.Screen name="export" options={{ href: null }} />

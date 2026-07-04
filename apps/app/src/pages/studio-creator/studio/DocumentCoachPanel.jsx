@@ -4,7 +4,7 @@
  * Rendu dans l'AIHub quand docType === 'document'.
  * Gère 6 phases : idle · detecting · questioning · generating · editing · reviewing
  *
- * Design tokens : #12111a · border-white/[0.07] · text-[10px..12px]
+ * Design tokens : #1f1e1c · border-white/[0.07] · text-[10px..12px]
  */
 import React, { useRef, useEffect, useState, useCallback } from 'react';
 import {

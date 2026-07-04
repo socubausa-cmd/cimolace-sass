@@ -698,7 +698,7 @@ function EmptyState({ onOpenPicker, conversations, onSelectConversation }) {
       transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
       className="flex flex-col items-center justify-center text-center px-6 py-12 h-full"
     >
-      <div className="w-20 h-20 rounded-3xl bg-gradient-to-br from-[color-mix(in_srgb,var(--school-accent)_20%,transparent)] to-violet-500/10 border border-white/10 flex items-center justify-center mb-6">
+      <div className="w-20 h-20 rounded-3xl bg-gradient-to-br from-[color-mix(in_srgb,var(--school-accent)_20%,transparent)] to-[color-mix(in_srgb,var(--school-accent)_9%,transparent)] border border-white/10 flex items-center justify-center mb-6">
         <MessageSquare className="w-9 h-9 text-[color-mix(in_srgb,var(--school-accent)_70%,transparent)]" />
       </div>
       <h2 className="text-xl font-semibold text-white mb-2">Messagerie immersive</h2>
@@ -5403,9 +5403,9 @@ const MessagingPage = ({ embedded = false }) => {
         ) : embedded ? null : (
           <>
             <div className="absolute -top-32 -left-32 w-96 h-96 bg-[var(--school-accent)]/[0.08] rounded-full blur-[150px]" />
-            <div className="absolute top-1/3 -right-24 w-80 h-80 bg-cyan-500/[0.06] rounded-full blur-[150px]" />
-            <div className="absolute bottom-0 right-0 w-80 h-80 bg-violet-500/[0.06] rounded-full blur-[140px]" />
-            <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_10%,rgba(212,175,55,0.08),transparent_34%),radial-gradient(circle_at_80%_90%,rgba(124,58,237,0.08),transparent_34%)]" />
+            <div className="absolute top-1/3 -right-24 w-80 h-80 bg-[rgba(227,170,107,0.05)] rounded-full blur-[150px]" />
+            <div className="absolute bottom-0 right-0 w-80 h-80 bg-[rgba(217,119,87,0.05)] rounded-full blur-[140px]" />
+            <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_10%,rgba(217,119,87,0.08),transparent_34%),radial-gradient(circle_at_80%_90%,rgba(200,110,70,0.07),transparent_34%)]" />
           </>
         )}
       </div>

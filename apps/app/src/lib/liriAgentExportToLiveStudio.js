@@ -96,6 +96,78 @@ export function buildLiriCourseTextForLiveStudio(cours) {
   return lines.join('\n').trim();
 }
 
+/** Découpe un contenu texte en points de développement (≤4, phrases ou lignes). */
+function splitCoursePoints(raw) {
+  const s = String(raw || '').trim();
+  if (!s) return [];
+  const parts = s.includes('\n')
+    ? s.split('\n')
+    : s.split(/(?<=[.!?])\s+/);
+  return parts.map((p) => p.replace(/^[-•*]\s*/, '').trim()).filter(Boolean).slice(0, 4);
+}
+
+/**
+ * ADAPTATEUR LOCAL (sans IA) : cours LIRI 10 étapes → réponse au format
+ * `smartboard-ia-generate` ({deck_title, slides[], master_scripts[]}) que
+ * `mapIAResponseToDraft` sait déjà transformer en scènes + master script.
+ * Le cours CONTIENT déjà tout (smartboard/masterscript par étape) : aucune
+ * génération nécessaire — l'edge (absente en prod, 404) devient optionnelle.
+ * @param {Record<string, unknown>} cours
+ */
+export function liriCourseToIAResponse(cours) {
+  const etapes = Array.isArray(cours?.etapes) ? cours.etapes : [];
+  const slides = [];
+  const masterScripts = [];
+  etapes.forEach((e, i) => {
+    const sb = e?.smartboard || {};
+    const ms = e?.masterscript || {};
+    const num = e?.numero ?? i + 1;
+    const development = [];
+    const points = splitCoursePoints(sb.contenu);
+    if (points.length) development.push({ label: 'Développement', points });
+    if (sb.question_cle) development.push({ label: 'Question clé', points: [String(sb.question_cle)] });
+    slides.push({
+      title: String(sb.titre || `Étape ${num}`),
+      subtitle: String(e?.tag || ''),
+      core_idea: String(sb.idee || ''),
+      development,
+      hero_visual: sb.support_visuel ? { type: 'sketch', description: String(sb.support_visuel) } : undefined,
+    });
+    masterScripts.push({
+      intention: String(ms.intention || ''),
+      message_central: String(sb.idee || ''),
+      teacher_script: String(ms.script || ''),
+      key_points: Array.isArray(ms.questions) ? ms.questions.map((q) => String(q)) : [],
+      student_understanding: Array.isArray(ms.reponses_attendues) ? ms.reponses_attendues.map((r) => String(r)).join(' · ') : '',
+      transition: String(ms.transition || ''),
+      simple_version: '',
+    });
+  });
+  if (cours?.loi_doctrinale || cours?.adage_final) {
+    slides.push({
+      title: 'Loi doctrinale',
+      subtitle: 'SAGESSE',
+      core_idea: String(cours?.loi_doctrinale || ''),
+      development: cours?.adage_final ? [{ label: 'Adage final', points: [String(cours.adage_final)] }] : [],
+    });
+    masterScripts.push({
+      intention: 'Sceller la loi du cours dans la mémoire.',
+      message_central: String(cours?.loi_doctrinale || ''),
+      teacher_script: String(cours?.conseil_prof || cours?.adage_final || ''),
+      key_points: [],
+      student_understanding: '',
+      transition: '',
+      simple_version: '',
+    });
+  }
+  return {
+    deck_title: String(cours?.titre || 'Cours LIRI').trim(),
+    provider: 'liri-agent-local',
+    slides,
+    master_scripts: masterScripts,
+  };
+}
+
 /**
  * @param {Record<string, unknown>} cours
  */
@@ -106,9 +178,11 @@ export function savePendingLiriCourseForLiveStudio(cours) {
     localStorage.setItem(
       LIRI_AGENT_PENDING_LIVE_KEY,
       JSON.stringify({
-        v: 1,
+        v: 2,
         title,
         text,
+        // Cours STRUCTURÉ conservé → Step6 construit le deck localement (sans edge).
+        cours: cours && typeof cours === 'object' ? cours : null,
         savedAt: new Date().toISOString(),
       }),
     );
@@ -118,7 +192,7 @@ export function savePendingLiriCourseForLiveStudio(cours) {
 }
 
 /**
- * @returns {{ title: string, text: string } | null}
+ * @returns {{ title: string, text: string, cours: Record<string, unknown> | null } | null}
  */
 export function consumePendingLiriCourseForLiveStudio() {
   try {
@@ -130,6 +204,7 @@ export function consumePendingLiriCourseForLiveStudio() {
     return {
       title: String(data.title || 'Cours LIRI').trim(),
       text: data.text,
+      cours: data?.cours && typeof data.cours === 'object' ? data.cours : null,
     };
   } catch {
     return null;

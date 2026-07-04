@@ -58,14 +58,14 @@ function TreeNode({ node, depth = 0, onSelect, selected }) {
     <div>
       <button
         onClick={() => { setOpen(v => !v); onSelect?.(node); }}
-        className={cn('flex w-full items-center gap-2 rounded-lg px-2 py-1.5 text-left transition-all hover:bg-white/5', isSelected && 'bg-violet-500/15 border border-violet-500/25')}
+        className={cn('flex w-full items-center gap-2 rounded-lg px-2 py-1.5 text-left transition-all hover:bg-white/5', isSelected && 'bg-[#d97757]/15 border border-[#d97757]/25')}
         style={{ paddingLeft: `${8 + depth * 12}px` }}
       >
         {children.length > 0
           ? (open ? <ChevronDown className="h-3 w-3 flex-shrink-0 text-white/30" /> : <ChevronRight className="h-3 w-3 flex-shrink-0 text-white/30" />)
           : <span className="h-3 w-3 flex-shrink-0" />
         }
-        <span className={cn('truncate text-[12px]', isSelected ? 'text-violet-300 font-medium' : depth === 0 ? 'text-white/80 font-medium' : 'text-white/50')}>
+        <span className={cn('truncate text-[12px]', isSelected ? 'text-[#e8a97f] font-medium' : depth === 0 ? 'text-white/80 font-medium' : 'text-white/50')}>
           {node.titre || node.label || node.id}
         </span>
         {node.duree && <span className="ml-auto flex-shrink-0 text-[10px] text-white/22">{node.duree}</span>}
@@ -85,7 +85,7 @@ function DetailPanel({ node }) {
       {node.titre && <div><div className="text-[11px] uppercase tracking-[0.15em] text-white/28 mb-1">Titre</div><div className="text-[15px] font-semibold text-white">{node.titre}</div></div>}
       {node.objectif && <div><div className="text-[11px] uppercase tracking-[0.15em] text-white/28 mb-1 flex items-center gap-1.5"><Target className="h-3 w-3" /> Objectif</div><p className="text-[13px] text-white/60 leading-relaxed">{node.objectif}</p></div>}
       {(node.duree || node.duree_estimee) && <div><div className="text-[11px] uppercase tracking-[0.15em] text-white/28 mb-1 flex items-center gap-1.5"><Clock className="h-3 w-3" /> Durée</div><div className="text-[13px] text-white/60">{node.duree || node.duree_estimee}</div></div>}
-      {node.tag_pedagogique && <span className="inline-flex rounded-full bg-violet-500/15 border border-violet-500/25 px-2.5 py-1 text-[11px] text-violet-300">{node.tag_pedagogique}</span>}
+      {node.tag_pedagogique && <span className="inline-flex rounded-full bg-[#d97757]/15 border border-[#d97757]/25 px-2.5 py-1 text-[11px] text-[#e8a97f]">{node.tag_pedagogique}</span>}
       {node.idee_centrale && <div><div className="text-[11px] uppercase tracking-[0.15em] text-white/28 mb-1">Idée centrale</div><p className="text-[13px] text-white/60 leading-relaxed">{node.idee_centrale}</p></div>}
       {node.cours?.length > 0 && (
         <div>
@@ -112,7 +112,7 @@ function DetailPanel({ node }) {
 function CreationForm({ onResult, loading, setLoading, error, setError }) {
   const [form, setForm] = useState({ sujet: '', type_programme: 'one_month_program', niveau: 'intermédiaire', contexte: 'Prorascience', profil: 'maitre_pedagogue' });
   const set = (k, v) => setForm(f => ({ ...f, [k]: v }));
-  const inputCls = 'w-full rounded-xl border border-white/10 bg-white/[0.04] px-3 py-2.5 text-[13px] text-white placeholder-white/28 outline-none transition-all focus:border-violet-500/50 focus:bg-white/[0.07]';
+  const inputCls = 'w-full rounded-xl border border-white/10 bg-white/[0.04] px-3 py-2.5 text-[13px] text-white placeholder-white/28 outline-none transition-all focus:border-[#d97757]/50 focus:bg-white/[0.07]';
   const labelCls = 'block text-[11px] font-medium uppercase tracking-[0.12em] text-white/38 mb-1.5';
 
   const handleSubmit = async e => {
@@ -187,7 +187,7 @@ function CreationForm({ onResult, loading, setLoading, error, setError }) {
         className={cn('flex items-center justify-center gap-2 rounded-xl py-3 text-[13px] font-semibold transition-all',
           loading || !form.sujet.trim()
             ? 'cursor-not-allowed border border-white/10 bg-white/5 text-white/28'
-            : 'bg-violet-600 text-white hover:bg-violet-500 shadow-[0_0_20px_rgba(139,92,246,0.38)]')}>
+            : 'bg-[#c96544] text-white hover:bg-[#d97757] shadow-[0_0_20px_rgba(217,119,87,0.38)]')}>
         {loading ? <><Loader2 className="h-4 w-4 animate-spin" />Génération...</> : <><Sparkles className="h-4 w-4" />Générer la formation</>}
       </button>
     </form>
@@ -196,7 +196,7 @@ function CreationForm({ onResult, loading, setLoading, error, setError }) {
 
 // ─── Assistant card ──────────────────────────────────────────────────────────
 function ACard({ icon: Icon, title, accent, text }) {
-  const m = { violet: 'text-violet-400 bg-violet-500/10 border-violet-500/20', blue: 'text-blue-400 bg-blue-500/10 border-blue-500/20', amber: 'text-amber-400 bg-amber-500/10 border-amber-500/20', emerald: 'text-emerald-400 bg-emerald-500/10 border-emerald-500/20', cyan: 'text-cyan-400 bg-cyan-500/10 border-cyan-500/20' };
+  const m = { violet: 'text-[#e08a5f] bg-[#d97757]/10 border-[#d97757]/20', blue: 'text-[#e0a458] bg-[#d4924a]/10 border-[#d4924a]/20', amber: 'text-amber-400 bg-amber-500/10 border-amber-500/20', emerald: 'text-[#7bb06a] bg-[#5a8f52]/10 border-[#5a8f52]/20', cyan: 'text-[#e0a458] bg-[#d4924a]/10 border-[#d4924a]/20' };
   const cls = (m[accent] || m.violet).split(' ');
   return (
     <div className={cn('rounded-xl border p-3', cls[1], cls[2])}>
@@ -322,7 +322,7 @@ export default function StudioLiriFormationBuilderPage() {
           <button type="button" onClick={() => navigate('/studio/liri/cours')} className="flex items-center gap-1.5 rounded-lg border border-amber-500/25 bg-amber-500/10 px-3 py-1.5 text-[11px] font-medium text-amber-400 transition-all hover:bg-amber-500/20">
             <Brain className="h-3.5 w-3.5" /> Course Builder
           </button>
-          <button type="button" onClick={() => navigate('/studio/smartboard-designer')} className="flex items-center gap-1.5 rounded-lg bg-violet-600 px-3 py-1.5 text-[11px] font-semibold text-white transition-all hover:bg-violet-500 shadow-[0_0_12px_rgba(139,92,246,0.35)]">
+          <button type="button" onClick={() => navigate('/studio/smartboard-designer')} className="flex items-center gap-1.5 rounded-lg bg-[#c96544] px-3 py-1.5 text-[11px] font-semibold text-white transition-all hover:bg-[#d97757] shadow-[0_0_12px_rgba(217,119,87,0.35)]">
             <Layers className="h-3.5 w-3.5" /> Designer
           </button>
         </div>
@@ -332,7 +332,7 @@ export default function StudioLiriFormationBuilderPage() {
         {/* Gauche */}
         <aside className="flex w-56 flex-shrink-0 flex-col border-r border-white/[0.07] overflow-hidden">
           <div className="flex items-center gap-2 border-b border-white/[0.07] px-4 py-3">
-            <Calendar className="h-3.5 w-3.5 text-blue-400" />
+            <Calendar className="h-3.5 w-3.5 text-[#e0a458]" />
             <span className="text-[11px] font-semibold uppercase tracking-[0.12em] text-white/45">Structure</span>
           </div>
           <div className="flex-1 overflow-y-auto p-2 flex flex-col gap-2 min-h-0">
@@ -377,10 +377,10 @@ export default function StudioLiriFormationBuilderPage() {
           </div>
           {formation && (
             <div className="border-t border-white/[0.07] p-3 space-y-2">
-              <div className="flex items-center gap-2 rounded-xl border border-emerald-500/25 bg-emerald-500/10 px-3 py-2">
-                <CheckCircle2 className="h-3.5 w-3.5 flex-shrink-0 text-emerald-400" />
+              <div className="flex items-center gap-2 rounded-xl border border-[#5a8f52]/25 bg-[#5a8f52]/10 px-3 py-2">
+                <CheckCircle2 className="h-3.5 w-3.5 flex-shrink-0 text-[#7bb06a]" />
                 <div className="min-w-0">
-                  <div className="text-[11px] font-medium text-emerald-300">Formation générée</div>
+                  <div className="text-[11px] font-medium text-[#9cc48a]">Formation générée</div>
                   <div className="text-[10px] text-white/32 truncate">{result?.meta?.type_programme_label}</div>
                 </div>
               </div>
@@ -390,7 +390,7 @@ export default function StudioLiriFormationBuilderPage() {
                     type="button"
                     onClick={() => saveCloudDraft()}
                     disabled={draftBusy}
-                    className="flex w-full items-center justify-center gap-1.5 rounded-lg border border-blue-500/30 bg-blue-500/12 py-2 text-[11px] font-semibold text-blue-200 hover:bg-blue-500/20 disabled:opacity-40"
+                    className="flex w-full items-center justify-center gap-1.5 rounded-lg border border-[#d4924a]/30 bg-[#d4924a]/12 py-2 text-[11px] font-semibold text-[#ecc98f] hover:bg-[#d4924a]/20 disabled:opacity-40"
                   >
                     {draftBusy ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Save className="h-3.5 w-3.5" />}
                     {draftCloudId ? 'Mettre à jour le brouillon' : 'Sauvegarder dans le cloud'}
@@ -441,7 +441,7 @@ export default function StudioLiriFormationBuilderPage() {
         {/* Droite */}
         <aside className="flex w-60 flex-shrink-0 flex-col border-l border-white/[0.07] overflow-hidden">
           <div className="flex items-center gap-2 border-b border-white/[0.07] px-4 py-3">
-            <Sparkles className="h-3.5 w-3.5 text-violet-400" />
+            <Sparkles className="h-3.5 w-3.5 text-[#e08a5f]" />
             <span className="text-[11px] font-semibold uppercase tracking-[0.12em] text-white/45">Assistant</span>
           </div>
           <div className="flex-1 overflow-y-auto p-4 flex flex-col gap-3">

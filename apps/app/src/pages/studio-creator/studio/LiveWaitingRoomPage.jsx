@@ -428,7 +428,7 @@ export default function LiveWaitingRoomPage() {
         const { data: sess, error: sErr } = await directSb
           .from('live_sessions')
           .select(
-            'id, title, description, teacher_id, status, scheduled_at, started_at, access_mode, cover_image_url, formation_id, duration_minutes, ambient_tracks_json, config',
+            'id, title, description, teacher_id, host_user_id, status, ended_at, scheduled_at, started_at, access_mode, cover_image_url, formation_id, duration_minutes, ambient_tracks_json, config',
           )
           .eq('id', sessionId)
           .maybeSingle();
@@ -446,11 +446,12 @@ export default function LiveWaitingRoomPage() {
         // s'annuler (re-render) avant setSession.
         setSession(sess);
         setAmbientTracks(normalizeAmbientTracks(sess));
-        if (sess.teacher_id) {
+        const effectiveHostId = sess.teacher_id || sess.host_user_id;
+        if (effectiveHostId) {
           supabase
             .from('profiles')
             .select('name, avatar_url')
-            .eq('id', sess.teacher_id)
+            .eq('id', effectiveHostId)
             .maybeSingle()
             .then(({ data: hostProfile }) => {
               if (!cancelled && hostProfile) {
@@ -507,6 +508,27 @@ export default function LiveWaitingRoomPage() {
   // ── Realtime : config / statut session (étape courante, horaires) ────────
   useEffect(() => {
     if (!sessionId) return;
+    let alive = true;
+    const applySessionState = (row) => {
+      if (!row || !alive) return;
+      setSession((prev) => prev ? {
+        ...prev,
+        status: row.status != null ? row.status : prev.status,
+        ended_at: row.ended_at !== undefined ? row.ended_at : prev.ended_at,
+        config: row.config !== undefined ? row.config : prev.config,
+        started_at: row.started_at != null ? row.started_at : prev.started_at,
+        scheduled_at: row.scheduled_at != null ? row.scheduled_at : prev.scheduled_at,
+        duration_minutes: row.duration_minutes != null ? row.duration_minutes : prev.duration_minutes,
+      } : prev);
+    };
+    const refreshSessionState = async () => {
+      const { data } = await supabase
+        .from('live_sessions')
+        .select('status, ended_at, config, started_at, scheduled_at, duration_minutes')
+        .eq('id', sessionId)
+        .maybeSingle();
+      applySessionState(data);
+    };
     const channel = supabase
       .channel(`waiting_live_session_${sessionId}`)
       .on(
@@ -518,24 +540,20 @@ export default function LiveWaitingRoomPage() {
           filter: `id=eq.${sessionId}`,
         },
         (payload) => {
-          const row = payload.new;
-          if (!row) return;
-          setSession((prev) => {
-            if (!prev) return prev;
-            return {
-              ...prev,
-              status: row.status != null ? row.status : prev.status,
-              config: row.config !== undefined ? row.config : prev.config,
-              started_at: row.started_at != null ? row.started_at : prev.started_at,
-              scheduled_at: row.scheduled_at != null ? row.scheduled_at : prev.scheduled_at,
-              duration_minutes: row.duration_minutes != null ? row.duration_minutes : prev.duration_minutes,
-            };
-          });
+          applySessionState(payload.new);
         },
       )
       .subscribe();
+    const pollId = window.setInterval(refreshSessionState, 3000);
+    const onVisible = () => {
+      if (document.visibilityState === 'visible') void refreshSessionState();
+    };
+    document.addEventListener('visibilitychange', onVisible);
 
     return () => {
+      alive = false;
+      window.clearInterval(pollId);
+      document.removeEventListener('visibilitychange', onVisible);
       supabase.removeChannel(channel);
     };
   }, [sessionId]);
@@ -615,17 +633,16 @@ export default function LiveWaitingRoomPage() {
 
       let effective = existing;
 
-      if (existing?.status === 'lobby') {
+      if (existing && ['lobby', 'rejected', 'left'].includes(existing.status)) {
         const { data: up, error: upErr } = await supabase
           .from('live_waiting_room_entries')
           .update({ status: 'waiting' })
           .eq('id', existing.id)
           .select()
           .single();
-        if (!upErr && up) {
-          effective = up;
-          setEntry(up);
-        }
+        if (upErr) throw upErr;
+        effective = up;
+        setEntry(up);
       } else if (!existing) {
         const { data: newEntry, error: insErr } = await supabase
           .from('live_waiting_room_entries')
@@ -644,7 +661,8 @@ export default function LiveWaitingRoomPage() {
         return;
       }
 
-      if (liveSession?.teacher_id && effective?.status === 'waiting') {
+      const effectiveHostId = liveSession?.teacher_id || liveSession?.host_user_id;
+      if (effectiveHostId && effective?.status === 'waiting') {
         const { data: profile } = await supabase
           .from('profiles')
           .select('name')
@@ -653,7 +671,7 @@ export default function LiveWaitingRoomPage() {
 
         await supabase.from('live_notifications').insert({
           live_session_id: sessionId,
-          user_id: liveSession.teacher_id,
+          user_id: effectiveHostId,
           channel: 'dashboard',
           type: 'waiting_entry',
           title: 'Nouvelle demande d\'entrée',
@@ -668,6 +686,11 @@ export default function LiveWaitingRoomPage() {
       }
     } catch (err) {
       console.warn('[WaitingRoom] requestEntry:', err.message);
+      toast({
+        title: 'Demande non envoyée',
+        description: err?.message || 'Impossible de contacter l’hôte. Réessayez.',
+        variant: 'destructive',
+      });
     } finally {
       setSubmitting(false);
     }
@@ -703,7 +726,8 @@ export default function LiveWaitingRoomPage() {
       default: return wantsApproval ? 'manual' : 'free';
     }
   }, [liveSession?.access_mode, liveSession?.config]);
-  const isHost     = user?.id === liveSession?.teacher_id;
+  const effectiveHostId = liveSession?.teacher_id || liveSession?.host_user_id;
+  const isHost     = user?.id === effectiveHostId;
   const sessionLive = liveSession?.status === 'live';
 
   const sessionConfig = useMemo(() => parseSessionConfig(liveSession?.config), [liveSession?.config]);
@@ -728,7 +752,7 @@ export default function LiveWaitingRoomPage() {
   const showProgramRibbon =
     sessionLive || mindmapSlides.length > 0 || Boolean(liveSession?.duration_minutes);
   const hostMemberForPanel = useMemo(() => {
-    if (!liveSession?.teacher_id) return [];
+    if (!effectiveHostId) return [];
     const name = liveSession.profiles?.name || 'Formateur';
     const init = String(name)
       .split(/\s+/)
@@ -738,10 +762,10 @@ export default function LiveWaitingRoomPage() {
       .toUpperCase() || 'F';
     return [
       {
-        id: liveSession.teacher_id,
+        id: effectiveHostId,
         name,
         init,
-        color: '#a78bfa',
+        color: '#ecae90',
         status: 'online',
         grade: 'Formateur',
         bio: '',
@@ -750,7 +774,7 @@ export default function LiveWaitingRoomPage() {
         note: '',
       },
     ];
-  }, [liveSession]);
+  }, [liveSession, effectiveHostId]);
 
   const planBlock = useMemo(() => planFromConfig(sessionConfig), [sessionConfig]);
   const showLiveDetails = rules?.show_live_details !== false;
@@ -863,6 +887,23 @@ export default function LiveWaitingRoomPage() {
     );
   }
 
+  if (liveSession && ['ended', 'cancelled'].includes(String(liveSession.status || '').toLowerCase())) {
+    return (
+      <ProrasciencePublicPageShell simpleNav navTitle="Live terminé" backLabel="Retour">
+        <div className="flex min-h-[calc(100vh-3.5rem)] flex-col items-center justify-center gap-4 px-4 text-center">
+          <XCircle className="h-12 w-12 text-white/45" />
+          <h1 className="text-2xl font-semibold text-white">Cette session est terminée</h1>
+          <p className="max-w-md text-sm text-white/55">
+            L’hôte a fermé le live. Votre demande d’accès n’est plus active.
+          </p>
+          <Button type="button" onClick={() => navigate('/app')} className="mt-2">
+            Retour à LIRI
+          </Button>
+        </div>
+      </ProrasciencePublicPageShell>
+    );
+  }
+
   return (
     <ProrasciencePublicPageShell simpleNav navTitle="Salle d&apos;attente" backLabel="Retour">
       <div className="relative flex min-h-[calc(100vh-3.5rem)] flex-col text-white">
@@ -958,7 +999,7 @@ export default function LiveWaitingRoomPage() {
             {sessionLive && rules?.waiting_room_video_enabled && !isHost && entry?.status !== 'rejected' ? (
               <WaitingRoomLivePreview
                 sessionId={sessionId}
-                hostUserId={liveSession?.teacher_id}
+                hostUserId={effectiveHostId}
                 previewSeconds={waitingPreviewSeconds}
                 enabled
               />

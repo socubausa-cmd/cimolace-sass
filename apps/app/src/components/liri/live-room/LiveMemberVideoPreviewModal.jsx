@@ -42,7 +42,7 @@ export default function LiveMemberVideoPreviewModal({
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          className="fixed inset-0 z-[320] flex items-center justify-center bg-black/88 p-3 backdrop-blur-md sm:p-4"
+          className="fixed inset-0 z-[320] flex items-center justify-center bg-[#100d0a]/82 p-3 backdrop-blur-md sm:p-4"
           onClick={onClose}
         >
           <motion.div
@@ -50,7 +50,7 @@ export default function LiveMemberVideoPreviewModal({
             animate={{ scale: 1, opacity: 1 }}
             exit={{ scale: 0.98, opacity: 0 }}
             transition={{ type: 'spring', stiffness: 380, damping: 32 }}
-            className="relative flex max-h-[min(92vh,880px)] w-full max-w-[min(94vw,680px)] flex-col overflow-hidden rounded-2xl border border-white/[0.12] bg-[#0e0d0b] shadow-[0_24px_80px_-20px_rgba(0,0,0,0.85)] ring-1 ring-inset ring-white/[0.04]"
+            className="relative flex max-h-[min(92vh,880px)] w-full max-w-[min(94vw,680px)] flex-col overflow-hidden rounded-2xl border border-white/[0.12] bg-[#262624] shadow-[0_24px_70px_-24px_rgba(0,0,0,0.6)] ring-1 ring-inset ring-white/[0.04]"
             onClick={(e) => e.stopPropagation()}
           >
             <button
@@ -91,7 +91,7 @@ export default function LiveMemberVideoPreviewModal({
 
             {/* Vidéo — cadre 16:9 façon lecteur de cours (plus de grand rectangle vide). */}
             <div className="shrink-0 p-3 sm:p-4">
-              <div className="relative aspect-video w-full overflow-hidden rounded-xl border border-white/10 bg-black">
+              <div className="relative aspect-video w-full overflow-hidden rounded-xl border border-white/10 bg-[#1f1e1c]">
                 {hasVideo && lk ? (
                   <LiveKitVideoCell
                     participant={lk}
@@ -121,7 +121,7 @@ export default function LiveMemberVideoPreviewModal({
 
             {/* Vie scolaire — sous la vidéo (fond chaud, plus de navy #080910). */}
             {memberSchoolLifeEnabled ? (
-              <div className="flex min-h-0 flex-1 flex-col overflow-hidden border-t border-white/[0.1] bg-[#14120f]/98">
+              <div className="flex min-h-0 flex-1 flex-col overflow-hidden border-t border-white/[0.1] bg-[#1f1e1c]/98">
                 <div className="shrink-0 border-b border-white/[0.06] px-3 py-2">
                   <p className="text-[9px] font-bold uppercase tracking-[0.14em] text-[color-mix(in_srgb,var(--school-accent)_95%,transparent)]">Vie scolaire</p>
                   <p className="text-[9px] text-white/35">Résumé, présences, événements</p>

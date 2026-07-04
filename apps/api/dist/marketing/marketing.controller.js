@@ -16,6 +16,8 @@ exports.MarketingController = void 0;
 const common_1 = require("@nestjs/common");
 const jwt_auth_guard_1 = require("../common/guards/jwt-auth.guard");
 const tenant_guard_1 = require("../common/guards/tenant.guard");
+const roles_guard_1 = require("../common/guards/roles.guard");
+const roles_decorator_1 = require("../common/decorators/roles.decorator");
 const marketing_service_1 = require("./marketing.service");
 let MarketingController = class MarketingController {
     constructor(svc) {
@@ -23,6 +25,8 @@ let MarketingController = class MarketingController {
     }
     async getPromos(req) { return { data: await this.svc.getPromos(req.tenant.id) }; }
     async createPromo(req, b) { return { data: await this.svc.createPromo(req.tenant.id, b) }; }
+    async updatePromo(req, id, b) { return { data: await this.svc.updatePromo(req.tenant.id, id, b) }; }
+    async deletePromo(req, id) { return { data: await this.svc.deletePromo(req.tenant.id, id) }; }
     async getPopups(req) { return { data: await this.svc.getPopups(req.tenant.id) }; }
     async getBanners(req) { return { data: await this.svc.getBanners(req.tenant.id) }; }
 };
@@ -36,12 +40,35 @@ __decorate([
 ], MarketingController.prototype, "getPromos", null);
 __decorate([
     (0, common_1.Post)("promos"),
+    (0, common_1.UseGuards)(roles_guard_1.RolesGuard),
+    (0, roles_decorator_1.Roles)("owner", "admin"),
     __param(0, (0, common_1.Req)()),
     __param(1, (0, common_1.Body)()),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [Object, Object]),
     __metadata("design:returntype", Promise)
 ], MarketingController.prototype, "createPromo", null);
+__decorate([
+    (0, common_1.Patch)("promos/:id"),
+    (0, common_1.UseGuards)(roles_guard_1.RolesGuard),
+    (0, roles_decorator_1.Roles)("owner", "admin"),
+    __param(0, (0, common_1.Req)()),
+    __param(1, (0, common_1.Param)("id")),
+    __param(2, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, String, Object]),
+    __metadata("design:returntype", Promise)
+], MarketingController.prototype, "updatePromo", null);
+__decorate([
+    (0, common_1.Delete)("promos/:id"),
+    (0, common_1.UseGuards)(roles_guard_1.RolesGuard),
+    (0, roles_decorator_1.Roles)("owner", "admin"),
+    __param(0, (0, common_1.Req)()),
+    __param(1, (0, common_1.Param)("id")),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, String]),
+    __metadata("design:returntype", Promise)
+], MarketingController.prototype, "deletePromo", null);
 __decorate([
     (0, common_1.Get)("popups"),
     __param(0, (0, common_1.Req)()),

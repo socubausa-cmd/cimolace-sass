@@ -61,21 +61,21 @@ export default function SegmentAIEditorPanel({
   };
 
   const statusColors = {
-    draft: 'text-gray-400',
-    generated: 'text-blue-400',
-    approved: 'text-emerald-400',
+    draft: 'text-[#b0ada3]',
+    generated: 'text-[#d97757]',
+    approved: 'text-[#9fbf8f]',
     rejected: 'text-red-400',
   };
 
   return (
-    <div className="rounded-2xl border border-white/10 bg-[#131d2d]/95 p-4 space-y-4">
+    <div className="rounded-2xl border border-white/10 bg-[#30302e]/95 p-4 space-y-4">
       {/* Header with actions */}
       <div className="flex items-start justify-between gap-3">
         <div>
-          <p className="text-[11px] uppercase tracking-wider text-gray-500">Assistance IA segmentée</p>
+          <p className="text-[11px] uppercase tracking-wider text-[#82807a]">Assistance IA segmentée</p>
           <h3 className="text-sm font-semibold text-white mt-0.5">{segmentLabel || 'Segment non sélectionné'}</h3>
           {ai.status && (
-            <span className={`text-[10px] font-medium ${statusColors[ai.status] || 'text-gray-400'}`}>
+            <span className={`text-[10px] font-medium ${statusColors[ai.status] || 'text-[#b0ada3]'}`}>
               • {ai.status}
             </span>
           )}
@@ -88,7 +88,7 @@ export default function SegmentAIEditorPanel({
           <Button type="button" size="sm" variant="outline" className="border-white/10 text-white hover:bg-white/5" onClick={onGenerateAll} disabled={loading}>
             Générer tous
           </Button>
-          <Button type="button" size="sm" className="bg-[var(--school-accent)] text-black hover:bg-yellow-500 font-semibold" onClick={onApprove} disabled={loading}>
+          <Button type="button" size="sm" className="bg-[var(--coral)] text-black hover:bg-[#c2683f] font-semibold" onClick={onApprove} disabled={loading}>
             <CheckCircle className="w-3.5 h-3.5 mr-1.5" /> Valider
           </Button>
           <Button type="button" size="sm" variant="outline" className="border-red-500/30 text-red-200 hover:bg-red-500/10" onClick={onReject} disabled={loading}>
@@ -100,30 +100,30 @@ export default function SegmentAIEditorPanel({
       {/* Main fields */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
         <div className="space-y-1.5">
-          <Label className="text-xs text-gray-400">Titre du chapitre</Label>
-          <Input className="bg-[#0F1419] border-white/10" value={ai.chapter_title || ''} onChange={(e) => onChangeField?.('chapter_title', e.target.value)} placeholder="Titre proposé par l'IA" />
+          <Label className="text-xs text-[#b0ada3]">Titre du chapitre</Label>
+          <Input className="bg-[#1f1e1c] border-white/10" value={ai.chapter_title || ''} onChange={(e) => onChangeField?.('chapter_title', e.target.value)} placeholder="Titre proposé par l'IA" />
         </div>
         <div className="space-y-1.5">
-          <Label className="text-xs text-gray-400">Sous-titre</Label>
-          <Input className="bg-[#0F1419] border-white/10" value={ai.subtitle || ''} onChange={(e) => onChangeField?.('subtitle', e.target.value)} placeholder="Sous-titre pédagogique" />
+          <Label className="text-xs text-[#b0ada3]">Sous-titre</Label>
+          <Input className="bg-[#1f1e1c] border-white/10" value={ai.subtitle || ''} onChange={(e) => onChangeField?.('subtitle', e.target.value)} placeholder="Sous-titre pédagogique" />
         </div>
       </div>
 
       <div className="space-y-1.5">
-        <Label className="text-xs text-gray-400">Résumé pédagogique</Label>
-        <Textarea className="bg-[#0F1419] border-white/10 min-h-[80px]" value={ai.summary_text || ''} onChange={(e) => onChangeField?.('summary_text', e.target.value)} />
+        <Label className="text-xs text-[#b0ada3]">Résumé pédagogique</Label>
+        <Textarea className="bg-[#1f1e1c] border-white/10 min-h-[80px]" value={ai.summary_text || ''} onChange={(e) => onChangeField?.('summary_text', e.target.value)} />
       </div>
 
       <div className="space-y-1.5">
-        <Label className="text-xs text-gray-400">Reformulation simple</Label>
-        <Textarea className="bg-[#0F1419] border-white/10 min-h-[80px]" value={ai.reformulation_text || ''} onChange={(e) => onChangeField?.('reformulation_text', e.target.value)} />
+        <Label className="text-xs text-[#b0ada3]">Reformulation simple</Label>
+        <Textarea className="bg-[#1f1e1c] border-white/10 min-h-[80px]" value={ai.reformulation_text || ''} onChange={(e) => onChangeField?.('reformulation_text', e.target.value)} />
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
         <div className="space-y-1.5">
-          <Label className="text-xs text-gray-400">Points clés (1 ligne = 1 point)</Label>
+          <Label className="text-xs text-[#b0ada3]">Points clés (1 ligne = 1 point)</Label>
           <Textarea
-            className="bg-[#0F1419] border-white/10 min-h-[100px]"
+            className="bg-[#1f1e1c] border-white/10 min-h-[100px]"
             value={toTextArea(ai.key_points_json)}
             onChange={(e) =>
               onChangeField?.('key_points_json', String(e.target.value || '').split('\n').map((l) => l.trim()).filter(Boolean))
@@ -131,23 +131,23 @@ export default function SegmentAIEditorPanel({
           />
         </div>
         <div className="space-y-1.5">
-          <Label className="text-xs text-gray-400">À retenir</Label>
-          <Textarea className="bg-[#0F1419] border-white/10 min-h-[100px]" value={ai.retention_text || ''} onChange={(e) => onChangeField?.('retention_text', e.target.value)} />
+          <Label className="text-xs text-[#b0ada3]">À retenir</Label>
+          <Textarea className="bg-[#1f1e1c] border-white/10 min-h-[100px]" value={ai.retention_text || ''} onChange={(e) => onChangeField?.('retention_text', e.target.value)} />
         </div>
       </div>
 
       {/* Illustration section */}
-      <div className="rounded-xl border border-white/10 bg-[#0a111d] p-3 space-y-3">
+      <div className="rounded-xl border border-white/10 bg-[#262624] p-3 space-y-3">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <Image className="w-4 h-4 text-[var(--school-accent)]" />
+            <Image className="w-4 h-4 text-[var(--coral)]" />
             <span className="text-xs font-semibold text-white">Illustration IA</span>
           </div>
           <div className="flex items-center gap-2">
             <button
               type="button"
               onClick={() => setShowIlloEditor((v) => !v)}
-              className="text-[10px] text-gray-400 hover:text-white transition-colors"
+              className="text-[10px] text-[#b0ada3] hover:text-white transition-colors"
             >
               {showIlloEditor ? 'Fermer' : 'Modifier le prompt'}
             </button>
@@ -184,8 +184,8 @@ export default function SegmentAIEditorPanel({
           </div>
         ) : (
           <div className="aspect-video rounded-lg border border-dashed border-white/10 flex flex-col items-center justify-center gap-2 bg-white/2">
-            <Image className="w-8 h-8 text-gray-600" />
-            <p className="text-xs text-gray-500 text-center max-w-[200px]">
+            <Image className="w-8 h-8 text-[#82807a]" />
+            <p className="text-xs text-[#82807a] text-center max-w-[200px]">
               {contentId ? 'Génère le segment IA pour obtenir une illustration automatique' : 'Sélectionne un segment'}
             </p>
           </div>
@@ -194,10 +194,10 @@ export default function SegmentAIEditorPanel({
         {/* Prompt editor */}
         {showIlloEditor && (
           <div className="space-y-2">
-            <Label className="text-xs text-gray-400">Prompt d'illustration (personnalisé)</Label>
+            <Label className="text-xs text-[#b0ada3]">Prompt d'illustration (personnalisé)</Label>
             <div className="flex gap-2">
               <Textarea
-                className="bg-[#0F1419] border-white/10 min-h-[60px] flex-1 text-xs"
+                className="bg-[#1f1e1c] border-white/10 min-h-[60px] flex-1 text-xs"
                 value={illoPromptEdit || ai.illustration_prompt || ''}
                 onChange={(e) => setIlloPromptEdit(e.target.value)}
                 placeholder="Ex: concept abstrait de l'apprentissage, cerveau lumineux, bleu et or..."
@@ -205,7 +205,7 @@ export default function SegmentAIEditorPanel({
               <Button
                 type="button"
                 size="sm"
-                className="bg-[var(--school-accent)] text-black hover:bg-amber-500 self-end"
+                className="bg-[var(--coral)] text-black hover:bg-[#c2683f] self-end"
                 onClick={() => handleRegenerateIllustration(illoPromptEdit)}
                 disabled={illoLoading}
               >
@@ -222,9 +222,9 @@ export default function SegmentAIEditorPanel({
 
       {/* Question de compréhension */}
       {ai.comprehension_question && (
-        <div className="rounded-xl border border-[color-mix(in_srgb,var(--school-accent)_20%,transparent)] bg-[color-mix(in_srgb,var(--school-accent)_5%,transparent)] p-3">
-          <p className="text-[10px] uppercase tracking-widest text-[color-mix(in_srgb,var(--school-accent)_60%,transparent)] font-semibold mb-1">Question de compréhension</p>
-          <p className="text-sm text-[var(--school-accent)] italic">{ai.comprehension_question}</p>
+        <div className="rounded-xl border border-[color-mix(in_srgb,var(--coral)_20%,transparent)] bg-[color-mix(in_srgb,var(--coral)_5%,transparent)] p-3">
+          <p className="text-[10px] uppercase tracking-widest text-[color-mix(in_srgb,var(--coral)_60%,transparent)] font-semibold mb-1">Question de compréhension</p>
+          <p className="text-sm text-[var(--coral)] italic">{ai.comprehension_question}</p>
         </div>
       )}
     </div>

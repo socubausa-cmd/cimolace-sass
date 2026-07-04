@@ -8,6 +8,14 @@ export declare class MarketingController {
     createPromo(req: any, b: any): Promise<{
         data: any;
     }>;
+    updatePromo(req: any, id: string, b: any): Promise<{
+        data: any;
+    }>;
+    deletePromo(req: any, id: string): Promise<{
+        data: {
+            ok: boolean;
+        };
+    }>;
     getPopups(req: any): Promise<{
         data: any[];
     }>;

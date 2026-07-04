@@ -13,6 +13,7 @@ export function useLiveHostPanelCallbacks({
   prevWaitingIdsRef,
   arenaHostAlertSoundRef,
   hostSfxCtxRef,
+  toast,
 }) {
   const appendLiveChatToNotificationsPanel = useCallback((name, text) => {
     setPanels((prev) =>
@@ -31,6 +32,7 @@ export function useLiveHostPanelCallbacks({
   }, [setPanels]);
 
   const syncWaitingRoomPanelAndChime = useCallback((entries) => {
+    const freshEntries = entries.filter((e) => !prevWaitingIdsRef.current.has(e.id));
     entries.forEach((e) => {
       if (!prevWaitingIdsRef.current.has(e.id)) {
         if (arenaHostAlertSoundRef.current) {
@@ -38,6 +40,13 @@ export function useLiveHostPanelCallbacks({
         }
       }
     });
+    if (freshEntries.length > 0) {
+      const first = freshEntries[0];
+      toast?.({
+        title: 'Demande d’entrée',
+        description: `${first.profile?.name || 'Un participant'} attend votre autorisation.`,
+      });
+    }
     prevWaitingIdsRef.current = new Set(entries.map((e) => e.id));
     setPanels((prev) =>
       prev.map((p, i) =>
@@ -55,7 +64,7 @@ export function useLiveHostPanelCallbacks({
           : p,
       ),
     );
-  }, [setPanels, prevWaitingIdsRef, arenaHostAlertSoundRef, hostSfxCtxRef]);
+  }, [setPanels, prevWaitingIdsRef, arenaHostAlertSoundRef, hostSfxCtxRef, toast]);
 
   const onHandRaise = useCallback((payload) => {
     const name = payload.userName || payload.userId || 'Élève';

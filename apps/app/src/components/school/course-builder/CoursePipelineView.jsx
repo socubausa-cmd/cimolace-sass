@@ -101,25 +101,25 @@ const STEPS = [
 ];
 
 const STATUS_ICON = {
-  pending:   { icon: Info,         cls: 'text-gray-500' },
-  running:   { icon: Loader2,      cls: 'text-blue-400 animate-spin' },
-  completed: { icon: CheckCircle,  cls: 'text-emerald-400' },
+  pending:   { icon: Info,         cls: 'text-[#82807a]' },
+  running:   { icon: Loader2,      cls: 'text-[#d97757] animate-spin' },
+  completed: { icon: CheckCircle,  cls: 'text-[#9fbf8f]' },
   error:     { icon: XCircle,      cls: 'text-red-400' },
-  skipped:   { icon: ChevronRight, cls: 'text-gray-600' },
+  skipped:   { icon: ChevronRight, cls: 'text-[#82807a]' },
 };
 
 const COLOR_RING = {
-  blue:    'ring-blue-500/40   bg-blue-500/10   text-blue-400',
-  indigo:  'ring-indigo-500/40 bg-indigo-500/10 text-indigo-400',
-  violet:  'ring-violet-500/40 bg-violet-500/10 text-violet-400',
-  purple:  'ring-purple-500/40 bg-purple-500/10 text-purple-400',
-  pink:    'ring-pink-500/40   bg-pink-500/10   text-pink-400',
-  amber:   'ring-amber-500/40  bg-amber-500/10  text-amber-400',
-  emerald: 'ring-emerald-500/40 bg-emerald-500/10 text-emerald-400',
-  teal:    'ring-teal-500/40   bg-teal-500/10   text-teal-400',
-  cyan:    'ring-cyan-500/40   bg-cyan-500/10   text-cyan-400',
-  sky:     'ring-sky-500/40    bg-sky-500/10    text-sky-400',
-  green:   'ring-green-500/40  bg-green-500/10  text-green-400',
+  blue:    'ring-[#c2683f]/40   bg-[#c2683f]/10   text-[#d97757]',
+  indigo:  'ring-[#c2683f]/40 bg-[#c2683f]/10 text-[#d97757]',
+  violet:  'ring-[#c2683f]/40 bg-[#c2683f]/10 text-[#d97757]',
+  purple:  'ring-[#c2683f]/40 bg-[#c2683f]/10 text-[#d97757]',
+  pink:    'ring-[#c2683f]/40   bg-[#c2683f]/10   text-[#d97757]',
+  amber:   'ring-[#c2683f]/40  bg-[#c2683f]/10  text-[#d97757]',
+  emerald: 'ring-[#7a9b6c]/40 bg-[#7a9b6c]/10 text-[#9fbf8f]',
+  teal:    'ring-[#c2683f]/40   bg-[#c2683f]/10   text-[#d97757]',
+  cyan:    'ring-[#c2683f]/40   bg-[#c2683f]/10   text-[#d97757]',
+  sky:     'ring-[#c2683f]/40    bg-[#c2683f]/10    text-[#d97757]',
+  green:   'ring-[#7a9b6c]/40  bg-[#7a9b6c]/10  text-[#9fbf8f]',
 };
 
 // ─── Main component ───────────────────────────────────────────────────────────
@@ -528,27 +528,27 @@ export default function CoursePipelineView({
 
   // ── Render ─────────────────────────────────────────────────────────────────
   return (
-    <div className="flex h-full bg-[#050b14] overflow-hidden">
+    <div className="flex h-full bg-[#262624] overflow-hidden">
       {/* ── Left: step list ── */}
-      <div className="w-72 flex-shrink-0 flex flex-col bg-[#070d1a] border-r border-white/8">
+      <div className="w-72 flex-shrink-0 flex flex-col bg-[#1f1e1c] border-r border-white/8">
         {/* Header */}
         <div className="px-4 py-4 border-b border-white/8">
           <div className="flex items-center justify-between mb-3">
             <div>
-              <p className="text-[10px] uppercase tracking-widest text-[var(--school-accent)] font-semibold">Pipeline</p>
+              <p className="text-[10px] uppercase tracking-widest text-[var(--coral)] font-semibold">Pipeline</p>
               <h2 className="text-sm font-bold text-white">Course Production</h2>
             </div>
-            <span className="text-xs font-mono text-[var(--school-accent)]">{pipelineProgress}%</span>
+            <span className="text-xs font-mono text-[var(--coral)]">{pipelineProgress}%</span>
           </div>
           {/* Progress bar */}
           <div className="h-1.5 bg-white/8 rounded-full overflow-hidden">
             <motion.div
-              className="h-full bg-gradient-to-r from-[var(--school-accent)] to-amber-500 rounded-full"
+              className="h-full bg-gradient-to-r from-[var(--coral)] to-[#c2683f] rounded-full"
               animate={{ width: `${pipelineProgress}%` }}
               transition={{ type: 'spring', stiffness: 60 }}
             />
           </div>
-          <p className="text-[10px] text-gray-500 mt-1.5">{completedCount}/{STEPS.length} étapes terminées</p>
+          <p className="text-[10px] text-[#82807a] mt-1.5">{completedCount}/{STEPS.length} étapes terminées</p>
         </div>
 
         {/* Run All / Stop */}
@@ -565,7 +565,7 @@ export default function CoursePipelineView({
           ) : (
             <Button
               size="sm"
-              className="w-full bg-[var(--school-accent)] text-black hover:bg-amber-400 text-xs font-bold"
+              className="w-full bg-[var(--coral)] text-black hover:bg-[#d97757] text-xs font-bold"
               onClick={runAll}
             >
               <Zap className="w-3.5 h-3.5 mr-1.5" /> Exécuter tout le pipeline
@@ -587,30 +587,30 @@ export default function CoursePipelineView({
                 key={step.id}
                 type="button"
                 onClick={() => setActiveStep(step.id)}
-                className={`w-full flex items-center gap-3 px-4 py-3 transition-colors text-left ${isActive ? 'bg-white/5 border-r-2 border-[var(--school-accent)]' : 'hover:bg-white/3'}`}
+                className={`w-full flex items-center gap-3 px-4 py-3 transition-colors text-left ${isActive ? 'bg-white/5 border-r-2 border-[var(--coral)]' : 'hover:bg-white/3'}`}
               >
                 {/* Line connector */}
                 <div className="relative flex flex-col items-center flex-shrink-0">
-                  <div className={`w-8 h-8 rounded-xl ring-1 flex items-center justify-center flex-shrink-0 ${status === 'completed' ? 'bg-emerald-500/20 ring-emerald-500/40' : status === 'error' ? 'bg-red-500/20 ring-red-500/40' : status === 'running' ? `${ringCls}` : 'bg-white/4 ring-white/10'}`}>
+                  <div className={`w-8 h-8 rounded-xl ring-1 flex items-center justify-center flex-shrink-0 ${status === 'completed' ? 'bg-[#7a9b6c]/20 ring-[#7a9b6c]/40' : status === 'error' ? 'bg-red-500/20 ring-red-500/40' : status === 'running' ? `${ringCls}` : 'bg-white/4 ring-white/10'}`}>
                     {status === 'running' ? (
-                      <Loader2 className="w-4 h-4 text-blue-400 animate-spin" />
+                      <Loader2 className="w-4 h-4 text-[#d97757] animate-spin" />
                     ) : status === 'completed' ? (
-                      <CheckCircle className="w-4 h-4 text-emerald-400" />
+                      <CheckCircle className="w-4 h-4 text-[#9fbf8f]" />
                     ) : status === 'error' ? (
                       <XCircle className="w-4 h-4 text-red-400" />
                     ) : (
-                      <Icon className={`w-4 h-4 ${isActive ? `text-${step.color}-400` : 'text-gray-600'}`} />
+                      <Icon className={`w-4 h-4 ${isActive ? `text-[#d97757]` : 'text-[#82807a]'}`} />
                     )}
                   </div>
                   {idx < STEPS.length - 1 && (
-                    <div className={`w-px h-3 mt-0.5 ${status === 'completed' ? 'bg-emerald-500/30' : 'bg-white/8'}`} />
+                    <div className={`w-px h-3 mt-0.5 ${status === 'completed' ? 'bg-[#7a9b6c]/30' : 'bg-white/8'}`} />
                   )}
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className={`text-xs font-semibold truncate ${isActive ? 'text-white' : status === 'completed' ? 'text-gray-300' : 'text-gray-500'}`}>
+                  <p className={`text-xs font-semibold truncate ${isActive ? 'text-white' : status === 'completed' ? 'text-[#b0ada3]' : 'text-[#82807a]'}`}>
                     {step.label}
                   </p>
-                  <p className={`text-[10px] truncate ${status === 'completed' ? 'text-emerald-400' : status === 'error' ? 'text-red-400' : status === 'running' ? 'text-blue-400' : 'text-gray-600'}`}>
+                  <p className={`text-[10px] truncate ${status === 'completed' ? 'text-[#9fbf8f]' : status === 'error' ? 'text-red-400' : status === 'running' ? 'text-[#d97757]' : 'text-[#82807a]'}`}>
                     {status === 'completed' ? '✓ Terminé' : status === 'error' ? '✗ Erreur' : status === 'running' ? 'En cours…' : status === 'skipped' ? '→ Ignoré' : 'En attente'}
                   </p>
                 </div>
@@ -633,7 +633,7 @@ export default function CoursePipelineView({
               className="flex-1 flex flex-col overflow-hidden"
             >
               {/* Step header */}
-              <div className="px-6 py-5 border-b border-white/8 bg-[#070d1a]">
+              <div className="px-6 py-5 border-b border-white/8 bg-[#1f1e1c]">
                 <div className="flex items-start justify-between gap-4">
                   <div className="flex items-center gap-4">
                     <div className={`w-10 h-10 rounded-xl ring-1 flex items-center justify-center ${COLOR_RING[activeStepDef.color]}`}>
@@ -643,15 +643,15 @@ export default function CoursePipelineView({
                       <div className="flex items-center gap-2">
                         <h2 className="text-base font-bold text-white">{activeStepDef.label}</h2>
                         <span className={`text-[10px] uppercase tracking-wider font-semibold px-2 py-0.5 rounded-full ${
-                          activeStatus === 'completed' ? 'bg-emerald-500/20 text-emerald-400' :
+                          activeStatus === 'completed' ? 'bg-[#7a9b6c]/20 text-[#9fbf8f]' :
                           activeStatus === 'error' ? 'bg-red-500/20 text-red-400' :
-                          activeStatus === 'running' ? 'bg-blue-500/20 text-blue-400' :
-                          'bg-white/8 text-gray-500'
+                          activeStatus === 'running' ? 'bg-[#c2683f]/20 text-[#d97757]' :
+                          'bg-white/8 text-[#82807a]'
                         }`}>
                           {activeStatus === 'completed' ? '✓ Terminé' : activeStatus === 'error' ? '✗ Erreur' : activeStatus === 'running' ? '⟳ En cours' : activeStatus === 'skipped' ? '→ Ignoré' : '○ En attente'}
                         </span>
                       </div>
-                      <p className="text-xs text-gray-400 mt-0.5">{activeStepDef.detail}</p>
+                      <p className="text-xs text-[#b0ada3] mt-0.5">{activeStepDef.detail}</p>
                     </div>
                   </div>
                   <div className="flex items-center gap-2 flex-shrink-0">
@@ -677,24 +677,24 @@ export default function CoursePipelineView({
               <div className="flex-1 overflow-y-auto p-6 space-y-5">
                 {/* Output card */}
                 {activeOutput && (
-                  <div className="rounded-2xl border border-emerald-500/20 bg-emerald-500/5 p-4 space-y-3">
-                    <p className="text-[10px] uppercase tracking-widest text-emerald-400 font-semibold">Sortie</p>
+                  <div className="rounded-2xl border border-[#7a9b6c]/20 bg-[#7a9b6c]/5 p-4 space-y-3">
+                    <p className="text-[10px] uppercase tracking-widest text-[#9fbf8f] font-semibold">Sortie</p>
                     <StepOutputRenderer stepId={activeStep} output={activeOutput} scriptText={scriptText} />
                   </div>
                 )}
 
                 {/* Logs */}
                 {activeLogs.length > 0 && (
-                  <div className="rounded-2xl border border-white/8 bg-[#070d1a] p-4">
-                    <p className="text-[10px] uppercase tracking-widest text-gray-500 font-semibold mb-3">Journal</p>
+                  <div className="rounded-2xl border border-white/8 bg-[#1f1e1c] p-4">
+                    <p className="text-[10px] uppercase tracking-widest text-[#82807a] font-semibold mb-3">Journal</p>
                     <div className="space-y-1 font-mono text-xs">
                       {activeLogs.map((log, i) => (
-                        <div key={i} className={`${log.includes('✓') ? 'text-emerald-400' : log.includes('✗') ? 'text-red-400' : log.includes('⚠') ? 'text-amber-400' : 'text-gray-500'}`}>
+                        <div key={i} className={`${log.includes('✓') ? 'text-[#9fbf8f]' : log.includes('✗') ? 'text-red-400' : log.includes('⚠') ? 'text-[#d97757]' : 'text-[#82807a]'}`}>
                           {log}
                         </div>
                       ))}
                       {activeStatus === 'running' && (
-                        <div className="flex items-center gap-2 text-blue-400">
+                        <div className="flex items-center gap-2 text-[#d97757]">
                           <Loader2 className="w-3 h-3 animate-spin" /> En cours…
                         </div>
                       )}
@@ -709,12 +709,12 @@ export default function CoursePipelineView({
                       <activeStepDef.icon className="w-8 h-8 opacity-60" />
                     </div>
                     <div>
-                      <p className="text-sm font-semibold text-gray-400">{activeStepDef.description}</p>
-                      <p className="text-xs text-gray-600 mt-1 max-w-xs">{activeStepDef.detail}</p>
+                      <p className="text-sm font-semibold text-[#b0ada3]">{activeStepDef.description}</p>
+                      <p className="text-xs text-[#82807a] mt-1 max-w-xs">{activeStepDef.detail}</p>
                     </div>
                     <Button
                       size="sm"
-                      className="bg-[var(--school-accent)] text-black hover:bg-amber-400 text-xs font-bold"
+                      className="bg-[var(--coral)] text-black hover:bg-[#d97757] text-xs font-bold"
                       onClick={() => runStep(activeStep)}
                       disabled={autoRunning}
                     >
@@ -755,7 +755,7 @@ function StepOutputRenderer({ stepId, output, scriptText }) {
     return (
       <div className="space-y-1">
         <p className="text-sm text-white">{output.chapterCount} segments générés</p>
-        {output.method && <p className="text-xs text-gray-400">Méthode : {output.method}</p>}
+        {output.method && <p className="text-xs text-[#b0ada3]">Méthode : {output.method}</p>}
       </div>
     );
   }
@@ -774,7 +774,7 @@ function StepOutputRenderer({ stepId, output, scriptText }) {
         <p className="text-sm text-white">{output.segmentCount} chapitres • script compilé</p>
         {scriptText && (
           <>
-            <pre className="text-xs text-gray-300 bg-[#050b14] rounded-xl p-4 overflow-x-auto max-h-64 border border-white/8 whitespace-pre-wrap">
+            <pre className="text-xs text-[#b0ada3] bg-[#262624] rounded-xl p-4 overflow-x-auto max-h-64 border border-white/8 whitespace-pre-wrap">
               {scriptText.slice(0, 1200)}{scriptText.length > 1200 ? '\n…(tronqué)' : ''}
             </pre>
             <Button
@@ -806,18 +806,18 @@ function StepOutputRenderer({ stepId, output, scriptText }) {
       <div className="space-y-2">
         {output.downloadUrl ? (
           <>
-            <p className="text-sm text-emerald-300">Vidéo rendue disponible !</p>
+            <p className="text-sm text-[#9fbf8f]">Vidéo rendue disponible !</p>
             <a
               href={output.downloadUrl}
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center gap-2 text-xs text-[var(--school-accent)] hover:text-amber-400 transition-colors"
+              className="inline-flex items-center gap-2 text-xs text-[var(--coral)] hover:text-[#d97757] transition-colors"
             >
               <Download className="w-3.5 h-3.5" /> Télécharger la vidéo finale
             </a>
           </>
         ) : (
-          <p className="text-sm text-gray-400">Rendu en arrière-plan (vérifiez le statut plus tard)</p>
+          <p className="text-sm text-[#b0ada3]">Rendu en arrière-plan (vérifiez le statut plus tard)</p>
         )}
       </div>
     );
@@ -826,9 +826,9 @@ function StepOutputRenderer({ stepId, output, scriptText }) {
   if (stepId === 'publication') {
     return (
       <div className="space-y-2">
-        <p className="text-sm text-emerald-300">✓ Formation publiée et accessible</p>
+        <p className="text-sm text-[#9fbf8f]">✓ Formation publiée et accessible</p>
         {output.downloadUrl && (
-          <a href={output.downloadUrl} target="_blank" rel="noopener noreferrer" className="text-xs text-[var(--school-accent)] hover:text-amber-400 flex items-center gap-1">
+          <a href={output.downloadUrl} target="_blank" rel="noopener noreferrer" className="text-xs text-[var(--coral)] hover:text-[#d97757] flex items-center gap-1">
             <Eye className="w-3.5 h-3.5" /> Voir la vidéo enrichie
           </a>
         )}
@@ -836,5 +836,5 @@ function StepOutputRenderer({ stepId, output, scriptText }) {
     );
   }
 
-  return <pre className="text-xs text-gray-300">{JSON.stringify(output, null, 2)}</pre>;
+  return <pre className="text-xs text-[#b0ada3]">{JSON.stringify(output, null, 2)}</pre>;
 }

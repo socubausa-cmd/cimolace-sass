@@ -67,7 +67,7 @@ export function EmptyState({ onOpenPicker, conversations, onSelectConversation }
       transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
       className="flex flex-col items-center justify-center text-center px-6 py-12 h-full"
     >
-      <div className="w-20 h-20 rounded-3xl bg-gradient-to-br from-[color-mix(in_srgb,var(--school-accent)_20%,transparent)] to-violet-500/10 border border-white/10 flex items-center justify-center mb-6">
+      <div className="w-20 h-20 rounded-3xl bg-gradient-to-br from-[color-mix(in_srgb,var(--school-accent)_20%,transparent)] to-[color-mix(in_srgb,var(--school-accent)_9%,transparent)] border border-white/10 flex items-center justify-center mb-6">
         <MessageSquare className="w-9 h-9 text-[color-mix(in_srgb,var(--school-accent)_70%,transparent)]" />
       </div>
       <h2 className="text-xl font-semibold text-white mb-2">Messagerie immersive</h2>

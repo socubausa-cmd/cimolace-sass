@@ -40,10 +40,11 @@ const MOCK_ASSETS = [
   { id: 6, title: 'Hollywood Poster Preset', type: 'lut', author: 'CinéStudio', likes: 38, downloads: 156, starred: true, compat: 'medium', tags: ['cinéma', 'poster'] },
 ];
 
+// Compatibilité = 3 nuances CHAUDES (directive LIRI : zéro vert/or franc).
 const COMPAT_CLASSES = {
-  high: 'bg-emerald-500/15 text-emerald-400 border-emerald-500/25',
-  medium: 'bg-amber-500/15 text-amber-400 border-amber-500/25',
-  low: 'bg-red-500/15 text-red-400 border-red-500/25',
+  high: 'bg-[#cf8059]/15 text-[#e0976a] border-[#cf8059]/25',
+  medium: 'bg-[#d99a4e]/15 text-[#e6b878] border-[#d99a4e]/25',
+  low: 'bg-[#e0705a]/15 text-[#ec8a72] border-[#e0705a]/25',
 };
 const COMPAT_LABELS = { high: 'Compatib.', medium: 'Partiel', low: 'Limité' };
 
@@ -76,7 +77,7 @@ export default function StudioLiriBibliothequePage() {
       TitleIcon={Library}
       titleLine="Assets & presets"
       topBarActions={(
-        <button type="button" className="flex items-center gap-1.5 rounded-lg border border-emerald-500/25 bg-emerald-500/10 px-3 py-1.5 text-[11px] font-medium text-emerald-400 transition-all hover:bg-emerald-500/20">
+        <button type="button" className="flex items-center gap-1.5 rounded-lg border border-[#d97757]/25 bg-[#d97757]/10 px-3 py-1.5 text-[11px] font-medium text-[#e0926a] transition-all hover:bg-[#d97757]/20">
           <Upload className="h-3 w-3" />
           Publier un asset
         </button>
@@ -87,7 +88,7 @@ export default function StudioLiriBibliothequePage() {
         {/* ── Filtres ── */}
         <aside className="flex w-52 flex-shrink-0 flex-col border-r border-white/[0.07] overflow-hidden">
           <div className="flex items-center gap-2 border-b border-white/[0.07] px-4 py-3">
-            <Filter className="h-3.5 w-3.5 text-emerald-400" />
+            <Filter className="h-3.5 w-3.5 text-[#e0926a]" />
             <span className="text-[11px] font-semibold uppercase tracking-[0.12em] text-white/50">Filtres</span>
           </div>
 
@@ -103,7 +104,7 @@ export default function StudioLiriBibliothequePage() {
                     className={cn(
                       'flex flex-1 items-center justify-center gap-1 rounded-lg py-1.5 text-[11px] font-medium transition-all',
                       activeTab === tab.id
-                        ? 'bg-emerald-600/80 text-white shadow-sm'
+                        ? 'bg-[#cc8068] text-[#2a1c14] shadow-sm'
                         : 'text-white/40 hover:text-white/70',
                     )}
                   >
@@ -127,7 +128,7 @@ export default function StudioLiriBibliothequePage() {
                   className={cn(
                     'flex items-center gap-2.5 rounded-lg px-3 py-2 text-left transition-all',
                     activeType === type.id
-                      ? 'bg-emerald-500/15 border border-emerald-500/25 text-emerald-300'
+                      ? 'bg-[#d97757]/15 border border-[#d97757]/25 text-[#e0926a]'
                       : 'text-white/45 hover:bg-white/5 border border-transparent',
                   )}
                 >
@@ -182,7 +183,7 @@ export default function StudioLiriBibliothequePage() {
                   className={cn(
                     'text-left rounded-xl border transition-all hover:border-white/20',
                     selected?.id === asset.id
-                      ? 'border-emerald-500/30 bg-emerald-500/5'
+                      ? 'border-[#d97757]/30 bg-[#d97757]/[0.08]'
                       : 'border-white/[0.07] bg-white/[0.02] hover:bg-white/[0.04]',
                     viewMode === 'list' && 'flex items-center gap-4',
                   )}
@@ -273,7 +274,7 @@ export default function StudioLiriBibliothequePage() {
 
               {/* Actions */}
               <div className="flex flex-col gap-2">
-                <button className="flex items-center justify-center gap-2 rounded-xl bg-emerald-600 py-2.5 text-[12px] font-semibold text-white transition-all hover:bg-emerald-500">
+                <button className="flex items-center justify-center gap-2 rounded-xl bg-[#cc8068] py-2.5 text-[12px] font-semibold text-[#2a1c14] transition-all hover:bg-[#d4815f]">
                   <Download className="h-3.5 w-3.5" />
                   Utiliser dans LIRI
                 </button>

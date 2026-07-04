@@ -209,7 +209,7 @@ export async function fetchNeuronqQuestions(
   if (!sessionId) return [];
   const { data, error } = await supabase
     .from('live_neuronq_questions')
-    .select('id,question,raw_text,reformulated_text,status,user_id,created_at')
+    .select('id,raw_text,reformulated_text,status,user_id,created_at')
     .eq('live_session_id', sessionId)
     .order('created_at', { ascending: true })
     .limit(200);
@@ -243,7 +243,7 @@ export async function castVote(
     live_session_id: sessionId,
     user_id: uid,
     type: 'debate_vote',
-    payload: { side: choice, round },
+    payload: JSON.stringify({ side: choice, round }),
   });
   return !error;
 }
@@ -261,7 +261,7 @@ export async function submitNeuronqQuestion(
   if (!sessionId || !uid || !text) return false;
   const { error } = await supabase.from('live_neuronq_questions').insert({
     live_session_id: sessionId,
-    question: text,
+    raw_text: text,
     user_id: uid,
   });
   return !error;

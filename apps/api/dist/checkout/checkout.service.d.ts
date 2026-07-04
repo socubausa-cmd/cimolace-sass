@@ -1,18 +1,16 @@
+import { AuthService } from "../auth/auth.service";
+import { TenantPaymentConfigService } from "../billing/tenant-payment-config/tenant-payment-config.service";
 export declare class CheckoutService {
-    createSession(data: {
-        priceCents: number;
-        currency: string;
-        productName: string;
-        successUrl: string;
-        cancelUrl: string;
-    }): Promise<{
+    private readonly auth;
+    private readonly tenantPayments;
+    private readonly logger;
+    constructor(auth: AuthService, tenantPayments: TenantPaymentConfigService);
+    private get db();
+    createSession(userId: string, liveSessionId: string): Promise<{
         checkoutUrl: string;
         sessionId: string;
-        amount: number;
-        currency: string;
     }>;
-    handleWebhook(event: any): Promise<{
+    handleStripeWebhook(rawBody: Buffer, signature?: string): Promise<{
         received: boolean;
-        type: any;
     }>;
 }

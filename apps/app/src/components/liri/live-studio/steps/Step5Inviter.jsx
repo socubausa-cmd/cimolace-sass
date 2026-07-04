@@ -52,8 +52,8 @@ function InviteSection({ icon: Icon, title, desc, defaultOpen = false, children 
         className="w-full flex items-center justify-between p-4 text-left hover:bg-white/[0.02] transition-colors"
       >
         <div className="flex items-center gap-3">
-          <div className="w-8 h-8 rounded-xl bg-[#7B61FF]/15 border border-[#7B61FF]/30 flex items-center justify-center">
-            <Icon className="w-4 h-4 text-[#7B61FF]" />
+          <div className="w-8 h-8 rounded-xl bg-[#d97757]/15 border border-[#d97757]/30 flex items-center justify-center">
+            <Icon className="w-4 h-4 text-[#d97757]" />
           </div>
           <div>
             <p className="text-sm font-semibold text-white">{title}</p>
@@ -86,7 +86,7 @@ function InviteSection({ icon: Icon, title, desc, defaultOpen = false, children 
 // ─── Tag/pill removable ─────────────────────────────────────────────────────
 function Pill({ label, onRemove }) {
   return (
-    <span className="inline-flex items-center gap-1.5 h-7 pl-3 pr-2 rounded-full bg-[#7B61FF]/15 border border-[#7B61FF]/30 text-[#7B61FF] text-xs font-medium">
+    <span className="inline-flex items-center gap-1.5 h-7 pl-3 pr-2 rounded-full bg-[#d97757]/15 border border-[#d97757]/30 text-[#d97757] text-xs font-medium">
       {label}
       <button type="button" onClick={onRemove} className="hover:bg-white/10 rounded-full p-0.5 transition-colors">
         <X className="w-3 h-3" />
@@ -133,7 +133,7 @@ function ClassesPicker({ selected, onChange }) {
         value={search}
         onChange={(e) => setSearch(e.target.value)}
         placeholder="Rechercher une classe…"
-        className="w-full h-9 bg-black/30 border border-white/10 rounded-xl px-3 text-sm text-white placeholder:text-white/25 outline-none focus:border-[#7B61FF]/40 transition-colors"
+        className="w-full h-9 bg-black/30 border border-white/10 rounded-xl px-3 text-sm text-white placeholder:text-white/25 outline-none focus:border-[#d97757]/40 transition-colors"
       />
       {selected.length > 0 && (
         <div className="flex flex-wrap gap-1.5">
@@ -156,7 +156,7 @@ function ClassesPicker({ selected, onChange }) {
                   className={cn(
                     'w-full flex items-center justify-between px-3 py-2 rounded-xl text-sm transition-colors',
                     active
-                      ? 'bg-[#7B61FF]/15 border border-[#7B61FF]/30 text-[#7B61FF]'
+                      ? 'bg-[#d97757]/15 border border-[#d97757]/30 text-[#d97757]'
                       : 'bg-black/20 border border-white/[0.06] text-white/60 hover:text-white hover:border-white/15'
                   )}
                 >
@@ -234,7 +234,7 @@ function ModulesPicker({ selected, onChange }) {
                 className={cn(
                   'h-7 px-3 rounded-full border text-xs font-medium transition-all',
                   active
-                    ? 'bg-[#7B61FF]/20 border-[#7B61FF]/40 text-[#7B61FF]'
+                    ? 'bg-[#d97757]/20 border-[#d97757]/40 text-[#d97757]'
                     : 'bg-black/20 border-white/10 text-white/50 hover:border-white/25 hover:text-white'
                 )}
               >
@@ -287,7 +287,7 @@ function RolesPicker({ selected, onChange }) {
             className={cn(
               'flex items-center gap-1.5 h-8 px-3 rounded-full border text-xs font-medium transition-all',
               active
-                ? 'bg-[#7B61FF]/20 border-[#7B61FF]/40 text-[#7B61FF]'
+                ? 'bg-[#d97757]/20 border-[#d97757]/40 text-[#d97757]'
                 : 'bg-black/20 border-white/10 text-white/50 hover:border-white/25 hover:text-white'
             )}
           >
@@ -327,7 +327,7 @@ export function Step5Inviter({ draft, updateDraft }) {
         <h2 className="text-2xl font-semibold text-white mb-1">Invitations</h2>
         <p className="text-gray-400 text-sm">
           Invitez des personnes, classes, modules ou groupes de rôles. Un{' '}
-          <strong className="font-medium text-[#c4b5fd]/95">code court LIRI mobile</strong> est généré
+          <strong className="font-medium text-[#f0b89a]/95">code court LIRI mobile</strong> est généré
           automatiquement à la validation finale pour rejoindre le live depuis l&apos;app (affiché dans la notification et sur l&apos;écran de chargement de l&apos;Arène).
         </p>
       </div>
@@ -394,7 +394,7 @@ export function Step5Inviter({ draft, updateDraft }) {
           <p>
             Dès que vous validez le live à l&apos;étape suivante, le système crée une session avec un{' '}
             <strong className="text-white/75">code à 8 caractères</strong> (affiché style{' '}
-            <span className="font-mono text-[#c4b5fd]/90">XXXX-XXXX</span>). Les élèves ouvrent{' '}
+            <span className="font-mono text-[#f0b89a]/90">XXXX-XXXX</span>). Les élèves ouvrent{' '}
             <strong className="text-white/75">LIRI mobile → Rejoindre avec un code</strong> et saisissent ce code
             (ou collent le lien web du live si vous le leur envoyez).
           </p>
@@ -408,7 +408,7 @@ export function Step5Inviter({ draft, updateDraft }) {
       {/* Options membres */}
       <div className="flex items-center justify-between p-3.5 rounded-xl bg-[#0F1419]/50 border border-white/10">
         <div className="flex items-center gap-3">
-          <Users className="w-4 h-4 text-[#7B61FF]/70" />
+          <Users className="w-4 h-4 text-[#d97757]/70" />
           <div>
             <Label className="text-sm text-white/80 font-medium">Les membres peuvent inviter</Label>
             <p className="text-xs text-white/40">Permettre aux participants d'inviter d\'autres personnes</p>
@@ -417,7 +417,7 @@ export function Step5Inviter({ draft, updateDraft }) {
         <Switch
           checked={draft.allow_members_invite}
           onCheckedChange={(v) => updateDraft({ allow_members_invite: v })}
-          className="data-[state=checked]:bg-[#7B61FF]"
+          className="data-[state=checked]:bg-[#d97757]"
         />
       </div>
     </div>

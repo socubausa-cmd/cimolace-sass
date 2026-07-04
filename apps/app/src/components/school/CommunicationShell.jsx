@@ -33,9 +33,9 @@ export default function CommunicationShell({ forumBasePath = '/student-school-li
           display: 'inline-flex', alignItems: 'center', gap: 8,
           padding: '9px 18px', borderRadius: 11, cursor: 'pointer',
           fontSize: 13.5, fontWeight: 700, letterSpacing: '-0.01em',
-          color: active ? '#0b0b0f' : '#D4AF37',
-          background: active ? '#D4AF37' : 'rgba(212,175,55,0.10)',
-          border: `1px solid ${active ? '#D4AF37' : 'rgba(212,175,55,0.28)'}`,
+          color: active ? '#2a1c14' : '#d97757',
+          background: active ? '#cc8068' : 'rgba(217,119,87,0.10)',
+          border: `1px solid ${active ? '#cc8068' : 'rgba(217,119,87,0.30)'}`,
           transition: 'background 160ms ease, color 160ms ease',
         }}
       >

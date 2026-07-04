@@ -16,6 +16,8 @@ exports.CimolaceController = void 0;
 const common_1 = require("@nestjs/common");
 const jwt_auth_guard_1 = require("../common/guards/jwt-auth.guard");
 const tenant_guard_1 = require("../common/guards/tenant.guard");
+const roles_guard_1 = require("../common/guards/roles.guard");
+const roles_decorator_1 = require("../common/decorators/roles.decorator");
 const service_catalog_service_1 = require("./service-catalog.service");
 const feature_gate_service_1 = require("./feature-gate.service");
 let CimolaceController = class CimolaceController {
@@ -52,7 +54,8 @@ __decorate([
 ], CimolaceController.prototype, "getTenantServices", null);
 __decorate([
     (0, common_1.Post)("services/:key/toggle"),
-    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard, tenant_guard_1.TenantGuard),
+    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard, tenant_guard_1.TenantGuard, roles_guard_1.RolesGuard),
+    (0, roles_decorator_1.Roles)("owner", "admin"),
     __param(0, (0, common_1.Req)()),
     __param(1, (0, common_1.Param)("key")),
     __param(2, (0, common_1.Body)()),
@@ -62,7 +65,8 @@ __decorate([
 ], CimolaceController.prototype, "toggle", null);
 __decorate([
     (0, common_1.Post)("activate-template/:type"),
-    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard, tenant_guard_1.TenantGuard),
+    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard, tenant_guard_1.TenantGuard, roles_guard_1.RolesGuard),
+    (0, roles_decorator_1.Roles)("owner", "admin"),
     __param(0, (0, common_1.Req)()),
     __param(1, (0, common_1.Param)("type")),
     __metadata("design:type", Function),

@@ -33,6 +33,19 @@ export function useSchoolActive() {
     return () => { alive = false; };
   }, []);
 
+  // Escape-hatch DEV (guardé, sans effet en prod : les deux clés sont absentes → ignoré).
+  // Sert à tester les modes ÉCOLE/SIMPLE en preview quand le fetch tenant_services n'aboutit
+  // pas (préflight CORS de l'API locale). `window.__FORCE_SCHOOL_ACTIVE__` = volatile ;
+  // `localStorage.__FORCE_SCHOOL_ACTIVE__` = survit au reload complet (pour la revue).
+  if (typeof window !== 'undefined') {
+    if (window.__FORCE_SCHOOL_ACTIVE__ != null) return window.__FORCE_SCHOOL_ACTIVE__;
+    try {
+      const ls = window.localStorage?.getItem('__FORCE_SCHOOL_ACTIVE__');
+      if (ls === 'true') return true;
+      if (ls === 'false') return false;
+    } catch { /* localStorage indisponible */ }
+  }
+
   return active;
 }
 

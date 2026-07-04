@@ -3,6 +3,7 @@ import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { supabase } from '@/lib/customSupabaseClient';
 import UnifiedVideoPlayer from '@/components/lesson-player/unified/UnifiedVideoPlayer';
 import { fromReplay } from '@/components/lesson-player/unified/fromReplay';
+import NoteComposer from '@/components/liri/NoteComposer';
 
 /**
  * Salle de replay « mode révision » : lit une session + son état recall via la RPC
@@ -208,6 +209,13 @@ export default function ReplayRoomPage() {
         <div style={{ textAlign: 'center', padding: '44px 20px', color: COL.t3 }}>Replay introuvable ou non accessible.</div>
       ) : (
         <UnifiedVideoPlayer data={data} layout="embed" onAskQuestion={handleAsk} />
+      )}
+
+      {/* Prise de notes rattachée à CE LIVE → remonte au hub « Mes notes » (filtre + lien origine) */}
+      {data && (
+        <div style={{ marginTop: 18, background: 'rgba(0,0,0,0.16)', border: '1px solid rgba(245,244,238,0.08)', borderRadius: 16, padding: 16 }}>
+          <NoteComposer sourceType="live" sourceId={sessionId} sourceTitle={session?.title || 'Live'} />
+        </div>
       )}
     </div>
   );

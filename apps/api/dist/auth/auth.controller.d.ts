@@ -5,12 +5,7 @@ export declare class AuthController {
     private readonly authService;
     private readonly tenantApiKeyService;
     constructor(authService: AuthService, tenantApiKeyService: TenantApiKeyService);
-    me(req: any): Promise<{
-        data: {
-            id: any;
-            email: any;
-        };
-    }>;
+    me(req: any): Promise<import("./auth.service").CimolaceIdentity>;
     tenantToken(dto: TenantTokenDto): Promise<{
         token: string;
         expiresAt: string;

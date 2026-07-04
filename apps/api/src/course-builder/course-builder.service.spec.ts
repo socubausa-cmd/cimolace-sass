@@ -16,8 +16,11 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { NotFoundException } from '@nestjs/common';
 import { CourseBuilderService } from './course-builder.service';
+import { ConfigService } from '@nestjs/config';
 import { SupabaseService } from '../supabase/supabase.service';
 import { MasterclassFactoryService } from '../masterclass-factory/masterclass-factory.service';
+import { AiUtilsService } from '../ai-utils/ai-utils.service';
+import { TopicsService } from '../messaging/topics.service';
 
 function buildChain(
   singleResult: { data: unknown; error: unknown } = { data: null, error: null },
@@ -56,6 +59,17 @@ const mockMasterclass = {
     .fn()
     .mockResolvedValue({ text: '', provider: 'none' }),
 };
+// Le constructeur réel injecte AiUtilsService, ConfigService et TopicsService.
+const mockAiUtils = {
+  reformulate: jest.fn().mockResolvedValue({ result: '' }),
+};
+const mockConfig = { get: jest.fn().mockReturnValue('') };
+// LOT 3 — TopicsService est appelé en effet de bord (best-effort) par saveVersion.
+const mockTopics = {
+  publishCourseContentTopic: jest
+    .fn()
+    .mockResolvedValue({ topic: null, skipped: 'course_not_resolved' }),
+};
 
 const TENANT_ID = 'tenant-0001';
 
@@ -85,6 +99,9 @@ describe('CourseBuilderService', () => {
         CourseBuilderService,
         { provide: SupabaseService, useValue: mockSupabase },
         { provide: MasterclassFactoryService, useValue: mockMasterclass },
+        { provide: AiUtilsService, useValue: mockAiUtils },
+        { provide: ConfigService, useValue: mockConfig },
+        { provide: TopicsService, useValue: mockTopics },
       ],
     }).compile();
 

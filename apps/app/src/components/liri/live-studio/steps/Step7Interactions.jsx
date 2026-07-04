@@ -65,7 +65,7 @@ function Step7SubstepIndicator({ activeIndex, trackCount, liriCount }) {
               key={meta.key}
               className={cn(
                 'flex gap-2.5 rounded-lg border px-3 py-2.5 text-left transition-colors',
-                current && 'border-[#7B61FF]/50 bg-[#7B61FF]/10 shadow-[0_0_0_1px_rgba(123,97,255,0.12)]',
+                current && 'border-[#d97757]/50 bg-[#d97757]/10 shadow-[0_0_0_1px_rgba(217,119,87,0.12)]',
                 done && !current && 'border-emerald-500/25 bg-emerald-500/5',
                 locked && 'border-white/8 bg-black/25 opacity-60',
               )}
@@ -73,7 +73,7 @@ function Step7SubstepIndicator({ activeIndex, trackCount, liriCount }) {
               <div
                 className={cn(
                   'flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-xs font-bold',
-                  current && 'bg-[#7B61FF]/25 text-[#7B61FF]',
+                  current && 'bg-[#d97757]/25 text-[#d97757]',
                   done && !current && 'bg-emerald-500/20 text-emerald-400',
                   locked && 'bg-white/5 text-gray-500',
                 )}
@@ -361,13 +361,13 @@ export function Step7Interactions({ draft, updateDraft, interactionsSubStepIndex
               className={cn(
                 'p-4 rounded-xl border transition-all',
                 draft[key]
-                  ? 'bg-[#7B61FF]/10 border-[#7B61FF]/30'
+                  ? 'bg-[#d97757]/10 border-[#d97757]/30'
                   : 'bg-[#0F1419]/50 border-white/10 hover:border-white/20'
               )}
             >
               <div className="flex items-start justify-between gap-3">
                 <div className="flex items-center gap-3">
-                  <Icon className="w-5 h-5 text-[#7B61FF]/80 flex-shrink-0" />
+                  <Icon className="w-5 h-5 text-[#d97757]/80 flex-shrink-0" />
                   <div>
                     <Label className="text-white font-medium">{label}</Label>
                     <p className="text-xs text-gray-500">{desc}</p>
@@ -376,7 +376,7 @@ export function Step7Interactions({ draft, updateDraft, interactionsSubStepIndex
                 <Switch
                   checked={draft[key] ?? false}
                   onCheckedChange={(v) => updateDraft({ [key]: v })}
-                  className="data-[state=checked]:bg-[#7B61FF]"
+                  className="data-[state=checked]:bg-[#d97757]"
                 />
               </div>
             </motion.div>
@@ -398,7 +398,7 @@ export function Step7Interactions({ draft, updateDraft, interactionsSubStepIndex
           <Switch
             checked={draft.ambient_audio_enabled ?? false}
             onCheckedChange={(v) => updateDraft({ ambient_audio_enabled: v })}
-            className="data-[state=checked]:bg-[#7B61FF]"
+            className="data-[state=checked]:bg-[#d97757]"
           />
         </div>
 
@@ -422,7 +422,7 @@ export function Step7Interactions({ draft, updateDraft, interactionsSubStepIndex
                         className={cn(
                           'inline-flex items-stretch rounded-lg text-xs border overflow-hidden',
                           added
-                            ? 'border-[#7B61FF]/40 bg-[#7B61FF]/10'
+                            ? 'border-[#d97757]/40 bg-[#d97757]/10'
                             : 'border-white/10 bg-[#0F1419]/50'
                         )}
                       >
@@ -433,7 +433,7 @@ export function Step7Interactions({ draft, updateDraft, interactionsSubStepIndex
                             e.stopPropagation();
                             setAmbientPreview({ url: p.url, label: p.label });
                           }}
-                          className="px-2 py-1.5 text-[#7B61FF] hover:bg-white/10 border-r border-white/10"
+                          className="px-2 py-1.5 text-[#d97757] hover:bg-white/10 border-r border-white/10"
                         >
                           <Play className="w-3 h-3" />
                         </button>
@@ -444,7 +444,7 @@ export function Step7Interactions({ draft, updateDraft, interactionsSubStepIndex
                           className={cn(
                             'flex items-center gap-1.5 px-3 py-1.5 transition-colors',
                             added
-                              ? 'text-[#7B61FF] cursor-default'
+                              ? 'text-[#d97757] cursor-default'
                               : 'text-gray-300 hover:bg-white/5'
                           )}
                         >
@@ -497,11 +497,11 @@ export function Step7Interactions({ draft, updateDraft, interactionsSubStepIndex
                         type="button"
                         title="Préécouter"
                         onClick={() => setAmbientPreview({ url: track.url, label: track.label || `Piste ${i + 1}` })}
-                        className="text-[#7B61FF]/80 hover:text-[#7B61FF] p-1 rounded-md hover:bg-white/5 flex-shrink-0"
+                        className="text-[#d97757]/80 hover:text-[#d97757] p-1 rounded-md hover:bg-white/5 flex-shrink-0"
                       >
                         <Play className="w-3.5 h-3.5" />
                       </button>
-                      <Volume2 className="w-3.5 h-3.5 text-[#7B61FF]/60 flex-shrink-0" />
+                      <Volume2 className="w-3.5 h-3.5 text-[#d97757]/60 flex-shrink-0" />
                       <span className="text-sm text-white flex-1 truncate">{track.label || `Piste ${i + 1}`}</span>
                       <div className="flex items-center gap-1.5">
                         <span className="text-[10px] text-gray-500">Vol.</span>
@@ -515,7 +515,7 @@ export function Step7Interactions({ draft, updateDraft, interactionsSubStepIndex
                             next[i] = { ...next[i], volume: Number(e.target.value) / 100 };
                             updateDraft({ ambient_tracks: next });
                           }}
-                          className="w-16 h-1 accent-[#7B61FF]"
+                          className="w-16 h-1 accent-[#d97757]"
                         />
                       </div>
                       <button type="button" onClick={() => removeTrack(i)} className="text-gray-600 hover:text-red-400">
@@ -542,7 +542,7 @@ export function Step7Interactions({ draft, updateDraft, interactionsSubStepIndex
       >
         <div className="flex items-center justify-between gap-3">
           <div className="flex items-center gap-2 min-w-0">
-            <Disc3 className="w-5 h-5 text-[#7B61FF]/80 shrink-0" />
+            <Disc3 className="w-5 h-5 text-[#d97757]/80 shrink-0" />
             <div>
               <p className="text-xs uppercase tracking-wider text-gray-500">Scènes audio LIRI</p>
               <p className="text-[11px] text-gray-600 mt-0.5">
@@ -558,7 +558,7 @@ export function Step7Interactions({ draft, updateDraft, interactionsSubStepIndex
               if (!canUseLiriSceneTracks) return;
               updateDraft({ liri_audio_enabled: v });
             }}
-            className="data-[state=checked]:bg-[#7B61FF] shrink-0"
+            className="data-[state=checked]:bg-[#d97757] shrink-0"
           />
         </div>
 
@@ -582,10 +582,10 @@ export function Step7Interactions({ draft, updateDraft, interactionsSubStepIndex
             >
               <div className="rounded-xl border border-white/[0.08] bg-black/20 px-3 py-2.5 space-y-1">
                 <p className="text-[11px] text-gray-400 flex items-center gap-2">
-                  <LayoutList className="w-3.5 h-3.5 text-[#7B61FF]/70 shrink-0" />
+                  <LayoutList className="w-3.5 h-3.5 text-[#d97757]/70 shrink-0" />
                   <span>
                     Déroulé SmartBoard détecté :{' '}
-                    <strong className="text-[#7B61FF]/90">{smartboardScenes.length}</strong> scène
+                    <strong className="text-[#d97757]/90">{smartboardScenes.length}</strong> scène
                     {smartboardScenes.length > 1 ? 's' : ''} (Architect IA, plan mindmap IA ou manuel).
                   </span>
                 </p>
@@ -596,7 +596,7 @@ export function Step7Interactions({ draft, updateDraft, interactionsSubStepIndex
                   type="button"
                   variant="outline"
                   size="sm"
-                  className="border-[#7B61FF]/35 text-[#7B61FF] hover:bg-[#7B61FF]/10"
+                  className="border-[#d97757]/35 text-[#d97757] hover:bg-[#d97757]/10"
                   disabled={availableSmartboardPicks.length === 0}
                   title={
                     availableSmartboardPicks.length === 0
@@ -611,7 +611,7 @@ export function Step7Interactions({ draft, updateDraft, interactionsSubStepIndex
                   type="button"
                   variant="outline"
                   size="sm"
-                  className="border-[#7B61FF]/30 text-[#c4b5fd]/90 hover:bg-[#7B61FF]/10"
+                  className="border-[#d97757]/30 text-[#f0b89a]/90 hover:bg-[#d97757]/10"
                   onClick={syncLiriRowsToSmartboard}
                   title="Crée une ligne par slide SmartBoard ; conserve les fichiers déjà renseignés quand c'est possible"
                 >
@@ -651,7 +651,7 @@ export function Step7Interactions({ draft, updateDraft, interactionsSubStepIndex
                     >
                       <div className="space-y-1">
                         {sbPick ? (
-                          <p className="text-[10px] font-medium text-[#7B61FF]/85">
+                          <p className="text-[10px] font-medium text-[#d97757]/85">
                             Slide SmartBoard {sbPick.index + 1}/{smartboardScenes.length} — {sbPick.label}
                           </p>
                         ) : (
@@ -692,7 +692,7 @@ export function Step7Interactions({ draft, updateDraft, interactionsSubStepIndex
                             title="Préécouter"
                             disabled={!scene.audioUrl}
                             onClick={() => scene.audioUrl && setAmbientPreview({ url: scene.audioUrl, label: scene.name || `Scène ${i + 1}` })}
-                            className="p-1.5 rounded-lg text-[#7B61FF]/80 hover:bg-[#7B61FF]/15 disabled:opacity-25"
+                            className="p-1.5 rounded-lg text-[#d97757]/80 hover:bg-[#d97757]/15 disabled:opacity-25"
                           >
                             <Play className="w-4 h-4" />
                           </button>
@@ -737,7 +737,7 @@ export function Step7Interactions({ draft, updateDraft, interactionsSubStepIndex
                             max={100}
                             value={Math.round((typeof scene.volume === 'number' ? scene.volume : 0.35) * 100)}
                             onChange={(e) => patchLiriScene(i, { volume: Number(e.target.value) / 100 })}
-                            className="w-24 h-1 accent-[#7B61FF]"
+                            className="w-24 h-1 accent-[#d97757]"
                           />
                         </label>
                         <label className="flex items-center gap-2 text-[11px] text-gray-400 cursor-pointer">
@@ -764,7 +764,7 @@ export function Step7Interactions({ draft, updateDraft, interactionsSubStepIndex
                           }}
                           rows={2}
                           placeholder="Affiché dans l'overlay synchro scène…"
-                          className="w-full rounded-lg border border-white/10 bg-black/30 px-3 py-2 text-xs text-white/90 outline-none focus:border-[#7B61FF]/40 resize-none"
+                          className="w-full rounded-lg border border-white/10 bg-black/30 px-3 py-2 text-xs text-white/90 outline-none focus:border-[#d97757]/40 resize-none"
                         />
                       </div>
                     </div>
@@ -788,7 +788,7 @@ export function Step7Interactions({ draft, updateDraft, interactionsSubStepIndex
       <Dialog open={liriSlidePickOpen} onOpenChange={setLiriSlidePickOpen}>
         <DialogContent
           overlayClassName="z-[2200]"
-          className="!z-[2200] bg-[#0F1419] border-[#7B61FF]/25 sm:max-w-md text-white"
+          className="!z-[2200] bg-[#0F1419] border-[#d97757]/25 sm:max-w-md text-white"
         >
           <DialogHeader>
             <DialogTitle className="text-white">Choisir une slide SmartBoard</DialogTitle>
@@ -805,9 +805,9 @@ export function Step7Interactions({ draft, updateDraft, interactionsSubStepIndex
                   key={o.linkId}
                   type="button"
                   onClick={() => addLiriSceneForSmartboardPick(o)}
-                  className="w-full text-left rounded-xl border border-white/10 bg-black/30 px-3 py-3 hover:border-[#7B61FF]/40 hover:bg-[#7B61FF]/10 transition-colors"
+                  className="w-full text-left rounded-xl border border-white/10 bg-black/30 px-3 py-3 hover:border-[#d97757]/40 hover:bg-[#d97757]/10 transition-colors"
                 >
-                  <span className="text-[#7B61FF] font-semibold tabular-nums">{o.index + 1}.</span>{' '}
+                  <span className="text-[#d97757] font-semibold tabular-nums">{o.index + 1}.</span>{' '}
                   <span className="text-sm text-white">{o.label}</span>
                   <span className="block text-[10px] text-gray-500 mt-1">Position {o.index + 1} dans le déroulé SmartBoard</span>
                 </button>
@@ -829,7 +829,7 @@ export function Step7Interactions({ draft, updateDraft, interactionsSubStepIndex
             </DialogDescription>
           </DialogHeader>
           {ambientPreview?.url ? (
-            <audio key={ambientPreview.url} src={ambientPreview.url} controls className="w-full mt-2 accent-[#7B61FF]" autoPlay />
+            <audio key={ambientPreview.url} src={ambientPreview.url} controls className="w-full mt-2 accent-[#d97757]" autoPlay />
           ) : null}
         </DialogContent>
       </Dialog>

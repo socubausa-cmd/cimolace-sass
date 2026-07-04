@@ -11,7 +11,10 @@
     "ios": {
       "icon": "./assets/expo.icon",
       "supportsTablet": true,
-      "bundleIdentifier": "org.prorascience.liri"
+      "bundleIdentifier": "org.prorascience.liri",
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false
+      }
     },
     "android": {
       "package": "org.prorascience.liri",

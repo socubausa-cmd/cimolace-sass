@@ -1,10 +1,11 @@
 import { Feather } from '@expo/vector-icons';
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Linking, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import PaymentSheet, { type PaymentItem } from '@/components/commerce/payment-sheet';
 import { LiriFonts as F, softShadow, type LiriPalette } from '@/constants/liri-theme';
+import { supabase } from '@/lib/supabase';
 import { useTheme } from '@/lib/theme';
 
 /**
@@ -14,43 +15,81 @@ import { useTheme } from '@/lib/theme';
  */
 const WEB = (process.env.EXPO_PUBLIC_WEB_URL ?? '').replace(/\/+$/, '');
 
-const toCents = (price: string) => parseInt(price.replace(/[^\d]/g, ''), 10) || 0;
-
 type Tab = 'forfaits' | 'boutique';
 
-const FORFAITS = [
-  { id: 'mensuel', label: 'Mensuel', price: '9 900', period: '/ mois', perks: ['Accès tous les lives', 'Replays illimités', 'Neuron IA'], featured: false },
-  { id: 'trimestre', label: 'Trimestriel', price: '26 900', period: '/ trim.', perks: ['Tout le mensuel', '-10% vs mensuel', 'Support prioritaire'], featured: true },
-  { id: 'annee', label: 'Annuel', price: '94 900', period: '/ an', perks: ['Tout le trimestriel', '-20% vs mensuel', 'Certificats inclus'], featured: false },
-];
+type BillingPlan = {
+  key: string;
+  label: string;
+  description?: string | null;
+  price_cents: number;
+  currency: string;
+  billing_cycle: string;
+  features?: unknown;
+};
 
-const BOUTIQUE = [
-  { id: 'pack-sacre', label: 'Pack Sacré', desc: 'Ouvrages fondateurs (PDF)', price: '14 900', emoji: '📜' },
-  { id: 'fiches', label: 'Fiches de révision', desc: '21 sciences · format imprimable', price: '6 900', emoji: '🗂️' },
-  { id: 'audio', label: 'Pack audio', desc: 'Cours en audio (hors-ligne)', price: '9 900', emoji: '🎧' },
-];
+const periodLabel = (cycle: string) =>
+  ({ monthly: '/ mois', quarterly: '/ trim.', yearly: '/ an', weekly: '/ semaine', one_time: '' })[cycle] ?? '';
+
+const money = (cents: number) =>
+  Math.round(cents / 100).toLocaleString('fr-FR').replace(/\u202f/g, ' ');
+
+const featureLabels = (features: unknown): string[] => {
+  if (Array.isArray(features)) {
+    return features
+      .map((feature) => (typeof feature === 'string' ? feature : null))
+      .filter((feature): feature is string => !!feature)
+      .slice(0, 4);
+  }
+  return [];
+};
 
 export default function CommerceScreen() {
   const { colors: C } = useTheme();
   const s = useMemo(() => makeStyles(C), [C]);
   const [tab, setTab] = useState<Tab>('forfaits');
   const [payItem, setPayItem] = useState<PaymentItem | null>(null);
+  const [plans, setPlans] = useState<BillingPlan[]>([]);
+  const [catalogError, setCatalogError] = useState(false);
 
-  const buyForfait = (f: (typeof FORFAITS)[number]) =>
+  useEffect(() => {
+    let active = true;
+    void (async () => {
+      const { data, error } = await supabase
+        .from('billing_plans')
+        .select('key,label,description,price_cents,currency,billing_cycle,features,is_active')
+        .eq('is_active', true)
+        .order('price_cents', { ascending: true });
+      if (!active) return;
+      setCatalogError(!!error);
+      setPlans(
+        ((data as BillingPlan[] | null) ?? []).filter(
+          (plan) => !String(plan.key).toLowerCase().startsWith('ngowazulu-'),
+        ),
+      );
+    })();
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  const forfaits = plans.filter((plan) => plan.billing_cycle !== 'one_time');
+  const boutique = plans.filter((plan) => plan.billing_cycle === 'one_time');
+
+  const buyForfait = (f: BillingPlan) =>
     setPayItem({
       label: `Forfait ${f.label}`,
       kind: 'subscription',
-      planSlug: `isna-forfait-${f.id}`,
-      amountCents: toCents(f.price),
-      priceLabel: `${f.price} FCFA`,
+      planSlug: f.key,
+      amountCents: f.price_cents,
+      priceLabel: `${money(f.price_cents)} ${f.currency}`,
     });
 
-  const buyBoutique = (b: (typeof BOUTIQUE)[number]) =>
+  const buyBoutique = (b: BillingPlan) =>
     setPayItem({
       label: b.label,
       kind: 'donation',
-      amountCents: toCents(b.price),
-      priceLabel: `${b.price} FCFA`,
+      amountCents: b.price_cents,
+      priceLabel: `${money(b.price_cents)} ${b.currency}`,
     });
 
   const openWebCheckout = (kind: string, id: string) => {
@@ -77,45 +116,48 @@ export default function CommerceScreen() {
         </View>
 
         <ScrollView contentContainerStyle={s.scroll} showsVerticalScrollIndicator={false}>
+          {catalogError ? <Text style={s.catalogNotice}>Catalogue temporairement indisponible. Réessayez plus tard.</Text> : null}
+          {!catalogError && tab === 'forfaits' && forfaits.length === 0 ? <Text style={s.catalogNotice}>Aucun forfait actif.</Text> : null}
+          {!catalogError && tab === 'boutique' && boutique.length === 0 ? <Text style={s.catalogNotice}>Aucune offre ponctuelle active.</Text> : null}
           {tab === 'forfaits'
-            ? FORFAITS.map((f) => (
-                <View key={f.id} style={[s.card, f.featured && s.cardFeatured]}>
-                  {f.featured ? <View style={s.popular}><Text style={s.popularTxt}>POPULAIRE</Text></View> : null}
+            ? forfaits.map((f, index) => (
+                <View key={f.key} style={[s.card, index === 1 && s.cardFeatured]}>
+                  {index === 1 ? <View style={s.popular}><Text style={s.popularTxt}>POPULAIRE</Text></View> : null}
                   <Text style={s.planLabel}>{f.label}</Text>
                   <View style={s.priceRow}>
-                    <Text style={s.price}>{f.price}</Text>
-                    <Text style={s.currency}>FCFA</Text>
-                    <Text style={s.period}>{f.period}</Text>
+                    <Text style={s.price}>{money(f.price_cents)}</Text>
+                    <Text style={s.currency}>{f.currency}</Text>
+                    <Text style={s.period}>{periodLabel(f.billing_cycle)}</Text>
                   </View>
                   <View style={s.perks}>
-                    {f.perks.map((p) => (
+                    {(featureLabels(f.features).length ? featureLabels(f.features) : [f.description || 'Accès selon les conditions du forfait']).map((p) => (
                       <View key={p} style={s.perk}>
                         <Feather name="check" size={15} color={C.coral} />
                         <Text style={s.perkTxt}>{p}</Text>
                       </View>
                     ))}
                   </View>
-                  <Pressable style={({ pressed }) => [s.cta, f.featured && s.ctaFeatured, pressed && s.pressed]} onPress={() => buyForfait(f)}>
-                    <Feather name="smartphone" size={15} color={f.featured ? '#fff' : C.coral} />
-                    <Text style={[s.ctaTxt, f.featured && s.ctaTxtFeatured]}>Payer · Mobile Money</Text>
+                  <Pressable style={({ pressed }) => [s.cta, index === 1 && s.ctaFeatured, pressed && s.pressed]} onPress={() => buyForfait(f)}>
+                    <Feather name="smartphone" size={15} color={index === 1 ? '#fff' : C.coral} />
+                    <Text style={[s.ctaTxt, index === 1 && s.ctaTxtFeatured]}>Payer · Mobile Money</Text>
                   </Pressable>
                   {WEB ? (
-                    <Pressable onPress={() => openWebCheckout('forfait', f.id)} hitSlop={6}>
+                    <Pressable onPress={() => openWebCheckout('forfait', f.key)} hitSlop={6}>
                       <Text style={s.cardLink}>ou payer par carte</Text>
                     </Pressable>
                   ) : null}
                 </View>
               ))
-            : BOUTIQUE.map((b) => (
-                <Pressable key={b.id} style={({ pressed }) => [s.shopRow, pressed && s.pressed]} onPress={() => buyBoutique(b)}>
-                  <View style={s.shopEmoji}><Text style={{ fontSize: 24 }}>{b.emoji}</Text></View>
+            : boutique.map((b) => (
+                <Pressable key={b.key} style={({ pressed }) => [s.shopRow, pressed && s.pressed]} onPress={() => buyBoutique(b)}>
+                  <View style={s.shopEmoji}><Text style={{ fontSize: 24 }}>📦</Text></View>
                   <View style={s.shopMid}>
                     <Text style={s.shopLabel}>{b.label}</Text>
-                    <Text style={s.shopDesc}>{b.desc}</Text>
+                    <Text style={s.shopDesc}>{b.description || 'Offre LIRI'}</Text>
                   </View>
                   <View style={s.shopBuy}>
-                    <Text style={s.shopPrice}>{b.price}</Text>
-                    <Text style={s.shopFcfa}>FCFA</Text>
+                    <Text style={s.shopPrice}>{money(b.price_cents)}</Text>
+                    <Text style={s.shopFcfa}>{b.currency}</Text>
                   </View>
                 </Pressable>
               ))}
@@ -141,6 +183,7 @@ const makeStyles = (C: LiriPalette) => StyleSheet.create({
   tabTxt: { color: C.muted, fontSize: 14, fontWeight: '700', fontFamily: F.sans },
   tabTxtOn: { color: C.coral },
   scroll: { paddingHorizontal: 18, paddingBottom: 36, paddingTop: 8 },
+  catalogNotice: { color: C.faint, fontSize: 13, textAlign: 'center', paddingVertical: 24, fontFamily: F.sans },
 
   card: { borderRadius: 20, borderWidth: 1, borderColor: C.line, backgroundColor: C.panelTint, padding: 18, marginBottom: 12 },
   cardFeatured: { borderColor: C.coral, ...softShadow },

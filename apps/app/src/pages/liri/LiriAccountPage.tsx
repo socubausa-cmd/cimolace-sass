@@ -360,9 +360,7 @@ export default function LiriAccountPage() {
           <div>
             <Header title="Facturation & abonnement" subtitle="Votre forfait LIRI, vos renouvellements et vos factures — sans quitter le portail." />
             <div className="mt-5 border-t lp-line">
-              <Row label="Plan actuel" value={billing.label} action={!billing.isPaid ? (
-                <button onClick={() => nav('/cimolace/billing?upgrade=liri')} className="flex shrink-0 items-center gap-1.5 rounded-lg px-3.5 py-2 text-[12.5px] font-medium text-white lp-tr" style={{ background: 'linear-gradient(90deg,#e2855f,#c2683f)' }}><Sparkles size={14} /> Passer à un forfait</button>
-              ) : undefined} />
+              <Row label="Plan actuel" value={billing.label} />
               {billing.endLabel && <Row label={billing.isPaid ? 'Prochain renouvellement' : "Fin de l’essai"} value={billing.endLabel} />}
             </div>
 
@@ -469,7 +467,7 @@ export default function LiriAccountPage() {
               )}
               <Row label="Identifiant" value={<span className="font-mono text-[13px]">/t/{orgSlug}</span>} />
               <Row label="Plan" value={billing.label} action={!billing.isPaid ? (
-                <button onClick={() => nav('/cimolace/billing?upgrade=liri')} className="flex shrink-0 items-center gap-1.5 rounded-lg px-3.5 py-2 text-[12.5px] font-medium text-white lp-tr" style={{ background: 'linear-gradient(90deg,#e2855f,#c2683f)' }}><Sparkles size={14} /> Passer à un forfait</button>
+                <button onClick={() => setSection('facturation')} className="flex shrink-0 items-center gap-1.5 rounded-lg px-3.5 py-2 text-[12.5px] font-medium text-white lp-tr" style={{ background: 'linear-gradient(90deg,#e2855f,#c2683f)' }}><Sparkles size={14} /> Passer à un forfait</button>
               ) : undefined} />
             </div>
 

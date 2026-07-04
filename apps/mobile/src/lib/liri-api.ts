@@ -19,6 +19,11 @@ export const DEFAULT_MODEL = 'claude-haiku-4-5-20251001';
 /** UUID du tenant ISNA — même valeur que le web (tenants/isna/tenant.config). */
 export const ISNA_TENANT_ID =
   process.env.EXPO_PUBLIC_TENANT_ID ?? '4f6faaa8-43a0-46d6-b98a-99ea1154f9ea';
+let activeTenantId = ISNA_TENANT_ID;
+export const setActiveTenantId = (tenantId: string | null | undefined) => {
+  activeTenantId = tenantId || ISNA_TENANT_ID;
+};
+export const getActiveTenantId = () => activeTenantId;
 
 // Token de session — mis à jour par AuthProvider à chaque changement de session.
 let sessionToken: string | null = null;
@@ -310,7 +315,7 @@ export async function fetchSmartboardDecks(): Promise<SmartboardDeckSummary[]> {
     const { data, error } = await supabase
       .from('smartboard_decks')
       .select('id, title, status, created_at')
-      .eq('tenant_id', ISNA_TENANT_ID)
+      .eq('tenant_id', getActiveTenantId())
       .order('created_at', { ascending: false })
       .limit(30);
     if (error || !data) return [];
@@ -398,7 +403,7 @@ export async function fetchForumTopics(): Promise<ForumTopic[]> {
   const { data, error } = await supabase
     .from('forum_topics')
     .select('id, title, category, created_at, last_post_at, replies_count, is_locked, is_pinned')
-    .eq('tenant_id', ISNA_TENANT_ID)
+    .eq('tenant_id', getActiveTenantId())
     .eq('is_locked', false)
     .order('last_post_at', { ascending: false, nullsFirst: false })
     .order('created_at', { ascending: false })
@@ -425,7 +430,7 @@ export async function fetchReplays(): Promise<Replay[]> {
   const { data, error } = await supabase
     .from('live_sessions')
     .select('id, title, status, scheduled_at, created_at')
-    .eq('tenant_id', ISNA_TENANT_ID)
+    .eq('tenant_id', getActiveTenantId())
     .eq('replay_enabled', true)
     .order('scheduled_at', { ascending: false })
     .limit(50);
@@ -627,10 +632,16 @@ export function createForumTopic(input: {
 export interface AppNotification {
   id: string;
   title?: string | null;
-  message?: string | null;
-  type?: string | null;
+  body?: string | null;
+  channel?: string | null;
+  data?: Record<string, unknown> | null;
   is_read?: boolean | null;
   created_at?: string | null;
+  /** Compatibilité UI : dérivé de `body`. */
+  message?: string | null;
+  /** Compatibilité UI : dérivé de `data.type` ou `channel`. */
+  type?: string | null;
+  /** Compatibilité UI : dérivé de `data.action_url`. */
   action_url?: string | null;
 }
 
@@ -648,34 +659,55 @@ export async function fetchNotifications(): Promise<AppNotification[]> {
   if (!uid) return [];
   const { data, error } = await supabase
     .from('notifications')
-    .select('id,user_id,title,message,type,is_read,created_at,action_url')
+    .select('id,user_id,tenant_id,title,body,channel,data,is_read,created_at')
     .eq('user_id', uid)
+    .eq('tenant_id', getActiveTenantId())
     .order('created_at', { ascending: false })
     .limit(50);
   if (error || !data) return [];
-  return data as AppNotification[];
+  return (data as Omit<AppNotification, 'message' | 'type' | 'action_url'>[]).map((row) => {
+    const payload = row.data && typeof row.data === 'object' ? row.data : {};
+    return {
+      ...row,
+      message: row.body ?? null,
+      type: typeof payload.type === 'string' ? payload.type : row.channel ?? null,
+      action_url: typeof payload.action_url === 'string' ? payload.action_url : null,
+    };
+  });
 }
 
 export async function markNotificationRead(id: string): Promise<void> {
   const uid = await currentUserId();
   if (!uid) return;
-  await supabase.from('notifications').update({ is_read: true }).eq('id', id).eq('user_id', uid);
+  await supabase
+    .from('notifications')
+    .update({ is_read: true, read_at: new Date().toISOString() })
+    .eq('id', id)
+    .eq('user_id', uid)
+    .eq('tenant_id', getActiveTenantId());
 }
 
 export async function markAllNotificationsRead(): Promise<void> {
   const uid = await currentUserId();
   if (!uid) return;
-  await supabase.from('notifications').update({ is_read: true }).eq('user_id', uid).eq('is_read', false);
+  await supabase
+    .from('notifications')
+    .update({ is_read: true, read_at: new Date().toISOString() })
+    .eq('user_id', uid)
+    .eq('tenant_id', getActiveTenantId())
+    .eq('is_read', false);
 }
 
 /** Id de l'utilisateur connecté (ou null). */
 export const myUserId = currentUserId;
 
 // ── Messagerie (DM 1-1) ─────────────────────────────────────────────────────
-// Table `messages` (id, sender_id, receiver_id, content, is_read, created_at),
-// profils via `profiles`. Mirroir de apps/app/src/hooks/useRealtimeMessaging.js.
+// En production, `messages` est protégé service_role et suit le modèle
+// conversation_id + recipient_id. Le mobile passe donc par `/messaging/*`,
+// exactement comme le web, puis normalise recipient_id → receiver_id.
 export interface AppMessage {
   id: string;
+  conversation_id?: string | null;
   sender_id: string;
   receiver_id: string;
   content: string;
@@ -683,6 +715,7 @@ export interface AppMessage {
   created_at: string;
 }
 export interface AppConversation {
+  conversationId: string;
   otherId: string;
   name: string;
   avatarUrl?: string | null;
@@ -691,22 +724,70 @@ export interface AppConversation {
   unread: number;
 }
 
+interface ApiConversation {
+  id: string;
+  updated_at?: string;
+}
+
+interface ApiMessage {
+  id: string;
+  conversation_id?: string | null;
+  sender_id: string;
+  recipient_id?: string | null;
+  receiver_id?: string | null;
+  content: string;
+  is_read?: boolean | null;
+  created_at: string;
+}
+
+const normalizeApiMessage = (row: ApiMessage): AppMessage => ({
+  id: row.id,
+  conversation_id: row.conversation_id ?? null,
+  sender_id: row.sender_id,
+  receiver_id: row.recipient_id ?? row.receiver_id ?? '',
+  content: row.content,
+  is_read: row.is_read ?? false,
+  created_at: row.created_at,
+});
+
+let peerConversationIds = new Map<string, string>();
+
+async function fetchAllMessagingRows(uid: string): Promise<AppMessage[]> {
+  const conversations = (await getJson<ApiConversation[]>('/messaging/conversations')) ?? [];
+  const perConversation = await Promise.all(
+    conversations.map(async (conversation) => {
+      const rows = (await getJson<ApiMessage[]>(`/messaging/conversations/${conversation.id}`)) ?? [];
+      return rows.map(normalizeApiMessage);
+    }),
+  );
+  const rows = perConversation.flat();
+  const mapping = new Map<string, string>();
+  for (const row of rows) {
+    const otherId = row.sender_id === uid ? row.receiver_id : row.sender_id;
+    if (otherId && row.conversation_id) mapping.set(otherId, row.conversation_id);
+  }
+  peerConversationIds = mapping;
+  return rows;
+}
+
 export async function fetchConversations(): Promise<AppConversation[]> {
   const uid = await currentUserId();
   if (!uid) return [];
-  const { data } = await supabase
-    .from('messages')
-    .select('id, sender_id, receiver_id, content, is_read, created_at')
-    .or(`sender_id.eq.${uid},receiver_id.eq.${uid}`)
-    .order('created_at', { ascending: false })
-    .limit(500);
+  const rows = await fetchAllMessagingRows(uid);
   const map = new Map<string, AppConversation>();
-  for (const m of (data as AppMessage[]) ?? []) {
+  for (const m of [...rows].sort((a, b) => +new Date(b.created_at) - +new Date(a.created_at))) {
     const other = m.sender_id === uid ? m.receiver_id : m.sender_id;
     if (!other) continue;
     let conv = map.get(other);
     if (!conv) {
-      conv = { otherId: other, name: 'Membre', lastContent: m.content, lastAt: m.created_at, unread: 0 };
+      conv = {
+        conversationId: m.conversation_id ?? '',
+        otherId: other,
+        name: 'Membre',
+        lastContent: m.content,
+        lastAt: m.created_at,
+        unread: 0,
+      };
       map.set(other, conv);
     }
     if (!m.is_read && m.receiver_id === uid) conv.unread += 1;
@@ -728,24 +809,28 @@ export async function fetchConversations(): Promise<AppConversation[]> {
 export async function fetchThread(otherId: string): Promise<AppMessage[]> {
   const uid = await currentUserId();
   if (!uid) return [];
-  const { data } = await supabase
-    .from('messages')
-    .select('id, sender_id, receiver_id, content, is_read, created_at')
-    .or(`and(sender_id.eq.${uid},receiver_id.eq.${otherId}),and(sender_id.eq.${otherId},receiver_id.eq.${uid})`)
-    .order('created_at', { ascending: true })
-    .limit(200);
-  return (data as AppMessage[]) ?? [];
+  let conversationId = peerConversationIds.get(otherId);
+  if (!conversationId) {
+    await fetchAllMessagingRows(uid);
+    conversationId = peerConversationIds.get(otherId);
+  }
+  if (!conversationId) return [];
+  const rows = (await getJson<ApiMessage[]>(`/messaging/conversations/${conversationId}`)) ?? [];
+  await postJson(`/messaging/conversations/${conversationId}/read`, {});
+  return rows.map(normalizeApiMessage);
 }
 
 export async function sendMessage(receiverId: string, content: string): Promise<AppMessage | null> {
   const uid = await currentUserId();
   if (!uid || !content.trim()) return null;
-  const { data } = await supabase
-    .from('messages')
-    .insert({ sender_id: uid, receiver_id: receiverId, content: content.trim() })
-    .select('id, sender_id, receiver_id, content, is_read, created_at')
-    .single();
-  return (data as AppMessage) ?? null;
+  const row = await postJson<ApiMessage>('/messaging/send', {
+    recipientId: receiverId,
+    content: content.trim(),
+  });
+  if (!row) return null;
+  const normalized = normalizeApiMessage({ ...row, recipient_id: row.recipient_id ?? receiverId });
+  if (normalized.conversation_id) peerConversationIds.set(receiverId, normalized.conversation_id);
+  return normalized;
 }
 
 // ── Paiement Mobile Money (PawaPay, natif) ──────────────────────────────────
@@ -824,7 +909,6 @@ export async function pollDepositStatus(
   const interval = opts.intervalMs ?? 3000;
   const timeout = opts.timeoutMs ?? 90000;
   const start = Date.now();
-  // eslint-disable-next-line no-constant-condition
   while (true) {
     const s = await fetchDepositStatus(depositId);
     if (s) {

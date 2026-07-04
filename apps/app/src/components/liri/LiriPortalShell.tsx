@@ -10,6 +10,8 @@ import { authStore } from '@/lib/auth-store';
 import { useAuth } from '@/hooks/useAuth';
 import { isCreatorRole } from '@/lib/liri/creatorRole';
 import { useSchoolActive } from '@/hooks/useSchoolActive';
+import { LiriRailGroups } from './liriRail';
+import type { RailKey } from './liriRail';
 import { getApiBaseUrl } from '@/lib/apiBase';
 import activeTenantConfig from '@/lib/tenant/activeTenantConfig';
 import { PortalHeaderProvider, usePortalHeaderValues } from './portalHeader';
@@ -17,52 +19,6 @@ import '../../pages/LiriPortal.css';
 // Scope froid→chaud (même règles que le Studio) réutilisé sur tout le contenu du portail
 // → filet de sécurité : Lives, Brain, etc. n'ont plus de classes froides résiduelles.
 import '../../pages/studio-creator/studio/studioWarm.css';
-
-type RailKey =
-  | 'accueil' | 'semaine' | 'formations'
-  | 'vie-scolaire' | 'agenda' | 'notes' | 'evaluations' | 'absences'
-  | 'lives' | 'forum' | 'messages'
-  | 'biblio-eleve' | 'documents'
-  | 'studio' | 'ecole' | 'biblio' | 'brain' | 'integrations' | 'reglages';
-
-type RailItem = { key: RailKey; label: string; icon: typeof House; to: string; creator?: boolean; school?: boolean };
-
-// Rail GROUPÉ (familles) : LIRI embarque ISNA Academy (Vie scolaire) → l'élève a TOUTES
-// ses fonctionnalités école dans le portail. Visibilité :
-//   creator: true  → réservé au CRÉATEUR (Studio/École/Brain…)
-//   student: true  → réservé à l'ÉLÈVE (sa scolarité : agenda/notes/évals… — HS pour l'owner)
-//   (aucun flag)   → partagé (Accueil, Lives, Forum, Messages)
-const RAIL_GROUPS: { section?: string; items: RailItem[] }[] = [
-  { items: [
-    { key: 'accueil', label: 'Accueil', icon: House, to: '/liri' },
-  ] },
-  { section: 'Parcours', items: [
-    { key: 'semaine', label: 'Ma semaine', icon: CalendarDays, to: '/liri/semaine', school: true },
-    { key: 'formations', label: 'Mes cours', icon: BookOpen, to: '/liri/formations', school: true },
-  ] },
-  { section: 'Scolarité', items: [
-    { key: 'vie-scolaire', label: 'Vie scolaire', icon: School, to: '/liri/vie-scolaire', school: true },
-    { key: 'agenda', label: 'Agenda', icon: Calendar, to: '/liri/agenda', school: true },
-    { key: 'notes', label: 'Notes', icon: FileText, to: '/liri/notes', school: true },
-    { key: 'evaluations', label: 'Évals', icon: Award, to: '/liri/evaluations', school: true },
-    { key: 'absences', label: 'Absences', icon: AlertTriangle, to: '/liri/absences', school: true },
-  ] },
-  { section: 'Communauté', items: [
-    { key: 'lives', label: 'Lives', icon: Video, to: '/lives' },
-    { key: 'forum', label: 'Forum', icon: MessagesSquare, to: '/liri/forum' },
-    { key: 'messages', label: 'Messages', icon: MessageCircle, to: '/liri/messages' },
-  ] },
-  { section: 'Ressources', items: [
-    { key: 'biblio-eleve', label: 'Biblio.', icon: Library, to: '/liri/bibliotheque', school: true },
-    { key: 'documents', label: 'Documents', icon: FolderOpen, to: '/liri/documents', school: true },
-  ] },
-  { section: 'Création', items: [
-    { key: 'studio', label: 'Studio', icon: WandSparkles, to: '/studio/liri', creator: true },
-    { key: 'ecole', label: 'École', icon: GraduationCap, to: '/liri/ecole', creator: true },
-    { key: 'biblio', label: 'Biblio.', icon: Library, to: '/studio/liri/bibliotheque', creator: true },
-    { key: 'brain', label: 'Brain', icon: Sparkles, to: '/dashboard/liri', creator: true },
-  ] },
-];
 
 /** Onglets de sous-vues (niveau 3) rendus DANS l'en-tête — voir portalHeader + la RÈGLE menus.
  *  Au-delà de MAX onglets, l'excédent se replie dans un menu « ••• » (RÈGLE menus). */
@@ -251,38 +207,7 @@ function LiriPortalShellInner({
       <div className={`z-10 grid min-h-0 ${rail ? 'grid-cols-[92px_1fr]' : 'grid-cols-[1fr]'}`}>
         {rail && (
         <aside className="flex min-h-0 flex-col items-center gap-0.5 overflow-y-auto lp-rail-bg border-r lp-line py-3 lp-rail-scroll">
-          {RAIL_GROUPS.map((group, gi) => {
-            // Visibilité 3 niveaux : creator (owner…) / school (élève d'un tenant ÉCOLE
-            // activé) / partagé (LIRI simple = Zoom). Sans mode école → sections Vie
-            // scolaire masquées.
-            const items = group.items.filter((it) => (it.creator ? isCreator : it.school ? (!isCreator && schoolActive) : true));
-            if (!items.length) return null;
-            return (
-              <div key={group.section || `g${gi}`} className="flex w-full flex-col items-center gap-0.5">
-                {group.section && (
-                  <div className="mb-0.5 mt-2 w-full px-1 text-center lp-faint" style={{ fontSize: 8, fontWeight: 700, letterSpacing: '0.07em', textTransform: 'uppercase' }}>{group.section}</div>
-                )}
-                {items.map((it) => {
-                  const Icon = it.icon;
-                  const isActive = it.key === active;
-                  return (
-                    <button key={it.key} onClick={() => nav(it.to)} className={`lp-nav flex w-[74px] flex-col items-center gap-0.5 rounded-2xl py-2 lp-tr ${isActive ? 'lp-nav-active' : ''}`}>
-                      <span className="lp-ni relative grid h-6 w-6 place-items-center">
-                        <Icon size={19} />
-                        {it.key === 'lives' && live && (
-                          <span className="absolute -right-1.5 -top-1.5 flex h-3 w-3">
-                            <span className="lp-ping absolute inline-flex h-full w-full rounded-full opacity-75" style={{ background: 'var(--live)' }} />
-                            <span className="relative inline-flex h-3 w-3 rounded-full" style={{ background: 'var(--live)', boxShadow: '0 0 0 2px var(--rail)' }} />
-                          </span>
-                        )}
-                      </span>
-                      <span className="lp-nl text-center text-[9px] font-medium leading-tight">{it.label}</span>
-                    </button>
-                  );
-                })}
-              </div>
-            );
-          })}
+          <LiriRailGroups active={active} isCreator={isCreator} schoolActive={schoolActive} live={live} onNav={nav} />
           {isCreator && (
             <>
               <div className="my-1 h-px w-9" style={{ background: 'rgba(245,244,238,.08)' }} />

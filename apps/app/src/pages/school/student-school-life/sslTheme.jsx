@@ -28,21 +28,30 @@ const MONO = "'JetBrains Mono','Fira Code',monospace";
  * Superset de tous les `const T` des pages élève — défaut, identique à l'existant. */
 export const T_DARK = {
   bg:         '#0b0b0f',
-  surface:    '#12111a',
-  surface2:   '#192734',
-  surface3:   '#1e2840',
+  // Surfaces NEUTRES CHAUDES (ex-navy #192734/#1e2840 → brun très sombre) : s'emboîtent
+  // dans le fond chaud du portail LIRI au lieu de jurer en bleu. Directive artistique LIRI.
+  surface:    '#18130f',
+  surface2:   '#221b15',
+  surface3:   '#2b2219',
   border:     'rgba(255,255,255,0.07)',
   borderMid:  'rgba(255,255,255,0.12)',
-  gold:       '#D4AF37',
-  goldText:   '#D4AF37', // texte/lien doré sur fond sombre (lisible tel quel)
-  goldDim:    'rgba(212,175,55,0.12)',
-  goldMid:    'rgba(212,175,55,0.28)',
-  violet:     '#7C3AED',
-  violetDim:  'rgba(124,58,237,0.12)',
-  violetMid:  'rgba(124,58,237,0.28)',
-  cyan:       '#00E5FF',
-  cyanDim:    'rgba(0,229,255,0.08)',
-  teal:       '#14B8A6',
+  // Accent principal = CORAL LIRI (ex-or ISNA #D4AF37). « gold* » conservés comme noms de
+  // tokens (trop d'usages) mais pointent désormais sur le coral chaud.
+  gold:       '#d97757',
+  goldText:   '#ec9c79', // texte/lien coral clair sur fond sombre (lisible AA)
+  goldDim:    'rgba(217,119,87,0.13)',
+  goldMid:    'rgba(217,119,87,0.32)',
+  goldSolid:  '#d97757', // remplissage coral (boutons/barres) — texte sombre dessus
+  goldBright: 'rgba(217,119,87,0.5)',
+  card:       '#221b15', // carte élevée chaude (sombre)
+  warn:       '#F59E0B',
+  warnDim:    'rgba(245,158,11,0.10)',
+  violet:     '#c66f53', // ex-violet #7C3AED → terracotta (bannir le froid)
+  violetDim:  'rgba(198,111,83,0.13)',
+  violetMid:  'rgba(198,111,83,0.30)',
+  cyan:       '#e3aa6b', // ex-cyan #00E5FF → ambre chaud (accent média / clip)
+  cyanDim:    'rgba(227,170,107,0.10)',
+  teal:       '#d0915c', // ex-teal → terracotta clair
   success:    '#22C55E',
   successDim: 'rgba(34,197,94,0.10)',
   warning:    '#F59E0B',
@@ -65,16 +74,22 @@ export const T_LIGHT = {
   surface3:   '#F4F5F7', // état hover de ligne (légèrement creusé)
   border:     'rgba(0,0,0,0.08)',
   borderMid:  'rgba(0,0,0,0.14)',
-  gold:       '#D4AF37', // accent décoratif (barres, halos, points)
-  goldText:   '#8A6D1A', // texte / lien doré LISIBLE (AA ≥ 4.5:1 sur blanc)
-  goldDim:    'rgba(212,175,55,0.14)',
-  goldMid:    'rgba(212,175,55,0.40)',
-  violet:     '#7C3AED',
-  violetDim:  'rgba(124,58,237,0.10)',
-  violetMid:  'rgba(124,58,237,0.30)',
-  cyan:       '#0E7490', // cyan lisible sur blanc (le #00E5FF natif est illisible)
-  cyanDim:    'rgba(14,116,144,0.08)',
-  teal:       '#0F766E',
+  // Accent CORAL LIRI aussi en clair (ex-or ISNA). Teintes foncées → AA sur fond clair.
+  gold:       '#d97757', // accent décoratif coral (barres, halos, points)
+  goldText:   '#b0532f', // texte / lien CORAL FONCÉ lisible (AA ≥ 4.5:1 sur blanc)
+  goldDim:    'rgba(217,119,87,0.14)',
+  goldMid:    'rgba(217,119,87,0.42)',
+  goldSolid:  '#d97757', // remplissage coral (boutons/barres) — texte sombre dessus
+  goldBright: 'rgba(217,119,87,0.5)',
+  card:       '#FFFFFF', // carte élevée (clair)
+  warn:       '#B45309',
+  warnDim:    'rgba(245,158,11,0.14)',
+  violet:     '#b0532f', // ex-violet → terracotta foncé (bannir le froid)
+  violetDim:  'rgba(176,83,47,0.10)',
+  violetMid:  'rgba(176,83,47,0.30)',
+  cyan:       '#a0632a', // ex-cyan → ambre foncé lisible sur blanc
+  cyanDim:    'rgba(160,99,42,0.08)',
+  teal:       '#9c5733', // ex-teal → terracotta foncé
   success:    '#15803D', // vert lisible sur blanc
   successDim: 'rgba(34,197,94,0.12)',
   warning:    '#B45309', // ambre lisible sur blanc
@@ -129,6 +144,11 @@ const sslLightStyles = `
 .ssl-light .bg-\\[\\#151a21\\],
 .ssl-light .bg-\\[\\#151a21\\]\\/80,
 .ssl-light .bg-\\[\\#1e2840\\],
+/* Surfaces chaudes du calendrier Vie scolaire (ex-navy #0F1419/#16202A/#192734) : en
+   standalone CLAIR on les repasse en cartes blanches (en LIRI elles restent chaudes). */
+.ssl-light .bg-\\[\\#18130f\\],
+.ssl-light .bg-\\[\\#221b15\\],
+.ssl-light .bg-\\[\\#2b2219\\],
 .ssl-light .bg-slate-900,
 .ssl-light .bg-slate-800,
 .ssl-light .bg-gray-900,
@@ -153,7 +173,7 @@ const sslLightStyles = `
 .ssl-light .text-slate-500 { color: #71717A !important; }
 
 /* Lien / accent doré : le #D4AF37 est illisible sur blanc → teinte AA */
-.ssl-light .text-\\[var\\(--school-accent\\)\\] { color: #8A6D1A !important; }
+.ssl-light .text-\\[var\\(--school-accent\\)\\] { color: #b0532f !important; }
 
 /* — Bordures « verre » invisibles sur blanc → bordures grises nettes — */
 .ssl-light .border-white\\/5,
@@ -195,12 +215,12 @@ const sslLightStyles = `
 .ssl-light .forum-dark:not(.forum-immersive) .bg-red-100,
 .ssl-light .forum-dark:not(.forum-immersive) .hover\\:bg-red-100:hover { background-color: rgba(239,68,68,0.14) !important; }
 /* Indigo natif → accent or de l'école (déco) ; CTA reste doré */
-.ssl-light .forum-dark:not(.forum-immersive) .bg-indigo-50 { background-color: rgba(212,175,55,0.10) !important; }
-.ssl-light .forum-dark:not(.forum-immersive) .bg-indigo-100 { background-color: rgba(212,175,55,0.18) !important; }
+.ssl-light .forum-dark:not(.forum-immersive) .bg-indigo-50 { background-color: rgba(217,119,87,0.10) !important; }
+.ssl-light .forum-dark:not(.forum-immersive) .bg-indigo-100 { background-color: rgba(217,119,87,0.18) !important; }
 .ssl-light .forum-dark:not(.forum-immersive) .bg-indigo-600 { background-color: var(--school-accent) !important; }
-.ssl-light .forum-dark:not(.forum-immersive) .hover\\:bg-indigo-700:hover { background-color: #b8902b !important; }
+.ssl-light .forum-dark:not(.forum-immersive) .hover\\:bg-indigo-700:hover { background-color: #a8542f !important; }
 .ssl-light .forum-dark:not(.forum-immersive) .bg-\\[\\#0a0a0f\\] { background-color: var(--school-accent) !important; color: #18181B !important; }
-.ssl-light .forum-dark:not(.forum-immersive) .hover\\:bg-\\[\\#5b3df5\\]:hover { background-color: #b8902b !important; }
+.ssl-light .forum-dark:not(.forum-immersive) .hover\\:bg-\\[\\#5b3df5\\]:hover { background-color: #a8542f !important; }
 /* Texte forum → échelle sombre-sur-clair */
 .ssl-light .forum-dark:not(.forum-immersive) .text-gray-900 { color: #18181B !important; }
 .ssl-light .forum-dark:not(.forum-immersive) .text-gray-700 { color: #3F3F46 !important; }
@@ -210,10 +230,10 @@ const sslLightStyles = `
 .ssl-light .forum-dark:not(.forum-immersive) .text-gray-300 { color: #A1A1AA !important; }
 .ssl-light .forum-dark:not(.forum-immersive) .text-indigo-600,
 .ssl-light .forum-dark:not(.forum-immersive) .text-indigo-700,
-.ssl-light .forum-dark:not(.forum-immersive) .text-indigo-500 { color: #8A6D1A !important; }
+.ssl-light .forum-dark:not(.forum-immersive) .text-indigo-500 { color: #b0532f !important; }
 .ssl-light .forum-dark:not(.forum-immersive) .hover\\:text-gray-900:hover { color: #18181B !important; }
 .ssl-light .forum-dark:not(.forum-immersive) .hover\\:text-gray-700:hover { color: #3F3F46 !important; }
-.ssl-light .forum-dark:not(.forum-immersive) .hover\\:text-indigo-700:hover { color: #6B540F !important; }
+.ssl-light .forum-dark:not(.forum-immersive) .hover\\:text-indigo-700:hover { color: #8a3f22 !important; }
 .ssl-light .forum-dark:not(.forum-immersive) .text-green-600 { color: #15803D !important; }
 .ssl-light .forum-dark:not(.forum-immersive) .text-green-700 { color: #166534 !important; }
 /* Bordures forum */

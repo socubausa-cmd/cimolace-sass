@@ -14,7 +14,7 @@ const CARDS = [
     title: 'Formation LLM Builder',
     desc: 'Point d entree unique pour creer un cours via IA, sans dispersion entre plusieurs constructeurs.',
     tag: 'Course Building',
-    accent: 'from-fuchsia-500/15 to-transparent',
+    accent: 'from-[#d97757]/15 to-transparent',
   },
   {
     to: '/studio/formation',
@@ -22,7 +22,7 @@ const CARDS = [
     title: 'Parcours formation',
     desc: 'Modules, leçons et parcours pédagogiques structurés.',
     tag: 'Academy',
-    accent: 'from-violet-500/15 to-transparent',
+    accent: 'from-[#d97757]/15 to-transparent',
   },
 ];
 
@@ -41,7 +41,7 @@ export default function StudioCourseLabPage() {
       }}
     >
       <div className="pointer-events-none absolute inset-0">
-        <div className="absolute -left-16 top-1/4 h-64 w-64 rounded-full bg-fuchsia-600/10 blur-[100px]" />
+        <div className="absolute -left-16 top-1/4 h-64 w-64 rounded-full bg-[#c96544]/10 blur-[100px]" />
         <div
           className="absolute bottom-0 right-0 h-72 w-72 rounded-full blur-[100px]"
           style={{ backgroundColor: 'color-mix(in srgb, var(--school-accent, #D4AF37) 6%, transparent)' }}
@@ -58,8 +58,8 @@ export default function StudioCourseLabPage() {
 
         <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4 }}>
           <div className="mb-2 flex items-center gap-3">
-            <Sparkles className="h-5 w-5 text-fuchsia-400" />
-            <p className="font-display text-xs font-semibold uppercase tracking-[0.26em] text-fuchsia-300/85">
+            <Sparkles className="h-5 w-5 text-[#e08a5f]" />
+            <p className="font-display text-xs font-semibold uppercase tracking-[0.26em] text-[#e8a97f]/85">
               Laboratoire Cours
             </p>
           </div>
@@ -73,15 +73,15 @@ export default function StudioCourseLabPage() {
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.06 }}
-          className="mt-8 rounded-2xl border border-cyan-400/20 bg-gradient-to-br from-cyan-950/40 via-[#0a0908] to-transparent p-5 md:p-6"
+          className="mt-8 rounded-2xl border border-[#e0a458]/20 bg-gradient-to-br from-[#2e2016]/40 via-[#0a0908] to-transparent p-5 md:p-6"
         >
           <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
             <div className="flex gap-3">
-              <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-cyan-500/15 text-cyan-200">
+              <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-[#d4924a]/15 text-[#ecc98f]">
                 <Compass className="h-5 w-5" />
               </div>
               <div>
-                <p className="font-display text-[10px] font-semibold uppercase tracking-[0.2em] text-cyan-200/90">
+                <p className="font-display text-[10px] font-semibold uppercase tracking-[0.2em] text-[#ecc98f]/90">
                   Tous les constructeurs LIRI
                 </p>
                 <p className="mt-1 max-w-lg text-sm text-white/55">
@@ -93,7 +93,7 @@ export default function StudioCourseLabPage() {
             <div className="flex flex-wrap gap-2">
               <Link
                 to="/studio/liri/constructeurs"
-                className="inline-flex items-center justify-center gap-2 rounded-xl border border-cyan-400/35 bg-cyan-950/30 px-4 py-2.5 text-sm font-medium text-cyan-100 transition-colors hover:border-cyan-300/50 hover:bg-cyan-500/10"
+                className="inline-flex items-center justify-center gap-2 rounded-xl border border-[#e0a458]/35 bg-[#2e2016]/30 px-4 py-2.5 text-sm font-medium text-[#f0d9b8] transition-colors hover:border-[#e6b566]/50 hover:bg-[#d4924a]/10"
               >
                 <Compass className="h-4 w-4" />
                 Hub constructeurs

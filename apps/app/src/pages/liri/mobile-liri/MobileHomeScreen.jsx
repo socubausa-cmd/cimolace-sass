@@ -91,7 +91,7 @@ export default function MobileHomeScreen() {
           </p>
           {user ? (
             <p className="mt-1.5 flex items-center gap-1.5 text-xs text-white/50">
-              <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.85)]" />
+              <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 shadow-[0_0_8px_rgba(207,128,89,0.85)]" />
               Connecté
             </p>
           ) : (

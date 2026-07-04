@@ -1,7 +1,7 @@
 import type { Session } from '@supabase/supabase-js';
 import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
 
-import { setAuthToken } from './liri-api';
+import { setActiveTenantId, setAuthToken, TENANT_SLUG } from './liri-api';
 import { supabase } from './supabase';
 
 interface AuthValue {
@@ -26,15 +26,31 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     let active = true;
+    const syncTenant = async (next: Session | null) => {
+      if (!next) {
+        setActiveTenantId(null);
+        return;
+      }
+      const { data } = await supabase
+        .from('tenant_memberships')
+        .select('tenant_id,tenants!inner(slug)')
+        .eq('user_id', next.user.id)
+        .eq('status', 'active')
+        .eq('tenants.slug', TENANT_SLUG)
+        .maybeSingle();
+      if (active) setActiveTenantId(data?.tenant_id);
+    };
     supabase.auth.getSession().then(({ data }) => {
       if (!active) return;
       setSession(data.session);
       setAuthToken(data.session?.access_token ?? null);
+      void syncTenant(data.session);
       setLoading(false);
     });
     const { data: sub } = supabase.auth.onAuthStateChange((_event, next) => {
       setSession(next);
       setAuthToken(next?.access_token ?? null);
+      void syncTenant(next);
     });
     return () => {
       active = false;

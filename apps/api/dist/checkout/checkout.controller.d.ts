@@ -1,19 +1,16 @@
+import { type RawBodyRequest } from "@nestjs/common";
+import type { Request } from "express";
+import type { AuthUser } from "../auth/current-user.decorator";
 import { CheckoutService } from "./checkout.service";
+import { CreateCheckoutSessionDto } from "./create-checkout-session.dto";
 export declare class CheckoutController {
     private svc;
     constructor(svc: CheckoutService);
-    create(b: any): Promise<{
-        data: {
-            checkoutUrl: string;
-            sessionId: string;
-            amount: number;
-            currency: string;
-        };
+    create(dto: CreateCheckoutSessionDto, user: AuthUser): Promise<{
+        checkoutUrl: string;
+        sessionId: string;
     }>;
-    webhook(b: any): Promise<{
-        data: {
-            received: boolean;
-            type: any;
-        };
+    webhook(req: RawBodyRequest<Request>, sig?: string): Promise<{
+        received: boolean;
     }>;
 }

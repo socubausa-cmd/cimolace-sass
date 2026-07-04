@@ -28,10 +28,10 @@ function assetUrl(filename) {
 }
 
 const ACCENT = {
-  teal: { text: 'text-teal-400', bg: 'bg-teal-500/15', border: 'border-teal-500/30', glow: 'shadow-[0_0_14px_rgba(45,212,191,0.3)]' },
-  cyan: { text: 'text-cyan-400', bg: 'bg-cyan-500/15', border: 'border-cyan-500/30', glow: 'shadow-[0_0_14px_rgba(34,211,238,0.3)]' },
-  violet: { text: 'text-violet-400', bg: 'bg-violet-500/15', border: 'border-violet-500/30', glow: 'shadow-[0_0_14px_rgba(167,139,250,0.3)]' },
-  blue: { text: 'text-blue-400', bg: 'bg-blue-500/15', border: 'border-blue-500/30', glow: 'shadow-[0_0_14px_rgba(96,165,250,0.25)]' },
+  teal: { text: 'text-teal-400', bg: 'bg-teal-500/15', border: 'border-teal-500/30', glow: 'shadow-[0_0_14px_rgba(224,151,106,0.3)]' },
+  cyan: { text: 'text-cyan-400', bg: 'bg-cyan-500/15', border: 'border-cyan-500/30', glow: 'shadow-[0_0_14px_rgba(227,170,107,0.3)]' },
+  violet: { text: 'text-violet-400', bg: 'bg-violet-500/15', border: 'border-violet-500/30', glow: 'shadow-[0_0_14px_rgba(236,174,144,0.3)]' },
+  blue: { text: 'text-blue-400', bg: 'bg-blue-500/15', border: 'border-blue-500/30', glow: 'shadow-[0_0_14px_rgba(218,160,122,0.25)]' },
   amber: { text: 'text-amber-400', bg: 'bg-amber-500/15', border: 'border-amber-500/30', glow: 'shadow-[0_0_14px_rgba(251,191,36,0.25)]' },
 };
 
@@ -60,7 +60,7 @@ function PedagogieFooter() {
   return (
     <footer
       className="flex h-14 flex-shrink-0 items-center gap-3 border-t border-white/[0.07] px-3"
-      style={{ background: '#12111a' }}
+      style={{ background: '#1f1e1c' }}
     >
       <div className="flex min-w-0 flex-1 items-center gap-2 rounded-xl border border-white/[0.08] bg-black/25 px-3 py-2">
         <Sparkles className="h-4 w-4 shrink-0 text-amber-400/85" />

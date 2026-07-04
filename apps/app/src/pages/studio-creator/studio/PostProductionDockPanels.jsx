@@ -14,9 +14,9 @@ import { usePostProdNleStore } from '@/features/smartboard-konva-editor/store/us
 
 const ACCENT = {
   amber:   { text: 'text-amber-400',   bg: 'bg-amber-500/12',   border: 'border-amber-500/28',   glow: 'shadow-[0_0_12px_rgba(245,158,11,0.2)]' },
-  violet:  { text: 'text-violet-400',  bg: 'bg-violet-500/12',  border: 'border-violet-500/28',  glow: 'shadow-[0_0_12px_rgba(167,139,250,0.2)]' },
-  cyan:    { text: 'text-cyan-400',    bg: 'bg-cyan-500/12',    border: 'border-cyan-500/28',    glow: 'shadow-[0_0_12px_rgba(34,211,238,0.2)]' },
-  emerald: { text: 'text-emerald-400', bg: 'bg-emerald-500/12', border: 'border-emerald-500/28', glow: 'shadow-[0_0_12px_rgba(52,211,153,0.2)]' },
+  violet:  { text: 'text-violet-400',  bg: 'bg-violet-500/12',  border: 'border-violet-500/28',  glow: 'shadow-[0_0_12px_rgba(236,174,144,0.2)]' },
+  cyan:    { text: 'text-cyan-400',    bg: 'bg-cyan-500/12',    border: 'border-cyan-500/28',    glow: 'shadow-[0_0_12px_rgba(227,170,107,0.2)]' },
+  emerald: { text: 'text-emerald-400', bg: 'bg-emerald-500/12', border: 'border-emerald-500/28', glow: 'shadow-[0_0_12px_rgba(207,128,89,0.2)]' },
   rose:    { text: 'text-rose-400',    bg: 'bg-rose-500/12',    border: 'border-rose-500/28',    glow: 'shadow-[0_0_12px_rgba(251,113,133,0.2)]' },
   orange:  { text: 'text-orange-400',  bg: 'bg-orange-500/12',  border: 'border-orange-500/28', glow: 'shadow-[0_0_12px_rgba(251,146,60,0.2)]' },
 };
@@ -148,7 +148,7 @@ export function PostProductionContextPanel({
   const locked = !contentLoaded && activeTool !== 'source';
 
   return (
-    <div className="flex h-full min-h-0 w-[220px] flex-shrink-0 flex-col overflow-hidden border-r border-white/[0.06]" style={{ background: '#12111a' }}>
+    <div className="flex h-full min-h-0 w-[220px] flex-shrink-0 flex-col overflow-hidden border-r border-white/[0.06]" style={{ background: '#1f1e1c' }}>
       <div className="shrink-0 border-b border-white/[0.06] px-2.5 py-2">
         <p className="text-[10px] font-semibold text-white/70">Sous-outils</p>
         <p className="text-[9px] text-white/30">Varie selon l'onglet actif</p>

@@ -49,8 +49,7 @@ export function MasterscriptList() {
     [router],
   );
 
-  const renderItem = useCallback(
-    ({ item }: { item: MasterclassProjectSummary }) => (
+  const renderItem = ({ item }: { item: MasterclassProjectSummary }) => (
       <Pressable
         style={({ pressed }) => [styles.card, softShadow, pressed && styles.cardPressed]}
         onPress={() => open(item.id)}
@@ -83,8 +82,6 @@ export function MasterscriptList() {
           )}
         </View>
       </Pressable>
-    ),
-    [open],
   );
 
   return (

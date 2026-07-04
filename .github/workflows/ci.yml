@@ -10,6 +10,36 @@ env:
   NODE_VERSION: '20'
 
 jobs:
+  mobile:
+    name: LIRI mobile (Expo) — Contracts, Lint & TypeScript
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: apps/mobile
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js ${{ env.NODE_VERSION }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+          cache-dependency-path: apps/mobile/package-lock.json
+
+      - name: Install reproducibly
+        run: npm ci
+
+      - name: Verify mobile
+        run: npm run verify
+
+      - name: Expo Doctor
+        run: npm run doctor
+
+      - name: Bundle web preview
+        run: npm run build:web -- --output-dir /tmp/liri-mobile-web
+
   # ─────────────────────────────────────────────
   # 1. Build & Lint — API NestJS
   # ─────────────────────────────────────────────

@@ -1,5 +1,5 @@
 import { Feather } from '@expo/vector-icons';
-import { useFocusEffect, useRouter } from 'expo-router';
+import { useFocusEffect, useRouter, type Href } from 'expo-router';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Pressable, RefreshControl, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -122,7 +122,11 @@ export default function ForumScreen() {
           ) : null}
 
           {items.map((t) => (
-            <Pressable key={t.id} style={({ pressed }) => [styles.row, t.live && styles.rowLive, pressed && styles.pressed]}>
+            <Pressable
+              key={t.id}
+              onPress={() => router.push({ pathname: '/forum/[topicId]', params: { topicId: t.id } } as unknown as Href)}
+              style={({ pressed }) => [styles.row, t.live && styles.rowLive, pressed && styles.pressed]}
+            >
               {/* avatar */}
               <View style={[styles.avatar, t.live && styles.avatarLive]}>
                 {t.initials ? (

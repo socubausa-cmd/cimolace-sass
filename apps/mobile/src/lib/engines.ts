@@ -40,44 +40,44 @@ export interface Engine {
 
 export const ENGINES: Engine[] = [
   // ── LIVE ───────────────────────────────────────────────────────────────
-  { key: 'live-host', label: 'Régie live (hôte)', icon: 'radio', category: 'live', status: 'done', route: '/live-host', webRef: '/lives/:id/host · LiveHostMobileShell', backend: 'LiveKit (multicam) + data channels sb/chat/qa/mod' },
-  { key: 'live-room', label: 'Salle live (élève)', icon: 'video', category: 'live', status: 'done', route: '/live-room', webRef: '/lives/:id/classroom', backend: 'LiveKit + data channel (sb/chat)' },
+  { key: 'live-host', label: 'Régie live (hôte)', icon: 'radio', category: 'live', status: 'partial', route: '/live-host', webRef: '/lives/:id/host · LiveHostMobileShell', backend: 'LiveKit (multicam) + data channels sb/chat/qa/mod', gap: 'Modération avancée, multilangue et synchronisation complète des panneaux web.' },
+  { key: 'live-room', label: 'Salle live (élève)', icon: 'video', category: 'live', status: 'partial', route: '/live-room', webRef: '/lives/:id/classroom', backend: 'LiveKit + data channel (sb/chat)', gap: 'Overlays, annotations et modes réseau faible du web à compléter.' },
   { key: 'live-list', label: 'Lives & replays', icon: 'list', category: 'live', status: 'done', route: '/lives', webRef: '/dashboard/lives', backend: '/lives' },
-  { key: 'waiting-room', label: 'Salle d’attente', icon: 'clock', category: 'live', status: 'done', route: '/waiting-room', webRef: '/dev LiveWaitingRoomMaquette' },
+  { key: 'waiting-room', label: 'Salle d’attente', icon: 'clock', category: 'live', status: 'partial', route: '/waiting-room', webRef: '/dev LiveWaitingRoomMaquette', gap: 'UI locale; admission et état serveur temps réel manquants.' },
 
   // ── STUDIO / CRÉATION ──────────────────────────────────────────────────
-  { key: 'studio-hub', label: 'Studio', icon: 'grid', category: 'studio', status: 'done', route: '/studio', webRef: '/studio/liri' },
-  { key: 'smartboard', label: 'Smartboard', icon: 'edit-3', category: 'studio', status: 'done', route: '/smartboard', webRef: '/studio/smartboard (Konva)', backend: 'Skia + liri_course_workspaces (cloud + local)' },
-  { key: 'masterclass', label: 'Masterclass Factory', icon: 'award', category: 'studio', status: 'done', route: '/creer-masterclass', webRef: '/dev MasterclassFactoryV2 (pipeline 8 étapes IA)', backend: '/liri/masterclass-factory/generate' },
-  { key: 'course-builder', label: 'Créer un cours', icon: 'book', category: 'studio', status: 'done', route: '/creer-formation', webRef: '/studio/liri/cours', backend: '/courses + /modules + /lessons' },
+  { key: 'studio-hub', label: 'Studio', icon: 'grid', category: 'studio', status: 'partial', route: '/studio', webRef: '/studio/liri', gap: 'Studio Image et Import IA absents.' },
+  { key: 'smartboard', label: 'Smartboard', icon: 'edit-3', category: 'studio', status: 'partial', route: '/smartboard', webRef: '/studio/smartboard (Konva)', backend: 'Skia + liri_course_workspaces (cloud + local)', gap: 'Outils et calques avancés du web à porter.' },
+  { key: 'masterclass', label: 'Masterclass Factory', icon: 'award', category: 'studio', status: 'partial', route: '/creer-masterclass', webRef: '/dev MasterclassFactoryV2 (pipeline 8 étapes IA)', backend: '/masterclass-factory/generate', gap: 'Pipeline web en huit étapes non reproduit.' },
+  { key: 'course-builder', label: 'Créer un cours', icon: 'book', category: 'studio', status: 'partial', route: '/creer-formation', webRef: '/studio/liri/cours', backend: '/courses + /modules + /lessons', gap: 'Éditeur avancé, médias et prévisualisation à compléter.' },
   { key: 'masterscript', label: 'Masterscript', icon: 'file-text', category: 'studio', status: 'done', route: '/masterscript', webRef: 'scripts pédagogiques' },
-  { key: 'export-center', label: 'Export Center', icon: 'download', category: 'studio', status: 'done', route: '/export', webRef: '/studio/export-center', backend: '/liri/export' },
-  { key: 'orchestrator-live', label: 'Orchestrateur live', icon: 'sliders', category: 'studio', status: 'done', route: '/orchestrator-live', webRef: '/dev OrchestratorLiveV2', backend: 'session + régie LiveKit' },
+  { key: 'export-center', label: 'Export Center', icon: 'download', category: 'studio', status: 'todo', route: '/export', webRef: '/studio/export-center', gap: 'Écran de sélection uniquement; aucun pipeline serveur branché.' },
+  { key: 'orchestrator-live', label: 'Orchestrateur live', icon: 'sliders', category: 'studio', status: 'partial', route: '/orchestrator-live', webRef: '/dev OrchestratorLiveV2', backend: 'session + régie LiveKit', gap: 'Sélecteur de source local; synchro multi-source incomplète.' },
 
   // ── APPRENTISSAGE ──────────────────────────────────────────────────────
   { key: 'brain', label: 'LIRI Brain (IA)', icon: 'zap', category: 'apprentissage', status: 'done', route: '/brain', webRef: '/dashboard/liri', backend: '/liri/brain/chat (SSE)' },
   { key: 'neuron', label: 'Neuron / NeuroRecall', icon: 'layers', category: 'apprentissage', status: 'done', route: '/neuro-recall', webRef: 'EleveNeuronScreen', backend: '/liri/neuron' },
-  { key: 'arena', label: 'Arena', icon: 'flag', category: 'apprentissage', status: 'done', route: '/arena/[sessionId]', webRef: 'LiveArenaPage', backend: 'LiveKit + débat/votes/NeuronQ (Supabase realtime)' },
-  { key: 'bibliotheque', label: 'Bibliothèque', icon: 'book-open', category: 'apprentissage', status: 'done', route: '/bibliotheque', webRef: 'BibliothequePage', backend: '/replay + /courses' },
-  { key: 'forum', label: 'Forum', icon: 'message-square', category: 'apprentissage', status: 'done', route: '/forum', webRef: 'CommunityChatPage', backend: 'forum_topics (Supabase)' },
+  { key: 'arena', label: 'Arena', icon: 'flag', category: 'apprentissage', status: 'partial', route: '/arena/[sessionId]', webRef: 'LiveArenaPage', backend: 'LiveKit + débat/votes/NeuronQ (Supabase realtime)', gap: 'Workflow hôte et rapports avancés à compléter.' },
+  { key: 'bibliotheque', label: 'Bibliothèque', icon: 'book-open', category: 'apprentissage', status: 'partial', route: '/bibliotheque', webRef: 'BibliothequePage', backend: '/replay + /courses', gap: 'Détail cours, téléchargements et lecture exhaustive absents.' },
+  { key: 'forum', label: 'Forum', icon: 'message-square', category: 'apprentissage', status: 'partial', route: '/forum', webRef: 'CommunityChatPage', backend: 'forum_topics (Supabase)', gap: 'Fil détaillé, réponses et modération à porter.' },
 
   // ── VIE SCOLAIRE ───────────────────────────────────────────────────────
-  { key: 'vie-scolaire', label: 'Vie scolaire', icon: 'clipboard', category: 'vie-scolaire', status: 'done', route: '/vie-scolaire', webRef: 'EleveVieScolaireScreen', backend: 'Supabase RLS' },
-  { key: 'notes', label: 'Notes', icon: 'bar-chart-2', category: 'vie-scolaire', status: 'done', route: '/vie-scolaire', webRef: 'EleveEtudiantNotesScreen', backend: 'grades (Supabase)' },
-  { key: 'absences', label: 'Absences', icon: 'user-x', category: 'vie-scolaire', status: 'done', route: '/vie-scolaire', webRef: 'EleveEtudiantAbsencesScreen', backend: 'attendance (Supabase)' },
-  { key: 'evaluations', label: 'Évaluations', icon: 'check-square', category: 'vie-scolaire', status: 'done', route: '/vie-scolaire', webRef: 'EleveEtudiantEvaluationsScreen', backend: 'evaluations (Supabase)' },
-  { key: 'documents', label: 'Documents', icon: 'folder', category: 'vie-scolaire', status: 'done', route: '/vie-scolaire', webRef: 'EleveEtudiantDocumentsScreen', backend: 'documents (Supabase)' },
-  { key: 'agenda', label: 'Agenda', icon: 'calendar', category: 'vie-scolaire', status: 'done', route: '/vie-scolaire', webRef: 'EleveAgendaScreen', backend: 'agenda_events (Supabase)' },
+  { key: 'vie-scolaire', label: 'Vie scolaire', icon: 'clipboard', category: 'vie-scolaire', status: 'partial', route: '/vie-scolaire', webRef: 'EleveVieScolaireScreen', backend: 'Supabase RLS', gap: 'Contrats alignés; vues détaillées et actions du web restent à porter.' },
+  { key: 'notes', label: 'Notes', icon: 'bar-chart-2', category: 'vie-scolaire', status: 'partial', route: '/vie-scolaire', webRef: 'EleveEtudiantNotesScreen', backend: 'student_evaluations (Supabase)', gap: 'Classement, filtres et bulletin détaillé absents.' },
+  { key: 'absences', label: 'Absences', icon: 'user-x', category: 'vie-scolaire', status: 'partial', route: '/vie-scolaire', webRef: 'EleveEtudiantAbsencesScreen', backend: 'attendance_records (Supabase)', gap: 'Justificatifs et workflow de validation absents.' },
+  { key: 'evaluations', label: 'Évaluations', icon: 'check-square', category: 'vie-scolaire', status: 'partial', route: '/vie-scolaire', webRef: 'EleveEtudiantEvaluationsScreen', backend: 'student_evaluations (Supabase)', gap: 'Vue détaillée et contexte formation absents.' },
+  { key: 'documents', label: 'Documents', icon: 'folder', category: 'vie-scolaire', status: 'partial', route: '/vie-scolaire', webRef: 'EleveEtudiantDocumentsScreen', backend: 'certificates + student_live_reports (Supabase)', gap: 'Téléchargement et catégories avancées à compléter.' },
+  { key: 'agenda', label: 'Agenda', icon: 'calendar', category: 'vie-scolaire', status: 'partial', route: '/vie-scolaire', webRef: 'EleveAgendaScreen', backend: 'school_events + school_calendar + annual_program_weeks', gap: 'Calendrier annuel et interactions détaillées absents.' },
 
   // ── COMMUNICATION ──────────────────────────────────────────────────────
-  { key: 'messages', label: 'Messagerie', icon: 'send', category: 'communication', status: 'done', route: '/messages', webRef: 'MessagingPage', backend: 'messages + profiles (Supabase)' },
+  { key: 'messages', label: 'Messagerie', icon: 'send', category: 'communication', status: 'partial', route: '/messages', webRef: 'MessagingPage', backend: '/messaging/*', gap: 'API et polling alignés; nouveau destinataire, groupes et temps réel push à compléter.' },
   { key: 'notifications', label: 'Notifications', icon: 'bell', category: 'communication', status: 'done', route: '/notifications', webRef: 'NotificationCenter', backend: 'notifications (Supabase RLS)' },
-  { key: 'profil', label: 'Profil élève', icon: 'user', category: 'communication', status: 'done', route: '/profil', webRef: 'EleveProfileScreen', backend: 'student_progress (Supabase)' },
+  { key: 'profil', label: 'Profil élève', icon: 'user', category: 'communication', status: 'partial', route: '/profil', webRef: 'EleveProfileScreen', backend: 'student_progress (Supabase)', gap: 'Réalisations et plusieurs menus restent incomplets.' },
 
   // ── COMMERCE ───────────────────────────────────────────────────────────
-  { key: 'forfaits', label: 'Forfaits', icon: 'layers', category: 'commerce', status: 'done', route: '/commerce', webRef: 'EleveForfaitsScreen', backend: '/liri/plans' },
-  { key: 'boutique', label: 'Boutique', icon: 'shopping-bag', category: 'commerce', status: 'done', route: '/commerce', webRef: 'EleveBoutiqueSacreeScreen', backend: '/liri/shop' },
-  { key: 'checkout', label: 'Paiement', icon: 'credit-card', category: 'commerce', status: 'done', route: '/commerce', webRef: 'EleveBillingCheckoutScreen', backend: '/offering-checkout/mobile-money (PawaPay) + carte web' },
+  { key: 'forfaits', label: 'Forfaits', icon: 'layers', category: 'commerce', status: 'partial', route: '/commerce', webRef: 'EleveForfaitsScreen', gap: 'Catalogue et tarifs encore embarqués localement.' },
+  { key: 'boutique', label: 'Boutique', icon: 'shopping-bag', category: 'commerce', status: 'partial', route: '/commerce', webRef: 'EleveBoutiqueSacreeScreen', gap: 'Catalogue dynamique et droits après achat à brancher.' },
+  { key: 'checkout', label: 'Paiement', icon: 'credit-card', category: 'commerce', status: 'partial', route: '/commerce', webRef: 'EleveBillingCheckoutScreen', backend: '/offering-checkout/mobile-money (PawaPay) + carte web', gap: 'Mobile Money branché; confirmation, carte native et catalogue dynamique incomplets.' },
 
   // ── ACCUEIL ────────────────────────────────────────────────────────────
   { key: 'home', label: 'Accueil', icon: 'home', category: 'accueil', status: 'done', route: '/', webRef: 'EleveHomeScreen', backend: '/growth/stats + /lives' },

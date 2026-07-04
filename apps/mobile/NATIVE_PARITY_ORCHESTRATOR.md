@@ -8,13 +8,14 @@ grand public.
 - **Hub visible (app)** : écran `/engines` ([`src/app/engines.tsx`](src/app/engines.tsx)) — parité + navigation.
 - **Référence design** : `apps/app` (web) = LECTURE SEULE. Modèle live officiel : `../../docs/LIVE_HOST_MODELE_OFFICIEL.md`.
 
-## État (2026-06-06, après portage)
+## État vérifié (2026-07-03)
 
-**Parité native ≈ 83% · 20 Natif · 10 Partiel · 0 Absent** (vs 5 natif / 21 absent à l'audit initial).
-→ **Tous les moteurs LIRI ont désormais un écran natif** (plus aucun absent). Les « Partiel »
-restants sont des internes avancés (liste plus bas), pas des écrans manquants.
+**7 Natif · 22 Partiel · 1 À faire** sur 30 moteurs suivis.
+La présence d'un écran n'est plus considérée comme une preuve de parité : un moteur est
+`done` uniquement si son contrat de données et son parcours utilisateur principal sont
+alignés avec le web. Le registre vivant `src/lib/engines.ts` fait foi.
 
-Vérification continue : `npx tsc --noEmit` = 0 erreur ; chaque écran rendu en preview web (port 8090).
+Vérification continue : `npm run verify` (typecheck + lint strict + tests de contrats).
 
 ### Partiels restants (internes avancés à approfondir)
 Régie live (tiroirs/scènes réels, Q&R, multicam) · Salle live élève (overlays chat/annotations) ·
@@ -38,9 +39,9 @@ Export Center (pipeline serveur) · Orchestrateur live (synchro multi-source tem
 
 | Statut | Moteurs |
 |---|---|
-| ✅ Natif | Brain, NeuroRecall, Forum, Replays/Lives, Accueil, Masterscript, Intégrations |
-| 🟡 Partiel | Régie live (hôte), Salle live (élève), Smartboard, Studio hub, Masterclass, Bibliothèque, Arena, Profil |
-| ❌ À faire | Notifications, Messagerie, Profil élève, Vie scolaire (notes/absences/évals/docs), Agenda, Forfaits, Boutique, Paiement, Course/Formation builder, Export center, Orchestrateur live, Salle d'attente, Dashboard produit, Classroom |
+| ✅ Natif | Brain, NeuroRecall, Lives/Replays, Accueil, Masterscript, Notifications, Intégrations |
+| 🟡 Partiel | Régie et salle live, salle d'attente, Studio, Smartboard, Masterclass, Course builder, Orchestrateur, Arena, Bibliothèque, Forum, Vie scolaire, Messagerie, Profil, Commerce |
+| ❌ À faire | Export Center (pipeline serveur non branché) |
 
 ## Architecture de portage
 - **Backend partagé** : la plupart des moteurs lisent le même backend (`api.cimolace.space` REST `/...` + Supabase RLS + LiveKit). → Le portage natif = surtout des **écrans RN** branchés aux mêmes endpoints (cf. `src/lib/liri-api.ts`).

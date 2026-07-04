@@ -53,14 +53,14 @@ const STUDIO_TYPES = [
     title: 'SmartBoard Designer', category: 'pedagogy',
     shortDesc: 'Éditeur Konva 1037×750 + Course Copilot.',
     description: "Éditeur Konva 1037×750 avec Course Copilot : scènes, calques, exports. Workspaces cloud et import Polotno historique. Aide disponible via /studio/smartboard-aide.",
-    accent: '#22D3EE',
+    accent: '#e3aa6b',
   },
   {
     id: 'formation', path: '/studio/formation', icon: GraduationCap,
     title: 'Formation', category: 'pedagogy',
     shortDesc: 'Modules, leçons, parcours structurés.',
     description: "Concevez des parcours pédagogiques complets : modules, leçons et progression, dans une expérience structurée de bout en bout.",
-    accent: '#8B5CF6',
+    accent: '#e0926a',
   },
   {
     id: 'live', path: '/studio/live', icon: Video,
@@ -88,7 +88,7 @@ const STUDIO_TYPES = [
     title: 'Rendez-vous', category: 'agenda',
     shortDesc: 'Créneaux et disponibilités.',
     description: "Structurez vos créneaux, modalités et disponibilités pour des rendez-vous fluides et précis.",
-    accent: '#10B981',
+    accent: '#cf8059',
   },
   {
     id: 'event', path: '/studio/event', icon: Mic2,
@@ -102,7 +102,7 @@ const STUDIO_TYPES = [
     title: 'Programme / Coaching', category: 'agenda',
     shortDesc: 'Accompagnement, jalons, progression.',
     description: "Concevez des accompagnements personnalisés avec objectifs, jalons et suivi de progression.",
-    accent: '#06B6D4',
+    accent: '#d99a4e',
   },
   {
     id: 'ad-creator', path: '/studio/ad-creator', icon: Megaphone,

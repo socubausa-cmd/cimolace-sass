@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { Link, useLocation, useNavigate, useParams } from 'react-router-dom';
 import { supabase } from '@/lib/customSupabaseClient';
+import { LiriPortalShell } from '@/components/liri/LiriPortalShell';
 import { courseBuilderApi } from '@/lib/api-v2';
 import { normalizeReturnTo, safeDesignerReturnPathForState } from '@/lib/returnToNavigation';
 import { Button } from '@/components/ui/button';
@@ -1449,7 +1450,8 @@ const VideoPostProductionPage = ({
   const getFallbackReturnTo = () => {
     // If the user opened post-production directly (or refreshed), we still want
     // to bring them back to the formation builder instead of relying on history.
-    return '/owner-dashboard?tab=formations';
+    // STUDIO LIRI (dans le portail) — surtout PAS /owner-dashboard (chrome ISNA Academy).
+    return '/studio/liri/formation';
   };
 
   /**
@@ -1547,21 +1549,24 @@ const VideoPostProductionPage = ({
   };
 
   if (loading) {
-    return (
+    const _ppSpinner = (
       <div
         className={
           embedded
-            ? 'h-full min-h-[180px] bg-[#0F1419] text-white flex items-center justify-center'
-            : 'min-h-screen bg-[#0F1419] text-white flex items-center justify-center'
+            ? 'h-full min-h-[180px] bg-[#1f1e1c] text-white flex items-center justify-center'
+            : 'h-full bg-[#1f1e1c] text-white flex items-center justify-center'
         }
       >
-        <Loader2 className="w-6 h-6 animate-spin text-[var(--school-accent)]" />
+        <Loader2 className="w-6 h-6 animate-spin text-[#d97757]" />
       </div>
+    );
+    return embedded ? _ppSpinner : (
+      <LiriPortalShell active="studio">{_ppSpinner}</LiriPortalShell>
     );
   }
 
-  return (
-    <div className={embedded ? 'h-full bg-[#0F1419] text-white overflow-auto' : 'min-h-screen bg-[#0F1419] text-white'}>
+  const _ppBody = (
+    <div className={embedded ? 'h-full bg-[#1f1e1c] text-white overflow-auto' : 'h-full bg-[#1f1e1c] text-white overflow-auto'}>
       <div className={embedded ? (dockEmbed ? 'p-3' : 'p-6') : 'p-6'}>
         <div className="max-w-6xl mx-auto space-y-6">
         {dockEmbed ? (
@@ -1575,7 +1580,7 @@ const VideoPostProductionPage = ({
               onClick={save}
               disabled={saving}
               size="sm"
-              className="shrink-0 bg-[var(--school-accent)] text-black hover:bg-yellow-500 font-bold"
+              className="shrink-0 bg-[#d97757] text-black hover:bg-[#d97757] font-bold"
             >
               {saving ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Check className="w-4 h-4 mr-2" />}
               Valider
@@ -1605,12 +1610,12 @@ const VideoPostProductionPage = ({
             </Button>
             <div>
               <div className="text-lg font-bold">Post-production vidéo</div>
-              <div className="text-xs text-gray-400">contentId: {contentId}</div>
+              <div className="text-xs text-[#b0ada3]">contentId: {contentId}</div>
             </div>
             {smartboardDesignerHref ? (
               <Button
                 variant="outline"
-                className="border-cyan-500/35 bg-cyan-500/10 text-cyan-100 hover:bg-cyan-500/20"
+                className="border-[#c2683f]/35 bg-[#c2683f]/10 text-[#e8b6a3] hover:bg-[#c2683f]/20"
                 asChild
               >
                 <Link to={smartboardDesignerHref} title="Ouvrir ce contenu dans le SmartBoard Designer (post-production intégrée)">
@@ -1622,7 +1627,7 @@ const VideoPostProductionPage = ({
             {courseBuilderWithDesignerReturnHref ? (
               <Button
                 variant="outline"
-                className="border-amber-500/35 bg-amber-500/10 text-amber-100 hover:bg-amber-500/20"
+                className="border-[#d97757]/35 bg-[#d97757]/10 text-[#f0d0c2] hover:bg-[#d97757]/20"
                 asChild
               >
                 <Link
@@ -1636,7 +1641,7 @@ const VideoPostProductionPage = ({
             ) : null}
           </div>
 
-          <Button onClick={save} disabled={saving} className="bg-[var(--school-accent)] text-black hover:bg-yellow-500 font-bold">
+          <Button onClick={save} disabled={saving} className="bg-[#d97757] text-black hover:bg-[#d97757] font-bold">
             {saving ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Check className="w-4 h-4 mr-2" />}
             Valider
           </Button>
@@ -1649,7 +1654,7 @@ const VideoPostProductionPage = ({
             type="button"
             size="sm"
             variant={postProdView === 'classic' ? 'default' : 'outline'}
-            className={postProdView === 'classic' ? 'bg-[var(--school-accent)] text-black hover:bg-yellow-500' : 'border-white/10 text-white hover:bg-white/5'}
+            className={postProdView === 'classic' ? 'bg-[#d97757] text-black hover:bg-[#d97757]' : 'border-white/10 text-white hover:bg-white/5'}
             onClick={() => setPostProdView('classic')}
           >
             Workflow classique
@@ -1658,7 +1663,7 @@ const VideoPostProductionPage = ({
             type="button"
             size="sm"
             variant={postProdView === 'smartboard' ? 'default' : 'outline'}
-            className={postProdView === 'smartboard' ? 'bg-[var(--school-accent)] text-black hover:bg-yellow-500' : 'border-white/10 text-white hover:bg-white/5'}
+            className={postProdView === 'smartboard' ? 'bg-[#d97757] text-black hover:bg-[#d97757]' : 'border-white/10 text-white hover:bg-white/5'}
             onClick={() => setPostProdView('smartboard')}
           >
             <Sparkles className="w-4 h-4 mr-2" />
@@ -1668,7 +1673,7 @@ const VideoPostProductionPage = ({
             type="button"
             size="sm"
             variant={postProdView === 'assistant' ? 'default' : 'outline'}
-            className={postProdView === 'assistant' ? 'bg-[var(--school-accent)] text-black hover:bg-yellow-500' : 'border-white/10 text-white hover:bg-white/5'}
+            className={postProdView === 'assistant' ? 'bg-[#d97757] text-black hover:bg-[#d97757]' : 'border-white/10 text-white hover:bg-white/5'}
             onClick={() => setPostProdView('assistant')}
           >
             Assistance IA
@@ -1677,7 +1682,7 @@ const VideoPostProductionPage = ({
             type="button"
             size="sm"
             variant={postProdView === 'nle' ? 'default' : 'outline'}
-            className={postProdView === 'nle' ? 'bg-[var(--school-accent)] text-black hover:bg-yellow-500' : 'border-white/10 text-white hover:bg-white/5'}
+            className={postProdView === 'nle' ? 'bg-[#d97757] text-black hover:bg-[#d97757]' : 'border-white/10 text-white hover:bg-white/5'}
             onClick={() => setPostProdView('nle')}
           >
             <Clapperboard className="w-4 h-4 mr-2" />
@@ -1687,17 +1692,17 @@ const VideoPostProductionPage = ({
             type="button"
             size="sm"
             variant={postProdView === 'pipeline' ? 'default' : 'outline'}
-            className={postProdView === 'pipeline' ? 'bg-[var(--school-accent)] text-black hover:bg-yellow-500' : 'border-white/10 text-white hover:bg-white/5'}
+            className={postProdView === 'pipeline' ? 'bg-[#d97757] text-black hover:bg-[#d97757]' : 'border-white/10 text-white hover:bg-white/5'}
             onClick={() => setPostProdView('pipeline')}
           >
             ⚙ Pipeline
           </Button>
           <div className="ml-auto flex items-center gap-2">
-            <Label className="text-xs text-gray-400">Mode</Label>
+            <Label className="text-xs text-[#b0ada3]">Mode</Label>
             <select
               value={smartboardMode}
               onChange={(e) => setSmartboardMode(e.target.value)}
-              className="h-8 rounded-md border border-white/10 bg-[#0F1419] px-2 text-xs text-white"
+              className="h-8 rounded-md border border-white/10 bg-[#1f1e1c] px-2 text-xs text-white"
             >
               <option value="raw">Brut</option>
               <option value="pedagogical">Pedagogique</option>
@@ -1709,12 +1714,12 @@ const VideoPostProductionPage = ({
         ) : null}
 
         {dockEmbed && (postProdView === 'smartboard' || postProdView === 'assistant') ? (
-          <div className="flex flex-wrap items-center gap-2 rounded-lg border border-white/10 bg-[#111827]/40 px-3 py-2">
-            <Label className="text-xs text-gray-400">Mode SmartBoard</Label>
+          <div className="flex flex-wrap items-center gap-2 rounded-lg border border-white/10 bg-[#30302e]/40 px-3 py-2">
+            <Label className="text-xs text-[#b0ada3]">Mode SmartBoard</Label>
             <select
               value={smartboardMode}
               onChange={(e) => setSmartboardMode(e.target.value)}
-              className="h-8 rounded-md border border-white/10 bg-[#0F1419] px-2 text-xs text-white"
+              className="h-8 rounded-md border border-white/10 bg-[#1f1e1c] px-2 text-xs text-white"
             >
               <option value="raw">Brut</option>
               <option value="pedagogical">Pedagogique</option>
@@ -1724,7 +1729,7 @@ const VideoPostProductionPage = ({
           </div>
         ) : null}
 
-        <div className="rounded-lg border border-white/10 bg-[#111827]/40 p-3">
+        <div className="rounded-lg border border-white/10 bg-[#30302e]/40 p-3">
           <div className="flex flex-wrap items-center gap-2">
             <Button
               type="button"
@@ -1737,7 +1742,7 @@ const VideoPostProductionPage = ({
               Sauvegarder un snapshot
             </Button>
             <select
-              className="h-8 rounded-md border border-white/10 bg-[#0F1419] px-2 text-xs text-white min-w-[260px]"
+              className="h-8 rounded-md border border-white/10 bg-[#1f1e1c] px-2 text-xs text-white min-w-[260px]"
               defaultValue=""
               onChange={(e) => {
                 const id = e.target.value;
@@ -1753,13 +1758,13 @@ const VideoPostProductionPage = ({
                 </option>
               ))}
             </select>
-            {versionLoading ? <span className="text-xs text-gray-400">Chargement historique...</span> : null}
+            {versionLoading ? <span className="text-xs text-[#b0ada3]">Chargement historique...</span> : null}
           </div>
         </div>
 
         {!contentPersistedInDb ? (
-          <div className="border border-amber-500/30 bg-amber-500/10 rounded p-3 text-sm text-amber-100">
-            <strong className="text-amber-200">Mode brouillon :</strong> cette vidéo n'est pas encore enregistrée en base. La génération IA fonctionnera en mode local (les résultats ne seront pas persistés côté serveur). Pour une sauvegarde définitive, enregistrez la formation dans le configurateur puis rouvrez la post-production.
+          <div className="border border-[#d97757]/30 bg-[#d97757]/10 rounded p-3 text-sm text-[#f0d0c2]">
+            <strong className="text-[#e8b6a3]">Mode brouillon :</strong> cette vidéo n'est pas encore enregistrée en base. La génération IA fonctionnera en mode local (les résultats ne seront pas persistés côté serveur). Pour une sauvegarde définitive, enregistrez la formation dans le configurateur puis rouvrez la post-production.
           </div>
         ) : null}
 
@@ -1768,44 +1773,44 @@ const VideoPostProductionPage = ({
         ) : null}
 
         {!dockEmbed && postProdView === 'classic' ? (
-          <div className="rounded-lg border border-violet-500/25 bg-violet-500/10 p-4">
+          <div className="rounded-lg border border-[#d97757]/25 bg-[#d97757]/10 p-4">
             <div className="flex items-center gap-2">
-              <CalendarClock className="h-4 w-4 shrink-0 text-violet-200" />
-              <div className="text-sm font-bold text-violet-100">Publier au calendrier</div>
+              <CalendarClock className="h-4 w-4 shrink-0 text-[#e8b6a3]" />
+              <div className="text-sm font-bold text-[#e8b6a3]">Publier au calendrier</div>
             </div>
-            <p className="mt-1 text-xs text-violet-200/70">
+            <p className="mt-1 text-xs text-[#e8b6a3]/70">
               Programme la mise en ligne de cette vidéo dans l'agenda des élèves (« Vidéo du cours disponible »).
               Laisse vide pour la retirer du calendrier.
             </p>
             <div className="mt-3 flex flex-wrap items-end gap-3">
               <div className="min-w-[220px]">
-                <Label className="text-[11px] text-violet-200/80">Publier au calendrier le…</Label>
+                <Label className="text-[11px] text-[#e8b6a3]/80">Publier au calendrier le…</Label>
                 <Input
                   type="datetime-local"
                   value={publicationDateInput}
                   onChange={(e) => { setPublicationDateInput(e.target.value); setPublishMessage(''); }}
-                  className="mt-1 bg-[#0F1419] border-white/10 text-white [color-scheme:dark]"
+                  className="mt-1 bg-[#1f1e1c] border-white/10 text-white [color-scheme:dark]"
                 />
               </div>
               <Button
                 type="button"
                 onClick={() => void handlePublishToCalendar()}
                 disabled={publishSaving || !contentPersistedInDb}
-                className="bg-violet-600 text-white hover:bg-violet-500 font-bold"
+                className="bg-[#c2683f] text-white hover:bg-[#d97757] font-bold"
               >
                 {publishSaving ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <CalendarClock className="w-4 h-4 mr-2" />}
                 {publicationDateInput ? 'Programmer' : 'Retirer du calendrier'}
               </Button>
               {publishMessage ? (
-                <span className="text-xs text-violet-200/80">{publishMessage}</span>
+                <span className="text-xs text-[#e8b6a3]/80">{publishMessage}</span>
               ) : null}
             </div>
           </div>
         ) : null}
 
         {dockEmbed && (chapters || []).length > 0 ? (
-          <div className="rounded-lg border border-cyan-500/20 bg-cyan-950/25 px-3 py-2 text-[10px] leading-snug text-cyan-100/85">
-            <strong className="text-cyan-200/95">Timeline ↔ canvas :</strong> chapitre actif et scène Konva sont alignés
+          <div className="rounded-lg border border-[#c2683f]/20 bg-[#1f1e1c]/25 px-3 py-2 text-[10px] leading-snug text-[#e8b6a3]/85">
+            <strong className="text-[#e8b6a3]/95">Timeline ↔ canvas :</strong> chapitre actif et scène Konva sont alignés
             par index (plan Copilot). Changez de chapitre ici ou de scène dans le designer — la vidéo seek au début du
             segment correspondant.
           </div>
@@ -1814,13 +1819,13 @@ const VideoPostProductionPage = ({
         <div className={postProdView !== 'classic' ? 'hidden' : 'grid grid-cols-1 lg:grid-cols-2 gap-6'}>
           <Card
             ref={(el) => { dockSectionRefs.current.preview = el; }}
-            className="bg-[#192734] border-white/10"
+            className="bg-[#30302e] border-white/10"
           >
             <CardContent className="p-4 space-y-3">
               <div className="text-sm font-bold">Prévisualisation</div>
 
               {!canUsePostProd ? (
-                <div className="text-sm text-gray-400">URL vidéo manquante.</div>
+                <div className="text-sm text-[#b0ada3]">URL vidéo manquante.</div>
               ) : (
                 <>
                   <div className="border border-white/10 rounded overflow-hidden bg-black">
@@ -1849,7 +1854,7 @@ const VideoPostProductionPage = ({
                   </div>
 
                   <div className="space-y-2 touch-none">
-                    <div className="flex items-center justify-between text-xs text-gray-400">
+                    <div className="flex items-center justify-between text-xs text-[#b0ada3]">
                       <span>Navigation</span>
                       <span>{formatSecondsToTimeText(previewCurrentTime)} / {formatSecondsToTimeText(previewDuration)}</span>
                     </div>
@@ -1866,9 +1871,9 @@ const VideoPostProductionPage = ({
                   </div>
 
                   <div className="border border-white/10 rounded-lg p-3 bg-black/20 space-y-3">
-                    <div className="text-xs text-gray-400 uppercase tracking-wider">IN/OUT</div>
-                    <div className="text-xs text-gray-400">IN: {chapterIn === '' ? '—' : `${chapterIn}s`} • OUT: {chapterOut === '' ? '—' : `${chapterOut}s`}</div>
-                    <div className="text-xs text-gray-500">Début minimum (fin du dernier chapitre): {formatSecondsToTimeText(getLastChapterEndSeconds())}</div>
+                    <div className="text-xs text-[#b0ada3] uppercase tracking-wider">IN/OUT</div>
+                    <div className="text-xs text-[#b0ada3]">IN: {chapterIn === '' ? '—' : `${chapterIn}s`} • OUT: {chapterOut === '' ? '—' : `${chapterOut}s`}</div>
+                    <div className="text-xs text-[#82807a]">Début minimum (fin du dernier chapitre): {formatSecondsToTimeText(getLastChapterEndSeconds())}</div>
                     <div className="flex flex-wrap gap-2">
                       <Button size="sm" variant="outline" className="border-white/10 text-white hover:bg-white/5" onClick={() => {
                         const t = captureCurrentTime();
@@ -1880,10 +1885,10 @@ const VideoPostProductionPage = ({
                         if (t == null) return;
                         setOutSafe(t);
                       }}>Définir OUT</Button>
-                      <Button size="sm" className="bg-[var(--school-accent)] text-black hover:bg-yellow-500 font-bold" disabled={chapterIn === ''} onClick={previewSegment}>Prévisualiser</Button>
+                      <Button size="sm" className="bg-[#d97757] text-black hover:bg-[#d97757] font-bold" disabled={chapterIn === ''} onClick={previewSegment}>Prévisualiser</Button>
                       <Button
                         size="sm"
-                        className="bg-blue-600 hover:bg-blue-700 text-white"
+                        className="bg-[#c2683f] hover:bg-[#c2683f] text-white"
                         disabled={chapterIn === '' || chapterOut === ''}
                         onClick={commitChapterProgressive}
                         title="Valider le chapitre (progressif)"
@@ -1894,7 +1899,7 @@ const VideoPostProductionPage = ({
                         type="button"
                         size="sm"
                         variant="ghost"
-                        className="text-gray-300 hover:bg-white/5"
+                        className="text-[#b0ada3] hover:bg-white/5"
                         onClick={() => {
                           clipStopAtRef.current = null;
                           setChapterIn('');
@@ -1913,7 +1918,7 @@ const VideoPostProductionPage = ({
           <div className="space-y-6">
             <Card
               ref={(el) => { dockSectionRefs.current.chapters = el; }}
-              className="bg-[#192734] border-white/10"
+              className="bg-[#30302e] border-white/10"
             >
               <CardContent className="p-4 space-y-3">
                 <div className="text-sm font-bold">Chapitres</div>
@@ -1921,7 +1926,7 @@ const VideoPostProductionPage = ({
                   {(chapters || []).map((c, idx) => (
                     <div key={idx} className="grid grid-cols-12 gap-2 items-center">
                       <Input
-                        className="col-span-3 bg-[#0F1419] border-white/10"
+                        className="col-span-3 bg-[#1f1e1c] border-white/10"
                         value={c?.startText || ''}
                         onChange={(e) => {
                           const next = [...(chapters || [])];
@@ -1931,7 +1936,7 @@ const VideoPostProductionPage = ({
                         placeholder="0:00"
                       />
                       <Input
-                        className="col-span-3 bg-[#0F1419] border-white/10"
+                        className="col-span-3 bg-[#1f1e1c] border-white/10"
                         value={c?.endText || ''}
                         onChange={(e) => {
                           const next = [...(chapters || [])];
@@ -1941,7 +1946,7 @@ const VideoPostProductionPage = ({
                         placeholder="0:10"
                       />
                       <Input
-                        className="col-span-5 bg-[#0F1419] border-white/10"
+                        className="col-span-5 bg-[#1f1e1c] border-white/10"
                         value={c?.label || ''}
                         onChange={(e) => {
                           const next = [...(chapters || [])];
@@ -1992,15 +1997,15 @@ const VideoPostProductionPage = ({
 
                 {(chapters || []).length > 0 ? (
                   <div className="rounded-lg border border-white/10 bg-black/20 p-3 space-y-2">
-                    <div className="text-xs text-gray-400 uppercase tracking-wider">Chapitre → slide canvas</div>
-                    <div className="text-[11px] text-gray-500">
+                    <div className="text-xs text-[#b0ada3] uppercase tracking-wider">Chapitre → slide canvas</div>
+                    <div className="text-[11px] text-[#82807a]">
                       Indices alignés sur le plan Copilot et les scènes Konva (1…{bridgeableSlideCount}).{' '}
                       {dockEmbed
                         ? 'Synchro timeline ↔ SmartBoard active dans le designer.'
                         : 'La synchro automatique avec le canvas est disponible dans le designer.'}
                     </div>
                     {duplicateChapterSlides ? (
-                      <div className="text-[11px] text-amber-200/90 rounded border border-amber-500/30 bg-amber-500/10 px-2 py-1.5">
+                      <div className="text-[11px] text-[#e8b6a3]/90 rounded border border-[#d97757]/30 bg-[#d97757]/10 px-2 py-1.5">
                         Plusieurs chapitres pointent vers le même slide : au changement de scène, la timeline suit le
                         chapitre de plus petit index.
                       </div>
@@ -2008,13 +2013,13 @@ const VideoPostProductionPage = ({
                     {(chapters || []).map((c, idx) => (
                       <div key={`ch-slide-map-${idx}`} className="flex items-center gap-2 text-sm min-w-0">
                         <span
-                          className="text-gray-300 truncate flex-1 min-w-0"
+                          className="text-[#b0ada3] truncate flex-1 min-w-0"
                           title={String(c?.label || '').trim() || `Chapitre ${idx + 1}`}
                         >
                           {String(c?.label || '').trim() || `Chapitre ${idx + 1}`}
                         </span>
                         <select
-                          className="shrink-0 bg-[#0F1419] border border-white/10 rounded px-2 py-1 text-xs text-white max-w-[140px]"
+                          className="shrink-0 bg-[#1f1e1c] border border-white/10 rounded px-2 py-1 text-xs text-white max-w-[140px]"
                           value={Math.min(
                             chapterSlideMap[idx] ?? idx,
                             Math.max(bridgeableSlideCount - 1, 0)
@@ -2044,7 +2049,7 @@ const VideoPostProductionPage = ({
                   </div>
                 ) : null}
 
-                <div className="text-xs text-gray-400">
+                <div className="text-xs text-[#b0ada3]">
                   Valide toujours un chapitre par IN/OUT (progressif). Pour revenir en arrière, supprime un chapitre.
                 </div>
               </CardContent>
@@ -2052,14 +2057,14 @@ const VideoPostProductionPage = ({
 
             <Card
               ref={(el) => { dockSectionRefs.current.transcript = el; }}
-              className="bg-[#192734] border-white/10"
+              className="bg-[#30302e] border-white/10"
             >
               <CardContent className="p-4 space-y-3">
                 <div className="text-sm font-bold">Transcription</div>
                 <div className="flex flex-wrap gap-2">
                   <Button
                     type="button"
-                    className="bg-[var(--school-accent)] text-black hover:bg-yellow-500 font-bold"
+                    className="bg-[#d97757] text-black hover:bg-[#d97757] font-bold"
                     aria-disabled={asrLoading}
                     onClick={generateTranscriptWithASR}
                   >
@@ -2077,29 +2082,29 @@ const VideoPostProductionPage = ({
                   </Button>
                 </div>
                 {(transcript || []).length === 0 ? (
-                  <div className="text-sm text-gray-400">Aucune transcription.</div>
+                  <div className="text-sm text-[#b0ada3]">Aucune transcription.</div>
                 ) : (
                   <div className="space-y-2">
-                    <div className="text-xs text-gray-400">
+                    <div className="text-xs text-[#b0ada3]">
                       {(transcript || []).length} lignes (aperçu)
                     </div>
-                    <div className="rounded-lg border border-white/10 bg-black/20 p-3 text-sm text-gray-200 max-h-[220px] overflow-auto space-y-2">
+                    <div className="rounded-lg border border-white/10 bg-black/20 p-3 text-sm text-[#b0ada3] max-h-[220px] overflow-auto space-y-2">
                       {(transcript || []).slice(0, 8).map((l, idx) => (
                         <div key={`t-preview-${idx}`} className="leading-relaxed">
-                          <span className="text-gray-400 mr-2">[{l?.timeText || '—'}]</span>
+                          <span className="text-[#b0ada3] mr-2">[{l?.timeText || '—'}]</span>
                           <span>{String(l?.text || '').slice(0, 260)}</span>
-                          {String(l?.text || '').length > 260 ? <span className="text-gray-400">…</span> : null}
+                          {String(l?.text || '').length > 260 ? <span className="text-[#b0ada3]">…</span> : null}
                         </div>
                       ))}
                       {(transcript || []).length > 8 ? (
-                        <div className="text-xs text-gray-400">… aperçu tronqué. Ouvre l'éditeur pour corriger.</div>
+                        <div className="text-xs text-[#b0ada3]">… aperçu tronqué. Ouvre l'éditeur pour corriger.</div>
                       ) : null}
                     </div>
                   </div>
                 )}
 
                 <Dialog open={transcriptEditorOpen} onOpenChange={setTranscriptEditorOpen}>
-                  <DialogContent className="max-w-[98vw] w-full h-[92vh] bg-[#0F1419] border-white/10 p-0 overflow-hidden text-white">
+                  <DialogContent className="max-w-[98vw] w-full h-[92vh] bg-[#1f1e1c] border-white/10 p-0 overflow-hidden text-white">
                     <DialogTitle className="sr-only">Éditeur de transcription</DialogTitle>
                     <div className="h-full flex flex-col min-h-0">
                       <div className="h-14 px-4 flex items-center justify-between border-b border-white/10 bg-black/20">
@@ -2108,9 +2113,9 @@ const VideoPostProductionPage = ({
                       </div>
                       <div className="flex-1 min-h-0 flex">
                         <div className="w-[240px] border-r border-white/10 bg-black/20 overflow-auto p-3">
-                          <div className="text-[11px] text-gray-300 uppercase tracking-wider mb-2">Chapitres</div>
+                          <div className="text-[11px] text-[#b0ada3] uppercase tracking-wider mb-2">Chapitres</div>
                           {(chapters || []).length === 0 ? (
-                            <div className="text-xs text-gray-400">Aucun chapitre.</div>
+                            <div className="text-xs text-[#b0ada3]">Aucun chapitre.</div>
                           ) : (
                             <div className="space-y-1">
                               {(chapters || []).map((c, idx) => {
@@ -2123,7 +2128,7 @@ const VideoPostProductionPage = ({
                                     key={`chap-nav-${idx}`}
                                     type="button"
                                     className={active
-                                      ? 'w-full text-left rounded-md border border-blue-400/60 bg-blue-500/10 px-2 py-2'
+                                      ? 'w-full text-left rounded-md border border-[#d97757]/60 bg-[#c2683f]/10 px-2 py-2'
                                       : 'w-full text-left rounded-md border border-white/10 px-2 py-2 hover:bg-white/5'
                                     }
                                     onClick={() => {
@@ -2132,7 +2137,7 @@ const VideoPostProductionPage = ({
                                     }}
                                   >
                                     <div className="text-xs text-white font-semibold truncate">{label}</div>
-                                    <div className="text-[11px] text-gray-400">
+                                    <div className="text-[11px] text-[#b0ada3]">
                                       {s != null ? formatSecondsToTimeText(s) : '—'}
                                       {e != null ? ` → ${formatSecondsToTimeText(e)}` : ''}
                                     </div>
@@ -2157,7 +2162,7 @@ const VideoPostProductionPage = ({
                           {(transcript || []).map((l, idx) => (
                           <div key={`t-edit-${idx}`} ref={(el) => { transcriptRowRefs.current[idx] = el; }} className="grid grid-cols-12 gap-2 items-start">
                             <Input
-                              className="col-span-3 bg-[#0F1419] border-white/10"
+                              className="col-span-3 bg-[#1f1e1c] border-white/10"
                               value={l?.timeText || ''}
                               onChange={(e) => {
                                 const next = [...(transcript || [])];
@@ -2167,7 +2172,7 @@ const VideoPostProductionPage = ({
                               placeholder="0:12"
                             />
                             <Textarea
-                              className="col-span-8 bg-[#0F1419] border-white/10 min-h-[42px]"
+                              className="col-span-8 bg-[#1f1e1c] border-white/10 min-h-[42px]"
                               value={l?.text || ''}
                               onChange={(e) => {
                                 const next = [...(transcript || [])];
@@ -2199,7 +2204,7 @@ const VideoPostProductionPage = ({
                         >
                           <Plus className="w-4 h-4 mr-2" /> Ajouter une ligne
                         </Button>
-                        <Button className="bg-[var(--school-accent)] text-black hover:bg-yellow-500 font-bold" onClick={() => setTranscriptEditorOpen(false)}>
+                        <Button className="bg-[#d97757] text-black hover:bg-[#d97757] font-bold" onClick={() => setTranscriptEditorOpen(false)}>
                           <Check className="w-4 h-4 mr-2" /> OK
                         </Button>
                       </div>
@@ -2209,11 +2214,11 @@ const VideoPostProductionPage = ({
               </CardContent>
             </Card>
 
-            <Card className="bg-[#192734] border-white/10">
+            <Card className="bg-[#30302e] border-white/10">
               <CardContent className="p-4 space-y-3">
                 <div className="text-sm font-bold">Mindmap (JSON)</div>
                 <div className="space-y-2">
-                  <Label className="text-xs text-gray-400">Champs requis: id + label</Label>
+                  <Label className="text-xs text-[#b0ada3]">Champs requis: id + label</Label>
                   <div className="flex flex-wrap gap-2">
                     <Button
                       type="button"
@@ -2235,7 +2240,7 @@ const VideoPostProductionPage = ({
                     </Button>
                     <Button
                       type="button"
-                      className="bg-[var(--school-accent)] text-black hover:bg-yellow-500 font-bold disabled:opacity-60 disabled:cursor-not-allowed"
+                      className="bg-[#d97757] text-black hover:bg-[#d97757] font-bold disabled:opacity-60 disabled:cursor-not-allowed"
                       disabled={aiLoading}
                       onClick={generateMindmapWithAI}
                     >
@@ -2244,22 +2249,22 @@ const VideoPostProductionPage = ({
                     </Button>
                   </div>
                   {aiLoading && aiMessage ? (
-                    <div className="flex items-center gap-2 rounded-lg border border-yellow-500/30 bg-yellow-500/10 px-3 py-2 text-xs text-yellow-200">
-                      <Loader2 className="w-3 h-3 animate-spin flex-shrink-0 text-yellow-400" />
+                    <div className="flex items-center gap-2 rounded-lg border border-[#d97757]/30 bg-[#d97757]/10 px-3 py-2 text-xs text-[#e8b6a3]">
+                      <Loader2 className="w-3 h-3 animate-spin flex-shrink-0 text-[#d97757]" />
                       <span>{aiMessage}</span>
                     </div>
                   ) : aiMessage ? (
-                    <div className="text-xs text-gray-400">{aiMessage}</div>
+                    <div className="text-xs text-[#b0ada3]">{aiMessage}</div>
                   ) : null}
                   <Textarea
                     value={mindmapJsonText}
                     onChange={(e) => setMindmapJsonText(e.target.value)}
-                    className="bg-[#0F1419] border-white/10 min-h-[220px] font-mono text-xs"
+                    className="bg-[#1f1e1c] border-white/10 min-h-[220px] font-mono text-xs"
                     placeholder={`{\n  "id": "root",\n  "label": "Sujet",\n  "time": "0:00",\n  "children": []\n}`}
                   />
 
                   <Dialog open={mindmapPreviewOpen} onOpenChange={setMindmapPreviewOpen}>
-                    <DialogContent className="max-w-[98vw] w-full h-[92vh] bg-[#0F1419] border-white/10 p-0 overflow-hidden text-white">
+                    <DialogContent className="max-w-[98vw] w-full h-[92vh] bg-[#1f1e1c] border-white/10 p-0 overflow-hidden text-white">
                       <DialogTitle className="sr-only">Aperçu Mindmap</DialogTitle>
                       <div className="h-full flex flex-col min-h-0">
                         <div className="h-14 px-4 flex items-center justify-between border-b border-white/10 bg-black/20">
@@ -2307,13 +2312,13 @@ const VideoPostProductionPage = ({
         {postProdView !== 'classic' && postProdView !== 'pipeline' ? (
           <div className="space-y-3">
             {mindmapPreview ? (
-              <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-white/10 bg-[#111a2a]/60 px-4 py-3">
-                <div className="text-xs text-gray-400">
+              <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-white/10 bg-[#1f1e1c]/60 px-4 py-3">
+                <div className="text-xs text-[#b0ada3]">
                   <span className="text-white font-semibold">Slides riches</span> — contenu pédagogique premium (titre-idée, idée centrale, objectif, à retenir) + image au bon style, par carte.
                 </div>
                 <div className="flex items-center gap-3">
                   {cardImageLoading ? (
-                    <span className="text-xs text-[var(--school-accent)] font-mono">
+                    <span className="text-xs text-[#d97757] font-mono">
                       {cardImageLoading === 'slides' ? 'Slides…' : 'Images…'} {cardImageProgress.done}/{cardImageProgress.total}
                     </span>
                   ) : null}
@@ -2323,7 +2328,7 @@ const VideoPostProductionPage = ({
                     disabled={!!cardImageLoading}
                     onClick={handleGenerateRichSlides}
                     title="Génère, pour chaque carte, le contenu pédagogique riche (titre-idée, idée centrale, objectif, à retenir) + une image au bon style"
-                    className="border-[var(--school-accent)] text-[var(--school-accent)] hover:bg-[color-mix(in_srgb,var(--school-accent)_10%,transparent)] font-bold gap-2 h-9"
+                    className="border-[#d97757] text-[#d97757] hover:bg-[color-mix(in_srgb,var(--coral)_10%,transparent)] font-bold gap-2 h-9"
                   >
                     {cardImageLoading === 'slides' ? <Loader2 className="w-4 h-4 animate-spin" /> : <Sparkles className="w-4 h-4" />}
                     Générer les slides riches
@@ -2374,7 +2379,7 @@ const VideoPostProductionPage = ({
               onSeek={seekTo}
             />
             <div className="rounded-xl border border-white/10 bg-black/20 p-4 text-xs space-y-3">
-              <p className="text-[11px] font-semibold text-[color-mix(in_srgb,var(--school-accent)_90%,transparent)]">Sources vidéo additionnelles</p>
+              <p className="text-[11px] font-semibold text-[color-mix(in_srgb,var(--coral)_90%,transparent)]">Sources vidéo additionnelles</p>
               <p className="text-[10px] text-white/45 leading-relaxed">
                 Pour chaque ref utilisée sur un clip V1 (champ <span className="font-mono text-white/70">sourceRef</span>
                 ), indique l'URL du fichier. L\'export FFmpeg charge <span className="font-mono text-white/70">data.url</span>{' '}
@@ -2384,11 +2389,11 @@ const VideoPostProductionPage = ({
                 <ul className="space-y-2">
                   {Object.entries(sourceVideoUrlsByRef).map(([ref, url]) => (
                     <li key={ref} className="flex flex-wrap items-center gap-2">
-                      <span className="font-mono text-[10px] text-[color-mix(in_srgb,var(--school-accent)_90%,transparent)] w-24 shrink-0 truncate" title={ref}>
+                      <span className="font-mono text-[10px] text-[color-mix(in_srgb,var(--coral)_90%,transparent)] w-24 shrink-0 truncate" title={ref}>
                         {ref}
                       </span>
                       <Input
-                        className="h-8 flex-1 min-w-[200px] bg-[#0F1419] border-white/10 font-mono text-[10px]"
+                        className="h-8 flex-1 min-w-[200px] bg-[#1f1e1c] border-white/10 font-mono text-[10px]"
                         value={url}
                         onChange={(e) =>
                           setSourceVideoUrlsByRef((prev) => ({ ...prev, [ref]: e.target.value }))
@@ -2419,7 +2424,7 @@ const VideoPostProductionPage = ({
                 <div className="min-w-[100px]">
                   <Label className="text-[10px] text-white/40">Ref</Label>
                   <Input
-                    className="h-8 mt-0.5 bg-[#0F1419] border-white/10 font-mono text-[10px]"
+                    className="h-8 mt-0.5 bg-[#1f1e1c] border-white/10 font-mono text-[10px]"
                     placeholder="ex. broll"
                     value={extraSourceRefInput}
                     onChange={(e) => setExtraSourceRefInput(e.target.value)}
@@ -2428,7 +2433,7 @@ const VideoPostProductionPage = ({
                 <div className="flex-1 min-w-[220px]">
                   <Label className="text-[10px] text-white/40">URL fichier vidéo</Label>
                   <Input
-                    className="h-8 mt-0.5 bg-[#0F1419] border-white/10 font-mono text-[10px]"
+                    className="h-8 mt-0.5 bg-[#1f1e1c] border-white/10 font-mono text-[10px]"
                     placeholder="https://…"
                     value={extraSourceUrlInput}
                     onChange={(e) => setExtraSourceUrlInput(e.target.value)}
@@ -2532,13 +2537,13 @@ const VideoPostProductionPage = ({
 
 // ─── Render Export Panel ─────────────────────────────────────────────────────
 const STATUS_LABELS = {
-  queued:           { label: 'En file…',          color: 'text-gray-400',    pulse: true  },
-  preparing_assets: { label: 'Préparation…',       color: 'text-blue-400',   pulse: true  },
-  rendering:        { label: 'Rendu en cours…',    color: 'text-amber-400',  pulse: true  },
-  packaging:        { label: 'Finalisation…',      color: 'text-purple-400', pulse: true  },
-  completed:        { label: 'Terminé',            color: 'text-emerald-400', pulse: false },
+  queued:           { label: 'En file…',          color: 'text-[#b0ada3]',    pulse: true  },
+  preparing_assets: { label: 'Préparation…',       color: 'text-[#d97757]',   pulse: true  },
+  rendering:        { label: 'Rendu en cours…',    color: 'text-[#d97757]',  pulse: true  },
+  packaging:        { label: 'Finalisation…',      color: 'text-[#d97757]', pulse: true  },
+  completed:        { label: 'Terminé',            color: 'text-[#9fbf8f]', pulse: false },
   failed:           { label: 'Échec',              color: 'text-red-400',    pulse: false },
-  cancelled:        { label: 'Annulé',             color: 'text-gray-500',   pulse: false },
+  cancelled:        { label: 'Annulé',             color: 'text-[#82807a]',   pulse: false },
 };
 
 function RenderExportPanel({
@@ -2626,17 +2631,17 @@ function RenderExportPanel({
   const latestJob = jobs[0] || null;
 
   return (
-    <div className="rounded-2xl border border-[color-mix(in_srgb,var(--school-accent)_20%,transparent)] bg-[#0d1522] p-4 space-y-4">
+    <div className="rounded-2xl border border-[color-mix(in_srgb,var(--coral)_20%,transparent)] bg-[#1f1e1c] p-4 space-y-4">
       <div className="flex items-center justify-between gap-3">
         <div>
-          <p className="text-[11px] uppercase tracking-wider text-[color-mix(in_srgb,var(--school-accent)_60%,transparent)] font-semibold">🎬 Vidéo de sortie</p>
+          <p className="text-[11px] uppercase tracking-wider text-[color-mix(in_srgb,var(--coral)_60%,transparent)] font-semibold">🎬 Vidéo de sortie</p>
           <p className="text-sm text-white font-medium mt-0.5">Exporter la vidéo avec SmartBoard intégré</p>
-          <p className="text-xs text-gray-500 mt-0.5">
+          <p className="text-xs text-[#82807a] mt-0.5">
             Export jusqu'en 4K, split-screen formateur + slide, audio AAC haut débit, réglages NLE conservés.
             {slideFrameCount > 0 ? (
-              <span className="text-emerald-400/90"> · {slideFrameCount} plan(s) capturé(s)</span>
+              <span className="text-[#9fbf8f]/90"> · {slideFrameCount} plan(s) capturé(s)</span>
             ) : (
-              <span className="text-gray-400"> · Capturer les plans depuis le designer (panneau export vidéo)</span>
+              <span className="text-[#b0ada3]"> · Capturer les plans depuis le designer (panneau export vidéo)</span>
             )}
           </p>
         </div>
@@ -2645,7 +2650,7 @@ function RenderExportPanel({
             value={exportResolution}
             onChange={(e) => setExportResolution(e.target.value)}
             title="Résolution du fichier final"
-            className="h-8 rounded-md border border-white/10 bg-[#0F1419] px-2 text-xs text-white"
+            className="h-8 rounded-md border border-white/10 bg-[#1f1e1c] px-2 text-xs text-white"
           >
             {EXPORT_RESOLUTION_OPTIONS.map((o) => (
               <option key={o.id} value={o.id}>{o.label}</option>
@@ -2654,7 +2659,7 @@ function RenderExportPanel({
           <select
             value={renderMode}
             onChange={(e) => setRenderMode(e.target.value)}
-            className="h-8 rounded-md border border-white/10 bg-[#0F1419] px-2 text-xs text-white"
+            className="h-8 rounded-md border border-white/10 bg-[#1f1e1c] px-2 text-xs text-white"
           >
             <option value="pedagogical">Pédagogique</option>
             <option value="reformulation">Reformulation IA</option>
@@ -2663,7 +2668,7 @@ function RenderExportPanel({
           </select>
           <Button
             type="button"
-            className="bg-[var(--school-accent)] text-black hover:bg-amber-500 font-bold"
+            className="bg-[#d97757] text-black hover:bg-[#d97757] font-bold"
             onClick={handleEnqueue}
             disabled={enqueueLoading || !contentId}
           >
@@ -2694,7 +2699,7 @@ function RenderExportPanel({
       {jobs.length > 0 && (
         <div className="space-y-2">
           {jobs.slice(0, 5).map((job) => {
-            const s = STATUS_LABELS[job.status] || { label: job.status, color: 'text-gray-400', pulse: false };
+            const s = STATUS_LABELS[job.status] || { label: job.status, color: 'text-[#b0ada3]', pulse: false };
             const workerErr = job.manifest_json?.worker_error || job.error_message;
             return (
               <div key={job.id} className="rounded-xl border border-white/10 bg-white/3 px-4 py-3 flex items-center justify-between gap-3">
@@ -2703,9 +2708,9 @@ function RenderExportPanel({
                     <span className={`text-sm font-semibold ${s.color} ${s.pulse ? 'animate-pulse' : ''}`}>
                       {s.label}
                     </span>
-                    <span className="text-[10px] text-gray-500 bg-white/5 px-2 py-0.5 rounded-full font-mono">{job.render_mode}</span>
+                    <span className="text-[10px] text-[#82807a] bg-white/5 px-2 py-0.5 rounded-full font-mono">{job.render_mode}</span>
                   </div>
-                  <p className="text-[11px] text-gray-500 font-mono mt-0.5">
+                  <p className="text-[11px] text-[#82807a] font-mono mt-0.5">
                     {new Date(job.created_at).toLocaleString('fr-FR')}
                   </p>
                   {workerErr && (
@@ -2717,13 +2722,13 @@ function RenderExportPanel({
                     href={job.output_video_url}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="shrink-0 inline-flex items-center gap-1.5 rounded-lg bg-emerald-500/15 border border-emerald-500/30 px-3 py-1.5 text-xs text-emerald-300 hover:bg-emerald-500/25 transition-colors font-semibold"
+                    className="shrink-0 inline-flex items-center gap-1.5 rounded-lg bg-[#7a9b6c]/15 border border-[#7a9b6c]/30 px-3 py-1.5 text-xs text-[#9fbf8f] hover:bg-[#7a9b6c]/25 transition-colors font-semibold"
                   >
                     ⬇ Télécharger MP4
                   </a>
                 )}
                 {['queued', 'preparing_assets', 'rendering', 'packaging'].includes(job.status) && (
-                  <div className="shrink-0 flex items-center gap-1.5 text-xs text-gray-500">
+                  <div className="shrink-0 flex items-center gap-1.5 text-xs text-[#82807a]">
                     <Loader2 className="w-3.5 h-3.5 animate-spin" />
                     En cours…
                   </div>
@@ -2735,9 +2740,16 @@ function RenderExportPanel({
       )}
 
       {jobs.length === 0 && !jobsLoading && (
-        <p className="text-xs text-gray-600 text-center py-2">Aucun rendu pour ce contenu. Clique sur "Générer la vidéo" pour démarrer.</p>
+        <p className="text-xs text-[#82807a] text-center py-2">Aucun rendu pour ce contenu. Clique sur "Générer la vidéo" pour démarrer.</p>
       )}
     </div>
+  );
+
+  // Montage = outil de création : embarqué dans la coque portail LIRI (rail + topbar +
+  // footer), comme la Masterclass. Le mode `embedded` (modal replay, dock) garde son
+  // conteneur d'accueil et ne double PAS la coque.
+  return embedded ? _ppBody : (
+    <LiriPortalShell active="studio">{_ppBody}</LiriPortalShell>
   );
 }
 

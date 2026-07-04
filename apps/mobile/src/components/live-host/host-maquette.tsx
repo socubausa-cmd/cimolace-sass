@@ -138,7 +138,7 @@ export default function HostMaquette() {
                         La lumière se propage <Text style={s.strong}>en ligne droite</Text> en milieu homogène.
                       </Bullet>
                       <Bullet>
-                        Son <Text style={s.strong}>énergie</Text> transporte l'info couleur et intensité.
+                        Son <Text style={s.strong}>énergie</Text> transporte l’info couleur et intensité.
                       </Bullet>
                       <Bullet>
                         La vitesse <Text style={s.em}>c</Text> est la <Text style={s.strong}>limite haute</Text> pour toute information.
@@ -158,7 +158,7 @@ export default function HostMaquette() {
                 </View>
               ) : (
                 <Text style={s.previewNote}>
-                  Aperçu de la leçon — pensez à revenir sur « La vitesse de la lumière » pour l'exemple complet.
+                  Aperçu de la leçon — pensez à revenir sur « La vitesse de la lumière » pour l’exemple complet.
                 </Text>
               )}
             </LinearGradient>

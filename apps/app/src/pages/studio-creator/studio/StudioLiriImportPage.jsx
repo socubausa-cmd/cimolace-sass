@@ -78,12 +78,12 @@ const DESTINATIONS = [
 ];
 
 const ACCENT_MAP = {
-  violet: { text: 'text-violet-400', bg: 'bg-violet-500/15', border: 'border-violet-500/30', glow: 'shadow-[0_0_20px_rgba(139,92,246,0.25)]' },
-  cyan: { text: 'text-cyan-400', bg: 'bg-cyan-500/15', border: 'border-cyan-500/30', glow: 'shadow-[0_0_20px_rgba(34,211,238,0.25)]' },
-  blue: { text: 'text-blue-400', bg: 'bg-blue-500/15', border: 'border-blue-500/30', glow: 'shadow-[0_0_20px_rgba(59,130,246,0.25)]' },
+  violet: { text: 'text-[#e08a5f]', bg: 'bg-[#d97757]/15', border: 'border-[#d97757]/30', glow: 'shadow-[0_0_20px_rgba(217,119,87,0.25)]' },
+  cyan: { text: 'text-[#e0a458]', bg: 'bg-[#d4924a]/15', border: 'border-[#d4924a]/30', glow: 'shadow-[0_0_20px_rgba(227,170,107,0.25)]' },
+  blue: { text: 'text-[#e0a458]', bg: 'bg-[#d4924a]/15', border: 'border-[#d4924a]/30', glow: 'shadow-[0_0_20px_rgba(207,122,82,0.25)]' },
   amber: { text: 'text-amber-400', bg: 'bg-amber-500/15', border: 'border-amber-500/30', glow: 'shadow-[0_0_20px_rgba(245,158,11,0.25)]' },
-  purple: { text: 'text-purple-400', bg: 'bg-purple-500/15', border: 'border-purple-500/30', glow: 'shadow-[0_0_20px_rgba(168,85,247,0.25)]' },
-  emerald: { text: 'text-emerald-400', bg: 'bg-emerald-500/15', border: 'border-emerald-500/30', glow: 'shadow-[0_0_20px_rgba(52,211,153,0.25)]' },
+  purple: { text: 'text-[#e08a5f]', bg: 'bg-[#d97757]/15', border: 'border-[#d97757]/30', glow: 'shadow-[0_0_20px_rgba(168,85,247,0.25)]' },
+  emerald: { text: 'text-[#7bb06a]', bg: 'bg-[#5a8f52]/15', border: 'border-[#5a8f52]/30', glow: 'shadow-[0_0_20px_rgba(207,128,89,0.25)]' },
 };
 
 // ─── Wizard steps ────────────────────────────────────────────────────────────
@@ -105,9 +105,9 @@ function StepIndicator({ current }) {
             <div className={cn(
               'flex h-6 w-6 items-center justify-center rounded-full text-[11px] font-bold transition-all',
               step.id < current
-                ? 'bg-emerald-500/25 text-emerald-300'
+                ? 'bg-[#5a8f52]/25 text-[#9cc48a]'
                 : step.id === current
-                  ? 'bg-violet-600 text-white shadow-[0_0_10px_rgba(139,92,246,0.4)]'
+                  ? 'bg-[#c96544] text-white shadow-[0_0_10px_rgba(217,119,87,0.4)]'
                   : 'bg-white/10 text-white/25',
             )}>
               {step.id < current ? '✓' : step.id}
@@ -242,7 +242,7 @@ export default function StudioLiriImportPage() {
 
               {/* Drop zone */}
               <div
-                className="mt-4 flex flex-col items-center justify-center gap-3 rounded-2xl border-2 border-dashed border-white/10 py-10 cursor-pointer transition-all hover:border-violet-500/30 hover:bg-violet-500/[0.03]"
+                className="mt-4 flex flex-col items-center justify-center gap-3 rounded-2xl border-2 border-dashed border-white/10 py-10 cursor-pointer transition-all hover:border-[#d97757]/30 hover:bg-[#d97757]/[0.03]"
                 onClick={() => fileRef.current?.click()}
               >
                 <Upload className="h-8 w-8 text-white/20" />
@@ -271,8 +271,8 @@ export default function StudioLiriImportPage() {
               exit={{ opacity: 0, x: -20 }}
               className="rounded-2xl border border-white/10 bg-white/[0.02] p-8 flex flex-col items-center text-center gap-4"
             >
-              <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-violet-500/15 border border-violet-500/25">
-                <Loader2 className="h-7 w-7 text-violet-400 animate-spin" />
+              <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-[#d97757]/15 border border-[#d97757]/25">
+                <Loader2 className="h-7 w-7 text-[#e08a5f] animate-spin" />
               </div>
               <div>
                 <h3 className="text-[15px] font-semibold text-white mb-1">Analyse en cours...</h3>
@@ -304,7 +304,7 @@ export default function StudioLiriImportPage() {
                     <p className="text-[12px] text-white/40">{file?.name}</p>
                   </div>
                   <span className={cn('rounded-full border px-3 py-1 text-[11px] font-medium',
-                    analysis.compat === 'high' ? 'bg-emerald-500/15 border-emerald-500/25 text-emerald-400' : 'bg-amber-500/15 border-amber-500/25 text-amber-400',
+                    analysis.compat === 'high' ? 'bg-[#5a8f52]/15 border-[#5a8f52]/25 text-[#7bb06a]' : 'bg-amber-500/15 border-amber-500/25 text-amber-400',
                   )}>
                     {analysis.compat === 'high' ? 'Haute compatibilité' : 'Compatibilité partielle'}
                   </span>
@@ -313,7 +313,7 @@ export default function StudioLiriImportPage() {
                 {/* Usage recommandé */}
                 <div className="mb-4">
                   <div className="text-[11px] uppercase tracking-[0.12em] text-white/30 mb-2">Usage recommandé</div>
-                  <div className="text-[13px] text-violet-300">{analysis.usage}</div>
+                  <div className="text-[13px] text-[#e8a97f]">{analysis.usage}</div>
                 </div>
 
                 {/* Éléments récupérables */}
@@ -321,7 +321,7 @@ export default function StudioLiriImportPage() {
                   <div className="text-[11px] uppercase tracking-[0.12em] text-white/30 mb-2">Éléments récupérables</div>
                   <div className="flex flex-wrap gap-2">
                     {analysis.elements.map((el) => (
-                      <span key={el} className="flex items-center gap-1 rounded-lg border border-emerald-500/20 bg-emerald-500/8 px-2.5 py-1 text-[11px] text-emerald-400">
+                      <span key={el} className="flex items-center gap-1 rounded-lg border border-[#5a8f52]/20 bg-[#5a8f52]/8 px-2.5 py-1 text-[11px] text-[#7bb06a]">
                         <CheckCircle2 className="h-3 w-3" />
                         {el}
                       </span>
@@ -340,7 +340,7 @@ export default function StudioLiriImportPage() {
 
               <button
                 onClick={() => setStep(4)}
-                className="flex items-center justify-center gap-2 rounded-xl bg-violet-600 py-3 text-[13px] font-semibold text-white transition-all hover:bg-violet-500 shadow-[0_0_20px_rgba(139,92,246,0.35)]"
+                className="flex items-center justify-center gap-2 rounded-xl bg-[#c96544] py-3 text-[13px] font-semibold text-white transition-all hover:bg-[#d97757] shadow-[0_0_20px_rgba(217,119,87,0.35)]"
               >
                 Choisir la destination
                 <ArrowRight className="h-4 w-4" />
@@ -393,8 +393,8 @@ export default function StudioLiriImportPage() {
               animate={{ opacity: 1, scale: 1 }}
               className="flex flex-col items-center text-center gap-6 py-8"
             >
-              <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-emerald-500/15 border border-emerald-500/25">
-                <CheckCircle2 className="h-8 w-8 text-emerald-400" />
+              <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-[#5a8f52]/15 border border-[#5a8f52]/25">
+                <CheckCircle2 className="h-8 w-8 text-[#7bb06a]" />
               </div>
               <div>
                 <h3 className="text-[18px] font-bold text-white mb-2">Prêt à importer</h3>
@@ -412,7 +412,7 @@ export default function StudioLiriImportPage() {
                 </button>
                 <button
                   onClick={handleConfirm}
-                  className="flex items-center gap-2 rounded-xl bg-violet-600 px-6 py-2.5 text-[13px] font-semibold text-white transition-all hover:bg-violet-500 shadow-[0_0_20px_rgba(139,92,246,0.35)]"
+                  className="flex items-center gap-2 rounded-xl bg-[#c96544] px-6 py-2.5 text-[13px] font-semibold text-white transition-all hover:bg-[#d97757] shadow-[0_0_20px_rgba(217,119,87,0.35)]"
                 >
                   <Sparkles className="h-4 w-4" />
                   Importer maintenant

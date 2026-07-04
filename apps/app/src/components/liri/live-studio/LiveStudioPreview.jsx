@@ -99,7 +99,7 @@ export function LiveStudioPreview({ draft, onGoToDateStep, embedded = false }) {
         <div className="relative overflow-hidden rounded-xl border border-[#2D3139] bg-[#12141a]/90 p-4">
           <div className="pointer-events-none absolute inset-0 -translate-x-full animate-[shimmer_3.8s_infinite] bg-gradient-to-r from-transparent via-white/[0.06] to-transparent" />
           <h3 className="mb-2 flex items-center gap-2 text-xs font-bold uppercase tracking-[0.12em] text-white">
-            <Eye className="h-4 w-4 text-[#7B61FF]" />
+            <Eye className="h-4 w-4 text-[#d97757]" />
             Aperçu visuel
           </h3>
           <p className="text-[11px] leading-relaxed text-gray-500">
@@ -112,7 +112,7 @@ export function LiveStudioPreview({ draft, onGoToDateStep, embedded = false }) {
       <motion.div
         initial={{ opacity: 0, scale: 0.99 }}
         animate={{ opacity: 1, scale: 1 }}
-        className="overflow-hidden rounded-2xl border border-[#7B61FF]/25 bg-[#14161c] shadow-[0_20px_44px_-28px_rgba(123,97,255,0.25)]"
+        className="overflow-hidden rounded-2xl border border-[#d97757]/25 bg-[#14161c] shadow-[0_20px_44px_-28px_rgba(217,119,87,0.25)]"
       >
         {/* Cover — clic pour agrandir si une image est définie */}
         {cover_image_url ? (
@@ -125,7 +125,7 @@ export function LiveStudioPreview({ draft, onGoToDateStep, embedded = false }) {
             title="Voir en grand"
             className={cn(
               'relative aspect-video w-full overflow-hidden rounded-t-[inherit] bg-cover bg-center text-left',
-              'cursor-zoom-in focus:outline-none focus-visible:ring-2 focus-visible:ring-[#7B61FF]/70 focus-visible:ring-offset-2 focus-visible:ring-offset-[#14161c]',
+              'cursor-zoom-in focus:outline-none focus-visible:ring-2 focus-visible:ring-[#d97757]/70 focus-visible:ring-offset-2 focus-visible:ring-offset-[#14161c]',
               'group',
             )}
             style={{ backgroundImage: `url(${cover_image_url})` }}
@@ -140,11 +140,11 @@ export function LiveStudioPreview({ draft, onGoToDateStep, embedded = false }) {
           <motion.div
             whileHover={{ scale: 1.01 }}
             transition={{ duration: 0.24 }}
-            className="relative aspect-video flex items-center justify-center overflow-hidden rounded-t-[inherit] bg-gradient-to-br from-[#7B61FF]/30 via-[#151528] to-[#0a0c10]"
+            className="relative aspect-video flex items-center justify-center overflow-hidden rounded-t-[inherit] bg-gradient-to-br from-[#d97757]/30 via-[#151528] to-[#0a0c10]"
           >
             <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-black/15 via-black/30 to-black/55" />
             <div className="relative z-[1] p-6 text-center">
-              <Camera className="mx-auto mb-2 h-14 w-14 text-[#7B61FF]/85" strokeWidth={1.25} />
+              <Camera className="mx-auto mb-2 h-14 w-14 text-[#d97757]/85" strokeWidth={1.25} />
               <span className="text-sm text-gray-400">Image de couverture</span>
             </div>
           </motion.div>
@@ -153,7 +153,7 @@ export function LiveStudioPreview({ draft, onGoToDateStep, embedded = false }) {
         {/* Content */}
         <div className="p-5 space-y-4">
           <div>
-            <span className="rounded px-2 py-0.5 text-xs font-medium bg-[#7B61FF]/18 text-[#7B61FF]">
+            <span className="rounded px-2 py-0.5 text-xs font-medium bg-[#d97757]/18 text-[#d97757]">
               {SESSION_TYPES[session_type] || session_type}
             </span>
             <h4 className="text-lg font-semibold text-white mt-2">
@@ -165,7 +165,7 @@ export function LiveStudioPreview({ draft, onGoToDateStep, embedded = false }) {
           </div>
 
           <div className="flex flex-wrap items-center gap-x-1.5 gap-y-1 text-[13px] text-gray-400">
-            <Calendar className="h-3.5 w-3.5 shrink-0 text-[#7B61FF]" strokeWidth={2} />
+            <Calendar className="h-3.5 w-3.5 shrink-0 text-[#d97757]" strokeWidth={2} />
             <span className="text-gray-300">
               {displayDate}
               {' · '}
@@ -181,7 +181,7 @@ export function LiveStudioPreview({ draft, onGoToDateStep, embedded = false }) {
               <button
                 type="button"
                 onClick={onGoToDateStep}
-                className="ml-auto text-[11px] font-medium text-[#7B61FF] hover:underline"
+                className="ml-auto text-[11px] font-medium text-[#d97757] hover:underline"
               >
                 Régler date…
               </button>
@@ -263,7 +263,7 @@ export function LiveStudioPreview({ draft, onGoToDateStep, embedded = false }) {
                 </span>
               )}
               {totalInvited > 0 && (
-                <span className="inline-flex items-center gap-1 rounded-md border border-[#7B61FF]/25 bg-[#7B61FF]/8 px-2 py-1 text-[11px] text-[#7B61FF]">
+                <span className="inline-flex items-center gap-1 rounded-md border border-[#d97757]/25 bg-[#d97757]/8 px-2 py-1 text-[11px] text-[#d97757]">
                   <Users className="w-3 h-3" />
                   {totalInvited} individuel(s)
                 </span>
@@ -298,7 +298,7 @@ export function LiveStudioPreview({ draft, onGoToDateStep, embedded = false }) {
                   className={cn(
                     'inline-flex items-center gap-1 px-2 py-1 rounded-md text-[11px] border',
                     enabled
-                      ? 'border-[#7B61FF]/30 bg-[#7B61FF]/10 text-[#7B61FF]'
+                      ? 'border-[#d97757]/30 bg-[#d97757]/10 text-[#d97757]'
                       : 'border-white/10 bg-white/5 text-gray-500'
                   )}
                 >
@@ -336,7 +336,7 @@ export function LiveStudioPreview({ draft, onGoToDateStep, embedded = false }) {
               </p>
               <div className="flex flex-wrap gap-1.5">
                 {activeScenes.map((s) => (
-                  <span key={s} className="inline-flex items-center rounded-md border border-[#7B61FF]/20 bg-[#7B61FF]/5 px-2 py-1 text-[11px] capitalize text-[#7B61FF]/90">
+                  <span key={s} className="inline-flex items-center rounded-md border border-[#d97757]/20 bg-[#d97757]/5 px-2 py-1 text-[11px] capitalize text-[#d97757]/90">
                     {s}
                   </span>
                 ))}
@@ -346,14 +346,14 @@ export function LiveStudioPreview({ draft, onGoToDateStep, embedded = false }) {
 
           {hasAmbient && (
             <div className="pt-2 border-t border-white/10 flex items-center gap-2">
-              <Volume2 className="h-3.5 w-3.5 text-[#7B61FF]/65" />
+              <Volume2 className="h-3.5 w-3.5 text-[#d97757]/65" />
               <span className="text-[11px] text-gray-400">{(draft.ambient_tracks || []).length} piste(s) d&apos;ambiance</span>
             </div>
           )}
         </div>
 
         <div className="flex min-h-[40px] items-center gap-2 border-t border-[#2D3139] bg-[#07080c] px-3 py-2 text-[10px] text-gray-500">
-          <Waves className="h-3.5 w-3.5 shrink-0 text-[#7B61FF]" />
+          <Waves className="h-3.5 w-3.5 shrink-0 text-[#d97757]" />
           <div className="min-w-0 flex-1 leading-tight">
             <div className="truncate font-medium text-gray-200">{hasTitle ? title : 'Titre du live'}</div>
             <div className="hidden truncate text-[10px] text-gray-500 sm:block">
@@ -362,7 +362,7 @@ export function LiveStudioPreview({ draft, onGoToDateStep, embedded = false }) {
           </div>
           <button
             type="button"
-            className="ml-auto inline-flex shrink-0 items-center gap-0.5 rounded-md border border-[#7B61FF]/40 bg-[#7B61FF]/14 px-2 py-1 text-[10px] font-semibold text-[#7B61FF]"
+            className="ml-auto inline-flex shrink-0 items-center gap-0.5 rounded-md border border-[#d97757]/40 bg-[#d97757]/14 px-2 py-1 text-[10px] font-semibold text-[#d97757]"
           >
             Post-live
             <ChevronDown className="h-3 w-3 opacity-80" />
@@ -373,7 +373,7 @@ export function LiveStudioPreview({ draft, onGoToDateStep, embedded = false }) {
       {!embedded && (
         <button
           type="button"
-          className="inline-flex w-full items-center justify-center gap-2 rounded-xl border border-[#7B61FF]/35 bg-[#7B61FF]/10 px-3 py-2.5 text-sm font-medium text-[#c4b5fd] transition-all hover:scale-[1.01] hover:bg-[#7B61FF]/16"
+          className="inline-flex w-full items-center justify-center gap-2 rounded-xl border border-[#d97757]/35 bg-[#d97757]/10 px-3 py-2.5 text-sm font-medium text-[#f0b89a] transition-all hover:scale-[1.01] hover:bg-[#d97757]/16"
         >
           <Eye className="h-4 w-4" />
           Voir comme participant

@@ -1,0 +1,35 @@
+# .vercelignore — fichiers exclus de l'upload lors d'un déploiement Vercel.
+#
+# Le déploiement part de la RACINE du repo (vercel.json racine = build monorepo
+# `-w @isna/app`, outputDirectory apps/app/dist), donc ce fichier doit vivre ici.
+#
+# ⚠️ IMPORTANT : en déploiement via la CLI Vercel, dès qu'un .vercelignore existe,
+# Vercel n'utilise PLUS le .gitignore pour décider quoi uploader. On reproduit donc
+# ci-dessous les exclusions sensibles du .gitignore (en particulier .env*) afin de
+# NE JAMAIS uploader de secrets, puis on ajoute les fichiers lourds inutiles au déploiement.
+
+# --- Secrets / environnement (ne jamais uploader) ---
+.env
+.env.*
+!.env.example
+!.env.*.example
+
+# --- Dépendances & artefacts de build (régénérés côté Vercel) ---
+node_modules
+dist
+build
+.next
+.turbo
+coverage
+
+# --- Logs & fichiers locaux ---
+*.log
+.DS_Store
+
+# --- Artefacts de test ---
+playwright-report
+test-results
+
+# --- Fichiers utilisateur lourds déposés à la racine (PDF) ---
+# Ex. La_Femme_Nouvelle_Poche.pdf. Motif ancré à la racine : ne touche pas docs/*.pdf.
+/*.pdf

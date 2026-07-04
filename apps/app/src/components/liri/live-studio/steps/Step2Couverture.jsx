@@ -425,9 +425,9 @@ export function Step2Couverture({ draft, updateDraft }) {
             variant="outline"
             size="sm"
             onClick={() => openArchitect('cover')}
-            className="shrink-0 rounded-xl border-[#7B61FF]/40 bg-[#7B61FF]/10 text-[#c4b5fd] hover:bg-[#7B61FF]/20 hover:text-white"
+            className="shrink-0 rounded-xl border-[#d97757]/40 bg-[#d97757]/10 text-[#f0b89a] hover:bg-[#d97757]/20 hover:text-white"
           >
-            <Sparkles className="mr-2 h-4 w-4 text-[#7B61FF]" />
+            <Sparkles className="mr-2 h-4 w-4 text-[#d97757]" />
             Architect IA — couverture
           </Button>
         </div>
@@ -444,8 +444,8 @@ export function Step2Couverture({ draft, updateDraft }) {
           className={cn(
             'aspect-video rounded-2xl border-2 border-dashed flex flex-col items-center justify-center cursor-pointer transition-all overflow-hidden',
             draft.cover_image_url
-              ? 'border-[#7B61FF]/30 bg-[#0F1419] shadow-[0_0_0_1px_rgba(123,97,255,0.08)]'
-              : 'border-white/20 hover:border-[#7B61FF]/50 hover:bg-white/5',
+              ? 'border-[#d97757]/30 bg-[#0F1419] shadow-[0_0_0_1px_rgba(217,119,87,0.08)]'
+              : 'border-white/20 hover:border-[#d97757]/50 hover:bg-white/5',
           )}
           style={draft.cover_image_url ? { backgroundImage: `url(${draft.cover_image_url})`, backgroundSize: 'cover', backgroundPosition: 'center' } : {}}
         >
@@ -479,9 +479,9 @@ export function Step2Couverture({ draft, updateDraft }) {
             variant="outline"
             size="sm"
             onClick={() => openArchitect('thumbnail')}
-            className="shrink-0 rounded-xl border-[#7B61FF]/40 bg-[#7B61FF]/10 text-[#c4b5fd] hover:bg-[#7B61FF]/20 hover:text-white"
+            className="shrink-0 rounded-xl border-[#d97757]/40 bg-[#d97757]/10 text-[#f0b89a] hover:bg-[#d97757]/20 hover:text-white"
           >
-            <Sparkles className="mr-2 h-4 w-4 text-[#7B61FF]" />
+            <Sparkles className="mr-2 h-4 w-4 text-[#d97757]" />
             Architect IA — miniature
           </Button>
         </div>
@@ -495,7 +495,7 @@ export function Step2Couverture({ draft, updateDraft }) {
               document.getElementById('thumb-input')?.click();
             }
           }}
-          className="flex items-center gap-4 p-4 rounded-xl border border-white/10 hover:border-[#7B61FF]/30 cursor-pointer transition-all bg-black/20"
+          className="flex items-center gap-4 p-4 rounded-xl border border-white/10 hover:border-[#d97757]/30 cursor-pointer transition-all bg-black/20"
         >
           <div
             className="w-20 h-12 rounded-xl bg-white/5 flex items-center justify-center overflow-hidden flex-shrink-0 border border-white/10"
@@ -537,24 +537,24 @@ export function Step2Couverture({ draft, updateDraft }) {
         >
           <DialogHeader className="shrink-0">
             <DialogTitle className="flex items-center gap-2 text-lg">
-              <Sparkles className="h-5 w-5 text-[#7B61FF]" />
+              <Sparkles className="h-5 w-5 text-[#d97757]" />
               Architect IA — image pour le live
             </DialogTitle>
             <DialogDescription className="text-gray-400 text-sm leading-relaxed">
-              OpenAI applique le flux <strong className="font-medium text-[#c4b5fd]/95">LIRI IMAGE PRO</strong> : analyse, score qualité, trois prompts (TikTok 9:16, affiche 16:9, pub 4:5), puis génération via{' '}
+              OpenAI applique le flux <strong className="font-medium text-[#f0b89a]/95">LIRI IMAGE PRO</strong> : analyse, score qualité, trois prompts (TikTok 9:16, affiche 16:9, pub 4:5), puis génération via{' '}
               <code className="rounded bg-black/40 px-1 text-[11px]">generate-visual-image</code>{' '}
               (facturation / quotas selon votre configuration Supabase).
             </DialogDescription>
           </DialogHeader>
 
           <div className="min-h-0 flex-1 space-y-4 overflow-y-auto py-2">
-            <div className="rounded-xl border border-[#7B61FF]/20 bg-[#7B61FF]/[0.06] px-3 py-2 text-xs text-[#c4b5fd]/95">
+            <div className="rounded-xl border border-[#d97757]/20 bg-[#d97757]/[0.06] px-3 py-2 text-xs text-[#f0b89a]/95">
               Cible enregistrée :{' '}
               <strong className="text-white">
                 {architectTarget === 'cover' ? `couverture live (${COVER_SIZE} par défaut)` : `miniature (${THUMB_SIZE} par défaut)`}
               </strong>
               {architectFlowPhase === FLOW_PREVIEW ? (
-                <span className="block mt-1 text-[11px] text-[#c4b5fd]/80">
+                <span className="block mt-1 text-[11px] text-[#f0b89a]/80">
                   Tailles API par onglet : TikTok{' '}
                   <code className="rounded bg-black/30 px-1">1024×1792</code> · Affiche{' '}
                   <code className="rounded bg-black/30 px-1">
@@ -592,7 +592,7 @@ export function Step2Couverture({ draft, updateDraft }) {
                   <select
                     value={architectEngine}
                     onChange={(e) => setArchitectEngine(e.target.value)}
-                    className="mt-1.5 w-full rounded-xl border border-white/12 bg-black/40 py-2 px-3 text-sm text-white outline-none focus-visible:ring-2 focus-visible:ring-[#7B61FF]/45"
+                    className="mt-1.5 w-full rounded-xl border border-white/12 bg-black/40 py-2 px-3 text-sm text-white outline-none focus-visible:ring-2 focus-visible:ring-[#d97757]/45"
                   >
                     {ENGINE_OPTIONS.map((o) => (
                       <option key={o.value} value={o.value}>
@@ -607,7 +607,7 @@ export function Step2Couverture({ draft, updateDraft }) {
                     value={architectPrompt}
                     onChange={(e) => setArchitectPrompt(e.target.value)}
                     placeholder="Ex. : ambiance cyberpunk pour un cours de physique, violet et néons bleus…"
-                    className="mt-1.5 min-h-[120px] rounded-xl border-[#2D3139] bg-[#0a0c10] text-white placeholder:text-gray-600 focus-visible:ring-[#7B61FF]/45"
+                    className="mt-1.5 min-h-[120px] rounded-xl border-[#2D3139] bg-[#0a0c10] text-white placeholder:text-gray-600 focus-visible:ring-[#d97757]/45"
                   />
                 </label>
               </>
@@ -615,7 +615,7 @@ export function Step2Couverture({ draft, updateDraft }) {
 
             {architectFlowPhase === FLOW_CHAT && (
               <div className="flex min-h-[260px] flex-col gap-3">
-                <p className="text-xs font-medium text-[#c4b5fd]/90">
+                <p className="text-xs font-medium text-[#f0b89a]/90">
                   <MessageSquare className="mr-1.5 inline h-3.5 w-3.5 align-text-bottom" />
                   Discussion avec OpenAI — précisez le sujet, le public ou le style jusqu&apos;à la prévisualisation.
                 </p>
@@ -629,7 +629,7 @@ export function Step2Couverture({ draft, updateDraft }) {
                       className={cn(
                         'max-w-[92%] rounded-xl px-3 py-2 text-sm leading-relaxed whitespace-pre-wrap',
                         m.role === 'assistant'
-                          ? 'mr-auto border border-[#7B61FF]/25 bg-[#7B61FF]/[0.08] text-gray-100'
+                          ? 'mr-auto border border-[#d97757]/25 bg-[#d97757]/[0.08] text-gray-100'
                           : 'ml-auto border border-white/10 bg-white/[0.06] text-gray-200',
                       )}
                     >
@@ -650,7 +650,7 @@ export function Step2Couverture({ draft, updateDraft }) {
                     placeholder="Votre réponse… (Entrée pour envoyer, Maj+Entrée pour une ligne)"
                     rows={3}
                     disabled={architectInterpretBusy}
-                    className="min-h-[72px] flex-1 resize-none rounded-xl border-[#2D3139] bg-[#0a0c10] text-sm text-white placeholder:text-gray-600 focus-visible:ring-[#7B61FF]/45"
+                    className="min-h-[72px] flex-1 resize-none rounded-xl border-[#2D3139] bg-[#0a0c10] text-sm text-white placeholder:text-gray-600 focus-visible:ring-[#d97757]/45"
                   />
                   <Button
                     type="button"
@@ -678,8 +678,8 @@ export function Step2Couverture({ draft, updateDraft }) {
                 ) : null}
 
                 {typeof qualityScore === 'number' && Number.isFinite(qualityScore) ? (
-                  <div className="flex flex-wrap items-center gap-2 rounded-xl border border-[#7B61FF]/25 bg-[#7B61FF]/[0.07] px-3 py-2 text-xs">
-                    <span className="font-semibold text-[#c4b5fd]">Score LIRI · {qualityScore}/100</span>
+                  <div className="flex flex-wrap items-center gap-2 rounded-xl border border-[#d97757]/25 bg-[#d97757]/[0.07] px-3 py-2 text-xs">
+                    <span className="font-semibold text-[#f0b89a]">Score LIRI · {qualityScore}/100</span>
                     {weakPromptCorrected && correctionNoteFr ? (
                       <span className="text-gray-400">
                         <span className="font-medium text-gray-500">Correction · </span>
@@ -733,8 +733,8 @@ export function Step2Couverture({ draft, updateDraft }) {
                         className={cn(
                           'rounded-xl border px-3 py-1.5 text-left text-[11px] transition-colors',
                           selectedImageVariant === tab.id
-                            ? 'border-[#7B61FF]/55 bg-[#7B61FF]/15 text-white'
-                            : 'border-white/12 bg-black/25 text-gray-400 hover:border-[#7B61FF]/35 hover:text-gray-200',
+                            ? 'border-[#d97757]/55 bg-[#d97757]/15 text-white'
+                            : 'border-white/12 bg-black/25 text-gray-400 hover:border-[#d97757]/35 hover:text-gray-200',
                         )}
                       >
                         <span className="block font-medium">{tab.label}</span>
@@ -749,7 +749,7 @@ export function Step2Couverture({ draft, updateDraft }) {
                   <Textarea
                     value={previewPromptEn}
                     onChange={(e) => handlePreviewPromptChange(e.target.value)}
-                    className="mt-1.5 min-h-[120px] rounded-xl border-[#2D3139] bg-[#0a0c10] font-mono text-[13px] leading-relaxed text-gray-100 focus-visible:ring-[#7B61FF]/45"
+                    className="mt-1.5 min-h-[120px] rounded-xl border-[#2D3139] bg-[#0a0c10] font-mono text-[13px] leading-relaxed text-gray-100 focus-visible:ring-[#d97757]/45"
                   />
                 </label>
               </div>
@@ -907,9 +907,9 @@ export function Step2Couverture({ draft, updateDraft }) {
                   animate={{ scale: [1, 1.06, 1] }}
                   transition={{ duration: 2, repeat: Infinity, ease: 'easeInOut' }}
                 >
-                  <span className="absolute inset-0 rounded-full bg-[#7B61FF]/25 blur-xl" />
+                  <span className="absolute inset-0 rounded-full bg-[#d97757]/25 blur-xl" />
                   <motion.span
-                    className="absolute inset-2 rounded-full border-2 border-[#7B61FF]/50 border-t-transparent"
+                    className="absolute inset-2 rounded-full border-2 border-[#d97757]/50 border-t-transparent"
                     animate={{ rotate: 360 }}
                     transition={{ duration: 1.1, repeat: Infinity, ease: 'linear' }}
                   />
@@ -918,7 +918,7 @@ export function Step2Couverture({ draft, updateDraft }) {
                     alt=""
                     aria-hidden
                     draggable={false}
-                    className="relative z-[1] h-10 w-10 object-contain drop-shadow-[0_0_14px_rgba(123,97,255,0.45)]"
+                    className="relative z-[1] h-10 w-10 object-contain drop-shadow-[0_0_14px_rgba(217,119,87,0.45)]"
                   />
                 </motion.div>
                 <div className="space-y-1 text-center">
@@ -936,13 +936,13 @@ export function Step2Couverture({ draft, updateDraft }) {
                 <div className="w-full max-w-[280px] space-y-2">
                   <div className="h-2 overflow-hidden rounded-full bg-white/[0.08] ring-1 ring-inset ring-white/[0.06]">
                     <motion.div
-                      className="h-full w-[42%] rounded-full bg-gradient-to-r from-[#4c1d95] via-[#7B61FF] to-[#c4b5fd] shadow-[0_0_18px_rgba(123,97,255,0.45)]"
+                      className="h-full w-[42%] rounded-full bg-gradient-to-r from-[#4c1d95] via-[#d97757] to-[#f0b89a] shadow-[0_0_18px_rgba(217,119,87,0.45)]"
                       initial={{ x: '-100%' }}
                       animate={{ x: ['-100%', '280%'] }}
                       transition={{ duration: 2.2, repeat: Infinity, ease: 'easeInOut' }}
                     />
                   </div>
-                  <p className="text-center text-[10px] uppercase tracking-[0.2em] text-[#7B61FF]/90">
+                  <p className="text-center text-[10px] uppercase tracking-[0.2em] text-[#d97757]/90">
                     {architectInterpretBusy ? 'studio-cover-prompt-assistant' : 'generate-visual-image'}
                   </p>
                 </div>

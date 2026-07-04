@@ -698,6 +698,7 @@ export function useMasterclassProject() {
   // ── ÉTAPE 3 — Chapitres (validation + structuration des chapitres) ──────
   const launchChapters = useCallback(async () => {
     const currentProject = projectRef.current;
+    console.debug('[chapters] entry', { blocks: currentProject.blocks?.length ?? 0, factory: currentProject.factoryChapters?.length ?? 0, mutex: runningRef.current });
     if (!currentProject.blocks?.length && !currentProject.factoryChapters?.length) {
       setError('Lancez d\'abord l\'étape Blocs (segmentation + factory).');
       return;
@@ -969,8 +970,47 @@ export function useMasterclassProject() {
     }
   }, []); // stable — lit chapters via projectRef
 
-  // ── Compatibilité legacy launchPipeline ──────────────────────────────────
-  const launchPipeline = launchAnalysis;
+  // ── PONT B : le « mode automatique » enchaîne RÉELLEMENT les 4 étapes ────
+  // (avant : `launchPipeline = launchAnalysis` → blocs/chapitres/pédagogie n'étaient
+  // JAMAIS lancés par personne — wizard mort à l'étape 3, quel que soit le backend).
+  // Chaque launch* garde ses fallbacks locaux ; on attend entre deux étapes que
+  // l'état projeté (projectRef, setProject async) porte la donnée requise.
+  const waitForProject = useCallback(async (pred, ms = 4000) => {
+    const t0 = Date.now();
+    while (Date.now() - t0 < ms) {
+      if (pred(projectRef.current || {})) return true;
+      await new Promise((r) => setTimeout(r, 80));
+    }
+    return pred(projectRef.current || {});
+  }, []);
+
+  const launchPipeline = useCallback(async () => {
+    await launchAnalysis();
+    const okA = await waitForProject((p) => !!p.analysis, 6000);
+    console.debug('[pipeline] analysis →', okA);
+    if (!okA) return;
+    await launchBlocs();
+    const okB = await waitForProject((p) => (p.blocks || []).length > 0 || (p.factoryChapters || []).length > 0, 6000);
+    console.debug('[pipeline] blocs →', okB, (projectRef.current?.blocks || []).length);
+    if (!okB) return;
+    // Laisse le mutex runningRef se libérer + l'état se propager avant l'étape suivante.
+    await new Promise((r) => setTimeout(r, 200));
+    await launchChapters();
+    let okC = await waitForProject((p) => (p.chapters || []).length > 0, 6000);
+    if (!okC) {
+      console.debug('[pipeline] chapters retry (garde silencieuse ?)');
+      await new Promise((r) => setTimeout(r, 400));
+      await launchChapters();
+      okC = await waitForProject((p) => (p.chapters || []).length > 0, 6000);
+    }
+    console.debug('[pipeline] chapters →', okC, (projectRef.current?.chapters || []).length);
+    if (!okC) return;
+    await new Promise((r) => setTimeout(r, 200));
+    await launchPedagogy();
+    const okP = await waitForProject((p) => (p.pedagogy || []).length > 0, 8000);
+    console.debug('[pipeline] pedagogy →', okP);
+  }, [launchAnalysis, launchBlocs, launchChapters, launchPedagogy, waitForProject]);
+
   const pipelineRunning = Object.values(stepStatus).some(s => s === 'running');
   const status = pipelineRunning ? 'running' : 'idle';
 

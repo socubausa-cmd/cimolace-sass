@@ -8,6 +8,7 @@ const common_1 = require("@nestjs/common");
 const core_1 = require("@nestjs/core");
 const swagger_1 = require("@nestjs/swagger");
 const helmet_1 = __importDefault(require("helmet"));
+const express_1 = require("express");
 const app_module_1 = require("./app.module");
 const http_exception_filter_1 = require("./common/filters/http-exception.filter");
 const response_interceptor_1 = require("./common/interceptors/response.interceptor");
@@ -56,6 +57,7 @@ function extractHost(origin) {
 }
 async function bootstrap() {
     const app = await core_1.NestFactory.create(app_module_1.AppModule, { rawBody: true });
+    app.use('/webhooks/livekit', (0, express_1.raw)({ type: () => true, limit: '10mb' }));
     app.use((0, helmet_1.default)({
         contentSecurityPolicy: {
             directives: {

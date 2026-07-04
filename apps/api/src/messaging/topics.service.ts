@@ -263,6 +263,51 @@ export class TopicsService {
     return { topic, consolidated, alreadyConsolidated: false };
   }
 
+  /**
+   * LOT 3 — POST-PRODUCTION D'UN COURS : à la finalisation d'une post-prod de
+   * contenu vidéo (CourseBuilderService.saveVersion), on s'assure qu'un Sujet
+   * durable kind='topic', context_type='course' existe pour le COURS porteur du
+   * contenu (context_id = courses.id) → le forum « connecté » référence le cours.
+   *
+   * `contentId` = formation_day_contents.id (la vidéo post-produite). On résout le
+   * cours porteur via la chaîne studio
+   *   formation_day_contents → formation_days → formation_weeks → modules → courses
+   * (même résolution que isEnrolledInVideoCourse), en confirmant courses.tenant_id =
+   * tenant (isolation). Puis get-or-create IDEMPOTENT du Sujet du cours.
+   *
+   * NON BLOQUANT par conception : c'est un effet de bord de la sauvegarde post-prod.
+   * Si la chaîne est rompue (contenu standalone day_id NULL, cross-tenant, cours
+   * introuvable), on renvoie { topic: null, skipped } SANS lever — la sauvegarde du
+   * snapshot ne doit jamais échouer à cause du forum. L'appelant ignore le résultat.
+   *
+   * Sécurité : réutilise getOrCreateContextTopic qui re-vérifie l'accès AVANT toute
+   * écriture (ici l'appelant est un encadrant → court-circuit isStaffRole).
+   */
+  async publishCourseContentTopic(
+    tenant: TenantContext,
+    userId: string,
+    contentId: string,
+    subject?: string,
+  ): Promise<{ topic: any | null; skipped?: string }> {
+    if (!contentId) return { topic: null, skipped: 'no_content_id' };
+
+    const courseId = await this.resolveCourseIdForContent(tenant.id, contentId);
+    if (!courseId) return { topic: null, skipped: 'course_not_resolved' };
+
+    const topic = await this.getOrCreateContextTopic(tenant, userId, {
+      contextType: 'course',
+      contextId: courseId,
+      // courseId sert au contrôle d'accès des types 'video' ; pour 'course' il est
+      // redondant (contextId EST déjà le course_id) mais on le fournit par cohérence.
+      courseId,
+      subject:
+        subject && subject.trim()
+          ? subject.trim()
+          : this.defaultContextSubject('course'),
+    });
+    return { topic };
+  }
+
   /** Liste les Sujets accessibles au user dans le tenant (public OU participant). */
   async listTopics(
     tenant: TenantContext,
@@ -307,6 +352,83 @@ export class TopicsService {
     const { data, error } = await query.order('updated_at', { ascending: false });
     if (error) throw new BadRequestException(error.message);
     return data ?? [];
+  }
+
+  /**
+   * Lecture FORUM des Sujets PUBLICS du tenant (chemin LOT 1 « forum connecté »).
+   *
+   * Renvoie les conversations kind='topic', visibility='public' du tenant, triées
+   * par updated_at desc, avec un sous-ensemble de colonnes stable + `message_count`
+   * (compte des messages du fil). C'est la source que le forum (StudentForumRedesign)
+   * consomme via l'API NestJS — les messages étant lus en service_role, le front ne
+   * peut pas compter en PostgREST direct, d'où ce compte côté serveur.
+   *
+   * Différences VOLONTAIRES avec listTopics (qui sert la page Messagerie d'un user) :
+   *   • PAS de scope « participant / membre » : le forum n'expose QUE le public du
+   *     tenant (un Sujet public est lisible par toute la communauté du tenant) ;
+   *   • la requête reste tenant-scopée (tenant_id) → aucune fuite cross-tenant ;
+   *   • lecture seule, aucune écriture (idempotent, sans effet de bord).
+   *
+   * `limit` est borné (défaut 100, max 200) pour éviter une réponse non bornée.
+   */
+  async listForumTopics(
+    tenant: TenantContext,
+    opts: { limit?: number } = {},
+  ): Promise<
+    Array<{
+      id: string;
+      subject: string | null;
+      context_type: string | null;
+      context_id: string | null;
+      created_by: string | null;
+      created_at: string;
+      updated_at: string;
+      message_count: number;
+    }>
+  > {
+    const limit = Math.min(Math.max(opts.limit ?? 100, 1), 200);
+
+    const { data, error } = await this.db
+      .from('conversations')
+      .select(
+        'id, subject, context_type, context_id, created_by, created_at, updated_at',
+      )
+      .eq('tenant_id', tenant.id)
+      .eq('kind', 'topic')
+      .eq('visibility', 'public')
+      .order('updated_at', { ascending: false })
+      .limit(limit);
+    if (error) throw new BadRequestException(error.message);
+
+    const topics = (data ?? []) as Array<{
+      id: string;
+      subject: string | null;
+      context_type: string | null;
+      context_id: string | null;
+      created_by: string | null;
+      created_at: string;
+      updated_at: string;
+    }>;
+    if (!topics.length) return [];
+
+    // Compte des messages par Sujet (service_role) — un count exact, head-only (pas
+    // de lignes ramenées), tenant-scopé. On parallélise pour rester rapide sur la
+    // page forum (volume borné par `limit`).
+    const counts = await Promise.all(
+      topics.map(async (topic) => {
+        const { count } = await this.db
+          .from('messages')
+          .select('id', { count: 'exact', head: true })
+          .eq('tenant_id', tenant.id)
+          .eq('conversation_id', topic.id);
+        return count ?? 0;
+      }),
+    );
+
+    return topics.map((topic, i) => ({
+      ...topic,
+      message_count: counts[i],
+    }));
   }
 
   /** Détail d'un Sujet — soumis au contrôle d'accès (public+membre OU participant). */
@@ -493,6 +615,18 @@ export class TopicsService {
       return { topic, isParticipant };
     }
 
+    // LOT 3 — Sujet rattaché à un COURS (context_id = courses.id) : un inscrit au
+    // cours (ou un encadrant) peut LIRE sans être participant ; il ne rejoint le fil
+    // qu'à sa 1re contribution (postMessage auto-join), comme la vidéo et le live.
+    if (
+      topic.visibility === 'context' &&
+      topic.context_type === 'course' &&
+      (this.isStaffRole(tenant) ||
+        (await this.isEnrolledInCourse(tenant.id, userId, topic.context_id)))
+    ) {
+      return { topic, isParticipant };
+    }
+
     throw new ForbiddenException('Accès refusé à ce sujet');
   }
 
@@ -528,6 +662,16 @@ export class TopicsService {
       // cours/formation lié (le staff a déjà court-circuité plus haut).
       if (await this.hasLiveTopicAccess(tenant, userId, ctx.contextId)) return;
       throw new ForbiddenException('Accès refusé : non participant à ce live');
+    }
+
+    // LOT 3 — context_type='course' : Sujet du cours lui-même (contextId = courses.id).
+    // FAIL-CLOSED : seul un inscrit au cours (EXISTS student_progress, voie
+    // tenant-robuste) y accède (le staff a déjà court-circuité plus haut). La
+    // création « système » à la finalisation post-prod passe par un encadrant, donc
+    // par le court-circuit isStaffRole ; cette branche couvre les accès non-staff.
+    if (ctx.contextType === 'course') {
+      if (await this.isEnrolledInCourse(tenant.id, userId, ctx.contextId)) return;
+      throw new ForbiddenException('Accès refusé : non inscrit à ce cours');
     }
 
     // class : garde générique (membre actif du tenant).
@@ -655,6 +799,33 @@ export class TopicsService {
     if (!course || course.tenant_id !== tenantId) return false;
 
     return this.isEnrolledInCourse(tenantId, userId, course.id);
+  }
+
+  /**
+   * LOT 3 — Résout le COURS porteur d'un contenu (formation_day_contents.id) via la
+   * chaîne studio formation_day_contents → formation_days → formation_weeks →
+   * modules → courses (embedded PostgREST, même jointure que isEnrolledInVideoCourse).
+   * Confirme courses.tenant_id = tenant (isolation) et renvoie courses.id, ou null si
+   * la chaîne est rompue (contenu standalone day_id NULL, ou cross-tenant). Requête
+   * service_role (bypass RLS).
+   */
+  private async resolveCourseIdForContent(
+    tenantId: string,
+    contentId: string,
+  ): Promise<string | null> {
+    if (!contentId) return null;
+    const { data } = await this.db
+      .from('formation_day_contents')
+      .select(
+        'id, formation_days!inner(formation_weeks!inner(modules!inner(formation_id, courses!inner(id, tenant_id))))',
+      )
+      .eq('id', contentId)
+      .maybeSingle();
+
+    const course =
+      data?.formation_days?.formation_weeks?.modules?.courses ?? null;
+    if (!course || course.tenant_id !== tenantId) return null;
+    return (course.id as string) ?? null;
   }
 
   // ── Phase D — contexte live ──────────────────────────────────────────────────
@@ -817,6 +988,7 @@ export class TopicsService {
     if (contextType === 'video') return 'Questions — vidéo du cours';
     if (contextType === 'live') return 'Questions — live';
     if (contextType === 'class') return 'Questions — classe';
+    if (contextType === 'course') return 'Questions — cours';
     return 'Questions';
   }
 

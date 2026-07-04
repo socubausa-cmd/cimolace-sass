@@ -1,0 +1,15 @@
+node_modules/
+.expo/
+dist/
+web-build/
+coverage/
+ios/
+android/
+.claude/
+.vscode/
+.env
+.env.*
+*.log
+*.tsbuildinfo
+playwright-report/
+test-results/

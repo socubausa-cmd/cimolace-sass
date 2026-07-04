@@ -31,13 +31,27 @@ const GROUP_ROT: [number, number, number] = [0, 0, 0];
 type Sex = 'female' | 'male';
 type Status = 'normal' | 'critical' | 'selected' | 'dim';
 
+// Détection de capacité WebGL — mémoïsée ET auto-libérée.
+// PIÈGE : ce composant est monté dans l'arène live (cockpit + scène smartboard
+// « Dossier MEDOS ») où l'hôte re-render en boucle. Sans mémo, `webglOk()`
+// s'exécutait à CHAQUE render et créait un contexte WebGL jamais libéré ;
+// multiplié par les re-renders, on épuise la limite navigateur (~16 contextes)
+// et le navigateur TUE le plus ancien contexte vivant = celui du <Canvas> R3F
+// → jumeau 3D blanc alors que l'UI autour (contrôles, légende) reste montée.
+// Fix : ne sonder qu'une fois (cache module) et relâcher le contexte de sonde.
+let _webglSupport: boolean | null = null;
 function webglOk(): boolean {
+  if (_webglSupport !== null) return _webglSupport;
   try {
     const c = document.createElement('canvas');
-    return !!(window.WebGLRenderingContext && (c.getContext('webgl') || c.getContext('experimental-webgl')));
+    const gl = (c.getContext('webgl') || c.getContext('experimental-webgl')) as WebGLRenderingContext | null;
+    _webglSupport = !!(window.WebGLRenderingContext && gl);
+    // Libère IMMÉDIATEMENT le contexte de sonde (sinon il compte dans la limite).
+    gl?.getExtension('WEBGL_lose_context')?.loseContext();
   } catch {
-    return false;
+    _webglSupport = false;
   }
+  return _webglSupport;
 }
 
 function OrganModel({
@@ -211,6 +225,14 @@ export function BodyViewer3D({
         camera={{ position: [0, 0.05, 2.5], fov: 42 }}
         onPointerDown={(e) => { dragRef.current = { x: e.clientX, y: e.clientY, moved: false }; }}
         onPointerMove={(e) => { const d = dragRef.current; if (Math.hypot(e.clientX - d.x, e.clientY - d.y) > 5) d.moved = true; }}
+        onCreated={({ gl, invalidate }) => {
+          // Résilience : si un autre canvas WebGL de l'arène épuise les contextes
+          // et que celui-ci est perdu, autoriser la restauration auto du navigateur
+          // (preventDefault) puis relancer le rendu quand le contexte revient.
+          const el = gl.domElement;
+          el.addEventListener('webglcontextlost', (e) => e.preventDefault(), false);
+          el.addEventListener('webglcontextrestored', () => invalidate(), false);
+        }}
         style={{ touchAction: 'none' }}
       >
         <ambientLight intensity={0.55} />

@@ -36,9 +36,12 @@ import StudioCourseBuilderProPage from './StudioCourseBuilderProPage';
 import StudioLivePreviewPage from './StudioLivePreviewPage';
 import StudioExportCenterPage from './StudioExportCenterPage';
 import StudioFormationLlmBuilderPage from './StudioFormationLlmBuilderPage';
+import './studioWarm.css';
 
 export default function StudioRouter() {
   return (
+    // .studio-warm-scope (+ display:contents) → remap froid→chaud de TOUT /studio/* (studioWarm.css)
+    <div className="studio-warm-scope contents">
     <Routes>
       <Route index element={<StudioEntryPage />} />
       <Route path="ad-creator" element={<StudioAdCreatorPage />} />
@@ -79,5 +82,6 @@ export default function StudioRouter() {
       <Route path="coaching" element={<StudioCoachingPage />} />
       <Route path="*" element={<Navigate to="/studio" replace />} />
     </Routes>
+    </div>
   );
 }

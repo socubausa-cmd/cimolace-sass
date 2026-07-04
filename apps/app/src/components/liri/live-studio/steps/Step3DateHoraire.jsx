@@ -87,7 +87,7 @@ export function Step3DateHoraire({ draft, updateDraft }) {
             </SelectTrigger>
             <SelectContent className="bg-[#151a21] border-white/10 rounded-xl">
               {DURATIONS.map((d) => (
-                <SelectItem key={d} value={String(d)} className="focus:bg-[#7B61FF]/10 focus:text-[#7B61FF] rounded-lg">
+                <SelectItem key={d} value={String(d)} className="focus:bg-[#d97757]/10 focus:text-[#d97757] rounded-lg">
                   {d} min
                 </SelectItem>
               ))}
@@ -101,9 +101,9 @@ export function Step3DateHoraire({ draft, updateDraft }) {
               <SelectValue />
             </SelectTrigger>
             <SelectContent className="bg-[#151a21] border-white/10 rounded-xl">
-              <SelectItem value="Europe/Paris" className="focus:bg-[#7B61FF]/10 focus:text-[#7B61FF] rounded-lg">Paris</SelectItem>
-              <SelectItem value="Africa/Kinshasa" className="focus:bg-[#7B61FF]/10 focus:text-[#7B61FF] rounded-lg">Kinshasa</SelectItem>
-              <SelectItem value="UTC" className="focus:bg-[#7B61FF]/10 focus:text-[#7B61FF] rounded-lg">UTC</SelectItem>
+              <SelectItem value="Europe/Paris" className="focus:bg-[#d97757]/10 focus:text-[#d97757] rounded-lg">Paris</SelectItem>
+              <SelectItem value="Africa/Kinshasa" className="focus:bg-[#d97757]/10 focus:text-[#d97757] rounded-lg">Kinshasa</SelectItem>
+              <SelectItem value="UTC" className="focus:bg-[#d97757]/10 focus:text-[#d97757] rounded-lg">UTC</SelectItem>
             </SelectContent>
           </Select>
         </div>
@@ -122,7 +122,7 @@ export function Step3DateHoraire({ draft, updateDraft }) {
           </SelectTrigger>
           <SelectContent className="bg-[#151a21] border-white/10 rounded-xl">
             {RECURRENCE.map((r) => (
-              <SelectItem key={r.value} value={r.value} className="focus:bg-[#7B61FF]/10 focus:text-[#7B61FF] rounded-lg">
+              <SelectItem key={r.value} value={r.value} className="focus:bg-[#d97757]/10 focus:text-[#d97757] rounded-lg">
                 {r.label}
               </SelectItem>
             ))}

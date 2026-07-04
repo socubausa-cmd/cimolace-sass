@@ -160,7 +160,7 @@ export default function NodeExplanationPanel({ node, videoTitle, transcript, onS
       animate={{ opacity: 1, x: 0, scale: 1 }}
       exit={{ opacity: 0, x: 40, scale: 0.97 }}
       transition={{ duration: 0.35, ease: [0.4, 0, 0.2, 1] }}
-      className="h-full overflow-auto bg-gradient-to-b from-[#0d1b2a] to-[#0F1419]"
+      className="h-full overflow-auto bg-gradient-to-b from-[#262624] to-[#1f1e1c]"
     >
       <div className="p-4 space-y-4">
 
@@ -169,7 +169,7 @@ export default function NodeExplanationPanel({ node, videoTitle, transcript, onS
           <div className="flex-1 min-w-0">
             <div className="text-base font-bold text-white leading-tight">{node.label}</div>
             {nodeSeconds != null && (
-              <div className="text-xs text-[var(--school-accent)] mt-1 flex items-center gap-1">
+              <div className="text-xs text-[var(--coral)] mt-1 flex items-center gap-1">
                 <span>⏱</span>
                 <span>{formatTime(nodeSeconds)}</span>
               </div>
@@ -179,7 +179,7 @@ export default function NodeExplanationPanel({ node, videoTitle, transcript, onS
             <button
               type="button"
               onClick={onClose}
-              className="text-gray-400 hover:text-white p-1 text-xl leading-none flex-shrink-0 rounded"
+              className="text-[#b0ada3] hover:text-white p-1 text-xl leading-none flex-shrink-0 rounded"
             >×</button>
           )}
         </div>
@@ -189,7 +189,7 @@ export default function NodeExplanationPanel({ node, videoTitle, transcript, onS
           type="button"
           disabled={nodeSeconds == null || !onSeek}
           onClick={() => { if (nodeSeconds != null && onSeek) { onSeek(nodeSeconds); } }}
-          className="w-full flex items-center justify-center gap-2 bg-[var(--school-accent)] text-black font-bold rounded-lg px-3 py-2 text-sm hover:bg-yellow-400 disabled:opacity-40 transition-colors"
+          className="w-full flex items-center justify-center gap-2 bg-[var(--coral)] text-black font-bold rounded-lg px-3 py-2 text-sm hover:bg-[#d97757] disabled:opacity-40 transition-colors"
         >
           ▶ Aller au temps vidéo
         </button>
@@ -197,16 +197,16 @@ export default function NodeExplanationPanel({ node, videoTitle, transcript, onS
         {/* Summary from mindmap (instant, no loading) */}
         {node.summary && (
           <div className="rounded-xl border border-white/10 bg-white/5 p-3">
-            <div className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider mb-2">📋 Résumé</div>
-            <p className="text-sm text-gray-200 leading-relaxed">{node.summary}</p>
+            <div className="text-[10px] font-semibold text-[#b0ada3] uppercase tracking-wider mb-2">📋 Résumé</div>
+            <p className="text-sm text-[#b0ada3] leading-relaxed">{node.summary}</p>
           </div>
         )}
 
         {/* Loading */}
         {loading && (
-          <div className="flex items-center gap-3 rounded-xl border border-blue-500/20 bg-blue-500/5 px-4 py-3">
-            <Loader2 className="w-4 h-4 animate-spin text-blue-400 flex-shrink-0" />
-            <span className="text-sm text-blue-300">Génération d'une analyse enrichie du sujet…</span>
+          <div className="flex items-center gap-3 rounded-xl border border-[#c2683f]/20 bg-[#c2683f]/5 px-4 py-3">
+            <Loader2 className="w-4 h-4 animate-spin text-[#d97757] flex-shrink-0" />
+            <span className="text-sm text-[#d97757]">Génération d'une analyse enrichie du sujet…</span>
           </div>
         )}
 
@@ -229,11 +229,11 @@ export default function NodeExplanationPanel({ node, videoTitle, transcript, onS
           <>
             {/* Source Quotes — fidelity verification */}
             {(explanation.sourceQuotes?.length ?? 0) > 0 && (
-              <div className="rounded-xl border border-amber-500/25 bg-amber-500/5 p-3">
-                <div className="text-[10px] font-semibold text-amber-300 uppercase tracking-wider mb-2">📜 Texte source utilisé</div>
+              <div className="rounded-xl border border-[#c2683f]/25 bg-[#c2683f]/5 p-3">
+                <div className="text-[10px] font-semibold text-[#d97757] uppercase tracking-wider mb-2">📜 Texte source utilisé</div>
                 <ul className="space-y-1.5">
                   {explanation.sourceQuotes!.map((q, i) => (
-                    <li key={i} className="text-xs text-amber-100/80 italic border-l-2 border-amber-400/40 pl-2 leading-snug">"{q}"</li>
+                    <li key={i} className="text-xs text-[#e8b6a3]/80 italic border-l-2 border-[#d97757]/40 pl-2 leading-snug">"{q}"</li>
                   ))}
                 </ul>
               </div>
@@ -241,27 +241,27 @@ export default function NodeExplanationPanel({ node, videoTitle, transcript, onS
 
             {/* Core Principle */}
             {explanation.corePrinciple && (
-              <div className="rounded-xl border border-[color-mix(in_srgb,var(--school-accent)_40%,transparent)] bg-[color-mix(in_srgb,var(--school-accent)_8%,transparent)] px-4 py-3 flex items-start gap-2"
-                style={{ background: 'rgba(212,175,55,0.08)' }}>
-                <span className="text-[var(--school-accent)] text-base flex-shrink-0">⚡</span>
+              <div className="rounded-xl border border-[color-mix(in_srgb,var(--coral)_40%,transparent)] bg-[color-mix(in_srgb,var(--coral)_8%,transparent)] px-4 py-3 flex items-start gap-2"
+                style={{ background: 'rgba(217,119,87,0.08)' }}>
+                <span className="text-[var(--coral)] text-base flex-shrink-0">⚡</span>
                 <div>
-                  <div className="text-[10px] font-semibold text-[color-mix(in_srgb,var(--school-accent)_70%,transparent)] uppercase tracking-wider mb-0.5">Principe fondamental</div>
-                  <p className="text-sm font-semibold text-[var(--school-accent)] leading-snug">{explanation.corePrinciple}</p>
+                  <div className="text-[10px] font-semibold text-[color-mix(in_srgb,var(--coral)_70%,transparent)] uppercase tracking-wider mb-0.5">Principe fondamental</div>
+                  <p className="text-sm font-semibold text-[var(--coral)] leading-snug">{explanation.corePrinciple}</p>
                 </div>
               </div>
             )}
 
             {/* Concepts */}
             {(explanation.concepts?.length ?? 0) > 0 && (
-              <div className="rounded-xl border border-indigo-500/20 bg-indigo-500/5 p-3">
-                <div className="text-[10px] font-semibold text-indigo-300 uppercase tracking-wider mb-2">🧠 Concepts clés</div>
+              <div className="rounded-xl border border-[#c2683f]/20 bg-[#c2683f]/5 p-3">
+                <div className="text-[10px] font-semibold text-[#d97757] uppercase tracking-wider mb-2">🧠 Concepts clés</div>
                 <div className="flex flex-wrap gap-2">
                   {explanation.concepts!.map((c, i) => (
                     <div key={i} className="group relative">
-                      <div className="bg-indigo-500/15 border border-indigo-400/30 rounded-lg px-2.5 py-1.5 cursor-default">
-                        <div className="text-xs font-semibold text-indigo-200">{c.label}</div>
+                      <div className="bg-[#c2683f]/15 border border-[#d97757]/30 rounded-lg px-2.5 py-1.5 cursor-default">
+                        <div className="text-xs font-semibold text-[#e8b6a3]">{c.label}</div>
                         {c.definition && (
-                          <div className="text-[10px] text-indigo-300/70 mt-0.5 max-w-[160px] leading-snug">{c.definition}</div>
+                          <div className="text-[10px] text-[#d97757]/70 mt-0.5 max-w-[160px] leading-snug">{c.definition}</div>
                         )}
                       </div>
                     </div>
@@ -272,17 +272,17 @@ export default function NodeExplanationPanel({ node, videoTitle, transcript, onS
 
             {/* Relations */}
             {(explanation.relations?.length ?? 0) > 0 && (
-              <div className="rounded-xl border border-teal-500/20 bg-teal-500/5 p-3">
-                <div className="text-[10px] font-semibold text-teal-300 uppercase tracking-wider mb-2">🔗 Relations causales</div>
+              <div className="rounded-xl border border-[#c2683f]/20 bg-[#c2683f]/5 p-3">
+                <div className="text-[10px] font-semibold text-[#d97757] uppercase tracking-wider mb-2">🔗 Relations causales</div>
                 <div className="flex flex-col gap-1.5">
                   {explanation.relations!.map((r, i) => (
                     <div key={i} className="flex items-center gap-1.5 text-xs flex-wrap">
-                      <span className="bg-teal-500/15 border border-teal-400/30 rounded px-2 py-0.5 text-teal-200 font-medium">{r.from}</span>
-                      <span className="text-teal-400/60 font-bold">→</span>
+                      <span className="bg-[#c2683f]/15 border border-[#d97757]/30 rounded px-2 py-0.5 text-[#e8b6a3] font-medium">{r.from}</span>
+                      <span className="text-[#d97757]/60 font-bold">→</span>
                       {r.type && (
-                        <span className="text-[10px] text-teal-400/50 italic">[{r.type}]</span>
+                        <span className="text-[10px] text-[#d97757]/50 italic">[{r.type}]</span>
                       )}
-                      <span className="bg-teal-500/15 border border-teal-400/30 rounded px-2 py-0.5 text-teal-200 font-medium">{r.to}</span>
+                      <span className="bg-[#c2683f]/15 border border-[#d97757]/30 rounded px-2 py-0.5 text-[#e8b6a3] font-medium">{r.to}</span>
                     </div>
                   ))}
                 </div>
@@ -290,71 +290,71 @@ export default function NodeExplanationPanel({ node, videoTitle, transcript, onS
             )}
 
             {explanation.deepExplanation && (
-              <div className="rounded-xl border border-blue-500/20 bg-blue-500/5 p-3">
-                <div className="text-[10px] font-semibold text-blue-300 uppercase tracking-wider mb-2 flex items-center justify-between">
+              <div className="rounded-xl border border-[#c2683f]/20 bg-[#c2683f]/5 p-3">
+                <div className="text-[10px] font-semibold text-[#d97757] uppercase tracking-wider mb-2 flex items-center justify-between">
                   <span>📖 Explication approfondie</span>
                   <button
                     type="button"
                     onClick={() => setExpandedSection('explanation')}
                     title="Agrandir"
-                    className="flex-shrink-0 text-blue-300/50 hover:text-blue-200 hover:bg-blue-500/20 rounded p-0.5 transition-colors"
+                    className="flex-shrink-0 text-[#d97757]/50 hover:text-[#e8b6a3] hover:bg-[#c2683f]/20 rounded p-0.5 transition-colors"
                   >
                     <Maximize2 className="w-3.5 h-3.5" />
                   </button>
                 </div>
-                <p className="text-sm text-gray-200 leading-relaxed whitespace-pre-line line-clamp-6">{explanation.deepExplanation}</p>
+                <p className="text-sm text-[#b0ada3] leading-relaxed whitespace-pre-line line-clamp-6">{explanation.deepExplanation}</p>
               </div>
             )}
 
             {(explanation.examples?.length ?? 0) > 0 && (
-              <div className="rounded-xl border border-yellow-500/20 bg-yellow-500/5 p-3">
-                <div className="text-[10px] font-semibold text-yellow-300 uppercase tracking-wider mb-2 flex items-center justify-between">
+              <div className="rounded-xl border border-[#c2683f]/20 bg-[#c2683f]/5 p-3">
+                <div className="text-[10px] font-semibold text-[#d97757] uppercase tracking-wider mb-2 flex items-center justify-between">
                   <span>💡 Exemples concrets</span>
                   <button
                     type="button"
                     onClick={() => setExpandedSection('examples')}
                     title="Agrandir"
-                    className="flex-shrink-0 text-yellow-300/50 hover:text-yellow-200 hover:bg-yellow-500/20 rounded p-0.5 transition-colors"
+                    className="flex-shrink-0 text-[#d97757]/50 hover:text-[#e8b6a3] hover:bg-[#c2683f]/20 rounded p-0.5 transition-colors"
                   >
                     <Maximize2 className="w-3.5 h-3.5" />
                   </button>
                 </div>
                 <ol className="space-y-2">
                   {explanation.examples!.slice(0, 3).map((ex, i) => (
-                    <li key={i} className="flex items-start gap-2 text-sm text-gray-200">
-                      <span className="text-yellow-400 font-bold flex-shrink-0">{i + 1}.</span>
+                    <li key={i} className="flex items-start gap-2 text-sm text-[#b0ada3]">
+                      <span className="text-[#d97757] font-bold flex-shrink-0">{i + 1}.</span>
                       <span>{ex}</span>
                     </li>
                   ))}
                   {(explanation.examples!.length > 3) && (
-                    <li className="text-xs text-yellow-300/60 pl-5">+{explanation.examples!.length - 3} autres…</li>
+                    <li className="text-xs text-[#d97757]/60 pl-5">+{explanation.examples!.length - 3} autres…</li>
                   )}
                 </ol>
               </div>
             )}
 
             {(explanation.insights?.length ?? 0) > 0 && (
-              <div className="rounded-xl border border-green-500/20 bg-green-500/5 p-3">
-                <div className="text-[10px] font-semibold text-green-300 uppercase tracking-wider mb-2 flex items-center justify-between">
+              <div className="rounded-xl border border-[#7a9b6c]/20 bg-[#7a9b6c]/5 p-3">
+                <div className="text-[10px] font-semibold text-[#9fbf8f] uppercase tracking-wider mb-2 flex items-center justify-between">
                   <span>✨ Points clés</span>
                   <button
                     type="button"
                     onClick={() => setExpandedSection('insights')}
                     title="Agrandir"
-                    className="flex-shrink-0 text-green-300/50 hover:text-green-200 hover:bg-green-500/20 rounded p-0.5 transition-colors"
+                    className="flex-shrink-0 text-[#9fbf8f]/50 hover:text-[#9fbf8f] hover:bg-[#7a9b6c]/20 rounded p-0.5 transition-colors"
                   >
                     <Maximize2 className="w-3.5 h-3.5" />
                   </button>
                 </div>
                 <ul className="space-y-1.5">
                   {explanation.insights!.slice(0, 4).map((ins, i) => (
-                    <li key={i} className="flex items-start gap-2 text-sm text-gray-200">
-                      <span className="text-green-400 mt-0.5 flex-shrink-0">•</span>
+                    <li key={i} className="flex items-start gap-2 text-sm text-[#b0ada3]">
+                      <span className="text-[#9fbf8f] mt-0.5 flex-shrink-0">•</span>
                       <span>{ins}</span>
                     </li>
                   ))}
                   {(explanation.insights!.length > 4) && (
-                    <li className="text-xs text-green-300/60 pl-5">+{explanation.insights!.length - 4} autres…</li>
+                    <li className="text-xs text-[#9fbf8f]/60 pl-5">+{explanation.insights!.length - 4} autres…</li>
                   )}
                 </ul>
               </div>
@@ -362,13 +362,13 @@ export default function NodeExplanationPanel({ node, videoTitle, transcript, onS
 
             {(explanation.visuals?.length ?? 0) > 0 && (
               <div>
-                <div className="text-[10px] font-semibold text-purple-300 uppercase tracking-wider mb-2 px-0.5 flex items-center justify-between">
+                <div className="text-[10px] font-semibold text-[#d97757] uppercase tracking-wider mb-2 px-0.5 flex items-center justify-between">
                   <span>🎨 Visualisations</span>
                   <button
                     type="button"
                     onClick={() => setExpandedSection('visuals')}
                     title="Agrandir"
-                    className="flex-shrink-0 text-purple-300/50 hover:text-purple-200 hover:bg-purple-500/20 rounded p-0.5 transition-colors"
+                    className="flex-shrink-0 text-[#d97757]/50 hover:text-[#e8b6a3] hover:bg-[#c2683f]/20 rounded p-0.5 transition-colors"
                   >
                     <Maximize2 className="w-3.5 h-3.5" />
                   </button>
@@ -400,7 +400,7 @@ export default function NodeExplanationPanel({ node, videoTitle, transcript, onS
                 animate={{ scale: 1, y: 0 }}
                 exit={{ scale: 0.96, y: 12 }}
                 transition={{ duration: 0.22, ease: [0.4, 0, 0.2, 1] }}
-                className="w-full max-w-3xl max-h-[88vh] bg-[#0d1b2a] border border-white/15 rounded-2xl overflow-hidden shadow-2xl flex flex-col"
+                className="w-full max-w-3xl max-h-[88vh] bg-[#262624] border border-white/15 rounded-2xl overflow-hidden shadow-2xl flex flex-col"
                 onClick={(e) => e.stopPropagation()}
               >
                 {/* Header */}
@@ -414,7 +414,7 @@ export default function NodeExplanationPanel({ node, videoTitle, transcript, onS
                   <button
                     type="button"
                     onClick={() => setExpandedSection(null)}
-                    className="text-gray-400 hover:text-white p-1.5 rounded-lg hover:bg-white/10 transition-colors"
+                    className="text-[#b0ada3] hover:text-white p-1.5 rounded-lg hover:bg-white/10 transition-colors"
                     title="Fermer (ESC)"
                   >
                     <X className="w-4 h-4" />
@@ -423,14 +423,14 @@ export default function NodeExplanationPanel({ node, videoTitle, transcript, onS
                 {/* Content */}
                 <div className="flex-1 overflow-y-auto overflow-x-hidden p-6 min-w-0">
                   {expandedSection === 'explanation' && (
-                    <p className="text-base text-gray-100 leading-relaxed whitespace-pre-line">{explanation.deepExplanation}</p>
+                    <p className="text-base text-[#d3d1c7] leading-relaxed whitespace-pre-line">{explanation.deepExplanation}</p>
                   )}
                   {expandedSection === 'examples' && (
                     <ol className="space-y-4">
                       {explanation.examples?.map((ex, i) => (
                         <li key={i} className="flex gap-3">
-                          <span className="text-yellow-400 font-bold text-base flex-shrink-0 mt-0.5">{i + 1}.</span>
-                          <span className="text-base text-gray-100 leading-relaxed">{ex}</span>
+                          <span className="text-[#d97757] font-bold text-base flex-shrink-0 mt-0.5">{i + 1}.</span>
+                          <span className="text-base text-[#d3d1c7] leading-relaxed">{ex}</span>
                         </li>
                       ))}
                     </ol>
@@ -439,8 +439,8 @@ export default function NodeExplanationPanel({ node, videoTitle, transcript, onS
                     <ul className="space-y-3">
                       {explanation.insights?.map((ins, i) => (
                         <li key={i} className="flex items-start gap-3">
-                          <span className="text-green-400 text-lg flex-shrink-0 mt-0.5">•</span>
-                          <span className="text-base text-gray-100 leading-relaxed">{ins}</span>
+                          <span className="text-[#9fbf8f] text-lg flex-shrink-0 mt-0.5">•</span>
+                          <span className="text-base text-[#d3d1c7] leading-relaxed">{ins}</span>
                         </li>
                       ))}
                     </ul>
@@ -461,7 +461,7 @@ export default function NodeExplanationPanel({ node, videoTitle, transcript, onS
         {/* Sub-topics */}
         {Array.isArray(node.children) && node.children.length > 0 && (
           <div className="rounded-xl border border-white/10 bg-white/5 p-3">
-            <div className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider mb-2">🔗 Sous-thèmes</div>
+            <div className="text-[10px] font-semibold text-[#b0ada3] uppercase tracking-wider mb-2">🔗 Sous-thèmes</div>
             <div className="space-y-1">
               {node.children.map((c) => {
                 const cs = tsToSeconds(c);
@@ -476,7 +476,7 @@ export default function NodeExplanationPanel({ node, videoTitle, transcript, onS
                     }}
                   >
                     <div className="text-sm text-white font-medium">{c.label}</div>
-                    {cs != null && <div className="text-xs text-gray-400">{formatTime(cs)}</div>}
+                    {cs != null && <div className="text-xs text-[#b0ada3]">{formatTime(cs)}</div>}
                   </button>
                 );
               })}

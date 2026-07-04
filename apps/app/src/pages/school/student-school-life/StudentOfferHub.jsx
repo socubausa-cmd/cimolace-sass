@@ -237,7 +237,7 @@ const StudentOfferHub = () => {
               'RDV à ton rythme',
             ]}
             ctaLabel="Réserver"
-            onCta={() => navigate('/t/isna/paiement?plan=ngowazulu-consultation-90min&type=consultation&label=Consultation%2090%20min')}
+            onCta={() => navigate('/paiement?plan=ngowazulu-consultation-90min&type=consultation&label=Consultation%2090%20min')}
             delay={240}
           />
         )}

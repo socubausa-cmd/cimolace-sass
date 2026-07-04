@@ -1,5 +1,4 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { Link } from 'react-router-dom';
 import {
   Sparkles, Plus, ArrowUpRight, ArrowUp, Search, MessageSquareText, Trash2,
   PanelLeft, ShieldCheck, ShieldAlert, Check, ChevronDown, Zap, Paperclip,
@@ -8,6 +7,8 @@ import {
 import { authStore } from '@/lib/auth-store';
 import { getApiBaseUrl } from '@/lib/apiBase';
 import activeTenantConfig from '@/lib/tenant/activeTenantConfig';
+import '../studio-creator/studio/studioWarm.css'; // scope froid→chaud (icônes/accents résiduels)
+import { LiriPortalShell } from '@/components/liri/LiriPortalShell';
 import '../DashboardLiri.css';
 
 // Marque blanche par tenant : sur le domaine d'un tenant (ex. prorascience.org),
@@ -53,11 +54,11 @@ interface Conversation {
 
 const MODELS: ModelInfo[] = [
   { key: 'deepseek-chat',         name: 'DeepSeek V4',        provider: 'deepseek',   description: 'Généraliste · 1M tokens',         color: '#4f8ef7', icon: '🔷' },
-  { key: 'deepseek-reasoner',     name: 'DeepSeek Reasoner',  provider: 'deepseek',   description: 'Raisonnement profond',              color: '#2dd4bf', icon: '🧠' },
-  { key: 'claude-sonnet-4-6', name: 'Claude Sonnet 4.6', provider: 'anthropic',  description: 'Équilibré · rapide',                color: '#c084fc', icon: '⚡' },
+  { key: 'deepseek-reasoner',     name: 'DeepSeek Reasoner',  provider: 'deepseek',   description: 'Raisonnement profond',              color: '#e0976a', icon: '🧠' },
+  { key: 'claude-sonnet-4-6', name: 'Claude Sonnet 4.6', provider: 'anthropic',  description: 'Équilibré · rapide',                color: '#e9a079', icon: '⚡' },
   { key: 'claude-opus-4-8',   name: 'Claude Opus 4.8',   provider: 'anthropic',  description: 'Le plus puissant',                  color: '#f472b6', icon: '👑' },
-  { key: 'claude-haiku-4-5-20251001', name: 'Claude Haiku 4.5', provider: 'anthropic', description: 'Léger · économique',           color: '#a78bfa', icon: '🍃' },
-  { key: 'gpt-4o',                name: 'GPT-4o',             provider: 'openai',     description: 'Multimodal · polyvalent',           color: '#34d399', icon: '🌐' },
+  { key: 'claude-haiku-4-5-20251001', name: 'Claude Haiku 4.5', provider: 'anthropic', description: 'Léger · économique',           color: '#ecae90', icon: '🍃' },
+  { key: 'gpt-4o',                name: 'GPT-4o',             provider: 'openai',     description: 'Multimodal · polyvalent',           color: '#e0976a', icon: '🌐' },
   { key: 'gpt-4o-mini',           name: 'GPT-4o Mini',        provider: 'openai',     description: 'Léger · économique',                color: '#86efac', icon: '⚡' },
 ];
 
@@ -387,28 +388,15 @@ export function DashboardLiri() {
   ];
 
   return (
-    <div className="lq-root relative h-[100dvh] w-full overflow-hidden bg-stone-50 text-stone-900">
-      {/* fond vivant */}
-      <div className="lq-aurora">
-        <div className="lq-blob" style={{ width: '46vw', height: '46vw', left: '-8vw', top: '-6vw', background: 'radial-gradient(circle at 30% 30%, #FFD8A8, #FF8A4C 60%, transparent 72%)' }} />
-        <div className="lq-blob" style={{ width: '40vw', height: '40vw', right: '-6vw', top: '8vh', background: 'radial-gradient(circle at 50% 50%, #FFC9C9, #F2622E 55%, transparent 70%)', animationDelay: '-8s' }} />
-        <div className="lq-blob" style={{ width: '38vw', height: '38vw', left: '30vw', bottom: '-14vw', background: 'radial-gradient(circle at 50% 50%, #E5D4FF, #7C5CFF 55%, transparent 72%)', opacity: .5, animationDelay: '-15s' }} />
-      </div>
+    <LiriPortalShell active="brain">
+    <div className="lq-root studio-warm-scope relative h-full w-full overflow-hidden bg-[#262624] text-[#f5f1e9]">
 
       <div className="relative z-10 h-full flex">
 
         {/* ───────── SIDEBAR ───────── */}
         {sidebarOpen && (
           <aside className="w-[284px] shrink-0 lq-glass border-r lq-hair flex flex-col overflow-hidden">
-            <div className="px-5 pt-5 pb-4 flex items-center gap-3">
-              <div className="lq-pulse relative grid place-items-center h-11 w-11 rounded-2xl lq-ember lq-iris text-white"><Sparkles size={20} /></div>
-              <div>
-                <div className="lq-display text-[23px] leading-none font-semibold tracking-tight">{BRAIN_NAME} <span className="lq-ember-text">Brain</span></div>
-                <div className="text-[11.5px] text-stone-500 mt-1 flex items-center gap-1.5"><span className="h-1.5 w-1.5 rounded-full bg-emerald-500" /> assistant de l'école</div>
-              </div>
-            </div>
-
-            <div className="px-3.5">
+            <div className="px-3.5 pt-4">
               <button onClick={newConversation} className="lq-lift-hov group w-full flex items-center justify-between rounded-2xl px-4 py-3 text-white lq-ember lq-shadow-lift cursor-pointer">
                 <span className="flex items-center gap-2.5 font-medium text-[14px]"><Plus size={17} /> Nouvelle conversation</span>
                 <ArrowUpRight size={16} className="opacity-80" />
@@ -444,7 +432,6 @@ export function DashboardLiri() {
                 <span className="grid place-items-center h-8 w-8 rounded-xl text-white text-[12px] font-bold shrink-0" style={{ background: 'linear-gradient(135deg,#5b7a52,#6d8f60)' }}>{tenantLabel.slice(0, 2).toUpperCase()}</span>
                 <div className="min-w-0 flex-1"><div className="text-[12.5px] font-semibold truncate capitalize">{tenantLabel}</div><div className="text-[10.5px] text-stone-400">espace assistant {BRAIN_NAME}</div></div>
               </div>
-              <Link to="/dashboard" className="mt-3 flex items-center gap-1.5 text-[12px] text-stone-500 hover:text-stone-800 transition"><ArrowUpRight size={13} className="rotate-180" /> Retour au dashboard</Link>
             </div>
           </aside>
         )}
@@ -464,7 +451,7 @@ export function DashboardLiri() {
 
             <div className="relative shrink-0">
               <button onClick={() => setModelPickerOpen((v) => !v)} className="lq-hov group flex items-center gap-2.5 rounded-2xl lq-glass-soft lq-hair pl-2 pr-3 py-2 cursor-pointer">
-                <span className="grid place-items-center h-7 w-7 rounded-xl text-white" style={{ background: `linear-gradient(135deg, ${currentModel.color}, #7C5CFF)` }}><Zap size={14} /></span>
+                <span className="grid place-items-center h-7 w-7 rounded-xl text-white" style={{ background: `linear-gradient(135deg, ${currentModel.color}, #cf7a52)` }}><Zap size={14} /></span>
                 <span className="text-left leading-tight hidden sm:block"><span className="block text-[13px] font-semibold">{currentModel.name}</span><span className="block text-[10px] text-stone-400">{currentModel.description}</span></span>
                 <ChevronDown size={15} className="text-stone-400" />
               </button>
@@ -472,7 +459,7 @@ export function DashboardLiri() {
                 <div className="absolute right-0 top-[112%] z-50 w-[300px] rounded-2xl lq-glass lq-hair lq-shadow-lift p-2">
                   {MODELS.map((m) => (
                     <button key={m.key} onClick={() => { setModel(m.key); setModelPickerOpen(false); }} className={`w-full text-left rounded-xl px-3 py-2.5 flex items-center gap-2.5 transition cursor-pointer ${model === m.key ? 'bg-stone-900/[0.05]' : 'hover:bg-white/70'}`}>
-                      <span className="grid place-items-center h-7 w-7 rounded-lg text-white shrink-0" style={{ background: `linear-gradient(135deg, ${m.color}, #7C5CFF)` }}><Zap size={13} /></span>
+                      <span className="grid place-items-center h-7 w-7 rounded-lg text-white shrink-0" style={{ background: `linear-gradient(135deg, ${m.color}, #cf7a52)` }}><Zap size={13} /></span>
                       <div className="min-w-0 flex-1"><div className="text-[13px] font-semibold truncate">{m.name}</div><div className="text-[11px] text-stone-400 truncate">{m.description}</div></div>
                       {providerBadge(m.provider)}
                     </button>
@@ -580,5 +567,6 @@ export function DashboardLiri() {
         </main>
       </div>
     </div>
+    </LiriPortalShell>
   );
 }

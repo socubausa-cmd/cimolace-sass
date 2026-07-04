@@ -93,10 +93,10 @@ const ECOLE_WARM_CSS = `
 .ecole-warm-scope [class*="from-[#f0d98a]"] { --tw-gradient-from: #e0a86a var(--tw-gradient-from-position) !important; }
 .ecole-warm-scope [class*="to-[#e8c45a]"],
 .ecole-warm-scope [class*="to-[#f0d98a]"] { --tw-gradient-to: #c8893f var(--tw-gradient-to-position) !important; }
-.ecole-warm-scope [class*="bg-[#7C3AED]"],
+.ecole-warm-scope [class*="bg-[#d97757]"],
 .ecole-warm-scope [class*="bg-[#0EA5E9]"],
-.ecole-warm-scope [class*="bg-[#3B82F6]"] { background-color: #d97757 !important; }
-.ecole-warm-scope [class*="text-[#7C3AED]"],
+.ecole-warm-scope [class*="bg-[#cf7a52]"] { background-color: #d97757 !important; }
+.ecole-warm-scope [class*="text-[#d97757]"],
 .ecole-warm-scope [class*="text-[#0EA5E9]"] { color: #e58a5f !important; }
 /* LISIBILITÉ : textes foncés (composants conçus pour le mode clair) → clairs sur le sombre */
 .ecole-warm-scope [class*="text-zinc-900"],

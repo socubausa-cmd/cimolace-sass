@@ -59,15 +59,15 @@ import useTenantBranding from '@/hooks/useTenantBranding';
 
 // ─── Types de scènes ────────────────────────────────────────────────────────
 const SCENE_TYPES = [
-  { id: 'intro',         label: 'Introduction',    icon: Sparkles,         color: 'text-violet-400',  bg: 'bg-violet-500/10 border-violet-500/20' },
-  { id: 'presentation',  label: 'Présentation',     icon: Video,            color: 'text-blue-400',    bg: 'bg-blue-500/10 border-blue-500/20' },
-  { id: 'smartboard',    label: 'Smartboard',       icon: PenTool,          color: 'text-emerald-400', bg: 'bg-emerald-500/10 border-emerald-500/20' },
+  { id: 'intro',         label: 'Introduction',    icon: Sparkles,         color: 'text-[#e08a5f]',  bg: 'bg-[#d97757]/10 border-[#d97757]/20' },
+  { id: 'presentation',  label: 'Présentation',     icon: Video,            color: 'text-[#e0a458]',    bg: 'bg-[#d4924a]/10 border-[#d4924a]/20' },
+  { id: 'smartboard',    label: 'Smartboard',       icon: PenTool,          color: 'text-[#7bb06a]', bg: 'bg-[#5a8f52]/10 border-[#5a8f52]/20' },
   { id: 'discussion',    label: 'Discussion',       icon: Users,            color: 'text-amber-400',   bg: 'bg-amber-500/10 border-amber-500/20' },
   { id: 'demo',          label: 'Démonstration',    icon: MonitorUp,        color: 'text-orange-400',  bg: 'bg-orange-500/10 border-orange-500/20' },
   { id: 'conclusion',    label: 'Conclusion',       icon: BookOpen,         color: 'text-rose-400',    bg: 'bg-rose-500/10 border-rose-500/20' },
   { id: 'camera_only',   label: 'Caméra seule',     icon: Video,            color: 'text-white/60',    bg: 'bg-white/5 border-white/10' },
-  { id: 'screen',        label: 'Partage écran',    icon: MonitorUp,        color: 'text-cyan-400',    bg: 'bg-cyan-500/10 border-cyan-500/20' },
-  { id: 'slides',        label: 'Slides',           icon: SlidersHorizontal,color: 'text-indigo-400',  bg: 'bg-indigo-500/10 border-indigo-500/20' },
+  { id: 'screen',        label: 'Partage écran',    icon: MonitorUp,        color: 'text-[#e0a458]',    bg: 'bg-[#d4924a]/10 border-[#d4924a]/20' },
+  { id: 'slides',        label: 'Slides',           icon: SlidersHorizontal,color: 'text-[#e08a5f]',  bg: 'bg-[#d97757]/10 border-[#d97757]/20' },
 ];
 
 // ─── Types de contenus ───────────────────────────────────────────────────────
@@ -1053,7 +1053,7 @@ export default function LivePreparationStudioPage() {
                     '--tw-ring-color': 'color-mix(in srgb, var(--school-accent, #D4AF37) 35%, transparent)',
                   } : undefined}
                 >
-                  {done ? <Check className="h-4 w-4 shrink-0 text-emerald-400" /> : <Icon className="h-4 w-4 shrink-0 opacity-80" />}
+                  {done ? <Check className="h-4 w-4 shrink-0 text-[#7bb06a]" /> : <Icon className="h-4 w-4 shrink-0 opacity-80" />}
                   <span>{s.label}</span>
                 </button>
               );
@@ -1251,13 +1251,13 @@ export default function LivePreparationStudioPage() {
                       className={cn(
                         'rounded-xl border p-4 space-y-3',
                         wizardDraftFromBuilder
-                          ? 'border-emerald-500/30 bg-emerald-500/[0.07]'
+                          ? 'border-[#5a8f52]/30 bg-[#5a8f52]/[0.07]'
                           : 'border-white/10 bg-white/[0.02]',
                       )}
                     >
                       <div className="flex flex-wrap items-start justify-between gap-2">
                         <div>
-                          <p className="text-xs font-semibold uppercase tracking-wide text-emerald-300/90">
+                          <p className="text-xs font-semibold uppercase tracking-wide text-[#9cc48a]/90">
                             Constructeur de live (brouillon)
                           </p>
                           <p className="text-sm text-white/50 mt-1">
@@ -1299,7 +1299,7 @@ export default function LivePreparationStudioPage() {
                             (scenes.length > 0 && !draftImportReplaceExisting)
                           }
                           onClick={() => void importWizardDraftToLiveScenes()}
-                          className="flex items-center gap-2 h-9 px-4 rounded-full bg-emerald-500/20 border border-emerald-500/35 text-emerald-100 text-xs hover:bg-emerald-500/30 transition-colors disabled:opacity-40 disabled:pointer-events-none"
+                          className="flex items-center gap-2 h-9 px-4 rounded-full bg-[#5a8f52]/20 border border-[#5a8f52]/35 text-[#d4e6c4] text-xs hover:bg-[#5a8f52]/30 transition-colors disabled:opacity-40 disabled:pointer-events-none"
                         >
                           {draftImportBusy ? (
                             <Loader2 className="w-3.5 h-3.5 animate-spin" />
@@ -1322,7 +1322,7 @@ export default function LivePreparationStudioPage() {
                           to="/studio/smartboard-designer"
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="text-xs text-white/45 hover:text-cyan-300/90 underline-offset-4 hover:underline"
+                          className="text-xs text-white/45 hover:text-[#e6b566]/90 underline-offset-4 hover:underline"
                         >
                           SmartBoard Designer
                         </Link>
@@ -1955,11 +1955,11 @@ export default function LivePreparationStudioPage() {
                                       </div>
                                       <div className="rounded-lg bg-white/[0.03] border border-white/8 p-2 text-center">
                                         <p className="text-[8px] text-gray-500 uppercase tracking-wider">Répondues</p>
-                                        <p className="text-sm font-bold text-emerald-300">{s.questions_answered}</p>
+                                        <p className="text-sm font-bold text-[#9cc48a]">{s.questions_answered}</p>
                                       </div>
                                       <div className="rounded-lg bg-white/[0.03] border border-white/8 p-2 text-center">
                                         <p className="text-[8px] text-gray-500 uppercase tracking-wider">Script</p>
-                                        <p className="text-sm font-bold text-violet-300">{s.script_sections_total}</p>
+                                        <p className="text-sm font-bold text-[#e8a97f]">{s.script_sections_total}</p>
                                       </div>
                                     </div>
 
@@ -2035,9 +2035,9 @@ export default function LivePreparationStudioPage() {
                       <strong className="text-amber-200/80">Planning</strong>, deuxième écran).
                     </p>
                   )}
-                  <div className="space-y-3 rounded-xl border border-violet-500/20 bg-black/25 p-4">
+                  <div className="space-y-3 rounded-xl border border-[#d97757]/20 bg-black/25 p-4">
                     <div className="flex items-center gap-2">
-                      <Music className="h-4 w-4 text-violet-300" />
+                      <Music className="h-4 w-4 text-[#e8a97f]" />
                       <p className="text-sm font-medium text-white/90">Atmosphère (live production)</p>
                     </div>
                     <p className="text-[11px] text-white/45">

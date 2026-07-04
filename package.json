@@ -18,6 +18,8 @@
     "build": "npm run build --workspaces --if-present",
     "dev:med-app": "npm run dev -w @isna/med-app",
     "dev:patient-portal": "npm run dev -w @isna/patient-portal",
+    "dev:mobile": "npm run start --prefix apps/mobile",
+    "verify:mobile": "npm run verify --prefix apps/mobile",
     "test:e2e:liri": "playwright test -c playwright.config.ts tests/e2e/liri-signup-flow.spec.ts"
   },
   "devDependencies": {

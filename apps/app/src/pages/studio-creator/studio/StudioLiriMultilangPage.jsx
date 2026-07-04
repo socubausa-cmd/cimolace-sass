@@ -286,7 +286,7 @@ export default function StudioLiriMultilangPage() {
       titleLine="Live translate · Vidéo multilingue"
       breadcrumbMiddle={[{ label: 'LIRI', href: '/studio/liri' }]}
       footer={
-        <footer className="flex h-14 flex-shrink-0 items-center gap-3 border-t border-white/[0.07] px-3" style={{ background: '#12111a' }}>
+        <footer className="flex h-14 flex-shrink-0 items-center gap-3 border-t border-white/[0.07] px-3" style={{ background: '#1f1e1c' }}>
           <Sparkles className="h-4 w-4 shrink-0 text-emerald-400/80" />
           <p className="truncate text-[11px] text-white/38">
             <span className="text-white/55">Pack liri_complete_multilang_system</span>
@@ -333,7 +333,7 @@ export default function StudioLiriMultilangPage() {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.05 }}
                 onSubmit={onStartLive}
-                className="rounded-2xl border border-emerald-500/20 bg-[#12111a]/90 p-5 shadow-[0_0_40px_rgba(16,185,129,0.06)]"
+                className="rounded-2xl border border-emerald-500/20 bg-[#1f1e1c]/90 p-5 shadow-[0_0_40px_rgba(207,128,89,0.06)]"
               >
                 <div className="mb-4 flex items-center gap-2 text-[13px] font-semibold text-emerald-300/95">
                   <Radio className="h-4 w-4" />
@@ -371,7 +371,7 @@ export default function StudioLiriMultilangPage() {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.1 }}
                 onSubmit={onCreateVideo}
-                className="rounded-2xl border border-cyan-500/20 bg-[#12111a]/90 p-5 shadow-[0_0_40px_rgba(34,211,238,0.06)]"
+                className="rounded-2xl border border-cyan-500/20 bg-[#1f1e1c]/90 p-5 shadow-[0_0_40px_rgba(227,170,107,0.06)]"
               >
                 <div className="mb-4 flex items-center gap-2 text-[13px] font-semibold text-cyan-300/95">
                   <Film className="h-4 w-4" />
@@ -401,7 +401,7 @@ export default function StudioLiriMultilangPage() {
               initial={{ opacity: 0, y: 8 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.12 }}
-              className="mt-8 rounded-2xl border border-cyan-500/15 bg-[#12111a]/90 p-5 shadow-[0_0_32px_rgba(34,211,238,0.05)]"
+              className="mt-8 rounded-2xl border border-cyan-500/15 bg-[#1f1e1c]/90 p-5 shadow-[0_0_32px_rgba(227,170,107,0.05)]"
             >
               <div className="mb-3 flex items-center gap-2 text-[13px] font-semibold text-cyan-300/95">
                 <Film className="h-4 w-4" />
@@ -483,7 +483,7 @@ export default function StudioLiriMultilangPage() {
               initial={{ opacity: 0, y: 8 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.14 }}
-              className="mt-8 rounded-2xl border border-violet-500/15 bg-[#12111a]/90 p-5 shadow-[0_0_32px_rgba(139,92,246,0.05)]"
+              className="mt-8 rounded-2xl border border-violet-500/15 bg-[#1f1e1c]/90 p-5 shadow-[0_0_32px_rgba(217,119,87,0.05)]"
             >
               <div className="mb-3 flex items-center gap-2 text-[13px] font-semibold text-violet-300/95">
                 <Sparkles className="h-4 w-4" />

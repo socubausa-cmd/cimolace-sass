@@ -42,7 +42,7 @@ export function LiveStudioProgress({ steps, currentStep, onStepClick, stepStates
                   <span
                     className={cn(
                       'flex h-6 min-w-[1.5rem] shrink-0 items-center justify-center rounded-full text-[10px] font-bold tabular-nums sm:h-7 sm:min-w-[1.75rem] sm:text-[11px]',
-                      isActive && 'bg-[#7B61FF] text-white shadow-[0_0_16px_-4px_rgba(123,97,255,0.55)]',
+                      isActive && 'bg-[#d97757] text-white shadow-[0_0_16px_-4px_rgba(217,119,87,0.55)]',
                       !isActive && !hasError && 'bg-[#2A2F38] text-gray-400',
                       !isActive && hasError && 'bg-red-500/25 text-red-300',
                     )}
@@ -58,7 +58,7 @@ export function LiveStudioProgress({ steps, currentStep, onStepClick, stepStates
                   <span
                     className={cn(
                       'max-w-[5rem] truncate whitespace-nowrap text-[8px] font-bold uppercase leading-tight tracking-[0.06em] sm:max-w-none sm:text-[10px]',
-                      isActive && 'text-[#7B61FF]',
+                      isActive && 'text-[#d97757]',
                       !isActive && !hasError && 'text-gray-500',
                       !isActive && hasError && 'text-red-300/90',
                     )}
@@ -69,7 +69,7 @@ export function LiveStudioProgress({ steps, currentStep, onStepClick, stepStates
                 <span
                   className={cn(
                     'absolute bottom-0 left-1 right-1 h-[3px] rounded-full transition-all duration-200',
-                    isActive ? 'bg-[#7B61FF]' : 'bg-transparent',
+                    isActive ? 'bg-[#d97757]' : 'bg-transparent',
                   )}
                   aria-hidden
                 />

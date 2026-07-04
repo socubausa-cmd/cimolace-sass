@@ -125,16 +125,16 @@ export default function NleEngineWorkspace({ previewDuration, chapters, currentT
   }, []);
 
   return (
-    <div className="rounded-2xl border border-[color-mix(in_srgb,var(--school-accent)_25%,transparent)] bg-[#0a0f18] overflow-hidden">
+    <div className="rounded-2xl border border-[color-mix(in_srgb,var(--coral)_25%,transparent)] bg-[#262624] overflow-hidden">
       <div className="flex flex-wrap items-center gap-3 border-b border-white/10 bg-black/30 px-4 py-3">
-        <Clapperboard className="h-5 w-5 text-[var(--school-accent)]" />
+        <Clapperboard className="h-5 w-5 text-[var(--coral)]" />
         <div className="min-w-0 flex-1">
-          <p className="text-[11px] uppercase tracking-wider text-[color-mix(in_srgb,var(--school-accent)_70%,transparent)] font-semibold">Moteur NLE</p>
+          <p className="text-[11px] uppercase tracking-wider text-[color-mix(in_srgb,var(--coral)_70%,transparent)] font-semibold">Moteur NLE</p>
           <p className="text-xs text-white/50">Pistes vidéo/audio, clips, marqueurs — export FFmpeg aligné sur ce plan</p>
         </div>
         <div className="flex items-center gap-2">
           <Input
-            className="h-8 w-[200px] bg-[#0F1419] border-white/10 text-sm"
+            className="h-8 w-[200px] bg-[#1f1e1c] border-white/10 text-sm"
             value={project.name}
             onChange={(e) => setProjectName(e.target.value)}
             placeholder="Nom du montage"
@@ -177,13 +177,13 @@ export default function NleEngineWorkspace({ previewDuration, chapters, currentT
               onValueChange={(v) => setPixelsPerSecond(Array.isArray(v) ? v[0] : v)}
             />
             <span className="text-[10px] font-mono text-white/50">{pixelsPerSecond}px/s</span>
-            <span className="ml-auto text-[11px] font-mono text-[color-mix(in_srgb,var(--school-accent)_90%,transparent)]">
+            <span className="ml-auto text-[11px] font-mono text-[color-mix(in_srgb,var(--coral)_90%,transparent)]">
               {formatTc(currentTime)} / {formatTc(duration)}
             </span>
           </div>
 
           <div
-            className="relative h-8 cursor-pointer border-b border-white/10 bg-[#060a10]"
+            className="relative h-8 cursor-pointer border-b border-white/10 bg-[#1f1e1c]"
             onClick={onRulerClick}
             style={{ width: timelineWidth, minWidth: '100%' }}
           >
@@ -199,7 +199,7 @@ export default function NleEngineWorkspace({ previewDuration, chapters, currentT
               ))}
             </div>
             <div
-              className="absolute top-0 bottom-0 w-px bg-[var(--school-accent)] z-10 pointer-events-none"
+              className="absolute top-0 bottom-0 w-px bg-[var(--coral)] z-10 pointer-events-none"
               style={{ left: `${playheadPct}%` }}
             />
           </div>
@@ -211,7 +211,7 @@ export default function NleEngineWorkspace({ previewDuration, chapters, currentT
                   key={tr.id}
                   className={cn(
                     'flex border-b border-white/[0.06] min-h-[52px] relative',
-                    tr.type === 'audio' ? 'bg-[#0c1018]' : 'bg-[#080c14]'
+                    tr.type === 'audio' ? 'bg-[#2b2926]' : 'bg-[#30302e]'
                   )}
                 >
                   <div className="w-[140px] shrink-0 border-r border-white/10 px-2 py-2 flex items-start gap-1.5">
@@ -233,9 +233,9 @@ export default function NleEngineWorkspace({ previewDuration, chapters, currentT
                           className={cn(
                             'absolute top-1 bottom-1 rounded-md border text-left px-2 py-1 overflow-hidden transition-colors cursor-grab active:cursor-grabbing touch-none select-none',
                             tr.type === 'video'
-                              ? 'bg-blue-500/25 border-blue-400/40 hover:bg-blue-500/35'
-                              : 'bg-emerald-500/20 border-emerald-400/35 hover:bg-emerald-500/30',
-                            active && 'ring-2 ring-[color-mix(in_srgb,var(--school-accent)_80%,transparent)]'
+                              ? 'bg-[#c2683f]/25 border-[#d97757]/40 hover:bg-[#c2683f]/35'
+                              : 'bg-[#7a9b6c]/20 border-[#9fbf8f]/35 hover:bg-[#7a9b6c]/30',
+                            active && 'ring-2 ring-[color-mix(in_srgb,var(--coral)_80%,transparent)]'
                           )}
                           style={{ left: `${left}%`, width: `${width}%` }}
                           onPointerDown={(e) => onClipPointerDown(e, tr.id, c)}
@@ -278,9 +278,9 @@ export default function NleEngineWorkspace({ previewDuration, chapters, currentT
 
           {selectedClip ? (
             <div className="space-y-2 rounded-lg border border-white/10 bg-black/30 p-3">
-              <p className="text-[11px] font-semibold text-[color-mix(in_srgb,var(--school-accent)_90%,transparent)]">Clip sélectionné</p>
+              <p className="text-[11px] font-semibold text-[color-mix(in_srgb,var(--coral)_90%,transparent)]">Clip sélectionné</p>
               <Input
-                className="h-8 bg-[#0F1419] border-white/10 text-xs"
+                className="h-8 bg-[#1f1e1c] border-white/10 text-xs"
                 value={selectedClip.label}
                 onChange={(e) =>
                   updateClip(selectedTrackId, selectedClip.id, { label: e.target.value })
@@ -290,7 +290,7 @@ export default function NleEngineWorkspace({ previewDuration, chapters, currentT
                 <div>
                   <Label className="text-white/40">Début timeline (s)</Label>
                   <Input
-                    className="h-7 mt-0.5 bg-[#0F1419] border-white/10 font-mono text-[10px]"
+                    className="h-7 mt-0.5 bg-[#1f1e1c] border-white/10 font-mono text-[10px]"
                     value={selectedClip.startOnTimeline.toFixed(2)}
                     onChange={(e) =>
                       updateClip(selectedTrackId, selectedClip.id, {
@@ -302,7 +302,7 @@ export default function NleEngineWorkspace({ previewDuration, chapters, currentT
                 <div>
                   <Label className="text-white/40">Durée</Label>
                   <Input
-                    className="h-7 mt-0.5 bg-[#0F1419] border-white/10 font-mono text-[10px]"
+                    className="h-7 mt-0.5 bg-[#1f1e1c] border-white/10 font-mono text-[10px]"
                     value={selectedClip.duration.toFixed(2)}
                     onChange={(e) =>
                       updateClip(selectedTrackId, selectedClip.id, {
@@ -317,7 +317,7 @@ export default function NleEngineWorkspace({ previewDuration, chapters, currentT
                   <div>
                     <Label className="text-white/40">sourceRef (multi-fichier)</Label>
                     <Input
-                      className="h-7 mt-0.5 bg-[#0F1419] border-white/10 font-mono text-[10px]"
+                      className="h-7 mt-0.5 bg-[#1f1e1c] border-white/10 font-mono text-[10px]"
                       placeholder="main"
                       value={String(selectedClip.sourceRef ?? '')}
                       onChange={(e) =>
@@ -352,7 +352,7 @@ export default function NleEngineWorkspace({ previewDuration, chapters, currentT
                 <div>
                   <Label className="text-white/40">Trim IN (source s)</Label>
                   <Input
-                    className="h-7 mt-0.5 bg-[#0F1419] border-white/10 font-mono text-[10px]"
+                    className="h-7 mt-0.5 bg-[#1f1e1c] border-white/10 font-mono text-[10px]"
                     value={String(selectedClip.trimIn ?? 0)}
                     onChange={(e) => {
                       const v = Math.max(0, Number(e.target.value) || 0);
@@ -368,7 +368,7 @@ export default function NleEngineWorkspace({ previewDuration, chapters, currentT
                 <div>
                   <Label className="text-white/40">Trim OUT (source s)</Label>
                   <Input
-                    className="h-7 mt-0.5 bg-[#0F1419] border-white/10 font-mono text-[10px]"
+                    className="h-7 mt-0.5 bg-[#1f1e1c] border-white/10 font-mono text-[10px]"
                     value={String(selectedClip.trimOut ?? 0)}
                     onChange={(e) => {
                       const lo = Number(selectedClip.trimIn) || 0;
@@ -391,7 +391,7 @@ export default function NleEngineWorkspace({ previewDuration, chapters, currentT
                         <div>
                           <Label className="text-white/40 text-[10px]">{label}</Label>
                           <select
-                            className="mt-0.5 w-full h-7 rounded-md border border-white/10 bg-[#0F1419] px-2 text-[10px] text-white/90"
+                            className="mt-0.5 w-full h-7 rounded-md border border-white/10 bg-[#1f1e1c] px-2 text-[10px] text-white/90"
                             value={type}
                             onChange={(e) => {
                               const nextType = e.target.value;
@@ -411,7 +411,7 @@ export default function NleEngineWorkspace({ previewDuration, chapters, currentT
                         <div>
                           <Label className="text-white/40 text-[10px]">s</Label>
                           <Input
-                            className="h-7 mt-0.5 bg-[#0F1419] border-white/10 font-mono text-[10px]"
+                            className="h-7 mt-0.5 bg-[#1f1e1c] border-white/10 font-mono text-[10px]"
                             disabled={type === 'cut'}
                             value={type === 'cut' ? '0' : dur.toFixed(2)}
                             onChange={(e) =>
@@ -440,7 +440,7 @@ export default function NleEngineWorkspace({ previewDuration, chapters, currentT
                     <span className="truncate">{m.label || '—'}</span>
                     <button
                       type="button"
-                      className="text-[color-mix(in_srgb,var(--school-accent)_80%,transparent)] hover:underline shrink-0"
+                      className="text-[color-mix(in_srgb,var(--coral)_80%,transparent)] hover:underline shrink-0"
                       onClick={() => onSeek(m.timeSec)}
                     >
                       {formatTc(m.timeSec)}

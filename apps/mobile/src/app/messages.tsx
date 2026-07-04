@@ -1,4 +1,5 @@
 import { Feather } from '@expo/vector-icons';
+import { useRouter, type Href } from 'expo-router';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   ActivityIndicator,
@@ -39,6 +40,7 @@ function timeShort(iso?: string) {
 }
 
 export default function MessagesScreen() {
+  const router = useRouter();
   const { colors: C } = useTheme();
   const s = useMemo(() => makeStyles(C), [C]);
   const [me, setMe] = useState<string | null>(null);
@@ -52,6 +54,8 @@ export default function MessagesScreen() {
   const load = useCallback(async () => setConvs(await fetchConversations()), []);
   useEffect(() => {
     void load();
+    const timer = setInterval(() => void load(), 20_000);
+    return () => clearInterval(timer);
   }, [load]);
 
   if (active) return <Thread me={me} conv={active} onBack={() => { setActive(null); void load(); }} />;
@@ -62,7 +66,12 @@ export default function MessagesScreen() {
   return (
     <View style={s.root}>
       <SafeAreaView edges={['top']} style={s.safe}>
-        <View style={s.header}><Text style={s.h1}>Messagerie</Text></View>
+        <View style={s.header}>
+          <Text style={s.h1}>Messagerie</Text>
+          <Pressable onPress={() => router.push('/nouveau-message' as Href)} style={s.newButton}>
+            <Feather name="edit" size={18} color={C.coral} />
+          </Pressable>
+        </View>
         {loading ? (
           <View style={s.fill}><ActivityIndicator color={C.coral} /></View>
         ) : list.length === 0 ? (
@@ -108,6 +117,8 @@ function Thread({ me, conv, onBack }: { me: string | null; conv: AppConversation
   const load = useCallback(async () => setMsgs(await fetchThread(conv.otherId)), [conv.otherId]);
   useEffect(() => {
     void load();
+    const timer = setInterval(() => void load(), 5_000);
+    return () => clearInterval(timer);
   }, [load]);
 
   const send = async () => {
@@ -179,8 +190,9 @@ const makeStyles = (C: LiriPalette) => StyleSheet.create({
   pressed: { opacity: 0.7 },
   fill: { flex: 1, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 36, paddingBottom: 60 },
 
-  header: { paddingHorizontal: 18, paddingTop: 14, paddingBottom: 12 },
+  header: { paddingHorizontal: 18, paddingTop: 14, paddingBottom: 12, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
   h1: { color: C.ink, fontSize: 28, fontWeight: '700', fontFamily: F.serif },
+  newButton: { width: 40, height: 40, borderRadius: 13, alignItems: 'center', justifyContent: 'center', backgroundColor: C.panel, borderWidth: 1, borderColor: C.line },
   scroll: { paddingHorizontal: 14, paddingBottom: 24 },
 
   convRow: { flexDirection: 'row', alignItems: 'center', gap: 12, padding: 12, borderRadius: 16, marginBottom: 4 },

@@ -13,15 +13,15 @@ import * as Tooltip from '@radix-ui/react-tooltip';
 
 // --- Constants & Config ---
 const EVENT_COLORS = {
-  'Cours': { bg: 'bg-blue-500/20', text: 'text-blue-400', border: 'border-blue-500/30', dot: 'bg-blue-500' },
+  'Cours': { bg: 'bg-amber-500/20', text: 'text-amber-400', border: 'border-amber-500/30', dot: 'bg-amber-500' },
   'Conférence': { bg: 'bg-[color-mix(in_srgb,var(--school-accent)_20%,transparent)]', text: 'text-[var(--school-accent)]', border: 'border-[color-mix(in_srgb,var(--school-accent)_30%,transparent)]', dot: 'bg-[var(--school-accent)]' },
   'Permanence': { bg: 'bg-green-500/20', text: 'text-green-400', border: 'border-green-500/30', dot: 'bg-green-500' },
   'Évaluation': { bg: 'bg-orange-500/20', text: 'text-orange-400', border: 'border-orange-500/30', dot: 'bg-orange-500' },
   'Examen': { bg: 'bg-red-500/20', text: 'text-red-400', border: 'border-red-500/30', dot: 'bg-red-500' },
-  'Cérémonie': { bg: 'bg-purple-500/20', text: 'text-purple-400', border: 'border-purple-500/30', dot: 'bg-purple-500' },
+  'Cérémonie': { bg: 'bg-rose-500/20', text: 'text-rose-400', border: 'border-rose-500/30', dot: 'bg-rose-500' },
   'Assemblée': { bg: 'bg-gray-400/20', text: 'text-gray-300', border: 'border-gray-400/30', dot: 'bg-gray-400' },
   // Types institutionnels (données réelles côté admin, en anglais)
-  'period': { bg: 'bg-indigo-500/20', text: 'text-indigo-300', border: 'border-indigo-500/30', dot: 'bg-indigo-400' },
+  'period': { bg: 'bg-stone-400/20', text: 'text-stone-300', border: 'border-stone-400/30', dot: 'bg-stone-400' },
   'holiday': { bg: 'bg-emerald-500/20', text: 'text-emerald-300', border: 'border-emerald-500/30', dot: 'bg-emerald-400' },
   'exam': { bg: 'bg-red-500/20', text: 'text-red-400', border: 'border-red-500/30', dot: 'bg-red-500' },
   'event': { bg: 'bg-[color-mix(in_srgb,var(--school-accent)_20%,transparent)]', text: 'text-[var(--school-accent)]', border: 'border-[color-mix(in_srgb,var(--school-accent)_30%,transparent)]', dot: 'bg-[var(--school-accent)]' }
@@ -65,7 +65,7 @@ const SearchBar = ({ searchTerm, setSearchTerm }) => (
       placeholder="Rechercher..." 
       value={searchTerm}
       onChange={(e) => setSearchTerm(e.target.value)}
-      className="pl-9 bg-[#0F1419] border-white/10 text-white placeholder:text-gray-500 focus:border-[color-mix(in_srgb,var(--school-accent)_50%,transparent)] h-10 text-sm"
+      className="pl-9 bg-[#18130f] border-white/10 text-white placeholder:text-gray-500 focus:border-[color-mix(in_srgb,var(--school-accent)_50%,transparent)] h-10 text-sm"
     />
   </div>
 );
@@ -100,7 +100,7 @@ const UpcomingEventsWidget = ({ events }) => {
   };
 
   return (
-    <div className="bg-gradient-to-br from-[#192734] to-[#0F1419] border border-white/10 rounded-xl p-6 relative overflow-hidden group mt-6">
+    <div className="bg-gradient-to-br from-[#2b2219] to-[#18130f] border border-white/10 rounded-xl p-6 relative overflow-hidden group mt-6">
       <div className="absolute inset-0 bg-grid-white/[0.02] pointer-events-none" />
       <div className="flex items-center gap-3 mb-4 relative z-10">
         <Clock className="w-5 h-5 text-[var(--school-accent)]" />
@@ -114,7 +114,7 @@ const UpcomingEventsWidget = ({ events }) => {
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: idx * 0.1 }}
             key={evt.id} 
-            className="bg-[#0F1419]/50 border border-white/5 rounded-lg p-3 hover:border-[color-mix(in_srgb,var(--school-accent)_30%,transparent)] transition-all group/card relative overflow-hidden flex flex-col justify-between h-full min-h-[100px]"
+            className="bg-[#18130f]/50 border border-white/5 rounded-lg p-3 hover:border-[color-mix(in_srgb,var(--school-accent)_30%,transparent)] transition-all group/card relative overflow-hidden flex flex-col justify-between h-full min-h-[100px]"
           >
             <div className={cn("absolute top-0 left-0 w-1 h-full", EVENT_COLORS[evt.type]?.dot || 'bg-gray-500')} />
             <div>
@@ -158,9 +158,9 @@ const InteractiveCalendar = ({ events, currentDate, setCurrentDate, selectedDate
   const todayKey = getDateKey(new Date());
 
   return (
-    <div className="bg-[#192734] border border-white/10 rounded-xl overflow-hidden shadow-lg h-full flex flex-col">
+    <div className="bg-[#2b2219] border border-white/10 rounded-xl overflow-hidden shadow-lg h-full flex flex-col">
       {/* Header */}
-      <div className="p-4 border-b border-white/10 flex items-center justify-between bg-[#16202A]">
+      <div className="p-4 border-b border-white/10 flex items-center justify-between bg-[#221b15]">
         <h3 className="text-xl font-bold text-white font-serif capitalize flex items-center gap-2">
           <CalendarIcon className="w-5 h-5 text-[var(--school-accent)]" />
           {currentDate.toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' })}
@@ -176,7 +176,7 @@ const InteractiveCalendar = ({ events, currentDate, setCurrentDate, selectedDate
       </div>
 
       {/* Grid Header */}
-      <div className="grid grid-cols-7 border-b border-white/10 bg-[#0F1419]/50">
+      <div className="grid grid-cols-7 border-b border-white/10 bg-[#18130f]/50">
         {DAYS.map(day => (
           <div key={day} className="py-2 text-center text-[10px] uppercase font-bold text-gray-500 tracking-wider">
             {day}
@@ -185,7 +185,7 @@ const InteractiveCalendar = ({ events, currentDate, setCurrentDate, selectedDate
       </div>
 
       {/* Calendar Grid */}
-      <div className="grid grid-cols-7 auto-rows-fr flex-1 bg-[#0F1419]">
+      <div className="grid grid-cols-7 auto-rows-fr flex-1 bg-[#18130f]">
         <AnimatePresence mode="wait">
           <motion.div
             key={currentDate.toString()}
@@ -195,7 +195,7 @@ const InteractiveCalendar = ({ events, currentDate, setCurrentDate, selectedDate
             className="contents"
           >
             {blanks.map((_, i) => (
-              <div key={`blank-${i}`} className="border-r border-b border-white/5 min-h-[80px] sm:min-h-[100px] bg-[#0F1419]/30" />
+              <div key={`blank-${i}`} className="border-r border-b border-white/5 min-h-[80px] sm:min-h-[100px] bg-[#18130f]/30" />
             ))}
             
             {days.map(day => {
@@ -218,18 +218,18 @@ const InteractiveCalendar = ({ events, currentDate, setCurrentDate, selectedDate
                   className={cn(
                     "relative border-r border-b border-white/5 p-2 transition-all cursor-pointer hover:bg-white/5 flex flex-col min-h-[80px] sm:min-h-[100px]",
                     isSelected && "bg-[color-mix(in_srgb,var(--school-accent)_5%,transparent)] ring-1 ring-inset ring-[var(--school-accent)]",
-                    isToday && !isSelected && "bg-blue-900/10 shadow-[inset_0_0_10px_rgba(59,130,246,0.1)]"
+                    isToday && !isSelected && "bg-[color-mix(in_srgb,var(--school-accent)_8%,transparent)] shadow-[inset_0_0_10px_color-mix(in_srgb,var(--school-accent)_12%,transparent)]"
                   )}
                 >
                   <div className="flex justify-between items-start mb-1">
                      <span className={cn(
                        "text-xs font-medium w-6 h-6 flex items-center justify-center rounded-full",
                        isSelected ? "bg-[var(--school-accent)] text-black" : 
-                       isToday ? "bg-blue-500 text-white shadow-lg shadow-blue-500/30" : "text-gray-400"
+                       isToday ? "bg-[color-mix(in_srgb,var(--school-accent)_30%,transparent)] text-[var(--school-accent)]" : "text-gray-400"
                      )}>
                        {day}
                      </span>
-                     {isToday && <span className="w-1.5 h-1.5 bg-blue-500 rounded-full animate-pulse" />}
+                     {isToday && <span className="w-1.5 h-1.5 bg-[var(--school-accent)] rounded-full animate-pulse" />}
                   </div>
                   
                   <div className="flex flex-wrap content-start gap-1">
@@ -255,7 +255,7 @@ const InteractiveCalendar = ({ events, currentDate, setCurrentDate, selectedDate
 const EventDetailPanel = ({ date, events, onViewFullDetails }) => {
   if (!date) {
     return (
-      <div className="h-full flex flex-col items-center justify-center text-center p-6 bg-[#192734] border border-white/10 rounded-xl text-gray-500">
+      <div className="h-full flex flex-col items-center justify-center text-center p-6 bg-[#2b2219] border border-white/10 rounded-xl text-gray-500">
         <div className="p-4 rounded-full bg-white/5 mb-4">
            <CalendarIcon className="w-8 h-8 opacity-50" />
         </div>
@@ -267,13 +267,13 @@ const EventDetailPanel = ({ date, events, onViewFullDetails }) => {
   const formattedDate = formatDate(date);
 
   return (
-    <div className="h-full flex flex-col bg-[#192734] border border-white/10 rounded-xl overflow-hidden shadow-lg">
-      <div className="p-4 border-b border-white/10 bg-[#16202A]">
+    <div className="h-full flex flex-col bg-[#2b2219] border border-white/10 rounded-xl overflow-hidden shadow-lg">
+      <div className="p-4 border-b border-white/10 bg-[#221b15]">
         <h3 className="text-lg font-bold text-white font-serif capitalize">{formattedDate}</h3>
         <p className="text-sm text-gray-400 mt-1">{events.length} événement(s) prévu(s)</p>
       </div>
 
-      <div className="flex-1 overflow-y-auto p-4 space-y-3 custom-scrollbar bg-[#0F1419]/20">
+      <div className="flex-1 overflow-y-auto p-4 space-y-3 custom-scrollbar bg-[#18130f]/20">
         <AnimatePresence mode="popLayout">
           {events.length > 0 ? events.map((evt) => (
             <motion.div
@@ -281,7 +281,7 @@ const EventDetailPanel = ({ date, events, onViewFullDetails }) => {
               initial={{ opacity: 0, x: 20 }}
               animate={{ opacity: 1, x: 0 }}
               exit={{ opacity: 0, x: -20 }}
-              className="bg-[#0F1419] border border-white/5 rounded-lg p-4 hover:border-[color-mix(in_srgb,var(--school-accent)_30%,transparent)] transition-all group relative overflow-hidden"
+              className="bg-[#18130f] border border-white/5 rounded-lg p-4 hover:border-[color-mix(in_srgb,var(--school-accent)_30%,transparent)] transition-all group relative overflow-hidden"
             >
               <div className={cn("absolute left-0 top-0 bottom-0 w-1", EVENT_COLORS[evt.type]?.dot || 'bg-gray-500')} />
               
@@ -341,13 +341,13 @@ export const EventDetailModal = ({ event, onClose }) => {
         animate={{ opacity: 1, scale: 1 }}
         exit={{ opacity: 0, scale: 0.95 }}
         onClick={(e) => e.stopPropagation()}
-        className="bg-[#192734] border border-white/10 rounded-xl max-w-lg w-full overflow-hidden shadow-2xl relative"
+        className="bg-[#2b2219] border border-white/10 rounded-xl max-w-lg w-full overflow-hidden shadow-2xl relative"
       >
         <button onClick={onClose} className="absolute top-4 right-4 text-gray-400 hover:text-white z-10 transition-colors p-1 bg-black/20 rounded-full">
           <X className="w-5 h-5" />
         </button>
         
-        <div className="h-32 bg-gradient-to-br from-[#0F1419] to-[#16202A] relative overflow-hidden flex items-end p-6">
+        <div className="h-32 bg-gradient-to-br from-[#18130f] to-[#221b15] relative overflow-hidden flex items-end p-6">
            <div className="absolute inset-0 bg-grid-white/[0.05]" />
            <div className="relative z-10 flex items-center gap-4">
               <div className={cn("p-4 rounded-2xl border backdrop-blur-md shadow-xl", colorSet.bg, colorSet.border, colorSet.text)}>
@@ -362,14 +362,14 @@ export const EventDetailModal = ({ event, onClose }) => {
 
         <div className="p-6 space-y-6">
           <div className="grid grid-cols-2 gap-4">
-            <div className="bg-[#0F1419] p-3 rounded-lg border border-white/5 flex items-center gap-3">
+            <div className="bg-[#18130f] p-3 rounded-lg border border-white/5 flex items-center gap-3">
                <CalendarIcon className="w-5 h-5 text-[var(--school-accent)]" />
                <div className="flex flex-col">
                  <span className="text-[10px] text-gray-500 uppercase">Date</span>
                  <span className="text-sm font-bold text-white">{new Date(event.start_date).toLocaleDateString('fr-FR')}</span>
                </div>
             </div>
-            <div className="bg-[#0F1419] p-3 rounded-lg border border-white/5 flex items-center gap-3">
+            <div className="bg-[#18130f] p-3 rounded-lg border border-white/5 flex items-center gap-3">
                <Clock className="w-5 h-5 text-[var(--school-accent)]" />
                <div className="flex flex-col">
                  <span className="text-[10px] text-gray-500 uppercase">Horaire</span>

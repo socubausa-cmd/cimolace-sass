@@ -94,6 +94,7 @@ import {
   consumePendingArchitectForLiveStudio,
   consumePendingMasterclassForLiveStudio,
   consumePendingLiriCourseForLiveStudio,
+  liriCourseToIAResponse,
   LIRI_AGENT_PENDING_LIVE_KEY,
 } from '@/lib/liriAgentExportToLiveStudio';
 import { invokeLongiaGuestLive } from '@/lib/longiaGuestClient';
@@ -748,6 +749,9 @@ function SmartboardProgramStudioSection({ draft, updateDraft, user, selectedTeac
             masterclass: liriAgentImport?.masterclass && typeof liriAgentImport.masterclass === 'object'
               ? liriAgentImport.masterclass
               : null,
+            cours: liriAgentImport?.cours && typeof liriAgentImport.cours === 'object'
+              ? liriAgentImport.cours
+              : null,
           }
         : null;
     const pending = fromRouter || consumePendingMasterclassForLiveStudio() || consumePendingLiriCourseForLiveStudio();
@@ -759,16 +763,36 @@ function SmartboardProgramStudioSection({ draft, updateDraft, user, selectedTeac
       setCoachPipelineStage('done');
       masterclassAutoLaunchRef.current = true;
     }
-    updateDraft((d) => {
-      const t = String(d.title || '').trim();
-      if (t) return d;
-      return { ...d, title: pending.title };
-    });
+    // Cours LIRI STRUCTURÉ (etapes[] avec smartboard/masterscript) → on construit le
+    // programme SmartBoard + le master script LOCALEMENT (adaptateur pur, sans IA).
+    // L'edge smartboard-ia-generate (absente en prod → 404) devient un raffinement optionnel.
+    let builtSlides = 0;
+    const structuredCours = pending.cours && Array.isArray(pending.cours.etapes) ? pending.cours : null;
+    if (structuredCours) {
+      const local = liriCourseToIAResponse(structuredCours);
+      if (Array.isArray(local.slides) && local.slides.length) {
+        builtSlides = local.slides.length;
+        updateDraft((d) => mapIAResponseToDraft(local, d));
+      }
+    }
+    if (!builtSlides) {
+      updateDraft((d) => {
+        const t = String(d.title || '').trim();
+        if (t) return d;
+        return { ...d, title: pending.title };
+      });
+    }
     toast({
-      title: pending.masterclass ? 'Masterclass importée dans le Studio Live' : 'Cours importé depuis l\'Agent LIRI',
+      title: pending.masterclass
+        ? 'Masterclass importée dans le Studio Live'
+        : builtSlides
+          ? 'Cours LIRI importé — programme construit'
+          : 'Cours importé depuis l\'Agent LIRI',
       description: pending.masterclass
         ? 'Texte + compétences coach préchargés. Vous pouvez lancer SmartBoard Architect.'
-        : 'Texte prêt — lancez SmartBoard Architect ou la mindmap IA.',
+        : builtSlides
+          ? `${builtSlides} scènes SmartBoard + master script prêts. L'Architect IA reste optionnel pour raffiner.`
+          : 'Texte prêt — lancez SmartBoard Architect ou la mindmap IA.',
     });
     if (fromRouter) {
       try {

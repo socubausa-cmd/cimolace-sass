@@ -51,3 +51,31 @@
   .lq-blob, .lq-rise, .lq-dot, .lq-pulse::after { animation: none !important; }
   .lq-hov, .lq-lift-hov, .lq-input { transition: none !important; }
 }
+
+/* ═══════════════════════════════════════════════════════════════════
+   BASCULE SOMBRE — « respect du shell LIRI » (#262624 chaud).
+   Le Brain était en thème clair → on le réaligne sur le fond du portail.
+   Scopé .lq-root : ne touche que cet écran.
+   ═══════════════════════════════════════════════════════════════════ */
+.lq-root { background: #262624 !important; background-image: linear-gradient(rgba(245,244,238,0.022) 1px, transparent 1px), linear-gradient(90deg, rgba(245,244,238,0.022) 1px, transparent 1px) !important; background-size: 44px 44px !important; color: #f5f1e9; }
+/* Surfaces TRANSPARENTES (façon Formation Builder) : le fond #262624 + grille traverse,
+   plus de « laiteux » crème opaque. Distinction par bordure fine (lq-hair) seulement. */
+.lq-root .lq-glass { background: rgba(255,247,240,.022) !important; backdrop-filter: none !important; -webkit-backdrop-filter: none !important; }
+.lq-root .lq-glass-soft { background: rgba(255,247,240,.035) !important; backdrop-filter: none !important; -webkit-backdrop-filter: none !important; }
+.lq-root .lq-hair { border-color: rgba(245,241,233,.10) !important; }
+.lq-root .lq-blob { mix-blend-mode: screen !important; }
+.lq-root .lq-aurora { opacity: .42 !important; }
+.lq-root .lq-shadow-glass { box-shadow: 0 1px 0 rgba(255,255,255,.04) inset, 0 12px 40px -12px rgba(0,0,0,.5) !important; }
+/* surfaces & textes clairs (Tailwind) → sombre lisible */
+.lq-root .bg-white { background-color: rgba(255,247,240,.055) !important; }
+.lq-root .bg-stone-50 { background-color: #262624 !important; }
+.lq-root .bg-stone-100 { background-color: rgba(255,247,240,.08) !important; }
+.lq-root .bg-stone-200 { background-color: rgba(255,247,240,.12) !important; }
+.lq-root .text-stone-900, .lq-root .text-stone-800 { color: #f5f1e9 !important; }
+.lq-root .text-stone-700, .lq-root .text-stone-600 { color: rgba(245,241,233,.80) !important; }
+.lq-root .text-stone-500, .lq-root .text-stone-400 { color: rgba(245,241,233,.52) !important; }
+.lq-root [class*="border-stone-"] { border-color: rgba(245,241,233,.10) !important; }
+.lq-root .bg-stone-900 { background-color: #d97757 !important; }
+.lq-root .hover\:bg-stone-100:hover { background-color: rgba(255,247,240,.10) !important; }
+.lq-root .hover\:bg-stone-50:hover { background-color: rgba(255,247,240,.06) !important; }
+.lq-root .hover\:bg-white:hover { background-color: rgba(255,247,240,.08) !important; }

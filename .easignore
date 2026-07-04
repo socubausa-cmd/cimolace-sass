@@ -1,0 +1,37 @@
+# EAS resolves ignore patterns from the repository root but applies them to the
+# configured project directory (apps/mobile).
+node_modules/
+**/node_modules/
+.expo/
+dist/
+web-build/
+coverage/
+ios/
+android/
+.claude/
+.vscode/
+.env
+.env.*
+*.log
+*.tsbuildinfo
+playwright-report/
+test-results/
+
+# Other monorepo applications and backend assets are not mobile build inputs.
+apps/api/
+apps/app/
+apps/med-app/
+apps/patient-portal/
+apps/public-site/
+apps/worker/
+packages/
+docs/
+scripts/
+supabase/
+tests/
+tools/
+.github/
+.wrangler/
+.vercel.disabled/
+.isna-opus-consolidated/
+.deepseek/

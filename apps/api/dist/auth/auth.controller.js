@@ -24,7 +24,7 @@ let AuthController = class AuthController {
         this.tenantApiKeyService = tenantApiKeyService;
     }
     async me(req) {
-        return { data: { id: req.user.id, email: req.user.email } };
+        return this.authService.resolveCimolaceIdentity(req.user);
     }
     async tenantToken(dto) {
         const keyData = await this.tenantApiKeyService.validateKey(dto.apiKey);

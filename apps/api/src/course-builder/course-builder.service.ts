@@ -2,6 +2,8 @@ import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { SupabaseService } from '../supabase/supabase.service';
 import { AiUtilsService } from '../ai-utils/ai-utils.service';
+import { TopicsService } from '../messaging/topics.service';
+import type { TenantContext } from '../tenant/tenant.types';
 
 @Injectable()
 export class CourseBuilderService {
@@ -10,6 +12,7 @@ export class CourseBuilderService {
     private readonly supabase: SupabaseService,
     private readonly aiUtils: AiUtilsService,
     private readonly config: ConfigService,
+    private readonly topics: TopicsService,
   ) {}
 
   async createPipeline(tenantId: string, name: string, sourceText: string) {
@@ -150,14 +153,14 @@ export class CourseBuilderService {
 
   /** Enregistre un snapshot de l'état post-prod. Remplace l'edge postprod-version-save (404). */
   async saveVersion(
-    tenantId: string,
+    tenant: TenantContext,
     userId: string,
     dto: { contentId: string; snapshotLabel?: string; snapshot?: any },
   ) {
     const { data } = await (this.supabase.client as any)
       .from('course_postprod_versions')
       .insert({
-        tenant_id: tenantId,
+        tenant_id: tenant.id,
         content_id: dto.contentId,
         label: dto.snapshotLabel ?? null,
         snapshot: dto.snapshot ?? {},
@@ -165,6 +168,32 @@ export class CourseBuilderService {
       })
       .select('*')
       .single();
+
+    // LOT 3(b) — la post-prod du cours est finalisée (snapshot sauvegardé) : on
+    // alimente (idempotent) le Sujet de forum du COURS porteur (conversations
+    // kind='topic', context_type='course'). Effet de bord NON BLOQUANT : un échec
+    // (chaîne studio rompue, contenu non rattaché à un cours, etc.) ne doit jamais
+    // faire échouer la sauvegarde post-prod — on log et on continue. Réutilise le
+    // get-or-create idempotent de TopicsService (aucun doublon sur re-save).
+    if (dto.contentId) {
+      try {
+        const res = await this.topics.publishCourseContentTopic(
+          tenant,
+          userId,
+          dto.contentId,
+        );
+        if (res.skipped) {
+          this.logger.debug(
+            `post-prod topic non publié (content ${dto.contentId}): ${res.skipped}`,
+          );
+        }
+      } catch (e) {
+        this.logger.warn(
+          `publishCourseContentTopic échec (content ${dto.contentId}): ${String(e)}`,
+        );
+      }
+    }
+
     return { ok: true, version: data ?? null };
   }
 

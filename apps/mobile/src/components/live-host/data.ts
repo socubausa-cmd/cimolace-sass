@@ -8,7 +8,7 @@
  * (session null, participants []) plutôt que des maquettes.
  */
 import {
-  ISNA_TENANT_ID,
+  getActiveTenantId,
   LIVEKIT_URL,
   endLive,
   fetchLiveToken,
@@ -50,7 +50,7 @@ export async function fetchLiveSession(sessionId: string): Promise<LiveSession |
     .from('live_sessions')
     .select(SESSION_COLS)
     .eq('id', sessionId)
-    .eq('tenant_id', ISNA_TENANT_ID)
+    .eq('tenant_id', getActiveTenantId())
     .maybeSingle();
   if (error || !data) return null;
   return data as LiveSession;
@@ -91,7 +91,7 @@ export async function endHostLive(sessionId: string): Promise<boolean> {
     .from('live_sessions')
     .update({ status: 'ended', ended_at: new Date().toISOString() })
     .eq('id', sessionId)
-    .eq('tenant_id', ISNA_TENANT_ID);
+    .eq('tenant_id', getActiveTenantId());
 
   return apiOk || error == null;
 }

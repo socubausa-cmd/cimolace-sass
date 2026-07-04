@@ -47,7 +47,7 @@ const ACCESS_MODES = [
 const COLOR_MAP = {
   emerald: 'border-emerald-500/40 bg-emerald-500/10 text-emerald-300',
   blue:    'border-blue-500/40 bg-blue-500/10 text-blue-300',
-  violet:  'border-[#7B61FF]/40 bg-[#7B61FF]/10 text-[#7B61FF]',
+  violet:  'border-[#d97757]/40 bg-[#d97757]/10 text-[#d97757]',
   purple:  'border-purple-500/40 bg-purple-500/10 text-purple-300',
 };
 
@@ -59,8 +59,8 @@ const VISIBILITY_OPTIONS = [
 function SectionTitle({ icon: Icon, title, desc }) {
   return (
     <div className="flex items-start gap-3 mb-4">
-      <div className="w-8 h-8 rounded-xl bg-[#7B61FF]/15 border border-[#7B61FF]/30 flex items-center justify-center flex-shrink-0">
-        <Icon className="w-4 h-4 text-[#7B61FF]" />
+      <div className="w-8 h-8 rounded-xl bg-[#d97757]/15 border border-[#d97757]/30 flex items-center justify-center flex-shrink-0">
+        <Icon className="w-4 h-4 text-[#d97757]" />
       </div>
       <div>
         <p className="text-sm font-semibold text-white">{title}</p>
@@ -74,7 +74,7 @@ function ToggleRow({ icon: Icon, label, desc, checked, onChange }) {
   return (
     <div className="flex items-center justify-between p-3.5 rounded-xl bg-black/20 border border-white/[0.06] hover:border-white/10 transition-colors">
       <div className="flex items-center gap-3">
-        <Icon className="w-4 h-4 text-[#7B61FF]/70 flex-shrink-0" />
+        <Icon className="w-4 h-4 text-[#d97757]/70 flex-shrink-0" />
         <div>
           <p className="text-sm text-white/80 font-medium">{label}</p>
           {desc && <p className="text-xs text-white/40">{desc}</p>}
@@ -83,7 +83,7 @@ function ToggleRow({ icon: Icon, label, desc, checked, onChange }) {
       <Switch
         checked={checked}
         onCheckedChange={onChange}
-        className="data-[state=checked]:bg-[#7B61FF]"
+        className="data-[state=checked]:bg-[#d97757]"
       />
     </div>
   );
@@ -128,7 +128,7 @@ export function Step4Securite({ draft, updateDraft }) {
                 className={cn(
                   'flex items-center gap-2 p-3 rounded-xl border text-left transition-all',
                   active
-                    ? 'border-[#7B61FF]/40 bg-[#7B61FF]/10 text-[#7B61FF]'
+                    ? 'border-[#d97757]/40 bg-[#d97757]/10 text-[#d97757]'
                     : 'border-white/10 bg-black/20 text-white/50 hover:border-white/20'
                 )}
               >

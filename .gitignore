@@ -6,6 +6,7 @@ node_modules/
 # (binaires natifs rollup/napi par plateforme) et désynchronise le `npm ci` du CI.
 # On ne versionne donc aucun lock — le CI installe frais comme la prod.
 package-lock.json
+!apps/mobile/package-lock.json
 
 # Build outputs
 dist/
@@ -27,3 +28,11 @@ coverage/
 # Test artifacts
 playwright-report/
 test-results/
+
+# Fichiers utilisateur lourds déposés à la racine (PDF, ex. La_Femme_Nouvelle_Poche.pdf).
+# Non versionnés et exclus des déploiements (cf. .vercelignore). Les PDF « produit »
+# légitimes vont dans docs/ (versionnés) — ce motif ancré ne touche que la racine.
+/*.pdf
+.wrangler/
+apps/app/scratch-*.mjs
+apps/mobile/tests/

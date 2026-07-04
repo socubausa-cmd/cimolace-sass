@@ -145,7 +145,11 @@ export default function BibliothequeScreen() {
 
           <View style={styles.grid}>
             {items.map((a) => (
-              <Pressable key={a.title} style={({ pressed }) => [styles.card, pressed && styles.pressed]}>
+              <Pressable
+                key={a.title}
+                onPress={a.kind === 'Cours' ? () => router.push('/formations' as never) : undefined}
+                style={({ pressed }) => [styles.card, pressed && styles.pressed]}
+              >
                 <View style={styles.thumb}>
                   <Feather name={a.icon} size={26} color={C.coral} />
                 </View>
@@ -156,6 +160,18 @@ export default function BibliothequeScreen() {
               </Pressable>
             ))}
           </View>
+          {courses && courses.length > 0 ? (
+            <Pressable
+              onPress={() => router.push('/formations' as never)}
+              style={({ pressed }) => [styles.formationsCta, pressed && styles.pressed]}
+            >
+              <View>
+                <Text style={styles.formationsCtaTitle}>Mes formations</Text>
+                <Text style={styles.formationsCtaCopy}>Programme, modules et progression</Text>
+              </View>
+              <Feather name="arrow-right" size={18} color={C.coral} />
+            </Pressable>
+          ) : null}
         </ScrollView>
       </SafeAreaView>
     </View>
@@ -195,6 +211,13 @@ const makeStyles = (C: LiriPalette) => StyleSheet.create({
 
   scroll: { paddingHorizontal: 18, paddingBottom: 36 },
   grid: { flexDirection: 'row', flexWrap: 'wrap', gap: 12 },
+  formationsCta: {
+    marginTop: 16, paddingHorizontal: 16, minHeight: 64, borderRadius: 16,
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
+    backgroundColor: C.coralTint, borderWidth: 1, borderColor: C.line,
+  },
+  formationsCtaTitle: { color: C.ink, fontSize: 14, fontWeight: '700', fontFamily: F.sans },
+  formationsCtaCopy: { color: C.muted, fontSize: 11.5, marginTop: 3, fontFamily: F.sans },
   card: {
     width: '47.7%',
     flexGrow: 1,

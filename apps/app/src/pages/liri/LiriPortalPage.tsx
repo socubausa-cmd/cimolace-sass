@@ -3,8 +3,9 @@ import { useNavigate } from 'react-router-dom';
 import {
   Menu, Sparkles, Bell, Settings, House, Video, MessagesSquare, MessageCircle, WandSparkles,
   Library, Blocks, Settings2, Mic, ArrowUp, LogIn, CalendarPlus, PenTool,
-  ShoppingBag, Clock, ChevronRight, Film, ChevronLeft, UserRound, Plus,
-  Radio, GraduationCap, LogOut, ArrowUpRight,
+  ShoppingBag, Clock, ChevronRight, Film, ChevronLeft, UserRound,
+  Radio, GraduationCap, LogOut, ArrowUpRight, AlertTriangle, CalendarDays, Megaphone,
+  BookOpen, CheckCircle2, CalendarClock,
 } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import { authStore } from '@/lib/auth-store';
@@ -12,6 +13,9 @@ import { getCachedHostTenant } from '@/lib/tenantResolver';
 import { getApiBaseUrl } from '@/lib/apiBase';
 import { useAuth } from '@/hooks/useAuth';
 import { isCreatorRole } from '@/lib/liri/creatorRole';
+import { useSchoolActive } from '@/hooks/useSchoolActive';
+import { useUpcomingSchoolFeed } from '@/hooks/useUpcomingSchoolFeed';
+import { LiriRailGroups } from '@/components/liri/liriRail';
 import activeTenantConfig from '@/lib/tenant/activeTenantConfig';
 import '../LiriPortal.css';
 
@@ -156,6 +160,18 @@ export function LiriPortalPage() {
   );
   const recent = useMemo(() => [...lives].sort((a, b) => +new Date(b.scheduled_at ?? 0) - +new Date(a.scheduled_at ?? 0)).slice(0, 4), [lives]);
 
+  // Fil « À venir » + agenda + inscriptions élève (RLS tenant-scopé), fusionnés aux lives.
+  const { items: feed, agenda, courses } = useUpcomingSchoolFeed(upcoming, user?.id);
+
+  // Mini-agenda du jour (carte horloge) : jour sélectionné + ses items, navigable ‹ Auj. ›.
+  const [dayOffset, setDayOffset] = useState(0);
+  const selectedDay = useMemo(() => { const d = new Date(now); d.setHours(0, 0, 0, 0); d.setDate(d.getDate() + dayOffset); return d; }, [now, dayOffset]);
+  const dayItems = useMemo(() => agenda.filter((it) => { const w = new Date(it.when); w.setHours(0, 0, 0, 0); return +w === +selectedDay; }), [agenda, selectedDay]);
+  const agendaLabel = dayOffset === 0 ? "Aujourd'hui" : selectedDay.toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'short' });
+
+  // Rôle (créateur vs élève) — déclaré ICI car resumeItems/activityItems en dépendent.
+  const isCreator = isCreatorRole(tenantRole, org?.role);
+
   const liveMinutes = (stats?.totalLives ?? 0) * 70;
 
   const fmtAgo = (iso?: string) => {
@@ -169,32 +185,43 @@ export function LiriPortalPage() {
     return `${Math.round(h / 24)} j`;
   };
 
-  // « Reprendre » : prochains lives réels (plus de repli démo : un tenant neuf est vide).
-  const resumeItems = useMemo<ResumeItem[]>(() => (
-    upcoming.slice(0, 2).map((l) => ({
-      id: l.id,
-      icon: Clock,
-      title: l.title || 'Session live',
-      sub: `${fmtWhen(l.scheduled_at)}${l.price_cents ? ` · ${euros(l.price_cents)} €` : ' · gratuit'}`,
-      to: '/lives',
-    }))
+  // « Reprendre » — RÔLE-ADAPTATIF : élève = cours en cours (student_progress, RÉEL) ;
+  // créateur = prochains lives. (Avant : lives seulement → toujours vide pour l'élève.)
+  const resumeItems = useMemo<ResumeItem[]>(() => {
+    if (isCreator) {
+      return upcoming.slice(0, 2).map((l) => ({
+        id: l.id, icon: Clock, title: l.title || 'Session live',
+        sub: `${fmtWhen(l.scheduled_at)}${l.price_cents ? ` · ${euros(l.price_cents)} €` : ' · gratuit'}`,
+        to: '/lives',
+      }));
+    }
+    return courses.filter((c) => c.status === 'in_progress').slice(0, 2).map((c) => ({
+      id: c.id, icon: BookOpen, title: c.title, sub: 'Reprendre le cours', to: '/liri/formations',
+    }));
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  ), [upcoming]);
+  }, [isCreator, upcoming, courses]);
 
-  // « Activité récente » : lives récents réels (plus de repli démo).
-  const activityItems = useMemo<ActivityItem[]>(() => (
-    recent.map((l) => ({
-      id: l.id,
-      icon: l.ended_at ? Film : WandSparkles,
-      tint: 'coral' as const,
-      title: l.title || 'Session live',
-      sub: l.ended_at ? 'replay disponible' : l.started_at ? 'en cours' : 'programmé',
-      when: fmtAgo(l.scheduled_at),
-      action: l.ended_at ? 'Ouvrir' : undefined,
-      to: '/lives',
-    }))
+  // « Activité récente » — RÔLE-ADAPTATIF : élève = ses inscriptions récentes (terminées /
+  // en cours, RÉEL) ; créateur = lives récents.
+  const activityItems = useMemo<ActivityItem[]>(() => {
+    if (isCreator) {
+      return recent.map((l) => ({
+        id: l.id, icon: l.ended_at ? Film : WandSparkles, tint: 'coral' as const,
+        title: l.title || 'Session live',
+        sub: l.ended_at ? 'replay disponible' : l.started_at ? 'en cours' : 'programmé',
+        when: fmtAgo(l.scheduled_at),
+        action: l.ended_at ? 'Ouvrir' : undefined,
+        to: '/lives',
+      }));
+    }
+    return courses.slice(0, 4).map((c) => ({
+      id: c.id, icon: c.status === 'completed' ? CheckCircle2 : BookOpen,
+      tint: (c.status === 'completed' ? 'green' : 'coral') as const,
+      title: c.title, sub: c.status === 'completed' ? 'Terminé' : 'En cours',
+      when: fmtAgo(c.whenIso || undefined), action: 'Ouvrir', to: '/liri/formations',
+    }));
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  ), [recent]);
+  }, [isCreator, recent, courses]);
 
   function fmtWhen(iso?: string) {
     if (!iso) return '';
@@ -205,28 +232,23 @@ export function LiriPortalPage() {
   }
   function euros(cents?: number) { return ((cents ?? 0) / 100).toLocaleString('fr-FR'); }
 
-  // `creator: true` = outil réservé au CRÉATEUR (masqué pour l'élève).
-  const RAIL: { key: string; label: string; icon: LucideIcon; to: string; active?: boolean; live?: boolean; badge?: number; creator?: boolean }[] = [
-    { key: 'accueil', label: 'Accueil', icon: House, to: '/liri', active: true },
-    { key: 'lives', label: 'Lives', icon: Video, to: '/lives', live: liveNow.length > 0 },
-    { key: 'forum', label: 'Forum', icon: MessagesSquare, to: '/liri/forum', badge: 5 },
-    { key: 'messages', label: 'Messages', icon: MessageCircle, to: '/liri/messages' },
-    { key: 'studio', label: 'Studio', icon: WandSparkles, to: '/studio/liri', creator: true },
-    { key: 'ecole', label: 'École', icon: GraduationCap, to: '/liri/ecole', creator: true },
-    // Biblio → /studio/liri/bibliotheque (bibliothèque communautaire du STUDIO, gardée
-    // teacher/admin/owner…). Réservée au créateur : l'élève y serait bloqué par la garde.
-    { key: 'biblio', label: 'Biblio.', icon: Library, to: '/studio/liri/bibliotheque', creator: true },
-    { key: 'brain', label: 'Brain', icon: Sparkles, to: '/dashboard/liri', creator: true },
-  ];
-  const QUICK: { label: string; icon: LucideIcon; to: string; hero?: boolean; creator?: boolean }[] = [
+  // Le rail (nav latérale) vient de la SOURCE UNIQUE `LiriRailGroups` (partagée avec
+  // LiriPortalShell) → accueil et sous-pages ont exactement la même nav groupée.
+  // `creator` → réservé créateur ; `student` → réservé élève ; sans flag → tout le monde.
+  const QUICK: { label: string; icon: LucideIcon; to: string; hero?: boolean; creator?: boolean; student?: boolean }[] = [
     { label: 'Démarrer', icon: Video, hero: true, to: '/lives', creator: true },
     { label: 'Rejoindre', icon: LogIn, to: '/lives' },
-    { label: 'Converser', icon: MessageCircle, to: '/liri/messages' },
+    { label: 'Forum', icon: MessagesSquare, to: '/liri/forum' },
+    // Raccourcis APPRENTISSAGE / SCOLARITÉ (élève seulement).
+    { label: 'Mes cours', icon: BookOpen, to: '/liri/formations', student: true },
+    { label: 'Ma semaine', icon: CalendarDays, to: '/liri/semaine', student: true },
+    { label: 'Rendez-vous', icon: CalendarClock, to: '/liri/rendez-vous', student: true },
     { label: 'Programmer', icon: CalendarPlus, to: '/studio/live', creator: true },
     { label: 'SmartBoard', icon: PenTool, to: '/studio/smartboard', creator: true },
     // Le Précepteur — cours enseigné (narré + dessiné main), monté DANS le portail
     // (LiriPrecepteurPage → LiriPortalShell rail « École »). Route publique /liri/precepteur.
-    { label: 'Précepteur', icon: GraduationCap, to: '/liri/precepteur', creator: true },
+    // PARTAGÉ (sans flag) : pertinent pour l'élève (lancer une leçon) ET le créateur (démo).
+    { label: 'Précepteur', icon: GraduationCap, to: '/liri/precepteur' },
     { label: 'Acheter', icon: ShoppingBag, to: '/dashboard', creator: true },
   ];
 
@@ -235,9 +257,12 @@ export function LiriPortalPage() {
 
   // L'ÉLÈVE RESTE dans le portail LIRI, mais en vue ADAPTÉE : tout l'outillage
   // créateur (Studio, Programmer, Acheter, École-gestion, Intégr, Réglages,
-  // métriques revenus/quota) est masqué plus bas via `isCreator`. Plus de
+  // métriques revenus/quota) est masqué plus bas via `isCreator` (déclaré plus haut,
+  // AVANT resumeItems/activityItems qui en dépendent). Plus de
   // redirection vers l'ancienne « Vie scolaire » — un seul monde : LIRI.
-  const isCreator = isCreatorRole(tenantRole, org?.role);
+  // LIRI 2 modes : ÉCOLE (service `school` actif) ajoute la Vie scolaire au rail ;
+  // SIMPLE (Zoom) = Accueil/Lives/Forum/Messages seulement. Fail-closed.
+  const schoolActive = useSchoolActive() === true;
 
   return (
     <div className="lp-root relative h-[100dvh] w-full overflow-hidden grid grid-rows-[56px_1fr_34px]">
@@ -312,28 +337,16 @@ export function LiriPortalPage() {
       <div className="z-10 grid min-h-0 grid-cols-[92px_1fr_344px]">
 
         {/* RAIL */}
-        <aside className="flex min-h-0 flex-col items-center gap-1 lp-rail-bg border-r lp-line py-4">
-          {RAIL.filter((it) => isCreator || !it.creator).map((it) => {
-            const Icon = it.icon;
-            return (
-              <button key={it.key} onClick={() => nav(it.to)} className={`lp-nav flex w-[72px] flex-col items-center gap-1 rounded-2xl py-2.5 lp-tr ${it.active ? 'lp-nav-active' : ''}`}>
-                <span className="lp-ni relative grid h-7 w-7 place-items-center">
-                  <Icon size={20} />
-                  {it.live && <span className="absolute -right-1.5 -top-1.5 flex h-3 w-3"><span className="lp-ping absolute inline-flex h-full w-full rounded-full opacity-75" style={{ background: 'var(--live)' }} /><span className="relative inline-flex h-3 w-3 rounded-full" style={{ background: 'var(--live)', boxShadow: '0 0 0 2px var(--rail)' }} /></span>}
-                  {it.badge && <span className="absolute -right-1 -top-1 grid h-3.5 min-w-3.5 place-items-center rounded-full px-1 text-[8px] font-bold text-white" style={{ background: 'var(--coral)' }}>{it.badge}</span>}
-                </span>
-                <span className="lp-nl text-[10px] font-medium">{it.label}</span>
-              </button>
-            );
-          })}
+        <aside className="flex min-h-0 flex-col items-center gap-0.5 overflow-y-auto lp-rail-bg border-r lp-line py-3 lp-rail-scroll">
+          <LiriRailGroups active="accueil" isCreator={isCreator} schoolActive={schoolActive} live={liveNow.length > 0} onNav={nav} />
           {isCreator && (
             <>
-              <div className="my-1.5 h-px w-9" style={{ background: 'rgba(245,244,238,.08)' }} />
-              <button onClick={() => nav('/liri')} className="lp-nav flex w-[72px] flex-col items-center gap-1 rounded-2xl py-2.5 lp-tr"><span className="lp-ni grid h-7 w-7 place-items-center"><Blocks size={20} /></span><span className="lp-nl text-[10px] font-medium">Intégr.</span></button>
-              <button onClick={() => nav('/liri/compte')} className="lp-nav flex w-[72px] flex-col items-center gap-1 rounded-2xl py-2.5 lp-tr"><span className="lp-ni grid h-7 w-7 place-items-center"><Settings2 size={20} /></span><span className="lp-nl text-[10px] font-medium">Réglages</span></button>
+              <div className="my-1 h-px w-9" style={{ background: 'rgba(245,244,238,.08)' }} />
+              <button onClick={() => nav('/liri')} className="lp-nav flex w-[74px] flex-col items-center gap-0.5 rounded-2xl py-2 lp-tr"><span className="lp-ni grid h-6 w-6 place-items-center"><Blocks size={19} /></span><span className="lp-nl text-[9px] font-medium">Intégr.</span></button>
+              <button onClick={() => nav('/liri/compte')} className="lp-nav flex w-[74px] flex-col items-center gap-0.5 rounded-2xl py-2 lp-tr"><span className="lp-ni grid h-6 w-6 place-items-center"><Settings2 size={19} /></span><span className="lp-nl text-[9px] font-medium">Réglages</span></button>
             </>
           )}
-          <button onClick={openMenu} title={orgName} aria-label="Compte et organisation" className="mt-auto grid h-9 w-9 place-items-center rounded-full text-[11px] font-bold text-white lp-tr lp-railbtn" style={{ background: 'linear-gradient(135deg,#5b7a52,#6d8f60)' }}>{orgName.slice(0, 2).toUpperCase()}</button>
+          <button onClick={openMenu} title={orgName} aria-label="Compte et organisation" className="mt-2 grid h-9 w-9 shrink-0 place-items-center rounded-full text-[11px] font-bold text-white lp-tr lp-railbtn" style={{ background: 'linear-gradient(135deg,#5b7a52,#6d8f60)' }}>{orgName.slice(0, 2).toUpperCase()}</button>
         </aside>
 
         {/* MAIN — Accueil */}
@@ -355,7 +368,7 @@ export function LiriPortalPage() {
 
             {/* quick actions */}
             <div className="mt-10 flex flex-wrap items-start justify-center gap-x-6 gap-y-7">
-              {QUICK.filter((q) => isCreator || !q.creator).map((q) => {
+              {QUICK.filter((q) => (q.creator ? isCreator : q.student ? !isCreator : true)).map((q) => {
                 const Icon = q.icon;
                 return (
                   <button key={q.label} onClick={() => (q.hero ? startInstantMeeting() : nav(q.to))} disabled={q.hero && starting} className="group relative flex w-24 flex-col items-center gap-2.5 disabled:cursor-wait disabled:opacity-70">
@@ -383,9 +396,9 @@ export function LiriPortalPage() {
                   })}
                 </div>
               ) : (
-                <button onClick={() => nav('/studio/live')} className="lp-tr lp-soft flex w-full items-center gap-3 rounded-2xl lp-line border lp-panel70 px-4 py-3.5 text-left lp-panelhov">
-                  <span className="grid h-8 w-8 shrink-0 place-items-center rounded-lg lp-coral lp-coral-tint"><CalendarPlus size={17} /></span>
-                  <span className="flex-1 min-w-0"><span className="block text-[13.5px] font-medium">Rien à reprendre pour l’instant</span><span className="block text-[12px] lp-faint">{isCreator ? 'Programmez votre premier live ou créez un cours' : 'Reprends un cours ou un replay dès que tu en commences un'}</span></span>
+                <button onClick={() => nav(isCreator ? '/studio/live' : '/liri/formations')} className="lp-tr lp-soft flex w-full items-center gap-3 rounded-2xl lp-line border lp-panel70 px-4 py-3.5 text-left lp-panelhov">
+                  <span className="grid h-8 w-8 shrink-0 place-items-center rounded-lg lp-coral lp-coral-tint">{isCreator ? <CalendarPlus size={17} /> : <BookOpen size={17} />}</span>
+                  <span className="flex-1 min-w-0"><span className="block text-[13.5px] font-medium">Rien à reprendre pour l’instant</span><span className="block text-[12px] lp-faint">{isCreator ? 'Programmez votre premier live ou créez un cours' : 'Reprends un cours dès que tu en commences un'}</span></span>
                   <ChevronRight size={18} className="lp-faint" />
                 </button>
               )}
@@ -420,16 +433,39 @@ export function LiriPortalPage() {
 
         {/* RIGHT PANEL */}
         <aside className="lp-scroll min-h-0 overflow-y-auto border-l lp-line lp-rightbg px-4 py-5">
-          {/* horloge */}
+          {/* horloge + mini-agenda du jour (navigable ‹ Auj. ›) */}
           <div className="overflow-hidden rounded-3xl lp-line border lp-soft" style={{ background: 'linear-gradient(160deg,#332e29,#2a2724)' }}>
             <div className="px-5 py-5">
               <p className="lp-serif text-[38px] font-medium leading-none tracking-tight">{timeStr}</p>
               <p className="mt-2 text-[13px] lp-muted capitalize">{dateLong}</p>
             </div>
-            <div className="flex items-center justify-between border-t lp-line px-3 py-2 lp-faint">
-              <button className="grid h-7 w-7 place-items-center rounded-lg lp-railbtn lp-tr"><Plus size={15} /></button>
-              <span className="text-[12px] font-medium lp-muted">Agenda</span>
-              <div className="flex gap-0.5"><button className="grid h-7 w-7 place-items-center rounded-lg lp-railbtn lp-tr"><ChevronLeft size={15} /></button><button className="grid h-7 w-7 place-items-center rounded-lg lp-railbtn lp-tr"><ChevronRight size={15} /></button></div>
+            <div className="border-t lp-line">
+              <div className="flex items-center justify-between px-3 py-2">
+                <span className="truncate text-[11px] font-semibold uppercase tracking-[0.12em] lp-faint capitalize">{agendaLabel}</span>
+                <div className="flex items-center gap-0.5">
+                  <button onClick={() => setDayOffset((d) => d - 1)} aria-label="Jour précédent" className="grid h-7 w-7 place-items-center rounded-lg lp-railbtn lp-tr"><ChevronLeft size={15} /></button>
+                  {dayOffset !== 0 && <button onClick={() => setDayOffset(0)} className="rounded-lg px-2 py-1 text-[11px] font-medium lp-muted lp-tr">Auj.</button>}
+                  <button onClick={() => setDayOffset((d) => d + 1)} aria-label="Jour suivant" className="grid h-7 w-7 place-items-center rounded-lg lp-railbtn lp-tr"><ChevronRight size={15} /></button>
+                </div>
+              </div>
+              <div className="px-3 pb-3">
+                {dayItems.length > 0 ? (
+                  <div className="flex flex-col gap-1">
+                    {dayItems.slice(0, 4).map((it) => (
+                      <button key={it.id} onClick={() => nav('/liri/agenda')} className="lp-tr lp-panelhov flex w-full items-center gap-2.5 rounded-lg px-2 py-1.5 text-left">
+                        <span className="shrink-0 text-[11px] font-semibold tabular-nums" style={{ color: 'var(--coral)' }}>{it.when.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}</span>
+                        <span className="truncate text-[12px] lp-ink">{it.title}</span>
+                        {it.isExam && <span className="ml-auto shrink-0 rounded px-1 py-0.5 text-[9px] font-bold uppercase lp-muted" style={{ background: 'rgba(255,255,255,.06)' }}>Éval</span>}
+                      </button>
+                    ))}
+                  </div>
+                ) : (
+                  <button onClick={() => nav('/liri/agenda')} className="lp-tr flex w-full items-center gap-2 rounded-lg px-2 py-2 text-left">
+                    <CalendarDays size={13} className="lp-faint" />
+                    <span className="text-[12px] lp-faint">Rien de prévu · ouvrir l'agenda</span>
+                  </button>
+                )}
+              </div>
             </div>
           </div>
 
@@ -448,28 +484,49 @@ export function LiriPortalPage() {
             </button>
           )}
 
-          {/* à venir */}
+          {/* à venir — fil VIE SCOLAIRE priorisé : annonces urgentes + événements ≤7j + examens + lives */}
           <div className="mb-2 mt-6 flex items-center justify-between">
             <h3 className="text-[11px] font-semibold uppercase tracking-[0.16em] lp-faint">À venir</h3>
+            {feed.length > 0 && <button onClick={() => nav('/liri/vie-scolaire')} className="lp-tr text-[11px] font-medium lp-muted">Tout voir</button>}
           </div>
-          {upcoming.length > 0 ? (
-            <button onClick={() => nav('/lives')} className="lp-tr lp-soft w-full rounded-2xl lp-line border lp-panel70 p-3.5 text-left lp-panelhov">
-              <div className="flex items-center justify-between">
-                <span className="flex items-center gap-2 text-[13px] font-semibold"><span className="h-2 w-2 rounded-full" style={{ background: 'var(--coral)' }} />{new Date(upcoming[0].scheduled_at!).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}</span>
-                <span className="rounded-md px-1.5 py-0.5 text-[10px] font-bold lp-muted" style={{ background: 'rgba(255,255,255,.05)' }}>{fmtWhen(upcoming[0].scheduled_at).split(' · ')[0]}</span>
-              </div>
-              <p className="mt-2 text-[13.5px] font-medium">{upcoming[0].title || 'Session live'}</p>
-              <p className="mt-1 flex items-center gap-1.5 text-[11px] lp-faint capitalize"><UserRound size={12} /> {orgName}</p>
-            </button>
+          {feed.length > 0 ? (
+            <div className="flex flex-col gap-2">
+              {feed.map((it) => {
+                const Icon = it.kind === 'announcement' ? (it.urgent ? AlertTriangle : Megaphone) : it.kind === 'event' ? CalendarDays : it.kind === 'exam' ? GraduationCap : Radio;
+                const t = it.when ? it.when.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' }) : null;
+                const dchip = it.when ? (it.when.toDateString() === now.toDateString() ? "auj." : it.when.toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })) : null;
+                const badge = it.urgent ? 'Urgent' : it.kind === 'announcement' ? 'Annonce' : (t ? `${dchip} · ${t}` : dchip);
+                return (
+                  <button key={it.id} onClick={() => nav(it.to)}
+                    className="lp-tr lp-soft w-full rounded-2xl lp-line border lp-panel70 p-3 text-left lp-panelhov"
+                    style={it.urgent ? { borderColor: 'rgba(226,85,63,.34)', background: 'rgba(226,85,63,.08)' } : undefined}>
+                    <div className="flex items-center gap-2.5">
+                      <span className="grid h-8 w-8 shrink-0 place-items-center rounded-xl"
+                        style={{ background: it.urgent ? 'rgba(226,85,63,.16)' : 'rgba(255,255,255,.05)', color: it.urgent ? 'var(--coral)' : undefined }}>
+                        <Icon size={15} className={it.urgent ? '' : 'lp-muted'} />
+                      </span>
+                      <div className="min-w-0 flex-1">
+                        <p className="truncate text-[13px] font-medium lp-ink">{it.title}</p>
+                        <p className="mt-0.5 truncate text-[11px] lp-faint">{it.sub}</p>
+                      </div>
+                      <span className={`shrink-0 rounded-md px-1.5 py-0.5 text-[10px] font-bold ${it.urgent ? '' : 'lp-muted'}`}
+                        style={{ background: it.urgent ? 'var(--coral)' : 'rgba(255,255,255,.05)', color: it.urgent ? '#fff' : undefined }}>
+                        {badge}
+                      </span>
+                    </div>
+                  </button>
+                );
+              })}
+            </div>
           ) : isCreator ? (
             <button onClick={() => nav('/studio/live')} className="lp-tr lp-soft w-full rounded-2xl lp-line border lp-panel70 p-3.5 text-left lp-panelhov">
-              <p className="text-[13px] font-medium">Aucun live programmé</p>
+              <p className="text-[13px] font-medium">Rien de programmé</p>
               <p className="mt-1 flex items-center gap-1.5 text-[11px] lp-faint"><CalendarPlus size={12} /> Programmer une session</p>
             </button>
           ) : (
             <div className="w-full rounded-2xl lp-line border lp-panel70 p-3.5">
-              <p className="text-[13px] font-medium">Aucun live à venir</p>
-              <p className="mt-1 text-[11px] lp-faint">Tes prochains lives apparaîtront ici.</p>
+              <p className="text-[13px] font-medium">Rien d'urgent — tu es à jour.</p>
+              <p className="mt-1 text-[11px] lp-faint">Annonces, événements et lives apparaîtront ici.</p>
             </div>
           )}
 

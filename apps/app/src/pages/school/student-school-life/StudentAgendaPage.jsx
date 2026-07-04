@@ -115,7 +115,7 @@ const TypeBadge = ({ type }) => {
 const WeekStrip = ({ weekStart, events, onPrev, onNext, onToday, onPick }) => {
   const days = Array.from({ length: 7 }, (_, i) => addDays(weekStart, i));
   return (
-    <div style={{ background: 'rgba(25,39,52,0.34)', border: `1px solid ${T.border}`, borderRadius: 16, padding: 16, marginBottom: 22 }}>
+    <div style={{ background: 'rgba(46,43,40,0.34)', border: `1px solid ${T.border}`, borderRadius: 16, padding: 16, marginBottom: 22 }}>
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, marginBottom: 14 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 9 }}>
           <CalendarIcon size={17} color={T.gold} />
@@ -187,7 +187,7 @@ const EventRow = ({ ev, onJoin, onDetails, delay }) => {
       onMouseLeave={() => setHov(false)}
       style={{
         display: 'flex', alignItems: 'center', gap: 14, padding: '14px 16px',
-        background: hov ? 'rgba(25,39,52,0.6)' : 'rgba(25,39,52,0.34)',
+        background: hov ? 'rgba(46,43,40,0.6)' : 'rgba(46,43,40,0.34)',
         border: `1px solid ${hov ? T.goldMid : T.border}`, borderRadius: 14,
         transition: 'all 160ms ease', animation: `agFade .4s ease ${delay}ms both`,
       }}>
@@ -339,7 +339,7 @@ const StudentAgendaPage = () => {
             </Btn>
           )}
           {!isDemoMode && (
-            <Btn variant="gold" to="/appointment/request"><Plus size={14} /> Demander un rendez-vous</Btn>
+            <Btn variant="gold" to="/liri/rendez-vous"><Plus size={14} /> Demander un rendez-vous</Btn>
           )}
         </div>
       </div>

@@ -81,10 +81,14 @@ const books = [
 const categories = ['Tous', ...new Set(books.map((b) => b.category))];
 const series = ['Toutes', ...new Set(books.map((b) => b.serie))];
 
+// Décor NEUTRE (règle design produit « impeccable » : l'accent coral est réservé aux
+// ACTIONS / sélection / état — jamais la décoration, jamais en aplat plein sur des cartes
+// ni sur des états inactifs). Les cartes = couches neutres ; le coral n'apparaît que sur
+// le CTA d'un ouvrage disponible + le filtre actif. Cf. product.md (Restrained).
 const colorMap = {
   gold: {
-    bg: 'bg-[color-mix(in_srgb,var(--school-accent)_10%,transparent)]', border: 'border-[color-mix(in_srgb,var(--school-accent)_20%,transparent)]', hoverBorder: 'hover:border-[color-mix(in_srgb,var(--school-accent)_40%,transparent)]',
-    text: 'text-[var(--school-accent)]', badge: 'bg-[color-mix(in_srgb,var(--school-accent)_10%,transparent)] text-[var(--school-accent)] border-[color-mix(in_srgb,var(--school-accent)_20%,transparent)]',
+    bg: 'bg-white/[0.03]', border: 'border-white/10', hoverBorder: 'hover:border-white/20',
+    text: 'text-gray-400', badge: 'bg-white/5 text-gray-400 border-white/10',
   },
 };
 
@@ -99,7 +103,7 @@ const BookCard = ({ book, viewMode, embedded = false }) => {
   if (viewMode === 'list') {
     return (
       <Wrapper {...wp} className="block group">
-        <div className={`bg-[#192734] ${c.border} border rounded-xl p-4 transition-all ${soon ? '' : `${c.hoverBorder} hover:bg-[#1d2f40]`}`}>
+        <div className={`bg-[#2e2b28] ${c.border} border rounded-xl p-4 transition-all ${soon ? '' : `${c.hoverBorder} hover:bg-[#33302c]`}`}>
           <div className="flex items-center gap-4">
             <div className={`w-12 h-12 rounded-xl ${c.bg} ${c.border} border flex items-center justify-center shrink-0`}>
               <Icon className={`w-6 h-6 ${c.text}`} />
@@ -115,7 +119,7 @@ const BookCard = ({ book, viewMode, embedded = false }) => {
               <span className="text-xs text-gray-500">{book.chapters} chapitres</span>
               <span className="text-xs px-2 py-0.5 rounded bg-white/5 text-gray-400 border border-white/5">{book.category}</span>
               {soon
-                ? <span className="text-[10px] px-2 py-0.5 rounded-full bg-[color-mix(in_srgb,var(--school-accent)_10%,transparent)] text-[var(--school-accent)] border border-[color-mix(in_srgb,var(--school-accent)_20%,transparent)] font-bold">Bientôt</span>
+                ? <span className="text-[10px] px-2 py-0.5 rounded-full bg-white/5 text-gray-300 border border-white/10 font-bold">Bientôt</span>
                 : <ArrowRight className="w-4 h-4 text-gray-500 group-hover:text-[var(--school-accent)] transition-colors" />}
             </div>
           </div>
@@ -126,20 +130,31 @@ const BookCard = ({ book, viewMode, embedded = false }) => {
 
   return (
     <Wrapper {...wp} className="block group h-full">
-      <div className={`bg-[#192734] ${c.border} border rounded-2xl overflow-hidden transition-all h-full flex flex-col ${soon ? '' : `${c.hoverBorder} hover:bg-[#1d2f40] hover:-translate-y-1`}`}>
-        <div className={`relative h-44 ${c.bg} flex items-center justify-center overflow-hidden`}>
-          <div className="absolute inset-0 bg-gradient-to-b from-transparent to-[#192734]/80" />
-          <Icon className={`w-16 h-16 ${c.text} opacity-30 absolute`} />
-          <div className="relative text-center px-4">
-            <span className={`text-xs font-bold ${c.text} uppercase tracking-widest`}>{book.serie}</span>
-            <h3 className={`text-xl md:text-2xl font-serif font-bold text-white mt-1 transition-colors ${soon ? '' : 'group-hover:text-[var(--school-accent)]'}`}>{book.title}</h3>
-          </div>
+      <div className={`bg-[#2e2b28] ${c.border} border rounded-2xl overflow-hidden transition-all h-full flex flex-col ${soon ? '' : `${c.hoverBorder} hover:bg-[#33302c] hover:-translate-y-1`}`}>
+        {/* Vignette = image réelle (book.coverUrl) si fournie, sinon COUVERTURE GÉNÉRÉE :
+            planche de livre éditoriale sobre (cadre fin + emblème catégorie + titre serif
+            + filet). Palette neutre — aucun aplat de couleur (cf. règle « accent = action »). */}
+        <div className="relative h-44 shrink-0 overflow-hidden" style={{ background: '#282521' }}>
+          {book.coverUrl ? (
+            <img src={book.coverUrl} alt={`Couverture — ${book.title}`} loading="lazy" className="absolute inset-0 h-full w-full object-cover" />
+          ) : (
+            <>
+              <div className="absolute inset-3 rounded-md border border-white/[0.09]" />
+              <div className="absolute inset-[13px] rounded border border-white/[0.05]" />
+              <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 px-6 text-center">
+                <Icon className="h-7 w-7 text-white/30" strokeWidth={1.25} />
+                <span className="text-[8.5px] font-bold uppercase tracking-[0.22em] text-gray-500">{book.serie}</span>
+                <h3 className={`font-serif text-lg md:text-xl font-bold leading-snug text-white ${soon ? '' : 'transition-colors group-hover:text-[var(--school-accent)]'}`}>{book.title}</h3>
+                <span className="mt-0.5 h-px w-8 bg-white/15" />
+              </div>
+            </>
+          )}
           <div className="absolute top-3 right-3">
             <span className={`text-[10px] px-2 py-1 rounded-full border ${c.badge} font-bold`}>{book.subtitle}</span>
           </div>
           {soon && (
             <div className="absolute top-3 left-3">
-              <span className="text-[10px] px-2 py-1 rounded-full bg-[color-mix(in_srgb,var(--school-accent)_15%,transparent)] text-[var(--school-accent)] border border-[color-mix(in_srgb,var(--school-accent)_30%,transparent)] font-bold">Bientôt</span>
+              <span className="text-[10px] px-2 py-1 rounded-full bg-white/5 text-gray-300 border border-white/10 font-bold">Bientôt</span>
             </div>
           )}
         </div>
@@ -156,7 +171,7 @@ const BookCard = ({ book, viewMode, embedded = false }) => {
               <span className="text-xs text-gray-500 flex items-center gap-1"><FileText className="w-3 h-3" /> {book.chapters} ch.</span>
               <span className="text-xs text-gray-500 flex items-center gap-1"><Tag className="w-3 h-3" /> {book.category}</span>
             </div>
-            <span className={`text-xs font-bold ${c.text} flex items-center gap-1 transition-all ${soon ? '' : 'group-hover:gap-2'}`}>
+            <span className={`text-xs font-bold ${soon ? c.text : 'text-[var(--school-accent)]'} flex items-center gap-1 transition-all ${soon ? '' : 'group-hover:gap-2'}`}>
               {soon ? 'Bientôt' : <>Lire <ArrowRight className="w-3 h-3" /></>}
             </span>
           </div>
@@ -185,7 +200,7 @@ const BibliothequePage = ({ embedded = false }) => {
   const resetFilters = () => { setSelectedCategory('Tous'); setSelectedSerie('Toutes'); setSearchQuery(''); };
 
   const Filters = () => (
-    <div className="bg-[#192734]/80 border border-white/5 rounded-2xl p-4 space-y-4">
+    <div className="bg-[#2e2b28]/80 border border-white/5 rounded-2xl p-4 space-y-4">
       <div className="relative">
         <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
         <input
@@ -238,7 +253,7 @@ const BibliothequePage = ({ embedded = false }) => {
       ) : (
         <div className="space-y-3">{filtered.map((book) => <BookCard key={book.id} book={book} viewMode="list" embedded={embedded} />)}</div>
       )}
-      <section className="mt-12 bg-[#192734] border border-white/5 rounded-2xl p-6">
+      <section className="mt-12 bg-[#2e2b28] border border-white/5 rounded-2xl p-6">
         <h2 className="text-xl font-serif font-bold text-white mb-6 flex items-center gap-2"><BookMarked className="w-5 h-5 text-[var(--school-accent)]" /> Ordre de lecture recommandé</h2>
         <div className="space-y-3">
           {[...books].sort((a, b) => a.order - b.order).map((book, i) => {
@@ -251,7 +266,7 @@ const BibliothequePage = ({ embedded = false }) => {
                   <h3 className="text-sm font-bold text-white">{book.title}</h3>
                   <p className="text-xs text-gray-500 truncate">{book.subtitle} — {book.chapters} chapitres</p>
                 </div>
-                <span className="text-[10px] px-2 py-0.5 rounded-full bg-[color-mix(in_srgb,var(--school-accent)_10%,transparent)] text-[var(--school-accent)] border border-[color-mix(in_srgb,var(--school-accent)_20%,transparent)] font-bold">Bientôt</span>
+                <span className="text-[10px] px-2 py-0.5 rounded-full bg-white/5 text-gray-300 border border-white/10 font-bold">Bientôt</span>
                 <Icon className={`w-4 h-4 ${c.text} opacity-50`} />
               </div>
             );
@@ -281,13 +296,13 @@ const BibliothequePage = ({ embedded = false }) => {
   }
 
   return (
-    <div className="min-h-screen bg-[#0F1419] text-white">
+    <div className="min-h-screen bg-[#18130f] text-white">
       <SEO
         title={libraryPageTitle()}
         description={`Bibliothèque ${getActiveTenantBranding().name} : ouvrages du programme fondamental — Tajwîd, Sciences du Coran, Fiqh et Langue arabe.`}
       />
       <section className="relative py-24 md:py-32 px-6 overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-b from-[#0F1419] via-[#192734]/40 to-[#0F1419]" />
+        <div className="absolute inset-0 bg-gradient-to-b from-[#18130f] via-[#2b2219]/40 to-[#18130f]" />
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[700px] h-[700px] bg-[color-mix(in_srgb,var(--school-accent)_5%,transparent)] rounded-full blur-[250px]" />
         <div className="relative max-w-4xl mx-auto text-center space-y-5">
           <span className="inline-flex items-center gap-2 px-5 py-2 rounded-full bg-[color-mix(in_srgb,var(--school-accent)_10%,transparent)] text-[var(--school-accent)] text-xs font-bold uppercase tracking-widest border border-[color-mix(in_srgb,var(--school-accent)_20%,transparent)]">

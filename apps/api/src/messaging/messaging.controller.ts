@@ -1,16 +1,33 @@
-import { Body, Controller, Delete, Get, Param, Patch, Post, Req, UseGuards } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, Patch, Post, Query, Req, UseGuards } from '@nestjs/common';
 import type { Request } from 'express';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { CurrentTenant } from '../tenant/current-tenant.decorator';
 import { TenantGuard } from '../tenant/tenant.guard';
 import type { TenantContext } from '../tenant/tenant.types';
 import { CreateGroupDto, EditMessageDto, SendMessageDto } from './dto/messaging.dto';
+import { ListForumTopicsQueryDto } from './dto/topics.dto';
 import { MessagingService } from './messaging.service';
+import { TopicsService } from './topics.service';
 
 @Controller('messaging')
 @UseGuards(JwtAuthGuard, TenantGuard)
 export class MessagingController {
-  constructor(private readonly svc: MessagingService) {}
+  constructor(
+    private readonly svc: MessagingService,
+    private readonly topics: TopicsService,
+  ) {}
+
+  /**
+   * LOT 1 — lecture FORUM des Sujets publics du tenant (kind='topic', visibility=
+   * 'public'), triés par updated_at desc, avec message_count. Sert le forum
+   * (StudentForumRedesign) côté API : les messages étant lus en service_role, le
+   * front passe par ici plutôt que par PostgREST direct. Mêmes gardes que le reste
+   * du module (JwtAuthGuard + TenantGuard), scope tenant.
+   */
+  @Get('forum-topics')
+  listForumTopics(@Query() q: ListForumTopicsQueryDto, @CurrentTenant() t: TenantContext) {
+    return this.topics.listForumTopics(t, { limit: q.limit });
+  }
 
   @Post('send')
   sendMessage(@Body() dto: SendMessageDto, @CurrentTenant() t: TenantContext, @Req() req: Request) { return this.svc.sendMessage(t, (req as any).user.id, dto); }

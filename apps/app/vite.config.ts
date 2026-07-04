@@ -18,9 +18,13 @@ export default defineConfig({
           if (inMod('@react-three/') || inMod('@splinetool/')) return 'vendor-react-three';
           if (inMod('framer-motion/')) return 'vendor-framer-motion';
           if (inMod('gsap/') || inMod('@gsap/')) return 'vendor-gsap';
-          // recharts, reactflow et d3-* partagent d3 → même chunk (sinon cycle reactflow↔charts).
-          if (inMod('recharts/') || inMod('victory-vendor/') || inMod('d3-') || inMod('reactflow/') || inMod('@reactflow/')) return 'vendor-charts';
-          if (inMod('mermaid/') || inMod('katex/') || inMod('cytoscape') || inMod('dagre')) return 'vendor-mermaid';
+          // Mermaid dépend aussi de d3. Les séparer créait un cycle d'initialisation
+          // vendor-charts ↔ vendor-mermaid qui faisait crasher tout le bootstrap.
+          if (
+            inMod('recharts/') || inMod('victory-vendor/') || inMod('d3-') ||
+            inMod('reactflow/') || inMod('@reactflow/') || inMod('mermaid/') ||
+            inMod('katex/') || inMod('cytoscape') || inMod('dagre')
+          ) return 'vendor-diagrams';
           if (inMod('konva/') || inMod('react-konva/')) return 'vendor-konva';
           if (inMod('pdfjs-dist/')) return 'vendor-pdfjs';
           if (inMod('jspdf')) return 'vendor-jspdf';

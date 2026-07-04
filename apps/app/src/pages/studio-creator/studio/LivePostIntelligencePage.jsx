@@ -68,9 +68,9 @@ function fmtTimestamp(seconds) {
 function StatCard({ icon: Icon, label, value, color = 'amber' }) {
   const colors = {
     amber:   'from-amber-500/15 to-amber-600/5 border-amber-500/25 text-amber-300',
-    emerald: 'from-emerald-500/15 to-emerald-600/5 border-emerald-500/25 text-emerald-300',
-    blue:    'from-blue-500/15 to-blue-600/5 border-blue-500/25 text-blue-300',
-    purple:  'from-purple-500/15 to-purple-600/5 border-purple-500/25 text-purple-300',
+    emerald: 'from-[#5a8f52]/15 to-emerald-600/5 border-[#5a8f52]/25 text-[#9cc48a]',
+    blue:    'from-[#d4924a]/15 to-blue-600/5 border-[#d4924a]/25 text-[#e6b566]',
+    purple:  'from-[#d97757]/15 to-[#c96544]/5 border-[#d97757]/25 text-[#e8a97f]',
   };
   return (
     <motion.div
@@ -195,7 +195,7 @@ function MultilangReplaySection({ sessionId }) {
             className={cn(
               'rounded-full px-3 py-1 text-[11px] font-semibold border transition-colors',
               activeLang === l
-                ? 'border-violet-500/60 bg-violet-500/20 text-violet-200'
+                ? 'border-[#d97757]/60 bg-[#d97757]/20 text-[#f0c4b3]'
                 : 'border-white/10 bg-white/[0.04] text-white/50 hover:text-white/75',
             )}
           >
@@ -360,7 +360,7 @@ function NotesEditor({ sessionId, initialNotes }) {
       />
       <div className="absolute bottom-3 right-3 text-[10px]">
         {saving && <span className="text-white/30">Sauvegarde…</span>}
-        {saved  && <span className="text-emerald-400">✓ Sauvegardé</span>}
+        {saved  && <span className="text-[#7bb06a]">✓ Sauvegardé</span>}
       </div>
     </div>
   );
@@ -457,7 +457,7 @@ function ExportSection({ session, participants, messages, notes }) {
         className="h-9 px-4 rounded-xl bg-white/[0.04] border border-white/10 text-white/60 text-xs hover:text-white flex items-center gap-1.5 transition-colors"
       >
         {copied
-          ? <Check className="w-3.5 h-3.5 text-emerald-400" />
+          ? <Check className="w-3.5 h-3.5 text-[#7bb06a]" />
           : <Copy className="w-3.5 h-3.5" />}
         {copied ? 'Copié !' : 'Copier le résumé'}
       </button>
@@ -624,10 +624,10 @@ function NeuroRecallPanel({ sessionId, isTeacher, lirSummaryReady, compact = fal
     : null;
 
   return (
-    <div className="rounded-2xl border border-cyan-500/20 bg-gradient-to-br from-cyan-500/[0.07] to-transparent overflow-hidden">
+    <div className="rounded-2xl border border-[#d4924a]/20 bg-gradient-to-br from-[#d4924a]/[0.07] to-transparent overflow-hidden">
       <div className="flex items-start gap-3 px-5 py-4">
-        <div className="w-9 h-9 rounded-xl bg-cyan-500/15 border border-cyan-500/25 flex items-center justify-center flex-shrink-0">
-          <Library className="w-4 h-4 text-cyan-300" />
+        <div className="w-9 h-9 rounded-xl bg-[#d4924a]/15 border border-[#d4924a]/25 flex items-center justify-center flex-shrink-0">
+          <Library className="w-4 h-4 text-[#e6b566]" />
         </div>
         <div className="flex-1 min-w-0 space-y-2">
           <div>
@@ -641,20 +641,20 @@ function NeuroRecallPanel({ sessionId, isTeacher, lirSummaryReady, compact = fal
                 Mémoire post-live : ce module s'appuie sur le{' '}
                 <strong className="text-white/55">moteur de post-production vidéo</strong> déjà en place (transcription,
                 chapitres, mindmap, navigation temps ↔ contenu). Vous y accédez via le contenu de formation lié ci-dessous.
-                Les tables <code className="text-[10px] text-cyan-200/80">live_transcripts</code> et{' '}
-                <code className="text-[10px] text-cyan-200/80">live_mindmaps</code> restent les sources live d'origine ;
+                Les tables <code className="text-[10px] text-[#ecc98f]/80">live_transcripts</code> et{' '}
+                <code className="text-[10px] text-[#ecc98f]/80">live_mindmaps</code> restent les sources live d'origine ;
                 ici on trace le pipeline, les flashcards et la progression.
               </p>
             )}
           </div>
 
           {loading ? (
-            <Loader2 className="w-4 h-4 text-cyan-400/60 animate-spin" />
+            <Loader2 className="w-4 h-4 text-[#e0a458]/60 animate-spin" />
           ) : (
             <>
               <div className="flex flex-wrap items-center gap-2 text-[11px]">
                 <span className="text-white/35">Statut :</span>
-                <span className="px-2 py-0.5 rounded-full bg-cyan-500/15 border border-cyan-500/25 text-cyan-200/90">
+                <span className="px-2 py-0.5 rounded-full bg-[#d4924a]/15 border border-[#d4924a]/25 text-[#ecc98f]/90">
                   {row ? statusLabel : '—'}
                 </span>
                 <span className="text-white/30">
@@ -671,7 +671,7 @@ function NeuroRecallPanel({ sessionId, isTeacher, lirSummaryReady, compact = fal
                     disabled={busy}
                     onClick={() => void runBootstrap()}
                     className={cn(
-                      'rounded-lg bg-cyan-500/20 border border-cyan-500/35 text-cyan-100 text-xs hover:bg-cyan-500/30 transition-colors disabled:opacity-50',
+                      'rounded-lg bg-[#d4924a]/20 border border-[#d4924a]/35 text-[#f0d9b8] text-xs hover:bg-[#d4924a]/30 transition-colors disabled:opacity-50',
                       compact ? 'min-h-11 w-full px-3 py-2' : 'h-8 px-3',
                     )}
                   >
@@ -682,7 +682,7 @@ function NeuroRecallPanel({ sessionId, isTeacher, lirSummaryReady, compact = fal
                     disabled={busy}
                     onClick={() => void runGenerateFlashcards()}
                     className={cn(
-                      'rounded-lg bg-violet-500/15 border border-violet-500/30 text-violet-200 text-xs hover:bg-violet-500/25 transition-colors disabled:opacity-50',
+                      'rounded-lg bg-[#d97757]/15 border border-[#d97757]/30 text-[#f0c4b3] text-xs hover:bg-[#d97757]/25 transition-colors disabled:opacity-50',
                       compact ? 'min-h-11 w-full px-3 py-2' : 'h-8 px-3',
                     )}
                   >
@@ -693,7 +693,7 @@ function NeuroRecallPanel({ sessionId, isTeacher, lirSummaryReady, compact = fal
                     disabled={busy}
                     onClick={() => void runGenerateNodeReports()}
                     className={cn(
-                      'rounded-lg bg-sky-500/15 border border-sky-500/30 text-sky-200 text-xs hover:bg-sky-500/25 transition-colors disabled:opacity-50',
+                      'rounded-lg bg-[#d4924a]/15 border border-[#d4924a]/30 text-[#ecc98f] text-xs hover:bg-[#d4924a]/25 transition-colors disabled:opacity-50',
                       compact ? 'min-h-11 w-full px-3 py-2' : 'h-8 px-3',
                     )}
                   >
@@ -703,8 +703,8 @@ function NeuroRecallPanel({ sessionId, isTeacher, lirSummaryReady, compact = fal
               )}
               {isTeacher && (
                 <p className="text-[10px] text-white/30">
-                  Flashcards : résumé LIRI et/ou <code className="text-cyan-200/70">live_transcripts</code>.
-                  Rapports : mindmap LIRI (<code className="text-cyan-200/70">mindmap_nodes</code>) ou points clés.
+                  Flashcards : résumé LIRI et/ou <code className="text-[#ecc98f]/70">live_transcripts</code>.
+                  Rapports : mindmap LIRI (<code className="text-[#ecc98f]/70">mindmap_nodes</code>) ou points clés.
                   {!lirSummaryReady && ' Générez d\'abord le résumé IA ci-dessus si besoin.'}
                 </p>
               )}
@@ -712,7 +712,7 @@ function NeuroRecallPanel({ sessionId, isTeacher, lirSummaryReady, compact = fal
                 <p
                   className={cn(
                     'text-[11px] rounded-lg px-2 py-1.5',
-                    apiHint.type === 'ok' ? 'bg-emerald-500/10 text-emerald-200/90' : 'bg-red-500/10 text-red-200/90',
+                    apiHint.type === 'ok' ? 'bg-[#5a8f52]/10 text-[#bcd9a4]/90' : 'bg-red-500/10 text-red-200/90',
                   )}
                 >
                   {apiHint.text}
@@ -738,7 +738,7 @@ function NeuroRecallPanel({ sessionId, isTeacher, lirSummaryReady, compact = fal
                 <div className="space-y-2 pt-1 border-t border-white/[0.06] mt-2">
                   <p className="text-[10px] uppercase tracking-wide text-white/35">Créer un contenu post-production</p>
                   <p className="text-[10px] text-white/30 leading-relaxed">
-                    Nouvelle entrée <code className="text-cyan-200/70">formation_day_contents</code> (vidéo) avec le{' '}
+                    Nouvelle entrée <code className="text-[#ecc98f]/70">formation_day_contents</code> (vidéo) avec le{' '}
                     <strong className="text-white/45">replay</strong> et la transcription NeuroRecall si disponible.
                     Récupérez l'UUID du <strong className="text-white/45">jour</strong> dans le constructeur de programme
                     (formation → semaine → jour).
@@ -748,13 +748,13 @@ function NeuroRecallPanel({ sessionId, isTeacher, lirSummaryReady, compact = fal
                       value={formationDayIdInput}
                       onChange={(e) => setFormationDayIdInput(e.target.value)}
                       placeholder="UUID formation_days (jour du programme)"
-                      className="flex-1 min-w-0 rounded-lg border border-white/10 bg-black/30 px-3 py-2.5 sm:py-2 text-xs text-white/80 outline-none focus:border-emerald-500/40"
+                      className="flex-1 min-w-0 rounded-lg border border-white/10 bg-black/30 px-3 py-2.5 sm:py-2 text-xs text-white/80 outline-none focus:border-[#5a8f52]/40"
                     />
                     <button
                       type="button"
                       disabled={busy || !formationDayIdInput.trim()}
                       onClick={() => void runCreatePostProdContent()}
-                      className="min-h-11 sm:h-9 px-4 rounded-lg border border-emerald-500/30 bg-emerald-500/15 text-xs text-emerald-100 hover:bg-emerald-500/25 disabled:opacity-40 shrink-0"
+                      className="min-h-11 sm:h-9 px-4 rounded-lg border border-[#5a8f52]/30 bg-[#5a8f52]/15 text-xs text-[#d4e6c4] hover:bg-[#5a8f52]/25 disabled:opacity-40 shrink-0"
                     >
                       Créer le contenu vidéo
                     </button>
@@ -762,14 +762,14 @@ function NeuroRecallPanel({ sessionId, isTeacher, lirSummaryReady, compact = fal
 
                   <p className="text-[10px] uppercase tracking-wide text-white/35 pt-2">Ou lier un contenu existant</p>
                   <p className="text-[10px] text-white/30">
-                    Collez l'UUID du contenu (URL /owner-dashboard/post-production/<strong className="text-white/45">…</strong>).
+                    Collez l'UUID du contenu (URL /studio/post-production/<strong className="text-white/45">…</strong>).
                   </p>
                   <div className="flex flex-col gap-2">
                     <input
                       value={contentIdInput}
                       onChange={(e) => setContentIdInput(e.target.value)}
                       placeholder="UUID formation_day_contents"
-                      className="flex-1 min-w-0 rounded-lg border border-white/10 bg-black/30 px-3 py-2.5 sm:py-2 text-xs text-white/80 outline-none focus:border-cyan-500/40"
+                      className="flex-1 min-w-0 rounded-lg border border-white/10 bg-black/30 px-3 py-2.5 sm:py-2 text-xs text-white/80 outline-none focus:border-[#d4924a]/40"
                     />
                     <button
                       type="button"
@@ -787,7 +787,7 @@ function NeuroRecallPanel({ sessionId, isTeacher, lirSummaryReady, compact = fal
                         value={row.workflow_status || 'idle'}
                         disabled={busy}
                         onChange={(e) => void setWorkflow(e.target.value)}
-                        className="rounded-lg border border-white/10 bg-black/40 text-xs text-white/80 py-1.5 px-2 outline-none focus:border-cyan-500/40"
+                        className="rounded-lg border border-white/10 bg-black/40 text-xs text-white/80 py-1.5 px-2 outline-none focus:border-[#d4924a]/40"
                       >
                         {Object.entries(NEURO_RECALL_WORKFLOW_LABELS).map(([k, lab]) => (
                           <option key={k} value={k}>
@@ -876,7 +876,7 @@ function NeuroRecallFlashcardFullSheet({
             </div>
             <div className="flex-1 min-h-0 overflow-y-auto overscroll-contain px-4 pb-[max(1.25rem,env(safe-area-inset-bottom))] space-y-4 pt-3">
               <div className="flex flex-wrap gap-2 text-[9px] uppercase tracking-wide text-white/35">
-                {topic ? <span className="text-cyan-200/70">{topic}</span> : null}
+                {topic ? <span className="text-[#ecc98f]/70">{topic}</span> : null}
                 {difficulty ? <span>{difficulty}</span> : null}
               </div>
               <p className="text-base text-white/90 leading-relaxed">{question}</p>
@@ -893,7 +893,7 @@ function NeuroRecallFlashcardFullSheet({
                 {showAns ? 'Masquer la réponse' : 'Voir la réponse'}
               </button>
               {showAns ? (
-                <p className="text-sm text-emerald-200/95 whitespace-pre-wrap leading-relaxed border-t border-white/[0.08] pt-3">
+                <p className="text-sm text-[#bcd9a4]/95 whitespace-pre-wrap leading-relaxed border-t border-white/[0.08] pt-3">
                   {answer}
                 </p>
               ) : null}
@@ -907,7 +907,7 @@ function NeuroRecallFlashcardFullSheet({
                       className={cn(
                         'flex-1 min-h-12 rounded-xl border text-sm font-medium transition-colors',
                         grade === 'ok'
-                          ? 'bg-emerald-500/25 border-emerald-400/50 text-emerald-100'
+                          ? 'bg-[#5a8f52]/25 border-[#7bb06a]/50 text-[#d4e6c4]'
                           : 'border-white/15 text-white/75 hover:bg-white/[0.06]',
                       )}
                     >
@@ -1012,7 +1012,7 @@ function NeuroRecallFlashcardRow({
         className="w-full rounded-xl border border-white/10 bg-white/[0.04] p-3 text-left space-y-2 transition-colors hover:bg-white/[0.07] active:scale-[0.99]"
       >
         <div className="flex flex-wrap gap-2 text-[9px] uppercase tracking-wide text-white/35">
-          {topic ? <span className="text-cyan-200/70">{topic}</span> : null}
+          {topic ? <span className="text-[#ecc98f]/70">{topic}</span> : null}
           {difficulty ? <span>{difficulty}</span> : null}
         </div>
         <p className="text-sm text-white/85 leading-snug line-clamp-3">{question}</p>
@@ -1027,12 +1027,12 @@ function NeuroRecallFlashcardRow({
   return (
     <div className="rounded-xl border border-white/10 bg-white/[0.03] p-3 space-y-2">
       <div className="flex flex-wrap gap-2 text-[9px] uppercase tracking-wide text-white/35">
-        {topic && <span className="text-cyan-200/70">{topic}</span>}
+        {topic && <span className="text-[#ecc98f]/70">{topic}</span>}
         {difficulty && <span>{difficulty}</span>}
       </div>
       <p className="text-sm text-white/85 leading-relaxed">{question}</p>
       {show && (
-        <p className="text-sm text-emerald-200/90 border-t border-white/[0.08] pt-2 whitespace-pre-wrap leading-relaxed">
+        <p className="text-sm text-[#bcd9a4]/90 border-t border-white/[0.08] pt-2 whitespace-pre-wrap leading-relaxed">
           {answer}
         </p>
       )}
@@ -1052,7 +1052,7 @@ function NeuroRecallFlashcardRow({
             className={cn(
               'text-[11px] px-2.5 py-1 rounded-lg border transition-colors',
               grade === 'ok'
-                ? 'bg-emerald-500/25 border-emerald-400/50 text-emerald-100'
+                ? 'bg-[#5a8f52]/25 border-[#7bb06a]/50 text-[#d4e6c4]'
                 : 'border-white/15 text-white/60 hover:bg-white/[0.05]',
             )}
           >
@@ -1407,11 +1407,11 @@ function FollowUpSection() {
 
   const colorMap = {
     amber:  'border-amber-500/20 hover:border-amber-500/40 hover:bg-amber-500/5',
-    blue:   'border-blue-500/20 hover:border-blue-500/40 hover:bg-blue-500/5',
-    purple: 'border-purple-500/20 hover:border-purple-500/40 hover:bg-purple-500/5',
+    blue:   'border-[#d4924a]/20 hover:border-[#d4924a]/40 hover:bg-[#d4924a]/5',
+    purple: 'border-[#d97757]/20 hover:border-[#d97757]/40 hover:bg-[#d97757]/5',
   };
   const iconColor = {
-    amber: 'text-amber-400', blue: 'text-blue-400', purple: 'text-purple-400',
+    amber: 'text-amber-400', blue: 'text-[#e0a458]', purple: 'text-[#e08a5f]',
   };
 
   return (
@@ -1516,7 +1516,7 @@ function MindmapPanel({ sessionId, aiSummary, aiKeyPoints, neuronQuestions, disa
   };
 
   return (
-    <div className="rounded-2xl border border-purple-500/15 bg-gradient-to-br from-purple-500/5 to-transparent overflow-hidden">
+    <div className="rounded-2xl border border-[#d97757]/15 bg-gradient-to-br from-[#d97757]/5 to-transparent overflow-hidden">
       <button
         type="button"
         onClick={() => status === 'done' ? setExpanded((v) => !v) : generate()}
@@ -1527,10 +1527,10 @@ function MindmapPanel({ sessionId, aiSummary, aiKeyPoints, neuronQuestions, disa
           disabled && status === 'idle' ? 'opacity-50 cursor-not-allowed' : 'hover:bg-white/[0.03]'
         )}
       >
-        <div className="w-9 h-9 rounded-xl bg-purple-500/15 border border-purple-500/25 flex items-center justify-center flex-shrink-0">
+        <div className="w-9 h-9 rounded-xl bg-[#d97757]/15 border border-[#d97757]/25 flex items-center justify-center flex-shrink-0">
           {status === 'loading'
-            ? <Loader2 className="w-4 h-4 text-purple-400 animate-spin" />
-            : <Brain className="w-4 h-4 text-purple-400" />
+            ? <Loader2 className="w-4 h-4 text-[#e08a5f] animate-spin" />
+            : <Brain className="w-4 h-4 text-[#e08a5f]" />
           }
         </div>
         <div className="flex-1 min-w-0">
@@ -1549,7 +1549,7 @@ function MindmapPanel({ sessionId, aiSummary, aiKeyPoints, neuronQuestions, disa
             : <ChevronDown className="w-4 h-4 text-white/30" />
         )}
         {status === 'idle' && !disabled && (
-          <span className="h-6 px-2.5 rounded-full bg-purple-500/20 border border-purple-500/30 text-[10px] font-semibold text-purple-300">
+          <span className="h-6 px-2.5 rounded-full bg-[#d97757]/20 border border-[#d97757]/30 text-[10px] font-semibold text-[#e8a97f]">
             Générer
           </span>
         )}
@@ -1820,9 +1820,9 @@ export default function LivePostIntelligencePage({ mobileLiriShell = false } = {
             </div>
           </div>
           <div className="flex items-center justify-between sm:justify-end gap-2 sm:shrink-0">
-            <div className="flex items-center gap-1.5 h-7 sm:h-6 px-3 rounded-full bg-emerald-500/15 border border-emerald-500/25">
-              <CheckCircle2 className="w-3 h-3 text-emerald-400" />
-              <span className="text-[11px] text-emerald-300 font-medium">Terminée</span>
+            <div className="flex items-center gap-1.5 h-7 sm:h-6 px-3 rounded-full bg-[#5a8f52]/15 border border-[#5a8f52]/25">
+              <CheckCircle2 className="w-3 h-3 text-[#7bb06a]" />
+              <span className="text-[11px] text-[#9cc48a] font-medium">Terminée</span>
             </div>
             {!mobileLiriShell ? null : (
               <Link
@@ -1961,7 +1961,7 @@ export default function LivePostIntelligencePage({ mobileLiriShell = false } = {
                                 <div key={q.id} className="flex items-start gap-2 p-2.5 rounded-xl bg-white/[0.03] border border-white/[0.06]">
                                   <span className={cn(
                                     'mt-0.5 w-2 h-2 rounded-full flex-shrink-0',
-                                    q.status === 'answered' ? 'bg-emerald-400' : q.status === 'skipped' ? 'bg-red-400/60' : 'bg-amber-400/60'
+                                    q.status === 'answered' ? 'bg-[#7bb06a]' : q.status === 'skipped' ? 'bg-red-400/60' : 'bg-amber-400/60'
                                   )} />
                                   <p className="text-xs text-white/65 leading-relaxed">
                                     {q.reformulated_text || q.raw_text}

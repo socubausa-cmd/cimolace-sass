@@ -1,7 +1,7 @@
 import { Feather } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { useMemo } from 'react';
-import { Alert, Image, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Image, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Svg, { Circle, Defs, LinearGradient, Polygon, Stop } from 'react-native-svg';
 
@@ -23,12 +23,15 @@ const EV = {
 
 type IconName = React.ComponentProps<typeof Feather>['name'];
 
-const MENU: { to?: string; title: string; sub: string; icon: IconName; color: string; badge?: string }[] = [
+const MENU: { to: string; title: string; sub: string; icon: IconName; color: string; badge?: string }[] = [
   { to: '/reglages', title: 'Informations personnelles', sub: 'Gère ton profil et tes informations', icon: 'user', color: '#A78BFA' },
   { to: '/engines', title: 'Mes statistiques', sub: 'Découvre ton évolution', icon: 'bar-chart-2', color: '#34D399' },
   { to: '/bibliotheque', title: 'Téléchargements', sub: 'Cours, fiches et ressources', icon: 'download', color: '#FBBF24' },
-  { to: '/engines', title: '21 modules', sub: 'Catalogue pédagogique', icon: 'book-open', color: '#38BDF8' },
-  { title: 'Forfaits', sub: 'Abonnement par cycle', icon: 'layers', color: '#E879F9' },
+  { to: '/formations', title: 'Mes formations', sub: 'Modules, leçons et progression', icon: 'book-open', color: '#38BDF8' },
+  { to: '/ma-classe', title: 'Ma classe', sub: 'Promotion et camarades', icon: 'users', color: '#34D399' },
+  { to: '/calendrier-annuel', title: 'Calendrier annuel', sub: 'Programme et périodes scolaires', icon: 'calendar', color: '#FBBF24' },
+  { to: '/rendez-vous', title: 'Rendez-vous', sub: 'Contacter le secrétariat', icon: 'clock', color: '#FB7185' },
+  { to: '/commerce', title: 'Forfaits', sub: 'Abonnement par cycle', icon: 'layers', color: '#E879F9' },
   { to: '/neuro-recall', title: 'Neuron (mémoire IA)', sub: 'Ton assistant intelligent', icon: 'cpu', color: '#A78BFA', badge: 'NOUVEAU' },
 ];
 
@@ -113,7 +116,7 @@ export default function ProfilScreen() {
     [statStreak, statDone, progress.totalTimeMinutes, statXp],
   );
 
-  const onMenu = (to?: string, title?: string) => (to ? router.push(to as never) : Alert.alert('Bientôt', `${title} : en cours de portage.`));
+  const onMenu = (to: string) => router.push(to as never);
   const logout = async () => {
     try { await signOut(); } finally { router.replace('/'); }
   };
@@ -201,7 +204,7 @@ export default function ProfilScreen() {
           {/* Menu */}
           <View style={st.menu}>
             {MENU.map((m, i) => (
-              <Pressable key={m.title} style={({ pressed }) => [st.menuRow, i > 0 && st.menuDivider, pressed && st.pressed]} onPress={() => onMenu(m.to, m.title)}>
+              <Pressable key={m.title} style={({ pressed }) => [st.menuRow, i > 0 && st.menuDivider, pressed && st.pressed]} onPress={() => onMenu(m.to)}>
                 <Feather name={m.icon} size={24} color={m.color} />
                 <View style={st.menuMid}>
                   <View style={st.menuTitleRow}>

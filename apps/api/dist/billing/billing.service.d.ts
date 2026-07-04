@@ -1,12 +1,17 @@
+import { OnApplicationBootstrap } from "@nestjs/common";
 import { AuthService } from "../auth/auth.service";
 import { PawaPayService } from "../pawapay/pawapay.service";
 import { WebhookService } from "../liri-public/webhook.service";
-export declare class BillingService {
+import { EmailEngineService } from "../email-engine/email-engine.service";
+export declare class BillingService implements OnApplicationBootstrap {
     private auth;
     private pawapay;
     private tenantWebhooks;
-    constructor(auth: AuthService, pawapay: PawaPayService, tenantWebhooks: WebhookService);
+    private email;
+    private readonly logger;
+    constructor(auth: AuthService, pawapay: PawaPayService, tenantWebhooks: WebhookService, email: EmailEngineService);
     private get supabase();
+    onApplicationBootstrap(): void;
     private notifyTenant;
     getSubscription(tenantId: string): Promise<any>;
     createSubscription(tenantId: string, plan: string, provider: string): Promise<any>;
@@ -23,6 +28,18 @@ export declare class BillingService {
         } | null;
         gating_enabled: boolean;
         plan: any;
+    }>;
+    private static readonly PAYMENT_PROVIDERS;
+    subscribeToPlan(tenantId: string, planKey: string, provider?: string): Promise<{
+        subscription_id: string;
+        invoice_id: string | null;
+        plan: {
+            key: string;
+            label: any;
+            price_cents: number;
+            currency: string;
+        };
+        status: string;
     }>;
     collectSubscriptionViaPawaPay(tenantId: string, subscriptionId: string, dto: {
         phoneNumber?: string;
@@ -47,6 +64,38 @@ export declare class BillingService {
         received: boolean;
         matched: boolean;
         status: string | undefined;
+    }>;
+    private sendPaymentReceiptEmail;
+    syncPendingPawaPayDeposits(tenantId: string): Promise<{
+        synced: {
+            depositId: string;
+            depositStatus?: string;
+            applied?: string;
+        }[];
+        activated: boolean;
+        failed: boolean;
+    }>;
+    refundSubscriptionPayment(tenantId: string, subscriptionId: string): Promise<{
+        refundId: `${string}-${string}-${string}-${string}-${string}`;
+        status: import("../pawapay/pawapay.types").PawaPayDepositStatus;
+        amount_cents: any;
+        currency: string;
+        depositId: string;
+        invoiceId: any;
+    }>;
+    syncPendingRefunds(tenantId: string): Promise<{
+        synced: {
+            refundId: string;
+            refundStatus?: string;
+            applied?: string;
+        }[];
+        refunded: boolean;
+        failed: boolean;
+    }>;
+    renewDueSubscriptions(limit?: number): Promise<{
+        scanned: number;
+        initiated: number;
+        skipped: number;
     }>;
     private stripeAuth;
     createCardCheckout(tenantId: string, subscriptionId: string): Promise<{
@@ -76,6 +125,12 @@ export declare class BillingService {
         currency: string;
     }>;
     listPayouts(tenantId: string): Promise<any[]>;
+    getBalance(tenantId: string): Promise<{
+        collectedCents: number;
+        withdrawnCents: number;
+        availableCents: number;
+        currency: string;
+    }>;
     applyPayoutCallback(cb: {
         payoutId?: string;
         status?: string;
@@ -84,6 +139,28 @@ export declare class BillingService {
             failureCode?: string;
             failureMessage?: string;
         };
+    }): Promise<{
+        received: boolean;
+        matched: boolean;
+        status?: undefined;
+    } | {
+        received: boolean;
+        matched: boolean;
+        status: string;
+    }>;
+    applyPawaPayDepositFromWebhook(cb: {
+        depositId?: string;
+    }): Promise<{
+        received: boolean;
+        matched: boolean;
+        status?: undefined;
+    } | {
+        received: boolean;
+        matched: boolean;
+        status: string | undefined;
+    }>;
+    applyPayoutCallbackFromWebhook(cb: {
+        payoutId?: string;
     }): Promise<{
         received: boolean;
         matched: boolean;

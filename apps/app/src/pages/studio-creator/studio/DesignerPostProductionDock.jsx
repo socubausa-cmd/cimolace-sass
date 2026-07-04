@@ -41,9 +41,9 @@ const isUuid = (value) => {
 
 const PP_ACCENTS = {
   amber:   { text: 'text-amber-400',   bg: 'bg-amber-500/15',   border: 'border-amber-500/30',   glow: 'shadow-[0_0_12px_rgba(245,158,11,0.22)]' },
-  violet:  { text: 'text-violet-400',  bg: 'bg-violet-500/15',  border: 'border-violet-500/30',  glow: 'shadow-[0_0_12px_rgba(167,139,250,0.22)]' },
-  cyan:    { text: 'text-cyan-400',    bg: 'bg-cyan-500/15',    border: 'border-cyan-500/30',    glow: 'shadow-[0_0_12px_rgba(34,211,238,0.22)]' },
-  emerald: { text: 'text-emerald-400', bg: 'bg-emerald-500/15', border: 'border-emerald-500/30', glow: 'shadow-[0_0_12px_rgba(52,211,153,0.22)]' },
+  violet:  { text: 'text-violet-400',  bg: 'bg-violet-500/15',  border: 'border-violet-500/30',  glow: 'shadow-[0_0_12px_rgba(236,174,144,0.22)]' },
+  cyan:    { text: 'text-cyan-400',    bg: 'bg-cyan-500/15',    border: 'border-cyan-500/30',    glow: 'shadow-[0_0_12px_rgba(227,170,107,0.22)]' },
+  emerald: { text: 'text-emerald-400', bg: 'bg-emerald-500/15', border: 'border-emerald-500/30', glow: 'shadow-[0_0_12px_rgba(207,128,89,0.22)]' },
   rose:    { text: 'text-rose-400',    bg: 'bg-rose-500/15',    border: 'border-rose-500/30',    glow: 'shadow-[0_0_12px_rgba(251,113,133,0.22)]' },
   orange:  { text: 'text-orange-400',  bg: 'bg-orange-500/15',  border: 'border-orange-500/30',  glow: 'shadow-[0_0_12px_rgba(251,146,60,0.22)]' },
 };
@@ -62,7 +62,7 @@ function PostProdToolStrip({ activeTool, onTool }) {
   return (
     <aside
       className="flex w-12 flex-shrink-0 flex-col gap-0.5 border-r border-white/[0.07] px-1.5 py-2"
-      style={{ background: '#12111a' }}
+      style={{ background: '#1f1e1c' }}
     >
       {POST_PROD_TOOLS.map((tool) => {
         const Icon = tool.icon;
@@ -191,7 +191,7 @@ export default function DesignerPostProductionDock({
     <aside
       className="flex h-full min-h-0 w-[min(100vw,460px)] max-w-[100vw] flex-shrink-0 flex-col overflow-hidden border-l border-white/[0.07]"
       style={{
-        background: 'var(--school-shell-panel, #12111a)',
+        background: 'var(--school-shell-panel, #1f1e1c)',
         fontFamily: 'var(--school-font-family, Inter, system-ui, sans-serif)',
         ...cssVars,
       }}
@@ -283,7 +283,7 @@ export default function DesignerPostProductionDock({
               <button
                 type="button"
                 onClick={() => { onTool('source'); setVideoStudioOpen(true); }}
-                className="flex w-full max-w-[180px] items-center justify-center gap-2 rounded-xl border border-cyan-500/35 bg-cyan-500/[0.12] px-3 py-2.5 text-[11px] font-semibold text-cyan-200 shadow-[0_0_12px_rgba(34,211,238,0.12)] transition-all hover:bg-cyan-500/20"
+                className="flex w-full max-w-[180px] items-center justify-center gap-2 rounded-xl border border-cyan-500/35 bg-cyan-500/[0.12] px-3 py-2.5 text-[11px] font-semibold text-cyan-200 shadow-[0_0_12px_rgba(227,170,107,0.12)] transition-all hover:bg-cyan-500/20"
                 style={{ borderRadius: 'var(--school-radius, 12px)' }}
               >
                 <span className="text-[12px]">📹</span>

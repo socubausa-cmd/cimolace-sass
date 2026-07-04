@@ -99,7 +99,7 @@ const DocRow = ({ icon: Icon, iconCol, title, subtitle, badgeLabel, badgeCol, ac
       onMouseLeave={() => setHov(false)}
       style={{
         display: 'flex', alignItems: 'center', gap: 14, padding: '14px 16px',
-        background: hov ? 'rgba(25,39,52,0.6)' : 'rgba(25,39,52,0.34)',
+        background: hov ? 'rgba(46,43,40,0.6)' : 'rgba(46,43,40,0.34)',
         border: `1px solid ${hov ? T.goldMid : T.border}`, borderRadius: 14,
         transition: 'all 160ms ease', transform: hov ? 'translateY(-1px)' : 'none',
         animation: `docFade .4s ease ${delay}ms both`,
@@ -138,7 +138,7 @@ const ReportRow = ({ title, subtitle, text, delay }) => {
       onMouseLeave={() => setHov(false)}
       style={{
         padding: '14px 16px',
-        background: hov || open ? 'rgba(25,39,52,0.6)' : 'rgba(25,39,52,0.34)',
+        background: hov || open ? 'rgba(46,43,40,0.6)' : 'rgba(46,43,40,0.34)',
         border: `1px solid ${hov || open ? T.goldMid : T.border}`, borderRadius: 14,
         transition: 'all 160ms ease', animation: `docFade .4s ease ${delay}ms both`,
       }}
@@ -452,7 +452,7 @@ const StudentDocumentsPage = () => {
         <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
           {Array.from({ length: 4 }).map((_, i) => (
             <div key={i} style={{
-              height: 74, borderRadius: 14, background: 'rgba(25,39,52,0.34)',
+              height: 74, borderRadius: 14, background: 'rgba(46,43,40,0.34)',
               border: `1px solid ${T.border}`, animation: 'docPulse 1.4s ease-in-out infinite',
               animationDelay: `${i * 90}ms`,
             }} />

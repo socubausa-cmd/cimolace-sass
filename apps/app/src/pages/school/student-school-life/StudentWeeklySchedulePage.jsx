@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
-import { resolveTenantSlug } from '@/lib/tenant/activeBranding';
+import { createPortal } from 'react-dom';
 import PedagogicalBlockRenderer from "@/components/liri/liri-ecosystem/PedagogicalBlockRenderer";
 import {
   Calendar,
@@ -24,43 +24,30 @@ import {
   Award,
   AlertCircle,
   Sparkles,
+  Lock,
+  Target,
+  ArrowRight,
+  ChevronDown,
+  GraduationCap,
+  Check,
+  Sunrise,
+  Languages,
+  Link2,
+  Maximize2,
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/lib/customSupabaseClient';
 import { useAuth } from '@/contexts/SupabaseAuthContext';
 import ImmersiveClassroom from '@/components/school/course-builder/ImmersiveClassroom';
 import { buildClassroomChapters } from '@/lib/smartboard/buildClassroomChapters';
+import { themeProxy as T, useSslThemeMode } from './sslTheme';
 
-// ── Design tokens — thème CLAIR (Wix Studio) ──────────────────────────────────
-// Cette page « Ma semaine » est routée séparément dans App.jsx et n'est atteinte
-// QUE par l'élève (aucun équivalent côté prof) → on la passe au clair directement,
-// même forme de tokens (badges/icônes colorés conservés ; cyan/teal/violet lisibles).
-const T = {
-  bg:       '#F4F5F7', // canvas
-  surface:  '#FFFFFF', // surfaces internes
-  card:     '#FFFFFF', // cartes
-  border:   'rgba(0,0,0,0.08)',
-  borderMid:'rgba(0,0,0,0.14)',
-  gold:     '#8A6D1A', // doré LISIBLE pour texte/accents sur blanc (AA)
-  goldSolid:'#D4AF37', // doré VIF pour remplissages (boutons/barres) — texte sombre dessus
-  goldDim:  'rgba(212,175,55,0.14)',
-  goldMid:  'rgba(212,175,55,0.40)',
-  goldBright:'rgba(212,175,55,0.55)',
-  teal:     '#0F766E',
-  tealDim:  'rgba(15,118,110,0.12)',
-  tealMid:  'rgba(15,118,110,0.28)',
-  t1:       '#18181B', // texte primaire
-  t2:       '#52525B', // texte secondaire
-  t3:       '#71717A', // texte atténué
-  success:  '#15803D',
-  successDim:'rgba(34,197,94,0.12)',
-  danger:   '#DC2626',
-  dangerDim: 'rgba(220,38,38,0.10)',
-  warn:     '#B45309',
-  warnDim:  'rgba(245,158,11,0.14)',
-  purple:   '#7C3AED',
-  purpleDim:'rgba(124,58,237,0.10)',
-};
+// ── Design tokens — thème HOST-AWARE (sslTheme) ───────────────────────────────
+// « Ma semaine » vit dans DEUX coques : le portail LIRI (sombre/chaud par défaut)
+// et l'ancien espace student-school-life (clair, via <SslThemeProvider mode="light">).
+// On lit donc les tokens du pont `themeProxy` (T_DARK par défaut = LIRI ; T_LIGHT
+// sous provider light) — le composant publie le mode via `useSslThemeMode()` en tête.
+// Badges/icônes colorés conservés ; T_DARK est déjà re-skiné coral (directive LIRI).
 
 // ── Constants ─────────────────────────────────────────────────────────────────
 
@@ -78,19 +65,21 @@ const MONTH_LABELS_FULL = [
 ];
 
 // pedagogy_type badge colors
+// Palette CHAUDE (directive LIRI : bannir teal/violet/or). Types distincts via
+// coral / amber / honey / rose / sage / vert (ex-#2dd4bf teal, #a78bfa violet, #D4AF37 or).
 const PEDAGOGY_COLORS = {
-  opening_live:         { bg: 'rgba(45,212,191,0.15)', border: 'rgba(45,212,191,0.35)', color: '#2dd4bf' },
-  closure_live:         { bg: 'rgba(45,212,191,0.15)', border: 'rgba(45,212,191,0.35)', color: '#2dd4bf' },
-  smartboard_session:   { bg: 'rgba(167,139,250,0.15)', border: 'rgba(167,139,250,0.35)', color: '#a78bfa' },
-  friction_block:       { bg: 'rgba(251,191,36,0.15)', border: 'rgba(251,191,36,0.35)', color: '#fbbf24' },
-  recall_block:         { bg: 'rgba(212,175,55,0.15)', border: 'rgba(212,175,55,0.35)', color: '#D4AF37' },
-  experiment_block:     { bg: 'rgba(74,222,128,0.15)', border: 'rgba(74,222,128,0.35)', color: '#4ade80' },
+  opening_live:         { bg: 'rgba(224,138,95,0.15)',  border: 'rgba(224,138,95,0.35)',  color: '#e08a5f' },
+  closure_live:         { bg: 'rgba(224,138,95,0.15)',  border: 'rgba(224,138,95,0.35)',  color: '#e08a5f' },
+  smartboard_session:   { bg: 'rgba(224,164,88,0.15)',  border: 'rgba(224,164,88,0.35)',  color: '#e0a458' },
+  friction_block:       { bg: 'rgba(251,191,36,0.15)',  border: 'rgba(251,191,36,0.35)',  color: '#fbbf24' },
+  recall_block:         { bg: 'rgba(230,181,102,0.15)', border: 'rgba(230,181,102,0.35)', color: '#e6b566' },
+  experiment_block:     { bg: 'rgba(74,222,128,0.15)',  border: 'rgba(74,222,128,0.35)',  color: '#4ade80' },
   previsualisation_video:{ bg: 'rgba(248,113,113,0.15)', border: 'rgba(248,113,113,0.35)', color: '#f87171' },
   doctrinal_video:      { bg: 'rgba(248,113,113,0.15)', border: 'rgba(248,113,113,0.35)', color: '#f87171' },
-  quiz_block:           { bg: 'rgba(167,139,250,0.15)', border: 'rgba(167,139,250,0.35)', color: '#a78bfa' },
-  mindmap_block:        { bg: 'rgba(45,212,191,0.15)', border: 'rgba(45,212,191,0.35)', color: '#2dd4bf' },
-  summary_block:        { bg: 'rgba(156,163,175,0.15)', border: 'rgba(156,163,175,0.35)', color: '#9ca3af' },
-  generic:              { bg: 'rgba(0,0,0,0.05)', border: 'rgba(0,0,0,0.12)', color: '#52525B' },
+  quiz_block:           { bg: 'rgba(221,143,116,0.15)', border: 'rgba(221,143,116,0.35)', color: '#dd8f74' },
+  mindmap_block:        { bg: 'rgba(156,196,138,0.15)', border: 'rgba(156,196,138,0.35)', color: '#9cc48a' },
+  summary_block:        { bg: 'rgba(169,162,155,0.15)', border: 'rgba(169,162,155,0.35)', color: '#a9a29b' },
+  generic:              { bg: 'rgba(255,255,255,0.05)', border: 'rgba(255,255,255,0.12)', color: '#9a938c' },
 };
 
 const PEDAGOGY_LABELS = {
@@ -129,8 +118,8 @@ const BLOCK_CTA = {
   closure_live:          'Rejoindre',
   smartboard_session:    'Ouvrir',
   friction_block:        'Commencer',
-  doctrinal_video:       'Regarder',
-  previsualisation_video:'Regarder',
+  doctrinal_video:       'Aller en classe',
+  previsualisation_video:'Aller en classe',
   experiment_block:      'Commencer',
   recall_block:          'Réviser',
   quiz_block:            'Commencer',
@@ -284,108 +273,185 @@ function DurationChip({ minutes }) {
   );
 }
 
-/** Inline video modal */
-function VideoModal({ videoUrl, title, onClose, onOpenClassroom }) {
+/** Composant VIDÉO SEUL (viewer) — rien d'autre : <video> natif (scrubber/timecode/plein
+ *  écran natifs) ou embed YouTube/Vimeo. Reporte le temps au parent (onTimeUpdate/onLoadedMetadata). */
+// Composant RENDER (vidéo SEUL) — remplit son parent ; c'est le WRAPPER (dans VideoModal)
+// qui fixe le format 16:9 et les angles NETS (pas de coins arrondis ici). Aucune navigation.
+function ClassroomVideo({ videoUrl, isDirect, embedUrl, title, lang, videoRef, onTimeUpdate, onLoadedMetadata }) {
+  return (
+    <div style={{ position: 'relative', width: '100%', height: '100%', background: '#000', overflow: 'hidden' }}>
+      {!videoUrl ? (
+        <div style={{ position: 'absolute', inset: 0, display: 'grid', placeItems: 'center', color: 'rgba(255,255,255,0.5)', fontSize: 14 }}>Vidéo bientôt disponible</div>
+      ) : isDirect ? (
+        <video ref={videoRef} src={videoUrl} controls autoPlay crossOrigin="anonymous"
+          onTimeUpdate={onTimeUpdate} onLoadedMetadata={onLoadedMetadata}
+          style={{ position: 'absolute', inset: 0, width: '100%', height: '100%' }}>
+          <track kind="captions" srcLang={lang} label={lang.toUpperCase()} default />
+        </video>
+      ) : (
+        <iframe key={embedUrl} ref={videoRef} src={embedUrl} title={title || 'Vidéo'} frameBorder="0" allow="autoplay; fullscreen" allowFullScreen style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', border: 'none' }} />
+      )}
+    </div>
+  );
+}
+
+/** Panneau LATÉRAL de navigation par CHAPITRES — composant séparé, piloté par le parent
+ *  (curTime / duration / onSeek). Liste verticale, chapitre courant surligné, clic → seek. */
+function ClassroomChapterPanel({ chapters, curTime, duration, onSeek }) {
+  const fmtT = (s) => { const n = Number(s) || 0; return `${Math.floor(n / 60)}:${String(Math.floor(n % 60)).padStart(2, '0')}`; };
+  const chaps = (Array.isArray(chapters) ? chapters : []).filter((c) => c && typeof c.start === 'number').sort((a, b) => a.start - b.start);
+  const curChap = chaps.reduce((acc, c, i) => (curTime >= c.start ? i : acc), 0);
+  if (!chaps.length) return null;
+  return (
+    <aside style={{ width: 306, flexShrink: 0, borderLeft: '1px solid rgba(255,255,255,0.07)', background: 'rgba(0,0,0,0.2)', display: 'flex', flexDirection: 'column' }}>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '14px 18px', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
+        <span style={{ fontSize: 10.5, fontWeight: 800, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'rgba(245,241,233,0.62)' }}>Chapitres</span>
+        <span style={{ fontSize: 11, fontFamily: "'JetBrains Mono',monospace", color: 'rgba(245,241,233,0.45)' }}>{fmtT(curTime)} / {fmtT(duration)}</span>
+      </div>
+      {/* Stepper vertical : pastilles numérotées 01/02… sur un rail, état actif/fait/à venir */}
+      <div style={{ flex: 1, overflowY: 'auto', padding: '18px 18px 4px' }}>
+        {chaps.map((c, i) => {
+          const end = chaps[i + 1]?.start ?? (duration || c.start + 1);
+          const active = i === curChap;
+          const done = curTime >= end;
+          const last = i === chaps.length - 1;
+          const num = String(i + 1).padStart(2, '0');
+          return (
+            <button key={i} onClick={() => onSeek(c.start)} title={`Aller à : ${c.title}`}
+              style={{ display: 'flex', gap: 14, width: '100%', background: 'transparent', border: 'none', padding: 0, cursor: 'pointer', textAlign: 'left' }}>
+              {/* Rail : pastille + ligne verticale de connexion */}
+              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', flexShrink: 0 }}>
+                <span style={{
+                  display: 'grid', placeItems: 'center', width: 40, height: 40, borderRadius: '50%', flexShrink: 0,
+                  fontFamily: "'JetBrains Mono',monospace", fontSize: 14, fontWeight: 700,
+                  background: active ? '#e08a5f' : done ? 'rgba(224,164,88,0.92)' : 'transparent',
+                  border: (active || done) ? 'none' : '1.5px solid rgba(245,241,233,0.22)',
+                  boxShadow: active ? '0 0 0 4px rgba(217,119,87,0.22)' : 'none',
+                  color: (active || done) ? '#1c140e' : 'rgba(245,241,233,0.5)',
+                }}>{done && !active ? <Check size={18} /> : i + 1}</span>
+                {!last && <span style={{ width: 2, flex: 1, minHeight: 30, margin: '4px 0', borderRadius: 2, background: done ? 'rgba(224,164,88,0.5)' : 'rgba(245,241,233,0.12)' }} />}
+              </div>
+              {/* Texte : 0X · timecode + TITRE en MAJUSCULES */}
+              <div style={{ paddingTop: 2, paddingBottom: 22, minWidth: 0, flex: 1 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                  <span style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 12, fontWeight: 700, color: active ? '#e08a5f' : done ? 'rgba(224,164,88,0.92)' : 'rgba(245,241,233,0.4)' }}>{num}</span>
+                  <span style={{ fontSize: 11, fontFamily: "'JetBrains Mono',monospace", color: 'rgba(245,241,233,0.4)' }}>{fmtT(c.start)}</span>
+                </div>
+                <div style={{ marginTop: 3, fontSize: 13, fontWeight: 800, letterSpacing: '0.02em', textTransform: 'uppercase', lineHeight: 1.25, color: active ? '#f5f1e9' : done ? 'rgba(245,241,233,0.82)' : 'rgba(245,241,233,0.5)', overflow: 'hidden', textOverflow: 'ellipsis' }}>{c.title}</div>
+              </div>
+            </button>
+          );
+        })}
+      </div>
+    </aside>
+  );
+}
+
+/** Lecteur « Salle de classe » — orchestre le composant VIDÉO (seul) + le PANNEAU CHAPITRES
+ *  (latéral, séparé), en petit format centré sur le fond spotlight du shell (#262624). */
+function VideoModal({ videoUrl, title, chapters = [], onClose }) {
+  const cardRef = useRef(null);
+  const videoRef = useRef(null);
+  const [lang, setLang] = useState('fr');
+  const [langOpen, setLangOpen] = useState(false);
+  const [copied, setCopied] = useState(false);
+  const [curTime, setCurTime] = useState(0);
+  const [duration, setDuration] = useState(0);
+
   useEffect(() => {
     function onKey(e) { if (e.key === 'Escape') onClose(); }
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
   }, [onClose]);
 
-  // Build embed URL (YouTube / Vimeo)
+  const LANGS = [
+    { k: 'fr', label: 'Français' }, { k: 'en', label: 'English' },
+    { k: 'ar', label: 'العربية' }, { k: 'es', label: 'Español' },
+  ];
+  const isDirect = /\.(mp4|webm|ogg|m3u8|mov)(\?|$)/i.test(videoUrl || '');
   let embedUrl = videoUrl;
-  if (videoUrl) {
-    const ytMatch = videoUrl.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/)([A-Za-z0-9_-]{11})/);
-    if (ytMatch) {
-      embedUrl = `https://www.youtube.com/embed/${ytMatch[1]}?autoplay=1&rel=0`;
-    }
-    const vimeoMatch = videoUrl.match(/vimeo\.com\/(\d+)/);
-    if (vimeoMatch) {
-      embedUrl = `https://player.vimeo.com/video/${vimeoMatch[1]}?autoplay=1`;
-    }
+  if (videoUrl && !isDirect) {
+    const yt = videoUrl.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/)([A-Za-z0-9_-]{11})/);
+    if (yt) embedUrl = `https://www.youtube.com/embed/${yt[1]}?rel=0&cc_load_policy=1&cc_lang_pref=${lang}&hl=${lang}`;
+    const vim = videoUrl.match(/vimeo\.com\/(\d+)/);
+    if (vim) embedUrl = `https://player.vimeo.com/video/${vim[1]}?texttrack=${lang}`;
   }
 
-  return (
-    <div
-      role="dialog"
-      aria-modal="true"
-      aria-label={title || 'Vidéo'}
-      onClick={onClose}
-      style={{
-        position: 'fixed', inset: 0, zIndex: 9000,
-        background: 'rgba(0,0,0,0.85)',
-        display: 'flex', alignItems: 'center', justifyContent: 'center',
-        padding: 24,
-      }}
-    >
-      <div
-        onClick={(e) => e.stopPropagation()}
-        style={{
-          width: '100%', maxWidth: 860,
-          background: T.card, borderRadius: 16,
-          border: `1px solid ${T.border}`,
-          overflow: 'hidden',
-          boxShadow: '0 32px 80px rgba(0,0,0,0.7)',
-        }}
-      >
-        {/* Header */}
-        <div style={{
-          display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-          padding: '14px 18px',
-          borderBottom: `1px solid ${T.border}`,
-        }}>
-          <span style={{ color: T.t1, fontSize: 14, fontWeight: 600 }}>{title || 'Vidéo'}</span>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-            {onOpenClassroom ? (
-              <button
-                onClick={onOpenClassroom}
-                title="Voir ce cours en plein écran — le tableau qui enseigne (narré)"
-                style={{
-                  display: 'inline-flex', alignItems: 'center', gap: 6,
-                  background: 'rgba(212,163,106,0.14)', border: '1px solid rgba(212,163,106,0.45)',
-                  borderRadius: 999, padding: '6px 12px', cursor: 'pointer',
-                  color: '#b07f3c', fontSize: 12.5, fontWeight: 700,
-                }}
-              >
-                <Sparkles size={14} /> Salle de classe
-              </button>
-            ) : null}
-            <button
-              onClick={onClose}
-              style={{
-                background: 'rgba(0,0,0,0.05)', border: 'none',
-                borderRadius: 8, width: 30, height: 30, cursor: 'pointer',
-                display: 'flex', alignItems: 'center', justifyContent: 'center', color: T.t2,
-              }}
-            >
-              <X size={16} />
-            </button>
+  const enlarge = () => { const el = videoRef.current || cardRef.current; el?.requestFullscreen?.(); };
+  const copyLink = async () => { try { await navigator.clipboard.writeText(videoUrl || ''); setCopied(true); setTimeout(() => setCopied(false), 1500); } catch { /* clipboard indispo */ } };
+  const ctrlBtn = { display: 'inline-flex', alignItems: 'center', gap: 6, background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.12)', borderRadius: 10, padding: '7px 11px', cursor: 'pointer', color: 'rgba(245,241,233,0.85)', fontSize: 12.5, fontWeight: 600 };
+
+  // Le RENDU des chapitres est délégué au composant séparé ClassroomChapterPanel. Ici on ne
+  // garde que : `hasChaps` (largeur de carte quand le panneau est présent) + `seekTo` (seek natif).
+  const hasChaps = isDirect && (Array.isArray(chapters) ? chapters : []).some((c) => c && typeof c.start === 'number');
+  const seekTo = (t) => { if (videoRef.current && isDirect) { try { videoRef.current.currentTime = Math.max(0, t); videoRef.current.play?.(); } catch { /* seek indispo */ } } };
+
+  return createPortal((
+    // CANEVAS IMMERSIF plein-site (portail <body>) : fond = shell LIRI (#262624). PAS de carte
+    // monobloc centrée → 3 zones distinctes ancrées aux bords : ① en-tête (titre) · ② écran
+    // vidéo seul (angles nets) au centre-gauche · ③ rail chapitres docké au coin droit ·
+    // ④ barre de boutons en bas. Chaque composant respire dans l'espace immersif.
+    <div role="dialog" aria-modal="true" aria-label={title || 'Vidéo'} onClick={onClose}
+      style={{ position: 'fixed', inset: 0, zIndex: 9000, background: '#262624', display: 'flex', flexDirection: 'column', animation: 'evFade .3s ease both' }}>
+      <style>{'@keyframes evFade{from{opacity:0}to{opacity:1}}'}</style>
+      {/* Halo ambiant derrière l'écran vidéo (centre-gauche) */}
+      <div aria-hidden style={{ position: 'absolute', top: '46%', left: '42%', width: 'min(58vw, 860px)', height: 'min(52vh, 520px)', transform: 'translate(-50%, -50%)', borderRadius: '50%', background: 'radial-gradient(closest-side, rgba(217,119,87,0.16), transparent 76%)', filter: 'blur(90px)', pointerEvents: 'none' }} />
+
+      {/* ① EN-TÊTE DE L'INTERFACE — titre immersif tout en haut (pleine largeur) */}
+      <header onClick={(e) => e.stopPropagation()}
+        style={{ position: 'relative', zIndex: 2, display: 'flex', alignItems: 'center', gap: 12, padding: '16px 26px', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
+        <span style={{ display: 'grid', placeItems: 'center', width: 34, height: 34, borderRadius: 10, background: 'rgba(217,119,87,0.16)', border: '1px solid rgba(217,119,87,0.4)' }}><GraduationCap size={17} color="#e08a5f" /></span>
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <div style={{ fontSize: 9.5, fontWeight: 800, letterSpacing: '0.14em', textTransform: 'uppercase', color: '#e08a5f' }}>Salle de classe</div>
+          <div style={{ fontSize: 15, fontWeight: 700, color: '#fff', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{title || 'Vidéo'}</div>
+        </div>
+        <button onClick={onClose} aria-label="Fermer" style={{ display: 'grid', placeItems: 'center', width: 34, height: 34, borderRadius: 10, background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.12)', cursor: 'pointer', color: 'rgba(255,255,255,0.8)' }}><X size={17} /></button>
+      </header>
+
+      {/* CORPS : ② écran vidéo (centre-gauche) + ③ rail chapitres docké au coin droit */}
+      <div onClick={(e) => e.stopPropagation()} style={{ position: 'relative', zIndex: 1, flex: 1, minHeight: 0, display: 'flex', alignItems: 'stretch' }}>
+        {/* ② COMPOSANT VIDÉO SEUL — angles NETS (aucun borderRadius), centré dans l'espace */}
+        <div style={{ flex: 1, minWidth: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '26px 30px' }}>
+          <div ref={cardRef} style={{ height: 'min(64vh, 512px)', maxHeight: '100%', aspectRatio: '16 / 9', maxWidth: '100%', overflow: 'hidden', border: '1px solid rgba(255,255,255,0.08)', boxShadow: '0 36px 110px rgba(0,0,0,0.55), 0 0 120px rgba(217,119,87,0.10)' }}>
+            <ClassroomVideo
+              videoUrl={videoUrl} isDirect={isDirect} embedUrl={embedUrl} title={title} lang={lang} videoRef={videoRef}
+              onTimeUpdate={(e) => setCurTime(e.currentTarget.currentTime)}
+              onLoadedMetadata={(e) => setDuration(e.currentTarget.duration || 0)}
+            />
           </div>
         </div>
-        {/* Video */}
-        <div style={{ position: 'relative', paddingBottom: '56.25%', height: 0 }}>
-          {embedUrl ? (
-            <iframe
-              src={embedUrl}
-              title={title || 'Vidéo'}
-              frameBorder="0"
-              allow="autoplay; fullscreen"
-              allowFullScreen
-              style={{ position: 'absolute', inset: 0, width: '100%', height: '100%' }}
-            />
-          ) : (
-            <div style={{
-              position: 'absolute', inset: 0,
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              color: T.t3, fontSize: 14,
-            }}>
-              URL vidéo non disponible
+
+        {/* ③ RAIL CHAPITRES — composant SÉPARÉ, docké au coin côté droit (pleine hauteur du corps) */}
+        {isDirect && hasChaps && <ClassroomChapterPanel chapters={chapters} curTime={curTime} duration={duration} onSeek={seekTo} />}
+      </div>
+
+      {/* ④ BOUTONS EN BAS — langue · lien (gauche) · agrandir (droite), barre pleine largeur */}
+      <footer onClick={(e) => e.stopPropagation()}
+        style={{ position: 'relative', zIndex: 2, display: 'flex', alignItems: 'center', gap: 8, padding: '12px 26px', borderTop: '1px solid rgba(255,255,255,0.06)' }}>
+        <div style={{ position: 'relative' }}>
+          <button onClick={() => setLangOpen((o) => !o)} title="Langue des sous-titres / audio" style={ctrlBtn}>
+            <Languages size={15} /> {LANGS.find((l) => l.k === lang)?.label} <ChevronDown size={13} />
+          </button>
+          {langOpen && (
+            <div style={{ position: 'absolute', bottom: 'calc(100% + 8px)', left: 0, background: '#221e1a', border: '1px solid rgba(255,255,255,0.12)', borderRadius: 12, padding: 6, minWidth: 156, boxShadow: '0 20px 44px rgba(0,0,0,0.55)', zIndex: 3 }}>
+              {LANGS.map((l) => (
+                <button key={l.k} onClick={() => { setLang(l.k); setLangOpen(false); }}
+                  style={{ display: 'flex', width: '100%', alignItems: 'center', gap: 8, padding: '8px 10px', background: l.k === lang ? 'rgba(217,119,87,0.15)' : 'transparent', border: 'none', borderRadius: 8, cursor: 'pointer', color: l.k === lang ? '#e08a5f' : 'rgba(245,241,233,0.85)', fontSize: 13, fontWeight: 600, textAlign: 'left' }}>
+                  {l.label}{l.k === lang && <Check size={13} style={{ marginLeft: 'auto' }} />}
+                </button>
+              ))}
             </div>
           )}
         </div>
-      </div>
+        <button onClick={copyLink} title="Copier le lien de la vidéo" style={ctrlBtn}>
+          {copied ? <><Check size={15} color="#4ea172" /> Copié</> : <><Link2 size={15} /> Lien</>}
+        </button>
+        <button onClick={enlarge} title="Agrandir (plein écran)" style={{ ...ctrlBtn, marginLeft: 'auto' }}>
+          <Maximize2 size={15} /> Agrandir
+        </button>
+      </footer>
     </div>
-  );
+  ), document.body);
 }
 
 /** Inline expanded content panel (friction/experiment/mindmap/summary) */
@@ -424,9 +490,26 @@ function ExpandedPanel({ block, onClose }) {
           {block.data.content}
         </p>
       )}
-      {!block.data?.description && !block.data?.instructions && !block.data?.content && (
+      {block.data?.challenge_text && (
+        <p style={{ color: T.t2, fontSize: 13, lineHeight: 1.6, margin: '0 0 10px' }}>
+          <strong style={{ color: T.goldText }}>Défi : </strong>{block.data.challenge_text}
+        </p>
+      )}
+      {block.data?.hint_text && (
+        <p style={{ color: T.t3, fontSize: 12.5, lineHeight: 1.6, margin: '0 0 10px' }}>
+          <strong>Indice : </strong>{block.data.hint_text}
+        </p>
+      )}
+      {Array.isArray(block.data?.key_points) && block.data.key_points.length > 0 && (
+        <ul style={{ color: T.t2, fontSize: 13, lineHeight: 1.7, margin: 0, paddingLeft: 18 }}>
+          {block.data.key_points.map((p, i) => <li key={i}>{typeof p === 'string' ? p : (p?.text || p?.label || '')}</li>)}
+        </ul>
+      )}
+      {!block.data?.description && !block.data?.instructions && !block.data?.content
+        && !block.data?.challenge_text && !block.data?.hint_text
+        && !(Array.isArray(block.data?.key_points) && block.data.key_points.length) && (
         <p style={{ color: T.t3, fontSize: 13, fontStyle: 'italic', margin: 0 }}>
-          Aucun contenu détaillé pour ce bloc.
+          Aucun contenu détaillé pour ce bloc — il sera complété par ton professeur.
         </p>
       )}
     </div>
@@ -611,14 +694,14 @@ function BlockCard({ block, onNavigate, onOpenVideo, onOpenQuiz }) {
     switch (type) {
       case 'opening_live':
       case 'closure_live':
-        onNavigate(`/t/${resolveTenantSlug()}/live`);
+        onNavigate('/lives'); // portail LIRI — jamais /t/:slug/* (realm ISNA)
         break;
       case 'previsualisation_video':
       case 'doctrinal_video':
         onOpenVideo(block);
         break;
       case 'smartboard_session':
-        onNavigate('/studio/smartboard-designer');
+        onOpenVideo(block); // vue ÉLÈVE (jamais le studio créateur) — chemin BlockCard (legacy)
         break;
       case 'recall_block':
         onNavigate('/student-school-life/neuro-recall');
@@ -817,7 +900,181 @@ function WeekProgressBar({ days }) {
 
 // ── Main page ─────────────────────────────────────────────────────────────────
 
+/* ─── Documentation pédagogique par RÔLE de jour (déduite du pedagogy_type) ─── */
+const PEDAGOGY_DOC = {
+  opening:      { role: 'Ouverture',       Icon: Sunrise,      objectif: 'Lancer la semaine : découvrir le thème, le fil directeur et les objectifs.', learn: "La vue d’ensemble et les questions clés de la semaine.", able: 'Situer où tu vas — et pourquoi.' },
+  course:       { role: 'Cours principal', Icon: Presentation, objectif: 'Acquérir les concepts clés, au tableau interactif.', learn: 'Les notions fondamentales et leur logique.', able: 'Expliquer et réutiliser les concepts.' },
+  friction:     { role: 'Friction',        Icon: Zap,          objectif: 'Mettre les concepts à l’épreuve sur un cas pratique.', learn: 'Où tu bloques encore — et pourquoi.', able: 'Appliquer les concepts à un vrai problème.' },
+  memorisation: { role: 'Mémorisation',    Icon: Brain,        objectif: 'Ancrer durablement par la répétition espacée (SM-2).', learn: 'Ce qui doit rester en mémoire long terme.', able: 'Restituer sans effort.' },
+  synthesis:    { role: 'Synthèse',        Icon: Map,          objectif: 'Relier, résumer et valider les acquis de la semaine.', learn: 'Comment toutes les pièces s’assemblent.', able: 'Faire le bilan et enchaîner la suite.' },
+};
+function pedagogyDoc(type) {
+  const t = String(type || '').toLowerCase();
+  if (/(open|ouvert|debut|bienven)/.test(t)) return PEDAGOGY_DOC.opening;
+  if (/(friction|defi|challenge)/.test(t)) return PEDAGOGY_DOC.friction;
+  if (/(memo|recall|revis|sm2|sm-2)/.test(t)) return PEDAGOGY_DOC.memorisation;
+  if (/(synth|closure|clotur|bilan|summary|resum)/.test(t)) return PEDAGOGY_DOC.synthesis;
+  return PEDAGOGY_DOC.course;
+}
+/** Statut d'un jour vs aujourd'hui : completed (passé) / today / locked (futur). */
+function dayStatusFor(dayDate, today) {
+  const d = new Date(dayDate); d.setHours(0, 0, 0, 0);
+  const t = new Date(today); t.setHours(0, 0, 0, 0);
+  if (d.getTime() < t.getTime()) return 'completed';
+  if (d.getTime() === t.getTime()) return 'today';
+  return 'locked';
+}
+
+/* ─── Un jour = un nœud de la timeline (documenté + déblocage progressif) ─── */
+function TimelineDay({ last, dayLabel, dDate, dayData, status, onNavigate, onOpenVideo, onOpenQuiz, onOpenClassroom, completedBlocks }) {
+  const [open, setOpen] = useState(status === 'today');
+  // Bloc à contenu inline actuellement déplié (friction/experiment/mindmap/summary).
+  const [expandedBlockId, setExpandedBlockId] = useState(null);
+  const doc = pedagogyDoc(dayData?.pedagogy_type || dayData?.title);
+  const DocIcon = doc.Icon;
+  const blocks = dayData?.pedagogical_blocks || [];
+  const locked = status === 'locked';
+  const isToday = status === 'today';
+  const done = status === 'completed';
+  const unlockLabel = dDate.toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' });
+
+  const handleBlockClick = (block) => {
+    if (locked) return;
+    switch (block.type) {
+      case 'opening_live':
+      // Lives du PORTAIL (/lives) — jamais /t/:slug/* (frontière des realms LIRI≠ISNA).
+      case 'closure_live': onNavigate('/lives'); break;
+      case 'previsualisation_video':
+      case 'doctrinal_video':
+        // « Aller en classe » → SALLE DE CLASSE = vidéo PLEIN ÉCRAN IMMERSIVE (jamais une
+        // modale). Ouverture immédiate (synchrone), fiable.
+        onOpenVideo(block);
+        break;
+      // SmartBoard = cours au tableau interactif → VUE ÉLÈVE (salle de classe / deck en
+      // lecture seule via data.content_id). PLUS de fuite vers /studio/smartboard-designer
+      // (l'outil d'AUTEUR créateur). Fallback gracieux si pas de contenu généré.
+      case 'smartboard_session': onOpenClassroom(block); break;
+      case 'recall_block': onNavigate('/student-school-life/neuro-recall'); break;
+      case 'quiz_block': onOpenQuiz(block); break;
+      // Blocs à CONTENU INLINE (défi, atelier, mindmap, synthèse) : panneau déplié
+      // sous le bloc — plus de cul-de-sac (CTA sans action).
+      case 'friction_block':
+      case 'experiment_block':
+      case 'mindmap_block':
+      case 'summary_block':
+        setExpandedBlockId((cur) => (cur === block.id ? null : block.id));
+        break;
+      default: break;
+    }
+  };
+
+  return (
+    <div style={{ display: 'flex', gap: 15, alignItems: 'stretch' }}>
+      {/* Rail */}
+      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: 40, flexShrink: 0 }}>
+        <div style={{ position: 'relative', width: 40, height: 40, borderRadius: 999, background: locked ? 'rgba(0,0,0,0.28)' : isToday ? T.gold : T.goldDim, border: `1.5px solid ${locked ? T.border : T.goldMid}`, display: 'grid', placeItems: 'center', flexShrink: 0 }}>
+          {locked ? <Lock size={16} color={T.t3} /> : done ? <Check size={18} color={T.gold} /> : <DocIcon size={18} color={isToday ? '#1c140e' : T.gold} />}
+          {isToday && <span style={{ position: 'absolute', inset: -5, borderRadius: 999, border: `2px solid ${T.goldMid}`, animation: 'evPing 1.7s ease-out infinite' }} />}
+        </div>
+        {!last && <div style={{ flex: 1, width: 2, minHeight: 20, background: done || isToday ? T.goldMid : T.border, margin: '4px 0', borderRadius: 2 }} />}
+      </div>
+
+      {/* Carte jour */}
+      <div style={{ flex: 1, minWidth: 0, marginBottom: 14, background: isToday ? T.goldDim : 'rgba(0,0,0,0.16)', border: `1px solid ${isToday ? T.goldMid : T.border}`, borderRadius: 16, overflow: 'hidden', opacity: locked ? 0.7 : 1 }}>
+        <button onClick={() => setOpen((o) => !o)} style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 12, padding: '13px 16px', background: 'transparent', border: 'none', cursor: 'pointer', textAlign: 'left', color: 'inherit' }}>
+          <span style={{ flex: 1, minWidth: 0 }}>
+            <span style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+              <span style={{ fontSize: 15, fontWeight: 700, color: T.t1 }}>{dayLabel}</span>
+              <span style={{ fontSize: 10.5, fontWeight: 700, letterSpacing: '0.03em', textTransform: 'uppercase', color: T.goldText, background: T.goldDim, border: `1px solid ${T.goldMid}`, borderRadius: 20, padding: '2px 9px' }}>{doc.role}</span>
+              {isToday && <span style={{ fontSize: 10, fontWeight: 800, color: '#1c140e', background: T.gold, borderRadius: 20, padding: '2px 9px' }}>AUJOURD’HUI</span>}
+              {done && <span style={{ fontSize: 10.5, fontWeight: 700, color: T.success, display: 'inline-flex', alignItems: 'center', gap: 4 }}><Check size={12} /> Terminé</span>}
+              {locked && <span style={{ fontSize: 10.5, fontWeight: 700, color: T.t3, display: 'inline-flex', alignItems: 'center', gap: 4 }}><Lock size={11} /> Verrouillé</span>}
+            </span>
+            <span style={{ display: 'block', fontSize: 12.5, color: T.t3, marginTop: 3 }}>{locked ? `Se débloque ${unlockLabel}` : doc.objectif}</span>
+          </span>
+          <ChevronDown size={17} color={T.t3} style={{ transition: 'transform 180ms ease', transform: open ? 'rotate(180deg)' : 'none', flexShrink: 0 }} />
+        </button>
+
+        {open && (
+          <div style={{ padding: '0 16px 16px 16px' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px,1fr))', gap: 10, marginBottom: 13 }}>
+              <div style={{ background: 'rgba(255,255,255,0.03)', border: `1px solid ${T.border}`, borderRadius: 12, padding: '10px 12px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 10.5, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.04em', color: T.t3, marginBottom: 4 }}><GraduationCap size={13} color={T.goldText} /> Ce que tu vas apprendre</div>
+                <div style={{ fontSize: 13, color: T.t2, lineHeight: 1.45 }}>{doc.learn}</div>
+              </div>
+              <div style={{ background: 'rgba(255,255,255,0.03)', border: `1px solid ${T.border}`, borderRadius: 12, padding: '10px 12px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 10.5, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.04em', color: T.t3, marginBottom: 4 }}><Target size={13} color={T.goldText} /> Tu seras capable de</div>
+                <div style={{ fontSize: 13, color: T.t2, lineHeight: 1.45 }}>{doc.able}</div>
+              </div>
+            </div>
+
+            {locked ? (
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: 15, background: 'rgba(0,0,0,0.2)', border: `1px dashed ${T.border}`, borderRadius: 12, color: T.t3, fontSize: 13 }}>
+                <Lock size={16} /> {blocks.length > 0 ? `${blocks.length} activité${blocks.length > 1 ? 's' : ''} — débloquée${blocks.length > 1 ? 's' : ''} ${unlockLabel}.` : `Le programme se dévoilera ${unlockLabel}.`}
+              </div>
+            ) : blocks.length === 0 ? (
+              <div style={{ fontSize: 13, color: T.t3, padding: '6px 0' }}>Aucune activité programmée ce jour.</div>
+            ) : (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                {blocks.map((block) => {
+                  const cfg = PEDAGOGY_COLORS[block.type] || PEDAGOGY_COLORS.generic;
+                  const Icon = BLOCK_ICONS[block.type] || FileText;
+                  const label = PEDAGOGY_LABELS[block.type] || 'Activité';
+                  const action = BLOCK_CTA[block.type];
+                  const isDone = completedBlocks?.has(block.id);
+                  const isExpanded = expandedBlockId === block.id;
+                  return (
+                    <div key={block.id}>
+                      <button onClick={() => handleBlockClick(block)} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 12px', background: isExpanded ? 'rgba(255,255,255,0.05)' : 'rgba(255,255,255,0.03)', border: `1px solid ${T.border}`, borderRadius: 12, cursor: action ? 'pointer' : 'default', textAlign: 'left', color: 'inherit', width: '100%' }}>
+                        <span style={{ display: 'grid', placeItems: 'center', width: 34, height: 34, borderRadius: 9, background: cfg.bg, border: `1px solid ${cfg.border}`, flexShrink: 0 }}><Icon size={16} style={{ color: cfg.color }} /></span>
+                        <span style={{ flex: 1, minWidth: 0 }}>
+                          <span style={{ display: 'block', fontSize: 10, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.03em', color: cfg.color }}>{label}</span>
+                          <span style={{ display: 'block', fontSize: 13.5, fontWeight: 600, color: T.t1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{block.title}</span>
+                        </span>
+                        {isDone ? <Check size={16} color={T.success} /> : action ? <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: 12, fontWeight: 600, color: T.goldText, flexShrink: 0 }}>{isExpanded ? 'Fermer' : action} <ArrowRight size={13} style={{ transform: isExpanded ? 'rotate(90deg)' : 'none', transition: 'transform 160ms ease' }} /></span> : null}
+                      </button>
+                      {isExpanded && <ExpandedPanel block={block} onClose={() => setExpandedBlockId(null)} />}
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+/* ─── Timeline de la semaine : déblocage progressif jour après jour ─── */
+function WeekTimeline({ days, weekMonday, onNavigate, onOpenVideo, onOpenQuiz, onOpenClassroom, completedBlocks }) {
+  const today = new Date();
+  return (
+    <div>
+      <style>{'@keyframes evPing{from{transform:scale(1);opacity:.55}to{transform:scale(1.5);opacity:0}}'}</style>
+      {Array(5).fill(null).map((_, i) => {
+        const dDate = new Date(weekMonday); dDate.setDate(dDate.getDate() + i);
+        const { full: dayLabel } = formatDayLabel(weekMonday, i);
+        return (
+          <TimelineDay
+            key={i} last={i === 4} dayLabel={dayLabel} dDate={dDate}
+            dayData={days[i]} status={dayStatusFor(dDate, today)}
+            onNavigate={onNavigate} onOpenVideo={onOpenVideo} onOpenQuiz={onOpenQuiz}
+            onOpenClassroom={onOpenClassroom} completedBlocks={completedBlocks}
+          />
+        );
+      })}
+    </div>
+  );
+}
+
 export default function StudentWeeklySchedulePage() {
+  // Publie le mode courant (dark/light) pour le pont `themeProxy` AVANT le rendu des
+  // sous-composants (StatCard, PedagogyBadge…) qui référencent `T` au scope module.
+  const isLight = useSslThemeMode() === 'light';
+  // En LIRI (sombre) on laisse le fond du portail (#262624) transparaître ; en clair
+  // standalone on garde le canvas #F4F5F7. → fondu parfait avec la coque LIRI.
+  const pageBg = isLight ? T.bg : 'transparent';
   const { user } = useAuth();
   const navigate  = useNavigate();
 
@@ -844,16 +1101,21 @@ export default function StudentWeeklySchedulePage() {
 
   const onOpenClassroom = useCallback(async (block) => {
     const contentId = block?.data?.content_id;
-    if (!contentId) return;
+    if (!contentId) { setVideoModal({ block }); return; }
     try {
       const { data } = await supabase
         .from('formation_day_contents')
         .select('data')
         .eq('id', contentId)
         .maybeSingle();
-      const chapters = buildClassroomChapters(data?.data || null);
+      // ⚠️ PIÈGE supabaseCompat + colonne nommée `data` : le shim peut renvoyer le JSON
+      // du contenu DIRECTEMENT (déjà déballé), le vrai client renvoie { data: json }.
+      // On accepte les deux formes (le JSON porte mindmap/chapters à sa racine).
+      const src = (data && typeof data === 'object' && data.data && typeof data.data === 'object') ? data.data : data;
+      const chapters = buildClassroomChapters(src || null);
       if (chapters.length) { setClassroomChapters(chapters); setShowImmersive(true); }
-    } catch { /* repli silencieux : lecture vidéo classique */ }
+      else setVideoModal({ block }); // pas de chapitres constructibles → lecture vidéo classique
+    } catch { setVideoModal({ block }); }
   }, []);
   const [quizModal,  setQuizModal]  = useState(null); // { block }
 
@@ -1090,7 +1352,7 @@ export default function StudentWeeklySchedulePage() {
   if (!loading && noPath) {
     return (
       <div style={{
-        minHeight: '100vh', background: T.bg,
+        minHeight: '100%', background: pageBg,
         display: 'flex', flexDirection: 'column',
         alignItems: 'center', justifyContent: 'center',
         padding: 32, textAlign: 'center',
@@ -1103,7 +1365,7 @@ export default function StudentWeeklySchedulePage() {
           Vous n'avez pas encore de parcours scolaire. Consultez le catalogue pour rejoindre un programme.
         </p>
         <button
-          onClick={() => navigate(`/t/${resolveTenantSlug()}`)}
+          onClick={() => navigate('/liri/formations')}
           style={{
             background: T.goldDim, color: T.gold,
             border: `1px solid ${T.goldMid}`,
@@ -1120,7 +1382,7 @@ export default function StudentWeeklySchedulePage() {
   }
 
   return (
-    <div style={{ minHeight: '100vh', background: T.bg, color: T.t1, fontFamily: 'inherit' }}>
+    <div style={{ minHeight: '100%', background: pageBg, color: T.t1, fontFamily: 'inherit' }}>
       {/* Page container */}
       <div style={{ maxWidth: 1280, margin: '0 auto', padding: mobile ? '20px 14px 40px' : '28px 24px 60px' }}>
 
@@ -1241,32 +1503,15 @@ export default function StudentWeeklySchedulePage() {
             ))}
           </div>
         ) : (
-          <div style={{
-            display: 'flex',
-            flexDirection: mobile ? 'column' : 'row',
-            gap: 10,
-            alignItems: 'stretch',
-          }}>
-            {Array(5).fill(null).map((_, i) => {
-              const { full: dayLabelFull, date: dayDate } = formatDayLabel(weekMonday, i);
-              const dayData = days[i];
-              return (
-                <DayColumn
-                  key={i}
-                  dayLabel={dayLabelFull}
-                  dayDate={dayDate}
-                  dayData={dayData}
-                  isMobile={mobile}
-                  onNavigate={(path) => navigate(path)}
-                  onOpenVideo={(block) => setVideoModal({ block })}
-                  onOpenQuiz={(block) => setQuizModal({ block })}
-                  completedBlocks={completedBlocks}
-                  onBlockComplete={markBlockCompleted}
-                  onOpenClassroom={onOpenClassroom}
-                />
-              );
-            })}
-          </div>
+          <WeekTimeline
+            days={days}
+            weekMonday={weekMonday}
+            onNavigate={(path) => navigate(path)}
+            onOpenVideo={(block) => setVideoModal({ block })}
+            onOpenQuiz={(block) => setQuizModal({ block })}
+            onOpenClassroom={onOpenClassroom}
+            completedBlocks={completedBlocks}
+          />
         )}
       </div>
 
@@ -1275,8 +1520,8 @@ export default function StudentWeeklySchedulePage() {
         <VideoModal
           videoUrl={videoModal.block.data?.video_url}
           title={videoModal.block.title}
+          chapters={videoModal.block.data?.chapters || []}
           onClose={() => setVideoModal(null)}
-          onOpenClassroom={videoModal?.block?.data?.content_id ? () => onOpenClassroom(videoModal.block) : undefined}
         />
       )}
 

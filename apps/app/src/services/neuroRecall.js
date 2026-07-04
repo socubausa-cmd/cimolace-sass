@@ -13,10 +13,12 @@ export const NEURO_RECALL_WORKFLOW_LABELS = {
 
 /**
  * URL du constructeur de cours post-prod (mindmap, transcript, chapitres) — réutilisation NeuroRecall.
+ * Route STUDIO (contexte portail LIRI, coque LiriPortalShell) — surtout PAS `/owner-dashboard/*`
+ * qui sort l'utilisateur du portail vers la chrome ISNA Academy.
  * @param {string} formationDayContentId — UUID `formation_day_contents.id`
  */
 export function postProductionEditorPath(formationDayContentId) {
-  return `/owner-dashboard/post-production/${formationDayContentId}`;
+  return `/studio/post-production/${formationDayContentId}`;
 }
 
 export async function fetchNeuroRecallState(sessionId) {

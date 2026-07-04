@@ -41,13 +41,13 @@ const BLOCS = [
 ];
 
 const ACC = {
-  violet: 'text-violet-400 bg-violet-500/10 border-violet-500/25',
-  blue:   'text-blue-400 bg-blue-500/10 border-blue-500/25',
+  violet: 'text-[#e08a5f] bg-[#d97757]/10 border-[#d97757]/25',
+  blue:   'text-[#e0a458] bg-[#d4924a]/10 border-[#d4924a]/25',
   amber:  'text-amber-400 bg-amber-500/10 border-amber-500/25',
-  emerald:'text-emerald-400 bg-emerald-500/10 border-emerald-500/25',
-  cyan:   'text-cyan-400 bg-cyan-500/10 border-cyan-500/25',
-  purple: 'text-purple-400 bg-purple-500/10 border-purple-500/25',
-  teal:   'text-teal-400 bg-teal-500/10 border-teal-500/25',
+  emerald:'text-[#7bb06a] bg-[#5a8f52]/10 border-[#5a8f52]/25',
+  cyan:   'text-[#e0a458] bg-[#d4924a]/10 border-[#d4924a]/25',
+  purple: 'text-[#e08a5f] bg-[#d97757]/10 border-[#d97757]/25',
+  teal:   'text-[#e0a458] bg-[#d4924a]/10 border-[#d4924a]/25',
   orange: 'text-orange-400 bg-orange-500/10 border-orange-500/25',
   rose:   'text-rose-400 bg-rose-500/10 border-rose-500/25',
   pink:   'text-pink-400 bg-pink-500/10 border-pink-500/25',
@@ -65,7 +65,7 @@ function PedaBloc({ bloc, value, onChange }) {
           <Icon className={cn('h-3.5 w-3.5', cls[0])} />
         </div>
         <span className={cn('flex-1 text-[12px] font-medium', open ? 'text-white/90' : 'text-white/50')}>{bloc.label}</span>
-        {hasContent && <CheckCircle2 className="h-3.5 w-3.5 flex-shrink-0 text-emerald-400" />}
+        {hasContent && <CheckCircle2 className="h-3.5 w-3.5 flex-shrink-0 text-[#7bb06a]" />}
         <ChevronDown className={cn('h-3.5 w-3.5 flex-shrink-0 text-white/22 transition-transform', open && 'rotate-180')} />
       </button>
       {open && (
@@ -89,7 +89,7 @@ function ModeBtn({ mode, setMode }) {
     <div className="flex items-center gap-1 rounded-xl border border-white/10 bg-white/[0.03] p-1">
       {[{ id: 'ia', label: 'IA', icon: Sparkles }, { id: 'manuel', label: 'Manuel', icon: FileText }].map(({ id, label, icon: Icon }) => (
         <button key={id} onClick={() => setMode(id)}
-          className={cn('flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-[12px] font-medium transition-all', mode === id ? 'bg-violet-600 text-white shadow-[0_0_12px_rgba(139,92,246,0.35)]' : 'text-white/38 hover:text-white/70')}>
+          className={cn('flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-[12px] font-medium transition-all', mode === id ? 'bg-[#c96544] text-white shadow-[0_0_12px_rgba(217,119,87,0.35)]' : 'text-white/38 hover:text-white/70')}>
           <Icon className="h-3.5 w-3.5" />{label}
         </button>
       ))}
@@ -123,7 +123,7 @@ export default function StudioLiriCourseBuilderPage() {
         <div className="flex items-center gap-2">
           <ModeBtn mode={mode} setMode={setMode} />
           <button type="button" onClick={() => navigate('/studio/smartboard-designer')}
-            className="flex items-center gap-1.5 rounded-lg bg-violet-600 px-3 py-1.5 text-[11px] font-semibold text-white transition-all hover:bg-violet-500 shadow-[0_0_12px_rgba(139,92,246,0.35)]">
+            className="flex items-center gap-1.5 rounded-lg bg-[#c96544] px-3 py-1.5 text-[11px] font-semibold text-white transition-all hover:bg-[#d97757] shadow-[0_0_12px_rgba(217,119,87,0.35)]">
             <Layers className="h-3.5 w-3.5" /> Designer
           </button>
         </div>
@@ -145,7 +145,7 @@ export default function StudioLiriCourseBuilderPage() {
                     return (
                       <button key={step.numero} onClick={() => setActiveStep(step.numero)}
                         className={cn('flex items-center gap-2.5 rounded-lg px-2.5 py-2 text-left w-full transition-all', isActive ? 'bg-amber-500/15 border border-amber-500/25' : 'hover:bg-white/5 border border-transparent')}>
-                        <span className={cn('flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-full text-[10px] font-bold', s === 100 ? 'bg-emerald-500/25 text-emerald-300' : s > 0 ? 'bg-amber-500/25 text-amber-300' : 'bg-white/10 text-white/28')}>
+                        <span className={cn('flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-full text-[10px] font-bold', s === 100 ? 'bg-[#5a8f52]/25 text-[#9cc48a]' : s > 0 ? 'bg-amber-500/25 text-amber-300' : 'bg-white/10 text-white/28')}>
                           {s === 100 ? '✓' : step.numero}
                         </span>
                         <div className="min-w-0">
@@ -168,8 +168,8 @@ export default function StudioLiriCourseBuilderPage() {
         <main className="min-h-0 min-w-0 flex-1 overflow-y-auto">
           {mode === 'ia' ? (
             <div className="h-full">
-              <div className="sticky top-0 z-10 flex items-center gap-3 border-b border-white/[0.07] bg-[#0F1117]/95 px-6 py-2 backdrop-blur-sm">
-                <Sparkles className="h-3.5 w-3.5 text-violet-400" />
+              <div className="sticky top-0 z-10 flex items-center gap-3 border-b border-white/[0.07] bg-[#262624]/95 px-6 py-2 backdrop-blur-sm">
+                <Sparkles className="h-3.5 w-3.5 text-[#e08a5f]" />
                 <span className="text-[12px] text-white/45">Génération IA — méthode LIRI 10 étapes · MasterScript v2 · Checkpoints</span>
               </div>
               <div className="px-4 py-4"><LIRIAgent /></div>
@@ -190,7 +190,7 @@ export default function StudioLiriCourseBuilderPage() {
                 <h2 className="text-[18px] font-bold text-white">{STEPS_META[activeStep - 1]?.label}</h2>
                 <div className="mt-3 flex items-center gap-2">
                   <div className="flex-1 h-1.5 rounded-full bg-white/10 overflow-hidden">
-                    <div className="h-full rounded-full bg-gradient-to-r from-amber-500 to-emerald-500 transition-all duration-500" style={{ width: `${score(activeStep)}%` }} />
+                    <div className="h-full rounded-full bg-gradient-to-r from-amber-500 to-[#5a8f52] transition-all duration-500" style={{ width: `${score(activeStep)}%` }} />
                   </div>
                   <span className="text-[11px] text-white/32 flex-shrink-0">{score(activeStep)}%</span>
                 </div>
@@ -207,7 +207,7 @@ export default function StudioLiriCourseBuilderPage() {
                 </button>
                 {activeStep < 10
                   ? <button onClick={() => setActiveStep(s => s + 1)} className="flex items-center gap-1.5 rounded-lg bg-amber-500/20 border border-amber-500/30 px-4 py-2 text-[12px] text-amber-300 transition-all hover:bg-amber-500/30">Suivante →</button>
-                  : <button onClick={() => navigate('/studio/smartboard-designer')} className="flex items-center gap-1.5 rounded-lg bg-violet-600 px-4 py-2 text-[12px] font-semibold text-white transition-all hover:bg-violet-500 shadow-[0_0_12px_rgba(139,92,246,0.35)]">
+                  : <button onClick={() => navigate('/studio/smartboard-designer')} className="flex items-center gap-1.5 rounded-lg bg-[#c96544] px-4 py-2 text-[12px] font-semibold text-white transition-all hover:bg-[#d97757] shadow-[0_0_12px_rgba(217,119,87,0.35)]">
                       <Layers className="h-3.5 w-3.5" /> Designer <ArrowRight className="h-3.5 w-3.5" />
                     </button>
                 }
@@ -227,13 +227,13 @@ export default function StudioLiriCourseBuilderPage() {
               <div className="text-[11px] font-semibold text-white/45 mb-2">Règles LIRI v2</div>
               {['Jamais d\'affirmation sans structure','Toute connaissance = démonstration','Toute compétence = testable','1 segment = 1 idée centrale','Pas de progression sans checkpoint'].map((r, i) => (
                 <div key={i} className="flex items-start gap-1.5 mb-1">
-                  <div className="mt-1 h-1.5 w-1.5 rounded-full bg-violet-500/55 flex-shrink-0" />
+                  <div className="mt-1 h-1.5 w-1.5 rounded-full bg-[#d97757]/55 flex-shrink-0" />
                   <span className="text-[10px] text-white/32 leading-relaxed">{r}</span>
                 </div>
               ))}
             </div>
-            <div className="rounded-xl border border-cyan-500/20 bg-cyan-500/5 p-3">
-              <div className="flex items-center gap-2 mb-1.5"><LayoutGrid className="h-3.5 w-3.5 text-cyan-400" /><span className="text-[11px] font-semibold text-cyan-400">SmartBoard Ready</span></div>
+            <div className="rounded-xl border border-[#d4924a]/20 bg-[#d4924a]/5 p-3">
+              <div className="flex items-center gap-2 mb-1.5"><LayoutGrid className="h-3.5 w-3.5 text-[#e0a458]" /><span className="text-[11px] font-semibold text-[#e0a458]">SmartBoard Ready</span></div>
               <p className="text-[10px] text-white/32 leading-relaxed">1 sous-chapitre = 1 slide<br />1 segment = 1 étape progressive</p>
             </div>
             <div className="rounded-xl border border-amber-500/20 bg-amber-500/5 p-3">

@@ -1,13 +1,14 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import {
   ClipboardCheck, CalendarCheck, Clock, MapPin, ChevronDown,
-  Award, FileText, MessageSquareText, Inbox,
+  Award, FileText, MessageSquareText, Inbox, Trophy, Target,
 } from 'lucide-react';
 import { format, isValid } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { useDemoMode } from '@/contexts/DemoModeContext';
 import { useAuth } from '@/contexts/SupabaseAuthContext';
 import { useStudentEvaluationsParityData } from '@/hooks/useStudentEvaluationsParityData';
+import { useStudentNotesParityData } from '@/hooks/useStudentNotesParityData';
 import { supabase } from '@/lib/customSupabaseClient';
 // Thème host-aware : `T` = tokens vivants (clair sous l'espace élève, sombre sous le portail prof).
 import { themeProxy as T, useSslThemeMode } from '@/pages/school/student-school-life/sslTheme';
@@ -64,16 +65,16 @@ const FilterPill = ({ active, label, count, onClick }) => {
     <button onClick={onClick} onMouseEnter={() => setHov(true)} onMouseLeave={() => setHov(false)}
       style={{
         display: 'inline-flex', alignItems: 'center', gap: 7,
-        background: active ? T.gold : hov ? T.surface2 : 'transparent',
-        border: `1px solid ${active ? 'transparent' : hov ? T.goldMid : T.border}`,
+        background: active ? T.goldDim : hov ? T.surface2 : 'transparent',
+        border: `1px solid ${active ? T.goldMid : hov ? T.goldMid : T.border}`,
         borderRadius: 999, padding: '7px 14px', fontSize: 12.5, fontWeight: 600, fontFamily: 'inherit',
-        color: active ? '#000' : hov ? T.gold : T.t2, cursor: 'pointer', transition: 'all 160ms ease', whiteSpace: 'nowrap',
+        color: active ? T.gold : hov ? T.gold : T.t2, cursor: 'pointer', transition: 'all 160ms ease', whiteSpace: 'nowrap',
       }}>
       {label}
       {count != null && count > 0 && (
         <span style={{
           fontFamily: T.mono, fontSize: 10, fontWeight: 700,
-          color: active ? '#000' : T.gold, background: active ? 'rgba(0,0,0,0.14)' : T.goldDim,
+          color: T.gold, background: active ? 'rgba(217,119,87,0.22)' : T.goldDim,
           borderRadius: 999, padding: '0 6px', minWidth: 16, textAlign: 'center',
         }}>{count}</span>
       )}
@@ -100,7 +101,7 @@ const UpcomingRow = ({ ev, onDetails, delay }) => {
       onMouseLeave={() => setHov(false)}
       style={{
         display: 'flex', alignItems: 'center', gap: 14, padding: '14px 16px',
-        background: hov ? 'rgba(25,39,52,0.6)' : 'rgba(25,39,52,0.34)',
+        background: hov ? 'rgba(46,43,40,0.6)' : 'rgba(46,43,40,0.34)',
         border: `1px solid ${hov ? T.goldMid : T.border}`, borderRadius: 14,
         transition: 'all 160ms ease', transform: hov ? 'translateY(-1px)' : 'none',
         animation: `evFade .4s ease ${delay}ms both`,
@@ -150,7 +151,7 @@ const DoneRow = ({ ev, onToggle, expanded, delay }) => {
       onMouseEnter={() => setHov(true)}
       onMouseLeave={() => setHov(false)}
       style={{
-        background: hov || expanded ? 'rgba(25,39,52,0.6)' : 'rgba(25,39,52,0.34)',
+        background: hov || expanded ? 'rgba(46,43,40,0.6)' : 'rgba(46,43,40,0.34)',
         border: `1px solid ${hov || expanded ? T.goldMid : T.border}`, borderRadius: 14,
         transition: 'all 160ms ease', transform: hov && !expanded ? 'translateY(-1px)' : 'none',
         animation: `evFade .4s ease ${delay}ms both`, overflow: 'hidden',
@@ -158,7 +159,7 @@ const DoneRow = ({ ev, onToggle, expanded, delay }) => {
       <div style={{ display: 'flex', alignItems: 'center', gap: 14, padding: '14px 16px' }}>
         <div style={{
           display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
-          minWidth: 58, height: 58, borderRadius: 12, background: tone.bg, border: `1px solid ${tone.bd}`, flexShrink: 0,
+          minWidth: 58, height: 58, borderRadius: 12, background: 'rgba(0,0,0,0.22)', border: `1px solid ${T.border}`, flexShrink: 0,
         }}>
           <span style={{ fontSize: 17, fontWeight: 800, color: tone.col, lineHeight: 1, fontFamily: T.mono }}>
             {ev.norm20 == null ? '—' : frNum(ev.norm20)}
@@ -177,8 +178,7 @@ const DoneRow = ({ ev, onToggle, expanded, delay }) => {
             </span>
             <span style={{
               display: 'inline-flex', alignItems: 'center', gap: 5,
-              fontFamily: T.mono, fontWeight: 700, color: tone.col,
-              background: tone.bg, border: `1px solid ${tone.bd}`, borderRadius: 8, padding: '1px 8px',
+              fontFamily: T.mono, fontWeight: 700, color: T.t3,
             }}>
               {frNum(ev.score)} / {frNum(ev.maxScore)}
             </span>
@@ -306,6 +306,16 @@ const StudentEvaluationsPage = () => {
   }, [completed]);
   const avgTone = scoreTone(average);
 
+  // Classement + validation de l'année (rapatriés de l'ex-bulletin « Notes » → Évals
+  // porte désormais TOUT le résultat scolaire : moyenne + classement + validation).
+  const { rankingValue } = useStudentNotesParityData(isDemoMode ? null : user?.id);
+  const ranking = useMemo(() => {
+    const v = isDemoMode ? demoData?.stats?.ranking : rankingValue;
+    const m = v == null ? null : String(v).match(/(\d+)\D+(\d+)/);
+    return m ? { pos: Number(m[1]), total: Number(m[2]) } : { pos: null, total: null };
+  }, [isDemoMode, demoData?.stats?.ranking, rankingValue]);
+  const validation = average != null ? Math.min(100, Math.max(0, (average / 20) * 100)) : 0;
+
   /* ─── Onglet par défaut ─── */
   const [tab, setTab] = useState('upcoming');
   const [tabPinned, setTabPinned] = useState(false);
@@ -355,29 +365,45 @@ const StudentEvaluationsPage = () => {
         </div>
       </div>
 
-      {/* Moyenne générale */}
-      <div style={{
-        display: 'flex', alignItems: 'center', gap: 14, marginBottom: 22,
-        background: 'rgba(25,39,52,0.34)', border: `1px solid ${T.border}`, borderRadius: 16, padding: '16px 18px',
-      }}>
-        <div style={{
-          width: 46, height: 46, borderRadius: 12, background: avgTone.bg, border: `1px solid ${avgTone.bd}`,
-          display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
-        }}>
-          <Award size={22} color={avgTone.col} />
-        </div>
-        <div style={{ flex: 1, minWidth: 0 }}>
-          <div style={{ fontFamily: T.mono, fontSize: 10, fontWeight: 700, letterSpacing: '0.06em', color: T.t3, textTransform: 'uppercase' }}>
-            Moyenne générale
+      {/* Résultat scolaire : moyenne · classement · validation (ex-bulletin, désormais dans Évals) */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(212px, 1fr))', gap: 12, marginBottom: 22 }}>
+        {/* Moyenne générale */}
+        <div style={{ background: 'rgba(46,43,40,0.34)', border: `1px solid ${T.border}`, borderRadius: 16, padding: 16, display: 'flex', flexDirection: 'column', gap: 8 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 9 }}>
+            <span style={{ display: 'grid', placeItems: 'center', width: 34, height: 34, borderRadius: 10, background: 'rgba(0,0,0,0.22)', border: `1px solid ${T.border}`, flexShrink: 0 }}><Award size={18} color={avgTone.col} /></span>
+            <span style={{ fontFamily: T.mono, fontSize: 10, fontWeight: 700, letterSpacing: '0.05em', color: T.t3, textTransform: 'uppercase' }}>Moyenne générale</span>
           </div>
-          <div style={{ display: 'flex', alignItems: 'baseline', gap: 8, marginTop: 3 }}>
-            <span style={{ fontSize: 26, fontWeight: 800, color: avgTone.col, lineHeight: 1, fontFamily: T.mono }}>
-              {average == null ? '—' : frNum(average)}
-            </span>
+          <div style={{ display: 'flex', alignItems: 'baseline', gap: 6 }}>
+            <span style={{ fontSize: 30, fontWeight: 800, color: avgTone.col, lineHeight: 1, fontFamily: T.mono }}>{average == null ? '—' : frNum(average)}</span>
             <span style={{ fontSize: 13, color: T.t3, fontWeight: 600 }}>/ 20</span>
-            <span style={{ fontSize: 12, color: T.t3, marginLeft: 4 }}>
-              · {completed.length} évaluation{completed.length !== 1 ? 's' : ''} notée{completed.length !== 1 ? 's' : ''}
-            </span>
+          </div>
+          <div style={{ fontSize: 12, color: T.t3 }}>{completed.length} évaluation{completed.length !== 1 ? 's' : ''} notée{completed.length !== 1 ? 's' : ''}</div>
+        </div>
+        {/* Classement */}
+        <div style={{ background: 'rgba(46,43,40,0.34)', border: `1px solid ${T.border}`, borderRadius: 16, padding: 16, display: 'flex', flexDirection: 'column', gap: 8 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 9 }}>
+            <span style={{ display: 'grid', placeItems: 'center', width: 34, height: 34, borderRadius: 10, background: 'rgba(0,0,0,0.22)', border: `1px solid ${T.border}`, flexShrink: 0 }}><Trophy size={18} color={ranking.pos != null ? T.gold : T.t3} /></span>
+            <span style={{ fontFamily: T.mono, fontSize: 10, fontWeight: 700, letterSpacing: '0.05em', color: T.t3, textTransform: 'uppercase' }}>Classement</span>
+          </div>
+          <div style={{ display: 'flex', alignItems: 'baseline', gap: 6 }}>
+            <span style={{ fontSize: 30, fontWeight: 800, color: ranking.pos != null ? T.gold : T.t3, lineHeight: 1, fontFamily: T.mono }}>{ranking.pos != null ? `${ranking.pos}ᵉ` : '—'}</span>
+            {ranking.total != null && <span style={{ fontSize: 14, color: T.t3, fontFamily: T.mono }}>/ {ranking.total}</span>}
+          </div>
+          <div style={{ fontSize: 12, color: T.t3 }}>{ranking.pos == null ? 'Non classé' : ranking.total != null ? `Sur ${ranking.total} élève${ranking.total !== 1 ? 's' : ''}` : 'Position dans la promotion'}</div>
+        </div>
+        {/* Validation de l'année */}
+        <div style={{ background: 'rgba(46,43,40,0.34)', border: `1px solid ${T.border}`, borderRadius: 16, padding: 16, display: 'flex', flexDirection: 'column', gap: 8 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 9 }}>
+            <span style={{ display: 'grid', placeItems: 'center', width: 34, height: 34, borderRadius: 10, background: 'rgba(0,0,0,0.22)', border: `1px solid ${T.border}`, flexShrink: 0 }}><Target size={18} color={T.gold} /></span>
+            <span style={{ fontFamily: T.mono, fontSize: 10, fontWeight: 700, letterSpacing: '0.05em', color: T.t3, textTransform: 'uppercase' }}>Validation de l'année</span>
+          </div>
+          <div style={{ display: 'flex', alignItems: 'baseline', gap: 6 }}>
+            <span style={{ fontSize: 30, fontWeight: 800, color: T.gold, lineHeight: 1, fontFamily: T.mono }}>{average != null ? Math.round(validation) : '—'}</span>
+            <span style={{ fontSize: 14, color: T.t3 }}>%</span>
+            <span style={{ fontSize: 11.5, color: T.t3, marginLeft: 'auto' }}>seuil 50 %</span>
+          </div>
+          <div style={{ marginTop: 2, height: 6, borderRadius: 999, background: 'rgba(0,0,0,0.28)', overflow: 'hidden' }}>
+            <div style={{ height: '100%', width: `${validation}%`, borderRadius: 999, background: `linear-gradient(90deg, ${T.gold}, ${T.goldText})` }} />
           </div>
         </div>
       </div>

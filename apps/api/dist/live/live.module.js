@@ -12,9 +12,11 @@ const jwt_1 = require("@nestjs/jwt");
 const auth_module_1 = require("../auth/auth.module");
 const tenant_module_1 = require("../tenant/tenant.module");
 const livekit_module_1 = require("../livekit/livekit.module");
+const liri_entitlements_module_1 = require("../billing/liri-entitlements.module");
 const supabase_module_1 = require("../supabase/supabase.module");
 const live_service_1 = require("./live.service");
 const live_controller_1 = require("./live.controller");
+const live_replay_file_controller_1 = require("./live-replay-file.controller");
 const liri_admin_controller_1 = require("./liri-admin.controller");
 const live_embed_service_1 = require("./embed/live-embed.service");
 const live_embed_controller_1 = require("./embed/live-embed.controller");
@@ -30,11 +32,13 @@ exports.LiveModule = LiveModule = __decorate([
             auth_module_1.AuthModule,
             tenant_module_1.TenantModule,
             livekit_module_1.LiveKitModule,
+            liri_entitlements_module_1.LiriEntitlementsModule,
             supabase_module_1.SupabaseModule,
             jwt_1.JwtModule.register({}),
         ],
         controllers: [
             live_embed_controller_1.LiveEmbedController,
+            live_replay_file_controller_1.LiveReplayFileController,
             live_controller_1.LiveController,
             liri_admin_controller_1.LiriAdminController,
             livekit_webhook_controller_1.LiveKitWebhookController,

@@ -42,7 +42,7 @@ export default function WaitingRoomScreen() {
       <SafeAreaView edges={['top', 'bottom']} style={s.safe}>
         <View style={s.top}>
           <View style={s.pulse}><View style={s.pulseRing} /><Feather name="radio" size={30} color={EV.accent} /></View>
-          <Text style={s.kicker}>SALLE D'ATTENTE</Text>
+          <Text style={s.kicker}>SALLE D’ATTENTE</Text>
           <Text style={s.title} numberOfLines={2}>{title}</Text>
           <Text style={s.sub}>Le formateur va bientôt démarrer la session.</Text>
           <View style={s.timer}><Feather name="clock" size={14} color={EV.muted} /><Text style={s.timerTxt}>En attente · {mm}:{ss}</Text></View>
@@ -67,7 +67,7 @@ export default function WaitingRoomScreen() {
           <Text style={s.joinTxt}>Rejoindre maintenant</Text>
         </Pressable>
         <Pressable style={s.leave} onPress={() => (router.canGoBack() ? router.back() : router.replace('/lives'))}>
-          <Text style={s.leaveTxt}>Quitter la salle d'attente</Text>
+          <Text style={s.leaveTxt}>Quitter la salle d’attente</Text>
         </Pressable>
       </SafeAreaView>
     </View>

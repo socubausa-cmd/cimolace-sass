@@ -42,6 +42,27 @@ export function useLiveHostGuestSessionConfigRealtime({
     // status='ended' → restait connecté après l'arrêt de l'hôte. La garde isGuestUi + sessionId
     // suffit pour la détection de fin + la config temps réel. (fix 2026-06-16)
     if (!sessionId || !isGuestUi) return;
+    const finishGuestSession = (status) => {
+      if (!['ended', 'cancelled'].includes(String(status || ''))) return false;
+      if (phaseRef.current === PHASE.ENDED || liveSessionEndedHandledRef.current) return true;
+      liveSessionEndedHandledRef.current = true;
+      setAmbientTracks([]);
+      try {
+        if (roomRef.current) {
+          void roomRef.current.disconnect();
+          roomRef.current = null;
+        }
+      } catch {
+        /* ignore */
+      }
+      devLogLiveHostEnded('guest_session_ended', { status }, sessionId);
+      setPhase(PHASE.ENDED);
+      toast({
+        title: 'Live terminé',
+        description: 'Le formateur a mis fin à la session.',
+      });
+      return true;
+    };
     const ch = supabase
       .channel(`live-session-config-${sessionId}`)
       .on(
@@ -49,26 +70,7 @@ export function useLiveHostGuestSessionConfigRealtime({
         { event: 'UPDATE', schema: 'public', table: 'live_sessions', filter: `id=eq.${sessionId}` },
         (payload) => {
           const st = payload.new?.status;
-          if ((st === 'ended' || st === 'cancelled') && phaseRef.current !== PHASE.ENDED) {
-            if (liveSessionEndedHandledRef.current) return;
-            liveSessionEndedHandledRef.current = true;
-            setAmbientTracks([]);
-            try {
-              if (roomRef.current) {
-                void roomRef.current.disconnect();
-                roomRef.current = null;
-              }
-            } catch {
-              /* ignore */
-            }
-            devLogLiveHostEnded('realtime_guest_session_ended', { status: st }, sessionId);
-            setPhase(PHASE.ENDED);
-            toast({
-              title: 'Live terminé',
-              description: 'Le formateur a mis fin à la session.',
-            });
-            return;
-          }
+          if (finishGuestSession(st)) return;
           let cfg = payload.new?.config;
           if (cfg == null) return;
           if (typeof cfg === 'string') {
@@ -141,7 +143,16 @@ export function useLiveHostGuestSessionConfigRealtime({
         },
       )
       .subscribe();
+    const pollId = window.setInterval(async () => {
+      const { data } = await supabase
+        .from('live_sessions')
+        .select('status')
+        .eq('id', sessionId)
+        .maybeSingle();
+      finishGuestSession(data?.status);
+    }, 3000);
     return () => {
+      window.clearInterval(pollId);
       supabase.removeChannel(ch);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps -- setters + refs stables ; aligné historique LiveHostPage

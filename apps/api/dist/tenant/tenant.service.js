@@ -10,8 +10,24 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.TenantService = void 0;
+exports.isEmbeddedTenant = isEmbeddedTenant;
+exports.isPlatformOrigin = isPlatformOrigin;
 const common_1 = require("@nestjs/common");
 const auth_service_1 = require("../auth/auth.service");
+function isEmbeddedTenant(tenant) {
+    const mode = tenant?.metadata?.hosting_mode;
+    if (mode === "embedded")
+        return true;
+    if (mode === "hosted")
+        return false;
+    return !!tenant?.primary_domain;
+}
+function isPlatformOrigin(originOrReferer) {
+    const s = String(originOrReferer || "").toLowerCase();
+    if (!s)
+        return false;
+    return /(^|\/\/|\.)cimolace\.space([/:]|$)/.test(s) || /localhost|127\.0\.0\.1/.test(s);
+}
 let TenantService = class TenantService {
     constructor(authService) {
         this.authService = authService;
@@ -31,28 +47,75 @@ let TenantService = class TenantService {
                 .select("role")
                 .eq("tenant_id", tenant.id)
                 .eq("user_id", userId)
+                .eq("status", "active")
                 .single();
             const role = (membership?.role ?? null);
-            return { ...tenant, role, userRole: role };
+            return {
+                ...tenant,
+                role,
+                userRole: role,
+                data_region: tenant.data_region ?? "global",
+            };
         }
         const { data: membership } = await supabase
             .from("tenant_memberships")
             .select("tenant_id, role, tenants(*)")
             .eq("user_id", userId)
+            .eq("status", "active")
             .single();
         if (!membership)
             return null;
         const role = membership.role;
-        return { ...membership.tenants, role, userRole: role };
+        const tenant = membership.tenants;
+        return {
+            ...tenant,
+            role,
+            userRole: role,
+            data_region: tenant?.data_region ?? "global",
+        };
     }
     async resolveForUser(slug, userId) {
         return this.resolveTenant(userId, slug);
+    }
+    async joinAsStudent(userId, slug, fromPlatformHost = false) {
+        const supabase = this.authService.getClient();
+        const { data: tenant } = await supabase
+            .from("tenants")
+            .select("id, status, primary_domain, metadata")
+            .eq("slug", slug)
+            .single();
+        if (!tenant || tenant.status !== "active")
+            return null;
+        if (fromPlatformHost && isEmbeddedTenant(tenant))
+            return null;
+        const tenantId = tenant.id;
+        const { data: existing } = await supabase
+            .from("tenant_memberships")
+            .select("id, role, status")
+            .eq("tenant_id", tenantId)
+            .eq("user_id", userId)
+            .maybeSingle();
+        if (existing?.id) {
+            if (existing.status !== "active") {
+                await supabase
+                    .from("tenant_memberships")
+                    .update({ status: "active" })
+                    .eq("id", existing.id);
+            }
+            return { ok: true, joined: false, role: existing.role };
+        }
+        const { error } = await supabase
+            .from("tenant_memberships")
+            .insert({ tenant_id: tenantId, user_id: userId, role: "student", status: "active" });
+        if (error)
+            return { ok: true, joined: false };
+        return { ok: true, joined: true, role: "student" };
     }
     async getTenantBySlug(slug) {
         const supabase = this.authService.getClient();
         const { data } = await supabase
             .from("tenants")
-            .select("slug, name, logo_url, brand_colors, status, metadata")
+            .select("slug, name, logo_url, brand_colors, status, metadata, primary_domain")
             .eq("slug", slug)
             .single();
         if (!data || data.status !== "active")
@@ -76,7 +139,7 @@ let TenantService = class TenantService {
             return null;
         const { data } = await supabase
             .from("tenants")
-            .select("slug, name, logo_url, brand_colors, status")
+            .select("slug, name, logo_url, brand_colors, status, metadata")
             .eq("id", tenantId)
             .single();
         if (!data || data.status !== "active")
@@ -144,6 +207,23 @@ let TenantService = class TenantService {
         const { data } = await supabase
             .from("tenants")
             .update(patch)
+            .eq("id", tenantId)
+            .select("*")
+            .single();
+        return data;
+    }
+    async updateTenantSettings(tenantId, dto) {
+        const supabase = this.authService.getClient();
+        const tenant = (await this.getTenantById(tenantId));
+        const metadata = { ...(tenant?.metadata ?? {}) };
+        const settings = { ...(metadata.settings ?? {}) };
+        if (dto.requiresStudentDossier !== undefined) {
+            settings.requiresStudentDossier = dto.requiresStudentDossier;
+        }
+        metadata.settings = settings;
+        const { data } = await supabase
+            .from("tenants")
+            .update({ metadata })
             .eq("id", tenantId)
             .select("*")
             .single();

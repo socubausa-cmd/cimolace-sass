@@ -220,7 +220,7 @@ export function LiveStudioWizard({ draft, updateDraft, lastSavedAt, onClose, onS
         <aside className="live-studio-pane-right hidden w-[min(100%,320px)] shrink-0 flex-col lg:flex">
           <div className="live-studio-pane-head">
             <p className="flex items-center gap-2 text-[11px] font-bold uppercase tracking-[0.14em] text-white">
-              <span className="inline-flex h-7 w-7 items-center justify-center rounded-lg bg-[#7B61FF]/12 text-[#7B61FF]">
+              <span className="inline-flex h-7 w-7 items-center justify-center rounded-lg bg-[#d97757]/12 text-[#d97757]">
                 <Eye className="h-4 w-4" strokeWidth={2.25} />
               </span>
               APERÇU VISUEL

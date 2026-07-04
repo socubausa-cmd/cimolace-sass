@@ -142,7 +142,7 @@ function StepAnalysisLocalSearch({ rawText, structureCharEnd }) {
       {matches.length > 0 && (
         <ul className="max-h-40 overflow-y-auto space-y-1.5 text-[10px] text-slate-400">
           {matches.slice(0, 40).map((m, idx) => (
-            <li key={`${m.start}-${idx}`} className="leading-snug border-l-2 border-violet-500/30 pl-2">
+            <li key={`${m.start}-${idx}`} className="leading-snug border-l-2 border-[#d97757]/30 pl-2">
               <span className="text-slate-500 tabular-nums">{m.start}–{m.end}</span>
               {' · '}
               <span className="text-slate-300">{m.snippet}</span>
@@ -1132,7 +1132,7 @@ function StepAnalysis({ analysis, stepStatus, onLaunchBlocs, rawText }) {
             </div>
           )}
           {analysis.pedagogical_reordering_rationale && (
-            <p className="text-xs text-slate-500 leading-relaxed border-l-2 border-violet-500/40 pl-3">
+            <p className="text-xs text-slate-500 leading-relaxed border-l-2 border-[#d97757]/40 pl-3">
               {analysis.pedagogical_reordering_rationale.slice(0, 1200)}
               {analysis.pedagogical_reordering_rationale.length > 1200 ? '…' : ''}
             </p>

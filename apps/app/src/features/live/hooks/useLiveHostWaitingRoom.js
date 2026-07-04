@@ -36,6 +36,11 @@ export function useLiveHostWaitingRoom({ sessionId, onWaitingEntriesHydrated }) 
     };
 
     loadWaiting();
+    const pollId = window.setInterval(loadWaiting, 3000);
+    const onVisible = () => {
+      if (document.visibilityState === 'visible') void loadWaiting();
+    };
+    document.addEventListener('visibilitychange', onVisible);
 
     const ch = supabase
       .channel(`waiting-host-${sessionId}`)
@@ -54,6 +59,8 @@ export function useLiveHostWaitingRoom({ sessionId, onWaitingEntriesHydrated }) 
       .subscribe();
 
     return () => {
+      window.clearInterval(pollId);
+      document.removeEventListener('visibilitychange', onVisible);
       supabase.removeChannel(ch);
     };
   }, [sessionId, onWaitingEntriesHydrated]);

@@ -14,6 +14,7 @@ const common_1 = require("@nestjs/common");
 const supabase_js_1 = require("@supabase/supabase-js");
 const crypto_1 = require("crypto");
 const jwt = require('jsonwebtoken');
+const CIMOLACE_STAFF_ROLES = new Set(['owner', 'admin', 'support']);
 let AuthService = class AuthService {
     constructor() {
         this.supabase = (0, supabase_js_1.createClient)(process.env.SUPABASE_URL ?? '', process.env.SUPABASE_SERVICE_ROLE_KEY ?? '', { auth: { persistSession: false } });
@@ -21,12 +22,73 @@ let AuthService = class AuthService {
         if (!this.jwtSecret) {
             console.warn('[MedOS] MEDOS_JWT_SECRET non défini — le pont tenant-token ne fonctionnera pas');
         }
+        this.cimolaceAdminEmails = new Set(String(process.env.CIMOLACE_BACKOFFICE_ADMIN_EMAILS ?? '')
+            .split(',')
+            .map((email) => email.trim().toLowerCase())
+            .filter(Boolean));
     }
     async verifyToken(token) {
         const { data, error } = await this.supabase.auth.getUser(token);
         if (error || !data.user)
             return null;
-        return { id: data.user.id, email: data.user.email ?? '', role: 'authenticated' };
+        return {
+            id: data.user.id,
+            email: data.user.email ?? '',
+            role: 'authenticated',
+            user_metadata: (data.user.user_metadata ?? {}),
+            app_metadata: (data.user.app_metadata ?? {}),
+        };
+    }
+    async resolveCimolaceIdentity(user) {
+        const userId = user.id;
+        const email = String(user.email ?? '').toLowerCase();
+        const userMeta = (user.user_metadata ?? {});
+        const appMeta = (user.app_metadata ?? {});
+        let cimolaceStaff = userMeta.cimolace_staff === true || appMeta.cimolace_staff === true;
+        let staffRole = null;
+        let profileMetadata = {};
+        if (email && this.cimolaceAdminEmails.has(email)) {
+            cimolaceStaff = true;
+        }
+        try {
+            const { data: staff } = await this.supabase
+                .from('cimolace_staff_members')
+                .select('role,status')
+                .eq('user_id', userId)
+                .eq('status', 'active')
+                .maybeSingle();
+            const role = String(staff?.role ?? '').toLowerCase();
+            if (role && CIMOLACE_STAFF_ROLES.has(role)) {
+                cimolaceStaff = true;
+                staffRole = role;
+            }
+        }
+        catch {
+        }
+        try {
+            const { data: profile } = await this.supabase
+                .from('profiles')
+                .select('metadata,status')
+                .eq('id', userId)
+                .maybeSingle();
+            if (profile) {
+                profileMetadata = profile.metadata ?? {};
+                if (profile.status === 'active' && profileMetadata.cimolace_staff === true) {
+                    cimolaceStaff = true;
+                }
+            }
+        }
+        catch {
+        }
+        const role = staffRole ||
+            (cimolaceStaff ? 'owner' : String(user.role ?? 'authenticated').toLowerCase());
+        return {
+            id: userId,
+            email: user.email ?? '',
+            role,
+            cimolace_staff: cimolaceStaff,
+            metadata: { ...profileMetadata, cimolace_staff: cimolaceStaff },
+        };
     }
     generateMedosToken(payload) {
         if (!this.jwtSecret)

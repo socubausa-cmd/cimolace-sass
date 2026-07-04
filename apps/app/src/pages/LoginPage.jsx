@@ -25,7 +25,9 @@ import { FOUNDER_SLUG } from '@/lib/tenant/activeTenantConfig';
 import { Ripple, AnimatedForm } from '@/components/ui/animated-sign-in';
 
 const LIRI_CTA = {
-  background: `linear-gradient(90deg, ${EV_ACCENT} 0%, #5B21B6 100%)`,
+  // Coral → clay du PORTAIL LIRI (--coral #d97757 / --clay #c2683f). JAMAIS de violet
+  // (#5B21B6) : LIRI = terracotta, cohérent avec LiriPortalShell / lirilogo.png.
+  background: `linear-gradient(90deg, #d97757 0%, #c2683f 100%)`,
   boxShadow: EV_SH.cta,
   borderRadius: EV_R.lg,
 };
@@ -94,7 +96,11 @@ const LoginPage = () => {
   const isLiriMobileAuth = location.pathname.startsWith('/m/eleve/login');
   const spLogin = new URLSearchParams(location?.search || '');
   const redirectParam = spLogin.get('redirect') || spLogin.get('next');
-  const from = redirectParam || location.state?.from?.pathname || (isLiriMobileAuth ? ELEVE_MOBILE.home : '/dashboard');
+  // Défaut post-login : sur l'hôte PLATEFORME LIRI (localhost / liri.cimolace.space, sans
+  // tenant résolu) → le PORTAIL LIRI (/liri), surtout PAS /dashboard qui retombe sur la
+  // chrome ISNA Academy. Sur un domaine de tenant → son /dashboard (son académie).
+  const from = redirectParam || location.state?.from?.pathname
+    || (isLiriMobileAuth ? ELEVE_MOBILE.home : (isPlatformLiri ? '/liri' : '/dashboard'));
 
   // Sur petit écran, `/login` (liens, ProtectedRoute, e-mails…) envoie vers le parcours LIRI.
   useLayoutEffect(() => {
@@ -251,7 +257,7 @@ const LoginPage = () => {
             variant="outline"
             className={
               isLiriMobileAuth
-                ? 'mb-4 h-12 w-full border-violet-500/40 text-violet-200 hover:bg-violet-500/10'
+                ? 'mb-4 h-12 w-full border-[#d97757]/40 text-[#e8b6a3] hover:bg-[#d97757]/10'
                 : 'w-full mb-5 h-12 border-[color-mix(in_srgb,var(--school-accent)_50%,transparent)] text-[#f5e6c8] hover:bg-[color-mix(in_srgb,var(--school-accent)_15%,transparent)]'
             }
             asChild
@@ -336,7 +342,7 @@ const LoginPage = () => {
               onChange={handleChange}
               className={
                 isLiriMobileAuth
-                  ? 'h-12 border pl-10 text-white placeholder:text-white/35 focus:border-violet-500/60 focus:ring-violet-500/25'
+                  ? 'h-12 border pl-10 text-white placeholder:text-white/35 focus:border-[#d97757]/60 focus:ring-[#d97757]/25'
                   : 'pl-10 h-11 bg-[#192734] border-white/10 text-white focus:border-[var(--school-accent)] focus:ring-1 focus:ring-[color-mix(in_srgb,var(--school-accent)_30%,transparent)]'
               }
               style={isLiriMobileAuth ? { background: EV_CARD, borderColor: EV_LINE } : undefined}
@@ -354,7 +360,7 @@ const LoginPage = () => {
             </Label>
             <Link
               to="/forgot-password"
-              className={isLiriMobileAuth ? 'text-xs font-medium text-violet-400 hover:underline' : 'text-xs text-[var(--school-accent)] hover:underline'}
+              className={isLiriMobileAuth ? 'text-xs font-medium text-[#d97757] hover:underline' : 'text-xs text-[var(--school-accent)] hover:underline'}
             >
               Oublié ?
             </Link>
@@ -371,7 +377,7 @@ const LoginPage = () => {
               onChange={handleChange}
               className={
                 isLiriMobileAuth
-                  ? 'h-12 border pl-10 text-white placeholder:text-white/35 focus:border-violet-500/60 focus:ring-violet-500/25'
+                  ? 'h-12 border pl-10 text-white placeholder:text-white/35 focus:border-[#d97757]/60 focus:ring-[#d97757]/25'
                   : 'pl-10 h-11 bg-[#192734] border-white/10 text-white focus:border-[var(--school-accent)] focus:ring-1 focus:ring-[color-mix(in_srgb,var(--school-accent)_30%,transparent)]'
               }
               style={isLiriMobileAuth ? { background: EV_CARD, borderColor: EV_LINE } : undefined}
@@ -403,7 +409,7 @@ const LoginPage = () => {
         Pas encore inscrit ?{' '}
         <Link
           to="/signup"
-          className={isLiriMobileAuth ? 'font-medium text-violet-400 hover:underline' : 'text-[var(--school-accent)] hover:underline font-medium'}
+          className={isLiriMobileAuth ? 'font-medium text-[#d97757] hover:underline' : 'text-[var(--school-accent)] hover:underline font-medium'}
         >
           Créer un compte
         </Link>
@@ -447,7 +453,7 @@ const LoginPage = () => {
               )}
               <span className="font-sans text-[24px] font-extrabold tracking-tight text-white">{schoolBrand}</span>
               <span
-                className="text-[10px] font-bold uppercase tracking-[0.35em] text-violet-300/95"
+                className="text-[10px] font-bold uppercase tracking-[0.35em] text-[#e8b6a3]/95"
                 style={{ color: EV_ACCENT }}
               >
                 Academy

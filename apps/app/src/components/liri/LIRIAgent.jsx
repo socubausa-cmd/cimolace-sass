@@ -794,25 +794,33 @@ export default function LIRIAgent() {
       if (!sourceText.trim()) throw new Error('Texte du cours vide.');
 
       const designCanvas = resolveArchitectDesignCanvasForApiRequest();
-      const data = await invokeSupabaseFunction(supabase, 'smartboard-ia-generate', {
-        body: {
-          sourceText,
-          lang: 'fr',
-          fast: true,
-          ...(designCanvas ? { designCanvas } : {}),
-        },
-        headers,
-        timeout: 240_000,
-      });
-      if (!data?.slides?.length) {
-        throw new Error(data?.error || 'Aucune slide générée par SmartBoard Architect.');
+      // L'edge smartboard-ia-generate peut être ABSENTE (404 en prod) : son échec ne doit
+      // JAMAIS bloquer l'export — le cours structuré suffit (Step6 construit le deck
+      // localement via liriCourseToIAResponse). L'Architect n'est qu'un raffinement.
+      let data = null;
+      try {
+        data = await invokeSupabaseFunction(supabase, 'smartboard-ia-generate', {
+          body: {
+            sourceText,
+            lang: 'fr',
+            fast: true,
+            ...(designCanvas ? { designCanvas } : {}),
+          },
+          headers,
+          timeout: 240_000,
+        });
+      } catch (invokeErr) {
+        console.warn('[LIRIAgent] smartboard-ia-generate indisponible → import direct du cours structuré', invokeErr?.message);
+        data = null;
       }
-      savePendingArchitectForLiveStudio(data);
+      if (data?.slides?.length) {
+        savePendingArchitectForLiveStudio(data);
+      }
       const text = sourceText;
       const title = String(cours?.titre || '').trim() || 'Cours LIRI';
       savePendingLiriCourseForLiveStudio(cours);
       navigate('/studio/live?liriImport=1', {
-        state: { liriAgentImport: { text, title } },
+        state: { liriAgentImport: { text, title, cours } },
       });
     } catch (e) {
       const name = e?.name || '';
@@ -994,7 +1002,7 @@ export default function LIRIAgent() {
               const title = String(cours?.titre || '').trim() || 'Cours LIRI';
               savePendingLiriCourseForLiveStudio(cours);
               navigate('/studio/live?liriImport=1', {
-                state: { liriAgentImport: { text, title } },
+                state: { liriAgentImport: { text, title, cours } },
               });
             }}
             style={{

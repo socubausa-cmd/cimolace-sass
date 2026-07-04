@@ -43,17 +43,17 @@ export default function StudioLiriConstructeursGuidePage() {
       <div className="mx-auto max-w-4xl px-5 py-8 lg:px-8">
         <p className="mb-6 text-[13px] leading-relaxed text-white/45">
           {AUDIT_INTRO.map((p, i) => (
-            <span key={i} className="block border-l-2 border-violet-500/35 pl-3 mb-2 last:mb-0">
+            <span key={i} className="block border-l-2 border-[#d97757]/35 pl-3 mb-2 last:mb-0">
               {p}
             </span>
           ))}
         </p>
 
-        <div className="mb-8 rounded-2xl border border-cyan-500/20 bg-cyan-950/[0.12] px-5 py-5">
-          <h2 className="text-[12px] font-semibold uppercase tracking-[0.14em] text-cyan-400/90">Pipeline type</h2>
+        <div className="mb-8 rounded-2xl border border-[#d4924a]/20 bg-[#2e2016]/[0.12] px-5 py-5">
+          <h2 className="text-[12px] font-semibold uppercase tracking-[0.14em] text-[#e0a458]/90">Pipeline type</h2>
           <p className="mt-1 text-[12px] text-white/42">
             Les constructeurs ci-dessous préparent la structure et le contenu ; le{' '}
-            <Link to={DESIGNER_HREF} className="text-cyan-400/90 underline-offset-2 hover:underline">
+            <Link to={DESIGNER_HREF} className="text-[#e0a458]/90 underline-offset-2 hover:underline">
               SmartBoard Designer
             </Link>{' '}
             matérialise presque toujours l'étape visuelle avant live ou export.
@@ -61,7 +61,7 @@ export default function StudioLiriConstructeursGuidePage() {
           <ol className="mt-4 space-y-3">
             {CONSTRUCTEUR_PIPELINE_STEPS.map((s) => (
               <li key={s.step} className="flex gap-3 text-[12px] leading-relaxed text-white/52">
-                <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-cyan-500/15 text-[11px] font-bold text-cyan-300">
+                <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-[#d4924a]/15 text-[11px] font-bold text-[#e6b566]">
                   {s.step}
                 </span>
                 <span>
@@ -89,7 +89,7 @@ export default function StudioLiriConstructeursGuidePage() {
               {CONSTRUCTEURS_CATALOG.map((row) => (
                 <tr key={row.id} className="border-b border-white/[0.06] last:border-0">
                   <td className="px-3 py-2.5">
-                    <Link to={row.href} className="font-medium text-cyan-400/95 hover:underline">
+                    <Link to={row.href} className="font-medium text-[#e0a458]/95 hover:underline">
                       {row.title}
                     </Link>
                   </td>
@@ -107,7 +107,7 @@ export default function StudioLiriConstructeursGuidePage() {
             <a
               key={c.id}
               href={`#${c.id}`}
-              className="rounded-lg border border-white/10 bg-white/[0.04] px-2.5 py-1 text-[11px] text-white/50 transition-colors hover:border-violet-500/30 hover:text-white/80"
+              className="rounded-lg border border-white/10 bg-white/[0.04] px-2.5 py-1 text-[11px] text-white/50 transition-colors hover:border-[#d97757]/30 hover:text-white/80"
             >
               {c.title.split('(')[0].trim()}
             </a>
@@ -135,7 +135,7 @@ export default function StudioLiriConstructeursGuidePage() {
                       className={cn(
                         'rounded-md border px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide',
                         c.family === 'liri'
-                          ? 'border-violet-500/25 text-violet-300'
+                          ? 'border-[#d97757]/25 text-[#e8a97f]'
                           : 'border-amber-500/25 text-amber-300/90',
                       )}
                     >
@@ -145,7 +145,7 @@ export default function StudioLiriConstructeursGuidePage() {
                 </div>
                 <Link
                   to={c.href}
-                  className="inline-flex shrink-0 items-center gap-1 rounded-lg bg-violet-600 px-3 py-2 text-[12px] font-semibold text-white transition-colors hover:bg-violet-500"
+                  className="inline-flex shrink-0 items-center gap-1 rounded-lg bg-[#c96544] px-3 py-2 text-[12px] font-semibold text-white transition-colors hover:bg-[#d97757]"
                 >
                   Ouvrir l'outil
                   <ChevronRight className="h-4 w-4" />
@@ -158,7 +158,7 @@ export default function StudioLiriConstructeursGuidePage() {
                   <ul className="space-y-1.5">
                     {c.configures.map((line, i) => (
                       <li key={i} className="flex gap-2 text-[13px] leading-relaxed text-white/52">
-                        <span className="mt-2 h-1 w-1 shrink-0 rounded-full bg-cyan-500/55" />
+                        <span className="mt-2 h-1 w-1 shrink-0 rounded-full bg-[#d4924a]/55" />
                         {line}
                       </li>
                     ))}
@@ -177,8 +177,8 @@ export default function StudioLiriConstructeursGuidePage() {
               </div>
 
               <div className="mt-5 grid gap-4 sm:grid-cols-2">
-                <div className="rounded-xl border border-emerald-500/20 bg-emerald-500/[0.06] p-4">
-                  <h3 className="mb-2 flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.12em] text-emerald-400/95">
+                <div className="rounded-xl border border-[#5a8f52]/20 bg-[#5a8f52]/[0.06] p-4">
+                  <h3 className="mb-2 flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.12em] text-[#7bb06a]/95">
                     <CheckCircle2 className="h-3.5 w-3.5" />
                     Avantages
                   </h3>
@@ -209,7 +209,7 @@ export default function StudioLiriConstructeursGuidePage() {
                 <h3 className="mb-1 text-[11px] font-semibold uppercase tracking-[0.12em] text-white/35">Lien cahier des charges & vision produit</h3>
                 <p className="text-[13px] leading-relaxed text-white/48">{c.cahierDesCharges}</p>
                 {c.flowNext ? (
-                  <p className="mt-2 text-[12px] text-cyan-400/85">
+                  <p className="mt-2 text-[12px] text-[#e0a458]/85">
                     Enchaînement typique : {c.flowNext}
                   </p>
                 ) : null}
@@ -222,7 +222,7 @@ export default function StudioLiriConstructeursGuidePage() {
           <p className="text-[12px] text-white/40">Revenir au choix guidé des outils</p>
           <Link
             to="/studio/liri/constructeurs"
-            className="inline-flex items-center gap-1.5 text-[13px] font-medium text-violet-400 hover:text-violet-300"
+            className="inline-flex items-center gap-1.5 text-[13px] font-medium text-[#e08a5f] hover:text-[#e8a97f]"
           >
             <Compass className="h-4 w-4" />
             Hub constructeurs

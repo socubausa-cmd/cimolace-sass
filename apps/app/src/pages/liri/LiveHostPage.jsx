@@ -656,6 +656,7 @@ export default function LiveHostPage({ forceGuestRoute = false, joyKitSignalGran
     prevWaitingIdsRef,
     arenaHostAlertSoundRef,
     hostSfxCtxRef,
+    toast,
   });
 
   const { chatMessages, sendChatMessage } = useLiveHostSessionChat({

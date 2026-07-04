@@ -14,27 +14,39 @@ var __param = (this && this.__param) || function (paramIndex, decorator) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.CheckoutController = void 0;
 const common_1 = require("@nestjs/common");
+const current_user_decorator_1 = require("../auth/current-user.decorator");
+const jwt_auth_guard_1 = require("../auth/jwt-auth.guard");
+const skip_response_wrapper_decorator_1 = require("../common/decorators/skip-response-wrapper.decorator");
 const checkout_service_1 = require("./checkout.service");
+const create_checkout_session_dto_1 = require("./create-checkout-session.dto");
 let CheckoutController = class CheckoutController {
     constructor(svc) {
         this.svc = svc;
     }
-    async create(b) { return { data: await this.svc.createSession(b) }; }
-    async webhook(b) { return { data: await this.svc.handleWebhook(b) }; }
+    create(dto, user) {
+        return this.svc.createSession(user.id, dto.liveSessionId);
+    }
+    async webhook(req, sig) {
+        return this.svc.handleStripeWebhook(req.rawBody ?? Buffer.alloc(0), sig);
+    }
 };
 exports.CheckoutController = CheckoutController;
 __decorate([
     (0, common_1.Post)("sessions"),
+    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
     __param(0, (0, common_1.Body)()),
+    __param(1, (0, current_user_decorator_1.CurrentUser)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Object]),
-    __metadata("design:returntype", Promise)
+    __metadata("design:paramtypes", [create_checkout_session_dto_1.CreateCheckoutSessionDto, Object]),
+    __metadata("design:returntype", void 0)
 ], CheckoutController.prototype, "create", null);
 __decorate([
     (0, common_1.Post)("webhook/stripe"),
-    __param(0, (0, common_1.Body)()),
+    (0, skip_response_wrapper_decorator_1.SkipResponseWrapper)(),
+    __param(0, (0, common_1.Req)()),
+    __param(1, (0, common_1.Headers)("stripe-signature")),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Object]),
+    __metadata("design:paramtypes", [Object, String]),
     __metadata("design:returntype", Promise)
 ], CheckoutController.prototype, "webhook", null);
 exports.CheckoutController = CheckoutController = __decorate([
