@@ -881,7 +881,37 @@ function ConsultIdentityBadge({ identity }: { identity?: ConsultIdentity }) {
   );
 }
 
-function FaceToFace({ tracks, identity }: { tracks: any[]; identity?: ConsultIdentity }) {
+// Rôle d'un participant pour l'étiquette de vignette (patient comme praticien).
+// L'INVITÉ (proche/membre) a une identity préfixée `proche_` (cf. backend
+// issueInviteToken) → on le distingue du patient et du soignant SANS toucher au
+// token. Chaque vignette porte ainsi un nom + un rôle, quel que soit le nombre
+// d'invités (le rapport praticien↔patient, lui, ne bouge pas).
+type TileRole = { label: string; tone: 'self' | 'guest' | 'peer' };
+function participantRole(p: any, isHost: boolean): TileRole {
+  const identity = String(p?.identity || '');
+  const name = String(p?.name || '').trim();
+  if (p?.isLocal) return { label: 'Vous', tone: 'self' };
+  if (identity.startsWith('proche_')) return { label: name || 'Invité', tone: 'guest' };
+  return { label: name || (isHost ? 'Patient' : 'Praticien'), tone: 'peer' };
+}
+
+// Étiquette de rôle posée en haut à gauche d'une vignette : pastille + nom.
+// L'invité porte une pastille ambre + icône (le distingue du patient/soignant).
+function RoleTag({ role, style }: { role: TileRole; style?: React.CSSProperties }) {
+  const dot = role.tone === 'guest' ? GOLD : 'rgba(245,244,238,0.9)';
+  return (
+    <span style={{ position: 'absolute', left: 7, top: 7, zIndex: 3, display: 'inline-flex', alignItems: 'center', gap: 5, maxWidth: 'calc(100% - 14px)', fontSize: 10, fontWeight: 700, color: '#fff', background: 'rgba(0,0,0,0.6)', padding: '2px 8px', borderRadius: 999, pointerEvents: 'none', ...style }}>
+      {role.tone === 'guest' ? (
+        <UserPlus size={10} color={GOLD} aria-hidden="true" />
+      ) : (
+        <span style={{ width: 6, height: 6, borderRadius: '50%', background: dot, flexShrink: 0 }} />
+      )}
+      <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{role.label}</span>
+    </span>
+  );
+}
+
+function FaceToFace({ tracks, identity, isHost }: { tracks: any[]; identity?: ConsultIdentity; isHost?: boolean }) {
   const cams = tracks.filter((t) => t?.source === Track.Source.Camera);
   const screen = tracks.find((t) => t?.source === Track.Source.ScreenShare && t?.publication);
   const local = cams.find((t) => t?.participant?.isLocal) || null;
@@ -925,24 +955,19 @@ function FaceToFace({ tracks, identity }: { tracks: any[]; identity?: ConsultIde
       {/* Mini-cartes (dont SOI = retour de vue) en bas à droite — clic pour agrandir. */}
       {minis.length > 0 ? (
         <div style={{ position: 'absolute', right: 16, bottom: 16, display: 'flex', flexDirection: 'column', gap: 10, zIndex: 2 }}>
-          {minis.map((t) => {
-            const isSelf = !!t?.participant?.isLocal;
-            return (
-              <div
-                key={stableTrackKey(t)}
-                role="button"
-                tabIndex={0}
-                onClick={() => setFeaturedKey(stableTrackKey(t))}
-                title="Cliquer pour agrandir"
-                style={{ position: 'relative', width: 208, aspectRatio: '16 / 9', borderRadius: 12, overflow: 'hidden', background: '#000', border: '2px solid rgba(255,255,255,0.28)', boxShadow: '0 12px 34px rgba(0,0,0,0.55)', cursor: 'pointer' }}
-              >
-                <ParticipantTile trackRef={t} style={{ width: '100%', height: '100%', pointerEvents: 'none' }} />
-                {isSelf ? (
-                  <span style={{ position: 'absolute', left: 7, top: 7, fontSize: 10, fontWeight: 700, color: '#fff', background: 'rgba(0,0,0,0.55)', padding: '2px 7px', borderRadius: 999, pointerEvents: 'none' }}>Vous</span>
-                ) : null}
-              </div>
-            );
-          })}
+          {minis.map((t) => (
+            <div
+              key={stableTrackKey(t)}
+              role="button"
+              tabIndex={0}
+              onClick={() => setFeaturedKey(stableTrackKey(t))}
+              title="Cliquer pour agrandir"
+              style={{ position: 'relative', width: 208, aspectRatio: '16 / 9', borderRadius: 12, overflow: 'hidden', background: '#000', border: '2px solid rgba(255,255,255,0.28)', boxShadow: '0 12px 34px rgba(0,0,0,0.55)', cursor: 'pointer' }}
+            >
+              <ParticipantTile trackRef={t} style={{ width: '100%', height: '100%', pointerEvents: 'none' }} />
+              <RoleTag role={participantRole(t?.participant, !!isHost)} />
+            </div>
+          ))}
         </div>
       ) : null}
 
@@ -1180,7 +1205,7 @@ export function ConsultationStage({
   if (view === 'conversation') {
     return (
       <div style={{ flex: 1, minHeight: 0, padding: 14 }}>
-        <FaceToFace tracks={tracks} identity={identity} />
+        <FaceToFace tracks={tracks} identity={identity} isHost={isHost} />
       </div>
     );
   }
@@ -1226,13 +1251,13 @@ export function ConsultationStage({
           <AnnotationOverlay strokes={strokes} editable={editable} onStrokes={onStrokes} />
         ) : null}
       </div>
-      {!rightOpen ? <MembersRail tracks={tracks} /> : null}
+      {!rightOpen ? <MembersRail tracks={tracks} isHost={isHost} /> : null}
     </div>
   );
 }
 
 // ── Rail des participants (membres invités) — vue présentateur (Partage/Tableau) ─
-function MembersRail({ tracks }: { tracks: any[] }) {
+function MembersRail({ tracks, isHost }: { tracks: any[]; isHost?: boolean }) {
   const cams = tracks.filter((t) => t?.source === Track.Source.Camera);
   // Écran partagé : vignette dédiée EN TÊTE du rail (label ambre) → quand un
   // artefact/tableau occupe le grand cadre, le patient garde l'écran du praticien
@@ -1240,6 +1265,7 @@ function MembersRail({ tracks }: { tracks: any[] }) {
   const screen = tracks.find((t) => t?.source === Track.Source.ScreenShare && t?.publication);
   return (
     <div data-cr="members" style={{ width: 224, flexShrink: 0, display: 'flex', flexDirection: 'column', minHeight: 0, background: PANEL_BG, borderRadius: 14, border: PANEL_BORDER, overflow: 'hidden' }}>
+      <style>{`[data-cr="members"] .lk-participant-name{display:none!important}`}</style>
       <div style={{ display: 'flex', alignItems: 'center', gap: 7, padding: '10px 12px', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
         <Users size={15} color={GOLD} aria-hidden="true" />
         <span style={{ fontWeight: 600, fontSize: 13, color: '#fff' }}>Participants</span>
@@ -1257,8 +1283,9 @@ function MembersRail({ tracks }: { tracks: any[] }) {
           </div>
         ) : null}
         {cams.map((t, i) => (
-          <div key={tileKey(t, i)} style={{ width: '100%', aspectRatio: '16 / 9', flexShrink: 0, borderRadius: 10, overflow: 'hidden', background: '#000', border: '1px solid rgba(255,255,255,0.08)' }}>
+          <div key={tileKey(t, i)} style={{ position: 'relative', width: '100%', aspectRatio: '16 / 9', flexShrink: 0, borderRadius: 10, overflow: 'hidden', background: '#000', border: '1px solid rgba(255,255,255,0.08)' }}>
             <ParticipantTile trackRef={t} style={{ width: '100%', height: '100%' }} />
+            <RoleTag role={participantRole(t?.participant, !!isHost)} />
           </div>
         ))}
       </div>

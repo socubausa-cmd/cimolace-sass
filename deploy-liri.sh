@@ -49,8 +49,10 @@ PREV_URL=$(vercel ls app --scope cimolace 2>/dev/null | grep -i 'Production' | g
 echo "↩️  déploiement prod actuel (rollback de secours) : ${PREV_URL:-inconnu}"
 
 # --- 3) déploiement prod -----------------------------------------------------
-echo "🚀 vercel --prod --yes …"
-DEPLOY_OUT=$(vercel --prod --yes 2>&1); echo "$DEPLOY_OUT"
+echo "🚀 vercel --prod --yes --archive=tgz …"
+# --archive=tgz : contourne le quota « api-upload-free » (5000 fichiers/24h) que
+# des déploiements // répétés épuisent → sinon `missing_archive / Too many requests`.
+DEPLOY_OUT=$(vercel --prod --yes --archive=tgz 2>&1); echo "$DEPLOY_OUT"
 NEW_URL=$(echo "$DEPLOY_OUT" | grep -oE 'https://app-[a-z0-9]+-cimolace\.vercel\.app' | head -1)
 
 # --- 4) SMOKE TEST RUNTIME — le déploiement MONTE-T-IL vraiment ? -------------
