@@ -69,6 +69,8 @@ const LIVE_HOST_LONGIA_SIGNAL_HUB_KEYS = [
   'neuronqQuestions',
   'markNeuronqAnswered',
   'markNeuronqSkipped',
+  'neuronQActive',
+  'toggleNeuronQ',
   'hostCenterStageMirrorRef',
   'previewMobileMaquette',
   'handleMobileLayoutPreviewChange',

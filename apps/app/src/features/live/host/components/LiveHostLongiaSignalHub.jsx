@@ -83,6 +83,8 @@ export const LiveHostLongiaSignalHub = ({
   neuronqQuestions,
   markNeuronqAnswered,
   markNeuronqSkipped,
+  neuronQActive,
+  toggleNeuronQ,
   hostCenterStageMirrorRef,
   previewMobileMaquette,
   handleMobileLayoutPreviewChange,
@@ -115,6 +117,18 @@ export const LiveHostLongiaSignalHub = ({
       return next;
     });
   }, []);
+
+  // Onglet Script du tiroir Zone 3 — le master script RÉEL (étapes du cours),
+  // en lecture (plus de scriptSections=[] en dur) ; section courante = étape active.
+  const zone3ScriptSections = useMemo(
+    () => (Array.isArray(activeEtapes) ? activeEtapes : []).map((e, i) => ({
+      id: `etape-${e?.n ?? i}`,
+      title: e?.title || e?.court || `Étape ${i + 1}`,
+      content: e?.script || e?.intent || '',
+    })),
+    [activeEtapes],
+  );
+  const zone3CurrentSection = zone3ScriptSections[step] || null;
 
   if (phase !== PHASE.LIVE || isGuestUi) return null;
 
@@ -395,23 +409,9 @@ export const LiveHostLongiaSignalHub = ({
                               >
                                 ✓
                               </button>
-                              <button
-                                type="button"
-                                onClick={() => approveWaiting(e.id, { audioOnly: true })}
-                                title="Audio seulement"
-                                style={{
-                                  borderRadius: 3,
-                                  border: '1px solid rgba(251,191,36,.3)',
-                                  background: 'rgba(251,191,36,.07)',
-                                  padding: '3px 7px',
-                                  color: '#fbbf24',
-                                  fontSize: 9,
-                                  fontWeight: 700,
-                                  cursor: 'pointer',
-                                }}
-                              >
-                                ♪
-                              </button>
+                              {/* « ♪ Audio seulement » retiré : l'option audioOnly était
+                                  ignorée par approveWaiting (même effet qu'Accepter) —
+                                  trompeur tant que le backend ne la gère pas. */}
                               <button
                                 type="button"
                                 onClick={() => rejectWaiting(e.id)}
@@ -625,11 +625,15 @@ export const LiveHostLongiaSignalHub = ({
                       />
                     </div>
                   ) : null}
-                  {longiaSignalSubDrawer === 'zone3' ? (
+                  {longiaSignalSubDrawer === 'zone3' || longiaSignalSubDrawer === 'neuronq' ? (
                     <div style={{ flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column' }}>
+                      {/* UN seul composant pour Zone 3 ET NeuronQ (dédoublonné) : le
+                          raccourci NeuronQ ouvre le même panneau, onglet Q&A d'office. */}
                       <Zone3Panel
+                        key={longiaSignalSubDrawer}
                         embedded
                         open
+                        initialTab={longiaSignalSubDrawer === 'neuronq' ? 'questions' : 'membres'}
                         onClose={() => setLongiaSignalSubDrawer(null)}
                         members={activeMembers.map((m) => ({ userId: m.id, name: m.name, avatar_url: m.avatar_url, role: m.grade }))}
                         raisedHands={zone3RaisedHands}
@@ -643,114 +647,12 @@ export const LiveHostLongiaSignalHub = ({
                         questions={neuronqQuestions}
                         onMarkAnswered={markNeuronqAnswered}
                         onMarkSkipped={markNeuronqSkipped}
-                        scriptSections={[]}
+                        qaMode={Boolean(neuronQActive)}
+                        onToggleQaMode={toggleNeuronQ}
+                        scriptSections={zone3ScriptSections}
+                        scriptCurrentSection={zone3CurrentSection}
                       />
                     </div>
-                  ) : null}
-                  {longiaSignalSubDrawer === 'neuronq' ? (
-                    !debateNeuronqEnabled ? (
-                      <p style={{ fontSize: 11, color: 'rgba(255,255,255,.4)', textAlign: 'center', padding: '16px 8px', margin: 0 }}>
-                        NeuronQ n'est pas activé sur ce live.
-                      </p>
-                    ) : neuronqQuestions.length === 0 ? (
-                      <p style={{ fontSize: 11, color: 'rgba(255,255,255,.4)', textAlign: 'center', padding: '16px 8px', margin: 0 }}>
-                        0 question NeuronQ.
-                      </p>
-                    ) : (
-                      <div style={{ display: 'flex', flexDirection: 'column', gap: 5 }}>
-                        {neuronqQuestions.map((q) => (
-                          <div
-                            key={q.id}
-                            style={{
-                              display: 'flex',
-                              alignItems: 'flex-start',
-                              gap: 6,
-                              padding: '7px 8px',
-                              background: q.status === 'answered' ? 'rgba(200,148,62,.04)' : 'rgba(255,255,255,.025)',
-                              border: `1px solid ${q.status === 'answered' ? 'rgba(200,148,62,.2)' : 'rgba(200,148,62,.15)'}`,
-                              borderRadius: 4,
-                              opacity: q.status === 'answered' ? 0.55 : 1,
-                            }}
-                          >
-                            <div
-                              style={{
-                                width: 18,
-                                height: 18,
-                                borderRadius: '50%',
-                                background: 'rgba(200,148,62,.18)',
-                                border: '1px solid rgba(200,148,62,.4)',
-                                display: 'flex',
-                                alignItems: 'center',
-                                justifyContent: 'center',
-                                fontSize: 8,
-                                fontWeight: 700,
-                                color: '#c8943e',
-                                flexShrink: 0,
-                              }}
-                            >
-                              Q
-                            </div>
-                            <div style={{ flex: 1, minWidth: 0 }}>
-                              <p
-                                style={{
-                                  fontSize: 10,
-                                  color: 'rgba(255,255,255,.85)',
-                                  margin: '0 0 3px',
-                                  lineHeight: 1.45,
-                                  overflow: 'hidden',
-                                  display: '-webkit-box',
-                                  WebkitLineClamp: 3,
-                                  WebkitBoxOrient: 'vertical',
-                                }}
-                              >
-                                {q.reformulated_text || q.raw_text}
-                              </p>
-                              <span style={{ fontSize: 8, color: q.status === 'answered' ? '#c8943e' : 'rgba(200,148,62,.7)', fontWeight: 600 }}>
-                                {q.status === 'answered' ? '✓ Répondue' : 'En attente'}
-                              </span>
-                            </div>
-                            {!isGuestUi && q.status === 'pending' ? (
-                              <div style={{ display: 'flex', gap: 3, flexShrink: 0 }}>
-                                <button
-                                  type="button"
-                                  onClick={() => markNeuronqAnswered(q.id)}
-                                  title="Marquer répondue"
-                                  style={{
-                                    borderRadius: 3,
-                                    border: '1px solid rgba(200,148,62,.4)',
-                                    background: 'rgba(200,148,62,.12)',
-                                    padding: '3px 7px',
-                                    color: '#c8943e',
-                                    fontSize: 9,
-                                    fontWeight: 700,
-                                    cursor: 'pointer',
-                                  }}
-                                >
-                                  ✓
-                                </button>
-                                <button
-                                  type="button"
-                                  onClick={() => markNeuronqSkipped(q.id)}
-                                  title="Passer"
-                                  style={{
-                                    borderRadius: 3,
-                                    border: '1px solid rgba(255,255,255,.12)',
-                                    background: 'rgba(255,255,255,.04)',
-                                    padding: '3px 7px',
-                                    color: 'rgba(255,255,255,.35)',
-                                    fontSize: 9,
-                                    fontWeight: 700,
-                                    cursor: 'pointer',
-                                  }}
-                                >
-                                  —
-                                </button>
-                              </div>
-                            ) : null}
-                          </div>
-                        ))}
-                      </div>
-                    )
                   ) : null}
                   {/* Aperçu des vues retiré du hub (saturait) : l'œil ouvre désormais la vue
                       participant dans un nouvel onglet (cf. useLiveHostLongiaHubNav). */}

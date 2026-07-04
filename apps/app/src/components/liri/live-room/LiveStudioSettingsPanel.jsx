@@ -50,18 +50,20 @@ function SliderRow({ label, value, min, max, step = 1, onChange, unit = '', colo
 }
 
 // ─── Toggle switch ────────────────────────────────────────────────────────────
-function Toggle({ label, description, checked, onChange, color = '#D4AF37', dataCommKey }) {
+function Toggle({ label, description, checked, onChange, color = '#D4AF37', dataCommKey, disabled = false }) {
   return (
     <button
       type="button"
       data-checked={checked ? '1' : '0'}
       {...(dataCommKey ? { 'data-comm-key': dataCommKey } : {})}
-      onClick={() => onChange(!checked)}
+      onClick={() => { if (!disabled) onChange(!checked); }}
+      disabled={disabled}
       className={cn(
         'w-full flex items-center gap-3 p-3 rounded-xl border transition-all text-left',
         checked
           ? 'border-[color-mix(in_srgb,var(--school-accent)_30%,transparent)] bg-[color-mix(in_srgb,var(--school-accent)_8%,transparent)]'
-          : 'border-white/8 bg-white/[0.03] hover:border-white/15'
+          : 'border-white/8 bg-white/[0.03] hover:border-white/15',
+        disabled && 'cursor-not-allowed opacity-45'
       )}
     >
       <div
@@ -703,9 +705,12 @@ export default function LiveStudioSettingsPanel({
                     </div>
                     <Toggle
                       label="Filtre bruit de fond"
-                      description="Supprime les bruits ambiants (PC, ventilateur…)"
+                      description={liriAudioMode === 'music'
+                        ? 'Sans effet en mode Musique (la capture reste brute pour préserver le son)'
+                        : 'Supprime les bruits ambiants (PC, ventilateur…)'}
                       checked={noiseReduction}
                       onChange={onNoiseReductionChange}
+                      disabled={liriAudioMode === 'music'}
                     />
                   </StudioPanelSection>
 

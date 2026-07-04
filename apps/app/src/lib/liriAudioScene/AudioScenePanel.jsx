@@ -151,23 +151,27 @@ export function AudioScenePanel({
             >
               <Play className="h-3.5 w-3.5" /> Lancer
             </button>
+            {/* Transport gaté par l'état réel du moteur — plus de clics morts. */}
             <button
               type="button"
-              className="inline-flex h-9 items-center gap-1 rounded-xl border border-white/12 bg-white/[0.06] px-3 text-[11px] hover:bg-white/10"
+              disabled={engineState !== 'playing'}
+              className="inline-flex h-9 items-center gap-1 rounded-xl border border-white/12 bg-white/[0.06] px-3 text-[11px] hover:bg-white/10 disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-white/[0.06]"
               onClick={() => pause()}
             >
               <Pause className="h-3.5 w-3.5" /> Pause
             </button>
             <button
               type="button"
-              className="inline-flex h-9 items-center gap-1 rounded-xl border border-white/12 bg-white/[0.06] px-3 text-[11px] hover:bg-white/10"
+              disabled={engineState !== 'paused'}
+              className="inline-flex h-9 items-center gap-1 rounded-xl border border-white/12 bg-white/[0.06] px-3 text-[11px] hover:bg-white/10 disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-white/[0.06]"
               onClick={() => void resume()}
             >
               Reprendre
             </button>
             <button
               type="button"
-              className="inline-flex h-9 items-center gap-1 rounded-xl border border-white/12 bg-white/[0.06] px-3 text-[11px] hover:bg-white/10"
+              disabled={engineState !== 'playing' && engineState !== 'paused'}
+              className="inline-flex h-9 items-center gap-1 rounded-xl border border-white/12 bg-white/[0.06] px-3 text-[11px] hover:bg-white/10 disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-white/[0.06]"
               onClick={() => stop()}
             >
               <Square className="h-3.5 w-3.5" /> Stop

@@ -255,15 +255,30 @@ export function useLiveHostLiveSessionSignalsRealtime({
         { event: 'UPDATE', schema: 'public', table: 'live_session_signals', filter: `live_session_id=eq.${sessionId}` },
         (payload) => {
           if (payload.new.type === 'hand_raise' && payload.new.resolved) {
+            // Purge par signalId ET par userId : les entrées arrivées via broadcast
+            // n'ont pas de signalId → sans le filtre userId elles restaient à jamais
+            // dans Modération (badge « mains levées » périmé).
+            const resolvedUid = payload.new.user_id != null ? String(payload.new.user_id) : null;
             setPanels((prev) =>
               prev.map((p, i) =>
-                i === 0 ? { ...p, events: p.events.filter((e) => e.signalId !== payload.new.id) } : p,
+                i === 0
+                  ? {
+                      ...p,
+                      events: p.events.filter(
+                        (e) => e.signalId !== payload.new.id
+                          && !(resolvedUid && e.userId != null && String(e.userId) === resolvedUid),
+                      ),
+                    }
+                  : p,
               ),
             );
             if (isGuestUi && userId && payload.new.user_id === userId) {
               setMyHandRaised(false);
             }
-            setZone3RaisedHands((prev) => prev.filter((h) => h.signalId !== payload.new.id));
+            setZone3RaisedHands((prev) => prev.filter(
+              (h) => h.signalId !== payload.new.id
+                && !(resolvedUid && h.userId != null && String(h.userId) === resolvedUid),
+            ));
           }
           if (payload.new.type === LIVE_PERMISSION_REQUEST_SIGNAL_TYPE && payload.new.resolved && !isGuestUi) {
             setHostPermissionRequests((prev) => prev.filter((p) => p.id !== payload.new.id));

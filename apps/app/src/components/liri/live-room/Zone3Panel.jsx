@@ -348,8 +348,10 @@ export default function Zone3Panel({
    * le panneau remplit le parent flex pour rester emboîté et responsive.
    */
   embedded = false,
+  /** Onglet ouvert au montage (ex. 'questions' quand on arrive par NeuronQ). */
+  initialTab = 'membres',
 }) {
-  const [activeTab, setActiveTab] = useState('membres');
+  const [activeTab, setActiveTab] = useState(initialTab);
 
   useEffect(() => {
     if (!neuronqEnabled && activeTab === 'questions') setActiveTab('membres');
@@ -457,12 +459,13 @@ export default function Zone3Panel({
                 'bg-[radial-gradient(circle_at_14%_10%,rgba(255,255,255,0.06),transparent_38%)]',
               )}
             >
-            <AnimatePresence mode="wait">
+            {/* Swap d'onglet DÉTERMINISTE : plus d'AnimatePresence mode="wait" (une
+                exit-animation qui ne se termine pas laissait l'ancien onglet affiché
+                — onglet actif ≠ contenu). Fondu d'entrée conservé. */}
               <motion.div
                 key={activeTab}
                 initial={{ opacity: 0, y: 5 }}
                 animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -5 }}
                 transition={{ duration: 0.16 }}
               >
                 {activeTab === 'membres' && (
@@ -517,7 +520,6 @@ export default function Zone3Panel({
                   />
                 )}
               </motion.div>
-            </AnimatePresence>
             </div>
           </div>
 
