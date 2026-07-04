@@ -266,11 +266,20 @@ export default function ConsultationRoom() {
     };
   }, [sessionId, user?.id, ctxResolved, ctx?.role]);
 
-  // 2) Connexion LiveKit. L'hôte entre immédiatement. Le patient attend une
-  //    admission explicite ; Realtime + polling ci-dessus rendent le flux fiable.
+  // 2) Connexion LiveKit. Téléconsult 1-1 : l'hôte ET le patient entrent
+  //    DIRECTEMENT dans leur propre consultation (le praticien attend son
+  //    patient — une salle d'attente à admission manuelle le bloquait à tort
+  //    quand l'inscription/l'admission échouait silencieusement). Le patient
+  //    apparaît chez le praticien comme participant LiveKit. La sécurité reste
+  //    côté backend (le token n'est délivré qu'au vrai patient de la session).
+  //    `patientWaitingStatus === 'admitted'` reste géré pour compat (admission
+  //    manuelle si un jour ré-activée), mais n'est plus une barrière.
   const canConnect =
     ctxResolved &&
-    (!ctx || ctx.role === 'host' || patientWaitingStatus === 'admitted');
+    (!ctx ||
+      ctx.role === 'host' ||
+      ctx.role === 'patient' ||
+      patientWaitingStatus === 'admitted');
   useEffect(() => {
     if (!sessionId || conn || !canConnect) return undefined;
     let alive = true;
