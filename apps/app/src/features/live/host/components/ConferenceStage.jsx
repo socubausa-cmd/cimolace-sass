@@ -315,7 +315,7 @@ export default function ConferenceStage({ liveParticipants, livekitParticipantsM
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
             {filteredPanelRest.map((m) => (
               <div key={m.id} style={{ aspectRatio: '16 / 9' }}>
-                <Tile m={m} lk={lkOf(m)} mediaEpoch={liveKitMediaEpoch} speaking={String(activeSpeakerId) === String(m.id)} mic onClick={() => { if (onMemberPreview) { onMemberPreview(m); } else { setPinnedId(m.id); setAutoFollow(false); } }} />
+                <Tile m={m} lk={lkOf(m)} mediaEpoch={liveKitMediaEpoch} speaking={String(activeSpeakerId) === String(m.id)} mic onClick={() => { setPinnedId(m.id); setAutoFollow(false); setView('speaker'); }} />
               </div>
             ))}
             <button type="button" style={{ aspectRatio: '16 / 9', borderRadius: 12, border: '1px dashed rgba(255,255,255,.18)', background: 'rgba(255,255,255,.03)', color: 'rgba(255,255,255,.6)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 4, cursor: 'pointer', fontSize: 10.5, fontWeight: 700 }}>

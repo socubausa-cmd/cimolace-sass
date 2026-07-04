@@ -285,7 +285,7 @@ export function MemberVideoModal({
                 onEmptied={() => setVideoLive(false)}
               />
               {!videoLive && (
-                <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 bg-gradient-to-br from-[#1a2540] to-black/80">
+                <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 bg-gradient-to-br from-[#211f1c] to-[#100d0a]">
                   {presenceMeta?.avatar_url ? (
                     <img
                       src={presenceMeta.avatar_url}
@@ -293,7 +293,7 @@ export function MemberVideoModal({
                       className="h-20 w-20 rounded-full object-cover border border-[color-mix(in_srgb,var(--school-accent)_35%,transparent)]"
                     />
                   ) : (
-                    <div className="h-20 w-20 rounded-full bg-gradient-to-br from-[color-mix(in_srgb,var(--school-accent)_28%,transparent)] to-[#1a2540] border border-[color-mix(in_srgb,var(--school-accent)_30%,transparent)] flex items-center justify-center text-xl font-bold text-[var(--school-accent)]">
+                    <div className="h-20 w-20 rounded-full bg-gradient-to-br from-[color-mix(in_srgb,var(--school-accent)_28%,transparent)] to-[#211f1c] border border-[color-mix(in_srgb,var(--school-accent)_30%,transparent)] flex items-center justify-center text-xl font-bold text-[var(--school-accent)]">
                       {(name || '?').slice(0, 1).toUpperCase()}
                     </div>
                   )}
@@ -533,7 +533,7 @@ export function MemberVideoModal({
           {schoolLifeOpen ? (
             <div
               className={cn(
-                'absolute inset-0 z-[50] flex flex-col min-h-0 bg-gradient-to-b from-[#0a0f18]/97 to-black/95 backdrop-blur-xl px-3 sm:px-5',
+                'absolute inset-0 z-[50] flex flex-col min-h-0 bg-gradient-to-b from-[#100d0a]/97 to-black/95 backdrop-blur-xl px-3 sm:px-5',
                 isViewport
                   ? 'pt-[max(3.5rem,env(safe-area-inset-top)+2.5rem)] pb-[max(1rem,env(safe-area-inset-bottom))]'
                   : 'pt-14 pb-4',
