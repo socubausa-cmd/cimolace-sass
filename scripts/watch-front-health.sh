@@ -21,22 +21,37 @@ ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 SMOKE="$ROOT/scripts/smoke-front-health.mjs"
 LOG="${WATCH_LOG:-/tmp/liri-front-health.log}"
 
-echo "[$(date '+%F %T')] 👁️  surveillance démarrée — $URL (check /${INTERVAL}s)" | tee -a "$LOG"
-fails=0
+# WATCH_ON_FAIL=exit   (défaut) : sort (exit 2) sur régression → re-invoque Claude (session run_in_background).
+# WATCH_ON_FAIL=notify           : notifie macOS (osascript) 1×/épisode et CONTINUE → mode launchd permanent.
+ON_FAIL="${WATCH_ON_FAIL:-exit}"
+notify() { [ "$ON_FAIL" = "notify" ] && command -v osascript >/dev/null && osascript -e "display notification \"$2\" with title \"$1\" sound name \"Basso\"" >/dev/null 2>&1 || true; }
+
+echo "[$(date '+%F %T')] 👁️  surveillance démarrée — $URL (check /${INTERVAL}s · on-fail=$ON_FAIL)" | tee -a "$LOG"
+fails=0; notified=0
 while true; do
   if node "$SMOKE" "$URL" >/tmp/_watch_smoke.json 2>/dev/null; then
-    [ "$fails" -gt 0 ] && echo "[$(date '+%F %T')] ↩️ rétabli" | tee -a "$LOG"
-    fails=0
+    if [ "$notified" = "1" ]; then
+      echo "[$(date '+%F %T')] ↩️ prod RÉTABLIE" | tee -a "$LOG"
+      notify "✅ LIRI prod rétablie" "La prod remonte correctement."
+    fi
+    fails=0; notified=0
     echo "[$(date '+%F %T')] ✅ prod saine" >> "$LOG"
     sleep "$INTERVAL"
   else
     fails=$((fails + 1))
     echo "[$(date '+%F %T')] ⚠️ smoke KO ($fails/2) — $(tr -d '\n' </tmp/_watch_smoke.json)" | tee -a "$LOG"
     if [ "$fails" -ge 2 ]; then
-      echo "[$(date '+%F %T')] ⛔ RÉGRESSION CONFIRMÉE — prod BLANCHE. Rollback requis (vercel promote <url-saine>)." | tee -a "$LOG"
-      cat /tmp/_watch_smoke.json
-      exit 2
+      echo "[$(date '+%F %T')] ⛔ RÉGRESSION CONFIRMÉE — prod BLANCHE. Rollback : vercel promote <url-saine> --scope cimolace --yes" | tee -a "$LOG"
+      if [ "$ON_FAIL" = "notify" ]; then
+        [ "$notified" != "1" ] && notify "⛔ LIRI prod cassée (page blanche)" "Rollback requis : vercel promote <url-saine>"
+        notified=1
+        sleep "$INTERVAL"
+      else
+        cat /tmp/_watch_smoke.json
+        exit 2
+      fi
+    else
+      sleep 20   # re-test rapide pour confirmer (anti faux-positif)
     fi
-    sleep 20   # re-test rapide pour confirmer (anti faux-positif)
   fi
 done
