@@ -57,7 +57,10 @@ export function LiveHostMobileParticipantStrip({
       >
         {liveParticipants.slice(0, 20).map((p) => {
           const name = p.displayName || p.name || p.full_name || p.user_id || '?';
-          const isSelf = p.user_id === user?.id || p.userId === user?.id;
+          // isSelf exige DEUX ids définis : undefined===undefined rendait TOUS les
+          // membres « Moi » (harness dev, invités anonymes).
+          const pid = p.user_id ?? p.userId;
+          const isSelf = user?.id != null && pid != null && String(pid) === String(user.id);
           const accentColor = getColor(p.user_id || p.userId || name);
           const isSpeaking = Boolean(p.isSpeaking || p.speaking);
           const micEnabled = p.micOn !== false && p.mic !== false;
