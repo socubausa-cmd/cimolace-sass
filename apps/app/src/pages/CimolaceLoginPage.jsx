@@ -12,12 +12,15 @@ import { startGoogleOAuth, clearStoredOAuthTenant } from '@/lib/googleOAuth';
 const DEV_CIMOLACE_EMAIL    = 'cimolace-admin@prorascience.local';
 const DEV_CIMOLACE_PASSWORD = 'CimolaceDev2026';
 
+// Charte prorascience.org (or/slate) — alignée sur la homepage. Accent OR unique.
+const GOLD = '#d8b468', GOLD_SOFT = '#e6cc92', SERIF = "'Fraunces','Source Serif 4',Georgia,serif";
+
 const PRODUCTS = [
-  { icon: Sparkles,      label: 'LIRI Studio', desc: 'Live + IA · Studio · Masterclass · SmartBoard', color: '#6366f1' },
-  { icon: GraduationCap, label: 'École',       desc: 'ISNA · 11 moteurs · Live, cours, IA',           color: '#10b981' },
-  { icon: Stethoscope,   label: 'MedOS',       desc: 'EHR · praticiens · patients · prescriptions',   color: '#3b82f6' },
-  { icon: ShoppingBag,   label: 'Mbolo',       desc: 'Commerce · catalogue · paiements',              color: '#f59e0b' },
-  { icon: Zap,           label: 'Community',   desc: 'Forum · messagerie · événements',               color: '#8b5cf6' },
+  { icon: Sparkles,      label: 'LIRI Studio', desc: 'Live + IA · Studio · Masterclass · SmartBoard', color: GOLD },
+  { icon: GraduationCap, label: 'École',       desc: 'ISNA · 11 moteurs · Live, cours, IA',           color: GOLD },
+  { icon: Stethoscope,   label: 'MedOS',       desc: 'EHR · praticiens · patients · prescriptions',   color: GOLD },
+  { icon: ShoppingBag,   label: 'Mbolo',       desc: 'Commerce · catalogue · paiements',              color: GOLD },
+  { icon: Zap,           label: 'Community',   desc: 'Forum · messagerie · événements',               color: GOLD },
 ];
 
 export default function CimolaceLoginPage() {
@@ -120,12 +123,12 @@ export default function CimolaceLoginPage() {
         <meta name="robots" content="noindex" />
       </Helmet>
 
-      <div style={{ minHeight: '100vh', display: 'flex', background: '#0d1117' }}>
+      <div style={{ minHeight: '100vh', display: 'flex', background: '#0f1419' }}>
 
         {/* ── Left panel — branding ── */}
         <div style={{
           width: '420px', flexShrink: 0,
-          background: 'linear-gradient(160deg, #0d1117 0%, #12101e 60%, #0f0c1e 100%)',
+          background: 'linear-gradient(160deg, #0f1419 0%, #141b24 60%, #0f1419 100%)',
           borderRight: '1px solid #21262d',
           display: 'flex', flexDirection: 'column', justifyContent: 'space-between',
           padding: '48px 40px',
@@ -136,7 +139,7 @@ export default function CimolaceLoginPage() {
           <div style={{
             position: 'absolute', top: '-80px', left: '-80px',
             width: '360px', height: '360px', borderRadius: '50%',
-            background: 'radial-gradient(circle, rgba(124,58,237,0.12) 0%, transparent 70%)',
+            background: 'radial-gradient(circle, rgba(216,180,104,0.14) 0%, transparent 70%)',
             pointerEvents: 'none',
           }} />
 
@@ -145,15 +148,15 @@ export default function CimolaceLoginPage() {
             <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '48px' }}>
               <div style={{
                 width: '36px', height: '36px', borderRadius: '8px',
-                background: 'rgba(124,58,237,0.20)', border: '1px solid rgba(124,58,237,0.4)',
+                background: 'rgba(216,180,104,0.16)', border: '1px solid rgba(216,180,104,0.35)',
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
               }}>
-                <Globe size={18} color="#8b5cf6" strokeWidth={2} />
+                <Globe size={18} color={GOLD} strokeWidth={2} />
               </div>
               <span style={{ color: '#f0f6fc', fontSize: '18px', fontWeight: 800, letterSpacing: '0.06em' }}>CIMOLACE</span>
             </div>
 
-            <h2 style={{ color: '#f0f6fc', fontSize: '28px', fontWeight: 800, lineHeight: 1.25, marginBottom: '12px' }}>
+            <h2 style={{ color: '#f4efe6', fontFamily: SERIF, fontSize: '30px', fontWeight: 600, letterSpacing: '-0.02em', lineHeight: 1.1, marginBottom: '12px' }}>
               Infrastructure<br />intelligente pour<br />l'Afrique
             </h2>
             <p style={{ color: '#8b949e', fontSize: '14px', lineHeight: 1.6, marginBottom: '40px' }}>
@@ -203,7 +206,7 @@ export default function CimolaceLoginPage() {
 
             {/* Mobile logo */}
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '36px' }} className="lg:hidden">
-              <Globe size={20} color="#8b5cf6" />
+              <Globe size={20} color={GOLD} />
               <span style={{ color: '#f0f6fc', fontSize: '18px', fontWeight: 800, letterSpacing: '0.06em' }}>CIMOLACE</span>
             </div>
 
@@ -254,12 +257,12 @@ export default function CimolaceLoginPage() {
                   placeholder="admin@cimolace.com"
                   style={{
                     width: '100%', padding: '11px 14px',
-                    background: '#161b22', border: '1px solid #21262d',
+                    background: '#161d25', border: '1px solid #21262d',
                     borderRadius: '8px', color: '#f0f6fc', fontSize: '14px',
                     outline: 'none', boxSizing: 'border-box',
                     transition: 'border-color 0.15s ease',
                   }}
-                  onFocus={e => e.target.style.borderColor = '#7c3aed'}
+                  onFocus={e => e.target.style.borderColor = GOLD}
                   onBlur={e => e.target.style.borderColor = '#21262d'}
                 />
               </div>
@@ -272,12 +275,12 @@ export default function CimolaceLoginPage() {
                   placeholder="••••••••"
                   style={{
                     width: '100%', padding: '11px 14px',
-                    background: '#161b22', border: '1px solid #21262d',
+                    background: '#161d25', border: '1px solid #21262d',
                     borderRadius: '8px', color: '#f0f6fc', fontSize: '14px',
                     outline: 'none', boxSizing: 'border-box',
                     transition: 'border-color 0.15s ease',
                   }}
-                  onFocus={e => e.target.style.borderColor = '#7c3aed'}
+                  onFocus={e => e.target.style.borderColor = GOLD}
                   onBlur={e => e.target.style.borderColor = '#21262d'}
                 />
               </div>
@@ -285,15 +288,15 @@ export default function CimolaceLoginPage() {
                 type="submit" disabled={isLoading}
                 style={{
                   width: '100%', padding: '12px',
-                  background: isLoading ? '#5b21b6' : '#7c3aed',
+                  background: isLoading ? 'rgba(216,180,104,0.5)' : GOLD,
                   border: 'none', borderRadius: '8px',
-                  color: '#fff', fontSize: '14px', fontWeight: 700,
+                  color: '#20160f', fontSize: '14px', fontWeight: 700,
                   cursor: isLoading ? 'not-allowed' : 'pointer',
                   transition: 'background 0.18s ease',
                   display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px',
                 }}
-                onMouseEnter={e => { if (!isLoading) e.target.style.background = '#6d28d9'; }}
-                onMouseLeave={e => { if (!isLoading) e.target.style.background = '#7c3aed'; }}
+                onMouseEnter={e => { if (!isLoading) e.target.style.background = GOLD_SOFT; }}
+                onMouseLeave={e => { if (!isLoading) e.target.style.background = GOLD; }}
               >
                 {isLoading ? (
                   <>
@@ -345,7 +348,7 @@ export default function CimolaceLoginPage() {
             {isDev && (
               <div style={{
                 marginTop: '24px', padding: '14px 16px',
-                background: 'rgba(124,58,237,0.06)', border: '1px solid rgba(124,58,237,0.20)',
+                background: 'rgba(216,180,104,0.06)', border: '1px solid rgba(216,180,104,0.16)',
                 borderRadius: '8px',
               }}>
                 <div style={{ color: '#c4b5fd', fontSize: '12px', fontWeight: 700, marginBottom: '8px' }}>Dev — compte local</div>
@@ -354,7 +357,7 @@ export default function CimolaceLoginPage() {
                 <div style={{ display: 'flex', gap: '8px' }}>
                   <button type="button" onClick={fillDev} style={{
                     flex: 1, padding: '7px 12px', borderRadius: '6px',
-                    background: '#7c3aed', border: 'none', color: '#fff',
+                    background: GOLD, border: 'none', color: '#20160f',
                     fontSize: '12px', fontWeight: 600, cursor: 'pointer',
                   }}>Remplir</button>
                   <button type="button" onClick={resetSession} style={{

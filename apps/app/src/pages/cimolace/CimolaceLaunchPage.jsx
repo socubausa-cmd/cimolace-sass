@@ -7,11 +7,15 @@ import {
 import CimolaceHeader from '@/components/cimolace/CimolaceHeader';
 import CimolaceFooter from '@/components/cimolace/CimolaceFooter';
 
-// ── Design tokens ─────────────────────────────────────────────────────────────
+// ── Design tokens — charte prorascience.org (or/slate), alignée sur la homepage.
+// Accent OR unique (committed), fini l'arc-en-ciel violet/vert/bleu/orange : les
+// tokens de teinte (violet/green/blue/orange) pointent tous sur l'or → toutes les
+// cartes/accents deviennent or, cohérent avec CimolacePremiumHomepage.
+const GOLD = '#d8b468', GOLD_SOFT = '#e6cc92', SERIF = "'Fraunces','Source Serif 4',Georgia,serif";
 const C = {
-  bg: '#0d1117', panel: '#161b22', border: '#21262d', border2: '#30363d',
-  violet: '#7c3aed', violetLt: '#8b5cf6', text: '#f0f6fc', muted: '#8b949e',
-  green: '#10b981', blue: '#3b82f6', orange: '#f59e0b', muted2: '#6e7681',
+  bg: '#0f1419', panel: '#161d25', border: 'rgba(244,239,230,0.10)', border2: 'rgba(244,239,230,0.20)',
+  violet: GOLD, violetLt: GOLD_SOFT, text: '#f4efe6', muted: '#aeb6bf',
+  green: GOLD, blue: GOLD, orange: GOLD, muted2: '#7c858f',
 };
 
 // ── Infrastructure types ───────────────────────────────────────────────────────
@@ -67,10 +71,10 @@ const INFRA = [
     label: 'Community Hub',
     tagline: 'Espace communautaire & forum',
     desc: "Forum, messagerie temps réel, événements, programme d'ambassadeurs et croissance communautaire pilotée par l'IA.",
-    accent: '#a855f7',
+    accent: GOLD,
     badge: 'Planifié',
-    badgeBg: 'rgba(168,85,247,0.10)',
-    badgeBorder: 'rgba(168,85,247,0.30)',
+    badgeBg: 'rgba(216,180,104,0.10)',
+    badgeBorder: 'rgba(216,180,104,0.30)',
     engines: ['Forum', 'Chat temps réel', 'Événements', 'Ambassadeurs', 'Analytics'],
     cta: 'Bientôt disponible',
     to: null,
@@ -223,8 +227,8 @@ export default function CimolaceLaunchPage() {
             Infrastructure prête à l'emploi
           </div>
           <h1 style={{
-            color: C.text, fontSize: 'clamp(28px, 5vw, 48px)',
-            fontWeight: 900, lineHeight: 1.15, marginBottom: '16px',
+            color: C.text, fontFamily: SERIF, fontSize: 'clamp(28px, 5vw, 48px)',
+            fontWeight: 600, lineHeight: 1.08, letterSpacing: '-0.02em', marginBottom: '16px',
           }}>
             Choisissez votre infrastructure
           </h1>

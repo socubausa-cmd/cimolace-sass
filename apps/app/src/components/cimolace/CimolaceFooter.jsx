@@ -49,14 +49,14 @@ const CimolaceFooter = ({ variant = 'light' }) => {
   const bgClass = isLight ? 'bg-[#fafafa] border-t border-[#e5e5ea]' : 'bg-[#0a0a0f] border-t border-white/5';
   const textColor = isLight ? 'text-[#0a0a0f]' : 'text-white';
   const mutedColor = isLight ? 'text-[#6e6e73]' : 'text-gray-400';
-  const linkHover = isLight ? 'hover:text-[#5b3df5]' : 'hover:text-white';
+  const linkHover = isLight ? 'hover:text-[#d8b468]' : 'hover:text-white';
   const socialBg = isLight ? 'bg-[#0a0a0f]/5 border-[#e5e5ea] hover:bg-[#0a0a0f]/10' : 'bg-white/5 border-white/10 hover:border-white/30';
   const bottomBorder = isLight ? 'border-t border-[#e5e5ea]' : 'border-t border-white/5';
 
   return (
     <footer className={`relative ${bgClass}`}>
       {/* Top Accent Line */}
-      <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-[#5b3df5]/50 to-transparent" />
+      <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-[#d8b468]/50 to-transparent" />
 
       <div className="max-w-7xl mx-auto px-6 lg:px-12 py-16">
         {/* Main Footer Content */}
@@ -65,13 +65,13 @@ const CimolaceFooter = ({ variant = 'light' }) => {
           <div className="col-span-2 md:col-span-3 lg:col-span-2">
             <Link to={cimolacePlatformConfig.routes.home} className="inline-flex items-center gap-3 mb-6">
               <div className="relative w-10 h-10">
-                <div className="absolute inset-0 bg-gradient-to-br from-[#5b3df5] to-[#8b6dff] rounded-xl blur-lg opacity-50" />
-                <div className="relative w-full h-full bg-gradient-to-br from-[#5b3df5] to-[#8b6dff] rounded-xl flex items-center justify-center">
-                  <Zap className="w-5 h-5 text-white" />
+                <div className="absolute inset-0 bg-gradient-to-br from-[#d8b468] to-[#e6cc92] rounded-xl blur-lg opacity-50" />
+                <div className="relative w-full h-full bg-gradient-to-br from-[#d8b468] to-[#e6cc92] rounded-xl flex items-center justify-center">
+                  <Zap className="w-5 h-5 text-[#20160f]" />
                 </div>
               </div>
               <div>
-                <span className={`text-xl font-bold tracking-tight ${textColor}`}>CIMOLACE<span className="text-[#5b3df5]">.</span></span>
+                <span className={`text-xl font-bold tracking-tight ${textColor}`}>CIMOLACE<span className="text-[#d8b468]">.</span></span>
               </div>
             </Link>
             <p className={`${mutedColor} text-sm max-w-xs mb-6 leading-relaxed`}>

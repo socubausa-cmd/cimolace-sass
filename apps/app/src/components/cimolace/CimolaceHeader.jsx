@@ -55,13 +55,13 @@ const CimolaceHeader = ({ variant = 'light' }) => {
           {/* Logo */}
           <Link to="/cimolace" className="flex shrink-0 items-center gap-3">
             <div className="relative h-10 w-10">
-              <div className="absolute inset-0 bg-gradient-to-br from-[#5b3df5] to-[#8b6dff] rounded-xl blur-lg opacity-50" />
-              <div className="relative w-full h-full bg-gradient-to-br from-[#5b3df5] to-[#8b6dff] rounded-xl flex items-center justify-center">
-                <Zap className="w-5 h-5 text-white" />
+              <div className="absolute inset-0 bg-gradient-to-br from-[#d8b468] to-[#e6cc92] rounded-xl blur-lg opacity-50" />
+              <div className="relative w-full h-full bg-gradient-to-br from-[#d8b468] to-[#e6cc92] rounded-xl flex items-center justify-center">
+                <Zap className="w-5 h-5 text-[#20160f]" />
               </div>
             </div>
             <div>
-              <span className={`text-lg font-black tracking-tight ${textColor}`}>CIMOLACE<span className="text-[#5b3df5]">.</span></span>
+              <span className={`text-lg font-black tracking-tight ${textColor}`}>CIMOLACE<span className="text-[#d8b468]">.</span></span>
             </div>
           </Link>
 
@@ -75,8 +75,8 @@ const CimolaceHeader = ({ variant = 'light' }) => {
                   className={`whitespace-nowrap px-3 py-2 text-sm font-semibold transition-all duration-200 rounded-lg ${
                     link.highlight
                       ? isLight
-                        ? 'text-[#5b3df5] hover:bg-[#5b3df5]/10'
-                        : 'text-[#8b6dff] hover:bg-white/5'
+                        ? 'text-[#d8b468] hover:bg-[#d8b468]/10'
+                        : 'text-[#e6cc92] hover:bg-white/5'
                       : `${mutedColor} ${hoverColor} hover:bg-black/5`
                   }`}
                 >
@@ -108,8 +108,8 @@ const CimolaceHeader = ({ variant = 'light' }) => {
               whileTap={{ scale: 0.98 }}
               className={`px-5 py-2.5 text-sm font-semibold rounded-lg transition-all ${
                 isLight
-                  ? 'bg-[#0a0a0f] text-white hover:bg-[#5b3df5]'
-                  : 'bg-white text-[#0a0a0f] hover:bg-[#5b3df5] hover:text-white'
+                  ? 'bg-[#0a0a0f] text-white hover:bg-[#d8b468]'
+                  : 'bg-white text-[#0a0a0f] hover:bg-[#d8b468] hover:text-white'
               }`}
             >
               Commencer
@@ -143,7 +143,7 @@ const CimolaceHeader = ({ variant = 'light' }) => {
                 onClick={() => setIsMobileMenuOpen(false)}
                 className={`block text-base font-medium transition-colors py-2 ${
                   link.highlight
-                    ? isLight ? 'text-[#5b3df5]' : 'text-[#8b6dff]'
+                    ? isLight ? 'text-[#d8b468]' : 'text-[#e6cc92]'
                     : isLight ? 'text-[#424245] hover:text-[#0a0a0f]' : 'text-gray-300 hover:text-white'
                 }`}
               >
@@ -173,8 +173,8 @@ const CimolaceHeader = ({ variant = 'light' }) => {
               onClick={() => setIsMobileMenuOpen(false)}
               className={`block w-full text-center px-5 py-3 font-semibold rounded-xl ${
                 isLight
-                  ? 'bg-[#0a0a0f] text-white hover:bg-[#5b3df5]'
-                  : 'bg-white text-[#0a0a0f] hover:bg-[#5b3df5] hover:text-white'
+                  ? 'bg-[#0a0a0f] text-white hover:bg-[#d8b468]'
+                  : 'bg-white text-[#0a0a0f] hover:bg-[#d8b468] hover:text-white'
               }`}
             >
               Commencer
