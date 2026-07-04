@@ -15,6 +15,7 @@
  */
 import { useState, useCallback, useRef, useEffect } from 'react';
 import { resolveApiOrigin } from '@/lib/androidApiHost';
+import { supabase } from '@/lib/supabase';
 import {
   validateStructuredDocument,
   buildSenseBlocksFromStructure,
@@ -242,17 +243,19 @@ const FAILURE_26_SEGMENT_NAMES = [
   'Lien conceptuel', 'Transition narrative',
 ];
 
-// ─── Appel Netlify Function ───────────────────────────────────────────────────
-async function callFn(endpoint, body, signal) {
-  const origin = resolveApiOrigin();
-  const res = await fetch(`${origin}/.netlify/functions/${endpoint}`, {
-    method:  'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body:    JSON.stringify(body),
-    signal,
-  });
-  const data = await res.json().catch(() => ({}));
-  if (!res.ok) throw new Error(data?.error || `HTTP ${res.status}`);
+// ─── Appel d'une EDGE FUNCTION Supabase ───────────────────────────────────────
+// (Anciennement `${origin}/.netlify/functions/${endpoint}` — fonctions Netlify MORTES
+//  sur cette app Vite/Vercel → 404 → fallback regex silencieux. On invoque désormais
+//  les VRAIES edges Supabase, ex. `liri-masterclass-factory` — supabase.functions.invoke
+//  joint automatiquement le JWT de session (requireUser côté edge).)
+async function callFn(endpoint, body, _signal) {
+  const { data, error } = await supabase.functions.invoke(endpoint, { body });
+  if (error) {
+    // Corps d'erreur structuré de l'edge (message métier) si dispo, sinon message réseau.
+    let detail = '';
+    try { detail = (await error.context?.json?.())?.error || ''; } catch { /* noop */ }
+    throw new Error(detail || error.message || `Edge ${endpoint} indisponible`);
+  }
   return data;
 }
 
