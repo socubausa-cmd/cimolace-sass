@@ -52,7 +52,9 @@ export default function LiveHostMemberPanelCard({
   const showLiveThumb = hasCam && (!isPromoted || preferLiveVideo);
   const goldBorder = isPromoted || isSelected;
   const accent = member?.color || '#d4a36a';
-  const borderColor = goldBorder ? 'rgba(251,191,72, 0.72)' : `${accent}55`;
+  // Immersif : liseré neutre fin (comme les tuiles conférence), l'identité couleur
+  // reste sur le disque avatar. L'or ne s'affiche qu'à l'antenne / sélection.
+  const borderColor = goldBorder ? 'rgba(251,191,72, 0.72)' : 'rgba(255,255,255,.09)';
   const avatarUrl = member?.avatar_url || member?.avatarUrl;
 
   const body = (
@@ -64,7 +66,7 @@ export default function LiveHostMemberPanelCard({
           className="absolute inset-0 z-[1] h-full w-full"
         />
       ) : (
-        <div className="absolute inset-0 z-[1] flex items-center justify-center bg-black/25">
+        <div className="absolute inset-0 z-[1] flex items-center justify-center bg-white/[0.015]">
           {avatarUrl ? (
             <img
               src={avatarUrl}
@@ -97,7 +99,7 @@ export default function LiveHostMemberPanelCard({
           ANT.
         </div>
       ) : null}
-      <div className="pointer-events-none absolute bottom-[3px] left-0 right-0 z-[2] overflow-hidden text-ellipsis whitespace-nowrap bg-black/50 px-1 text-center text-[9px] font-medium text-white backdrop-blur-[2px]">
+      <div className="pointer-events-none absolute bottom-0 left-0 right-0 z-[2] overflow-hidden text-ellipsis whitespace-nowrap bg-gradient-to-t from-black/70 to-transparent px-1 pb-[3px] pt-3 text-center text-[9px] font-medium text-white">
         {member?.name || 'Membre'}
       </div>
       <div
@@ -115,7 +117,7 @@ export default function LiveHostMemberPanelCard({
 
   const style = {
     border: `1px solid ${borderColor}`,
-    background: 'rgba(0,0,0,0.4)',
+    background: 'rgba(255,255,255,.02)',
     boxShadow: goldBorder ? '0 0 12px rgba(251,191,72, 0.22)' : undefined,
   };
 
