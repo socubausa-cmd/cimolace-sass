@@ -45,7 +45,9 @@ fi
 echo "✅ anti-régression OK : HEAD ⊇ origin/main (rien ne sera perdu)"
 
 # --- 2) mémoriser le déploiement prod ACTUEL (rollback de secours) -----------
-PREV_URL=$(vercel ls app --scope cimolace 2>/dev/null | grep -i 'Production' | grep -oE 'https://app-[a-z0-9]+-cimolace\.vercel\.app' | head -1)
+# `vercel ls` écrit le tableau sur STDERR (→ 2>&1, sinon vide) ; cwd neutre car le
+# lien .vercel racine est neutralisé ; `|| true` : PREV_URL vide ne doit pas tuer le script.
+PREV_URL=$( (cd /tmp 2>/dev/null; vercel ls app --scope cimolace 2>&1 | grep -i 'Production' | grep -oE 'https://app-[a-z0-9]+-cimolace\.vercel\.app' | head -1) || true )
 echo "↩️  déploiement prod actuel (rollback de secours) : ${PREV_URL:-inconnu}"
 
 # --- 3) déploiement prod -----------------------------------------------------
