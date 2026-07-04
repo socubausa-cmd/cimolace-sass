@@ -1541,6 +1541,9 @@ function InviteProcheModal({ sessionId, open, onClose }: { sessionId: string; op
   const [invites, setInvites] = useState<TeleconsultInvite[]>([]);
   const [busy, setBusy] = useState(false);
   const [copiedId, setCopiedId] = useState<string | null>(null);
+  // Erreur d'invitation VISIBLE : l'ancien catch muet laissait un « rien ne se
+  // passe » incompréhensible (ex. salle expirée → 404 Session introuvable).
+  const [inviteError, setInviteError] = useState<string | null>(null);
 
   const slug = typeof window !== 'undefined' ? new URLSearchParams(window.location.search).get('tenant') : null;
   const linkFor = (id: string) =>
@@ -1584,6 +1587,7 @@ function InviteProcheModal({ sessionId, open, onClose }: { sessionId: string; op
 
   const create = async () => {
     setBusy(true);
+    setInviteError(null);
     try {
       let inv: TeleconsultInvite;
       if (mode === 'member') {
@@ -1602,8 +1606,19 @@ function InviteProcheModal({ sessionId, open, onClose }: { sessionId: string; op
       setInvites((prev) => [...prev, inv]);
       // Repli : si l'email n'est pas parti, on copie le lien pour l'envoyer soi-même.
       if (inv?.email_status !== 'sent') copy(inv.id);
-    } catch {
-      /* ignore */
+    } catch (e: any) {
+      // L'API enveloppe ses erreurs en { error: { code, message } }.
+      const msg: string =
+        e?.response?.data?.error?.message ||
+        e?.response?.data?.message ||
+        e?.message ||
+        'Invitation impossible.';
+      const dead = e?.response?.status === 404 || /introuvable/i.test(msg);
+      setInviteError(
+        dead
+          ? 'Cette salle n’est plus active — fermez-la puis relancez la consultation depuis Rendez-vous → Démarrer.'
+          : msg,
+      );
     } finally {
       setBusy(false);
     }
@@ -1673,6 +1688,11 @@ function InviteProcheModal({ sessionId, open, onClose }: { sessionId: string; op
             ? "Un membre du cabinet rejoint directement (soignant, secret médical) — il reçoit le lien par email."
             : <>L'invité reçoit le lien par email. <strong style={{ color: '#cbd5e1' }}>Le patient devra autoriser</strong> sa participation (données de santé).</>}
         </p>
+        {inviteError ? (
+          <p role="alert" style={{ margin: '0 0 12px', padding: '9px 12px', borderRadius: 9, fontSize: 12.5, lineHeight: 1.5, color: '#fca5a5', background: 'rgba(239,68,68,0.12)', border: '1px solid rgba(239,68,68,0.3)' }}>
+            {inviteError}
+          </p>
+        ) : null}
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: 8, maxHeight: 220, overflowY: 'auto' }}>
           {invites.length === 0 ? (
