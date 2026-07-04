@@ -55,6 +55,9 @@
 [data-lucide] { width:1em;height:1em; }
 .lp-root :focus-visible { outline:2px solid var(--coral); outline-offset:2px; border-radius:12px }
 @media (prefers-reduced-motion: reduce){ .lp-eq,.lp-ping,.lp-rise,.lp-tr,.lp-lift{ animation:none!important; transition:none!important } }
+/* Strips scrollables mobiles (sous-onglets d'en-tête, barre de nav basse) sans scrollbar visible. */
+.no-scrollbar { -ms-overflow-style:none; scrollbar-width:none; -webkit-overflow-scrolling:touch; }
+.no-scrollbar::-webkit-scrollbar { display:none; }
 
 /* ── Page enveloppée dans le <main> du shell (ex. LiveHostPage) ───────────────
    La chrome de la console hôte/invité est dimensionnée `height:100dvh` (plein

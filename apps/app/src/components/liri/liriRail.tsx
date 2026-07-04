@@ -21,7 +21,7 @@ export type RailKey =
   | 'biblio-eleve' | 'documents'
   | 'studio' | 'ecole' | 'biblio' | 'brain' | 'integrations' | 'reglages';
 
-type RailItem = { key: RailKey; label: string; icon: typeof House; to: string; creator?: boolean; school?: boolean };
+export type RailItem = { key: RailKey; label: string; icon: typeof House; to: string; creator?: boolean; school?: boolean };
 
 export const RAIL_GROUPS: { section?: string; items: RailItem[] }[] = [
   { items: [
@@ -54,6 +54,14 @@ export const RAIL_GROUPS: { section?: string; items: RailItem[] }[] = [
     { key: 'brain', label: 'Brain', icon: Sparkles, to: '/dashboard/liri', creator: true },
   ] },
 ];
+
+/** Liste PLATE des items du rail, filtrés par rôle + mode école — source de la barre de
+ *  navigation basse mobile (le rail latéral 92px est masqué < md). Même filtre que LiriRailGroups. */
+export function getRailItems(opts: { isCreator: boolean; schoolActive: boolean }): RailItem[] {
+  const { isCreator, schoolActive } = opts;
+  return RAIL_GROUPS.flatMap((g) => g.items)
+    .filter((it) => (it.creator ? isCreator : it.school ? (!isCreator && schoolActive) : true));
+}
 
 /** Rend les groupes du rail (labels de section + boutons), filtrés par rôle + mode école. */
 export function LiriRailGroups({

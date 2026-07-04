@@ -10,7 +10,7 @@ import { authStore } from '@/lib/auth-store';
 import { useAuth } from '@/hooks/useAuth';
 import { isCreatorRole } from '@/lib/liri/creatorRole';
 import { useSchoolActive } from '@/hooks/useSchoolActive';
-import { LiriRailGroups } from './liriRail';
+import { LiriRailGroups, getRailItems } from './liriRail';
 import type { RailKey } from './liriRail';
 import { getApiBaseUrl } from '@/lib/apiBase';
 import activeTenantConfig from '@/lib/tenant/activeTenantConfig';
@@ -52,32 +52,40 @@ function HeaderTabs() {
   };
 
   return (
-    <nav className="hidden min-w-0 items-center gap-0.5 md:flex">
-      {visible.map(TabBtn)}
-      {overflow && (
-        <div className="relative" ref={ref}>
-          <button onClick={() => setMoreOpen((o) => !o)}
-            className={`flex shrink-0 items-center gap-1 whitespace-nowrap rounded-lg px-2.5 py-1.5 text-[13px] lp-tr ${hiddenActive ? 'lp-ink font-medium' : 'lp-muted hover:lp-ink'}`}>
-            {hiddenActive ? hiddenActive.label : <MoreHorizontal size={16} />}
-            <ChevronDown size={13} className="lp-faint" />
-          </button>
-          {moreOpen && (
-            <div className="absolute right-0 top-[calc(100%+6px)] z-50 max-h-[60vh] min-w-[190px] overflow-auto rounded-xl border lp-line lp-rail-bg py-1 lp-soft">
-              {hidden.map((t) => {
-                const isActive = t.value === tabs!.active;
-                return (
-                  <button key={t.value} onClick={() => { tabs!.onChange(t.value); setMoreOpen(false); }}
-                    className={`flex w-full items-center whitespace-nowrap px-3.5 py-2 text-left text-[13px] lp-tr ${isActive ? 'lp-ink font-medium' : 'lp-muted hover:lp-ink'}`}
-                    style={isActive ? { background: 'color-mix(in srgb, var(--coral) 16%, transparent)' } : undefined}>
-                    {t.label}
-                  </button>
-                );
-              })}
-            </div>
-          )}
-        </div>
-      )}
-    </nav>
+    <>
+      {/* Desktop (≥ md) : au-delà de MAX, l'excédent se replie dans « ••• » (pas de scroll). */}
+      <nav className="hidden min-w-0 items-center gap-0.5 md:flex">
+        {visible.map(TabBtn)}
+        {overflow && (
+          <div className="relative" ref={ref}>
+            <button onClick={() => setMoreOpen((o) => !o)}
+              className={`flex shrink-0 items-center gap-1 whitespace-nowrap rounded-lg px-2.5 py-1.5 text-[13px] lp-tr ${hiddenActive ? 'lp-ink font-medium' : 'lp-muted hover:lp-ink'}`}>
+              {hiddenActive ? hiddenActive.label : <MoreHorizontal size={16} />}
+              <ChevronDown size={13} className="lp-faint" />
+            </button>
+            {moreOpen && (
+              <div className="absolute right-0 top-[calc(100%+6px)] z-50 max-h-[60vh] min-w-[190px] overflow-auto rounded-xl border lp-line lp-rail-bg py-1 lp-soft">
+                {hidden.map((t) => {
+                  const isActive = t.value === tabs!.active;
+                  return (
+                    <button key={t.value} onClick={() => { tabs!.onChange(t.value); setMoreOpen(false); }}
+                      className={`flex w-full items-center whitespace-nowrap px-3.5 py-2 text-left text-[13px] lp-tr ${isActive ? 'lp-ink font-medium' : 'lp-muted hover:lp-ink'}`}
+                      style={isActive ? { background: 'color-mix(in srgb, var(--coral) 16%, transparent)' } : undefined}>
+                      {t.label}
+                    </button>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+        )}
+      </nav>
+      {/* Mobile (< md) : TOUS les onglets en strip scrollable horizontal — pas de « ••• »
+          (un dropdown absolu serait clippé par overflow-x-auto). Le scroll révèle l'excédent. */}
+      <nav className="flex min-w-0 items-center gap-0.5 overflow-x-auto no-scrollbar md:hidden">
+        {tabs.items.map(TabBtn)}
+      </nav>
+    </>
   );
 }
 
@@ -159,8 +167,11 @@ function LiriPortalShellInner({
   // Suffixe affiché seulement s'il apporte une info ET qu'aucun fil d'Ariane ne prend le relais.
   const _schoolSuffix = !crumb && sessionSchool && sessionSchool !== _shellBrand ? sessionSchool : '';
 
+  // Items du rail (filtrés rôle + mode école) pour la barre de nav basse mobile (< md).
+  const mobileNavItems = getRailItems({ isCreator, schoolActive });
+
   return (
-    <div className="lp-root relative grid h-[100dvh] w-full grid-rows-[56px_1fr_34px] overflow-hidden">
+    <div className="lp-root relative grid h-[100dvh] w-full grid-rows-[56px_1fr_auto] overflow-hidden">
       {/* Glow chaleureux — discret, confiné à la topbar/aux marges. */}
       <div className="lp-glow">
         <span style={{ width: 460, height: 300, left: '36%', top: -160, background: 'rgba(217,119,87,.05)' }} />
@@ -197,8 +208,8 @@ function LiriPortalShellInner({
           )}
         </div>
 
-        {/* zone centrale : sous-vues de la section active (alignées à droite, remplissent le vide) */}
-        <div className="flex min-w-0 flex-1 justify-end">
+        {/* zone centrale : sous-vues de la section active (à gauche en mobile pour scroller, à droite ≥ md) */}
+        <div className="flex min-w-0 flex-1 justify-start md:justify-end">
           <HeaderTabs />
         </div>
 
@@ -215,10 +226,11 @@ function LiriPortalShellInner({
         </div>
       </header>
 
-      {/* middle : rail | main  (immersif : aucun gap/padding externe → le contenu remplit l'écran). */}
-      <div className={`z-10 grid min-h-0 ${rail ? 'grid-cols-[92px_1fr]' : 'grid-cols-[1fr]'}`}>
+      {/* middle : rail | main  (immersif : aucun gap/padding externe → le contenu remplit l'écran).
+          Mobile (< md) : le rail latéral disparaît (→ barre de nav basse), le contenu prend 100%. */}
+      <div className={`z-10 grid min-h-0 ${rail ? 'grid-cols-[1fr] md:grid-cols-[92px_1fr]' : 'grid-cols-[1fr]'}`}>
         {rail && (
-        <aside className="flex min-h-0 flex-col items-center gap-0.5 overflow-y-auto lp-rail-bg border-r lp-line py-3 lp-rail-scroll">
+        <aside className="hidden min-h-0 flex-col items-center gap-0.5 overflow-y-auto lp-rail-bg border-r lp-line py-3 lp-rail-scroll md:flex">
           <LiriRailGroups active={active} isCreator={isCreator} schoolActive={schoolActive} live={live} onNav={nav} />
           {isCreator && (
             <>
@@ -236,14 +248,37 @@ function LiriPortalShellInner({
         </main>
       </div>
 
-      {/* footer */}
-      <footer className="z-30 flex items-center justify-between border-t lp-line lp-rail-bg px-5 text-[11px] lp-muted">
-        <span className="flex items-center gap-2">
-          {live ? <span className="h-1.5 w-1.5 rounded-full" style={{ background: '#e2553f' }} /> : <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" />}
-          {live ? 'En direct' : 'Connecté'} · <span className="capitalize">{tenant}</span>
-        </span>
-        <span className="lp-faint flex items-center gap-1.5">{_shellBrand} v2.0</span>
-      </footer>
+      {/* rangée basse : barre de nav (mobile, < md) OU footer (desktop, ≥ md) — même slot de grille. */}
+      <div className="z-30 min-w-0">
+        {rail && (
+          <nav className="flex items-stretch gap-1 overflow-x-auto no-scrollbar border-t lp-line lp-rail-bg px-2 py-1.5 md:hidden" aria-label="Navigation principale">
+            {mobileNavItems.map((it) => {
+              const Icon = it.icon;
+              const isActive = it.key === active;
+              return (
+                <button key={it.key} onClick={() => nav(it.to)}
+                  aria-current={isActive ? 'page' : undefined}
+                  className={`lp-nav flex min-h-[44px] min-w-[60px] shrink-0 flex-col items-center justify-center gap-0.5 rounded-xl px-1 py-1 lp-tr ${isActive ? 'lp-nav-active' : ''}`}>
+                  <span className="lp-ni relative grid h-5 w-5 place-items-center">
+                    <Icon size={18} />
+                    {it.key === 'lives' && live && (
+                      <span className="absolute -right-1.5 -top-1.5 h-2 w-2 rounded-full" style={{ background: 'var(--live)', boxShadow: '0 0 0 2px var(--rail)' }} />
+                    )}
+                  </span>
+                  <span className="lp-nl text-center text-[9px] font-medium leading-none">{it.label}</span>
+                </button>
+              );
+            })}
+          </nav>
+        )}
+        <footer className={`items-center justify-between border-t lp-line lp-rail-bg px-5 py-1.5 text-[11px] lp-muted ${rail ? 'hidden md:flex' : 'flex'}`}>
+          <span className="flex items-center gap-2">
+            {live ? <span className="h-1.5 w-1.5 rounded-full" style={{ background: '#e2553f' }} /> : <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" />}
+            {live ? 'En direct' : 'Connecté'} · <span className="capitalize">{tenant}</span>
+          </span>
+          <span className="lp-faint flex items-center gap-1.5">{_shellBrand} v2.0</span>
+        </footer>
+      </div>
     </div>
   );
 }

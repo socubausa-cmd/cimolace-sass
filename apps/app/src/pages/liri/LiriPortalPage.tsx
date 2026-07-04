@@ -15,7 +15,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { isCreatorRole } from '@/lib/liri/creatorRole';
 import { useSchoolActive } from '@/hooks/useSchoolActive';
 import { useUpcomingSchoolFeed } from '@/hooks/useUpcomingSchoolFeed';
-import { LiriRailGroups } from '@/components/liri/liriRail';
+import { LiriRailGroups, getRailItems } from '@/components/liri/liriRail';
 import activeTenantConfig from '@/lib/tenant/activeTenantConfig';
 import LiriUpgradeWall from '@/components/liri/LiriUpgradeWall';
 import '../LiriPortal.css';
@@ -266,8 +266,11 @@ export function LiriPortalPage() {
   // SIMPLE (Zoom) = Accueil/Lives/Forum/Messages seulement. Fail-closed.
   const schoolActive = useSchoolActive() === true;
 
+  // Items du rail (filtrés rôle + mode école) pour la barre de nav basse mobile (< md).
+  const mobileNavItems = getRailItems({ isCreator, schoolActive });
+
   return (
-    <div className="lp-root relative h-[100dvh] w-full overflow-hidden grid grid-rows-[56px_1fr_34px]">
+    <div className="lp-root relative h-[100dvh] w-full overflow-hidden grid grid-rows-[56px_1fr_auto]">
       {/* glow chaleureux */}
       <div className="lp-glow">
         <span style={{ width: 520, height: 420, left: '34%', top: -120, background: 'rgba(217,119,87,.10)' }} />
@@ -335,11 +338,13 @@ export function LiriPortalPage() {
         </div>
       </header>
 
-      {/* ───── MIDDLE : rail | main | right ─────  (immersif : pas de gap/padding externe, rails collés) */}
-      <div className="z-10 grid min-h-0 grid-cols-[92px_1fr_344px]">
+      {/* ───── MIDDLE : rail | main | right ─────  (immersif : pas de gap/padding externe, rails collés)
+          Mobile (< md) : 1 colonne (contenu seul, rail → barre basse). md : rail + contenu.
+          xl : + panneau droit (horloge/agenda) — masqué avant pour éviter le tassement. */}
+      <div className="z-10 grid min-h-0 grid-cols-[1fr] md:grid-cols-[92px_1fr] xl:grid-cols-[92px_1fr_344px]">
 
-        {/* RAIL */}
-        <aside className="flex min-h-0 flex-col items-center gap-0.5 overflow-y-auto lp-rail-bg border-r lp-line py-3 lp-rail-scroll">
+        {/* RAIL — desktop uniquement (≥ md) */}
+        <aside className="hidden min-h-0 flex-col items-center gap-0.5 overflow-y-auto lp-rail-bg border-r lp-line py-3 lp-rail-scroll md:flex">
           <LiriRailGroups active="accueil" isCreator={isCreator} schoolActive={schoolActive} live={liveNow.length > 0} onNav={nav} />
           {isCreator && (
             <>
@@ -433,8 +438,8 @@ export function LiriPortalPage() {
           </div>
         </main>
 
-        {/* RIGHT PANEL */}
-        <aside className="lp-scroll min-h-0 overflow-y-auto border-l lp-line lp-rightbg px-4 py-5">
+        {/* RIGHT PANEL — grands écrans uniquement (≥ xl) ; masqué avant pour ne pas tasser le contenu. */}
+        <aside className="hidden min-h-0 overflow-y-auto border-l lp-line lp-rightbg px-4 py-5 lp-scroll xl:block">
           {/* horloge + mini-agenda du jour (navigable ‹ Auj. ›) */}
           <div className="overflow-hidden rounded-3xl lp-line border lp-soft" style={{ background: 'linear-gradient(160deg,#332e29,#2a2724)' }}>
             <div className="px-5 py-5">
@@ -554,20 +559,41 @@ export function LiriPortalPage() {
         </aside>
       </div>
 
-      {/* ───── FOOTER ───── */}
-      <footer className="z-30 flex items-center justify-between border-t lp-line lp-rail-bg px-5 text-[11px] lp-muted">
-        <span className="flex items-center gap-2"><span className="h-1.5 w-1.5 rounded-full bg-emerald-400" /> Connecté · <span className="capitalize">{orgName}</span></span>
-        <span className="hidden items-center gap-4 sm:flex">
-          {isCreator && (
-            <>
-              <span className="lp-faint">{liveMinutes} / 2 000 min ce mois</span>
-              <span className="h-3 w-px" style={{ background: 'rgba(255,255,255,.10)' }} />
-            </>
-          )}
-          <button onClick={() => nav('/dashboard')} className="lp-railbtn lp-tr rounded px-1">Aide</button>
-          <span className="lp-faint flex items-center gap-1.5"><Radio size={12} /> {PORTAL_BRAND} v2.0</span>
-        </span>
-      </footer>
+      {/* ───── RANGÉE BASSE : barre de nav (mobile, < md) OU footer (desktop, ≥ md) ───── */}
+      <div className="z-30 min-w-0">
+        <nav className="flex items-stretch gap-1 overflow-x-auto no-scrollbar border-t lp-line lp-rail-bg px-2 py-1.5 md:hidden" aria-label="Navigation principale">
+          {mobileNavItems.map((it) => {
+            const Icon = it.icon;
+            const isActive = it.key === 'accueil';
+            return (
+              <button key={it.key} onClick={() => nav(it.to)}
+                aria-current={isActive ? 'page' : undefined}
+                className={`lp-nav flex min-h-[44px] min-w-[60px] shrink-0 flex-col items-center justify-center gap-0.5 rounded-xl px-1 py-1 lp-tr ${isActive ? 'lp-nav-active' : ''}`}>
+                <span className="lp-ni relative grid h-5 w-5 place-items-center">
+                  <Icon size={18} />
+                  {it.key === 'lives' && liveNow.length > 0 && (
+                    <span className="absolute -right-1.5 -top-1.5 h-2 w-2 rounded-full" style={{ background: 'var(--live)', boxShadow: '0 0 0 2px var(--rail)' }} />
+                  )}
+                </span>
+                <span className="lp-nl text-center text-[9px] font-medium leading-none">{it.label}</span>
+              </button>
+            );
+          })}
+        </nav>
+        <footer className="hidden items-center justify-between border-t lp-line lp-rail-bg px-5 py-1.5 text-[11px] lp-muted md:flex">
+          <span className="flex items-center gap-2"><span className="h-1.5 w-1.5 rounded-full bg-emerald-400" /> Connecté · <span className="capitalize">{orgName}</span></span>
+          <span className="hidden items-center gap-4 sm:flex">
+            {isCreator && (
+              <>
+                <span className="lp-faint">{liveMinutes} / 2 000 min ce mois</span>
+                <span className="h-3 w-px" style={{ background: 'rgba(255,255,255,.10)' }} />
+              </>
+            )}
+            <button onClick={() => nav('/dashboard')} className="lp-railbtn lp-tr rounded px-1">Aide</button>
+            <span className="lp-faint flex items-center gap-1.5"><Radio size={12} /> {PORTAL_BRAND} v2.0</span>
+          </span>
+        </footer>
+      </div>
       {showUpgrade && <LiriUpgradeWall asModal onClose={() => setShowUpgrade(false)} />}
     </div>
   );
