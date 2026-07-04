@@ -3,12 +3,14 @@ import { useNavigate } from 'react-router-dom';
 import {
   ChevronLeft, UserRound, Building2, Users, CreditCard, Wallet, LogOut, Trash2,
   X, Loader2, Sparkles, Check, ArrowUpRight, SlidersHorizontal, Settings2,
-  Eye, EyeOff, Copy, ShieldCheck, UserPlus, FileText,
+  Eye, EyeOff, Copy, ShieldCheck, UserPlus, FileText, Globe,
 } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import { authStore } from '@/lib/auth-store';
 import { getApiBaseUrl } from '@/lib/apiBase';
 import { useAuth } from '@/hooks/useAuth';
+import LiriDomainSettings from '@/components/liri/LiriDomainSettings';
+import LiriMobileMoneySettings from '@/components/liri/LiriMobileMoneySettings';
 import '../LiriPortal.css';
 
 interface Org { name: string; slug: string; role?: string | null; plan?: string | null; }
@@ -209,6 +211,7 @@ export default function LiriAccountPage() {
     { key: 'membres', label: 'Membres', icon: Users, group: 'org' },
     { key: 'facturation', label: 'Facturation', icon: CreditCard, group: 'org' },
     { key: 'encaissements', label: 'Encaissements', icon: Wallet, group: 'org' },
+    { key: 'domaine', label: 'Domaine', icon: Globe, group: 'org' },
   ];
   const visibleNav = NAV.filter((n) => n.group === 'compte' || canManageOrg);
   const active = visibleNav.some((n) => n.key === section) ? section : (visibleNav[0]?.key || 'profil');
@@ -448,6 +451,16 @@ export default function LiriAccountPage() {
                 </div>
               </div>
             )}
+
+            {/* Encaissement Mobile Money (PawaPay) — Orange Money / MTN MoMo / Moov… (Afrique) */}
+            <LiriMobileMoneySettings />
+          </div>
+        );
+      case 'domaine':
+        return (
+          <div>
+            <Header title="Domaine personnalisé" subtitle="Reliez votre propre domaine — vos élèves arrivent directement sur votre espace, à vos couleurs." />
+            <div className="mt-4"><LiriDomainSettings /></div>
           </div>
         );
       case 'general':

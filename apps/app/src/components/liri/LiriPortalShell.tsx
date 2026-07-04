@@ -121,10 +121,18 @@ function LiriPortalShellInner({
   const schoolActive = useSchoolActive() === true;
   const slug = authStore.getTenantSlug?.() || 'École';
   const tenant = String(slug).replace(/-/g, ' ');
-  const initials = tenant.slice(0, 2).toUpperCase();
-  // Marque blanche : nom du tenant sur son domaine, « LIRI »/logo sur l'hôte produit LIRI.
+  // Initiales de marque : celles du NOM du tenant (Academy Ngowazulu → « AN »), pas du slug.
   const _shellIsTenant = !!activeTenantConfig?.slug;
+  // Marque blanche : nom + logo du tenant sur SON domaine ; « LIRI » + logo LIRI sur l'hôte produit.
   const _shellBrand = activeTenantConfig?.branding?.name || 'LIRI';
+  const _brandInitials = (_shellBrand === 'LIRI' ? tenant : _shellBrand)
+    .split(/\s+/).map((w) => w[0]).filter(Boolean).slice(0, 2).join('').toUpperCase() || 'É';
+  const initials = _shellIsTenant ? _brandInitials : tenant.slice(0, 2).toUpperCase();
+  // Logo P4 : le VRAI logo du tenant (branding.logo hydraté), jamais un logo LIRI de repli
+  // sur un domaine tenant. Sans logo → pastille-initiales (accent du tenant). Cf. audit P4.
+  const _rawLogo = activeTenantConfig?.branding?.logo || '';
+  const _isLiriLogo = _rawLogo === '/lirilogo.png' || _rawLogo === '/liri-logo-mark.png' || _rawLogo === '';
+  const _tenantLogo = _shellIsTenant && !_isLiriLogo ? _rawLogo : '';
 
   // Fil d'Ariane contextuel (poussé par la page active, ex. ['École', 'Paramètres']).
   const { crumb } = usePortalHeaderValues();
@@ -164,7 +172,11 @@ function LiriPortalShellInner({
         <div className="flex shrink-0 items-center gap-2.5">
           <button onClick={() => nav('/liri')} className="grid h-8 w-8 place-items-center rounded-xl lp-muted lp-railbtn lp-tr" aria-label="Retour au portail"><Menu size={17} /></button>
           <button onClick={() => nav('/liri')} className="flex items-center gap-2 lp-tr" aria-label="Portail LIRI">
-            {_shellIsTenant ? null : <img src="/lirilogo.png" alt="LIRI" className="h-9 w-9 object-contain" />}
+            {_shellIsTenant
+              ? (_tenantLogo
+                  ? <img src={_tenantLogo} alt={_shellBrand} className="h-9 w-9 rounded-lg object-contain" />
+                  : <span className="grid h-9 w-9 place-items-center rounded-lg text-[13px] font-black text-white lp-ember">{initials}</span>)
+              : <img src="/lirilogo.png" alt="LIRI" className="h-9 w-9 object-contain" />}
             <span className="text-[17px] font-semibold tracking-tight lp-ink">{_shellBrand}</span>
             {_schoolSuffix && (
               <span className="hidden items-center gap-2 text-[14px] lp-muted sm:flex">
