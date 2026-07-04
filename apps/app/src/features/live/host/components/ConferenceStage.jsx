@@ -237,6 +237,20 @@ export default function ConferenceStage({ liveParticipants, livekitParticipantsM
     </button>
   ) : null;
 
+  // Barre de recherche membre — remontée dans la barre d'options (à gauche des bascules de vue).
+  const searchBar = (
+    <div style={{ display: 'flex', alignItems: 'center', gap: 8, background: 'rgba(255,255,255,.05)', border: '1px solid rgba(255,255,255,.1)', borderRadius: 10, padding: '6px 10px', minWidth: 0, flex: 1 }}>
+      <Search size={14} color="rgba(255,255,255,.4)" />
+      <input
+        value={search}
+        onChange={(e) => setSearch(e.target.value)}
+        placeholder="Rechercher un membre"
+        style={{ flex: 1, minWidth: 0, background: 'transparent', border: 'none', outline: 'none', color: '#fff', fontSize: 12.5 }}
+      />
+      <SlidersHorizontal size={14} color="rgba(255,255,255,.4)" />
+    </div>
+  );
+
   return (
     <div style={{ position: 'absolute', inset: 0, zIndex: 15, background: 'var(--lh-stage-bg, #1f1e1c)', display: 'flex', flexDirection: 'column' }}>
       {isSharing ? (
@@ -246,41 +260,47 @@ export default function ConferenceStage({ liveParticipants, livekitParticipantsM
           <div style={{ marginLeft: 'auto', display: 'flex', gap: 6, alignItems: 'center' }}>{stopBtn}<ToolbarBtn onClick={() => { try { shareFsRef.current?.requestFullscreen?.(); } catch { /* ignore */ } }} title="Plein écran">{<Maximize2 size={14} />}</ToolbarBtn></div>
         </div>
       ) : (
-      <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 12px', flexShrink: 0 }}>
-        <ToolbarBtn active={view === 'grid'} onClick={() => setView('grid')} title="Tous les participants en grille">Grille</ToolbarBtn>
-        <ToolbarBtn active={view === 'speaker'} onClick={() => setView('speaker')} title="Un grand cadre + vignettes">Orateur</ToolbarBtn>
-        {onOpenLongia ? (
-          <ToolbarBtn onClick={onOpenLongia} title="Ouvrir le hub Longia (assistant IA)">Longia</ToolbarBtn>
-        ) : null}
-        {view === 'speaker' ? (
-          <>
-            <ToolbarBtn
-              active={autoFollow}
-              onClick={() => { setAutoFollow((v) => !v); setPinnedId(null); }}
-              title="Le grand cadre suit automatiquement qui parle"
-            >
-              {`Auto-suivi ${autoFollow ? 'ON' : 'OFF'}`}
-            </ToolbarBtn>
-            <ToolbarBtn
-              active={panelPos === 'side'}
-              onClick={() => setPanelPos((p) => (p === 'side' ? 'bottom' : 'side'))}
-              title="Vignettes des membres : bande en bas ou panneau latéral (2 colonnes, pleine hauteur)"
-            >
-              {panelPos === 'side' ? 'Vignettes : côté' : 'Vignettes : bas'}
-            </ToolbarBtn>
-          </>
-        ) : null}
-        {view === 'grid' ? (
-          <div style={{ display: 'flex', gap: 4, alignItems: 'center' }}>
-            <span style={{ fontSize: 9, fontWeight: 700, letterSpacing: '.06em', color: 'rgba(255,255,255,.4)', marginRight: 2 }}>TAILLE</span>
-            {['s', 'm', 'l'].map((d) => (
-              <ToolbarBtn key={d} active={density === d} onClick={() => setDensity(d)} title={d === 's' ? 'Petites' : d === 'l' ? 'Grandes' : 'Moyennes'}>
-                {d.toUpperCase()}
+      <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 12px', flexShrink: 0 }}>
+        {/* Gauche : recherche membre (remontée depuis le panneau membres). */}
+        <div style={{ flex: 1, minWidth: 0, maxWidth: 320, display: 'flex' }}>{searchBar}</div>
+        {/* Centre : bascules de vue Grille / Orateur / Longia (+ options de vue). */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0 }}>
+          <ToolbarBtn active={view === 'grid'} onClick={() => setView('grid')} title="Tous les participants en grille">Grille</ToolbarBtn>
+          <ToolbarBtn active={view === 'speaker'} onClick={() => setView('speaker')} title="Un grand cadre + vignettes">Orateur</ToolbarBtn>
+          {onOpenLongia ? (
+            <ToolbarBtn onClick={onOpenLongia} title="Ouvrir le hub Longia (assistant IA)">Longia</ToolbarBtn>
+          ) : null}
+          {view === 'speaker' ? (
+            <>
+              <ToolbarBtn
+                active={autoFollow}
+                onClick={() => { setAutoFollow((v) => !v); setPinnedId(null); }}
+                title="Le grand cadre suit automatiquement qui parle"
+              >
+                {`Auto-suivi ${autoFollow ? 'ON' : 'OFF'}`}
               </ToolbarBtn>
-            ))}
-          </div>
-        ) : null}
-        {stopBtn ? <div style={{ marginLeft: 'auto' }}>{stopBtn}</div> : null}
+              <ToolbarBtn
+                active={panelPos === 'side'}
+                onClick={() => setPanelPos((p) => (p === 'side' ? 'bottom' : 'side'))}
+                title="Vignettes des membres : bande en bas ou panneau latéral (2 colonnes, pleine hauteur)"
+              >
+                {panelPos === 'side' ? 'Vignettes : côté' : 'Vignettes : bas'}
+              </ToolbarBtn>
+            </>
+          ) : null}
+          {view === 'grid' ? (
+            <div style={{ display: 'flex', gap: 4, alignItems: 'center' }}>
+              <span style={{ fontSize: 9, fontWeight: 700, letterSpacing: '.06em', color: 'rgba(255,255,255,.4)', marginRight: 2 }}>TAILLE</span>
+              {['s', 'm', 'l'].map((d) => (
+                <ToolbarBtn key={d} active={density === d} onClick={() => setDensity(d)} title={d === 's' ? 'Petites' : d === 'l' ? 'Grandes' : 'Moyennes'}>
+                  {d.toUpperCase()}
+                </ToolbarBtn>
+              ))}
+            </div>
+          ) : null}
+        </div>
+        {/* Droite : STOP. */}
+        <div style={{ flex: 1, minWidth: 0, display: 'flex', justifyContent: 'flex-end' }}>{stopBtn}</div>
       </div>
       )}
 
@@ -317,19 +337,9 @@ export default function ConferenceStage({ liveParticipants, livekitParticipantsM
         <div style={{ flex: 1, minHeight: 0, display: 'flex', gap: 12, padding: '0 14px 14px' }}>
           <div style={{ width: 296, flexShrink: 0, minHeight: 0, display: 'flex', flexDirection: 'column', background: 'rgba(255,255,255,.03)', border: '1px solid rgba(255,255,255,.08)', borderRadius: 16, overflow: 'hidden' }}>
             <div style={{ padding: '14px 14px 10px', flexShrink: 0 }}>
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                 <span style={{ fontSize: 15, fontWeight: 700, color: '#fff' }}>{`Membres (${visible.length})`}</span>
                 <MoreHorizontal size={16} color="rgba(255,255,255,.45)" />
-              </div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 8, background: 'rgba(255,255,255,.05)', border: '1px solid rgba(255,255,255,.1)', borderRadius: 10, padding: '7px 10px' }}>
-                <Search size={14} color="rgba(255,255,255,.4)" />
-                <input
-                  value={search}
-                  onChange={(e) => setSearch(e.target.value)}
-                  placeholder="Rechercher un membre"
-                  style={{ flex: 1, minWidth: 0, background: 'transparent', border: 'none', outline: 'none', color: '#fff', fontSize: 12.5 }}
-                />
-                <SlidersHorizontal size={14} color="rgba(255,255,255,.4)" />
               </div>
             </div>
             <div style={{ flex: 1, minHeight: 0, overflowY: 'auto', padding: '0 12px 12px' }}>
