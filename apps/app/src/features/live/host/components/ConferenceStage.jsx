@@ -421,7 +421,7 @@ export default function ConferenceStage({ liveParticipants, livekitParticipantsM
         </div>
       ) : (isSharing || panelPos === 'side') ? (
         <div style={{ flex: 1, minHeight: 0, display: 'flex', gap: 12, padding: '10px 14px 14px' }}>
-          <div ref={shareFsRef} style={{ flex: 1, minHeight: 0, position: 'relative', borderRadius: 18, overflow: 'hidden', border: `1px solid ${isSharing ? 'rgba(var(--lh-accent-rgb,212,163,106),.4)' : focusSpeaking ? ACCENT : 'rgba(255,255,255,.1)'}`, background: isSharing ? '#000' : 'rgba(0,0,0,.45)', boxShadow: focusSpeaking && !isSharing ? '0 0 0 3px rgba(var(--lh-accent-rgb,212,163,106),.22)' : 'none' }}>
+          <div ref={shareFsRef} style={{ flex: 1, minHeight: 0, position: 'relative', borderRadius: 18, overflow: 'hidden', border: `1px solid ${isSharing ? 'rgba(var(--lh-accent-rgb,212,163,106),.4)' : focusSpeaking ? ACCENT : 'rgba(255,255,255,.1)'}`, background: isSharing ? '#000' : 'rgba(255,255,255,.02)', boxShadow: focusSpeaking && !isSharing ? '0 0 0 3px rgba(var(--lh-accent-rgb,212,163,106),.22)' : 'none' }}>
             {isSharing ? (
               <>
                 {screenShareLk ? (
@@ -441,7 +441,7 @@ export default function ConferenceStage({ liveParticipants, livekitParticipantsM
                 {focusShowVid && focusLk ? (
                   <LiveHostVideoCell participant={focusLk} mediaEpoch={liveKitMediaEpoch} style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover' }} />
                 ) : (
-                  <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', background: `${focus.color}1f` }}>
+                  <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(255,255,255,.015)' }}>
                     <div style={{ width: 112, height: 112, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 38, fontWeight: 800, color: focus.color, background: `${focus.color}22`, border: `1px solid ${focus.color}55` }}>{focus.init}</div>
                   </div>
                 )}
