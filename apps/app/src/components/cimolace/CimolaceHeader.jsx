@@ -5,6 +5,10 @@ import { Menu, X, Zap } from 'lucide-react';
 import { cimolacePlatformConfig } from '@/tenants/cimolace/cimolacePlatform.config';
 
 const MotionLink = motion.create(Link);
+const MotionA = motion.a;
+// Création d'org = onboarding self-service centralisé (cimolace.space) — décision USER
+// « tout via cimolace.space/onboarding ». Le bouton « Commencer » (URL absolue) → <a>.
+const ONBOARDING_URL = 'https://cimolace.space/onboarding';
 
 const navLinks = [
   { label: 'Accueil', href: cimolacePlatformConfig.routes.home, isRoute: true },
@@ -102,18 +106,18 @@ const CimolaceHeader = ({ variant = 'light' }) => {
             >
               Connexion
             </Link>
-            <MotionLink
-              to="/cimolace/installer"
+            <MotionA
+              href={ONBOARDING_URL}
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
               className={`px-5 py-2.5 text-sm font-semibold rounded-lg transition-all ${
                 isLight
-                  ? 'bg-[#0a0a0f] text-white hover:bg-[#d8b468]'
-                  : 'bg-white text-[#0a0a0f] hover:bg-[#d8b468] hover:text-white'
+                  ? 'bg-[#0a0a0f] text-white hover:bg-[#d8b468] hover:text-[#20160f]'
+                  : 'bg-white text-[#0a0a0f] hover:bg-[#d8b468]'
               }`}
             >
               Commencer
-            </MotionLink>
+            </MotionA>
           </div>
 
           {/* Mobile Menu Button */}
@@ -168,17 +172,17 @@ const CimolaceHeader = ({ variant = 'light' }) => {
             >
               Connexion
             </Link>
-            <Link
-              to="/cimolace/installer"
+            <a
+              href={ONBOARDING_URL}
               onClick={() => setIsMobileMenuOpen(false)}
               className={`block w-full text-center px-5 py-3 font-semibold rounded-xl ${
                 isLight
-                  ? 'bg-[#0a0a0f] text-white hover:bg-[#d8b468]'
-                  : 'bg-white text-[#0a0a0f] hover:bg-[#d8b468] hover:text-white'
+                  ? 'bg-[#0a0a0f] text-white hover:bg-[#d8b468] hover:text-[#20160f]'
+                  : 'bg-white text-[#0a0a0f] hover:bg-[#d8b468]'
               }`}
             >
               Commencer
-            </Link>
+            </a>
           </div>
         </div>
       </motion.div>
