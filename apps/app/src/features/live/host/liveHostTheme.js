@@ -70,9 +70,9 @@ body.lh-sp-on .lh-sp-glow{box-shadow:0 0 0 1px rgba(200,150,12,.22),0 0 28px rgb
    réorganise jamais (fini la superposition / le « poussé » du SmartBoard). */
 .lh-hoverrail{position:relative}
 .lh-hoverrail-strip{transition:opacity .2s ease}
-.lh-hoverrail-panel{position:absolute;left:58px;top:var(--lh-panel-top,10px);bottom:var(--lh-panel-bottom,10px);width:0;opacity:0;pointer-events:none;overflow:hidden;z-index:60;border-radius:16px;border:1px solid rgba(245,244,238,.1);background:var(--lh-panel-bg,rgba(48,48,46,.97));-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px);box-shadow:0 30px 80px rgba(0,0,0,.55),0 0 0 1px rgba(0,0,0,.35),inset 0 1px 0 rgba(255,255,255,.07);transition:width .28s cubic-bezier(.22,1,.36,1),opacity .18s ease}
+.lh-hoverrail-panel{position:absolute;left:58px;top:var(--lh-panel-top,10px);bottom:auto;max-height:calc(100% - var(--lh-panel-top,10px) - var(--lh-panel-bottom,10px));display:flex;flex-direction:column;width:0;opacity:0;pointer-events:none;overflow:hidden;z-index:60;border-radius:16px;border:1px solid rgba(245,244,238,.1);background:var(--lh-panel-bg,rgba(48,48,46,.97));-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px);box-shadow:0 30px 80px rgba(0,0,0,.55),0 0 0 1px rgba(0,0,0,.35),inset 0 1px 0 rgba(255,255,255,.07);transition:width .28s cubic-bezier(.22,1,.36,1),opacity .18s ease}
 .lh-hoverrail[data-pinned="true"]>.lh-hoverrail-panel{width:300px;opacity:1;pointer-events:auto}
-.lh-hoverrail-panel-inner{width:300px;height:100%;overflow-y:auto;padding:14px;box-sizing:border-box}
+.lh-hoverrail-panel-inner{width:300px;flex:0 1 auto;min-height:0;overflow-y:auto;padding:14px;box-sizing:border-box}
 @media (prefers-reduced-motion:reduce){.lh-hoverrail-panel{transition:opacity .14s ease}}
 `;
 
