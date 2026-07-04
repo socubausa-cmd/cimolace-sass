@@ -265,7 +265,7 @@ export function AttachmentsPanel({
                   <button
                     onClick={() => toggleVisibility(att)}
                     title={att.visible_to_patient ? 'Masquer au patient' : 'Rendre visible au patient'}
-                    style={{ background: 'none', border: '1px solid #e2e8f0', borderRadius: 4, padding: 4, cursor: 'pointer', color: att.visible_to_patient ? '#10b981' : '#94a3b8' }}
+                    style={{ background: 'none', border: '1px solid #e2e8f0', borderRadius: 4, padding: 4, cursor: 'pointer', color: att.visible_to_patient ? 'var(--brand-accent)' : '#94a3b8' }}
                   >
                     {att.visible_to_patient ? <Eye size={14} /> : <EyeOff size={14} />}
                   </button>

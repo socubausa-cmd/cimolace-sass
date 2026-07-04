@@ -257,7 +257,7 @@ export function MyPrivacy() {
                 disabled={!patientId || isWorking}
                 style={{
                   width: 48, height: 26, borderRadius: 13, position: 'relative',
-                  background: isGranted ? '#10b981' : '#cbd5e1',
+                  background: isGranted ? 'var(--brand-accent)' : '#cbd5e1',
                   border: 'none', cursor: !patientId || isWorking ? 'not-allowed' : 'pointer',
                   flexShrink: 0, transition: 'background 0.2s',
                   opacity: isWorking ? 0.6 : 1,

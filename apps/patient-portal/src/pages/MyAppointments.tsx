@@ -220,7 +220,7 @@ export function MyAppointments() {
         </h2>
         <button
           onClick={() => { setError(null); setReqOpen(true); }}
-          style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '10px 20px', background: '#0d9488', color: '#fff', border: 'none', borderRadius: 8, fontSize: 14, fontWeight: 500, cursor: 'pointer' }}
+          style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '10px 20px', background: 'var(--brand-primary)', color: '#fff', border: 'none', borderRadius: 8, fontSize: 14, fontWeight: 500, cursor: 'pointer' }}
         >
           <Plus size={16} /> Demander un RDV
         </button>
@@ -310,7 +310,7 @@ export function MyAppointments() {
             />
           </Field>
           {error && <div style={errStyle}>{error}</div>}
-          <Actions onCancel={() => setReqOpen(false)} saving={saving} submitLabel="Envoyer la demande" submitColor="#0d9488" />
+          <Actions onCancel={() => setReqOpen(false)} saving={saving} submitLabel="Envoyer la demande" submitColor="var(--brand-primary)" />
         </Modal>
       )}
     </div>
@@ -350,7 +350,7 @@ function AppointmentCard({
         <div style={{ fontSize: 11, color: '#64748b', textTransform: 'uppercase' }}>
           {dt.toLocaleDateString('fr', { weekday: 'short' })}
         </div>
-        <div style={{ fontSize: 22, fontWeight: 700, color: '#0d9488' }}>
+        <div style={{ fontSize: 22, fontWeight: 700, color: 'var(--brand-primary)' }}>
           {dt.getDate()}
         </div>
         <div style={{ fontSize: 11, color: '#64748b', textTransform: 'uppercase' }}>

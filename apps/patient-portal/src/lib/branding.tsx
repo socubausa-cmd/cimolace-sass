@@ -42,6 +42,7 @@ export type Branding = {
   logoUrl: string | null;
   primary: string;
   accent: string;
+  fonts: { headings: string; body: string };
   site: SiteConfig;
   loading: boolean;
 };
@@ -49,13 +50,18 @@ export type Branding = {
 const ENGINE_DEFAULTS = {
   // Patient-portal engine identity — used until tenant branding loads. The
   // patient surface targets 100% tenant white-label (no Cimolace, no MEDOS
-  // visible to the patient). The teal default approximates a clinical,
-  // calm palette so the pre-branding flash looks intentional rather than
-  // broken — but it's overridden as soon as the tenant lookup resolves.
+  // visible to the patient). Neutral warm defaults so the pre-branding flash
+  // looks intentional; overridden as soon as the tenant lookup resolves.
   name: 'Mon espace',
   logoUrl: null as string | null,
-  primary: '#0d9488',
-  accent: '#0f766e',
+  primary: '#6d2e46',
+  accent: '#8a3a58',
+  // Typo éditoriale par défaut (titres serif + corps sans-serif) ; un tenant
+  // peut la surcharger via le champ `fonts` de son branding.
+  fonts: {
+    headings: "'Cormorant Garamond', Georgia, 'Times New Roman', serif",
+    body: "'Jost', system-ui, -apple-system, sans-serif",
+  },
   site: null as SiteConfig,
 };
 
@@ -81,6 +87,8 @@ function applyCssVars(b: Branding) {
   root.setProperty('--brand-primary', b.primary);
   root.setProperty('--brand-primary-soft', addAlpha(b.primary, '33'));
   root.setProperty('--brand-accent', b.accent);
+  if (b.fonts?.headings) root.setProperty('--brand-heading-font', b.fonts.headings);
+  if (b.fonts?.body) root.setProperty('--brand-body-font', b.fonts.body);
 }
 
 /**
@@ -212,12 +220,20 @@ export function BrandingProvider({ children }: { children: ReactNode }) {
           }
         }
         const colors = (t.brand_colors || {}) as Record<string, string>;
+        const bf = (t.brand_fonts || t.fonts || {}) as {
+          headings?: string;
+          body?: string;
+        };
         setBranding({
           name: t.name || ENGINE_DEFAULTS.name,
           logoUrl: t.logo_url || null,
           primary: colors.primary || ENGINE_DEFAULTS.primary,
           accent:
             colors.accent || colors.secondary || ENGINE_DEFAULTS.accent,
+          fonts: {
+            headings: bf.headings || ENGINE_DEFAULTS.fonts.headings,
+            body: bf.body || ENGINE_DEFAULTS.fonts.body,
+          },
           site: (t.site as SiteConfig) ?? null,
           loading: false,
         });

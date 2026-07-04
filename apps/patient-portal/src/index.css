@@ -1,1 +1,12 @@
-*{margin:0;padding:0;box-sizing:border-box}body{font-family:system-ui,-apple-system,sans-serif;background:#f8fafc;color:#0f172a}a{color:inherit;text-decoration:none}
+:root{
+  --brand-primary:#6d2e46;
+  --brand-primary-soft:#6d2e4633;
+  --brand-accent:#8a3a58;
+  --brand-bg:#fafaf8;
+  --brand-heading-font:'Cormorant Garamond',Georgia,'Times New Roman',serif;
+  --brand-body-font:'Jost',system-ui,-apple-system,sans-serif;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:var(--brand-body-font);background:var(--brand-bg);color:#1e1e1e;-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility}
+h1,h2,h3,h4,h5,h6{font-family:var(--brand-heading-font);letter-spacing:.2px}
+a{color:inherit;text-decoration:none}

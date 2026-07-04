@@ -15,7 +15,7 @@ const SEVERITY_COLORS: Record<string, { bg: string; fg: string; border: string }
 function organColor(score: number | null, hint: string | null): string {
   if (hint) return hint;
   if (score == null) return '#cbd5e1';
-  if (score >= 70) return '#10b981';
+  if (score >= 70) return '#16a34a';
   if (score >= 40) return '#f59e0b';
   return '#ef4444';
 }

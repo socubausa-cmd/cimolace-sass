@@ -89,7 +89,7 @@ export function MyHealth() {
     { icon: Heart, label: 'Humeur', value: latest.mood_score, unit: '/10', color: '#ef4444' },
     { icon: Activity, label: 'Energie', value: latest.energy_level, unit: '/10', color: '#f59e0b' },
     { icon: Moon, label: 'Sommeil', value: latest.sleep_hours, unit: 'h', color: '#8b5cf6' },
-    { icon: Dumbbell, label: 'Exercice', value: latest.exercise_minutes, unit: 'min', color: '#10b981' },
+    { icon: Dumbbell, label: 'Exercice', value: latest.exercise_minutes, unit: 'min', color: 'var(--brand-accent)' },
     { icon: Droplets, label: 'Eau', value: latest.water_liters, unit: 'L', color: '#3b82f6' },
   ];
 
@@ -115,7 +115,7 @@ export function MyHealth() {
     },
     { icon: Droplets, label: 'Glycémie', value: lastVital('blood_glucose'), unit: 'mg/dL', color: '#0ea5e9' },
     { icon: HeartPulse, label: 'Fréq. card.', value: lastVital('heart_rate'), unit: 'bpm', color: '#ec4899' },
-    { icon: Scale, label: 'Poids', value: lastVital('weight_kg'), unit: 'kg', color: '#10b981' },
+    { icon: Scale, label: 'Poids', value: lastVital('weight_kg'), unit: 'kg', color: 'var(--brand-accent)' },
     { icon: Thermometer, label: 'Température', value: lastVital('temperature'), unit: '°C', color: '#f59e0b' },
   ];
   const hasAnyVital = vitalCards.some((c) => c.value != null);

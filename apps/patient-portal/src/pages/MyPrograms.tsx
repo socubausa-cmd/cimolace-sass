@@ -161,7 +161,7 @@ export function MyPrograms() {
               <div style={{ flex: 1 }}>
                 <h3 style={{ fontWeight: 600, fontSize: 16, margin: 0 }}>
                   {program?.title || 'Programme'}
-                  {isCompleted && <span style={{ marginLeft: 8, fontSize: 11, color: '#10b981', fontWeight: 600 }}>✓ TERMINE</span>}
+                  {isCompleted && <span style={{ marginLeft: 8, fontSize: 11, color: 'var(--brand-accent)', fontWeight: 600 }}>✓ TERMINE</span>}
                   {isPaused && <span style={{ marginLeft: 8, fontSize: 11, color: '#ea580c', fontWeight: 600 }}>EN PAUSE</span>}
                 </h3>
                 {program?.description && (
@@ -174,7 +174,7 @@ export function MyPrograms() {
                 )}
               </div>
               <div style={{ textAlign: 'right', fontSize: 12, color: '#64748b', flexShrink: 0 }}>
-                <div style={{ fontSize: 20, fontWeight: 700, color: '#0d9488' }}>
+                <div style={{ fontSize: 20, fontWeight: 700, color: 'var(--brand-primary)' }}>
                   {enr.progress_percent || 0}%
                 </div>
                 <div>{pos}/{total} etapes</div>
@@ -185,7 +185,7 @@ export function MyPrograms() {
             <div style={{ background: '#f1f5f9', borderRadius: 99, height: 6, overflow: 'hidden', marginBottom: 16 }}>
               <div
                 style={{
-                  background: isCompleted ? '#10b981' : '#0d9488',
+                  background: isCompleted ? 'var(--brand-accent)' : 'var(--brand-primary)',
                   height: '100%',
                   width: `${enr.progress_percent || 0}%`,
                   transition: 'width 0.3s',
@@ -213,7 +213,7 @@ export function MyPrograms() {
                         borderRadius: 8,
                         marginBottom: 4,
                         background: isDone ? '#ecfdf5' : isNext ? '#f0fdfa' : 'transparent',
-                        border: isNext ? '1px solid #0d9488' : '1px solid transparent',
+                        border: isNext ? '1px solid var(--brand-primary)' : '1px solid transparent',
                         cursor: isDone || isNext ? 'pointer' : 'default',
                         opacity: isLocked ? 0.5 : 1,
                       }}
@@ -228,9 +228,9 @@ export function MyPrograms() {
                       }}
                     >
                       {isDone ? (
-                        <CheckCircle size={20} color="#10b981" style={{ flexShrink: 0 }} />
+                        <CheckCircle size={20} color="var(--brand-accent)" style={{ flexShrink: 0 }} />
                       ) : (
-                        <Circle size={20} color={isNext ? '#0d9488' : '#94a3b8'} style={{ flexShrink: 0 }} />
+                        <Circle size={20} color={isNext ? 'var(--brand-primary)' : '#94a3b8'} style={{ flexShrink: 0 }} />
                       )}
                       <div style={{ flex: 1 }}>
                         <div
@@ -249,7 +249,7 @@ export function MyPrograms() {
                         <div style={{ fontSize: 11, color: '#94a3b8', marginTop: 2 }}>
                           {s.step_type}
                           {typeof s.due_after_days === 'number' && ` · J+${s.due_after_days}`}
-                          {isNext && <span style={{ color: '#0d9488', fontWeight: 600, marginLeft: 8 }}>← A faire maintenant</span>}
+                          {isNext && <span style={{ color: 'var(--brand-primary)', fontWeight: 600, marginLeft: 8 }}>← A faire maintenant</span>}
                         </div>
                       </div>
                     </li>

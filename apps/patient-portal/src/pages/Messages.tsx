@@ -143,7 +143,7 @@ export function Messages() {
                   border: 'none',
                   borderRadius: 8,
                   cursor: 'pointer',
-                  borderLeft: activeId === t.id ? '3px solid #0d9488' : '3px solid transparent',
+                  borderLeft: activeId === t.id ? '3px solid var(--brand-primary)' : '3px solid transparent',
                 }}
               >
                 <div style={{ fontSize: 13, fontWeight: 600, color: '#0f172a' }}>
@@ -218,7 +218,7 @@ export function Messages() {
                       maxWidth: '72%',
                       padding: '10px 14px',
                       borderRadius: 14,
-                      background: mine ? '#0d9488' : '#f1f5f9',
+                      background: mine ? 'var(--brand-primary)' : '#f1f5f9',
                       color: mine ? '#fff' : '#0f172a',
                       fontSize: 14,
                       lineHeight: 1.4,
@@ -269,7 +269,7 @@ export function Messages() {
                 alignItems: 'center',
                 gap: 6,
                 padding: '10px 20px',
-                background: activeId && input.trim() ? '#0f766e' : '#94a3b8',
+                background: activeId && input.trim() ? 'var(--brand-primary)' : '#94a3b8',
                 color: '#fff',
                 border: 'none',
                 borderRadius: 8,

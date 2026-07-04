@@ -91,7 +91,7 @@ function NoteCard({ note, onRead }: { note: ConsultNote; onRead: (id: string) =>
   return (
     <div style={{
       background: '#fff', borderRadius: 14, marginBottom: 14,
-      border: `2px solid ${isUnread ? '#0d9488' : '#e2e8f0'}`,
+      border: `2px solid ${isUnread ? 'var(--brand-primary)' : '#e2e8f0'}`,
       boxShadow: isUnread ? '0 4px 20px rgba(13,148,136,0.08)' : '0 1px 4px rgba(0,0,0,0.04)',
       overflow: 'hidden', transition: 'box-shadow 0.2s',
     }}>
@@ -106,7 +106,7 @@ function NoteCard({ note, onRead }: { note: ConsultNote; onRead: (id: string) =>
       >
         {/* Status icon */}
         {note.is_signed
-          ? <CheckCircle2 size={20} color="#10b981" style={{ flexShrink: 0 }} />
+          ? <CheckCircle2 size={20} color="var(--brand-accent)" style={{ flexShrink: 0 }} />
           : <Clock size={20} color="#f59e0b" style={{ flexShrink: 0 }} />}
 
         <div style={{ flex: 1 }}>
@@ -117,14 +117,14 @@ function NoteCard({ note, onRead }: { note: ConsultNote; onRead: (id: string) =>
             {note.is_signed
               ? `Signée le ${new Date(note.signed_at!).toLocaleDateString('fr-FR')}`
               : 'En attente de signature'}
-            {note.ai_summary && <span style={{ marginLeft: 8, color: '#0d9488' }}>· Note IA disponible</span>}
+            {note.ai_summary && <span style={{ marginLeft: 8, color: 'var(--brand-primary)' }}>· Note IA disponible</span>}
           </div>
         </div>
 
         {/* Unread badge */}
         {isUnread && (
           <span style={{
-            background: '#0d9488', color: '#fff', fontSize: 11, fontWeight: 700,
+            background: 'var(--brand-primary)', color: '#fff', fontSize: 11, fontWeight: 700,
             padding: '2px 8px', borderRadius: 10, marginRight: 8,
           }}>NOUVEAU</span>
         )}
@@ -143,8 +143,8 @@ function NoteCard({ note, onRead }: { note: ConsultNote; onRead: (id: string) =>
               border: '1px solid #99f6e4', borderRadius: 10, padding: 14, margin: '14px 0',
             }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 6 }}>
-                <Brain size={15} color="#0d9488" />
-                <span style={{ fontSize: 12, fontWeight: 700, color: '#0d9488', textTransform: 'uppercase', letterSpacing: 0.5 }}>
+                <Brain size={15} color="var(--brand-primary)" />
+                <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--brand-primary)', textTransform: 'uppercase', letterSpacing: 0.5 }}>
                   Résumé généré par IA
                 </span>
               </div>
@@ -158,7 +158,7 @@ function NoteCard({ note, onRead }: { note: ConsultNote; onRead: (id: string) =>
               <SoapSection label="Subjectif"  content={note.subjective}  color="#6366f1" />
               <SoapSection label="Objectif"   content={note.objective}   color="#0891b2" />
               <SoapSection label="Évaluation" content={note.assessment}  color="#d97706" />
-              <SoapSection label="Plan"       content={note.plan}        color="#059669" />
+              <SoapSection label="Plan"       content={note.plan}        color="var(--brand-accent)" />
             </div>
           )}
 
@@ -239,13 +239,13 @@ export function MyChartingNotes() {
       {/* Header */}
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 24 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-          <Brain size={24} color="#0d9488" />
+          <Brain size={24} color="var(--brand-primary)" />
           <div>
             <h2 style={{ fontSize: 22, fontWeight: 700, margin: 0, color: '#0f172a' }}>
               Notes de consultation
             </h2>
             {unreadCount > 0 && (
-              <p style={{ fontSize: 13, color: '#0d9488', margin: '2px 0 0', fontWeight: 500 }}>
+              <p style={{ fontSize: 13, color: 'var(--brand-primary)', margin: '2px 0 0', fontWeight: 500 }}>
                 {unreadCount} nouvelle{unreadCount > 1 ? 's' : ''} note{unreadCount > 1 ? 's' : ''}
               </p>
             )}
@@ -257,7 +257,7 @@ export function MyChartingNotes() {
           style={{
             display: 'flex', alignItems: 'center', gap: 6, padding: '8px 14px',
             background: '#f0fdfa', border: '1px solid #99f6e4', borderRadius: 8,
-            color: '#0d9488', fontSize: 13, fontWeight: 500, cursor: 'pointer',
+            color: 'var(--brand-primary)', fontSize: 13, fontWeight: 500, cursor: 'pointer',
           }}
         >
           <RefreshCw size={14} style={{ animation: loading ? 'spin 1s linear infinite' : 'none' }} />

@@ -83,7 +83,7 @@ function bandFor(score: number | null): ScoreBand {
 }
 
 const BAND_META: Record<ScoreBand, { color: string; soft: string; label: string }> = {
-  good:    { color: '#10b981', soft: '#ecfdf5', label: 'Point fort' },
+  good:    { color: 'var(--brand-accent)', soft: '#ecfdf5', label: 'Point fort' },
   watch:   { color: '#f59e0b', soft: '#fffbeb', label: 'À entretenir' },
   focus:   { color: '#3b82f6', soft: '#eff6ff', label: 'À soutenir en douceur' },
   unknown: { color: '#94a3b8', soft: '#f8fafc', label: 'Pas encore mesuré' },

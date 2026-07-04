@@ -15,7 +15,7 @@ export function PatientDashboard() {
 
   const cards = [
     { icon: User, label: 'Mon dossier', to: '/records', color: '#3b82f6' },
-    { icon: FileText, label: 'Notes', count: stats.notes, to: '/notes', color: '#10b981' },
+    { icon: FileText, label: 'Notes', count: stats.notes, to: '/notes', color: 'var(--brand-accent)' },
     { icon: Pill, label: 'Ordonnances', to: '/prescriptions', color: '#f59e0b' },
     { icon: Heart, label: 'Suivi sante', to: '/health', color: '#ef4444' },
     { icon: BookOpen, label: 'Programmes', to: '/programs', color: '#8b5cf6' },

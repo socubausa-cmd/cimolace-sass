@@ -17,7 +17,7 @@ export function MyNotes() {
         <div key={n.id} style={{ background: '#fff', borderRadius: 12, border: '1px solid #e2e8f0', padding: 20, marginBottom: 12 }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <span style={{ fontWeight: 600 }}>Consultation du {new Date(n.created_at).toLocaleDateString('fr')}</span>
-            {n.is_signed ? <Lock size={14} color="#10b981" /> : <span style={{ fontSize: 12, color: '#f59e0b' }}>Non signee</span>}
+            {n.is_signed ? <Lock size={14} color="var(--brand-accent)" /> : <span style={{ fontSize: 12, color: '#f59e0b' }}>Non signee</span>}
           </div>
           {n.is_shared_with_patient && <div style={{ marginTop: 12, padding: 12, background: '#f0fdf4', borderRadius: 8, fontSize: 14, color: '#166534' }}>
             <p><strong>Resume:</strong> {n.ai_summary || n.free_text || 'Resume non disponible'}</p>
