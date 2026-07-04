@@ -845,6 +845,19 @@ export class TeleconsultService {
       .update({ status: 'ended', ended_at: now })
       .eq('id', sessionId);
 
+    // Cohérence RDV ↔ session : une téléconsult terminée CLÔT son RDV. Sans ça
+    // le RDV reste 'confirmed' et bloque à tort la création de nouveaux
+    // créneaux qui le chevauchent (détection de conflit dans appointments →
+    // 409). Best-effort, ne bloque pas la fin de séance.
+    if (sessionRow.appointment_id) {
+      await (this.supabase.client as any)
+        .from('med_appointments')
+        .update({ status: 'completed' })
+        .eq('tenant_id', tenant.id)
+        .eq('id', sessionRow.appointment_id)
+        .in('status', ['requested', 'confirmed', 'rescheduled']);
+    }
+
     // Tell Liri the session ended so its ledger row gets a duration. Failing
     // here would not invalidate the MEDOS-side end, so we swallow the error.
     try {

@@ -163,7 +163,7 @@ export function Appointments() {
       });
       if (!res.ok) {
         const b = await res.json().catch(() => ({}));
-        throw new Error(b?.message || `Erreur ${res.status}`);
+        throw new Error(b?.error?.message || b?.message || `Erreur ${res.status}`);
       }
       setAvailOpen(false);
       await fetchAvailabilities();
@@ -216,7 +216,7 @@ export function Appointments() {
       });
       if (!res.ok) {
         const b = await res.json().catch(() => ({}));
-        throw new Error(b?.message || `Erreur ${res.status}`);
+        throw new Error(b?.error?.message || b?.message || `Erreur ${res.status}`);
       }
       setApptOpen(false);
       setApptForm({ patient_id: '', scheduled_at: '', duration_minutes: '30', appointment_type: 'in_person', reason: '' });
@@ -238,7 +238,7 @@ export function Appointments() {
     });
     if (!res.ok) {
       const b = await res.json().catch(() => ({}));
-      setError(b?.message || `Erreur ${res.status}`);
+      setError(b?.error?.message || b?.message || `Erreur ${res.status}`);
       return null;
     }
     const d = await res.json();
@@ -328,7 +328,7 @@ export function Appointments() {
       });
       if (!res.ok) {
         const b = await res.json().catch(() => ({}));
-        setError(b?.message || `Erreur ${res.status}`);
+        setError(b?.error?.message || b?.message || `Erreur ${res.status}`);
         return;
       }
       await fetchAppointments();
