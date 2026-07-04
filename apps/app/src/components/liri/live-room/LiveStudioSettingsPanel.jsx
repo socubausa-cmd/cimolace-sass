@@ -418,13 +418,14 @@ export default function LiveStudioSettingsPanel({
               </div>
 
               <div className="relative min-h-0 flex-1 overflow-y-auto overflow-x-hidden bg-[var(--lh-stage-bg)] px-5 py-4 [scrollbar-width:thin] [scrollbar-color:rgba(255,255,255,0.12)_transparent]">
-                <AnimatePresence mode="wait" initial={false}>
+                {/* Swap d'onglet DÉTERMINISTE : plus d'AnimatePresence mode="wait"
+                    (exit spring jamais terminé sous RAF ralenti → onglet cliqué mais
+                    contenu figé). Animation d'entrée conservée. */}
                   <motion.div
                     key={tab}
                     role="tabpanel"
                     initial={{ opacity: 0, y: 12, scaleY: 0.982 }}
                     animate={{ opacity: 1, y: 0, scaleY: 1 }}
-                    exit={{ opacity: 0, y: -10, scaleY: 0.99 }}
                     transition={LIVE_TAB_SPRING}
                     style={{ transformOrigin: '50% 0%' }}
                     className="space-y-4"
@@ -1156,7 +1157,6 @@ export default function LiveStudioSettingsPanel({
                       </>
                     ) : null}
                   </motion.div>
-                </AnimatePresence>
               </div>
             </Tabs>
 
