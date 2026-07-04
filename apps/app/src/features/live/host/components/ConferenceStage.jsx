@@ -251,8 +251,49 @@ export default function ConferenceStage({ liveParticipants, livekitParticipantsM
     </div>
   );
 
+  // Panneau membres — colonne DROITE pleine hauteur, style « panneau de référence » :
+  // cartes chaudes arrondies + en-têtes de section (self-view puis participants).
+  const membersPanel = (
+    <aside style={{ width: 324, flexShrink: 0, minHeight: 0, display: 'flex', flexDirection: 'column', gap: 10, padding: '10px 12px 12px', borderLeft: '1px solid rgba(245,244,238,0.09)', overflow: 'hidden' }}>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '2px 4px', flexShrink: 0 }}>
+        <span style={{ fontSize: 14, fontWeight: 700, color: '#fff' }}>{`Membres (${visible.length})`}</span>
+        <MoreHorizontal size={16} color="rgba(255,255,255,.45)" />
+      </div>
+      {panelTop ? (
+        <div style={{ flexShrink: 0, borderRadius: 14, border: '1px solid rgba(255,255,255,.08)', background: 'rgba(255,255,255,.02)', padding: 10 }}>
+          <div style={{ fontSize: 9, fontWeight: 700, letterSpacing: '.1em', textTransform: 'uppercase', color: 'rgba(227,199,154,.8)', marginBottom: 8 }}>{panelTopLabel}</div>
+          <div style={{ aspectRatio: '16 / 9' }}>
+            <Tile m={panelTop} lk={panelTopLk} mediaEpoch={liveKitMediaEpoch} speaking={panelTopSpeaking} mic pinned={Boolean(pinnedId && String(pinnedId) === String(panelTop.id))} />
+          </div>
+        </div>
+      ) : null}
+      <div style={{ flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column', borderRadius: 14, border: '1px solid rgba(255,255,255,.08)', background: 'rgba(255,255,255,.02)', overflow: 'hidden' }}>
+        <div style={{ fontSize: 9, fontWeight: 700, letterSpacing: '.1em', textTransform: 'uppercase', color: 'rgba(227,199,154,.8)', padding: '10px 10px 6px', flexShrink: 0 }}>{`Participants (${filteredPanelRest.length})`}</div>
+        <div style={{ flex: 1, minHeight: 0, overflowY: 'auto', padding: '0 10px 10px' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
+            {filteredPanelRest.map((m) => (
+              <div key={m.id} style={{ aspectRatio: '16 / 9' }}>
+                <Tile m={m} lk={lkOf(m)} mediaEpoch={liveKitMediaEpoch} speaking={String(activeSpeakerId) === String(m.id)} mic onClick={() => { if (onMemberPreview) { onMemberPreview(m); } else { setPinnedId(m.id); setAutoFollow(false); } }} />
+              </div>
+            ))}
+            <button type="button" style={{ aspectRatio: '16 / 9', borderRadius: 12, border: '1px dashed rgba(255,255,255,.18)', background: 'rgba(255,255,255,.03)', color: 'rgba(255,255,255,.6)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 4, cursor: 'pointer', fontSize: 10.5, fontWeight: 700 }}>
+              <UserPlus size={18} />
+              Inviter
+            </button>
+          </div>
+        </div>
+      </div>
+      <button type="button" style={{ flexShrink: 0, width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, borderRadius: 12, border: '1px solid rgba(255,255,255,.12)', background: 'rgba(255,255,255,.04)', color: '#fff', fontSize: 12.5, fontWeight: 700, padding: '10px', cursor: 'pointer' }}>
+        <UserPlus size={16} />
+        Inviter un membre
+      </button>
+    </aside>
+  );
+
   return (
-    <div style={{ position: 'absolute', inset: 0, zIndex: 15, background: 'var(--lh-stage-bg, #1f1e1c)', display: 'flex', flexDirection: 'column' }}>
+    <div style={{ position: 'absolute', inset: 0, zIndex: 15, background: 'var(--lh-stage-bg, #1f1e1c)', display: 'flex', flexDirection: 'row', minHeight: 0 }}>
+      {/* Colonne GAUCHE : barre d'options + scène (orateur / grille). */}
+      <div style={{ flex: 1, minWidth: 0, minHeight: 0, display: 'flex', flexDirection: 'column' }}>
       {isSharing ? (
         <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 12px', flexShrink: 0 }}>
           <span style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13, fontWeight: 700, color: '#fff' }}><MonitorUp size={16} color={ACCENT} />{`${screenSharerName} partage son écran`}</span>
@@ -334,47 +375,7 @@ export default function ConferenceStage({ liveParticipants, livekitParticipantsM
           )}
         </div>
       ) : (isSharing || panelPos === 'side') ? (
-        <div style={{ flex: 1, minHeight: 0, display: 'flex', gap: 12, padding: '0 14px 14px' }}>
-          <div style={{ width: 296, flexShrink: 0, minHeight: 0, display: 'flex', flexDirection: 'column', background: 'rgba(255,255,255,.03)', border: '1px solid rgba(255,255,255,.08)', borderRadius: 16, overflow: 'hidden' }}>
-            <div style={{ padding: '14px 14px 10px', flexShrink: 0 }}>
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                <span style={{ fontSize: 15, fontWeight: 700, color: '#fff' }}>{`Membres (${visible.length})`}</span>
-                <MoreHorizontal size={16} color="rgba(255,255,255,.45)" />
-              </div>
-            </div>
-            <div style={{ flex: 1, minHeight: 0, overflowY: 'auto', padding: '0 12px 12px' }}>
-              {panelTop ? (
-                <>
-                  <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: '.08em', textTransform: 'uppercase', color: 'rgba(255,255,255,.4)', margin: '4px 2px 8px' }}>{panelTopLabel}</div>
-                  <div style={{ aspectRatio: '16 / 9', marginBottom: 14 }}>
-                    <Tile m={panelTop} lk={panelTopLk} mediaEpoch={liveKitMediaEpoch} speaking={panelTopSpeaking} mic pinned={Boolean(pinnedId && String(pinnedId) === String(panelTop.id))} />
-                  </div>
-                </>
-              ) : null}
-              {filteredPanelRest.length > 0 ? (
-                <>
-                  <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: '.08em', textTransform: 'uppercase', color: 'rgba(255,255,255,.4)', margin: '4px 2px 8px' }}>{`Participants (${filteredPanelRest.length})`}</div>
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
-                    {filteredPanelRest.map((m) => (
-                      <div key={m.id} style={{ aspectRatio: '16 / 9' }}>
-                        <Tile m={m} lk={lkOf(m)} mediaEpoch={liveKitMediaEpoch} speaking={String(activeSpeakerId) === String(m.id)} mic onClick={() => { if (onMemberPreview) { onMemberPreview(m); } else { setPinnedId(m.id); setAutoFollow(false); } }} />
-                      </div>
-                    ))}
-                    <button type="button" style={{ aspectRatio: '16 / 9', borderRadius: 12, border: '1px dashed rgba(255,255,255,.18)', background: 'rgba(255,255,255,.03)', color: 'rgba(255,255,255,.6)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 4, cursor: 'pointer', fontSize: 10.5, fontWeight: 700 }}>
-                      <UserPlus size={18} />
-                      Inviter
-                    </button>
-                  </div>
-                </>
-              ) : null}
-            </div>
-            <div style={{ padding: 12, flexShrink: 0, borderTop: '1px solid rgba(255,255,255,.06)' }}>
-              <button type="button" style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, borderRadius: 12, border: '1px solid rgba(255,255,255,.12)', background: 'rgba(255,255,255,.04)', color: '#fff', fontSize: 12.5, fontWeight: 700, padding: '10px', cursor: 'pointer' }}>
-                <UserPlus size={16} />
-                Inviter un membre
-              </button>
-            </div>
-          </div>
+        <div style={{ flex: 1, minHeight: 0, display: 'flex', gap: 12, padding: '10px 14px 14px' }}>
           <div ref={shareFsRef} style={{ flex: 1, minHeight: 0, position: 'relative', borderRadius: 18, overflow: 'hidden', border: `1px solid ${isSharing ? 'rgba(var(--lh-accent-rgb,212,163,106),.4)' : focusSpeaking ? ACCENT : 'rgba(255,255,255,.1)'}`, background: isSharing ? '#000' : 'rgba(0,0,0,.45)', boxShadow: focusSpeaking && !isSharing ? '0 0 0 3px rgba(var(--lh-accent-rgb,212,163,106),.22)' : 'none' }}>
             {isSharing ? (
               <>
@@ -450,6 +451,8 @@ export default function ConferenceStage({ liveParticipants, livekitParticipantsM
           ) : null}
         </div>
       )}
+      </div>
+      {(isSharing || (view !== 'grid' && panelPos === 'side')) ? membersPanel : null}
     </div>
   );
 }
