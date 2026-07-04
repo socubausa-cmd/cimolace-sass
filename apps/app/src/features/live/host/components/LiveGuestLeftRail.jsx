@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 
 import { LiriWordmark } from '@/components/brand/LiriWordmark';
 import { PHASE } from '@/features/live/host/liveHostConstants';
+import { TC } from '@/features/live/host/liveSmartboardLegacySlides';
 
 export function LiveGuestLeftRail({
   hostCompactColOrder,
@@ -14,11 +15,18 @@ export function LiveGuestLeftRail({
   lhStageFocusLayout,
   liveDuration,
   curEtape,
+  activeEtapes,
+  step,
+  stepCount,
   liveParticipants,
   sessionFormationId,
   onOpen,
   onClose,
 }) {
+  // Timeline du cours (déroulé des étapes) — repère permanent pour l'élève : où on
+  // en est. En lecture seule (l'élève ne pilote pas). Déplacée du panneau droit vers
+  // le rail gauche pour rester toujours visible.
+  const etapes = Array.isArray(activeEtapes) ? activeEtapes : [];
   return (
     <div
       className="lh-sy lh-sp-dim"
@@ -98,16 +106,51 @@ export function LiveGuestLeftRail({
             {liveDuration ? <span style={{marginLeft:'auto',fontSize:'10px',color:'rgba(255,255,255,.38)',fontVariantNumeric:'tabular-nums'}}>{liveDuration}</span> : null}
           </div>
 
-          {curEtape?.title ? (
+          <p style={{margin:0,fontSize:'10px',color:'rgba(255,255,255,.35)'}}>
+            {liveParticipants.length + 1} participant{liveParticipants.length > 0 ? 's' : ''} en ligne
+          </p>
+
+          {etapes.length > 0 ? (
+            <div style={{ display:'flex', flexDirection:'column', minHeight:0, flex:1 }}>
+              <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:'6px' }}>
+                <span style={{ fontSize:'8px', fontWeight:700, letterSpacing:'.1em', color:'rgba(208,187,167,.65)' }}>PLAN DU COURS</span>
+                <span style={{ fontSize:'9px', fontWeight:700, color:'rgba(200,150,12,.85)', fontVariantNumeric:'tabular-nums' }}>Étape {Math.min(step + 1, stepCount || etapes.length)}/{stepCount || etapes.length}</span>
+              </div>
+              <div style={{ display:'flex', flexDirection:'column', gap:'3px', overflowY:'auto', minHeight:0, scrollbarWidth:'thin', paddingRight:'2px' }}>
+                {etapes.map((e, i) => {
+                  const active = i === step;
+                  const done = i < step;
+                  const c = TC[e.type] || '#888';
+                  return (
+                    <div
+                      key={i}
+                      title={e.title || e.court}
+                      style={{
+                        display:'flex', alignItems:'center', gap:'6px', padding:'5px 7px', borderRadius:'4px',
+                        border:`1px solid ${active ? `${c}66` : 'rgba(255,255,255,.06)'}`,
+                        borderLeft:`2px solid ${active ? c : 'transparent'}`,
+                        background: active ? 'var(--lh-stage-bg, #1f1e1c)' : 'transparent',
+                        opacity: done ? 0.55 : 1,
+                      }}
+                    >
+                      <span style={{ width:'17px', height:'17px', borderRadius:'50%', background: active ? `${c}33` : 'rgba(255,255,255,.05)', border:`1px solid ${active ? c : 'rgba(255,255,255,.1)'}`, display:'flex', alignItems:'center', justifyContent:'center', fontSize:'8px', fontWeight:700, color: active ? c : 'rgba(255,255,255,.35)', flexShrink:0 }}>
+                        {done ? '✓' : e.n}
+                      </span>
+                      <span style={{ fontSize:'10px', fontWeight: active ? 700 : 400, color: active ? '#fff' : 'rgba(255,255,255,.5)', flex:1, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>
+                        {e.court}
+                      </span>
+                      <span style={{ fontSize:'8px', color: active ? c : 'rgba(255,255,255,.2)' }}>{(e.tag || '').split(' ')[0]}</span>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          ) : curEtape?.title ? (
             <div style={{padding:'8px',borderRadius:'6px',border:'1px solid rgba(255,255,255,.07)',background:'rgba(255,255,255,.03)'}}>
               <div style={{fontSize:'8px',fontWeight:700,letterSpacing:'.1em',color:'rgba(208,187,167,.65)',marginBottom:'4px'}}>ÉTAPE EN COURS</div>
               <p style={{margin:0,fontSize:'11px',color:'rgba(255,255,255,.75)',lineHeight:1.45,overflow:'hidden',display:'-webkit-box',WebkitLineClamp:3,WebkitBoxOrient:'vertical'}}>{curEtape.title}</p>
             </div>
           ) : null}
-
-          <p style={{margin:0,fontSize:'10px',color:'rgba(255,255,255,.35)'}}>
-            {liveParticipants.length + 1} participant{liveParticipants.length > 0 ? 's' : ''} en ligne
-          </p>
 
           {sessionFormationId ? (
             <div style={{display:'flex',flexDirection:'column',gap:'5px',marginTop:'auto'}}>

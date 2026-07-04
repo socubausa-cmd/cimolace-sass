@@ -205,6 +205,9 @@ export const LiveHostLiveGridShell = forwardRef(function LiveHostLiveGridShell(p
           lhStageFocusLayout={lhStageFocusLayout}
           liveDuration={liveDuration}
           curEtape={curEtape}
+          activeEtapes={activeEtapes}
+          step={step}
+          stepCount={stepCount}
           liveParticipants={liveParticipants}
           sessionFormationId={sessionFormationId}
           onOpen={() => setLiveLeftRailOpen(true)}

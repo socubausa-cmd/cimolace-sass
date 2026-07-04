@@ -55,6 +55,10 @@ export const LiveHostMindmapOrWhiteboardSlot = ({
             />
           </div>
         </div>
+      ) : isGuestUi ? (
+        // Côté invité : le plan du cours (mindmap) vit désormais dans le RAIL GAUCHE
+        // (timeline permanente), plus dans la colonne droite → on ne le rend pas ici.
+        null
       ) : (
         <LiveMindmapCard
           mmCardVisible={mmCardVisible}
