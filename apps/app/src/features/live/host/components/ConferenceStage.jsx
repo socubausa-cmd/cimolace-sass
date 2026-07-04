@@ -81,8 +81,8 @@ const Tile = ({ m, lk, mediaEpoch, speaking, big = false, onClick, pinned = fals
         minHeight: 0,
         borderRadius: big ? 18 : 12,
         overflow: 'hidden',
-        border: speaking ? `2px solid ${ACCENT}` : '1px solid rgba(255,255,255,.1)',
-        background: 'rgba(0,0,0,.45)',
+        border: speaking ? `2px solid ${ACCENT}` : '1px solid rgba(255,255,255,.09)',
+        background: 'rgba(255,255,255,.02)',
         boxShadow: speaking ? `0 0 0 3px rgba(var(--lh-accent-rgb,212,163,106),.28)` : 'none',
         transition: 'box-shadow .18s ease, border-color .18s ease',
         cursor: onClick ? 'pointer' : 'default',
@@ -95,7 +95,7 @@ const Tile = ({ m, lk, mediaEpoch, speaking, big = false, onClick, pinned = fals
           style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover' }}
         />
       ) : (
-        <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', background: `${m.color}22` }}>
+        <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(255,255,255,.015)' }}>
           <div
             style={{
               width: big ? 96 : 52,
@@ -151,6 +151,22 @@ const Tile = ({ m, lk, mediaEpoch, speaking, big = false, onClick, pinned = fals
   );
 };
 
+/** Meilleur nombre de colonnes pour N tuiles CARRÉES qui remplissent au mieux un cadre w×h. */
+function bestGridCols(n, w, h, gap) {
+  if (n <= 1) return 1;
+  if (!w || !h) return Math.min(5, Math.ceil(Math.sqrt(n)));
+  let best = 1;
+  let bestSize = 0;
+  for (let c = 1; c <= n; c += 1) {
+    const rows = Math.ceil(n / c);
+    const tileW = (w - gap * (c - 1)) / c;
+    const tileH = (h - gap * (rows - 1)) / rows;
+    const size = Math.min(tileW, tileH);
+    if (size > bestSize + 0.5) { bestSize = size; best = c; }
+  }
+  return best;
+}
+
 export default function ConferenceStage({ liveParticipants, livekitParticipantsMap, liveKitMediaEpoch, hostId = null, sharingScreen = false, cameraOn = false, selfName = 'Vous', onStop = null, stopBusy = false, onOpenLongia = null, onMemberPreview = null }) {
   // Défaut = vue Orateur + panneau latéral (flux vidéo membres) : l'« interface conférence »
   // attendue (grand cadre à l'écran + colonne Membres). Togglable vers Grille / Vignettes bas.
@@ -161,6 +177,8 @@ export default function ConferenceStage({ liveParticipants, livekitParticipantsM
   const [panelPos, setPanelPos] = useState('side'); // 'bottom' (bande) | 'side' (panneau latéral 2 colonnes)
   const [search, setSearch] = useState('');
   const [activeSpeakerId, setActiveSpeakerId] = useState(null);
+  const gridRef = useRef(null);
+  const [gridBox, setGridBox] = useState({ w: 0, h: 0 });
 
   const visible = useMemo(
     () => (liveParticipants || []).slice(0, ARENA_MEMBERS_WALL_MAX_VISIBLE),
@@ -182,6 +200,21 @@ export default function ConferenceStage({ liveParticipants, livekitParticipantsM
     return () => clearInterval(id);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [visible, livekitParticipantsMap]);
+
+  // Mesure du conteneur grille → tuiles CARRÉES dimensionnées pour remplir (adaptées au nombre).
+  useEffect(() => {
+    const el = gridRef.current;
+    if (!el || typeof ResizeObserver === 'undefined') return undefined;
+    const ro = new ResizeObserver((entries) => {
+      const r = entries[0]?.contentRect;
+      if (!r) return;
+      const w = Math.round(r.width);
+      const h = Math.round(r.height);
+      setGridBox((prev) => (prev.w === w && prev.h === h ? prev : { w, h }));
+    });
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, [view]);
 
   const n = visible.length;
   const focusId = pinnedId || (autoFollow ? activeSpeakerId : null) || visible[0]?.id || null;
@@ -219,8 +252,17 @@ export default function ConferenceStage({ liveParticipants, livekitParticipantsM
   if (!screenSharerName && isSharing) screenSharerName = host?.name || "L'animateur";
 
   // Densité : S = tuiles plus petites (1 colonne de plus), L = plus grandes (1 de moins).
-  const baseCols = n <= 1 ? 1 : n <= 2 ? 2 : n <= 6 ? 3 : n <= 12 ? 4 : 5;
-  const cols = Math.max(1, Math.min(6, baseCols + (density === 's' ? 1 : density === 'l' ? -1 : 0)));
+  // Vue GRILLE : tuiles CARRÉES dont le nombre de colonnes + la taille s'adaptent au nombre de
+  // membres ET au cadre mesuré, pour remplir sans grand vide. La densité S/M/L ajuste la finesse.
+  const GRID_GAP = 12;
+  const gridCols = Math.max(1, Math.min(n || 1, bestGridCols(n, gridBox.w, gridBox.h, GRID_GAP) + (density === 's' ? 1 : density === 'l' ? -1 : 0)));
+  const gridRows = Math.max(1, Math.ceil(n / Math.max(1, gridCols)));
+  const gridTileSize = (gridBox.w && gridBox.h)
+    ? Math.max(72, Math.floor(Math.min(
+        (gridBox.w - GRID_GAP * (gridCols - 1)) / gridCols,
+        (gridBox.h - GRID_GAP * (gridRows - 1)) / gridRows,
+      )))
+    : 200;
 
   // STOP relogé dans la barre d'options (la bande du haut est masquée en conférence) —
   // c'est le seul moyen d'arrêter le live, il doit rester accessible.
@@ -347,27 +389,30 @@ export default function ConferenceStage({ liveParticipants, livekitParticipantsM
 
       {!isSharing && view === 'grid' ? (
         <div
+          ref={gridRef}
           style={{
             flex: 1,
             minHeight: 0,
-            padding: '0 14px 14px',
-            display: 'grid',
-            gridTemplateColumns: `repeat(${cols}, minmax(0, 1fr))`,
-            gridAutoRows: '1fr',
-            gap: 10,
+            padding: '10px 14px 14px',
+            display: 'flex',
+            flexWrap: 'wrap',
+            gap: GRID_GAP,
             alignContent: 'center',
+            alignItems: 'center',
+            justifyContent: 'center',
           }}
         >
           {n === 0 ? (
-            <div style={{ gridColumn: '1 / -1' }}><EmptyState /></div>
+            <EmptyState />
           ) : (
             visible.map((m) => (
-              <div key={m.id} style={{ aspectRatio: '16 / 9', minHeight: 0 }}>
+              <div key={m.id} style={{ width: gridTileSize, height: gridTileSize, flexShrink: 0 }}>
                 <Tile
                   m={m}
                   lk={lkOf(m)}
                   mediaEpoch={liveKitMediaEpoch}
                   speaking={String(activeSpeakerId) === String(m.id)}
+                  mic
                   onClick={() => { setPinnedId(m.id); setAutoFollow(false); setView('speaker'); }}
                 />
               </div>
