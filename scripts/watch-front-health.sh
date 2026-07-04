@@ -41,9 +41,20 @@ while true; do
     fails=$((fails + 1))
     echo "[$(date '+%F %T')] ⚠️ smoke KO ($fails/2) — $(tr -d '\n' </tmp/_watch_smoke.json)" | tee -a "$LOG"
     if [ "$fails" -ge 2 ]; then
-      echo "[$(date '+%F %T')] ⛔ RÉGRESSION CONFIRMÉE — prod BLANCHE. Rollback : vercel promote <url-saine> --scope cimolace --yes" | tee -a "$LOG"
+      echo "[$(date '+%F %T')] ⛔ RÉGRESSION CONFIRMÉE — prod BLANCHE." | tee -a "$LOG"
+      # Auto-rollback (WATCH_AUTOROLLBACK=1) : restaure le dernier build sain.
+      if [ "${WATCH_AUTOROLLBACK:-0}" = "1" ]; then
+        echo "[$(date '+%F %T')] 🔧 auto-rollback en cours…" | tee -a "$LOG"
+        if bash "$ROOT/scripts/rollback-to-healthy.sh"; then
+          notify "↩️ LIRI prod auto-rétablie" "Un déploiement cassé (page blanche) a été annulé automatiquement."
+          fails=0; notified=0
+          sleep 45   # laisser l'alias basculer + purge CDN avant le prochain check
+          continue
+        fi
+        # rollback KO → on retombe dans l'alerte ci-dessous
+      fi
       if [ "$ON_FAIL" = "notify" ]; then
-        [ "$notified" != "1" ] && notify "⛔ LIRI prod cassée (page blanche)" "Rollback requis : vercel promote <url-saine>"
+        [ "$notified" != "1" ] && notify "⛔ LIRI prod cassée (page blanche)" "Rollback auto impossible — intervention requise (bash scripts/rollback-to-healthy.sh)."
         notified=1
         sleep "$INTERVAL"
       else

@@ -30,7 +30,7 @@ fi
 
 echo "📦 copie du watcher hors TCC → $DEST"
 mkdir -p "$DEST/scripts" "$HOME/Library/Logs" "$HOME/Library/LaunchAgents"
-cp "$REPO/scripts/smoke-front-health.mjs" "$REPO/scripts/watch-front-health.sh" "$DEST/scripts/"
+cp "$REPO/scripts/smoke-front-health.mjs" "$REPO/scripts/watch-front-health.sh" "$REPO/scripts/rollback-to-healthy.sh" "$DEST/scripts/"
 
 PWV="$(node -e "console.log(require('$REPO/node_modules/@playwright/test/package.json').version)")"
 ( cd "$DEST" && { [ -f package.json ] || npm init -y >/dev/null 2>&1; } && npm i "@playwright/test@$PWV" >/dev/null 2>&1 )
@@ -51,6 +51,7 @@ cat > "$PLIST" <<PLISTEOF
     <key>PATH</key><string>$NODE_BIN_DIR:/usr/bin:/bin:/usr/sbin:/sbin</string>
     <key>WATCH_INTERVAL</key><string>900</string>
     <key>WATCH_ON_FAIL</key><string>notify</string>
+    <key>WATCH_AUTOROLLBACK</key><string>1</string>
     <key>WATCH_LOG</key><string>$HOME/Library/Logs/liri-front-health.log</string>
   </dict>
   <key>RunAtLoad</key><true/>
