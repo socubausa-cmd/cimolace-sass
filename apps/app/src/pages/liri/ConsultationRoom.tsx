@@ -35,6 +35,7 @@ import { Track, ConnectionState, RoomEvent } from 'livekit-client';
 import { getStableLiveKitRoomOptions, stableLiveKitConnectOptions } from '@/lib/livekitStableClient';
 import LiveDataSaverEffect from '@/features/live/LiveDataSaverEffect';
 import { useLiveDataSaver } from '@/hooks/useLiveDataSaver';
+import { useMatchMediaAtMost } from '@/hooks/useLiriMobileBreakpoint';
 import LiriProductBadge from '@/components/brand/LiriProductBadge';
 import { Stethoscope, PhoneOff, Share2, Pencil, Users, Presentation, MonitorUp, Eraser, UserPlus, Copy, Check, ShieldCheck, X, MessageSquare, Send, Sparkles, Brain, Music2, Play, Pause, FileText, LayoutTemplate, Radio, Upload } from 'lucide-react';
 import { createPortal } from 'react-dom';
@@ -759,22 +760,28 @@ function ConsultationChrome({
   view: ConsultView;
   onView: (v: ConsultView) => void;
 }) {
+  // ≤820px : le header (logo + « Consultation · CARE · patient » + 3 onglets à
+  // libellés + « En direct ») ne tient pas sur une ligne → les onglets débordent.
+  // On COMPACTE : titre/badge/nom masqués (le nom reste visible sur la carte
+  // patient), onglets réduits aux ICÔNES (title=label pour l'accessibilité),
+  // « En direct » réduit à sa pastille. Le logo reste l'ancre de marque.
+  const compact = useMatchMediaAtMost(820);
   return (
-    <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 16px', background: BAR, color: '#fff', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
+    <div style={{ display: 'flex', alignItems: 'center', gap: compact ? 6 : 10, padding: compact ? '8px 10px' : '10px 16px', background: BAR, color: '#fff', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
       {/* Logo LIRI (mark officiel, même que login/boot) — image de marque du shell. */}
       <img
         src="/lirilogo.png"
         alt="LIRI"
-        style={{ height: 26, width: 'auto', objectFit: 'contain', filter: 'drop-shadow(0 1px 3px rgba(212,163,106,0.32))', flexShrink: 0 }}
+        style={{ height: compact ? 22 : 26, width: 'auto', objectFit: 'contain', filter: 'drop-shadow(0 1px 3px rgba(212,163,106,0.32))', flexShrink: 0 }}
       />
-      <span style={{ fontWeight: 600, fontSize: 14, whiteSpace: 'nowrap' }}>Consultation</span>
-      <LiriProductBadge product="care" size="xs" />
-      {patientName ? (
+      {!compact && <span style={{ fontWeight: 600, fontSize: 14, whiteSpace: 'nowrap' }}>Consultation</span>}
+      {!compact && <LiriProductBadge product="care" size="xs" />}
+      {!compact && patientName ? (
         <span style={{ color: '#cbd5e1', fontSize: 13, whiteSpace: 'nowrap' }}>· {patientName}</span>
       ) : null}
 
       {/* Switcher de vue : centré. Host = boutons ; patient = libellé seul. */}
-      <div style={{ flex: 1, display: 'flex', justifyContent: 'center' }}>
+      <div style={{ flex: 1, display: 'flex', justifyContent: 'center', minWidth: 0 }}>
         {isHost ? (
           <div role="tablist" aria-label="Vue de consultation" style={{ display: 'inline-flex', background: 'rgba(255,255,255,0.07)', borderRadius: 11, padding: 3, gap: 2 }}>
             {VIEW_OPTIONS.map((o) => {
@@ -784,16 +791,17 @@ function ConsultationChrome({
                   key={o.id}
                   role="tab"
                   aria-selected={active}
+                  title={o.label}
                   onClick={() => onView(o.id)}
                   style={{
-                    display: 'inline-flex', alignItems: 'center', gap: 7, padding: '7px 14px', borderRadius: 9, border: 'none', cursor: 'pointer',
+                    display: 'inline-flex', alignItems: 'center', gap: 7, padding: compact ? '8px 11px' : '7px 14px', borderRadius: 9, border: 'none', cursor: 'pointer',
                     background: active ? GOLD : 'transparent',
                     color: active ? '#1a1a1a' : '#cbd5e1',
                     fontSize: 13, fontWeight: 600, transition: 'background 0.15s',
                   }}
                 >
                   {o.icon}
-                  <span>{o.label}</span>
+                  {!compact && <span>{o.label}</span>}
                 </button>
               );
             })}
@@ -801,13 +809,13 @@ function ConsultationChrome({
         ) : (
           <span style={{ display: 'inline-flex', alignItems: 'center', gap: 7, fontSize: 13, color: '#cbd5e1', background: 'rgba(255,255,255,0.06)', padding: '6px 13px', borderRadius: 9 }}>
             {VIEW_OPTIONS.find((o) => o.id === view)?.icon}
-            {VIEW_OPTIONS.find((o) => o.id === view)?.label}
+            {!compact && VIEW_OPTIONS.find((o) => o.id === view)?.label}
           </span>
         )}
       </div>
 
-      <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, color: '#f87171', fontSize: 12.5, whiteSpace: 'nowrap' }}>
-        <span style={{ width: 8, height: 8, borderRadius: '50%', background: '#f87171' }} /> En direct
+      <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, color: '#f87171', fontSize: 12.5, whiteSpace: 'nowrap', flexShrink: 0 }}>
+        <span style={{ width: 8, height: 8, borderRadius: '50%', background: '#f87171' }} /> {!compact && 'En direct'}
       </span>
     </div>
   );
