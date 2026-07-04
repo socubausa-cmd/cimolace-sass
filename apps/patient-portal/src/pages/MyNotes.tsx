@@ -12,9 +12,9 @@ export function MyNotes() {
   return (
     <div>
       <h2 style={{ fontSize: 24, fontWeight: 700, marginBottom: 20, display: 'flex', alignItems: 'center', gap: 8 }}><FileText size={22} /> Notes de consultation</h2>
-      {notes.length === 0 && <p style={{ color: '#94a3b8' }}>Aucune note partagee par votre praticien.</p>}
+      {notes.length === 0 && <p style={{ color: '#b0aaa2' }}>Aucune note partagee par votre praticien.</p>}
       {notes.map((n: any) => (
-        <div key={n.id} style={{ background: '#fff', borderRadius: 12, border: '1px solid #e2e8f0', padding: 20, marginBottom: 12 }}>
+        <div key={n.id} style={{ background: '#fff', borderRadius: 12, border: '1px solid #ece7e1', padding: 20, marginBottom: 12 }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <span style={{ fontWeight: 600 }}>Consultation du {new Date(n.created_at).toLocaleDateString('fr')}</span>
             {n.is_signed ? <Lock size={14} color="var(--brand-accent)" /> : <span style={{ fontSize: 12, color: '#f59e0b' }}>Non signee</span>}

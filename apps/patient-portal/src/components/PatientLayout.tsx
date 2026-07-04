@@ -138,7 +138,7 @@ export function PatientLayout() {
             alignItems: 'center',
             justifyContent: 'flex-end',
             padding: '16px 32px',
-            borderBottom: '1px solid #e2e8f0',
+            borderBottom: '1px solid #ece7e1',
             background: '#fff',
           }}
         >

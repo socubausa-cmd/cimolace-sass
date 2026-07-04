@@ -24,7 +24,7 @@ const queryClient = new QueryClient();
 
 function AppRoutes() {
   const { isAuthenticated, loading } = useAuth();
-  if (loading) return <div style={{ padding: 40, textAlign: 'center', color: '#94a3b8' }}>Chargement...</div>;
+  if (loading) return <div style={{ padding: 40, textAlign: 'center', color: '#b0aaa2' }}>Chargement...</div>;
   if (!isAuthenticated) {
     return (
       <Routes>

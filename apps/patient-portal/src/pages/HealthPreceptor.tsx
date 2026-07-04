@@ -86,7 +86,7 @@ const BAND_META: Record<ScoreBand, { color: string; soft: string; label: string 
   good:    { color: 'var(--brand-accent)', soft: '#ecfdf5', label: 'Point fort' },
   watch:   { color: '#f59e0b', soft: '#fffbeb', label: 'À entretenir' },
   focus:   { color: '#3b82f6', soft: '#eff6ff', label: 'À soutenir en douceur' },
-  unknown: { color: '#94a3b8', soft: '#f8fafc', label: 'Pas encore mesuré' },
+  unknown: { color: '#b0aaa2', soft: '#fafaf8', label: 'Pas encore mesuré' },
 };
 
 // Phrase de sens générique selon la bande — bienveillante, jamais un diagnostic.
@@ -367,7 +367,7 @@ export function HealthPreceptor() {
           alignItems: 'center',
           gap: 10,
           padding: 24,
-          color: '#64748b',
+          color: '#8a8580',
           fontSize: 14,
         }}
       >
@@ -408,8 +408,8 @@ export function HealthPreceptor() {
           gap: 10,
           alignItems: 'flex-start',
           padding: 16,
-          background: '#f8fafc',
-          border: '1px solid #e2e8f0',
+          background: '#fafaf8',
+          border: '1px solid #ece7e1',
           color: '#475569',
           borderRadius: 10,
           fontSize: 14,
@@ -437,12 +437,12 @@ export function HealthPreceptor() {
             display: 'flex',
             alignItems: 'center',
             gap: 10,
-            color: '#0f172a',
+            color: '#1e1e1e',
           }}
         >
           <GraduationCap size={22} color="var(--brand-primary)" /> Précepteur santé
         </h2>
-        <p style={{ color: '#64748b', marginTop: 6, fontSize: 14 }}>
+        <p style={{ color: '#8a8580', marginTop: 6, fontSize: 14 }}>
           Un parcours guidé et bienveillant pour comprendre, pas à pas, les
           repères de votre suivi {branding.name}.
         </p>
@@ -454,8 +454,8 @@ export function HealthPreceptor() {
           display: 'flex',
           gap: 10,
           padding: 12,
-          background: '#f8fafc',
-          border: '1px solid #e2e8f0',
+          background: '#fafaf8',
+          border: '1px solid #ece7e1',
           borderRadius: 10,
           color: '#475569',
           fontSize: 12.5,
@@ -483,7 +483,7 @@ export function HealthPreceptor() {
             flex: 1,
             height: 6,
             borderRadius: 999,
-            background: '#e2e8f0',
+            background: '#ece7e1',
             overflow: 'hidden',
           }}
           role="progressbar"
@@ -500,7 +500,7 @@ export function HealthPreceptor() {
             }}
           />
         </div>
-        <span style={{ fontSize: 12, color: '#64748b', whiteSpace: 'nowrap' }}>
+        <span style={{ fontSize: 12, color: '#8a8580', whiteSpace: 'nowrap' }}>
           Chapitre {index + 1} / {chapters.length}
         </span>
         <button
@@ -560,7 +560,7 @@ export function HealthPreceptor() {
                 border: 'none',
                 cursor: 'pointer',
                 background:
-                  i === index ? 'var(--brand-primary)' : '#cbd5e1',
+                  i === index ? 'var(--brand-primary)' : '#d8d2ca',
               }}
             />
           ))}
@@ -586,7 +586,7 @@ function PreceptorSlide({ chapter }: { chapter: PreceptorChapter }) {
     <section
       style={{
         background: '#fff',
-        border: '1px solid #e2e8f0',
+        border: '1px solid #ece7e1',
         borderRadius: 16,
         overflow: 'hidden',
         boxShadow: '0 1px 2px rgba(15,23,42,0.04)',
@@ -643,13 +643,13 @@ function PreceptorSlide({ chapter }: { chapter: PreceptorChapter }) {
               fontSize: 11,
               textTransform: 'uppercase',
               letterSpacing: 0.5,
-              color: '#64748b',
+              color: '#8a8580',
               fontWeight: 600,
             }}
           >
             {chapter.subtitle}
           </div>
-          <h3 style={{ fontSize: 22, fontWeight: 700, margin: '2px 0 0', color: '#0f172a' }}>
+          <h3 style={{ fontSize: 22, fontWeight: 700, margin: '2px 0 0', color: '#1e1e1e' }}>
             {chapter.title}
           </h3>
           {(chapter.band !== 'unknown' || chapter.fromHealthEntry) && (
@@ -705,7 +705,7 @@ function PreceptorSlide({ chapter }: { chapter: PreceptorChapter }) {
 
       {/* Corps : ce que ça veut dire + facteurs + leviers */}
       <div style={{ padding: '20px 22px' }}>
-        <p style={{ fontSize: 15, lineHeight: 1.6, color: '#334155', margin: 0 }}>
+        <p style={{ fontSize: 15, lineHeight: 1.6, color: '#3a3632', margin: 0 }}>
           {chapter.meaning}
         </p>
 
@@ -728,7 +728,7 @@ function PreceptorSlide({ chapter }: { chapter: PreceptorChapter }) {
                   style={{
                     padding: '5px 11px',
                     borderRadius: 999,
-                    background: '#f1f5f9',
+                    background: '#f4f0ea',
                     color: '#475569',
                     fontSize: 12,
                   }}
@@ -766,7 +766,7 @@ function PreceptorSlide({ chapter }: { chapter: PreceptorChapter }) {
                     alignItems: 'flex-start',
                     fontSize: 14,
                     lineHeight: 1.5,
-                    color: '#334155',
+                    color: '#3a3632',
                   }}
                 >
                   <span
@@ -811,9 +811,9 @@ function NavButton({
         gap: 6,
         padding: '10px 18px',
         borderRadius: 10,
-        border: '1px solid #e2e8f0',
-        background: disabled ? '#f8fafc' : '#fff',
-        color: disabled ? '#cbd5e1' : '#0f172a',
+        border: '1px solid #ece7e1',
+        background: disabled ? '#fafaf8' : '#fff',
+        color: disabled ? '#d8d2ca' : '#1e1e1e',
         fontSize: 14,
         fontWeight: 600,
         cursor: disabled ? 'not-allowed' : 'pointer',
@@ -911,7 +911,7 @@ function CoachBlock({
     <section
       style={{
         background: '#fff',
-        border: '1px solid #e2e8f0',
+        border: '1px solid #ece7e1',
         borderRadius: 16,
         marginTop: 22,
         overflow: 'hidden',
@@ -920,7 +920,7 @@ function CoachBlock({
       <div
         style={{
           padding: '14px 18px',
-          borderBottom: '1px solid #e2e8f0',
+          borderBottom: '1px solid #ece7e1',
           display: 'flex',
           alignItems: 'center',
           gap: 8,
@@ -928,10 +928,10 @@ function CoachBlock({
       >
         <Sparkles size={18} color="var(--brand-primary)" />
         <div>
-          <div style={{ fontSize: 15, fontWeight: 600, color: '#0f172a' }}>
+          <div style={{ fontSize: 15, fontWeight: 600, color: '#1e1e1e' }}>
             Posez votre question au coach
           </div>
-          <div style={{ fontSize: 12, color: '#64748b' }}>
+          <div style={{ fontSize: 12, color: '#8a8580' }}>
             Réponses éducatives, basées sur votre suivi {brandName}.
           </div>
         </div>
@@ -1006,8 +1006,8 @@ function CoachBlock({
                     padding: '12px 14px',
                     borderRadius: 14,
                     borderBottomLeftRadius: 4,
-                    background: '#f1f5f9',
-                    color: '#0f172a',
+                    background: '#f4f0ea',
+                    color: '#1e1e1e',
                     fontSize: 14,
                     lineHeight: 1.5,
                     whiteSpace: 'pre-wrap',
@@ -1023,10 +1023,10 @@ function CoachBlock({
                       gap: 8,
                       padding: '8px 12px',
                       marginTop: 6,
-                      background: '#f8fafc',
-                      border: '1px solid #e2e8f0',
+                      background: '#fafaf8',
+                      border: '1px solid #ece7e1',
                       borderRadius: 10,
-                      color: '#64748b',
+                      color: '#8a8580',
                       fontSize: 11.5,
                       lineHeight: 1.45,
                     }}
@@ -1047,8 +1047,8 @@ function CoachBlock({
                 padding: '12px 16px',
                 borderRadius: 14,
                 borderBottomLeftRadius: 4,
-                background: '#f1f5f9',
-                color: '#64748b',
+                background: '#f4f0ea',
+                color: '#8a8580',
                 fontSize: 14,
               }}
             >
@@ -1084,7 +1084,7 @@ function CoachBlock({
           send(input);
         }}
         style={{
-          borderTop: '1px solid #e2e8f0',
+          borderTop: '1px solid #ece7e1',
           padding: 12,
           display: 'flex',
           gap: 8,
@@ -1099,10 +1099,10 @@ function CoachBlock({
           style={{
             flex: 1,
             padding: '11px 14px',
-            border: '1px solid #e2e8f0',
+            border: '1px solid #ece7e1',
             borderRadius: 10,
             fontSize: 14,
-            background: thinking ? '#f8fafc' : '#fff',
+            background: thinking ? '#fafaf8' : '#fff',
             outline: 'none',
           }}
         />
@@ -1114,7 +1114,7 @@ function CoachBlock({
             alignItems: 'center',
             gap: 6,
             padding: '11px 20px',
-            background: canSend ? 'var(--brand-primary)' : '#94a3b8',
+            background: canSend ? 'var(--brand-primary)' : '#b0aaa2',
             color: '#fff',
             border: 'none',
             borderRadius: 10,

@@ -104,7 +104,7 @@ export function NotificationBell() {
           width: 40,
           height: 40,
           borderRadius: 10,
-          border: '1px solid #e2e8f0',
+          border: '1px solid #ece7e1',
           background: '#fff',
           color: 'var(--brand-primary)',
           cursor: 'pointer',
@@ -147,7 +147,7 @@ export function NotificationBell() {
             maxHeight: 420,
             overflowY: 'auto',
             background: '#fff',
-            border: '1px solid #e2e8f0',
+            border: '1px solid #ece7e1',
             borderRadius: 12,
             boxShadow: '0 12px 32px rgba(15,23,42,0.16)',
             zIndex: 50,
@@ -156,17 +156,17 @@ export function NotificationBell() {
           <div
             style={{
               padding: '12px 16px',
-              borderBottom: '1px solid #f1f5f9',
+              borderBottom: '1px solid #f4f0ea',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'space-between',
             }}
           >
-            <span style={{ fontSize: 14, fontWeight: 700, color: '#0f172a' }}>
+            <span style={{ fontSize: 14, fontWeight: 700, color: '#1e1e1e' }}>
               Notifications
             </span>
             {unread > 0 && (
-              <span style={{ fontSize: 12, color: '#64748b' }}>
+              <span style={{ fontSize: 12, color: '#8a8580' }}>
                 {unread} non lue{unread > 1 ? 's' : ''}
               </span>
             )}
@@ -177,7 +177,7 @@ export function NotificationBell() {
               style={{
                 padding: '28px 16px',
                 textAlign: 'center',
-                color: '#94a3b8',
+                color: '#b0aaa2',
                 fontSize: 13,
               }}
             >
@@ -197,7 +197,7 @@ export function NotificationBell() {
                       display: 'flex',
                       gap: 10,
                       padding: '12px 16px',
-                      borderBottom: '1px solid #f1f5f9',
+                      borderBottom: '1px solid #f4f0ea',
                       background: n.read ? '#fff' : 'var(--brand-primary-soft)',
                       cursor: n.read ? 'default' : 'pointer',
                     }}
@@ -222,7 +222,7 @@ export function NotificationBell() {
                           display: 'block',
                           fontSize: 13,
                           fontWeight: n.read ? 500 : 700,
-                          color: '#0f172a',
+                          color: '#1e1e1e',
                         }}
                       >
                         {n.title}
@@ -243,7 +243,7 @@ export function NotificationBell() {
                         style={{
                           display: 'block',
                           fontSize: 11,
-                          color: '#94a3b8',
+                          color: '#b0aaa2',
                           marginTop: 4,
                         }}
                       >

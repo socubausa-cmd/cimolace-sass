@@ -201,9 +201,9 @@ export function MyForms() {
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <h4 style={{ fontWeight: 600, margin: 0, fontSize: 15 }}>{a.form_title || 'Formulaire'}</h4>
                   {a.form_description && (
-                    <p style={{ fontSize: 13, color: '#64748b', margin: '2px 0 0' }}>{a.form_description}</p>
+                    <p style={{ fontSize: 13, color: '#8a8580', margin: '2px 0 0' }}>{a.form_description}</p>
                   )}
-                  <p style={{ fontSize: 12, color: '#94a3b8', margin: '4px 0 0' }}>
+                  <p style={{ fontSize: 12, color: '#b0aaa2', margin: '4px 0 0' }}>
                     Demandé le {new Date(a.assigned_at).toLocaleDateString('fr')}
                   </p>
                 </div>
@@ -239,7 +239,7 @@ export function MyForms() {
       )}
 
       {forms.length === 0 && pending.length === 0 && (
-        <p style={{ color: '#94a3b8' }}>
+        <p style={{ color: '#b0aaa2' }}>
           Aucun formulaire en attente{branding.name ? ` chez ${branding.name}` : ''}.
         </p>
       )}
@@ -250,7 +250,7 @@ export function MyForms() {
           style={{
             background: '#fff',
             borderRadius: 12,
-            border: '1px solid #e2e8f0',
+            border: '1px solid #ece7e1',
             padding: 20,
             marginBottom: 12,
             display: 'flex',
@@ -261,9 +261,9 @@ export function MyForms() {
         >
           <div style={{ flex: 1 }}>
             <h3 style={{ fontWeight: 600 }}>{f.title}</h3>
-            <p style={{ fontSize: 13, color: '#64748b' }}>{f.description || 'Formulaire medical'}</p>
+            <p style={{ fontSize: 13, color: '#8a8580' }}>{f.description || 'Formulaire medical'}</p>
             {Array.isArray(f.fields) && (
-              <p style={{ fontSize: 12, color: '#94a3b8', marginTop: 4 }}>
+              <p style={{ fontSize: 12, color: '#b0aaa2', marginTop: 4 }}>
                 {f.fields.length} question{f.fields.length > 1 ? 's' : ''} ·{' '}
                 {f.fields.filter((x) => x.required).length} obligatoire
                 {f.fields.filter((x) => x.required).length > 1 ? 's' : ''}
@@ -322,7 +322,7 @@ export function MyForms() {
               <div>
                 <h3 style={{ fontSize: 18, fontWeight: 700, margin: 0 }}>{active.title}</h3>
                 {active.description && (
-                  <p style={{ fontSize: 13, color: '#64748b', margin: '4px 0 0' }}>{active.description}</p>
+                  <p style={{ fontSize: 13, color: '#8a8580', margin: '4px 0 0' }}>{active.description}</p>
                 )}
               </div>
               <button
@@ -360,7 +360,7 @@ export function MyForms() {
                   padding: '10px 16px',
                   background: '#fff',
                   color: '#475569',
-                  border: '1px solid #e2e8f0',
+                  border: '1px solid #ece7e1',
                   borderRadius: 8,
                   fontSize: 14,
                   fontWeight: 500,
@@ -413,7 +413,7 @@ function FieldRenderer({
   const baseInput: React.CSSProperties = {
     width: '100%',
     padding: '9px 11px',
-    border: '1px solid #e2e8f0',
+    border: '1px solid #ece7e1',
     borderRadius: 6,
     fontSize: 14,
     background: '#fff',
@@ -491,7 +491,7 @@ function FieldRenderer({
             onChange={(e) => onChange(e.target.value)}
             style={{ ...baseInput, fontFamily: 'cursive', fontSize: 16, fontStyle: 'italic' }}
           />
-          <span style={{ fontSize: 11, color: '#94a3b8', marginTop: 4, display: 'block' }}>
+          <span style={{ fontSize: 11, color: '#b0aaa2', marginTop: 4, display: 'block' }}>
             Votre signature electronique a valeur juridique.
           </span>
         </label>

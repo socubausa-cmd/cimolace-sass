@@ -20,7 +20,7 @@ export function PatientLogin() {
   const inputStyle: React.CSSProperties = {
     width: '100%',
     padding: 12,
-    border: '1px solid #e2e8f0',
+    border: '1px solid #ece7e1',
     borderRadius: 8,
     fontSize: 14,
     marginBottom: 12,
@@ -64,7 +64,7 @@ export function PatientLogin() {
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
-        background: '#f8fafc',
+        background: '#fafaf8',
       }}
     >
       <div
@@ -89,7 +89,7 @@ export function PatientLogin() {
           <h1 style={{ fontSize: 24, fontWeight: 700, marginTop: 12 }}>
             {forgot ? 'Mot de passe oublié' : 'Espace patient'}
           </h1>
-          <p style={{ color: '#64748b', marginTop: 4 }}>{branding.name}</p>
+          <p style={{ color: '#8a8580', marginTop: 4 }}>{branding.name}</p>
         </div>
 
         {error && (
@@ -114,7 +114,7 @@ export function PatientLogin() {
               color="var(--brand-primary)"
               style={{ margin: '0 auto 12px' }}
             />
-            <p style={{ color: '#334155', fontSize: 14, lineHeight: 1.5 }}>
+            <p style={{ color: '#3a3632', fontSize: 14, lineHeight: 1.5 }}>
               Si un compte existe pour <strong>{email}</strong>, un lien de
               réinitialisation vient d'être envoyé. Vérifiez votre boîte mail.
             </p>
@@ -134,7 +134,7 @@ export function PatientLogin() {
             {forgot && (
               <p
                 style={{
-                  color: '#64748b',
+                  color: '#8a8580',
                   fontSize: 13,
                   marginBottom: 16,
                   lineHeight: 1.5,
@@ -225,7 +225,7 @@ export function PatientLogin() {
                     textAlign: 'center',
                     marginTop: 12,
                     fontSize: 13,
-                    color: '#64748b',
+                    color: '#8a8580',
                   }}
                 >
                   {isSignUp ? 'Déjà un espace ?' : 'Première visite ?'}{' '}

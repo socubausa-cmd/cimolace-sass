@@ -218,7 +218,7 @@ export function MyPrivacy() {
       <h2 style={{ fontSize: 24, fontWeight: 700, marginBottom: 8, display: 'flex', alignItems: 'center', gap: 8 }}>
         <Shield size={22} /> Confidentialite & RGPD
       </h2>
-      <p style={{ color: '#64748b', fontSize: 14, marginBottom: 24 }}>
+      <p style={{ color: '#8a8580', fontSize: 14, marginBottom: 24 }}>
         Vos droits sur vos donnees personnelles, conformement au RGPD (UE 2016/679) et aux articles 38-49 de la loi Informatique et Libertes.
       </p>
 
@@ -234,9 +234,9 @@ export function MyPrivacy() {
         </div>
       )}
 
-      <section style={{ background: '#fff', borderRadius: 12, border: '1px solid #e2e8f0', padding: 20, marginBottom: 16 }}>
+      <section style={{ background: '#fff', borderRadius: 12, border: '1px solid #ece7e1', padding: 20, marginBottom: 16 }}>
         <h3 style={{ fontSize: 16, fontWeight: 600, margin: 0, marginBottom: 4 }}>Mes consentements</h3>
-        <p style={{ fontSize: 13, color: '#64748b', margin: 0, marginBottom: 16 }}>
+        <p style={{ fontSize: 13, color: '#8a8580', margin: 0, marginBottom: 16 }}>
           Activez ou retirez votre consentement pour chaque utilisation de vos donnees.
         </p>
 
@@ -246,18 +246,18 @@ export function MyPrivacy() {
           return (
             <div
               key={scope.key}
-              style={{ display: 'flex', alignItems: 'flex-start', gap: 16, padding: '12px 0', borderTop: '1px solid #f1f5f9' }}
+              style={{ display: 'flex', alignItems: 'flex-start', gap: 16, padding: '12px 0', borderTop: '1px solid #f4f0ea' }}
             >
               <div style={{ flex: 1 }}>
-                <div style={{ fontSize: 14, fontWeight: 500, color: '#0f172a' }}>{scope.label}</div>
-                <div style={{ fontSize: 12, color: '#64748b', marginTop: 2 }}>{scope.description}</div>
+                <div style={{ fontSize: 14, fontWeight: 500, color: '#1e1e1e' }}>{scope.label}</div>
+                <div style={{ fontSize: 12, color: '#8a8580', marginTop: 2 }}>{scope.description}</div>
               </div>
               <button
                 onClick={() => toggleConsent(scope.key, !isGranted)}
                 disabled={!patientId || isWorking}
                 style={{
                   width: 48, height: 26, borderRadius: 13, position: 'relative',
-                  background: isGranted ? 'var(--brand-accent)' : '#cbd5e1',
+                  background: isGranted ? 'var(--brand-accent)' : '#d8d2ca',
                   border: 'none', cursor: !patientId || isWorking ? 'not-allowed' : 'pointer',
                   flexShrink: 0, transition: 'background 0.2s',
                   opacity: isWorking ? 0.6 : 1,
@@ -276,11 +276,11 @@ export function MyPrivacy() {
         })}
       </section>
 
-      <section style={{ background: '#fff', borderRadius: 12, border: '1px solid #e2e8f0', padding: 20, marginBottom: 16 }}>
+      <section style={{ background: '#fff', borderRadius: 12, border: '1px solid #ece7e1', padding: 20, marginBottom: 16 }}>
         <h3 style={{ fontSize: 16, fontWeight: 600, margin: 0, marginBottom: 4 }}>
-          Telecharger mes donnees <span style={{ fontSize: 11, color: '#64748b', fontWeight: 400 }}>· Article 20 RGPD</span>
+          Telecharger mes donnees <span style={{ fontSize: 11, color: '#8a8580', fontWeight: 400 }}>· Article 20 RGPD</span>
         </h3>
-        <p style={{ fontSize: 13, color: '#64748b', margin: 0, marginBottom: 12 }}>
+        <p style={{ fontSize: 13, color: '#8a8580', margin: 0, marginBottom: 12 }}>
           Vous pouvez exporter une copie complete de votre dossier au format JSON (consultations, ordonnances, formulaires, pieces jointes).
         </p>
         <ul style={{ fontSize: 12, color: '#475569', margin: '0 0 16px 0', paddingLeft: 18, lineHeight: 1.6 }}>
@@ -306,10 +306,10 @@ export function MyPrivacy() {
         </button>
 
         {exports.length > 0 && (
-          <div style={{ marginTop: 16, paddingTop: 16, borderTop: '1px solid #f1f5f9' }}>
+          <div style={{ marginTop: 16, paddingTop: 16, borderTop: '1px solid #f4f0ea' }}>
             <h4 style={{ fontSize: 13, fontWeight: 600, color: '#475569', margin: 0, marginBottom: 8 }}>Mes exports recents</h4>
             {exports.slice(0, 5).map((e) => (
-              <div key={e.id} style={{ display: 'flex', justifyContent: 'space-between', padding: '8px 0', fontSize: 12, color: '#64748b', borderTop: '1px solid #f1f5f9' }}>
+              <div key={e.id} style={{ display: 'flex', justifyContent: 'space-between', padding: '8px 0', fontSize: 12, color: '#8a8580', borderTop: '1px solid #f4f0ea' }}>
                 <span>{new Date(e.requested_at).toLocaleString('fr')} · format {e.format} · {e.scope}</span>
                 <span style={{ padding: '1px 8px', borderRadius: 8, background: e.status === 'ready' ? '#dcfce7' : '#fef3c7', color: e.status === 'ready' ? '#166534' : '#92400e', fontWeight: 600 }}>{e.status}</span>
               </div>
@@ -363,7 +363,7 @@ export function MyPrivacy() {
                 value={deleteReason}
                 onChange={(e) => setDeleteReason(e.target.value)}
                 placeholder="Je souhaite fermer mon compte / changer de praticien / autre raison..."
-                style={{ width: '100%', padding: '8px 10px', border: '1px solid #e2e8f0', borderRadius: 6, fontSize: 14, fontFamily: 'inherit', resize: 'vertical', boxSizing: 'border-box' }}
+                style={{ width: '100%', padding: '8px 10px', border: '1px solid #ece7e1', borderRadius: 6, fontSize: 14, fontFamily: 'inherit', resize: 'vertical', boxSizing: 'border-box' }}
               />
             </label>
 
@@ -371,7 +371,7 @@ export function MyPrivacy() {
               <button
                 onClick={() => setDeleteConfirmOpen(false)}
                 disabled={!!working}
-                style={{ padding: '10px 16px', background: '#fff', color: '#475569', border: '1px solid #e2e8f0', borderRadius: 8, fontSize: 14, fontWeight: 500, cursor: working ? 'not-allowed' : 'pointer' }}
+                style={{ padding: '10px 16px', background: '#fff', color: '#475569', border: '1px solid #ece7e1', borderRadius: 8, fontSize: 14, fontWeight: 500, cursor: working ? 'not-allowed' : 'pointer' }}
               >
                 Annuler
               </button>

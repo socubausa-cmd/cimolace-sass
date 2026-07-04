@@ -104,12 +104,12 @@ export function HealthAssistant() {
             display: 'flex',
             alignItems: 'center',
             gap: 10,
-            color: '#0f172a',
+            color: '#1e1e1e',
           }}
         >
           <Sparkles size={22} color="var(--brand-primary)" /> Assistant santé
         </h2>
-        <p style={{ color: '#64748b', marginTop: 6, fontSize: 14 }}>
+        <p style={{ color: '#8a8580', marginTop: 6, fontSize: 14 }}>
           Votre assistant de suivi {branding.name} — posez vos questions sur vos
           indicateurs, votre roue d'équilibre et votre hygiène de vie.
         </p>
@@ -141,7 +141,7 @@ export function HealthAssistant() {
         style={{
           background: '#fff',
           borderRadius: 14,
-          border: '1px solid #e2e8f0',
+          border: '1px solid #ece7e1',
           display: 'flex',
           flexDirection: 'column',
           minHeight: 520,
@@ -194,7 +194,7 @@ export function HealthAssistant() {
         <form
           onSubmit={handleSubmit}
           style={{
-            borderTop: '1px solid #e2e8f0',
+            borderTop: '1px solid #ece7e1',
             padding: 12,
             display: 'flex',
             gap: 8,
@@ -209,10 +209,10 @@ export function HealthAssistant() {
             style={{
               flex: 1,
               padding: '11px 14px',
-              border: '1px solid #e2e8f0',
+              border: '1px solid #ece7e1',
               borderRadius: 10,
               fontSize: 14,
-              background: thinking ? '#f8fafc' : '#fff',
+              background: thinking ? '#fafaf8' : '#fff',
               outline: 'none',
             }}
           />
@@ -224,7 +224,7 @@ export function HealthAssistant() {
               alignItems: 'center',
               gap: 6,
               padding: '11px 20px',
-              background: canSend ? 'var(--brand-primary)' : '#94a3b8',
+              background: canSend ? 'var(--brand-primary)' : '#b0aaa2',
               color: '#fff',
               border: 'none',
               borderRadius: 10,
@@ -265,12 +265,12 @@ function EmptyState({
       >
         <Sparkles size={26} color="var(--brand-primary)" />
       </div>
-      <div style={{ fontSize: 16, fontWeight: 600, color: '#0f172a' }}>
+      <div style={{ fontSize: 16, fontWeight: 600, color: '#1e1e1e' }}>
         Bienvenue dans votre assistant de suivi
       </div>
       <p
         style={{
-          color: '#64748b',
+          color: '#8a8580',
           fontSize: 13,
           maxWidth: 440,
           margin: '8px auto 18px',
@@ -340,8 +340,8 @@ function AssistantBubble({
             padding: '12px 14px',
             borderRadius: 14,
             borderBottomLeftRadius: 4,
-            background: '#f1f5f9',
-            color: '#0f172a',
+            background: '#f4f0ea',
+            color: '#1e1e1e',
             fontSize: 14,
             lineHeight: 1.5,
             whiteSpace: 'pre-wrap',
@@ -358,10 +358,10 @@ function AssistantBubble({
               gap: 8,
               padding: '8px 12px',
               marginTop: 6,
-              background: '#f8fafc',
-              border: '1px solid #e2e8f0',
+              background: '#fafaf8',
+              border: '1px solid #ece7e1',
               borderRadius: 10,
-              color: '#64748b',
+              color: '#8a8580',
               fontSize: 11.5,
               lineHeight: 1.45,
             }}
@@ -431,8 +431,8 @@ function ThinkingBubble() {
           padding: '12px 16px',
           borderRadius: 14,
           borderBottomLeftRadius: 4,
-          background: '#f1f5f9',
-          color: '#64748b',
+          background: '#f4f0ea',
+          color: '#8a8580',
           fontSize: 14,
           display: 'flex',
           alignItems: 'center',

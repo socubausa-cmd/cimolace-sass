@@ -135,7 +135,7 @@ export function MyPrograms() {
         </div>
       )}
 
-      {enrollments.length === 0 && <p style={{ color: '#94a3b8' }}>Aucun programme assigne.</p>}
+      {enrollments.length === 0 && <p style={{ color: '#b0aaa2' }}>Aucun programme assigne.</p>}
 
       {enrollments.map((enr) => {
         const program = programs[enr.program_id];
@@ -151,7 +151,7 @@ export function MyPrograms() {
             style={{
               background: '#fff',
               borderRadius: 12,
-              border: '1px solid #e2e8f0',
+              border: '1px solid #ece7e1',
               padding: 20,
               marginBottom: 16,
               opacity: enr.status === 'abandoned' ? 0.5 : 1,
@@ -165,15 +165,15 @@ export function MyPrograms() {
                   {isPaused && <span style={{ marginLeft: 8, fontSize: 11, color: '#ea580c', fontWeight: 600 }}>EN PAUSE</span>}
                 </h3>
                 {program?.description && (
-                  <p style={{ fontSize: 13, color: '#64748b', margin: '4px 0 0' }}>{program.description}</p>
+                  <p style={{ fontSize: 13, color: '#8a8580', margin: '4px 0 0' }}>{program.description}</p>
                 )}
                 {enr.notes && (
-                  <p style={{ fontSize: 12, color: '#475569', margin: '6px 0 0', padding: 8, background: '#f8fafc', borderRadius: 6, fontStyle: 'italic' }}>
+                  <p style={{ fontSize: 12, color: '#475569', margin: '6px 0 0', padding: 8, background: '#fafaf8', borderRadius: 6, fontStyle: 'italic' }}>
                     Note du praticien : {enr.notes}
                   </p>
                 )}
               </div>
-              <div style={{ textAlign: 'right', fontSize: 12, color: '#64748b', flexShrink: 0 }}>
+              <div style={{ textAlign: 'right', fontSize: 12, color: '#8a8580', flexShrink: 0 }}>
                 <div style={{ fontSize: 20, fontWeight: 700, color: 'var(--brand-primary)' }}>
                   {enr.progress_percent || 0}%
                 </div>
@@ -182,7 +182,7 @@ export function MyPrograms() {
             </div>
 
             {/* Progress bar */}
-            <div style={{ background: '#f1f5f9', borderRadius: 99, height: 6, overflow: 'hidden', marginBottom: 16 }}>
+            <div style={{ background: '#f4f0ea', borderRadius: 99, height: 6, overflow: 'hidden', marginBottom: 16 }}>
               <div
                 style={{
                   background: isCompleted ? 'var(--brand-accent)' : 'var(--brand-primary)',
@@ -195,7 +195,7 @@ export function MyPrograms() {
 
             {/* Steps */}
             {steps.length === 0 ? (
-              <p style={{ fontSize: 13, color: '#94a3b8', fontStyle: 'italic' }}>Aucune etape dans ce programme.</p>
+              <p style={{ fontSize: 13, color: '#b0aaa2', fontStyle: 'italic' }}>Aucune etape dans ce programme.</p>
             ) : (
               <ol style={{ paddingLeft: 0, listStyle: 'none', margin: 0 }}>
                 {steps.map((s, idx) => {
@@ -230,23 +230,23 @@ export function MyPrograms() {
                       {isDone ? (
                         <CheckCircle size={20} color="var(--brand-accent)" style={{ flexShrink: 0 }} />
                       ) : (
-                        <Circle size={20} color={isNext ? 'var(--brand-primary)' : '#94a3b8'} style={{ flexShrink: 0 }} />
+                        <Circle size={20} color={isNext ? 'var(--brand-primary)' : '#b0aaa2'} style={{ flexShrink: 0 }} />
                       )}
                       <div style={{ flex: 1 }}>
                         <div
                           style={{
                             fontSize: 13,
                             fontWeight: isNext ? 600 : 500,
-                            color: isDone ? '#065f46' : '#0f172a',
+                            color: isDone ? '#065f46' : '#1e1e1e',
                             textDecoration: isDone ? 'line-through' : 'none',
                           }}
                         >
                           {idx + 1}. {s.title}
                         </div>
                         {s.description && (
-                          <div style={{ fontSize: 12, color: '#64748b', marginTop: 2 }}>{s.description}</div>
+                          <div style={{ fontSize: 12, color: '#8a8580', marginTop: 2 }}>{s.description}</div>
                         )}
-                        <div style={{ fontSize: 11, color: '#94a3b8', marginTop: 2 }}>
+                        <div style={{ fontSize: 11, color: '#b0aaa2', marginTop: 2 }}>
                           {s.step_type}
                           {typeof s.due_after_days === 'number' && ` · J+${s.due_after_days}`}
                           {isNext && <span style={{ color: 'var(--brand-primary)', fontWeight: 600, marginLeft: 8 }}>← A faire maintenant</span>}

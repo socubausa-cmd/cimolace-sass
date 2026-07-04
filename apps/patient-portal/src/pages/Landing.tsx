@@ -64,12 +64,12 @@ export function Landing() {
   };
 
   return (
-    <div style={{ minHeight: '100vh', background: '#fff', color: '#0f172a', fontFamily: 'inherit' }}>
+    <div style={{ minHeight: '100vh', background: '#fff', color: '#1e1e1e', fontFamily: 'inherit' }}>
       {/* Header */}
       <header
         style={{
           position: 'sticky', top: 0, zIndex: 10, background: 'rgba(255,255,255,0.9)',
-          backdropFilter: 'blur(8px)', borderBottom: '1px solid #f1f5f9',
+          backdropFilter: 'blur(8px)', borderBottom: '1px solid #f4f0ea',
           display: 'flex', alignItems: 'center', justifyContent: 'space-between',
           padding: '14px 24px', maxWidth: 1120, margin: '0 auto',
         }}
@@ -121,7 +121,7 @@ export function Landing() {
           {services.map((s) => (
             <div
               key={s.title}
-              style={{ background: '#fff', border: '1px solid #f1f5f9', borderRadius: 16, padding: 28, boxShadow: '0 1px 3px rgba(0,0,0,0.04)' }}
+              style={{ background: '#fff', border: '1px solid #f4f0ea', borderRadius: 16, padding: 28, boxShadow: '0 1px 3px rgba(0,0,0,0.04)' }}
             >
               <div
                 style={{
@@ -132,14 +132,14 @@ export function Landing() {
                 <s.icon size={24} color="var(--brand-primary)" />
               </div>
               <h3 style={{ fontSize: 18, fontWeight: 700, margin: '0 0 8px' }}>{s.title}</h3>
-              <p style={{ color: '#64748b', fontSize: 15, lineHeight: 1.6, margin: 0 }}>{s.desc}</p>
+              <p style={{ color: '#8a8580', fontSize: 15, lineHeight: 1.6, margin: 0 }}>{s.desc}</p>
             </div>
           ))}
         </div>
       </section>
 
       {/* Comment ça marche */}
-      <section style={{ background: '#f8fafc', padding: '56px 24px' }}>
+      <section style={{ background: '#fafaf8', padding: '56px 24px' }}>
         <div style={{ maxWidth: 1120, margin: '0 auto' }}>
           <h2 style={{ fontSize: 30, fontWeight: 800, textAlign: 'center', margin: '0 0 40px', letterSpacing: '-0.01em' }}>
             Comment ça marche
@@ -159,7 +159,7 @@ export function Landing() {
                   Étape {i + 1}
                 </div>
                 <h3 style={{ fontSize: 18, fontWeight: 700, margin: '0 0 8px' }}>{st.title}</h3>
-                <p style={{ color: '#64748b', fontSize: 15, lineHeight: 1.6, margin: '0 auto', maxWidth: 280 }}>{st.desc}</p>
+                <p style={{ color: '#8a8580', fontSize: 15, lineHeight: 1.6, margin: '0 auto', maxWidth: 280 }}>{st.desc}</p>
               </div>
             ))}
           </div>
@@ -180,7 +180,7 @@ export function Landing() {
       </section>
 
       {/* Footer — white-label : aucune mention Cimolace/MEDOS */}
-      <footer style={{ borderTop: '1px solid #f1f5f9', padding: '24px', textAlign: 'center', color: '#94a3b8', fontSize: 13 }}>
+      <footer style={{ borderTop: '1px solid #f4f0ea', padding: '24px', textAlign: 'center', color: '#b0aaa2', fontSize: 13 }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, marginBottom: 6 }}>
           {branding.logoUrl ? (
             <img src={branding.logoUrl} alt={branding.name} style={{ height: 22, objectFit: 'contain' }} />

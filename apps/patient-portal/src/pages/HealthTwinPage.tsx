@@ -14,7 +14,7 @@ const SEVERITY_COLORS: Record<string, { bg: string; fg: string; border: string }
 // par fourchette de score (vert > 70, jaune 40-70, rouge < 40).
 function organColor(score: number | null, hint: string | null): string {
   if (hint) return hint;
-  if (score == null) return '#cbd5e1';
+  if (score == null) return '#d8d2ca';
   if (score >= 70) return '#16a34a';
   if (score >= 40) return '#f59e0b';
   return '#ef4444';
@@ -60,7 +60,7 @@ export function HealthTwinPage() {
   }, []);
 
   if (loading) {
-    return <div style={{ padding: 24, color: '#64748b' }}>Chargement de votre jumeau santé…</div>;
+    return <div style={{ padding: 24, color: '#8a8580' }}>Chargement de votre jumeau santé…</div>;
   }
   if (error) {
     return (
@@ -75,7 +75,7 @@ export function HealthTwinPage() {
     <div>
       <div style={{ marginBottom: 16 }}>
         <h2 style={{ fontSize: 24, fontWeight: 700, margin: 0 }}>Mon corps</h2>
-        <p style={{ color: '#64748b', marginTop: 6 }}>
+        <p style={{ color: '#8a8580', marginTop: 6 }}>
           Vue d'ensemble de votre santé : organes, équilibres, événements et repères.
         </p>
       </div>
@@ -118,7 +118,7 @@ function OrgansSection({ organs }: { organs: MyTwinState['organs_scores'] }) {
     <section style={sectionStyle}>
       <h3 style={sectionTitle}>Mes organes</h3>
       {organs.length === 0 ? (
-        <p style={{ color: '#94a3b8', fontSize: 13 }}>
+        <p style={{ color: '#b0aaa2', fontSize: 13 }}>
           Aucun score d'organe enregistré pour l'instant.
         </p>
       ) : (
@@ -136,7 +136,7 @@ function OrgansSection({ organs }: { organs: MyTwinState['organs_scores'] }) {
                 key={o.organ_code}
                 style={{
                   background: '#fff',
-                  border: '1px solid #e2e8f0',
+                  border: '1px solid #ece7e1',
                   borderRadius: 12,
                   padding: 16,
                   display: 'flex',
@@ -161,10 +161,10 @@ function OrgansSection({ organs }: { organs: MyTwinState['organs_scores'] }) {
                   {o.score != null ? Math.round(o.score) : '—'}
                 </div>
                 <div style={{ minWidth: 0 }}>
-                  <div style={{ fontSize: 13, fontWeight: 600, color: '#0f172a' }}>
+                  <div style={{ fontSize: 13, fontWeight: 600, color: '#1e1e1e' }}>
                     {o.label}
                   </div>
-                  <div style={{ fontSize: 11, color: '#94a3b8', textTransform: 'uppercase' }}>
+                  <div style={{ fontSize: 11, color: '#b0aaa2', textTransform: 'uppercase' }}>
                     {o.organ_code}
                   </div>
                 </div>
@@ -208,7 +208,7 @@ function WheelSection({ wheel }: { wheel: MyTwinState['wheel'] }) {
     <section style={sectionStyle}>
       <h3 style={sectionTitle}>Ma roue d'équilibre</h3>
       {wheel.every((d) => d.score == null) ? (
-        <p style={{ color: '#94a3b8', fontSize: 13 }}>
+        <p style={{ color: '#b0aaa2', fontSize: 13 }}>
           Aucune mesure enregistrée. Votre praticien pourra remplir votre roue lors d'une consultation.
         </p>
       ) : (
@@ -222,7 +222,7 @@ function WheelSection({ wheel }: { wheel: MyTwinState['wheel'] }) {
                 cy={cy}
                 r={r * f}
                 fill="none"
-                stroke="#e2e8f0"
+                stroke="#ece7e1"
                 strokeWidth={1}
               />
             ))}
@@ -238,7 +238,7 @@ function WheelSection({ wheel }: { wheel: MyTwinState['wheel'] }) {
                   y1={cy}
                   x2={x}
                   y2={y}
-                  stroke="#e2e8f0"
+                  stroke="#ece7e1"
                   strokeWidth={1}
                 />
               );
@@ -312,7 +312,7 @@ function TimelineSection({ events }: { events: MyTwinState['events'] }) {
     <section style={sectionStyle}>
       <h3 style={sectionTitle}>Ma timeline santé</h3>
       {events.length === 0 ? (
-        <p style={{ color: '#94a3b8', fontSize: 13 }}>Aucun événement enregistré.</p>
+        <p style={{ color: '#b0aaa2', fontSize: 13 }}>Aucun événement enregistré.</p>
       ) : (
         <ol style={{ listStyle: 'none', padding: 0, margin: 0 }}>
           {events.map((e) => (
@@ -322,15 +322,15 @@ function TimelineSection({ events }: { events: MyTwinState['events'] }) {
                 display: 'flex',
                 gap: 12,
                 padding: '10px 0',
-                borderBottom: '1px solid #f1f5f9',
+                borderBottom: '1px solid #f4f0ea',
               }}
             >
               <div style={{ marginTop: 4 }}>
                 <Activity size={16} color="var(--brand-primary)" aria-hidden="true" />
               </div>
               <div style={{ flex: 1 }}>
-                <div style={{ fontSize: 14, fontWeight: 500, color: '#0f172a' }}>{e.title}</div>
-                <div style={{ fontSize: 12, color: '#64748b' }}>
+                <div style={{ fontSize: 14, fontWeight: 500, color: '#1e1e1e' }}>{e.title}</div>
+                <div style={{ fontSize: 12, color: '#8a8580' }}>
                   {new Date(e.occurred_at).toLocaleDateString('fr')} · {e.event_type}
                 </div>
               </div>
@@ -357,10 +357,10 @@ function AlertsSection({ alerts }: { alerts: MyTwinState['alerts'] }) {
     <section style={sectionStyle}>
       <h3 style={sectionTitle}>Mes repères de prévention</h3>
       {alerts.length === 0 ? (
-        <p style={{ color: '#94a3b8', fontSize: 13 }}>Aucun repère particulier en ce moment.</p>
+        <p style={{ color: '#b0aaa2', fontSize: 13 }}>Aucun repère particulier en ce moment.</p>
       ) : (
         <>
-          <p style={{ color: '#64748b', fontSize: 12.5, margin: '0 0 10px', lineHeight: 1.5 }}>
+          <p style={{ color: '#8a8580', fontSize: 12.5, margin: '0 0 10px', lineHeight: 1.5 }}>
             Ces repères ne sont pas un diagnostic. Ils signalent une mesure à surveiller ou à
             partager avec votre praticien.
           </p>
@@ -408,8 +408,8 @@ function Disclaimer({ text }: { text: string }) {
         display: 'flex',
         gap: 10,
         padding: 12,
-        background: '#f8fafc',
-        border: '1px solid #e2e8f0',
+        background: '#fafaf8',
+        border: '1px solid #ece7e1',
         borderRadius: 10,
         color: '#475569',
         fontSize: 12,
@@ -428,7 +428,7 @@ function Disclaimer({ text }: { text: string }) {
 const sectionStyle: React.CSSProperties = {
   background: '#fff',
   borderRadius: 12,
-  border: '1px solid #e2e8f0',
+  border: '1px solid #ece7e1',
   padding: 20,
   marginBottom: 16,
 };
@@ -438,5 +438,5 @@ const sectionTitle: React.CSSProperties = {
   fontWeight: 600,
   marginTop: 0,
   marginBottom: 12,
-  color: '#0f172a',
+  color: '#1e1e1e',
 };

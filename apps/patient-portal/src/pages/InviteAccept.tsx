@@ -25,7 +25,7 @@ export function InviteAccept() {
   const inputStyle: React.CSSProperties = {
     width: '100%',
     padding: 12,
-    border: '1px solid #e2e8f0',
+    border: '1px solid #ece7e1',
     borderRadius: 8,
     fontSize: 14,
     marginBottom: 12,
@@ -73,7 +73,7 @@ export function InviteAccept() {
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
-        background: '#f8fafc',
+        background: '#fafaf8',
         padding: 16,
       }}
     >
@@ -101,7 +101,7 @@ export function InviteAccept() {
           <h1 style={{ fontSize: 22, fontWeight: 700, marginTop: 12 }}>
             {done ? 'Espace activé' : 'Activer mon espace'}
           </h1>
-          <p style={{ color: '#64748b', marginTop: 4 }}>{branding.name}</p>
+          <p style={{ color: '#8a8580', marginTop: 4 }}>{branding.name}</p>
         </div>
 
         {!token && !done && (
@@ -126,7 +126,7 @@ export function InviteAccept() {
               color="var(--brand-primary)"
               style={{ margin: '0 auto 12px' }}
             />
-            <p style={{ color: '#334155', fontSize: 14, lineHeight: 1.5 }}>
+            <p style={{ color: '#3a3632', fontSize: 14, lineHeight: 1.5 }}>
               Votre mot de passe est défini. Vous pouvez maintenant vous
               connecter
               {doneEmail ? (
@@ -178,7 +178,7 @@ export function InviteAccept() {
               )}
               <p
                 style={{
-                  color: '#64748b',
+                  color: '#8a8580',
                   fontSize: 13,
                   marginBottom: 16,
                   lineHeight: 1.5,

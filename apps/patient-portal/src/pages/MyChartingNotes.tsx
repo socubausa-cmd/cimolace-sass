@@ -66,8 +66,8 @@ function Icd10Badge({ code, description, isPrimary }: { code: string; descriptio
     <span style={{
       display: 'inline-flex', alignItems: 'center', gap: 4,
       padding: '3px 10px', borderRadius: 8, fontSize: 12,
-      background: isPrimary ? '#eff6ff' : '#f8fafc',
-      border: `1px solid ${isPrimary ? '#93c5fd' : '#e2e8f0'}`,
+      background: isPrimary ? '#eff6ff' : '#fafaf8',
+      border: `1px solid ${isPrimary ? '#93c5fd' : '#ece7e1'}`,
       color: isPrimary ? '#1d4ed8' : '#475569', marginRight: 6, marginBottom: 4,
     }}>
       <Tag size={11} />
@@ -91,7 +91,7 @@ function NoteCard({ note, onRead }: { note: ConsultNote; onRead: (id: string) =>
   return (
     <div style={{
       background: '#fff', borderRadius: 14, marginBottom: 14,
-      border: `2px solid ${isUnread ? 'var(--brand-primary)' : '#e2e8f0'}`,
+      border: `2px solid ${isUnread ? 'var(--brand-primary)' : '#ece7e1'}`,
       boxShadow: isUnread ? '0 4px 20px rgba(13,148,136,0.08)' : '0 1px 4px rgba(0,0,0,0.04)',
       overflow: 'hidden', transition: 'box-shadow 0.2s',
     }}>
@@ -110,10 +110,10 @@ function NoteCard({ note, onRead }: { note: ConsultNote; onRead: (id: string) =>
           : <Clock size={20} color="#f59e0b" style={{ flexShrink: 0 }} />}
 
         <div style={{ flex: 1 }}>
-          <div style={{ fontWeight: 600, fontSize: 15, color: '#0f172a' }}>
+          <div style={{ fontWeight: 600, fontSize: 15, color: '#1e1e1e' }}>
             Consultation du {formatDate(note.created_at)}
           </div>
-          <div style={{ fontSize: 12, color: '#64748b', marginTop: 2 }}>
+          <div style={{ fontSize: 12, color: '#8a8580', marginTop: 2 }}>
             {note.is_signed
               ? `Signée le ${new Date(note.signed_at!).toLocaleDateString('fr-FR')}`
               : 'En attente de signature'}
@@ -129,12 +129,12 @@ function NoteCard({ note, onRead }: { note: ConsultNote; onRead: (id: string) =>
           }}>NOUVEAU</span>
         )}
 
-        {expanded ? <ChevronUp size={18} color="#94a3b8" /> : <ChevronDown size={18} color="#94a3b8" />}
+        {expanded ? <ChevronUp size={18} color="#b0aaa2" /> : <ChevronDown size={18} color="#b0aaa2" />}
       </button>
 
       {/* Body */}
       {expanded && (
-        <div style={{ padding: '0 20px 20px', borderTop: '1px solid #f1f5f9' }}>
+        <div style={{ padding: '0 20px 20px', borderTop: '1px solid #f4f0ea' }}>
 
           {/* AI Summary */}
           {note.ai_summary && (
@@ -172,7 +172,7 @@ function NoteCard({ note, onRead }: { note: ConsultNote; onRead: (id: string) =>
           {/* ICD-10 codes */}
           {icd10.length > 0 && (
             <div style={{ marginTop: 14 }}>
-              <p style={{ fontSize: 12, fontWeight: 600, color: '#64748b', marginBottom: 6, textTransform: 'uppercase', letterSpacing: 0.4 }}>
+              <p style={{ fontSize: 12, fontWeight: 600, color: '#8a8580', marginBottom: 6, textTransform: 'uppercase', letterSpacing: 0.4 }}>
                 Codes diagnostics (CIM-10)
               </p>
               <div>
@@ -185,7 +185,7 @@ function NoteCard({ note, onRead }: { note: ConsultNote; onRead: (id: string) =>
 
           {/* Read timestamp */}
           {note.patient_read_at && (
-            <p style={{ fontSize: 11, color: '#94a3b8', marginTop: 14, marginBottom: 0 }}>
+            <p style={{ fontSize: 11, color: '#b0aaa2', marginTop: 14, marginBottom: 0 }}>
               Consulté le {new Date(note.patient_read_at).toLocaleDateString('fr-FR')}
             </p>
           )}
@@ -241,7 +241,7 @@ export function MyChartingNotes() {
         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
           <Brain size={24} color="var(--brand-primary)" />
           <div>
-            <h2 style={{ fontSize: 22, fontWeight: 700, margin: 0, color: '#0f172a' }}>
+            <h2 style={{ fontSize: 22, fontWeight: 700, margin: 0, color: '#1e1e1e' }}>
               Notes de consultation
             </h2>
             {unreadCount > 0 && (
@@ -280,7 +280,7 @@ export function MyChartingNotes() {
 
       {/* States */}
       {loading && (
-        <div style={{ textAlign: 'center', padding: '60px 0', color: '#94a3b8' }}>
+        <div style={{ textAlign: 'center', padding: '60px 0', color: '#b0aaa2' }}>
           <RefreshCw size={28} style={{ animation: 'spin 1s linear infinite', marginBottom: 12 }} />
           <p style={{ margin: 0 }}>Chargement de vos notes…</p>
         </div>
@@ -298,11 +298,11 @@ export function MyChartingNotes() {
 
       {!loading && !error && notes.length === 0 && (
         <div style={{ textAlign: 'center', padding: '60px 0' }}>
-          <FileText size={40} color="#cbd5e1" style={{ marginBottom: 14 }} />
-          <p style={{ color: '#64748b', fontSize: 15, margin: 0 }}>
+          <FileText size={40} color="#d8d2ca" style={{ marginBottom: 14 }} />
+          <p style={{ color: '#8a8580', fontSize: 15, margin: 0 }}>
             Aucune note partagée par votre praticien pour le moment.
           </p>
-          <p style={{ color: '#94a3b8', fontSize: 13, marginTop: 6 }}>
+          <p style={{ color: '#b0aaa2', fontSize: 13, marginTop: 6 }}>
             Les notes apparaîtront ici après vos consultations.
           </p>
         </div>

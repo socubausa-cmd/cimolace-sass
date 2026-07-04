@@ -257,7 +257,7 @@ export function MyHealth() {
       )}
 
       {loading && entries.length === 0 && !loadError && (
-        <div role="status" aria-live="polite" style={{ padding: '8px 0 20px', color: '#64748b', fontSize: 14 }}>
+        <div role="status" aria-live="polite" style={{ padding: '8px 0 20px', color: '#8a8580', fontSize: 14 }}>
           Chargement de votre journal…
         </div>
       )}
@@ -266,13 +266,13 @@ export function MyHealth() {
         {metrics.map((m) => (
           <div
             key={m.label}
-            style={{ background: '#fff', borderRadius: 12, border: '1px solid #e2e8f0', padding: 16, display: 'flex', alignItems: 'center', gap: 10 }}
+            style={{ background: '#fff', borderRadius: 12, border: '1px solid #ece7e1', padding: 16, display: 'flex', alignItems: 'center', gap: 10 }}
           >
             <m.icon size={20} color={m.color} />
             <div>
-              <div style={{ fontSize: 12, color: '#64748b' }}>{m.label}</div>
+              <div style={{ fontSize: 12, color: '#8a8580' }}>{m.label}</div>
               <div style={{ fontSize: 20, fontWeight: 700 }}>
-                {m.value != null && m.value !== '' ? m.value : '-'} <span style={{ fontSize: 12, color: '#94a3b8' }}>{m.unit}</span>
+                {m.value != null && m.value !== '' ? m.value : '-'} <span style={{ fontSize: 12, color: '#b0aaa2' }}>{m.unit}</span>
               </div>
             </div>
           </div>
@@ -280,7 +280,7 @@ export function MyHealth() {
       </div>
 
       {/* ── Mes constantes (RPM) ─────────────────────────────────────── */}
-      <section style={{ background: '#fff', borderRadius: 12, border: '1px solid #e2e8f0', padding: 20, marginBottom: 24 }} aria-labelledby="vitals-title">
+      <section style={{ background: '#fff', borderRadius: 12, border: '1px solid #ece7e1', padding: 20, marginBottom: 24 }} aria-labelledby="vitals-title">
         <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4, flexWrap: 'wrap' }}>
           <Stethoscope size={18} color="var(--brand-primary)" aria-hidden="true" />
           <h3 id="vitals-title" style={{ fontSize: 16, fontWeight: 600, margin: 0 }}>Mes constantes</h3>
@@ -291,7 +291,7 @@ export function MyHealth() {
             <Plus size={15} aria-hidden="true" /> Ajouter un relevé
           </button>
         </div>
-        <p style={{ fontSize: 13, color: '#64748b', margin: '0 0 10px', lineHeight: 1.5 }}>
+        <p style={{ fontSize: 13, color: '#8a8580', margin: '0 0 10px', lineHeight: 1.5 }}>
           Relevez vos mesures d'appareils maison (tensiomètre, glucomètre, balance, oxymètre…). Elles enrichissent votre suivi et celui de votre praticien.
         </p>
         <div style={{ display: 'flex', gap: 8, alignItems: 'flex-start', padding: '10px 12px', background: 'var(--brand-primary-soft)', border: '1px solid var(--brand-primary)', borderRadius: 8, color: 'var(--brand-primary)', fontSize: 12, lineHeight: 1.5, marginBottom: 14 }}>
@@ -301,7 +301,7 @@ export function MyHealth() {
           </span>
         </div>
         {!hasAnyVital ? (
-          <p style={{ color: '#94a3b8', fontSize: 14, margin: 0 }}>
+          <p style={{ color: '#b0aaa2', fontSize: 14, margin: 0 }}>
             Aucune constante enregistrée pour l'instant. Cliquez sur « Ajouter un relevé » pour commencer.
           </p>
         ) : (
@@ -309,13 +309,13 @@ export function MyHealth() {
             {vitalCards.map((c) => (
               <div
                 key={c.label}
-                style={{ background: '#f8fafc', borderRadius: 12, border: '1px solid #eef2f7', padding: 14, display: 'flex', alignItems: 'center', gap: 10 }}
+                style={{ background: '#fafaf8', borderRadius: 12, border: '1px solid #eef2f7', padding: 14, display: 'flex', alignItems: 'center', gap: 10 }}
               >
                 <c.icon size={20} color={c.color} aria-hidden="true" />
                 <div>
-                  <div style={{ fontSize: 12, color: '#64748b' }}>{c.label}</div>
+                  <div style={{ fontSize: 12, color: '#8a8580' }}>{c.label}</div>
                   <div style={{ fontSize: 19, fontWeight: 700 }}>
-                    {c.value != null && c.value !== '' ? c.value : '-'} <span style={{ fontSize: 12, color: '#94a3b8' }}>{c.unit}</span>
+                    {c.value != null && c.value !== '' ? c.value : '-'} <span style={{ fontSize: 12, color: '#b0aaa2' }}>{c.unit}</span>
                   </div>
                 </div>
               </div>
@@ -325,7 +325,7 @@ export function MyHealth() {
       </section>
 
       {entries.length >= 2 && (
-        <div style={{ background: '#fff', borderRadius: 12, border: '1px solid #e2e8f0', padding: 20, marginBottom: 16 }}>
+        <div style={{ background: '#fff', borderRadius: 12, border: '1px solid #ece7e1', padding: 20, marginBottom: 16 }}>
           <h3 style={{ fontSize: 16, fontWeight: 600, marginBottom: 12 }}>Evolution sur les 30 derniers jours</h3>
           <ResponsiveContainer width="100%" height={240}>
             <LineChart
@@ -340,9 +340,9 @@ export function MyHealth() {
                 }))}
               margin={{ top: 8, right: 20, left: 0, bottom: 0 }}
             >
-              <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
-              <XAxis dataKey="date" fontSize={11} stroke="#64748b" />
-              <YAxis domain={[0, 10]} fontSize={11} stroke="#64748b" />
+              <CartesianGrid strokeDasharray="3 3" stroke="#ece7e1" />
+              <XAxis dataKey="date" fontSize={11} stroke="#8a8580" />
+              <YAxis domain={[0, 10]} fontSize={11} stroke="#8a8580" />
               <Tooltip />
               <Legend />
               <Line type="monotone" dataKey="Humeur" stroke="#ef4444" strokeWidth={2} dot={{ r: 3 }} />
@@ -353,15 +353,15 @@ export function MyHealth() {
         </div>
       )}
 
-      <div style={{ background: '#fff', borderRadius: 12, border: '1px solid #e2e8f0', padding: 20 }}>
+      <div style={{ background: '#fff', borderRadius: 12, border: '1px solid #ece7e1', padding: 20 }}>
         <h3 style={{ fontSize: 16, fontWeight: 600, marginBottom: 12 }}>Historique</h3>
         {entries.length === 0 && (
-          <p style={{ color: '#94a3b8' }}>Aucune entree. Cliquez sur "Enregistrer aujourd'hui" pour demarrer le suivi.</p>
+          <p style={{ color: '#b0aaa2' }}>Aucune entree. Cliquez sur "Enregistrer aujourd'hui" pour demarrer le suivi.</p>
         )}
         {entries.slice(0, 10).map((e: any) => (
           <div
             key={e.id}
-            style={{ padding: '8px 0', borderTop: '1px solid #f1f5f9', fontSize: 13, color: '#64748b' }}
+            style={{ padding: '8px 0', borderTop: '1px solid #f4f0ea', fontSize: 13, color: '#8a8580' }}
           >
             {new Date(e.entry_date || e.created_at).toLocaleDateString('fr')} — Humeur:{' '}
             {e.mood_score ?? '-'}/10, Energie: {e.energy_level ?? '-'}/10, Sommeil: {e.sleep_hours ?? '-'}h
@@ -461,7 +461,7 @@ export function MyHealth() {
                 style={{
                   width: '100%',
                   padding: '8px 10px',
-                  border: '1px solid #e2e8f0',
+                  border: '1px solid #ece7e1',
                   borderRadius: 6,
                   fontSize: 14,
                   fontFamily: 'inherit',
@@ -487,7 +487,7 @@ export function MyHealth() {
                   padding: '10px 16px',
                   background: '#fff',
                   color: '#475569',
-                  border: '1px solid #e2e8f0',
+                  border: '1px solid #ece7e1',
                   borderRadius: 8,
                   fontSize: 14,
                   fontWeight: 500,
@@ -543,7 +543,7 @@ export function MyHealth() {
                 <X size={18} aria-hidden="true" />
               </button>
             </div>
-            <p style={{ fontSize: 13, color: '#64748b', margin: '0 0 16px', lineHeight: 1.5 }}>
+            <p style={{ fontSize: 13, color: '#8a8580', margin: '0 0 16px', lineHeight: 1.5 }}>
               Saisissez les valeurs lues sur vos appareils. Laissez vide ce que vous n'avez pas mesuré.
             </p>
 
@@ -600,7 +600,7 @@ export function MyHealth() {
               />
             </div>
 
-            <p style={{ fontSize: 12, color: '#94a3b8', margin: '14px 0 0', lineHeight: 1.5 }}>
+            <p style={{ fontSize: 12, color: '#b0aaa2', margin: '14px 0 0', lineHeight: 1.5 }}>
               Ces relevés sont une information de prévention, pas un diagnostic, et ne remplacent pas un avis médical. En cas de malaise ou de valeur très inhabituelle, contactez votre praticien ou les urgences (15/112).
             </p>
 
@@ -616,7 +616,7 @@ export function MyHealth() {
                 type="button"
                 onClick={() => !vitalsSaving && setVitalsOpen(false)}
                 disabled={vitalsSaving}
-                style={{ padding: '10px 16px', background: '#fff', color: '#475569', border: '1px solid #e2e8f0', borderRadius: 8, fontSize: 14, fontWeight: 500, cursor: vitalsSaving ? 'not-allowed' : 'pointer' }}
+                style={{ padding: '10px 16px', background: '#fff', color: '#475569', border: '1px solid #ece7e1', borderRadius: 8, fontSize: 14, fontWeight: 500, cursor: vitalsSaving ? 'not-allowed' : 'pointer' }}
               >
                 Annuler
               </button>
@@ -651,7 +651,7 @@ function Slider({
       <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
         {icon}
         <span style={{ fontSize: 13, color: '#475569', fontWeight: 500 }}>{label}</span>
-        <span style={{ marginLeft: 'auto', fontSize: 16, fontWeight: 700, color: '#0f172a' }}>{value}/10</span>
+        <span style={{ marginLeft: 'auto', fontSize: 16, fontWeight: 700, color: '#1e1e1e' }}>{value}/10</span>
       </div>
       <input
         type="range"
@@ -694,7 +694,7 @@ function NumField({
         style={{
           width: '100%',
           padding: '8px 10px',
-          border: '1px solid #e2e8f0',
+          border: '1px solid #ece7e1',
           borderRadius: 6,
           fontSize: 14,
           background: '#fff',

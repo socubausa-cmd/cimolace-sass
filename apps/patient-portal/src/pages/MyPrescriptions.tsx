@@ -12,11 +12,11 @@ export function MyPrescriptions() {
   return (
     <div>
       <h2 style={{ fontSize: 24, fontWeight: 700, marginBottom: 20, display: 'flex', alignItems: 'center', gap: 8 }}><Pill size={22} /> Mes ordonnances</h2>
-      {prescriptions.length === 0 && <p style={{ color: '#94a3b8' }}>Aucune ordonnance.</p>}
+      {prescriptions.length === 0 && <p style={{ color: '#b0aaa2' }}>Aucune ordonnance.</p>}
       {prescriptions.map((p: any) => (
-        <div key={p.id} style={{ background: '#fff', borderRadius: 12, border: '1px solid #e2e8f0', padding: 20, marginBottom: 12, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <div><div style={{ fontWeight: 600 }}>{p.medication || 'Ordonnance'}</div><div style={{ fontSize: 13, color: '#64748b' }}>{new Date(p.created_at).toLocaleDateString('fr')}</div></div>
-          <button style={{ display: 'flex', alignItems: 'center', gap: 4, padding: '6px 12px', background: '#f1f5f9', border: 'none', borderRadius: 6, fontSize: 13, cursor: 'pointer' }}><FileDown size={14} /> PDF</button>
+        <div key={p.id} style={{ background: '#fff', borderRadius: 12, border: '1px solid #ece7e1', padding: 20, marginBottom: 12, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <div><div style={{ fontWeight: 600 }}>{p.medication || 'Ordonnance'}</div><div style={{ fontSize: 13, color: '#8a8580' }}>{new Date(p.created_at).toLocaleDateString('fr')}</div></div>
+          <button style={{ display: 'flex', alignItems: 'center', gap: 4, padding: '6px 12px', background: '#f4f0ea', border: 'none', borderRadius: 6, fontSize: 13, cursor: 'pointer' }}><FileDown size={14} /> PDF</button>
         </div>
       ))}
     </div>

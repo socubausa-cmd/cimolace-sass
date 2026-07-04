@@ -237,7 +237,7 @@ export function MyAppointments() {
           A venir ({upcoming.length})
         </h3>
         {upcoming.length === 0 && (
-          <div style={{ background: '#fff', padding: 20, borderRadius: 12, border: '1px solid #e2e8f0', color: '#94a3b8', textAlign: 'center', fontSize: 14 }}>
+          <div style={{ background: '#fff', padding: 20, borderRadius: 12, border: '1px solid #ece7e1', color: '#b0aaa2', textAlign: 'center', fontSize: 14 }}>
             Aucun rendez-vous a venir.
           </div>
         )}
@@ -274,7 +274,7 @@ export function MyAppointments() {
               style={inputStyle}
               min={new Date(Date.now() + 24 * 3600 * 1000).toISOString().slice(0, 16)}
             />
-            <span style={{ fontSize: 11, color: '#94a3b8', marginTop: 4, display: 'block' }}>
+            <span style={{ fontSize: 11, color: '#b0aaa2', marginTop: 4, display: 'block' }}>
               Votre praticien confirmera ou proposera une alternative.
             </span>
           </Field>
@@ -341,28 +341,28 @@ function AppointmentCard({
   return (
     <div
       style={{
-        background: '#fff', borderRadius: 12, border: '1px solid #e2e8f0', padding: 16,
+        background: '#fff', borderRadius: 12, border: '1px solid #ece7e1', padding: 16,
         marginBottom: 8, display: 'flex', alignItems: 'center', gap: 16,
         opacity: isCancelled ? 0.6 : 1,
       }}
     >
       <div style={{ textAlign: 'center', minWidth: 64 }}>
-        <div style={{ fontSize: 11, color: '#64748b', textTransform: 'uppercase' }}>
+        <div style={{ fontSize: 11, color: '#8a8580', textTransform: 'uppercase' }}>
           {dt.toLocaleDateString('fr', { weekday: 'short' })}
         </div>
         <div style={{ fontSize: 22, fontWeight: 700, color: 'var(--brand-primary)' }}>
           {dt.getDate()}
         </div>
-        <div style={{ fontSize: 11, color: '#64748b', textTransform: 'uppercase' }}>
+        <div style={{ fontSize: 11, color: '#8a8580', textTransform: 'uppercase' }}>
           {dt.toLocaleDateString('fr', { month: 'short' })}
         </div>
       </div>
 
-      <div style={{ flex: 1, borderLeft: '1px solid #f1f5f9', paddingLeft: 16 }}>
-        <div style={{ fontSize: 14, fontWeight: 600, color: '#0f172a' }}>
+      <div style={{ flex: 1, borderLeft: '1px solid #f4f0ea', paddingLeft: 16 }}>
+        <div style={{ fontSize: 14, fontWeight: 600, color: '#1e1e1e' }}>
           {dt.toLocaleTimeString('fr', { hour: '2-digit', minute: '2-digit' })} · {a.duration_minutes} min
         </div>
-        <div style={{ fontSize: 12, color: '#64748b', marginTop: 4, display: 'flex', alignItems: 'center', gap: 4 }}>
+        <div style={{ fontSize: 12, color: '#8a8580', marginTop: 4, display: 'flex', alignItems: 'center', gap: 4 }}>
           <IconCmp size={12} /> {meta.label}
         </div>
         {a.reason && (
@@ -399,9 +399,9 @@ function StatusBadge({ status }: { status: string }) {
     confirmed: { bg: '#dbeafe', fg: '#1e40af', label: 'Confirme' },
     completed: { bg: '#dcfce7', fg: '#166534', label: 'Termine' },
     cancelled: { bg: '#fecaca', fg: '#991b1b', label: 'Annule' },
-    no_show: { bg: '#f1f5f9', fg: '#475569', label: 'Manqué' },
+    no_show: { bg: '#f4f0ea', fg: '#475569', label: 'Manqué' },
   };
-  const c = config[status] || { bg: '#f1f5f9', fg: '#475569', label: status };
+  const c = config[status] || { bg: '#f4f0ea', fg: '#475569', label: status };
   return (
     <span style={{ padding: '2px 8px', borderRadius: 12, fontSize: 10, fontWeight: 600, background: c.bg, color: c.fg, textTransform: 'uppercase', whiteSpace: 'nowrap' }}>
       {c.label}
@@ -410,7 +410,7 @@ function StatusBadge({ status }: { status: string }) {
 }
 
 const inputStyle: React.CSSProperties = {
-  width: '100%', padding: '8px 10px', border: '1px solid #e2e8f0',
+  width: '100%', padding: '8px 10px', border: '1px solid #ece7e1',
   borderRadius: 6, fontSize: 14, background: '#fff', boxSizing: 'border-box',
 };
 const errStyle: React.CSSProperties = {
@@ -448,7 +448,7 @@ function Modal({
 function Actions({ onCancel, saving, submitLabel, submitColor }: { onCancel: () => void; saving: boolean; submitLabel: string; submitColor: string }) {
   return (
     <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8, marginTop: 20 }}>
-      <button type="button" onClick={onCancel} disabled={saving} style={{ padding: '10px 16px', background: '#fff', color: '#475569', border: '1px solid #e2e8f0', borderRadius: 8, fontSize: 14, fontWeight: 500, cursor: saving ? 'not-allowed' : 'pointer' }}>
+      <button type="button" onClick={onCancel} disabled={saving} style={{ padding: '10px 16px', background: '#fff', color: '#475569', border: '1px solid #ece7e1', borderRadius: 8, fontSize: 14, fontWeight: 500, cursor: saving ? 'not-allowed' : 'pointer' }}>
         Annuler
       </button>
       <button type="submit" disabled={saving} style={{ padding: '10px 18px', background: submitColor, color: '#fff', border: 'none', borderRadius: 8, fontSize: 14, fontWeight: 500, cursor: saving ? 'not-allowed' : 'pointer', opacity: saving ? 0.7 : 1 }}>
