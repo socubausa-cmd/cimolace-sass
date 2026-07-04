@@ -39,11 +39,14 @@ export const LiveLocalUserVignette = ({
         minWidth: '136px',
         width: '136px',
         height: '100%',
-        borderRadius: '4px',
-        border: '2px solid rgba(251,191,36,.5)',
+        borderRadius: '12px',
+        border: '1px solid rgba(255,255,255,.09)',
         overflow: 'hidden',
         flexShrink: 0,
-        background: 'linear-gradient(135deg,#2a2218,#15102a)',
+        // Immersif façon vignette conférence : fond quasi transparent posé sur le
+        // fond LIRI, séparé seulement par le fin liseré (plus de dégradé navy ni
+        // de grosse bordure ambre).
+        background: 'rgba(255,255,255,.02)',
       }}
     >
       {cameraVisible && participant ? (
