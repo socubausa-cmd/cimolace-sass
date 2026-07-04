@@ -62,11 +62,16 @@ Cloison login prouvée (0 fuite sur 6 comptes × 2 méthodes). Toute page de con
 
 ## 5. PARCOURS CLIENT DE BOUT EN BOUT (le produit)
 
-### Étape 1 — Découverte
-`cimolace.space` (vitrine) → `/cimolace` (page premium refaite, charte prorascience) → catalogue des OS (`/cimolace/os/:id`). ✅
+### Étape 1 — Découverte (rôles des 3 surfaces — clarifié 2026-07-04)
+- **`cimolace.space`** (`apps/public-site`) = **LA vitrine marketing** publique (prospects) : découvrir LIRI/MedOS/mbolo, prix, docs dev. Analogie : `stripe.com`.
+- **`app/cimolace`** (`CimolacePremiumHomepage`, charte prorascience) = **ENTRÉE BACK-OFFICE** (accès opérateurs/clients existants), **PAS une 2ᵉ vitrine** : CTA « Accéder à mon espace » → `/cimolace/login` ; lien « Découvrir ↗ » renvoie à `cimolace.space`. Analogie : `dashboard.stripe.com`.
+- **`liri.cimolace.space`** = le **produit LIRI** (créer/gérer son org, animer les lives ; les élèves/membres **rejoignent**). Racine = « 2 portes » (Créer mon espace / Rejoindre).
 
-### Étape 2 — Créer son organisation
-- **LIRI self-service** : `/creer-organisation` → `POST /signup/tenant` → login direct → `/liri`. ✅ (CGU corrigées 2026-07-03).
+### Étape 2 — Créer son organisation (2 portails, redirection HARMONISÉE 2026-07-04)
+Décision USER : **garder les DEUX portails**, mais faire converger la redirection.
+- **Depuis la vitrine** : `cimolace.space/onboarding` (picker moteur + AI-branding) → `/onboarding/create` (`SignupTenantForm`) → `POST /signup/tenant`.
+- **Depuis le produit** : `liri.cimolace.space/creer-organisation` (`OnboardingOrgPage`) → `POST /signup/tenant` → login direct.
+- **Les deux relaient désormais le `next_url` du backend** (`/liri` pour LIRI, `/t/{slug}/admin/…` sinon) → atterrissent au **MÊME endroit** (le realm produit). Le public-site passe `?next=` au login tenant, qui l'honore (validé, anti open-redirect). ✅ (commit `07a2c544`). CGU corrigées 2026-07-03.
 - **École payante** : wizard `/cimolace/admin/.../provision-school`. 🔴 **backend 404** (controller jamais enregistré, 4 méthodes service fantômes). **À livrer (P0)**.
 
 ### Étape 3 — Activer un moteur (à la carte)
