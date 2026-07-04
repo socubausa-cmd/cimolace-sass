@@ -118,7 +118,12 @@ export function SignupTenantForm({
       }
       const body = await res.json();
       const data = (body.data ?? body) as SignupResult;
-      const url = `${APP_URL}/t/${data.tenant.slug}/login?welcome=1`;
+      // Redirection COHÉRENTE avec le flux de l'app (liri.cimolace.space/creer-organisation) :
+      // on relaie le next_url du backend (/liri pour LIRI, /t/{slug}/admin/… sinon) via le
+      // login tenant, qui l'honore désormais → les DEUX portails de création atterrissent au
+      // MÊME endroit (le realm produit), au lieu d'un /t/{slug}/login générique divergent.
+      const next = data.next_url || `/t/${data.tenant.slug}/admin`;
+      const url = `${APP_URL}/t/${data.tenant.slug}/login?welcome=1&next=${encodeURIComponent(next)}`;
       window.location.href = url;
     } catch (err) {
       setError((err as Error).message);

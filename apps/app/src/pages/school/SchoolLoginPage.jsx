@@ -7,7 +7,7 @@
  * - Après callback, l'utilisateur est renvoyé sur /t/:tenantSlug/admin
  */
 import { useState } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { useTenantBranding } from '@/hooks/useTenantBranding';
 import { authStore } from '@/lib/auth-store';
@@ -42,7 +42,15 @@ async function fetchTenantRole(tenantSlug) {
 export default function SchoolLoginPage() {
   const { tenantSlug } = useParams();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const { login, loginWithOAuth } = useAuth();
+
+  // Destination post-login imposée par le flux de création d'org (public-site passe
+  // ?next=<next_url backend>, ex. /liri pour LIRI) — pour que les DEUX portails de
+  // création (cimolace.space/onboarding ET liri.cimolace.space/creer-organisation)
+  // atterrissent au MÊME endroit. Validée : chemin interne seulement (anti open-redirect).
+  const nextRaw = searchParams.get('next') || '';
+  const safeNext = nextRaw.startsWith('/') && !nextRaw.startsWith('//') && !nextRaw.includes('://') ? nextRaw : null;
   const { branding } = useTenantBranding();
 
   const [email, setEmail] = useState('');
@@ -69,6 +77,11 @@ export default function SchoolLoginPage() {
         return;
       }
       authStore.setTenantSlug(tenantSlug);
+      // Destination imposée par le flux d'onboarding (ex. /liri) → prime sur le défaut.
+      if (safeNext) {
+        navigate(safeNext);
+        return;
+      }
       const role = await fetchTenantRole(tenantSlug);
       if (ADMIN_ROLES.has(role)) {
         navigate(`/t/${tenantSlug}/admin`);
