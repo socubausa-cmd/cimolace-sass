@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useAuth, useSupabase } from '../lib/auth';
+import { useIsMobile } from '../lib/useIsMobile';
 import { Calendar, Plus, X, Clock, Trash2, CheckCircle, XCircle, AlertCircle, Video, Clapperboard } from 'lucide-react';
 
 const API = import.meta.env.VITE_API_URL || 'http://localhost:4002';
@@ -65,6 +66,7 @@ function formatDateTime(iso: string) {
 export function Appointments() {
   const { user } = useAuth();
   const { supabase } = useSupabase();
+  const isMobile = useIsMobile();
   const practitionerId = (user as any)?.id || '';
   const [tab, setTab] = useState<'upcoming' | 'past' | 'all'>('upcoming');
 
@@ -361,11 +363,11 @@ export function Appointments() {
 
   return (
     <div>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
-        <h2 style={{ fontSize: 24, fontWeight: 700, display: 'flex', alignItems: 'center', gap: 8 }}>
+      <div style={{ display: 'flex', flexDirection: isMobile ? 'column' : 'row', justifyContent: 'space-between', alignItems: isMobile ? 'stretch' : 'center', gap: isMobile ? 12 : 0, marginBottom: 20 }}>
+        <h2 style={{ fontSize: isMobile ? 20 : 24, fontWeight: 700, display: 'flex', alignItems: 'center', gap: 8 }}>
           <Calendar size={22} /> Rendez-vous
         </h2>
-        <div style={{ display: 'flex', gap: 8 }}>
+        <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
           <button
             onClick={() => { setError(null); setAvailOpen(true); }}
             style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '10px 14px', background: '#fff', color: 'var(--zw-indigo)', border: '1px solid var(--zw-indigo)', borderRadius: 8, fontSize: 13, fontWeight: 500, cursor: 'pointer' }}
@@ -385,7 +387,7 @@ export function Appointments() {
         <div style={{ marginBottom: 16, padding: 10, background: '#fef2f2', color: '#991b1b', borderRadius: 8, fontSize: 13 }}>{error}</div>
       )}
 
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 320px', gap: 16 }}>
+      <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 320px', gap: 16 }}>
         {/* Appointments timeline */}
         <div>
           {/* KPI strip */}
