@@ -31,7 +31,7 @@ import {
   useRoomContext,
   useTracks,
 } from '@livekit/components-react';
-import { Track, ConnectionState } from 'livekit-client';
+import { Track, ConnectionState, RoomEvent } from 'livekit-client';
 import { getStableLiveKitRoomOptions, stableLiveKitConnectOptions } from '@/lib/livekitStableClient';
 import LiveDataSaverEffect from '@/features/live/LiveDataSaverEffect';
 import { useLiveDataSaver } from '@/hooks/useLiveDataSaver';
@@ -635,6 +635,7 @@ export default function ConsultationRoom() {
           ) : null}
         </div>
         <RoomAudioRenderer />
+        <AudioUnlockGate />
       </LiveKitRoom>
       {/* Composer clinique MEDOS (praticien seul) ; le patient voit le partage
           directement sur la SCÈNE centrale. */}
@@ -1802,6 +1803,55 @@ function HostAdmitGate({ sessionId }: { sessionId: string }) {
         <button onClick={() => act(true)} disabled={busy} style={{ ...primaryBtn, padding: '7px 16px', fontSize: 12.5 }}>Admettre</button>
       </div>
     </div>
+  );
+}
+
+// Débloque la lecture AUDIO sur mobile/WebView (navigateur intégré WhatsApp,
+// iOS Safari…) : ces navigateurs BLOQUENT l'autoplay du son distant tant qu'un
+// geste utilisateur n'a pas appelé room.startAudio(). Symptôme sans ce gate :
+// « je le vois mais je ne l'entends pas » côté invité/patient mobile — alors
+// que les tracks sont bien publiées et souscrites (diagnostic serveur OK).
+// Le bandeau ne s'affiche QUE quand le navigateur bloque réellement le son.
+export function AudioUnlockGate() {
+  const room = useRoomContext();
+  const [blocked, setBlocked] = useState(false);
+  useEffect(() => {
+    if (!room) return undefined;
+    const update = () => setBlocked(!room.canPlaybackAudio);
+    update();
+    room.on(RoomEvent.AudioPlaybackStatusChanged, update);
+    return () => {
+      room.off(RoomEvent.AudioPlaybackStatusChanged, update);
+    };
+  }, [room]);
+  if (!blocked) return null;
+  return (
+    <button
+      onClick={() => {
+        void room.startAudio().catch(() => {});
+      }}
+      style={{
+        position: 'fixed',
+        top: 12,
+        left: '50%',
+        transform: 'translateX(-50%)',
+        zIndex: 2147483400,
+        display: 'flex',
+        alignItems: 'center',
+        gap: 8,
+        padding: '12px 18px',
+        borderRadius: 999,
+        background: GOLD,
+        color: '#2a2018',
+        border: 'none',
+        fontSize: 14.5,
+        fontWeight: 700,
+        boxShadow: '0 12px 40px rgba(0,0,0,0.55)',
+        cursor: 'pointer',
+      }}
+    >
+      🔊 Appuyez ici pour activer le son
+    </button>
   );
 }
 

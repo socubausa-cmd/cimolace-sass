@@ -22,7 +22,7 @@ import '@livekit/components-styles';
 import { getProcheStatus, getProcheToken, type ProcheStatus } from '@/features/medos-cockpit/procheApi';
 import { useCockpitChannel } from '@/features/medos-cockpit/useCockpitChannel';
 import { getApiBaseUrl } from '@/lib/apiBase';
-import { ConsultationStage, CallEndedScreen, ChatPanel } from './ConsultationRoom';
+import { ConsultationStage, CallEndedScreen, ChatPanel, AudioUnlockGate } from './ConsultationRoom';
 
 // Shell chaud LIRI (aligné sur ConsultationRoom / liveHostTheme).
 const BG = '#262624';
@@ -281,6 +281,7 @@ function ProcheLiveRoom({ url, token, sessionId, clinic, initialCam = true, init
           {chatOpen ? <ChatPanel onClose={() => setChatOpen(false)} /> : null}
         </div>
         <RoomAudioRenderer />
+        <AudioUnlockGate />
       </LiveKitRoom>
     </div>
   );
