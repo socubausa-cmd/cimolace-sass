@@ -19,7 +19,7 @@
 
 import React, { useEffect, useRef } from 'react';
 import { Mic, MicOff, Video, VideoOff, Sparkles, Wifi } from 'lucide-react';
-import { proColors, proRadii, proShadow, proType } from '@/styles/proTokens';
+import { proColors, proRadii, proShadow, proType } from '@/components/liri/live-room/liveGuestProTokens';
 
 const QUALITY_COLOR = {
   good: proColors.ok,

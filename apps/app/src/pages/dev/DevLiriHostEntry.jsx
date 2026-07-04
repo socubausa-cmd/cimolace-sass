@@ -26,6 +26,10 @@ export default function DevLiriHostEntry() {
   if (key === 'liri-host-live') {
     return <LiveHostPage />;
   }
+  if (key === 'liri-guest-live') {
+    // Aperçu dev de la VUE INVITÉ (même mock 7 membres, isGuestUi via forceGuestRoute).
+    return <LiveHostPage forceGuestRoute />;
+  }
   if (key === 'liri-mobile-guest') {
     return <LiriMobileGuestDevPage />;
   }
