@@ -162,8 +162,11 @@ export const LiveHostLongiaSignalHub = ({
             exit={{ opacity: 0 }}
             transition={{ duration: 0.22, ease: [0.16, 1, 0.3, 1] }}
             style={{
-              position: 'absolute',
-              inset: 0,
+              // En flux (plus d'absolute inset:0) → la hauteur du hub = celle du
+              // contenu du sous-tiroir, pour un panneau compact (cf. conteneur capé).
+              position: 'relative',
+              width: '100%',
+              minHeight: 0,
               zIndex: 40,
               display: 'flex',
               flexDirection: 'row',
@@ -636,8 +639,10 @@ export const LiveHostLongiaSignalHub = ({
                         onRevokeSeat={zone3RevokeSeat}
                         currentUserId={user?.id}
                         isHost
-                        neuronqEnabled={false}
-                        questions={[]}
+                        neuronqEnabled={debateNeuronqEnabled}
+                        questions={neuronqQuestions}
+                        onMarkAnswered={markNeuronqAnswered}
+                        onMarkSkipped={markNeuronqSkipped}
                         scriptSections={[]}
                       />
                     </div>
