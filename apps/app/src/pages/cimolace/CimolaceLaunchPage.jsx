@@ -28,7 +28,7 @@ const INFRA = [
     badgeBorder: `${C.green}44`,
     engines: ['Live interactif', 'Course Builder', 'Smartboard IA', 'Replay', 'NeuroRecall', 'Marketing', 'Studio', 'Calendrier', 'Paiements', 'Chat', 'Notifications'],
     cta: 'Lancer mon école',
-    to: '/cimolace/create-school',
+    to: 'https://cimolace.space/onboarding',
     featured: true,
   },
   {
@@ -43,7 +43,7 @@ const INFRA = [
     badgeBorder: `${C.blue}44`,
     engines: ['Dossiers patients', 'Notes SOAP', 'Prescriptions', 'Formulaires', 'Téléconsultation', 'Santé', 'Programmes', 'RGPD'],
     cta: 'Créer un tenant MedOS',
-    to: '/cimolace/admin/clients',
+    to: 'https://cimolace.space/onboarding',
     featured: false,
   },
   {
@@ -98,6 +98,12 @@ function InfraCard({ infra }) {
   const [hov, setHov] = useState(false);
   const { icon: Icon, label, tagline, desc, accent, badge, badgeBg, badgeBorder, engines, cta, to, featured } = infra;
   const available = !!to;
+  // La création d'org passe par l'onboarding self-service EXTERNE (cimolace.space) —
+  // décision USER. Un `to` en http(s) doit être une <a> (react-router <Link> casse
+  // sur les URLs absolues). Sinon route interne classique.
+  const isExternalTo = typeof to === 'string' && /^https?:\/\//.test(to);
+  const CtaWrap = isExternalTo ? 'a' : Link;
+  const ctaWrapProps = isExternalTo ? { href: to } : { to };
 
   return (
     <div style={{
@@ -157,7 +163,7 @@ function InfraCard({ infra }) {
 
       {/* CTA */}
       {to ? (
-        <Link to={to} style={{ textDecoration: 'none', marginTop: 'auto' }}>
+        <CtaWrap {...ctaWrapProps} style={{ textDecoration: 'none', marginTop: 'auto' }}>
           <button style={{
             width: '100%', padding: '12px 20px',
             background: featured ? accent : (hov ? `${accent}20` : `${accent}12`),
@@ -171,7 +177,7 @@ function InfraCard({ infra }) {
             {cta}
             <ArrowRight size={16} />
           </button>
-        </Link>
+        </CtaWrap>
       ) : (
         <button disabled style={{
           width: '100%', padding: '12px 20px', marginTop: 'auto',

@@ -37,6 +37,11 @@ const GOLD = '#d8b468';
 const GOLD_SOFT = '#e6cc92';
 const SERIF = "'Fraunces','Source Serif 4',Georgia,serif";
 
+// Création d'org = onboarding self-service CENTRALISÉ sur la vitrine (décision USER :
+// « tout via cimolace.space/onboarding »). On ne passe plus par /cimolace/launch →
+// /cimolace/create-school (qui exige un login OPÉRATEUR = impasse pour un client).
+const ONBOARDING_URL = 'https://cimolace.space/onboarding';
+
 // Icône SVG par OS (remplace les emojis de OS_LIST)
 const OS_ICONS = {
   temple: Landmark,
@@ -142,9 +147,9 @@ function Hero() {
             Site, paiement, live, école, santé et commerce — réunis dans des OS métier prêts à l'emploi. Moins d'outils éparpillés. Plus de contrôle, plus de vitesse.
           </p>
           <div className="mt-9 flex flex-wrap gap-3.5">
-            <Link to="/cimolace/launch" className="inline-flex items-center gap-2 rounded-xl px-5 py-3.5 text-sm font-semibold text-[#20160f] transition-all hover:-translate-y-[1px]" style={{ background: GOLD }}>
+            <a href={ONBOARDING_URL} className="inline-flex items-center gap-2 rounded-xl px-5 py-3.5 text-sm font-semibold text-[#20160f] transition-all hover:-translate-y-[1px]" style={{ background: GOLD }}>
               Lancer mon infrastructure <ArrowRight className="w-4 h-4" />
-            </Link>
+            </a>
             <a href="#os" className="inline-flex items-center rounded-xl px-5 py-3.5 text-sm font-medium text-[#f4efe6] border border-[#f4efe6]/10 bg-[#f4efe6]/[0.03] hover:bg-[#f4efe6]/[0.07] transition-colors">
               Voir les produits
             </a>
@@ -270,9 +275,9 @@ function FinalCta() {
           Choisissez vos OS, activez, encaissez. L'infrastructure suit — vous avancez.
         </p>
         <div className="mt-8 flex flex-wrap justify-center gap-3.5">
-          <Link to="/cimolace/launch" className="inline-flex items-center gap-2 rounded-xl px-5 py-3.5 text-sm font-semibold text-[#20160f] transition-all hover:-translate-y-[1px]" style={{ background: GOLD }}>
+          <a href={ONBOARDING_URL} className="inline-flex items-center gap-2 rounded-xl px-5 py-3.5 text-sm font-semibold text-[#20160f] transition-all hover:-translate-y-[1px]" style={{ background: GOLD }}>
             Lancer mon infrastructure <ArrowRight className="w-4 h-4" />
-          </Link>
+          </a>
           <Link to={cimolacePlatformConfig?.routes?.resourcesDocs || '/cimolace/login'} className="inline-flex items-center rounded-xl px-5 py-3.5 text-sm font-medium text-[#f4efe6] border border-[#f4efe6]/10 bg-[#f4efe6]/[0.03] hover:bg-[#f4efe6]/[0.07] transition-colors">
             Parler à l'équipe
           </Link>
