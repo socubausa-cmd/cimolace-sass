@@ -24,6 +24,7 @@ import { buildLiriProcessingGraph, getLiriMicConstraints } from '@/lib/liriAudio
  */
 export function useMicProcessor(roomRef, opts = {}) {
   const {
+    micOn = true,
     micGain,
     noiseReduction,
     activeAudioId,
@@ -35,6 +36,11 @@ export function useMicProcessor(roomRef, opts = {}) {
     liriLimiter = 72,
     onLevels,
   } = opts;
+
+  // Dernière valeur de micOn lisible depuis les cleanups (mise à jour au render) —
+  // pour ne JAMAIS ré-ouvrir le micro SDK d'un hôte qui l'avait coupé.
+  const micOnRef = useRef(micOn);
+  micOnRef.current = micOn;
 
   const onLevelsRef = useRef(onLevels);
   useEffect(() => {
@@ -51,7 +57,9 @@ export function useMicProcessor(roomRef, opts = {}) {
   const outputAnRef = useRef(null);
 
   const useLiriChain = liriMode && liriMode !== 'off';
-  const needsProcessing = useLiriChain || micGain !== 100 || noiseReduction;
+  // P0 : la chaîne traitée ne se publie QUE micro ouvert — régler le moteur audio
+  // micro coupé ne doit jamais mettre la voix de l'hôte à l'antenne.
+  const needsProcessing = (useLiriChain || micGain !== 100 || noiseReduction) && micOn;
 
   useEffect(() => {
     if (gainNodeRef.current && audioCtxRef.current && !useLiriChain) {
@@ -97,7 +105,7 @@ export function useMicProcessor(roomRef, opts = {}) {
           rawStream = await navigator.mediaDevices.getUserMedia({ audio: true });
         } catch (e) {
           console.warn('[MicP] getUserMedia failed:', e?.message);
-          await room.localParticipant.setMicrophoneEnabled(true).catch(() => {});
+          await room.localParticipant.setMicrophoneEnabled(Boolean(micOnRef.current)).catch(() => {});
           return;
         }
       }
@@ -197,7 +205,8 @@ export function useMicProcessor(roomRef, opts = {}) {
         inputAnRef.current = null;
         outputAnRef.current = null;
         if (room && room.state === ConnectionState.Connected) {
-          room.localParticipant.setMicrophoneEnabled(true).catch(() => {});
+          // Restaure l'état VOULU du micro (pas un unmute aveugle).
+          room.localParticipant.setMicrophoneEnabled(Boolean(micOnRef.current)).catch(() => {});
         }
       })();
     };

@@ -130,6 +130,8 @@ import {
   LONGIA_PANEL_FILTER,
 } from '@/lib/longiaLiveCopilot';
 import { useLongiaLiveRealtime } from '@/hooks/useLongiaLiveRealtime';
+import { useLongiaHostWebSpeech } from '@/hooks/useLongiaHostWebSpeech';
+import { multilangLangToBcp47 } from '@/lib/liriMultilangAudioGuest';
 import MedTeleconsultCockpit from '@/features/medos-cockpit/MedTeleconsultCockpit';
 
 // ── Composant principal ────────────────────────────────────────────────────────
@@ -1141,6 +1143,7 @@ export default function LiveHostPage({ forceGuestRoute = false, joyKitSignalGran
     setLiriAudioLevels(lv);
   }, []);
   useMicProcessor(roomRef, {
+    micOn,
     micGain,
     noiseReduction,
     activeAudioId,
@@ -1234,6 +1237,22 @@ export default function LiveHostPage({ forceGuestRoute = false, joyKitSignalGran
     analyzeLiveContext, smartBoardStageRef, longiaModesRef, arenaHostAlertSoundRef, hostSfxCtxRef,
     longiaBusHostChRef, longiaSessionDigestBroadcastRef, transcriptEngineCooldownRef, visibilitySignalCooldownRef, longiaChatAnalyzeTimerRef,
     longiaLastChatLenRef, longiaSeenRealtimeIdsRef, chatHeuristicCooldownRef, applyLongiaEngineDecisionsRef, flushBusStudentSignalsRef,
+  });
+
+  // ── STT hôte (Web Speech) — PRODUCTEUR de la chaîne multilingue ───────────
+  // Parole du formateur → transcript (bus LONGIA) → edge translate-transcript →
+  // sous-titres traduits + TTS invité, et texte final → Decision Engine.
+  // Actif si les traductions live sont activées (Paramètres studio) ou via le
+  // flag bêta VITE_LONGIA_WEB_SPEECH=1 ; coupé avec le micro (cohérent P0 audio).
+  useLongiaHostWebSpeech({
+    enabled: !isGuestUi && phase === PHASE.LIVE && micOn
+      && (Boolean(hostMultilang.enabled) || import.meta.env.VITE_LONGIA_WEB_SPEECH === '1'),
+    sessionId,
+    language: multilangLangToBcp47(hostMultilang.sourceLang || 'fr'),
+    analyzeLiveContext,
+    pushLongiaHostNotif,
+    onTranscriptChunk: broadcastTeacherTranscriptChunk,
+    onTranscriptFinalForEngine: handleTranscriptFinalForDecisionEngine,
   });
 
   // ── Recherche membres ─────────────────────────────────────────────────────
