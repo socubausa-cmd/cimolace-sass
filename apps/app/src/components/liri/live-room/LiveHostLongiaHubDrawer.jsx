@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { ChevronDown, ChevronUp, ExternalLink, Minimize2, X } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -54,6 +54,21 @@ export default function LiveHostLongiaHubDrawer({
   const [hubPanelOpen, setHubPanelOpen] = useState(true);
   /** En mode écran central : barre complète vs pastille compacte (reste visible). */
   const [hubBarCollapsed, setHubBarCollapsed] = useState(false);
+  /** Fenêtre flottante (mode standard) — pour la fermeture au clic extérieur. */
+  const asideRef = useRef(null);
+
+  // Comportement tiroir : un clic DANS LE VIDE (hors fenêtre) ferme le hub, comme la
+  // croix. Capture pointerdown → le clic sur une icône du rail ferme puis rouvre le
+  // sous-tiroir visé (bascule), jamais deux tiroirs superposés.
+  useEffect(() => {
+    if (!open || centralFocusMode) return undefined;
+    const onDocPointerDown = (e) => {
+      const el = asideRef.current;
+      if (el && !el.contains(e.target)) onClose();
+    };
+    document.addEventListener('pointerdown', onDocPointerDown, true);
+    return () => document.removeEventListener('pointerdown', onDocPointerDown, true);
+  }, [open, centralFocusMode, onClose]);
 
   useEffect(() => {
     if (open && centralFocusMode) {
@@ -129,6 +144,7 @@ export default function LiveHostLongiaHubDrawer({
   if (!centralFocusMode) {
     return (
       <motion.aside
+        ref={asideRef}
         role="dialog"
         aria-label="Hub LONGIA — signaux et salle"
         initial={{ opacity: 0, x: -14, scale: 0.985 }}
@@ -138,7 +154,11 @@ export default function LiveHostLongiaHubDrawer({
         style={{
           left: 'var(--lh-rail-edge, 78px)',
           top: 'var(--lh-stage-top-vw, 150px)',
-          bottom: 'var(--lh-stage-bottom-vw, 84px)',
+          // Compact façon menu Outils : hauteur = contenu (plus d'ancrage bas), capée
+          // à la zone scène — plus de fenêtre pleine hauteur imposante. Chaque tiroir
+          // (Modération / Coach / Interactions) montre alors son contenu court distinct.
+          bottom: 'auto',
+          maxHeight: 'calc(100vh - var(--lh-stage-top-vw, 150px) - var(--lh-stage-bottom-vw, 84px))',
           width: `min(92vw, ${Math.max(300, drawerWidthPx)}px)`,
           maxWidth: '92vw',
           borderRadius: 16,

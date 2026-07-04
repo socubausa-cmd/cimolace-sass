@@ -97,6 +97,7 @@ const LIVE_HOST_GRID_SHELL_SPREAD_KEYS = [
   'openLongiaHubControlMesh',
   'openLongiaHubCoachPanel',
   'longiaHubOpen',
+  'setLongiaHubOpen',
   'longiaSignalSubDrawer',
   'lhStageFocusLayout',
   'sessionId',

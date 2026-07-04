@@ -27,6 +27,7 @@ export const LiveHostLiveGridShell = forwardRef(function LiveHostLiveGridShell(p
     openLongiaHubControlMesh,
     openLongiaHubCoachPanel,
     longiaHubOpen,
+    setLongiaHubOpen,
     longiaSignalSubDrawer,
     lhStageFocusLayout,
     sessionId,
@@ -170,6 +171,10 @@ export const LiveHostLiveGridShell = forwardRef(function LiveHostLiveGridShell(p
           setLongiaSignalSubDrawer={setLongiaSignalSubDrawer}
           openLongiaHubControlMesh={openLongiaHubControlMesh}
           openLongiaHubCoachPanel={openLongiaHubCoachPanel}
+          closeLongiaHub={() => {
+            setLongiaHubOpen?.(false);
+            setLongiaSignalSubDrawer(null);
+          }}
           longiaHubOpen={longiaHubOpen}
           longiaSignalSubDrawer={longiaSignalSubDrawer}
           lhStageFocusLayout={lhStageFocusLayout}

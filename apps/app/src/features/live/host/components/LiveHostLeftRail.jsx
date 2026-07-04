@@ -35,6 +35,7 @@ export const LiveHostLeftRail = React.forwardRef(function LiveHostLeftRail(
     setLongiaSignalSubDrawer,
     openLongiaHubControlMesh,
     openLongiaHubCoachPanel,
+    closeLongiaHub,
     longiaHubOpen,
     longiaSignalSubDrawer,
     lhStageFocusLayout,
@@ -67,6 +68,18 @@ export const LiveHostLeftRail = React.forwardRef(function LiveHostLeftRail(
   // l'overlay « Salle » ancré au rail ; Modération/Coach/Interactions ouvrent le Hub ; Aperçu = onglet.
   const [activePanel, setActivePanel] = React.useState(null);
   const [copied, setCopied] = React.useState(false);
+
+  // Comportement tiroir : un clic DANS LE VIDE (hors rail + panneau) ferme l'overlay
+  // « Salle », comme la croix. Les icônes du rail restent gérées par leurs onClick.
+  React.useEffect(() => {
+    if (activePanel !== 'salle') return undefined;
+    const onDocPointerDown = (e) => {
+      const el = localRef.current;
+      if (el && !el.contains(e.target)) setActivePanel(null);
+    };
+    document.addEventListener('pointerdown', onDocPointerDown, true);
+    return () => document.removeEventListener('pointerdown', onDocPointerDown, true);
+  }, [activePanel]);
 
   // Ref fusionnée : on conserve la ref transmise par le parent ET une ref locale pour
   // mesurer la barre membres (haut) et le dock scènes (bas), afin d'aligner la fenêtre
@@ -231,7 +244,7 @@ export const LiveHostLeftRail = React.forwardRef(function LiveHostLeftRail(
             aria-hidden
           />
           {[
-            { id: 'salle', label: 'Salle — participants, file, inviter', Icon: Users, badge: waitingCount > 0 ? waitingCount : 0, active: activePanel === 'salle', onClick: () => setActivePanel((p) => (p === 'salle' ? null : 'salle')) },
+            { id: 'salle', label: 'Salle — participants, file, inviter', Icon: Users, badge: waitingCount > 0 ? waitingCount : 0, active: activePanel === 'salle', onClick: () => { closeLongiaHub?.(); setActivePanel((p) => (p === 'salle' ? null : 'salle')); } },
             { id: 'mod', label: 'Modération — mains levées, demandes', Icon: Hand, badge: modBadge, active: longiaHubOpen && longiaSignalSubDrawer === 'hands', onClick: () => { setActivePanel(null); openLongiaHubControlMesh(); setLongiaSignalSubDrawer('hands'); } },
             { id: 'coach', label: 'Coach IA — Longia', Icon: Lightbulb, badge: coachBadge, active: longiaHubOpen && longiaSignalSubDrawer === 'host_coach', onClick: () => { setActivePanel(null); openLongiaHubCoachPanel(); } },
             { id: 'inter', label: 'Interactions — Zone 3, NeuronQ', Icon: Brain, badge: interBadge, active: longiaHubOpen && longiaSignalSubDrawer === 'zone3', onClick: () => { setActivePanel(null); openLongiaHubControlMesh(); setLongiaSignalSubDrawer('zone3'); } },
@@ -622,7 +635,7 @@ export const LiveHostLeftRail = React.forwardRef(function LiveHostLeftRail(
               {typeof onOpenLongiaWaiting === 'function' ? (
                 <button
                   type="button"
-                  onClick={onOpenLongiaWaiting}
+                  onClick={() => { setActivePanel(null); onOpenLongiaWaiting(); }}
                   style={{
                     marginTop: 8,
                     display: 'flex',
