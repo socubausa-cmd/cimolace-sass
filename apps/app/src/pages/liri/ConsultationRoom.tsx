@@ -127,7 +127,8 @@ const CONSULT_SHELL_CSS = `
     width:100% !important; border-left:none !important;
     border-top-left-radius:16px !important; border-top-right-radius:16px !important;
   }
-  .consult-shell [data-cr="members"]{ display:none !important; }
+  /* (members n'est PLUS masqué : MembersRail passe en bande horizontale compacte
+     via la prop `horizontal` — le partage garde l'écran, les vignettes restent.) */
   .consult-shell [data-cr="bar"]{ flex-wrap:wrap !important; justify-content:center !important; padding:7px 8px !important; gap:6px !important; }
   .consult-shell [data-cr="cockpit"]{ left:10px !important; right:10px !important; bottom:10px !important; width:auto !important; max-width:none !important; height:84vh !important; }
   .consult-shell [data-cr="cockpit-fab"]{ bottom:76px !important; right:12px !important; }
@@ -1219,6 +1220,11 @@ export function ConsultationStage({
     ],
     { onlySubscribed: false },
   );
+  // ≤820px : en Partage/Tableau, la rangée « scène + rail 224px » écrasait le
+  // CONTENU PARTAGÉ dans ~130px (le jumeau devenait une colonne illisible chez
+  // l'invité téléphone). Sur mobile le PARTAGE est prioritaire : scène pleine
+  // largeur, participants réduits à une BANDE horizontale de vignettes en bas.
+  const compact = useMatchMediaAtMost(820);
 
   // CONVERSATION : face-à-face — grand flux de l'interlocuteur + soi en incrustation.
   if (view === 'conversation') {
@@ -1237,17 +1243,20 @@ export function ConsultationStage({
   // on l'y affiche en plein ; sinon il reste visible dans le rail (MembersRail).
   const screen = tracks.find((t) => t?.source === Track.Source.ScreenShare && t?.publication);
   return (
-    <div style={{ flex: 1, minHeight: 0, display: 'flex', flexDirection: 'row', gap: 12, padding: 14 }}>
-      <div style={{ flex: 1, minWidth: 0, borderRadius: 16, overflow: 'hidden', position: 'relative', ...(view === 'board' ? { background: TILE_BG } : SHARE_STAGE_BG) }}>
+    <div style={{ flex: 1, minHeight: 0, display: 'flex', flexDirection: compact ? 'column' : 'row', gap: compact ? 8 : 12, padding: compact ? 8 : 14 }}>
+      <div style={{ flex: 1, minWidth: 0, minHeight: 0, borderRadius: 16, overflow: 'hidden', position: 'relative', ...(view === 'board' ? { background: TILE_BG } : SHARE_STAGE_BG) }}>
         {view === 'board' ? (
           // Tableau intelligent (SmartBoard Konva) — outils de dessin/formes/texte +
           // NeuroInk côté praticien ; lecture seule côté patient. Sync patient
           // temps-réel : l'hôte relaie ses patchs via onBroadcast → canal
           // med-cockpit ; le patient les rejoue via incomingBroadcast.
+          // Mobile spectateur : le rail d'outils embarqué (inutilisable en lecture
+          // seule) est masqué — il écrasait le tableau dans la colonne restante.
           <ConsultationSmartBoard
             sessionId={sessionId}
             isHost={isHost}
             viewerMode={!isHost}
+            hideEmbeddedWhiteboardToolsRail={compact && !isHost}
             onBroadcast={isHost ? onSmartboardBroadcast : undefined}
             incomingBroadcast={!isHost ? smartboard : undefined}
           />
@@ -1270,18 +1279,39 @@ export function ConsultationStage({
           <AnnotationOverlay strokes={strokes} editable={editable} onStrokes={onStrokes} />
         ) : null}
       </div>
-      {!rightOpen ? <MembersRail tracks={tracks} isHost={isHost} /> : null}
+      {!rightOpen ? <MembersRail tracks={tracks} isHost={isHost} horizontal={compact} /> : null}
     </div>
   );
 }
 
 // ── Rail des participants (membres invités) — vue présentateur (Partage/Tableau) ─
-function MembersRail({ tracks, isHost }: { tracks: any[]; isHost?: boolean }) {
+// `horizontal` (mobile ≤820px) : le rail vertical 224px volait la largeur du
+// CONTENU PARTAGÉ sur téléphone → il devient une BANDE horizontale compacte de
+// vignettes (scroll latéral), le partage garde tout l'écran.
+function MembersRail({ tracks, isHost, horizontal }: { tracks: any[]; isHost?: boolean; horizontal?: boolean }) {
   const cams = tracks.filter((t) => t?.source === Track.Source.Camera);
   // Écran partagé : vignette dédiée EN TÊTE du rail (label ambre) → quand un
   // artefact/tableau occupe le grand cadre, le patient garde l'écran du praticien
   // sous les yeux (jamais masqué silencieusement).
   const screen = tracks.find((t) => t?.source === Track.Source.ScreenShare && t?.publication);
+  if (horizontal) {
+    return (
+      <div data-cr="members" style={{ width: '100%', height: 104, flexShrink: 0, display: 'flex', flexDirection: 'row', alignItems: 'stretch', gap: 8, padding: 8, background: PANEL_BG, borderRadius: 14, border: PANEL_BORDER, overflowX: 'auto', overflowY: 'hidden' }}>
+        <style>{`[data-cr="members"] .lk-participant-name{display:none!important}`}</style>
+        {screen ? (
+          <div title="Écran partagé" style={{ position: 'relative', height: '100%', aspectRatio: '16 / 9', flexShrink: 0, borderRadius: 10, overflow: 'hidden', background: '#000', border: '1px solid rgba(212,163,106,0.55)' }}>
+            <ParticipantTile trackRef={screen} style={{ width: '100%', height: '100%' }} />
+          </div>
+        ) : null}
+        {cams.map((t, i) => (
+          <div key={tileKey(t, i)} style={{ position: 'relative', height: '100%', aspectRatio: '16 / 9', flexShrink: 0, borderRadius: 10, overflow: 'hidden', background: '#000', border: '1px solid rgba(255,255,255,0.08)' }}>
+            <ParticipantTile trackRef={t} style={{ width: '100%', height: '100%' }} />
+            <RoleTag role={participantRole(t?.participant, !!isHost)} />
+          </div>
+        ))}
+      </div>
+    );
+  }
   return (
     <div data-cr="members" style={{ width: 224, flexShrink: 0, display: 'flex', flexDirection: 'column', minHeight: 0, background: PANEL_BG, borderRadius: 14, border: PANEL_BORDER, overflow: 'hidden' }}>
       <style>{`[data-cr="members"] .lk-participant-name{display:none!important}`}</style>
