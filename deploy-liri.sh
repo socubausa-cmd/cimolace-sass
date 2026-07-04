@@ -44,11 +44,45 @@ if ! git merge-base --is-ancestor origin/main HEAD; then
 fi
 echo "✅ anti-régression OK : HEAD ⊇ origin/main (rien ne sera perdu)"
 
-# --- 2) déploiement prod -----------------------------------------------------
-echo "🚀 vercel --prod --yes …"
-vercel --prod --yes
+# --- 2) mémoriser le déploiement prod ACTUEL (rollback de secours) -----------
+PREV_URL=$(vercel ls app --scope cimolace 2>/dev/null | grep -i 'Production' | grep -oE 'https://app-[a-z0-9]+-cimolace\.vercel\.app' | head -1)
+echo "↩️  déploiement prod actuel (rollback de secours) : ${PREV_URL:-inconnu}"
 
-# --- 3) verrou anti-divergence : main = état déployé (fast-forward SEULEMENT) -
+# --- 3) déploiement prod -----------------------------------------------------
+echo "🚀 vercel --prod --yes …"
+DEPLOY_OUT=$(vercel --prod --yes 2>&1); echo "$DEPLOY_OUT"
+NEW_URL=$(echo "$DEPLOY_OUT" | grep -oE 'https://app-[a-z0-9]+-cimolace\.vercel\.app' | head -1)
+
+# --- 4) SMOKE TEST RUNTIME — le déploiement MONTE-T-IL vraiment ? -------------
+# ⚠️ Un `vite build` VERT ne garantit PAS que la prod monte. Le crash
+#   « page blanche globale · TypeError undefined (reading 'default') »
+#   (mélange import statique+dynamique d'un gros module, ex: main.tsx → @/App)
+#   n'apparaît QU'EN build prod et peut être MASQUÉ en local par le WIP d'une
+#   session //. On charge donc un vrai Chromium et on vérifie que React monte.
+#   Détails → mémoire `vite-prod-crash-build-only`.
+if [ -n "${NEW_URL:-}" ]; then
+  echo "🩺 smoke test runtime : ${NEW_URL}/liri …"
+  if node "$CANON/../../scripts/smoke-front-health.mjs" "${NEW_URL}/liri"; then
+    echo "✅ smoke test OK — React monte, pas de crash bootstrap."
+  else
+    echo ""
+    echo "⛔ SMOKE TEST ÉCHOUÉ — le déploiement CRASHE au runtime (page blanche globale) !"
+    if [ -n "${PREV_URL:-}" ]; then
+      echo "   ↩️  ROLLBACK automatique → $PREV_URL"
+      vercel promote "$PREV_URL" --scope cimolace --yes || echo "   ⚠️ rollback auto échoué — rollback MANUEL requis."
+    else
+      echo "   ⚠️ URL de rollback inconnue — rollback MANUEL requis (vercel ls app ; vercel promote <url>)."
+    fi
+    echo "   🚫 origin/main NON mis à jour (l'état committé reste marqué non-déployable)."
+    echo "   ➜ Corrige le crash AVANT de redéployer. Cause quasi-certaine : import"
+    echo "      statique + dynamique mêlés d'un gros module. Cf. vite-prod-crash-build-only."
+    exit 1
+  fi
+else
+  echo "⚠️ URL de déploiement non détectée — smoke test SAUTÉ. Vérifie https://prorascience.org/liri à la main."
+fi
+
+# --- 5) verrou anti-divergence : main = état déployé (fast-forward SEULEMENT) -
 echo "🔒 sync : push fast-forward HEAD → origin/main…"
 if git push origin "HEAD:main" 2>/tmp/_dl_push.log; then
   echo "✅ origin/main = état déployé. Aucune divergence possible."

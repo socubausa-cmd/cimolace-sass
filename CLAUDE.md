@@ -24,7 +24,9 @@
 
 5. **Railway (API `isna-api` → api.cimolace.space)** : MÊME piège. `~/.railway/config.json` est restreint au seul checkout `~/Downloads/cimolace`. Détecter un revert API : un endpoint récent repasse en `404` alors que le code est committé (c'est l'artefact déployé qui régresse).
 
-> Détails + historique des pièges phantom-deploy : fichier mémoire **`cimolace-appsapp-vercel-deploy`**.
+6. **⚠️ « BUILD VERT » ≠ « PROD QUI MONTE ».** Un `TypeError: Cannot read properties of undefined (reading 'default')` au bootstrap rend la prod **BLANCHE sur TOUTES les routes**. Il n'apparaît **qu'en build de PRODUCTION** (jamais en `vite`/dev) et peut être **MASQUÉ par le WIP non-committé d'une autre session** (leur `git status` sale change le graphe de chunks → le build local passe, mais le HEAD committé PUR crashe). Cause type : un gros module importé **à la fois statiquement ET dynamiquement** (vécu 2026-07 : `main.tsx` faisait `await import('@/App')` alors qu'`App` était aussi importé en statique ailleurs → Rollup le range dans le chunk d'entrée et l'`import()` résout `undefined`). **`deploy-liri.sh` lance désormais un SMOKE TEST runtime** (`scripts/smoke-front-health.mjs` — Chromium headless : `#root` doit avoir des enfants) **après `vercel --prod` et AVANT de basculer `origin/main` → rollback auto (`vercel promote`) si crash.** **NE JAMAIS contourner ce smoke test ni déployer `vercel --prod` à la main sans lui.** Diagnostic à froid (worktree HEAD pur `git worktree add --detach` + `vite build --sourcemap` + `@jridgewell/trace-mapping`) → mémoire **`vite-prod-crash-build-only`**.
+
+> Détails + historique des pièges phantom-deploy : fichier mémoire **`cimolace-appsapp-vercel-deploy`** · crash « page blanche » build-only → **`vite-prod-crash-build-only`**.
 
 ## Architecture générale
 
