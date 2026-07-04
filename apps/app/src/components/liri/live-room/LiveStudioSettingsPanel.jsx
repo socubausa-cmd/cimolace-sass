@@ -390,18 +390,8 @@ export default function LiveStudioSettingsPanel({
             {...liveDrawerAsideRight}
             className={cn(designerShellDrawerClass('w-[min(100vw,400px)]'), '!shadow-[-16px_0_44px_-22px_rgba(0,0,0,0.5)]')}
           >
-            <div className={cn(designerShellHeader, '!py-3')}>
-              <div>
-                <p className="text-[12px] font-semibold tracking-wide text-white/95">
-                  {participantMode ? 'Votre audio & vidéo' : 'LONGIA — Contrôle studio'}
-                </p>
-                <p className="mt-1 max-w-[280px] text-[10px] leading-relaxed text-white/38">
-                  {participantMode
-                    ? 'Micro, caméra, périphériques et réglages audio — les options de salle restent gérées par le formateur.'
-                    : 'Vidéo & salle virtuelle, moteur audio, ambiance — aligné sur le designer Smartboard.'}
-                </p>
-              </div>
-              <button type="button" onClick={onClose} className={designerShellCloseBtn} aria-label="Fermer">
+            <div className={cn(designerShellHeader, '!py-2 !justify-end')}>
+              <button type="button" onClick={onClose} className={designerShellCloseBtn} aria-label="Fermer les réglages studio">
                 <X className="h-4 w-4" />
               </button>
             </div>

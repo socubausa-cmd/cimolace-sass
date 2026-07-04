@@ -59,11 +59,14 @@ export const LiveHostRightRailVideoCard = ({
         // pas un remplissage de carte). Base chaude sombre seulement.
         border: '1px solid rgba(245,244,238,.08)',
         background: 'linear-gradient(160deg, rgba(38,34,29,.92), rgba(22,18,14,.96))',
+        position: 'relative',
+        padding: '6px',
       }}
     >
-      <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:'6px',gap:'6px',flexWrap:'wrap'}}>
-        <span style={{fontSize:'11px',fontWeight:700,color:'#e9bf72',letterSpacing:'.07em'}}>HOTE EN DIRECT</span>
-        <div style={{display:'flex',alignItems:'center',gap:'5px',flexWrap:'wrap',justifyContent:'flex-end'}}>
+      {/* Chips (LIVE / durée / Bandeau·Ici / fermer) posés en OVERLAY sur la vidéo — plus de bandeau
+          « HÔTE EN DIRECT » séparé qui prenait une ligne : rendu immersif. */}
+      <div style={{position:'absolute',top:'12px',left:'12px',right:'12px',zIndex:16,display:'flex',alignItems:'center',justifyContent:'flex-end',gap:'6px',flexWrap:'wrap',pointerEvents:'none'}}>
+        <div style={{display:'flex',alignItems:'center',gap:'5px',flexWrap:'wrap',justifyContent:'flex-end',pointerEvents:'auto'}}>
           {!isGuestUi && phase === PHASE.LIVE && antennaSoloMode && liveParticipants.length > 0 ? (
             <button
               type="button"
