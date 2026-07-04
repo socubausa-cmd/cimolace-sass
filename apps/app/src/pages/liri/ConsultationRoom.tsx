@@ -127,8 +127,8 @@ const CONSULT_SHELL_CSS = `
     width:100% !important; border-left:none !important;
     border-top-left-radius:16px !important; border-top-right-radius:16px !important;
   }
-  /* (members n'est PLUS masqué : MembersRail passe en bande horizontale compacte
-     via la prop `horizontal` — le partage garde l'écran, les vignettes restent.) */
+  /* (members n'est PLUS masque : MembersRail passe en bande horizontale compacte
+     via la prop horizontal — le partage garde l'ecran, les vignettes restent.) */
   .consult-shell [data-cr="bar"]{ flex-wrap:wrap !important; justify-content:center !important; padding:7px 8px !important; gap:6px !important; }
   .consult-shell [data-cr="cockpit"]{ left:10px !important; right:10px !important; bottom:10px !important; width:auto !important; max-width:none !important; height:84vh !important; }
   .consult-shell [data-cr="cockpit-fab"]{ bottom:76px !important; right:12px !important; }
