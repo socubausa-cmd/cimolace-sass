@@ -293,8 +293,8 @@ export default function ConferenceStage({ liveParticipants, livekitParticipantsM
     </div>
   );
 
-  // Panneau membres — colonne DROITE pleine hauteur, style « panneau de référence » :
-  // cartes chaudes arrondies + en-têtes de section (self-view puis participants).
+  // Panneau membres — colonne DROITE pleine hauteur, IMMERSIF : pas de carte de section
+  // (fond/bordure), juste les en-têtes + les vidéos avec leur fin liseré (le « tracé »).
   const membersPanel = (
     <aside style={{ width: 324, flexShrink: 0, minHeight: 0, display: 'flex', flexDirection: 'column', gap: 10, padding: '10px 12px 12px', borderLeft: '1px solid rgba(245,244,238,0.09)', overflow: 'hidden' }}>
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '2px 4px', flexShrink: 0 }}>
@@ -302,16 +302,16 @@ export default function ConferenceStage({ liveParticipants, livekitParticipantsM
         <MoreHorizontal size={16} color="rgba(255,255,255,.45)" />
       </div>
       {panelTop ? (
-        <div style={{ flexShrink: 0, borderRadius: 14, border: '1px solid rgba(255,255,255,.08)', background: 'rgba(255,255,255,.02)', padding: 10 }}>
-          <div style={{ fontSize: 9, fontWeight: 700, letterSpacing: '.1em', textTransform: 'uppercase', color: 'rgba(227,199,154,.8)', marginBottom: 8 }}>{panelTopLabel}</div>
+        <div style={{ flexShrink: 0 }}>
+          <div style={{ fontSize: 9, fontWeight: 700, letterSpacing: '.1em', textTransform: 'uppercase', color: 'rgba(227,199,154,.8)', margin: '2px 2px 8px' }}>{panelTopLabel}</div>
           <div style={{ aspectRatio: '16 / 9' }}>
             <Tile m={panelTop} lk={panelTopLk} mediaEpoch={liveKitMediaEpoch} speaking={panelTopSpeaking} mic pinned={Boolean(pinnedId && String(pinnedId) === String(panelTop.id))} />
           </div>
         </div>
       ) : null}
-      <div style={{ flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column', borderRadius: 14, border: '1px solid rgba(255,255,255,.08)', background: 'rgba(255,255,255,.02)', overflow: 'hidden' }}>
-        <div style={{ fontSize: 9, fontWeight: 700, letterSpacing: '.1em', textTransform: 'uppercase', color: 'rgba(227,199,154,.8)', padding: '10px 10px 6px', flexShrink: 0 }}>{`Participants (${filteredPanelRest.length})`}</div>
-        <div style={{ flex: 1, minHeight: 0, overflowY: 'auto', padding: '0 10px 10px' }}>
+      <div style={{ flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+        <div style={{ fontSize: 9, fontWeight: 700, letterSpacing: '.1em', textTransform: 'uppercase', color: 'rgba(227,199,154,.8)', padding: '6px 2px 8px', flexShrink: 0 }}>{`Participants (${filteredPanelRest.length})`}</div>
+        <div style={{ flex: 1, minHeight: 0, overflowY: 'auto', padding: '0 2px 8px' }}>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
             {filteredPanelRest.map((m) => (
               <div key={m.id} style={{ aspectRatio: '16 / 9' }}>
