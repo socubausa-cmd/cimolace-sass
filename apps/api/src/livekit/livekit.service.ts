@@ -202,6 +202,26 @@ export class LiveKitService {
     }
   }
 
+  /**
+   * Ferme une room de force (déconnecte TOUS les participants). Sert au
+   * nettoyage des lives abandonnés (hôte parti sans « Terminer ») : sans ça,
+   * un invité resté seul garde la room ouverte indéfiniment. Fail-soft :
+   * room inexistante / LiveKit non configuré → no-op.
+   */
+  async deleteRoom(roomName: string): Promise<void> {
+    if (!this.configured) return;
+    const roomService = new RoomServiceClient(
+      this.livekitUrl,
+      this.apiKey,
+      this.apiSecret,
+    );
+    try {
+      await roomService.deleteRoom(roomName);
+    } catch {
+      /* room déjà fermée / inexistante */
+    }
+  }
+
   static scopedRoomName(tenantSlug: string, sessionId: string): string {
     const t = tenantSlug.replace(/[^a-z0-9_-]/gi, '');
     const s = sessionId.replace(/-/g, '');

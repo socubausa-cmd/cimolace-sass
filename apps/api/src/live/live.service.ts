@@ -673,6 +673,22 @@ export class LiveService {
     return LiveKitService.scopedRoomName(tenantSlug, externalRef);
   }
 
+  /**
+   * Identités actuellement connectées à la room d'une session (délégué
+   * LiveKit, fail-soft → []). Exposé via Liri pour que les moteurs métier
+   * (MEDOS…) puissent détecter un live abandonné sans toucher LiveKit.
+   */
+  listRoomParticipants(tenantSlug: string, externalRef: string): Promise<string[]> {
+    return this.liveKit.listParticipantIdentities(
+      this.roomNameFor(tenantSlug, externalRef),
+    );
+  }
+
+  /** Ferme la room de force (déconnecte tous les participants). Fail-soft. */
+  async closeRoom(tenantSlug: string, externalRef: string): Promise<void> {
+    await this.liveKit.deleteRoom(this.roomNameFor(tenantSlug, externalRef));
+  }
+
   // ─────────────────────────────────────────────────────────────────────
   // Liri — unified entry point for ALL engines that need a video room.
   //

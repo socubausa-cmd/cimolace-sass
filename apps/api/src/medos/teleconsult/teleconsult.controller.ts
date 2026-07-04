@@ -190,6 +190,18 @@ export class TeleconsultController {
   }
 
   /**
+   * Balaye les téléconsults ABANDONNÉES du tenant (hôte absent de la room
+   * depuis > 5 min → fin d'office + room fermée). Le même balayage tourne
+   * en cron interne toutes les 2 min ; cet endpoint permet un déclenchement
+   * manuel (test / rattrapage).
+   */
+  @Post('sweep')
+  @Roles('owner', 'practitioner', 'clinic_admin')
+  sweep(@CurrentTenant() tenant: TenantContext) {
+    return this.service.sweepAbandoned(tenant.id);
+  }
+
+  /**
    * One-shot helper for the UI: takes an appointment_id, gets-or-creates
    * the underlying teleconsult session (depending on role), then issues a
    * LiveKit token. The "Démarrer la téléconsult" / "Rejoindre" buttons

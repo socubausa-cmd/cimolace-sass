@@ -4,6 +4,7 @@ import {
   InternalServerErrorException,
   Logger,
   NotFoundException,
+  type OnModuleInit,
 } from '@nestjs/common';
 import { SupabaseService } from '../../supabase/supabase.service';
 // IMPORTANT — P5 architectural decision:
@@ -21,7 +22,7 @@ import {
 } from './dto/teleconsult.dto';
 
 @Injectable()
-export class TeleconsultService {
+export class TeleconsultService implements OnModuleInit {
   private readonly logger = new Logger(TeleconsultService.name);
 
   constructor(
@@ -29,6 +30,118 @@ export class TeleconsultService {
     private readonly liri: LiveService,
     private readonly email: EmailEngineService,
   ) {}
+
+  /**
+   * Fermeture AUTOMATIQUE des téléconsults abandonnées. Fermer l'onglet ne
+   * déclenche pas end() : la session restait « active » à vie, l'invité seul
+   * dans la room, et le RDV « confirmed » (blocage de créneau). Un balayage
+   * toutes les 2 min détecte les rooms SANS HÔTE : après 5 min d'absence
+   * continue (tolère un refresh / une coupure réseau), la session est
+   * terminée d'office (ended_reason='timeout' → RDV completed → les invités
+   * voient « Consultation terminée ») et la room LiveKit est fermée.
+   */
+  onModuleInit(): void {
+    if (process.env.TELECONSULT_SWEEP_DISABLED === 'true') return;
+    const t = setInterval(() => {
+      this.sweepAbandoned().catch((e) =>
+        this.logger.warn(`sweep: ${(e as Error).message}`),
+      );
+    }, 120_000);
+    (t as unknown as { unref?: () => void }).unref?.();
+  }
+
+  async sweepAbandoned(
+    tenantId?: string,
+    graceMinutes = 5,
+  ): Promise<{ checked: number; marked: number; ended: number }> {
+    let q = (this.supabase.client as any)
+      .from('med_teleconsult_sessions')
+      .select('id, tenant_id, practitioner_id, host_absent_since, status')
+      .in('status', ['scheduled', 'active']);
+    if (tenantId) q = q.eq('tenant_id', tenantId);
+    const { data: sessions } = await q;
+    if (!sessions?.length) return { checked: 0, marked: 0, ended: 0 };
+
+    const ids = (sessions as any[]).map((s) => s.id);
+    // Miroir live_sessions = le live a réellement démarré (créé au premier
+    // token hôte). Une session jamais lancée (RDV futur) n'est PAS balayée.
+    const { data: lives } = await (this.supabase.client as any)
+      .from('live_sessions')
+      .select('id, status, host_user_id, teacher_id')
+      .in('id', ids);
+    const liveById = new Map(((lives ?? []) as any[]).map((l) => [l.id, l]));
+    const tenantIds = [...new Set((sessions as any[]).map((s) => s.tenant_id))];
+    const { data: tenants } = await this.supabase.client
+      .from('tenants')
+      .select('id, slug')
+      .in('id', tenantIds);
+    const slugById = new Map(
+      ((tenants ?? []) as any[]).map((t) => [t.id, t.slug]),
+    );
+
+    let checked = 0;
+    let marked = 0;
+    let ended = 0;
+    for (const s of sessions as any[]) {
+      const live = liveById.get(s.id);
+      if (!live || live.status === 'ended') continue;
+      const slug = slugById.get(s.tenant_id);
+      if (!slug) continue;
+      checked++;
+
+      let present: string[] = [];
+      try {
+        present = await this.liri.listRoomParticipants(slug, s.id);
+      } catch {
+        present = [];
+      }
+      const hostIds = new Set(
+        [s.practitioner_id, live.host_user_id, live.teacher_id].filter(Boolean),
+      );
+      const hostPresent = present.some((p) => hostIds.has(p));
+
+      if (hostPresent) {
+        // L'hôte est (re)là : on efface le chrono d'absence.
+        if (s.host_absent_since) {
+          await (this.supabase.client as any)
+            .from('med_teleconsult_sessions')
+            .update({ host_absent_since: null })
+            .eq('id', s.id);
+        }
+        continue;
+      }
+
+      if (!s.host_absent_since) {
+        // Première détection d'absence : on arme le chrono (tolérance refresh).
+        await (this.supabase.client as any)
+          .from('med_teleconsult_sessions')
+          .update({ host_absent_since: new Date().toISOString() })
+          .eq('id', s.id);
+        marked++;
+        continue;
+      }
+
+      const absentMs = Date.now() - new Date(s.host_absent_since).getTime();
+      if (absentMs < graceMinutes * 60_000) continue;
+
+      try {
+        await this.end(
+          { id: s.tenant_id, slug } as unknown as TenantContext,
+          'practitioner',
+          s.id,
+          { ended_reason: 'timeout' } as EndTeleconsultDto,
+        );
+        await this.liri.closeRoom(slug, s.id).catch(() => {});
+        ended++;
+        this.logger.log(
+          `sweep: session ${s.id} terminée d'office (hôte absent ~${Math.round(absentMs / 60_000)} min)`,
+        );
+      } catch (e) {
+        this.logger.warn(`sweep end ${s.id}: ${(e as Error).message}`);
+      }
+    }
+    return { checked, marked, ended };
+  }
 
   /**
    * Crée une session de téléconsultation : record DB + room LiveKit. Si un
