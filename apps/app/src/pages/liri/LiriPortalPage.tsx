@@ -17,6 +17,7 @@ import { useSchoolActive } from '@/hooks/useSchoolActive';
 import { useUpcomingSchoolFeed } from '@/hooks/useUpcomingSchoolFeed';
 import { LiriRailGroups } from '@/components/liri/liriRail';
 import activeTenantConfig from '@/lib/tenant/activeTenantConfig';
+import LiriUpgradeWall from '@/components/liri/LiriUpgradeWall';
 import '../LiriPortal.css';
 
 // Marque blanche par tenant : sur le domaine d'un tenant (ex. prorascience.org), le
@@ -52,6 +53,7 @@ export function LiriPortalPage() {
   const [org, setOrg] = useState<Org | null>(null);
   const [subs, setSubs] = useState<Sub[]>([]);
   const [starting, setStarting] = useState(false);
+  const [showUpgrade, setShowUpgrade] = useState(false);
 
   // Menu compte / organisation (avatar).
   const [menuOpen, setMenuOpen] = useState(false);
@@ -307,7 +309,7 @@ export function LiriPortalPage() {
 
                 {/* CTA upgrade — visible tant que non payant */}
                 {!billing.isPaid && (
-                  <button role="menuitem" onClick={() => runMenu(() => nav('/cimolace/billing?upgrade=liri'))}
+                  <button role="menuitem" onClick={() => runMenu(() => setShowUpgrade(true))}
                     className="flex w-full items-center justify-between px-4 py-3 text-left lp-tr hover:bg-[rgba(217,119,87,.08)]">
                     <span className="flex items-center gap-2.5 text-[13.5px] font-medium lp-ink"><Sparkles size={16} className="lp-coral" /> Passer à un forfait</span>
                     <ArrowUpRight size={16} className="lp-coral" />
@@ -566,6 +568,7 @@ export function LiriPortalPage() {
           <span className="lp-faint flex items-center gap-1.5"><Radio size={12} /> {PORTAL_BRAND} v2.0</span>
         </span>
       </footer>
+      {showUpgrade && <LiriUpgradeWall asModal onClose={() => setShowUpgrade(false)} />}
     </div>
   );
 }

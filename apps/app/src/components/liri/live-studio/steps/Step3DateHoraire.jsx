@@ -1,7 +1,7 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Link } from 'react-router-dom';
 import { Sparkles } from 'lucide-react';
+import LiriUpgradeWall from '@/components/liri/LiriUpgradeWall';
 import { useLiriEntitlements } from '@/hooks/useLiriEntitlements';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -24,6 +24,7 @@ const RECURRENCE = [
 export function Step3DateHoraire({ draft, updateDraft }) {
   const { isFree, limits } = useLiriEntitlements();
   const scheduleLocked = isFree && !limits.canSchedule;
+  const [showUpgrade, setShowUpgrade] = useState(false);
   const dateStr = draft.scheduled_at ? (typeof draft.scheduled_at === 'string' && draft.scheduled_at.includes('T')
     ? draft.scheduled_at.slice(0, 10)
     : new Date(draft.scheduled_at).toISOString().slice(0, 10)) : '';
@@ -40,10 +41,11 @@ export function Step3DateHoraire({ draft, updateDraft }) {
           <Sparkles className="mt-0.5 h-4 w-4 shrink-0 text-amber-300" />
           <span>
             <strong>Programmer un live à l'avance</strong> est réservé aux forfaits LIRI. En gratuit, lancez un live immédiat — ou{' '}
-            <Link to="/cimolace/billing?upgrade=liri" className="font-semibold underline underline-offset-2 hover:text-white">passez à un forfait</Link> pour planifier.
+            <button type="button" onClick={() => setShowUpgrade(true)} className="font-semibold underline underline-offset-2 hover:text-white">passez à un forfait</button> pour planifier.
           </span>
         </div>
       )}
+      {showUpgrade && <LiriUpgradeWall asModal onClose={() => setShowUpgrade(false)} />}
 
       <motion.div
         initial={{ opacity: 0, y: 8 }}

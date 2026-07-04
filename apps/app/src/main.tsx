@@ -3,8 +3,6 @@ import { createRoot } from 'react-dom/client';
 import { HelmetProvider } from 'react-helmet-async';
 import '@/index.css';
 import '@/styles/liri-brand-theme.css';
-import App from '@/App';
-import { activeTenantConfig } from '@/lib/tenant/activeTenantConfig';
 import {
   hydrateHostTenant,
   isPlatformOrDevHost,
@@ -58,6 +56,16 @@ async function boot() {
     // Multi-tenant : rafraîchit le cache domaine→tenant en fond (réglages frais).
     void hydrateHostTenant();
   }
+
+  // Import DYNAMIQUE APRÈS l'hydratation (P1 anti-flash multi-tenant) : `activeTenantConfig`
+  // est une const évaluée à l'import de son module ; en l'important ICI (pas en statique en
+  // tête), elle se résout APRÈS le cache host→tenant → un domaine tenant affiche SON identité
+  // au 1er paint, sans flash « LIRI ». NE PAS remettre `import App`/`import activeTenantConfig`
+  // en tête de fichier (ça neutralise le gate — régression déjà survenue une fois).
+  const [{ default: App }, { activeTenantConfig }] = await Promise.all([
+    import('@/App'),
+    import('@/lib/tenant/activeTenantConfig'),
+  ]);
 
   // Accent global RÉSOLU PAR L'HÔTE : surcharge le défaut :root `--school-accent`
   // (#d4af37, l'or ISNA, dans index.css) par l'accent du tenant ACTIF résolu —
