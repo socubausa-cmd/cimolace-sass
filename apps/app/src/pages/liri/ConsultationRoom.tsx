@@ -644,6 +644,7 @@ export default function ConsultationRoom() {
         <InviteProcheModal sessionId={sessionId} open={inviteOpen} onClose={() => setInviteOpen(false)} />
       ) : null}
       {!isHost && sessionId ? <PatientConsentGate sessionId={sessionId} /> : null}
+      {isHost && sessionId ? <HostAdmitGate sessionId={sessionId} /> : null}
       {/* Fond sonore — pastille flottante autonome (praticien), pilotée par le même
           contrôleur que le panneau Réglages. */}
       {isHost ? <AmbientAudioEngine controller={ambient} /> : null}
@@ -1714,6 +1715,69 @@ function PatientConsentGate({ sessionId }: { sessionId: string }) {
           <button onClick={() => decide(false)} disabled={busy} style={secondaryBtn}>Refuser</button>
           <button onClick={() => decide(true)} disabled={busy} style={{ ...primaryBtn, padding: '10px 20px' }}>Autoriser</button>
         </div>
+      </div>
+    </div>
+  );
+}
+
+// Bandeau HOST : alerte le praticien dès qu'un proche attend d'être admis, avec
+// admission en 1 CLIC — sans rouvrir le modal d'invitation. Symétrique de
+// PatientConsentGate (côté patient) mais NON bloquant (le praticien reste en
+// consultation, bandeau flottant en haut) et réservé à l'hôte. Sans lui, le
+// bouton « Admettre » restait caché dans le modal → le praticien ne savait pas
+// qu'un invité l'attendait, qui restait bloqué « en attente d'autorisation ».
+function HostAdmitGate({ sessionId }: { sessionId: string }) {
+  const [pending, setPending] = useState<TeleconsultInvite | null>(null);
+  const [busy, setBusy] = useState(false);
+
+  useEffect(() => {
+    let alive = true;
+    const poll = () =>
+      teleconsultApi
+        .listInvites(sessionId)
+        .then((list) => {
+          if (alive) setPending(list.find((i) => i.status === 'consent_requested') || null);
+        })
+        .catch(() => {});
+    poll();
+    const t = setInterval(poll, 3000);
+    return () => {
+      alive = false;
+      clearInterval(t);
+    };
+  }, [sessionId]);
+
+  if (!pending) return null;
+
+  const act = async (admit: boolean) => {
+    setBusy(true);
+    try {
+      if (admit) await teleconsultApi.admitInvite(sessionId, pending.id);
+      else await teleconsultApi.revokeInvite(sessionId, pending.id);
+      setPending(null);
+    } catch {
+      /* ignore */
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  return (
+    <div
+      style={{
+        position: 'fixed', top: 14, left: '50%', transform: 'translateX(-50%)', zIndex: 60,
+        display: 'flex', alignItems: 'center', gap: 12, padding: '10px 14px', borderRadius: 14,
+        background: 'rgba(24,20,16,0.96)', border: '1px solid rgba(212,163,106,0.5)',
+        boxShadow: '0 12px 40px rgba(0,0,0,0.5)', maxWidth: 'calc(100vw - 28px)',
+      }}
+    >
+      <UserPlus size={18} color={GOLD} aria-hidden="true" style={{ flexShrink: 0 }} />
+      <span style={{ fontSize: 13.5, color: '#fff', fontWeight: 600, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+        <strong>{pending.display_name}</strong>{pending.relationship ? ` (${pending.relationship})` : ''} souhaite rejoindre
+      </span>
+      <div style={{ display: 'flex', gap: 8, flexShrink: 0 }}>
+        <button onClick={() => act(false)} disabled={busy} style={{ ...secondaryBtn, padding: '7px 12px', fontSize: 12.5 }}>Refuser</button>
+        <button onClick={() => act(true)} disabled={busy} style={{ ...primaryBtn, padding: '7px 16px', fontSize: 12.5 }}>Admettre</button>
       </div>
     </div>
   );
