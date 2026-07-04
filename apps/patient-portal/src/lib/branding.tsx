@@ -55,7 +55,7 @@ const ENGINE_DEFAULTS = {
   name: 'Mon espace',
   logoUrl: null as string | null,
   primary: '#6d2e46',
-  accent: '#8a3a58',
+  accent: '#6b8e6e',
   // Typo éditoriale par défaut (titres serif + corps sans-serif) ; un tenant
   // peut la surcharger via le champ `fonts` de son branding.
   fonts: {
