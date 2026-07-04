@@ -63,12 +63,15 @@ function Nav() {
           <a href="#os" className="hover:text-[#f4efe6] transition-colors">Produits</a>
           <a href="#infra" className="hover:text-[#f4efe6] transition-colors">Infrastructure</a>
           <Link to="/cimolace/launch" className="hover:text-[#f4efe6] transition-colors">Tarifs</Link>
+          {/* Cette page = ENTRÉE BACK-OFFICE (accès opérateurs/clients). La vitrine
+              publique de découverte vit sur cimolace.space → on y renvoie les prospects. */}
+          <a href="https://cimolace.space" className="inline-flex items-center gap-1 hover:text-[#f4efe6] transition-colors">Découvrir <ArrowUpRight className="w-3.5 h-3.5" /></a>
         </div>
         <Link
           to="/cimolace/login"
           className="inline-flex items-center rounded-xl px-[18px] py-2.5 text-sm font-semibold text-[#20160f] transition-all hover:-translate-y-[1px]"
           style={{ background: GOLD }}
-        >Accéder à la plateforme</Link>
+        >Accéder à mon espace</Link>
       </div>
     </nav>
   );
