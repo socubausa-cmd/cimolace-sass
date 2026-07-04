@@ -108,6 +108,8 @@ export interface ConsultationSmartBoardProps {
    * écrire. Mettre à true UNIQUEMENT si un parent affiche déjà les outils.
    */
   hideEmbeddedWhiteboardToolsRail?: boolean;
+  /** Mobile spectateur : masque le navigateur de scènes vertical (dock droit). */
+  hideSceneDock?: boolean;
   /** Notifie le parent quand la scène active change (ex. board → image). */
   onSceneChange?: (scene: string) => void;
 }
@@ -125,6 +127,7 @@ export default function ConsultationSmartBoard({
   incomingBroadcast,
   sceneFlags,
   hideEmbeddedWhiteboardToolsRail = false,
+  hideSceneDock = false,
   onSceneChange,
 }: ConsultationSmartBoardProps) {
   // Ref impératif du stage : côté patient (viewer), on lui ré-applique les patchs
@@ -209,6 +212,7 @@ export default function ConsultationSmartBoard({
           // Par défaut : rail outils VISIBLE (sinon le praticien n'aurait aucun
           // outil de dessin — cf. doc du prop).
           hideEmbeddedWhiteboardToolsRail={hideEmbeddedWhiteboardToolsRail}
+          hideSceneDock={hideSceneDock}
           onSceneChange={onSceneChange}
         />
       </Suspense>

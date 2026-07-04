@@ -50,6 +50,8 @@ const LiveHostSmartBoardStage = forwardRef(function LiveHostSmartBoardStage(
      * 'footer' = dock masqué ici — le parent (LiveHostPage) affiche les boutons dans sa barre footer.
      */
     sceneDockPlacement = 'right',
+    /** Téléconsult mobile spectateur : masque entièrement le navigateur de scènes vertical. */
+    hideSceneDock = false,
     /** Appelé quand la scène active change — permet au parent de synchroniser son état. */
     onSceneChange = null,
     /**
@@ -1062,6 +1064,7 @@ const LiveHostSmartBoardStage = forwardRef(function LiveHostSmartBoardStage(
         }}
         premiumArenaHostTray
         sceneDockPlacement={sceneDockPlacement}
+        hideSceneDock={hideSceneDock}
         readOnlySceneNavigator={viewerMode}
         annotationStrokes={annotationStrokes}
         onAnnotationStrokesChange={viewerMode ? undefined : onAnnotationStrokesChange}

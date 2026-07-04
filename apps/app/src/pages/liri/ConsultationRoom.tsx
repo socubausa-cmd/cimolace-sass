@@ -1257,6 +1257,7 @@ export function ConsultationStage({
             isHost={isHost}
             viewerMode={!isHost}
             hideEmbeddedWhiteboardToolsRail={compact && !isHost}
+            hideSceneDock={compact && !isHost}
             onBroadcast={isHost ? onSmartboardBroadcast : undefined}
             incomingBroadcast={!isHost ? smartboard : undefined}
           />

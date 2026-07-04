@@ -5286,6 +5286,8 @@ export default function SmartBoardCompositor({
    * 'footer' = scènes dans la barre d'actions parente ; ici seulement PiP (étroit) + NeuroInk sur le bord droit en scène board.
    */
   sceneDockPlacement = 'right',
+  /** Téléconsult mobile spectateur : masque ENTIÈREMENT le navigateur de scènes vertical (aucun dock). */
+  hideSceneDock = false,
   /**
    * LiveRoomShell affiche déjà `LiveWhiteboardToolsSidebar` dans le rail latéral — éviter le doublon dans le cadre.
    * LiveHost (SmartBoard stage seul) : laisser à false pour monter le rail ici.
@@ -5917,7 +5919,7 @@ export default function SmartBoardCompositor({
       )}
 
       {/* Navigateur de scènes : colonne verticale (défaut) ; mode footer = barre parente + ici PiP seul + NeuroInk (board) */}
-      {!useFooterSceneDock ? (
+      {!useFooterSceneDock && !hideSceneDock ? (
         <TooltipProvider delayDuration={200} skipDelayDuration={100}>
           <div
             className={cn(
