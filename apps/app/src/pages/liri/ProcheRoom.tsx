@@ -278,7 +278,9 @@ function ProcheLiveRoom({ url, token, sessionId, clinic, initialCam = true, init
             />
             <ProcheBar onLeave={() => setLeft(true)} chatOpen={chatOpen} onToggleChat={() => setChatOpen((v) => !v)} />
           </div>
-          {chatOpen ? <ChatPanel onClose={() => setChatOpen(false)} /> : null}
+          {/* Toujours monté (masqué via `open`) : préserve l'historique useChat
+              et capte les messages reçus panneau fermé. */}
+          <ChatPanel open={chatOpen} onClose={() => setChatOpen(false)} />
         </div>
         <RoomAudioRenderer />
         <AudioUnlockGate />

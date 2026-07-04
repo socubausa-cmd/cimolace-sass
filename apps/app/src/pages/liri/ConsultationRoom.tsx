@@ -621,10 +621,13 @@ export default function ConsultationRoom() {
           {/* Panneau de droite — un seul ouvert à la fois. Enveloppé dans `rightdock`
               (data-cr) : desktop = colonne à largeur fixe ; mobile (≤820px) = feuille
               plein écran par le bas (cf. CONSULT_SHELL_CSS @media). */}
-          {rightPanel ? (
-            <div data-cr="rightdock" style={{ display: 'flex', minHeight: 0 }}>
-              {rightPanel === 'chat' ? <ChatPanel onClose={() => setRightPanel(null)} /> : null}
-              {rightPanel === 'copilot' && isHost ? (
+          {/* Le dock reste MONTÉ (display:none fermé) pour que le ChatPanel — donc
+              l'historique useChat — survive aux ouvertures/fermetures et reçoive
+              les messages même panneau fermé. Les autres panneaux restent
+              conditionnels (fetches à la demande, pas d'état à préserver). */}
+          <div data-cr="rightdock" style={{ display: rightPanel ? 'flex' : 'none', minHeight: 0 }}>
+            <ChatPanel open={rightPanel === 'chat'} onClose={() => setRightPanel(null)} />
+            {rightPanel === 'copilot' && isHost ? (
                 <CopilotPanel sessionId={sessionId} onClose={() => setRightPanel(null)} />
               ) : null}
               {rightPanel === 'recall' && isHost && sessionId ? (
@@ -633,8 +636,7 @@ export default function ConsultationRoom() {
               {rightPanel === 'script' && isHost && sessionId ? (
                 <ConsultationScriptPanel sessionId={sessionId} onClose={() => setRightPanel(null)} />
               ) : null}
-            </div>
-          ) : null}
+          </div>
         </div>
         <RoomAudioRenderer />
         <AudioUnlockGate />
@@ -1006,15 +1008,20 @@ function fmtChatTime(ts: number): string {
   }
 }
 
-export function ChatPanel({ onClose }: { onClose: () => void }) {
+// ⚠️ `open` (défaut true) : le panneau doit rester MONTÉ en permanence et être
+// simplement masqué quand fermé. `useChat` garde l'historique DANS l'instance du
+// hook : démonter le panneau vidait le fil à chaque fermeture, et les messages
+// reçus panneau fermé n'étaient JAMAIS affichés (« on ne voit pas le fil »).
+export function ChatPanel({ open = true, onClose }: { open?: boolean; onClose: () => void }) {
   const { chatMessages, send, isSending } = useChat();
   const { localParticipant } = useLocalParticipant();
   const [text, setText] = useState('');
   const endRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
+    if (!open) return;
     endRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [chatMessages.length]);
+  }, [chatMessages.length, open]);
 
   const submit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -1025,7 +1032,7 @@ export function ChatPanel({ onClose }: { onClose: () => void }) {
   };
 
   return (
-    <div style={{ width: 340, flexShrink: 0, background: PANEL_BG, borderLeft: PANEL_BORDER, display: 'flex', flexDirection: 'column', minHeight: 0 }}>
+    <div style={{ width: 340, flexShrink: 0, background: PANEL_BG, borderLeft: PANEL_BORDER, display: open ? 'flex' : 'none', flexDirection: 'column', minHeight: 0 }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '12px 14px', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
         <MessageSquare size={16} color={GOLD} aria-hidden="true" />
         <span style={{ fontWeight: 600, fontSize: 14, color: '#fff' }}>Discussion</span>
