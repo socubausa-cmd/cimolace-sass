@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { BookOpen, Plus, X, CheckCircle, Trash2, UserPlus } from 'lucide-react';
+import { useIsMobile } from '../lib/useIsMobile';
 
 const API = import.meta.env.VITE_API_URL || 'http://localhost:4002';
 
@@ -68,6 +69,7 @@ function patientName(p: Patient | undefined): string {
 }
 
 export function ProgramsList() {
+  const isMobile = useIsMobile();
   const [programs, setPrograms] = useState<Program[]>([]);
   const [loaded, setLoaded] = useState(false);
   const [selectedId, setSelectedId] = useState<string | null>(null);
@@ -263,7 +265,7 @@ export function ProgramsList() {
 
   return (
     <div>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
+      <div style={{ display: 'flex', flexDirection: isMobile ? 'column' : 'row', justifyContent: 'space-between', alignItems: isMobile ? 'stretch' : 'center', gap: isMobile ? 12 : 0, marginBottom: 20 }}>
         <h2 style={{ fontSize: 24, fontWeight: 700, display: 'flex', alignItems: 'center', gap: 8 }}>
           <BookOpen size={22} /> Programmes de soins
         </h2>
@@ -275,7 +277,7 @@ export function ProgramsList() {
         </button>
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: '340px 1fr', gap: 16 }}>
+      <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '340px 1fr', gap: 16 }}>
         {/* Programs list */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
           {loaded && programs.length === 0 && (

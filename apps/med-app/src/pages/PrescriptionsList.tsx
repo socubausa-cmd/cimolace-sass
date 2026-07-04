@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { Plus, FileDown, X, Trash2, FileSignature, Check } from 'lucide-react';
+import { useIsMobile } from '../lib/useIsMobile';
 
 const API = import.meta.env.VITE_API_URL || 'http://localhost:4002';
 
@@ -56,6 +57,7 @@ function patientName(p: Patient | undefined): string {
 }
 
 export function PrescriptionsList() {
+  const isMobile = useIsMobile();
   const [prescriptions, setPrescriptions] = useState<Prescription[]>([]);
   const [loaded, setLoaded] = useState(false);
   const [patients, setPatients] = useState<Record<string, Patient>>({});
@@ -211,7 +213,7 @@ export function PrescriptionsList() {
 
   return (
     <div>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
+      <div style={{ display: 'flex', flexDirection: isMobile ? 'column' : 'row', justifyContent: 'space-between', alignItems: isMobile ? 'stretch' : 'center', gap: isMobile ? 12 : 0, marginBottom: 20 }}>
         <h2 style={{ fontSize: 24, fontWeight: 700 }}>Ordonnances</h2>
         <button
           onClick={() => { setError(null); setNewOpen(true); }}
@@ -227,7 +229,7 @@ export function PrescriptionsList() {
         </div>
       )}
 
-      <div style={{ display: 'grid', gridTemplateColumns: '380px 1fr', gap: 16 }}>
+      <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '380px 1fr', gap: 16 }}>
         <div style={{ background: '#fff', borderRadius: 12, border: '1px solid var(--zw-border)', overflow: 'hidden' }}>
           {loaded && prescriptions.length === 0 && (
             <p style={{ padding: 24, color: 'var(--zw-text-faint)', textAlign: 'center' }}>Aucune ordonnance</p>
@@ -427,7 +429,7 @@ export function PrescriptionsList() {
                     </button>
                   )}
                 </div>
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 8, marginBottom: 8 }}>
+                <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr 1fr', gap: 8, marginBottom: 8 }}>
                   <input
                     placeholder="Fréquence (3x/jour) *"
                     value={it.frequency}
