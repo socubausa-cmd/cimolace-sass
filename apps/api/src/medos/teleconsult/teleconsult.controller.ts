@@ -139,6 +139,18 @@ export class TeleconsultController {
     );
   }
 
+  /** HOST : admet un proche même sans le patient (maître de séance). */
+  @Post(':id/invites/:inviteId/admit')
+  @Roles('owner', 'practitioner', 'clinic_admin')
+  admitInvite(
+    @Param('id') id: string,
+    @Param('inviteId') inviteId: string,
+    @CurrentTenant() tenant: TenantContext,
+    @Req() req: AuthRequest,
+  ) {
+    return this.service.admitInvite(tenant, req.user.id, id, inviteId);
+  }
+
   /** Host OU patient-propriétaire : révoque une invitation. */
   @Post(':id/invites/:inviteId/revoke')
   @Roles('owner', 'practitioner', 'clinic_admin', 'patient')

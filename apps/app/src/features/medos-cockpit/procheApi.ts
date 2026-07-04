@@ -15,6 +15,9 @@ export interface ProcheStatus {
   display_name: string;
   session_id: string;
   clinic_name: string;
+  /** Statut de la SESSION (pas de l'invite) : 'ended'/'cancelled' → la salle
+   *  affiche « Consultation terminée » au lieu de poller à l'infini. */
+  session_status?: string | null;
 }
 
 export async function getProcheStatus(inviteId: string): Promise<ProcheStatus> {

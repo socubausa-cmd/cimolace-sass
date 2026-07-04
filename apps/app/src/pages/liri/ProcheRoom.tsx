@@ -156,6 +156,8 @@ export default function ProcheRoom() {
             <Gate tone="error" title="Accès indisponible" text={err} />
           ) : !status ? (
             <Gate spinner title="Chargement…" text="Vérification de votre invitation." />
+          ) : status.session_status === 'ended' || status.session_status === 'cancelled' ? (
+            <Gate title="Consultation terminée" text="Cette téléconsultation est terminée. Vous pouvez fermer cette fenêtre." />
           ) : status.status === 'consent_requested' ? (
             <Gate spinner title="En attente d'autorisation" text={`${guestName ? `${guestName}, votre` : 'Votre'} participation doit être autorisée par le patient. Cette page se met à jour automatiquement.`} />
           ) : status.status === 'denied' ? (

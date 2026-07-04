@@ -1554,6 +1554,13 @@ function InviteProcheModal({ sessionId, open, onClose }: { sessionId: string; op
     teleconsultApi.listInvites(sessionId).then(setInvites).catch(() => {});
   };
 
+  // Le praticien admet un proche sans attendre le patient (utile quand le
+  // patient n'est pas encore connecté : sinon le proche reste bloqué).
+  const admit = async (id: string) => {
+    await teleconsultApi.admitInvite(sessionId, id).catch(() => {});
+    teleconsultApi.listInvites(sessionId).then(setInvites).catch(() => {});
+  };
+
   const memberLabel = (m: { full_name: string | null; email: string | null; user_id: string }) =>
     m.full_name || m.email || m.user_id.slice(0, 8);
 
@@ -1622,6 +1629,16 @@ function InviteProcheModal({ sessionId, open, onClose }: { sessionId: string; op
                     <EmailStatusBadge status={inv.email_status} />
                   </div>
                 </div>
+                {inv.status === 'consent_requested' ? (
+                  <button
+                    onClick={() => admit(inv.id)}
+                    title="Admettre ce proche maintenant (sans attendre le patient)"
+                    aria-label="Admettre"
+                    style={{ ...iconBtn, width: 'auto', padding: '0 10px', gap: 5, color: '#86efac', background: 'rgba(34,197,94,0.14)', fontSize: 11.5, fontWeight: 700 }}
+                  >
+                    <Check size={14} /> Admettre
+                  </button>
+                ) : null}
                 <button onClick={() => copy(inv.id)} title="Copier le lien" style={iconBtn} aria-label="Copier le lien">
                   {copiedId === inv.id ? <Check size={15} color="#86efac" /> : <Copy size={15} />}
                 </button>

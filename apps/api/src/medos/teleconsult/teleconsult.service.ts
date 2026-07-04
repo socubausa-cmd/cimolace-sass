@@ -566,6 +566,37 @@ export class TeleconsultService {
     return data;
   }
 
+  /**
+   * HOST (praticien / owner / clinic_admin) : admet un proche EN L'ABSENCE du
+   * patient. Le consentement RGPD reste porté par le patient quand il est
+   * présent (`consentInvite`), MAIS le praticien — maître de séance et auteur
+   * de l'invitation — doit pouvoir laisser entrer un proche quand le patient
+   * n'est pas connecté (sinon le proche reste bloqué « en attente » à vie). On
+   * trace qui a admis (`consent_by = actorId` du praticien).
+   */
+  async admitInvite(
+    tenant: TenantContext,
+    actorId: string,
+    sessionId: string,
+    inviteId: string,
+  ): Promise<any> {
+    await this.loadSession(tenant.id, sessionId); // tenant-scope + existence
+    const { data, error } = await (this.supabase.client as any)
+      .from('med_teleconsult_invites')
+      .update({
+        status: 'consented',
+        consent_by: actorId,
+        consent_at: new Date().toISOString(),
+      })
+      .eq('tenant_id', tenant.id)
+      .eq('session_id', sessionId)
+      .eq('id', inviteId)
+      .select('id, status, consent_at')
+      .single();
+    if (error || !data) throw new NotFoundException('Invitation introuvable');
+    return data;
+  }
+
   /** Host OU patient-propriétaire : révoque une invitation (proche exclu). */
   async revokeInvite(
     tenant: TenantContext,
@@ -598,6 +629,7 @@ export class TeleconsultService {
     display_name: string;
     session_id: string;
     clinic_name: string;
+    session_status: string | null;
   }> {
     const { data: invite } = await (this.supabase.client as any)
       .from('med_teleconsult_invites')
@@ -610,11 +642,21 @@ export class TeleconsultService {
       .select('name')
       .eq('id', (invite as any).tenant_id)
       .maybeSingle();
+    // Statut de la SESSION (pas seulement de l'invite) : sans ça, un proche
+    // resté « en attente d'autorisation » poll indéfiniment même après que le
+    // praticien a raccroché. La page proche affiche « Consultation terminée »
+    // dès que status = 'ended' | 'cancelled'.
+    const { data: sess } = await this.supabase.client
+      .from('med_teleconsult_sessions')
+      .select('status')
+      .eq('id', (invite as any).session_id)
+      .maybeSingle();
     return {
       status: (invite as any).status,
       display_name: (invite as any).display_name,
       session_id: (invite as any).session_id,
       clinic_name: (tenant as any)?.name || 'Consultation',
+      session_status: (sess as any)?.status ?? null,
     };
   }
 

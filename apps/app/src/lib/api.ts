@@ -938,6 +938,9 @@ export const teleconsultApi = {
     api.get<ApiEnvelope<TeleconsultInvite[]>>(`/med/teleconsult/${id}/invites`).then(unwrap),
   consentInvite: (id: string, inviteId: string, granted: boolean) =>
     api.post<ApiEnvelope<TeleconsultInvite>>(`/med/teleconsult/${id}/invites/${inviteId}/consent`, { granted }).then(unwrap),
+  /** HOST : admet un proche même si le patient n'est pas connecté. */
+  admitInvite: (id: string, inviteId: string) =>
+    api.post<ApiEnvelope<TeleconsultInvite>>(`/med/teleconsult/${id}/invites/${inviteId}/admit`).then(unwrap),
   revokeInvite: (id: string, inviteId: string) =>
     api.post<ApiEnvelope<TeleconsultInvite>>(`/med/teleconsult/${id}/invites/${inviteId}/revoke`).then(unwrap),
 };
