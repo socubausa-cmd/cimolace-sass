@@ -272,13 +272,13 @@ export function BookingCalendarModal({
     (async () => {
       const { data } = await supabase
         .from('profiles')
-        .select('notification_email, email, whatsapp_phone, notify_sms')
+        .select('email, phone, notify_sms')
         .eq('id', user.id)
         .maybeSingle();
       if (cancelled) return;
-      const em = String(data?.notification_email || data?.email || user?.email || '').trim();
+      const em = String(data?.email || user?.email || '').trim();
       setNotificationEmail(em);
-      setWhatsappPhone(String(data?.whatsapp_phone || '').trim());
+      setWhatsappPhone(String(data?.phone || '').trim());
       setSmsOptIn(data?.notify_sms === true);
     })();
     return () => {

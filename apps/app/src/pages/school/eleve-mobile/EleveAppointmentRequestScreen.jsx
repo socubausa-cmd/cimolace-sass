@@ -167,12 +167,12 @@ export default function EleveAppointmentRequestScreen() {
     (async () => {
       const { data } = await supabase
         .from('profiles')
-        .select('notification_email,email,whatsapp_phone,notify_sms')
+        .select('email,phone,notify_sms')
         .eq('id', user.id)
         .maybeSingle();
       if (!alive) return;
-      setEmail(String(data?.notification_email || data?.email || user?.email || '').trim());
-      setWhatsapp(String(data?.whatsapp_phone || '').trim());
+      setEmail(String(data?.email || user?.email || '').trim());
+      setWhatsapp(String(data?.phone || '').trim());
       setSmsOptIn(data?.notify_sms === true);
     })();
     return () => {
