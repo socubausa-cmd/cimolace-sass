@@ -609,17 +609,47 @@ export class TeleconsultService implements OnModuleInit {
     const clinic = (t as any)?.name || 'votre praticien';
     const base = process.env.APP_URL || 'https://app.cimolace.space';
     const link = `${base}/teleconsult/${invite.session_id}/proche/${invite.id}${slug ? `?tenant=${encodeURIComponent(slug)}` : ''}`;
+
+    // « But de la réunion » AUTOMATIQUE : motif du RDV lié (appointments.reason).
+    // Best-effort — s'il n'y a pas de RDV/motif, le message reste clair sans lui.
+    let motif = '';
+    try {
+      const { data: sess } = await this.supabase.client
+        .from('med_teleconsult_sessions')
+        .select('appointment_id')
+        .eq('id', invite.session_id)
+        .maybeSingle();
+      const apptId = (sess as any)?.appointment_id;
+      if (apptId) {
+        const { data: appt } = await this.supabase.client
+          .from('appointments')
+          .select('reason')
+          .eq('id', apptId)
+          .maybeSingle();
+        motif = String((appt as any)?.reason || '').trim();
+      }
+    } catch {
+      /* best-effort : motif optionnel */
+    }
+
+    // Message CLAIR qui commence par le NOM de l'invité + le BUT de la réunion.
+    const name = String(invite.display_name || '').trim() || 'Bonjour';
+    const object = motif
+      ? `une téléconsultation médicale avec ${clinic} — motif : ${motif}`
+      : `une téléconsultation médicale avec ${clinic}`;
+    const access =
+      invite.kind === 'member'
+        ? 'Cliquez sur le bouton pour entrer dans la salle sécurisée.'
+        : "L'accès s'ouvrira dès que le patient aura autorisé votre participation.";
     const html = this.email.brandedHtml({
       title: 'Invitation à une téléconsultation',
-      body:
-        invite.kind === 'member'
-          ? `Vous êtes invité·e à rejoindre une téléconsultation avec ${clinic}. Cliquez pour entrer dans la salle sécurisée.`
-          : `Vous êtes invité·e à rejoindre une téléconsultation avec ${clinic}. L'accès s'ouvrira dès que le patient aura autorisé votre participation.`,
+      body: `Bonjour ${name}, vous êtes invité·e à ${object}. ${access}`,
       ctaLabel: 'Rejoindre la consultation',
       ctaUrl: link,
     });
     try {
-      const r = await this.email.sendRaw(tenantId, to, `Invitation — téléconsultation ${clinic}`, html);
+      const subject = `${name}, invitation à une téléconsultation — ${clinic}`;
+      const r = await this.email.sendRaw(tenantId, to, subject, html);
       return r.status;
     } catch {
       return 'error';

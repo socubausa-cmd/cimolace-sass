@@ -698,7 +698,7 @@ export default function ConsultationRoom() {
       {isHost && sessionId ? <CockpitDock sessionId={sessionId} mode="host" channel={channel} /> : null}
       {/* Inviter un proche (praticien) + consentement RGPD (patient). */}
       {isHost && sessionId ? (
-        <InviteProcheModal sessionId={sessionId} open={inviteOpen} onClose={() => setInviteOpen(false)} />
+        <InviteProcheModal sessionId={sessionId} open={inviteOpen} onClose={() => setInviteOpen(false)} agendaReason={ctx?.agenda_reason} />
       ) : null}
       {!isHost && sessionId ? <PatientConsentGate sessionId={sessionId} /> : null}
       {isHost && sessionId ? <HostAdmitGate sessionId={sessionId} /> : null}
@@ -2028,7 +2028,7 @@ function StatusBadge({ status }: { status: TeleconsultInvite['status'] }) {
   return <span style={{ display: 'inline-block', marginTop: 3, fontSize: 11, color: s.color, background: s.bg, padding: '2px 8px', borderRadius: 999 }}>{s.label}</span>;
 }
 
-function InviteProcheModal({ sessionId, open, onClose }: { sessionId: string; open: boolean; onClose: () => void }) {
+function InviteProcheModal({ sessionId, open, onClose, agendaReason }: { sessionId: string; open: boolean; onClose: () => void; agendaReason?: string | null }) {
   const [mode, setMode] = useState<'member' | 'guest'>('guest');
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
@@ -2075,8 +2075,13 @@ function InviteProcheModal({ sessionId, open, onClose }: { sessionId: string; op
   // d'inviter n'importe qui en externe sans email. Sécurité inchangée : le
   // lien est non devinable (UUID) et reste fail-closed tant que non admis.
   const waShare = (inv: TeleconsultInvite) => {
+    // Message CLAIR : commence par le NOM de l'invité + le BUT (motif du RDV si connu).
+    const motif = String(agendaReason || '').trim();
+    const object = motif
+      ? `une téléconsultation médicale sécurisée — motif : ${motif}`
+      : `une téléconsultation médicale sécurisée`;
     const msg =
-      `Bonjour ${inv.display_name}, vous êtes invité·e à rejoindre une téléconsultation sécurisée.` +
+      `Bonjour ${inv.display_name}, vous êtes invité·e à ${object}.` +
       `\n\nCliquez sur ce lien pour entrer dans la salle d'attente :\n${linkFor(inv.id)}` +
       `\n\nL'accès s'ouvrira dès que votre participation sera autorisée.`;
     window.open(`https://wa.me/?text=${encodeURIComponent(msg)}`, '_blank', 'noopener');
