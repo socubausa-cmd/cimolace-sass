@@ -257,6 +257,26 @@ export class TeleconsultService implements OnModuleInit {
       );
     }
 
+    // Nom affiché sur la tuile vidéo : JAMAIS l'email brut du soignant/patient
+    // (peu professionnel + fuite d'identifiant). On résout un VRAI nom depuis le
+    // compte auth (full_name), repli sur le nom du cabinet (hôte) puis un libellé
+    // neutre. Le contrôleur passe l'email comme simple indice → on l'écarte s'il
+    // ressemble à une adresse.
+    let liveKitName = String(displayName || '').trim();
+    if (!liveKitName || liveKitName.includes('@')) {
+      try {
+        const { data: u } = await (this.supabase.client as any).auth.admin.getUserById(actorId);
+        const meta = u?.user?.user_metadata || {};
+        const resolved = String(meta.full_name || meta.name || '').trim();
+        if (resolved && !resolved.includes('@')) liveKitName = resolved;
+      } catch {
+        /* best-effort : on garde le repli ci-dessous */
+      }
+    }
+    if (!liveKitName || liveKitName.includes('@')) {
+      liveKitName = isHost ? tenant.name || 'Praticien' : 'Patient';
+    }
+
     // Delegate to Liri. The session.id is a stable, unique external_ref
     // so re-joins reuse the same LiveKit room. The metadata blob lets the
     // billing UI link back to the medical appointment without re-querying
@@ -267,7 +287,7 @@ export class TeleconsultService implements OnModuleInit {
       externalRef: sessionId,
       purpose: 'medical_teleconsult',
       userId: actorId,
-      displayName,
+      displayName: liveKitName,
       role: isHost ? 'host' : 'guest',
       // A teleconsultation is a two-way call: the PATIENT (guest) must be
       // able to publish their camera + mic. Without this they'd get a
