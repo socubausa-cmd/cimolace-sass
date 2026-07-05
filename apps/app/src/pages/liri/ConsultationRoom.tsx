@@ -1290,6 +1290,21 @@ export function ConsultationStage({
       return !v;
     });
   };
+  // GRANDE VUE : un tap sur une pastille agrandit la personne plein cadre
+  // (par-dessus le partage), re-tap (ou tap n'importe où) referme. Même cue
+  // sonore que le zoom des miniatures.
+  const [focusId, setFocusId] = useState<string | null>(null);
+  const focusMember = (id: string) => {
+    setFocusId((prev) => {
+      const next = prev === id ? null : id;
+      playZoomCue(next ? 'in' : 'out');
+      return next;
+    });
+  };
+  const closeFocus = () => {
+    setFocusId(null);
+    playZoomCue('out');
+  };
 
   // CONVERSATION : face-à-face — grand flux de l'interlocuteur + soi en incrustation.
   if (view === 'conversation') {
@@ -1352,6 +1367,33 @@ export function ConsultationStage({
             <AnnotationOverlay strokes={strokes} editable={editable} onStrokes={onStrokes} />
           </div>
         ) : null}
+        {/* GRANDE VUE : la personne choisie plein cadre par-dessus le partage.
+            Tap n'importe où (ou X) pour revenir. zIndex 40 > pastilles (30). */}
+        {focusId ? (() => {
+          const ft = tracks.find((t) => t?.source === Track.Source.Camera && t?.participant?.identity === focusId);
+          if (!ft) return null;
+          return (
+            <div
+              onClick={closeFocus}
+              role="button"
+              aria-label="Réduire la vue"
+              style={{ position: 'absolute', inset: 0, zIndex: 40, background: 'rgba(14,12,10,0.96)', animation: 'crFocusIn 0.25s cubic-bezier(0.2,0.7,0.3,1)' }}
+            >
+              <style>{'@keyframes crFocusIn{from{opacity:0;transform:scale(.96)}to{opacity:1;transform:none}}'}</style>
+              <ParticipantTile trackRef={ft} style={{ width: '100%', height: '100%' }} />
+              <span style={{ position: 'absolute', left: 12, bottom: 12, zIndex: 2, display: 'inline-flex', alignItems: 'center', gap: 7, padding: '6px 12px', borderRadius: 999, background: 'rgba(24,20,16,0.85)', color: '#fff', fontSize: 13, fontWeight: 600 }}>
+                {ft?.participant?.name || 'Participant'}
+              </span>
+              <button
+                onClick={(e) => { e.stopPropagation(); closeFocus(); }}
+                aria-label="Fermer la grande vue"
+                style={{ position: 'absolute', top: 10, right: 10, zIndex: 2, width: 36, height: 36, borderRadius: 999, border: 'none', background: 'rgba(24,20,16,0.85)', color: GOLD, cursor: 'pointer', display: 'grid', placeItems: 'center' }}
+              >
+                <X size={17} aria-hidden="true" />
+              </button>
+            </div>
+          );
+        })() : null}
         {/* Mobile + disposition « overlay » : pile verticale par-dessus la scène
             (rendue ICI pour profiter du position:relative du conteneur). */}
         {compact && !rightOpen && miniLayout === 'overlay' ? (
@@ -1362,6 +1404,7 @@ export function ConsultationStage({
             collapsed={miniCollapsed}
             onToggleCollapsed={toggleMini}
             onSwitchLayout={() => setMiniLayout('band')}
+            onFocus={focusMember}
           />
         ) : null}
       </div>
@@ -1373,6 +1416,7 @@ export function ConsultationStage({
           collapsed={miniCollapsed}
           onToggleCollapsed={toggleMini}
           onSwitchLayout={() => setMiniLayout('overlay')}
+          onFocus={focusMember}
         />
       ) : null}
     </div>
@@ -1396,6 +1440,7 @@ function MembersRail({
   collapsed = false,
   onToggleCollapsed,
   onSwitchLayout,
+  onFocus,
 }: {
   tracks: any[];
   isHost?: boolean;
@@ -1403,6 +1448,8 @@ function MembersRail({
   collapsed?: boolean;
   onToggleCollapsed?: () => void;
   onSwitchLayout?: () => void;
+  /** Tap sur une pastille caméra → grande vue de la personne (toggle). */
+  onFocus?: (participantIdentity: string) => void;
 }) {
   const cams = tracks.filter((t) => t?.source === Track.Source.Camera);
   // Écran partagé : vignette dédiée EN TÊTE du rail (label ambre) → quand un
@@ -1432,7 +1479,13 @@ function MembersRail({
           </div>
         ) : null}
         {cams.map((t, i) => (
-          <div key={tileKey(t, i)} style={{ position: 'relative', height: '100%', aspectRatio: '16 / 9', flexShrink: 0, borderRadius: 8, overflow: 'hidden', background: '#000', border: '1px solid rgba(255,255,255,0.08)' }}>
+          <div
+            key={tileKey(t, i)}
+            onClick={() => { const id = t?.participant?.identity; if (id) onFocus?.(id); }}
+            role="button"
+            title="Agrandir"
+            style={{ position: 'relative', height: '100%', aspectRatio: '16 / 9', flexShrink: 0, borderRadius: 8, overflow: 'hidden', background: '#000', border: '1px solid rgba(255,255,255,0.08)', cursor: 'pointer' }}
+          >
             <ParticipantTile trackRef={t} style={{ width: '100%', height: '100%' }} />
             <RoleTag role={participantRole(t?.participant, !!isHost)} />
           </div>
@@ -1479,7 +1532,14 @@ function MembersRail({
           </div>
         ) : null}
         {cams.map((t, i) => (
-          <div key={tileKey(t, i)} className="cr-mini" style={{ position: 'relative', width: 96, aspectRatio: '16 / 9', flexShrink: 0, borderRadius: 10, overflow: 'hidden', background: '#000', boxShadow: '0 3px 12px rgba(0,0,0,0.25)' }}>
+          <div
+            key={tileKey(t, i)}
+            className="cr-mini"
+            onClick={() => { const id = t?.participant?.identity; if (id) onFocus?.(id); }}
+            role="button"
+            title="Agrandir"
+            style={{ position: 'relative', width: 96, aspectRatio: '16 / 9', flexShrink: 0, borderRadius: 10, overflow: 'hidden', background: '#000', boxShadow: '0 3px 12px rgba(0,0,0,0.25)', cursor: 'pointer' }}
+          >
             <ParticipantTile trackRef={t} style={{ width: '100%', height: '100%' }} />
             <RoleTag role={participantRole(t?.participant, !!isHost)} />
           </div>
@@ -1515,7 +1575,13 @@ function MembersRail({
           </div>
         ) : null}
         {cams.map((t, i) => (
-          <div key={tileKey(t, i)} style={{ position: 'relative', width: '100%', aspectRatio: '16 / 9', flexShrink: 0, borderRadius: 10, overflow: 'hidden', background: '#000', border: '1px solid rgba(255,255,255,0.08)' }}>
+          <div
+            key={tileKey(t, i)}
+            onClick={() => { const id = t?.participant?.identity; if (id) onFocus?.(id); }}
+            role="button"
+            title="Agrandir"
+            style={{ position: 'relative', width: '100%', aspectRatio: '16 / 9', flexShrink: 0, borderRadius: 10, overflow: 'hidden', background: '#000', border: '1px solid rgba(255,255,255,0.08)', cursor: 'pointer' }}
+          >
             <ParticipantTile trackRef={t} style={{ width: '100%', height: '100%' }} />
             <RoleTag role={participantRole(t?.participant, !!isHost)} />
           </div>
