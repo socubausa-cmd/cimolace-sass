@@ -789,6 +789,50 @@ export class TeleconsultService implements OnModuleInit {
     return data;
   }
 
+  private assertHostRole(role: TenantContext['userRole']): void {
+    if (role !== 'practitioner' && role !== 'owner' && role !== 'clinic_admin') {
+      throw new ForbiddenException('Action réservée au praticien.');
+    }
+  }
+
+  /**
+   * MODÉRATION HÔTE — SOURDINE : coupe le micro d'un participant à distance
+   * (forcé côté serveur LiveKit, pas une simple demande). `identity` = identité
+   * LiveKit (host/patient = userId ; proche = `proche_<inviteId>`).
+   */
+  async muteParticipant(
+    tenant: TenantContext,
+    actorRole: TenantContext['userRole'],
+    sessionId: string,
+    identity: string,
+  ): Promise<{ muted: number }> {
+    await this.loadSession(tenant.id, sessionId); // tenant-scope + existence
+    this.assertHostRole(actorRole);
+    if (!identity?.trim()) throw new BadRequestException('Participant manquant.');
+    const muted = await this.liri.muteParticipant(
+      tenant.slug,
+      sessionId,
+      identity.trim(),
+    );
+    return { muted };
+  }
+
+  /**
+   * MODÉRATION HÔTE — EXPULSION : déconnecte de force un participant de la room.
+   */
+  async removeParticipant(
+    tenant: TenantContext,
+    actorRole: TenantContext['userRole'],
+    sessionId: string,
+    identity: string,
+  ): Promise<{ ok: true }> {
+    await this.loadSession(tenant.id, sessionId);
+    this.assertHostRole(actorRole);
+    if (!identity?.trim()) throw new BadRequestException('Participant manquant.');
+    await this.liri.removeParticipant(tenant.slug, sessionId, identity.trim());
+    return { ok: true };
+  }
+
   /**
    * PUBLIC (token-gaté) : statut d'une invitation, pour la page du proche.
    * Renvoie le STRICT minimum (aucune donnée de santé) : où en est le

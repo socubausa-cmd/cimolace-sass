@@ -943,6 +943,12 @@ export const teleconsultApi = {
     api.post<ApiEnvelope<TeleconsultInvite>>(`/med/teleconsult/${id}/invites/${inviteId}/admit`).then(unwrap),
   revokeInvite: (id: string, inviteId: string) =>
     api.post<ApiEnvelope<TeleconsultInvite>>(`/med/teleconsult/${id}/invites/${inviteId}/revoke`).then(unwrap),
+  /** MODÉRATION HÔTE : coupe le micro (sourdine) d'un participant à distance. */
+  muteParticipant: (id: string, identity: string) =>
+    api.post<ApiEnvelope<{ muted: number }>>(`/med/teleconsult/${id}/participants/mute`, { identity }).then(unwrap),
+  /** MODÉRATION HÔTE : expulse un participant du live. */
+  removeParticipant: (id: string, identity: string) =>
+    api.post<ApiEnvelope<{ ok: true }>>(`/med/teleconsult/${id}/participants/remove`, { identity }).then(unwrap),
 };
 
 // ─── Attachments ────────────────────────────────────────────────────────────

@@ -689,6 +689,30 @@ export class LiveService {
     await this.liveKit.deleteRoom(this.roomNameFor(tenantSlug, externalRef));
   }
 
+  /** Modération hôte : coupe le micro (sourdine) d'un participant. Fail-soft. */
+  muteParticipant(
+    tenantSlug: string,
+    externalRef: string,
+    identity: string,
+  ): Promise<number> {
+    return this.liveKit.muteParticipantAudio(
+      this.roomNameFor(tenantSlug, externalRef),
+      identity,
+    );
+  }
+
+  /** Modération hôte : expulse un participant de la room. Fail-soft. */
+  removeParticipant(
+    tenantSlug: string,
+    externalRef: string,
+    identity: string,
+  ): Promise<void> {
+    return this.liveKit.removeParticipant(
+      this.roomNameFor(tenantSlug, externalRef),
+      identity,
+    );
+  }
+
   // ─────────────────────────────────────────────────────────────────────
   // Liri — unified entry point for ALL engines that need a video room.
   //

@@ -11,6 +11,7 @@ import {
   EncodedFileType,
   EncodedFileOutput,
   S3Upload,
+  TrackType,
 } from 'livekit-server-sdk';
 import { S3Client, GetObjectCommand } from '@aws-sdk/client-s3';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
@@ -219,6 +220,54 @@ export class LiveKitService {
       await roomService.deleteRoom(roomName);
     } catch {
       /* room déjà fermée / inexistante */
+    }
+  }
+
+  /**
+   * Force-mute (sourdine) les pistes AUDIO d'un participant : l'hôte coupe le
+   * micro d'un membre à distance (côté serveur → réellement appliqué, pas juste
+   * une demande polie). Fail-soft. Retourne le nombre de pistes coupées.
+   */
+  async muteParticipantAudio(roomName: string, identity: string): Promise<number> {
+    if (!this.configured) return 0;
+    const roomService = new RoomServiceClient(
+      this.livekitUrl,
+      this.apiKey,
+      this.apiSecret,
+    );
+    try {
+      const p = await roomService.getParticipant(roomName, identity);
+      const audio = (p?.tracks ?? []).filter(
+        (t) => (t as { type?: TrackType }).type === TrackType.AUDIO,
+      );
+      let muted = 0;
+      for (const t of audio) {
+        const sid = String((t as { sid?: string }).sid ?? '');
+        if (!sid) continue;
+        await roomService.mutePublishedTrack(roomName, identity, sid, true);
+        muted++;
+      }
+      return muted;
+    } catch {
+      return 0;
+    }
+  }
+
+  /**
+   * Expulse un participant de la room (déconnexion forcée, irréversible pour ce
+   * token). L'hôte sort un intrus / un participant du live. Fail-soft.
+   */
+  async removeParticipant(roomName: string, identity: string): Promise<void> {
+    if (!this.configured) return;
+    const roomService = new RoomServiceClient(
+      this.livekitUrl,
+      this.apiKey,
+      this.apiSecret,
+    );
+    try {
+      await roomService.removeParticipant(roomName, identity);
+    } catch {
+      /* déjà parti / room inexistante */
     }
   }
 

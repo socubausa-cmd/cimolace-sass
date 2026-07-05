@@ -692,6 +692,8 @@ export default function ConsultationRoom() {
             audio LiveKit quand le mode « Partagé » est actif → patient + invités
             l'entendent via leur RoomAudioRenderer. */}
         {isHost ? <AmbientBroadcaster ctl={ambient} /> : null}
+        {/* Modération hôte (DANS la room → useParticipants) : sourdine + expulsion. */}
+        {isHost && sessionId ? <HostParticipantsPanel sessionId={sessionId} /> : null}
       </LiveKitRoom>
       {/* Composer clinique MEDOS (praticien seul) ; le patient voit le partage
           directement sur la SCÈNE centrale. */}
@@ -2364,9 +2366,10 @@ function PatientConsentGate({ sessionId }: { sessionId: string }) {
 // qu'un invité l'attendait, qui restait bloqué « en attente d'autorisation ».
 function HostAdmitGate({ sessionId }: { sessionId: string }) {
   const [invites, setInvites] = useState<TeleconsultInvite[]>([]);
-  const [busy, setBusy] = useState(false);
-  // Bandeau « souhaite rejoindre » UNIQUEMENT pour un proche RÉELLEMENT présent sur
-  // le lien (signal realtime), plus jamais à la simple création de l'invitation.
+  // id de l'invitation en cours d'action (ou 'all'), pour désactiver son bouton.
+  const [busy, setBusy] = useState<string | null>(null);
+  // LISTE des invités RÉELLEMENT présents sur le lien (signal realtime), pour gérer
+  // une file d'attente à plusieurs — plus jamais à la simple création de l'invitation.
   const requesting = useJoinRequests(sessionId);
 
   useEffect(() => {
@@ -2386,21 +2389,36 @@ function HostAdmitGate({ sessionId }: { sessionId: string }) {
     };
   }, [sessionId]);
 
-  const pending =
-    invites.find((i) => i.status === 'consent_requested' && requesting.has(i.id)) || null;
+  // FILE D'ATTENTE : TOUTES les personnes présentes sur le lien et en attente
+  // d'autorisation (pas seulement la première) → liste scrollable quand il y en
+  // a beaucoup, avec « Admettre tout ».
+  const pending = invites.filter(
+    (i) => i.status === 'consent_requested' && requesting.has(i.id),
+  );
+  if (pending.length === 0) return null;
 
-  if (!pending) return null;
-
-  const act = async (admit: boolean) => {
-    setBusy(true);
+  const act = async (inviteId: string, admit: boolean) => {
+    setBusy(inviteId);
     try {
-      if (admit) await teleconsultApi.admitInvite(sessionId, pending.id);
-      else await teleconsultApi.revokeInvite(sessionId, pending.id);
-      setInvites((prev) => prev.filter((i) => i.id !== pending.id)); // retrait optimiste
+      if (admit) await teleconsultApi.admitInvite(sessionId, inviteId);
+      else await teleconsultApi.revokeInvite(sessionId, inviteId);
+      setInvites((prev) => prev.filter((i) => i.id !== inviteId)); // retrait optimiste
     } catch {
       /* ignore */
     } finally {
-      setBusy(false);
+      setBusy(null);
+    }
+  };
+  const admitAll = async () => {
+    const ids = pending.map((p) => p.id);
+    setBusy('all');
+    try {
+      await Promise.allSettled(ids.map((id) => teleconsultApi.admitInvite(sessionId, id)));
+      setInvites((prev) => prev.filter((i) => !ids.includes(i.id)));
+    } catch {
+      /* ignore */
+    } finally {
+      setBusy(null);
     }
   };
 
@@ -2408,20 +2426,107 @@ function HostAdmitGate({ sessionId }: { sessionId: string }) {
     <div
       style={{
         position: 'fixed', top: 14, left: '50%', transform: 'translateX(-50%)', zIndex: 60,
-        display: 'flex', alignItems: 'center', gap: 12, padding: '10px 14px', borderRadius: 14,
-        background: 'rgba(24,20,16,0.96)', border: '1px solid rgba(212,163,106,0.5)',
-        boxShadow: '0 12px 40px rgba(0,0,0,0.5)', maxWidth: 'calc(100vw - 28px)',
+        width: 344, maxWidth: 'calc(100vw - 28px)', padding: 12, borderRadius: 14,
+        background: 'rgba(24,20,16,0.97)', border: '1px solid rgba(212,163,106,0.5)',
+        boxShadow: '0 12px 40px rgba(0,0,0,0.5)',
       }}
     >
-      <UserPlus size={18} color={GOLD} aria-hidden="true" style={{ flexShrink: 0 }} />
-      <span style={{ fontSize: 13.5, color: '#fff', fontWeight: 600, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-        <strong>{pending.display_name}</strong>{pending.relationship ? ` (${pending.relationship})` : ''} souhaite rejoindre
-      </span>
-      <div style={{ display: 'flex', gap: 8, flexShrink: 0 }}>
-        <button onClick={() => act(false)} disabled={busy} style={{ ...secondaryBtn, padding: '7px 12px', fontSize: 12.5 }}>Refuser</button>
-        <button onClick={() => act(true)} disabled={busy} style={{ ...primaryBtn, padding: '7px 16px', fontSize: 12.5 }}>Admettre</button>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 9 }}>
+        <UserPlus size={16} color={GOLD} aria-hidden="true" style={{ flexShrink: 0 }} />
+        <span style={{ fontSize: 13, color: '#fff', fontWeight: 700 }}>
+          {pending.length === 1 ? '1 personne en attente' : `${pending.length} personnes en attente`}
+        </span>
+        {pending.length > 1 ? (
+          <button onClick={admitAll} disabled={busy === 'all'} style={{ ...primaryBtn, marginLeft: 'auto', padding: '5px 12px', fontSize: 12, opacity: busy === 'all' ? 0.6 : 1 }}>
+            {busy === 'all' ? '…' : 'Admettre tout'}
+          </button>
+        ) : null}
+      </div>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 6, maxHeight: 244, overflowY: 'auto' }}>
+        {pending.map((p) => (
+          <div key={p.id} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '7px 9px', borderRadius: 10, background: 'rgba(255,255,255,0.05)' }}>
+            <span style={{ flex: 1, minWidth: 0, fontSize: 12.5, color: '#fff', fontWeight: 600, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+              {p.display_name}{p.relationship ? <span style={{ color: '#9ca3af', fontWeight: 400 }}> · {p.relationship}</span> : null}
+            </span>
+            <button onClick={() => act(p.id, false)} disabled={busy === p.id} title="Refuser" style={{ background: 'transparent', border: '1px solid rgba(239,68,68,0.4)', color: '#fca5a5', borderRadius: 8, padding: '5px 10px', fontSize: 12, fontWeight: 600, cursor: 'pointer', flexShrink: 0 }}>Refuser</button>
+            <button onClick={() => act(p.id, true)} disabled={busy === p.id} style={{ ...primaryBtn, padding: '5px 13px', fontSize: 12, flexShrink: 0, opacity: busy === p.id ? 0.6 : 1 }}>Admettre</button>
+          </div>
+        ))}
       </div>
     </div>
+  );
+}
+
+// MODÉRATION HÔTE (DANS la room → `useParticipants` dispo) : l'hôte gère les
+// participants CONNECTÉS. Pastille flottante → panneau listant les AUTRES avec
+// « Sourdine » (coupe leur micro à distance, forcé serveur) et « Expulser »
+// (déconnexion forcée). Réservé à l'hôte. Le mute/kick est appliqué par LiveKit
+// côté serveur (endpoints /participants/mute|remove), pas une simple demande.
+function HostParticipantsPanel({ sessionId }: { sessionId: string }) {
+  const participants = useParticipants();
+  const [open, setOpen] = useState(false);
+  const [busy, setBusy] = useState<string | null>(null);
+  const [muted, setMuted] = useState<Set<string>>(new Set());
+
+  const remote = participants.filter((p) => !p.isLocal); // l'hôte gère les AUTRES
+
+  const mute = async (identity: string) => {
+    setBusy(identity + ':m');
+    try {
+      await teleconsultApi.muteParticipant(sessionId, identity);
+      setMuted((prev) => new Set(prev).add(identity));
+    } catch {
+      /* ignore */
+    } finally {
+      setBusy(null);
+    }
+  };
+  const expel = async (identity: string, name: string) => {
+    if (typeof window !== 'undefined' && !window.confirm(`Expulser ${name} du live ?`)) return;
+    setBusy(identity + ':x');
+    try {
+      await teleconsultApi.removeParticipant(sessionId, identity);
+    } catch {
+      /* ignore */
+    } finally {
+      setBusy(null);
+    }
+  };
+
+  if (remote.length === 0) return null;
+
+  return (
+    <>
+      <button
+        onClick={() => setOpen((v) => !v)}
+        aria-label="Gérer les participants"
+        style={{ position: 'fixed', right: 14, bottom: 92, zIndex: 58, display: 'inline-flex', alignItems: 'center', gap: 6, padding: '8px 12px', borderRadius: 999, background: 'rgba(24,20,16,0.94)', border: '1px solid rgba(212,163,106,0.45)', color: GOLD, fontSize: 12.5, fontWeight: 700, cursor: 'pointer', boxShadow: '0 8px 24px rgba(0,0,0,0.45)' }}
+      >
+        <Users size={15} aria-hidden="true" /> {remote.length}
+      </button>
+      {open ? (
+        <div style={{ position: 'fixed', right: 14, bottom: 134, zIndex: 59, width: 300, maxWidth: 'calc(100vw - 28px)', padding: 12, borderRadius: 14, background: 'rgba(24,20,16,0.98)', border: '1px solid rgba(212,163,106,0.5)', boxShadow: '0 12px 40px rgba(0,0,0,0.5)' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 9 }}>
+            <Users size={15} color={GOLD} aria-hidden="true" />
+            <span style={{ fontSize: 13, color: '#fff', fontWeight: 700 }}>Participants ({remote.length})</span>
+            <button onClick={() => setOpen(false)} aria-label="Fermer" style={{ marginLeft: 'auto', background: 'transparent', border: 'none', color: '#9ca3af', cursor: 'pointer', display: 'inline-flex' }}><X size={15} /></button>
+          </div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 6, maxHeight: 260, overflowY: 'auto' }}>
+            {remote.map((p) => {
+              const role = participantRole(p, true);
+              const name = p.name || role.label || p.identity;
+              return (
+                <div key={p.identity} style={{ display: 'flex', alignItems: 'center', gap: 7, padding: '7px 9px', borderRadius: 10, background: 'rgba(255,255,255,0.05)' }}>
+                  <span style={{ flex: 1, minWidth: 0, fontSize: 12.5, color: '#fff', fontWeight: 600, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{name}</span>
+                  <button onClick={() => mute(p.identity)} disabled={busy === p.identity + ':m'} title="Couper le micro (sourdine)" style={{ background: 'transparent', border: '1px solid rgba(255,255,255,0.2)', color: muted.has(p.identity) ? '#86efac' : '#cbd5e1', borderRadius: 8, padding: '5px 9px', fontSize: 11.5, fontWeight: 600, cursor: 'pointer', flexShrink: 0 }}>{muted.has(p.identity) ? 'Coupé' : 'Sourdine'}</button>
+                  <button onClick={() => expel(p.identity, name)} disabled={busy === p.identity + ':x'} title="Expulser du live" style={{ background: 'transparent', border: '1px solid rgba(239,68,68,0.4)', color: '#fca5a5', borderRadius: 8, padding: '5px 9px', fontSize: 11.5, fontWeight: 600, cursor: 'pointer', flexShrink: 0 }}>Expulser</button>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      ) : null}
+    </>
   );
 }
 

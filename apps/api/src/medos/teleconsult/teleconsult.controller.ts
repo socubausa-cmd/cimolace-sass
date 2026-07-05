@@ -169,6 +169,28 @@ export class TeleconsultController {
     );
   }
 
+  /** MODÉRATION HÔTE : coupe le micro (sourdine) d'un participant à distance. */
+  @Post(':id/participants/mute')
+  @Roles('owner', 'practitioner', 'clinic_admin')
+  muteParticipant(
+    @Param('id') id: string,
+    @Body() body: { identity: string },
+    @CurrentTenant() tenant: TenantContext,
+  ) {
+    return this.service.muteParticipant(tenant, tenant.userRole, id, body?.identity);
+  }
+
+  /** MODÉRATION HÔTE : expulse un participant du live. */
+  @Post(':id/participants/remove')
+  @Roles('owner', 'practitioner', 'clinic_admin')
+  removeParticipant(
+    @Param('id') id: string,
+    @Body() body: { identity: string },
+    @CurrentTenant() tenant: TenantContext,
+  ) {
+    return this.service.removeParticipant(tenant, tenant.userRole, id, body?.identity);
+  }
+
   /** Marque le participant comme entré (appelé par le frontend après rejoindre) */
   @Post(':id/join')
   @Roles('owner', 'practitioner', 'clinic_admin', 'patient')
