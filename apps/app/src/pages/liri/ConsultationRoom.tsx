@@ -1347,7 +1347,10 @@ export function ConsultationStage({
             />
           </div>
         ) : hasScene ? (
-          <div style={{ height: '100%', width: '100%', overflow: 'auto', padding: 18, paddingRight: 18 + reserve, transition: `padding 0.3s ${ZOOM_EASE}`, boxSizing: 'border-box' }}>
+          // ARTEFACT/JUMEAU : pleine largeur comme le tableau — le panneau (fond
+          // crème) s'étend SOUS les pastilles, un seul élément visuel ; le corps
+          // reste centré donc la zone droite est naturellement libre d'infos.
+          <div style={{ height: '100%', width: '100%', overflow: 'auto', padding: 18, boxSizing: 'border-box' }}>
             <SharedSceneView scene={scene} />
           </div>
         ) : screen ? (
@@ -1364,9 +1367,7 @@ export function ConsultationStage({
             réserve que l'artefact : les annotations n'entrent jamais dans la
             marge des miniatures. */}
         {hasScene && view !== 'board' ? (
-          <div style={{ position: 'absolute', inset: 0, right: reserve, transition: `right 0.3s ${ZOOM_EASE}` }}>
-            <AnnotationOverlay strokes={strokes} editable={editable} onStrokes={onStrokes} />
-          </div>
+          <AnnotationOverlay strokes={strokes} editable={editable} onStrokes={onStrokes} />
         ) : null}
         {/* GRANDE VUE : la personne choisie plein cadre par-dessus le partage.
             Tap n'importe où (ou X) pour revenir. zIndex 40 > pastilles (30). */}
