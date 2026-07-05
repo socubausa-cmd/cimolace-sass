@@ -31,7 +31,7 @@ import {
   useRoomContext,
   useTracks,
 } from '@livekit/components-react';
-import { Track, ConnectionState, RoomEvent } from 'livekit-client';
+import { Track, ConnectionState, RoomEvent, LocalAudioTrack, type LocalTrackPublication } from 'livekit-client';
 import { getStableLiveKitRoomOptions, stableLiveKitConnectOptions } from '@/lib/livekitStableClient';
 import LiveDataSaverEffect from '@/features/live/LiveDataSaverEffect';
 import { useLiveDataSaver } from '@/hooks/useLiveDataSaver';
@@ -49,7 +49,7 @@ import { SharedSceneView, CockpitDock } from '@/features/medos-cockpit/MedTeleco
 import { AnnotationOverlay } from '@/features/medos-cockpit/AnnotationOverlay';
 import ImmersiveBootLoader from '@/components/liri/ImmersiveBootLoader';
 // ── Briques de la salle de téléconsultation (features/consultation-stage) ─────
-import AmbientAudioEngine, { useAmbientAudio } from '@/features/consultation-stage/AmbientAudioEngine';
+import AmbientAudioEngine, { useAmbientAudio, BroadcastToggle } from '@/features/consultation-stage/AmbientAudioEngine';
 import ConsultationSettings, { ConsultationSettingsButton } from '@/features/consultation-stage/ConsultationSettings';
 import ConsultationSmartBoard from '@/features/consultation-stage/ConsultationSmartBoard';
 import ConsultationCopilot from '@/features/consultation-stage/ConsultationCopilot';
@@ -634,7 +634,7 @@ export default function ConsultationRoom() {
                 showAmbientSection
               >
                 {/* Fond sonore piloté inline dans le panneau Réglages. */}
-                <AmbientInlineControls ctl={ambient} />
+                <AmbientInlineControls ctl={ambient} host={isHost} />
               </ConsultationSettings>
               <ConsultationBar
                 isHost={isHost}
@@ -679,6 +679,10 @@ export default function ConsultationRoom() {
         </div>
         <RoomAudioRenderer />
         <AudioUnlockGate />
+        {/* Diffusion du fond sonore (praticien) : publie l'ambiance comme piste
+            audio LiveKit quand le mode « Partagé » est actif → patient + invités
+            l'entendent via leur RoomAudioRenderer. */}
+        {isHost ? <AmbientBroadcaster ctl={ambient} /> : null}
       </LiveKitRoom>
       {/* Composer clinique MEDOS (praticien seul) ; le patient voit le partage
           directement sur la SCÈNE centrale. */}
@@ -691,7 +695,7 @@ export default function ConsultationRoom() {
       {isHost && sessionId ? <HostAdmitGate sessionId={sessionId} /> : null}
       {/* Fond sonore — pastille flottante autonome (praticien), pilotée par le même
           contrôleur que le panneau Réglages. */}
-      {isHost ? <AmbientAudioEngine controller={ambient} /> : null}
+      {isHost ? <AmbientAudioEngine controller={ambient} host /> : null}
     </div>
   );
   // Plein écran : portal vers <body> pour échapper à tout ancêtre containing-block
@@ -1122,10 +1126,79 @@ export function ChatPanel({ open = true, onClose }: { open?: boolean; onClose: (
   );
 }
 
+// ── Diffusion du fond sonore → piste LiveKit ─────────────────────────────────
+// Rendu DANS <LiveKitRoom> (accès à la salle via useRoomContext). Quand le mode
+// « Partagé » est actif (ctl.broadcast), publie le flux MediaStream capté sur
+// l'élément <audio> comme piste audio (source=Unknown). Le RoomAudioRenderer des
+// autres participants rend cette source → patient + invités entendent l'ambiance.
+// Le praticien ne s'entend pas en double (RoomAudioRenderer filtre le local ;
+// son local via les enceintes du graphe WebAudio).
+function AmbientBroadcaster({ ctl }: { ctl: ReturnType<typeof useAmbientAudio> }) {
+  const room = useRoomContext();
+  const pubRef = useRef<LocalTrackPublication | null>(null);
+  const trackRef = useRef<LocalAudioTrack | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    const lp = room?.localParticipant;
+    if (!lp) return undefined;
+
+    void (async () => {
+      if (ctl.broadcast) {
+        if (pubRef.current) return; // déjà en diffusion
+        const stream = ctl.getBroadcastStream();
+        const mst = stream?.getAudioTracks?.()[0];
+        if (!mst) return;
+        try {
+          // userProvidedTrack=true : piste synthétique (WebAudio) — LiveKit ne
+          // doit pas tenter de la réacquérir via getUserMedia sur restart.
+          const track = new LocalAudioTrack(mst, undefined, true);
+          trackRef.current = track;
+          const pub = await lp.publishTrack(track, {
+            name: 'ambient',
+            source: Track.Source.Unknown,
+            dtx: false, // musique continue : pas de coupure sur "silence"
+            red: false,
+          });
+          if (cancelled) {
+            try { await lp.unpublishTrack(track, false); } catch { /* ignore */ }
+            trackRef.current = null;
+            return;
+          }
+          pubRef.current = pub;
+        } catch {
+          trackRef.current = null;
+        }
+      } else if (trackRef.current) {
+        // Repasse en Privé : on dépublie SANS couper la piste (flux réutilisable).
+        try { await lp.unpublishTrack(trackRef.current, false); } catch { /* ignore */ }
+        pubRef.current = null;
+        trackRef.current = null;
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [ctl.broadcast, ctl.getBroadcastStream, room]);
+
+  // Dépublier à la sortie de la salle.
+  useEffect(() => {
+    return () => {
+      const lp = room?.localParticipant;
+      if (lp && trackRef.current) {
+        try { void lp.unpublishTrack(trackRef.current, false); } catch { /* ignore */ }
+      }
+    };
+  }, [room]);
+
+  return null;
+}
+
 // ── Fond sonore : contrôles inline (logés dans le panneau Réglages) ──────────
 // Pilote le contrôleur `useAmbientAudio` partagé (le même que la pastille
 // flottante). Grille de presets + lecture/pause + volume, en styles inline GOLD.
-function AmbientInlineControls({ ctl }: { ctl: ReturnType<typeof useAmbientAudio> }) {
+function AmbientInlineControls({ ctl, host = false }: { ctl: ReturnType<typeof useAmbientAudio>; host?: boolean }) {
   const { presets, presetId, preset, volume, playing, selectPreset, setVolume, togglePlay, addCustomTrack } = ctl;
   const hasSource = !!preset.src;
   return (
@@ -1177,6 +1250,7 @@ function AmbientInlineControls({ ctl }: { ctl: ReturnType<typeof useAmbientAudio
           }}
         />
       </label>
+      {host ? <BroadcastToggle ctl={ctl} /> : null}
       {hasSource ? (
         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
           <button

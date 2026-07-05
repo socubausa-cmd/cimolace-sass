@@ -20,7 +20,7 @@
 // ConsultationRoom (pas de Tailwind, pas de dépendance à --school-accent).
 // ─────────────────────────────────────────────────────────────────────────────
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Music2, Volume1, Volume2, VolumeX, Play, Pause, ChevronUp, ChevronDown, Upload } from 'lucide-react';
+import { Music2, Volume1, Volume2, VolumeX, Play, Pause, ChevronUp, ChevronDown, Upload, Headphones, Radio } from 'lucide-react';
 
 const GOLD = '#b08d57';
 const PANEL_BG = 'rgba(22,22,24,0.94)';
@@ -76,6 +76,17 @@ export type AmbientAudioController = {
   pause: () => void;
   /** Charge une piste locale (fichier de l'appareil) → l'ajoute aux ambiances et la lance. */
   addCustomTrack: (file: File) => void;
+  // ── Diffusion (Privé ↔ Partagé) ──────────────────────────────────────────
+  /** true = l'ambiance est diffusée aux autres participants (patient + invités). */
+  broadcast: boolean;
+  /** Active/coupe la diffusion. À true → construit le graphe WebAudio (geste requis). */
+  setBroadcast: (on: boolean) => void;
+  /**
+   * Flux MediaStream capté sur l'élément <audio> (via WebAudio) à PUBLIER dans la
+   * salle LiveKit. Construit le graphe paresseusement au 1er appel. `null` si SSR.
+   * Le son local continue de sortir sur les enceintes (graphe → destination).
+   */
+  getBroadcastStream: () => MediaStream | null;
 };
 
 const SILENCE_ID = 'none';
@@ -98,11 +109,69 @@ export function useAmbientAudio(options: UseAmbientAudioOptions = {}): AmbientAu
   // « playing » = intention de lecture. La lecture réelle ne sonne que si le
   // preset a une source (≠ Silence) — Silence reste un état « pause sonore ».
   const [playing, setPlaying] = useState<boolean>(!!autoPlay);
+  // Diffusion aux autres participants (Privé = false par défaut).
+  const [broadcast, setBroadcastState] = useState<boolean>(false);
 
   const audioRef = useRef<HTMLAudioElement | null>(null);
   // Object URLs des pistes chargées (révoquées à la destruction) + compteur d'id stable.
   const customUrlsRef = useRef<string[]>([]);
   const customIdRef = useRef<number>(1);
+
+  // ── Graphe WebAudio (capture pour diffusion) ───────────────────────────────
+  // Construit UNIQUEMENT quand la diffusion est activée (aucune régression sur la
+  // lecture locale en mode Privé). Une fois créé : element → gain → { enceintes
+  // locales, flux MediaStream diffusé }. Le gain porte le volume (uniforme local
+  // + distant, fiable sur tous navigateurs, contrairement à `el.volume` capté).
+  const audioCtxRef = useRef<AudioContext | null>(null);
+  const srcNodeRef = useRef<MediaElementAudioSourceNode | null>(null);
+  const gainNodeRef = useRef<GainNode | null>(null);
+  const destNodeRef = useRef<MediaStreamAudioDestinationNode | null>(null);
+  const streamRef = useRef<MediaStream | null>(null);
+
+  const ensureGraph = useCallback((): MediaStream | null => {
+    if (typeof window === 'undefined') return null;
+    const el = audioRef.current;
+    if (!el) return null;
+    if (!streamRef.current) {
+      try {
+        const Ctx: typeof AudioContext =
+          window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
+        const ctx = new Ctx();
+        // createMediaElementSource ne peut être appelé qu'UNE fois par élément :
+        // dès lors la sortie de l'élément passe par le graphe → on doit rebrancher
+        // les enceintes via ctx.destination.
+        const src = ctx.createMediaElementSource(el);
+        const gain = ctx.createGain();
+        gain.gain.value = clampVolume(volume) / 100;
+        const dest = ctx.createMediaStreamDestination();
+        src.connect(gain);
+        gain.connect(ctx.destination); // son local (enceintes du praticien)
+        gain.connect(dest); // flux à publier dans la salle
+        // Le graphe attenue déjà via le gain → l'élément joue à plein régime.
+        el.volume = 1;
+        audioCtxRef.current = ctx;
+        srcNodeRef.current = src;
+        gainNodeRef.current = gain;
+        destNodeRef.current = dest;
+        streamRef.current = dest.stream;
+      } catch {
+        return null;
+      }
+    }
+    // Reprise du contexte (politique autoplay) — appelé depuis un geste utilisateur.
+    audioCtxRef.current?.resume().catch(() => {});
+    return streamRef.current;
+  }, [volume]);
+
+  const getBroadcastStream = useCallback(() => ensureGraph(), [ensureGraph]);
+
+  const setBroadcast = useCallback(
+    (on: boolean) => {
+      if (on) ensureGraph(); // construit le graphe DANS le geste (autoplay policy)
+      setBroadcastState(on);
+    },
+    [ensureGraph],
+  );
 
   const preset = useMemo(
     () => presets.find((p) => p.id === presetId) ?? presets[0],
@@ -151,7 +220,14 @@ export function useAmbientAudio(options: UseAmbientAudioOptions = {}): AmbientAu
         /* ignore */
       }
     }
-    el.volume = clampVolume(volume) / 100;
+    // Volume : via le gain WebAudio si le graphe de diffusion existe (attenuation
+    // uniforme local + distant), sinon directement sur l'élément (mode Privé pur).
+    if (streamRef.current && gainNodeRef.current) {
+      el.volume = 1;
+      gainNodeRef.current.gain.value = clampVolume(volume) / 100;
+    } else {
+      el.volume = clampVolume(volume) / 100;
+    }
 
     if (audible) {
       // play() peut être rejeté (autoplay policy) → silencieux, l'utilisateur
@@ -186,6 +262,20 @@ export function useAmbientAudio(options: UseAmbientAudioOptions = {}): AmbientAu
         }
       });
       customUrlsRef.current = [];
+      // Fermer le contexte WebAudio de diffusion (le cas échéant).
+      const ctx = audioCtxRef.current;
+      if (ctx && ctx.state !== 'closed') {
+        try {
+          void ctx.close();
+        } catch {
+          /* ignore */
+        }
+      }
+      audioCtxRef.current = null;
+      srcNodeRef.current = null;
+      gainNodeRef.current = null;
+      destNodeRef.current = null;
+      streamRef.current = null;
     };
   }, []);
 
@@ -231,7 +321,77 @@ export function useAmbientAudio(options: UseAmbientAudioOptions = {}): AmbientAu
     play,
     pause,
     addCustomTrack,
+    broadcast,
+    setBroadcast,
+    getBroadcastStream,
   };
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// TOGGLE Privé ↔ Partagé — segmenté, réutilisé dans le panneau flottant ET le
+// panneau Réglages (même contrôleur). RÉSERVÉ au praticien (l'hôte publie la
+// piste ; le patient ne fait que la recevoir via son RoomAudioRenderer).
+// ─────────────────────────────────────────────────────────────────────────────
+export function BroadcastToggle({ ctl }: { ctl: AmbientAudioController }) {
+  const { broadcast, setBroadcast } = ctl;
+  const seg = (active: boolean): React.CSSProperties => ({
+    flex: 1,
+    display: 'inline-flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 5,
+    height: 30,
+    borderRadius: 8,
+    border: 'none',
+    cursor: 'pointer',
+    fontSize: 11,
+    fontWeight: 600,
+    background: active ? GOLD : 'transparent',
+    color: active ? '#1a1a1a' : 'rgba(255,255,255,0.62)',
+    transition: 'background 0.15s, color 0.15s',
+  });
+  return (
+    <div>
+      <div
+        role="tablist"
+        aria-label="Diffusion du fond sonore"
+        style={{
+          display: 'flex',
+          gap: 4,
+          padding: 3,
+          borderRadius: 10,
+          background: 'rgba(255,255,255,0.04)',
+          border: '1px solid rgba(255,255,255,0.08)',
+        }}
+      >
+        <button
+          type="button"
+          role="tab"
+          aria-selected={!broadcast}
+          onClick={() => setBroadcast(false)}
+          title="Vous seul entendez l'ambiance"
+          style={seg(!broadcast)}
+        >
+          <Headphones size={13} aria-hidden="true" />
+          Privé
+        </button>
+        <button
+          type="button"
+          role="tab"
+          aria-selected={broadcast}
+          onClick={() => setBroadcast(true)}
+          title="Le patient et les invités entendent l'ambiance"
+          style={seg(broadcast)}
+        >
+          <Radio size={13} aria-hidden="true" />
+          Partagé
+        </button>
+      </div>
+      <p style={{ margin: '6px 2px 0', fontSize: 10.5, color: 'rgba(255,255,255,0.4)', lineHeight: 1.4 }}>
+        {broadcast ? 'Le patient et vos invités entendent l’ambiance.' : 'Vous seul entendez l’ambiance.'}
+      </p>
+    </div>
+  );
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -247,6 +407,8 @@ export type AmbientAudioEngineProps = {
   initialVolume?: number;
   /** Contrôleur externe (si l'hôte gère déjà l'état via useAmbientAudio). */
   controller?: AmbientAudioController;
+  /** Praticien : affiche le sélecteur Privé/Partagé (diffusion aux participants). */
+  host?: boolean;
 };
 
 const VOLUME_ICON_THRESHOLD_LOW = 45;
@@ -263,6 +425,7 @@ export default function AmbientAudioEngine({
   initialPresetId,
   initialVolume,
   controller,
+  host = false,
 }: AmbientAudioEngineProps) {
   // Soit on consomme un contrôleur fourni, soit on en crée un local.
   const localCtl = useAmbientAudio({ initialPresetId, initialVolume });
@@ -402,6 +565,13 @@ export default function AmbientAudioEngine({
             }}
           />
         </label>
+
+        {/* Privé ↔ Partagé (praticien) : diffuse l'ambiance aux participants. */}
+        {host ? (
+          <div style={{ marginBottom: 12 }}>
+            <BroadcastToggle ctl={ctl} />
+          </div>
+        ) : null}
 
         {/* Play/pause + volume (masqué si Silence : rien à régler). */}
         {hasSource ? (
