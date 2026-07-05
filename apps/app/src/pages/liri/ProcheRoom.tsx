@@ -294,6 +294,7 @@ function ProcheLiveRoom({ url, token, sessionId, clinic, initialCam = true, init
               strokes={channel.strokes}
               editable={false}
               onStrokes={() => {}}
+              smartboard={channel.smartboard}
               identity={{ logo: clinicLogo, label: clinic ?? null, name: channel.hostName }}
               onImmersiveChange={setImmersive}
             />
