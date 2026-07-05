@@ -251,8 +251,9 @@ export function BodyViewer3D({
         <OrbitControls ref={controls} makeDefault enablePan={false} enableDamping minDistance={0.7} maxDistance={6} />
       </Canvas>
 
-      {/* Légende + note 2D */}
-      <div style={{ position: 'absolute', bottom: 8, left: 0, right: 0, display: 'flex', flexWrap: 'wrap', gap: '5px 14px', justifyContent: 'center', padding: '0 8px', fontSize: 11, color: 'var(--zw-text-muted)', pointerEvents: 'none' }}>
+      {/* Légende + note 2D. Mobile : REMONTÉE (bottom:26) pour laisser la mention
+          « Anatomie… » seule tout en bas → les deux ne se chevauchent plus. */}
+      <div style={{ position: 'absolute', bottom: compact ? 26 : 8, left: 0, right: 0, display: 'flex', flexWrap: 'wrap', gap: compact ? '3px 10px' : '5px 14px', justifyContent: 'center', padding: '0 8px', fontSize: compact ? 10 : 11, color: 'var(--zw-text-muted)', pointerEvents: 'none' }}>
         {(['green', 'yellow', 'orange', 'red'] as OrganColor[]).map((c, i) => (
           <span key={c} style={{ display: 'inline-flex', alignItems: 'center', gap: 5 }}>
             <span style={{ width: 9, height: 9, borderRadius: '50%', background: COLOR_HEX[c] }} />

@@ -39,7 +39,7 @@ import '@livekit/components-styles';
 import { getProcheStatus, getProcheToken, type ProcheStatus } from '@/features/medos-cockpit/procheApi';
 import { useCockpitChannel } from '@/features/medos-cockpit/useCockpitChannel';
 import { getApiBaseUrl } from '@/lib/apiBase';
-import { ConsultationStage, CallEndedScreen, ChatPanel, AudioUnlockGate } from './ConsultationRoom';
+import { ConsultationStage, CallEndedScreen, ChatPanel, AudioUnlockGate, RaiseHandButton } from './ConsultationRoom';
 
 // Shell chaud LIRI (aligné sur ConsultationRoom / liveHostTheme).
 const BG = '#262624';
@@ -286,7 +286,7 @@ function ProcheLiveRoom({ url, token, sessionId, clinic, initialCam = true, init
       <LiveKitRoom serverUrl={url} token={token} connect audio={initialMic} video={initialCam} style={{ flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column' }}>
         <div style={{ display: 'flex', flex: 1, minHeight: 0 }}>
           <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column' }}>
-            <ProcheChrome clinic={clinic} />
+            <ProcheChrome />
             <ConsultationStage
               view={channel.view}
               isHost={false}
@@ -314,7 +314,7 @@ function ProcheLiveRoom({ url, token, sessionId, clinic, initialCam = true, init
   return typeof document !== 'undefined' ? createPortal(content, document.body) : content;
 }
 
-function ProcheChrome({ clinic }: { clinic?: string }) {
+function ProcheChrome() {
   // ≤820px : en-tête compacte — titre = nom de la clinique SEUL (plus de « Consultation »),
   // calibres réduits, « Proche invité » → icône seule, « En direct » → pastille seule.
   const compact = useMatchMediaAtMost(820);
@@ -326,10 +326,9 @@ function ProcheChrome({ clinic }: { clinic?: string }) {
         alt="LIRI"
         style={{ height: compact ? 20 : 24, width: 'auto', objectFit: 'contain', filter: 'drop-shadow(0 1px 3px rgba(212,163,106,0.32))', flexShrink: 0 }}
       />
-      {/* Titre = nom de la clinique (le mot « Consultation » supprimé). */}
-      {clinic ? (
-        <span style={{ fontWeight: 600, fontSize: compact ? 12.5 : 14, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', minWidth: 0 }}>{clinic}</span>
-      ) : null}
+      {/* Titre = « LIRI » (le nom de la clinique est déjà en badge sur la vidéo
+          du praticien → inutile de le répéter ici). */}
+      <span style={{ fontWeight: 600, fontSize: compact ? 12.5 : 14, whiteSpace: 'nowrap', flexShrink: 0 }}>LIRI</span>
       <span
         title="Proche invité"
         style={{ display: 'inline-flex', alignItems: 'center', gap: 5, fontSize: compact ? 11 : 12, color: '#cbd5e1', background: 'rgba(255,255,255,0.06)', padding: compact ? '3px 6px' : '3px 9px', borderRadius: 999, flexShrink: 0 }}
@@ -345,6 +344,9 @@ function ProcheChrome({ clinic }: { clinic?: string }) {
 
 function ProcheBar({ onLeave, chatOpen, onToggleChat }: { onLeave: () => void; chatOpen: boolean; onToggleChat: () => void }) {
   const room = useRoomContext();
+  // Mobile : boutons du pied de page en ICÔNES SEULES (les libellés prenaient
+  // trop de place). Libellés conservés sur ordinateur.
+  const compact = useMatchMediaAtMost(820);
   const [fs, setFs] = useState(typeof document !== 'undefined' && !!document.fullscreenElement);
   useEffect(() => {
     const on = () => setFs(!!document.fullscreenElement);
@@ -370,24 +372,28 @@ function ProcheBar({ onLeave, chatOpen, onToggleChat }: { onLeave: () => void; c
       >
         {fs ? <Minimize size={16} aria-hidden="true" /> : <Maximize size={16} aria-hidden="true" />}
       </button>
-      <TrackToggle source={Track.Source.Microphone} showIcon>
-        Micro
+      <TrackToggle source={Track.Source.Microphone} showIcon title="Micro">
+        {compact ? null : 'Micro'}
       </TrackToggle>
-      <TrackToggle source={Track.Source.Camera} showIcon>
-        Caméra
+      <TrackToggle source={Track.Source.Camera} showIcon title="Caméra">
+        {compact ? null : 'Caméra'}
       </TrackToggle>
+      {/* Lever la main → le praticien voit un badge ✋ sur votre vignette. */}
+      <RaiseHandButton compact={compact} />
       <button
         onClick={onToggleChat}
         aria-pressed={chatOpen}
-        style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '8px 12px', borderRadius: 9, border: 'none', cursor: 'pointer', background: chatOpen ? GOLD : 'rgba(255,255,255,0.1)', color: chatOpen ? '#1a1a1a' : '#fff', fontSize: 13, fontWeight: 600 }}
+        title="Discussion"
+        style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: compact ? 0 : 6, width: compact ? 40 : undefined, height: 38, padding: compact ? 0 : '8px 12px', borderRadius: 9, border: 'none', cursor: 'pointer', background: chatOpen ? GOLD : 'rgba(255,255,255,0.1)', color: chatOpen ? '#1a1a1a' : '#fff', fontSize: 13, fontWeight: 600 }}
       >
-        <MessageSquare size={15} aria-hidden="true" /> Discussion
+        <MessageSquare size={15} aria-hidden="true" /> {compact ? null : 'Discussion'}
       </button>
       <button
         onClick={leave}
-        style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '8px 14px', borderRadius: 9, border: 'none', cursor: 'pointer', background: '#b1372f', color: '#fff', fontSize: 13, fontWeight: 600 }}
+        title="Quitter"
+        style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: compact ? 0 : 6, width: compact ? 40 : undefined, height: 38, padding: compact ? 0 : '8px 14px', borderRadius: 9, border: 'none', cursor: 'pointer', background: '#b1372f', color: '#fff', fontSize: 13, fontWeight: 600 }}
       >
-        <PhoneOff size={16} aria-hidden="true" /> Quitter
+        <PhoneOff size={16} aria-hidden="true" /> {compact ? null : 'Quitter'}
       </button>
     </div>
   );

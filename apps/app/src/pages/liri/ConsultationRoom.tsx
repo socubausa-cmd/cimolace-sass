@@ -17,7 +17,7 @@
 // chaque flux est encadré en 16:9 (object-fit cover SANS écrasement). Token via
 // le chemin MÉDICAL (contrôle d'accès patient).
 // ─────────────────────────────────────────────────────────────────────────────
-import { useEffect, useRef, useState, type CSSProperties } from 'react';
+import { useCallback, useEffect, useRef, useState, type CSSProperties } from 'react';
 import { useParams } from 'react-router-dom';
 import {
   LiveKitRoom,
@@ -37,7 +37,7 @@ import LiveDataSaverEffect from '@/features/live/LiveDataSaverEffect';
 import { useLiveDataSaver } from '@/hooks/useLiveDataSaver';
 import { useMatchMediaAtMost } from '@/hooks/useLiriMobileBreakpoint';
 import LiriProductBadge from '@/components/brand/LiriProductBadge';
-import { Stethoscope, PhoneOff, Share2, Pencil, Users, Presentation, MonitorUp, Eraser, UserPlus, Copy, Check, ShieldCheck, X, MessageSquare, Send, Sparkles, Brain, Music2, Play, Pause, FileText, LayoutTemplate, Radio, Upload, ChevronUp, ChevronDown, ChevronRight, ChevronLeft, PanelRight, PanelBottom, Maximize, Minimize } from 'lucide-react';
+import { Stethoscope, PhoneOff, Share2, Pencil, Users, Presentation, MonitorUp, Eraser, UserPlus, Copy, Check, ShieldCheck, X, MessageSquare, Send, Sparkles, Brain, Music2, Play, Pause, FileText, LayoutTemplate, Radio, Upload, ChevronUp, ChevronDown, ChevronRight, ChevronLeft, PanelRight, PanelBottom, Maximize, Minimize, Hand } from 'lucide-react';
 import { createPortal } from 'react-dom';
 import '@livekit/components-styles';
 import { useAuth } from '@/contexts/SupabaseAuthContext';
@@ -798,6 +798,95 @@ function ConnectedParticipantsCard() {
   );
 }
 
+// ── « Lever la main » ────────────────────────────────────────────────────────
+// Signal léger diffusé via LiveKit publishData (topic 'hand') — aucune permission
+// spéciale (contrairement à setAttributes). L'invité lève la main → le praticien
+// voit un badge ✋ sur sa tuile. Éphémère (un arrivant tardif ne voit pas l'état
+// déjà levé) : suffisant pour un signal transitoire d'attention.
+export function useHandRaise() {
+  const room = useRoomContext();
+  const { localParticipant } = useLocalParticipant();
+  const [raised, setRaised] = useState<Set<string>>(new Set());
+  const [localRaised, setLocalRaised] = useState(false);
+
+  useEffect(() => {
+    if (!room) return undefined;
+    const dec = new TextDecoder();
+    const onData = (payload: Uint8Array, participant?: any, _k?: unknown, topic?: string) => {
+      if (topic !== 'hand' || !participant?.identity) return;
+      let up = false;
+      try { up = !!JSON.parse(dec.decode(payload))?.raised; } catch { return; }
+      setRaised((prev) => {
+        const has = prev.has(participant.identity);
+        if (up === has) return prev;
+        const n = new Set(prev);
+        if (up) n.add(participant.identity); else n.delete(participant.identity);
+        return n;
+      });
+    };
+    const onLeft = (participant?: any) => setRaised((prev) => {
+      if (!participant?.identity || !prev.has(participant.identity)) return prev;
+      const n = new Set(prev); n.delete(participant.identity); return n;
+    });
+    room.on(RoomEvent.DataReceived, onData);
+    room.on(RoomEvent.ParticipantDisconnected, onLeft);
+    return () => {
+      room.off(RoomEvent.DataReceived, onData);
+      room.off(RoomEvent.ParticipantDisconnected, onLeft);
+    };
+  }, [room]);
+
+  const toggle = useCallback(() => {
+    setLocalRaised((prev) => {
+      const next = !prev;
+      try {
+        const enc = new TextEncoder();
+        void localParticipant?.publishData(enc.encode(JSON.stringify({ raised: next })), { reliable: true, topic: 'hand' });
+      } catch { /* ignore */ }
+      return next;
+    });
+  }, [localParticipant]);
+
+  return { raised, localRaised, toggle };
+}
+
+// Bouton « Lever la main » — barre du bas (invité ET praticien). Icône seule en
+// compact (économie de place). Publie l'état via useHandRaise.
+export function RaiseHandButton({ compact = false }: { compact?: boolean }) {
+  const { localRaised, toggle } = useHandRaise();
+  return (
+    <button
+      onClick={toggle}
+      aria-pressed={localRaised}
+      aria-label={localRaised ? 'Baisser la main' : 'Lever la main'}
+      title={localRaised ? 'Baisser la main' : 'Lever la main'}
+      style={{
+        display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: compact ? 0 : 6,
+        width: compact ? 40 : undefined, height: 38, padding: compact ? 0 : '8px 12px',
+        borderRadius: 9, border: 'none', cursor: 'pointer',
+        background: localRaised ? GOLD : 'rgba(255,255,255,0.1)', color: localRaised ? '#1a1a1a' : '#fff',
+        fontSize: 13, fontWeight: 600, flexShrink: 0,
+      }}
+    >
+      <Hand size={16} aria-hidden="true" />
+      {compact ? null : (localRaised ? 'Baisser' : 'Lever la main')}
+    </button>
+  );
+}
+
+// Petit badge ✋ posé sur une tuile quand ce participant a la main levée.
+function RaisedHandBadge({ show }: { show: boolean }) {
+  if (!show) return null;
+  return (
+    <span
+      aria-label="Main levée"
+      style={{ position: 'absolute', right: 6, top: 6, zIndex: 4, width: 22, height: 22, borderRadius: 999, background: GOLD, color: '#1a1a1a', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 2px 8px rgba(0,0,0,0.4)' }}
+    >
+      <Hand size={13} aria-hidden="true" />
+    </span>
+  );
+}
+
 // ── Bandeau haut : identité + SWITCHER de vue (host) ─────────────────────────
 const VIEW_OPTIONS: { id: ConsultView; label: string; icon: React.ReactNode }[] = [
   { id: 'conversation', label: 'Conversation', icon: <Users size={15} aria-hidden="true" /> },
@@ -986,7 +1075,7 @@ function RoleTag({ role, style }: { role: TileRole; style?: React.CSSProperties 
   );
 }
 
-function FaceToFace({ tracks, identity, isHost, compact }: { tracks: any[]; identity?: ConsultIdentity; isHost?: boolean; compact?: boolean }) {
+function FaceToFace({ tracks, identity, isHost, compact, raisedHands }: { tracks: any[]; identity?: ConsultIdentity; isHost?: boolean; compact?: boolean; raisedHands?: Set<string> }) {
   const cams = tracks.filter((t) => t?.source === Track.Source.Camera);
   const screen = tracks.find((t) => t?.source === Track.Source.ScreenShare && t?.publication);
   // Rôles STABLES : le « peer » = l'autre partie principale (praticien vu du
@@ -1031,6 +1120,7 @@ function FaceToFace({ tracks, identity, isHost, compact }: { tracks: any[]; iden
             style={{ position: 'absolute', inset: 0, cursor: featured ? 'zoom-out' : 'default' }}
           >
             <ParticipantTile trackRef={big} style={{ width: '100%', height: '100%', pointerEvents: 'none' }} />
+            <RaisedHandBadge show={!!raisedHands?.has(big?.participant?.identity)} />
           </div>
         ) : (
           <div style={{ position: 'absolute', inset: 0, display: 'grid', placeItems: 'center', pointerEvents: 'none' }}>
@@ -1057,6 +1147,7 @@ function FaceToFace({ tracks, identity, isHost, compact }: { tracks: any[]; iden
             >
               <ParticipantTile trackRef={t} style={{ width: '100%', height: '100%', pointerEvents: 'none' }} />
               <RoleTag role={participantRole(t?.participant, !!isHost)} />
+              <RaisedHandBadge show={!!raisedHands?.has(t?.participant?.identity)} />
             </div>
           ))}
         </div>
@@ -1374,6 +1465,8 @@ export function ConsultationStage({
   // OVERLAY vertical empilé à droite (partage 100 % hauteur) ; chacune
   // repliable en pastille. Hooks déclarés avant le return conditionnel.
   const compact = useMatchMediaAtMost(820);
+  // Mains levées (identités) — badge ✋ sur les tuiles concernées.
+  const { raised: raisedHands } = useHandRaise();
   const [miniLayout, setMiniLayout] = useState<'band' | 'overlay'>('band');
   const [miniCollapsed, setMiniCollapsed] = useState(false);
   // Disposition « overlay » IMMERSIVE : on RÉSERVE une marge droite dans le
@@ -1429,7 +1522,7 @@ export function ConsultationStage({
   if (view === 'conversation') {
     return (
       <div style={{ flex: 1, minHeight: 0, padding: compact ? 8 : 14, display: 'flex' }}>
-        <FaceToFace tracks={tracks} identity={identity} isHost={isHost} compact={compact} />
+        <FaceToFace tracks={tracks} identity={identity} isHost={isHost} compact={compact} raisedHands={raisedHands} />
       </div>
     );
   }
@@ -1442,7 +1535,7 @@ export function ConsultationStage({
   // on l'y affiche en plein ; sinon il reste visible dans le rail (MembersRail).
   const screen = tracks.find((t) => t?.source === Track.Source.ScreenShare && t?.publication);
   return (
-    <div style={{ flex: 1, minHeight: 0, display: 'flex', flexDirection: compact ? 'column' : 'row', gap: compact ? 8 : 12, padding: compact ? 8 : 14 }}>
+    <div style={{ flex: 1, minHeight: 0, display: 'flex', flexDirection: compact ? 'column' : 'row', gap: compact ? 4 : 12, padding: compact ? 3 : 14 }}>
       <div style={{ flex: 1, minWidth: 0, minHeight: 0, borderRadius: 16, overflow: 'hidden', position: 'relative', ...(view === 'board' ? { background: TILE_BG } : SHARE_STAGE_BG) }}>
         {view === 'board' ? (
           // Tableau intelligent (SmartBoard Konva) — outils de dessin/formes/texte +
@@ -1546,6 +1639,7 @@ export function ConsultationStage({
             onToggleCollapsed={toggleMini}
             onSwitchLayout={() => setMiniLayout('band')}
             onFocus={focusMember}
+            raisedHands={raisedHands}
           />
         ) : null}
       </div>
@@ -1558,6 +1652,7 @@ export function ConsultationStage({
           onToggleCollapsed={toggleMini}
           onSwitchLayout={() => setMiniLayout('overlay')}
           onFocus={focusMember}
+          raisedHands={raisedHands}
         />
       ) : null}
     </div>
@@ -1582,6 +1677,7 @@ function MembersRail({
   onToggleCollapsed,
   onSwitchLayout,
   onFocus,
+  raisedHands,
 }: {
   tracks: any[];
   isHost?: boolean;
@@ -1591,6 +1687,8 @@ function MembersRail({
   onSwitchLayout?: () => void;
   /** Tap sur une pastille caméra → grande vue de la personne (toggle). */
   onFocus?: (participantIdentity: string) => void;
+  /** Identités avec la main levée → badge ✋ sur la pastille. */
+  raisedHands?: Set<string>;
 }) {
   const cams = tracks.filter((t) => t?.source === Track.Source.Camera);
   // Écran partagé : vignette dédiée EN TÊTE du rail (label ambre) → quand un
@@ -1629,6 +1727,7 @@ function MembersRail({
           >
             <ParticipantTile trackRef={t} style={{ width: '100%', height: '100%' }} />
             <RoleTag role={participantRole(t?.participant, !!isHost)} />
+            <RaisedHandBadge show={!!raisedHands?.has(t?.participant?.identity)} />
           </div>
         ))}
         <div style={{ marginLeft: 'auto', display: 'flex', flexDirection: 'column', gap: 4, flexShrink: 0 }}>
@@ -1649,7 +1748,7 @@ function MembersRail({
         <button
           onClick={onToggleCollapsed}
           aria-label={`Afficher les ${cams.length} participants`}
-          style={{ ...pillStyle, position: 'absolute', top: '50%', right: 8, transform: 'translateY(-50%)', zIndex: 30, flexDirection: 'column', gap: 2, padding: '9px 8px' }}
+          style={{ ...pillStyle, position: 'absolute', top: '50%', right: 3, transform: 'translateY(-50%)', zIndex: 30, flexDirection: 'column', gap: 2, padding: '9px 8px' }}
         >
           <Users size={14} aria-hidden="true" /> {cams.length} <ChevronLeft size={12} aria-hidden="true" />
         </button>
@@ -1660,7 +1759,7 @@ function MembersRail({
     // sont posées sur le même fond que le contenu partagé, qui ne place jamais
     // d'information sous elles. Un seul écran organisé, zéro superposition.
     return (
-      <div data-cr="members" data-ov="" style={{ position: 'absolute', top: '50%', right: 8, transform: 'translateY(-50%)', zIndex: 30, width: 80, display: 'flex', flexDirection: 'column', alignItems: 'stretch', gap: 8, maxHeight: 'calc(100% - 24px)', overflowY: 'auto' }}>
+      <div data-cr="members" data-ov="" style={{ position: 'absolute', top: '50%', right: 3, transform: 'translateY(-50%)', zIndex: 30, width: 80, display: 'flex', flexDirection: 'column', alignItems: 'stretch', gap: 8, maxHeight: 'calc(100% - 24px)', overflowY: 'auto' }}>
         <style>{`
 [data-cr="members"] .lk-participant-name{display:none!important}
 [data-cr="members"][data-ov] .cr-mini{opacity:.8;filter:brightness(.86) saturate(.95);transition:opacity .25s ease, filter .25s ease;animation:crMiniIn .3s cubic-bezier(.2,.7,.3,1)}
@@ -1683,6 +1782,7 @@ function MembersRail({
           >
             <ParticipantTile trackRef={t} style={{ width: '100%', height: '100%' }} />
             <RoleTag role={participantRole(t?.participant, !!isHost)} />
+            <RaisedHandBadge show={!!raisedHands?.has(t?.participant?.identity)} />
           </div>
         ))}
         <div style={{ display: 'flex', justifyContent: 'center', gap: 4 }}>
@@ -1725,6 +1825,7 @@ function MembersRail({
           >
             <ParticipantTile trackRef={t} style={{ width: '100%', height: '100%' }} />
             <RoleTag role={participantRole(t?.participant, !!isHost)} />
+            <RaisedHandBadge show={!!raisedHands?.has(t?.participant?.identity)} />
           </div>
         ))}
       </div>
@@ -1801,6 +1902,8 @@ function ConsultationBar({
       <TrackToggle source={Track.Source.Microphone} showIcon title="Micro" />
       <TrackToggle source={Track.Source.Camera} showIcon title="Caméra" />
       {isHost ? <TrackToggle source={Track.Source.ScreenShare} showIcon title="Partager l'écran" /> : null}
+      {/* Lever la main (patient) → le praticien voit un badge ✋ sur sa tuile. */}
+      {!isHost ? <RaiseHandButton compact /> : null}
       <button
         type="button"
         onClick={toggleDataSaver}
