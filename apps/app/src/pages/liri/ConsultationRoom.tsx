@@ -45,6 +45,7 @@ import { teleconsultApi, type TeleconsultInvite } from '@/lib/api';
 import { getApiBaseUrl } from '@/lib/apiBase';
 import { getClinicalContext, type ClinicalContext, type CockpitScene } from '@/features/medos-cockpit/cockpit-api';
 import { useCockpitChannel, type AnnotStroke, type ConsultView } from '@/features/medos-cockpit/useCockpitChannel';
+import { useJoinRequests } from '@/features/medos-cockpit/useJoinRequest';
 import { SharedSceneView, CockpitDock } from '@/features/medos-cockpit/MedTeleconsultCockpit';
 import { AnnotationOverlay } from '@/features/medos-cockpit/AnnotationOverlay';
 import ImmersiveBootLoader from '@/components/liri/ImmersiveBootLoader';
@@ -2254,8 +2255,10 @@ function EmailStatusBadge({ status }: { status?: string | null }) {
 }
 
 function PatientConsentGate({ sessionId }: { sessionId: string }) {
-  const [pending, setPending] = useState<TeleconsultInvite | null>(null);
+  const [invites, setInvites] = useState<TeleconsultInvite[]>([]);
   const [busy, setBusy] = useState(false);
+  // Ne demande le consentement QUE pour un proche RÉELLEMENT présent sur le lien.
+  const requesting = useJoinRequests(sessionId);
 
   useEffect(() => {
     let alive = true;
@@ -2263,7 +2266,7 @@ function PatientConsentGate({ sessionId }: { sessionId: string }) {
       teleconsultApi
         .listInvites(sessionId)
         .then((list) => {
-          if (alive) setPending(list.find((i) => i.status === 'consent_requested') || null);
+          if (alive) setInvites(Array.isArray(list) ? list : []);
         })
         .catch(() => {});
     poll();
@@ -2274,13 +2277,16 @@ function PatientConsentGate({ sessionId }: { sessionId: string }) {
     };
   }, [sessionId]);
 
+  const pending =
+    invites.find((i) => i.status === 'consent_requested' && requesting.has(i.id)) || null;
+
   if (!pending) return null;
 
   const decide = async (granted: boolean) => {
     setBusy(true);
     try {
       await teleconsultApi.consentInvite(sessionId, pending.id, granted);
-      setPending(null);
+      setInvites((prev) => prev.filter((i) => i.id !== pending.id)); // retrait optimiste
     } catch {
       /* ignore */
     } finally {
@@ -2312,8 +2318,11 @@ function PatientConsentGate({ sessionId }: { sessionId: string }) {
 // bouton « Admettre » restait caché dans le modal → le praticien ne savait pas
 // qu'un invité l'attendait, qui restait bloqué « en attente d'autorisation ».
 function HostAdmitGate({ sessionId }: { sessionId: string }) {
-  const [pending, setPending] = useState<TeleconsultInvite | null>(null);
+  const [invites, setInvites] = useState<TeleconsultInvite[]>([]);
   const [busy, setBusy] = useState(false);
+  // Bandeau « souhaite rejoindre » UNIQUEMENT pour un proche RÉELLEMENT présent sur
+  // le lien (signal realtime), plus jamais à la simple création de l'invitation.
+  const requesting = useJoinRequests(sessionId);
 
   useEffect(() => {
     let alive = true;
@@ -2321,7 +2330,7 @@ function HostAdmitGate({ sessionId }: { sessionId: string }) {
       teleconsultApi
         .listInvites(sessionId)
         .then((list) => {
-          if (alive) setPending(list.find((i) => i.status === 'consent_requested') || null);
+          if (alive) setInvites(Array.isArray(list) ? list : []);
         })
         .catch(() => {});
     poll();
@@ -2332,6 +2341,9 @@ function HostAdmitGate({ sessionId }: { sessionId: string }) {
     };
   }, [sessionId]);
 
+  const pending =
+    invites.find((i) => i.status === 'consent_requested' && requesting.has(i.id)) || null;
+
   if (!pending) return null;
 
   const act = async (admit: boolean) => {
@@ -2339,7 +2351,7 @@ function HostAdmitGate({ sessionId }: { sessionId: string }) {
     try {
       if (admit) await teleconsultApi.admitInvite(sessionId, pending.id);
       else await teleconsultApi.revokeInvite(sessionId, pending.id);
-      setPending(null);
+      setInvites((prev) => prev.filter((i) => i.id !== pending.id)); // retrait optimiste
     } catch {
       /* ignore */
     } finally {

@@ -37,6 +37,7 @@ function toggleAppFullscreen() {
 import { createPortal } from 'react-dom';
 import '@livekit/components-styles';
 import { getProcheStatus, getProcheToken, type ProcheStatus } from '@/features/medos-cockpit/procheApi';
+import { useBroadcastJoinRequest } from '@/features/medos-cockpit/useJoinRequest';
 import { useCockpitChannel } from '@/features/medos-cockpit/useCockpitChannel';
 import { getApiBaseUrl } from '@/lib/apiBase';
 import { ConsultationStage, CallEndedScreen, ChatPanel, AudioUnlockGate, RaiseHandButton, CONSULT_SHELL_CSS } from './ConsultationRoom';
@@ -84,6 +85,12 @@ export default function ProcheRoom() {
       clearInterval(t);
     };
   }, [inviteId, conn]);
+
+  // Signal « présent sur le lien » : tant que l'invité patiente sur l'écran
+  // d'autorisation (consent_requested), il DIFFUSE sa demande → le host/patient
+  // n'affichent le bandeau/la modale d'admission QUE maintenant (plus jamais à la
+  // simple création du lien). S'arrête dès qu'il est autorisé / refusé / rejoint.
+  useBroadcastJoinRequest(sessionId, inviteId, !conn && status?.status === 'consent_requested');
 
   // Logo de la clinique (branding public par slug) pour l'écran d'accueil.
   useEffect(() => {
