@@ -35,17 +35,20 @@ export type AmbiencePreset = {
   src: string | null;
 };
 
-// Sources MP3 FIABLES (hotlink autorisé, 200). Les anciennes URLs pixabay
-// renvoyaient 403 (hotlink protégé) → le fond sonore ne jouait JAMAIS. SoundHelix
-// = pistes instrumentales libres, hébergées de façon stable, parfaites en fond.
+// Sources MP3 servies EN SAME-ORIGIN via un proxy Vercel (cf. apps/app/vercel.json
+// rewrites `/media/ambient/*`). CRUCIAL pour la DIFFUSION : `createMediaElementSource`
+// produit un flux SILENCIEUX (tainted) sur une source cross-origin SANS en-tête CORS
+// (cas de SoundHelix en direct). En passant par le proxy same-origin, le graphe
+// WebAudio capte le vrai son → l'ambiance est diffusable au patient + invités.
+// (Les pistes chargées par le praticien sont des blob: URLs same-origin → OK aussi.)
 export const AMBIENCE_PRESETS: AmbiencePreset[] = [
   { id: 'none', label: 'Silence', icon: '🔇', src: null },
-  { id: 'calm', label: 'Détente', icon: '🍃', src: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-3.mp3' },
-  { id: 'lo-fi', label: 'Lo-Fi', icon: '🎵', src: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3' },
-  { id: 'focus', label: 'Focus', icon: '🎯', src: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-2.mp3' },
-  { id: 'soft', label: 'Douce', icon: '🎶', src: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-8.mp3' },
-  { id: 'warm', label: 'Chill', icon: '☕', src: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-7.mp3' },
-  { id: 'deep', label: 'Ambiant', icon: '🌌', src: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-11.mp3' },
+  { id: 'calm', label: 'Détente', icon: '🍃', src: '/media/ambient/calm.mp3' },
+  { id: 'lo-fi', label: 'Lo-Fi', icon: '🎵', src: '/media/ambient/lofi.mp3' },
+  { id: 'focus', label: 'Focus', icon: '🎯', src: '/media/ambient/focus.mp3' },
+  { id: 'soft', label: 'Douce', icon: '🎶', src: '/media/ambient/soft.mp3' },
+  { id: 'warm', label: 'Chill', icon: '☕', src: '/media/ambient/warm.mp3' },
+  { id: 'deep', label: 'Ambiant', icon: '🌌', src: '/media/ambient/deep.mp3' },
 ];
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -225,6 +228,11 @@ export function useAmbientAudio(options: UseAmbientAudioOptions = {}): AmbientAu
     if (streamRef.current && gainNodeRef.current) {
       el.volume = 1;
       gainNodeRef.current.gain.value = clampVolume(volume) / 100;
+      // Le navigateur peut suspendre le contexte (changement de source, onglet…) :
+      // le flux diffusé deviendrait muet. On le relance (déjà autorisé par un geste).
+      if (audible && audioCtxRef.current?.state === 'suspended') {
+        audioCtxRef.current.resume().catch(() => {});
+      }
     } else {
       el.volume = clampVolume(volume) / 100;
     }

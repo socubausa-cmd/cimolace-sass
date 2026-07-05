@@ -3,5 +3,13 @@
   "buildCommand": "npm run build",
   "outputDirectory": "dist",
   "framework": "vite",
-  "rewrites": [{ "source": "/(.*)", "destination": "/index.html" }]
+  "rewrites": [
+    { "source": "/media/ambient/calm.mp3", "destination": "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-3.mp3" },
+    { "source": "/media/ambient/lofi.mp3", "destination": "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3" },
+    { "source": "/media/ambient/focus.mp3", "destination": "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-2.mp3" },
+    { "source": "/media/ambient/soft.mp3", "destination": "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-8.mp3" },
+    { "source": "/media/ambient/warm.mp3", "destination": "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-7.mp3" },
+    { "source": "/media/ambient/deep.mp3", "destination": "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-11.mp3" },
+    { "source": "/(.*)", "destination": "/index.html" }
+  ]
 }
