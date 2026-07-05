@@ -1237,6 +1237,13 @@ export function ConsultationStage({
   const compact = useMatchMediaAtMost(820);
   const [miniLayout, setMiniLayout] = useState<'band' | 'overlay'>('band');
   const [miniCollapsed, setMiniCollapsed] = useState(false);
+  // Disposition « overlay » IMMERSIVE : on RÉSERVE une marge droite dans le
+  // contenu partagé (le jumeau/tableau/écran ne place JAMAIS d'information
+  // dedans) et les miniatures y vivent, posées sur le MÊME fond — un seul
+  // écran organisé, zéro superposition, aucune séparation visible. Repliée →
+  // la réserve disparaît et le contenu reprend toute la largeur.
+  const overlayActive = compact && !rightOpen && miniLayout === 'overlay' && !miniCollapsed;
+  const reserve = overlayActive ? 112 : 0;
 
   // CONVERSATION : face-à-face — grand flux de l'interlocuteur + soi en incrustation.
   if (view === 'conversation') {
@@ -1264,32 +1271,40 @@ export function ConsultationStage({
           // med-cockpit ; le patient les rejoue via incomingBroadcast.
           // Mobile spectateur : le rail d'outils embarqué (inutilisable en lecture
           // seule) est masqué — il écrasait le tableau dans la colonne restante.
-          <ConsultationSmartBoard
-            sessionId={sessionId}
-            isHost={isHost}
-            viewerMode={!isHost}
-            hideEmbeddedWhiteboardToolsRail={compact && !isHost}
-            hideSceneDock={compact && !isHost}
-            onBroadcast={isHost ? onSmartboardBroadcast : undefined}
-            incomingBroadcast={!isHost ? smartboard : undefined}
-          />
+          // `right: reserve` = marge immersive : le canevas s'arrête avant la
+          // zone des miniatures (fond TILE_BG continu derrière → même écran).
+          <div style={{ position: 'absolute', inset: 0, right: reserve, overflow: 'hidden' }}>
+            <ConsultationSmartBoard
+              sessionId={sessionId}
+              isHost={isHost}
+              viewerMode={!isHost}
+              hideEmbeddedWhiteboardToolsRail={compact && !isHost}
+              hideSceneDock={compact && !isHost}
+              onBroadcast={isHost ? onSmartboardBroadcast : undefined}
+              incomingBroadcast={!isHost ? smartboard : undefined}
+            />
+          </div>
         ) : hasScene ? (
-          <div style={{ height: '100%', width: '100%', overflow: 'auto', padding: 18 }}>
+          <div style={{ height: '100%', width: '100%', overflow: 'auto', padding: 18, paddingRight: 18 + reserve }}>
             <SharedSceneView scene={scene} />
           </div>
         ) : screen ? (
           // Aucun artefact poussé mais le praticien partage son écran → l'écran EST
           // le contenu partagé : plein cadre (host ET patient le voient).
-          <div style={{ position: 'absolute', inset: 0, background: '#000' }}>
+          <div style={{ position: 'absolute', inset: 0, right: reserve, background: '#000' }}>
             <ParticipantTile trackRef={screen} style={{ width: '100%', height: '100%' }} />
           </div>
         ) : (
           <SharePlaceholder />
         )}
         {/* L'overlay d'annotation SVG reste pour le PARTAGE d'artefact ; le tableau
-            Konva a ses propres outils de dessin (pas de double calque). */}
+            Konva a ses propres outils de dessin (pas de double calque). Même
+            réserve que l'artefact : les annotations n'entrent jamais dans la
+            marge des miniatures. */}
         {hasScene && view !== 'board' ? (
-          <AnnotationOverlay strokes={strokes} editable={editable} onStrokes={onStrokes} />
+          <div style={{ position: 'absolute', inset: 0, right: reserve }}>
+            <AnnotationOverlay strokes={strokes} editable={editable} onStrokes={onStrokes} />
+          </div>
         ) : null}
         {/* Mobile + disposition « overlay » : pile verticale par-dessus la scène
             (rendue ICI pour profiter du position:relative du conteneur). */}
@@ -1400,25 +1415,29 @@ function MembersRail({
         </button>
       );
     }
+    // IMMERSIF : la pile vit dans la MARGE RÉSERVÉE par le contenu (reserve du
+    // stage) — aucun fond de panneau, aucune bordure de séparation : les tuiles
+    // sont posées sur le même fond que le contenu partagé, qui ne place jamais
+    // d'information sous elles. Un seul écran organisé, zéro superposition.
     return (
-      <div data-cr="members" style={{ position: 'absolute', top: '50%', right: 8, transform: 'translateY(-50%)', zIndex: 30, display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 6, maxHeight: 'calc(100% - 24px)', overflowY: 'auto' }}>
+      <div data-cr="members" style={{ position: 'absolute', top: '50%', right: 8, transform: 'translateY(-50%)', zIndex: 30, width: 96, display: 'flex', flexDirection: 'column', alignItems: 'stretch', gap: 8, maxHeight: 'calc(100% - 24px)', overflowY: 'auto' }}>
         <style>{`[data-cr="members"] .lk-participant-name{display:none!important}`}</style>
         {screen ? (
-          <div title="Écran partagé" style={{ position: 'relative', width: 96, aspectRatio: '16 / 9', flexShrink: 0, borderRadius: 9, overflow: 'hidden', background: '#000', border: '1px solid rgba(212,163,106,0.65)', boxShadow: '0 6px 18px rgba(0,0,0,0.4)' }}>
+          <div title="Écran partagé" style={{ position: 'relative', width: 96, aspectRatio: '16 / 9', flexShrink: 0, borderRadius: 10, overflow: 'hidden', background: '#000', border: '1px solid rgba(212,163,106,0.45)', boxShadow: '0 3px 12px rgba(0,0,0,0.25)' }}>
             <ParticipantTile trackRef={screen} style={{ width: '100%', height: '100%' }} />
           </div>
         ) : null}
         {cams.map((t, i) => (
-          <div key={tileKey(t, i)} style={{ position: 'relative', width: 96, aspectRatio: '16 / 9', flexShrink: 0, borderRadius: 9, overflow: 'hidden', background: '#000', border: '1px solid rgba(255,255,255,0.28)', boxShadow: '0 6px 18px rgba(0,0,0,0.4)' }}>
+          <div key={tileKey(t, i)} style={{ position: 'relative', width: 96, aspectRatio: '16 / 9', flexShrink: 0, borderRadius: 10, overflow: 'hidden', background: '#000', boxShadow: '0 3px 12px rgba(0,0,0,0.25)' }}>
             <ParticipantTile trackRef={t} style={{ width: '100%', height: '100%' }} />
             <RoleTag role={participantRole(t?.participant, !!isHost)} />
           </div>
         ))}
-        <div style={{ display: 'flex', gap: 4 }}>
-          <button onClick={onSwitchLayout} aria-label="Basculer les miniatures en bande sous la scène" title="Bande sous la scène" style={{ ...miniBtn, width: 30, height: 26 }}>
+        <div style={{ display: 'flex', justifyContent: 'center', gap: 4 }}>
+          <button onClick={onSwitchLayout} aria-label="Basculer les miniatures en bande sous la scène" title="Bande sous la scène" style={{ ...miniBtn, width: 30, height: 24, background: 'rgba(24,20,16,0.4)' }}>
             <PanelBottom size={13} aria-hidden="true" />
           </button>
-          <button onClick={onToggleCollapsed} aria-label="Masquer les miniatures" title="Masquer" style={{ ...miniBtn, width: 30, height: 26 }}>
+          <button onClick={onToggleCollapsed} aria-label="Masquer les miniatures" title="Masquer" style={{ ...miniBtn, width: 30, height: 24, background: 'rgba(24,20,16,0.4)' }}>
             <ChevronRight size={13} aria-hidden="true" />
           </button>
         </div>
