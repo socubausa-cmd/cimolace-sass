@@ -1334,6 +1334,7 @@ export function ConsultationStage({
   sessionId,
   rightOpen = false,
   identity,
+  onImmersiveChange,
 }: {
   view: ConsultView;
   isHost: boolean;
