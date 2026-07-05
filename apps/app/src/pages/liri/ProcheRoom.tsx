@@ -8,6 +8,7 @@
 // useCockpitChannel('patient') → le proche SUIT la vue pilotée par le praticien.
 // ─────────────────────────────────────────────────────────────────────────────
 import { useEffect, useRef, useState, type CSSProperties } from 'react';
+import { useMatchMediaAtMost } from '@/hooks/useLiriMobileBreakpoint';
 import { useParams } from 'react-router-dom';
 import {
   LiveKitRoom,
@@ -264,6 +265,8 @@ function ProcheLiveRoom({ url, token, sessionId, clinic, initialCam = true, init
   const channel = useCockpitChannel(sessionId, 'patient');
   const [left, setLeft] = useState(false);
   const [chatOpen, setChatOpen] = useState(false);
+  // Mode focus (partage immersif) : remonté de ConsultationStage → masque la barre.
+  const [immersive, setImmersive] = useState(false);
   // Image de marque : logo du tenant (résolu par slug) + nom praticien (diffusé
   // par le host sur le canal) → le proche aussi sait avec qui il parle.
   const [clinicLogo, setClinicLogo] = useState<string | null>(null);
@@ -292,8 +295,12 @@ function ProcheLiveRoom({ url, token, sessionId, clinic, initialCam = true, init
               editable={false}
               onStrokes={() => {}}
               identity={{ logo: clinicLogo, label: clinic ?? null, name: channel.hostName }}
+              onImmersiveChange={setImmersive}
             />
-            <ProcheBar onLeave={() => setLeft(true)} chatOpen={chatOpen} onToggleChat={() => setChatOpen((v) => !v)} />
+            {/* Mode focus → barre masquée (montée pour ne pas couper micro/caméra). */}
+            <div style={{ display: immersive ? 'none' : 'contents' }}>
+              <ProcheBar onLeave={() => setLeft(true)} chatOpen={chatOpen} onToggleChat={() => setChatOpen((v) => !v)} />
+            </div>
           </div>
           {/* Toujours monté (masqué via `open`) : préserve l'historique useChat
               et capte les messages reçus panneau fermé. */}
@@ -308,20 +315,29 @@ function ProcheLiveRoom({ url, token, sessionId, clinic, initialCam = true, init
 }
 
 function ProcheChrome({ clinic }: { clinic?: string }) {
+  // ≤820px : en-tête compacte — titre = nom de la clinique SEUL (plus de « Consultation »),
+  // calibres réduits, « Proche invité » → icône seule, « En direct » → pastille seule.
+  const compact = useMatchMediaAtMost(820);
   return (
-    <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 16px', background: BAR, color: '#fff', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
+    <div style={{ display: 'flex', alignItems: 'center', gap: compact ? 7 : 10, padding: compact ? '7px 11px' : '10px 16px', background: BAR, color: '#fff', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
       {/* Logo LIRI (mark officiel, même que login/boot) — image de marque. */}
       <img
         src="/lirilogo.png"
         alt="LIRI"
-        style={{ height: 24, width: 'auto', objectFit: 'contain', filter: 'drop-shadow(0 1px 3px rgba(212,163,106,0.32))', flexShrink: 0 }}
+        style={{ height: compact ? 20 : 24, width: 'auto', objectFit: 'contain', filter: 'drop-shadow(0 1px 3px rgba(212,163,106,0.32))', flexShrink: 0 }}
       />
-      <span style={{ fontWeight: 600, fontSize: 14 }}>Consultation{clinic ? ` · ${clinic}` : ''}</span>
-      <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5, fontSize: 12, color: '#cbd5e1', background: 'rgba(255,255,255,0.06)', padding: '3px 9px', borderRadius: 999 }}>
-        <ShieldCheck size={13} aria-hidden="true" /> Proche invité
+      {/* Titre = nom de la clinique (le mot « Consultation » supprimé). */}
+      {clinic ? (
+        <span style={{ fontWeight: 600, fontSize: compact ? 12.5 : 14, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', minWidth: 0 }}>{clinic}</span>
+      ) : null}
+      <span
+        title="Proche invité"
+        style={{ display: 'inline-flex', alignItems: 'center', gap: 5, fontSize: compact ? 11 : 12, color: '#cbd5e1', background: 'rgba(255,255,255,0.06)', padding: compact ? '3px 6px' : '3px 9px', borderRadius: 999, flexShrink: 0 }}
+      >
+        <ShieldCheck size={compact ? 12 : 13} aria-hidden="true" /> {compact ? null : 'Proche invité'}
       </span>
-      <span style={{ marginLeft: 'auto', display: 'inline-flex', alignItems: 'center', gap: 6, color: '#f87171', fontSize: 12.5 }}>
-        <span style={{ width: 8, height: 8, borderRadius: '50%', background: '#f87171' }} /> En direct
+      <span style={{ marginLeft: 'auto', display: 'inline-flex', alignItems: 'center', gap: 6, color: '#f87171', fontSize: 12.5, flexShrink: 0 }}>
+        <span style={{ width: 8, height: 8, borderRadius: '50%', background: '#f87171' }} /> {compact ? null : 'En direct'}
       </span>
     </div>
   );

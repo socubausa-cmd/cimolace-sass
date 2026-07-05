@@ -37,7 +37,7 @@ import LiveDataSaverEffect from '@/features/live/LiveDataSaverEffect';
 import { useLiveDataSaver } from '@/hooks/useLiveDataSaver';
 import { useMatchMediaAtMost } from '@/hooks/useLiriMobileBreakpoint';
 import LiriProductBadge from '@/components/brand/LiriProductBadge';
-import { Stethoscope, PhoneOff, Share2, Pencil, Users, Presentation, MonitorUp, Eraser, UserPlus, Copy, Check, ShieldCheck, X, MessageSquare, Send, Sparkles, Brain, Music2, Play, Pause, FileText, LayoutTemplate, Radio, Upload, ChevronUp, ChevronDown, ChevronRight, ChevronLeft, PanelRight, PanelBottom } from 'lucide-react';
+import { Stethoscope, PhoneOff, Share2, Pencil, Users, Presentation, MonitorUp, Eraser, UserPlus, Copy, Check, ShieldCheck, X, MessageSquare, Send, Sparkles, Brain, Music2, Play, Pause, FileText, LayoutTemplate, Radio, Upload, ChevronUp, ChevronDown, ChevronRight, ChevronLeft, PanelRight, PanelBottom, Maximize, Minimize } from 'lucide-react';
 import { createPortal } from 'react-dom';
 import '@livekit/components-styles';
 import { useAuth } from '@/contexts/SupabaseAuthContext';
@@ -380,6 +380,9 @@ export default function ConsultationRoom() {
   // Réglages : popover ancré au-dessus de la barre. Le fond sonore est logé dans
   // ce panneau (contrôleur partagé avec la pastille flottante autonome).
   const [settingsOpen, setSettingsOpen] = useState(false);
+  // Mode focus (partage immersif) : remonté de ConsultationStage → masque la barre
+  // du bas (et les vignettes, gérées dans le stage). Re-tap sur l'écran = retour.
+  const [stageImmersive, setStageImmersive] = useState(false);
   // Contrôleur d'ambiance partagé : piloté DANS le panneau Réglages ET reflété par
   // la pastille flottante (host) — même état audio des deux côtés.
   const ambient = useAmbientAudio();
@@ -624,10 +627,13 @@ export default function ConsultationRoom() {
               sessionId={sessionId ?? null}
               rightOpen={rightPanel !== null}
               identity={consultIdentity}
+              onImmersiveChange={setStageImmersive}
             />
             {/* Wrapper positionné : ancre le popover Réglages au-dessus de la barre
-                (reste DANS <LiveKitRoom> → ConsultationSettings lit le contexte salle). */}
-            <div style={{ position: 'relative' }}>
+                (reste DANS <LiveKitRoom> → ConsultationSettings lit le contexte salle).
+                Mode focus (partage immersif) → barre MASQUÉE (display:none, reste
+                montée pour ne PAS couper micro/caméra) ; re-tap sur l'écran = retour. */}
+            <div style={{ position: 'relative', display: stageImmersive ? 'none' : undefined }}>
               <ConsultationSettings
                 open={settingsOpen}
                 onClose={() => setSettingsOpen(false)}
@@ -820,7 +826,7 @@ function ConsultationChrome({
         alt="LIRI"
         style={{ height: compact ? 22 : 26, width: 'auto', objectFit: 'contain', filter: 'drop-shadow(0 1px 3px rgba(212,163,106,0.32))', flexShrink: 0 }}
       />
-      {!compact && <span style={{ fontWeight: 600, fontSize: 14, whiteSpace: 'nowrap' }}>Consultation</span>}
+      {/* Mot « Consultation » supprimé (demande USER) — le badge produit suffit. */}
       {!compact && <LiriProductBadge product="care" size="xs" />}
       {!compact && patientName ? (
         <span style={{ color: '#cbd5e1', fontSize: 13, whiteSpace: 'nowrap' }}>· {patientName}</span>
@@ -976,50 +982,66 @@ function RoleTag({ role, style }: { role: TileRole; style?: React.CSSProperties 
   );
 }
 
-function FaceToFace({ tracks, identity, isHost }: { tracks: any[]; identity?: ConsultIdentity; isHost?: boolean }) {
+function FaceToFace({ tracks, identity, isHost, compact }: { tracks: any[]; identity?: ConsultIdentity; isHost?: boolean; compact?: boolean }) {
   const cams = tracks.filter((t) => t?.source === Track.Source.Camera);
   const screen = tracks.find((t) => t?.source === Track.Source.ScreenShare && t?.publication);
-  const local = cams.find((t) => t?.participant?.isLocal) || null;
-  const remotes = cams.filter((t) => !t?.participant?.isLocal);
-  // Quel flux est au GRAND plan (clic d'une mini-carte). null = défaut.
+  // Rôles STABLES : le « peer » = l'autre partie principale (praticien vu du
+  // patient/invité, patient vu du praticien) ; les invités = guests ; soi = self.
+  const withRole = cams.map((t) => ({ t, role: participantRole(t?.participant, !!isHost) }));
+  const peer = withRole.find((x) => x.role.tone === 'peer')?.t || null;
+  const guests = withRole.filter((x) => x.role.tone === 'guest').map((x) => x.t);
+  const selfTrack = withRole.find((x) => x.role.tone === 'self')?.t || null;
+  // Quel flux est au GRAND plan (clic d'une vignette). null = défaut.
   const [featuredKey, setFeaturedKey] = useState<string | null>(null);
-
-  // Ordre par défaut du grand plan : partage d'écran > interlocuteur > soi.
-  const ordered = [screen, ...remotes, local].filter(Boolean) as any[];
-  const hasOther = !!screen || remotes.length > 0;
-  // Seul (aucun interlocuteur) : le grand plan reste un placeholder « en attente »
-  // et SOI passe en mini-carte (retour de vue), comme WhatsApp.
-  const defaultBig = hasOther ? ordered[0] : null;
-  const featured = featuredKey ? ordered.find((t) => stableTrackKey(t) === featuredKey) : null;
+  // Grand plan par défaut ADAPTATIF : partage d'écran > l'autre partie (praticien
+  // pour le patient/invité ; patient pour le praticien) > 1er invité. Ordre STABLE
+  // (le rapport praticien↔patient ne bouge pas) → plus de « saut » quand un invité
+  // rejoint/part. Seul (aucun interlocuteur) → placeholder + SOI en vignette.
+  const orderedTiles = [screen, peer, ...guests, selfTrack].filter(Boolean) as any[];
+  const defaultBig = screen || peer || guests[0] || null;
+  const featured = featuredKey ? orderedTiles.find((t) => stableTrackKey(t) === featuredKey) : null;
   const big = featured || defaultBig;
-  // SOI est TOUJOURS visible : en grand si featuré, sinon en mini-carte.
-  const minis = ordered.filter((t) => t !== big);
+  // SOI est TOUJOURS visible : en grand si featuré, sinon en vignette du rail.
+  const minis = orderedTiles.filter((t) => t !== big);
+
+  // RAIL RÉSERVÉ (zéro superposition) : colonne à droite (ordinateur) ou bande en
+  // bas (téléphone). Les vignettes vivent DEDANS — elles ne couvrent jamais le
+  // visage du grand plan (même principe que la marge réservée du mode Partage).
+  const railStyle: React.CSSProperties = compact
+    ? { display: 'flex', flexDirection: 'row', gap: 8, height: 78, flexShrink: 0, overflowX: 'auto' }
+    : { display: 'flex', flexDirection: 'column', gap: 10, width: 150, flexShrink: 0, overflowY: 'auto' };
+  const miniStyle: React.CSSProperties = compact
+    ? { position: 'relative', flex: '1 1 0', minWidth: 92, borderRadius: 12, overflow: 'hidden', background: '#000', border: '2px solid rgba(255,255,255,0.22)', cursor: 'pointer' }
+    : { position: 'relative', width: '100%', aspectRatio: '16 / 9', borderRadius: 12, overflow: 'hidden', background: '#000', border: '2px solid rgba(255,255,255,0.22)', cursor: 'pointer', flexShrink: 0 };
 
   return (
-    <div className="consult-f2f" style={{ position: 'relative', height: '100%', borderRadius: 18, overflow: 'hidden', background: TILE_BG, border: '1px solid rgba(255,255,255,0.06)' }}>
-      {/* Masque l'étiquette de nom LiveKit par défaut sur les tuiles (redondante
-          avec le badge d'identité ; l'indicateur micro reste visible). */}
-      <style>{`.consult-f2f .lk-participant-name{display:none!important}`}</style>
-      {/* Grand plan (clic → réduire au plan par défaut). */}
-      {big ? (
-        <div
-          onClick={() => setFeaturedKey(null)}
-          title="Cliquer pour revenir à l'interlocuteur"
-          style={{ position: 'absolute', inset: 0, cursor: featured ? 'zoom-out' : 'default' }}
-        >
-          <ParticipantTile trackRef={big} style={{ width: '100%', height: '100%', pointerEvents: 'none' }} />
-        </div>
-      ) : (
-        <div style={{ position: 'absolute', inset: 0, display: 'grid', placeItems: 'center', pointerEvents: 'none' }}>
-          <span style={{ background: 'rgba(0,0,0,0.55)', color: '#fff', padding: '9px 18px', borderRadius: 999, fontSize: 13, display: 'inline-flex', alignItems: 'center', gap: 8 }}>
-            <span style={{ width: 8, height: 8, borderRadius: '50%', background: GOLD }} /> En attente de votre interlocuteur…
-          </span>
-        </div>
-      )}
+    <div style={{ display: 'flex', flexDirection: compact ? 'column' : 'row', gap: compact ? 8 : 12, flex: 1, minWidth: 0, minHeight: 0 }}>
+      {/* Masque l'étiquette de nom LiveKit par défaut (redondante avec le badge). */}
+      <style>{`.consult-f2f .lk-participant-name,.consult-f2f-rail .lk-participant-name{display:none!important}`}</style>
+      {/* GRAND PLAN (clic → revenir au plan par défaut). */}
+      <div className="consult-f2f" style={{ position: 'relative', flex: 1, minWidth: 0, minHeight: 0, borderRadius: 18, overflow: 'hidden', background: TILE_BG, border: '1px solid rgba(255,255,255,0.06)' }}>
+        {big ? (
+          <div
+            onClick={() => setFeaturedKey(null)}
+            title={featured ? "Cliquer pour revenir à l'interlocuteur" : undefined}
+            style={{ position: 'absolute', inset: 0, cursor: featured ? 'zoom-out' : 'default' }}
+          >
+            <ParticipantTile trackRef={big} style={{ width: '100%', height: '100%', pointerEvents: 'none' }} />
+          </div>
+        ) : (
+          <div style={{ position: 'absolute', inset: 0, display: 'grid', placeItems: 'center', pointerEvents: 'none' }}>
+            <span style={{ background: 'rgba(0,0,0,0.55)', color: '#fff', padding: '9px 18px', borderRadius: 999, fontSize: 13, display: 'inline-flex', alignItems: 'center', gap: 8 }}>
+              <span style={{ width: 8, height: 8, borderRadius: '50%', background: GOLD }} /> En attente de votre interlocuteur…
+            </span>
+          </div>
+        )}
+        {/* Image de marque : logo tenant + nom praticien (transparent, sur la vidéo). */}
+        <ConsultIdentityBadge identity={identity} />
+      </div>
 
-      {/* Mini-cartes (dont SOI = retour de vue) en bas à droite — clic pour agrandir. */}
+      {/* RAIL RÉSERVÉ — vignettes (dont SOI). Clic pour agrandir. Ne recouvre RIEN. */}
       {minis.length > 0 ? (
-        <div style={{ position: 'absolute', right: 16, bottom: 16, display: 'flex', flexDirection: 'column', gap: 10, zIndex: 2 }}>
+        <div className="consult-f2f-rail" style={railStyle}>
           {minis.map((t) => (
             <div
               key={stableTrackKey(t)}
@@ -1027,7 +1049,7 @@ function FaceToFace({ tracks, identity, isHost }: { tracks: any[]; identity?: Co
               tabIndex={0}
               onClick={() => setFeaturedKey(stableTrackKey(t))}
               title="Cliquer pour agrandir"
-              style={{ position: 'relative', width: 208, aspectRatio: '16 / 9', borderRadius: 12, overflow: 'hidden', background: '#000', border: '2px solid rgba(255,255,255,0.28)', boxShadow: '0 12px 34px rgba(0,0,0,0.55)', cursor: 'pointer' }}
+              style={miniStyle}
             >
               <ParticipantTile trackRef={t} style={{ width: '100%', height: '100%', pointerEvents: 'none' }} />
               <RoleTag role={participantRole(t?.participant, !!isHost)} />
@@ -1035,9 +1057,6 @@ function FaceToFace({ tracks, identity, isHost }: { tracks: any[]; identity?: Co
           ))}
         </div>
       ) : null}
-
-      {/* Image de marque : logo tenant + nom praticien (transparent, sur la vidéo). */}
-      <ConsultIdentityBadge identity={identity} />
     </div>
   );
 }
@@ -1332,6 +1351,8 @@ export function ConsultationStage({
   rightOpen?: boolean;
   /** Image de marque : logo tenant + nom praticien (badge vue Conversation). */
   identity?: ConsultIdentity;
+  /** Mode focus (partage immersif) actif → le parent masque sa barre du bas. */
+  onImmersiveChange?: (on: boolean) => void;
 }) {
   const tracks = useTracks(
     [
@@ -1380,11 +1401,30 @@ export function ConsultationStage({
     playZoomCue('out');
   };
 
-  // CONVERSATION : face-à-face — grand flux de l'interlocuteur + soi en incrustation.
+  // MODE FOCUS (partage immersif) : un tap sur l'écran partagé (ou le bouton
+  // plein écran) masque les vignettes vidéo ET la barre du bas → le contenu
+  // partagé occupe tout ; re-tap = retour normal. Émis au parent pour qu'il
+  // masque sa barre. Réinitialisé dès qu'on quitte Partage/Tableau.
+  const [immersive, setImmersive] = useState(false);
+  const toggleImmersive = () => {
+    setImmersive((v) => {
+      playZoomCue(v ? 'out' : 'in');
+      return !v;
+    });
+  };
+  useEffect(() => {
+    if (view !== 'share' && view !== 'board') setImmersive(false);
+  }, [view]);
+  useEffect(() => {
+    onImmersiveChange?.(immersive);
+  }, [immersive, onImmersiveChange]);
+
+  // CONVERSATION : grand plan de l'autre partie + rail RÉSERVÉ de vignettes
+  // (à droite sur ordinateur, en bande sur téléphone) — zéro superposition.
   if (view === 'conversation') {
     return (
-      <div style={{ flex: 1, minHeight: 0, padding: 14 }}>
-        <FaceToFace tracks={tracks} identity={identity} isHost={isHost} />
+      <div style={{ flex: 1, minHeight: 0, padding: compact ? 8 : 14, display: 'flex' }}>
+        <FaceToFace tracks={tracks} identity={identity} isHost={isHost} compact={compact} />
       </div>
     );
   }
@@ -1425,7 +1465,11 @@ export function ConsultationStage({
           // (frameless) — le corps se pose directement sur la grille de fond ;
           // quand les pastilles sont visibles, le CONTENU recule (paddingRight
           // reserve + leger dezoom anime) pour ne JAMAIS passer dessous.
-          <div style={{ height: '100%', width: '100%', overflow: 'auto', padding: 18, paddingRight: 18 + reserve, boxSizing: 'border-box', transition: `padding 0.3s ${ZOOM_EASE}` }}>
+          <div
+            onClick={() => { if (!editable) toggleImmersive(); }}
+            title={editable ? undefined : immersive ? 'Quitter le plein écran' : 'Plein écran'}
+            style={{ height: '100%', width: '100%', overflow: 'auto', padding: 18, paddingRight: 18 + reserve, boxSizing: 'border-box', transition: `padding 0.3s ${ZOOM_EASE}`, cursor: editable ? 'default' : 'pointer' }}
+          >
             <div style={{ height: '100%', transform: overlayActive ? 'scale(0.94)' : 'none', transformOrigin: 'center', transition: `transform 0.3s ${ZOOM_EASE}` }}>
               <SharedSceneView scene={scene} frameless={compact} />
             </div>
@@ -1433,12 +1477,25 @@ export function ConsultationStage({
         ) : screen ? (
           // Aucun artefact poussé mais le praticien partage son écran → l'écran EST
           // le contenu partagé : plein cadre (host ET patient le voient).
-          <div style={{ position: 'absolute', inset: 0, right: reserve, background: '#000', transition: `right 0.3s ${ZOOM_EASE}` }}>
+          <div onClick={toggleImmersive} style={{ position: 'absolute', inset: 0, right: reserve, background: '#000', transition: `right 0.3s ${ZOOM_EASE}`, cursor: 'pointer' }}>
             <ParticipantTile trackRef={screen} style={{ width: '100%', height: '100%' }} />
           </div>
         ) : (
           <SharePlaceholder />
         )}
+        {/* Bouton PLEIN ÉCRAN (mode focus) : masque vignettes + barre du bas.
+            Toujours visible en Partage/Tableau (le tableau interactif ne peut pas
+            basculer au tap → ce bouton est sa commande). */}
+        {(hasScene || screen || view === 'board') ? (
+          <button
+            onClick={(e) => { e.stopPropagation(); toggleImmersive(); }}
+            aria-label={immersive ? 'Quitter le plein écran' : 'Plein écran (masquer vignettes et barre)'}
+            title={immersive ? 'Quitter le plein écran' : 'Plein écran'}
+            style={{ position: 'absolute', top: 10, right: 10, zIndex: 22, width: 38, height: 38, borderRadius: 999, border: 'none', background: 'rgba(24,20,16,0.72)', color: immersive ? GOLD : '#fff', cursor: 'pointer', display: 'grid', placeItems: 'center', backdropFilter: 'blur(6px)', WebkitBackdropFilter: 'blur(6px)' }}
+          >
+            {immersive ? <Minimize size={17} aria-hidden="true" /> : <Maximize size={17} aria-hidden="true" />}
+          </button>
+        ) : null}
         {/* L'overlay d'annotation SVG reste pour le PARTAGE d'artefact ; le tableau
             Konva a ses propres outils de dessin (pas de double calque). Même
             réserve que l'artefact : les annotations n'entrent jamais dans la
@@ -1475,7 +1532,7 @@ export function ConsultationStage({
         })() : null}
         {/* Mobile + disposition « overlay » : pile verticale par-dessus la scène
             (rendue ICI pour profiter du position:relative du conteneur). */}
-        {compact && !rightOpen && miniLayout === 'overlay' ? (
+        {compact && !rightOpen && miniLayout === 'overlay' && !immersive ? (
           <MembersRail
             tracks={tracks}
             isHost={isHost}
@@ -1487,7 +1544,7 @@ export function ConsultationStage({
           />
         ) : null}
       </div>
-      {!rightOpen && (!compact || miniLayout === 'band') ? (
+      {!rightOpen && (!compact || miniLayout === 'band') && !immersive ? (
         <MembersRail
           tracks={tracks}
           isHost={isHost}
