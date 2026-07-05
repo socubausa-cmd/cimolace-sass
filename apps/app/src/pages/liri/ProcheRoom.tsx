@@ -40,6 +40,7 @@ import { getProcheStatus, getProcheToken, type ProcheStatus } from '@/features/m
 import { useCockpitChannel } from '@/features/medos-cockpit/useCockpitChannel';
 import { getApiBaseUrl } from '@/lib/apiBase';
 import { ConsultationStage, CallEndedScreen, ChatPanel, AudioUnlockGate, RaiseHandButton } from './ConsultationRoom';
+import { ParticipantCaptions } from '@/features/consultation-stage/LiveCaptions';
 
 // Shell chaud LIRI (aligné sur ConsultationRoom / liveHostTheme).
 const BG = '#262624';
@@ -312,6 +313,7 @@ function ProcheLiveRoom({ url, token, sessionId, inviteId, clinic, initialCam = 
               editable={false}
               onStrokes={() => {}}
               smartboard={channel.smartboard}
+              sessionId={sessionId}
               identity={{ logo: clinicLogo, label: clinic ?? null, name: channel.hostName }}
               onImmersiveChange={setImmersive}
             />
@@ -327,6 +329,8 @@ function ProcheLiveRoom({ url, token, sessionId, inviteId, clinic, initialCam = 
         <RoomAudioRenderer />
         <AudioUnlockGate />
       </LiveKitRoom>
+      {/* Sous-titres traduits (invité) : sélecteur de langue + overlay. */}
+      <ParticipantCaptions channel={channel} />
     </div>
   );
   return typeof document !== 'undefined' ? createPortal(content, document.body) : content;

@@ -36,6 +36,9 @@ export function useCockpitChannel(
   // l'hôte (annotationStrokes, activeScene, sharedImageIdx…) mergés → le patient
   // rejoue le dessin/la scène du praticien sur la vue Tableau.
   const [smartboard, setSmartboard] = useState<Record<string, unknown>>({});
+  // Sous-titre LIVE : dernier segment de parole du praticien (STT) → chaque
+  // participant le traduit dans SA langue. Éphémère (dernier segment seul).
+  const [caption, setCaption] = useState<{ text: string; id: number } | null>(null);
   const channelRef = useRef<any>(null);
   const lastSentRef = useRef<CockpitScene | null>(null);
   const lastViewRef = useRef<ConsultView>('conversation');
@@ -86,6 +89,16 @@ export function useCockpitChannel(
       if (patch && typeof patch === 'object') {
         lastSmartboardRef.current = { ...lastSmartboardRef.current, ...patch };
         setSmartboard(lastSmartboardRef.current);
+      }
+    });
+
+    // Sous-titre live (segment de parole du praticien) → le participant le
+    // traduit dans sa langue. Non ré-émis sur request_state (éphémère).
+    channel.on('broadcast', { event: 'caption' }, (msg: any) => {
+      const text = msg?.payload?.text;
+      const id = msg?.payload?.id;
+      if (typeof text === 'string' && text.trim()) {
+        setCaption({ text: text.trim(), id: typeof id === 'number' ? id : Date.now() });
       }
     });
 
@@ -189,5 +202,12 @@ export function useCockpitChannel(
     channelRef.current?.send({ type: 'broadcast', event: 'smartboard', payload: patch });
   }, []);
 
-  return { scene, view, strokes, hostName, smartboard, shareScene, pushView, clearScene, shareStrokes, clearStrokes, shareHostName, shareSmartboard };
+  /** Host : diffuse un segment de parole (STT) → sous-titres live des participants. */
+  const shareCaption = useCallback((text: string) => {
+    const t = String(text || '').trim();
+    if (!t) return;
+    channelRef.current?.send({ type: 'broadcast', event: 'caption', payload: { text: t, id: Date.now() } });
+  }, []);
+
+  return { scene, view, strokes, hostName, smartboard, caption, shareScene, pushView, clearScene, shareStrokes, clearStrokes, shareHostName, shareSmartboard, shareCaption };
 }

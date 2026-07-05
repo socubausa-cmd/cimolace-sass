@@ -17,7 +17,7 @@
 // chaque flux est encadré en 16:9 (object-fit cover SANS écrasement). Token via
 // le chemin MÉDICAL (contrôle d'accès patient).
 // ─────────────────────────────────────────────────────────────────────────────
-import { useCallback, useEffect, useRef, useState, type CSSProperties } from 'react';
+import { useCallback, useEffect, useRef, useState, type CSSProperties, type ReactNode } from 'react';
 import { useParams } from 'react-router-dom';
 import {
   LiveKitRoom,
@@ -56,6 +56,7 @@ import ConsultationCopilot from '@/features/consultation-stage/ConsultationCopil
 import ConsultationRecall from '@/features/consultation-stage/ConsultationRecall';
 import ConsultationScriptPanel from '@/features/consultation-stage/ConsultationScriptPanel';
 import WaitingRoom from '@/features/consultation-stage/WaitingRoom';
+import { HostCaptionToggle, ParticipantCaptions } from '@/features/consultation-stage/LiveCaptions';
 import { BackgroundBlur, VirtualBackground, supportsBackgroundProcessors } from '@livekit/track-processors';
 import { useLiveHostWaitingRoom } from '@/features/live/hooks/useLiveHostWaitingRoom';
 import { supabase } from '@/lib/customSupabaseClient';
@@ -660,6 +661,7 @@ export default function ConsultationRoom() {
                 onLaunchLive={() => openLiveStudio(true)}
                 settingsOpen={settingsOpen}
                 onToggleSettings={() => setSettingsOpen((v) => !v)}
+                captionSlot={isHost ? <HostCaptionToggle channel={channel} /> : undefined}
               />
             </div>
           </div>
@@ -702,6 +704,8 @@ export default function ConsultationRoom() {
       {/* Fond sonore — pastille flottante autonome (praticien), pilotée par le même
           contrôleur que le panneau Réglages. */}
       {isHost ? <AmbientAudioEngine controller={ambient} host /> : null}
+      {/* Sous-titres traduits (patient) : sélecteur de langue + overlay. */}
+      {!isHost ? <ParticipantCaptions channel={channel} /> : null}
     </div>
   );
   // Plein écran : portal vers <body> pour échapper à tout ancêtre containing-block
@@ -1870,6 +1874,7 @@ function ConsultationBar({
   onLaunchLive,
   settingsOpen,
   onToggleSettings,
+  captionSlot,
 }: {
   isHost: boolean;
   annotatable: boolean;
@@ -1888,6 +1893,7 @@ function ConsultationBar({
   onLaunchLive: () => void;
   settingsOpen: boolean;
   onToggleSettings: () => void;
+  captionSlot?: ReactNode;
 }) {
   const room = useRoomContext();
   const { dataSaver, toggleDataSaver } = useLiveDataSaver();
@@ -1905,6 +1911,8 @@ function ConsultationBar({
       <TrackToggle source={Track.Source.Microphone} showIcon title="Micro" />
       <TrackToggle source={Track.Source.Camera} showIcon title="Caméra" />
       {isHost ? <TrackToggle source={Track.Source.ScreenShare} showIcon title="Partager l'écran" /> : null}
+      {/* Sous-titres live (praticien) → chaque participant les traduit dans sa langue. */}
+      {captionSlot}
       {/* Lever la main (patient) → le praticien voit un badge ✋ sur sa tuile. */}
       {!isHost ? <RaiseHandButton compact /> : null}
       <button

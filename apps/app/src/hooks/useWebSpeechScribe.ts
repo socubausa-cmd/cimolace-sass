@@ -7,7 +7,14 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 // quand Chrome coupe après un silence (`onend`). Non supporté → `supported=false`
 // (Safari desktop OK via webkit ; Firefox non → l'UI retombe sur la saisie manuelle).
 // ─────────────────────────────────────────────────────────────────────────────
-export function useWebSpeechScribe({ lang = 'fr-FR' }: { lang?: string } = {}) {
+export function useWebSpeechScribe({
+  lang = 'fr-FR',
+  onFinalChunk,
+}: {
+  lang?: string;
+  /** Appelé à CHAQUE segment final (delta) — ex. diffusion de sous-titres live. */
+  onFinalChunk?: (text: string) => void;
+} = {}) {
   const [listening, setListening] = useState(false);
   const [transcript, setTranscript] = useState('');
   const [interim, setInterim] = useState('');
@@ -15,6 +22,8 @@ export function useWebSpeechScribe({ lang = 'fr-FR' }: { lang?: string } = {}) {
 
   const recRef = useRef<any>(null);
   const listeningRef = useRef(false);
+  const onFinalChunkRef = useRef(onFinalChunk);
+  onFinalChunkRef.current = onFinalChunk;
 
   const supported =
     typeof window !== 'undefined' &&
@@ -38,8 +47,10 @@ export function useWebSpeechScribe({ lang = 'fr-FR' }: { lang?: string } = {}) {
         else itm += piece;
       }
       if (fin.trim()) {
-        setTranscript((prev) => (prev ? `${prev} ${fin.trim()}` : fin.trim()));
+        const chunk = fin.trim();
+        setTranscript((prev) => (prev ? `${prev} ${chunk}` : chunk));
         setInterim('');
+        try { onFinalChunkRef.current?.(chunk); } catch { /* ignore */ }
       } else {
         setInterim(itm.trim());
       }
