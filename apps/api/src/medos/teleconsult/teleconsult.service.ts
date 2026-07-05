@@ -872,6 +872,27 @@ export class TeleconsultService implements OnModuleInit {
       .single();
     if (!tenant) throw new NotFoundException('Tenant introuvable');
 
+    // MONO-OCCUPATION : un lien invité = UN siège. L'identité LiveKit est
+    // `proche_<inviteId>` ; si le même lien est réutilisé par une 2e personne,
+    // LiveKit (une seule connexion par identité) ÉJECTE le 1er connecté. On
+    // REFUSE donc une 2e émission de token tant qu'un participant avec cette
+    // identité est présent dans la room → l'occupant reste, l'intrus est bloqué.
+    // Best-effort : si la liste LiveKit échoue, on laisse passer (dispo > blocage).
+    try {
+      const present = await this.liri.listRoomParticipants(
+        (tenant as any).slug,
+        inv.session_id,
+      );
+      if (Array.isArray(present) && present.includes(`proche_${inv.id}`)) {
+        throw new ForbiddenException(
+          'Ce lien est déjà utilisé par une personne connectée. Un seul participant par lien — demandez votre propre lien d’invitation.',
+        );
+      }
+    } catch (e) {
+      if (e instanceof ForbiddenException) throw e;
+      /* liste LiveKit indisponible → on n'empêche pas la connexion */
+    }
+
     const result = await this.liri.issueTokenForSession({
       tenantId: inv.tenant_id,
       tenantSlug: (tenant as any).slug,
