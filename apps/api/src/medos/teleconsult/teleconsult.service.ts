@@ -477,9 +477,12 @@ export class TeleconsultService implements OnModuleInit {
       .update({ [field]: new Date().toISOString(), status: 'active' })
       .eq('tenant_id', tenant.id)
       .eq('id', sessionId)
+      // Ne RESSUSCITE PAS une session terminée : un POST :id/join tardif sur une
+      // session 'ended' ne doit pas la repasser 'active' (room fermée + sweep qui boucle).
+      .in('status', ['scheduled', 'active'])
       .select('*')
       .single();
-    if (error || !data) throw new NotFoundException('Session introuvable');
+    if (error || !data) throw new NotFoundException('Session introuvable ou déjà terminée');
     return data;
   }
 
@@ -704,9 +707,12 @@ export class TeleconsultService implements OnModuleInit {
       .eq('tenant_id', tenant.id)
       .eq('session_id', sessionId)
       .eq('id', inviteId)
+      // FAIL-CLOSED RGPD : n'admet JAMAIS une invitation REFUSÉE (denied) ou
+      // RÉVOQUÉE (revoked) — le praticien ne peut pas passer outre un refus patient.
+      .in('status', ['consent_requested', 'consented', 'admitted'])
       .select('id, status, consent_at')
       .single();
-    if (error || !data) throw new NotFoundException('Invitation introuvable');
+    if (error || !data) throw new NotFoundException('Invitation introuvable ou non admissible (refusée/révoquée)');
     return data;
   }
 
@@ -796,6 +802,17 @@ export class TeleconsultService implements OnModuleInit {
       throw new ForbiddenException(
         "En attente de l'autorisation du patient",
       );
+    }
+
+    // NE DÉLIVRE PAS de token vidéo si la consultation est TERMINÉE : sinon un
+    // vieux lien (transféré par email/WhatsApp) reste rejoignable après la fin.
+    const { data: sess } = await (this.supabase.client as any)
+      .from('med_teleconsult_sessions')
+      .select('status')
+      .eq('id', inv.session_id)
+      .maybeSingle();
+    if (sess && (sess as any).status === 'ended') {
+      throw new ForbiddenException('Cette consultation est terminée.');
     }
 
     const { data: tenant } = await this.supabase.client
@@ -907,6 +924,9 @@ export class TeleconsultService implements OnModuleInit {
     if (loadErr || !session) throw new NotFoundException('Session introuvable');
 
     const sessionRow = session as any;
+    // IDEMPOTENT : une session déjà terminée ne se re-termine pas (sinon un
+    // second POST :id/end regonfle `duration_seconds` / réécrit `ended_reason`).
+    if (sessionRow.status === 'ended') return sessionRow;
     const now = new Date().toISOString();
 
     // Calculer durée si on a un join_at
@@ -957,6 +977,13 @@ export class TeleconsultService implements OnModuleInit {
       .from('live_sessions')
       .update({ status: 'ended', ended_at: now })
       .eq('id', sessionId);
+
+    // FERMETURE de la room LiveKit : sinon les tokens patient/proche restent
+    // valides ~2 h et la room ne s'éteint qu'à `emptyTimeout`. On la ferme ici
+    // (comme le sweep) → expulsion serveur immédiate. Best-effort.
+    if ((tenant as any).slug) {
+      await this.liri.closeRoom((tenant as any).slug, sessionId).catch(() => {});
+    }
 
     // Cohérence RDV ↔ session : une téléconsult terminée CLÔT son RDV. Sans ça
     // le RDV reste 'confirmed' et bloque à tort la création de nouveaux
