@@ -1880,6 +1880,10 @@ isLiriHostDevPreviewRoute;
               strippé par CimolaceDomainHandler). PaiementPage résout le tenant via
               tenantSlug||DEFAULT_TENANT_SLUG → fonctionne sans :tenantSlug dans l'URL. */}
           <Route path="/paiement" element={<PaiementPage />} />
+          {/* Activation OTP (domaine tenant) : le lien de l'email d'accès /t/:slug/activer
+              est strippé en /activer par CimolaceDomainHandler sur prorascience.org.
+              ActivateAccountPage résout tenantSlug||DEFAULT_TENANT_SLUG. */}
+          <Route path="/activer" element={<ActivateAccountPage />} />
 
           <Route path="/forgot-password" element={<ForgotPasswordPage />} />
           {/* Cross-app SSO landing (med-app → immersive room, no second login) */}
