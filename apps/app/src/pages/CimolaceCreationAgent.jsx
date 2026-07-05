@@ -2,25 +2,33 @@
  * CimolaceCreationAgent — assistant conversationnel immersif de création d'organisation.
  * Route (preview) : /creer-organisation/agent
  *
- * LOT 1 (cette version) : coque immersive + présence 5 états + saisie « parler à la présence ».
- *   - Fond LIRI #262624, zéro bordure, écran vide.
- *   - Présence centrale animée à 5 états (connexion / attente / réflexion / écriture / prêt).
- *   - Saisie « parler à la présence » : toucher l'écran vide OU taper (type-anywhere) fait
- *     apparaître le champ ; Entrée l'efface (retour au vide). Pas de barre fixe.
- *   - Contenu encore statique (réponses préécrites). Le vrai « cerveau » IA arrive au LOT 3
- *     (edge agent-brain : routeur d'intention + réponses + hooks + couverture).
+ * LOT 2 (cette version) : coque immersive L1 + MACHINE À ÉTATS du flux de création,
+ * branchée sur les vrais endpoints (check-slug + POST /signup/tenant + login).
+ *   Flux : discovery → produit → marque (nom + slug vérifié) → compte → prêt.
+ *   - Présence 5 états (connexion/attente/réflexion/écriture/prêt) câblée aux événements.
+ *   - Saisie « parler à la présence » (toucher / type-anywhere) pour le texte libre et le
+ *     NOM de l'organisation ; l'étape COMPTE a un vrai formulaire (e-mail + mot de passe) —
+ *     le mot de passe est saisi par l'utilisateur, jamais par l'agent.
+ *   - Le « cerveau » IA (routeur d'intention + réponses génératives + tunnel de vente)
+ *     arrive au LOT 3 (edge agent-brain) ; ici les réponses restent préécrites.
  *
+ * Réutilise la logique de OnboardingOrgPage.jsx (endpoints identiques, prouvés en prod).
  * Cf. mémoire projet `cimolace-creation-agent-immersif` pour la direction complète (L1→L5).
  */
 import { useState, useEffect, useRef, useCallback } from 'react';
-import { GraduationCap, Stethoscope, ShoppingBag, ArrowUp, Check } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { GraduationCap, Stethoscope, ShoppingBag, ArrowUp, ArrowRight, Check, Loader2, Mail, Lock } from 'lucide-react';
+import { getApiBaseUrl } from '@/lib/apiBase';
+import { useAuth } from '@/hooks/useAuth';
+import { authStore } from '@/lib/auth-store';
 
 const BG = '#262624';
 const BG_THINK = '#20232a';
 const INK = '#f4efe6';
+const TERRA = '#d97757';
+const GOLD = '#e6cc92';
 const SERIF = "'Fraunces','Source Serif 4',Georgia,serif";
 
-// État de la présence : connexion | attente | reflexion | ecriture | pret
 const GREETING = "Bonjour. Dites-moi ce que vous voulez lancer — je m'occupe du reste.";
 
 const SUGG = [
@@ -29,19 +37,30 @@ const SUGG = [
   { kind: 'shop', label: 'Boutique en ligne', Icon: ShoppingBag },
 ];
 
-const PRODUCT_REPLY = {
-  school: "Parfait — pour ça, LIRI École : lives, cours, smartboard IA, replay. On construit votre espace ?",
-  medos: "Pour une clinique, c'est MedOS : dossiers, notes SOAP, téléconsultation, RGPD. On le met en place ?",
-  shop: "Pour vendre en ligne, Virtuel Mbolo : catalogue, panier, mobile money. On lance votre boutique ?",
+// Mon « kind » d'UI → « kind » attendu par POST /signup/tenant
+const KIND_MAP = { school: 'school', medos: 'medos', shop: 'mbolo' };
+
+const PRODUCT = {
+  school: { tag: 'LIRI École', reply: "Parfait — LIRI École : lives, cours, smartboard IA, replay. On construit votre espace ?" },
+  medos: { tag: 'MedOS', reply: "Pour une clinique, MedOS : dossiers, notes SOAP, téléconsultation, RGPD. On le met en place ?" },
+  shop: { tag: 'Virtuel Mbolo', reply: "Pour vendre en ligne, Virtuel Mbolo : catalogue, panier, mobile money. On lance votre boutique ?" },
 };
 
-function replyFor(v) {
-  const s = v.toLowerCase();
-  if (/prix|tarif|combien|co[uû]t|cher|payer/.test(s))
-    return "Tout est inclus dès 150 €/mois — installation 500 € une fois, zéro commission sur vos ventes.";
-  if (/zoom|concurr|pourquoi|diff[ée]r|mieux/.test(s))
-    return "Zoom vous loue une salle. LIRI vous donne l'école entière — à votre marque, pas la leur.";
-  return "Bien reçu. Ici, la présence vous écoute ; le cerveau qui compose la vraie réponse arrive au prochain lot.";
+function slugify(value) {
+  return String(value || '')
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[̀-ͯ]/g, '')
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/(^-|-$)/g, '')
+    .slice(0, 40);
+}
+
+function guessKind(v) {
+  const s = (v || '').toLowerCase();
+  if (/clin|sant|patient|m[ée]dec|soin/.test(s)) return 'medos';
+  if (/boutiq|vend|produit|commerce|magasin|mbolo/.test(s)) return 'shop';
+  return 'school';
 }
 
 const STYLE = `
@@ -60,7 +79,7 @@ const STYLE = `
 .cca-boot{width:44px;height:44px;border-radius:50%;border:1.5px solid rgba(217,119,87,.8)}
 .cca-done{display:flex;align-items:center;justify-content:center;width:46px;height:46px;border-radius:50%;background:radial-gradient(circle,rgba(63,191,106,.28),transparent 70%);color:#7fe0a0}
 .cca-glow{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:320px;height:320px;border-radius:50%;background:radial-gradient(circle,rgba(217,119,87,.15),transparent 60%);transition:background .7s ease;pointer-events:none}
-/* Les animations ne tournent QUE dans l'état actif (sinon leurs keyframes d'opacité écrasent le masquage → formes empilées). */
+/* Les animations ne tournent QUE dans l'état actif (sinon leurs keyframes d'opacité écrasent le masquage). */
 .cca-connexion .cca-boot{opacity:1;animation:ccaBoot 1.4s ease-out infinite}
 .cca-attente .cca-dot{opacity:1;animation:ccaBreath 3s ease-in-out infinite}
 .cca-reflexion .cca-line{opacity:1;animation:ccaLine 2s linear infinite}
@@ -71,40 +90,78 @@ const STYLE = `
 .cca-in{animation:ccaFade .5s cubic-bezier(.22,1,.36,1) both}
 .cca-chip{transition:background .16s ease;cursor:pointer}
 .cca-chip:hover{background:rgba(230,204,146,.14)!important}
+.cca-field::placeholder{color:rgba(244,239,230,.35)}
 `;
 
 export default function CimolaceCreationAgent() {
-  const [state, setState] = useState('connexion');
+  const navigate = useNavigate();
+  const { login } = useAuth();
+
+  const [presence, setPresence] = useState('connexion'); // connexion|attente|reflexion|ecriture|pret
   const [message, setMessage] = useState('');
+  const [step, setStep] = useState('discovery'); // discovery|product|brand_ask|brand_confirm|account|pret
+
+  const [chosen, setChosen] = useState('school');
+  const [orgName, setOrgName] = useState('');
+  const [slug, setSlug] = useState('');
+  const [slugState, setSlugState] = useState({ checking: false, available: null });
+
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState('');
+
   const [inputOpen, setInputOpen] = useState(false);
   const [value, setValue] = useState('');
   const inputRef = useRef(null);
   const typeTimer = useRef(null);
+  const thinkTimer = useRef(null);
   const rootRef = useRef(null);
+  const genRef = useRef(0);
 
+  const inputAllowed = step === 'discovery' || step === 'brand_ask';
+
+  // Typewriter robuste par « génération » : chaque speak() incrémente un jeton ; toute
+  // frappe périmée (nouvelle frappe, ou double-mount StrictMode) s'arrête d'elle-même via
+  // le garde genRef. setTimeout récursif = zéro interval orphelin.
   const speak = useCallback((text, done) => {
-    setState('ecriture');
+    const gen = ++genRef.current;
+    clearTimeout(typeTimer.current);
+    // Onglet masqué (les timers y sont throttlés → frappe saccadée) ou reduced-motion :
+    // on écrit le texte instantanément plutôt que d'animer.
+    if (document.hidden || window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      setMessage(text);
+      setPresence('attente');
+      if (done) done();
+      return;
+    }
+    setPresence('ecriture');
     setMessage('');
     let i = 0;
-    clearInterval(typeTimer.current);
-    typeTimer.current = setInterval(() => {
+    const tick = () => {
+      if (genRef.current !== gen) return; // périmée → stop
       i += 1;
       setMessage(text.slice(0, i));
       if (i >= text.length) {
-        clearInterval(typeTimer.current);
-        setState('attente');
+        setPresence('attente');
         if (done) done();
+        return;
       }
-    }, 22);
+      typeTimer.current = setTimeout(tick, 22);
+    };
+    typeTimer.current = setTimeout(tick, 22);
   }, []);
 
-  // Éveil : connexion → parole du message d'accueil → attente
+  const think = useCallback((fn, delay = 1000) => {
+    setPresence('reflexion');
+    clearTimeout(thinkTimer.current);
+    thinkTimer.current = setTimeout(fn, delay);
+  }, []);
+
+  // Éveil
   useEffect(() => {
     const t = setTimeout(() => speak(GREETING), 900);
-    return () => {
-      clearTimeout(t);
-      clearInterval(typeTimer.current);
-    };
+    return () => { clearTimeout(t); clearInterval(typeTimer.current); clearTimeout(thinkTimer.current); };
   }, [speak]);
 
   const openInput = useCallback((prefill = '') => {
@@ -112,65 +169,125 @@ export default function CimolaceCreationAgent() {
     setValue(prefill);
     setTimeout(() => inputRef.current?.focus(), 30);
   }, []);
+  const closeInput = useCallback(() => { setInputOpen(false); setValue(''); }, []);
 
-  const closeInput = useCallback(() => {
-    setInputOpen(false);
-    setValue('');
-  }, []);
-
-  // « type-anywhere » : dès qu'on tape une lettre, le champ se matérialise
+  // « type-anywhere » — seulement là où le texte libre a du sens
   useEffect(() => {
     const onKey = (e) => {
-      if (inputOpen) return;
+      if (inputOpen || !inputAllowed) return;
       if (e.metaKey || e.ctrlKey || e.altKey) return;
       if (e.key && e.key.length === 1) openInput(e.key);
     };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
-  }, [inputOpen, openInput]);
+  }, [inputOpen, inputAllowed, openInput]);
 
-  const submit = useCallback(() => {
+  const checkSlug = useCallback(async (s) => {
+    if (s.length < 2) { setSlugState({ checking: false, available: null }); return; }
+    setSlugState({ checking: true, available: null });
+    try {
+      const res = await fetch(`${getApiBaseUrl()}/signup/tenant/check-slug`, {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ slug: s }),
+      });
+      const body = await res.json().catch(() => ({}));
+      const payload = body?.data ?? body;
+      setSlugState({ checking: false, available: Boolean(payload?.available) });
+    } catch {
+      setSlugState({ checking: false, available: null });
+    }
+  }, []);
+
+  // ── Transitions de flux ────────────────────────────────────────────────
+  const pickKind = useCallback((k) => {
+    setChosen(k);
+    setError('');
+    think(() => { setStep('product'); speak(PRODUCT[k].reply); });
+  }, [think, speak]);
+
+  const chooseProduct = useCallback(() => {
+    setStep('brand_ask');
+    speak("Comment s'appelle votre organisation ? Dites-le moi.", () => openInput());
+  }, [speak, openInput]);
+
+  const submitName = useCallback((name) => {
+    const s = slugify(name);
+    setOrgName(name);
+    setSlug(s);
+    checkSlug(s);
+    think(() => { setStep('brand_confirm'); speak(`Parfait. Votre espace : cimolace.space/t/${s || '…'}. On continue ?`); });
+  }, [think, speak, checkSlug]);
+
+  const continueToAccount = useCallback(() => {
+    setStep('account');
+    speak("Dernière étape : votre e-mail et un mot de passe (8 caractères min). Vous saisissez, je crée l'espace.");
+  }, [speak]);
+
+  const submitInput = useCallback(() => {
     const v = value.trim();
     closeInput();
     if (!v) return;
-    setState('reflexion');
-    setTimeout(() => speak(replyFor(v)), 1100);
-  }, [value, closeInput, speak]);
+    if (step === 'brand_ask') { submitName(v); return; }
+    const k = guessKind(v);
+    setChosen(k);
+    think(() => { setStep('product'); speak(PRODUCT[k].reply); });
+  }, [value, step, closeInput, submitName, think, speak]);
 
-  const pick = useCallback((kind) => {
-    setState('reflexion');
-    setTimeout(() => speak(PRODUCT_REPLY[kind]), 1000);
-  }, [speak]);
+  const createAccount = useCallback(async () => {
+    setError('');
+    if (!email.trim() || !password) { setError('E-mail et mot de passe requis.'); return; }
+    if (password.length < 8) { setError('Mot de passe : 8 caractères minimum.'); return; }
+    if (slug.length < 2) { setError("Le nom d'organisation ne produit pas d'identifiant valide."); return; }
+    setBusy(true);
+    setPresence('reflexion');
+    try {
+      const res = await fetch(`${getApiBaseUrl()}/signup/tenant`, {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ email: email.trim(), password, platformName: orgName.trim(), slug, kind: KIND_MAP[chosen] || 'liri' }),
+      });
+      const body = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(body?.error?.message || body?.message || 'Création impossible. Réessayez.');
+      const payload = body?.data ?? body;
+      const createdSlug = payload?.tenant?.slug || slug;
+      const nextUrl = payload?.next_url || `/t/${createdSlug}/admin`;
+      authStore.setTenantSlug(createdSlug);
+      setStep('pret');
+      setPresence('pret');
+      setMessage(`Votre espace ${PRODUCT[chosen].tag} est prêt.`);
+      const { error: loginErr } = await login(email.trim(), password);
+      setTimeout(() => navigate(loginErr ? '/login' : nextUrl, { replace: true }), 1500);
+    } catch (err) {
+      setError(err?.message || 'Une erreur est survenue.');
+      setPresence('attente');
+    } finally {
+      setBusy(false);
+    }
+  }, [email, password, slug, orgName, chosen, login, navigate]);
 
   const onRootClick = (e) => {
-    if (inputOpen) return;
+    if (inputOpen || !inputAllowed) return;
     if (rootRef.current && e.target === rootRef.current) openInput();
   };
 
-  const bg = state === 'reflexion' ? BG_THINK : BG;
+  const bg = presence === 'reflexion' ? BG_THINK : BG;
+  const showActions = presence === 'attente' && !inputOpen;
 
   return (
     <div
       ref={rootRef}
       onClick={onRootClick}
       style={{
-        minHeight: '100vh',
-        background: bg,
-        transition: 'background .8s ease',
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center',
-        justifyContent: 'center',
-        position: 'relative',
-        overflow: 'hidden',
-        padding: '0 24px',
-        fontFamily: "'Inter', system-ui, sans-serif",
-        cursor: inputOpen ? 'default' : 'text',
+        minHeight: '100vh', background: bg, transition: 'background .8s ease',
+        display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
+        position: 'relative', overflow: 'hidden', padding: '0 24px',
+        fontFamily: "'Inter', system-ui, sans-serif", cursor: inputOpen || !inputAllowed ? 'default' : 'text',
       }}
     >
       <style>{STYLE}</style>
 
-      {/* Indicateur « connecté » */}
+      {/* Connecté */}
       <div style={{ position: 'absolute', top: 22, left: '50%', transform: 'translateX(-50%)', display: 'flex', alignItems: 'center', gap: 7, opacity: 0.7, pointerEvents: 'none' }}>
         <span style={{ position: 'relative', display: 'inline-flex', width: 6, height: 6, alignItems: 'center', justifyContent: 'center' }}>
           <span style={{ position: 'absolute', width: 6, height: 6, borderRadius: '50%', background: '#3fbf6a', animation: 'ccaPing 1.9s ease-out infinite' }} />
@@ -180,7 +297,7 @@ export default function CimolaceCreationAgent() {
       </div>
 
       {/* Présence */}
-      <div className={`cca-${state}`} style={{ position: 'relative', width: 200, height: 120, pointerEvents: 'none' }}>
+      <div className={`cca-${presence}`} style={{ position: 'relative', width: 200, height: 120, pointerEvents: 'none' }}>
         <div className="cca-glow" />
         <span className="cca-form cca-boot" />
         <span className="cca-form cca-dot" />
@@ -189,56 +306,96 @@ export default function CimolaceCreationAgent() {
         <span className="cca-form cca-done"><Check size={20} /></span>
       </div>
 
-      {/* Message (voix) ou indice */}
+      {/* Voix */}
       <div style={{ minHeight: 34, marginTop: 14, textAlign: 'center' }}>
         {message ? (
-          <p key={message.length === 1 ? 'start' : 'msg'} className="cca-in" style={{ fontFamily: SERIF, fontSize: 19, lineHeight: 1.5, color: INK, maxWidth: 460, margin: 0 }}>
-            {message}
-          </p>
+          <p className="cca-in" style={{ fontFamily: SERIF, fontSize: 19, lineHeight: 1.5, color: INK, maxWidth: 470, margin: 0 }}>{message}</p>
         ) : (
-          state === 'attente' && !inputOpen && (
-            <span style={{ fontSize: 12, color: 'rgba(244,239,230,.4)' }}>touchez l'écran pour parler</span>
-          )
+          showActions && step === 'discovery' && <span style={{ fontSize: 12, color: 'rgba(244,239,230,.4)' }}>touchez l'écran pour parler</span>
         )}
       </div>
 
-      {/* Suggestions (attente) */}
-      {state === 'attente' && !inputOpen && (
+      {/* Erreur */}
+      {error && (
+        <p className="cca-in" style={{ marginTop: 10, fontSize: 12.5, color: '#f0997b' }}>{error}</p>
+      )}
+
+      {/* Actions par étape */}
+      {showActions && step === 'discovery' && (
         <div className="cca-in" style={{ display: 'flex', flexWrap: 'wrap', gap: 9, justifyContent: 'center', marginTop: 18, maxWidth: 470 }}>
           {SUGG.map(({ kind, label, Icon }) => (
-            <span
-              key={kind}
-              className="cca-chip"
-              onClick={(e) => { e.stopPropagation(); pick(kind); }}
-              style={{ display: 'inline-flex', alignItems: 'center', gap: 7, fontSize: 13, color: '#e6cc92', background: 'rgba(244,239,230,.05)', borderRadius: 999, padding: '8px 15px' }}
-            >
-              <Icon size={14} />
-              {label}
+            <span key={kind} className="cca-chip" onClick={(e) => { e.stopPropagation(); pickKind(kind); }}
+              style={{ display: 'inline-flex', alignItems: 'center', gap: 7, fontSize: 13, color: GOLD, background: 'rgba(244,239,230,.05)', borderRadius: 999, padding: '8px 15px' }}>
+              <Icon size={14} />{label}
             </span>
           ))}
         </div>
       )}
 
-      {/* Saisie « parler à la présence » — apparaît au toucher / à la frappe, disparaît à l'Entrée */}
+      {showActions && step === 'product' && (
+        <div className="cca-in" style={{ display: 'flex', gap: 9, justifyContent: 'center', marginTop: 18 }}>
+          <button className="cca-chip" onClick={(e) => { e.stopPropagation(); chooseProduct(); }}
+            style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 13.5, fontWeight: 500, color: '#2a140c', background: TERRA, border: 'none', borderRadius: 11, padding: '10px 18px', cursor: 'pointer' }}>
+            Choisir {PRODUCT[chosen].tag}<ArrowRight size={15} />
+          </button>
+          <button className="cca-chip" onClick={(e) => { e.stopPropagation(); const o = ['school', 'medos', 'shop'].filter((x) => x !== chosen); pickKind(o[0]); }}
+            style={{ fontSize: 13, color: 'rgba(244,239,230,.6)', background: 'rgba(244,239,230,.05)', border: 'none', borderRadius: 11, padding: '10px 15px', cursor: 'pointer' }}>
+            Autre
+          </button>
+        </div>
+      )}
+
+      {showActions && step === 'brand_confirm' && (
+        <div className="cca-in" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 12, marginTop: 16 }}>
+          <span style={{ fontSize: 12, display: 'inline-flex', alignItems: 'center', gap: 6, color: slugState.available === false ? '#f0997b' : '#7fe0a0' }}>
+            {slugState.checking ? (<><Loader2 size={13} className="animate-spin" /> vérification…</>)
+              : slugState.available === false ? (<>identifiant déjà pris — changez le nom</>)
+                : slugState.available ? (<><Check size={13} /> identifiant disponible</>)
+                  : (<>cimolace.space/t/{slug}</>)}
+          </span>
+          <div style={{ display: 'flex', gap: 9 }}>
+            <button className="cca-chip" disabled={slugState.available === false} onClick={(e) => { e.stopPropagation(); continueToAccount(); }}
+              style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 13.5, fontWeight: 500, color: '#2a140c', background: slugState.available === false ? 'rgba(217,119,87,.4)' : TERRA, border: 'none', borderRadius: 11, padding: '10px 18px', cursor: slugState.available === false ? 'not-allowed' : 'pointer' }}>
+              Continuer<ArrowRight size={15} />
+            </button>
+            <button className="cca-chip" onClick={(e) => { e.stopPropagation(); setStep('brand_ask'); speak('Quel nom, alors ?', () => openInput()); }}
+              style={{ fontSize: 13, color: 'rgba(244,239,230,.6)', background: 'rgba(244,239,230,.05)', border: 'none', borderRadius: 11, padding: '10px 15px', cursor: 'pointer' }}>
+              Changer le nom
+            </button>
+          </div>
+        </div>
+      )}
+
+      {showActions && step === 'account' && (
+        <form className="cca-in" onClick={(e) => e.stopPropagation()} onSubmit={(e) => { e.preventDefault(); createAccount(); }}
+          style={{ display: 'flex', flexDirection: 'column', gap: 9, width: 320, marginTop: 16 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 9, background: 'rgba(244,239,230,.05)', borderRadius: 11, padding: '10px 13px' }}>
+            <Mail size={15} color="rgba(244,239,230,.4)" />
+            <input className="cca-field" type="email" autoComplete="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="vous@exemple.com"
+              style={{ flex: 1, background: 'transparent', border: 'none', outline: 'none', color: INK, fontSize: 13.5, fontFamily: 'inherit' }} />
+          </div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 9, background: 'rgba(244,239,230,.05)', borderRadius: 11, padding: '10px 13px' }}>
+            <Lock size={15} color="rgba(244,239,230,.4)" />
+            <input className="cca-field" type="password" autoComplete="new-password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="Mot de passe (8 car. min)"
+              style={{ flex: 1, background: 'transparent', border: 'none', outline: 'none', color: INK, fontSize: 13.5, fontFamily: 'inherit' }} />
+          </div>
+          <button type="submit" disabled={busy}
+            style={{ marginTop: 4, background: TERRA, color: '#2a140c', border: 'none', borderRadius: 11, padding: '11px', fontSize: 13.5, fontWeight: 500, cursor: busy ? 'not-allowed' : 'pointer', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 7 }}>
+            {busy ? (<><Loader2 size={15} className="animate-spin" /> Création…</>) : (<>Créer mon espace<ArrowRight size={15} /></>)}
+          </button>
+        </form>
+      )}
+
+      {/* Saisie « parler à la présence » */}
       {inputOpen && (
-        <div
-          className="cca-in"
-          onClick={(e) => e.stopPropagation()}
-          style={{ position: 'absolute', left: '50%', bottom: 40, transform: 'translateX(-50%)', width: 'min(440px, 86vw)', display: 'flex', alignItems: 'center', gap: 8, background: 'rgba(244,239,230,.07)', borderRadius: 14, padding: '8px 8px 8px 15px' }}
-        >
-          <input
-            ref={inputRef}
-            value={value}
-            onChange={(e) => setValue(e.target.value)}
-            onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); submit(); } else if (e.key === 'Escape') { closeInput(); } }}
-            placeholder="Parlez à la présence…"
-            style={{ flex: 1, background: 'transparent', border: 'none', outline: 'none', color: INK, fontSize: 14, fontFamily: 'inherit' }}
-          />
-          <button
-            onClick={submit}
-            aria-label="Envoyer"
-            style={{ width: 32, height: 32, borderRadius: 9, background: '#d97757', color: '#2a140c', border: 'none', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, cursor: 'pointer' }}
-          >
+        <div className="cca-in" onClick={(e) => e.stopPropagation()}
+          style={{ position: 'absolute', left: '50%', bottom: 40, transform: 'translateX(-50%)', width: 'min(440px, 86vw)', display: 'flex', alignItems: 'center', gap: 8, background: 'rgba(244,239,230,.07)', borderRadius: 14, padding: '8px 8px 8px 15px' }}>
+          <input ref={inputRef} className="cca-field" value={value} onChange={(e) => setValue(e.target.value)}
+            onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); submitInput(); } else if (e.key === 'Escape') { closeInput(); } }}
+            placeholder={step === 'brand_ask' ? 'Nom de votre organisation…' : 'Parlez à la présence…'}
+            style={{ flex: 1, background: 'transparent', border: 'none', outline: 'none', color: INK, fontSize: 14, fontFamily: 'inherit' }} />
+          <button onClick={submitInput} aria-label="Envoyer"
+            style={{ width: 32, height: 32, borderRadius: 9, background: TERRA, color: '#2a140c', border: 'none', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, cursor: 'pointer' }}>
             <ArrowUp size={17} />
           </button>
         </div>
