@@ -22,7 +22,7 @@ export const LIRI_PLATFORM_BRANDING = {
   favicon: '/liri-logo-mark.png',
   primaryColor: '#0b1115',
   secondaryColor: '#162331',
-  accentColor: '#7c3aed',
+  accentColor: '#d97757',
   backgroundColor: '#0b1115',
   domain: '',
   publicSiteOrigin: '',

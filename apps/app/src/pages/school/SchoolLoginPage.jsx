@@ -59,9 +59,10 @@ export default function SchoolLoginPage() {
   const [googleLoading, setGoogleLoading] = useState(false);
   const [error, setError] = useState('');
 
-  // Fallback OR (charte Cimolace) au lieu du violet, quand le tenant n'a pas de
-  // couleur de marque. Les tenants brandés gardent leur accentColor.
-  const accent = branding?.accentColor ?? '#d8b468';
+  // Fallback TERRACOTTA LIRI (#d97757, directive « tout chaud ») au lieu du violet
+  // legacy, quand le tenant n'a pas de couleur de marque. C'est une surface PRODUIT
+  // LIRI (≠ Cimolace or). Les tenants brandés gardent leur accentColor.
+  const accent = branding?.accentColor ?? '#d97757';
   // Prefer branding.name from DB; if still the generic FALLBACK, use URL slug
   const brandingName = branding?.name;
   const isFallback = !brandingName || brandingName === 'Mon École';
