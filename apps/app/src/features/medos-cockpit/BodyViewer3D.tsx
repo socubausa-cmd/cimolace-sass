@@ -4,6 +4,7 @@ import { OrbitControls, Center, Html, useGLTF } from '@react-three/drei';
 import * as THREE from 'three';
 import { COLOR_HEX, type OrganColor } from './cockpit-api';
 import { BodyViewer, type OrganNode } from './BodyViewer';
+import { useMatchMediaAtMost } from '@/hooks/useLiriMobileBreakpoint';
 
 const GREY = '#c9bdab';
 const DRACO = '/medos-twin/draco/';
@@ -196,17 +197,22 @@ export function BodyViewer3D({
     c.update();
   };
 
+  // Mobile : la tête du jumeau tient tout en haut → les contrôles (Femme/Homme +
+  // zoom, à top) la recouvraient. On COLLE les contrôles au bord (top:6) et on
+  // DÉCALE le rendu 3D sous leur bande (marginTop) → tête entièrement visible.
+  const compact = useMatchMediaAtMost(820);
+  const CTRL_BAND = 42; // hauteur réservée aux contrôles sur mobile
   return (
-    <div style={{ width: '100%', height: '100%', minHeight: 480, position: 'relative', borderRadius: 16, overflow: 'hidden', background: 'radial-gradient(circle at 50% 22%, #fffaf2, var(--zw-bg-subtle))' }}>
-      {/* Barre haut : sexe + zoom */}
-      <div style={{ position: 'absolute', top: 12, left: 12, zIndex: 5, display: 'flex', gap: 4, background: 'rgba(255,255,255,0.85)', backdropFilter: 'blur(6px)', borderRadius: 9, padding: 3, border: '1px solid var(--zw-border)' }}>
+    <div style={{ width: '100%', height: '100%', minHeight: compact ? 360 : 480, position: 'relative', borderRadius: 16, overflow: 'hidden', background: 'radial-gradient(circle at 50% 22%, #fffaf2, var(--zw-bg-subtle))' }}>
+      {/* Barre haut : sexe + zoom (mobile : collée au bord, compacte). */}
+      <div style={{ position: 'absolute', top: compact ? 6 : 12, left: compact ? 6 : 12, zIndex: 5, display: 'flex', gap: 4, background: 'rgba(255,255,255,0.85)', backdropFilter: 'blur(6px)', borderRadius: 9, padding: compact ? 2 : 3, border: '1px solid var(--zw-border)' }}>
         {(['female', 'male'] as Sex[]).map((s) => (
-          <button key={s} onClick={() => setSex(s)} style={{ padding: '5px 12px', borderRadius: 7, border: 'none', cursor: 'pointer', fontSize: 12, fontWeight: 600, background: sex === s ? 'var(--brand-primary)' : 'transparent', color: sex === s ? '#fff' : 'var(--zw-text-muted)' }}>
+          <button key={s} onClick={() => setSex(s)} style={{ padding: compact ? '4px 8px' : '5px 12px', borderRadius: 7, border: 'none', cursor: 'pointer', fontSize: compact ? 11 : 12, fontWeight: 600, background: sex === s ? 'var(--brand-primary)' : 'transparent', color: sex === s ? '#fff' : 'var(--zw-text-muted)' }}>
             {s === 'female' ? 'Femme' : 'Homme'}
           </button>
         ))}
       </div>
-      <div style={{ position: 'absolute', top: 12, right: 12, zIndex: 5, display: 'flex', gap: 6 }}>
+      <div style={{ position: 'absolute', top: compact ? 6 : 12, right: compact ? 6 : 12, zIndex: 5, display: 'flex', gap: compact ? 4 : 6 }}>
         <button onClick={() => dolly(0.82)} title="Zoom avant" style={zbtn}>+</button>
         <button onClick={() => dolly(1.22)} title="Zoom arrière" style={zbtn}>−</button>
         <button onClick={() => controls.current?.reset()} title="Réinitialiser" style={zbtn}>⟲</button>
@@ -233,7 +239,7 @@ export function BodyViewer3D({
           el.addEventListener('webglcontextlost', (e) => e.preventDefault(), false);
           el.addEventListener('webglcontextrestored', () => invalidate(), false);
         }}
-        style={{ touchAction: 'none' }}
+        style={compact ? { touchAction: 'none', marginTop: CTRL_BAND, height: `calc(100% - ${CTRL_BAND}px)` } : { touchAction: 'none' }}
       >
         <ambientLight intensity={0.55} />
         <hemisphereLight intensity={0.5} groundColor={new THREE.Color('#d8c8ad')} />

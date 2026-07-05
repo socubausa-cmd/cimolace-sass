@@ -761,6 +761,9 @@ function CallVideoFx({ camId, micId, detourage }: { camId: string; micId: string
 
 function ConnectedParticipantsCard() {
   const participants = useParticipants();
+  // Mobile : la carte est POUSSÉE au coin, à fleur de l'écran (juste sous le
+  // header compact), plus étroite → elle libère un maximum la scène partagée.
+  const compact = useMatchMediaAtMost(820);
   const visible = participants.map((participant: any) => ({
     id: participant.identity,
     name: participant.name || participant.identity || 'Participant',
@@ -770,8 +773,9 @@ function ConnectedParticipantsCard() {
     <div
       data-testid="connected-participants"
       style={{
-        position: 'fixed', top: 76, left: 20, zIndex: 2147483635,
-        minWidth: 190, maxWidth: 290, padding: '11px 13px', borderRadius: 13,
+        position: 'fixed', top: compact ? 48 : 76, left: compact ? 4 : 20, zIndex: 2147483635,
+        minWidth: compact ? 128 : 190, maxWidth: compact ? 190 : 290,
+        padding: compact ? '7px 9px' : '11px 13px', borderRadius: compact ? 10 : 13,
         background: 'rgba(35,33,30,0.96)', border: '1px solid rgba(245,244,238,0.13)',
         boxShadow: '0 12px 32px rgba(0,0,0,0.4)', color: '#f5f4ee',
       }}
@@ -1378,7 +1382,7 @@ export function ConsultationStage({
   // écran organisé, zéro superposition, aucune séparation visible. Repliée →
   // la réserve disparaît et le contenu reprend toute la largeur.
   const overlayActive = compact && !rightOpen && miniLayout === 'overlay' && !miniCollapsed;
-  const reserve = overlayActive ? 112 : 0;
+  const reserve = overlayActive ? 96 : 0;
   // Repli = ZOOM sur le partage (cue sonore montant) ; dépli = dézoom (descendant).
   const toggleMini = () => {
     setMiniCollapsed((v) => {
@@ -1608,10 +1612,10 @@ function MembersRail({
       );
     }
     return (
-      <div data-cr="members" style={{ width: '100%', height: 66, flexShrink: 0, display: 'flex', flexDirection: 'row', alignItems: 'stretch', gap: 6, padding: 6, background: PANEL_BG, borderRadius: 12, border: PANEL_BORDER, overflowX: 'auto', overflowY: 'hidden' }}>
+      <div data-cr="members" style={{ width: '100%', height: 92, flexShrink: 0, display: 'flex', flexDirection: 'row', alignItems: 'stretch', gap: 6, padding: 6, background: PANEL_BG, borderRadius: 12, border: PANEL_BORDER, overflowX: 'auto', overflowY: 'hidden' }}>
         <style>{`[data-cr="members"] .lk-participant-name{display:none!important}`}</style>
         {screen ? (
-          <div title="Écran partagé" style={{ position: 'relative', height: '100%', aspectRatio: '16 / 9', flexShrink: 0, borderRadius: 8, overflow: 'hidden', background: '#000', border: '1px solid rgba(212,163,106,0.55)' }}>
+          <div title="Écran partagé" style={{ position: 'relative', height: '100%', aspectRatio: '1 / 1', flexShrink: 0, borderRadius: 8, overflow: 'hidden', background: '#000', border: '1px solid rgba(212,163,106,0.55)' }}>
             <ParticipantTile trackRef={screen} style={{ width: '100%', height: '100%' }} />
           </div>
         ) : null}
@@ -1621,7 +1625,7 @@ function MembersRail({
             onClick={() => { const id = t?.participant?.identity; if (id) onFocus?.(id); }}
             role="button"
             title="Agrandir"
-            style={{ position: 'relative', height: '100%', aspectRatio: '16 / 9', flexShrink: 0, borderRadius: 8, overflow: 'hidden', background: '#000', border: '1px solid rgba(255,255,255,0.08)', cursor: 'pointer' }}
+            style={{ position: 'relative', height: '100%', aspectRatio: '1 / 1', flexShrink: 0, borderRadius: 8, overflow: 'hidden', background: '#000', border: '1px solid rgba(255,255,255,0.08)', cursor: 'pointer' }}
           >
             <ParticipantTile trackRef={t} style={{ width: '100%', height: '100%' }} />
             <RoleTag role={participantRole(t?.participant, !!isHost)} />
@@ -1656,7 +1660,7 @@ function MembersRail({
     // sont posées sur le même fond que le contenu partagé, qui ne place jamais
     // d'information sous elles. Un seul écran organisé, zéro superposition.
     return (
-      <div data-cr="members" data-ov="" style={{ position: 'absolute', top: '50%', right: 8, transform: 'translateY(-50%)', zIndex: 30, width: 96, display: 'flex', flexDirection: 'column', alignItems: 'stretch', gap: 8, maxHeight: 'calc(100% - 24px)', overflowY: 'auto' }}>
+      <div data-cr="members" data-ov="" style={{ position: 'absolute', top: '50%', right: 8, transform: 'translateY(-50%)', zIndex: 30, width: 80, display: 'flex', flexDirection: 'column', alignItems: 'stretch', gap: 8, maxHeight: 'calc(100% - 24px)', overflowY: 'auto' }}>
         <style>{`
 [data-cr="members"] .lk-participant-name{display:none!important}
 [data-cr="members"][data-ov] .cr-mini{opacity:.8;filter:brightness(.86) saturate(.95);transition:opacity .25s ease, filter .25s ease;animation:crMiniIn .3s cubic-bezier(.2,.7,.3,1)}
@@ -1664,7 +1668,7 @@ function MembersRail({
 @keyframes crMiniIn{from{opacity:0;transform:translateX(12px) scale(.94)}to{opacity:.8;transform:none}}
 `}</style>
         {screen ? (
-          <div className="cr-mini" title="Écran partagé" style={{ position: 'relative', width: 96, aspectRatio: '16 / 9', flexShrink: 0, borderRadius: 10, overflow: 'hidden', background: '#000', border: '1px solid rgba(212,163,106,0.45)', boxShadow: '0 3px 12px rgba(0,0,0,0.25)' }}>
+          <div className="cr-mini" title="Écran partagé" style={{ position: 'relative', width: 80, aspectRatio: '1 / 1', flexShrink: 0, borderRadius: 10, overflow: 'hidden', background: '#000', border: '1px solid rgba(212,163,106,0.45)', boxShadow: '0 3px 12px rgba(0,0,0,0.25)' }}>
             <ParticipantTile trackRef={screen} style={{ width: '100%', height: '100%' }} />
           </div>
         ) : null}
@@ -1675,7 +1679,7 @@ function MembersRail({
             onClick={() => { const id = t?.participant?.identity; if (id) onFocus?.(id); }}
             role="button"
             title="Agrandir"
-            style={{ position: 'relative', width: 96, aspectRatio: '16 / 9', flexShrink: 0, borderRadius: 10, overflow: 'hidden', background: '#000', boxShadow: '0 3px 12px rgba(0,0,0,0.25)', cursor: 'pointer' }}
+            style={{ position: 'relative', width: 80, aspectRatio: '1 / 1', flexShrink: 0, borderRadius: 10, overflow: 'hidden', background: '#000', boxShadow: '0 3px 12px rgba(0,0,0,0.25)', cursor: 'pointer' }}
           >
             <ParticipantTile trackRef={t} style={{ width: '100%', height: '100%' }} />
             <RoleTag role={participantRole(t?.participant, !!isHost)} />
