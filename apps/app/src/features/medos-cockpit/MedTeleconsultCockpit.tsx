@@ -1013,6 +1013,15 @@ export function CockpitDock({
       window.dispatchEvent(new CustomEvent('LIRI_MEDOS_SHARED_SCENE', { detail: { scene } }));
     }
   }, [channel.scene]);
+  // Nettoyage au DÉMONTAGE (sortie de consultation) : ne pas laisser la scène
+  // clinique du patient PRÉCÉDENT fuiter vers une consultation suivante (SPA :
+  // window persiste sans reload) → un compositeur monté après lirait l'ancienne.
+  useEffect(() => () => {
+    if (typeof window !== 'undefined') {
+      (window as unknown as { __liriMedosScene?: CockpitScene | null }).__liriMedosScene = null;
+      window.dispatchEvent(new CustomEvent('LIRI_MEDOS_SHARED_SCENE', { detail: { scene: null } }));
+    }
+  }, []);
   return mode === 'host' ? (
     <HostCockpit sessionId={sessionId} channel={channel} eduMode={eduMode} />
   ) : (
