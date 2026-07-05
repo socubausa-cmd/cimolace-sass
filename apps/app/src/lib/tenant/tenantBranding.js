@@ -87,6 +87,14 @@ export function normalizeTenantBranding(tenant = null) {
     source.metadata?.branding && typeof source.metadata.branding === 'object'
       ? source.metadata.branding
       : {};
+  // Contenu éditorial vitrine (L1/L3) — deux formes selon la source : payload
+  // public by-slug (`site` à la racine) ou ligne tenant brute (`metadata.site`).
+  const site =
+    source.site && typeof source.site === 'object'
+      ? source.site
+      : source.metadata?.site && typeof source.metadata.site === 'object'
+        ? source.metadata.site
+        : {};
 
   const name = firstString(rawBranding.name, metadataBranding.name, source.name, FALLBACK_BRANDING.name);
   const fullName = firstString(rawBranding.fullName, metadataBranding.fullName, source.business_name, name, FALLBACK_BRANDING.fullName);
@@ -107,6 +115,10 @@ export function normalizeTenantBranding(tenant = null) {
     secondaryColor: firstString(rawBranding.secondaryColor, metadataBranding.secondaryColor, brandColors.secondary, FALLBACK_BRANDING.secondaryColor),
     accentColor: firstString(rawBranding.accentColor, metadataBranding.accentColor, brandColors.accent, FALLBACK_BRANDING.accentColor),
     backgroundColor: firstString(rawBranding.backgroundColor, metadataBranding.backgroundColor, FALLBACK_BRANDING.backgroundColor),
+    slogan: firstString(site.slogan, metadataBranding.slogan),
+    vision: firstString(site.vision, metadataBranding.vision),
+    siteDescription: firstString(site.description, metadataBranding.description, source.description),
+    siteWebsite: firstString(site.website, metadataBranding.website),
     domain: firstString(rawBranding.domain, metadataBranding.domain, source.primary_domain, FALLBACK_BRANDING.domain),
     publicSiteOrigin,
     vitrineContactEmail: firstString(

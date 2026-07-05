@@ -56,6 +56,25 @@ export default function PaiementPage() {
   const [phone, setPhone] = useState('');
   const [status, setStatus] = useState({ state: 'idle', message: '', depositId: null });
   const cardReturn = searchParams.get('card'); // 'success' | 'cancel' au retour de Stripe
+  const paypalReturn = searchParams.get('paypal'); // 'success' | 'cancel' au retour de PayPal
+  const paypalOrderId = searchParams.get('token'); // PayPal renvoie ?token=<orderId>
+  // 'idle' | 'capturing' | 'done' | 'error' — capture de l'ordre PayPal au retour.
+  const [paypalCapture, setPaypalCapture] = useState('idle');
+
+  // Au retour de PayPal (paypal=success + token), on CAPTURE l'ordre côté serveur
+  // (le fulfillment — abonnement + accès — se fait à la capture, jamais avant).
+  useEffect(() => {
+    if (paypalReturn !== 'success' || !paypalOrderId) return;
+    let alive = true;
+    setPaypalCapture('capturing');
+    offeringCheckoutApi.capturePaypal(paypalOrderId)
+      .then((res) => {
+        if (!alive) return;
+        setPaypalCapture(res?.isCompleted ? 'done' : 'error');
+      })
+      .catch(() => alive && setPaypalCapture('error'));
+    return () => { alive = false; };
+  }, [paypalReturn, paypalOrderId]);
 
   // Modèle d'accès du service (lu depuis billing_plans) : free/community → débloqué SANS paiement.
   const [accessModel, setAccessModel] = useState(null);
@@ -159,6 +178,24 @@ export default function PaiementPage() {
           return;
         }
         setStatus({ state: 'error', message: 'Réponse de paiement carte invalide.', depositId: null });
+        return;
+      }
+
+      // ── PayPal (Orders v2) → redirection vers l'approbation PayPal ──
+      if (method === 'paypal') {
+        const base = `${window.location.origin}/t/${tenantSlug || DEFAULT_TENANT_SLUG}/paiement${planSlug ? `?plan=${encodeURIComponent(planSlug)}` : ''}`;
+        const sep = base.includes('?') ? '&' : '?';
+        const body = { kind: offer.kind };
+        if (offer.kind === 'subscription') body.planSlug = planSlug;
+        else { body.amountCents = amountCents; if (planSlug) body.planSlug = planSlug; }
+        body.successUrl = `${base}${sep}paypal=success`;
+        body.cancelUrl = `${base}${sep}paypal=cancel`;
+        const res = await offeringCheckoutApi.createPaypal(body);
+        if (res?.approveUrl) {
+          window.location.href = res.approveUrl;
+          return;
+        }
+        setStatus({ state: 'error', message: 'Réponse PayPal invalide (pas de lien d\'approbation).', depositId: null });
         return;
       }
 
@@ -278,10 +315,33 @@ export default function PaiementPage() {
           </div>
         )}
 
+        {paypalReturn === 'success' && paypalCapture === 'capturing' && (
+          <div className="mt-6 rounded-xl border border-white/15 bg-white/5 p-4 text-sm text-gray-200">
+            Confirmation du paiement PayPal en cours…
+          </div>
+        )}
+        {paypalReturn === 'success' && paypalCapture === 'done' && (
+          <div className="mt-6 rounded-xl border border-emerald-500/30 bg-emerald-500/10 p-4 text-sm text-emerald-200">
+            Paiement PayPal confirmé.{' '}
+            {offer.kind === 'subscription' ? 'Votre abonnement est actif.' : 'Merci pour votre contribution.'}
+          </div>
+        )}
+        {paypalReturn === 'success' && paypalCapture === 'error' && (
+          <div className="mt-6 rounded-xl border border-amber-500/30 bg-amber-500/10 p-4 text-sm text-amber-200">
+            Le paiement PayPal n'a pas pu être confirmé. Si vous avez été débité, contactez-nous — sinon réessayez ci-dessous.
+          </div>
+        )}
+        {paypalReturn === 'cancel' && (
+          <div className="mt-6 rounded-xl border border-amber-500/30 bg-amber-500/10 p-4 text-sm text-amber-200">
+            Paiement PayPal annulé. Vous pouvez réessayer ci-dessous.
+          </div>
+        )}
+
         {/* Choix du moyen de paiement */}
-        <div className="mt-8 grid grid-cols-2 gap-3" role="tablist" aria-label="Moyen de paiement">
+        <div className="mt-8 grid grid-cols-3 gap-3" role="tablist" aria-label="Moyen de paiement">
           {[
             { id: 'card', label: 'Carte bancaire', sub: 'Visa · Mastercard' },
+            { id: 'paypal', label: 'PayPal', sub: 'Compte PayPal' },
             { id: 'mobile_money', label: 'Mobile Money', sub: 'MTN · Orange' },
           ].map((m) => {
             const active = method === m.id;
@@ -380,14 +440,18 @@ export default function PaiementPage() {
             className="w-full cursor-pointer rounded-lg bg-[var(--school-accent)] px-5 py-3 font-semibold text-black hover:bg-[#e5c04a] disabled:opacity-60"
           >
             {status.state === 'submitting'
-              ? method === 'card'
-                ? 'Redirection vers le paiement…'
-                : 'Envoi en cours…'
+              ? method === 'mobile_money'
+                ? 'Envoi en cours…'
+                : 'Redirection vers le paiement…'
               : method === 'card'
                 ? offer.kind === 'subscription'
                   ? "S'abonner par carte"
                   : 'Payer par carte'
-                : 'Payer par Mobile Money'}
+                : method === 'paypal'
+                  ? offer.kind === 'subscription'
+                    ? "S'abonner avec PayPal"
+                    : 'Payer avec PayPal'
+                  : 'Payer par Mobile Money'}
           </button>
         </form>
 
@@ -413,7 +477,9 @@ export default function PaiementPage() {
         <p className="mt-8 text-xs text-gray-500">
           {method === 'card'
             ? 'Paiement sécurisé par Stripe (carte). Aucune donnée bancaire n’est stockée par PRORASCIENCE.'
-            : 'Paiement opéré par PawaPay (Mobile Money). Aucune donnée bancaire n’est stockée par PRORASCIENCE.'}
+            : method === 'paypal'
+              ? 'Paiement sécurisé par PayPal. Aucune donnée bancaire n’est stockée par PRORASCIENCE.'
+              : 'Paiement opéré par PawaPay (Mobile Money). Aucune donnée bancaire n’est stockée par PRORASCIENCE.'}
         </p>
       </main>
     </div>

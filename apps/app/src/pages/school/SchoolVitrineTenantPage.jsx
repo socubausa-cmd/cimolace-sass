@@ -1,7 +1,19 @@
 import React, { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
+import { Helmet } from 'react-helmet';
 import { useTenantBranding } from '@/hooks/useTenantBranding';
 import { getApiBaseUrl } from '@/lib/apiBase';
+
+/** Prix affichable depuis billing_plans (price_cents + currency + billing_cycle). */
+function formatOfferPrice(offer) {
+  const cents = Number(offer?.price_cents);
+  if (!Number.isFinite(cents) || cents <= 0) return '';
+  const amount = (cents / 100).toLocaleString('fr-FR', { maximumFractionDigits: 2 });
+  const symbol = String(offer?.currency || 'EUR').toUpperCase() === 'EUR' ? '€' : ` ${String(offer?.currency || '').toUpperCase()}`;
+  const cycle = String(offer?.billing_cycle || '').toLowerCase();
+  const suffix = cycle === 'monthly' ? ' /mois' : cycle === 'yearly' || cycle === 'annual' ? ' /an' : '';
+  return `${amount}${symbol}${suffix}`;
+}
 
 /**
  * Page vitrine publique générique d'une école-tenant.
@@ -13,27 +25,31 @@ export default function SchoolVitrineTenantPage() {
   const { branding, shellTheme } = useTenantBranding({ forceRefresh: true });
   const [courses, setCourses] = useState([]);
   const [coursesLoading, setCoursesLoading] = useState(true);
+  const [offers, setOffers] = useState([]);
 
   useEffect(() => {
     if (!tenantSlug) {
       setCoursesLoading(false);
       return;
     }
+    const asList = (data) => (Array.isArray(data) ? data : Array.isArray(data?.data) ? data.data : []);
     fetch(`${getApiBaseUrl()}/tenants/public/${encodeURIComponent(tenantSlug)}/courses`)
       .then((res) => (res.ok ? res.json() : Promise.reject(res.status)))
-      .then((data) => {
-        const list = Array.isArray(data) ? data : Array.isArray(data?.data) ? data.data : [];
-        setCourses(list);
-      })
-      .catch(() => {
-        setCourses([]);
-      })
+      .then((data) => setCourses(asList(data)))
+      .catch(() => setCourses([]))
       .finally(() => setCoursesLoading(false));
+    fetch(`${getApiBaseUrl()}/tenants/public/${encodeURIComponent(tenantSlug)}/offers`)
+      .then((res) => (res.ok ? res.json() : Promise.reject(res.status)))
+      .then((data) => setOffers(asList(data)))
+      .catch(() => setOffers([]));
   }, [tenantSlug]);
 
   const primary = branding.primaryColor || '#0b1115';
   const secondary = branding.secondaryColor || '#162331';
-  const accent = branding.accentColor || '#7c3aed';
+  const accent = branding.accentColor || '#d97757';
+  const slogan = branding.slogan || '';
+  const vision = branding.vision || '';
+  const siteDescription = branding.siteDescription || '';
   const contactEmail = branding.vitrineContactEmail || '';
   const fallbackName = tenantSlug
     ? tenantSlug
@@ -201,9 +217,20 @@ export default function SchoolVitrineTenantPage() {
 
   const signupPath = tenantSlug ? `/t/${tenantSlug}/signup` : '#';
   const loginPath  = tenantSlug ? `/t/${tenantSlug}/login`  : '#';
+  // Checkout réel (PaiementPage) — gère lui-même l'utilisateur non connecté.
+  const offerCheckoutPath = (planKey) =>
+    tenantSlug ? `/t/${tenantSlug}/paiement?plan=${encodeURIComponent(planKey)}` : '#';
 
   return (
     <div style={rootStyle}>
+      <Helmet>
+        <title>{schoolFullName}</title>
+        {(slogan || siteDescription) && <meta name="description" content={slogan || siteDescription} />}
+        <meta property="og:title" content={schoolFullName} />
+        {(slogan || siteDescription) && <meta property="og:description" content={slogan || siteDescription} />}
+        {logo && <meta property="og:image" content={logo} />}
+        <meta property="og:type" content="website" />
+      </Helmet>
       {/* Header */}
       <header style={{ ...headerStyle, justifyContent: 'space-between' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
@@ -228,11 +255,16 @@ export default function SchoolVitrineTenantPage() {
         </nav>
       </header>
 
-      {/* Hero */}
+      {/* Hero — slogan + description édités par le tenant (metadata.site) */}
       <section style={heroStyle}>
         <h1 style={heroTitleStyle}>{schoolFullName}</h1>
+        {slogan && (
+          <p style={{ fontSize: '20px', fontStyle: 'italic', color: accent, margin: '0 0 14px', fontWeight: 600 }}>
+            « {slogan} »
+          </p>
+        )}
         <p style={heroSubStyle}>
-          Découvrez nos formations et rejoignez notre communauté d'apprentissage.
+          {siteDescription || "Découvrez nos formations et rejoignez notre communauté d'apprentissage."}
         </p>
         <div style={{ display: 'flex', gap: '12px', justifyContent: 'center', flexWrap: 'wrap' }}>
           <a href={signupPath} style={ctaBtnStyle}>
@@ -259,7 +291,13 @@ export default function SchoolVitrineTenantPage() {
           <div style={gridStyle}>
             {courses.length === 0 ? (
               <div style={placeholderCardStyle}>
-                Les formations seront bientôt disponibles.
+                <span>
+                  Les formations arrivent bientôt —{' '}
+                  <a href={signupPath} style={{ color: accent, fontStyle: 'normal', fontWeight: 600 }}>
+                    inscrivez-vous
+                  </a>{' '}
+                  pour être prévenu.
+                </span>
               </div>
             ) : (
               courses.map((course) => {
@@ -283,6 +321,44 @@ export default function SchoolVitrineTenantPage() {
           </div>
         )}
       </section>
+
+      {/* Nos offres — billing_plans actifs du tenant */}
+      {offers.length > 0 && (
+        <section style={sectionStyle}>
+          <h2 style={sectionTitleStyle}>Nos offres</h2>
+          <div style={gridStyle}>
+            {offers.map((offer) => {
+              const price = formatOfferPrice(offer);
+              return (
+                <div key={offer.key} style={{ ...cardStyle, display: 'flex', flexDirection: 'column' }}>
+                  <div style={cardTitleStyle}>{offer.label || offer.key}</div>
+                  {price && (
+                    <div style={{ fontSize: '24px', fontWeight: 800, color: accent, marginBottom: '10px' }}>
+                      {price}
+                    </div>
+                  )}
+                  {(offer.tagline || offer.description) && (
+                    <p style={{ ...cardDescStyle, flex: 1 }}>{offer.tagline || offer.description}</p>
+                  )}
+                  <a href={offerCheckoutPath(offer.key)} style={cardLinkStyle}>
+                    Choisir cette offre
+                  </a>
+                </div>
+              );
+            })}
+          </div>
+        </section>
+      )}
+
+      {/* Notre vision — éditée par le tenant (metadata.site.vision) */}
+      {vision && (
+        <section style={{ ...sectionStyle, paddingTop: 0 }}>
+          <h2 style={sectionTitleStyle}>Notre vision</h2>
+          <p style={{ fontSize: '16px', lineHeight: 1.7, color: 'rgba(255,255,255,0.75)', maxWidth: '720px' }}>
+            {vision}
+          </p>
+        </section>
+      )}
 
       {/* Footer */}
       <footer style={footerStyle}>

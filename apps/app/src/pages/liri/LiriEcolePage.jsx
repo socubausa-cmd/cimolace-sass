@@ -21,7 +21,7 @@ import { buildOwnerMenuGroups } from '@/components/owner/ownerMenuGroups';
 import { useResolvedTenantSlug } from '@/hooks/useResolvedTenantSlug';
 import { SslThemeProvider } from '@/pages/school/student-school-life/sslTheme';
 import ErrorBoundary from '@/components/ErrorBoundary';
-import { catalogApi } from '@/lib/api-v2';
+import { catalogApi, tenantsApi } from '@/lib/api-v2';
 
 const ECOLE_BASE = '/liri/ecole';
 
@@ -169,6 +169,29 @@ function EcoleBody() {
   const { slug: payoutTenantSlug } = useResolvedTenantSlug();
   const activeTab = searchParams.get('tab') || 'dashboard';
   const [ecoleActive, setEcoleActive] = useState(null); // null=inconnu (affiché), false=non activé
+  const [activating, setActivating] = useState(false);
+  const [activateError, setActivateError] = useState('');
+
+  // Activation self-serve (owner/admin) — gatée serveur par l'abonnement (402 si free).
+  const handleActivateSchool = async () => {
+    setActivating(true);
+    setActivateError('');
+    try {
+      await tenantsApi.activateSchool(true);
+      setEcoleActive(true);
+    } catch (err) {
+      const msg = String(err?.message || '');
+      if (/402|abonnement|SUBSCRIPTION_REQUIRED/i.test(msg)) {
+        setActivateError("Un abonnement Cimolace actif (essai inclus) est requis pour activer l'École.");
+      } else if (/403|forbidden|owner|admin/i.test(msg)) {
+        setActivateError("Seul le propriétaire ou un admin de l'organisation peut activer l'École.");
+      } else {
+        setActivateError(msg || "Activation impossible pour le moment.");
+      }
+    } finally {
+      setActivating(false);
+    }
+  };
 
   const menuGroups = buildOwnerMenuGroups(payoutTenantSlug, ECOLE_BASE);
   const allItems = menuGroups.flatMap((g) => g.items);
@@ -211,6 +234,18 @@ function EcoleBody() {
           Active le moteur École pour gérer formations, calendrier, élèves, coaching,
           certificats et finances directement depuis LIRI — sans site web.
         </p>
+        {activateError ? (
+          <p className="max-w-md text-[12px] text-red-300">{activateError}</p>
+        ) : null}
+        <button
+          type="button"
+          onClick={handleActivateSchool}
+          disabled={activating}
+          className="mt-1 inline-flex items-center gap-2 rounded-md bg-[#d97757] px-4 py-2.5 text-[13px] font-semibold text-black hover:bg-[#c2683f] disabled:opacity-60"
+        >
+          {activating ? 'Activation…' : "Activer l'École"}
+        </button>
+        <p className="text-[11px] lp-faint">Réservé au propriétaire/admin · abonnement Cimolace actif requis (essai inclus).</p>
       </div>
     );
   }

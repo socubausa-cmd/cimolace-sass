@@ -398,6 +398,9 @@ const SecretariatPage = lazy(() => import('@/pages/SecretariatPage'));
 const SchoolVitrinePage = lazy(() => import('@/pages/school/SchoolVitrinePage'));
 const SchoolVitrineTenantPage = lazy(() => import('@/pages/school/SchoolVitrineTenantPage'));
 const PaiementPage = lazy(() => import('@/pages/school/PaiementPage'));
+const ActivateAccountPage = lazy(() => import('@/pages/school/ActivateAccountPage'));
+const LiveJoinPage = lazy(() => import('@/pages/school/LiveJoinPage'));
+const LiveJoinLinksPage = lazy(() => import('@/pages/school/LiveJoinLinksPage'));
 const SchoolBillingPage = lazy(() => import('@/pages/school/SchoolBillingPage'));
 const SchoolLoginPage = lazy(() => import('@/pages/school/SchoolLoginPage'));
 const SchoolGoogleCallback = lazy(() => import('@/pages/school/SchoolGoogleCallback'));
@@ -2381,6 +2384,13 @@ isLiriHostDevPreviewRoute;
             path="/t/:tenantSlug/paiement"
             element={<PaiementPage />}
           />
+          <Route
+            path="/t/:tenantSlug/activer"
+            element={<ActivateAccountPage />}
+          />
+          {/* Rejoindre un live via code (public, anonyme) + gestion des liens (prof). */}
+          <Route path="/live/rejoindre" element={<LiveJoinPage />} />
+          <Route path="/live/:id/liens" element={<LiveJoinLinksPage />} />
 
           {/* ── Dashboard admin école (route principale) ─────────────────── */}
           <Route

@@ -69,8 +69,10 @@ export default function TenantAdminSettingsPage() {
   const [branding, setBranding] = useState({
     name: '',
     description: '',
+    slogan: '',
+    vision: '',
     website: '',
-    accentColor: '#3B82F6',
+    accentColor: '#d97757',
     logoUrl: '',
   });
 
@@ -81,12 +83,15 @@ export default function TenantAdminSettingsPage() {
     tenantsApi.current()
       .then(t => {
         setTenant(t);
+        const site = t?.metadata?.site ?? {};
         setBranding({
-          name: t.branding?.name ?? t.name ?? '',
-          description: t.branding?.description ?? t.description ?? '',
-          website: t.branding?.website ?? '',
-          accentColor: t.branding?.accentColor ?? '#3B82F6',
-          logoUrl: t.branding?.logoUrl ?? '',
+          name: t.name ?? t.branding?.name ?? '',
+          description: site.description ?? t.branding?.description ?? t.description ?? '',
+          slogan: site.slogan ?? '',
+          vision: site.vision ?? '',
+          website: site.website ?? t.branding?.website ?? '',
+          accentColor: t.brand_colors?.accent ?? t.branding?.accentColor ?? '#d97757',
+          logoUrl: t.logo_url ?? t.branding?.logoUrl ?? '',
         });
       })
       .catch(e => setError(e?.message ?? 'Erreur de chargement'))
@@ -99,7 +104,19 @@ export default function TenantAdminSettingsPage() {
     setSaved(false);
     setError(null);
     try {
-      await tenantsApi.updateBranding(branding);
+      // Payload CANONIQUE attendu par UpdateBrandingDto (le camelCase brut était
+      // silencieusement jeté par la whitelist ValidationPipe → rien ne persistait).
+      await tenantsApi.updateBranding({
+        name: branding.name,
+        logo_url: branding.logoUrl,
+        brand_colors: { accent: branding.accentColor },
+        site: {
+          description: branding.description,
+          slogan: branding.slogan,
+          vision: branding.vision,
+          website: branding.website,
+        },
+      });
       setSaved(true);
       setTimeout(() => setSaved(false), 3000);
     } catch (err) {
@@ -173,6 +190,29 @@ export default function TenantAdminSettingsPage() {
                 placeholder="Notre école forme les professionnels du numérique de demain…"
               />
             </Field>
+            <Field label="Slogan" hint="Phrase d'accroche affichée sous le nom (vitrine, emails)">
+              <input
+                style={inputStyle}
+                onFocus={onInputFocus}
+                onBlur={onInputBlur}
+                value={branding.slogan}
+                onChange={e => setBranding(b => ({ ...b, slogan: e.target.value }))}
+                placeholder="Ex : La connaissance n'est pas un privilège, c'est une responsabilité"
+                maxLength={160}
+              />
+            </Field>
+            <Field label="Vision" hint="Votre mission long terme — affichée sur la page « À propos » de la vitrine">
+              <textarea
+                style={inputStyle}
+                onFocus={onInputFocus}
+                onBlur={onInputBlur}
+                rows={3}
+                value={branding.vision}
+                onChange={e => setBranding(b => ({ ...b, vision: e.target.value }))}
+                placeholder="Former une génération capable de…"
+                maxLength={1200}
+              />
+            </Field>
             <Field label="Site web" hint="URL complète (optionnel)">
               <div style={{ position: 'relative' }}>
                 <Globe style={{ position: 'absolute', left: 12, top: '50%', width: 14, height: 14, transform: 'translateY(-50%)', color: T.t3 }} />
@@ -230,7 +270,7 @@ export default function TenantAdminSettingsPage() {
                   onBlur={onInputBlur}
                   value={branding.accentColor}
                   onChange={e => setBranding(b => ({ ...b, accentColor: e.target.value }))}
-                  placeholder="#3B82F6"
+                  placeholder="#d97757"
                   maxLength={7}
                 />
                 <div

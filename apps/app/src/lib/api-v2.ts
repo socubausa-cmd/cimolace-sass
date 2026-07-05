@@ -60,6 +60,10 @@ export const tenantsApi = {
   // Réglages tenant no-code (owner/admin) — ex: requiresStudentDossier (gating KYC).
   updateSettings: (body: { requiresStudentDossier?: boolean }) =>
     apiV2.patch<ApiEnvelope<any>>('/tenants/current/settings', body).then(unwrap),
+  // Activation self-serve du moteur École (owner/admin) — 402 si aucun abonnement
+  // Cimolace actif (essai inclus).
+  activateSchool: (active: boolean = true) =>
+    apiV2.post<ApiEnvelope<any>>('/tenants/current/services/school/activate', { active }).then(unwrap),
   mine: () => apiV2.get<ApiEnvelope<any[]>>('/tenants/mine').then(unwrap),
   dashboard: () => apiV2.get<ApiEnvelope<any>>('/tenants/current/dashboard').then(unwrap),
   listMembers: () => apiV2.get<ApiEnvelope<any[]>>('/tenants/current/members').then(unwrap),
@@ -166,6 +170,12 @@ export const offeringCheckoutApi = {
   /** Paiement CARTE (Stripe Checkout) → renvoie { checkoutUrl } à ouvrir (redirect). */
   createCard: (body: Record<string, unknown>) =>
     apiV2.post<ApiEnvelope<any>>('/offering-checkout/card', body).then(unwrap),
+  /** Paiement PAYPAL → crée un ordre, renvoie { orderId, approveUrl } (redirect vers approveUrl). */
+  createPaypal: (body: Record<string, unknown>) =>
+    apiV2.post<ApiEnvelope<any>>('/offering-checkout/paypal/create-order', body).then(unwrap),
+  /** Capture d'un ordre PayPal approuvé (au retour) → { orderId, status, isCompleted }. */
+  capturePaypal: (orderId: string) =>
+    apiV2.post<ApiEnvelope<any>>('/offering-checkout/paypal/capture', { orderId }).then(unwrap),
   getStatus: (depositId: string) =>
     apiV2.get<ApiEnvelope<any>>(`/offering-checkout/mobile-money/${depositId}/status`).then(unwrap),
   getProviders: (country?: string) =>
@@ -173,6 +183,32 @@ export const offeringCheckoutApi = {
   /** Accès GRATUIT (service free/community) → débloque sans paiement, renvoie { ok }. */
   claimFree: (body: Record<string, unknown>) =>
     apiV2.post<ApiEnvelope<any>>('/offering-checkout/claim-free', body).then(unwrap),
+};
+
+/** Liens de live configurables (scénario A) — classe rejouable / individuel one-time. */
+export const liveJoinApi = {
+  /** Animateur/admin : génère les liens d'un live. */
+  generate: (sessionId: string, body: { mode: 'class' | 'individual'; count?: number; students?: string[]; expiresAt?: string | null }) =>
+    apiV2.post<ApiEnvelope<any>>(`/live-join/${sessionId}/codes`, body).then(unwrap),
+  /** Liste les liens existants d'un live. */
+  list: (sessionId: string) =>
+    apiV2.get<ApiEnvelope<any>>(`/live-join/${sessionId}/codes`).then(unwrap),
+  /** Révoque un lien. */
+  revoke: (sessionId: string, codeId: string) =>
+    apiV2.delete<ApiEnvelope<any>>(`/live-join/${sessionId}/codes/${codeId}`).then(unwrap),
+  /** PUBLIC : l'élève échange un code contre un accès salle (token viewer LiveKit). */
+  redeem: (body: { code: string; displayName?: string }) =>
+    apiV2.post<ApiEnvelope<any>>('/live-join/redeem', body).then(unwrap),
+};
+
+/** Codes OTP d'accès élève (L5). */
+export const studentInviteApi = {
+  /** Owner/admin/secrétariat : génère + envoie un code d'accès à un élève. */
+  send: (body: { email: string; role?: string }) =>
+    apiV2.post<ApiEnvelope<any>>('/student-invite/send', body).then(unwrap),
+  /** PUBLIC : l'élève échange (email + code + mot de passe) contre son accès. */
+  redeem: (body: { tenantSlug: string; email: string; code: string; password: string }) =>
+    apiV2.post<ApiEnvelope<any>>('/student-invite/redeem', body).then(unwrap),
 };
 
 // ── Marketing ───────────────────────────────────────────────────────────────
