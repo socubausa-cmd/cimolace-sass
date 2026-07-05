@@ -16,7 +16,7 @@ import {
   TrackToggle,
   useRoomContext,
 } from '@livekit/components-react';
-import { Track } from 'livekit-client';
+import { Track, DisconnectReason } from 'livekit-client';
 import { PhoneOff, ShieldCheck, MessageSquare, Mic, MicOff, Video, VideoOff, Maximize, Minimize } from 'lucide-react';
 
 // Plein ecran mobile (masque les barres du navigateur). Doit etre appele sur un
@@ -273,6 +273,9 @@ function ProcheLiveRoom({ url, token, sessionId, inviteId, clinic, initialCam = 
   // Le proche SUIT la vue/scène/annotation pilotées par le praticien (read-only).
   const channel = useCockpitChannel(sessionId, 'patient');
   const [left, setLeft] = useState(false);
+  // Expulsé par l'hôte (modération) → LiveKit déconnecte avec ce motif ; on montre
+  // un écran clair au lieu de laisser la salle figée.
+  const [kicked, setKicked] = useState(false);
   const [chatOpen, setChatOpen] = useState(false);
   // Fin de session pilotée par le PRATICIEN : l'invité doit sortir tout seul
   // quand l'hôte coupe le live (sinon il reste connecté « dans le vide »). Le
@@ -306,6 +309,7 @@ function ProcheLiveRoom({ url, token, sessionId, inviteId, clinic, initialCam = 
       .catch(() => {});
     return () => { alive = false; };
   }, []);
+  if (kicked) return <CallEndedScreen title="Vous avez été retiré" text="L'hôte vous a retiré·e de la consultation. Vous pouvez fermer cette fenêtre." />;
   if (left) return <CallEndedScreen />;
   const content = (
     <div
@@ -323,7 +327,9 @@ function ProcheLiveRoom({ url, token, sessionId, inviteId, clinic, initialCam = 
       } as CSSProperties}
     >
       <style>{CONSULT_SHELL_CSS}</style>
-      <LiveKitRoom serverUrl={url} token={token} connect audio={initialMic} video={initialCam} style={{ flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column' }}>
+      <LiveKitRoom serverUrl={url} token={token} connect audio={initialMic} video={initialCam}
+        onDisconnected={(reason) => { if (reason === DisconnectReason.PARTICIPANT_REMOVED) setKicked(true); }}
+        style={{ flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column' }}>
         <div style={{ display: 'flex', flex: 1, minHeight: 0 }}>
           <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column' }}>
             <ProcheChrome />

@@ -2580,13 +2580,13 @@ export function AudioUnlockGate() {
 }
 
 // Écran de fin neutre (patient / proche) : pas de redirection vers un portail.
-export function CallEndedScreen() {
+export function CallEndedScreen({ title, text }: { title?: string; text?: string } = {}) {
   return (
     <Screen>
       <div style={{ textAlign: 'center', color: '#cbd5e1', maxWidth: 360 }}>
         <Stethoscope size={28} color={GOLD} style={{ marginBottom: 10 }} aria-hidden="true" />
-        <h2 style={{ margin: '0 0 6px', fontSize: 18, color: '#fff' }}>Consultation terminée</h2>
-        <p style={{ fontSize: 13.5, lineHeight: 1.55 }}>Vous avez quitté la consultation. Vous pouvez fermer cette fenêtre.</p>
+        <h2 style={{ margin: '0 0 6px', fontSize: 18, color: '#fff' }}>{title || 'Consultation terminée'}</h2>
+        <p style={{ fontSize: 13.5, lineHeight: 1.55 }}>{text || 'Vous avez quitté la consultation. Vous pouvez fermer cette fenêtre.'}</p>
       </div>
     </Screen>
   );
