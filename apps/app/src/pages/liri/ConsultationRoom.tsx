@@ -1569,7 +1569,10 @@ export function ConsultationStage({
             style={{ height: '100%', width: '100%', overflow: 'auto', padding: 18, paddingRight: 18 + reserve, boxSizing: 'border-box', transition: `padding 0.3s ${ZOOM_EASE}`, cursor: editable ? 'default' : 'pointer' }}
           >
             <div style={{ height: '100%', transform: overlayActive ? 'scale(0.94)' : 'none', transformOrigin: 'center', transition: `transform 0.3s ${ZOOM_EASE}` }}>
-              <SharedSceneView scene={scene} frameless={compact} />
+              {/* frameless TOUJOURS (desktop + mobile) : toute scène partagée
+                  (jumeau, roue, bilans, ordonnance, image, boutique) se pose
+                  DIRECTEMENT sur la grille sombre — plus de carte crème. */}
+              <SharedSceneView scene={scene} frameless />
             </div>
           </div>
         ) : screen ? (
