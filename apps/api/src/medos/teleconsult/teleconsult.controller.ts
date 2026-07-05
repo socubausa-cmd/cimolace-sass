@@ -17,6 +17,7 @@ import { CurrentTenant } from '../../tenant/current-tenant.decorator';
 import { TenantGuard } from '../../tenant/tenant.guard';
 import type { TenantContext } from '../../tenant/tenant.types';
 import { MedosEnabledGuard } from '../medos-enabled.guard';
+import { TeleconsultRegisterRateLimitGuard } from './register-rate-limit.guard';
 import {
   ConsentInviteDto,
   CreateInviteDto,
@@ -274,6 +275,7 @@ export class TeleconsultInvitePublicController {
    * kick) → elle est renvoyée vers la salle d'attente /proche/<invite_id>.
    */
   @Post('register')
+  @UseGuards(TeleconsultRegisterRateLimitGuard)
   register(
     @Body()
     body: {

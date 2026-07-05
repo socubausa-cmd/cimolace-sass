@@ -900,6 +900,18 @@ export class TeleconsultService implements OnModuleInit {
       throw new ForbiddenException('Cette consultation est terminée.');
     }
 
+    // CAP par SÉANCE : borne le nombre d'inscriptions (2e barrière anti-spam, tient
+    // même si les IP changent). Généreux (grand événement) mais évite la DB illimitée.
+    const { count } = await (this.supabase.client as any)
+      .from('med_teleconsult_invites')
+      .select('id', { count: 'exact', head: true })
+      .eq('session_id', sessionId);
+    if ((count ?? 0) >= 120) {
+      throw new ForbiddenException(
+        'Le nombre maximum de participants pour cette séance est atteint.',
+      );
+    }
+
     const email = String(dto?.email || '').trim().toLowerCase();
     const { data, error } = await (this.supabase.client as any)
       .from('med_teleconsult_invites')
