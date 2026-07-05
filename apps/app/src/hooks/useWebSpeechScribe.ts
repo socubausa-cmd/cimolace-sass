@@ -79,7 +79,12 @@ export function useWebSpeechScribe({
     setInterim('');
     const rec = recRef.current;
     recRef.current = null;
-    if (rec) { try { rec.stop(); } catch { /* ignore */ } }
+    if (rec) {
+      // Détacher les handlers AVANT stop() : sinon onend (async) relancerait la
+      // reconnaissance, et onresult/onerror pousseraient un setState post-unmount.
+      rec.onresult = null; rec.onend = null; rec.onerror = null;
+      try { rec.stop(); } catch { /* ignore */ }
+    }
   }, []);
 
   const toggle = useCallback(() => {
@@ -92,7 +97,10 @@ export function useWebSpeechScribe({
     const rec = recRef.current;
     recRef.current = null;
     listeningRef.current = false;
-    if (rec) { try { rec.stop(); } catch { /* ignore */ } }
+    if (rec) {
+      rec.onresult = null; rec.onend = null; rec.onerror = null;
+      try { rec.stop(); } catch { /* ignore */ }
+    }
   }, []);
 
   return { supported, listening, transcript, interim, error, start, stop, toggle, reset, setTranscript };

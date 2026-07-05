@@ -325,7 +325,10 @@ export async function getSignedPrescriptions(patientId: string): Promise<RxDoc[]
     .catch(() => []);
   if (!list.length) return [];
   const full = await prescriptionsApi.get(list[0].id).catch(() => list[0]);
-  return [full, ...list.slice(1)];
+  // Ne remplace la 1re par la version détaillée QUE si elle porte des lignes
+  // (sinon on partagerait une ordonnance vide — items non chargés).
+  const head = Array.isArray(full?.items) && full.items.length ? full : list[0];
+  return [head, ...list.slice(1)];
 }
 
 /** Pièces jointes du patient (imagerie / scan / PDF) à partager. */

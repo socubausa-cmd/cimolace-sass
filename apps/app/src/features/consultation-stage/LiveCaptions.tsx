@@ -46,6 +46,12 @@ async function translateLine(text: string, targetLang: string): Promise<string> 
     });
     if (error) return text;
     const out = (data?.transcript?.[0]?.text as string) || text;
+    // Borne mémoire : évince le plus ancien au-delà de 500 entrées (Map = ordre
+    // d'insertion) — évite une fuite lente sur une longue consultation.
+    if (_cache.size >= 500) {
+      const oldest = _cache.keys().next().value;
+      if (oldest !== undefined) _cache.delete(oldest);
+    }
     _cache.set(key, out);
     return out;
   } catch {

@@ -135,7 +135,7 @@ const SHARE_STAGE_BG: React.CSSProperties = {
 // quadrillé : carreaux 40px + repères 200px), puis on retire le voile noir du
 // tableau pour que les carreaux le traversent. Préfixé `.consult-shell` → Formation
 // (LiveHostPage, hors de ce scope) reste INTACTE.
-const CONSULT_SHELL_CSS = `
+export const CONSULT_SHELL_CSS = `
 .consult-shell [class*="lh-stage-bg"]{
   background-color:#1f1e1c !important;
   background-image:

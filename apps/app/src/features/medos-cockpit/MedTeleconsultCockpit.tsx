@@ -198,6 +198,7 @@ function SoapScribeTab({
 
   const generate = async () => {
     if (!canGen) { setErr('Dictez ou saisissez d’abord la consultation.'); return; }
+    scribe.stop(); // fige la dictée pendant la génération (transcription stable)
     setGenerating(true); setErr(null); setSaved(false);
     try {
       const s = await generateSoapFromTranscript(text.trim(), { language: 'fr', patientContext });

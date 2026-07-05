@@ -39,7 +39,7 @@ import '@livekit/components-styles';
 import { getProcheStatus, getProcheToken, type ProcheStatus } from '@/features/medos-cockpit/procheApi';
 import { useCockpitChannel } from '@/features/medos-cockpit/useCockpitChannel';
 import { getApiBaseUrl } from '@/lib/apiBase';
-import { ConsultationStage, CallEndedScreen, ChatPanel, AudioUnlockGate, RaiseHandButton } from './ConsultationRoom';
+import { ConsultationStage, CallEndedScreen, ChatPanel, AudioUnlockGate, RaiseHandButton, CONSULT_SHELL_CSS } from './ConsultationRoom';
 import { ParticipantCaptions } from '@/features/consultation-stage/LiveCaptions';
 
 // Shell chaud LIRI (aligné sur ConsultationRoom / liveHostTheme).
@@ -48,6 +48,7 @@ const PAGE_MESH =
   'radial-gradient(ellipse 85% 55% at 50% -15%, rgba(217,119,87,0.06), transparent 58%), radial-gradient(ellipse 55% 40% at 100% 85%, rgba(226,85,63,0.05), transparent 52%), radial-gradient(ellipse 45% 32% at 0% 75%, rgba(194,104,63,0.04), transparent 48%)';
 const BAR = 'rgba(43,41,38,0.96)';
 const GOLD = '#d4a36a';
+const TILE_BG = '#1f1e1c'; // --lh-stage-bg : SANS elle, le Tableau (SmartBoard) de l'invité tombe sur du noir.
 const STAGE_BG = '#1f1e1c';
 const PANEL_BG = 'rgba(48,48,46,0.97)';
 const PANEL_BORDER = '1px solid rgba(245,244,238,0.1)';
@@ -300,7 +301,21 @@ function ProcheLiveRoom({ url, token, sessionId, inviteId, clinic, initialCam = 
   }, []);
   if (left) return <CallEndedScreen />;
   const content = (
-    <div data-lk-theme="default" style={{ position: 'fixed', inset: 0, zIndex: 2147483000, background: BG, display: 'flex', flexDirection: 'column' }}>
+    <div
+      data-lk-theme="default"
+      className="consult-shell"
+      style={{
+        position: 'fixed', inset: 0, zIndex: 2147483000, background: BG, display: 'flex', flexDirection: 'column',
+        // Vars shell LIRI : SANS elles, var(--lh-stage-bg) du Tableau (SmartBoard)
+        // partagé tombait sur du noir chez l'invité (carreaux invisibles).
+        '--lh-page-bg': BG,
+        '--lh-stage-bg': TILE_BG,
+        '--lh-panel-bg': PANEL_BG,
+        '--lh-strip-bg': BAR,
+        '--lh-accent': GOLD,
+      } as CSSProperties}
+    >
+      <style>{CONSULT_SHELL_CSS}</style>
       <LiveKitRoom serverUrl={url} token={token} connect audio={initialMic} video={initialCam} style={{ flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column' }}>
         <div style={{ display: 'flex', flex: 1, minHeight: 0 }}>
           <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column' }}>

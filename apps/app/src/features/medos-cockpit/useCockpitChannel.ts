@@ -120,14 +120,22 @@ export function useCockpitChannel(
       }
     });
 
+    const retryTimers: number[] = [];
     channel.subscribe((status: string) => {
       if (status === 'SUBSCRIBED' && mode === 'patient') {
-        channel.send({ type: 'broadcast', event: 'request_state', payload: {} });
+        // RETRY : si l'hôte vient de (re)monter et n'est pas encore SUBSCRIBED,
+        // il perd notre 1re demande (broadcast Realtime = best-effort). On re-demande
+        // l'état 2 fois → couvre la fenêtre de re-souscription (patient sur écran vide).
+        const ask = () => channel.send({ type: 'broadcast', event: 'request_state', payload: {} });
+        ask();
+        retryTimers.push(window.setTimeout(ask, 1500));
+        retryTimers.push(window.setTimeout(ask, 4000));
       }
     });
 
     channelRef.current = channel;
     return () => {
+      retryTimers.forEach((t) => window.clearTimeout(t));
       try {
         supabase.removeChannel(channel);
       } catch {
