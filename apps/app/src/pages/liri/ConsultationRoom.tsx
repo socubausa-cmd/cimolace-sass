@@ -37,7 +37,7 @@ import LiveDataSaverEffect from '@/features/live/LiveDataSaverEffect';
 import { useLiveDataSaver } from '@/hooks/useLiveDataSaver';
 import { useMatchMediaAtMost } from '@/hooks/useLiriMobileBreakpoint';
 import LiriProductBadge from '@/components/brand/LiriProductBadge';
-import { Stethoscope, PhoneOff, Share2, Pencil, Users, Presentation, MonitorUp, Eraser, UserPlus, Copy, Check, ShieldCheck, X, MessageSquare, Send, Sparkles, Brain, Music2, Play, Pause, FileText, LayoutTemplate, Radio, Upload } from 'lucide-react';
+import { Stethoscope, PhoneOff, Share2, Pencil, Users, Presentation, MonitorUp, Eraser, UserPlus, Copy, Check, ShieldCheck, X, MessageSquare, Send, Sparkles, Brain, Music2, Play, Pause, FileText, LayoutTemplate, Radio, Upload, ChevronUp, ChevronDown } from 'lucide-react';
 import { createPortal } from 'react-dom';
 import '@livekit/components-styles';
 import { useAuth } from '@/contexts/SupabaseAuthContext';
@@ -1297,26 +1297,52 @@ export function ConsultationStage({
 // CONTENU PARTAGÉ sur téléphone → il devient une BANDE horizontale compacte de
 // vignettes (scroll latéral), le partage garde tout l'écran.
 function MembersRail({ tracks, isHost, horizontal }: { tracks: any[]; isHost?: boolean; horizontal?: boolean }) {
+  // Mobile : bande de miniatures REPLIABLE — dépliée elle ne recouvre RIEN (elle
+  // vit SOUS la scène), repliée elle rend ~100 % de l'écran au contenu partagé
+  // (il ne reste qu'une pastille « N participants »). Hook déclaré avant tout
+  // retour conditionnel (règle des hooks).
+  const [collapsed, setCollapsed] = useState(false);
   const cams = tracks.filter((t) => t?.source === Track.Source.Camera);
   // Écran partagé : vignette dédiée EN TÊTE du rail (label ambre) → quand un
   // artefact/tableau occupe le grand cadre, le patient garde l'écran du praticien
   // sous les yeux (jamais masqué silencieusement).
   const screen = tracks.find((t) => t?.source === Track.Source.ScreenShare && t?.publication);
   if (horizontal) {
+    if (collapsed) {
+      return (
+        <div style={{ display: 'flex', justifyContent: 'flex-end', flexShrink: 0 }}>
+          <button
+            onClick={() => setCollapsed(false)}
+            aria-label={`Afficher les ${cams.length} participants`}
+            style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '6px 12px', borderRadius: 999, border: '1px solid rgba(212,163,106,0.4)', background: 'rgba(24,20,16,0.92)', color: GOLD, fontSize: 12, fontWeight: 700, cursor: 'pointer' }}
+          >
+            <Users size={14} aria-hidden="true" /> {cams.length} <ChevronUp size={13} aria-hidden="true" />
+          </button>
+        </div>
+      );
+    }
     return (
-      <div data-cr="members" style={{ width: '100%', height: 104, flexShrink: 0, display: 'flex', flexDirection: 'row', alignItems: 'stretch', gap: 8, padding: 8, background: PANEL_BG, borderRadius: 14, border: PANEL_BORDER, overflowX: 'auto', overflowY: 'hidden' }}>
+      <div data-cr="members" style={{ width: '100%', height: 66, flexShrink: 0, display: 'flex', flexDirection: 'row', alignItems: 'stretch', gap: 6, padding: 6, background: PANEL_BG, borderRadius: 12, border: PANEL_BORDER, overflowX: 'auto', overflowY: 'hidden' }}>
         <style>{`[data-cr="members"] .lk-participant-name{display:none!important}`}</style>
         {screen ? (
-          <div title="Écran partagé" style={{ position: 'relative', height: '100%', aspectRatio: '16 / 9', flexShrink: 0, borderRadius: 10, overflow: 'hidden', background: '#000', border: '1px solid rgba(212,163,106,0.55)' }}>
+          <div title="Écran partagé" style={{ position: 'relative', height: '100%', aspectRatio: '16 / 9', flexShrink: 0, borderRadius: 8, overflow: 'hidden', background: '#000', border: '1px solid rgba(212,163,106,0.55)' }}>
             <ParticipantTile trackRef={screen} style={{ width: '100%', height: '100%' }} />
           </div>
         ) : null}
         {cams.map((t, i) => (
-          <div key={tileKey(t, i)} style={{ position: 'relative', height: '100%', aspectRatio: '16 / 9', flexShrink: 0, borderRadius: 10, overflow: 'hidden', background: '#000', border: '1px solid rgba(255,255,255,0.08)' }}>
+          <div key={tileKey(t, i)} style={{ position: 'relative', height: '100%', aspectRatio: '16 / 9', flexShrink: 0, borderRadius: 8, overflow: 'hidden', background: '#000', border: '1px solid rgba(255,255,255,0.08)' }}>
             <ParticipantTile trackRef={t} style={{ width: '100%', height: '100%' }} />
             <RoleTag role={participantRole(t?.participant, !!isHost)} />
           </div>
         ))}
+        <button
+          onClick={() => setCollapsed(true)}
+          aria-label="Replier les miniatures (plein écran pour le partage)"
+          title="Plein écran pour le partage"
+          style={{ marginLeft: 'auto', alignSelf: 'stretch', width: 28, flexShrink: 0, borderRadius: 8, border: 'none', background: 'rgba(255,255,255,0.07)', color: GOLD, cursor: 'pointer', display: 'grid', placeItems: 'center' }}
+        >
+          <ChevronDown size={15} aria-hidden="true" />
+        </button>
       </div>
     );
   }
