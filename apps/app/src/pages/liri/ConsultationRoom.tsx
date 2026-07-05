@@ -72,6 +72,45 @@ const TILE_BG = '#1f1e1c'; // --lh-stage-bg (tuiles vidéo / scène)
 const PANEL_BG = 'rgba(48,48,46,0.97)'; // --lh-panel-bg (panneaux frostés chauds)
 const PANEL_BORDER = '1px solid rgba(245,244,238,0.09)'; // filet ivoire discret
 
+// Courbe commune des transitions zoom/dézoom du stage mobile (repli/dépli des
+// miniatures → le contenu partagé grandit/rétrécit en douceur).
+const ZOOM_EASE = 'cubic-bezier(0.2, 0.7, 0.3, 1)';
+
+// Repère SONORE zoom/dézoom (WebAudio généré — aucun asset) : sweep court et
+// discret. 'in' = repli des miniatures → focus sur le partage (monte) ;
+// 'out' = dépli (descend). Déclenché par un geste utilisateur (clic) donc
+// compatible autoplay. Fail-soft : silencieux si AudioContext indisponible.
+let zoomCueCtx: AudioContext | null = null;
+function playZoomCue(dir: 'in' | 'out') {
+  try {
+    const AC: typeof AudioContext | undefined =
+      window.AudioContext || (window as unknown as { webkitAudioContext?: typeof AudioContext }).webkitAudioContext;
+    if (!AC) return;
+    zoomCueCtx = zoomCueCtx || new AC();
+    const ac = zoomCueCtx;
+    if (ac.state === 'suspended') void ac.resume();
+    const t = ac.currentTime;
+    const osc = ac.createOscillator();
+    const gain = ac.createGain();
+    osc.type = 'sine';
+    if (dir === 'in') {
+      osc.frequency.setValueAtTime(340, t);
+      osc.frequency.exponentialRampToValueAtTime(680, t + 0.16);
+    } else {
+      osc.frequency.setValueAtTime(680, t);
+      osc.frequency.exponentialRampToValueAtTime(340, t + 0.16);
+    }
+    gain.gain.setValueAtTime(0.0001, t);
+    gain.gain.exponentialRampToValueAtTime(0.05, t + 0.03);
+    gain.gain.exponentialRampToValueAtTime(0.0001, t + 0.2);
+    osc.connect(gain).connect(ac.destination);
+    osc.start(t);
+    osc.stop(t + 0.22);
+  } catch {
+    /* silencieux */
+  }
+}
+
 // Fond de scène « cahier quadrillé » (sombre chaud + grille ambre) — identique au
 // tableau. Sert de fond DE BASE à la zone de partage : plus de crème/blanc, mais le
 // même quadrillage que le reste de la salle (demande : garder le fond à grille).
@@ -1244,6 +1283,13 @@ export function ConsultationStage({
   // la réserve disparaît et le contenu reprend toute la largeur.
   const overlayActive = compact && !rightOpen && miniLayout === 'overlay' && !miniCollapsed;
   const reserve = overlayActive ? 112 : 0;
+  // Repli = ZOOM sur le partage (cue sonore montant) ; dépli = dézoom (descendant).
+  const toggleMini = () => {
+    setMiniCollapsed((v) => {
+      playZoomCue(v ? 'out' : 'in');
+      return !v;
+    });
+  };
 
   // CONVERSATION : face-à-face — grand flux de l'interlocuteur + soi en incrustation.
   if (view === 'conversation') {
@@ -1273,7 +1319,7 @@ export function ConsultationStage({
           // seule) est masqué — il écrasait le tableau dans la colonne restante.
           // `right: reserve` = marge immersive : le canevas s'arrête avant la
           // zone des miniatures (fond TILE_BG continu derrière → même écran).
-          <div style={{ position: 'absolute', inset: 0, right: reserve, overflow: 'hidden' }}>
+          <div style={{ position: 'absolute', inset: 0, right: reserve, overflow: 'hidden', transition: `right 0.3s ${ZOOM_EASE}` }}>
             <ConsultationSmartBoard
               sessionId={sessionId}
               isHost={isHost}
@@ -1285,13 +1331,13 @@ export function ConsultationStage({
             />
           </div>
         ) : hasScene ? (
-          <div style={{ height: '100%', width: '100%', overflow: 'auto', padding: 18, paddingRight: 18 + reserve }}>
+          <div style={{ height: '100%', width: '100%', overflow: 'auto', padding: 18, paddingRight: 18 + reserve, transition: `padding 0.3s ${ZOOM_EASE}`, boxSizing: 'border-box' }}>
             <SharedSceneView scene={scene} />
           </div>
         ) : screen ? (
           // Aucun artefact poussé mais le praticien partage son écran → l'écran EST
           // le contenu partagé : plein cadre (host ET patient le voient).
-          <div style={{ position: 'absolute', inset: 0, right: reserve, background: '#000' }}>
+          <div style={{ position: 'absolute', inset: 0, right: reserve, background: '#000', transition: `right 0.3s ${ZOOM_EASE}` }}>
             <ParticipantTile trackRef={screen} style={{ width: '100%', height: '100%' }} />
           </div>
         ) : (
@@ -1302,7 +1348,7 @@ export function ConsultationStage({
             réserve que l'artefact : les annotations n'entrent jamais dans la
             marge des miniatures. */}
         {hasScene && view !== 'board' ? (
-          <div style={{ position: 'absolute', inset: 0, right: reserve }}>
+          <div style={{ position: 'absolute', inset: 0, right: reserve, transition: `right 0.3s ${ZOOM_EASE}` }}>
             <AnnotationOverlay strokes={strokes} editable={editable} onStrokes={onStrokes} />
           </div>
         ) : null}
@@ -1314,7 +1360,7 @@ export function ConsultationStage({
             isHost={isHost}
             variant="overlay"
             collapsed={miniCollapsed}
-            onToggleCollapsed={() => setMiniCollapsed((v) => !v)}
+            onToggleCollapsed={toggleMini}
             onSwitchLayout={() => setMiniLayout('band')}
           />
         ) : null}
@@ -1325,7 +1371,7 @@ export function ConsultationStage({
           isHost={isHost}
           variant={compact ? 'band' : 'desktop'}
           collapsed={miniCollapsed}
-          onToggleCollapsed={() => setMiniCollapsed((v) => !v)}
+          onToggleCollapsed={toggleMini}
           onSwitchLayout={() => setMiniLayout('overlay')}
         />
       ) : null}
@@ -1420,15 +1466,20 @@ function MembersRail({
     // sont posées sur le même fond que le contenu partagé, qui ne place jamais
     // d'information sous elles. Un seul écran organisé, zéro superposition.
     return (
-      <div data-cr="members" style={{ position: 'absolute', top: '50%', right: 8, transform: 'translateY(-50%)', zIndex: 30, width: 96, display: 'flex', flexDirection: 'column', alignItems: 'stretch', gap: 8, maxHeight: 'calc(100% - 24px)', overflowY: 'auto' }}>
-        <style>{`[data-cr="members"] .lk-participant-name{display:none!important}`}</style>
+      <div data-cr="members" data-ov="" style={{ position: 'absolute', top: '50%', right: 8, transform: 'translateY(-50%)', zIndex: 30, width: 96, display: 'flex', flexDirection: 'column', alignItems: 'stretch', gap: 8, maxHeight: 'calc(100% - 24px)', overflowY: 'auto' }}>
+        <style>{`
+[data-cr="members"] .lk-participant-name{display:none!important}
+[data-cr="members"][data-ov] .cr-mini{opacity:.8;filter:brightness(.86) saturate(.95);transition:opacity .25s ease, filter .25s ease;animation:crMiniIn .3s cubic-bezier(.2,.7,.3,1)}
+[data-cr="members"][data-ov] .cr-mini:hover,[data-cr="members"][data-ov] .cr-mini:active{opacity:1;filter:none}
+@keyframes crMiniIn{from{opacity:0;transform:translateX(12px) scale(.94)}to{opacity:.8;transform:none}}
+`}</style>
         {screen ? (
-          <div title="Écran partagé" style={{ position: 'relative', width: 96, aspectRatio: '16 / 9', flexShrink: 0, borderRadius: 10, overflow: 'hidden', background: '#000', border: '1px solid rgba(212,163,106,0.45)', boxShadow: '0 3px 12px rgba(0,0,0,0.25)' }}>
+          <div className="cr-mini" title="Écran partagé" style={{ position: 'relative', width: 96, aspectRatio: '16 / 9', flexShrink: 0, borderRadius: 10, overflow: 'hidden', background: '#000', border: '1px solid rgba(212,163,106,0.45)', boxShadow: '0 3px 12px rgba(0,0,0,0.25)' }}>
             <ParticipantTile trackRef={screen} style={{ width: '100%', height: '100%' }} />
           </div>
         ) : null}
         {cams.map((t, i) => (
-          <div key={tileKey(t, i)} style={{ position: 'relative', width: 96, aspectRatio: '16 / 9', flexShrink: 0, borderRadius: 10, overflow: 'hidden', background: '#000', boxShadow: '0 3px 12px rgba(0,0,0,0.25)' }}>
+          <div key={tileKey(t, i)} className="cr-mini" style={{ position: 'relative', width: 96, aspectRatio: '16 / 9', flexShrink: 0, borderRadius: 10, overflow: 'hidden', background: '#000', boxShadow: '0 3px 12px rgba(0,0,0,0.25)' }}>
             <ParticipantTile trackRef={t} style={{ width: '100%', height: '100%' }} />
             <RoleTag role={participantRole(t?.participant, !!isHost)} />
           </div>
