@@ -12,6 +12,7 @@ import AtelierPrompt from '@/components/school/course-builder/AtelierPrompt';
 import { supabase } from '@/lib/supabaseCompat';
 import { invokeGenerateVisualImage } from '@/features/smartboard-konva-editor/lib/designerIaImageHistory';
 import { CANONICAL_COURSE } from './precepteurCanonicalCourse';
+import { enrichCourseWithDevices } from '@/lib/precepteur/enrichCourseWithDevices';
 import { masterclassProjectToPrecepteurCourse } from '@/lib/precepteur/fromMasterclass';
 
 // Clé localStorage : un MasterclassProject déposé ici est transformé et joué à la
@@ -291,7 +292,10 @@ export function PrecepteurPlayer({ course }) {
     const speechMs = estSpeechMs(text);
     const minMs = sc.type === 'croquis'
       ? ((sc.sketch?.elements?.length || 1) * 1700 + 1800)
-      : sc.type === 'image_analogie' ? 3500 : 700;
+      : sc.type === 'image_analogie' ? 3500
+      : sc.type === 'resume_encadre' ? ((sc.points?.length || 2) * 700 + 1400)
+      : (sc.type === 'surlignage' || sc.type === 'encadre') ? 2600
+      : 700;
     let t0 = 0; try { t0 = performance.now(); } catch { t0 = 0; }
     const goAfterMin = () => {
       let el = minMs; try { el = performance.now() - t0; } catch { /* */ }
@@ -431,6 +435,74 @@ export function PrecepteurPlayer({ course }) {
         <div className="w-full max-w-4xl">
           <AtelierPrompt scene={s} studentName={name} speak={speak} onNarrate={narrateNow} onContinue={advance} judgeAnswer={judgeAnswer} />
         </div>
+      );
+    }
+    // ── SURLIGNAGE (style Sherpas : le mot-clé porte le sens, en VERT) ────────
+    if (s.type === 'surlignage') {
+      const term = String(s.term || '').trim();
+      const text = String(s.text || s.narration || '');
+      const parts = term
+        ? text.split(new RegExp(`(${term.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'i'))
+        : [text];
+      return (
+        <Board>
+          <div className="mb-3 flex items-center gap-2 text-emerald-700">
+            <PenLine className="h-4 w-4" />
+            <span className="text-[11px] font-bold uppercase tracking-[0.18em]">Le mot-clé</span>
+          </div>
+          <p className="text-[18px] leading-relaxed text-slate-700 md:text-xl">
+            {parts.map((p, i) =>
+              term && p.toLowerCase() === term.toLowerCase() ? (
+                <mark key={i} className="box-decoration-clone rounded bg-emerald-300/70 px-1 font-bold text-slate-900">{p}</mark>
+              ) : (
+                <span key={i}>{p}</span>
+              ),
+            )}
+          </p>
+        </Board>
+      );
+    }
+    // ── ENCADRÉ (définition / formule / point clé figé dans un cadre) ─────────
+    if (s.type === 'encadre') {
+      const kindLabel = s.kind === 'formule' ? 'Formule' : s.kind === 'point' ? 'Point clé' : 'Définition';
+      return (
+        <Board>
+          <motion.div
+            initial={{ opacity: 0, scale: 0.96 }} animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.5, ease: EXPO }}
+            className="mx-auto max-w-2xl rounded-2xl border-2 border-emerald-500/60 bg-emerald-50/60 p-5 md:p-6"
+          >
+            <div className="mb-2 text-[11px] font-bold uppercase tracking-[0.18em] text-emerald-700">{kindLabel}</div>
+            <p className="text-[17px] font-semibold leading-relaxed text-slate-800 md:text-lg">{s.text || s.narration}</p>
+          </motion.div>
+        </Board>
+      );
+    }
+    // ── RÉSUMÉ ENCADRÉ (« Je retiens » : les points clés rassemblés) ──────────
+    if (s.type === 'resume_encadre') {
+      const points = Array.isArray(s.points) ? s.points.filter(Boolean) : [];
+      return (
+        <Board>
+          <div className="mx-auto max-w-2xl rounded-2xl border-2 border-amber-400/70 bg-amber-50/50 p-5 md:p-6">
+            <div className="mb-3 text-[11px] font-bold uppercase tracking-[0.18em] text-amber-700">Je retiens</div>
+            {points.length ? (
+              <ul className="space-y-2">
+                {points.map((pt, i) => (
+                  <motion.li key={i}
+                    initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: 0.15 * i + 0.2, duration: 0.4, ease: EXPO }}
+                    className="flex items-start gap-2 text-[16px] leading-relaxed text-slate-700 md:text-[17px]"
+                  >
+                    <Check className="mt-1 h-4 w-4 shrink-0 text-emerald-600" />
+                    <span>{pt}</span>
+                  </motion.li>
+                ))}
+              </ul>
+            ) : (
+              <p className="text-[16px] leading-relaxed text-slate-700">{s.narration}</p>
+            )}
+          </div>
+        </Board>
       );
     }
     // transition
@@ -623,6 +695,6 @@ export function PrecepteurPlayer({ course }) {
  * sinon on garde le cours canonique figé (fallback, démo intacte). Lu UNE fois au montage.
  */
 export default function PrecepteurDemoPage() {
-  const course = useMemo(() => loadCourseFromStorage() || CANONICAL_COURSE, []);
+  const course = useMemo(() => enrichCourseWithDevices(loadCourseFromStorage() || CANONICAL_COURSE), []);
   return <PrecepteurPlayer course={course} />;
 }

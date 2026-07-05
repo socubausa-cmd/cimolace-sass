@@ -3,6 +3,7 @@ import { Link, useParams } from 'react-router-dom';
 import { GraduationCap } from 'lucide-react';
 import { PrecepteurPlayer } from '@/pages/dev/PrecepteurDemoPage';
 import { masterclassProjectToPrecepteurCourse } from '@/lib/precepteur/fromMasterclass';
+import { enrichCourseWithDevices } from '@/lib/precepteur/enrichCourseWithDevices';
 import { masterclassApi } from '@/lib/api-v2';
 
 /**
@@ -142,7 +143,11 @@ export default function PrecepteurCoursePage() {
     );
   }
 
-  const course = masterclassId ? remoteCourse : localCourse;
+  // Atelier d'analyse (brique A2) : injecte les dispositifs déterministes
+  // (surlignage / encadré / résumé encadré) selon le texte des leçons. Non destructif
+  // (croquis/atelier conservés). null reste null → l'écran vide ci-dessous fonctionne.
+  const rawCourse = masterclassId ? remoteCourse : localCourse;
+  const course = rawCourse ? enrichCourseWithDevices(rawCourse) : null;
 
   // MODE B — aucune source localStorage exploitable → écran vide explicite (inchangé).
   if (!course) {
