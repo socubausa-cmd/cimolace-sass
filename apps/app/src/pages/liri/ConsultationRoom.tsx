@@ -37,7 +37,7 @@ import LiveDataSaverEffect from '@/features/live/LiveDataSaverEffect';
 import { useLiveDataSaver } from '@/hooks/useLiveDataSaver';
 import { useMatchMediaAtMost } from '@/hooks/useLiriMobileBreakpoint';
 import LiriProductBadge from '@/components/brand/LiriProductBadge';
-import { Stethoscope, PhoneOff, Share2, Pencil, Users, Presentation, MonitorUp, Eraser, UserPlus, Copy, Check, ShieldCheck, X, MessageSquare, Send, Sparkles, Brain, Music2, Play, Pause, FileText, LayoutTemplate, Radio, Upload, ChevronUp, ChevronDown } from 'lucide-react';
+import { Stethoscope, PhoneOff, Share2, Pencil, Users, Presentation, MonitorUp, Eraser, UserPlus, Copy, Check, ShieldCheck, X, MessageSquare, Send, Sparkles, Brain, Music2, Play, Pause, FileText, LayoutTemplate, Radio, Upload, ChevronUp, ChevronDown, ChevronRight, ChevronLeft, PanelRight, PanelBottom } from 'lucide-react';
 import { createPortal } from 'react-dom';
 import '@livekit/components-styles';
 import { useAuth } from '@/contexts/SupabaseAuthContext';
@@ -1230,8 +1230,13 @@ export function ConsultationStage({
   // ≤820px : en Partage/Tableau, la rangée « scène + rail 224px » écrasait le
   // CONTENU PARTAGÉ dans ~130px (le jumeau devenait une colonne illisible chez
   // l'invité téléphone). Sur mobile le PARTAGE est prioritaire : scène pleine
-  // largeur, participants réduits à une BANDE horizontale de vignettes en bas.
+  // largeur, participants réduits en MINIATURES. Deux dispositions au choix de
+  // l'utilisateur (bouton bascule) : BANDE sous la scène (ne recouvre rien) ou
+  // OVERLAY vertical empilé à droite (partage 100 % hauteur) ; chacune
+  // repliable en pastille. Hooks déclarés avant le return conditionnel.
   const compact = useMatchMediaAtMost(820);
+  const [miniLayout, setMiniLayout] = useState<'band' | 'overlay'>('band');
+  const [miniCollapsed, setMiniCollapsed] = useState(false);
 
   // CONVERSATION : face-à-face — grand flux de l'interlocuteur + soi en incrustation.
   if (view === 'conversation') {
@@ -1286,8 +1291,29 @@ export function ConsultationStage({
         {hasScene && view !== 'board' ? (
           <AnnotationOverlay strokes={strokes} editable={editable} onStrokes={onStrokes} />
         ) : null}
+        {/* Mobile + disposition « overlay » : pile verticale par-dessus la scène
+            (rendue ICI pour profiter du position:relative du conteneur). */}
+        {compact && !rightOpen && miniLayout === 'overlay' ? (
+          <MembersRail
+            tracks={tracks}
+            isHost={isHost}
+            variant="overlay"
+            collapsed={miniCollapsed}
+            onToggleCollapsed={() => setMiniCollapsed((v) => !v)}
+            onSwitchLayout={() => setMiniLayout('band')}
+          />
+        ) : null}
       </div>
-      {!rightOpen ? <MembersRail tracks={tracks} isHost={isHost} horizontal={compact} /> : null}
+      {!rightOpen && (!compact || miniLayout === 'band') ? (
+        <MembersRail
+          tracks={tracks}
+          isHost={isHost}
+          variant={compact ? 'band' : 'desktop'}
+          collapsed={miniCollapsed}
+          onToggleCollapsed={() => setMiniCollapsed((v) => !v)}
+          onSwitchLayout={() => setMiniLayout('overlay')}
+        />
+      ) : null}
     </div>
   );
 }
@@ -1296,26 +1322,41 @@ export function ConsultationStage({
 // `horizontal` (mobile ≤820px) : le rail vertical 224px volait la largeur du
 // CONTENU PARTAGÉ sur téléphone → il devient une BANDE horizontale compacte de
 // vignettes (scroll latéral), le partage garde tout l'écran.
-function MembersRail({ tracks, isHost, horizontal }: { tracks: any[]; isHost?: boolean; horizontal?: boolean }) {
-  // Mobile : bande de miniatures REPLIABLE — dépliée elle ne recouvre RIEN (elle
-  // vit SOUS la scène), repliée elle rend ~100 % de l'écran au contenu partagé
-  // (il ne reste qu'une pastille « N participants »). Hook déclaré avant tout
-  // retour conditionnel (règle des hooks).
-  const [collapsed, setCollapsed] = useState(false);
+// Mobile (variant band/overlay) : miniatures contrôlées par le PARENT
+// (disposition + repli remontés dans ConsultationStage pour survivre à la
+// bascule bande ↔ overlay). band = fine bande SOUS la scène (ne recouvre
+// jamais rien) ; overlay = pile verticale par-dessus le bord droit de la
+// scène (partage 100 % hauteur, style Meet/Zoom) ; les deux repliables en
+// pastille « N participants ».
+function MembersRail({
+  tracks,
+  isHost,
+  variant = 'desktop',
+  collapsed = false,
+  onToggleCollapsed,
+  onSwitchLayout,
+}: {
+  tracks: any[];
+  isHost?: boolean;
+  variant?: 'desktop' | 'band' | 'overlay';
+  collapsed?: boolean;
+  onToggleCollapsed?: () => void;
+  onSwitchLayout?: () => void;
+}) {
   const cams = tracks.filter((t) => t?.source === Track.Source.Camera);
   // Écran partagé : vignette dédiée EN TÊTE du rail (label ambre) → quand un
   // artefact/tableau occupe le grand cadre, le patient garde l'écran du praticien
   // sous les yeux (jamais masqué silencieusement).
   const screen = tracks.find((t) => t?.source === Track.Source.ScreenShare && t?.publication);
-  if (horizontal) {
+
+  const pillStyle: React.CSSProperties = { display: 'inline-flex', alignItems: 'center', gap: 6, padding: '6px 12px', borderRadius: 999, border: '1px solid rgba(212,163,106,0.4)', background: 'rgba(24,20,16,0.92)', color: GOLD, fontSize: 12, fontWeight: 700, cursor: 'pointer', boxShadow: '0 6px 20px rgba(0,0,0,0.4)' };
+  const miniBtn: React.CSSProperties = { border: 'none', background: 'rgba(24,20,16,0.9)', color: GOLD, cursor: 'pointer', borderRadius: 8, display: 'grid', placeItems: 'center' };
+
+  if (variant === 'band') {
     if (collapsed) {
       return (
         <div style={{ display: 'flex', justifyContent: 'flex-end', flexShrink: 0 }}>
-          <button
-            onClick={() => setCollapsed(false)}
-            aria-label={`Afficher les ${cams.length} participants`}
-            style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '6px 12px', borderRadius: 999, border: '1px solid rgba(212,163,106,0.4)', background: 'rgba(24,20,16,0.92)', color: GOLD, fontSize: 12, fontWeight: 700, cursor: 'pointer' }}
-          >
+          <button onClick={onToggleCollapsed} aria-label={`Afficher les ${cams.length} participants`} style={pillStyle}>
             <Users size={14} aria-hidden="true" /> {cams.length} <ChevronUp size={13} aria-hidden="true" />
           </button>
         </div>
@@ -1335,14 +1376,52 @@ function MembersRail({ tracks, isHost, horizontal }: { tracks: any[]; isHost?: b
             <RoleTag role={participantRole(t?.participant, !!isHost)} />
           </div>
         ))}
+        <div style={{ marginLeft: 'auto', display: 'flex', flexDirection: 'column', gap: 4, flexShrink: 0 }}>
+          <button onClick={onSwitchLayout} aria-label="Basculer les miniatures en pile verticale (overlay)" title="Pile verticale sur la scène" style={{ ...miniBtn, width: 28, flex: 1, background: 'rgba(255,255,255,0.07)' }}>
+            <PanelRight size={14} aria-hidden="true" />
+          </button>
+          <button onClick={onToggleCollapsed} aria-label="Replier les miniatures (plein écran pour le partage)" title="Plein écran pour le partage" style={{ ...miniBtn, width: 28, flex: 1, background: 'rgba(255,255,255,0.07)' }}>
+            <ChevronDown size={14} aria-hidden="true" />
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  if (variant === 'overlay') {
+    if (collapsed) {
+      return (
         <button
-          onClick={() => setCollapsed(true)}
-          aria-label="Replier les miniatures (plein écran pour le partage)"
-          title="Plein écran pour le partage"
-          style={{ marginLeft: 'auto', alignSelf: 'stretch', width: 28, flexShrink: 0, borderRadius: 8, border: 'none', background: 'rgba(255,255,255,0.07)', color: GOLD, cursor: 'pointer', display: 'grid', placeItems: 'center' }}
+          onClick={onToggleCollapsed}
+          aria-label={`Afficher les ${cams.length} participants`}
+          style={{ ...pillStyle, position: 'absolute', top: '50%', right: 8, transform: 'translateY(-50%)', zIndex: 30, flexDirection: 'column', gap: 2, padding: '9px 8px' }}
         >
-          <ChevronDown size={15} aria-hidden="true" />
+          <Users size={14} aria-hidden="true" /> {cams.length} <ChevronLeft size={12} aria-hidden="true" />
         </button>
+      );
+    }
+    return (
+      <div data-cr="members" style={{ position: 'absolute', top: '50%', right: 8, transform: 'translateY(-50%)', zIndex: 30, display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 6, maxHeight: 'calc(100% - 24px)', overflowY: 'auto' }}>
+        <style>{`[data-cr="members"] .lk-participant-name{display:none!important}`}</style>
+        {screen ? (
+          <div title="Écran partagé" style={{ position: 'relative', width: 96, aspectRatio: '16 / 9', flexShrink: 0, borderRadius: 9, overflow: 'hidden', background: '#000', border: '1px solid rgba(212,163,106,0.65)', boxShadow: '0 6px 18px rgba(0,0,0,0.4)' }}>
+            <ParticipantTile trackRef={screen} style={{ width: '100%', height: '100%' }} />
+          </div>
+        ) : null}
+        {cams.map((t, i) => (
+          <div key={tileKey(t, i)} style={{ position: 'relative', width: 96, aspectRatio: '16 / 9', flexShrink: 0, borderRadius: 9, overflow: 'hidden', background: '#000', border: '1px solid rgba(255,255,255,0.28)', boxShadow: '0 6px 18px rgba(0,0,0,0.4)' }}>
+            <ParticipantTile trackRef={t} style={{ width: '100%', height: '100%' }} />
+            <RoleTag role={participantRole(t?.participant, !!isHost)} />
+          </div>
+        ))}
+        <div style={{ display: 'flex', gap: 4 }}>
+          <button onClick={onSwitchLayout} aria-label="Basculer les miniatures en bande sous la scène" title="Bande sous la scène" style={{ ...miniBtn, width: 30, height: 26 }}>
+            <PanelBottom size={13} aria-hidden="true" />
+          </button>
+          <button onClick={onToggleCollapsed} aria-label="Masquer les miniatures" title="Masquer" style={{ ...miniBtn, width: 30, height: 26 }}>
+            <ChevronRight size={13} aria-hidden="true" />
+          </button>
+        </div>
       </div>
     );
   }
