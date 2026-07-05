@@ -20,7 +20,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased bg-black text-slate-900`}>
         <header className="fixed top-0 left-0 right-0 z-50 glass-dark border-b border-white/5">
           <div className="max-w-7xl mx-auto flex items-center justify-between px-6 py-3.5">
-            <Link href="/" className="text-xl font-bold tracking-tight text-white hover:text-indigo-300 transition-colors">Cimolace</Link>
+            <Link href="/" className="text-xl font-bold tracking-tight text-white hover:text-[#e6cc92] transition-colors">Cimolace</Link>
             <nav className="hidden md:flex items-center gap-1 text-sm font-medium">
               <Link href="/medos" className="px-3 py-2 rounded-lg text-white/70 hover:text-white hover:bg-white/5 transition-colors">MedOS</Link>
               <Link href="/engines" className="px-3 py-2 rounded-lg text-white/70 hover:text-white hover:bg-white/5 transition-colors">Moteurs</Link>

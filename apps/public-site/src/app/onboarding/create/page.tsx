@@ -14,22 +14,22 @@ const PRESETS: Record<
   liri: {
     label: "LIRI Studio",
     tagline: "Live + IA · Studio · Masterclass · SmartBoard",
-    color: "#6366f1",
-    gradient: "from-indigo-500/30 via-violet-500/20 to-transparent",
+    color: "#d8b468",
+    gradient: "from-[#d8b468]/30 via-[#e6cc92]/20 to-transparent",
     nextTab: "lives",
   },
   school: {
     label: "École en ligne",
     tagline: "11 moteurs · Live, cours, IA",
-    color: "#10b981",
-    gradient: "from-emerald-500/30 via-teal-500/20 to-transparent",
+    color: "#d8b468",
+    gradient: "from-[#d8b468]/30 via-[#e6cc92]/20 to-transparent",
     nextTab: "courses",
   },
   medos: {
     label: "MedOS",
     tagline: "EHR · praticiens · patients",
-    color: "#3b82f6",
-    gradient: "from-blue-500/30 via-sky-500/20 to-transparent",
+    color: "#d8b468",
+    gradient: "from-[#d8b468]/30 via-[#e6cc92]/20 to-transparent",
     nextTab: "",
   },
 };

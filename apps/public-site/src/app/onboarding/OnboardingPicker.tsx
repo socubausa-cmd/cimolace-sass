@@ -26,7 +26,7 @@ const INFRA: Infra[] = [
     label: "LIRI Studio",
     desc: "Live + IA · Studio · Masterclass · SmartBoard",
     to: "/onboarding/create?kind=liri",
-    color: "#6366f1",
+    color: "#d8b468",
     available: true,
     featured: true,
   },
@@ -36,7 +36,7 @@ const INFRA: Infra[] = [
     label: "École en ligne",
     desc: "11 moteurs · Live, cours, IA",
     to: "/onboarding/create?kind=school",
-    color: "#10b981",
+    color: "#d8b468",
     available: true,
   },
   {
@@ -45,7 +45,7 @@ const INFRA: Infra[] = [
     label: "MedOS",
     desc: "EHR · praticiens · patients",
     to: "/onboarding/create?kind=medos",
-    color: "#3b82f6",
+    color: "#d8b468",
     available: true,
   },
   {
@@ -54,7 +54,7 @@ const INFRA: Infra[] = [
     label: "Virtuel Mbolo",
     desc: "Commerce · catalogue",
     to: null,
-    color: "#f59e0b",
+    color: "#d8b468",
     available: false,
   },
   {
@@ -63,7 +63,7 @@ const INFRA: Infra[] = [
     label: "Community Hub",
     desc: "Forum · messagerie",
     to: null,
-    color: "#8b5cf6",
+    color: "#d8b468",
     available: false,
   },
 ];

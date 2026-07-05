@@ -12,7 +12,7 @@ export default function OnboardingPage() {
   return (
     <main className="min-h-screen bg-[#0d1117] flex flex-col items-center justify-center py-16 px-6">
       <div className="text-center mb-12">
-        <div className="text-indigo-500 text-[13px] font-bold tracking-[0.08em] uppercase mb-3">
+        <div className="text-[#d8b468] text-[13px] font-bold tracking-[0.08em] uppercase mb-3">
           Cimolace — Démarrer
         </div>
         <h1 className="text-white text-[clamp(28px,4vw,44px)] font-black leading-tight mb-3">
@@ -27,7 +27,7 @@ export default function OnboardingPage() {
 
       <div className="mt-8 text-slate-500 text-xs">
         Déjà un compte ?{" "}
-        <Link href="/login" className="text-indigo-400 hover:text-indigo-300 underline">
+        <Link href="/login" className="text-[#e6cc92] hover:text-[#e6cc92] underline">
           Se connecter
         </Link>
       </div>
