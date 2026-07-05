@@ -257,6 +257,34 @@ export async function getLatestSoap(patientId: string): Promise<SoapNote | null>
   };
 }
 
+/**
+ * Génère une note SOAP (S/O/A/P) à partir de la TRANSCRIPTION de la
+ * téléconsultation (dictée live du praticien). Appelle l'edge `generate-soap`
+ * (DeepSeek). Aide à la rédaction — le praticien revoit avant d'enregistrer.
+ */
+export async function generateSoapFromTranscript(
+  transcript: string,
+  opts?: { language?: string; patientContext?: Record<string, unknown> },
+): Promise<SoapNote> {
+  const { data, error } = await supabase.functions.invoke('generate-soap', {
+    body: {
+      transcript,
+      language: opts?.language || 'fr',
+      patientContext: opts?.patientContext,
+    },
+  });
+  if (error) throw new Error(error.message || 'Échec de la génération du SOAP');
+  if (data?.error) throw new Error(String(data.error));
+  return {
+    subjective: data?.subjective ?? null,
+    objective: data?.objective ?? null,
+    assessment: data?.assessment ?? null,
+    plan: data?.plan ?? null,
+    is_signed: false,
+    created_at: null,
+  };
+}
+
 /** Fusionne référentiel (name_fr, position) + état (scores) → OrganNode[]. */
 export function buildOrganNodes(
   referential: { organs?: any[] } | null,

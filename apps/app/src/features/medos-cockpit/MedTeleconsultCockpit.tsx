@@ -29,6 +29,7 @@ import {
   type ShopProduct,
   type ShopBrand,
   getStorefront,
+  generateSoapFromTranscript,
   type OrganColor,
   type OrganNode,
   type SoapNote,
@@ -39,7 +40,8 @@ import {
 } from './cockpit-api';
 import { useCockpitChannel } from './useCockpitChannel';
 import { MEDOS_STUDY_CASES, applyCaseOrganScores } from './medosStudyCases';
-import { attachmentsApi } from '@/lib/api';
+import { attachmentsApi, medosApi } from '@/lib/api';
+import { useWebSpeechScribe } from '@/hooks/useWebSpeechScribe';
 
 const BodyViewer3D = lazy(() =>
   import('./BodyViewer3D').then((m) => ({ default: m.BodyViewer3D })),
@@ -163,6 +165,122 @@ function WheelView({
       {(!domains || domains.length === 0) && scored.length === 0 && (
         <div style={emptyHint}>Aucun bilan disponible pour ce patient.</div>
       )}
+    </div>
+  );
+}
+
+// ── Scribe SOAP (praticien) : dictée live → transcription éditable → SOAP IA ──
+// Web Speech API (micro local, gratuit) remplit la transcription ; « Générer le
+// SOAP » appelle l'edge generate-soap (DeepSeek) → S/O/A/P éditables → enregistre
+// au dossier (createNote) + partageable (barre existante « Partager au patient »).
+function SoapScribeTab({
+  soap,
+  onSoap,
+  patientId,
+  patientContext,
+}: {
+  soap: SoapNote | null;
+  onSoap: (s: SoapNote) => void;
+  patientId?: string | null;
+  patientContext?: Record<string, unknown>;
+}) {
+  const scribe = useWebSpeechScribe({ lang: 'fr-FR' });
+  const [text, setText] = useState('');
+  const [generating, setGenerating] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [saved, setSaved] = useState(false);
+  const [err, setErr] = useState<string | null>(null);
+
+  // La dictée alimente la transcription éditable (arrêter la dictée pour corriger).
+  useEffect(() => { if (scribe.transcript) setText(scribe.transcript); }, [scribe.transcript]);
+
+  const canGen = text.trim().length >= 12 && !generating;
+
+  const generate = async () => {
+    if (!canGen) { setErr('Dictez ou saisissez d’abord la consultation.'); return; }
+    setGenerating(true); setErr(null); setSaved(false);
+    try {
+      const s = await generateSoapFromTranscript(text.trim(), { language: 'fr', patientContext });
+      onSoap(s);
+    } catch (e) { setErr((e as { message?: string })?.message || 'Échec de la génération.'); }
+    finally { setGenerating(false); }
+  };
+
+  const save = async () => {
+    if (!patientId || !soap) return;
+    setSaving(true); setErr(null);
+    try {
+      await medosApi.createNote(patientId, {
+        subjective: soap.subjective || undefined,
+        objective: soap.objective || undefined,
+        assessment: soap.assessment || undefined,
+        plan: soap.plan || undefined,
+      } as any);
+      setSaved(true);
+    } catch (e) { setErr((e as { message?: string })?.message || 'Échec de l’enregistrement.'); }
+    finally { setSaving(false); }
+  };
+
+  const setField = (k: keyof SoapNote, v: string) =>
+    onSoap({ subjective: null, objective: null, assessment: null, plan: null, ...(soap || {}), [k]: v });
+
+  const taBase: React.CSSProperties = { width: '100%', boxSizing: 'border-box', resize: 'vertical', borderRadius: 8, border: '1px solid var(--zw-border)', color: 'var(--zw-text)', fontSize: 12.5, lineHeight: 1.5, padding: 8, fontFamily: 'inherit' };
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 9, height: '100%', overflowY: 'auto', padding: 2 }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+        {scribe.supported ? (
+          <button
+            onClick={scribe.toggle}
+            style={{ display: 'inline-flex', alignItems: 'center', gap: 7, padding: '7px 12px', borderRadius: 999, border: 'none', cursor: 'pointer', fontSize: 12, fontWeight: 700, background: scribe.listening ? '#ef4444' : 'var(--brand-primary)', color: '#fff' }}
+          >
+            <span style={{ width: 8, height: 8, borderRadius: '50%', background: '#fff', opacity: scribe.listening ? 1 : 0.85 }} />
+            {scribe.listening ? 'Dictée en cours — cliquer pour arrêter' : 'Dicter la consultation'}
+          </button>
+        ) : (
+          <span style={{ fontSize: 11.5, color: 'var(--zw-text-muted)' }}>Dictée non supportée ici — saisissez le résumé ci-dessous.</span>
+        )}
+        {(text || scribe.transcript) ? (
+          <button onClick={() => { setText(''); scribe.reset(); setSaved(false); }} style={{ padding: '6px 10px', borderRadius: 8, border: '1px solid var(--zw-border-strong)', background: 'transparent', color: 'var(--zw-text-soft)', cursor: 'pointer', fontSize: 11.5 }}>Effacer</button>
+        ) : null}
+      </div>
+
+      <textarea
+        value={text}
+        onChange={(e) => setText(e.target.value)}
+        placeholder="La dictée s’affiche ici (ou saisissez le déroulé de la consultation). Vous pouvez corriger avant de générer le SOAP."
+        style={{ ...taBase, minHeight: 84, background: 'var(--zw-bg-subtle)' }}
+      />
+      {scribe.listening && scribe.interim ? (
+        <div style={{ fontSize: 11.5, color: 'var(--zw-text-muted)', fontStyle: 'italic', marginTop: -4 }}>… {scribe.interim}</div>
+      ) : null}
+
+      <button
+        onClick={generate}
+        disabled={!canGen}
+        style={{ padding: '9px 14px', borderRadius: 9, border: 'none', cursor: canGen ? 'pointer' : 'not-allowed', fontSize: 12.5, fontWeight: 700, background: canGen ? 'var(--brand-primary)' : 'var(--zw-border-strong)', color: '#fff', opacity: canGen ? 1 : 0.7 }}
+      >
+        {generating ? 'Génération du SOAP…' : '✨ Générer le SOAP'}
+      </button>
+
+      {err ? <div style={{ fontSize: 11.5, color: '#dc2626' }}>{err}</div> : null}
+
+      {soap ? (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginTop: 2 }}>
+          {([['subjective', 'S — Subjectif'], ['objective', 'O — Objectif'], ['assessment', 'A — Analyse'], ['plan', 'P — Plan']] as Array<[keyof SoapNote, string]>).map(([k, label]) => (
+            <div key={String(k)}>
+              <div style={{ fontSize: 11.5, fontWeight: 700, color: 'var(--brand-primary)', letterSpacing: 0.3, marginBottom: 3 }}>{label}</div>
+              <textarea value={String(soap[k] ?? '')} onChange={(e) => setField(k, e.target.value)} style={{ ...taBase, minHeight: 42, background: '#fff' }} />
+            </div>
+          ))}
+          {patientId ? (
+            <button onClick={save} disabled={saving} style={{ padding: '8px 12px', borderRadius: 9, border: '1px solid var(--zw-border-strong)', cursor: saving ? 'default' : 'pointer', fontSize: 12, fontWeight: 700, background: saved ? '#dcfce7' : 'transparent', color: saved ? '#166534' : 'var(--zw-text)' }}>
+              {saving ? 'Enregistrement…' : saved ? '✓ Enregistré au dossier' : 'Enregistrer au dossier'}
+            </button>
+          ) : null}
+          <div style={{ fontSize: 10.5, color: 'var(--zw-text-faint)', lineHeight: 1.4 }}>Aide à la rédaction (assistant) — vérifiez avant d’enregistrer / partager. Ne constitue pas un diagnostic.</div>
+        </div>
+      ) : null}
     </div>
   );
 }
@@ -816,7 +934,14 @@ function HostCockpit({ sessionId, channel, eduMode = false }: { sessionId: strin
               <TwinView organs={organs} sex={displaySex} selected={selected} onSelect={setSelected} />
             )}
             {tab === 'wheel' && <WheelView domains={wheel} organs={organScores} />}
-            {tab === 'soap' && <SoapView soap={soap} />}
+            {tab === 'soap' && (
+              <SoapScribeTab
+                soap={soap}
+                onSoap={setSoap}
+                patientId={ctx?.patient_id ?? null}
+                patientContext={ctx ? { name: ctx.patient_name, sex: ctx.sex, motif: (ctx as any).agenda_reason } : undefined}
+              />
+            )}
             {tab === 'labs' && <LabsView items={labs} />}
             {tab === 'rx' && <PrescriptionView rx={latestRx} />}
             {tab === 'image' && (
