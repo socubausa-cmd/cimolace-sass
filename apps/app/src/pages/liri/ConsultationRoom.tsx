@@ -1332,9 +1332,10 @@ export function ConsultationStage({
           // med-cockpit ; le patient les rejoue via incomingBroadcast.
           // Mobile spectateur : le rail d'outils embarqué (inutilisable en lecture
           // seule) est masqué — il écrasait le tableau dans la colonne restante.
-          // `right: reserve` = marge immersive : le canevas s'arrête avant la
-          // zone des miniatures (fond TILE_BG continu derrière → même écran).
-          <div style={{ position: 'absolute', inset: 0, right: reserve, overflow: 'hidden', transition: `right 0.3s ${ZOOM_EASE}` }}>
+          // TABLEAU : PAS de découpe — le quadrillage s'étend SOUS les pastilles
+          // (un seul élément visuel, la zone d'accueil est invisible, intégrée au
+          // tableau) ; les miniatures flottent par-dessus en overlay.
+          <div style={{ position: 'absolute', inset: 0, overflow: 'hidden' }}>
             <ConsultationSmartBoard
               sessionId={sessionId}
               isHost={isHost}
