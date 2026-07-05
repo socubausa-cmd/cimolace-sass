@@ -150,7 +150,7 @@ export default function ProcheRoom() {
   };
 
   if (conn && sessionId) {
-    return <ProcheLiveRoom url={conn.url} token={conn.token} sessionId={sessionId} clinic={status?.clinic_name} initialCam={joinWithCam} initialMic={joinWithMic} />;
+    return <ProcheLiveRoom url={conn.url} token={conn.token} sessionId={sessionId} inviteId={inviteId} clinic={status?.clinic_name} initialCam={joinWithCam} initialMic={joinWithMic} />;
   }
 
   const clinicName = status?.clinic_name || null;
@@ -260,11 +260,28 @@ function Gate({ title, text, tone, spinner }: { title: string; text: string; ton
 }
 
 // ── La salle vidéo du proche (après consentement) ────────────────────────────
-function ProcheLiveRoom({ url, token, sessionId, clinic, initialCam = true, initialMic = true }: { url: string; token: string; sessionId: string; clinic?: string; initialCam?: boolean; initialMic?: boolean }) {
+function ProcheLiveRoom({ url, token, sessionId, inviteId, clinic, initialCam = true, initialMic = true }: { url: string; token: string; sessionId: string; inviteId?: string; clinic?: string; initialCam?: boolean; initialMic?: boolean }) {
   // Le proche SUIT la vue/scène/annotation pilotées par le praticien (read-only).
   const channel = useCockpitChannel(sessionId, 'patient');
   const [left, setLeft] = useState(false);
   const [chatOpen, setChatOpen] = useState(false);
+  // Fin de session pilotée par le PRATICIEN : l'invité doit sortir tout seul
+  // quand l'hôte coupe le live (sinon il reste connecté « dans le vide »). Le
+  // patient (ConsultationRoom) s'abonne à live_sessions ; l'invité (anon, pas
+  // d'accès RLS) POLL le statut public de son invitation (session_status).
+  useEffect(() => {
+    if (!inviteId) return undefined;
+    let alive = true;
+    const check = () =>
+      getProcheStatus(inviteId)
+        .then((s) => {
+          if (alive && (s.session_status === 'ended' || s.session_status === 'cancelled')) setLeft(true);
+        })
+        .catch(() => {});
+    const t = setInterval(check, 3000);
+    void check();
+    return () => { alive = false; clearInterval(t); };
+  }, [inviteId]);
   // Mode focus (partage immersif) : remonté de ConsultationStage → masque la barre.
   const [immersive, setImmersive] = useState(false);
   // Image de marque : logo du tenant (résolu par slug) + nom praticien (diffusé
