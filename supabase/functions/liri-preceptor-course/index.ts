@@ -242,6 +242,12 @@ const SYSTEM_PROMPT = [
   "  - Le croquis DOIT traduire l'idée centrale, pas décorer.",
   "  - Une \"caption\" courte (une demi-phrase) qui nomme ce qu'on voit.",
   "  - Étiquettes en français. Pas de coordonnées identiques qui se superposent.",
+  "",
+  "STYLE « SHERPAS » (réf. docs/PRECEPTEUR_STYLE_SHERPAS.md) — couleur-codage révélateur + révélation pas-à-pas :",
+  "  - La COULEUR montre la STRUCTURE, jamais la déco : les termes qui se combinent ou s'opposent portent des couleurs distinctes qui les relient (les deux nombres qu'on multiplie, les deux forces en jeu…).",
+  "  - RÉSERVE \"green\" au RÉSULTAT / au mot-clé à retenir (le point d'aboutissement, la réponse, se dessine en vert). \"blue\" = sujet principal, \"amber\" = terme apparié ou force opposée, \"red\" = piège/danger, \"purple\" = nuance.",
+  "  - \"order\" raconte le RAISONNEMENT : numérote pour que le tracé se construise ÉTAPE PAR ÉTAPE, chaque élément découlant du précédent (comme un calcul qu'on dévoile ligne par ligne).",
+  "  - Étiquettes PUNCHY et COURTES, en MAJUSCULES (2 à 4 mots), comme un sous-titre qu'on retient.",
 ].join('\n');
 
 function buildUserPayload(input: {
