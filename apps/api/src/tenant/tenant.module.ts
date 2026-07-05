@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common';
 import { AuthModule } from '../auth/auth.module';
 import { SupabaseModule } from '../supabase/supabase.module';
+import { LiriEntitlementsModule } from '../billing/liri-entitlements.module';
 import { CimolaceStaffGuard } from '../cimolace-backoffice/cimolace-staff.guard';
 import { TenantService } from './tenant.service';
 import {
@@ -14,7 +15,7 @@ import { TenantPortalController } from './tenant-portal.controller';
   // SupabaseModule is needed because CimolaceStaffGuard injects SupabaseService
   // (used by the PATCH /tenants/:id/branding endpoint and the marketplace
   // toggle on /admin/tenants/:tenantId/services/:serviceKey/toggle).
-  imports: [AuthModule, SupabaseModule],
+  imports: [AuthModule, SupabaseModule, LiriEntitlementsModule],
   controllers: [
     TenantController,
     TenantApiKeyController,

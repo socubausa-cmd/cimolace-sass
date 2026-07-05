@@ -77,6 +77,56 @@ export class SubscriptionRenewalService implements OnApplicationBootstrap, OnMod
     return new Date(base.getTime() + days * 86_400_000).toISOString();
   }
 
+  /** Id du tenant isna actif (repli quand un event n'expose pas son tenant_id). */
+  private _defaultTenantId: string | null | undefined;
+  private async resolveDefaultTenantId(): Promise<string | null> {
+    if (this._defaultTenantId !== undefined) return this._defaultTenantId ?? null;
+    const { data } = await this.supabase
+      .from('tenants')
+      .select('id')
+      .eq('slug', 'isna')
+      .eq('status', 'active')
+      .maybeSingle();
+    this._defaultTenantId = (data as any)?.id ?? null;
+    return this._defaultTenantId ?? null;
+  }
+
+  /**
+   * Consigne un event webhook UNE seule fois (dédup anti-rejeu Stripe).
+   * Renvoie `true` si c'est la 1re fois (traiter), `false` si déjà vu (ignorer).
+   * S'appuie sur `billing_events.stripe_event_id` UNIQUE (insert → 23505 sur doublon).
+   * FAIL-OPEN : toute autre erreur (table absente, event sans id) → `true`, pour ne
+   * jamais bloquer le fulfillment d'un paiement réel à cause du registre de dédup.
+   */
+  private async recordEventOnce(event: any, tenantId: string): Promise<boolean> {
+    const eventId = event?.id;
+    if (!eventId) return true; // pas d'id → on ne peut pas dédupliquer, on traite
+    try {
+      const { error } = await (this.supabase as any).from('billing_events').insert({
+        tenant_id: tenantId,
+        stripe_event_id: String(eventId),
+        event_type: String(event?.type ?? 'webhook'),
+        payload: {},
+        processed: true,
+        processed_at: new Date().toISOString(),
+      });
+      if (error) {
+        if (
+          String((error as any).code) === '23505' ||
+          /duplicate|already exists/i.test((error as any).message ?? '')
+        ) {
+          return false; // doublon → déjà traité
+        }
+        this.logger.warn(`billing_events dedup (insert): ${(error as any).message}`);
+        return true; // fail-open
+      }
+      return true;
+    } catch (e) {
+      this.logger.warn(`billing_events dedup indisponible: ${(e as Error).message}`);
+      return true; // fail-open
+    }
+  }
+
   // ── Webhook pawaPay ────────────────────────────────────────────────────────
   /**
    * Traite le callback pawaPay (POST /offering-checkout/webhook/pawapay).
@@ -468,6 +518,37 @@ export class SubscriptionRenewalService implements OnApplicationBootstrap, OnMod
     }
   }
 
+  /**
+   * Fulfillment PUBLIC d'une offre PAYÉE (partagé par tous les rails : PayPal,
+   * et réutilisable). Abonnement → crée/prolonge l'abo (+ membership via
+   * grantStudentAccess) ; paiement unique (don/consultation) → reçu seul.
+   * L'appelant garantit l'unicité (claim atomique) avant d'appeler ceci.
+   */
+  async fulfillPaidOffer(opts: {
+    userId: string;
+    tenantId: string | null;
+    kind?: string | null;
+    planSlug?: string | null;
+    provider?: string;
+    amountCents?: number | null;
+    currency?: string | null;
+  }): Promise<void> {
+    if (opts.kind === 'subscription' && opts.planSlug) {
+      await this.createOrExtendSubscription(opts.userId, opts.planSlug, {
+        tenantId: opts.tenantId ?? null,
+        provider: opts.provider ?? 'paypal',
+      });
+    } else {
+      await this.notifyOneOffPayment(
+        opts.userId,
+        opts.tenantId ?? null,
+        opts.kind,
+        opts.amountCents ?? undefined,
+        opts.currency ?? undefined,
+      );
+    }
+  }
+
   // ── Webhook Stripe des offres élève ─────────────────────────────────────────
   /**
    * Traite le webhook Stripe (POST /offering-checkout/webhook/stripe), signature vérifiée.
@@ -476,16 +557,65 @@ export class SubscriptionRenewalService implements OnApplicationBootstrap, OnMod
    * - invoice.paid / invoice.payment_succeeded       → renouvellement Stripe : prolonge la période.
    */
   async handleStripeOfferingWebhook(rawBody: Buffer, signature?: string): Promise<void> {
-    const secret =
-      process.env.STRIPE_OFFERING_WEBHOOK_SECRET ||
-      process.env.STRIPE_WEBHOOK_SECRET ||
-      process.env.STRIPE_BILLING_WEBHOOK_SECRET;
-    if (!secret) {
-      this.logger.warn('Webhook Stripe offering : aucun secret configuré — ignoré');
+    // ── Vérification de signature PAR TENANT (multi-compte Stripe) ──
+    // Un tenant qui encaisse sur SON PROPRE compte Stripe a SON PROPRE webhook
+    // secret : le vérifier avec les seuls secrets plateforme faisait échouer la
+    // signature → élève débité, aucun accès accordé (trou critique). On « peek »
+    // le tenant_id du payload NON vérifié UNIQUEMENT pour choisir le bon secret ;
+    // la confiance vient ENSUITE de la signature (un tenant_id forgé → aucun
+    // secret candidat ne valide → 400). Repli sur les secrets d'env (plateforme).
+    let peekTenantId: string | null = null;
+    try {
+      const peek = JSON.parse((rawBody ?? Buffer.alloc(0)).toString('utf8'));
+      const obj = peek?.data?.object ?? {};
+      peekTenantId =
+        obj?.metadata?.tenant_id ??
+        obj?.subscription_details?.metadata?.tenant_id ??
+        obj?.lines?.data?.[0]?.metadata?.tenant_id ??
+        null;
+    } catch {
+      /* payload illisible → on tentera les secrets d'env */
+    }
+
+    const candidates: string[] = [];
+    if (peekTenantId) {
+      try {
+        const tp = await this.tenantPayments.resolveTenantProviderCreds(peekTenantId, 'stripe');
+        if ((tp as any)?.creds?.webhook_secret) candidates.push((tp as any).creds.webhook_secret);
+      } catch {
+        /* pas de creds tenant → secrets d'env */
+      }
+    }
+    for (const s of [
+      process.env.STRIPE_OFFERING_WEBHOOK_SECRET,
+      process.env.STRIPE_WEBHOOK_SECRET,
+      process.env.STRIPE_BILLING_WEBHOOK_SECRET,
+    ]) {
+      if (s) candidates.push(s);
+    }
+    if (candidates.length === 0) {
+      this.logger.warn('Webhook Stripe offering : aucun secret (tenant ni env) — ignoré');
       return;
     }
-    const event = verifyStripeSignature(rawBody, signature, secret);
+
+    let event: any = null;
+    for (const secret of candidates) {
+      event = verifyStripeSignature(rawBody, signature, secret);
+      if (event) break;
+    }
     if (!event) throw new BadRequestException('Signature Stripe invalide');
+
+    // ── Anti-rejeu (dédup par event.id) ──
+    // Stripe REESSAIE le même event (jusqu'à ~3 j) → sans dédup, un abonnement se
+    // prolongeait 2× (double provisioning). On consigne l'event.id dans
+    // billing_events (UNIQUE(stripe_event_id)) : le 1er passe, tout doublon
+    // s'arrête ici. Fail-open si la table est indisponible (ne casse jamais le
+    // fulfillment d'un paiement réel).
+    const ledgerTenantId = peekTenantId ?? (await this.resolveDefaultTenantId());
+    if (ledgerTenantId && !(await this.recordEventOnce(event, ledgerTenantId))) {
+      this.logger.log(`Webhook Stripe offering ignoré (déjà traité) event=${event.id}`);
+      return;
+    }
 
     if (event.type === 'checkout.session.completed') {
       const session = event.data?.object ?? {};

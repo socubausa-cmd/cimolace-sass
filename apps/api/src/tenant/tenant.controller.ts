@@ -3,6 +3,8 @@ import {
   Body,
   Controller,
   Get,
+  HttpException,
+  HttpStatus,
   NotFoundException,
   Param,
   Patch,
@@ -10,6 +12,7 @@ import {
   Req,
   UseGuards,
 } from "@nestjs/common";
+import { LiriEntitlementsService } from "../billing/liri-entitlements.service";
 import { JwtAuthGuard } from "../common/guards/jwt-auth.guard";
 import { TenantGuard } from "../common/guards/tenant.guard";
 import { RolesGuard } from "../common/guards/roles.guard";
@@ -21,7 +24,10 @@ import { UpdateTenantSettingsDto } from "./update-tenant-settings.dto";
 
 @Controller("tenants")
 export class TenantController {
-  constructor(private tenantService: TenantService) {}
+  constructor(
+    private tenantService: TenantService,
+    private entitlements: LiriEntitlementsService,
+  ) {}
 
   /** Read the calling user's active tenant (with branding). */
   @Get("current")
@@ -126,6 +132,25 @@ export class TenantController {
   }
 
   /**
+   * Public — catalogue de cours de la vitrine /t/:slug. UNIQUEMENT les cours
+   * publiés (le service filtre status='published'). [] si slug inconnu/inactif
+   * (pas de 404 : aucune fuite d'existence de slugs).
+   */
+  @Get("public/:slug/courses")
+  async publicCourses(@Param("slug") slug: string) {
+    return this.tenantService.getPublicCourses(slug);
+  }
+
+  /**
+   * Public — offres (billing_plans actifs tenant-scoped) de la vitrine /t/:slug.
+   * Champs d'affichage uniquement. [] si slug inconnu/inactif.
+   */
+  @Get("public/:slug/offers")
+  async publicOffers(@Param("slug") slug: string) {
+    return this.tenantService.getPublicOffers(slug);
+  }
+
+  /**
    * Public endpoint — branding-only lookup by CUSTOM HOST (Enterprise
    * white-label). When the patient-portal is served on a tenant's own
    * domain (e.g. patient.zahirwellness.com), the URL carries no slug, so
@@ -178,6 +203,44 @@ export class TenantController {
   ) {
     return {
       data: await this.tenantService.updateBranding(req.tenant.id, dto),
+    };
+  }
+
+  /**
+   * POST /tenants/current/services/school/activate — activation SELF-SERVE du
+   * moteur École par l'owner/admin, GATÉE par l'abonnement Cimolace : palier
+   * paid/trial (essai 7 j inclus) requis, 'free' → 402 (pas de bypass paywall —
+   * raison du durcissement RLS qui a fermé l'écriture directe de tenant_services).
+   * Périmètre volontairement limité au service 'school' : les autres services
+   * restent pilotés par le staff via /admin/tenants/... .
+   */
+  @Post("current/services/school/activate")
+  @UseGuards(JwtAuthGuard, TenantGuard, RolesGuard)
+  @Roles("owner", "admin")
+  async activateOwnSchool(
+    @Req() req: any,
+    @Body() body: { active?: boolean },
+  ) {
+    const active = typeof body?.active === "boolean" ? body.active : true;
+    if (active) {
+      const tier = await this.entitlements.resolveTier(req.tenant.id);
+      if (tier === "free") {
+        throw new HttpException(
+          {
+            message:
+              "Un abonnement Cimolace actif (essai inclus) est requis pour activer l'École.",
+            code: "SUBSCRIPTION_REQUIRED",
+          },
+          HttpStatus.PAYMENT_REQUIRED,
+        );
+      }
+    }
+    return {
+      data: await this.tenantService.updateTenantService(
+        req.tenant.id,
+        "school",
+        active,
+      ),
     };
   }
 

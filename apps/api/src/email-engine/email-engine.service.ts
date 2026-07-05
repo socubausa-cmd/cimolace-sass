@@ -23,14 +23,25 @@ export class EmailEngineService {
    * (ex. zahirwellness.com) au lieu du global cimolace.com — c'est ce qui rend
    * les emails « attachés » au tenant.
    *
-   * Source de vérité = `tenants.metadata.email` :
-   *   { from: "Zahir Wellness <noreply@zahirwellness.com>" }   ← prioritaire
-   *   { domain: "zahirwellness.com" }                          ← dérive noreply@domaine
-   * Fallback = expéditeur global (RESEND_FROM). On NE dérive PAS depuis
-   * `primary_domain` (= sous-domaine du portail, non vérifié chez Resend → bounce).
+   * SOURCE DE VÉRITÉ UNIFIÉE (L6) = `tenant_notification_settings.email_from`
+   * (+ email_from_name), la MÊME que celle lue par le worker (email.js/tenantNotif)
+   * et par les insertions email_queue (checkout, student-invite). Avant, cette
+   * méthode lisait `tenants.metadata.email` → un tenant configuré dans un seul des
+   * deux → email envoyé depuis le mauvais domaine (bounce). On garde `metadata.email`
+   * en REPLI (rétrocompat), puis l'expéditeur global.
    */
   async resolveFrom(tenantId: string): Promise<string> {
     try {
+      // 1) Source canonique : tenant_notification_settings.
+      const { data: ns } = await (this.supabase.client as any)
+        .from('tenant_notification_settings')
+        .select('email_from, email_from_name')
+        .eq('tenant_id', tenantId)
+        .maybeSingle();
+      if (ns?.email_from) {
+        return ns.email_from_name ? `${ns.email_from_name} <${ns.email_from}>` : ns.email_from;
+      }
+      // 2) Repli rétrocompat : tenants.metadata.email.
       const { data: t } = await (this.supabase.client as any)
         .from('tenants')
         .select('name, metadata')

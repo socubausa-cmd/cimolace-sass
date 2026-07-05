@@ -11,6 +11,14 @@ import { PawaPayService } from '../pawapay/pawapay.service';
 import { CreateOfferingDepositDto } from './create-offering-deposit.dto';
 import { CreateOfferingCardDto } from './create-offering-card.dto';
 import { isStripeConfigured, stripeCreateCheckoutSession } from '../billing/stripe-rest.util';
+import {
+  resolvePaypalCreds,
+  normalizePaypalMode,
+  paypalAccessToken,
+  paypalCreateOrder,
+  paypalCaptureOrder,
+  type PaypalCreds,
+} from './paypal-rest.util';
 import { SubscriptionRenewalService } from './subscription-renewal.service';
 import { TenantPaymentConfigService } from '../billing/tenant-payment-config/tenant-payment-config.service';
 
@@ -68,6 +76,12 @@ export class OfferingCheckoutService {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   private get ppDeposits() {
     return (this.supabase as any).from('pawapay_deposits');
+  }
+
+  /** Accès non-typé à paypal_orders (table hors types Supabase générés). */
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  private get paypalOrders() {
+    return (this.supabase as any).from('paypal_orders');
   }
 
   /**
@@ -362,6 +376,194 @@ export class OfferingCheckoutService {
       currency,
       mode: isSubscription ? 'subscription' : 'payment',
     };
+  }
+
+  // ── PayPal (Orders v2) ──────────────────────────────────────────────────────
+  /**
+   * Résout les creds PayPal effectifs d'un tenant. La page de réglages écrit via
+   * l'edge `tenant-payments` dans les COLONNES PLATES `public_key`/`secret_key`
+   * (+ `is_active`), alors que `resolveTenantProviderCreds` lit le JSONB chiffré
+   * `credentials` (+ `enabled`) — deux chemins d'écriture distincts. On lit donc
+   * D'ABORD les colonnes plates (source de l'UI), puis le JSONB, puis l'env.
+   */
+  private async resolveTenantPaypalCreds(tenantId: string): Promise<PaypalCreds | null> {
+    // 1) Colonnes plates — ce que l'UI de réglages (edge tenant-payments) écrit.
+    try {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const { data: row } = await (this.supabase as any)
+        .from('tenant_payment_providers')
+        .select('public_key, secret_key, mode, is_active')
+        .eq('tenant_id', tenantId)
+        .eq('provider', 'paypal')
+        .maybeSingle();
+      if (row && row.is_active !== false && row.public_key && row.secret_key) {
+        return {
+          clientId: String(row.public_key),
+          clientSecret: String(row.secret_key),
+          mode: normalizePaypalMode(row.mode),
+        };
+      }
+    } catch {
+      /* pas de colonnes plates → chemin JSONB / env */
+    }
+    // 2) JSONB chiffré (chemin NestJS tenant-payment-config) + 3) repli env.
+    const tp = await this.tenantPayments.resolveTenantProviderCreds(tenantId, 'paypal');
+    return resolvePaypalCreds(tp);
+  }
+
+  /**
+   * Crée un ordre PayPal (intent CAPTURE) pour une offre. Montant TOUJOURS calculé
+   * serveur (resolveAmount). Credentials DU TENANT (client_id/secret/mode) si
+   * configurés, sinon env plateforme. On persiste l'ordre AVANT l'approbation
+   * (paypal_orders) → à la capture on relit user/plan/kind (jamais fournis par le
+   * client). Renvoie { orderId, approveUrl } : le front redirige vers approveUrl.
+   */
+  async createPaypalOrder(userId: string, dto: CreateOfferingCardDto) {
+    const { amountCents, planSlug, currency } = await this.resolveAmount(dto);
+
+    const tenantSlug = this.resolveTenantSlug(dto.tenantSlug);
+    const { data: tenant } = await this.supabase
+      .from('tenants')
+      .select('id')
+      .eq('slug', tenantSlug)
+      .eq('status', 'active')
+      .maybeSingle();
+    if (!tenant) throw new NotFoundException(`Tenant « ${tenantSlug} » introuvable ou inactif`);
+
+    const creds = await this.resolveTenantPaypalCreds(tenant.id);
+    if (!creds) {
+      throw new ServiceUnavailableException(
+        'Paiement PayPal indisponible : aucun identifiant PayPal (ni tenant, ni plateforme).',
+      );
+    }
+
+    const productName =
+      dto.kind === 'subscription'
+        ? `Abonnement PRORASCIENCE${planSlug ? ` — ${planSlug}` : ''}`
+        : dto.kind === 'donation'
+          ? 'Offrande PRORASCIENCE'
+          : 'Consultation Ngowazulu (90 min)';
+
+    const fallbackBase = process.env.SCHOOL_FRONTEND_URL ?? 'https://prorascience.org';
+    const base = `${fallbackBase}/t/${tenantSlug}/paiement${planSlug ? `?plan=${encodeURIComponent(planSlug)}` : ''}`;
+    const sep = base.includes('?') ? '&' : '?';
+    const returnUrl = dto.successUrl ?? `${base}${sep}paypal=success`;
+    const cancelUrl = dto.cancelUrl ?? `${base}${sep}paypal=cancel`;
+
+    // Persistance AVANT PayPal — order_id renseigné après create (2 temps : insert
+    // brouillon puis update order_id). On insère d'abord un brouillon avec un
+    // order_id temporaire unique, puis on le remplace par l'id PayPal réel.
+    let token: string;
+    try {
+      token = await paypalAccessToken(creds);
+    } catch (e) {
+      this.logger.error('PayPal OAuth', (e as Error).message);
+      throw new ServiceUnavailableException(`PayPal indisponible : ${(e as Error).message}`);
+    }
+
+    let order: { id: string; approveUrl: string | null };
+    try {
+      order = await paypalCreateOrder(creds, token, {
+        amountCents,
+        currency,
+        description: productName,
+        customId: `${userId}:${dto.kind}`,
+        returnUrl,
+        cancelUrl,
+      });
+    } catch (e) {
+      this.logger.error('PayPal createOrder', (e as Error).message);
+      throw new ServiceUnavailableException(`Impossible de créer l'ordre PayPal : ${(e as Error).message}`);
+    }
+
+    const { error: insErr } = await this.paypalOrders.insert({
+      order_id: order.id,
+      tenant_id: tenant.id,
+      user_id: userId,
+      amount_cents: amountCents,
+      currency,
+      kind: dto.kind,
+      plan_slug: planSlug,
+      status: 'CREATED',
+    });
+    if (insErr) {
+      this.logger.error('insert paypal_order', insErr.message);
+      throw new ServiceUnavailableException(
+        `Impossible d'enregistrer l'ordre PayPal (migration paypal_orders requise ?) : ${insErr.message}`,
+      );
+    }
+
+    return {
+      orderId: order.id,
+      approveUrl: order.approveUrl,
+      amountCents,
+      currency,
+      mode: creds.mode,
+    };
+  }
+
+  /**
+   * Capture un ordre PayPal approuvé (scopé à l'utilisateur). Relit le contexte
+   * en base (jamais du client), capture côté PayPal, et sur COMPLETED réclame la
+   * transition ATOMIQUE (status != COMPLETED) → fulfillment UNIQUE (abonnement +
+   * membership, ou reçu). Idempotent : une 2e capture ne re-provisionne pas.
+   */
+  async capturePaypalOrder(userId: string, orderId: string) {
+    if (!orderId) throw new BadRequestException('orderId requis');
+
+    const { data: ord } = await this.paypalOrders
+      .select('order_id, tenant_id, user_id, amount_cents, currency, kind, plan_slug, status')
+      .eq('order_id', orderId)
+      .eq('user_id', userId)
+      .maybeSingle();
+    if (!ord) throw new NotFoundException('Ordre PayPal introuvable.');
+
+    if (ord.status === 'COMPLETED') {
+      return { orderId, status: 'COMPLETED', isCompleted: true };
+    }
+
+    const creds = await this.resolveTenantPaypalCreds(ord.tenant_id);
+    if (!creds) throw new ServiceUnavailableException('PayPal non configuré pour ce tenant.');
+
+    let token: string;
+    try {
+      token = await paypalAccessToken(creds);
+    } catch (e) {
+      throw new ServiceUnavailableException(`PayPal indisponible : ${(e as Error).message}`);
+    }
+
+    let cap: { status: string; captureId: string | null };
+    try {
+      cap = await paypalCaptureOrder(creds, token, orderId);
+    } catch (e) {
+      this.logger.error('PayPal capture', (e as Error).message);
+      throw new ServiceUnavailableException(`Capture PayPal impossible : ${(e as Error).message}`);
+    }
+
+    if (cap.status !== 'COMPLETED') {
+      await this.paypalOrders.update({ status: cap.status, updated_at: new Date().toISOString() }).eq('order_id', orderId);
+      return { orderId, status: cap.status, isCompleted: false };
+    }
+
+    // COMPLETED : un seul appelant gagne la transition (le 2e met à jour 0 ligne → skip fulfillment).
+    const { data: claimed } = await this.paypalOrders
+      .update({ status: 'COMPLETED', capture_id: cap.captureId, updated_at: new Date().toISOString() })
+      .eq('order_id', orderId)
+      .neq('status', 'COMPLETED')
+      .select('order_id');
+    if (claimed && claimed.length > 0) {
+      await this.renewals.fulfillPaidOffer({
+        userId: ord.user_id,
+        tenantId: ord.tenant_id,
+        kind: ord.kind,
+        planSlug: ord.plan_slug,
+        provider: 'paypal',
+        amountCents: ord.amount_cents,
+        currency: ord.currency,
+      });
+      this.logger.log(`PayPal capturé — user=${ord.user_id} kind=${ord.kind} order=${orderId}`);
+    }
+    return { orderId, status: 'COMPLETED', isCompleted: true };
   }
 
   /** Statut d'un dépôt (scopé à l'utilisateur). */

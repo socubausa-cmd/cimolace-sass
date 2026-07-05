@@ -45,6 +45,20 @@ export class OfferingCheckoutController {
     return this.svc.createStripeCheckout(user.id, dto, user.email);
   }
 
+  /** Paiement PAYPAL — crée un ordre (Orders v2), renvoie { orderId, approveUrl }. */
+  @Post('paypal/create-order')
+  @UseGuards(JwtAuthGuard)
+  paypalCreate(@Body() dto: CreateOfferingCardDto, @CurrentUser() user: AuthUser) {
+    return this.svc.createPaypalOrder(user.id, dto);
+  }
+
+  /** Capture d'un ordre PayPal approuvé (scopé à l'utilisateur) → fulfillment. */
+  @Post('paypal/capture')
+  @UseGuards(JwtAuthGuard)
+  paypalCapture(@Body() body: { orderId?: string }, @CurrentUser() user: AuthUser) {
+    return this.svc.capturePaypalOrder(user.id, String(body?.orderId ?? ''));
+  }
+
   /** Accès GRATUIT (service free/community) : débloque sans paiement. Vérifié côté serveur. */
   @Post('claim-free')
   @UseGuards(JwtAuthGuard)

@@ -129,10 +129,24 @@ export class LiveEmbedService {
       );
     }
 
+    // SÉCURITÉ (anti-escalade) : le rôle demandé n'est HONORÉ que pour le flux
+    // API-key (origin '*', émis serveur-à-serveur par un porteur de clé tenant —
+    // donc de confiance). Pour le flux NAVIGATEUR (widget public gaté seulement
+    // par l'Origin, partagée par TOUS les visiteurs du site), on FORCE 'viewer' :
+    // sinon n'importe quel spectateur anonyme pouvait demander 'co_host' et
+    // obtenir un token canPublish (publier caméra/micro dans le live). Un vrai
+    // co-présentateur passe par un chemin authentifié, jamais par ce widget.
+    const effectiveRole: LiveEmbedRole = isApiKeyFlow ? role : 'viewer';
+    if (effectiveRole !== role) {
+      this.logger.warn(
+        `embed token: rôle "${role}" demandé sur flux navigateur (origin=${originHost}) → forcé à "viewer" (anti-escalade).`,
+      );
+    }
+
     const payload: LiveEmbedTokenPayload = {
       tenant_id: (tenant as any).id,
       session_id: sessionId,
-      role,
+      role: effectiveRole,
       origin: origin.toLowerCase(),
       iss: 'cimolace-liri-embed',
     };

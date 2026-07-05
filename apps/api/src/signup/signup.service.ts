@@ -177,6 +177,15 @@ export class SignupService {
       this.logger.error(`Tenant insert failed: ${tenantErr?.message}`);
       // Rollback : supprimer le user créé
       await this.deleteUserSafely(userId);
+      // Race sur le slug : deux requêtes ont passé le pré-check puis l'INSERT a
+      // violé la contrainte UNIQUE(slug) (23505) → 409 propre (pas un 500 opaque).
+      const code = (tenantErr as { code?: string } | null)?.code;
+      const msg = (tenantErr?.message ?? '').toLowerCase();
+      if (code === '23505' || /duplicate|unique|already exists/.test(msg)) {
+        throw new ConflictException(
+          `Le slug "${slug}" vient d'être pris. Choisissez-en un autre.`,
+        );
+      }
       throw new InternalServerErrorException(
         `Création du tenant échouée: ${tenantErr?.message ?? 'inconnue'}`,
       );

@@ -133,6 +133,57 @@ export class TenantService {
     return data;
   }
 
+  /** Résout l'id d'un tenant ACTIF par slug — null sinon (aucune fuite de slugs). */
+  private async getActiveTenantIdBySlug(slug: string): Promise<string | null> {
+    const supabase = this.authService.getClient();
+    const { data } = await supabase
+      .from("tenants")
+      .select("id, status")
+      .eq("slug", slug)
+      .maybeSingle();
+    if (!data || (data as any).status !== "active") return null;
+    return (data as any).id as string;
+  }
+
+  /**
+   * Catalogue PUBLIC des cours d'un tenant (vitrine /t/:slug) — UNIQUEMENT les
+   * cours `status='published'` (jamais les brouillons : fuite de catalogue sinon),
+   * champs publics seulement. [] si tenant inconnu/inactif.
+   */
+  async getPublicCourses(slug: string) {
+    const tenantId = await this.getActiveTenantIdBySlug(slug);
+    if (!tenantId) return [];
+    const supabase = this.authService.getClient();
+    const { data } = await supabase
+      .from("courses")
+      .select("id, title, description, category, price_cents, cycle, duration_weeks, image_url, mode")
+      .eq("tenant_id", tenantId)
+      .eq("status", "published")
+      .order("created_at", { ascending: false })
+      .limit(24);
+    return Array.isArray(data) ? data : [];
+  }
+
+  /**
+   * Offres PUBLIQUES d'un tenant (vitrine /t/:slug) — billing_plans actifs
+   * tenant-scoped, champs d'affichage seulement (pas de stripe_price_id ni
+   * d'access_model). [] si tenant inconnu/inactif.
+   */
+  async getPublicOffers(slug: string) {
+    const tenantId = await this.getActiveTenantIdBySlug(slug);
+    if (!tenantId) return [];
+    const supabase = this.authService.getClient();
+    const { data } = await supabase
+      .from("billing_plans")
+      .select("key, label, tagline, description, price_cents, currency, billing_cycle, category, features, sort_order")
+      .eq("tenant_id", tenantId)
+      .eq("is_active", true)
+      .order("sort_order", { ascending: true })
+      .order("price_cents", { ascending: true })
+      .limit(12);
+    return Array.isArray(data) ? data : [];
+  }
+
   /**
    * Resolve a tenant's public branding from a CUSTOM HOST (Enterprise
    * white-label). The patient-portal served on a tenant's own domain
@@ -248,6 +299,7 @@ export class TenantService {
       logo_url?: string;
       primary_domain?: string;
       brand_colors?: { primary?: string; secondary?: string; accent?: string };
+      site?: { description?: string; slogan?: string; vision?: string; website?: string };
     },
   ) {
     const supabase = this.authService.getClient();
@@ -255,7 +307,25 @@ export class TenantService {
     if (dto.name !== undefined) patch.name = dto.name;
     if (dto.logo_url !== undefined) patch.logo_url = dto.logo_url;
     if (dto.primary_domain !== undefined) patch.primary_domain = dto.primary_domain;
-    if (dto.brand_colors !== undefined) patch.brand_colors = dto.brand_colors;
+
+    // brand_colors + metadata.site : MERGE non destructif — un PATCH partiel
+    // (ex: {accent}) ne doit jamais effacer primary/secondary ni les autres
+    // clés de metadata (settings, billing…).
+    if (dto.brand_colors !== undefined || dto.site !== undefined) {
+      const existing = (await this.getTenantById(tenantId)) as {
+        brand_colors?: Record<string, unknown> | null;
+        metadata?: Record<string, unknown> | null;
+      } | null;
+      if (dto.brand_colors !== undefined) {
+        patch.brand_colors = { ...((existing?.brand_colors as any) ?? {}), ...dto.brand_colors };
+      }
+      if (dto.site !== undefined) {
+        const metadata: Record<string, any> = { ...((existing?.metadata as any) ?? {}) };
+        metadata.site = { ...(metadata.site ?? {}), ...dto.site };
+        patch.metadata = metadata;
+      }
+    }
+
     if (Object.keys(patch).length === 0) {
       return this.getTenantById(tenantId);
     }

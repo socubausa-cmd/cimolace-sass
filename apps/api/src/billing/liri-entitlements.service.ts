@@ -72,27 +72,33 @@ export class LiriEntitlementsService {
    */
   async resolveTier(tenantId: string): Promise<LiriTier> {
     try {
+      // On lit les N dernières lignes et on cherche le dernier abonnement
+      // EXPLOITABLE — PAS seulement la dernière ligne : un checkout abandonné
+      // (status 'pending' plus récent que l'abo actif) rétrogradait à tort le
+      // tenant en 'free' (bug constaté sur isna le 2026-07-05 : 2 abos actifs
+      // masqués par un pending).
       const { data, error } = await this.supabase
         .from("billing_subscriptions")
         .select("status, current_period_end, plan_id, metadata")
         .eq("tenant_id", tenantId)
         .order("created_at", { ascending: false })
-        .limit(1)
-        .maybeSingle();
+        .limit(10);
       if (error) return "paid"; // fail-open
-      if (!data) return "free"; // aucun abonnement → gratuit
-      const sub = data as {
+      const rows = (Array.isArray(data) ? data : []) as Array<{
         status?: string;
         current_period_end?: string | null;
         plan_id?: string | null;
         metadata?: Record<string, unknown> | null;
-      };
+      }>;
+      if (!rows.length) return "free"; // aucun abonnement → gratuit
       const now = Date.now();
-      const end = sub.current_period_end
-        ? new Date(sub.current_period_end).getTime()
-        : null;
-      const active = sub.status === "active" && (end === null || end > now);
-      if (!active) return "free";
+      const sub = rows.find((s) => {
+        const end = s.current_period_end
+          ? new Date(s.current_period_end).getTime()
+          : null;
+        return s.status === "active" && (end === null || end > now);
+      });
+      if (!sub) return "free";
       const isTrial =
         (sub.metadata as { trial?: boolean } | null)?.trial === true ||
         String(sub.plan_id ?? "").includes("trial");

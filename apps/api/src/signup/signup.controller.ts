@@ -6,6 +6,7 @@
 import { Body, Controller, Post, Req, UseGuards } from '@nestjs/common';
 import { SignupService, type SignupTenantInput, type SignupTenantResult } from './signup.service';
 import { AiBrandRateLimitGuard } from './ai-brand-rate-limit.guard';
+import { SignupRateLimitGuard } from './signup-rate-limit.guard';
 import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
 
 @Controller('signup')
@@ -13,6 +14,7 @@ export class SignupController {
   constructor(private readonly svc: SignupService) {}
 
   @Post('tenant')
+  @UseGuards(SignupRateLimitGuard)
   async signupTenant(@Body() body: SignupTenantInput): Promise<SignupTenantResult> {
     return this.svc.signupTenant(body);
   }
@@ -50,6 +52,7 @@ export class SignupController {
 
   /** Health check — utile pour les tests CI et préchauffer le module. */
   @Post('tenant/check-slug')
+  @UseGuards(SignupRateLimitGuard)
   async checkSlug(@Body() body: { slug: string }) {
     if (!body?.slug) return { available: false, reason: 'slug requis' };
     // Réutilise le slugify implicite de la service via une signature minimale
