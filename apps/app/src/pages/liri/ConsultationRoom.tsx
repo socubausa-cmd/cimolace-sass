@@ -2038,6 +2038,7 @@ function InviteProcheModal({ sessionId, open, onClose, agendaReason }: { session
   const [invites, setInvites] = useState<TeleconsultInvite[]>([]);
   const [busy, setBusy] = useState(false);
   const [copiedId, setCopiedId] = useState<string | null>(null);
+  const [groupCopied, setGroupCopied] = useState(false);
   // Erreur d'invitation VISIBLE : l'ancien catch muet laissait un « rien ne se
   // passe » incompréhensible (ex. salle expirée → 404 Session introuvable).
   const [inviteError, setInviteError] = useState<string | null>(null);
@@ -2045,6 +2046,24 @@ function InviteProcheModal({ sessionId, open, onClose, agendaReason }: { session
   const slug = typeof window !== 'undefined' ? new URLSearchParams(window.location.search).get('tenant') : null;
   const linkFor = (id: string) =>
     `${window.location.origin}/teleconsult/${sessionId}/proche/${id}${slug ? `?tenant=${encodeURIComponent(slug)}` : ''}`;
+  // LIEN DE GROUPE : un seul lien pour la séance. Chaque personne s'auto-inscrit
+  // (nom + email) → siège unique → salle d'attente → admise nominativement.
+  const groupLink = `${window.location.origin}/teleconsult/${sessionId}/rejoindre${slug ? `?tenant=${encodeURIComponent(slug)}` : ''}`;
+  const copyGroup = async () => {
+    try {
+      await navigator.clipboard.writeText(groupLink);
+      setGroupCopied(true);
+      setTimeout(() => setGroupCopied(false), 2000);
+    } catch {
+      /* clipboard refusé */
+    }
+  };
+  const waShareGroup = () => {
+    const msg =
+      `Bonjour, vous êtes invité·e à rejoindre une téléconsultation médicale sécurisée.` +
+      `\n\nCliquez, indiquez votre nom, puis patientez jusqu'à votre admission :\n${groupLink}`;
+    window.open(`https://wa.me/?text=${encodeURIComponent(msg)}`, '_blank', 'noopener');
+  };
 
   useEffect(() => {
     if (!open) return undefined;
@@ -2190,6 +2209,27 @@ function InviteProcheModal({ sessionId, open, onClose, agendaReason }: { session
             ? "Un membre du cabinet rejoint directement (soignant, secret médical) — il reçoit le lien par email."
             : <>L'invité reçoit le lien par email. <strong style={{ color: '#cbd5e1' }}>Le patient devra autoriser</strong> sa participation (données de santé).</>}
         </p>
+
+        {/* LIEN DE GROUPE : un seul lien à diffuser (WhatsApp/story). Chaque
+            personne s'auto-inscrit (nom) → siège UNIQUE → salle d'attente. Évite
+            le partage d'un même lien perso (qui, lui, éjecte le précédent). */}
+        <div style={{ marginBottom: 12, padding: 12, borderRadius: 12, background: 'rgba(212,163,106,0.08)', border: '1px solid rgba(212,163,106,0.25)' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 7, marginBottom: 6 }}>
+            <Users size={15} color={GOLD} aria-hidden="true" />
+            <span style={{ fontSize: 12.5, fontWeight: 700, color: '#f5f4ee' }}>Lien de groupe · plusieurs invités</span>
+          </div>
+          <p style={{ margin: '0 0 9px', fontSize: 11.5, color: '#9ca3af', lineHeight: 1.5 }}>
+            Un seul lien à partager. Chaque personne entre son nom, puis apparaît dans votre salle d'attente pour que vous l'admettiez — chacun a sa place, personne n'est éjecté.
+          </p>
+          <div style={{ display: 'flex', gap: 8 }}>
+            <button type="button" onClick={copyGroup} style={{ ...primaryBtn, flex: 1, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 6, background: groupCopied ? 'rgba(34,197,94,0.9)' : (primaryBtn as any).background }}>
+              {groupCopied ? <><Check size={14} /> Copié</> : <><Copy size={14} /> Copier le lien</>}
+            </button>
+            <button type="button" onClick={waShareGroup} title="Partager sur WhatsApp" style={{ ...primaryBtn, background: '#25D366', color: '#0a2e13', display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+              <Share2 size={14} /> WhatsApp
+            </button>
+          </div>
+        </div>
         {inviteError ? (
           <p role="alert" style={{ margin: '0 0 12px', padding: '9px 12px', borderRadius: 9, fontSize: 12.5, lineHeight: 1.5, color: '#fca5a5', background: 'rgba(239,68,68,0.12)', border: '1px solid rgba(239,68,68,0.3)' }}>
             {inviteError}

@@ -245,4 +245,22 @@ export class TeleconsultInvitePublicController {
   token(@Param('inviteId') inviteId: string) {
     return this.service.issueInviteToken(inviteId);
   }
+
+  /**
+   * PUBLIC : auto-inscription au « lien de groupe » d'une séance. La personne
+   * saisit son nom + email → on crée SA propre invitation (siège unique, zéro
+   * kick) → elle est renvoyée vers la salle d'attente /proche/<invite_id>.
+   */
+  @Post('register')
+  register(
+    @Body()
+    body: {
+      session_id: string;
+      name: string;
+      email?: string;
+      relationship?: string;
+    },
+  ) {
+    return this.service.selfRegisterInvite(body?.session_id, body);
+  }
 }

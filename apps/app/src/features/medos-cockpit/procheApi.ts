@@ -44,3 +44,30 @@ export async function getProcheToken(
   }
   return peel(await r.json());
 }
+
+/**
+ * LIEN DE GROUPE : auto-inscription à une séance (nom + email). Crée l'invitation
+ * de la personne et renvoie son `invite_id` → elle rejoint ensuite la salle
+ * d'attente /proche/<invite_id> (siège unique, admise nominativement par l'hôte).
+ */
+export async function selfRegisterToSession(
+  sessionId: string,
+  body: { name: string; email?: string; relationship?: string },
+): Promise<{ invite_id: string }> {
+  const r = await fetch(`${BASE}/med/teleconsult-invite-public/register`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ session_id: sessionId, ...body }),
+  });
+  if (!r.ok) {
+    let msg = 'Inscription impossible';
+    try {
+      const j = await r.json();
+      msg = j?.message || msg;
+    } catch {
+      /* ignore */
+    }
+    throw new Error(msg);
+  }
+  return peel(await r.json());
+}

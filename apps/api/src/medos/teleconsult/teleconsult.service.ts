@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   ForbiddenException,
   Injectable,
   InternalServerErrorException,
@@ -827,6 +828,55 @@ export class TeleconsultService implements OnModuleInit {
       clinic_name: (tenant as any)?.name || 'Consultation',
       session_status: (sess as any)?.status ?? null,
     };
+  }
+
+  /**
+   * PUBLIC (auto-inscription au « LIEN DE GROUPE » d'une séance) : une personne
+   * qui ouvre le lien de groupe saisit son nom + email → on crée SA PROPRE
+   * invitation (inviteId unique → identité LiveKit unique → zéro collision/kick,
+   * contrairement à un lien unique partagé à plusieurs). Elle atterrit ensuite
+   * dans la salle d'attente `/proche/<inviteId>` où l'hôte l'admet nominativement.
+   * Fail-closed : refuse si la séance est terminée. Le lien de groupe = l'id de
+   * séance (UUID non devinable) et meurt donc avec la séance.
+   */
+  async selfRegisterInvite(
+    sessionId: string,
+    dto: { name?: string; email?: string; relationship?: string },
+  ): Promise<{ invite_id: string }> {
+    const name = String(dto?.name || '').trim();
+    if (!name) throw new BadRequestException('Votre nom est requis.');
+
+    const { data: sess } = await (this.supabase.client as any)
+      .from('med_teleconsult_sessions')
+      .select('id, tenant_id, status, practitioner_id')
+      .eq('id', sessionId)
+      .maybeSingle();
+    if (!sess) throw new NotFoundException('Séance introuvable.');
+    if ((sess as any).status === 'ended') {
+      throw new ForbiddenException('Cette consultation est terminée.');
+    }
+
+    const email = String(dto?.email || '').trim().toLowerCase();
+    const { data, error } = await (this.supabase.client as any)
+      .from('med_teleconsult_invites')
+      .insert({
+        tenant_id: (sess as any).tenant_id,
+        session_id: sessionId,
+        display_name: name.slice(0, 80),
+        relationship: String(dto?.relationship || '').trim().slice(0, 60) || null,
+        invited_email: email || null,
+        kind: 'proche',
+        status: 'consent_requested',
+        // created_by est NOT NULL : on rattache l'invitation au praticien-hôte.
+        created_by: (sess as any).practitioner_id,
+      })
+      .select('id')
+      .single();
+    if (error || !data) {
+      this.logger.error('selfRegisterInvite', error?.message);
+      throw new InternalServerErrorException('Inscription impossible pour le moment.');
+    }
+    return { invite_id: (data as any).id };
   }
 
   /**

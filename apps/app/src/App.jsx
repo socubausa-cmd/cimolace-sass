@@ -442,6 +442,7 @@ const IsnaProPage = lazy(() => import('@/pages/IsnaProPage'));
 const LoginPage = lazy(() => import('@/pages/LoginPage'));
 const SignupPage = lazy(() => import('@/pages/SignupPage'));
 const OnboardingOrgPage = lazy(() => import('@/pages/OnboardingOrgPage'));
+const CimolaceCreationAgent = lazy(() => import('@/pages/CimolaceCreationAgent'));
 const LiriLandingPage = lazy(() => import('@/pages/LiriLandingPage'));
 const JoinOrgPage = lazy(() => import('@/pages/JoinOrgPage'));
 const ForgotPasswordPage = lazy(() => import('@/pages/ForgotPasswordPage'));
@@ -607,6 +608,7 @@ const StudioLiriRouter = lazy(() => import('@/pages/studio-creator/studio/Studio
 const LiveHostPageNativeGate = lazy(() => import('@/components/eleve-mobile/LiveHostPageNativeGate'));
 const LiveGuestPage = lazy(() => import('@/pages/liri/LiveGuestPage'));
 const ProcheRoom = lazy(() => import('@/pages/liri/ProcheRoom'));
+const TeleconsultJoinPage = lazy(() => import('@/pages/liri/TeleconsultJoinPage'));
 const DevLiriHostEntry = lazy(() => import('@/pages/dev/DevLiriHostEntry'));
 const TableauVivantDemoPage = lazy(() => import('@/pages/dev/TableauVivantDemoPage'));
 const CourseDemoPage = lazy(() => import('@/pages/dev/CourseDemoPage'));
@@ -1342,7 +1344,7 @@ isLiriHostDevPreviewRoute;
       )}
 
       {/* Discovery Chat — pages publiques. Exclu de l'espace élève (collision avec le FAB de la sidebar) et des embeds. */}
-      {!isAdminRoute && !isImmersiveEmbed && !isEmbedRoute && !isLiveArenaRoute && !isEleveMobileRoute && !isCimolaceRoute && !isStudentSpaceShell && (
+      {!isAdminRoute && !isImmersiveEmbed && !isEmbedRoute && !isLiveArenaRoute && !isEleveMobileRoute && !isCimolaceRoute && !isStudentSpaceShell && !location.pathname.startsWith('/creer-organisation/agent') && (
         <LazyShell>
           <DiscoveryChat />
         </LazyShell>
@@ -1808,6 +1810,8 @@ isLiriHostDevPreviewRoute;
           } />
           {/* Onboarding self-service LIRI — créer son organisation (POST /signup/tenant) */}
           <Route path="/creer-organisation" element={<OnboardingOrgPage />} />
+          {/* Assistant conversationnel immersif (preview L1) — présence 5 états + parler-à-la-présence */}
+          <Route path="/creer-organisation/agent" element={<CimolaceCreationAgent />} />
           {/* Rejoindre une organisation par slug (self-join) — accessible connecté OU non */}
           <Route path="/rejoindre" element={<JoinOrgPage />} />
           {/* Alias publics — le lien "Inscription" du menu vitrine ne doit pas faire 404 */}
@@ -2263,6 +2267,16 @@ isLiriHostDevPreviewRoute;
             <ErrorBoundary>
               <Suspense fallback={<ImmersiveBootLoader message="Préparation de votre accès sécurisé…" />}>
                 <ProcheRoom />
+              </Suspense>
+            </ErrorBoundary>
+          } />
+
+          {/* LIEN DE GROUPE — auto-inscription PUBLIQUE : la personne saisit son nom,
+              on lui crée un siège unique puis on la renvoie vers sa salle d'attente. */}
+          <Route path="/teleconsult/:id/rejoindre" element={
+            <ErrorBoundary>
+              <Suspense fallback={<ImmersiveBootLoader message="Préparation de votre accès sécurisé…" />}>
+                <TeleconsultJoinPage />
               </Suspense>
             </ErrorBoundary>
           } />
