@@ -1347,11 +1347,14 @@ export function ConsultationStage({
             />
           </div>
         ) : hasScene ? (
-          // ARTEFACT/JUMEAU : pleine largeur comme le tableau — le panneau (fond
-          // crème) s'étend SOUS les pastilles, un seul élément visuel ; le corps
-          // reste centré donc la zone droite est naturellement libre d'infos.
-          <div style={{ height: '100%', width: '100%', overflow: 'auto', padding: 18, boxSizing: 'border-box' }}>
-            <SharedSceneView scene={scene} />
+          // ARTEFACT/JUMEAU immersif : en mobile la carte creme DISPARAIT
+          // (frameless) — le corps se pose directement sur la grille de fond ;
+          // quand les pastilles sont visibles, le CONTENU recule (paddingRight
+          // reserve + leger dezoom anime) pour ne JAMAIS passer dessous.
+          <div style={{ height: '100%', width: '100%', overflow: 'auto', padding: 18, paddingRight: 18 + reserve, boxSizing: 'border-box', transition: `padding 0.3s ${ZOOM_EASE}` }}>
+            <div style={{ height: '100%', transform: overlayActive ? 'scale(0.94)' : 'none', transformOrigin: 'center', transition: `transform 0.3s ${ZOOM_EASE}` }}>
+              <SharedSceneView scene={scene} frameless={compact} />
+            </div>
           </div>
         ) : screen ? (
           // Aucun artefact poussé mais le praticien partage son écran → l'écran EST

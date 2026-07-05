@@ -473,10 +473,21 @@ function ShowcaseCard({ p, big }: { p: ShopProduct; big: boolean }) {
 // Rendu d'une scène clinique partagée — réutilisé par le cockpit patient ET la
 // SCÈNE CENTRALE de la salle Consultation. Wrappé dans les vars --zw-* pour que
 // les composants portés (jumeau, roue, SOAP, labs, ordonnance, imagerie) rendent.
-export function SharedSceneView({ scene }: { scene: CockpitScene | null }) {
+export function SharedSceneView({ scene, frameless = false }: { scene: CockpitScene | null; frameless?: boolean }) {
   if (!scene || scene.kind === 'clear') return null;
+  // `frameless` (salle mobile immersive) : la carte creme disparait — fonds
+  // transparents, textes/controles passes en clair — la scene partagee se pose
+  // DIRECTEMENT sur la grille sombre de la salle (aucun panneau visible).
   return (
-    <div style={{ ...COCKPIT_VARS, width: '100%', height: '100%' }}>
+    <div data-cr-scene={frameless ? 'frameless' : undefined} style={{ ...COCKPIT_VARS, width: '100%', height: '100%' }}>
+      {frameless ? (
+        <style>{`
+[data-cr-scene="frameless"] div{background:transparent !important;box-shadow:none !important}
+[data-cr-scene="frameless"] button{background:rgba(255,255,255,0.08) !important;color:#e9e4dd !important;border-color:rgba(255,255,255,0.18) !important}
+[data-cr-scene="frameless"] span:not([style*="background"]),[data-cr-scene="frameless"] p,[data-cr-scene="frameless"] label{color:#e9e4dd !important}
+[data-cr-scene="frameless"] canvas{background:transparent !important}
+`}</style>
+      ) : null}
       {scene.kind === 'twin' && (
         <TwinView organs={scene.organs} sex={scene.sex} selected={scene.focus} onSelect={() => {}} />
       )}

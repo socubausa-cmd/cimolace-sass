@@ -16,7 +16,23 @@ import {
   useRoomContext,
 } from '@livekit/components-react';
 import { Track } from 'livekit-client';
-import { PhoneOff, ShieldCheck, MessageSquare, Mic, MicOff, Video, VideoOff } from 'lucide-react';
+import { PhoneOff, ShieldCheck, MessageSquare, Mic, MicOff, Video, VideoOff, Maximize, Minimize } from 'lucide-react';
+
+// Plein ecran mobile (masque les barres du navigateur). Doit etre appele sur un
+// GESTE utilisateur ; fail-soft (iOS Safari ne le supporte pas sur la page).
+function requestAppFullscreen() {
+  try {
+    const el = document.documentElement as HTMLElement & { webkitRequestFullscreen?: () => Promise<void> };
+    if (document.fullscreenElement) return;
+    (el.requestFullscreen || el.webkitRequestFullscreen)?.call(el)?.catch?.(() => {});
+  } catch { /* non supporte */ }
+}
+function toggleAppFullscreen() {
+  try {
+    if (document.fullscreenElement) void document.exitFullscreen();
+    else requestAppFullscreen();
+  } catch { /* non supporte */ }
+}
 import { createPortal } from 'react-dom';
 import '@livekit/components-styles';
 import { getProcheStatus, getProcheToken, type ProcheStatus } from '@/features/medos-cockpit/procheApi';
@@ -117,6 +133,7 @@ export default function ProcheRoom() {
 
   const join = async () => {
     if (!inviteId) return;
+    requestAppFullscreen();
     // Libère la caméra d'aperçu pour que LiveKit la reprenne proprement.
     streamRef.current?.getTracks().forEach((t) => t.stop());
     streamRef.current = null;
@@ -312,6 +329,12 @@ function ProcheChrome({ clinic }: { clinic?: string }) {
 
 function ProcheBar({ onLeave, chatOpen, onToggleChat }: { onLeave: () => void; chatOpen: boolean; onToggleChat: () => void }) {
   const room = useRoomContext();
+  const [fs, setFs] = useState(typeof document !== 'undefined' && !!document.fullscreenElement);
+  useEffect(() => {
+    const on = () => setFs(!!document.fullscreenElement);
+    document.addEventListener('fullscreenchange', on);
+    return () => document.removeEventListener('fullscreenchange', on);
+  }, []);
   const leave = () => {
     try {
       room.disconnect();
@@ -322,6 +345,15 @@ function ProcheBar({ onLeave, chatOpen, onToggleChat }: { onLeave: () => void; c
   };
   return (
     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10, padding: '10px 14px', background: BAR, borderTop: '1px solid rgba(255,255,255,0.06)' }}>
+      <button
+        onClick={toggleAppFullscreen}
+        aria-pressed={fs}
+        aria-label={fs ? 'Quitter le plein ecran' : 'Plein ecran'}
+        title={fs ? 'Quitter le plein ecran' : 'Plein ecran'}
+        style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: 40, height: 38, borderRadius: 9, border: 'none', cursor: 'pointer', background: 'rgba(255,255,255,0.1)', color: '#fff' }}
+      >
+        {fs ? <Minimize size={16} aria-hidden="true" /> : <Maximize size={16} aria-hidden="true" />}
+      </button>
       <TrackToggle source={Track.Source.Microphone} showIcon>
         Micro
       </TrackToggle>
