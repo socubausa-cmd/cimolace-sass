@@ -21,6 +21,7 @@ import { GraduationCap, Stethoscope, ShoppingBag, ArrowUp, ArrowRight, ArrowLeft
 import { getApiBaseUrl } from '@/lib/apiBase';
 import { useAuth } from '@/hooks/useAuth';
 import { authStore } from '@/lib/auth-store';
+import { supabase } from '@/lib/supabase';
 
 const BG = '#262624';
 const BG_THINK = '#20232a';
@@ -127,6 +128,7 @@ export default function CimolaceCreationAgent() {
   const [password, setPassword] = useState('');
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
+  const [brainHooks, setBrainHooks] = useState([]);
 
   const [inputOpen, setInputOpen] = useState(false);
   const [value, setValue] = useState('');
@@ -140,7 +142,7 @@ export default function CimolaceCreationAgent() {
   const mutedRef = useRef(false);
   const [muted, setMuted] = useState(false);
 
-  const inputAllowed = step === 'discovery' || step === 'brand_ask';
+  const inputAllowed = step === 'discovery' || step === 'brand_ask' || step === 'brain';
 
   useEffect(() => { mutedRef.current = muted; }, [muted]);
 
@@ -295,16 +297,39 @@ export default function CimolaceCreationAgent() {
     speak("Dernière étape : votre e-mail et un mot de passe (8 caractères min). Vous saisissez, je crée l'espace.");
   }, [speak, sPop]);
 
+  // Le « cerveau » : appelle l'edge agent-brain (LLM) → reply générative + produit + hooks.
+  // Repli hors-ligne : détection par mots-clés.
+  const brain = useCallback(async (message) => {
+    setError('');
+    setBrainHooks([]);
+    setPresence('reflexion');
+    sThink();
+    try {
+      const { data, error: fnErr } = await supabase.functions.invoke('agent-brain', {
+        body: { message, chosen, covered: [] },
+      });
+      if (fnErr) throw fnErr;
+      const reply = String(data?.reply || '').trim() || "Je vous écoute — dites-m'en un peu plus ?";
+      const product = data?.product && PRODUCT[data.product] ? data.product : null;
+      setBrainHooks(Array.isArray(data?.hooks) ? data.hooks : []);
+      if (product) { setChosen(product); setStep('product'); speak(reply); }
+      else { setStep('brain'); speak(reply); }
+    } catch (_) {
+      const k = guessKind(message);
+      setChosen(k);
+      setStep('product');
+      speak(PRODUCT[k].reply);
+    }
+  }, [chosen, speak, sThink]);
+
   const submitInput = useCallback(() => {
     const v = value.trim();
     closeInput();
     if (!v) return;
     sPop();
     if (step === 'brand_ask') { submitName(v); return; }
-    const k = guessKind(v);
-    setChosen(k);
-    think(() => { setStep('product'); speak(PRODUCT[k].reply); });
-  }, [value, step, closeInput, submitName, think, speak, sPop]);
+    brain(v);
+  }, [value, step, closeInput, submitName, brain, sPop]);
 
   const createAccount = useCallback(async () => {
     setError('');
@@ -346,7 +371,7 @@ export default function CimolaceCreationAgent() {
     setError('');
     setBusy(false);
     closeInput();
-    if (step === 'product') { setStep('discovery'); speak(GREETING); }
+    if (step === 'product' || step === 'brain') { setStep('discovery'); speak(GREETING); }
     else if (step === 'brand_ask') { setStep('product'); speak(PRODUCT[chosen].reply); }
     else if (step === 'brand_confirm') { setStep('brand_ask'); speak("Quel nom pour votre organisation ?", () => openInput()); }
     else if (step === 'account') { setStep('brand_confirm'); speak(`On reprend — cimolace.space/t/${slug}. On continue ?`); }
@@ -449,15 +474,42 @@ export default function CimolaceCreationAgent() {
       )}
 
       {showActions && step === 'product' && (
-        <div className="cca-in" style={{ display: 'flex', gap: 9, justifyContent: 'center', marginTop: 18 }}>
-          <button className="cca-chip" onClick={(e) => { e.stopPropagation(); chooseProduct(); }}
-            style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 13.5, fontWeight: 500, color: '#2a140c', background: TERRA, border: 'none', borderRadius: 11, padding: '10px 18px', cursor: 'pointer' }}>
-            Choisir {PRODUCT[chosen].tag}<ArrowRight size={15} />
-          </button>
-          <button className="cca-chip" onClick={(e) => { e.stopPropagation(); const o = ['school', 'medos', 'shop'].filter((x) => x !== chosen); pickKind(o[0]); }}
-            style={{ fontSize: 13, color: 'rgba(244,239,230,.6)', background: 'rgba(244,239,230,.05)', border: 'none', borderRadius: 11, padding: '10px 15px', cursor: 'pointer' }}>
-            Autre
-          </button>
+        <div className="cca-in" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 12, marginTop: 16 }}>
+          {brainHooks.length > 0 && (
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 7, justifyContent: 'center', maxWidth: 470 }}>
+              {brainHooks.map((h, n) => (
+                <span key={`ph${n}`} className="cca-chip" onClick={(e) => { e.stopPropagation(); brain(h); }}
+                  style={{ fontSize: 12, color: GOLD, background: 'rgba(244,239,230,.05)', borderRadius: 999, padding: '6px 13px' }}>{h}</span>
+              ))}
+            </div>
+          )}
+          <div style={{ display: 'flex', gap: 9 }}>
+            <button className="cca-chip" onClick={(e) => { e.stopPropagation(); chooseProduct(); }}
+              style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 13.5, fontWeight: 500, color: '#2a140c', background: TERRA, border: 'none', borderRadius: 11, padding: '10px 18px', cursor: 'pointer' }}>
+              Choisir {PRODUCT[chosen].tag}<ArrowRight size={15} />
+            </button>
+            <button className="cca-chip" onClick={(e) => { e.stopPropagation(); const o = ['school', 'medos', 'shop'].filter((x) => x !== chosen); pickKind(o[0]); }}
+              style={{ fontSize: 13, color: 'rgba(244,239,230,.6)', background: 'rgba(244,239,230,.05)', border: 'none', borderRadius: 11, padding: '10px 15px', cursor: 'pointer' }}>
+              Autre
+            </button>
+          </div>
+        </div>
+      )}
+
+      {showActions && step === 'brain' && (
+        <div className="cca-in" style={{ display: 'flex', flexWrap: 'wrap', gap: 9, justifyContent: 'center', marginTop: 18, maxWidth: 480 }}>
+          {brainHooks.map((h, n) => (
+            <span key={`bh${n}`} className="cca-chip" onClick={(e) => { e.stopPropagation(); brain(h); }}
+              style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 12.5, color: GOLD, background: 'rgba(244,239,230,.05)', borderRadius: 999, padding: '7px 14px' }}>
+              <ArrowRight size={13} />{h}
+            </span>
+          ))}
+          {SUGG.map(({ kind, label, Icon }) => (
+            <span key={kind} className="cca-chip" onClick={(e) => { e.stopPropagation(); pickKind(kind); }}
+              style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 12.5, color: 'rgba(244,239,230,.6)', background: 'rgba(244,239,230,.04)', borderRadius: 999, padding: '7px 14px' }}>
+              <Icon size={13} />{label}
+            </span>
+          ))}
         </div>
       )}
 
