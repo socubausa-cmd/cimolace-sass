@@ -1,9 +1,10 @@
 /**
- * Extraction de texte depuis PDF (pdfjs-dist) ou fichier texte (.txt, .md, etc.).
- * Même configuration worker que KnowledgeBaseManager.
+ * Extraction de texte depuis PDF (pdfjs-dist), Word (.docx via mammoth)
+ * ou fichier texte (.txt, .md, etc.). Même configuration worker que KnowledgeBaseManager.
  */
 import * as pdfjsLib from 'pdfjs-dist';
 import pdfjsWorkerUrl from 'pdfjs-dist/build/pdf.worker.min.mjs?url';
+import mammoth from 'mammoth/mammoth.browser';
 
 pdfjsLib.GlobalWorkerOptions.workerSrc = pdfjsWorkerUrl;
 
@@ -26,6 +27,9 @@ export async function extractTextFromFile(file) {
       );
     }
     text = pages.join('\n\n');
+  } else if (ext === 'docx') {
+    const { value } = await mammoth.extractRawText({ arrayBuffer: await file.arrayBuffer() });
+    text = value;
   } else {
     text = await file.text();
   }

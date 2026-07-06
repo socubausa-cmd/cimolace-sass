@@ -25,9 +25,9 @@ const IMPORT_TYPES = [
     id: 'document',
     label: 'Document de cours',
     icon: FileText,
-    desc: 'PDF · texte · notes → cours Précepteur',
+    desc: 'PDF · Word · texte · notes → cours Précepteur',
     accent: 'violet',
-    accept: '.pdf,.txt,.md,.text',
+    accept: '.pdf,.docx,.txt,.md,.text',
   },
   {
     id: 'visual',
@@ -167,7 +167,7 @@ export default function StudioLiriImportPage() {
       } catch {
         setAnalysis({
           type: 'document', compat: 'partial', usage: 'Masterclass Factory (Précepteur)', elements: [],
-          limits: 'Lecture impossible. Formats acceptés : PDF, .txt, .md.',
+          limits: 'Lecture impossible. Formats acceptés : PDF, Word (.docx), .txt, .md.',
         });
       }
       setAnalyzing(false);

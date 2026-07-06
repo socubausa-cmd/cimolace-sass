@@ -572,7 +572,7 @@ function Step1Raw({ rawText, setRawText, onLaunch, status, onLoadDemo, MAX_RAW_C
         setRawText(text.slice(0, MAX_RAW_CHARS));
       }
     } catch {
-      setImportError('Impossible de lire ce fichier. Formats : PDF, .txt, .md — ou copie-colle le texte.');
+      setImportError('Impossible de lire ce fichier. Formats : PDF, Word (.docx), .txt, .md — ou copie-colle le texte.');
     } finally {
       setImporting(false);
     }
@@ -615,7 +615,7 @@ function Step1Raw({ rawText, setRawText, onLaunch, status, onLoadDemo, MAX_RAW_C
           />
           <div className="flex items-center justify-between border-t border-white/[0.06] px-3 py-2">
             <div className="flex items-center gap-1.5">
-              <input ref={fileInputRef} type="file" accept=".txt,.md,.text,.pdf,text/plain,application/pdf" className="sr-only" onChange={onPickFile} />
+              <input ref={fileInputRef} type="file" accept=".txt,.md,.text,.pdf,.docx,text/plain,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document" className="sr-only" onChange={onPickFile} />
               <button
                 type="button"
                 onClick={() => fileInputRef.current?.click()}
@@ -623,7 +623,7 @@ function Step1Raw({ rawText, setRawText, onLaunch, status, onLoadDemo, MAX_RAW_C
                 className="inline-flex items-center gap-1.5 rounded-lg border border-white/12 bg-white/[0.04] px-2.5 py-1 text-[11.5px] font-medium text-white/70 transition hover:border-white/25 hover:text-white disabled:opacity-50"
               >
                 {importing ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Upload className="h-3.5 w-3.5" />}
-                {importing ? 'Extraction…' : 'Importer (PDF, texte)'}
+                {importing ? 'Extraction…' : 'Importer (PDF, Word, texte)'}
               </button>
               {rawText ? (
                 <button
