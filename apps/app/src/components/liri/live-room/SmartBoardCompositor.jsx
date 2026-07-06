@@ -1265,18 +1265,19 @@ function WhiteboardScene({
       const W = fg.width;
       const H = fg.height;
       if (b && b.w > 1 && b.h > 1 && W > 2 && H > 2) {
-        const inside = b.x >= 0 && b.y >= 0 && b.x + b.w <= W && b.y + b.h <= H;
-        if (!inside) {
-          // Marge confortable : le dessin recadré ne colle jamais aux bords (ni aux
-          // pastilles membres qui flottent sur les côtés en mobile). ~9% de la plus
-          // petite dimension.
-          const pad = Math.max(12, Math.min(W, H) * 0.09);
-          const k = Math.min((W - pad * 2) / b.w, (H - pad * 2) / b.h, 1);
-          const kk = k > 0 ? k : 1;
-          const cx = b.x + b.w / 2;
-          const cy = b.y + b.h / 2;
-          viewFit = { k: kk, dx: W / 2 - cx * kk, dy: H / 2 - cy * kk };
-        }
+        // Marge confortable : le dessin recadré ne colle jamais aux bords (ni aux
+        // pastilles membres qui flottent sur les côtés en mobile). ~9% de la plus
+        // petite dimension.
+        const pad = Math.max(12, Math.min(W, H) * 0.09);
+        // FIT-TO-VIEW : le dessin remplit le canvas du viewer — il AGRANDIT (mode
+        // focus / grand écran) autant qu'il RÉDUIT (petit mobile), toujours
+        // entièrement visible + centré. Cap l'agrandissement (évite une
+        // pixelisation extrême d'un tout petit tracé blown-up).
+        const fit = Math.min((W - pad * 2) / b.w, (H - pad * 2) / b.h);
+        const k = Math.max(0.02, Math.min(fit, 3.5));
+        const cx = b.x + b.w / 2;
+        const cy = b.y + b.h / 2;
+        viewFit = { k, dx: W / 2 - cx * k, dy: H / 2 - cy * k };
       }
     }
     redrawBoardWithCompass(
