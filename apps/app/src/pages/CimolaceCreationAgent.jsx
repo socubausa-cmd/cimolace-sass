@@ -111,6 +111,113 @@ const STYLE = `
 .cca-amb{position:absolute;border-radius:50%;background:#d97757;pointer-events:none}
 @keyframes ccaDraw{to{stroke-dashoffset:0}}
 .cca-dr{stroke-dasharray:1;stroke-dashoffset:1;animation:ccaDraw .7s ease forwards}
+
+/* ═══ L6 — Scènes : l'IA compose toute la surface ═══ */
+/* Décalage de la présence selon la scène (wrapper à transition permanente → retour au centre « gratuit ») */
+.cca-presence-holder{transition:transform .6s cubic-bezier(.16,1,.3,1),opacity .5s ease}
+.cca-scene-on.cca-slot-aside{transform:translateX(-16%)}
+.cca-scene-on.cca-slot-aside.cca-aside-left{transform:translateX(16%)}
+.cca-scene-on.cca-slot-split{transform:translateY(-33vh) scale(.6)}
+.cca-scene-on.cca-slot-reader{transform:translate(-42vw,-40vh) scale(.4);opacity:0}
+.cca-scene-on.cca-slot-tutorial{transform:translateY(-31vh) scale(.7)}
+/* Voix centrale / actions atténuées quand la scène occupe le plein écran */
+.cca-voicecol{transition:opacity .4s ease}
+.cca-voicecol.cca-dim{opacity:0;pointer-events:none}
+.cca-rail-dim{opacity:.2!important;pointer-events:none}
+
+/* Conteneur de scène : contenu rendu dès scene!=null ; -on = mouvement seulement */
+.cca-scene{opacity:0;transition:opacity .5s ease}
+.cca-scene.cca-scene-on{opacity:1}
+
+/* aside — panneau qui glisse d'un bord (transform only), lignes en cascade */
+.cca-aside{position:absolute;top:50%;right:3.2vw;transform:translate(120%,-50%);opacity:0;width:min(300px,33vw);display:flex;flex-direction:column;gap:11px;transition:transform .5s cubic-bezier(.16,1,.3,1),opacity .4s ease}
+.cca-aside.cca-aside-left{left:3.2vw;right:auto;transform:translate(-120%,-50%)}
+.cca-scene-on .cca-aside{transform:translate(0,-50%);opacity:1}
+.cca-aside-title{font-family:${SERIF};font-size:15px;color:rgba(244,239,230,.6);letter-spacing:.01em;margin-bottom:2px}
+.cca-aside-row{opacity:0;transform:translateY(9px);transition:opacity .4s ease,transform .4s cubic-bezier(.16,1,.3,1);background:rgba(244,239,230,.05);border-radius:12px;padding:11px 14px;display:flex;flex-direction:column;gap:3px}
+.cca-scene-on .cca-aside-row{opacity:1;transform:none}
+.cca-aside-head{display:flex;align-items:baseline;justify-content:space-between;gap:10px}
+.cca-aside-label{font-size:12.5px;color:rgba(244,239,230,.75);letter-spacing:.02em}
+.cca-aside-value{font-family:${SERIF};font-size:16px;color:${INK}}
+.cca-aside-note{font-size:11.5px;color:rgba(244,239,230,.42);line-height:1.35}
+
+/* split — rideau (clip-path) + ligne + 2 colonnes qui montent */
+.cca-split{position:absolute;inset:0;display:grid;grid-template-columns:1fr 1fr}
+.cca-split-veil{position:absolute;inset:0;opacity:0;transform:scale(1.06);background:radial-gradient(circle at 50% 46%,transparent,rgba(20,22,27,.55));transition:opacity .5s ease,transform .6s cubic-bezier(.16,1,.3,1);pointer-events:none}
+.cca-scene-on .cca-split-veil{opacity:1;transform:scale(1)}
+.cca-split-headline{position:absolute;top:8.5vh;left:50%;transform:translateX(-50%);font-family:${SERIF};font-size:18px;color:rgba(244,239,230,.62);text-align:center;opacity:0;transition:opacity .5s ease .15s;white-space:nowrap}
+.cca-scene-on .cca-split-headline{opacity:1}
+.cca-split-line{position:absolute;left:50%;top:20%;bottom:16%;width:1px;transform:translateX(-50%);background:linear-gradient(180deg,transparent,#d97757,#e6cc92,transparent);clip-path:inset(0 0 100% 0);transition:clip-path .42s cubic-bezier(.16,1,.3,1) .12s}
+.cca-scene-on .cca-split-line{clip-path:inset(0 0 0 0)}
+.cca-split-col{display:flex;flex-direction:column;justify-content:center;padding:0 5.5vw;opacity:0;transform:translateY(24px);transition:opacity .48s ease,transform .48s cubic-bezier(.16,1,.3,1)}
+.cca-scene-on .cca-split-col{opacity:1;transform:none}
+.cca-scene-on .cca-split-col.cca-col-r{transition-delay:.1s}
+.cca-split-h{font-family:${SERIF};font-size:23px;margin:0 0 3px;font-weight:600}
+.cca-split-sub{font-size:12px;color:rgba(244,239,230,.45);margin:0 0 15px;letter-spacing:.04em;text-transform:uppercase}
+.cca-split-b{display:flex;align-items:center;gap:10px;font-size:14px;color:${INK};padding:6px 0;opacity:0;transform:translateY(6px);transition:opacity .4s ease,transform .4s cubic-bezier(.16,1,.3,1)}
+.cca-scene-on .cca-split-b{opacity:1;transform:none}
+.cca-split-tick{width:6px;height:6px;border-radius:50%;flex-shrink:0}
+.cca-split-hooks{position:absolute;left:50%;bottom:5vh;transform:translateX(-50%);display:flex;gap:8px;flex-wrap:wrap;justify-content:center;max-width:82vw;opacity:0;transition:opacity .5s ease .5s}
+.cca-scene-on .cca-split-hooks{opacity:1}
+
+/* reader — profil (gauche) · texte scrollable (centre, masque bas = « il reste du texte ») · nav (droite) · suggestions (bas) */
+.cca-reader{position:absolute;inset:0;display:grid;grid-template-columns:210px minmax(0,1fr) 176px;grid-template-rows:1fr auto;gap:0 3vw;padding:8.5vh 4vw 3vh}
+.cca-reader-profile{grid-column:1;grid-row:1;display:flex;flex-direction:column;gap:7px;align-self:start;opacity:0;transform:translateX(-24px);transition:opacity .5s ease,transform .5s cubic-bezier(.16,1,.3,1)}
+.cca-scene-on .cca-reader-profile{opacity:1;transform:none}
+.cca-reader-name{font-family:${SERIF};font-size:18px;color:${INK};margin-top:6px}
+.cca-reader-role{font-size:12px;color:${GOLD};letter-spacing:.02em}
+.cca-reader-fact{display:flex;flex-direction:column;gap:1px;margin-top:8px;font-size:12px}
+.cca-reader-fact span{color:rgba(244,239,230,.4);text-transform:uppercase;letter-spacing:.06em;font-size:10px}
+.cca-reader-fact b{color:rgba(244,239,230,.8);font-weight:500}
+.cca-reader-body{grid-column:2;grid-row:1;overflow-y:auto;max-width:640px;justify-self:center;width:100%;scrollbar-width:none;-webkit-mask-image:linear-gradient(#000 90%,transparent);mask-image:linear-gradient(#000 90%,transparent);opacity:0;transform:translateY(12px);transition:opacity .5s ease,transform .5s cubic-bezier(.16,1,.3,1)}
+.cca-scene-on .cca-reader-body{opacity:1;transform:none}
+.cca-reader-body::-webkit-scrollbar{width:0;height:0}
+.cca-reader-title{font-family:${SERIF};font-size:26px;color:${INK};line-height:1.2;margin:0 0 20px;text-wrap:balance}
+.cca-reader-body section{margin-bottom:22px}
+.cca-reader-h{font-family:${SERIF};font-size:15px;color:${GOLD};margin:0 0 7px;letter-spacing:.01em}
+.cca-reader-p{font-family:${SERIF};font-size:16px;line-height:1.62;color:rgba(244,239,230,.86);margin:0 0 9px;max-width:62ch}
+.cca-reader-nav{grid-column:3;grid-row:1;display:flex;flex-direction:column;gap:2px;align-self:start;opacity:0;transform:translateX(24px);transition:opacity .5s ease,transform .5s cubic-bezier(.16,1,.3,1)}
+.cca-scene-on .cca-reader-nav{opacity:1;transform:none}
+.cca-reader-nav button{display:flex;align-items:center;gap:9px;background:none;border:none;cursor:pointer;color:rgba(244,239,230,.4);font:inherit;font-size:12.5px;padding:6px 0;text-align:left;transition:color .2s ease}
+.cca-reader-nav button.on{color:${GOLD}}
+.cca-reader-nav .dot{width:6px;height:6px;border-radius:50%;flex-shrink:0;background:rgba(244,239,230,.22);transition:background .2s ease}
+.cca-reader-nav button.on .dot{background:${TERRA}}
+.cca-reader-suggests{grid-column:1 / -1;grid-row:2;display:flex;gap:8px;flex-wrap:wrap;justify-content:center;padding-top:14px;opacity:0;transition:opacity .5s ease .4s}
+.cca-scene-on .cca-reader-suggests{opacity:1}
+
+/* tutorial — étapes numérotées en cascade + CTA */
+.cca-tuto{position:absolute;inset:0;display:flex;flex-direction:column;gap:16px;justify-content:center;padding:10vh 8vw 6vh;overflow-y:auto;scrollbar-width:none}
+.cca-tuto::-webkit-scrollbar{width:0}
+.cca-tuto-title{font-family:${SERIF};font-size:22px;color:${INK};margin-bottom:4px;text-wrap:balance}
+.cca-tuto-steps{display:flex;flex-direction:column;gap:15px}
+.cca-tuto-step{display:flex;gap:15px;align-items:flex-start;opacity:0;transform:translateY(14px);transition:opacity .45s ease,transform .45s cubic-bezier(.16,1,.3,1)}
+.cca-scene-on .cca-tuto-step{opacity:1;transform:none}
+.cca-tuto-n{flex-shrink:0;width:28px;height:28px;border-radius:50%;background:rgba(217,119,87,.16);color:${TERRA};font-family:${SERIF};font-size:15px;display:inline-flex;align-items:center;justify-content:center;margin-top:1px}
+.cca-tuto-txt{flex:1;min-width:0}
+.cca-tuto-h{font-size:15.5px;color:${INK};font-weight:500;margin-bottom:2px}
+.cca-tuto-d{font-size:13px;color:rgba(244,239,230,.55);line-height:1.5}
+.cca-tuto-sketch{flex-shrink:0;opacity:.9}
+.cca-tuto-cta{align-self:flex-start;margin-top:6px}
+
+/* reduced-motion : l'état final s'applique direct (cca-scene-on posé instantanément par enterScene) */
+@media (prefers-reduced-motion: reduce){
+  .cca-presence-holder,.cca-scene,.cca-scene *{transition-duration:.001s!important;animation-duration:.001s!important}
+}
+/* responsive mobile : split empilé, reader en une colonne */
+@media (max-width:640px){
+  .cca-scene-on.cca-slot-reader{transform:translate(-30vw,-30vh) scale(.5)}
+  .cca-aside{width:min(280px,72vw);right:5vw}
+  .cca-split{grid-template-columns:1fr;grid-template-rows:1fr 1fr}
+  .cca-split-line{left:12%;right:12%;top:50%;bottom:auto;width:auto;height:1px;transform:translateY(-50%);background:linear-gradient(90deg,transparent,#d97757,#e6cc92,transparent);clip-path:inset(0 100% 0 0)}
+  .cca-scene-on .cca-split-line{clip-path:inset(0 0 0 0)}
+  .cca-split-col{padding:0 8vw}
+  .cca-split-headline{top:3vh;font-size:15px}
+  .cca-reader{grid-template-columns:1fr;grid-template-rows:auto 1fr auto;padding:7vh 6vw 3vh;gap:12px 0}
+  .cca-reader-profile{grid-column:1;grid-row:1;flex-direction:row;align-items:center;gap:12px;flex-wrap:wrap}
+  .cca-reader-body{grid-column:1;grid-row:2}
+  .cca-reader-nav{grid-column:1;grid-row:3;flex-direction:row;flex-wrap:wrap;gap:6px 14px}
+  .cca-reader-suggests{grid-row:4}
+}
 `;
 
 // ── Croquis « Précepteur » — se dessinent seuls (stroke-dashoffset), un par sujet ──
@@ -194,6 +301,233 @@ function croquisFor(t) {
   </>);
 }
 
+// ═══════════════════════════════════════════════════════════════════════════
+// L6 — L'IA réalisatrice de sa surface : un champ `scene` (optionnel) décrit une
+// composition de tout l'écran ; le front la met en scène + l'anime, puis revient
+// au mode de base. `reply` reste TOUJOURS la voix autonome (invariant anti-écran-vide).
+// ═══════════════════════════════════════════════════════════════════════════
+const SCENE_TYPES = ['aside', 'split', 'reader', 'tutorial'];
+const prefersReduced = () =>
+  typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+// normalizeScene = AUTORITÉ FINALE (pure, ne throw jamais). Doute → null → center-question.
+function normalizeScene(raw) {
+  try {
+    if (!raw || typeof raw !== 'object' || !SCENE_TYPES.includes(raw.type)) return null;
+    const cut = (s, n) => String(s == null ? '' : s).slice(0, n);
+    const arr = (a, n, len) => (Array.isArray(a) ? a : []).slice(0, n).map((x) => cut(x, len)).filter(Boolean);
+    if (raw.type === 'aside') {
+      const items = (Array.isArray(raw.items) ? raw.items : []).slice(0, 4)
+        .map((it) => (it && it.label && it.value)
+          ? { label: cut(it.label, 24), value: cut(it.value, 40), note: cut(it.note, 80) || undefined } : null)
+        .filter(Boolean);
+      if (!items.length) return null;
+      return { type: 'aside', side: raw.side === 'left' ? 'left' : 'right',
+        title: cut(raw.title, 80) || undefined, items,
+        highlight: typeof raw.highlight === 'string' ? cut(raw.highlight, 24) : undefined };
+    }
+    if (raw.type === 'split') {
+      const pane = (o) => (o && o.title && Array.isArray(o.points) && o.points.length)
+        ? { title: cut(o.title, 60), subtitle: cut(o.subtitle, 80) || undefined, points: arr(o.points, 4, 90) } : null;
+      const left = pane(raw.left), right = pane(raw.right);
+      if (!left || !right || !left.points.length || !right.points.length) return null;
+      const tn = (v) => (v === 'terra' || v === 'gold') ? v : undefined;
+      return { type: 'split', headline: cut(raw.headline, 80) || undefined, left, right,
+        tone: { left: tn(raw.tone && raw.tone.left), right: tn(raw.tone && raw.tone.right) } };
+    }
+    if (raw.type === 'reader') {
+      const body = (Array.isArray(raw.body) ? raw.body : []).slice(0, 6)
+        .map((s) => (s && s.h && s.p) ? { h: cut(s.h, 60), p: cut(s.p, 700) } : null).filter(Boolean);
+      if (!body.length || !(raw.profile && raw.profile.name)) return null;
+      const facts = (Array.isArray(raw.profile.facts) ? raw.profile.facts : []).slice(0, 4)
+        .map((f) => (f && f.k && f.v) ? { k: cut(f.k, 24), v: cut(f.v, 60) } : null).filter(Boolean);
+      return { type: 'reader', title: cut(raw.title, 80) || 'Lecture',
+        profile: { name: cut(raw.profile.name, 60), role: cut(raw.profile.role, 80) || undefined,
+          avatarSeed: cut(raw.profile.avatarSeed, 40) || undefined, facts },
+        body, suggestions: arr(raw.suggestions, 4, 60) };
+    }
+    if (raw.type === 'tutorial') {
+      const steps = (Array.isArray(raw.steps) ? raw.steps : []).slice(0, 5)
+        .map((s) => (s && s.title) ? { title: cut(s.title, 60), detail: cut(s.detail, 160) || undefined,
+          sketch: TOPIC_ORDER.includes(s.sketch) ? s.sketch : undefined } : null).filter(Boolean);
+      if (!steps.length) return null;
+      return { type: 'tutorial', title: cut(raw.title, 80) || 'Pas à pas', steps, cta: cut(raw.cta, 80) || undefined };
+    }
+    return null;
+  } catch { return null; }
+}
+
+// Avatar SVG déterministe (hash → teinte terra/or), zéro réseau — pour le reader.
+function hashSeed(s) {
+  let h = 2166136261;
+  for (let i = 0; i < s.length; i += 1) { h ^= s.charCodeAt(i); h = Math.imul(h, 16777619); }
+  return h >>> 0;
+}
+function avatarFromSeed(seed) {
+  const s = String(seed || '?').trim() || '?';
+  const h = hashSeed(s);
+  const accent = (h & 1) ? TERRA : GOLD;
+  const initials = s.split(/\s+/).filter(Boolean).slice(0, 2).map((w) => (w[0] || '').toUpperCase()).join('') || '?';
+  const gid = `av-${h}`;
+  return (
+    <svg width="74" height="74" viewBox="0 0 74 74" aria-hidden="true">
+      <defs>
+        <radialGradient id={gid} cx="38%" cy="30%">
+          <stop offset="0%" stopColor={accent} stopOpacity="0.92" />
+          <stop offset="100%" stopColor={accent} stopOpacity="0.14" />
+        </radialGradient>
+      </defs>
+      <circle cx="37" cy="37" r="35" fill={`url(#${gid})`} />
+      <circle cx="37" cy="37" r="35.5" fill="none" stroke={accent} strokeOpacity="0.4" />
+      <text x="37" y="39" dominantBaseline="middle" textAnchor="middle" fontFamily={SERIF} fontSize="25" fontWeight="600" fill="#1a1613">{initials}</text>
+    </svg>
+  );
+}
+
+// ── Renderer de scène + 4 sous-scènes. Contenu rendu dès scene!=null (jamais gaté
+//    sur `visible`) ; la classe cca-scene-on n'ajoute QUE le mouvement (anti onglet-masqué). ──
+function SceneStage({ scene, visible, readerIdx, setReaderIdx, onSuggest, onCta, hooks, onHook }) {
+  if (!scene) return null;
+  return (
+    <div className={`cca-scene cca-stage-${scene.type} ${visible ? 'cca-scene-on' : ''}`}
+      style={{ position: 'absolute', inset: 0, pointerEvents: 'none', zIndex: 2 }}>
+      {scene.type === 'aside' && <AsidePanel scene={scene} />}
+      {scene.type === 'split' && <SplitWorlds scene={scene} hooks={hooks} onHook={onHook} />}
+      {scene.type === 'reader' && <ReaderView scene={scene} idx={readerIdx} setIdx={setReaderIdx} onSuggest={onSuggest} />}
+      {scene.type === 'tutorial' && <TutorialFlow scene={scene} onCta={onCta} />}
+    </div>
+  );
+}
+
+function AsidePanel({ scene }) {
+  const isLeft = scene.side === 'left';
+  return (
+    <aside className={`cca-aside ${isLeft ? 'cca-aside-left' : ''}`} style={{ pointerEvents: 'auto' }}>
+      {scene.title && <div className="cca-aside-title">{scene.title}</div>}
+      {scene.items.map((it, i) => (
+        <div key={i} className="cca-aside-row" style={{ transitionDelay: `${i * 70 + 120}ms` }}>
+          <div className="cca-aside-head">
+            <span className="cca-aside-label" style={it.label === scene.highlight ? { color: TERRA } : undefined}>{it.label}</span>
+            <span className="cca-aside-value">{it.value}</span>
+          </div>
+          {it.note && <span className="cca-aside-note">{it.note}</span>}
+        </div>
+      ))}
+    </aside>
+  );
+}
+
+function SplitWorlds({ scene, hooks, onHook }) {
+  const col = (side, data, tone) => (
+    <div className={`cca-split-col cca-col-${side}`}>
+      <h3 className="cca-split-h" style={{ color: tone === 'terra' ? TERRA : GOLD }}>{data.title}</h3>
+      {data.subtitle && <p className="cca-split-sub">{data.subtitle}</p>}
+      {data.points.map((p, i) => (
+        <div key={i} className="cca-split-b" style={{ transitionDelay: `${i * 80 + 260}ms` }}>
+          <span className="cca-split-tick" style={{ background: tone === 'terra' ? TERRA : GOLD }} />{p}
+        </div>
+      ))}
+    </div>
+  );
+  return (
+    <div className="cca-split" style={{ pointerEvents: 'auto' }}>
+      <div className="cca-split-veil" />
+      {scene.headline && <div className="cca-split-headline">{scene.headline}</div>}
+      {col('l', scene.left, (scene.tone && scene.tone.left) || 'gold')}
+      <div className="cca-split-line" />
+      {col('r', scene.right, (scene.tone && scene.tone.right) || 'terra')}
+      {hooks && hooks.length > 0 && (
+        <div className="cca-split-hooks">
+          {hooks.map((h, i) => (
+            <span key={i} className="cca-chip" onClick={() => onHook(h)}
+              style={{ fontSize: 12.5, color: GOLD, background: 'rgba(244,239,230,.06)', borderRadius: 999, padding: '7px 14px' }}>{h}</span>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function ReaderView({ scene, idx, setIdx, onSuggest }) {
+  const scrollRef = useRef(null);
+  const onScroll = () => {
+    const el = scrollRef.current; if (!el) return;
+    const cRect = el.getBoundingClientRect();
+    const secs = el.querySelectorAll('section');
+    let best = 0, bestD = Infinity;
+    secs.forEach((sec, i) => { const d = Math.abs(sec.getBoundingClientRect().top - cRect.top - 10); if (d < bestD) { bestD = d; best = i; } });
+    setIdx(best);
+  };
+  const go = (i) => {
+    setIdx(i);
+    const sec = scrollRef.current && scrollRef.current.querySelector(`#cca-sec-${i}`);
+    if (sec) sec.scrollIntoView({ behavior: prefersReduced() ? 'auto' : 'smooth', block: 'start' });
+  };
+  const profile = scene.profile;
+  return (
+    <div className="cca-reader" style={{ pointerEvents: 'auto' }}>
+      <div className="cca-reader-profile">
+        {avatarFromSeed(profile.avatarSeed || profile.name)}
+        <div className="cca-reader-name">{profile.name}</div>
+        {profile.role && <div className="cca-reader-role">{profile.role}</div>}
+        {(profile.facts || []).map((f, i) => (
+          <div key={i} className="cca-reader-fact"><span>{f.k}</span><b>{f.v}</b></div>
+        ))}
+      </div>
+      <div className="cca-reader-body" ref={scrollRef} onScroll={onScroll}>
+        <h2 className="cca-reader-title">{scene.title}</h2>
+        {scene.body.map((s, i) => (
+          <section key={i} id={`cca-sec-${i}`}>
+            <h4 className="cca-reader-h">{s.h}</h4>
+            {s.p.split('\n\n').map((para, j) => (<p key={j} className="cca-reader-p">{para}</p>))}
+          </section>
+        ))}
+      </div>
+      <nav className="cca-reader-nav">
+        {scene.body.map((s, i) => (
+          <button key={i} className={i === idx ? 'on' : ''} onClick={() => go(i)}>
+            <span className="dot" />{s.h}
+          </button>
+        ))}
+      </nav>
+      {scene.suggestions && scene.suggestions.length > 0 && (
+        <div className="cca-reader-suggests">
+          {scene.suggestions.map((s, i) => (
+            <span key={i} className="cca-chip" onClick={() => onSuggest(s)}
+              style={{ fontSize: 12, color: GOLD, background: 'rgba(244,239,230,.05)', borderRadius: 999, padding: '6px 13px' }}>{s}</span>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function TutorialFlow({ scene, onCta }) {
+  return (
+    <div className="cca-tuto" style={{ pointerEvents: 'auto' }}>
+      <div className="cca-tuto-title">{scene.title}</div>
+      <div className="cca-tuto-steps">
+        {scene.steps.map((st, i) => (
+          <div key={i} className="cca-tuto-step" style={{ transitionDelay: `${i * 110 + 160}ms` }}>
+            <span className="cca-tuto-n">{i + 1}</span>
+            <div className="cca-tuto-txt">
+              <div className="cca-tuto-h">{st.title}</div>
+              {st.detail && <div className="cca-tuto-d">{st.detail}</div>}
+            </div>
+            {TOPIC_ORDER.includes(st.sketch) && <div className="cca-tuto-sketch">{croquisFor(st.sketch)}</div>}
+          </div>
+        ))}
+      </div>
+      {scene.cta && (
+        <button className="cca-chip cca-tuto-cta" onClick={onCta}
+          style={{ display: 'inline-flex', alignItems: 'center', gap: 7, color: '#2a140c', background: TERRA, border: 'none', borderRadius: 12, padding: '11px 22px', fontWeight: 500, fontSize: 13.5, cursor: 'pointer' }}>
+          {scene.cta}<ArrowRight size={16} />
+        </button>
+      )}
+    </div>
+  );
+}
+
 export default function CimolaceCreationAgent() {
   const navigate = useNavigate();
   const { login } = useAuth();
@@ -217,6 +551,13 @@ export default function CimolaceCreationAgent() {
   const [keyword, setKeyword] = useState('');
   const coveredRef = useRef([]);
 
+  // L6 — scène « réalisée » par l'IA (composition plein écran)
+  const [scene, setScene] = useState(null);
+  const [sceneVisible, setSceneVisible] = useState(false);
+  const [readerIdx, setReaderIdx] = useState(0);
+  const sceneRef = useRef(null);
+  const sceneTimer = useRef(null);
+
   const [inputOpen, setInputOpen] = useState(false);
   const [value, setValue] = useState('');
   const inputRef = useRef(null);
@@ -233,6 +574,7 @@ export default function CimolaceCreationAgent() {
 
   useEffect(() => { mutedRef.current = muted; }, [muted]);
   useEffect(() => { coveredRef.current = covered; }, [covered]);
+  useEffect(() => { sceneRef.current = scene; }, [scene]);
 
   // ── Sons synthétisés (Web Audio, zéro asset) — subtils, coupables via mute ──
   const audio = useCallback(() => {
@@ -316,10 +658,34 @@ export default function CimolaceCreationAgent() {
     thinkTimer.current = setTimeout(fn, delay);
   }, [sThink]);
 
+  // L6 — séquenceur d'entrée/sortie de scène. Le contenu est monté dès setScene ;
+  // `sceneVisible` (classe cca-scene-on) ne pilote QUE le mouvement → jamais d'écran vide.
+  const exitScene = useCallback((done) => {
+    clearTimeout(sceneTimer.current);
+    if (!sceneRef.current) { setSceneVisible(false); if (done) done(); return; }
+    setSceneVisible(false); // retire cca-scene-on → sortie animée, présence revient au centre
+    const dur = (document.hidden || prefersReduced()) ? 0 : 320;
+    sceneTimer.current = setTimeout(() => { setScene(null); setReaderIdx(0); if (done) done(); }, dur);
+  }, []);
+
+  const enterScene = useCallback((next, speakReply) => {
+    clearTimeout(sceneTimer.current);
+    if (!next) { exitScene(speakReply); return; }
+    const instant = document.hidden || prefersReduced();
+    setReaderIdx(0);
+    setScene(next);
+    if (instant) { setSceneVisible(true); if (speakReply) speakReply(); return; }
+    setSceneVisible(false);
+    requestAnimationFrame(() => requestAnimationFrame(() => setSceneVisible(true)));
+    if (next.type === 'split') sThink(); // grand geste → appui sonore
+    const voiceDelay = next.type === 'aside' ? 500 : 360; // laisse la scène se poser avant la voix
+    sceneTimer.current = setTimeout(() => { if (speakReply) speakReply(); }, voiceDelay);
+  }, [exitScene, sThink]);
+
   // Éveil
   useEffect(() => {
     const t = setTimeout(() => speak(GREETING), 900);
-    return () => { clearTimeout(t); clearInterval(typeTimer.current); clearTimeout(thinkTimer.current); };
+    return () => { clearTimeout(t); clearInterval(typeTimer.current); clearTimeout(thinkTimer.current); clearTimeout(sceneTimer.current); };
   }, [speak]);
 
   const openInput = useCallback((prefill = '') => {
@@ -360,30 +726,34 @@ export default function CimolaceCreationAgent() {
   // ── Transitions de flux ────────────────────────────────────────────────
   const pickKind = useCallback((k) => {
     sPop();
+    exitScene();
     setChosen(k);
     setError('');
     think(() => { setStep('product'); speak(PRODUCT[k].reply); });
-  }, [think, speak, sPop]);
+  }, [think, speak, sPop, exitScene]);
 
   const chooseProduct = useCallback(() => {
     sPop();
+    exitScene();
     setStep('brand_ask');
     speak("Comment s'appelle votre organisation ? Dites-le moi.", () => openInput());
-  }, [speak, openInput, sPop]);
+  }, [speak, openInput, sPop, exitScene]);
 
   const submitName = useCallback((name) => {
+    exitScene();
     const s = slugify(name);
     setOrgName(name);
     setSlug(s);
     checkSlug(s);
     think(() => { setStep('brand_confirm'); speak(`Parfait. Votre espace : cimolace.space/t/${s || '…'}. On continue ?`); });
-  }, [think, speak, checkSlug]);
+  }, [think, speak, checkSlug, exitScene]);
 
   const continueToAccount = useCallback(() => {
     sPop();
+    exitScene();
     setStep('account');
     speak("Dernière étape : votre e-mail et un mot de passe (8 caractères min). Vous saisissez, je crée l'espace.");
-  }, [speak, sPop]);
+  }, [speak, sPop, exitScene]);
 
   // Le « cerveau » : appelle l'edge agent-brain (LLM) → reply générative + produit + hooks.
   // Repli hors-ligne : détection par mots-clés.
@@ -391,6 +761,7 @@ export default function CimolaceCreationAgent() {
     setError('');
     setBrainHooks([]);
     setKeyword('');
+    exitScene(); // la scène précédente s'efface pendant que l'IA réfléchit
     setPresence('reflexion');
     sThink();
     try {
@@ -405,16 +776,19 @@ export default function CimolaceCreationAgent() {
       setTopic(t);
       if (t) setCovered((prev) => (prev.includes(t) ? prev : [...prev, t]));
       setBrainHooks(Array.isArray(data?.hooks) ? data.hooks : []);
-      if (product) { setChosen(product); setStep('product'); speak(reply); }
-      else { setStep('brain'); speak(reply); }
+      const nextScene = normalizeScene(data?.scene); // autorité finale, ne throw jamais
+      if (product) setChosen(product);
+      setStep(product ? 'product' : 'brain');
+      enterScene(nextScene, () => speak(reply)); // scene null → speak immédiat (mode L5)
     } catch (_) {
+      exitScene();
       setTopic(null);
       const k = guessKind(message);
       setChosen(k);
       setStep('product');
       speak(PRODUCT[k].reply);
     }
-  }, [chosen, speak, sThink]);
+  }, [chosen, speak, sThink, enterScene, exitScene]);
 
   const submitInput = useCallback(() => {
     const v = value.trim();
@@ -427,6 +801,7 @@ export default function CimolaceCreationAgent() {
 
   const createAccount = useCallback(async () => {
     setError('');
+    exitScene();
     if (!email.trim() || !password) { setError('E-mail et mot de passe requis.'); return; }
     if (password.length < 8) { setError('Mot de passe : 8 caractères minimum.'); return; }
     if (slug.length < 2) { setError("Le nom d'organisation ne produit pas d'identifiant valide."); return; }
@@ -458,18 +833,19 @@ export default function CimolaceCreationAgent() {
     } finally {
       setBusy(false);
     }
-  }, [email, password, slug, orgName, chosen, login, navigate, sPop, sThink, sChime]);
+  }, [email, password, slug, orgName, chosen, login, navigate, sPop, sThink, sChime, exitScene]);
 
   const goBack = useCallback(() => {
     sPop();
     setError('');
     setBusy(false);
     closeInput();
+    exitScene();
     if (step === 'product' || step === 'brain') { setStep('discovery'); speak(GREETING); }
     else if (step === 'brand_ask') { setStep('product'); speak(PRODUCT[chosen].reply); }
     else if (step === 'brand_confirm') { setStep('brand_ask'); speak("Quel nom pour votre organisation ?", () => openInput()); }
     else if (step === 'account') { setStep('brand_confirm'); speak(`On reprend — cimolace.space/t/${slug}. On continue ?`); }
-  }, [step, chosen, slug, sPop, closeInput, speak, openInput]);
+  }, [step, chosen, slug, sPop, closeInput, speak, openInput, exitScene]);
 
   const onRootClick = (e) => {
     if (inputOpen || !inputAllowed) return;
@@ -478,6 +854,9 @@ export default function CimolaceCreationAgent() {
 
   const bg = presence === 'reflexion' ? BG_THINK : BG;
   const showActions = presence === 'attente' && !inputOpen;
+  // Scène plein écran (split/reader/tutorial) : la voix centrale + actions en flux s'effacent,
+  // la scène porte le message ; `aside` garde la voix au centre.
+  const fullscreenScene = !!scene && scene.type !== 'aside';
 
   return (
     <div
@@ -497,6 +876,12 @@ export default function CimolaceCreationAgent() {
       <span className="cca-amb" style={{ width: 4, height: 4, top: '58%', left: '65%', opacity: 0.13, background: '#e6cc92', animation: 'ccaDriftB 14s ease-in-out infinite' }} />
       <span className="cca-amb" style={{ width: 3, height: 3, top: '44%', left: '70%', opacity: 0.12, animation: 'ccaDriftC 9s ease-in-out infinite' }} />
 
+      {/* L6 — Scène « réalisée » par l'IA : composition de toute la surface (fond, sous la voix) */}
+      {scene && (step === 'brain' || step === 'product') && (
+        <SceneStage scene={scene} visible={sceneVisible} readerIdx={readerIdx} setReaderIdx={setReaderIdx}
+          onSuggest={brain} onCta={chooseProduct} hooks={brainHooks} onHook={brain} />
+      )}
+
       {/* Connecté */}
       <div style={{ position: 'absolute', top: 22, left: '50%', transform: 'translateX(-50%)', display: 'flex', alignItems: 'center', gap: 7, opacity: 0.7, pointerEvents: 'none' }}>
         <span style={{ position: 'relative', display: 'inline-flex', width: 6, height: 6, alignItems: 'center', justifyContent: 'center' }}>
@@ -509,7 +894,7 @@ export default function CimolaceCreationAgent() {
       {/* L5 — rail de sujets « tableau intelligent » : liste à gauche, clic → le cerveau compose au centre.
           Sert aussi de barre de couverture (le tunnel) : sujets abordés = allumés. */}
       {(step === 'brain' || step === 'product') && (
-        <div className="cca-in" style={{ position: 'absolute', left: 22, top: '50%', transform: 'translateY(-50%)', display: 'flex', flexDirection: 'column', gap: 13, zIndex: 3, maxWidth: 130 }}>
+        <div className={`cca-in ${fullscreenScene ? 'cca-rail-dim' : ''}`} style={{ position: 'absolute', left: 22, top: '50%', transform: 'translateY(-50%)', display: 'flex', flexDirection: 'column', gap: 13, zIndex: 3, maxWidth: 130 }}>
           <span style={{ fontSize: 9, color: 'rgba(244,239,230,.3)', letterSpacing: '.1em', textTransform: 'uppercase', marginBottom: 3 }}>Le tour du produit</span>
           {TOPIC_ORDER.map((tp) => {
             const on = covered.includes(tp);
@@ -545,27 +930,32 @@ export default function CimolaceCreationAgent() {
         </button>
       )}
 
-      {/* Présence */}
-      <div className={`cca-${presence}`} style={{ position: 'relative', width: 200, height: 120, pointerEvents: 'none' }}>
-        <div className="cca-glow" />
-        <span key={presence} className="cca-ripple" />
-        <div className="cca-orbit"><span /><span /></div>
-        <span className="cca-form cca-boot" />
-        <span className="cca-form cca-dot" />
-        <span className="cca-form cca-line" />
-        <span className="cca-form cca-wave"><i /><i style={{ animationDelay: '.1s' }} /><i style={{ animationDelay: '.2s' }} /><i style={{ animationDelay: '.3s' }} /><i style={{ animationDelay: '.4s' }} /></span>
-        <span className="cca-form cca-done"><Check size={20} /></span>
+      {/* Présence (le wrapper se décale selon la scène active) */}
+      <div
+        className={`cca-presence-holder${scene ? ` cca-slot-${scene.type}` : ''}${scene && sceneVisible ? ' cca-scene-on' : ''}${scene && scene.type === 'aside' && scene.side === 'left' ? ' cca-aside-left' : ''}`}
+        style={{ position: 'relative', zIndex: 4 }}
+      >
+        <div className={`cca-${presence}`} style={{ position: 'relative', width: 200, height: 120, pointerEvents: 'none' }}>
+          <div className="cca-glow" />
+          <span key={presence} className="cca-ripple" />
+          <div className="cca-orbit"><span /><span /></div>
+          <span className="cca-form cca-boot" />
+          <span className="cca-form cca-dot" />
+          <span className="cca-form cca-line" />
+          <span className="cca-form cca-wave"><i /><i style={{ animationDelay: '.1s' }} /><i style={{ animationDelay: '.2s' }} /><i style={{ animationDelay: '.3s' }} /><i style={{ animationDelay: '.4s' }} /></span>
+          <span className="cca-form cca-done"><Check size={20} /></span>
+        </div>
       </div>
 
       {/* Croquis « Précepteur » — se dessine quand le cerveau explique un sujet */}
       {topic && (step === 'brain' || step === 'product') && (
-        <div key={topic} className="cca-in" style={{ marginTop: 8, marginBottom: 2, display: 'flex', justifyContent: 'center' }}>
+        <div key={topic} className="cca-in cca-voicecol" style={{ marginTop: 8, marginBottom: 2, display: 'flex', justifyContent: 'center', position: 'relative', zIndex: 4, opacity: fullscreenScene ? 0 : 1, pointerEvents: fullscreenScene ? 'none' : undefined }}>
           {croquisFor(topic)}
         </div>
       )}
 
       {/* Voix */}
-      <div style={{ minHeight: 34, marginTop: 14, textAlign: 'center' }}>
+      <div className={`cca-voicecol${fullscreenScene ? ' cca-dim' : ''}`} style={{ minHeight: 34, marginTop: 14, textAlign: 'center', position: 'relative', zIndex: 4 }}>
         {message ? (
           <p className="cca-in" style={{ fontFamily: SERIF, fontSize: 19, lineHeight: 1.5, color: INK, maxWidth: 470, margin: 0 }}>
             {keyword && (step === 'brain' || step === 'product') ? highlightReply(message, keyword) : message}
@@ -593,8 +983,8 @@ export default function CimolaceCreationAgent() {
         </div>
       )}
 
-      {showActions && step === 'product' && (
-        <div className="cca-in" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 12, marginTop: 16 }}>
+      {showActions && step === 'product' && !fullscreenScene && (
+        <div className="cca-in" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 12, marginTop: 16, position: 'relative', zIndex: 4 }}>
           {brainHooks.length > 0 && (
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: 7, justifyContent: 'center', maxWidth: 470 }}>
               {brainHooks.map((h, n) => (
@@ -616,8 +1006,8 @@ export default function CimolaceCreationAgent() {
         </div>
       )}
 
-      {showActions && step === 'brain' && (
-        <div className="cca-in" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 12, marginTop: 16 }}>
+      {showActions && step === 'brain' && !fullscreenScene && (
+        <div className="cca-in" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 12, marginTop: 16, position: 'relative', zIndex: 4 }}>
           {(covered.length >= 3 || covered.includes('prix')) && (
             <button className="cca-chip" onClick={(e) => { e.stopPropagation(); chooseProduct(); }}
               style={{ display: 'inline-flex', alignItems: 'center', gap: 7, fontSize: 14, fontWeight: 500, color: '#2a140c', background: TERRA, border: 'none', borderRadius: 12, padding: '11px 22px', cursor: 'pointer' }}>
