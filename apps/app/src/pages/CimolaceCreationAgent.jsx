@@ -17,7 +17,7 @@
  */
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { GraduationCap, Stethoscope, ShoppingBag, ArrowUp, ArrowRight, Check, Loader2, Mail, Lock, Volume2, VolumeX } from 'lucide-react';
+import { GraduationCap, Stethoscope, ShoppingBag, ArrowUp, ArrowRight, ArrowLeft, Check, Loader2, Mail, Lock, Volume2, VolumeX } from 'lucide-react';
 import { getApiBaseUrl } from '@/lib/apiBase';
 import { useAuth } from '@/hooks/useAuth';
 import { authStore } from '@/lib/auth-store';
@@ -341,6 +341,17 @@ export default function CimolaceCreationAgent() {
     }
   }, [email, password, slug, orgName, chosen, login, navigate, sPop, sThink, sChime]);
 
+  const goBack = useCallback(() => {
+    sPop();
+    setError('');
+    setBusy(false);
+    closeInput();
+    if (step === 'product') { setStep('discovery'); speak(GREETING); }
+    else if (step === 'brand_ask') { setStep('product'); speak(PRODUCT[chosen].reply); }
+    else if (step === 'brand_confirm') { setStep('brand_ask'); speak("Quel nom pour votre organisation ?", () => openInput()); }
+    else if (step === 'account') { setStep('brand_confirm'); speak(`On reprend — cimolace.space/t/${slug}. On continue ?`); }
+  }, [step, chosen, slug, sPop, closeInput, speak, openInput]);
+
   const onRootClick = (e) => {
     if (inputOpen || !inputAllowed) return;
     if (rootRef.current && e.target === rootRef.current) openInput();
@@ -384,6 +395,17 @@ export default function CimolaceCreationAgent() {
       >
         {muted ? <VolumeX size={17} /> : <Volume2 size={17} />}
       </button>
+
+      {/* Retour — jamais bloqué */}
+      {step !== 'discovery' && step !== 'pret' && (
+        <button
+          onClick={(e) => { e.stopPropagation(); goBack(); }}
+          aria-label="Revenir en arrière"
+          style={{ position: 'absolute', top: 16, left: 18, background: 'transparent', border: 'none', color: 'rgba(244,239,230,.5)', cursor: 'pointer', zIndex: 5, display: 'inline-flex', alignItems: 'center', gap: 5, fontSize: 12.5, fontFamily: 'inherit' }}
+        >
+          <ArrowLeft size={16} /> Retour
+        </button>
+      )}
 
       {/* Présence */}
       <div className={`cca-${presence}`} style={{ position: 'relative', width: 200, height: 120, pointerEvents: 'none' }}>
@@ -465,7 +487,7 @@ export default function CimolaceCreationAgent() {
           style={{ display: 'flex', flexDirection: 'column', gap: 9, width: 320, marginTop: 16 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 9, background: 'rgba(244,239,230,.05)', borderRadius: 11, padding: '10px 13px' }}>
             <Mail size={15} color="rgba(244,239,230,.4)" />
-            <input className="cca-field" type="email" autoComplete="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="vous@exemple.com"
+            <input className="cca-field" type="email" autoComplete="email" autoFocus value={email} onChange={(e) => setEmail(e.target.value)} placeholder="vous@exemple.com"
               style={{ flex: 1, background: 'transparent', border: 'none', outline: 'none', color: INK, fontSize: 13.5, fontFamily: 'inherit' }} />
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 9, background: 'rgba(244,239,230,.05)', borderRadius: 11, padding: '10px 13px' }}>
