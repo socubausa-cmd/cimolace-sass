@@ -47,7 +47,7 @@ Deno.serve(async (req: Request) => {
     if (!message) return jsonResponse({ error: 'message is required' }, 400);
 
     const system =
-      "Tu es l'assistant de création d'organisation de Cimolace — chaleureux, vif, orienté conseil ET vente HONNÊTE (jamais de fausse urgence ; prix toujours affiché ; on oriente, on ne manipule pas).\n" +
+      "Tu es l'assistant de création d'organisation de Cimolace — dans l'esprit d'un GRAND FRÈRE / d'une GRANDE SŒUR qui explique (style « Les Sherpas ») : énergique, complice, jamais prof magistral. Phrases COURTES et incarnées, tu/on, énergie constante. Tu attaques par une petite ACCROCHE et tu finis souvent par un « waouh » (payoff). Une analogie concrète du quotidien vaut mieux qu'un jargon. Conseil ET vente HONNÊTE (jamais de fausse urgence ; prix toujours affiché ; on oriente, on ne manipule pas).\n" +
       "Cimolace fournit des « moteurs » métier clés en main, à la marque du client :\n" +
       "- \"school\" = LIRI École (école / cours en ligne) : lives HD, cours, smartboard IA, replay.\n" +
       "- \"medos\" = MedOS (santé / clinique) : dossiers patients, notes SOAP, téléconsultation, RGPD.\n" +
@@ -59,12 +59,14 @@ Deno.serve(async (req: Request) => {
       '  "reply": "réponse chaleureuse et VIVANTE en français, 1 à 2 phrases ; tu peux poser une question pour faire avancer",\n' +
       '  "product": "school" | "medos" | "shop" | null,\n' +
       '  "topic": "live" | "cours" | "ia" | "replay" | "compare" | "prix" | null,\n' +
+      '  "keyword": "le mot-clé FORT à retenir (2 à 3 mots), présent TEL QUEL dans reply",\n' +
       '  "hooks": ["relance courte 1", "relance courte 2"]\n' +
       '}\n' +
       "Règles :\n" +
       "- \"product\" = le moteur qui correspond au besoin (sinon null si ambigu ou question générale).\n" +
       "- \"topic\" = si ta reply EXPLIQUE un aspect précis, lequel : \"live\" (cours en direct), \"cours\" (cours/leçons à la demande), \"ia\" (smartboard / assistant IA), \"replay\" (enregistrements / replay), \"compare\" (pourquoi Cimolace plutôt que Zoom / un concurrent), \"prix\" (tarifs). Sinon null.\n" +
       "- \"reply\" court, jamais robotique, orienté vers la création d'un espace ; tu peux dérouler UN aspect à la fois (comme un tuto vivant) et enchaîner.\n" +
+      "- \"keyword\" = LE terme fort de ta reply (un bénéfice, un résultat, un chiffre, ou « zéro commission », « en direct »…), 2 à 3 mots max, il doit apparaître EXACTEMENT dans reply (il sera surligné à l'écran).\n" +
       "- \"hooks\" = 2 max, relances utiles orientées valeur, prix, comparaison, ou passage à la création — de préférence vers un SUJET non encore abordé (voir contexte).\n" +
       "- Plus l'utilisateur a déjà couvert de sujets (voir contexte), plus tu l'orientes clairement vers la CRÉATION de son espace.\n" +
       "Réponds UNIQUEMENT en JSON valide.";
@@ -128,7 +130,10 @@ Deno.serve(async (req: Request) => {
     const topic = ['live', 'cours', 'ia', 'replay', 'compare', 'prix'].includes(String(parsed.topic))
       ? String(parsed.topic)
       : null;
-    const reply = String(parsed.reply || '').trim() || "Dites-m'en un peu plus sur votre projet ?";
+    const reply =
+      String(parsed.reply || '').replace(/\*+/g, '').replace(/\s+/g, ' ').trim() ||
+      "Dites-m'en un peu plus sur votre projet ?";
+    const keyword = String(parsed.keyword || '').replace(/\*+/g, '').trim().slice(0, 44);
     const trim = (h: unknown) => {
       const s = String(h).trim();
       return s.length > 84 ? s.slice(0, 84).replace(/\s+\S*$/, '') + '…' : s;
@@ -137,7 +142,7 @@ Deno.serve(async (req: Request) => {
       ? parsed.hooks.filter(Boolean).map(trim).filter((s) => s.length > 1).slice(0, 2)
       : [];
 
-    return jsonResponse({ reply, product, topic, hooks });
+    return jsonResponse({ reply, product, topic, keyword, hooks });
   } catch (e) {
     return jsonResponse({ error: String((e as Error)?.message || e) }, 500);
   }

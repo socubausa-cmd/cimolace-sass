@@ -116,6 +116,28 @@ const STYLE = `
 // ── Croquis « Précepteur » — se dessinent seuls (stroke-dashoffset), un par sujet ──
 const T_LABELS = { live: 'Live', cours: 'Cours', ia: 'IA', replay: 'Replay', compare: 'Comparé', prix: 'Prix' };
 const TOPIC_ORDER = ['live', 'cours', 'ia', 'replay', 'compare', 'prix'];
+// Questions canoniques par sujet (rail L5 → interroge le cerveau).
+const TOPIC_Q = {
+  live: 'Comment marchent les cours en direct ?',
+  cours: 'Et les cours et leçons à la demande ?',
+  ia: 'Le smartboard IA, ça fait quoi ?',
+  replay: 'Les cours restent en replay après ?',
+  compare: 'Pourquoi Cimolace plutôt que Zoom ?',
+  prix: 'Et le prix, ça donne quoi ?',
+};
+// Surligne le mot-clé (style « Sherpas » : le terme fort ressort en accent) dans la reply.
+function highlightReply(text, kw) {
+  if (!kw) return text;
+  const i = text.toLowerCase().indexOf(kw.toLowerCase());
+  if (i < 0) return text;
+  return (
+    <>
+      {text.slice(0, i)}
+      <span style={{ color: '#e6cc92', fontWeight: 500 }}>{text.slice(i, i + kw.length)}</span>
+      {text.slice(i + kw.length)}
+    </>
+  );
+}
 function croquisFor(t) {
   const dr = (d) => ({ className: 'cca-dr', style: { animationDelay: `${d}s` } });
   const S = { stroke: '#d97757', strokeWidth: 2, fill: 'none', pathLength: 1 };
@@ -192,6 +214,7 @@ export default function CimolaceCreationAgent() {
   const [brainHooks, setBrainHooks] = useState([]);
   const [covered, setCovered] = useState([]);
   const [topic, setTopic] = useState(null);
+  const [keyword, setKeyword] = useState('');
   const coveredRef = useRef([]);
 
   const [inputOpen, setInputOpen] = useState(false);
@@ -367,6 +390,7 @@ export default function CimolaceCreationAgent() {
   const brain = useCallback(async (message) => {
     setError('');
     setBrainHooks([]);
+    setKeyword('');
     setPresence('reflexion');
     sThink();
     try {
@@ -374,6 +398,7 @@ export default function CimolaceCreationAgent() {
         body: { message, chosen, covered: coveredRef.current },
       });
       if (fnErr) throw fnErr;
+      setKeyword(String(data?.keyword || ''));
       const reply = String(data?.reply || '').trim() || "Je vous écoute — dites-m'en un peu plus ?";
       const product = data?.product && PRODUCT[data.product] ? data.product : null;
       const t = TOPIC_ORDER.includes(data?.topic) ? data.topic : null;
@@ -481,16 +506,20 @@ export default function CimolaceCreationAgent() {
         <span style={{ fontSize: 11, color: 'rgba(244,239,230,.55)', letterSpacing: '.03em' }}>assistant cimolace · connecté</span>
       </div>
 
-      {/* Barre de couverture — le « tunnel » : les sujets abordés s'allument */}
-      {covered.length > 0 && (
-        <div className="cca-in" style={{ position: 'absolute', top: 46, left: '50%', transform: 'translateX(-50%)', display: 'flex', gap: 11, alignItems: 'center', zIndex: 3, pointerEvents: 'none', flexWrap: 'wrap', justifyContent: 'center', maxWidth: '90%' }}>
+      {/* L5 — rail de sujets « tableau intelligent » : liste à gauche, clic → le cerveau compose au centre.
+          Sert aussi de barre de couverture (le tunnel) : sujets abordés = allumés. */}
+      {(step === 'brain' || step === 'product') && (
+        <div className="cca-in" style={{ position: 'absolute', left: 22, top: '50%', transform: 'translateY(-50%)', display: 'flex', flexDirection: 'column', gap: 13, zIndex: 3, maxWidth: 130 }}>
+          <span style={{ fontSize: 9, color: 'rgba(244,239,230,.3)', letterSpacing: '.1em', textTransform: 'uppercase', marginBottom: 3 }}>Le tour du produit</span>
           {TOPIC_ORDER.map((tp) => {
             const on = covered.includes(tp);
+            const cur = topic === tp;
             return (
-              <span key={tp} style={{ display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: 9.5, letterSpacing: '.04em', color: on ? '#e6cc92' : 'rgba(244,239,230,.26)' }}>
-                <span style={{ width: 5, height: 5, borderRadius: '50%', background: on ? '#d97757' : 'rgba(244,239,230,.18)' }} />
+              <button key={tp} onClick={(e) => { e.stopPropagation(); brain(TOPIC_Q[tp]); }}
+                style={{ display: 'inline-flex', alignItems: 'center', gap: 9, background: 'transparent', border: 'none', cursor: 'pointer', color: cur ? '#f4efe6' : on ? '#e6cc92' : 'rgba(244,239,230,.4)', fontSize: 12.5, fontFamily: 'inherit', padding: 0, textAlign: 'left' }}>
+                <span style={{ width: 6, height: 6, borderRadius: '50%', flexShrink: 0, background: cur ? '#d97757' : on ? '#e6cc92' : 'rgba(244,239,230,.22)' }} />
                 {T_LABELS[tp]}
-              </span>
+              </button>
             );
           })}
         </div>
@@ -539,7 +568,7 @@ export default function CimolaceCreationAgent() {
       <div style={{ minHeight: 34, marginTop: 14, textAlign: 'center' }}>
         {message ? (
           <p className="cca-in" style={{ fontFamily: SERIF, fontSize: 19, lineHeight: 1.5, color: INK, maxWidth: 470, margin: 0 }}>
-            {message}
+            {keyword && (step === 'brain' || step === 'product') ? highlightReply(message, keyword) : message}
             {(presence === 'ecriture' || presence === 'attente') && <span className="cca-caret" />}
           </p>
         ) : (
