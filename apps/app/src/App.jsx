@@ -612,7 +612,8 @@ const TeleconsultJoinPage = lazy(() => import('@/pages/liri/TeleconsultJoinPage'
 const DevLiriHostEntry = lazy(() => import('@/pages/dev/DevLiriHostEntry'));
 const TableauVivantDemoPage = lazy(() => import('@/pages/dev/TableauVivantDemoPage'));
 const CourseDemoPage = lazy(() => import('@/pages/dev/CourseDemoPage'));
-const PrecepteurDemoPage = lazy(() => import('@/pages/dev/PrecepteurDemoPage'));
+// /precepteur = Le Précepteur DANS le cerveau immersif (coque partagée + présence + « parler à la présence »).
+const PrecepteurDemoPage = lazy(() => import('@/pages/precepteur/PrecepteurImmersiveDemo'));
 const PrecepteurCoursePage = lazy(() => import('@/pages/precepteur/PrecepteurCoursePage'));
 // Le Précepteur ENVELOPPÉ dans le chrome du portail LIRI (LiriPortalShell, rail « École ») —
 // même moteur (PrecepteurPlayer) que /precepteur, dual-mode démo + :masterclassId.

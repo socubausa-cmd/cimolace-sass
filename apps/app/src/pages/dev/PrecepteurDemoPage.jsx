@@ -162,7 +162,7 @@ function Board({ children, className = '' }) {
  * numérique issu d'un MasterclassProject (`PrecepteurCoursePage`).
  * @param {{ course: { title: string, concepts: Array<{ title: string, scenes: Object[] }> } }} props
  */
-export function PrecepteurPlayer({ course }) {
+export function PrecepteurPlayer({ course, embedded = false, onScene }) {
   const scenes = useMemo(
     () => course.concepts.flatMap((c) => c.scenes.map((s) => ({ ...s, conceptTitle: c.title }))),
     [course],
@@ -346,6 +346,8 @@ export function PrecepteurPlayer({ course }) {
   }, [idx, started, done, scenes, sfx]);
   // Petite fanfare à la fin du cours.
   useEffect(() => { if (started && done) sfx.play('success'); }, [started, done, sfx]);
+  // Notifie la coque immersive (mode embedded) de l'état courant → pilote la Présence.
+  useEffect(() => { onScene?.({ type: scenes[idx]?.type, idx, started, done }); }, [idx, started, done, scenes, onScene]);
 
   // débloque l'audio DANS le geste (sinon les navigateurs muettent <audio> et la synthèse)
   const begin = () => {
@@ -544,12 +546,15 @@ export function PrecepteurPlayer({ course }) {
   const sceneAnim = sceneVariants(sc && sc.type, reducedMotion);
 
   return (
-    <div className="flex min-h-screen flex-col bg-[#0b0f17] px-4 py-6 md:py-8" style={{ '--school-accent': '#d4a36a' }}>
+    <div
+      className={`flex flex-col ${embedded ? 'min-h-full bg-transparent px-2 py-2' : 'min-h-screen bg-[#0b0f17] px-4 py-6 md:py-8'}`}
+      style={{ '--school-accent': '#d4a36a' }}
+    >
       <div className={`mx-auto flex w-full flex-1 flex-col transition-[max-width] duration-500 ${wide ? 'max-w-6xl' : 'max-w-4xl'}`}>
         {/* En-tête */}
         <div className="relative mb-2 flex items-center justify-center gap-2 text-amber-400/90">
-          <GraduationCap className="h-5 w-5" />
-          <span className="text-[11px] font-bold uppercase tracking-[0.2em]">Le Précepteur · cours enseigné</span>
+          {!embedded && <GraduationCap className="h-5 w-5" />}
+          {!embedded && <span className="text-[11px] font-bold uppercase tracking-[0.2em]">Le Précepteur · cours enseigné</span>}
           {started ? (
             <button
               type="button"
@@ -724,10 +729,12 @@ export function PrecepteurPlayer({ course }) {
           )}
         </div>
 
-        <p className="mt-5 text-center text-xs leading-relaxed text-white/35">
-          Démo « Le Précepteur » — leçon → amorce → croquis dessiné (balayage) → atelier nominatif → analogie animée.
-          Voix off : ElevenLabs (réaliste) si connecté, sinon synthèse du navigateur.
-        </p>
+        {!embedded && (
+          <p className="mt-5 text-center text-xs leading-relaxed text-white/35">
+            Démo « Le Précepteur » — leçon → amorce → croquis dessiné (balayage) → atelier nominatif → analogie animée.
+            Voix off : ElevenLabs (réaliste) si connecté, sinon synthèse du navigateur.
+          </p>
+        )}
       </div>
     </div>
   );
