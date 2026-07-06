@@ -48,7 +48,7 @@ import {
 import { LiriPortalShell } from '@/components/liri/LiriPortalShell';
 import { savePendingMasterclassForLiveStudio } from '@/lib/liriAgentExportToLiveStudio';
 import { masterclassProjectToPrecepteurCourse } from '@/lib/precepteur/fromMasterclass';
-import { enrichCourseWithCroquis, buildCroquisSeeds } from '@/lib/precepteur/enrichCroquis';
+import { conformCourse } from '@/lib/precepteur/conformCourse';
 import { supabase } from '@/lib/supabaseCompat';
 import { masterclassApi } from '@/lib/api-v2';
 
@@ -2077,11 +2077,13 @@ function MasterclassFactoryPage() {
       };
 
       setPrecepteurLoading(true);
-      let enriched = course; // GARDE-FOU : par défaut le cours NON enrichi (jamais bloquant)
+      let enriched = course; // GARDE-FOU : par défaut le cours NON conformé (jamais bloquant)
       try {
-        const seeds = buildCroquisSeeds(m.project);
-        enriched = await enrichCourseWithCroquis(course, seeds, invokeEdge);
-      } catch { /* enrichissement optionnel : on garde le cours non enrichi */ }
+        // Juge de conformité (brique C) À LA CRÉATION : répare les dispositifs déterministes
+        // (surlignage/encadré/résumé), régénère les croquis manquants via l'edge (project source
+        // aligné pour les seeds), sécurise (anti-crash) et réordonne. Non destructif, fail-safe.
+        enriched = (await conformCourse(course, { enrichCroquis: true, project: m.project, invokeEdge })).course;
+      } catch { /* conformité optionnelle : on garde le cours non conformé */ }
       finally { setPrecepteurLoading(false); }
 
       // On dépose le cours DÉJÀ enrichi (lu en priorité par PrecepteurCoursePage) ET on

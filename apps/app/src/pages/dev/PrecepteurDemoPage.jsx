@@ -460,7 +460,7 @@ export function PrecepteurPlayer({ course }) {
     if (s.type === 'atelier') {
       return (
         <div className="w-full max-w-4xl">
-          <AtelierPrompt scene={s} studentName={name} speak={speak} onNarrate={narrateNow} onContinue={advance} judgeAnswer={judgeAnswer} />
+          <AtelierPrompt scene={s} studentName={name} speak={speak} onNarrate={narrateNow} onContinue={advance} judgeAnswer={judgeAnswer} onReveal={(cat) => sfx.play(cat === 'ok' ? 'success' : 'appear')} />
         </div>
       );
     }

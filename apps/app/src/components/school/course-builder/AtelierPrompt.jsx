@@ -30,7 +30,7 @@ const ACK_TONE = {
   skip: 'text-slate-500',
 };
 
-export default function AtelierPrompt({ scene, studentName = '', speak = false, onNarrate, onContinue, judgeAnswer }) {
+export default function AtelierPrompt({ scene, studentName = '', speak = false, onNarrate, onContinue, judgeAnswer, onReveal }) {
   const name = (studentName || '').trim() || 'l’élève';
   const question = String(scene?.question || '').replace('{{student_name}}', name);
   const [phase, setPhase] = useState('asking'); // asking | judging | revealed
@@ -56,9 +56,10 @@ export default function AtelierPrompt({ scene, studentName = '', speak = false, 
     if (msg) say(msg);
     window.setTimeout(() => {
       setPhase('revealed');
+      onReveal?.(cat); // SFX de révélation (brique D) : réussite (ok) vs simple apparition
       say(scene.reveal_narration || '');
     }, delay);
-  }, [scene, say]);
+  }, [scene, say, onReveal]);
 
   const submit = async () => {
     if (phase !== 'asking') return;
