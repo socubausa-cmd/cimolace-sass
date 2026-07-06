@@ -38,6 +38,7 @@ import { createPortal } from 'react-dom';
 import '@livekit/components-styles';
 import { getProcheStatus, getProcheToken, type ProcheStatus } from '@/features/medos-cockpit/procheApi';
 import { useBroadcastJoinRequest } from '@/features/medos-cockpit/useJoinRequest';
+import { explainSharedScene } from '@/features/medos-cockpit/cockpit-api';
 import { useCockpitChannel } from '@/features/medos-cockpit/useCockpitChannel';
 import { getApiBaseUrl } from '@/lib/apiBase';
 import { ConsultationStage, CallEndedScreen, ChatPanel, AudioUnlockGate, RaiseHandButton, CONSULT_SHELL_CSS } from './ConsultationRoom';
@@ -345,6 +346,12 @@ function ProcheLiveRoom({ url, token, sessionId, inviteId, clinic, initialCam = 
               identity={{ logo: clinicLogo, label: clinic ?? null, name: channel.hostName }}
               onImmersiveChange={setImmersive}
               explain={channel.explain}
+              onExplain={async () => {
+                // Invité : explication LOCALE (self-service) de ce qui est affiché.
+                const sc = channel.scene as any;
+                const r = await explainSharedScene({ scene: sc, kind: sc?.kind || '', focus: sc?.focus || undefined });
+                return { title: r.title, text: r.explanation };
+              }}
             />
             {/* Mode focus → barre masquée (montée pour ne pas couper micro/caméra). */}
             <div style={{ display: immersive ? 'none' : 'contents' }}>

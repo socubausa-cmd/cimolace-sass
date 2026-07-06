@@ -632,14 +632,17 @@ export default function ConsultationRoom() {
               identity={consultIdentity}
               onImmersiveChange={setStageImmersive}
               explain={channel.explain}
-              onExplain={isHost ? async () => {
+              onExplain={async () => {
                 const r = await explainSharedScene({
                   scene,
                   kind: (scene as any)?.kind || (view === 'board' ? 'report' : ''),
+                  focus: (scene as any)?.focus || undefined,
                   patient_name: ctx?.patient_name || undefined,
                 });
-                channel.shareExplain(r.title, r.explanation);
-              } : undefined}
+                // Hôte : diffuse à tous. Patient : explication locale (self-service).
+                if (isHost) { channel.shareExplain(r.title, r.explanation); return; }
+                return { title: r.title, text: r.explanation };
+              }}
               onCloseExplain={channel.clearExplain}
             />
             {/* Wrapper positionné : ancre le popover Réglages au-dessus de la barre
@@ -1486,9 +1489,10 @@ export function ConsultationStage({
   sessionId: string | null;
   /** Explication IA de l'artefact partagé — reçue du canal, affichée chez tous. */
   explain?: { title: string; text: string; id: number } | null;
-  /** Host : déclenche l'explication IA de la scène courante (async). */
-  onExplain?: () => Promise<void> | void;
-  /** Host : ferme l'explication chez tous. */
+  /** Déclenche l'explication IA de la scène courante. L'hôte DIFFUSE (renvoie
+   *  void) ; le patient/invité obtient une explication LOCALE (renvoie le texte). */
+  onExplain?: () => Promise<{ title: string; text: string } | void> | void;
+  /** Host : ferme l'explication diffusée chez tous. */
   onCloseExplain?: () => void;
   /** Un panneau de droite (Discussion/Copilote/Récap) est ouvert → on masque le
    *  rail Participants pour ne JAMAIS avoir 2 colonnes à droite (anti-surcharge). */
@@ -1552,29 +1556,36 @@ export function ConsultationStage({
   // partagé occupe tout ; re-tap = retour normal. Émis au parent pour qu'il
   // masque sa barre. Réinitialisé dès qu'on quitte Partage/Tableau.
   const [immersive, setImmersive] = useState(false);
-  // Explication IA de l'artefact partagé : chargement (host) + panneau (tous).
+  // Explication IA de l'artefact partagé : chargement + panneau.
   const [explaining, setExplaining] = useState(false);
   const [explainDismissed, setExplainDismissed] = useState(0);
+  // Explication LOCALE (self-service) : quand le patient/invité demande LUI-MÊME
+  // une explication, elle ne s'affiche que chez lui (pas de diffusion).
+  const [localExplain, setLocalExplain] = useState<{ title: string; text: string; id: number } | null>(null);
+  // Affichée = la PLUS RÉCENTE entre la diffusée (hôte) et la locale.
+  const shownExplain = [explain, localExplain].filter(Boolean).sort((a, b) => (b!.id - a!.id))[0] || null;
   const lastExplainIdRef = useRef(0);
-  // Cue sonore + révélation animée à CHAQUE nouvelle explication reçue.
+  // Cue sonore + révélation animée à CHAQUE nouvelle explication.
   useEffect(() => {
-    if (explain && explain.id !== lastExplainIdRef.current) {
-      lastExplainIdRef.current = explain.id;
+    if (shownExplain && shownExplain.id !== lastExplainIdRef.current) {
+      lastExplainIdRef.current = shownExplain.id;
       playZoomCue('in');
     }
-  }, [explain]);
+  }, [shownExplain?.id]);
   const doExplain = async () => {
     if (!onExplain || explaining) return;
     setExplaining(true);
     try {
-      await onExplain();
+      const r = await onExplain();
+      // L'hôte diffuse (void) ; le patient/invité reçoit un texte → panneau LOCAL.
+      if (r && r.text) setLocalExplain({ title: r.title, text: r.text, id: Date.now() });
     } catch {
-      /* l'erreur remonte côté parent (toast) ; on ne bloque pas la salle */
+      /* l'erreur ne bloque pas la salle ; le bouton se réactive */
     } finally {
       setExplaining(false);
     }
   };
-  const explainVisible = !!explain && explain.id !== explainDismissed;
+  const explainVisible = !!shownExplain && shownExplain.id !== explainDismissed;
   const toggleImmersive = () => {
     setImmersive((v) => {
       playZoomCue(v ? 'out' : 'in');
@@ -1681,13 +1692,13 @@ export function ConsultationStage({
           <AnnotationOverlay strokes={strokes} editable={editable} onStrokes={onStrokes} />
         ) : null}
 
-        {/* COCKPIT INTELLIGENT — bouton « Expliquer par l'IA » (hôte) : demande
-            à l'IA d'expliquer l'artefact partagé courant → panneau chez TOUS. */}
-        {isHost && onExplain && (hasScene || view === 'board' || screen) && !explainVisible ? (
+        {/* COCKPIT INTELLIGENT — bouton « Expliquer par l'IA » : l'hôte DIFFUSE
+            l'explication à tous ; le patient/invité obtient la sienne (self-service). */}
+        {onExplain && (hasScene || view === 'board' || screen) && !explainVisible ? (
           <button
             onClick={doExplain}
             disabled={explaining}
-            title="Expliquer par l'IA ce qui est partagé à l'écran"
+            title={isHost ? "Expliquer par l'IA ce qui est partagé (visible par tous)" : "Demander à l'IA de m'expliquer ce qui est affiché"}
             style={{ position: 'absolute', left: 12, bottom: 12, zIndex: 23, display: 'inline-flex', alignItems: 'center', gap: 7, padding: '9px 14px', borderRadius: 999, border: 'none', background: explaining ? 'rgba(24,20,16,0.85)' : GOLD, color: explaining ? GOLD : '#1a1a1a', fontSize: 12.5, fontWeight: 700, cursor: explaining ? 'default' : 'pointer', boxShadow: '0 8px 24px rgba(0,0,0,0.4)' }}
           >
             <Sparkles size={15} aria-hidden="true" /> {explaining ? 'Analyse…' : 'Expliquer'}
@@ -1695,9 +1706,9 @@ export function ConsultationStage({
         ) : null}
 
         {/* Panneau d'explication IA (TOUS) : révélation animée + pastille pulsée. */}
-        {explainVisible ? (
+        {explainVisible && shownExplain ? (
           <div
-            key={explain?.id}
+            key={shownExplain.id}
             style={{ position: 'absolute', left: 12, right: 12 + reserve, bottom: 12, zIndex: 24, maxWidth: 580, marginInline: 'auto', padding: '13px 15px', borderRadius: 16, background: 'rgba(24,20,16,0.97)', border: '1px solid rgba(212,163,106,0.5)', boxShadow: '0 16px 48px rgba(0,0,0,0.55)', animation: 'crExplainIn 0.4s cubic-bezier(0.2,0.7,0.3,1)' }}
           >
             <style>{'@keyframes crExplainIn{from{opacity:0;transform:translateY(16px) scale(.98)}to{opacity:1;transform:none}}@keyframes crExplainPulse{0%,100%{box-shadow:0 0 0 0 rgba(212,163,106,.55)}50%{box-shadow:0 0 0 5px rgba(212,163,106,0)}}'}</style>
@@ -1705,19 +1716,19 @@ export function ConsultationStage({
               <span style={{ width: 22, height: 22, borderRadius: 999, background: 'rgba(212,163,106,0.18)', display: 'grid', placeItems: 'center', flexShrink: 0, animation: 'crExplainPulse 2.2s ease-in-out infinite' }}>
                 <Sparkles size={13} color={GOLD} aria-hidden="true" />
               </span>
-              <span style={{ fontSize: 13, fontWeight: 700, color: '#fff', flex: 1, minWidth: 0, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{explain?.title || 'Explication'}</span>
+              <span style={{ fontSize: 13, fontWeight: 700, color: '#fff', flex: 1, minWidth: 0, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{shownExplain.title || 'Explication'}</span>
               <button
-                onClick={() => { if (isHost) onCloseExplain?.(); else setExplainDismissed(explain?.id || 0); }}
+                onClick={() => { setExplainDismissed(shownExplain.id); setLocalExplain(null); if (isHost) onCloseExplain?.(); }}
                 aria-label="Fermer l'explication"
                 style={{ background: 'transparent', border: 'none', color: '#9ca3af', cursor: 'pointer', display: 'inline-flex', flexShrink: 0 }}
               >
                 <X size={15} />
               </button>
             </div>
-            <p style={{ margin: 0, fontSize: 13, lineHeight: 1.55, color: '#e8e6e0' }}>{explain?.text}</p>
-            {isHost ? (
+            <p style={{ margin: 0, fontSize: 13, lineHeight: 1.55, color: '#e8e6e0' }}>{shownExplain.text}</p>
+            {onExplain ? (
               <button onClick={doExplain} disabled={explaining} style={{ marginTop: 9, background: 'transparent', border: '1px solid rgba(212,163,106,0.45)', color: GOLD, borderRadius: 9, padding: '5px 11px', fontSize: 11.5, fontWeight: 600, cursor: explaining ? 'default' : 'pointer' }}>
-                {explaining ? 'Analyse…' : 'Réexpliquer'}
+                {explaining ? 'Analyse…' : (isHost ? 'Réexpliquer' : "M'expliquer à nouveau")}
               </button>
             ) : null}
           </div>
