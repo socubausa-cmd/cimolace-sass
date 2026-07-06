@@ -52,14 +52,18 @@ function RootRedirect() {
   const hash = typeof window !== 'undefined' ? window.location.hash : '';
   const host = typeof window !== 'undefined' ? window.location.hostname.toLowerCase() : '';
   if (hash.includes('access_token')) return <Navigate to="/auth/callback" replace />;
+  const isProrascienceHost = host === 'prorascience.org' || host === 'www.prorascience.org';
+  // P5 — prorascience.org → Cimolace OS (realm isolé). DOIT passer AVANT la résolution host→tenant :
+  // prorascience.org est un domaine custom du tenant `isna`, donc getCachedHostTenant renverrait 'isna'
+  // → les maquettes, court-circuitant l'OS. Kill-switch : ?os=0 (retombe alors sur les maquettes ci-dessous).
+  if (isProrascienceHost && prorascienceOsEnabled()) {
+    return <CimolaceCreationAgent tenantSlug={DEFAULT_TENANT_SLUG} />;
+  }
   // Domaine custom d'un tenant → SA vitrine, rendue en URL PROPRE (sans /t/:slug). Multi-tenant.
   const hostTenant = getCachedHostTenant(host);
   if (hostTenant) return <TenantVitrineHome slug={hostTenant} />;
-  // Domaine fondateur (prorascience.org = tenant ISNA). P5 — bascule derrière flag : si l'OS est
-  // actif, le MÊME moteur rend prorascience en realm isolé (logo/nom/bienvenue/cerveau prorascience) ;
-  // sinon, les maquettes du fondateur (défaut, zéro régression).
-  if (host === 'prorascience.org' || host === 'www.prorascience.org') {
-    if (prorascienceOsEnabled()) return <CimolaceCreationAgent tenantSlug={DEFAULT_TENANT_SLUG} />;
+  // Domaine fondateur (prorascience.org = tenant ISNA), OS désactivé (?os=0) → maquettes du fondateur.
+  if (isProrascienceHost) {
     return <TenantVitrineHome slug={DEFAULT_TENANT_SLUG} />;
   }
   // LOT C — Racine Cimolace (SaaS) → l'ASSISTANT IMMERSIF RENDU AU ROOT (l'URL reste `/`, pas de
