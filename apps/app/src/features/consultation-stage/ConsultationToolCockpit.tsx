@@ -1,60 +1,57 @@
 // ─────────────────────────────────────────────────────────────────────────────
-// ConsultationToolCockpit — « cockpit d'outils » compact pour le TABLEAU de la
-// salle de téléconsultation MEDOS (praticien).
+// ConsultationToolCockpit — barre d'outils du TABLEAU de téléconsultation MEDOS,
+// façon logiciel d'édition (Figma/Canva).
 //
-// PROBLÈME (demande USER) : le rail d'outils complet (LiveWhiteboardToolsSidebar,
-// ~960 lignes) affiche TOUT en permanence → vue surchargée + long scroll pour
-// trouver un outil. On veut un fonctionnement « cockpit » : on ouvre une FAMILLE
-// (Écrire, Formes, Math, Naviguer) et SEULS ces outils apparaissent en petit rail
-// overlay dans un coin, sélectionnables au clic. Couleur + épaisseur toujours à
-// portée.
+// ORGANISATION (demande USER) : une BARRE EN EN-TÊTE (haut du tableau), épurée :
+//   • seuls les OUTILS LES PLUS UTILISÉS sont visibles en permanence
+//     (Sélection · Crayon · Texte · Gomme) ;
+//   • les GROUPES sont des « déployeurs » (menus) qui s'ouvrent au clic
+//     (Formes · Math · Image) → on ne voit QUE ce dont on a besoin ;
+//   • le bouton d'un groupe montre le DERNIER outil choisi de ce groupe → un clic
+//     le re-sélectionne sans rouvrir le menu (le chevron rouvre le menu) ;
+//   • à droite : couleur + épaisseur (déployeurs), Annuler/Refaire, Aperçu/Avancé.
 //
-// Purement client : lit/écrit `useLiveWhiteboardStore` (tool/color/size/surface),
-// exactement comme le grand rail. Aucun état réseau. Ne rend rien en lecture seule.
+// Purement client : lit/écrit `useLiveWhiteboardStore`. Rien en lecture seule.
 // ─────────────────────────────────────────────────────────────────────────────
 import { useState } from 'react';
 import {
-  Pencil, PenLine, Type, Eraser,
-  Square, Circle, Minus, Spline, Hexagon, Star, MoveUpRight,
-  Hand, MousePointer2, BoxSelect, Crosshair,
-  Compass, Ruler, Triangle, LineChart,
-  Image as ImageIcon, Undo2, Redo2, Trash2, SlidersHorizontal,
-  Eye, X,
+  MousePointer2, Pencil, Type, Eraser,
+  Shapes, Square, Circle, Minus, MoveUpRight, Spline, Hexagon, Star,
+  Ruler, Compass, Triangle, LineChart,
+  Image as ImageIcon, ChevronDown,
+  Undo2, Redo2, Trash2, Eye, X, SlidersHorizontal,
 } from 'lucide-react';
 import { useLiveWhiteboardStore } from '@/components/liri/live-room/useLiveWhiteboardStore';
 
 const GOLD = '#d4a36a';
 
-type ToolDef = { id: string; label: string; Icon: any };
-type Family = { key: string; label: string; Icon: any; tools: ToolDef[]; surface?: string };
+type Tool = { id: string; label: string; Icon: any };
+type Group = { key: string; label: string; Icon: any; tools: Tool[]; surface?: string };
 
-// Familles = regroupement des outils EXISTANTS (mêmes ids que le grand rail →
-// aucune perte de fonction). « Math » bascule aussi la surface Géoplan.
-const FAMILIES: Family[] = [
+// Les 4 outils toujours visibles (les plus utilisés en consultation).
+const MOST_USED: Tool[] = [
+  { id: 'select', label: 'Sélection', Icon: MousePointer2 },
+  { id: 'pencil', label: 'Crayon', Icon: Pencil },
+  { id: 'text', label: 'Texte', Icon: Type },
+  { id: 'eraser', label: 'Gomme', Icon: Eraser },
+];
+
+// Groupes « déployés » au clic (mêmes ids que le moteur → aucune perte).
+const GROUPS: Group[] = [
   {
-    key: 'write', label: 'Écrire', Icon: Pencil,
-    tools: [
-      { id: 'pencil', label: 'Crayon', Icon: Pencil },
-      { id: 'poly', label: 'Stylo', Icon: PenLine },
-      { id: 'text', label: 'Texte', Icon: Type },
-      { id: 'eraser', label: 'Gomme', Icon: Eraser },
-      { id: 'eraser-stroke', label: 'Effacer objet', Icon: Eraser },
-    ],
-  },
-  {
-    key: 'shapes', label: 'Formes', Icon: Square,
+    key: 'formes', label: 'Formes', Icon: Shapes,
     tools: [
       { id: 'rect', label: 'Rectangle', Icon: Square },
       { id: 'circle', label: 'Cercle', Icon: Circle },
       { id: 'line', label: 'Ligne', Icon: Minus },
+      { id: 'arrow', label: 'Flèche', Icon: MoveUpRight },
       { id: 'curve', label: 'Courbe', Icon: Spline },
       { id: 'polygon', label: 'Polygone', Icon: Hexagon },
       { id: 'star', label: 'Étoile', Icon: Star },
-      { id: 'arrow', label: 'Flèche', Icon: MoveUpRight },
     ],
   },
   {
-    key: 'math', label: 'Math', Icon: Compass, surface: 'geoplan',
+    key: 'math', label: 'Math', Icon: Ruler, surface: 'geoplan',
     tools: [
       { id: 'compass', label: 'Compas', Icon: Compass },
       { id: 'protractor', label: 'Rapporteur', Icon: Triangle },
@@ -62,15 +59,6 @@ const FAMILIES: Family[] = [
       { id: 'angle', label: 'Angle', Icon: Triangle },
       { id: 'axes', label: 'Repère', Icon: LineChart },
       { id: 'function-plot', label: 'Courbe f(x)', Icon: LineChart },
-    ],
-  },
-  {
-    key: 'nav', label: 'Naviguer', Icon: Hand,
-    tools: [
-      { id: 'hand', label: 'Main', Icon: Hand },
-      { id: 'select', label: 'Sélection', Icon: MousePointer2 },
-      { id: 'marquee', label: 'Zone', Icon: BoxSelect },
-      { id: 'laser', label: 'Laser', Icon: Crosshair },
     ],
   },
   {
@@ -84,18 +72,17 @@ const FAMILIES: Family[] = [
 const SWATCHES = ['#ffffff', '#111111', '#d4a36a', '#e5484d', '#3b82f6', '#22c55e', '#eab308'];
 const SIZES = [2, 4, 8, 14];
 
+const BAR_BG = 'rgba(24,20,16,0.96)';
+const MENU_BG = 'rgba(24,20,16,0.98)';
+
 export default function ConsultationToolCockpit({
   preview = false,
   onPreviewChange,
   advancedOpen = false,
   onAdvancedChange,
 }: {
-  /** Mode APERÇU (partie C) : replie le cockpit → le praticien voit le tableau
-   *  propre, comme le patient. Purement local (le patient ne remarque rien). */
   preview?: boolean;
   onPreviewChange?: (v: boolean) => void;
-  /** « Avancé » : révèle le rail complet d'origine (LiveWhiteboardToolsSidebar)
-   *  avec TOUS les outils niche (math avancé, NeuroInk IA, pages, groupes…). */
   advancedOpen?: boolean;
   onAdvancedChange?: (v: boolean) => void;
 } = {}) {
@@ -110,19 +97,12 @@ export default function ConsultationToolCockpit({
   const redoBoard = useLiveWhiteboardStore((s) => s.redoBoard);
   const clearBoard = useLiveWhiteboardStore((s) => s.clearBoard);
 
-  // Famille ouverte (null = seule la barre de familles est visible).
-  const [openFamily, setOpenFamily] = useState<string | null>('write');
+  // Menu ouvert (null | clé de groupe | 'color' | 'size'). Dernier outil choisi
+  // par groupe (pour l'afficher sur le bouton du groupe).
+  const [openMenu, setOpenMenu] = useState<string | null>(null);
+  const [groupLast, setGroupLast] = useState<Record<string, string>>({});
 
-  const family = FAMILIES.find((f) => f.key === openFamily) || null;
-
-  const pickFamily = (f: Family) => {
-    setOpenFamily((prev) => (prev === f.key ? null : f.key));
-    if (f.surface) setBoardSurface(f.surface);
-  };
-
-  // MODE APERÇU (C) : cockpit replié → seul un petit bouton « Quitter l'aperçu »
-  // reste. Le tableau se voit propre, comme côté patient. Local (le patient ne
-  // remarque rien : c'est juste l'overlay hôte qui disparaît).
+  // APERÇU (C) : barre repliée → pastille « quitter ».
   if (preview) {
     return (
       <button
@@ -130,9 +110,9 @@ export default function ConsultationToolCockpit({
         onClick={() => onPreviewChange?.(false)}
         title="Quitter l'aperçu patient"
         style={{
-          position: 'absolute', left: 12, bottom: 12, zIndex: 31,
+          position: 'absolute', top: 10, left: '50%', transform: 'translateX(-50%)', zIndex: 31,
           display: 'inline-flex', alignItems: 'center', gap: 7, padding: '9px 14px',
-          borderRadius: 999, border: `1px solid ${GOLD}`, background: 'rgba(24,20,16,0.92)',
+          borderRadius: 999, border: `1px solid ${GOLD}`, background: BAR_BG,
           color: GOLD, fontSize: 12, fontWeight: 700, cursor: 'pointer',
           boxShadow: '0 10px 30px rgba(0,0,0,0.45)', backdropFilter: 'blur(8px)',
         }}
@@ -142,159 +122,214 @@ export default function ConsultationToolCockpit({
     );
   }
 
+  const pickTool = (id: string, groupKey?: string, surface?: string) => {
+    if (surface) setBoardSurface(surface);
+    setTool(id);
+    if (groupKey) setGroupLast((p) => ({ ...p, [groupKey]: id }));
+    setOpenMenu(null);
+  };
+  const toggleMenu = (key: string) => setOpenMenu((m) => (m === key ? null : key));
+
+  const toolBtn = (active: boolean) => ({
+    width: 36, height: 36, borderRadius: 9, cursor: 'pointer',
+    display: 'grid', placeItems: 'center',
+    border: active ? `1px solid ${GOLD}` : '1px solid transparent',
+    background: active ? 'rgba(212,163,106,0.16)' : 'rgba(255,255,255,0.04)',
+    color: active ? GOLD : 'rgba(255,255,255,0.82)',
+  } as const);
+  const divider = <div style={{ width: 1, height: 24, background: 'rgba(255,255,255,0.09)' }} />;
+  const menuBox = {
+    position: 'absolute', top: 'calc(100% + 6px)', left: 0, zIndex: 32,
+    display: 'flex', gap: 4, padding: 7, borderRadius: 12,
+    background: MENU_BG, border: `1px solid rgba(212,163,106,0.30)`,
+    boxShadow: '0 12px 36px rgba(0,0,0,0.5)', animation: 'ctcIn 0.15s cubic-bezier(0.2,0.7,0.3,1)',
+  } as const;
+
   return (
-    <div
-      style={{
-        position: 'absolute', left: 12, bottom: 12, zIndex: 30,
-        display: 'flex', flexDirection: 'column', gap: 8, alignItems: 'flex-start',
-        pointerEvents: 'auto',
-      }}
-    >
-      {/* Rail overlay de la famille ouverte (au-dessus de la barre de familles) */}
-      {family ? (
-        <div
-          style={{
-            display: 'flex', gap: 6, padding: 7, borderRadius: 14,
-            background: 'rgba(24,20,16,0.92)', border: '1px solid rgba(212,163,106,0.28)',
-            boxShadow: '0 12px 36px rgba(0,0,0,0.5)', backdropFilter: 'blur(8px)',
-            animation: 'ctcIn 0.18s cubic-bezier(0.2,0.7,0.3,1)',
-          }}
-        >
-          {family.tools.map((t) => {
-            const active = tool === t.id;
-            return (
-              <button
-                key={`${family.key}-${t.id}`}
-                type="button"
-                title={t.label}
-                onClick={() => setTool(t.id)}
+    <>
+      {openMenu ? (
+        <div onClick={() => setOpenMenu(null)} style={{ position: 'absolute', inset: 0, zIndex: 29 }} />
+      ) : null}
+
+      <div
+        style={{
+          position: 'absolute', top: 10, left: '50%', transform: 'translateX(-50%)', zIndex: 30,
+          display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 7, padding: '6px 8px',
+          maxWidth: 'calc(100% - 88px)', borderRadius: 13, background: BAR_BG,
+          border: '1px solid rgba(255,255,255,0.08)', boxShadow: '0 10px 30px rgba(0,0,0,0.45)',
+          backdropFilter: 'blur(8px)',
+        }}
+      >
+        {/* Outils les plus utilisés — toujours visibles */}
+        {MOST_USED.map((t) => (
+          <button key={t.id} type="button" title={t.label} onClick={() => pickTool(t.id)} style={toolBtn(tool === t.id)}>
+            <t.Icon size={17} aria-hidden="true" />
+          </button>
+        ))}
+
+        {divider}
+
+        {/* Groupes = déployeurs. Le bouton montre le DERNIER outil choisi. */}
+        {GROUPS.map((g) => {
+          const lastId = groupLast[g.key];
+          const lastTool = g.tools.find((x) => x.id === lastId);
+          const Shown = lastTool?.Icon || g.Icon;
+          const active = g.tools.some((x) => x.id === tool);
+          return (
+            <div key={g.key} style={{ position: 'relative', display: 'inline-flex' }}>
+              <div
                 style={{
-                  width: 44, height: 44, borderRadius: 11, cursor: 'pointer',
-                  display: 'grid', placeItems: 'center', gap: 2,
-                  border: active ? `1px solid ${GOLD}` : '1px solid rgba(255,255,255,0.08)',
-                  background: active ? 'rgba(212,163,106,0.16)' : 'rgba(255,255,255,0.03)',
-                  color: active ? GOLD : 'rgba(255,255,255,0.82)',
+                  display: 'inline-flex', alignItems: 'center', height: 36, borderRadius: 9, overflow: 'hidden',
+                  border: active ? `1px solid ${GOLD}` : '1px solid transparent',
+                  background: active ? 'rgba(212,163,106,0.14)' : 'rgba(255,255,255,0.04)',
                 }}
               >
-                <t.Icon size={17} aria-hidden="true" />
-                <span style={{ fontSize: 8, fontWeight: 600, lineHeight: 1 }}>{t.label}</span>
-              </button>
-            );
-          })}
-          {/* Couleur + épaisseur — toujours à portée dans le rail actif */}
-          <div style={{ width: 1, background: 'rgba(255,255,255,0.08)', margin: '2px 2px' }} />
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 4, justifyContent: 'center' }}>
-            <div style={{ display: 'flex', gap: 3 }}>
+                <button
+                  type="button"
+                  title={lastTool ? `${g.label} · ${lastTool.label}` : `${g.label} — choisir un outil`}
+                  onClick={() => (lastId ? pickTool(lastId, g.key, g.surface) : toggleMenu(g.key))}
+                  style={{
+                    display: 'inline-flex', alignItems: 'center', gap: 6, padding: '0 6px 0 9px', height: 36,
+                    border: 'none', background: 'transparent', cursor: 'pointer', fontSize: 12.5, fontWeight: 600,
+                    color: active ? GOLD : 'rgba(255,255,255,0.8)',
+                  }}
+                >
+                  <Shown size={16} aria-hidden="true" /> {g.label}
+                </button>
+                <button
+                  type="button" aria-label={`Ouvrir ${g.label}`} onClick={() => toggleMenu(g.key)}
+                  style={{
+                    display: 'grid', placeItems: 'center', width: 22, height: 36, border: 'none',
+                    background: openMenu === g.key ? 'rgba(212,163,106,0.18)' : 'transparent', cursor: 'pointer',
+                    color: active ? GOLD : 'rgba(255,255,255,0.6)',
+                  }}
+                >
+                  <ChevronDown size={14} aria-hidden="true" />
+                </button>
+              </div>
+              {openMenu === g.key ? (
+                <div style={menuBox}>
+                  {g.tools.map((t) => (
+                    <button
+                      key={t.id} type="button" title={t.label} onClick={() => pickTool(t.id, g.key, g.surface)}
+                      style={{
+                        width: 44, height: 44, borderRadius: 10, cursor: 'pointer', display: 'grid', placeItems: 'center', gap: 2,
+                        border: tool === t.id ? `1px solid ${GOLD}` : '1px solid rgba(255,255,255,0.08)',
+                        background: tool === t.id ? 'rgba(212,163,106,0.16)' : 'rgba(255,255,255,0.03)',
+                        color: tool === t.id ? GOLD : 'rgba(255,255,255,0.85)',
+                      }}
+                    >
+                      <t.Icon size={17} aria-hidden="true" />
+                      <span style={{ fontSize: 7.5, fontWeight: 600, lineHeight: 1 }}>{t.label}</span>
+                    </button>
+                  ))}
+                </div>
+              ) : null}
+            </div>
+          );
+        })}
+
+        {divider}
+
+        {/* Couleur — déployeur */}
+        <div style={{ position: 'relative', display: 'inline-flex' }}>
+          <button
+            type="button" aria-label="Couleur" onClick={() => toggleMenu('color')}
+            style={{
+              display: 'inline-flex', alignItems: 'center', gap: 6, height: 36, padding: '0 8px', borderRadius: 9,
+              border: '1px solid transparent', background: 'rgba(255,255,255,0.04)', cursor: 'pointer',
+            }}
+          >
+            <span style={{ width: 16, height: 16, borderRadius: '50%', background: color, border: '1px solid rgba(255,255,255,0.3)' }} />
+            <ChevronDown size={14} aria-hidden="true" style={{ color: 'rgba(255,255,255,0.6)' }} />
+          </button>
+          {openMenu === 'color' ? (
+            <div style={{ ...menuBox, gap: 6 }}>
               {SWATCHES.map((c) => (
                 <button
-                  key={c} type="button" title={c} onClick={() => setColor(c)}
+                  key={c} type="button" title={c} onClick={() => { setColor(c); setOpenMenu(null); }}
                   style={{
-                    width: 15, height: 15, borderRadius: '50%', cursor: 'pointer', padding: 0,
-                    background: c,
+                    width: 22, height: 22, borderRadius: '50%', cursor: 'pointer', padding: 0, background: c,
                     border: color === c ? `2px solid ${GOLD}` : '1px solid rgba(255,255,255,0.25)',
                   }}
                 />
               ))}
             </div>
-            <div style={{ display: 'flex', gap: 3 }}>
+          ) : null}
+        </div>
+
+        {/* Épaisseur — déployeur */}
+        <div style={{ position: 'relative', display: 'inline-flex' }}>
+          <button
+            type="button" aria-label="Épaisseur" onClick={() => toggleMenu('size')}
+            style={{
+              display: 'inline-flex', alignItems: 'center', gap: 6, height: 36, padding: '0 8px', borderRadius: 9,
+              border: '1px solid transparent', background: 'rgba(255,255,255,0.04)', cursor: 'pointer',
+            }}
+          >
+            <span style={{ width: 16, height: Math.max(2, size / 2), borderRadius: 9, background: 'rgba(255,255,255,0.85)' }} />
+            <ChevronDown size={14} aria-hidden="true" style={{ color: 'rgba(255,255,255,0.6)' }} />
+          </button>
+          {openMenu === 'size' ? (
+            <div style={{ ...menuBox, alignItems: 'center' }}>
               {SIZES.map((s) => (
                 <button
-                  key={s} type="button" title={`Épaisseur ${s}`} onClick={() => setSize(s)}
+                  key={s} type="button" title={`Épaisseur ${s}`} onClick={() => { setSize(s); setOpenMenu(null); }}
                   style={{
-                    width: 22, height: 15, borderRadius: 6, cursor: 'pointer', display: 'grid', placeItems: 'center',
-                    border: size === s ? `1px solid ${GOLD}` : '1px solid rgba(255,255,255,0.12)',
+                    width: 34, height: 34, borderRadius: 8, cursor: 'pointer', display: 'grid', placeItems: 'center',
+                    border: size === s ? `1px solid ${GOLD}` : '1px solid rgba(255,255,255,0.1)',
                     background: size === s ? 'rgba(212,163,106,0.16)' : 'rgba(255,255,255,0.03)',
                   }}
                 >
-                  <span style={{ display: 'block', width: Math.min(16, s + 2), height: Math.max(2, s / 2), borderRadius: 99, background: color === '#ffffff' ? '#fff' : color }} />
+                  <span style={{ width: 18, height: Math.max(2, s / 2), borderRadius: 9, background: '#fff' }} />
                 </button>
               ))}
             </div>
-          </div>
+          ) : null}
         </div>
-      ) : null}
 
-      {/* Barre de familles (toujours visible) */}
-      <div
-        style={{
-          display: 'flex', gap: 5, padding: 6, borderRadius: 14,
-          background: 'rgba(24,20,16,0.92)', border: '1px solid rgba(255,255,255,0.09)',
-          boxShadow: '0 10px 30px rgba(0,0,0,0.45)', backdropFilter: 'blur(8px)',
-        }}
-      >
-        {FAMILIES.map((f) => {
-          const isOpen = openFamily === f.key;
-          return (
-            <button
-              key={f.key}
-              type="button"
-              title={f.label}
-              onClick={() => pickFamily(f)}
-              style={{
-                minWidth: 52, height: 40, borderRadius: 10, cursor: 'pointer',
-                display: 'inline-flex', alignItems: 'center', gap: 5, padding: '0 9px',
-                border: isOpen ? `1px solid ${GOLD}` : '1px solid transparent',
-                background: isOpen ? 'rgba(212,163,106,0.14)' : 'rgba(255,255,255,0.03)',
-                color: isOpen ? GOLD : 'rgba(255,255,255,0.75)',
-                fontSize: 11, fontWeight: 600,
-              }}
-            >
-              <f.Icon size={15} aria-hidden="true" />
-              {f.label}
-            </button>
-          );
-        })}
-        {/* Actions rapides : annuler / refaire / tout effacer */}
-        <div style={{ width: 1, background: 'rgba(255,255,255,0.09)', margin: '4px 2px' }} />
+        {divider}
+
+        {/* Annuler / Refaire / Effacer */}
         {([
           { key: 'undo', title: 'Annuler', Icon: Undo2, run: () => undoBoard?.() },
           { key: 'redo', title: 'Refaire', Icon: Redo2, run: () => redoBoard?.() },
           { key: 'clear', title: 'Tout effacer', Icon: Trash2, run: () => clearBoard?.() },
         ] as const).map((a) => (
-          <button
-            key={a.key} type="button" title={a.title} onClick={a.run}
-            style={{
-              width: 40, height: 40, borderRadius: 10, cursor: 'pointer', display: 'grid', placeItems: 'center',
-              border: '1px solid transparent', background: 'rgba(255,255,255,0.03)', color: 'rgba(255,255,255,0.72)',
-            }}
-          >
+          <button key={a.key} type="button" title={a.title} onClick={a.run} style={toolBtn(false)}>
             <a.Icon size={16} aria-hidden="true" />
           </button>
         ))}
-        {/* AVANCÉ : révèle le rail complet d'origine (tous les outils niche + IA) */}
-        <div style={{ width: 1, background: 'rgba(255,255,255,0.09)', margin: '4px 2px' }} />
+
+        {divider}
+
+        {/* Aperçu (C) + Avancé (rail complet) */}
         <button
-          type="button"
-          title="Avancé — tous les outils (math avancé, NeuroInk IA, pages, groupes…)"
-          onClick={() => onAdvancedChange?.(!advancedOpen)}
-          style={{
-            minWidth: 44, height: 40, borderRadius: 10, cursor: 'pointer',
-            display: 'inline-flex', alignItems: 'center', gap: 5, padding: '0 9px',
-            border: advancedOpen ? `1px solid ${GOLD}` : '1px solid transparent',
-            background: advancedOpen ? 'rgba(212,163,106,0.14)' : 'rgba(255,255,255,0.03)',
-            color: advancedOpen ? GOLD : 'rgba(255,255,255,0.72)', fontSize: 11, fontWeight: 600,
-          }}
-        >
-          <SlidersHorizontal size={15} aria-hidden="true" /> Avancé
-        </button>
-        {/* Aperçu (C) : voir le tableau comme le patient (replie le cockpit) */}
-        <div style={{ width: 1, background: 'rgba(255,255,255,0.09)', margin: '4px 2px' }} />
-        <button
-          type="button"
-          title="Aperçu — voir le tableau comme le patient"
+          type="button" title="Aperçu — voir le tableau comme le patient"
           onClick={() => onPreviewChange?.(true)}
           style={{
-            minWidth: 44, height: 40, borderRadius: 10, cursor: 'pointer',
-            display: 'inline-flex', alignItems: 'center', gap: 5, padding: '0 9px',
-            border: '1px solid transparent', background: 'rgba(255,255,255,0.03)',
-            color: 'rgba(255,255,255,0.72)', fontSize: 11, fontWeight: 600,
+            display: 'inline-flex', alignItems: 'center', gap: 5, height: 36, padding: '0 10px', borderRadius: 9,
+            border: '1px solid transparent', background: 'rgba(255,255,255,0.04)', color: 'rgba(255,255,255,0.78)',
+            fontSize: 12, fontWeight: 600, cursor: 'pointer',
           }}
         >
           <Eye size={15} aria-hidden="true" /> Aperçu
         </button>
+        <button
+          type="button" title="Avancé — tous les outils (math avancé, NeuroInk IA, pages, groupes…)"
+          onClick={() => onAdvancedChange?.(!advancedOpen)}
+          style={{
+            display: 'inline-flex', alignItems: 'center', gap: 5, height: 36, padding: '0 10px', borderRadius: 9,
+            border: advancedOpen ? `1px solid ${GOLD}` : '1px solid transparent',
+            background: advancedOpen ? 'rgba(212,163,106,0.14)' : 'rgba(255,255,255,0.04)',
+            color: advancedOpen ? GOLD : 'rgba(255,255,255,0.78)', fontSize: 12, fontWeight: 600, cursor: 'pointer',
+          }}
+        >
+          <SlidersHorizontal size={15} aria-hidden="true" /> Avancé
+        </button>
       </div>
 
-      <style>{`@keyframes ctcIn{from{opacity:0;transform:translateY(6px) scale(.97)}to{opacity:1;transform:none}}`}</style>
-    </div>
+      <style>{`@keyframes ctcIn{from{opacity:0;transform:translateY(-6px) scale(.97)}to{opacity:1;transform:none}}`}</style>
+    </>
   );
 }

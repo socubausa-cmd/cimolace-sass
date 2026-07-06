@@ -162,9 +162,9 @@ export default function ConsultationSmartBoard({
   const [preview, setPreview] = useState(false);
   // « Avancé » : révèle le grand rail d'origine (tous les outils niche + NeuroInk).
   const [advancedOpen, setAdvancedOpen] = useState(false);
-  // Réserve basse pour le cockpit d'outils (partie B) : le tableau utile côté
-  // hôte = tout SAUF cette bande basse (où vivent les outils, non-dessinable).
-  const COCKPIT_RESERVED_BOTTOM = 128;
+  // Réserve HAUTE pour la barre d'outils en en-tête (partie B) : le tableau utile
+  // côté hôte = tout SAUF cette bande haute (où vit la barre, non-dessinable).
+  const TOOLBAR_RESERVED_TOP = 56;
 
   // Patient (viewer) : à chaque nouvel état SmartBoard reçu du canal, on le
   // rejoue dans le stage (setActiveScene/setAnnotationStrokes/… en interne).
@@ -240,13 +240,13 @@ export default function ConsultationSmartBoard({
         <div
           aria-hidden
           style={{
-            position: 'absolute', top: 10, left: 10, right: 10,
-            bottom: COCKPIT_RESERVED_BOTTOM, zIndex: 12, pointerEvents: 'none',
+            position: 'absolute', top: TOOLBAR_RESERVED_TOP, left: 10, right: 10,
+            bottom: 10, zIndex: 12, pointerEvents: 'none',
             border: '1.5px dashed rgba(212,163,106,0.35)', borderRadius: 12,
           }}
         >
           <span style={{
-            position: 'absolute', top: -9, left: 12, padding: '1px 8px', borderRadius: 999,
+            position: 'absolute', top: -9, right: 14, padding: '1px 8px', borderRadius: 999,
             background: '#1f1e1c', color: 'rgba(212,163,106,0.9)', fontSize: 9, fontWeight: 700,
             letterSpacing: 0.3, textTransform: 'uppercase',
           }}>Zone vue par le patient</span>
