@@ -632,11 +632,11 @@ export default function ConsultationRoom() {
               identity={consultIdentity}
               onImmersiveChange={setStageImmersive}
               explain={channel.explain}
-              onExplain={async () => {
+              onExplain={async (focus?: string) => {
                 const r = await explainSharedScene({
                   scene,
                   kind: (scene as any)?.kind || (view === 'board' ? 'report' : ''),
-                  focus: (scene as any)?.focus || undefined,
+                  focus: focus || (scene as any)?.focus || undefined, // organe cliqué prioritaire
                   patient_name: ctx?.patient_name || undefined,
                 });
                 // Hôte : diffuse à tous. Patient : explication locale (self-service).
@@ -1489,9 +1489,10 @@ export function ConsultationStage({
   sessionId: string | null;
   /** Explication IA de l'artefact partagé — reçue du canal, affichée chez tous. */
   explain?: { title: string; text: string; id: number } | null;
-  /** Déclenche l'explication IA de la scène courante. L'hôte DIFFUSE (renvoie
-   *  void) ; le patient/invité obtient une explication LOCALE (renvoie le texte). */
-  onExplain?: () => Promise<{ title: string; text: string } | void> | void;
+  /** Déclenche l'explication IA. `focus` optionnel = élément précis cliqué
+   *  (organe, axe…). L'hôte DIFFUSE (renvoie void) ; le patient/invité obtient
+   *  une explication LOCALE (renvoie le texte). */
+  onExplain?: (focus?: string) => Promise<{ title: string; text: string } | void> | void;
   /** Host : ferme l'explication diffusée chez tous. */
   onCloseExplain?: () => void;
   /** Un panneau de droite (Discussion/Copilote/Récap) est ouvert → on masque le
@@ -1572,11 +1573,11 @@ export function ConsultationStage({
       playZoomCue('in');
     }
   }, [shownExplain?.id]);
-  const doExplain = async () => {
+  const doExplain = async (focus?: string) => {
     if (!onExplain || explaining) return;
     setExplaining(true);
     try {
-      const r = await onExplain();
+      const r = await onExplain(focus);
       // L'hôte diffuse (void) ; le patient/invité reçoit un texte → panneau LOCAL.
       if (r && r.text) setLocalExplain({ title: r.title, text: r.text, id: Date.now() });
     } catch {
@@ -1659,7 +1660,7 @@ export function ConsultationStage({
               {/* frameless TOUJOURS (desktop + mobile) : toute scène partagée
                   (jumeau, roue, bilans, ordonnance, image, boutique) se pose
                   DIRECTEMENT sur la grille sombre — plus de carte crème. */}
-              <SharedSceneView scene={scene} frameless />
+              <SharedSceneView scene={scene} frameless onSelectElement={onExplain ? (focus) => doExplain(focus) : undefined} />
             </div>
           </div>
         ) : screen ? (

@@ -592,7 +592,7 @@ function ShowcaseCard({ p, big }: { p: ShopProduct; big: boolean }) {
 // Rendu d'une scène clinique partagée — réutilisé par le cockpit patient ET la
 // SCÈNE CENTRALE de la salle Consultation. Wrappé dans les vars --zw-* pour que
 // les composants portés (jumeau, roue, SOAP, labs, ordonnance, imagerie) rendent.
-export function SharedSceneView({ scene, frameless = false }: { scene: CockpitScene | null; frameless?: boolean }) {
+export function SharedSceneView({ scene, frameless = false, onSelectElement }: { scene: CockpitScene | null; frameless?: boolean; onSelectElement?: (focus: string) => void }) {
   if (!scene || scene.kind === 'clear') return null;
   // `frameless` (salle mobile immersive) : la carte creme disparait — fonds
   // transparents, textes/controles passes en clair — la scene partagee se pose
@@ -608,7 +608,7 @@ export function SharedSceneView({ scene, frameless = false }: { scene: CockpitSc
 `}</style>
       ) : null}
       {scene.kind === 'twin' && (
-        <TwinView organs={scene.organs} sex={scene.sex} selected={scene.focus} onSelect={() => {}} />
+        <TwinView organs={scene.organs} sex={scene.sex} selected={scene.focus} onSelect={(code) => onSelectElement?.(code)} />
       )}
       {scene.kind === 'wheel' && <WheelView domains={scene.domains} organs={scene.organs} />}
       {scene.kind === 'soap' && <SoapView soap={scene.soap} />}

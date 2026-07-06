@@ -346,10 +346,10 @@ function ProcheLiveRoom({ url, token, sessionId, inviteId, clinic, initialCam = 
               identity={{ logo: clinicLogo, label: clinic ?? null, name: channel.hostName }}
               onImmersiveChange={setImmersive}
               explain={channel.explain}
-              onExplain={async () => {
-                // Invité : explication LOCALE (self-service) de ce qui est affiché.
+              onExplain={async (focus?: string) => {
+                // Invité : explication LOCALE (self-service). `focus` = organe cliqué.
                 const sc = channel.scene as any;
-                const r = await explainSharedScene({ scene: sc, kind: sc?.kind || '', focus: sc?.focus || undefined });
+                const r = await explainSharedScene({ scene: sc, kind: sc?.kind || '', focus: focus || sc?.focus || undefined });
                 return { title: r.title, text: r.explanation };
               }}
             />
