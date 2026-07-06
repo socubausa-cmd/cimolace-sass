@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { GraduationCap } from 'lucide-react';
-import { PrecepteurPlayer } from '@/pages/dev/PrecepteurDemoPage';
+import FormationStage from '@/components/agent/FormationStage';
 import { masterclassProjectToPrecepteurCourse } from '@/lib/precepteur/fromMasterclass';
 import { conformCourseSync } from '@/lib/precepteur/conformCourse';
 import { masterclassApi } from '@/lib/api-v2';
@@ -170,5 +170,7 @@ export default function PrecepteurCoursePage() {
     );
   }
 
-  return <PrecepteurPlayer course={course} />;
+  // Rendu IMMERSIF plein écran (FormationStage = secteur formation de Cimolace) : couvre le header
+  // portail → même expérience que /precepteur, zéro chrome web, zéro bouton.
+  return <FormationStage course={course} />;
 }
