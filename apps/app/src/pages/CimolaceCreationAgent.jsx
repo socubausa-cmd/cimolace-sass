@@ -91,6 +91,23 @@ const STYLE = `
 .cca-chip{transition:background .16s ease;cursor:pointer}
 .cca-chip:hover{background:rgba(230,204,146,.14)!important}
 .cca-field::placeholder{color:rgba(244,239,230,.35)}
+/* — Effets « vivants » — */
+@keyframes ccaCaret{0%,44%{opacity:1}50%,94%{opacity:0}100%{opacity:1}}
+@keyframes ccaOrbit{to{transform:translate(-50%,-50%) rotate(360deg)}}
+@keyframes ccaGlowPulse{0%,100%{opacity:.55;transform:translate(-50%,-50%) scale(1)}50%{opacity:.95;transform:translate(-50%,-50%) scale(1.13)}}
+@keyframes ccaRipple{0%{transform:translate(-50%,-50%) scale(.45);opacity:.5}100%{transform:translate(-50%,-50%) scale(2.6);opacity:0}}
+@keyframes ccaDriftA{0%,100%{transform:translate(0,0)}50%{transform:translate(16px,-12px)}}
+@keyframes ccaDriftB{0%,100%{transform:translate(0,0)}50%{transform:translate(-14px,10px)}}
+@keyframes ccaDriftC{0%,100%{transform:translate(0,0)}50%{transform:translate(10px,14px)}}
+.cca-caret{display:inline-block;width:2px;height:0.92em;margin-left:3px;vertical-align:-1px;border-radius:1px;background:#e6cc92;animation:ccaCaret 1s step-end infinite}
+.cca-ripple{position:absolute;top:50%;left:50%;width:44px;height:44px;border-radius:50%;border:1px solid rgba(217,119,87,.55);transform:translate(-50%,-50%);animation:ccaRipple .85s ease-out forwards;pointer-events:none}
+.cca-orbit{position:absolute;top:50%;left:50%;width:72px;height:72px;transform:translate(-50%,-50%);opacity:0;transition:opacity .4s ease;pointer-events:none}
+.cca-orbit span{position:absolute;left:50%;width:5px;height:5px;border-radius:50%;transform:translateX(-50%)}
+.cca-orbit span:first-child{top:-2px;background:#e6cc92}
+.cca-orbit span:last-child{bottom:-2px;background:#d97757}
+.cca-reflexion .cca-orbit{opacity:1;animation:ccaOrbit 2.3s linear infinite}
+.cca-ecriture .cca-glow{animation:ccaGlowPulse 1.5s ease-in-out infinite}
+.cca-amb{position:absolute;border-radius:50%;background:#d97757;pointer-events:none}
 `;
 
 export default function CimolaceCreationAgent() {
@@ -287,6 +304,11 @@ export default function CimolaceCreationAgent() {
     >
       <style>{STYLE}</style>
 
+      {/* Particules ambiantes — le vide « respire » même au repos */}
+      <span className="cca-amb" style={{ width: 5, height: 5, top: '34%', left: '32%', opacity: 0.16, animation: 'ccaDriftA 11s ease-in-out infinite' }} />
+      <span className="cca-amb" style={{ width: 4, height: 4, top: '58%', left: '65%', opacity: 0.13, background: '#e6cc92', animation: 'ccaDriftB 14s ease-in-out infinite' }} />
+      <span className="cca-amb" style={{ width: 3, height: 3, top: '44%', left: '70%', opacity: 0.12, animation: 'ccaDriftC 9s ease-in-out infinite' }} />
+
       {/* Connecté */}
       <div style={{ position: 'absolute', top: 22, left: '50%', transform: 'translateX(-50%)', display: 'flex', alignItems: 'center', gap: 7, opacity: 0.7, pointerEvents: 'none' }}>
         <span style={{ position: 'relative', display: 'inline-flex', width: 6, height: 6, alignItems: 'center', justifyContent: 'center' }}>
@@ -299,6 +321,8 @@ export default function CimolaceCreationAgent() {
       {/* Présence */}
       <div className={`cca-${presence}`} style={{ position: 'relative', width: 200, height: 120, pointerEvents: 'none' }}>
         <div className="cca-glow" />
+        <span key={presence} className="cca-ripple" />
+        <div className="cca-orbit"><span /><span /></div>
         <span className="cca-form cca-boot" />
         <span className="cca-form cca-dot" />
         <span className="cca-form cca-line" />
@@ -309,7 +333,10 @@ export default function CimolaceCreationAgent() {
       {/* Voix */}
       <div style={{ minHeight: 34, marginTop: 14, textAlign: 'center' }}>
         {message ? (
-          <p className="cca-in" style={{ fontFamily: SERIF, fontSize: 19, lineHeight: 1.5, color: INK, maxWidth: 470, margin: 0 }}>{message}</p>
+          <p className="cca-in" style={{ fontFamily: SERIF, fontSize: 19, lineHeight: 1.5, color: INK, maxWidth: 470, margin: 0 }}>
+            {message}
+            {(presence === 'ecriture' || presence === 'attente') && <span className="cca-caret" />}
+          </p>
         ) : (
           showActions && step === 'discovery' && <span style={{ fontSize: 12, color: 'rgba(244,239,230,.4)' }}>touchez l'écran pour parler</span>
         )}
