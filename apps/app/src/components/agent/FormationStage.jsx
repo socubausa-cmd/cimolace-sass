@@ -97,10 +97,12 @@ export default function FormationStage({ course }) {
     });
   }, [scenes.length]);
 
-  // Éveil : la présence salue et demande le prénom (conversation, pas un formulaire).
+  // Éveil : la présence salue puis LANCE le cours toute seule (ça coule, zéro bouton, zéro saisie).
   useEffect(() => {
     const t = setTimeout(() => {
-      speak(`${knowledge.title}. Avant qu’on commence — comment tu t’appelles ?`, () => openInput());
+      speak(`${knowledge.title}. Installe-toi — on commence.`, () => {
+        setTimeout(() => { setStarted(true); setIdx(0); }, 900);
+      });
     }, 700);
     return () => clearTimeout(t);
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -177,10 +179,9 @@ export default function FormationStage({ course }) {
     const v = value.trim();
     closeInput();
     if (!v) return;
-    if (!started) { setName(v.slice(0, 40)); think(() => { setStarted(true); setIdx(0); }, 700); return; }
     if (awaitingAnswer) { answerAtelier(v); return; }
     ask(v);
-  }, [value, started, awaitingAnswer, closeInput, think, answerAtelier, ask]);
+  }, [value, awaitingAnswer, closeInput, answerAtelier, ask]);
 
   // Type-anywhere : taper une lettre matérialise le champ.
   useEffect(() => {
@@ -278,10 +279,10 @@ export default function FormationStage({ course }) {
       {/* Parler à la présence */}
       {inputOpen && (
         <div className="cca-in" onClick={(e) => e.stopPropagation()}
-          style={{ position: 'fixed', left: '50%', bottom: 30, transform: 'translateX(-50%)', width: 'min(460px, 88vw)', display: 'flex', alignItems: 'center', gap: 8, background: 'rgba(244,239,230,.07)', borderRadius: 14, padding: '8px 8px 8px 15px', zIndex: 6 }}>
+          style={{ position: 'fixed', left: '50%', bottom: 96, transform: 'translateX(-50%)', width: 'min(460px, 88vw)', display: 'flex', alignItems: 'center', gap: 8, background: 'rgba(38,38,36,.96)', boxShadow: '0 8px 30px rgba(0,0,0,.4)', borderRadius: 14, padding: '8px 8px 8px 15px', zIndex: 20 }}>
           <input ref={inputRef} className="cca-field" value={value} onChange={(e) => setValue(e.target.value)}
             onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); submit(); } else if (e.key === 'Escape') closeInput(); }}
-            placeholder={!started ? 'Ton prénom…' : awaitingAnswer ? 'Ta réponse…' : 'Parle à la présence…'}
+            placeholder={awaitingAnswer ? 'Ta réponse…' : 'Parle à la présence…'}
             style={{ flex: 1, background: 'transparent', border: 'none', outline: 'none', color: INK, fontSize: 14, fontFamily: 'inherit' }} />
           <button onClick={submit} aria-label="Envoyer" style={{ width: 32, height: 32, borderRadius: 9, background: TERRA, color: '#2a140c', border: 'none', cursor: 'pointer' }}>↑</button>
         </div>
