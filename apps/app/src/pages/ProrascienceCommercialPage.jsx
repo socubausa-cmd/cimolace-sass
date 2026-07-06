@@ -1156,17 +1156,13 @@ const ProrascienceCommercialPage = () => {
     return () => mq.removeEventListener('change', onChange);
   }, []);
 
-  const isWebMobileNotNative =
-    typeof window !== 'undefined' && !Capacitor.isNativePlatform() && isNarrowViewport;
   const shouldOpenLiriShellInWebView =
     !forceWebVitrine
     && typeof window !== 'undefined'
     && Capacitor.isNativePlatform();
-  /** Téléphone (navigateur) : même coque LIRI que l'appli; PC large : on reste sur la vitrine web. */
-  const shouldRedirectWebMobileToEleveEntry =
-    !forceWebVitrine
-    && !redirectMobileWebToLiriOff
-    && isWebMobileNotNative;
+  // Redirection web-mobile → /m/eleve SUPPRIMÉE : le web mobile reste la VITRINE WEB RESPONSIVE,
+  // jamais la fausse coque à onglets. (LIRI = web responsive + natif Expo.)
+  const shouldRedirectWebMobileToEleveEntry = false;
 
   useEffect(() => {
     if (shouldOpenLiriShellInWebView) {

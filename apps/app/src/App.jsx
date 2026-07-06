@@ -985,7 +985,10 @@ const AppContent = () => {
     window.scrollTo({ top: 0, left: 0, behavior: 'auto' });
   }, [location.pathname, location.search, location.hash]);
 
-  const mobileReelsShellActive = useMobileReelsShellVisible() && !location.pathname.startsWith('/cimolace');
+  // Coque mobile « type app » (MobileReelsShell) SUPPRIMÉE définitivement : LIRI = WEB RESPONSIVE
+  // + NATIF (Expo, apps/mobile). Plus aucune fausse coque à onglets par-dessus le web, quel que
+  // soit le viewport. (Kill switch load-bearing ; le hook viewport et sa config deviennent morts.)
+  const mobileReelsShellActive = false;
 
   /** Maquettes LIRI hôte : accessibles sans .env Supabase + shell plein écran (voir isLiveArenaRoute plus bas). */
   const isLiriHostDevPreviewRoute =

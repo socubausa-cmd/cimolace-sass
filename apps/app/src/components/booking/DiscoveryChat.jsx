@@ -13,7 +13,6 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { X, MessageSquare, Send, Loader2, Sparkles, CalendarClock, ChevronDown } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { BookingCalendarModal } from './BookingCalendarModal';
-import { useMobileReelsShellActive } from '@/contexts/MobileReelsShellContext';
 import { cn } from '@/lib/utils';
 
 /* ─── helpers ───────────────────────────────────────────────── */
@@ -104,7 +103,6 @@ const SUGGESTIONS = [
 
 /* ─── Main component ─────────────────────────────────────────── */
 export function DiscoveryChat() {
-  const mobileReelsShell = useMobileReelsShellActive();
   const [open, setOpen] = useState(false);
   const [input, setInput] = useState('');
   const [messages, setMessages] = useState([]); // { role: 'user'|'ai', text, routes, showBook }
@@ -194,9 +192,7 @@ export function DiscoveryChat() {
       <div
         className={cn(
           'fixed right-4 sm:right-6 flex flex-col items-end gap-3',
-          mobileReelsShell
-            ? 'bottom-[calc(3.65rem+max(0.25rem,env(safe-area-inset-bottom))+0.75rem)] z-[160]'
-            : 'bottom-6 z-50',
+          'bottom-6 z-50',
         )}
       >
         <AnimatePresence>
