@@ -43,7 +43,7 @@ import '@livekit/components-styles';
 import { useAuth } from '@/contexts/SupabaseAuthContext';
 import { teleconsultApi, type TeleconsultInvite } from '@/lib/api';
 import { getApiBaseUrl } from '@/lib/apiBase';
-import { getClinicalContext, type ClinicalContext, type CockpitScene } from '@/features/medos-cockpit/cockpit-api';
+import { getClinicalContext, explainSharedScene, type ClinicalContext, type CockpitScene } from '@/features/medos-cockpit/cockpit-api';
 import { useCockpitChannel, type AnnotStroke, type ConsultView } from '@/features/medos-cockpit/useCockpitChannel';
 import { useJoinRequests } from '@/features/medos-cockpit/useJoinRequest';
 import { SharedSceneView, CockpitDock } from '@/features/medos-cockpit/MedTeleconsultCockpit';
@@ -631,6 +631,16 @@ export default function ConsultationRoom() {
               rightOpen={rightPanel !== null}
               identity={consultIdentity}
               onImmersiveChange={setStageImmersive}
+              explain={channel.explain}
+              onExplain={isHost ? async () => {
+                const r = await explainSharedScene({
+                  scene,
+                  kind: (scene as any)?.kind || (view === 'board' ? 'report' : ''),
+                  patient_name: ctx?.patient_name || undefined,
+                });
+                channel.shareExplain(r.title, r.explanation);
+              } : undefined}
+              onCloseExplain={channel.clearExplain}
             />
             {/* Wrapper positionné : ancre le popover Réglages au-dessus de la barre
                 (reste DANS <LiveKitRoom> → ConsultationSettings lit le contexte salle).
@@ -1459,6 +1469,9 @@ export function ConsultationStage({
   rightOpen = false,
   identity,
   onImmersiveChange,
+  explain,
+  onExplain,
+  onCloseExplain,
 }: {
   view: ConsultView;
   isHost: boolean;
@@ -1471,6 +1484,12 @@ export function ConsultationStage({
   /** Host : relaie un patch SmartBoard sur le canal med-cockpit. */
   onSmartboardBroadcast?: (p?: Record<string, unknown>) => void;
   sessionId: string | null;
+  /** Explication IA de l'artefact partagé — reçue du canal, affichée chez tous. */
+  explain?: { title: string; text: string; id: number } | null;
+  /** Host : déclenche l'explication IA de la scène courante (async). */
+  onExplain?: () => Promise<void> | void;
+  /** Host : ferme l'explication chez tous. */
+  onCloseExplain?: () => void;
   /** Un panneau de droite (Discussion/Copilote/Récap) est ouvert → on masque le
    *  rail Participants pour ne JAMAIS avoir 2 colonnes à droite (anti-surcharge). */
   rightOpen?: boolean;
@@ -1533,6 +1552,29 @@ export function ConsultationStage({
   // partagé occupe tout ; re-tap = retour normal. Émis au parent pour qu'il
   // masque sa barre. Réinitialisé dès qu'on quitte Partage/Tableau.
   const [immersive, setImmersive] = useState(false);
+  // Explication IA de l'artefact partagé : chargement (host) + panneau (tous).
+  const [explaining, setExplaining] = useState(false);
+  const [explainDismissed, setExplainDismissed] = useState(0);
+  const lastExplainIdRef = useRef(0);
+  // Cue sonore + révélation animée à CHAQUE nouvelle explication reçue.
+  useEffect(() => {
+    if (explain && explain.id !== lastExplainIdRef.current) {
+      lastExplainIdRef.current = explain.id;
+      playZoomCue('in');
+    }
+  }, [explain]);
+  const doExplain = async () => {
+    if (!onExplain || explaining) return;
+    setExplaining(true);
+    try {
+      await onExplain();
+    } catch {
+      /* l'erreur remonte côté parent (toast) ; on ne bloque pas la salle */
+    } finally {
+      setExplaining(false);
+    }
+  };
+  const explainVisible = !!explain && explain.id !== explainDismissed;
   const toggleImmersive = () => {
     setImmersive((v) => {
       playZoomCue(v ? 'out' : 'in');
@@ -1637,6 +1679,48 @@ export function ConsultationStage({
             marge des miniatures. */}
         {hasScene && view !== 'board' ? (
           <AnnotationOverlay strokes={strokes} editable={editable} onStrokes={onStrokes} />
+        ) : null}
+
+        {/* COCKPIT INTELLIGENT — bouton « Expliquer par l'IA » (hôte) : demande
+            à l'IA d'expliquer l'artefact partagé courant → panneau chez TOUS. */}
+        {isHost && onExplain && (hasScene || view === 'board' || screen) && !explainVisible ? (
+          <button
+            onClick={doExplain}
+            disabled={explaining}
+            title="Expliquer par l'IA ce qui est partagé à l'écran"
+            style={{ position: 'absolute', left: 12, bottom: 12, zIndex: 23, display: 'inline-flex', alignItems: 'center', gap: 7, padding: '9px 14px', borderRadius: 999, border: 'none', background: explaining ? 'rgba(24,20,16,0.85)' : GOLD, color: explaining ? GOLD : '#1a1a1a', fontSize: 12.5, fontWeight: 700, cursor: explaining ? 'default' : 'pointer', boxShadow: '0 8px 24px rgba(0,0,0,0.4)' }}
+          >
+            <Sparkles size={15} aria-hidden="true" /> {explaining ? 'Analyse…' : 'Expliquer'}
+          </button>
+        ) : null}
+
+        {/* Panneau d'explication IA (TOUS) : révélation animée + pastille pulsée. */}
+        {explainVisible ? (
+          <div
+            key={explain?.id}
+            style={{ position: 'absolute', left: 12, right: 12 + reserve, bottom: 12, zIndex: 24, maxWidth: 580, marginInline: 'auto', padding: '13px 15px', borderRadius: 16, background: 'rgba(24,20,16,0.97)', border: '1px solid rgba(212,163,106,0.5)', boxShadow: '0 16px 48px rgba(0,0,0,0.55)', animation: 'crExplainIn 0.4s cubic-bezier(0.2,0.7,0.3,1)' }}
+          >
+            <style>{'@keyframes crExplainIn{from{opacity:0;transform:translateY(16px) scale(.98)}to{opacity:1;transform:none}}@keyframes crExplainPulse{0%,100%{box-shadow:0 0 0 0 rgba(212,163,106,.55)}50%{box-shadow:0 0 0 5px rgba(212,163,106,0)}}'}</style>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
+              <span style={{ width: 22, height: 22, borderRadius: 999, background: 'rgba(212,163,106,0.18)', display: 'grid', placeItems: 'center', flexShrink: 0, animation: 'crExplainPulse 2.2s ease-in-out infinite' }}>
+                <Sparkles size={13} color={GOLD} aria-hidden="true" />
+              </span>
+              <span style={{ fontSize: 13, fontWeight: 700, color: '#fff', flex: 1, minWidth: 0, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{explain?.title || 'Explication'}</span>
+              <button
+                onClick={() => { if (isHost) onCloseExplain?.(); else setExplainDismissed(explain?.id || 0); }}
+                aria-label="Fermer l'explication"
+                style={{ background: 'transparent', border: 'none', color: '#9ca3af', cursor: 'pointer', display: 'inline-flex', flexShrink: 0 }}
+              >
+                <X size={15} />
+              </button>
+            </div>
+            <p style={{ margin: 0, fontSize: 13, lineHeight: 1.55, color: '#e8e6e0' }}>{explain?.text}</p>
+            {isHost ? (
+              <button onClick={doExplain} disabled={explaining} style={{ marginTop: 9, background: 'transparent', border: '1px solid rgba(212,163,106,0.45)', color: GOLD, borderRadius: 9, padding: '5px 11px', fontSize: 11.5, fontWeight: 600, cursor: explaining ? 'default' : 'pointer' }}>
+                {explaining ? 'Analyse…' : 'Réexpliquer'}
+              </button>
+            ) : null}
+          </div>
         ) : null}
         {/* GRANDE VUE : la personne choisie plein cadre par-dessus le partage.
             Tap n'importe où (ou X) pour revenir. zIndex 40 > pastilles (30). */}

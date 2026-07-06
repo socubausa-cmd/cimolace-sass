@@ -344,6 +344,7 @@ function ProcheLiveRoom({ url, token, sessionId, inviteId, clinic, initialCam = 
               sessionId={sessionId}
               identity={{ logo: clinicLogo, label: clinic ?? null, name: channel.hostName }}
               onImmersiveChange={setImmersive}
+              explain={channel.explain}
             />
             {/* Mode focus → barre masquée (montée pour ne pas couper micro/caméra). */}
             <div style={{ display: immersive ? 'none' : 'contents' }}>

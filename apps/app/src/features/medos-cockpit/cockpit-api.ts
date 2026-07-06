@@ -285,6 +285,36 @@ export async function generateSoapFromTranscript(
   };
 }
 
+/**
+ * COCKPIT INTELLIGENT — explique EN LANGAGE PATIENT ce qui est PARTAGÉ à l'écran
+ * (jumeau, roue, bilan…). Appelle l'edge `cockpit-explain` (DeepSeek). Le
+ * praticien déclenche, l'explication est ensuite diffusée à tous via le canal.
+ * NON diagnostique (aide pédagogique). Le praticien reste le référent.
+ */
+export async function explainSharedScene(opts: {
+  scene?: unknown;
+  kind?: string;
+  focus?: string;
+  patient_name?: string;
+  language?: string;
+}): Promise<{ title: string; explanation: string }> {
+  const { data, error } = await supabase.functions.invoke('cockpit-explain', {
+    body: {
+      scene: opts.scene ?? null,
+      kind: opts.kind || '',
+      focus: opts.focus || undefined,
+      patient_name: opts.patient_name || undefined,
+      language: opts.language || 'fr',
+    },
+  });
+  if (error) throw new Error(error.message || "Échec de l'explication IA");
+  if (data?.error) throw new Error(String(data.error));
+  return {
+    title: String(data?.title || 'Explication'),
+    explanation: String(data?.explanation || ''),
+  };
+}
+
 /** Fusionne référentiel (name_fr, position) + état (scores) → OrganNode[]. */
 export function buildOrganNodes(
   referential: { organs?: any[] } | null,

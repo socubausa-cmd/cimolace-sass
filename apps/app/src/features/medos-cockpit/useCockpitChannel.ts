@@ -39,12 +39,17 @@ export function useCockpitChannel(
   // Sous-titre LIVE : dernier segment de parole du praticien (STT) → chaque
   // participant le traduit dans SA langue. Éphémère (dernier segment seul).
   const [caption, setCaption] = useState<{ text: string; id: number } | null>(null);
+  // Explication IA de l'artefact PARTAGÉ (cockpit intelligent) : le praticien
+  // demande une explication → elle s'affiche chez TOUS. Persistante (rejouée au
+  // join) → un arrivant tardif voit l'explication en cours. null = fermée.
+  const [explain, setExplain] = useState<{ title: string; text: string; id: number } | null>(null);
   const channelRef = useRef<any>(null);
   const lastSentRef = useRef<CockpitScene | null>(null);
   const lastViewRef = useRef<ConsultView>('conversation');
   const lastStrokesRef = useRef<AnnotStroke[]>([]);
   const lastHostNameRef = useRef<string | null>(null);
   const lastSmartboardRef = useRef<Record<string, unknown>>({});
+  const lastExplainRef = useRef<{ title: string; text: string; id: number } | null>(null);
 
   useEffect(() => {
     if (!sessionId) return undefined;
@@ -102,6 +107,23 @@ export function useCockpitChannel(
       }
     });
 
+    // Explication IA de l'artefact partagé → affichée chez tous. null = fermée.
+    channel.on('broadcast', { event: 'explain' }, (msg: any) => {
+      const p = msg?.payload;
+      if (!p || (!p.text && !p.title)) {
+        setExplain(null);
+        lastExplainRef.current = null;
+        return;
+      }
+      const next = {
+        title: String(p.title || '').trim(),
+        text: String(p.text || '').trim(),
+        id: typeof p.id === 'number' ? p.id : Date.now(),
+      };
+      lastExplainRef.current = next;
+      setExplain(next);
+    });
+
     // Host : un patient demande l'état → on renvoie vue + scène + annotations.
     channel.on('broadcast', { event: 'request_state' }, () => {
       if (mode !== 'host') return;
@@ -117,6 +139,9 @@ export function useCockpitChannel(
       }
       if (Object.keys(lastSmartboardRef.current).length) {
         channel.send({ type: 'broadcast', event: 'smartboard', payload: lastSmartboardRef.current });
+      }
+      if (lastExplainRef.current) {
+        channel.send({ type: 'broadcast', event: 'explain', payload: lastExplainRef.current });
       }
     });
 
@@ -217,5 +242,23 @@ export function useCockpitChannel(
     channelRef.current?.send({ type: 'broadcast', event: 'caption', payload: { text: t, id: Date.now() } });
   }, []);
 
-  return { scene, view, strokes, hostName, smartboard, caption, shareScene, pushView, clearScene, shareStrokes, clearStrokes, shareHostName, shareSmartboard, shareCaption };
+  /** Host : diffuse une explication IA de l'artefact partagé → affichée chez tous
+   *  (+ reflet local immédiat). Rejouée aux arrivants tardifs (request_state). */
+  const shareExplain = useCallback((title: string, text: string) => {
+    const t = String(text || '').trim();
+    if (!t) return;
+    const payload = { title: String(title || '').trim(), text: t, id: Date.now() };
+    lastExplainRef.current = payload;
+    setExplain(payload);
+    channelRef.current?.send({ type: 'broadcast', event: 'explain', payload });
+  }, []);
+
+  /** Host : ferme l'explication chez tous. */
+  const clearExplain = useCallback(() => {
+    lastExplainRef.current = null;
+    setExplain(null);
+    channelRef.current?.send({ type: 'broadcast', event: 'explain', payload: null });
+  }, []);
+
+  return { scene, view, strokes, hostName, smartboard, caption, explain, shareScene, pushView, clearScene, shareStrokes, clearStrokes, shareHostName, shareSmartboard, shareCaption, shareExplain, clearExplain };
 }
