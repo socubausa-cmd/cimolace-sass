@@ -72,6 +72,9 @@ export const STYLE = `
 .cca-scene-on.cca-slot-tutorial{transform:translateY(-31vh) scale(.7);opacity:0}
 /* leçon (Précepteur embarqué) : la présence RESTE visible, petite, en haut — elle suit le cours */
 .cca-scene-on.cca-slot-lesson{transform:translateY(-41vh) scale(.5)}
+/* le tableau du Précepteur fondu dans la coque (papier chaud, pas une carte blanche « app ») + badge masqué */
+.cca-lesson .cca-board{background:#f4efe6!important;box-shadow:0 26px 70px -26px rgba(0,0,0,.6)!important;border:1px solid rgba(217,119,87,.14)!important}
+.cca-lesson .cca-board-badge{display:none!important}
 /* Voix centrale / actions atténuées quand la scène occupe le plein écran */
 .cca-voicecol{transition:opacity .4s ease}
 .cca-voicecol.cca-dim{opacity:0;pointer-events:none}

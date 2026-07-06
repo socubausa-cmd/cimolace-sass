@@ -141,9 +141,9 @@ function Board({ children, className = '' }) {
       initial={{ opacity: 0, scale: 0.99, filter: 'blur(2px)' }}
       animate={{ opacity: 1, scale: 1, filter: 'blur(0px)' }}
       transition={{ duration: 0.45, ease: EXPO }}
-      className={`relative w-full max-w-4xl overflow-hidden rounded-[28px] bg-white p-7 shadow-2xl ring-1 ring-black/5 md:p-10 ${className}`}
+      className={`cca-board relative w-full max-w-4xl overflow-hidden rounded-[28px] bg-white p-7 shadow-2xl ring-1 ring-black/5 md:p-10 ${className}`}
     >
-      <div className="pointer-events-none absolute right-5 top-5 flex items-center gap-2 rounded-full bg-slate-900/5 px-3 py-1.5">
+      <div className="cca-board-badge pointer-events-none absolute right-5 top-5 flex items-center gap-2 rounded-full bg-slate-900/5 px-3 py-1.5">
         <span className="relative flex h-2 w-2">
           <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-blue-500/60" />
           <span className="relative inline-flex h-2 w-2 rounded-full bg-blue-600" />
@@ -563,7 +563,7 @@ export function PrecepteurPlayer({ course, embedded = false, onScene, studentNam
         <div className="relative mb-2 flex items-center justify-center gap-2 text-amber-400/90">
           {!embedded && <GraduationCap className="h-5 w-5" />}
           {!embedded && <span className="text-[11px] font-bold uppercase tracking-[0.2em]">Le Précepteur · cours enseigné</span>}
-          {started ? (
+          {started && !embedded ? (
             <button
               type="button"
               onClick={() => setSfxMuted((m) => !m)}
@@ -576,8 +576,8 @@ export function PrecepteurPlayer({ course, embedded = false, onScene, studentNam
           ) : null}
         </div>
 
-        {/* Indicateur de voix (diagnostic) */}
-        {started ? (
+        {/* Indicateur de voix (diagnostic) — masqué en embed (chrome) */}
+        {started && !embedded ? (
           <div className="mb-3 text-center text-[10px] font-semibold uppercase tracking-wider">
             {!useServerVoice ? (
               <span className="text-sky-400/80">🔊 Voix navigateur : {(frVoices.find((v) => v.uri === voiceChoice) || {}).name || 'sélectionnée'}</span>
