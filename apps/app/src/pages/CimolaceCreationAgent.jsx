@@ -577,7 +577,7 @@ export default function CimolaceCreationAgent() {
           <div style={{ display: 'flex', gap: 9 }}>
             <button className="cca-chip" onClick={(e) => { e.stopPropagation(); chooseProduct(); }}
               style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 13.5, fontWeight: 500, color: '#2a140c', background: TERRA, border: 'none', borderRadius: 11, padding: '10px 18px', cursor: 'pointer' }}>
-              Choisir {PRODUCT[chosen].tag}<ArrowRight size={15} />
+              {(covered.length >= 3 || covered.includes('prix')) ? `Lancer ${PRODUCT[chosen].tag} — dès 150 €/mois` : `Choisir ${PRODUCT[chosen].tag}`}<ArrowRight size={15} />
             </button>
             <button className="cca-chip" onClick={(e) => { e.stopPropagation(); const o = ['school', 'medos', 'shop'].filter((x) => x !== chosen); pickKind(o[0]); }}
               style={{ fontSize: 13, color: 'rgba(244,239,230,.6)', background: 'rgba(244,239,230,.05)', border: 'none', borderRadius: 11, padding: '10px 15px', cursor: 'pointer' }}>
