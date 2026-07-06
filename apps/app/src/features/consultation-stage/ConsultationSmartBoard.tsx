@@ -35,6 +35,7 @@ import React, { Suspense, useEffect, useMemo, useRef } from 'react';
 import { Presentation } from 'lucide-react';
 import { mergeSmartboardSceneFlags } from '@/lib/smartboardNavigatorScenes';
 import { useLiveWhiteboardStore } from '@/components/liri/live-room/useLiveWhiteboardStore';
+import ConsultationToolCockpit from './ConsultationToolCockpit';
 
 // Le moteur réel est un module .jsx — import dynamique (lazy) : le wrapper reste
 // léger et `LiveHostSmartBoardStage` (+ Konva) n'est tiré qu'à l'ouverture.
@@ -215,11 +216,16 @@ export default function ConsultationSmartBoard({
           sceneDockPlacement="right"
           // Par défaut : rail outils VISIBLE (sinon le praticien n'aurait aucun
           // outil de dessin — cf. doc du prop).
-          hideEmbeddedWhiteboardToolsRail={hideEmbeddedWhiteboardToolsRail}
+          // Le grand rail d'outils est REMPLACÉ par le cockpit compact groupé
+          // (ci-dessous) côté praticien → on le masque toujours ici.
+          hideEmbeddedWhiteboardToolsRail={hideEmbeddedWhiteboardToolsRail || !readOnly}
           hideSceneDock={hideSceneDock}
           onSceneChange={onSceneChange}
         />
       </Suspense>
+      {/* Cockpit d'outils groupés (praticien seul) : familles → rail overlay
+          compact dans un coin, au lieu du grand rail surchargé. */}
+      {!readOnly ? <ConsultationToolCockpit /> : null}
     </div>
   );
 }
