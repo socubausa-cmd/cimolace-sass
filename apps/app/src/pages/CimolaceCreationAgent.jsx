@@ -1214,7 +1214,7 @@ export default function CimolaceCreationAgent({ tenantSlug: tenantSlugProp = nul
 
       {/* L5 — rail de sujets « tableau intelligent » : liste à gauche, clic → le cerveau compose au centre.
           Sert aussi de barre de couverture (le tunnel) : sujets abordés = allumés. */}
-      {(step === 'brain' || step === 'product') && !inLesson && (
+      {(step === 'brain' || step === 'product') && !inLesson && !isTenantRealm && (
         <div className={`cca-in ${fullscreenScene ? 'cca-rail-dim' : ''}`} style={{ position: 'absolute', left: 22, top: '50%', transform: 'translateY(-50%)', display: 'flex', flexDirection: 'column', gap: 13, zIndex: 3, maxWidth: 130 }}>
           <span style={{ fontSize: 9, color: 'rgba(244,239,230,.3)', letterSpacing: '.1em', textTransform: 'uppercase', marginBottom: 3 }}>Le tour du produit</span>
           {TOPIC_ORDER.map((tp) => {
