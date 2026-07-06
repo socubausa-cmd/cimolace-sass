@@ -34,19 +34,45 @@ function sceneSpeech(sc) {
   }
 }
 
-// Surligne le terme dans le texte narré (mot-clé Sherpas), sans dépendance externe.
-function withHighlight(text, term) {
-  const t = String(text || '');
-  const k = String(term || '').trim();
-  if (!k) return t;
-  const i = t.toLowerCase().indexOf(k.toLowerCase());
-  if (i < 0) return t;
+// Mot-clé FORT d'une scène (style Sherpas) : terme surligné explicite, sinon terme entre «…».
+function sceneKeyword(sc) {
+  if (!sc) return '';
+  if (sc.type === 'surlignage' && sc.term) return String(sc.term);
+  const q = String(sceneSpeech(sc)).match(/«\s*([^»]{2,40})\s*»/);
+  return q ? q[1].trim() : '';
+}
+
+// CSS local du rendu « Sherpas » (mot qui pop + boîte dorée du mot-clé).
+const SV_STYLE = `
+@keyframes svPop{from{opacity:.12;transform:translateY(8px) scale(.88)}to{opacity:1;transform:none}}
+.sv-w{display:inline-block}
+.sv-pop{animation:svPop .3s cubic-bezier(.16,1,.3,1) both}
+.sv-key{background:${GOLD};color:#2a140c;border-radius:9px;padding:0 9px;font-weight:800;-webkit-box-decoration-break:clone;box-decoration-break:clone}
+`;
+
+/**
+ * SherpasVoice — la voix serif rendue « à la Sherpas » : gros + gras, chaque mot RÉVÉLÉ
+ * un à un (le dernier « pop »), et le mot-clé dans une BOÎTE DORÉE (notre équivalent du vert Sherpas).
+ * `text` est le message déjà révélé mot à mot par speak() ; keyword = le terme fort à mettre en boîte.
+ */
+function SherpasVoice({ text, keyword, live }) {
+  const words = String(text || '').split(' ').filter(Boolean);
+  const keys = new Set(String(keyword || '').toLowerCase().split(/\s+/).filter((w) => w.length > 1));
   return (
-    <>
-      {t.slice(0, i)}
-      <span style={{ color: '#2a140c', background: GOLD, borderRadius: 4, padding: '0 5px', fontWeight: 700 }}>{t.slice(i, i + k.length)}</span>
-      {t.slice(i + k.length)}
-    </>
+    <p style={{ fontFamily: SERIF, fontSize: 'clamp(22px, 4.8vw, 32px)', fontWeight: 600, lineHeight: 1.32, letterSpacing: '-0.015em', color: INK, margin: 0 }}>
+      {words.map((w, i) => {
+        const bare = w.toLowerCase().replace(/[.,;:!?«»"'’—()…]/g, '');
+        const isKey = keys.has(bare);
+        const last = i === words.length - 1;
+        return (
+          <React.Fragment key={i}>
+            <span className={`sv-w${last ? ' sv-pop' : ''}${isKey ? ' sv-key' : ''}`}>{w}</span>
+            {i < words.length - 1 ? ' ' : ''}
+          </React.Fragment>
+        );
+      })}
+      {live ? <span className="cca-caret" /> : null}
+    </p>
   );
 }
 
@@ -210,6 +236,7 @@ export default function FormationStage({ course }) {
       }}
     >
       <style>{STYLE}</style>
+      <style>{SV_STYLE}</style>
       <span className="cca-amb" style={{ width: 5, height: 5, top: '28%', left: '30%', opacity: 0.14, animation: 'ccaDriftA 11s ease-in-out infinite' }} />
       <span className="cca-amb" style={{ width: 4, height: 4, top: '64%', left: '68%', opacity: 0.12, background: GOLD, animation: 'ccaDriftB 14s ease-in-out infinite' }} />
 
@@ -242,14 +269,11 @@ export default function FormationStage({ course }) {
         </div>
       ) : null}
 
-      {/* La voix (serif) — la narration. Encadrée pour un `encadre`, avec liste pour un résumé. */}
-      <div style={{ minHeight: 40, marginTop: 12, textAlign: 'center', maxWidth: 560, position: 'relative', zIndex: 2 }}>
+      {/* La voix (serif) rendue « Sherpas » : gros/gras, mots qui pop + mot-clé en boîte dorée. */}
+      <div style={{ minHeight: 44, marginTop: 12, textAlign: 'center', maxWidth: 680, position: 'relative', zIndex: 2 }}>
         {message ? (
-          <div className="cca-in" style={framed ? { border: `1.5px solid ${TERRA}55`, borderRadius: 16, padding: '14px 20px', background: 'rgba(217,119,87,.06)' } : undefined}>
-            <p style={{ fontFamily: SERIF, fontSize: 19, lineHeight: 1.55, color: INK, margin: 0 }}>
-              {sc?.type === 'surlignage' ? withHighlight(message, sc.term) : message}
-              {(presence === 'ecriture' || presence === 'attente') && <span className="cca-caret" />}
-            </p>
+          <div className="cca-in" style={framed ? { border: `1.5px solid ${TERRA}55`, borderRadius: 18, padding: '18px 24px', background: 'rgba(217,119,87,.06)' } : undefined}>
+            <SherpasVoice text={message} keyword={sceneKeyword(sc)} live={presence === 'ecriture' || presence === 'attente'} />
             {showResume && (
               <ul style={{ listStyle: 'none', padding: 0, margin: '12px 0 0', textAlign: 'left', display: 'inline-block' }}>
                 {sc.points.map((p, i) => (

@@ -66,26 +66,30 @@ export function useImmersiveVoice() {
     return () => { window.removeEventListener('pointerdown', unlock); window.removeEventListener('keydown', unlock); };
   }, [audio, sHello]);
 
-  // La « voix » = typewriter serif. Garde par génération (frappe périmée / double-mount → stop).
+  // La « voix » = révélation MOT À MOT (karaoké, style Sherpas), pas caractère par caractère :
+  // beaucoup plus dynamique. Garde par génération (frappe périmée / double-mount → stop).
   const speak = useCallback((text, done) => {
     const gen = ++genRef.current;
     clearTimeout(typeTimer.current);
-    const str = String(text || '');
+    const str = String(text || '').replace(/\s+/g, ' ').trim();
     if (document.hidden || (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches)) {
       setMessage(str); setPresence('attente'); if (done) done(); return;
     }
     setPresence('ecriture');
     setMessage('');
+    const words = str.split(' ').filter(Boolean);
     let i = 0;
     const tick = () => {
       if (genRef.current !== gen) return;
       i += 1;
-      setMessage(str.slice(0, i));
-      if (i % 2 === 0 && str.charAt(i - 1) !== ' ') sTick();
-      if (i >= str.length) { setPresence('attente'); if (done) done(); return; }
-      typeTimer.current = setTimeout(tick, 22);
+      setMessage(words.slice(0, i).join(' '));
+      sTick(); // un tic par mot (comme un accent rythmique)
+      if (i >= words.length) { setPresence('attente'); if (done) done(); return; }
+      // cadence par mot ∝ longueur du mot (les mots courts défilent plus vite) : ~110–190ms.
+      const w = words[i - 1] || '';
+      typeTimer.current = setTimeout(tick, Math.min(190, 90 + w.length * 12));
     };
-    typeTimer.current = setTimeout(tick, 22);
+    typeTimer.current = setTimeout(tick, 120);
   }, [sTick]);
 
   const think = useCallback((fn, delay = 900) => {
