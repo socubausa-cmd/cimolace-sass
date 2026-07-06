@@ -52,10 +52,9 @@ const TYPO = {
   hybride: { body: SERIF, weight: 600, keyFont: F_GROTESQUE, upper: true },          // voix temple + mot-clé punch
   temple: { body: SERIF, weight: 600, keyFont: SERIF, upper: false },                // tout Fraunces
 };
-function currentTypo() {
-  try { return TYPO[new URLSearchParams(window.location.search).get('typo')] || TYPO.punch; }
-  catch { return TYPO.punch; }
-}
+// Style VERROUILLÉ = Punch (choix fondateur) : corps Source Serif 4 + mot-clé grotesque MAJUSCULE.
+// (hybride/temple restent dans TYPO pour référence, mais ne sont plus commutables par URL.)
+function currentTypo() { return TYPO.punch; }
 
 // CSS local du rendu « Sherpas » (mot qui pop + boîte dorée du mot-clé) + chargement des polices.
 const SV_STYLE = `
