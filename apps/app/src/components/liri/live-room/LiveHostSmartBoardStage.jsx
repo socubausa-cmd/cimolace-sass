@@ -128,6 +128,10 @@ const LiveHostSmartBoardStage = forwardRef(function LiveHostSmartBoardStage(
   const sbTacticalSyncRef = useRef(null);
   const secureAppShareStateRef = useRef(null);
   const camera2SourceRef = useRef(null);
+  // BOUTIQUE : produits de l'hôte (pour le payload/rejeu) + produits reçus du
+  // broadcast côté invité (le guest ne peut pas fetch l'API membre).
+  const shopProductsRef = useRef(Array.isArray(shopProducts) ? shopProducts : []);
+  const [viewerShopProducts, setViewerShopProducts] = useState([]);
   const prevSessionIdRef = useRef(null);
   /** Évite de réécraser la scène (ex. Images) quand sharingScreen reste true mais viewerMode / deps changent. */
   const prevSharingScreenRef = useRef(sharingScreen);
@@ -165,6 +169,14 @@ const LiveHostSmartBoardStage = forwardRef(function LiveHostSmartBoardStage(
   useEffect(() => { annotationStrokesRef.current = annotationStrokes; }, [annotationStrokes]);
   useEffect(() => { whiteboardPagesRef.current = whiteboardPages; }, [whiteboardPages]);
   useEffect(() => { whiteboardPageIndexRef.current = whiteboardPageIndex; }, [whiteboardPageIndex]);
+  useEffect(() => { shopProductsRef.current = Array.isArray(shopProducts) ? shopProducts : []; }, [shopProducts]);
+  // Hôte : diffuse les produits boutique à l'invité (rejoué aussi au request_state
+  // via getSmartboardPayload). Viewer : ne diffuse pas, il reçoit.
+  useEffect(() => {
+    if (viewerMode) return;
+    const list = Array.isArray(shopProducts) ? shopProducts : [];
+    queueMicrotask(() => onBroadcast?.({ shopProducts: list }));
+  }, [shopProducts, viewerMode, onBroadcast]);
 
   const whiteboardStrokes = whiteboardPages[whiteboardPageIndex] ?? [];
   useEffect(() => {
@@ -839,6 +851,9 @@ const LiveHostSmartBoardStage = forwardRef(function LiveHostSmartBoardStage(
         annotationStrokesRef.current = payload.annotationStrokes;
         setAnnotationStrokes(payload.annotationStrokes);
       }
+      if (Array.isArray(payload.shopProducts)) {
+        setViewerShopProducts(payload.shopProducts);
+      }
       if (
         (Array.isArray(payload.whiteboardPages) && payload.whiteboardPages.every(Array.isArray))
         || Array.isArray(payload.whiteboardStrokes)
@@ -990,6 +1005,7 @@ const LiveHostSmartBoardStage = forwardRef(function LiveHostSmartBoardStage(
       activeScene: activeSceneRef.current,
       progressivePlayback: progressivePlaybackRef.current,
       annotationStrokes: annotationStrokesRef.current,
+      shopProducts: shopProductsRef.current,
       whiteboardPages: whiteboardPagesRef.current,
       whiteboardPageIndex: whiteboardPageIndexRef.current,
       whiteboardStrokes: whiteboardStrokesRef.current,
@@ -1057,7 +1073,7 @@ const LiveHostSmartBoardStage = forwardRef(function LiveHostSmartBoardStage(
         sceneFlags={mergedFlags}
         onSaveStroke={() => {}}
         onShareScreen={onShareScreenRequest}
-        shopProducts={shopProducts}
+        shopProducts={viewerMode ? viewerShopProducts : shopProducts}
         onShopProductClick={(product) => {
           const url = product.payUrl || product.url;
           if (url) window.open(url.startsWith('/') ? window.location.origin + url : url, '_blank', 'noopener');

@@ -1520,6 +1520,52 @@ export function ConsultationStage({
   const compact = useMatchMediaAtMost(820);
   // Mains levées (identités) — badge ✋ sur les tuiles concernées.
   const { raised: raisedHands } = useHandRaise();
+
+  // BOUTIQUE PARTAGÉE — l'hôte (praticien, authentifié) récupère les produits du
+  // tenant (mbolo) et les passe au tableau (scène « boutique ») ; ils sont ensuite
+  // DIFFUSÉS à l'invité via le canal smartboard (l'invité est un guest : il ne peut
+  // pas appeler l'API membre, il reçoit donc les produits du broadcast). Source =
+  // boutique du tenant (case 1). Le lien d'achat est laissé vide pour l'instant
+  // (évite un lien mort ; à brancher sur le catalogue tenant ensuite).
+  const [shopProducts, setShopProducts] = useState<any[]>([]);
+  useEffect(() => {
+    if (!isHost) return undefined;
+    let alive = true;
+    (async () => {
+      try {
+        const slug = new URLSearchParams(window.location.search).get('tenant');
+        if (!slug) return;
+        const { data: { session } } = await supabase.auth.getSession();
+        const token = session?.access_token;
+        if (!token) return;
+        const res = await fetch(`${getApiBaseUrl()}/mbolo/products`, {
+          headers: { Authorization: `Bearer ${token}`, 'X-Tenant-Slug': slug },
+        });
+        if (!res.ok) return;
+        const json = await res.json();
+        const raw = Array.isArray(json?.data) ? json.data : Array.isArray(json) ? json : [];
+        const mapped = raw
+          .filter((p: any) => p?.is_active !== false)
+          .map((p: any) => {
+            const img = Array.isArray(p.images)
+              ? (p.images.find((im: any) => im?.is_primary)?.url || p.images[0]?.url || null)
+              : null;
+            const cents = Number(p.price_cents);
+            return {
+              id: p.id,
+              name: p.name,
+              price: Number.isFinite(cents) ? Math.round(cents / 100) : null,
+              currency: p.currency || 'XAF',
+              image: img || p.image_url || null,
+            };
+          });
+        if (alive) setShopProducts(mapped);
+      } catch {
+        /* réseau : boutique vide (non bloquant) */
+      }
+    })();
+    return () => { alive = false; };
+  }, [isHost, sessionId]);
   const [miniLayout, setMiniLayout] = useState<'band' | 'overlay'>('band');
   const [miniCollapsed, setMiniCollapsed] = useState(false);
   // Disposition « overlay » IMMERSIVE : on RÉSERVE une marge droite dans le
@@ -1641,6 +1687,7 @@ export function ConsultationStage({
               hideSceneDock={compact && !isHost}
               onBroadcast={isHost ? onSmartboardBroadcast : undefined}
               incomingBroadcast={!isHost ? smartboard : undefined}
+              shopProducts={shopProducts}
             />
           </div>
         ) : hasScene ? (

@@ -112,6 +112,9 @@ export interface ConsultationSmartBoardProps {
   hideSceneDock?: boolean;
   /** Notifie le parent quand la scène active change (ex. board → image). */
   onSceneChange?: (scene: string) => void;
+  /** Produits de la boutique tenant (scène « boutique »). Fournis par l'hôte ;
+   *  diffusés à l'invité via le smartboard. Vide = « Aucun produit configuré ». */
+  shopProducts?: any[];
 }
 
 /**
@@ -129,6 +132,7 @@ export default function ConsultationSmartBoard({
   hideEmbeddedWhiteboardToolsRail = false,
   hideSceneDock = false,
   onSceneChange,
+  shopProducts = EMPTY_LIST,
 }: ConsultationSmartBoardProps) {
   // Ref impératif du stage : côté patient (viewer), on lui ré-applique les patchs
   // reçus du canal via applyHostSmartboardBroadcast (cf. LiveHostSmartBoardStage).
@@ -187,7 +191,7 @@ export default function ConsultationSmartBoard({
           // Aucune galerie / boutique / produit en téléconsult.
           sharedImageGallery={EMPTY_LIST}
           sharedImageLoop={false}
-          shopProducts={EMPTY_LIST}
+          shopProducts={shopProducts}
           spotlight={false}
           // Pas de partage-écran piloté ici (la vidéo vit dans ConsultationRoom).
           sharingScreen={false}
