@@ -28,6 +28,7 @@ import Presence from '@/components/agent/Presence';
 import { CIMOLACE_LESSONS } from '@/lib/agent/cimolaceLessons';
 import { OS_KNOWLEDGE, prorascienceKnowledgeText, buildTenantTour } from '@/lib/agent/prorascienceKnowledge';
 import { buildVnpGraph, vnpSerialize, vnpRelated, vnpIntent } from '@/lib/agent/vnp';
+import { createProtocol } from '@/lib/agent/vnpProtocol';
 
 // Cimolace EST le moteur de rendu (l'OS) : il consomme le CONTENU de cours du Précepteur
 // (données JSON : leçons narrées + atelier) et le rend NATIVEMENT dans sa coque — voix serif
@@ -144,6 +145,10 @@ function genSlots(count = 6) {
   }
   return out;
 }
+// Protocole de Visite (spec §3) — reducer vnpProtocol branché mais OFF par défaut : le flux VNP actuel
+// reste la référence. Passer à true APRÈS validation preview pour piloter node/détail par la machine à états.
+const VNP_PROTOCOL_V2 = false;
+
 const VNP_ACTION_META = {
   contacter: { label: 'Nous contacter', Icon: Mail },
   rejoindre: { label: 'Rejoindre', Icon: UserPlus },
@@ -154,6 +159,7 @@ const VNP_ACTION_META = {
   decouvrir: { label: 'Découvrir', Icon: Sparkles },
   telecharger: { label: 'Télécharger', Icon: Download },
   participer: { label: 'Participer', Icon: Users },
+  __detail__: { label: 'Approfondir', Icon: BookOpen },
 };
 
 // L'OS peut RENDRE un tenant existant (realm) — MÊME moteur/couleurs, seuls le logo (au coin),
@@ -641,6 +647,10 @@ export default function CimolaceCreationAgent({ tenantSlug: tenantSlugProp = nul
   const [vnpSuggest, setVnpSuggest] = useState([]); // [{nodeId,label}] sujets liés
   const [vnpActs, setVnpActs] = useState([]);       // [intentId] actions disponibles
   const [contactForm, setContactForm] = useState(null); // Action Engine : {name,email,message,subject,sending,sent,error} | null
+  const protocolRef = useRef(null); // Protocole de Visite (machine à états) — instancié si VNP_PROTOCOL_V2
+  useEffect(() => {
+    protocolRef.current = VNP_PROTOCOL_V2 && vnpGraph ? createProtocol({ graph: vnpGraph, order: vnpGraph.tourOrder }) : null;
+  }, [vnpGraph]);
   const [bookingForm, setBookingForm] = useState(null); // Action Engine RDV : {service,slotIso,name,email,sending,sent,error} | null
   const bookingSlots = useMemo(() => genSlots(6), []); // créneaux proposés (stables sur la session)
   const [covered, setCovered] = useState([]);
@@ -1177,6 +1187,19 @@ export default function CimolaceCreationAgent({ tenantSlug: tenantSlugProp = nul
     }
   }, [osTenant, osBrand, speak, sThink]);
 
+  // Exécuteur des EFFETS du reducer Protocole (gaté). Effets PRIMITIFS seulement (aucun renvoi vers
+  // vnpChat/vnpAction → pas de souci d'ordre React) ; l'ordre des effets est préservé.
+  const runEffects = useCallback((effects) => {
+    (effects || []).forEach((e) => {
+      if (e.type === 'SPEAK') speak(e.text);
+      else if (e.type === 'SET_SUGGESTIONS') setVnpSuggest(e.items || []);
+      else if (e.type === 'SET_ACTIONS') setVnpActs((e.items || []).map((it) => (typeof it === 'string' ? it : it.id)));
+      else if (e.type === 'OPEN_CONTACT') setContactForm({ name: '', email: '', message: '', subject: `Contact via l'assistant ${(osBrand && osBrand.name) || osTenant}`, sending: false, sent: false, error: '' });
+      else if (e.type === 'LOG') logEvent(e.event, e.payload || {}, osTenant);
+      // TOUR_STEP / GO_CHECKOUT / ASK_BRAIN : gérés par les handlers existants (v1 du branchement).
+    });
+  }, [speak, osBrand, osTenant]);
+
   // ── VNP (VibeNavigation Protocol) — moteur d'intentions + navigation guidée + Action Engine ──
   // Ouvre un NŒUD du graphe de façon DÉTERMINISTE (clic sur une intention/un sujet) : réponse directe
   // depuis le contenu du nœud + sujets liés (suites) + actions disponibles. Zéro appel LLM.
@@ -1185,11 +1208,12 @@ export default function CimolaceCreationAgent({ tenantSlug: tenantSlugProp = nul
     const n = g.byId(nodeId); if (!n) return;
     setEngaged(true); setError('');
     brainGenRef.current += 1;
+    if (VNP_PROTOCOL_V2 && protocolRef.current) { runEffects(protocolRef.current.dispatch({ type: 'OPEN_NODE', payload: { nodeId } }).effects); return; }
     setVnpSuggest(vnpRelated(g, nodeId, 3));
     setVnpActs(n.actions || []);
     logEvent('node_opened', { nodeId, intention: n.intention || '' }, osTenant);
     speak(`${n.summary} ${n.content}`.replace(/\s+/g, ' ').trim().slice(0, 340) || n.title);
-  }, [vnpGraph, speak, osTenant]);
+  }, [vnpGraph, speak, osTenant, runEffects]);
 
   // Réponse à une QUESTION LIBRE via l'edge VNP (résout intention + nœud + suggestions + actions).
   const vnpChat = useCallback(async (message) => {
@@ -1224,6 +1248,7 @@ export default function CimolaceCreationAgent({ tenantSlug: tenantSlugProp = nul
   //  • acheter/rejoindre/réserver → on annonce puis on emmène vers la VRAIE page /forfaits (Stripe/PawaPay).
   const vnpAction = useCallback(async (actionId, label) => {
     setError(''); setEngaged(true); setVnpActs([]);
+    if (actionId === '__detail__') { if (protocolRef.current) runEffects(protocolRef.current.dispatch({ type: 'WANT_DETAIL' }).effects); return; }
     if (actionId === 'contacter' || actionId === 'participer') {
       setContactForm({ name: '', email: '', message: '', subject: `Contact via l'assistant ${(osBrand && osBrand.name) || osTenant}`, sending: false, sent: false, error: '' });
       return;
