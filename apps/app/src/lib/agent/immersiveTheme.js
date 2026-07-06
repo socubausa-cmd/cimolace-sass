@@ -18,9 +18,12 @@ export const SERIF = "'Fraunces','Source Serif 4',Georgia,serif";
 // SERIF (Fraunces) reste la « voix » chaude des scènes. À importer par les DEUX agents.
 export const GROTESQUE = "'Bricolage Grotesque', system-ui, sans-serif";
 export const SERIF_BODY = "'Source Serif 4', Georgia, serif";
+// DISPLAY = serif classique haut-contraste (Cormorant Garamond) — traitement éditorial « hero »
+// (eyebrow + grand nom + filet). Chargé ici, utilisé pour l'accueil du realm tenant (prorascience).
+export const DISPLAY = "'Cormorant Garamond','Cormorant',Georgia,serif";
 
 export const STYLE = `
-@import url('https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=Source+Serif+4:opsz,wght@8..60,400;8..60,600&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,500&family=Source+Serif+4:opsz,wght@8..60,400;8..60,600&display=swap');
 @keyframes ccaBreath{0%,100%{transform:translate(-50%,-50%) scale(1);opacity:.6}50%{transform:translate(-50%,-50%) scale(1.18);opacity:.95}}
 @keyframes ccaLine{0%{background-position:-90px 0}100%{background-position:130px 0}}
 @keyframes ccaEq{0%,100%{transform:scaleY(.3)}50%{transform:scaleY(1)}}
@@ -45,8 +48,10 @@ export const STYLE = `
 .cca-pret .cca-done{opacity:1;animation:ccaHalo 2.6s ease-in-out infinite}
 .cca-pret .cca-glow{background:radial-gradient(circle,rgba(63,191,106,.16),transparent 60%)}
 .cca-in{animation:ccaFade .5s cubic-bezier(.22,1,.36,1) both}
-.cca-chip{transition:background .16s ease;cursor:pointer}
+.cca-chip{transition:background .16s ease,border-color .16s ease;cursor:pointer}
 .cca-chip:hover{background:rgba(230,204,146,.14)!important}
+button.cca-chip:hover{border-color:rgba(230,204,146,.42)!important}
+button.cca-chip-visit:hover{background:#e18b6b!important;border-color:transparent!important}
 .cca-field::placeholder{color:rgba(244,239,230,.35)}
 /* — Effets « vivants » — */
 @keyframes ccaCaret{0%,44%{opacity:1}50%,94%{opacity:0}100%{opacity:1}}

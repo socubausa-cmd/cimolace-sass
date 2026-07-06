@@ -17,12 +17,12 @@
  */
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { GraduationCap, Stethoscope, ShoppingBag, ArrowUp, ArrowRight, ArrowLeft, Check, Loader2, Mail, Lock, Volume2, VolumeX, Sparkles, SkipForward, X, Compass } from 'lucide-react';
+import { GraduationCap, Stethoscope, ShoppingBag, ArrowUp, ArrowRight, ArrowLeft, Check, Loader2, Mail, Lock, Volume2, VolumeX, Sparkles, SkipForward, X, Compass, BookOpen, Users, Tag } from 'lucide-react';
 import { getApiBaseUrl } from '@/lib/apiBase';
 import { useAuth } from '@/hooks/useAuth';
 import { authStore } from '@/lib/auth-store';
 import { supabase } from '@/lib/supabase';
-import { BG, BG_THINK, INK, TERRA, GOLD, SERIF, STYLE } from '@/lib/agent/immersiveTheme';
+import { BG, BG_THINK, INK, TERRA, GOLD, SERIF, DISPLAY, STYLE } from '@/lib/agent/immersiveTheme';
 import Presence from '@/components/agent/Presence';
 import { CIMOLACE_LESSONS } from '@/lib/agent/cimolaceLessons';
 import { OS_KNOWLEDGE, prorascienceKnowledgeText, buildTenantTour } from '@/lib/agent/prorascienceKnowledge';
@@ -98,6 +98,15 @@ function extractLessonTopic(m) {
 // BG/BG_THINK/INK/TERRA/GOLD/SERIF importés depuis @/lib/agent/immersiveTheme (coque partagée)
 
 const GREETING = "Bonjour. Dites-moi ce que vous voulez lancer — je m'occupe du reste.";
+
+// Icône de puce (realm tenant) selon l'intention de la question — cohérent avec le redesign éditorial.
+function chipIconFor(q) {
+  const s = String(q || '').toLowerCase();
+  if (/fondateur|recteur|manikongo|[ée]quipe/.test(s)) return Users;
+  if (/forfait|prix|tarif|palier|cycle|mentorat|co[ûu]t/.test(s)) return Tag;
+  if (/pratiqu|rejoindre|m[ée]thode|commenc|d[ée]buter/.test(s)) return Sparkles;
+  return BookOpen;
+}
 
 // L'OS peut RENDRE un tenant existant (realm) — MÊME moteur/couleurs, seuls le logo (au coin),
 // le nom de la plateforme et le message de bienvenue changent. Résolution du slug tenant :
@@ -559,6 +568,7 @@ export default function CimolaceCreationAgent({ tenantSlug: tenantSlugProp = nul
 
   const [presence, setPresence] = useState('connexion'); // connexion|attente|reflexion|ecriture|pret
   const [message, setMessage] = useState('');
+  const [engaged, setEngaged] = useState(false); // realm tenant : le visiteur a-t-il interagi ? (masque le hero d'accueil)
   const [step, setStep] = useState('discovery'); // discovery|product|brand_ask|brand_confirm|account|pret
 
   const [chosen, setChosen] = useState('school');
@@ -746,14 +756,15 @@ export default function CimolaceCreationAgent({ tenantSlug: tenantSlugProp = nul
     return () => { if (t) clearTimeout(t); clearInterval(typeTimer.current); clearTimeout(thinkTimer.current); clearTimeout(sceneTimer.current); clearTimeout(lessonTimer.current); cancelAnimationFrame(rafRef.current); };
   }, [speak, isTenantRealm]);
 
-  // Bienvenue TENANT — même moteur, identité du tenant (logo + nom au coin + ce message).
+  // Bienvenue TENANT — accueil ÉDITORIAL : le hero (eyebrow + grand nom serif + filet + corps) est
+  // rendu statiquement (cf. bloc hero). On amène juste la présence à « attente » pour révéler
+  // hero + suggestions (pas de machine à écrire — l'accueil se pose, il ne se tape pas).
   useEffect(() => {
     if (!isTenantRealm || welcomedRef.current || !osBrand) return undefined;
     welcomedRef.current = true;
-    const name = osBrand.name || osTenant;
-    const t = setTimeout(() => speak(`Bienvenue sur ${name}. Je suis votre guide — je connais tout ${name}. Que souhaitez-vous découvrir ?`), 700);
+    const t = setTimeout(() => setPresence('attente'), 650);
     return () => clearTimeout(t);
-  }, [isTenantRealm, osBrand, osTenant, speak]);
+  }, [isTenantRealm, osBrand, osTenant]);
 
   // Filet anti-écran-vide : si l'onglet redevient visible et qu'une scène est montée
   // mais restée invisible (rAF gelé en arrière-plan), on la révèle.
@@ -823,6 +834,7 @@ export default function CimolaceCreationAgent({ tenantSlug: tenantSlugProp = nul
   // moteur de scènes que le tour Cimolace, mais drapeau `tenant` = pas de tunnel de vente Cimolace.
   const startTenantTour = useCallback(() => {
     if (!osTenant) return;
+    setEngaged(true);
     stopTour();
     const beats = buildTenantTour(OS_KNOWLEDGE[osTenant] || undefined, (osBrand && osBrand.name) || osTenant);
     if (!beats || !beats.length) return;
@@ -1081,6 +1093,7 @@ export default function CimolaceCreationAgent({ tenantSlug: tenantSlugProp = nul
   // refuse Cimolace (cloison). Générique, piloté par le knowledge pack du tenant.
   const tenantBrain = useCallback(async (message) => {
     setError(''); setBrainHooks([]); setKeyword('');
+    setEngaged(true); // quitte l'accueil éditorial → la voix (réponse) prend le relais
     const gen = ++brainGenRef.current;
     setPresence('reflexion'); sThink();
     try {
@@ -1168,6 +1181,10 @@ export default function CimolaceCreationAgent({ tenantSlug: tenantSlugProp = nul
 
   const bg = presence === 'reflexion' ? BG_THINK : BG;
   const showActions = presence === 'attente' && !inputOpen;
+  // Accueil ÉDITORIAL du realm tenant : hero (eyebrow + grand nom + filet + corps) tant que le
+  // visiteur n'a pas interagi (pas de scène/tour/leçon/saisie en cours).
+  const showTenantHero = isTenantRealm && !engaged && !scene && !tourActive && !lessonActive && !inputOpen;
+  const tenantName = (osBrand && osBrand.name) || osTenant;
   // Scène plein écran (split/reader/tutorial) : la voix centrale + actions en flux s'effacent,
   // la scène porte le message ; `aside` garde la voix au centre.
   const fullscreenScene = !!scene && scene.type !== 'aside';
@@ -1198,18 +1215,33 @@ export default function CimolaceCreationAgent({ tenantSlug: tenantSlugProp = nul
           hooks={isTenantRealm ? [] : brainHooks} onHook={isTenantRealm ? tenantBrain : brain} />
       )}
 
-      {/* Identité du realm (où on est) : logo + nom de la plateforme pour un tenant, sinon Cimolace */}
-      <div style={{ position: 'absolute', top: 20, left: '50%', transform: 'translateX(-50%)', display: 'flex', alignItems: 'center', gap: 8, opacity: 0.85, pointerEvents: 'none' }}>
-        {isTenantRealm && osBrand && osBrand.logo ? (
-          <img src={osBrand.logo} alt="" style={{ height: 22, width: 'auto', maxWidth: 96, objectFit: 'contain' }} />
-        ) : null}
-        <span style={{ position: 'relative', display: 'inline-flex', width: 6, height: 6, alignItems: 'center', justifyContent: 'center' }}>
-          <span style={{ position: 'absolute', width: 6, height: 6, borderRadius: '50%', background: '#3fbf6a', animation: 'ccaPing 1.9s ease-out infinite' }} />
-          <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#3fbf6a' }} />
-        </span>
-        <span style={{ fontSize: 11.5, color: 'rgba(244,239,230,.6)', letterSpacing: '.03em' }}>
-          {isTenantRealm ? `${(osBrand && osBrand.name) || osTenant} · connecté` : 'assistant cimolace · connecté'}
-        </span>
+      {/* Identité du realm (où on est) : badge marque (logo + nom) + état connecté */}
+      <div style={{ position: 'absolute', top: 18, left: '50%', transform: 'translateX(-50%)', display: 'flex', alignItems: 'center', gap: 14, pointerEvents: 'none', zIndex: 6 }}>
+        {isTenantRealm ? (
+          <>
+            <span style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '6px 15px', border: '1px solid rgba(230,204,146,.26)', borderRadius: 999, background: 'rgba(230,204,146,.045)' }}>
+              {osBrand && osBrand.logo
+                ? <img src={osBrand.logo} alt="" style={{ height: 16, width: 'auto', maxWidth: 66, objectFit: 'contain' }} />
+                : <span style={{ width: 7, height: 7, transform: 'rotate(45deg)', background: GOLD, borderRadius: 1, display: 'inline-block' }} />}
+              <span style={{ fontFamily: DISPLAY, fontSize: 13, letterSpacing: '.2em', textTransform: 'uppercase', color: GOLD, fontWeight: 600 }}>{tenantName}</span>
+            </span>
+            <span style={{ display: 'inline-flex', alignItems: 'center', gap: 7 }}>
+              <span style={{ position: 'relative', display: 'inline-flex', width: 9, height: 9 }}>
+                <span style={{ position: 'absolute', inset: 0, borderRadius: '50%', border: '1.5px solid #3fbf6a', animation: 'ccaPing 1.9s ease-out infinite' }} />
+                <span style={{ width: 9, height: 9, borderRadius: '50%', border: '1.5px solid #3fbf6a' }} />
+              </span>
+              <span style={{ fontSize: 12, color: 'rgba(244,239,230,.55)', letterSpacing: '.02em' }}>Connecté</span>
+            </span>
+          </>
+        ) : (
+          <span style={{ display: 'inline-flex', alignItems: 'center', gap: 8, opacity: 0.85 }}>
+            <span style={{ position: 'relative', display: 'inline-flex', width: 6, height: 6, alignItems: 'center', justifyContent: 'center' }}>
+              <span style={{ position: 'absolute', width: 6, height: 6, borderRadius: '50%', background: '#3fbf6a', animation: 'ccaPing 1.9s ease-out infinite' }} />
+              <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#3fbf6a' }} />
+            </span>
+            <span style={{ fontSize: 11.5, color: 'rgba(244,239,230,.6)', letterSpacing: '.03em' }}>assistant cimolace · connecté</span>
+          </span>
+        )}
       </div>
 
       {/* L5 — rail de sujets « tableau intelligent » : liste à gauche, clic → le cerveau compose au centre.
@@ -1266,35 +1298,68 @@ export default function CimolaceCreationAgent({ tenantSlug: tenantSlugProp = nul
         </div>
       )}
 
-      {/* Voix */}
-      <div className={`cca-voicecol${fullscreenScene ? ' cca-dim' : ''}`} style={{ minHeight: 34, marginTop: 14, textAlign: 'center', position: 'relative', zIndex: 4 }}>
-        {message ? (
-          <p className="cca-in" style={{ fontFamily: SERIF, fontSize: 19, lineHeight: 1.5, color: INK, maxWidth: 470, margin: 0 }}>
-            {keyword && (step === 'brain' || step === 'product') ? highlightReply(message, keyword) : message}
-            {(presence === 'ecriture' || presence === 'attente') && <span className="cca-caret" />}
+      {/* Realm tenant — ACCUEIL ÉDITORIAL : eyebrow + grand nom serif (Cormorant) + filet losange + corps */}
+      {showTenantHero && (
+        <div className="cca-in" style={{ textAlign: 'center', marginTop: 14, maxWidth: 680, position: 'relative', zIndex: 4, padding: '0 20px' }}>
+          <div style={{ fontFamily: DISPLAY, fontSize: 13, letterSpacing: '.34em', textTransform: 'uppercase', color: TERRA, fontWeight: 600, marginBottom: 4 }}>
+            Bienvenue sur
+          </div>
+          <h1 style={{ fontFamily: DISPLAY, fontWeight: 600, fontSize: 'clamp(46px, 8.5vw, 90px)', lineHeight: 1.02, letterSpacing: '-0.005em', color: INK, margin: 0, textWrap: 'balance' }}>
+            {tenantName}
+          </h1>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 12, margin: '18px auto 16px', width: 220 }}>
+            <span style={{ height: 1, flex: 1, background: 'linear-gradient(90deg, transparent, rgba(217,119,87,.5))' }} />
+            <span style={{ width: 7, height: 7, transform: 'rotate(45deg)', background: TERRA, borderRadius: 1, opacity: 0.9, flexShrink: 0 }} />
+            <span style={{ height: 1, flex: 1, background: 'linear-gradient(90deg, rgba(217,119,87,.5), transparent)' }} />
+          </div>
+          <p style={{ fontFamily: DISPLAY, fontSize: 'clamp(19px, 2.3vw, 25px)', lineHeight: 1.42, color: 'rgba(244,239,230,.9)', margin: '0 auto', maxWidth: 500, textWrap: 'balance' }}>
+            Je suis votre guide — je connais tout {tenantName}. Que souhaitez-vous découvrir ?
           </p>
-        ) : (
-          showActions && step === 'discovery' && !isTenantRealm && <span style={{ fontSize: 12, color: 'rgba(244,239,230,.4)' }}>touchez l'écran pour parler</span>
-        )}
-      </div>
+        </div>
+      )}
+
+      {/* Voix (masquée pendant l'accueil éditorial du tenant) */}
+      {!showTenantHero && (
+        <div className={`cca-voicecol${fullscreenScene ? ' cca-dim' : ''}`} style={{ minHeight: 34, marginTop: 14, textAlign: 'center', position: 'relative', zIndex: 4 }}>
+          {message ? (
+            <p className="cca-in" style={{ fontFamily: isTenantRealm ? DISPLAY : SERIF, fontSize: isTenantRealm ? 23 : 19, lineHeight: 1.45, color: INK, maxWidth: isTenantRealm ? 560 : 470, margin: '0 auto' }}>
+              {keyword && (step === 'brain' || step === 'product') ? highlightReply(message, keyword) : message}
+              {(presence === 'ecriture' || presence === 'attente') && <span className="cca-caret" />}
+            </p>
+          ) : (
+            showActions && step === 'discovery' && !isTenantRealm && <span style={{ fontSize: 12, color: 'rgba(244,239,230,.4)' }}>touchez l'écran pour parler</span>
+          )}
+        </div>
+      )}
 
       {/* Erreur */}
       {error && (
         <p className="cca-in" style={{ marginTop: 10, fontSize: 12.5, color: '#f0997b' }}>{error}</p>
       )}
 
-      {/* Realm tenant : « Visiter » (l'OS REND le site en scènes) + suggestions branchées sur le cerveau du tenant */}
+      {/* Realm tenant : « Visiter » (l'OS REND le site en scènes) + suggestions vers le cerveau du tenant.
+          Puces éditoriales : icône + libellé + flèche, en grille 2 colonnes (cf. redesign). */}
       {showActions && isTenantRealm && !tourActive && (
-        <div className="cca-in" style={{ display: 'flex', flexWrap: 'wrap', gap: 9, justifyContent: 'center', marginTop: 18, maxWidth: 520, position: 'relative', zIndex: 4 }}>
-          <span className="cca-chip" onClick={(e) => { e.stopPropagation(); startTenantTour(); }}
-            style={{ display: 'inline-flex', alignItems: 'center', gap: 7, fontSize: 13, fontWeight: 600, color: '#1a1613', background: TERRA, borderRadius: 999, padding: '8px 16px' }}>
-            <Compass size={15} /> Fais-moi visiter
-          </span>
+        <div className="cca-in" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(238px, 1fr))', gap: 10, justifyItems: 'stretch', marginTop: 24, width: '100%', maxWidth: 560, position: 'relative', zIndex: 4, padding: '0 20px', boxSizing: 'border-box' }}>
+          <button className="cca-chip cca-chip-visit" onClick={(e) => { e.stopPropagation(); startTenantTour(); }}
+            style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10, fontSize: 14, fontWeight: 600, color: '#231208', background: TERRA, border: '1px solid transparent', borderRadius: 15, padding: '13px 17px', cursor: 'pointer', fontFamily: 'inherit', textAlign: 'left' }}>
+            <span style={{ display: 'inline-flex', alignItems: 'center', gap: 10 }}><Compass size={17} style={{ flexShrink: 0 }} /> Fais-moi visiter</span>
+            <ArrowRight size={16} style={{ flexShrink: 0 }} />
+          </button>
           {[...((OS_KNOWLEDGE[osTenant] && OS_KNOWLEDGE[osTenant].faq) || []).map((f) => f.q).slice(0, 2), 'Qui est le fondateur ?', 'Vos forfaits ?']
-            .filter(Boolean).slice(0, 3).map((q) => (
-              <span key={q} className="cca-chip" onClick={(e) => { e.stopPropagation(); tenantBrain(q); }}
-                style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 13, color: GOLD, background: 'rgba(244,239,230,.05)', borderRadius: 999, padding: '8px 15px' }}>{q}</span>
-            ))}
+            .filter(Boolean).slice(0, 3).map((q) => {
+              const Icon = chipIconFor(q);
+              return (
+                <button key={q} className="cca-chip" onClick={(e) => { e.stopPropagation(); tenantBrain(q); }}
+                  style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10, fontSize: 14, color: 'rgba(244,239,230,.9)', background: 'rgba(244,239,230,.035)', border: '1px solid rgba(230,204,146,.2)', borderRadius: 15, padding: '13px 17px', cursor: 'pointer', fontFamily: 'inherit', textAlign: 'left' }}>
+                  <span style={{ display: 'inline-flex', alignItems: 'center', gap: 10, minWidth: 0 }}>
+                    <Icon size={16} style={{ color: GOLD, flexShrink: 0 }} />
+                    <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{q}</span>
+                  </span>
+                  <ArrowRight size={15} style={{ color: 'rgba(230,204,146,.6)', flexShrink: 0 }} />
+                </button>
+              );
+            })}
         </div>
       )}
 
