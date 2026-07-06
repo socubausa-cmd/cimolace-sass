@@ -1193,6 +1193,10 @@ isLiriHostDevPreviewRoute;
   const isStudioHubOnly = studioPathNorm === '/studio';
   
   const isCimolaceRoute = location.pathname.startsWith('/cimolace');
+  // Salle de téléconsultation MEDOS (santé) : plein écran ISOLÉ — aucun chrome du
+  // portail LIRI/école (bannières, panier, assistant, menu mobile) ne doit s'y
+  // afficher, ni pendant l'appel ni sur l'écran de fin. Cloison [[cimolace]] santé.
+  const isTeleconsultRoute = location.pathname.startsWith('/teleconsult');
 
   // Espace propriétaire (/owner-dashboard) : PAS d'entête globale (cf. hideHeaderRoutes). Sur un
   // domaine tenant (prorascience.org), le Header global = bandeau VITRINE → confusion « ramené à la
@@ -1322,7 +1326,7 @@ isLiriHostDevPreviewRoute;
   return (
     <MobileReelsShellProvider active={mobileReelsShellActive}>
     <div className={appShellClassName}>
-      {!isLiveArenaRoute && !isEleveMobileRoute && !isCimolaceRoute && !isAdminRoute && (
+      {!isLiveArenaRoute && !isTeleconsultRoute && !isEleveMobileRoute && !isCimolaceRoute && !isAdminRoute && (
         <LazyShell>
           <GraceBanner />
         </LazyShell>
@@ -1333,12 +1337,12 @@ isLiriHostDevPreviewRoute;
         </LazyShell>
       )}
 
-      {!isLiveArenaRoute && !isEleveMobileRoute && !isCimolaceRoute && !isAdminRoute && (
+      {!isLiveArenaRoute && !isTeleconsultRoute && !isEleveMobileRoute && !isCimolaceRoute && !isAdminRoute && (
         <LazyShell>
           <ShoppingCart />
         </LazyShell>
       )}
-      {!isLiveArenaRoute && !isEleveMobileRoute && !isCimolaceRoute && !isAdminRoute && !isStudentSpaceShell && (
+      {!isLiveArenaRoute && !isTeleconsultRoute && !isEleveMobileRoute && !isCimolaceRoute && !isAdminRoute && !isStudentSpaceShell && (
         <LazyShell>
           <LiveAlertBanner />
         </LazyShell>
