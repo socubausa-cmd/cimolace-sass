@@ -18,18 +18,21 @@ import HandoffPage from '@/pages/HandoffPage';
  *  5. tout autre host → /login
  *  Cimolace est la plateforme ; ISNA n'est qu'un tenant. Cf. CIMOLACE_ARCHITECTURE_SOURCE_OF_TRUTH.md.
  */
-// P5 — bascule prorascience.org → Cimolace OS (realm isolé) derrière un FLAG. Défaut = maquettes
-// (ZÉRO régression du site fondateur live). Activation : build `VITE_PRORASCIENCE_OS='1'` (prod, après
-// GO fondateur) OU `?os=isna` / `?os=1` (preview de la bascule sans toucher le défaut prod).
-// Échappatoire : `?os=0` force les maquettes. Sert 2 endroits : le rendu ET le masquage du header.
+// P5 — bascule prorascience.org → Cimolace OS (realm isolé). Flip fondateur CONFIRMÉ (2026-07-06) :
+// l'OS est le DÉFAUT sur prorascience.org (le MÊME moteur rend le site fondateur, données prorascience).
+// KILL-SWITCH instantané = `?os=0` / `?os=off` → maquettes, SANS redéploiement. Rollback total =
+// repasser OS_DEFAULT_ON à false + redéployer. `?os=isna` / `?os=1` = forçage explicite. Le flag env
+// `VITE_PRORASCIENCE_OS==='0'` désactive aussi (si un jour injecté). N'affecte QUE le host prorascience.org.
+const OS_DEFAULT_ON = true; // ← rollback total : mettre à false + redéployer
 function prorascienceOsEnabled() {
   if (typeof window === 'undefined') return false;
   try {
     const q = new URLSearchParams(window.location.search).get('os');
-    if (q === '0') return false;                      // échappatoire → maquettes
-    if (q === 'isna' || q === '1') return true;       // preview de la bascule
+    if (q === '0' || q === 'off') return false;       // kill-switch instantané → maquettes
+    if (q === 'isna' || q === '1') return true;        // forçage explicite → OS
   } catch { /* noop */ }
-  return import.meta.env.VITE_PRORASCIENCE_OS === '1'; // flag build prod (défaut absent = maquettes)
+  if (import.meta.env.VITE_PRORASCIENCE_OS === '0') return false; // kill par env (si dispo)
+  return OS_DEFAULT_ON;
 }
 
 // LOT C — l'assistant immersif est-il l'entrée à la RACINE `/` pour ce host ? (host Cimolace SaaS :
