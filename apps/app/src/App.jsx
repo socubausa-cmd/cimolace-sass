@@ -190,9 +190,7 @@ const Header = lazy(() => import('@/components/Header'));
 import ProtectedOwnerRoute from '@/components/ProtectedOwnerRoute';
 const ShoppingCart = lazy(() => import('@/components/ecommerce/ShoppingCart'));
 const LiveAlertBanner = lazy(() => import('@/components/liri/live/LiveAlertBanner'));
-const MobileReelsShell = lazy(() => import('@/components/mobile-app/MobileReelsShell'));
-import { MobileReelsShellProvider } from '@/contexts/MobileReelsShellContext';
-import { useMobileReelsShellVisible } from '@/hooks/useMobileReelsShellVisible';
+// Coque mobile « type app » (MobileReelsShell) SUPPRIMÉE : LIRI = web responsive + natif Expo.
 import { isSupabaseConfigured } from '@/lib/supabase';
 
 // --- Core Pages ---
@@ -1292,42 +1290,35 @@ isLiriHostDevPreviewRoute;
 
   if (location.pathname === '/ecoles/prorascience-apple-story') {
     return (
-      <MobileReelsShellProvider active={mobileReelsShellActive}>
-        <div className="flex min-h-screen flex-col marketing-public-shell">
-          {!isLiveArenaRoute && <GraceBanner />}
-          {!isAdminRoute && !isImmersiveEmbed && !isEmbedRoute && !isLiveArenaRoute && <DiscoveryChat />}
-          <main className="flex-grow min-h-[100dvh]">
-            <React.Suspense fallback={<div className="flex min-h-[100dvh] items-center justify-center bg-[#f7f8fb] text-slate-500">Chargement…</div>}>
-              <ProrascienceAppleStoryLandingLazy />
-            </React.Suspense>
-          </main>
-          {mobileReelsShellActive ? <MobileReelsShell /> : null}
-          <Toaster />
-        </div>
-      </MobileReelsShellProvider>
+      <div className="flex min-h-screen flex-col marketing-public-shell">
+        {!isLiveArenaRoute && <GraceBanner />}
+        {!isAdminRoute && !isImmersiveEmbed && !isEmbedRoute && !isLiveArenaRoute && <DiscoveryChat />}
+        <main className="flex-grow min-h-[100dvh]">
+          <React.Suspense fallback={<div className="flex min-h-[100dvh] items-center justify-center bg-[#f7f8fb] text-slate-500">Chargement…</div>}>
+            <ProrascienceAppleStoryLandingLazy />
+          </React.Suspense>
+        </main>
+        <Toaster />
+      </div>
     );
   }
 
   if (location.pathname === '/ecoles/prorascience-apple-story-v3') {
     return (
-      <MobileReelsShellProvider active={mobileReelsShellActive}>
-        <div className="flex min-h-screen flex-col marketing-public-shell">
-          {!isLiveArenaRoute && <GraceBanner />}
-          {!isAdminRoute && !isImmersiveEmbed && !isEmbedRoute && !isLiveArenaRoute && <DiscoveryChat />}
-          <main className="flex-grow min-h-[100dvh]">
-            <React.Suspense fallback={<div className="flex min-h-[100dvh] items-center justify-center bg-[#06070c] text-white/60">Chargement…</div>}>
-              <ProrascienceAppleStoryV3Lazy />
-            </React.Suspense>
-          </main>
-          {mobileReelsShellActive ? <MobileReelsShell /> : null}
-          <Toaster />
-        </div>
-      </MobileReelsShellProvider>
+      <div className="flex min-h-screen flex-col marketing-public-shell">
+        {!isLiveArenaRoute && <GraceBanner />}
+        {!isAdminRoute && !isImmersiveEmbed && !isEmbedRoute && !isLiveArenaRoute && <DiscoveryChat />}
+        <main className="flex-grow min-h-[100dvh]">
+          <React.Suspense fallback={<div className="flex min-h-[100dvh] items-center justify-center bg-[#06070c] text-white/60">Chargement…</div>}>
+            <ProrascienceAppleStoryV3Lazy />
+          </React.Suspense>
+        </main>
+        <Toaster />
+      </div>
     );
   }
 
   return (
-    <MobileReelsShellProvider active={mobileReelsShellActive}>
     <div className={appShellClassName}>
       {!isLiveArenaRoute && !isTeleconsultRoute && !isEleveMobileRoute && !isCimolaceRoute && !isAdminRoute && (
         <LazyShell>
@@ -2698,15 +2689,8 @@ isLiriHostDevPreviewRoute;
         </EleveNoStudioGuard>
       </main>
 
-      {mobileReelsShellActive ? (
-        <LazyShell>
-          <MobileReelsShell />
-        </LazyShell>
-      ) : null}
-
       <Toaster />
     </div>
-    </MobileReelsShellProvider>
   );
 };
 
