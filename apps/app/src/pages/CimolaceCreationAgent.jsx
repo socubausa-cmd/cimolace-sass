@@ -17,7 +17,7 @@
  */
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { GraduationCap, Stethoscope, ShoppingBag, ArrowUp, ArrowRight, ArrowLeft, Check, Loader2, Mail, Lock, Volume2, VolumeX } from 'lucide-react';
+import { GraduationCap, Stethoscope, ShoppingBag, ArrowUp, ArrowRight, ArrowLeft, Check, Loader2, Mail, Lock, Volume2, VolumeX, Sparkles, SkipForward, X } from 'lucide-react';
 import { getApiBaseUrl } from '@/lib/apiBase';
 import { useAuth } from '@/hooks/useAuth';
 import { authStore } from '@/lib/auth-store';
@@ -75,6 +75,73 @@ const TOPIC_Q = {
   compare: 'Pourquoi Cimolace plutôt que Zoom ?',
   prix: 'Et le prix, ça donne quoi ?',
 };
+// ── L7 — « Fais-moi le tour » : l'IA prend le contrôle et enchaîne les scènes toute seule ──
+// Chaque beat = { reply (voix Sherpas), keyword (surligné), topic? (croquis), scene? (composition), final? }.
+const isTourIntent = (m) =>
+  /fais[ -]?(moi )?(le )?tour|pr[ée]sente[ -]?(moi )?tout|montre[ -]?(moi )?tout|tour (complet|du produit|guid[ée])|fais le tour|visite guid[ée]|pr[ée]sentation (compl[èe]te|guid[ée])/i.test(m || '');
+
+const TOUR = {
+  school: [
+    { reply: "C'est parti, je te fais le tour. Ton école aura deux faces : ce que voient tes élèves, et ta salle des machines.",
+      keyword: 'deux faces',
+      scene: { type: 'split', headline: 'Ton école, deux mondes',
+        left: { title: "Le monde d'en haut", subtitle: 'Côté élève', points: ['Vitrine à ta marque', 'Inscription en 1 clic', 'Lives HD + replay'] },
+        right: { title: "Le monde d'en bas", subtitle: 'Côté toi', points: ['Tableau de bord', 'Membres & paiements', 'Smartboard IA'] },
+        tone: { left: 'gold', right: 'terra' } } },
+    { reply: 'Le cœur, c\'est le direct : tes cours en live HD, avec un tableau intelligent qui dessine pour toi.',
+      keyword: 'en direct', topic: 'live' },
+    { reply: 'Et rien ne se perd : chaque live devient un replay que tes élèves revoient quand ils veulent.',
+      keyword: 'un replay', topic: 'replay' },
+    { reply: 'Côté budget c\'est clair : dès 150 €/mois, et zéro commission sur tes ventes.',
+      keyword: 'zéro commission',
+      scene: { type: 'aside', side: 'right', title: 'Les paliers',
+        items: [{ label: 'START', value: '150 €/mois', note: 'lives + replay' }, { label: 'BUSINESS', value: '200 €/mois', note: 'multi-classes, IA' }, { label: 'Installation', value: '500 € une fois', note: 'prêt en minutes' }],
+        highlight: 'START' } },
+    { reply: 'Voilà le tour ! Ton espace à ta marque est prêt en quelques minutes — on le lance ?',
+      keyword: 'prêt en quelques minutes', final: true },
+  ],
+  medos: [
+    { reply: 'Je te fais le tour. MedOS, c\'est deux faces : l\'espace de ton patient, et ton cockpit de praticien.',
+      keyword: 'deux faces',
+      scene: { type: 'split', headline: 'MedOS, deux faces',
+        left: { title: 'Côté patient', subtitle: 'Rassurant', points: ['Prise de RDV en ligne', 'Téléconsultation', 'Portail à ta marque'] },
+        right: { title: 'Côté praticien', subtitle: 'Puissant', points: ['Dossiers patients', 'Notes SOAP dictées', 'Ordonnances & suivi'] },
+        tone: { left: 'gold', right: 'terra' } } },
+    { reply: 'En consultation, tu dictes : l\'IA rédige la note SOAP pendant que tu parles à ton patient.',
+      keyword: 'note SOAP',
+      scene: { type: 'tutorial', title: 'Une consultation, 3 gestes',
+        steps: [{ title: 'Ouvre le dossier', detail: "Tout l'historique du patient d'un coup d'œil." }, { title: 'Dicte, l\'IA rédige', detail: 'La note SOAP s\'écrit toute seule.' }, { title: 'Lance la téléconsult', detail: 'Vidéo sécurisée, à distance, RGPD.' }],
+        cta: 'Mettre en place MedOS' } },
+    { reply: 'Côté budget : dès 150 €/mois, zéro commission, et c\'est aux couleurs de ta clinique.',
+      keyword: 'zéro commission',
+      scene: { type: 'aside', side: 'right', title: 'Les paliers',
+        items: [{ label: 'START', value: '150 €/mois', note: 'dossiers + téléconsult' }, { label: 'BUSINESS', value: '200 €/mois', note: 'multi-praticiens' }, { label: 'Installation', value: '500 € une fois', note: 'prêt en minutes' }],
+        highlight: 'START' } },
+    { reply: 'Voilà le tour ! Ta clinique en ligne, à ta marque, est prête en minutes — on la lance ?',
+      keyword: 'prête en minutes', final: true },
+  ],
+  shop: [
+    { reply: 'Je te fais le tour. Ta boutique a deux faces : la vitrine que voit ton client, et ton arrière-boutique.',
+      keyword: 'deux faces',
+      scene: { type: 'split', headline: 'Ta boutique, deux faces',
+        left: { title: 'La vitrine', subtitle: 'Côté client', points: ['Catalogue à ta marque', 'Panier & paiement', 'Mobile money'] },
+        right: { title: "L'arrière-boutique", subtitle: 'Côté toi', points: ['Produits & stock', 'Commandes', 'Encaissements'] },
+        tone: { left: 'gold', right: 'terra' } } },
+    { reply: 'Vendre, c\'est 3 gestes : tu ajoutes un produit, tu partages ton lien, tu encaisses en mobile money.',
+      keyword: 'mobile money',
+      scene: { type: 'tutorial', title: 'Vendre en 3 gestes',
+        steps: [{ title: 'Ajoute un produit', detail: 'Photo, prix, stock — en une minute.' }, { title: 'Partage ton lien', detail: 'Ta boutique à ta marque, prête à envoyer.' }, { title: 'Encaisse', detail: 'Carte ou mobile money (XAF/XOF).' }],
+        cta: 'Lancer ma boutique' } },
+    { reply: 'Côté budget : dès 150 €/mois, zéro commission sur tes ventes.',
+      keyword: 'zéro commission',
+      scene: { type: 'aside', side: 'right', title: 'Les paliers',
+        items: [{ label: 'START', value: '150 €/mois', note: 'catalogue + paiement' }, { label: 'BUSINESS', value: '200 €/mois', note: 'multi-boutiques' }, { label: 'Installation', value: '500 € une fois', note: 'prêt en minutes' }],
+        highlight: 'START' } },
+    { reply: 'Voilà le tour ! Ta boutique à ta marque est prête en minutes — on la lance ?',
+      keyword: 'prête en minutes', final: true },
+  ],
+};
+
 // Surligne le mot-clé (style « Sherpas » : le terme fort ressort en accent) dans la reply.
 function highlightReply(text, kw) {
   if (!kw) return text;
@@ -411,6 +478,13 @@ export default function CimolaceCreationAgent() {
   const brainGenRef = useRef(0); // invalide un brain() en vol (Retour / appels concurrents)
   const historyRef = useRef([]); // mémoire conversationnelle envoyée à l'edge
 
+  // L7 — « Fais-moi le tour » : l'IA enchaîne les scènes toute seule
+  const [tourActive, setTourActive] = useState(false);
+  const [tourIdx, setTourIdx] = useState(0);
+  const tourRef = useRef(null);   // { kind, beats, gen }
+  const tourTimer = useRef(null);
+  const tourGenRef = useRef(0);
+
   const [inputOpen, setInputOpen] = useState(false);
   const [value, setValue] = useState('');
   const inputRef = useRef(null);
@@ -555,6 +629,73 @@ export default function CimolaceCreationAgent() {
     return () => document.removeEventListener('visibilitychange', onVis);
   }, [sceneVisible]);
 
+  // ── L7 — « Fais-moi le tour » : l'IA prend le contrôle et enchaîne les scènes ──
+  const stopTour = useCallback(() => {
+    tourGenRef.current += 1;         // invalide toute avance programmée
+    clearTimeout(tourTimer.current);
+    tourRef.current = null;
+    setTourActive(false);
+  }, []);
+
+  const runBeat = useCallback((gen, i) => {
+    if (tourGenRef.current !== gen) return; // tour arrêté / remplacé
+    const t = tourRef.current;
+    if (!t) return;
+    if (i >= t.beats.length) { // dépassé la fin → décision
+      setCovered((prev) => Array.from(new Set([...prev, 'prix'])));
+      setStep('product');
+      stopTour();
+      return;
+    }
+    const beat = t.beats[i];
+    setTourIdx(i);
+    setBrainHooks([]); setError('');
+    setKeyword(beat.keyword || '');
+    const tp = TOPIC_ORDER.includes(beat.topic) ? beat.topic : null;
+    setTopic(tp);
+    if (tp) setCovered((prev) => (prev.includes(tp) ? prev : [...prev, tp]));
+    setStep('brain'); // scènes/croquis se montent en brain/product
+    enterScene(normalizeScene(beat.scene), () => speak(beat.reply, () => {
+      if (tourGenRef.current !== gen) return;
+      if (beat.final) {
+        // fin : retour à la base + on éclaire la décision (CTA « Lancer … »)
+        setCovered((prev) => Array.from(new Set([...prev, 'prix'])));
+        setStep('product');
+        tourRef.current = null;
+        setTourActive(false);
+        return;
+      }
+      const dwell = Math.min(4600, 1500 + beat.reply.length * 24); // temps de lecture
+      tourTimer.current = setTimeout(() => runBeat(gen, i + 1), dwell);
+    }));
+  }, [enterScene, speak, stopTour]);
+
+  const startTour = useCallback((kind) => {
+    stopTour();
+    const k = TOUR[kind] ? kind : 'school';
+    const gen = ++tourGenRef.current;
+    tourRef.current = { kind: k, beats: TOUR[k], gen };
+    setChosen(k); setError('');
+    setTourActive(true); setTourIdx(0);
+    runBeat(gen, 0);
+  }, [stopTour, runBeat]);
+
+  const skipBeat = useCallback(() => {
+    const t = tourRef.current;
+    if (!t) return;
+    clearTimeout(tourTimer.current);
+    genRef.current += 1;             // coupe la frappe en cours
+    runBeat(t.gen, tourIdx + 1);
+  }, [runBeat, tourIdx]);
+
+  const endTour = useCallback(() => {
+    stopTour();
+    genRef.current += 1;
+    setStep('product');
+    setTopic(null);
+    exitScene();
+  }, [stopTour, exitScene]);
+
   const openInput = useCallback((prefill = '') => {
     setInputOpen(true);
     setValue(prefill);
@@ -593,38 +734,44 @@ export default function CimolaceCreationAgent() {
   // ── Transitions de flux ────────────────────────────────────────────────
   const pickKind = useCallback((k) => {
     sPop();
+    stopTour();
     exitScene();
     setChosen(k);
     setError('');
     think(() => { setStep('product'); speak(PRODUCT[k].reply); });
-  }, [think, speak, sPop, exitScene]);
+  }, [think, speak, sPop, exitScene, stopTour]);
 
   const chooseProduct = useCallback(() => {
     sPop();
+    stopTour();
     exitScene();
     setStep('brand_ask');
     speak("Comment s'appelle votre organisation ? Dites-le moi.", () => openInput());
-  }, [speak, openInput, sPop, exitScene]);
+  }, [speak, openInput, sPop, exitScene, stopTour]);
 
   const submitName = useCallback((name) => {
+    stopTour();
     exitScene();
     const s = slugify(name);
     setOrgName(name);
     setSlug(s);
     checkSlug(s);
     think(() => { setStep('brand_confirm'); speak(`Parfait. Votre espace : cimolace.space/t/${s || '…'}. On continue ?`); });
-  }, [think, speak, checkSlug, exitScene]);
+  }, [think, speak, checkSlug, exitScene, stopTour]);
 
   const continueToAccount = useCallback(() => {
     sPop();
+    stopTour();
     exitScene();
     setStep('account');
     speak("Dernière étape : votre e-mail et un mot de passe (8 caractères min). Vous saisissez, je crée l'espace.");
-  }, [speak, sPop, exitScene]);
+  }, [speak, sPop, exitScene, stopTour]);
 
   // Le « cerveau » : appelle l'edge agent-brain (LLM) → reply générative + produit + hooks.
   // Repli hors-ligne : détection par mots-clés.
   const brain = useCallback(async (message) => {
+    if (isTourIntent(message)) { startTour(TOUR[chosen] ? chosen : guessKind(message)); return; }
+    stopTour();
     setError('');
     setBrainHooks([]);
     setKeyword('');
@@ -659,7 +806,7 @@ export default function CimolaceCreationAgent() {
       setStep('product');
       speak(PRODUCT[k].reply);
     }
-  }, [chosen, speak, sThink, enterScene, exitScene]);
+  }, [chosen, speak, sThink, enterScene, exitScene, startTour, stopTour]);
 
   const submitInput = useCallback(() => {
     const v = value.trim();
@@ -672,6 +819,7 @@ export default function CimolaceCreationAgent() {
 
   const createAccount = useCallback(async () => {
     setError('');
+    stopTour();
     exitScene();
     if (!email.trim() || !password) { setError('E-mail et mot de passe requis.'); return; }
     if (password.length < 8) { setError('Mot de passe : 8 caractères minimum.'); return; }
@@ -704,19 +852,20 @@ export default function CimolaceCreationAgent() {
     } finally {
       setBusy(false);
     }
-  }, [email, password, slug, orgName, chosen, login, navigate, sPop, sThink, sChime, exitScene]);
+  }, [email, password, slug, orgName, chosen, login, navigate, sPop, sThink, sChime, exitScene, stopTour]);
 
   const goBack = useCallback(() => {
     sPop();
     setError('');
     setBusy(false);
     closeInput();
+    stopTour();
     exitScene();
     if (step === 'product' || step === 'brain') { setStep('discovery'); speak(GREETING); }
     else if (step === 'brand_ask') { setStep('product'); speak(PRODUCT[chosen].reply); }
     else if (step === 'brand_confirm') { setStep('brand_ask'); speak("Quel nom pour votre organisation ?", () => openInput()); }
     else if (step === 'account') { setStep('brand_confirm'); speak(`On reprend — cimolace.space/t/${slug}. On continue ?`); }
-  }, [step, chosen, slug, sPop, closeInput, speak, openInput, exitScene]);
+  }, [step, chosen, slug, sPop, closeInput, speak, openInput, exitScene, stopTour]);
 
   const onRootClick = (e) => {
     if (inputOpen || !inputAllowed) return;
@@ -728,6 +877,7 @@ export default function CimolaceCreationAgent() {
   // Scène plein écran (split/reader/tutorial) : la voix centrale + actions en flux s'effacent,
   // la scène porte le message ; `aside` garde la voix au centre.
   const fullscreenScene = !!scene && scene.type !== 'aside';
+  const tourTotal = tourActive ? (TOUR[chosen] || []).length : 0; // pour les points de progression
 
   return (
     <div
@@ -834,18 +984,22 @@ export default function CimolaceCreationAgent() {
       )}
 
       {/* Actions par étape */}
-      {showActions && step === 'discovery' && (
-        <div className="cca-in" style={{ display: 'flex', flexWrap: 'wrap', gap: 9, justifyContent: 'center', marginTop: 18, maxWidth: 470 }}>
+      {showActions && step === 'discovery' && !tourActive && (
+        <div className="cca-in" style={{ display: 'flex', flexWrap: 'wrap', gap: 9, justifyContent: 'center', marginTop: 18, maxWidth: 480 }}>
           {SUGG.map(({ kind, label, Icon }) => (
             <span key={kind} className="cca-chip" onClick={(e) => { e.stopPropagation(); pickKind(kind); }}
               style={{ display: 'inline-flex', alignItems: 'center', gap: 7, fontSize: 13, color: GOLD, background: 'rgba(244,239,230,.05)', borderRadius: 999, padding: '8px 15px' }}>
               <Icon size={14} />{label}
             </span>
           ))}
+          <span className="cca-chip" onClick={(e) => { e.stopPropagation(); startTour(chosen); }}
+            style={{ display: 'inline-flex', alignItems: 'center', gap: 7, fontSize: 13, color: TERRA, background: 'rgba(217,119,87,.11)', borderRadius: 999, padding: '8px 15px' }}>
+            <Sparkles size={14} />Fais-moi le tour
+          </span>
         </div>
       )}
 
-      {showActions && step === 'product' && !fullscreenScene && (
+      {showActions && step === 'product' && !fullscreenScene && !tourActive && (
         <div className="cca-in" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 12, marginTop: 16, position: 'relative', zIndex: 4 }}>
           {brainHooks.length > 0 && (
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: 7, justifyContent: 'center', maxWidth: 470 }}>
@@ -865,10 +1019,16 @@ export default function CimolaceCreationAgent() {
               Autre
             </button>
           </div>
+          {!(covered.length >= 3 || covered.includes('prix')) && (
+            <span className="cca-chip" onClick={(e) => { e.stopPropagation(); startTour(chosen); }}
+              style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 12.5, color: TERRA, background: 'rgba(217,119,87,.10)', borderRadius: 999, padding: '7px 14px' }}>
+              <Sparkles size={13} />Fais-moi le tour
+            </span>
+          )}
         </div>
       )}
 
-      {showActions && step === 'brain' && !fullscreenScene && (
+      {showActions && step === 'brain' && !fullscreenScene && !tourActive && (
         <div className="cca-in" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 12, marginTop: 16, position: 'relative', zIndex: 4 }}>
           {(covered.length >= 3 || covered.includes('prix')) && (
             <button className="cca-chip" onClick={(e) => { e.stopPropagation(); chooseProduct(); }}
@@ -889,6 +1049,10 @@ export default function CimolaceCreationAgent() {
                 <Icon size={13} />{label}
               </span>
             ))}
+            <span className="cca-chip" onClick={(e) => { e.stopPropagation(); startTour(chosen); }}
+              style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 12.5, color: TERRA, background: 'rgba(217,119,87,.10)', borderRadius: 999, padding: '7px 14px' }}>
+              <Sparkles size={13} />Fais-moi le tour
+            </span>
           </div>
         </div>
       )}
@@ -932,6 +1096,35 @@ export default function CimolaceCreationAgent() {
             {busy ? (<><Loader2 size={15} className="animate-spin" /> Création…</>) : (<>Créer mon espace<ArrowRight size={15} /></>)}
           </button>
         </form>
+      )}
+
+      {/* L7 — Tour guidé : sous-titre narrateur (scènes plein écran) + contrôles */}
+      {tourActive && (
+        <>
+          {fullscreenScene && message && (
+            <div className="cca-in" style={{ position: 'absolute', left: '50%', bottom: 98, transform: 'translateX(-50%)', width: 'min(620px, 86vw)', textAlign: 'center', zIndex: 6, pointerEvents: 'none' }}>
+              <p style={{ fontFamily: SERIF, fontSize: 17, lineHeight: 1.5, color: INK, margin: 0 }}>
+                {keyword ? highlightReply(message, keyword) : message}
+                {(presence === 'ecriture' || presence === 'attente') && <span className="cca-caret" />}
+              </p>
+            </div>
+          )}
+          <div style={{ position: 'absolute', left: '50%', bottom: 34, transform: 'translateX(-50%)', display: 'flex', alignItems: 'center', gap: 14, zIndex: 6 }}>
+            <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
+              {Array.from({ length: tourTotal }).map((_, i) => (
+                <span key={i} style={{ width: i === tourIdx ? 18 : 6, height: 6, borderRadius: 999, background: i === tourIdx ? TERRA : i < tourIdx ? GOLD : 'rgba(244,239,230,.25)', transition: 'all .3s cubic-bezier(.16,1,.3,1)' }} />
+              ))}
+            </div>
+            <button className="cca-chip" onClick={(e) => { e.stopPropagation(); skipBeat(); }}
+              style={{ display: 'inline-flex', alignItems: 'center', gap: 5, background: 'rgba(244,239,230,.06)', border: 'none', color: 'rgba(244,239,230,.7)', borderRadius: 999, padding: '7px 13px', fontSize: 12.5, fontFamily: 'inherit', cursor: 'pointer' }}>
+              <SkipForward size={13} />Passer
+            </button>
+            <button className="cca-chip" onClick={(e) => { e.stopPropagation(); endTour(); }}
+              style={{ display: 'inline-flex', alignItems: 'center', gap: 5, background: 'transparent', border: 'none', color: 'rgba(244,239,230,.45)', borderRadius: 999, padding: '7px 10px', fontSize: 12.5, fontFamily: 'inherit', cursor: 'pointer' }}>
+              <X size={13} />Arrêter
+            </button>
+          </div>
+        </>
       )}
 
       {/* Saisie « parler à la présence » */}
