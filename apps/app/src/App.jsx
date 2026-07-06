@@ -18,6 +18,18 @@ import HandoffPage from '@/pages/HandoffPage';
  *  5. tout autre host → /login
  *  Cimolace est la plateforme ; ISNA n'est qu'un tenant. Cf. CIMOLACE_ARCHITECTURE_SOURCE_OF_TRUTH.md.
  */
+// LOT C — l'assistant immersif est-il l'entrée à la RACINE `/` pour ce host ? (host Cimolace SaaS :
+// ni tenant custom, ni prorascience, ni callback OAuth). Sert à masquer le header/DiscoveryChat au `/`.
+function isCimolaceAssistantRoot(pathname) {
+  if (typeof window === 'undefined') return false;
+  if (pathname !== '/') return false;
+  if (window.location.hash.includes('access_token')) return false;
+  const host = window.location.hostname.toLowerCase();
+  if (getCachedHostTenant(host)) return false;
+  if (host === 'prorascience.org' || host === 'www.prorascience.org') return false;
+  return true;
+}
+
 function RootRedirect() {
   const hash = typeof window !== 'undefined' ? window.location.hash : '';
   const host = typeof window !== 'undefined' ? window.location.hostname.toLowerCase() : '';
@@ -27,11 +39,11 @@ function RootRedirect() {
   if (hostTenant) return <TenantVitrineHome slug={hostTenant} />;
   // Domaine fondateur (prorascience.org = tenant ISNA) → vitrine du fondateur en racine propre.
   if (host === 'prorascience.org' || host === 'www.prorascience.org') return <TenantVitrineHome slug={DEFAULT_TENANT_SLUG} />;
-  // LOT C — Racine Cimolace (SaaS) → l'ASSISTANT IMMERSIF = le nouvel OS d'entrée (migration douce
-  // du site classique). Le back-office /cimolace, le funnel /creer-organisation et /login restent
-  // accessibles EN DIRECT ; seule la racine bascule vers l'assistant. CIMOLACE_PUBLIC_HOSTS /
-  // isPlatformOrDevHost / LiriLandingPage restent utilisés ailleurs (résolution tenant, etc.).
-  return <Navigate to="/creer-organisation/agent" replace />;
+  // LOT C — Racine Cimolace (SaaS) → l'ASSISTANT IMMERSIF RENDU AU ROOT (l'URL reste `/`, pas de
+  // redirection cliente). Le back-office /cimolace, le funnel /creer-organisation et /login restent
+  // accessibles EN DIRECT. CIMOLACE_PUBLIC_HOSTS / isPlatformOrDevHost / LiriLandingPage restent
+  // utilisés ailleurs (résolution tenant, etc.).
+  return <CimolaceCreationAgent />;
 }
 
 // DEV PREVIEW — composant sans auth
@@ -1244,6 +1256,7 @@ isLiriHostDevPreviewRoute;
     !hideHeaderRoutes.some(route => location.pathname.startsWith(route)) &&
     !mobileReelsShellActive &&
     !isCimolaceRoute &&
+    !isCimolaceAssistantRoot(location.pathname) &&
     !isMaquetteRoute;
   const shouldOffsetMain =
     shouldShowHeader &&
@@ -1343,7 +1356,7 @@ isLiriHostDevPreviewRoute;
       {/* Discovery Chat — pages publiques. Exclu de l'espace élève (collision avec le FAB de la sidebar) et des embeds. */}
       {/* CLOISON MEDOS : jamais l'assistant portail LIRI/prorascience par-dessus la
           salle de téléconsultation santé (`/teleconsult*`), ni pendant ni à la fin. */}
-      {!isAdminRoute && !isImmersiveEmbed && !isEmbedRoute && !isLiveArenaRoute && !location.pathname.startsWith('/teleconsult') && !isEleveMobileRoute && !isCimolaceRoute && !isStudentSpaceShell && !location.pathname.startsWith('/creer-organisation/agent') && (
+      {!isAdminRoute && !isImmersiveEmbed && !isEmbedRoute && !isLiveArenaRoute && !location.pathname.startsWith('/teleconsult') && !isEleveMobileRoute && !isCimolaceRoute && !isStudentSpaceShell && !location.pathname.startsWith('/creer-organisation/agent') && !isCimolaceAssistantRoot(location.pathname) && (
         <LazyShell>
           <DiscoveryChat />
         </LazyShell>
