@@ -1267,7 +1267,10 @@ function WhiteboardScene({
       if (b && b.w > 1 && b.h > 1 && W > 2 && H > 2) {
         const inside = b.x >= 0 && b.y >= 0 && b.x + b.w <= W && b.y + b.h <= H;
         if (!inside) {
-          const pad = Math.max(10, Math.min(W, H) * 0.06);
+          // Marge confortable : le dessin recadré ne colle jamais aux bords (ni aux
+          // pastilles membres qui flottent sur les côtés en mobile). ~9% de la plus
+          // petite dimension.
+          const pad = Math.max(12, Math.min(W, H) * 0.09);
           const k = Math.min((W - pad * 2) / b.w, (H - pad * 2) / b.h, 1);
           const kk = k > 0 ? k : 1;
           const cx = b.x + b.w / 2;

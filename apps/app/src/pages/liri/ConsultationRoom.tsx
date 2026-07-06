@@ -1632,7 +1632,7 @@ export function ConsultationStage({
           // TABLEAU : PAS de découpe — le quadrillage s'étend SOUS les pastilles
           // (un seul élément visuel, la zone d'accueil est invisible, intégrée au
           // tableau) ; les miniatures flottent par-dessus en overlay.
-          <div style={{ position: 'absolute', inset: 0, overflow: 'hidden' }}>
+          <div style={{ position: 'absolute', inset: 0, right: reserve, overflow: 'hidden', transition: `right 0.3s ${ZOOM_EASE}` }}>
             <ConsultationSmartBoard
               sessionId={sessionId}
               isHost={isHost}

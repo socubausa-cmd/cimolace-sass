@@ -1082,7 +1082,7 @@ const LiveHostSmartBoardStage = forwardRef(function LiveHostSmartBoardStage(
         onWhiteboardRemovePage={viewerMode ? undefined : removeWhiteboardPage}
         secureAppShareState={secureAppShareState}
         onSecureAppShareStateChange={viewerMode ? undefined : onSecureAppShareStateChange}
-        hideSceneIndexChip={sceneDockPlacement === 'footer'}
+        hideSceneIndexChip={viewerMode || sceneDockPlacement === 'footer'}
         hideEmbeddedWhiteboardToolsRail={hideEmbeddedWhiteboardToolsRail}
       />
     </div>
