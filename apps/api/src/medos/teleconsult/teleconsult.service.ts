@@ -978,21 +978,34 @@ export class TeleconsultService implements OnModuleInit {
       .single();
     if (!tenant) throw new NotFoundException('Tenant introuvable');
 
-    // MONO-OCCUPATION : un lien invité = UN siège. L'identité LiveKit est
-    // `proche_<inviteId>` ; si le même lien est réutilisé par une 2e personne,
-    // LiveKit (une seule connexion par identité) ÉJECTE le 1er connecté. On
-    // REFUSE donc une 2e émission de token tant qu'un participant avec cette
-    // identité est présent dans la room → l'occupant reste, l'intrus est bloqué.
-    // Best-effort : si la liste LiveKit échoue, on laisse passer (dispo > blocage).
+    // Deux gardes basées sur la présence RÉELLE dans la room LiveKit :
+    //  1) MONO-OCCUPATION — un lien invité = UN siège (identité `proche_<inviteId>`).
+    //     Le même lien réutilisé = même identité → LiveKit ÉJECTE le 1er connecté.
+    //     On refuse la 2e émission tant que cette identité est déjà présente.
+    //  2) ANTI « INVITÉ SEUL » — on refuse si AUCUN hôte/patient (participant
+    //     non-`proche_`) n'est présent : c'est le cas d'un VIEUX lien d'une séance
+    //     abandonnée/périmée (le sweep n'a pas fermé la room) → sans ça, l'invité
+    //     tombe SEUL dans une room vide (bug « invités seuls dans des séances »).
+    // Best-effort : si la liste LiveKit échoue (erreur), on laisse passer (dispo).
     try {
       const present = await this.liri.listRoomParticipants(
         (tenant as any).slug,
         inv.session_id,
       );
-      if (Array.isArray(present) && present.includes(`proche_${inv.id}`)) {
-        throw new ForbiddenException(
-          'Ce lien est déjà utilisé par une personne connectée. Un seul participant par lien — demandez votre propre lien d’invitation.',
+      if (Array.isArray(present)) {
+        if (present.includes(`proche_${inv.id}`)) {
+          throw new ForbiddenException(
+            'Ce lien est déjà utilisé par une personne connectée. Un seul participant par lien — demandez votre propre lien d’invitation.',
+          );
+        }
+        const hostOrPatientPresent = present.some(
+          (p) => !String(p).startsWith('proche_'),
         );
+        if (!hostOrPatientPresent) {
+          throw new ForbiddenException(
+            "La consultation n'est pas active : le praticien n'est pas présent. Ce lien n'est plus valable — demandez-en un à jour.",
+          );
+        }
       }
     } catch (e) {
       if (e instanceof ForbiddenException) throw e;
