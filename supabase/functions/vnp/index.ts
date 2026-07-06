@@ -80,10 +80,42 @@ async function callChat(message: string, platformName: string, graph: string, hi
   return json({ reply, intent, nodeId, suggestions, actions, onTopic });
 }
 
-// ACTION ENGINE (§ doc « Exécuter les actions métier »). Exécute/accuse réception d'une action.
-// Reste GÉNÉRIQUE : renvoie un résultat structuré + la SUITE (next) ; la livraison réelle (email,
-// checkout, réservation) est branchée par le client selon `next.kind`.
-function runAction(action: string, platformName: string, payload: any) {
+// Livraison RÉELLE d'un lead : insertion server-side dans contact_requests avec la SERVICE ROLE
+// (contourne la RLS — l'insert anon est refusé). SUPABASE_URL / SUPABASE_SERVICE_ROLE_KEY sont
+// injectés automatiquement dans le runtime des edge functions.
+async function insertContact(payload: any): Promise<boolean> {
+  // @ts-ignore
+  const url = Deno.env.get('SUPABASE_URL');
+  // @ts-ignore
+  const key = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
+  if (!url || !key) return false;
+  try {
+    // contact_requests.tenant_id est NOT NULL → on résout l'UUID du tenant depuis son slug.
+    const slug = String(payload?.slug || '').trim().toLowerCase();
+    if (!slug) return false;
+    const tr = await fetch(`${url}/rest/v1/tenants?slug=eq.${encodeURIComponent(slug)}&select=id`, { headers: { apikey: key, Authorization: `Bearer ${key}` } });
+    if (!tr.ok) return false;
+    const rows = await tr.json();
+    const tenantId = rows && rows[0] && rows[0].id;
+    if (!tenantId) return false;
+    const res = await fetch(`${url}/rest/v1/contact_requests`, {
+      method: 'POST',
+      headers: { apikey: key, Authorization: `Bearer ${key}`, 'Content-Type': 'application/json', Prefer: 'return=minimal' },
+      body: JSON.stringify({
+        tenant_id: tenantId,
+        name: String(payload?.name || '').slice(0, 120),
+        email: String(payload?.email || '').slice(0, 160),
+        subject: String(payload?.subject || 'Contact').slice(0, 160),
+        message: String(payload?.message || '').slice(0, 4000),
+      }),
+    });
+    return res.ok;
+  } catch (_) { return false; }
+}
+
+// ACTION ENGINE (§ doc « Exécuter les actions métier »). EXÉCUTE l'action : le contact est LIVRÉ
+// (contact_requests) ; les actions transactionnelles renvoient la SUITE (next.kind) que le client route.
+async function runAction(action: string, platformName: string, payload: any) {
   const a = String(action || '').toLowerCase();
   const name = payload?.name ? String(payload.name).slice(0, 80) : '';
   const label = payload?.label ? String(payload.label).slice(0, 120) : '';
@@ -91,9 +123,20 @@ function runAction(action: string, platformName: string, payload: any) {
 
   switch (a) {
     case 'contacter':
-    case 'participer':
-      return json({ ok: true, message: `C'est noté${name ? `, ${name}` : ''} — l'équipe de ${platformName} vous recontacte très vite.`,
+    case 'participer': {
+      const email = String(payload?.email || '').trim();
+      const message = String(payload?.message || '').trim();
+      // 2e temps : coordonnées fournies → on LIVRE le message.
+      if (email && message) {
+        const ok = await insertContact({ ...payload, subject: payload?.subject || `Contact via l'assistant ${platformName}` });
+        return json(ok
+          ? { ok: true, message: `C'est envoyé${name ? `, ${name}` : ''} — l'équipe de ${platformName} vous recontacte très vite.` }
+          : { ok: false, message: 'Envoi impossible pour le moment — réessayez.' }, ok ? 200 : 502);
+      }
+      // 1er temps : on demande le mini-formulaire.
+      return json({ ok: true, message: `Laissez-nous un mot — ${platformName} vous répond vite.`,
         next: { kind: 'contact_form', fields: ['name', 'email', 'message'] } });
+    }
     case 'reserver':
       return json({ ok: true, message: `Parfait — réservons votre créneau${label ? ` pour « ${label} »` : ''}.`,
         next: { kind: 'booking', target: label || 'Consultation privée' } });
@@ -128,7 +171,7 @@ Deno.serve(async (req: Request) => {
       return await callChat(message, platformName, graph, history);
     }
     if (op === 'action') {
-      return runAction(String(body?.action || ''), platformName, body?.payload || {});
+      return await runAction(String(body?.action || ''), platformName, body?.payload || {});
     }
     if (op === 'node') {
       const graph = body?.graph;

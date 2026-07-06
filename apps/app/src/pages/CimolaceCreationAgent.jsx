@@ -1225,9 +1225,11 @@ export default function CimolaceCreationAgent({ tenantSlug: tenantSlugProp = nul
     if (!message) { setContactForm((c) => ({ ...c, error: 'Écrivez-nous un petit message.' })); return; }
     setContactForm((c) => ({ ...c, sending: true, error: '' }));
     try {
-      const { error: dbErr } = await supabase.from('contact_requests')
-        .insert([{ name: (f.name || '').trim(), email, subject: f.subject, message }]);
-      if (dbErr) throw dbErr;
+      // Livraison via l'edge VNP (service role → contourne la RLS de contact_requests).
+      const { data, error: fnErr } = await supabase.functions.invoke('vnp', {
+        body: { op: 'action', action: 'contacter', platformName: (osBrand && osBrand.name) || osTenant, payload: { slug: osTenant, name: (f.name || '').trim(), email, subject: f.subject, message } },
+      });
+      if (fnErr || !data?.ok) throw (fnErr || new Error('delivery failed'));
       setContactForm((c) => ({ ...c, sending: false, sent: true }));
       speak(`Merci${f.name ? `, ${f.name.trim()}` : ''} — votre message est bien parti. L'équipe de ${(osBrand && osBrand.name) || osTenant} vous répond vite.`);
       setTimeout(() => setContactForm(null), 2800);
