@@ -18,6 +18,11 @@ export function isMobileReelsShellExcluded(pathname, search) {
   if (p.startsWith('/embed/')) return true;
   if (p.startsWith('/studio/live-arena')) return true;
   if (p.startsWith('/live/') && !p.startsWith('/lives')) return true;
+  // Salle de téléconsultation MEDOS (santé) : CLOISON stricte — jamais la coque
+  // portail LIRI/école (barre + onglets Accueil/Cours/Live/Messages/Client vers
+  // prorascience) par-dessus, ni pendant l'appel ni sur l'écran de fin. Le contexte
+  // santé (patient/proche) ne doit pas fuir vers le portail école.
+  if (p.startsWith('/teleconsult')) return true;
   if (
     p === '/login' ||
     p === '/signup' ||
