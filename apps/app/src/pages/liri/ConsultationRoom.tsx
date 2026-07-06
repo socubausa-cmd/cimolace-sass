@@ -385,6 +385,7 @@ export default function ConsultationRoom() {
   // Mode focus (partage immersif) : remonté de ConsultationStage → masque la barre
   // du bas (et les vignettes, gérées dans le stage). Re-tap sur l'écran = retour.
   const [stageImmersive, setStageImmersive] = useState(false);
+  const [chatUnread, setChatUnread] = useState(0);
   // Contrôleur d'ambiance partagé : piloté DANS le panneau Réglages ET reflété par
   // la pastille flottante (host) — même état audio des deux côtés.
   const ambient = useAmbientAudio();
@@ -654,6 +655,7 @@ export default function ConsultationRoom() {
                 onInvite={() => setInviteOpen(true)}
                 onLeave={() => void handleLeave()}
                 rightPanel={rightPanel}
+                chatUnread={chatUnread}
                 onToggleChat={() => setRightPanel((p) => (p === 'chat' ? null : 'chat'))}
                 onToggleCopilot={() => setRightPanel((p) => (p === 'copilot' ? null : 'copilot'))}
                 onToggleRecall={() => setRightPanel((p) => (p === 'recall' ? null : 'recall'))}
@@ -688,6 +690,8 @@ export default function ConsultationRoom() {
         </div>
         <RoomAudioRenderer />
         <AudioUnlockGate />
+        {/* Compteur non-lu Discussion → badge sur le bouton de la barre. */}
+        <ChatUnreadTracker open={rightPanel === 'chat'} onUnread={setChatUnread} />
         {/* Diffusion du fond sonore (praticien) : publie l'ambiance comme piste
             audio LiveKit quand le mode « Partagé » est actif → patient + invités
             l'entendent via leur RoomAudioRenderer. */}
@@ -1176,6 +1180,24 @@ function fmtChatTime(ts: number): string {
 // simplement masqué quand fermé. `useChat` garde l'historique DANS l'instance du
 // hook : démonter le panneau vidait le fil à chaque fermeture, et les messages
 // reçus panneau fermé n'étaient JAMAIS affichés (« on ne voit pas le fil »).
+// Compteur de messages NON LUS : monté en continu DANS <LiveKitRoom> (useChat).
+// Tant que le panneau Discussion est fermé, on remonte le nombre de messages
+// arrivés depuis la dernière ouverture → badge sur le bouton Discussion (sinon
+// « on ne sait pas si quelqu'un a écrit »). À l'ouverture : remis à zéro.
+function ChatUnreadTracker({ open, onUnread }: { open: boolean; onUnread: (n: number) => void }) {
+  const { chatMessages } = useChat();
+  const seenRef = useRef(0);
+  useEffect(() => {
+    if (open) {
+      seenRef.current = chatMessages.length;
+      onUnread(0);
+    } else {
+      onUnread(Math.max(0, chatMessages.length - seenRef.current));
+    }
+  }, [open, chatMessages.length, onUnread]);
+  return null;
+}
+
 export function ChatPanel({ open = true, onClose }: { open?: boolean; onClose: () => void }) {
   const { chatMessages, send, isSending } = useChat();
   const { localParticipant } = useLocalParticipant();
@@ -1518,8 +1540,10 @@ export function ConsultationStage({
     });
   };
   useEffect(() => {
-    if (view !== 'share' && view !== 'board') setImmersive(false);
-  }, [view]);
+    // Mode focus réservé au mobile + aux vues partagées ; sinon toujours off
+    // (desktop = interaction jumeau libre, pas de plein écran qui capture le clic).
+    if (!compact || (view !== 'share' && view !== 'board')) setImmersive(false);
+  }, [view, compact]);
   useEffect(() => {
     onImmersiveChange?.(immersive);
   }, [immersive, onImmersiveChange]);
@@ -1571,9 +1595,12 @@ export function ConsultationStage({
           // quand les pastilles sont visibles, le CONTENU recule (paddingRight
           // reserve + leger dezoom anime) pour ne JAMAIS passer dessous.
           <div
-            onClick={() => { if (!editable) toggleImmersive(); }}
-            title={editable ? undefined : immersive ? 'Quitter le plein écran' : 'Plein écran'}
-            style={{ height: '100%', width: '100%', overflow: 'auto', padding: 18, paddingRight: 18 + reserve, boxSizing: 'border-box', transition: `padding 0.3s ${ZOOM_EASE}`, cursor: editable ? 'default' : 'pointer' }}
+            // Mode focus (plein écran au tap) SEULEMENT sur mobile : sur ordinateur
+            // ce clic capturait l'interaction destinée au jumeau (clic sur un organe)
+            // → sur desktop on ne bascule PAS, les clics atteignent la scène.
+            onClick={() => { if (!editable && compact) toggleImmersive(); }}
+            title={compact && !editable ? (immersive ? 'Quitter le plein écran' : 'Plein écran') : undefined}
+            style={{ height: '100%', width: '100%', overflow: 'auto', padding: 18, paddingRight: 18 + reserve, boxSizing: 'border-box', transition: `padding 0.3s ${ZOOM_EASE}`, cursor: (!editable && compact) ? 'pointer' : 'default' }}
           >
             <div style={{ height: '100%', transform: overlayActive ? 'scale(0.94)' : 'none', transformOrigin: 'center', transition: `transform 0.3s ${ZOOM_EASE}` }}>
               {/* frameless TOUJOURS (desktop + mobile) : toute scène partagée
@@ -1585,16 +1612,16 @@ export function ConsultationStage({
         ) : screen ? (
           // Aucun artefact poussé mais le praticien partage son écran → l'écran EST
           // le contenu partagé : plein cadre (host ET patient le voient).
-          <div onClick={toggleImmersive} style={{ position: 'absolute', inset: 0, right: reserve, background: '#000', transition: `right 0.3s ${ZOOM_EASE}`, cursor: 'pointer' }}>
+          <div onClick={() => { if (compact) toggleImmersive(); }} style={{ position: 'absolute', inset: 0, right: reserve, background: '#000', transition: `right 0.3s ${ZOOM_EASE}`, cursor: compact ? 'pointer' : 'default' }}>
             <ParticipantTile trackRef={screen} style={{ width: '100%', height: '100%' }} />
           </div>
         ) : (
           <SharePlaceholder />
         )}
         {/* Bouton PLEIN ÉCRAN (mode focus) : masque vignettes + barre du bas.
-            Toujours visible en Partage/Tableau (le tableau interactif ne peut pas
-            basculer au tap → ce bouton est sa commande). */}
-        {(hasScene || screen || view === 'board') ? (
+            MOBILE UNIQUEMENT — sur ordinateur le mode focus gênait l'interaction
+            avec le jumeau (clic organe) ; le praticien a l'écran large, pas besoin. */}
+        {compact && (hasScene || screen || view === 'board') ? (
           <button
             onClick={(e) => { e.stopPropagation(); toggleImmersive(); }}
             aria-label={immersive ? 'Quitter le plein écran' : 'Plein écran (masquer vignettes et barre)'}
@@ -1869,6 +1896,7 @@ function ConsultationBar({
   onInvite,
   onLeave,
   rightPanel,
+  chatUnread = 0,
   onToggleChat,
   onToggleCopilot,
   onToggleRecall,
@@ -1886,6 +1914,7 @@ function ConsultationBar({
   hasStrokes: boolean;
   onClearStrokes: () => void;
   onInvite: () => void;
+  chatUnread?: number;
   onLeave: () => void;
   rightPanel: 'chat' | 'copilot' | 'recall' | null;
   onToggleChat: () => void;
@@ -1965,8 +1994,14 @@ function ConsultationBar({
       ) : null}
       <BarSep />
       {/* Panneaux droite + réglages. */}
-      <button onClick={onToggleChat} aria-pressed={rightPanel === 'chat'} title="Discussion écrite" style={barBtn(rightPanel === 'chat')}>
+      <button onClick={onToggleChat} aria-pressed={rightPanel === 'chat'} title={chatUnread > 0 ? `Discussion — ${chatUnread} non lu${chatUnread > 1 ? 's' : ''}` : 'Discussion écrite'} style={{ ...barBtn(rightPanel === 'chat'), position: 'relative' }}>
         <MessageSquare size={16} aria-hidden="true" />
+        {chatUnread > 0 && rightPanel !== 'chat' ? (
+          <span aria-label={`${chatUnread} message${chatUnread > 1 ? 's' : ''} non lu${chatUnread > 1 ? 's' : ''}`}
+            style={{ position: 'absolute', top: -3, right: -3, minWidth: 16, height: 16, padding: '0 4px', borderRadius: 999, background: '#ef4444', color: '#fff', fontSize: 10, fontWeight: 800, display: 'grid', placeItems: 'center', boxShadow: '0 0 0 2px rgba(24,20,16,0.9)', lineHeight: 1 }}>
+            {chatUnread > 9 ? '9+' : chatUnread}
+          </span>
+        ) : null}
       </button>
       {isHost ? (
         <button onClick={onToggleCopilot} aria-pressed={rightPanel === 'copilot'} title="Copilote IA du tableau" style={barBtn(rightPanel === 'copilot')}>
