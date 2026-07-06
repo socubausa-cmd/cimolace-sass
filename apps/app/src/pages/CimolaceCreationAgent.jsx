@@ -15,7 +15,7 @@
  * Réutilise la logique de OnboardingOrgPage.jsx (endpoints identiques, prouvés en prod).
  * Cf. mémoire projet `cimolace-creation-agent-immersif` pour la direction complète (L1→L5).
  */
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect, useRef, useCallback, lazy, Suspense } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { GraduationCap, Stethoscope, ShoppingBag, ArrowUp, ArrowRight, ArrowLeft, Check, Loader2, Mail, Lock, Volume2, VolumeX, Sparkles, SkipForward, X } from 'lucide-react';
 import { getApiBaseUrl } from '@/lib/apiBase';
@@ -24,6 +24,13 @@ import { authStore } from '@/lib/auth-store';
 import { supabase } from '@/lib/supabase';
 import { BG, BG_THINK, INK, TERRA, GOLD, SERIF, STYLE } from '@/lib/agent/immersiveTheme';
 import Presence from '@/components/agent/Presence';
+
+// Le Précepteur (cerveau « formation ») embarqué comme scène — chargé à la demande
+// (frontière lazy) pour ne pas alourdir le bundle initial de l'assistant.
+const LessonScene = lazy(() => import('@/components/agent/LessonScene'));
+// Intention d'apprendre → Cimolace bascule en mode formation (appelle le Précepteur).
+const isLessonIntent = (m) =>
+  /enseigne|apprends?[ -]?moi|donne[ -]?moi un cours|fais[ -]?moi un cours|un vrai cours|cours (sur|de|complet|num[ée]rique)|je veux (comprendre|apprendre)|montre[ -]?moi un cours|le pr[ée]cepteur|suivre un cours/i.test(m || '');
 
 // BG/BG_THINK/INK/TERRA/GOLD/SERIF importés depuis @/lib/agent/immersiveTheme (coque partagée)
 
@@ -296,7 +303,7 @@ function avatarFromSeed(seed) {
 
 // ── Renderer de scène + 4 sous-scènes. Contenu rendu dès scene!=null (jamais gaté
 //    sur `visible`) ; la classe cca-scene-on n'ajoute QUE le mouvement (anti onglet-masqué). ──
-function SceneStage({ scene, visible, readerIdx, setReaderIdx, onSuggest, onCta, hooks, onHook }) {
+function SceneStage({ scene, visible, readerIdx, setReaderIdx, onSuggest, onCta, hooks, onHook, onLessonScene }) {
   if (!scene) return null;
   return (
     <div className={`cca-scene cca-stage-${scene.type} ${visible ? 'cca-scene-on' : ''}`}
@@ -305,6 +312,13 @@ function SceneStage({ scene, visible, readerIdx, setReaderIdx, onSuggest, onCta,
       {scene.type === 'split' && <SplitWorlds scene={scene} hooks={hooks} onHook={onHook} />}
       {scene.type === 'reader' && <ReaderView scene={scene} idx={readerIdx} setIdx={setReaderIdx} onSuggest={onSuggest} hooks={hooks} />}
       {scene.type === 'tutorial' && <TutorialFlow scene={scene} onCta={onCta} hooks={hooks} onHook={onHook} />}
+      {scene.type === 'lesson' && (
+        <div className="cca-lesson" style={{ position: 'absolute', inset: 0, pointerEvents: 'auto', display: 'flex', flexDirection: 'column', paddingTop: '8vh' }}>
+          <Suspense fallback={<div style={{ margin: 'auto', color: 'rgba(244,239,230,.5)', fontFamily: SERIF, fontSize: 16 }}>Le professeur prépare le tableau…</div>}>
+            <LessonScene studentName={scene.studentName} onScene={onLessonScene} />
+          </Suspense>
+        </div>
+      )}
     </div>
   );
 }
@@ -485,6 +499,9 @@ export default function CimolaceCreationAgent() {
   const tourTimer = useRef(null);
   const tourGenRef = useRef(0);
 
+  // L8 — mode formation : Cimolace appelle le Précepteur. `pendingLesson` = on attend le prénom.
+  const [pendingLesson, setPendingLesson] = useState(false);
+
   const [inputOpen, setInputOpen] = useState(false);
   const [value, setValue] = useState('');
   const inputRef = useRef(null);
@@ -497,7 +514,8 @@ export default function CimolaceCreationAgent() {
   const mutedRef = useRef(false);
   const [muted, setMuted] = useState(false);
 
-  const inputAllowed = step === 'discovery' || step === 'brand_ask' || step === 'brain' || step === 'product';
+  const inLesson = !!scene && scene.type === 'lesson';
+  const inputAllowed = !inLesson && (step === 'discovery' || step === 'brand_ask' || step === 'brain' || step === 'product');
 
   useEffect(() => { mutedRef.current = muted; }, [muted]);
   useEffect(() => { coveredRef.current = covered; }, [covered]);
@@ -706,6 +724,33 @@ export default function CimolaceCreationAgent() {
   }, []);
   const closeInput = useCallback(() => { setInputOpen(false); setValue(''); }, []);
 
+  // ── L8 — mode formation : Cimolace appelle le Précepteur (le cerveau enseignant) ──
+  // La présence de Cimolace SUIT le cours (même mapping que PrecepteurImmersive) → un seul cerveau.
+  const onLessonScene = useCallback(({ type, done, started: st }) => {
+    if (done) { setPresence('pret'); return; }
+    if (!st) { setPresence('connexion'); return; }
+    if (type === 'atelier') setPresence('attente');
+    else if (type === 'croquis' || type === 'amorce_croquis') setPresence('reflexion');
+    else setPresence('ecriture');
+  }, []);
+
+  const startLesson = useCallback((name) => {
+    stopTour();
+    setPendingLesson(false);
+    setBrainHooks([]); setKeyword(''); setTopic(null); setError('');
+    setStep('brain');
+    // scène « leçon » : le lecteur du Précepteur, embarqué sans son chrome (auto-démarré).
+    enterScene({ type: 'lesson', studentName: String(name || '').trim() || 'ami' });
+  }, [stopTour, enterScene]);
+
+  const askLessonName = useCallback(() => {
+    stopTour();
+    exitScene();
+    setPendingLesson(true);
+    setStep('brain');
+    speak("Avec plaisir — le professeur va t'enseigner. Comment tu t'appelles ? Il t'appellera par ton prénom.", () => openInput());
+  }, [stopTour, exitScene, speak, openInput]);
+
   // « type-anywhere » — seulement là où le texte libre a du sens
   useEffect(() => {
     const onKey = (e) => {
@@ -773,6 +818,7 @@ export default function CimolaceCreationAgent() {
   // Le « cerveau » : appelle l'edge agent-brain (LLM) → reply générative + produit + hooks.
   // Repli hors-ligne : détection par mots-clés.
   const brain = useCallback(async (message) => {
+    if (isLessonIntent(message)) { askLessonName(); return; } // mode formation → Précepteur
     if (isTourIntent(message)) { startTour(TOUR[chosen] ? chosen : guessKind(message)); return; }
     stopTour();
     setError('');
@@ -809,16 +855,17 @@ export default function CimolaceCreationAgent() {
       setStep('product');
       speak(PRODUCT[k].reply);
     }
-  }, [chosen, speak, sThink, enterScene, exitScene, startTour, stopTour]);
+  }, [chosen, speak, sThink, enterScene, exitScene, startTour, stopTour, askLessonName]);
 
   const submitInput = useCallback(() => {
     const v = value.trim();
     closeInput();
     if (!v) return;
     sPop();
+    if (pendingLesson) { startLesson(v); return; } // le prénom → on lance le cours
     if (step === 'brand_ask') { submitName(v); return; }
     brain(v);
-  }, [value, step, closeInput, submitName, brain, sPop]);
+  }, [value, step, pendingLesson, closeInput, submitName, brain, startLesson, sPop]);
 
   const createAccount = useCallback(async () => {
     setError('');
@@ -863,6 +910,7 @@ export default function CimolaceCreationAgent() {
     setBusy(false);
     closeInput();
     stopTour();
+    setPendingLesson(false);
     exitScene();
     if (step === 'product' || step === 'brain') { setStep('discovery'); speak(GREETING); }
     else if (step === 'brand_ask') { setStep('product'); speak(PRODUCT[chosen].reply); }
@@ -903,7 +951,7 @@ export default function CimolaceCreationAgent() {
       {/* L6 — Scène « réalisée » par l'IA : composition de toute la surface (fond, sous la voix) */}
       {scene && (step === 'brain' || step === 'product') && (
         <SceneStage scene={scene} visible={sceneVisible} readerIdx={readerIdx} setReaderIdx={setReaderIdx}
-          onSuggest={brain} onCta={chooseProduct} hooks={brainHooks} onHook={brain} />
+          onSuggest={brain} onCta={chooseProduct} hooks={brainHooks} onHook={brain} onLessonScene={onLessonScene} />
       )}
 
       {/* Connecté */}
@@ -998,6 +1046,10 @@ export default function CimolaceCreationAgent() {
           <span className="cca-chip" onClick={(e) => { e.stopPropagation(); startTour(chosen); }}
             style={{ display: 'inline-flex', alignItems: 'center', gap: 7, fontSize: 13, color: TERRA, background: 'rgba(217,119,87,.11)', borderRadius: 999, padding: '8px 15px' }}>
             <Sparkles size={14} />Fais-moi le tour
+          </span>
+          <span className="cca-chip" onClick={(e) => { e.stopPropagation(); askLessonName(); }}
+            style={{ display: 'inline-flex', alignItems: 'center', gap: 7, fontSize: 13, color: GOLD, background: 'rgba(230,204,146,.09)', borderRadius: 999, padding: '8px 15px' }}>
+            <GraduationCap size={14} />Apprendre avec le Précepteur
           </span>
         </div>
       )}

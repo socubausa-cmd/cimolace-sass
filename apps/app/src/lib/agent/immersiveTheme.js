@@ -70,6 +70,8 @@ export const STYLE = `
 .cca-scene-on.cca-slot-split{transform:translateY(-33vh) scale(.6);opacity:0}
 .cca-scene-on.cca-slot-reader{transform:translate(-42vw,-40vh) scale(.4);opacity:0}
 .cca-scene-on.cca-slot-tutorial{transform:translateY(-31vh) scale(.7);opacity:0}
+/* leçon (Précepteur embarqué) : la présence RESTE visible, petite, en haut — elle suit le cours */
+.cca-scene-on.cca-slot-lesson{transform:translateY(-41vh) scale(.5)}
 /* Voix centrale / actions atténuées quand la scène occupe le plein écran */
 .cca-voicecol{transition:opacity .4s ease}
 .cca-voicecol.cca-dim{opacity:0;pointer-events:none}

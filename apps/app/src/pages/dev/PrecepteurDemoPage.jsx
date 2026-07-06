@@ -162,14 +162,14 @@ function Board({ children, className = '' }) {
  * numérique issu d'un MasterclassProject (`PrecepteurCoursePage`).
  * @param {{ course: { title: string, concepts: Array<{ title: string, scenes: Object[] }> } }} props
  */
-export function PrecepteurPlayer({ course, embedded = false, onScene }) {
+export function PrecepteurPlayer({ course, embedded = false, onScene, studentName, autoBegin = false }) {
   const scenes = useMemo(
     () => course.concepts.flatMap((c) => c.scenes.map((s) => ({ ...s, conceptTitle: c.title }))),
     [course],
   );
 
   const [started, setStarted] = useState(false);
-  const [name, setName] = useState('');
+  const [name, setName] = useState(studentName || '');
   const [idx, setIdx] = useState(0);
   const [done, setDone] = useState(false);
   const [analogyImages, setAnalogyImages] = useState({}); // sceneIndex -> { url?, loading?, error? }
@@ -358,6 +358,14 @@ export function PrecepteurPlayer({ course, embedded = false, onScene }) {
     setStarted(true);
   };
   const replay = () => { setDone(false); setStarted(true); setIdx(0); };
+
+  // Auto-démarrage (embed Cimolace) : pas de start-screen à boutons — le cours se lance seul.
+  // Le priming audio peut attendre un 1er geste (visuel intact ; cadence = cap-max en repli).
+  const autoBegunRef = useRef(false);
+  useEffect(() => {
+    if (autoBegin && !autoBegunRef.current && !started) { autoBegunRef.current = true; begin(); }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [autoBegin]);
 
   // voix À LA DEMANDE (atelier) : ElevenLabs si possible, sinon synthèse navigateur.
   // Jeton : si une narration plus récente démarre, l'ancienne ne joue pas (pas de doublon).
