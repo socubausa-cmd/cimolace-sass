@@ -315,7 +315,7 @@ function SceneStage({ scene, visible, readerIdx, setReaderIdx, onSuggest, onCta,
       {scene.type === 'lesson' && (
         <div className="cca-lesson" style={{ position: 'absolute', inset: 0, pointerEvents: 'auto', display: 'flex', flexDirection: 'column', paddingTop: '8vh' }}>
           <Suspense fallback={<div style={{ margin: 'auto', color: 'rgba(244,239,230,.5)', fontFamily: SERIF, fontSize: 16 }}>Le professeur prépare le tableau…</div>}>
-            <LessonScene studentName={scene.studentName} onScene={onLessonScene} />
+            <LessonScene studentName={scene.studentName} courseKey={scene.courseKey} onScene={onLessonScene} />
           </Suspense>
         </div>
       )}
@@ -739,9 +739,10 @@ export default function CimolaceCreationAgent() {
     setPendingLesson(false);
     setBrainHooks([]); setKeyword(''); setTopic(null); setError('');
     setStep('brain');
-    // scène « leçon » : le lecteur du Précepteur, embarqué sans son chrome (auto-démarré).
-    enterScene({ type: 'lesson', studentName: String(name || '').trim() || 'ami' });
-  }, [stopTour, enterScene]);
+    // scène « leçon » : le Précepteur enseigne le cours DU MOTEUR choisi, embarqué sans chrome.
+    const courseKey = ['school', 'medos', 'shop'].includes(chosen) ? chosen : 'school';
+    enterScene({ type: 'lesson', studentName: String(name || '').trim() || 'ami', courseKey });
+  }, [stopTour, enterScene, chosen]);
 
   const askLessonName = useCallback(() => {
     stopTour();
@@ -1074,12 +1075,18 @@ export default function CimolaceCreationAgent() {
               Autre
             </button>
           </div>
-          {!(covered.length >= 3 || covered.includes('prix')) && (
-            <span className="cca-chip" onClick={(e) => { e.stopPropagation(); startTour(chosen); }}
-              style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 12.5, color: TERRA, background: 'rgba(217,119,87,.10)', borderRadius: 999, padding: '7px 14px' }}>
-              <Sparkles size={13} />Fais-moi le tour
+          <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', justifyContent: 'center' }}>
+            {!(covered.length >= 3 || covered.includes('prix')) && (
+              <span className="cca-chip" onClick={(e) => { e.stopPropagation(); startTour(chosen); }}
+                style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 12.5, color: TERRA, background: 'rgba(217,119,87,.10)', borderRadius: 999, padding: '7px 14px' }}>
+                <Sparkles size={13} />Fais-moi le tour
+              </span>
+            )}
+            <span className="cca-chip" onClick={(e) => { e.stopPropagation(); askLessonName(); }}
+              style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 12.5, color: GOLD, background: 'rgba(230,204,146,.09)', borderRadius: 999, padding: '7px 14px' }}>
+              <GraduationCap size={13} />Un cours sur {PRODUCT[chosen].tag}
             </span>
-          )}
+          </div>
         </div>
       )}
 
