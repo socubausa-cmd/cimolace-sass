@@ -18,6 +18,20 @@ import HandoffPage from '@/pages/HandoffPage';
  *  5. tout autre host → /login
  *  Cimolace est la plateforme ; ISNA n'est qu'un tenant. Cf. CIMOLACE_ARCHITECTURE_SOURCE_OF_TRUTH.md.
  */
+// P5 — bascule prorascience.org → Cimolace OS (realm isolé) derrière un FLAG. Défaut = maquettes
+// (ZÉRO régression du site fondateur live). Activation : build `VITE_PRORASCIENCE_OS='1'` (prod, après
+// GO fondateur) OU `?os=isna` / `?os=1` (preview de la bascule sans toucher le défaut prod).
+// Échappatoire : `?os=0` force les maquettes. Sert 2 endroits : le rendu ET le masquage du header.
+function prorascienceOsEnabled() {
+  if (typeof window === 'undefined') return false;
+  try {
+    const q = new URLSearchParams(window.location.search).get('os');
+    if (q === '0') return false;                      // échappatoire → maquettes
+    if (q === 'isna' || q === '1') return true;       // preview de la bascule
+  } catch { /* noop */ }
+  return import.meta.env.VITE_PRORASCIENCE_OS === '1'; // flag build prod (défaut absent = maquettes)
+}
+
 // LOT C — l'assistant immersif est-il l'entrée à la RACINE `/` pour ce host ? (host Cimolace SaaS :
 // ni tenant custom, ni prorascience, ni callback OAuth). Sert à masquer le header/DiscoveryChat au `/`.
 function isCimolaceAssistantRoot(pathname) {
@@ -26,7 +40,8 @@ function isCimolaceAssistantRoot(pathname) {
   if (window.location.hash.includes('access_token')) return false;
   const host = window.location.hostname.toLowerCase();
   if (getCachedHostTenant(host)) return false;
-  if (host === 'prorascience.org' || host === 'www.prorascience.org') return false;
+  // prorascience.org : header masqué UNIQUEMENT quand l'OS est actif (immersif) ; sinon maquettes (header visible).
+  if (host === 'prorascience.org' || host === 'www.prorascience.org') return prorascienceOsEnabled();
   return true;
 }
 
@@ -37,8 +52,13 @@ function RootRedirect() {
   // Domaine custom d'un tenant → SA vitrine, rendue en URL PROPRE (sans /t/:slug). Multi-tenant.
   const hostTenant = getCachedHostTenant(host);
   if (hostTenant) return <TenantVitrineHome slug={hostTenant} />;
-  // Domaine fondateur (prorascience.org = tenant ISNA) → vitrine du fondateur en racine propre.
-  if (host === 'prorascience.org' || host === 'www.prorascience.org') return <TenantVitrineHome slug={DEFAULT_TENANT_SLUG} />;
+  // Domaine fondateur (prorascience.org = tenant ISNA). P5 — bascule derrière flag : si l'OS est
+  // actif, le MÊME moteur rend prorascience en realm isolé (logo/nom/bienvenue/cerveau prorascience) ;
+  // sinon, les maquettes du fondateur (défaut, zéro régression).
+  if (host === 'prorascience.org' || host === 'www.prorascience.org') {
+    if (prorascienceOsEnabled()) return <CimolaceCreationAgent tenantSlug={DEFAULT_TENANT_SLUG} />;
+    return <TenantVitrineHome slug={DEFAULT_TENANT_SLUG} />;
+  }
   // LOT C — Racine Cimolace (SaaS) → l'ASSISTANT IMMERSIF RENDU AU ROOT (l'URL reste `/`, pas de
   // redirection cliente). Le back-office /cimolace, le funnel /creer-organisation et /login restent
   // accessibles EN DIRECT. CIMOLACE_PUBLIC_HOSTS / isPlatformOrDevHost / LiriLandingPage restent
