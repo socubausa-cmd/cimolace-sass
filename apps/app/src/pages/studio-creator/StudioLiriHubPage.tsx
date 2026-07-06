@@ -28,7 +28,7 @@ const HUB_CARDS = [
     actions: [
       { label: 'Cours unique (Course Builder)', href: '/studio/liri/cours', icon: Brain, desc: '10 étapes · MasterScript · SmartBoard' },
       { label: 'Formation complète', href: '/studio/liri/formation', icon: GraduationCap, desc: 'Programme multi-modules' },
-      { label: 'Masterclass (IA)', href: '/studio/liri/masterclass', icon: Sparkles, desc: 'Génération 21/26 segments' },
+      { label: 'Masterclass (IA)', href: '/dashboard/tools/masterclass-factory', icon: Sparkles, desc: 'Génération 21/26 segments' },
       { label: 'SmartBoard Designer', href: '/studio/smartboard', icon: LayoutGrid, desc: 'Design visuel interactif' },
       { label: 'Studio Image', href: '/studio/liri/studio-image', icon: ImageIcon, desc: 'Canvas + IA contextuelle' },
     ],
@@ -76,7 +76,7 @@ const HUB_CARDS = [
 const PILIERS = [
   { label: 'Course Builder', href: '/studio/liri/cours', icon: Brain, desc: 'Contenu pédagogique 10 étapes', accent: 'text-amber-400', bg: 'bg-amber-500/10', border: 'border-amber-500/20' },
   { label: 'Formation Builder', href: '/studio/liri/formation', icon: GraduationCap, desc: 'Programme dans le temps', accent: 'text-blue-400', bg: 'bg-blue-500/10', border: 'border-blue-500/20' },
-  { label: 'Masterclass Factory', href: '/studio/liri/masterclass', icon: Sparkles, desc: 'Génération IA 21/26 segments', accent: 'text-violet-400', bg: 'bg-violet-500/10', border: 'border-violet-500/20' },
+  { label: 'Masterclass Factory', href: '/dashboard/tools/masterclass-factory', icon: Sparkles, desc: 'Génération IA 21/26 segments', accent: 'text-violet-400', bg: 'bg-violet-500/10', border: 'border-violet-500/20' },
   { label: 'SmartBoard Designer', href: '/studio/smartboard', icon: LayoutGrid, desc: 'Design & composition', accent: 'text-cyan-400', bg: 'bg-cyan-500/10', border: 'border-cyan-500/20' },
   { label: 'Export Center', href: '/studio/export-center', icon: FileOutput, desc: 'PDF · PPTX · JSON', accent: 'text-emerald-400', bg: 'bg-emerald-500/10', border: 'border-emerald-500/20' },
   { label: 'Multilingue', href: '/studio/liri/multilang', icon: Languages, desc: 'Traduction live/vidéo', accent: 'text-rose-400', bg: 'bg-rose-500/10', border: 'border-rose-500/20' },

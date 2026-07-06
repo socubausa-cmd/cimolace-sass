@@ -46,6 +46,7 @@ import {
   DOCUMENT_ANALYZE_FIRST_WINDOW_CHARS,
 } from '@/hooks/useMasterclassProject';
 import { LiriPortalShell } from '@/components/liri/LiriPortalShell';
+import { extractTextFromFile } from '@/lib/extractDocumentText';
 import { savePendingMasterclassForLiveStudio } from '@/lib/liriAgentExportToLiveStudio';
 import { masterclassProjectToPrecepteurCourse } from '@/lib/precepteur/fromMasterclass';
 import { conformCourse } from '@/lib/precepteur/conformCourse';
@@ -550,16 +551,31 @@ function Step1Raw({ rawText, setRawText, onLaunch, status, onLoadDemo, MAX_RAW_C
   documentAnalyzeOptions, onDocumentAnalyzeOptionsChange }) {
   const [exampleTag, setExampleTag] = useState(EXAMPLE_TYPES[0]);
   const [showOptions, setShowOptions] = useState(false);
+  const [importing, setImporting] = useState(false);
+  const [importError, setImportError] = useState('');
   const fileInputRef = useRef(null);
   const canLaunch = Boolean(rawText.trim()) && status !== 'running';
 
-  const onPickFile = (e) => {
+  // Import RÉEL d'un document : PDF (extraction pdfjs) ou fichier texte (.txt/.md).
+  // Le texte extrait pré-remplit la zone — l'IA travaille dessus comme un collage.
+  const onPickFile = async (e) => {
     const f = e.target.files?.[0];
-    if (!f) return;
-    const reader = new FileReader();
-    reader.onload = () => setRawText(String(reader.result || '').slice(0, MAX_RAW_CHARS));
-    reader.readAsText(f);
     e.target.value = '';
+    if (!f) return;
+    setImportError('');
+    setImporting(true);
+    try {
+      const text = await extractTextFromFile(f);
+      if (!text.trim()) {
+        setImportError('Aucun texte lisible (PDF scanné/image ?). Copie-colle le texte à la place.');
+      } else {
+        setRawText(text.slice(0, MAX_RAW_CHARS));
+      }
+    } catch {
+      setImportError('Impossible de lire ce fichier. Formats : PDF, .txt, .md — ou copie-colle le texte.');
+    } finally {
+      setImporting(false);
+    }
   };
 
   // Écran IMMERSIF (façon RDV) : une seule colonne centrée, de l'air, une action.
@@ -584,7 +600,7 @@ function Step1Raw({ rawText, setRawText, onLaunch, status, onLoadDemo, MAX_RAW_C
             Colle ton contenu
           </h2>
           <p className="mx-auto mt-2 max-w-md text-[13.5px] leading-relaxed text-white/55">
-            Texte, transcription, doctrine ou simple idée — LIRI s&apos;occupe de tout le reste.
+            Colle ton texte ou importe un PDF — LIRI s&apos;occupe de tout le reste.
           </p>
         </div>
 
@@ -599,13 +615,15 @@ function Step1Raw({ rawText, setRawText, onLaunch, status, onLoadDemo, MAX_RAW_C
           />
           <div className="flex items-center justify-between border-t border-white/[0.06] px-3 py-2">
             <div className="flex items-center gap-1.5">
-              <input ref={fileInputRef} type="file" accept=".txt,.md,.text,text/plain" className="sr-only" onChange={onPickFile} />
+              <input ref={fileInputRef} type="file" accept=".txt,.md,.text,.pdf,text/plain,application/pdf" className="sr-only" onChange={onPickFile} />
               <button
                 type="button"
                 onClick={() => fileInputRef.current?.click()}
-                className="inline-flex items-center gap-1.5 rounded-lg border border-white/12 bg-white/[0.04] px-2.5 py-1 text-[11.5px] font-medium text-white/70 transition hover:border-white/25 hover:text-white"
+                disabled={importing}
+                className="inline-flex items-center gap-1.5 rounded-lg border border-white/12 bg-white/[0.04] px-2.5 py-1 text-[11.5px] font-medium text-white/70 transition hover:border-white/25 hover:text-white disabled:opacity-50"
               >
-                <Upload className="h-3.5 w-3.5" /> Importer
+                {importing ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Upload className="h-3.5 w-3.5" />}
+                {importing ? 'Extraction…' : 'Importer (PDF, texte)'}
               </button>
               {rawText ? (
                 <button
@@ -622,6 +640,10 @@ function Step1Raw({ rawText, setRawText, onLaunch, status, onLoadDemo, MAX_RAW_C
             </span>
           </div>
         </div>
+
+        {importError ? (
+          <p className="mt-2 text-center text-[11.5px] text-amber-400/90">{importError}</p>
+        ) : null}
 
         {/* Exemples + démo (subtil, centré) */}
         <div className="mt-3 flex flex-wrap items-center justify-center gap-1.5">
@@ -1998,6 +2020,19 @@ function MasterclassFactoryPage() {
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [m.step]);
+
+  /* Pré-remplissage depuis l'import Studio (« Document de cours ») : on récupère le
+     texte extrait du document, on le pose dans l'étape 1, puis on nettoie la clé (usage unique). */
+  useEffect(() => {
+    try {
+      const pre = window.localStorage.getItem('masterclass:prefillRawText');
+      if (pre && pre.trim() && !m.project.rawText) {
+        m.setRawText(pre.slice(0, m.MAX_RAW_CHARS || 40000));
+        window.localStorage.removeItem('masterclass:prefillRawText');
+      }
+    } catch { /* mode privé / quota */ }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const handleLaunch = async () => {
     await m.launchPipeline();

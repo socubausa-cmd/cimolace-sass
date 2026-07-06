@@ -55,6 +55,7 @@ export default function StudioLiriRouter() {
       <Route path="studio-image" element={<StudioLiriStudioImagePage />} />
 
       {/* Redirections vers studios existants */}
+      <Route path="masterclass" element={<Navigate to="/dashboard/tools/masterclass-factory" replace />} />
       <Route path="designer" element={<Navigate to="/studio/smartboard-designer" replace />} />
       <Route path="composite" element={<Navigate to="/studio/smartboard-designer" replace />} />
       <Route path="live" element={<Navigate to="/studio/live" replace />} />

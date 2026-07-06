@@ -32,6 +32,7 @@ export function buildOwnerMenuGroups(payoutTenantSlug, basePath = '/owner-dashbo
       section: 'Pédagogie',
       items: [
         { id: 'formations', icon: BookOpen, label: 'Formations' },
+        { id: 'masterclass-factory', icon: Sparkles, label: 'Créer un cours (IA)', href: '/dashboard/tools/masterclass-factory' },
         { id: 'school-life', icon: Calendar, label: 'Vie Scolaire' },
         { id: 'coaching-mentoring', icon: Handshake, label: 'Coaching & Mentorat' },
         { id: 'workshops', icon: UsersIcon, label: 'Ateliers' },

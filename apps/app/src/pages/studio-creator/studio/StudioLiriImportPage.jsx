@@ -15,6 +15,7 @@ import {
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '@/lib/utils';
+import { extractTextFromFile } from '@/lib/extractDocumentText';
 import StudioDesignerLikeShell from '@/components/liri/liri-ecosystem/StudioDesignerLikeShell';
 
 // ─── Import types ────────────────────────────────────────────────────────────
@@ -24,9 +25,9 @@ const IMPORT_TYPES = [
     id: 'document',
     label: 'Document de cours',
     icon: FileText,
-    desc: 'PDF · PowerPoint · texte · notes',
+    desc: 'PDF · texte · notes → cours Précepteur',
     accent: 'violet',
-    accept: '.pdf,.ppt,.pptx,.txt,.md,.docx',
+    accept: '.pdf,.txt,.md,.text',
   },
   {
     id: 'visual',
@@ -141,13 +142,42 @@ export default function StudioLiriImportPage() {
   const [analysis, setAnalysis] = useState(null);
   const [destination, setDestination] = useState(null);
 
-  const handleFileChange = (e) => {
+  const handleFileChange = async (e) => {
     const f = e.target.files?.[0];
+    e.target.value = '';
     if (!f) return;
     setFile(f);
+
+    // « Document de cours » = flux RÉEL : on EXTRAIT le texte (PDF/texte) et on l'envoie,
+    // pré-rempli, à la Masterclass Factory — d'où on exporte le « Cours numérique (Précepteur) ».
+    if (selectedType?.id === 'document') {
+      setStep(2);
+      setAnalyzing(true);
+      try {
+        const text = await extractTextFromFile(f);
+        if (text.trim()) {
+          window.localStorage.setItem('masterclass:prefillRawText', text.slice(0, 40000));
+          navigate('/dashboard/tools/masterclass-factory');
+          return;
+        }
+        setAnalysis({
+          type: 'document', compat: 'partial', usage: 'Masterclass Factory (Précepteur)', elements: [],
+          limits: 'Aucun texte lisible (PDF scanné ?). Ouvre la Factory et copie-colle le texte.',
+        });
+      } catch {
+        setAnalysis({
+          type: 'document', compat: 'partial', usage: 'Masterclass Factory (Précepteur)', elements: [],
+          limits: 'Lecture impossible. Formats acceptés : PDF, .txt, .md.',
+        });
+      }
+      setAnalyzing(false);
+      setStep(3);
+      return;
+    }
+
+    // Autres types (visuel · template · projet · LUT · pack) : maquette de parcours (roadmap).
     setStep(2);
     setAnalyzing(true);
-    // Simule une analyse IA
     setTimeout(() => {
       setAnalysis({
         type: selectedType?.id || 'document',
