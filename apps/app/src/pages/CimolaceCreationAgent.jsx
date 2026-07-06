@@ -1229,7 +1229,7 @@ export default function CimolaceCreationAgent({ tenantSlug: tenantSlugProp = nul
       return;
     }
     if (actionId === 'reserver') { // RDV : sélecteur de créneaux inline (dans la conversation)
-      setBookingForm({ service: label || 'Consultation privée', slotIso: '', name: '', email: '', sending: false, sent: false, error: '' });
+      setBookingForm({ service: 'Consultation privée', slotIso: '', name: '', email: '', sending: false, sent: false, error: '' });
       return;
     }
     const gen = ++brainGenRef.current;
