@@ -149,6 +149,60 @@ export function buildVnpGraph(knowledge, name) {
     `Choisissez un forfait, réservez une consultation, ou rejoignez ${brand}.`,
     ['produits', 'contact'], ['rejoindre', 'reserver', 'acheter']));
 
+  // ── Approfondissement (spec « Lieu ») : 4 champs ajoutés en POST-PASSE. ──
+  // intention / priorite_tour / est_raccourci = métadonnées de navigation ; preuves = faits
+  // EXACTS DÉRIVÉS du knowledge (source unique de vérité → anti-hallucination). Post-passe
+  // pour n'alourdir aucun des 17 add() ci-dessus (additif, rétro-compatible).
+  const founderLine = founder.name ? `${founder.name} — ${founder.title || ''}`.replace(/ — $/, '').trim() : '';
+  const transmetteurs = stats.find((s) => /transmet/i.test(s.label || ''));
+  const META = {
+    identity: { intention: `Comprendre ce qu'est ${brand} en une phrase.`, priorite_tour: 1, est_raccourci: true },
+    vision: { intention: 'Saisir notre regard : le problème et la promesse.', priorite_tour: 2, est_raccourci: true },
+    mission: { intention: `Comprendre pourquoi ${brand} existe et ce qu'elle vise.`, priorite_tour: 3, est_raccourci: true },
+    services: { intention: `Découvrir la méthode : le chemin d'apprentissage.`, priorite_tour: 4 },
+    realisations: { intention: `Mesurer l'ampleur et la crédibilité par les chiffres.`, priorite_tour: 5 },
+    valeurs: { intention: 'Connaître les principes qui nous engagent.', priorite_tour: 6 },
+    produits: { intention: 'Comparer les forfaits et leurs prix pour choisir.', priorite_tour: 7, est_raccourci: true },
+    solutions: { intention: 'Choisir un parcours selon son intention.', priorite_tour: 8 },
+    documentation: { intention: 'Savoir quels corpus et sciences sont enseignés.', priorite_tour: 9 },
+    ressources: { intention: `Trouver les supports d'apprentissage disponibles.`, priorite_tour: 10 },
+    histoire: { intention: `Découvrir l'origine et le mandat du fondateur.`, priorite_tour: 11 },
+    fondateur: { intention: `Savoir qui porte et signe ${brand}.`, priorite_tour: 12, est_raccourci: true },
+    equipe: { intention: 'Savoir qui transmet et accompagne.', priorite_tour: 13 },
+    faq: { intention: `Obtenir des réponses avant de s'engager.`, priorite_tour: 14 },
+    contact: { intention: `Entrer en relation avec l'équipe.`, priorite_tour: 15, est_raccourci: true },
+    support: { intention: `Obtenir de l'aide sur son parcours ou son compte.`, priorite_tour: 16 },
+    actions: { intention: `Passer à l'action : rejoindre, réserver, acheter.`, priorite_tour: 17 },
+  };
+  const offerPreuves = offers.slice(0, 3).map((o) => `${o.name} — ${o.price}${o.suffix || ''}`);
+  const statPreuves = stats.map((s) => `${s.value} ${s.label}`);
+  const PREUVES = {
+    identity: [id.fullName, id.subtitle, id.website].filter(Boolean),
+    vision: [vision.whatIs, vision.problem, vision.promise].filter(Boolean),
+    mission: [vision.whatIs, vision.promise].filter(Boolean),
+    valeurs: (vision.values || []).slice(0, 3).map((v) => `${v.title} — ${v.desc}`),
+    services: method.map((m) => `${m.step}${m.kind ? ` (${m.kind})` : ''}`),
+    solutions: method.map((m) => (m.foot ? `${m.step} — ${m.foot}` : m.step)),
+    produits: offerPreuves,
+    realisations: statPreuves,
+    documentation: [(k.navigation || []).includes('Les 21 sciences') ? 'Les 21 sciences' : '', method.map((m) => m.kind).filter(Boolean).join(', ')].filter(Boolean),
+    ressources: [(k.navigation || []).filter((n) => /formation|pro|mentorat|coaching|science/i.test(n)).join(', ')].filter(Boolean),
+    histoire: [founderLine, ...statPreuves.slice(0, 2)].filter(Boolean),
+    fondateur: [founder.name, founder.title].filter(Boolean),
+    equipe: [founderLine, transmetteurs ? `${transmetteurs.value} transmetteurs` : ''].filter(Boolean),
+    faq: faqs.slice(0, 2).map((f) => `${f.q} — ${f.a}`),
+    contact: [],
+    support: [],
+    actions: offerPreuves,
+  };
+  Object.keys(nodes).forEach((nid) => {
+    const m = META[nid] || {};
+    nodes[nid].intention = m.intention || '';
+    nodes[nid].priorite_tour = typeof m.priorite_tour === 'number' ? m.priorite_tour : 99;
+    nodes[nid].est_raccourci = m.est_raccourci === true;
+    nodes[nid].preuves = PREUVES[nid] || [];
+  });
+
   const order = [...VNP_SUBJECTS.filter((s) => nodes[s])];
   if (nodes.fondateur && !order.includes('fondateur')) order.splice(order.indexOf('equipe') + 1, 0, 'fondateur');
 
@@ -163,10 +217,14 @@ export function buildVnpGraph(knowledge, name) {
     { intent: 'contacter', nodeId: 'contact', label: 'Nous contacter' },
   ];
 
+  // Ordre de la VISITE GUIDÉE (spec §3) = par priorite_tour (narratif), distinct de `order`.
+  const tourOrder = Object.keys(nodes).sort((a, b) => nodes[a].priorite_tour - nodes[b].priorite_tour);
+
   return {
     name: brand,
     nodes,
     order,
+    tourOrder,
     accueil,
     byId: (nid) => nodes[nid] || null,
   };
@@ -179,7 +237,8 @@ export function vnpSerialize(graph) {
     const n = graph.nodes[id];
     const rel = n.related && n.related.length ? ` [liés: ${n.related.join(', ')}]` : '';
     const act = n.actions && n.actions.length ? ` [actions: ${n.actions.join(', ')}]` : '';
-    return `# ${n.id} — ${n.title}\n${n.summary}\n${n.content}${rel}${act}`;
+    const prv = n.preuves && n.preuves.length ? `\nPreuves (faits exacts, à citer verbatim): ${n.preuves.join(' | ')}` : '';
+    return `# ${n.id} — ${n.title}\n${n.summary}\n${n.content}${prv}${rel}${act}`;
   }).join('\n\n');
 }
 
