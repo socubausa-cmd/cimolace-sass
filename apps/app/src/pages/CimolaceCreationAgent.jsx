@@ -25,6 +25,7 @@ import { supabase } from '@/lib/supabase';
 import { BG, BG_THINK, INK, TERRA, GOLD, SERIF, STYLE } from '@/lib/agent/immersiveTheme';
 import Presence from '@/components/agent/Presence';
 import { CIMOLACE_LESSONS } from '@/lib/agent/cimolaceLessons';
+import { OS_KNOWLEDGE, prorascienceKnowledgeText } from '@/lib/agent/prorascienceKnowledge';
 
 // Cimolace EST le moteur de rendu (l'OS) : il consomme le CONTENU de cours du Précepteur
 // (données JSON : leçons narrées + atelier) et le rend NATIVEMENT dans sa coque — voix serif
@@ -618,9 +619,9 @@ export default function CimolaceCreationAgent({ tenantSlug: tenantSlugProp = nul
   const [muted, setMuted] = useState(false);
 
   const inLesson = lessonActive;
-  // Realm tenant (P1) : coque de bienvenue immersive, sans le funnel Cimolace (le cerveau/pages du
-  // tenant arrivent en P3/P4). On coupe donc la saisie « parler à la présence » ici.
-  const inputAllowed = !isTenantRealm && !lessonActive && (step === 'discovery' || step === 'brand_ask' || step === 'brain' || step === 'product');
+  // Realm tenant : la saisie est ACTIVE et branchée sur le cerveau du tenant (prorascience-brain).
+  // Realm Cimolace : saisie sur le funnel de création. (lessonActive coupe toujours la saisie.)
+  const inputAllowed = !lessonActive && (isTenantRealm || step === 'discovery' || step === 'brand_ask' || step === 'brain' || step === 'product');
 
   useEffect(() => { mutedRef.current = muted; }, [muted]);
   useEffect(() => { coveredRef.current = covered; }, [covered]);
@@ -1060,15 +1061,38 @@ export default function CimolaceCreationAgent({ tenantSlug: tenantSlugProp = nul
     }
   }, [chosen, speak, sThink, enterScene, exitScene, startTour, stopTour, stopLesson, askLessonName]);
 
+  // P3/P4 — Cerveau du TENANT (realm) : répond dans SON périmètre depuis sa mémoire centralisée,
+  // refuse Cimolace (cloison). Générique, piloté par le knowledge pack du tenant.
+  const tenantBrain = useCallback(async (message) => {
+    setError(''); setBrainHooks([]); setKeyword('');
+    const gen = ++brainGenRef.current;
+    setPresence('reflexion'); sThink();
+    try {
+      const knowledge = OS_KNOWLEDGE[osTenant] ? prorascienceKnowledgeText(OS_KNOWLEDGE[osTenant]) : '';
+      const { data, error: fnErr } = await supabase.functions.invoke('prorascience-brain', {
+        body: { message, platformName: (osBrand && osBrand.name) || osTenant, knowledge, history: historyRef.current.slice(-6) },
+      });
+      if (brainGenRef.current !== gen) return;
+      if (fnErr) throw fnErr;
+      const reply = String(data?.reply || '').trim() || "Je vous écoute — dites-m'en un peu plus ?";
+      historyRef.current = [...historyRef.current, { role: 'user', content: message }, { role: 'assistant', content: reply }].slice(-12);
+      speak(reply);
+    } catch (_) {
+      if (brainGenRef.current !== gen) return;
+      speak(`Restons sur ${(osBrand && osBrand.name) || 'ce site'} — je vous écoute.`);
+    }
+  }, [osTenant, osBrand, speak, sThink]);
+
   const submitInput = useCallback(() => {
     const v = value.trim();
     closeInput();
     if (!v) return;
     sPop();
+    if (isTenantRealm) { tenantBrain(v); return; } // realm tenant → cerveau du tenant
     if (pendingLesson) { startLesson(v, pendingTopicRef.current); return; } // le prénom → on lance/génère le cours
     if (step === 'brand_ask') { submitName(v); return; }
     brain(v);
-  }, [value, step, pendingLesson, closeInput, submitName, brain, startLesson, sPop]);
+  }, [value, step, pendingLesson, isTenantRealm, tenantBrain, closeInput, submitName, brain, startLesson, sPop]);
 
   const createAccount = useCallback(async () => {
     setError('');
@@ -1240,6 +1264,17 @@ export default function CimolaceCreationAgent({ tenantSlug: tenantSlugProp = nul
       {/* Erreur */}
       {error && (
         <p className="cca-in" style={{ marginTop: 10, fontSize: 12.5, color: '#f0997b' }}>{error}</p>
+      )}
+
+      {/* Realm tenant : suggestions branchées sur le cerveau du tenant (guide le visiteur) */}
+      {showActions && isTenantRealm && (
+        <div className="cca-in" style={{ display: 'flex', flexWrap: 'wrap', gap: 9, justifyContent: 'center', marginTop: 18, maxWidth: 520, position: 'relative', zIndex: 4 }}>
+          {[...((OS_KNOWLEDGE[osTenant] && OS_KNOWLEDGE[osTenant].faq) || []).map((f) => f.q).slice(0, 2), 'Qui est le fondateur ?', 'Vos forfaits ?']
+            .filter(Boolean).slice(0, 4).map((q) => (
+              <span key={q} className="cca-chip" onClick={(e) => { e.stopPropagation(); tenantBrain(q); }}
+                style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 13, color: GOLD, background: 'rgba(244,239,230,.05)', borderRadius: 999, padding: '8px 15px' }}>{q}</span>
+            ))}
+        </div>
       )}
 
       {/* Actions par étape */}
