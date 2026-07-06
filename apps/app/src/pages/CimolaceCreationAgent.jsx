@@ -1354,10 +1354,10 @@ export default function CimolaceCreationAgent({ tenantSlug: tenantSlugProp = nul
               const Icon = chipIconFor(q);
               return (
                 <button key={q} className="cca-chip" onClick={(e) => { e.stopPropagation(); tenantBrain(q); }}
-                  style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10, fontSize: 14, color: 'rgba(244,239,230,.9)', background: 'rgba(244,239,230,.035)', border: '1px solid rgba(230,204,146,.2)', borderRadius: 15, padding: '13px 17px', cursor: 'pointer', fontFamily: 'inherit', textAlign: 'left' }}>
+                  style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10, fontSize: 14, lineHeight: 1.25, color: 'rgba(244,239,230,.9)', background: 'rgba(244,239,230,.035)', border: '1px solid rgba(230,204,146,.2)', borderRadius: 15, padding: '12px 16px', cursor: 'pointer', fontFamily: 'inherit', textAlign: 'left' }}>
                   <span style={{ display: 'inline-flex', alignItems: 'center', gap: 10, minWidth: 0 }}>
                     <Icon size={16} style={{ color: GOLD, flexShrink: 0 }} />
-                    <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{q}</span>
+                    <span>{q}</span>
                   </span>
                   <ArrowRight size={15} style={{ color: 'rgba(230,204,146,.6)', flexShrink: 0 }} />
                 </button>
