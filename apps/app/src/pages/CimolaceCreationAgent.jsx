@@ -15,9 +15,9 @@
  * Réutilise la logique de OnboardingOrgPage.jsx (endpoints identiques, prouvés en prod).
  * Cf. mémoire projet `cimolace-creation-agent-immersif` pour la direction complète (L1→L5).
  */
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { GraduationCap, Stethoscope, ShoppingBag, ArrowUp, ArrowRight, ArrowLeft, Check, Loader2, Mail, Lock, Volume2, VolumeX, Sparkles, SkipForward, X, Compass, BookOpen, Users, Tag } from 'lucide-react';
+import { GraduationCap, Stethoscope, ShoppingBag, ArrowUp, ArrowRight, ArrowLeft, Check, Loader2, Mail, Lock, Volume2, VolumeX, Sparkles, SkipForward, X, Compass, BookOpen, Users, Tag, UserPlus, Calendar, Download, Scale } from 'lucide-react';
 import { getApiBaseUrl } from '@/lib/apiBase';
 import { useAuth } from '@/hooks/useAuth';
 import { authStore } from '@/lib/auth-store';
@@ -26,6 +26,7 @@ import { BG, BG_THINK, INK, TERRA, GOLD, SERIF, DISPLAY, STYLE } from '@/lib/age
 import Presence from '@/components/agent/Presence';
 import { CIMOLACE_LESSONS } from '@/lib/agent/cimolaceLessons';
 import { OS_KNOWLEDGE, prorascienceKnowledgeText, buildTenantTour } from '@/lib/agent/prorascienceKnowledge';
+import { buildVnpGraph, vnpSerialize, vnpRelated, vnpIntent } from '@/lib/agent/vnp';
 
 // Cimolace EST le moteur de rendu (l'OS) : il consomme le CONTENU de cours du Précepteur
 // (données JSON : leçons narrées + atelier) et le rend NATIVEMENT dans sa coque — voix serif
@@ -103,10 +104,29 @@ const GREETING = "Bonjour. Dites-moi ce que vous voulez lancer — je m'occupe d
 function chipIconFor(q) {
   const s = String(q || '').toLowerCase();
   if (/fondateur|recteur|manikongo|[ée]quipe/.test(s)) return Users;
-  if (/forfait|prix|tarif|palier|cycle|mentorat|co[ûu]t/.test(s)) return Tag;
-  if (/pratiqu|rejoindre|m[ée]thode|commenc|d[ée]buter/.test(s)) return Sparkles;
+  if (/forfait|prix|tarif|palier|cycle|mentorat|co[ûu]t|parcours/.test(s)) return Tag;
+  if (/contact|support|aide|nous [ée]crire/.test(s)) return Mail;
+  if (/mission|vision|valeur|histoire|r[ée]alisation/.test(s)) return Sparkles;
   return BookOpen;
 }
+
+// ── VNP — styles de puces (accueil / navigation guidée / action) + méta des actions métier. ──
+const VNP_CHIP_BASE = { display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10, fontSize: 14, lineHeight: 1.25, borderRadius: 15, padding: '12px 16px', cursor: 'pointer', fontFamily: 'inherit', textAlign: 'left' };
+const VNP_NAV_CHIP = { ...VNP_CHIP_BASE, color: 'rgba(244,239,230,.9)', background: 'rgba(244,239,230,.035)', border: '1px solid rgba(230,204,146,.2)' };
+const VNP_ACTION_CHIP = { ...VNP_CHIP_BASE, color: INK, background: 'rgba(217,119,87,.15)', border: '1px solid rgba(217,119,87,.5)' };
+const VNP_VISIT_CHIP = { ...VNP_CHIP_BASE, fontWeight: 600, color: '#231208', background: TERRA, border: '1px solid transparent' };
+const VNP_CHIP_LABEL = { display: 'inline-flex', alignItems: 'center', gap: 10, minWidth: 0 };
+const VNP_ACTION_META = {
+  contacter: { label: 'Nous contacter', Icon: Mail },
+  rejoindre: { label: 'Rejoindre', Icon: UserPlus },
+  reserver: { label: 'Réserver', Icon: Calendar },
+  acheter: { label: 'Choisir un forfait', Icon: Tag },
+  comparer: { label: 'Comparer', Icon: Scale },
+  comprendre: { label: 'Comprendre', Icon: BookOpen },
+  decouvrir: { label: 'Découvrir', Icon: Sparkles },
+  telecharger: { label: 'Télécharger', Icon: Download },
+  participer: { label: 'Participer', Icon: Users },
+};
 
 // L'OS peut RENDRE un tenant existant (realm) — MÊME moteur/couleurs, seuls le logo (au coin),
 // le nom de la plateforme et le message de bienvenue changent. Résolution du slug tenant :
@@ -585,6 +605,13 @@ export default function CimolaceCreationAgent({ tenantSlug: tenantSlugProp = nul
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
   const [brainHooks, setBrainHooks] = useState([]);
+  // VNP — graphe de connaissance du tenant + suggestions de suite (navigation guidée) + actions dispo.
+  const vnpGraph = useMemo(
+    () => (osTenant && OS_KNOWLEDGE[osTenant]) ? buildVnpGraph(OS_KNOWLEDGE[osTenant], (osBrand && osBrand.name) || osTenant) : null,
+    [osTenant, osBrand],
+  );
+  const [vnpSuggest, setVnpSuggest] = useState([]); // [{nodeId,label}] sujets liés
+  const [vnpActs, setVnpActs] = useState([]);       // [intentId] actions disponibles
   const [covered, setCovered] = useState([]);
   const [topic, setTopic] = useState(null);
   const [keyword, setKeyword] = useState('');
@@ -1119,16 +1146,74 @@ export default function CimolaceCreationAgent({ tenantSlug: tenantSlugProp = nul
     }
   }, [osTenant, osBrand, speak, sThink]);
 
+  // ── VNP (VibeNavigation Protocol) — moteur d'intentions + navigation guidée + Action Engine ──
+  // Ouvre un NŒUD du graphe de façon DÉTERMINISTE (clic sur une intention/un sujet) : réponse directe
+  // depuis le contenu du nœud + sujets liés (suites) + actions disponibles. Zéro appel LLM.
+  const vnpOpenNode = useCallback((nodeId) => {
+    const g = vnpGraph; if (!g) return;
+    const n = g.byId(nodeId); if (!n) return;
+    setEngaged(true); setError('');
+    brainGenRef.current += 1;
+    setVnpSuggest(vnpRelated(g, nodeId, 3));
+    setVnpActs(n.actions || []);
+    speak(`${n.summary} ${n.content}`.replace(/\s+/g, ' ').trim().slice(0, 340) || n.title);
+  }, [vnpGraph, speak]);
+
+  // Réponse à une QUESTION LIBRE via l'edge VNP (résout intention + nœud + suggestions + actions).
+  const vnpChat = useCallback(async (message) => {
+    const g = vnpGraph;
+    setError(''); setEngaged(true);
+    const gen = ++brainGenRef.current;
+    setPresence('reflexion'); sThink();
+    try {
+      const { data, error: fnErr } = await supabase.functions.invoke('vnp', {
+        body: { op: 'chat', message, platformName: (osBrand && osBrand.name) || osTenant, graph: g ? vnpSerialize(g) : '', history: historyRef.current.slice(-6) },
+      });
+      if (brainGenRef.current !== gen) return;
+      if (fnErr) throw fnErr;
+      const reply = String(data?.reply || '').trim() || "Je vous écoute — dites-m'en un peu plus ?";
+      historyRef.current = [...historyRef.current, { role: 'user', content: message }, { role: 'assistant', content: reply }].slice(-12);
+      const sug = (Array.isArray(data?.suggestions) ? data.suggestions : [])
+        .map((id) => g && g.byId(id)).filter(Boolean).map((nn) => ({ nodeId: nn.id, label: nn.title })).slice(0, 3);
+      setVnpSuggest(sug.length ? sug : (g && data?.nodeId ? vnpRelated(g, data.nodeId, 3) : []));
+      setVnpActs(Array.isArray(data?.actions) ? data.actions.slice(0, 4) : []);
+      speak(reply);
+    } catch (_) {
+      if (brainGenRef.current !== gen) return;
+      setVnpSuggest([]); setVnpActs([]);
+      speak(`Restons sur ${(osBrand && osBrand.name) || 'ce site'} — je vous écoute.`);
+    }
+  }, [vnpGraph, osBrand, osTenant, speak, sThink]);
+
+  // ACTION ENGINE — exécute une action métier (contacter / réserver / rejoindre / acheter…) via l'edge.
+  const vnpAction = useCallback(async (actionId, label) => {
+    setError(''); setEngaged(true); setVnpActs([]);
+    const gen = ++brainGenRef.current;
+    setPresence('reflexion'); sThink();
+    try {
+      const { data, error: fnErr } = await supabase.functions.invoke('vnp', {
+        body: { op: 'action', action: actionId, platformName: (osBrand && osBrand.name) || osTenant, payload: { label } },
+      });
+      if (brainGenRef.current !== gen) return;
+      if (fnErr) throw fnErr;
+      speak(String(data?.message || "C'est noté."));
+      // data.next.kind (checkout / booking / contact_form) = point d'extension (routage réel à brancher).
+    } catch (_) {
+      if (brainGenRef.current !== gen) return;
+      speak('Un instant — réessayons dans un moment.');
+    }
+  }, [osBrand, osTenant, speak, sThink]);
+
   const submitInput = useCallback(() => {
     const v = value.trim();
     closeInput();
     if (!v) return;
     sPop();
-    if (isTenantRealm) { tenantBrain(v); return; } // realm tenant → cerveau du tenant
+    if (isTenantRealm) { vnpChat(v); return; } // realm tenant → moteur VNP (intention + nœud + suites)
     if (pendingLesson) { startLesson(v, pendingTopicRef.current); return; } // le prénom → on lance/génère le cours
     if (step === 'brand_ask') { submitName(v); return; }
     brain(v);
-  }, [value, step, pendingLesson, isTenantRealm, tenantBrain, closeInput, submitName, brain, startLesson, sPop]);
+  }, [value, step, pendingLesson, isTenantRealm, vnpChat, closeInput, submitName, brain, startLesson, sPop]);
 
   const createAccount = useCallback(async () => {
     setError('');
@@ -1218,8 +1303,8 @@ export default function CimolaceCreationAgent({ tenantSlug: tenantSlugProp = nul
       {/* L6 — Scène « réalisée » par l'IA : composition de toute la surface (fond, sous la voix) */}
       {scene && (step === 'brain' || step === 'product') && (
         <SceneStage scene={scene} visible={sceneVisible} readerIdx={readerIdx} setReaderIdx={setReaderIdx}
-          onSuggest={isTenantRealm ? tenantBrain : brain} onCta={isTenantRealm ? tenantBrain : chooseProduct}
-          hooks={isTenantRealm ? [] : brainHooks} onHook={isTenantRealm ? tenantBrain : brain} />
+          onSuggest={isTenantRealm ? vnpChat : brain} onCta={isTenantRealm ? vnpChat : chooseProduct}
+          hooks={isTenantRealm ? [] : brainHooks} onHook={isTenantRealm ? vnpChat : brain} />
       )}
 
       {/* Identité du realm (où on est) : badge marque (logo + nom) + état connecté */}
@@ -1344,29 +1429,52 @@ export default function CimolaceCreationAgent({ tenantSlug: tenantSlugProp = nul
         <p className="cca-in" style={{ marginTop: 10, fontSize: 12.5, color: '#f0997b' }}>{error}</p>
       )}
 
-      {/* Realm tenant : « Visiter » (l'OS REND le site en scènes) + suggestions vers le cerveau du tenant.
-          Puces éditoriales : icône + libellé + flèche, en grille 2 colonnes (cf. redesign). */}
+      {/* VNP — Realm tenant : accueil = INTENTIONS (avant interaction) ; puis NAVIGATION GUIDÉE
+          (sujets liés) + ACTION ENGINE (actions métier). Le visiteur ne clique pas des liens : des intentions. */}
       {showActions && isTenantRealm && !tourActive && (
         <div className="cca-in" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(238px, 1fr))', gap: 10, justifyItems: 'stretch', marginTop: 24, width: '100%', maxWidth: 560, position: 'relative', zIndex: 4, padding: '0 20px', boxSizing: 'border-box' }}>
-          <button className="cca-chip cca-chip-visit" onClick={(e) => { e.stopPropagation(); startTenantTour(); }}
-            style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10, fontSize: 14, fontWeight: 600, color: '#231208', background: TERRA, border: '1px solid transparent', borderRadius: 15, padding: '13px 17px', cursor: 'pointer', fontFamily: 'inherit', textAlign: 'left' }}>
+          {/* Toujours proposé : la visite guidée (l'OS REND le site en scènes) */}
+          <button className="cca-chip cca-chip-visit" onClick={(e) => { e.stopPropagation(); startTenantTour(); }} style={VNP_VISIT_CHIP}>
             <span style={{ display: 'inline-flex', alignItems: 'center', gap: 10 }}><Compass size={17} style={{ flexShrink: 0 }} /> Fais-moi visiter</span>
             <ArrowRight size={16} style={{ flexShrink: 0 }} />
           </button>
-          {[...((OS_KNOWLEDGE[osTenant] && OS_KNOWLEDGE[osTenant].faq) || []).map((f) => f.q).slice(0, 2), 'Qui est le fondateur ?', 'Vos forfaits ?']
-            .filter(Boolean).slice(0, 3).map((q) => {
-              const Icon = chipIconFor(q);
-              return (
-                <button key={q} className="cca-chip" onClick={(e) => { e.stopPropagation(); tenantBrain(q); }}
-                  style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10, fontSize: 14, lineHeight: 1.25, color: 'rgba(244,239,230,.9)', background: 'rgba(244,239,230,.035)', border: '1px solid rgba(230,204,146,.2)', borderRadius: 15, padding: '12px 16px', cursor: 'pointer', fontFamily: 'inherit', textAlign: 'left' }}>
-                  <span style={{ display: 'inline-flex', alignItems: 'center', gap: 10, minWidth: 0 }}>
-                    <Icon size={16} style={{ color: GOLD, flexShrink: 0 }} />
-                    <span>{q}</span>
-                  </span>
-                  <ArrowRight size={15} style={{ color: 'rgba(230,204,146,.6)', flexShrink: 0 }} />
-                </button>
-              );
-            })}
+
+          {/* ACCUEIL (avant interaction) : les intentions VNP (cartographie du site) */}
+          {!engaged && (vnpGraph ? vnpGraph.accueil.filter((a) => a.intent !== 'visiter') : []).slice(0, 5).map((a) => {
+            const Icon = chipIconFor(a.label);
+            return (
+              <button key={a.label} className="cca-chip" style={VNP_NAV_CHIP}
+                onClick={(e) => { e.stopPropagation(); if (a.nodeId) vnpOpenNode(a.nodeId); else vnpChat(a.label); }}>
+                <span style={VNP_CHIP_LABEL}><Icon size={16} style={{ color: GOLD, flexShrink: 0 }} /><span>{a.label}</span></span>
+                <ArrowRight size={15} style={{ color: 'rgba(230,204,146,.6)', flexShrink: 0 }} />
+              </button>
+            );
+          })}
+
+          {/* NAVIGATION GUIDÉE (après interaction) : sujets liés → suites */}
+          {engaged && vnpSuggest.map((s) => {
+            const Icon = chipIconFor(s.label);
+            return (
+              <button key={`s-${s.nodeId}`} className="cca-chip" style={VNP_NAV_CHIP}
+                onClick={(e) => { e.stopPropagation(); vnpOpenNode(s.nodeId); }}>
+                <span style={VNP_CHIP_LABEL}><Icon size={16} style={{ color: GOLD, flexShrink: 0 }} /><span>{s.label}</span></span>
+                <ArrowRight size={15} style={{ color: 'rgba(230,204,146,.6)', flexShrink: 0 }} />
+              </button>
+            );
+          })}
+
+          {/* ACTION ENGINE (après interaction) : actions métier disponibles sur le sujet courant */}
+          {engaged && vnpActs.map((act) => {
+            const m = VNP_ACTION_META[act];
+            if (!m) return null;
+            return (
+              <button key={`a-${act}`} className="cca-chip" style={VNP_ACTION_CHIP}
+                onClick={(e) => { e.stopPropagation(); vnpAction(act, m.label); }}>
+                <span style={VNP_CHIP_LABEL}><m.Icon size={16} style={{ color: TERRA, flexShrink: 0 }} /><span>{m.label}</span></span>
+                <ArrowRight size={15} style={{ color: TERRA, flexShrink: 0 }} />
+              </button>
+            );
+          })}
         </div>
       )}
 
