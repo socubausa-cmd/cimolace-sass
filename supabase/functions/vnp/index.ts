@@ -114,8 +114,44 @@ async function insertContact(payload: any): Promise<boolean> {
   } catch (_) { return false; }
 }
 
+// Résout l'UUID d'un tenant depuis son slug (service role).
+async function resolveTenantId(url: string, key: string, slug: string): Promise<string | null> {
+  if (!slug) return null;
+  const tr = await fetch(`${url}/rest/v1/tenants?slug=eq.${encodeURIComponent(slug)}&select=id`, { headers: { apikey: key, Authorization: `Bearer ${key}` } });
+  if (!tr.ok) return null;
+  const rows = await tr.json();
+  return (rows && rows[0] && rows[0].id) || null;
+}
+
+// Livraison RÉELLE d'une demande de RDV : insertion server-side dans vnp_booking_requests (service role).
+async function insertBooking(payload: any): Promise<boolean> {
+  // @ts-ignore
+  const url = Deno.env.get('SUPABASE_URL');
+  // @ts-ignore
+  const key = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
+  if (!url || !key) return false;
+  try {
+    const tenantId = await resolveTenantId(url, key, String(payload?.slug || '').trim().toLowerCase());
+    if (!tenantId) return false;
+    const res = await fetch(`${url}/rest/v1/vnp_booking_requests`, {
+      method: 'POST',
+      headers: { apikey: key, Authorization: `Bearer ${key}`, 'Content-Type': 'application/json', Prefer: 'return=minimal' },
+      body: JSON.stringify({
+        tenant_id: tenantId,
+        service: String(payload?.service || 'Consultation').slice(0, 120),
+        name: String(payload?.name || '').slice(0, 120),
+        email: String(payload?.email || '').slice(0, 160),
+        preferred_at: payload?.preferred_at || null,
+        message: String(payload?.message || '').slice(0, 2000),
+      }),
+    });
+    return res.ok;
+  } catch (_) { return false; }
+}
+
 // ACTION ENGINE (§ doc « Exécuter les actions métier »). EXÉCUTE l'action : le contact est LIVRÉ
-// (contact_requests) ; les actions transactionnelles renvoient la SUITE (next.kind) que le client route.
+// (contact_requests), le RDV est ENREGISTRÉ (vnp_booking_requests) ; les actions transactionnelles
+// renvoient la SUITE (next.kind) que le client route.
 async function runAction(action: string, platformName: string, payload: any) {
   const a = String(action || '').toLowerCase();
   const name = payload?.name ? String(payload.name).slice(0, 80) : '';
@@ -138,9 +174,20 @@ async function runAction(action: string, platformName: string, payload: any) {
       return json({ ok: true, message: `Laissez-nous un mot — ${platformName} vous répond vite.`,
         next: { kind: 'contact_form', fields: ['name', 'email', 'message'] } });
     }
-    case 'reserver':
-      return json({ ok: true, message: `Parfait — réservons votre créneau${label ? ` pour « ${label} »` : ''}.`,
+    case 'reserver': {
+      const email = String(payload?.email || '').trim();
+      const preferredAt = payload?.preferred_at;
+      // 2e temps : créneau + email fournis → on ENREGISTRE la demande de RDV.
+      if (email && preferredAt) {
+        const ok = await insertBooking({ ...payload, service: payload?.service || 'Consultation privée' });
+        return json(ok
+          ? { ok: true, message: `C'est réservé${name ? `, ${name}` : ''} — ${platformName} vous confirme le créneau par e-mail.` }
+          : { ok: false, message: 'Réservation impossible pour le moment — réessayez.' }, ok ? 200 : 502);
+      }
+      // 1er temps : on ouvre le sélecteur de créneaux.
+      return json({ ok: true, message: `Choisissez un créneau — je réserve votre consultation.`,
         next: { kind: 'booking', target: label || 'Consultation privée' } });
+    }
     case 'acheter':
     case 'rejoindre':
       return json({ ok: true, message: `Excellent choix — on vous emmène vers ${label ? `« ${label} »` : 'l\'inscription'}.`,

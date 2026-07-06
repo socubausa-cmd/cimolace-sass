@@ -641,6 +641,8 @@ export default function CimolaceCreationAgent({ tenantSlug: tenantSlugProp = nul
   const [vnpSuggest, setVnpSuggest] = useState([]); // [{nodeId,label}] sujets liés
   const [vnpActs, setVnpActs] = useState([]);       // [intentId] actions disponibles
   const [contactForm, setContactForm] = useState(null); // Action Engine : {name,email,message,subject,sending,sent,error} | null
+  const [bookingForm, setBookingForm] = useState(null); // Action Engine RDV : {service,slotIso,name,email,sending,sent,error} | null
+  const bookingSlots = useMemo(() => genSlots(6), []); // créneaux proposés (stables sur la session)
   const [covered, setCovered] = useState([]);
   const [topic, setTopic] = useState(null);
   const [keyword, setKeyword] = useState('');
@@ -1226,6 +1228,10 @@ export default function CimolaceCreationAgent({ tenantSlug: tenantSlugProp = nul
       setContactForm({ name: '', email: '', message: '', subject: `Contact via l'assistant ${(osBrand && osBrand.name) || osTenant}`, sending: false, sent: false, error: '' });
       return;
     }
+    if (actionId === 'reserver') { // RDV : sélecteur de créneaux inline (dans la conversation)
+      setBookingForm({ service: label || 'Consultation privée', slotIso: '', name: '', email: '', sending: false, sent: false, error: '' });
+      return;
+    }
     const gen = ++brainGenRef.current;
     setPresence('reflexion'); sThink();
     try {
@@ -1269,6 +1275,27 @@ export default function CimolaceCreationAgent({ tenantSlug: tenantSlugProp = nul
       setContactForm((c) => ({ ...c, sending: false, error: 'Envoi impossible pour le moment — réessayez.' }));
     }
   }, [contactForm, osBrand, osTenant, speak]);
+
+  // Prise de RDV RÉELLE : le créneau choisi + email → enregistré (vnp_booking_requests) via l'edge (service role).
+  const submitBooking = useCallback(async () => {
+    const f = bookingForm; if (!f || f.sending) return;
+    const email = (f.email || '').trim();
+    if (!f.slotIso) { setBookingForm((c) => ({ ...c, error: 'Choisissez un créneau.' })); return; }
+    if (!/.+@.+\..+/.test(email)) { setBookingForm((c) => ({ ...c, error: "Une adresse e-mail valide, s'il vous plaît." })); return; }
+    setBookingForm((c) => ({ ...c, sending: true, error: '' }));
+    try {
+      const { data, error: fnErr } = await supabase.functions.invoke('vnp', {
+        body: { op: 'action', action: 'reserver', platformName: (osBrand && osBrand.name) || osTenant, payload: { slug: osTenant, service: f.service, name: (f.name || '').trim(), email, preferred_at: f.slotIso } },
+      });
+      if (fnErr || !data?.ok) throw (fnErr || new Error('booking failed'));
+      setBookingForm((c) => ({ ...c, sending: false, sent: true }));
+      logEvent('booking_submitted', { service: f.service }, osTenant);
+      speak(String(data?.message || `C'est réservé — ${(osBrand && osBrand.name) || osTenant} vous confirme par e-mail.`));
+      setTimeout(() => setBookingForm(null), 3000);
+    } catch (_) {
+      setBookingForm((c) => ({ ...c, sending: false, error: 'Réservation impossible pour le moment — réessayez.' }));
+    }
+  }, [bookingForm, osBrand, osTenant, speak]);
 
   const submitInput = useCallback(() => {
     const v = value.trim();
@@ -1498,7 +1525,7 @@ export default function CimolaceCreationAgent({ tenantSlug: tenantSlugProp = nul
 
       {/* VNP — Realm tenant : accueil = INTENTIONS (avant interaction) ; puis NAVIGATION GUIDÉE
           (sujets liés) + ACTION ENGINE (actions métier). Le visiteur ne clique pas des liens : des intentions. */}
-      {showActions && isTenantRealm && !tourActive && !contactForm && (
+      {showActions && isTenantRealm && !tourActive && !contactForm && !bookingForm && (
         <div className="cca-in" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(238px, 1fr))', gap: 10, justifyItems: 'stretch', marginTop: 24, width: '100%', maxWidth: 560, position: 'relative', zIndex: 4, padding: '0 20px', boxSizing: 'border-box' }}>
           {/* Toujours proposé : la visite guidée (l'OS REND le site en scènes) */}
           <button className="cca-chip cca-chip-visit" onClick={(e) => { e.stopPropagation(); startTenantTour(); }} style={VNP_VISIT_CHIP}>
@@ -1569,6 +1596,49 @@ export default function CimolaceCreationAgent({ tenantSlug: tenantSlugProp = nul
                   {contactForm.sending ? 'Envoi…' : 'Envoyer'}
                 </button>
                 <button onClick={(e) => { e.stopPropagation(); setContactForm(null); }}
+                  style={{ ...VNP_NAV_CHIP, justifyContent: 'center', width: 108 }}>Annuler</button>
+              </div>
+            </>
+          )}
+        </div>
+      )}
+
+      {/* ACTION ENGINE — prise de RDV inline : créneaux + email → vnp_booking_requests */}
+      {isTenantRealm && bookingForm && (
+        <div className="cca-in" onClick={(e) => e.stopPropagation()}
+          style={{ marginTop: 22, width: '100%', maxWidth: 470, position: 'relative', zIndex: 6, padding: '0 20px', boxSizing: 'border-box', display: 'flex', flexDirection: 'column', gap: 12 }}>
+          {bookingForm.sent ? (
+            <div style={{ textAlign: 'center', color: GOLD, fontFamily: DISPLAY, fontSize: 20, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
+              <Check size={18} /> Créneau demandé
+            </div>
+          ) : (
+            <>
+              <div className="cca-display" style={{ textAlign: 'center', fontSize: 19, color: INK }}>Réserver une {bookingForm.service}</div>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: 8 }}>
+                {bookingSlots.map((s) => {
+                  const on = bookingForm.slotIso === s.iso;
+                  return (
+                    <button key={s.iso} onClick={(e) => { e.stopPropagation(); setBookingForm((c) => ({ ...c, slotIso: s.iso, error: '' })); }}
+                      style={{ ...VNP_CHIP_BASE, justifyContent: 'center', fontSize: 13.5, textTransform: 'capitalize',
+                        color: on ? '#231208' : 'rgba(244,239,230,.9)', background: on ? TERRA : 'rgba(244,239,230,.035)',
+                        border: on ? '1px solid transparent' : '1px solid rgba(230,204,146,.2)' }}>
+                      {s.label}
+                    </button>
+                  );
+                })}
+              </div>
+              <input className="cca-field" placeholder="Votre nom" value={bookingForm.name}
+                onChange={(e) => setBookingForm((c) => ({ ...c, name: e.target.value }))} style={VNP_FIELD} />
+              <input className="cca-field" type="email" placeholder="Votre e-mail" value={bookingForm.email}
+                onChange={(e) => setBookingForm((c) => ({ ...c, email: e.target.value }))} style={VNP_FIELD} />
+              {bookingForm.error && <span style={{ color: '#f0997b', fontSize: 12.5 }}>{bookingForm.error}</span>}
+              <div style={{ display: 'flex', gap: 8 }}>
+                <button onClick={(e) => { e.stopPropagation(); submitBooking(); }} disabled={bookingForm.sending}
+                  style={{ ...VNP_CHIP_BASE, flex: 1, justifyContent: 'center', fontWeight: 600, color: '#231208', background: TERRA, border: 'none', opacity: bookingForm.sending ? 0.7 : 1 }}>
+                  {bookingForm.sending ? <Loader2 size={15} className="animate-spin" /> : <Calendar size={15} />}
+                  {bookingForm.sending ? 'Réservation…' : 'Confirmer le RDV'}
+                </button>
+                <button onClick={(e) => { e.stopPropagation(); setBookingForm(null); }}
                   style={{ ...VNP_NAV_CHIP, justifyContent: 'center', width: 108 }}>Annuler</button>
               </div>
             </>
