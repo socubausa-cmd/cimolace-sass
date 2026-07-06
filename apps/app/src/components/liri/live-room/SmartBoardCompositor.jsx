@@ -702,11 +702,23 @@ function paintBoardBackground(bgCanvas) {
 }
 
 /** `fgCanvas` = calque traits (transparent) ; `bgCanvas` = fond opaque (optionnel si même ref legacy). */
-function redrawBoard(fgCanvas, bgCanvas, allStrokes, draft = null, curveDraft = null, marqueeDraft = null, polyDraft = null) {
+function redrawBoard(fgCanvas, bgCanvas, allStrokes, draft = null, curveDraft = null, marqueeDraft = null, polyDraft = null, viewFit = null) {
   if (!fgCanvas) return;
   if (bgCanvas) paintBoardBackground(bgCanvas);
   const ctx = fgCanvas.getContext('2d');
   ctx.clearRect(0, 0, fgCanvas.width, fgCanvas.height);
+  // Recadrage "fit" du VIEWER (lecture seule) : les traits sont stockés en
+  // coords-pixels du canvas de l'HÔTE ; sur un buffer plus petit (mobile) ils
+  // débordent et sont rognés → invisibles (seul le quadrillage, redessiné plein
+  // buffer, reste visible). `viewFit` (calculé côté viewer, cf. flushRedraw) mappe
+  // tout le dessin dans le buffer via une transform de contexte ; les traceurs de
+  // traits n'utilisant que des transforms RELATIVES, ils composent proprement.
+  // HÔTE : viewFit = null → rendu strictement identique (aucune régression).
+  const fit = viewFit && viewFit.k > 0;
+  if (fit) {
+    ctx.save();
+    ctx.setTransform(viewFit.k, 0, 0, viewFit.k, viewFit.dx, viewFit.dy);
+  }
   allStrokes.forEach((s) => drawOneStroke(ctx, s));
   if (draft) {
     const st = useLiveWhiteboardStore.getState();
@@ -750,11 +762,12 @@ function redrawBoard(fgCanvas, bgCanvas, allStrokes, draft = null, curveDraft = 
     const st = useLiveWhiteboardStore.getState();
     drawPolyDraft(ctx, polyDraft, st.color || '#fff', st.size || 2);
   }
+  if (fit) ctx.restore();
 }
 
 /* extended redraw — compass + angle + measure draft overlaid after board strokes */
-function redrawBoardWithCompass(fgCanvas, bgCanvas, allStrokes, draft, curveDraft, marqueeDraft, polyDraft, compassDraft, angleDraftVal, measureDraftVal, triFreeDraftVal) {
-  redrawBoard(fgCanvas, bgCanvas, allStrokes, draft, curveDraft, marqueeDraft, polyDraft);
+function redrawBoardWithCompass(fgCanvas, bgCanvas, allStrokes, draft, curveDraft, marqueeDraft, polyDraft, compassDraft, angleDraftVal, measureDraftVal, triFreeDraftVal, viewFit = null) {
+  redrawBoard(fgCanvas, bgCanvas, allStrokes, draft, curveDraft, marqueeDraft, polyDraft, viewFit);
   if (!fgCanvas) return;
   const ctx = fgCanvas.getContext('2d');
   const st = useLiveWhiteboardStore.getState();
@@ -1131,6 +1144,11 @@ function WhiteboardScene({
   const drawing = useRef(false);
   const lastPos = useRef(null);
   const strokesRef = useRef(Array.isArray(strokesProp) ? strokesProp : []);
+  // Miroir de `readOnly` lisible dans flushRedraw (deps stables []). Sert au
+  // recadrage "fit" du viewer (les traits de l'hôte doivent tenir dans un buffer
+  // plus petit, ex. mobile). Cf. redrawBoard(viewFit).
+  const readOnlyRef = useRef(readOnly);
+  readOnlyRef.current = readOnly;
   const curStroke = useRef(null);
   const straightLineModifierRef = useRef(false);
   const shapeDraft = useRef(null);
@@ -1234,9 +1252,34 @@ function WhiteboardScene({
     const a = redrawArgsRef.current;
     redrawArgsRef.current = null;
     if (!a) return;
+    const fg = canvasRef.current;
+    // VIEWER (lecture seule) : calcule un recadrage "fit" pour que TOUT le dessin de
+    // l'hôte tienne dans le buffer local. Actif UNIQUEMENT si le bbox des traits
+    // déborde le buffer (cas mobile : petit canvas → traits hôte rognés). Sur un
+    // buffer où tout rentre déjà (desktop) → viewFit reste null → rendu inchangé.
+    let viewFit = null;
+    if (readOnlyRef.current && fg && Array.isArray(a.strokes) && a.strokes.length) {
+      const mctx = fg.getContext('2d');
+      let b = null;
+      a.strokes.forEach((s) => { if (s) b = mergeBounds(b, strokeVisualBounds(mctx, s)); });
+      const W = fg.width;
+      const H = fg.height;
+      if (b && b.w > 1 && b.h > 1 && W > 2 && H > 2) {
+        const inside = b.x >= 0 && b.y >= 0 && b.x + b.w <= W && b.y + b.h <= H;
+        if (!inside) {
+          const pad = Math.max(10, Math.min(W, H) * 0.06);
+          const k = Math.min((W - pad * 2) / b.w, (H - pad * 2) / b.h, 1);
+          const kk = k > 0 ? k : 1;
+          const cx = b.x + b.w / 2;
+          const cy = b.y + b.h / 2;
+          viewFit = { k: kk, dx: W / 2 - cx * kk, dy: H / 2 - cy * kk };
+        }
+      }
+    }
     redrawBoardWithCompass(
-      canvasRef.current, bgCanvasRef.current, a.strokes, a.draft, a.curve, a.marquee,
+      fg, bgCanvasRef.current, a.strokes, a.draft, a.curve, a.marquee,
       polyDraftRef.current, compassDraftRef.current, angleDraftRef.current, measureDraftRef.current, triFreeDraftRef.current,
+      viewFit,
     );
   }, []);
   const redrawSheet = useCallback((
