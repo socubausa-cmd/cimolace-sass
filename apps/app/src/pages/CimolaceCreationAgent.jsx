@@ -98,6 +98,21 @@ function extractLessonTopic(m) {
 
 const GREETING = "Bonjour. Dites-moi ce que vous voulez lancer — je m'occupe du reste.";
 
+// L'OS peut RENDRE un tenant existant (realm) — MÊME moteur/couleurs, seuls le logo (au coin),
+// le nom de la plateforme et le message de bienvenue changent. Résolution du slug tenant :
+// prop → ?os=<slug> (preview) → host dédié (prorascience.org → isna). Sinon null = realm Cimolace.
+function getOsRealmSlug(propSlug) {
+  if (propSlug) return String(propSlug).trim().toLowerCase();
+  if (typeof window === 'undefined') return null;
+  try {
+    const q = new URLSearchParams(window.location.search).get('os');
+    if (q && q.trim()) return q.trim().toLowerCase();
+  } catch { /* ignore */ }
+  const host = window.location.hostname.toLowerCase();
+  if (host === 'prorascience.org' || host === 'www.prorascience.org') return 'isna';
+  return null;
+}
+
 const SUGG = [
   { kind: 'school', label: 'École / cours en ligne', Icon: GraduationCap },
   { kind: 'medos', label: 'Clinique / santé', Icon: Stethoscope },
@@ -515,9 +530,25 @@ function TutorialFlow({ scene, onCta, hooks, onHook }) {
   );
 }
 
-export default function CimolaceCreationAgent() {
+export default function CimolaceCreationAgent({ tenantSlug: tenantSlugProp = null } = {}) {
   const navigate = useNavigate();
   const { login } = useAuth();
+
+  // L8-P1 — realm : si un tenant est ciblé, l'OS REND ce tenant (même moteur, autre identité) au lieu
+  // du tunnel de création Cimolace. isTenantRealm gate tout le flux « créer une org Cimolace ».
+  const osTenant = getOsRealmSlug(tenantSlugProp);
+  const isTenantRealm = !!osTenant;
+  const [osBrand, setOsBrand] = useState(null); // { name, logo }
+  useEffect(() => {
+    if (!osTenant) return undefined;
+    let alive = true;
+    fetch(`${getApiBaseUrl()}/tenants/by-slug/${encodeURIComponent(osTenant)}/branding`)
+      .then((r) => r.json()).then((b) => {
+        const t = (b && b.data) ? b.data : b;
+        if (alive && t && t.slug) setOsBrand({ name: t.name || osTenant, logo: t.logo_url || t.logo || '' });
+      }).catch(() => {});
+    return () => { alive = false; };
+  }, [osTenant]);
 
   const [presence, setPresence] = useState('connexion'); // connexion|attente|reflexion|ecriture|pret
   const [message, setMessage] = useState('');
@@ -581,7 +612,9 @@ export default function CimolaceCreationAgent() {
   const [muted, setMuted] = useState(false);
 
   const inLesson = lessonActive;
-  const inputAllowed = !lessonActive && (step === 'discovery' || step === 'brand_ask' || step === 'brain' || step === 'product');
+  // Realm tenant (P1) : coque de bienvenue immersive, sans le funnel Cimolace (le cerveau/pages du
+  // tenant arrivent en P3/P4). On coupe donc la saisie « parler à la présence » ici.
+  const inputAllowed = !isTenantRealm && !lessonActive && (step === 'discovery' || step === 'brand_ask' || step === 'brain' || step === 'product');
 
   useEffect(() => { mutedRef.current = muted; }, [muted]);
   useEffect(() => { coveredRef.current = covered; }, [covered]);
@@ -699,11 +732,21 @@ export default function CimolaceCreationAgent() {
     sceneTimer.current = setTimeout(() => { if (speakReply) speakReply(); }, voiceDelay);
   }, [exitScene, sThink]);
 
-  // Éveil
+  // Éveil (realm Cimolace : greeting de vente ; realm tenant : bienvenue gérée à part, attend le branding)
+  const welcomedRef = useRef(false);
   useEffect(() => {
-    const t = setTimeout(() => speak(GREETING), 900);
-    return () => { clearTimeout(t); clearInterval(typeTimer.current); clearTimeout(thinkTimer.current); clearTimeout(sceneTimer.current); clearTimeout(lessonTimer.current); cancelAnimationFrame(rafRef.current); };
-  }, [speak]);
+    const t = !isTenantRealm ? setTimeout(() => speak(GREETING), 900) : null;
+    return () => { if (t) clearTimeout(t); clearInterval(typeTimer.current); clearTimeout(thinkTimer.current); clearTimeout(sceneTimer.current); clearTimeout(lessonTimer.current); cancelAnimationFrame(rafRef.current); };
+  }, [speak, isTenantRealm]);
+
+  // Bienvenue TENANT — même moteur, identité du tenant (logo + nom au coin + ce message).
+  useEffect(() => {
+    if (!isTenantRealm || welcomedRef.current || !osBrand) return undefined;
+    welcomedRef.current = true;
+    const name = osBrand.name || osTenant;
+    const t = setTimeout(() => speak(`Bienvenue sur ${name}. Je suis votre guide — je connais tout ${name}. Que souhaitez-vous découvrir ?`), 700);
+    return () => clearTimeout(t);
+  }, [isTenantRealm, osBrand, osTenant, speak]);
 
   // Filet anti-écran-vide : si l'onglet redevient visible et qu'une scène est montée
   // mais restée invisible (rAF gelé en arrière-plan), on la révèle.
@@ -1108,13 +1151,18 @@ export default function CimolaceCreationAgent() {
           onSuggest={brain} onCta={chooseProduct} hooks={brainHooks} onHook={brain} />
       )}
 
-      {/* Connecté */}
-      <div style={{ position: 'absolute', top: 22, left: '50%', transform: 'translateX(-50%)', display: 'flex', alignItems: 'center', gap: 7, opacity: 0.7, pointerEvents: 'none' }}>
+      {/* Identité du realm (où on est) : logo + nom de la plateforme pour un tenant, sinon Cimolace */}
+      <div style={{ position: 'absolute', top: 20, left: '50%', transform: 'translateX(-50%)', display: 'flex', alignItems: 'center', gap: 8, opacity: 0.85, pointerEvents: 'none' }}>
+        {isTenantRealm && osBrand && osBrand.logo ? (
+          <img src={osBrand.logo} alt="" style={{ height: 22, width: 'auto', maxWidth: 96, objectFit: 'contain' }} />
+        ) : null}
         <span style={{ position: 'relative', display: 'inline-flex', width: 6, height: 6, alignItems: 'center', justifyContent: 'center' }}>
           <span style={{ position: 'absolute', width: 6, height: 6, borderRadius: '50%', background: '#3fbf6a', animation: 'ccaPing 1.9s ease-out infinite' }} />
           <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#3fbf6a' }} />
         </span>
-        <span style={{ fontSize: 11, color: 'rgba(244,239,230,.55)', letterSpacing: '.03em' }}>assistant cimolace · connecté</span>
+        <span style={{ fontSize: 11.5, color: 'rgba(244,239,230,.6)', letterSpacing: '.03em' }}>
+          {isTenantRealm ? `${(osBrand && osBrand.name) || osTenant} · connecté` : 'assistant cimolace · connecté'}
+        </span>
       </div>
 
       {/* L5 — rail de sujets « tableau intelligent » : liste à gauche, clic → le cerveau compose au centre.
@@ -1179,7 +1227,7 @@ export default function CimolaceCreationAgent() {
             {(presence === 'ecriture' || presence === 'attente') && <span className="cca-caret" />}
           </p>
         ) : (
-          showActions && step === 'discovery' && <span style={{ fontSize: 12, color: 'rgba(244,239,230,.4)' }}>touchez l'écran pour parler</span>
+          showActions && step === 'discovery' && !isTenantRealm && <span style={{ fontSize: 12, color: 'rgba(244,239,230,.4)' }}>touchez l'écran pour parler</span>
         )}
       </div>
 
@@ -1189,7 +1237,7 @@ export default function CimolaceCreationAgent() {
       )}
 
       {/* Actions par étape */}
-      {showActions && step === 'discovery' && !tourActive && (
+      {showActions && step === 'discovery' && !tourActive && !isTenantRealm && (
         <div className="cca-in" style={{ display: 'flex', flexWrap: 'wrap', gap: 9, justifyContent: 'center', marginTop: 18, maxWidth: 480 }}>
           {SUGG.map(({ kind, label, Icon }) => (
             <span key={kind} className="cca-chip" onClick={(e) => { e.stopPropagation(); pickKind(kind); }}
