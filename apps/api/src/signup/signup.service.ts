@@ -312,11 +312,9 @@ export class SignupService {
       `✅ Tenant ${tenant.slug} (${kind}) créé pour ${email} (user ${userId})`,
     );
 
-    // Frontend va rediriger ici. LIRI = produit horizontal (façon Zoom) → portail LIRI
-    // unifié (/liri) ; les autres kinds → back-office tenant /t/{slug}/admin.
-    const next_url = kind === 'liri'
-      ? '/liri'
-      : `/t/${tenant.slug}/admin/${this.firstAdminTabFor(kind as Kind)}`;
+    // Frontend va rediriger ici. LIRI (produit horizontal, façon Zoom) ET École (mode de
+    // LIRI) → portail LIRI unifié /liri ; Clinique/Boutique → leur back-office tenant.
+    const next_url = this.landingUrlFor(kind as Kind, tenant.slug);
 
     return {
       tenant: {
@@ -364,7 +362,7 @@ export class SignupService {
     const { data: ownedTenant } = await this.sb.client
       .from('tenants').select('id, slug, name, infrastructure_type').eq('owner_user_id', userId).maybeSingle();
     if (ownedTenant) {
-      const next_url = kind === 'liri' ? '/liri' : `/t/${ownedTenant.slug}/admin`;
+      const next_url = this.landingUrlFor(kind as Kind, ownedTenant.slug);
       return {
         tenant: { id: ownedTenant.id, slug: ownedTenant.slug, name: ownedTenant.name, infrastructure_type: ownedTenant.infrastructure_type ?? kind },
         user: { id: userId, email },
@@ -396,7 +394,7 @@ export class SignupService {
     }
 
     this.logger.log(`✅ Tenant ${tenant.slug} (${kind}) créé via OAuth pour ${email} (user ${userId})`);
-    const next_url = kind === 'liri' ? '/liri' : `/t/${tenant.slug}/admin/${this.firstAdminTabFor(kind as Kind)}`;
+    const next_url = this.landingUrlFor(kind as Kind, tenant.slug);
     return { tenant: { id: tenant.id, slug: tenant.slug, name: tenant.name, infrastructure_type: tenant.infrastructure_type ?? kind }, user: { id: userId, email }, next_url };
   }
 
@@ -506,6 +504,18 @@ export class SignupService {
     if (kind === 'liri') return 'lives';
     if (kind === 'school') return 'courses';
     return '';
+  }
+
+  /**
+   * Destination post-signup. LIRI est le produit horizontal (portail unifié /liri) et
+   * l'ÉCOLE en est un MODE (Vie scolaire dans le rail) → ces deux kinds atterrissent sur
+   * le portail LIRI. Le back-office Academy /t/{slug}/admin reste accessible mais n'est
+   * plus la page d'accueil. Clinique (medos) et Boutique (mbolo) gardent leur back-office
+   * (produits distincts, autres realms).
+   */
+  private landingUrlFor(kind: Kind, slug: string): string {
+    if (kind === 'liri' || kind === 'school') return '/liri';
+    return `/t/${slug}/admin/${this.firstAdminTabFor(kind)}`;
   }
 
   private async deleteUserSafely(userId: string) {
