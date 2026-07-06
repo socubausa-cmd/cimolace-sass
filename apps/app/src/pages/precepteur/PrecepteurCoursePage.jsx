@@ -3,7 +3,7 @@ import { Link, useParams } from 'react-router-dom';
 import { GraduationCap } from 'lucide-react';
 import { PrecepteurPlayer } from '@/pages/dev/PrecepteurDemoPage';
 import { masterclassProjectToPrecepteurCourse } from '@/lib/precepteur/fromMasterclass';
-import { enrichCourseWithDevices } from '@/lib/precepteur/enrichCourseWithDevices';
+import { conformCourseSync } from '@/lib/precepteur/conformCourse';
 import { masterclassApi } from '@/lib/api-v2';
 
 /**
@@ -143,11 +143,12 @@ export default function PrecepteurCoursePage() {
     );
   }
 
-  // Atelier d'analyse (brique A2) : injecte les dispositifs déterministes
-  // (surlignage / encadré / résumé encadré) selon le texte des leçons. Non destructif
-  // (croquis/atelier conservés). null reste null → l'écran vide ci-dessous fonctionne.
+  // Juge de conformité (brique C) : garantit l'uniformité — injecte les dispositifs
+  // déterministes (surlignage / encadré / résumé, comme A2), dédoublonne, sécurise les
+  // croquis (anti-crash) et réordonne au contrat canonique (beat-aware). Non destructif ;
+  // les manques LLM (croquis/atelier/image) sont flaggés, jamais inventés. null reste null.
   const rawCourse = masterclassId ? remoteCourse : localCourse;
-  const course = rawCourse ? enrichCourseWithDevices(rawCourse) : null;
+  const course = rawCourse ? conformCourseSync(rawCourse).course : null;
 
   // MODE B — aucune source localStorage exploitable → écran vide explicite (inchangé).
   if (!course) {

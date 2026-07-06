@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
-import { motion } from 'framer-motion';
-import { GraduationCap, Volume2, Play, RotateCcw, Check, PenLine } from 'lucide-react';
+import { motion, useReducedMotion } from 'framer-motion';
+import { GraduationCap, Volume2, VolumeX, Play, RotateCcw, Check, PenLine } from 'lucide-react';
 import {
   Handwriting, speakText, cancelSpeech, canSpeak, estSpeechMs, primeSpeech,
   setPreferredVoiceURI, listFrVoices, setSpeakRate,
@@ -12,7 +12,9 @@ import AtelierPrompt from '@/components/school/course-builder/AtelierPrompt';
 import { supabase } from '@/lib/supabaseCompat';
 import { invokeGenerateVisualImage } from '@/features/smartboard-konva-editor/lib/designerIaImageHistory';
 import { CANONICAL_COURSE } from './precepteurCanonicalCourse';
-import { enrichCourseWithDevices } from '@/lib/precepteur/enrichCourseWithDevices';
+import { conformCourseSync } from '@/lib/precepteur/conformCourse';
+import { createPrecepteurSfx, SCENE_SFX } from '@/lib/precepteur/precepteurSfx';
+import { EXPO, sceneVariants, kenBurnsBoardZoom } from '@/lib/precepteur/precepteurMotion';
 import { masterclassProjectToPrecepteurCourse } from '@/lib/precepteur/fromMasterclass';
 
 // Clé localStorage : un MasterclassProject déposé ici est transformé et joué à la
@@ -131,7 +133,7 @@ const imgCacheKey = (prompt) => {
  * croquis vectoriel tracé main (balayage) → atelier nominatif (saisie) → analogie animée.
  */
 
-const EXPO = [0.16, 1, 0.3, 1];
+// EXPO + variantes de transition + zoom : source unique dans lib/precepteur/precepteurMotion.js.
 
 function Board({ children, className = '' }) {
   return (
@@ -182,6 +184,18 @@ export function PrecepteurPlayer({ course }) {
   const serverTts = ['openai', 'elevenlabs', 'mistral'].includes(voiceChoice) ? voiceChoice : null;
   const useServerVoice = !!serverTts;
   const [connected, setConnected] = useState(false); // session présente ? (pour les voix premium)
+
+  // ── SFX (brique D) : effets sensoriels synthétisés (Web Audio), muteables, débloqués
+  //    dans le geste utilisateur. Instance stable ; fail-safe headless (no-op).
+  const sfx = useMemo(() => createPrecepteurSfx(), []);
+  const [sfxMuted, setSfxMuted] = useState(() => {
+    try { return window.localStorage.getItem('precepteur_sfx_muted') === '1'; } catch { return false; }
+  });
+  useEffect(() => {
+    sfx.setMuted(sfxMuted);
+    try { window.localStorage.setItem('precepteur_sfx_muted', sfxMuted ? '1' : '0'); } catch { /* */ }
+  }, [sfx, sfxMuted]);
+  const reducedMotion = useReducedMotion(); // transitions/zoom respectent prefers-reduced-motion
 
   // Détecte la session (les voix premium OpenAI/ElevenLabs/Mistral l'exigent).
   useEffect(() => {
@@ -322,9 +336,22 @@ export function PrecepteurPlayer({ course }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [idx, started, done, narrAudio[idx], ttsFailed, useServerVoice]);
 
+  // SFX de scène (brique D) : joue l'effet sonore mappé à l'APPARITION de chaque scène.
+  // Fire-and-forget, bas volume, indépendant de la cadence voix → n'affecte PAS l'avance.
+  useEffect(() => {
+    if (!started || done) return;
+    const s = scenes[idx];
+    const name = s && SCENE_SFX[s.type];
+    if (name) sfx.play(name);
+  }, [idx, started, done, scenes, sfx]);
+  // Petite fanfare à la fin du cours.
+  useEffect(() => { if (started && done) sfx.play('success'); }, [started, done, sfx]);
+
   // débloque l'audio DANS le geste (sinon les navigateurs muettent <audio> et la synthèse)
   const begin = () => {
     primeSpeech();
+    sfx.unlock();
+    sfx.play('start'); // lever de rideau (dans le geste utilisateur)
     try { const a = new Audio('data:audio/mp3;base64,SUQzBAAAAAAAI1RTU0UAAAAPAAADTGF2ZjU4Ljc2LjEwMAAAAAAAAAAAAAAA//tQxAADB8AhSmxhIIEVCSiJrDCQBTcu3UrAIwUdkRgQbFAZC1CQEwTJ9mjRvBA4UOLD8nKVOWfh+UlK3z/177OXrfOdKl7pyn3Xf//WreyTEFNRTMuOTkuNVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVV'); a.volume = 0; void a.play().catch(() => {}); } catch { /* */ }
     setStarted(true);
   };
@@ -513,16 +540,27 @@ export function PrecepteurPlayer({ course }) {
     );
   };
 
-  const strong = sc && sc.type === 'image_analogie';
   const wide = sc && (sc.type === 'croquis' || sc.type === 'image_analogie');
+  const sceneAnim = sceneVariants(sc && sc.type, reducedMotion);
 
   return (
     <div className="flex min-h-screen flex-col bg-[#0b0f17] px-4 py-6 md:py-8" style={{ '--school-accent': '#d4a36a' }}>
       <div className={`mx-auto flex w-full flex-1 flex-col transition-[max-width] duration-500 ${wide ? 'max-w-6xl' : 'max-w-4xl'}`}>
         {/* En-tête */}
-        <div className="mb-2 flex items-center justify-center gap-2 text-amber-400/90">
+        <div className="relative mb-2 flex items-center justify-center gap-2 text-amber-400/90">
           <GraduationCap className="h-5 w-5" />
           <span className="text-[11px] font-bold uppercase tracking-[0.2em]">Le Précepteur · cours enseigné</span>
+          {started ? (
+            <button
+              type="button"
+              onClick={() => setSfxMuted((m) => !m)}
+              title={sfxMuted ? 'Activer les effets sonores' : 'Couper les effets sonores'}
+              aria-label={sfxMuted ? 'Activer les effets sonores' : 'Couper les effets sonores'}
+              className="absolute right-0 top-1/2 -translate-y-1/2 rounded-full p-1.5 text-white/40 transition-colors hover:text-white/80"
+            >
+              {sfxMuted ? <VolumeX className="h-4 w-4" /> : <Volume2 className="h-4 w-4" />}
+            </button>
+          ) : null}
         </div>
 
         {/* Indicateur de voix (diagnostic) */}
@@ -670,12 +708,18 @@ export function PrecepteurPlayer({ course }) {
           ) : (
             <motion.div
               key={idx}
-              initial={{ x: strong ? '55%' : '7%', opacity: 0, filter: 'blur(3px)' }}
-              animate={{ x: 0, opacity: 1, filter: 'blur(0px)' }}
-              transition={{ duration: strong ? 0.6 : 0.45, ease: EXPO }}
+              initial={sceneAnim.initial}
+              animate={sceneAnim.animate}
+              transition={sceneAnim.transition}
               className="flex w-full justify-center"
             >
-              {renderScene(sc)}
+              {/* Zoom immersif (brique D) : léger push-in ambiant, réinitialisé par scène (key). */}
+              <motion.div
+                {...kenBurnsBoardZoom(reducedMotion)}
+                className="flex w-full justify-center"
+              >
+                {renderScene(sc)}
+              </motion.div>
             </motion.div>
           )}
         </div>
@@ -695,6 +739,8 @@ export function PrecepteurPlayer({ course }) {
  * sinon on garde le cours canonique figé (fallback, démo intacte). Lu UNE fois au montage.
  */
 export default function PrecepteurDemoPage() {
-  const course = useMemo(() => enrichCourseWithDevices(loadCourseFromStorage() || CANONICAL_COURSE), []);
+  // Juge de conformité (brique C) : mêmes dispositifs que A2 + dédup + anti-crash croquis
+  // + réordonnancement canonique beat-aware. Déterministe/synchrone → sûr en useMemo.
+  const course = useMemo(() => conformCourseSync(loadCourseFromStorage() || CANONICAL_COURSE).course, []);
   return <PrecepteurPlayer course={course} />;
 }
