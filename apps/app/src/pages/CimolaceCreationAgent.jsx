@@ -1440,7 +1440,7 @@ export default function CimolaceCreationAgent({ tenantSlug: tenantSlugProp = nul
           </button>
 
           {/* ACCUEIL (avant interaction) : les intentions VNP (cartographie du site) */}
-          {!engaged && (vnpGraph ? vnpGraph.accueil.filter((a) => a.intent !== 'visiter') : []).slice(0, 5).map((a) => {
+          {!engaged && (vnpGraph ? vnpGraph.accueil.filter((a) => a.intent !== 'visiter') : []).slice(0, 6).map((a) => {
             const Icon = chipIconFor(a.label);
             return (
               <button key={a.label} className="cca-chip" style={VNP_NAV_CHIP}
@@ -1463,8 +1463,8 @@ export default function CimolaceCreationAgent({ tenantSlug: tenantSlugProp = nul
             );
           })}
 
-          {/* ACTION ENGINE (après interaction) : actions métier disponibles sur le sujet courant */}
-          {engaged && vnpActs.map((act) => {
+          {/* ACTION ENGINE (après interaction) : actions métier disponibles (hors navigation pure) */}
+          {engaged && vnpActs.filter((act) => !['comprendre', 'decouvrir'].includes(act)).map((act) => {
             const m = VNP_ACTION_META[act];
             if (!m) return null;
             return (

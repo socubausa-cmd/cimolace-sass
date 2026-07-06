@@ -103,6 +103,8 @@ function runAction(action: string, platformName: string, payload: any) {
         next: { kind: 'checkout', target: label || '' } });
     case 'telecharger':
       return json({ ok: true, message: `La ressource${label ? ` « ${label} »` : ''} arrive.`, next: { kind: 'download', target: label || '' } });
+    case 'comparer':
+      return json({ ok: true, message: `Comparons les forfaits de ${platformName} pour trouver celui qui vous correspond.`, next: { kind: 'compare', target: 'produits' } });
     default:
       return json({ ok: true, message: `On avance sur ${platformName}.`, next: { kind: 'navigate' } });
   }
