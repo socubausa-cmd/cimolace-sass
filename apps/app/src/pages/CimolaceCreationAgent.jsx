@@ -113,6 +113,12 @@ function getOsRealmSlug(propSlug) {
   return null;
 }
 
+// Fallback anti-flash + robustesse CORS : l'API branding bloque les origines vercel.app en preview
+// (le fetch réel confirme/affine en prod). Garantit nom + logo immédiats pour les tenants connus.
+const OS_REALM_FALLBACK = {
+  isna: { name: 'Prorascience', logo: '/logos/isna-logo.png' },
+};
+
 const SUGG = [
   { kind: 'school', label: 'École / cours en ligne', Icon: GraduationCap },
   { kind: 'medos', label: 'Clinique / santé', Icon: Stethoscope },
@@ -538,7 +544,7 @@ export default function CimolaceCreationAgent({ tenantSlug: tenantSlugProp = nul
   // du tunnel de création Cimolace. isTenantRealm gate tout le flux « créer une org Cimolace ».
   const osTenant = getOsRealmSlug(tenantSlugProp);
   const isTenantRealm = !!osTenant;
-  const [osBrand, setOsBrand] = useState(null); // { name, logo }
+  const [osBrand, setOsBrand] = useState(() => (osTenant ? (OS_REALM_FALLBACK[osTenant] || { name: osTenant, logo: '' }) : null)); // { name, logo }
   useEffect(() => {
     if (!osTenant) return undefined;
     let alive = true;
