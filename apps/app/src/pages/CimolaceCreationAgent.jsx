@@ -17,7 +17,7 @@
  */
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { GraduationCap, Stethoscope, ShoppingBag, ArrowUp, ArrowRight, ArrowLeft, Check, Loader2, Mail, Lock, Volume2, VolumeX, Sparkles, SkipForward, X } from 'lucide-react';
+import { GraduationCap, Stethoscope, ShoppingBag, ArrowUp, ArrowRight, ArrowLeft, Check, Loader2, Mail, Lock, Volume2, VolumeX, Sparkles, SkipForward, X, Compass } from 'lucide-react';
 import { getApiBaseUrl } from '@/lib/apiBase';
 import { useAuth } from '@/hooks/useAuth';
 import { authStore } from '@/lib/auth-store';
@@ -25,7 +25,7 @@ import { supabase } from '@/lib/supabase';
 import { BG, BG_THINK, INK, TERRA, GOLD, SERIF, STYLE } from '@/lib/agent/immersiveTheme';
 import Presence from '@/components/agent/Presence';
 import { CIMOLACE_LESSONS } from '@/lib/agent/cimolaceLessons';
-import { OS_KNOWLEDGE, prorascienceKnowledgeText } from '@/lib/agent/prorascienceKnowledge';
+import { OS_KNOWLEDGE, prorascienceKnowledgeText, buildTenantTour } from '@/lib/agent/prorascienceKnowledge';
 
 // Cimolace EST le moteur de rendu (l'OS) : il consomme le CONTENU de cours du Précepteur
 // (données JSON : leçons narrées + atelier) et le rend NATIVEMENT dans sa coque — voix serif
@@ -776,8 +776,9 @@ export default function CimolaceCreationAgent({ tenantSlug: tenantSlugProp = nul
     const t = tourRef.current;
     if (!t) return;
     if (i >= t.beats.length) { // dépassé la fin → décision
-      setCovered((prev) => Array.from(new Set([...prev, 'prix'])));
       setPresence('attente');
+      if (t.tenant) { setStep('brain'); stopTour(); return; } // realm tenant : retour au guide (pas de tunnel Cimolace)
+      setCovered((prev) => Array.from(new Set([...prev, 'prix'])));
       setStep('product');
       stopTour();
       return;
@@ -795,7 +796,8 @@ export default function CimolaceCreationAgent({ tenantSlug: tenantSlugProp = nul
     enterScene(normalizeScene(beat.scene), () => speak(beat.reply, () => {
       if (tourGenRef.current !== gen) return;
       if (beat.final) {
-        // fin : retour à la base + on éclaire la décision (CTA « Lancer … »)
+        // fin : retour à la base. Realm tenant → présence-guide ; Cimolace → décision (CTA « Lancer … »)
+        if (t.tenant) { setPresence('attente'); setStep('brain'); tourRef.current = null; setTourActive(false); return; }
         setCovered((prev) => Array.from(new Set([...prev, 'prix'])));
         setStep('product');
         tourRef.current = null;
@@ -817,6 +819,20 @@ export default function CimolaceCreationAgent({ tenantSlug: tenantSlugProp = nul
     runBeat(gen, 0);
   }, [stopTour, runBeat]);
 
+  // P4-pixel — visite guidée du TENANT (beats construits depuis son knowledge pack). Même
+  // moteur de scènes que le tour Cimolace, mais drapeau `tenant` = pas de tunnel de vente Cimolace.
+  const startTenantTour = useCallback(() => {
+    if (!osTenant) return;
+    stopTour();
+    const beats = buildTenantTour(OS_KNOWLEDGE[osTenant] || undefined, (osBrand && osBrand.name) || osTenant);
+    if (!beats || !beats.length) return;
+    const gen = ++tourGenRef.current;
+    tourRef.current = { kind: 'tenant', beats, gen, idx: 0, tenant: true };
+    setError('');
+    setTourActive(true); setTourIdx(0);
+    runBeat(gen, 0);
+  }, [osTenant, osBrand, stopTour, runBeat]);
+
   const skipBeat = useCallback(() => {
     const t = tourRef.current;
     if (!t) return;
@@ -828,10 +844,10 @@ export default function CimolaceCreationAgent({ tenantSlug: tenantSlugProp = nul
   const endTour = useCallback(() => {
     stopTour();
     genRef.current += 1;
-    setStep('product');
+    setStep(isTenantRealm ? 'brain' : 'product'); // realm tenant → retour au guide, jamais le tunnel Cimolace
     setTopic(null);
     exitScene();
-  }, [stopTour, exitScene]);
+  }, [stopTour, exitScene, isTenantRealm]);
 
   const openInput = useCallback((prefill = '') => {
     setInputOpen(true);
@@ -1155,7 +1171,7 @@ export default function CimolaceCreationAgent({ tenantSlug: tenantSlugProp = nul
   // Scène plein écran (split/reader/tutorial) : la voix centrale + actions en flux s'effacent,
   // la scène porte le message ; `aside` garde la voix au centre.
   const fullscreenScene = !!scene && scene.type !== 'aside';
-  const tourTotal = tourActive ? (TOUR[chosen] || []).length : 0; // pour les points de progression
+  const tourTotal = tourActive ? ((tourRef.current && tourRef.current.beats.length) || (TOUR[chosen] || []).length) : 0; // points de progression (tenant ou Cimolace)
 
   return (
     <div
@@ -1178,7 +1194,8 @@ export default function CimolaceCreationAgent({ tenantSlug: tenantSlugProp = nul
       {/* L6 — Scène « réalisée » par l'IA : composition de toute la surface (fond, sous la voix) */}
       {scene && (step === 'brain' || step === 'product') && (
         <SceneStage scene={scene} visible={sceneVisible} readerIdx={readerIdx} setReaderIdx={setReaderIdx}
-          onSuggest={brain} onCta={chooseProduct} hooks={brainHooks} onHook={brain} />
+          onSuggest={isTenantRealm ? tenantBrain : brain} onCta={isTenantRealm ? tenantBrain : chooseProduct}
+          hooks={isTenantRealm ? [] : brainHooks} onHook={isTenantRealm ? tenantBrain : brain} />
       )}
 
       {/* Identité du realm (où on est) : logo + nom de la plateforme pour un tenant, sinon Cimolace */}
@@ -1266,11 +1283,15 @@ export default function CimolaceCreationAgent({ tenantSlug: tenantSlugProp = nul
         <p className="cca-in" style={{ marginTop: 10, fontSize: 12.5, color: '#f0997b' }}>{error}</p>
       )}
 
-      {/* Realm tenant : suggestions branchées sur le cerveau du tenant (guide le visiteur) */}
-      {showActions && isTenantRealm && (
+      {/* Realm tenant : « Visiter » (l'OS REND le site en scènes) + suggestions branchées sur le cerveau du tenant */}
+      {showActions && isTenantRealm && !tourActive && (
         <div className="cca-in" style={{ display: 'flex', flexWrap: 'wrap', gap: 9, justifyContent: 'center', marginTop: 18, maxWidth: 520, position: 'relative', zIndex: 4 }}>
+          <span className="cca-chip" onClick={(e) => { e.stopPropagation(); startTenantTour(); }}
+            style={{ display: 'inline-flex', alignItems: 'center', gap: 7, fontSize: 13, fontWeight: 600, color: '#1a1613', background: TERRA, borderRadius: 999, padding: '8px 16px' }}>
+            <Compass size={15} /> Fais-moi visiter
+          </span>
           {[...((OS_KNOWLEDGE[osTenant] && OS_KNOWLEDGE[osTenant].faq) || []).map((f) => f.q).slice(0, 2), 'Qui est le fondateur ?', 'Vos forfaits ?']
-            .filter(Boolean).slice(0, 4).map((q) => (
+            .filter(Boolean).slice(0, 3).map((q) => (
               <span key={q} className="cca-chip" onClick={(e) => { e.stopPropagation(); tenantBrain(q); }}
                 style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 13, color: GOLD, background: 'rgba(244,239,230,.05)', borderRadius: 999, padding: '8px 15px' }}>{q}</span>
             ))}
@@ -1297,7 +1318,7 @@ export default function CimolaceCreationAgent({ tenantSlug: tenantSlugProp = nul
         </div>
       )}
 
-      {showActions && step === 'product' && !fullscreenScene && !tourActive && !lessonActive && (
+      {showActions && step === 'product' && !isTenantRealm && !fullscreenScene && !tourActive && !lessonActive && (
         <div className="cca-in" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 12, marginTop: 16, position: 'relative', zIndex: 4 }}>
           {brainHooks.length > 0 && (
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: 7, justifyContent: 'center', maxWidth: 470 }}>
@@ -1332,7 +1353,7 @@ export default function CimolaceCreationAgent({ tenantSlug: tenantSlugProp = nul
         </div>
       )}
 
-      {showActions && step === 'brain' && !fullscreenScene && !tourActive && !lessonActive && (
+      {showActions && step === 'brain' && !isTenantRealm && !fullscreenScene && !tourActive && !lessonActive && (
         <div className="cca-in" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 12, marginTop: 16, position: 'relative', zIndex: 4 }}>
           {(covered.length >= 3 || covered.includes('prix')) && (
             <button className="cca-chip" onClick={(e) => { e.stopPropagation(); chooseProduct(); }}

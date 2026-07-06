@@ -91,5 +91,96 @@ export function prorascienceKnowledgeText(k = PRORASCIENCE_KNOWLEDGE) {
   return lines.join('\n');
 }
 
+// ── P4-pixel — « Fais-moi visiter » : l'OS REND le site du tenant en scènes (pas juste du chat).
+// Construit une visite guidée (beats compatibles TOUR/SceneStage de l'OS) À PARTIR du knowledge
+// pack — 100% piloté par les données, donc réutilisable pour n'importe quel tenant. Chaque beat =
+// { reply (voix), keyword (surligné), scene? (split/aside/tutorial/reader), final? }. Les scènes
+// respectent normalizeScene (aside: label+value requis ; split: 2 paliers ≥2 points ; reader: profile+body).
+export function buildTenantTour(k = PRORASCIENCE_KNOWLEDGE, brandName) {
+  const name = brandName || k.identity.name;
+  const pillars = k.vision.pillars || [];
+  const beats = [];
+
+  // 1 — La vision : le constat vs la promesse (split).
+  beats.push({
+    reply: `Bienvenue sur ${name}. Tout part d'un constat simple : on vous a appris quoi faire, jamais pourquoi.`,
+    keyword: 'jamais pourquoi',
+    scene: {
+      type: 'split', headline: name,
+      left: { title: 'Le constat', subtitle: 'Le problème', points: ['On reproduit les gestes', 'On répète les traditions', 'La compréhension manque'] },
+      right: { title: 'La promesse', subtitle: name, points: ['Comprendre en profondeur', 'Maîtriser vraiment', 'Puis évoluer'] },
+      tone: { left: 'terra', right: 'gold' },
+    },
+  });
+
+  // 2 — Les trois piliers (aside).
+  if (pillars.length >= 2) {
+    beats.push({
+      reply: `Tout repose sur trois piliers : la Raison, la Science, et les Savoirs Africains.`,
+      keyword: 'trois piliers',
+      scene: {
+        type: 'aside', side: 'right', title: 'Les trois piliers',
+        items: pillars.slice(0, 4).map((p) => ({ label: p.title, value: (p.points && p.points[0]) || '—', note: (p.points || []).slice(1, 3).join(' · ') || undefined })),
+      },
+    });
+  }
+
+  // 3 — La méthode, un chemin en 4 temps (tutorial, sans CTA Cimolace).
+  if ((k.method || []).length) {
+    beats.push({
+      reply: `La méthode est un chemin : comprendre, pratiquer, exercer, puis évoluer.`,
+      keyword: 'un chemin',
+      scene: {
+        type: 'tutorial', title: 'La méthode, 4 temps',
+        steps: k.method.slice(0, 5).map((m) => ({ title: m.step, detail: `${m.kind ? m.kind + ' — ' : ''}${(m.items || []).join(', ')}` })),
+      },
+    });
+  }
+
+  // 4 — Les forfaits (aside) — labels courts + prix, palier phare surligné.
+  if ((k.offers || []).length) {
+    const shortLabel = (nm) => nm.replace('Consultation privée', 'Consultation').replace('Mentorat Souverain / Privilégié', 'Mentorat').slice(0, 24);
+    const items = k.offers.slice(0, 5)
+      .filter((o) => !/autonome/i.test(o.name)) // 4 items max côté aside ; on garde les paliers phares
+      .slice(0, 4)
+      .map((o) => ({ label: shortLabel(o.name), value: `${o.price}${o.suffix || ''}`, note: o.desc && o.desc.slice(0, 80) }));
+    const popular = k.offers.find((o) => o.popular);
+    beats.push({
+      reply: `Côté parcours, il y a un forfait pour chaque intention — de la consultation au mentorat.`,
+      keyword: 'chaque intention',
+      scene: { type: 'aside', side: 'right', title: 'Les forfaits', items, highlight: popular ? shortLabel(popular.name) : undefined },
+    });
+  }
+
+  // 5 — Le fondateur (reader).
+  if (k.founder && k.founder.name) {
+    beats.push({
+      reply: `Et tout cela porte une signature : celle du fondateur, ${k.founder.name}.`,
+      keyword: k.founder.name,
+      scene: {
+        type: 'reader', title: 'Le fondateur',
+        profile: {
+          name: k.founder.name, role: k.founder.title, avatarSeed: k.founder.name,
+          facts: [{ k: 'Rôle', v: 'Recteur de l’ISNA' }, { k: 'Mandat', v: 'Restaurer la dignité par la connaissance' }],
+        },
+        body: [
+          { h: 'Sa vision', p: k.founder.bio },
+          { h: 'Son mandat', p: k.vision.closing },
+        ],
+        suggestions: ['Vos forfaits ?', 'La méthode ?'],
+      },
+    });
+  }
+
+  // 6 — Final : retour à la présence-guide (pas de CTA Cimolace).
+  beats.push({
+    reply: `Voilà ${name} en un souffle. Dites-moi ce que vous voulez approfondir — je connais tout ce site.`,
+    keyword: 'je connais tout',
+    final: true,
+  });
+
+  return beats;
+}
+
 // Table (extensible) : slug tenant → knowledge pack. Pour l'instant seul isna/prorascience.
 export const OS_KNOWLEDGE = { isna: PRORASCIENCE_KNOWLEDGE };
