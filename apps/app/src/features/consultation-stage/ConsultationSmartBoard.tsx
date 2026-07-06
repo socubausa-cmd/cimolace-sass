@@ -160,8 +160,6 @@ export default function ConsultationSmartBoard({
   // Mode APERÇU (C) : le praticien replie le cockpit + le cadre pour voir le
   // tableau propre, comme le patient. Local (n'affecte pas le patient).
   const [preview, setPreview] = useState(false);
-  // « Avancé » : révèle le grand rail d'origine (tous les outils niche + NeuroInk).
-  const [advancedOpen, setAdvancedOpen] = useState(false);
   // Réserve HAUTE pour la barre d'outils en en-tête (partie B) : le tableau utile
   // côté hôte = tout SAUF cette bande haute (où vit la barre, non-dessinable).
   const TOOLBAR_RESERVED_TOP = 56;
@@ -224,10 +222,9 @@ export default function ConsultationSmartBoard({
           sceneDockPlacement="right"
           // Par défaut : rail outils VISIBLE (sinon le praticien n'aurait aucun
           // outil de dessin — cf. doc du prop).
-          // Le grand rail d'outils est REMPLACÉ par le cockpit compact groupé
-          // (ci-dessous) côté praticien → masqué par défaut ; RÉVÉLÉ quand le
-          // praticien active « Avancé » (accès à TOUS les outils niche + NeuroInk).
-          hideEmbeddedWhiteboardToolsRail={hideEmbeddedWhiteboardToolsRail || (!readOnly && !advancedOpen)}
+          // Le grand rail d'outils est REMPLACÉ par la barre d'en-tête + rails
+          // contextuels + palette « Plus » (ci-dessous) côté praticien → masqué ici.
+          hideEmbeddedWhiteboardToolsRail={hideEmbeddedWhiteboardToolsRail || !readOnly}
           hideSceneDock={hideSceneDock}
           onSceneChange={onSceneChange}
         />
@@ -255,12 +252,7 @@ export default function ConsultationSmartBoard({
       {/* A + C — Cockpit d'outils groupés (praticien) : familles → rail overlay
           compact + bouton Aperçu. Remplace le grand rail surchargé. */}
       {!readOnly ? (
-        <ConsultationToolCockpit
-          preview={preview}
-          onPreviewChange={setPreview}
-          advancedOpen={advancedOpen}
-          onAdvancedChange={setAdvancedOpen}
-        />
+        <ConsultationToolCockpit preview={preview} onPreviewChange={setPreview} />
       ) : null}
     </div>
   );
