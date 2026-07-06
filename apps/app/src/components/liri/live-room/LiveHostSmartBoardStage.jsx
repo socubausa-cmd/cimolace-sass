@@ -58,6 +58,7 @@ const LiveHostSmartBoardStage = forwardRef(function LiveHostSmartBoardStage(
      * Hôte LiveHost : masque le rail outils flottant sur le canevas — le parent l'affiche dans la colonne droite.
      */
     hideEmbeddedWhiteboardToolsRail = false,
+    showNeuroInk = false,
     /**
      * Sync pagination + traits page active vers le rail parent (ex. `LiveWhiteboardToolsSidebar` hors compositeur).
      */
@@ -1100,6 +1101,7 @@ const LiveHostSmartBoardStage = forwardRef(function LiveHostSmartBoardStage(
         onSecureAppShareStateChange={viewerMode ? undefined : onSecureAppShareStateChange}
         hideSceneIndexChip={viewerMode || sceneDockPlacement === 'footer'}
         hideEmbeddedWhiteboardToolsRail={hideEmbeddedWhiteboardToolsRail}
+        showNeuroInk={showNeuroInk}
       />
     </div>
   );

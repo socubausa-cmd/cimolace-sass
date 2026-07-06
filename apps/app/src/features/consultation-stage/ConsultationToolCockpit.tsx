@@ -22,7 +22,7 @@ import {
   BarChart3, PieChart, LineChart, ScatterChart, Table2, Sigma, Divide, Network,
   FlipHorizontal2, RotateCw, Scaling,
   Image as ImageIcon, LayoutTemplate, ChevronDown, X, Search,
-  Undo2, Redo2, Trash2, Eye, LayoutGrid, PaintBucket, Zap, EyeOff,
+  Undo2, Redo2, Trash2, Eye, LayoutGrid, PaintBucket, Zap, EyeOff, Sparkles,
 } from 'lucide-react';
 import { useLiveWhiteboardStore } from '@/components/liri/live-room/useLiveWhiteboardStore';
 
@@ -142,6 +142,8 @@ export default function ConsultationToolCockpit({
   const undoBoard = useLiveWhiteboardStore((s) => s.undoBoard);
   const redoBoard = useLiveWhiteboardStore((s) => s.redoBoard);
   const clearBoard = useLiveWhiteboardStore((s) => s.clearBoard);
+  const neuroInkOpen = useLiveWhiteboardStore((s) => s.neuroInkOpen);
+  const setNeuroInkOpen = useLiveWhiteboardStore((s) => s.setNeuroInkOpen);
 
   const [sideGroup, setSideGroup] = useState<string | null>(null);
   const [menu, setMenu] = useState<string | null>(null); // 'color' | 'size' | 'fond'
@@ -288,6 +290,9 @@ export default function ConsultationToolCockpit({
           </button>
         ))}
         {divider}
+        <button type="button" title="NeuroInk — assistant IA du tableau (décrire, structurer, embellir)" onClick={() => setNeuroInkOpen?.(!neuroInkOpen)} style={chip(neuroInkOpen)}>
+          <Sparkles size={15} aria-hidden="true" /> IA
+        </button>
         <button type="button" title="Aperçu — voir le tableau comme le patient" onClick={() => onPreviewChange?.(true)} style={chip(false)}>
           <Eye size={15} aria-hidden="true" /> Aperçu
         </button>

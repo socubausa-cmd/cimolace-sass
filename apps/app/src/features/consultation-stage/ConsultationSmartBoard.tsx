@@ -227,6 +227,7 @@ export default function ConsultationSmartBoard({
           hideEmbeddedWhiteboardToolsRail={hideEmbeddedWhiteboardToolsRail || !readOnly}
           hideSceneDock={hideSceneDock}
           onSceneChange={onSceneChange}
+          showNeuroInk={!readOnly}
         />
       </Suspense>
       {/* B — Cadre « zone vue par le patient » : l'aire de travail utile côté

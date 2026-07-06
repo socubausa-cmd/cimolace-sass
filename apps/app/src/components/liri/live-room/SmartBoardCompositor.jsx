@@ -5340,6 +5340,9 @@ export default function SmartBoardCompositor({
    * LiveHost (SmartBoard stage seul) : laisser à false pour monter le rail ici.
    */
   hideEmbeddedWhiteboardToolsRail = false,
+  // Consultation MEDOS : active le panneau NeuroInk (IA tableau) piloté par le
+  // bouton IA du cockpit (via le flag store `neuroInkOpen`), même hors footer dock.
+  showNeuroInk = false,
   /** Pagination tableau blanc : plusieurs « écrans » de dessin (sync côté parent). */
   whiteboardPageIndex = 0,
   whiteboardPageCount = 1,
@@ -6132,7 +6135,7 @@ export default function SmartBoardCompositor({
         </TooltipProvider>
       ) : null}
 
-      {useFooterSceneDock && currentScene === 'board' && !readOnlySceneNavigator ? (
+      {(useFooterSceneDock || (showNeuroInk && neuroInkOpen)) && currentScene === 'board' && !readOnlySceneNavigator ? (
         <div
           className={cn(
             'pointer-events-auto absolute top-1/2 z-[52] w-[min(13.5rem,38vw)] max-h-[min(78vh,520px)] -translate-y-1/2 overflow-y-auto overflow-x-hidden rounded-2xl border border-white/[0.09] bg-[#1f1e1c]/94 p-2 shadow-[inset_0_1px_0_rgba(255,255,255,0.05),0_16px_48px_-16px_rgba(0,0,0,0.65)] backdrop-blur-xl ring-1 ring-inset ring-white/[0.03]',
