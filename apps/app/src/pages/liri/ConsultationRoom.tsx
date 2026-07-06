@@ -61,6 +61,8 @@ import { HostCaptionToggle, ParticipantCaptions } from '@/features/consultation-
 import { BackgroundBlur, VirtualBackground, supportsBackgroundProcessors } from '@livekit/track-processors';
 import { useLiveHostWaitingRoom } from '@/features/live/hooks/useLiveHostWaitingRoom';
 import { supabase } from '@/lib/customSupabaseClient';
+import { getStorefront } from '@/features/medos-cockpit/cockpit-api';
+import { authStore } from '@/lib/auth-store';
 
 // Shell visuel ALIGNÉ SUR LE PORTAIL LIRI (cf. liveHostTheme `LH_DESIGN`) : base
 // chaude #262624 + halos coral, panneaux frostés, accent AMBRE #d4a36a — fini le
@@ -1532,8 +1534,21 @@ export function ConsultationStage({
     if (!isHost) return undefined;
     let alive = true;
     (async () => {
+      const slug = new URLSearchParams(window.location.search).get('tenant');
+      if (slug) authStore.setTenantSlug?.(slug);
       try {
-        const slug = new URLSearchParams(window.location.search).get('tenant');
+        // Source PRINCIPALE = catalogue LIVE de la boutique du tenant (vrais
+        // produits + photos + liens d'achat Stripe), déjà implémenté et prouvé
+        // (cockpit-api.getStorefront : lit la config __storefront__<slug> puis le
+        // vrai Supabase du site tenant). ShopProduct = déjà la forme du board.
+        const { products } = await getStorefront();
+        if (alive && Array.isArray(products) && products.length) {
+          setShopProducts(products);
+          return;
+        }
+      } catch { /* catalogue indisponible → repli ci-dessous */ }
+      try {
+        // Repli : produits mbolo (API Cimolace) si pas de catalogue storefront.
         if (!slug) return;
         const { data: { session } } = await supabase.auth.getSession();
         const token = session?.access_token;
