@@ -68,7 +68,7 @@ function loadExportedCourse() {
 // Écran plein sombre partagé (chargement / vide / introuvable) — reprend le style de l'écran vide.
 function PrecepteurScreen({ children }) {
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center bg-[#0b0f17] px-6 text-center">
+    <div className="fixed inset-0 z-[4000] flex flex-col items-center justify-center bg-[#262624] px-6 text-center">
       <div className="mb-4 flex items-center gap-2 text-amber-400/90">
         <GraduationCap className="h-6 w-6" />
         <span className="text-[11px] font-bold uppercase tracking-[0.2em]">Le Précepteur · cours numérique</span>
