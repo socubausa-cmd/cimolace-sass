@@ -203,7 +203,7 @@ export default function FormationStage({ course }) {
     <div
       onClick={(e) => { if (e.target === e.currentTarget && !inputOpen) openInput(); }}
       style={{
-        position: 'relative', minHeight: '100vh', overflow: 'hidden',
+        position: 'fixed', inset: 0, zIndex: 4000, overflow: 'hidden',
         background: `radial-gradient(1200px 720px at 50% -6%, #2c2b28, ${BG})`,
         fontFamily: "'Inter', system-ui, sans-serif", cursor: inputOpen ? 'default' : 'text',
         display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '0 22px',
@@ -269,6 +269,10 @@ export default function FormationStage({ course }) {
       {done && (
         <p className="cca-in" style={{ fontFamily: SERIF, fontSize: 15, color: 'rgba(244,239,230,.5)', marginTop: 10 }}>Cours terminé. Reste avec moi — pose-moi une question.</p>
       )}
+
+      {/* Sortie discrète (on couvre le chrome de l'app → il faut pouvoir quitter) */}
+      <button onClick={(e) => { e.stopPropagation(); if (window.history.length > 1) window.history.back(); else window.location.assign('/'); }} aria-label="Quitter"
+        style={{ position: 'absolute', top: 15, left: 16, background: 'transparent', border: 'none', color: 'rgba(244,239,230,.4)', cursor: 'pointer', fontSize: 18, lineHeight: 1, zIndex: 21 }}>✕</button>
 
       {/* Mute */}
       <button onClick={(e) => { e.stopPropagation(); setMuted((m) => !m); }} aria-label={muted ? 'Activer le son' : 'Couper le son'}
