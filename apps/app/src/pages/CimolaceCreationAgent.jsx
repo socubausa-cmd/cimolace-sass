@@ -17,7 +17,7 @@
  */
 import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { GraduationCap, Stethoscope, ShoppingBag, ArrowUp, ArrowRight, ArrowLeft, Check, Loader2, Mail, Lock, Volume2, VolumeX, Sparkles, SkipForward, X, Compass, BookOpen, Users, Tag, UserPlus, Calendar, Download, Scale } from 'lucide-react';
+import { GraduationCap, Stethoscope, ShoppingBag, ArrowUp, ArrowRight, ArrowLeft, Check, Loader2, Mail, Lock, Volume2, VolumeX, Sparkles, SkipForward, X, Compass, BookOpen, Users, Tag, UserPlus, Calendar, Download, Scale, Send } from 'lucide-react';
 import { getApiBaseUrl } from '@/lib/apiBase';
 import { useAuth } from '@/hooks/useAuth';
 import { authStore } from '@/lib/auth-store';
@@ -116,6 +116,7 @@ const VNP_NAV_CHIP = { ...VNP_CHIP_BASE, color: 'rgba(244,239,230,.9)', backgrou
 const VNP_ACTION_CHIP = { ...VNP_CHIP_BASE, color: INK, background: 'rgba(217,119,87,.15)', border: '1px solid rgba(217,119,87,.5)' };
 const VNP_VISIT_CHIP = { ...VNP_CHIP_BASE, fontWeight: 600, color: '#231208', background: TERRA, border: '1px solid transparent' };
 const VNP_CHIP_LABEL = { display: 'inline-flex', alignItems: 'center', gap: 10, minWidth: 0 };
+const VNP_FIELD = { width: '100%', boxSizing: 'border-box', background: 'rgba(244,239,230,.05)', border: '1px solid rgba(230,204,146,.22)', borderRadius: 12, padding: '11px 14px', color: INK, fontFamily: 'inherit', fontSize: 14, outline: 'none' };
 const VNP_ACTION_META = {
   contacter: { label: 'Nous contacter', Icon: Mail },
   rejoindre: { label: 'Rejoindre', Icon: UserPlus },
@@ -612,6 +613,7 @@ export default function CimolaceCreationAgent({ tenantSlug: tenantSlugProp = nul
   );
   const [vnpSuggest, setVnpSuggest] = useState([]); // [{nodeId,label}] sujets liés
   const [vnpActs, setVnpActs] = useState([]);       // [intentId] actions disponibles
+  const [contactForm, setContactForm] = useState(null); // Action Engine : {name,email,message,subject,sending,sent,error} | null
   const [covered, setCovered] = useState([]);
   const [topic, setTopic] = useState(null);
   const [keyword, setKeyword] = useState('');
@@ -1185,24 +1187,54 @@ export default function CimolaceCreationAgent({ tenantSlug: tenantSlugProp = nul
     }
   }, [vnpGraph, osBrand, osTenant, speak, sThink]);
 
-  // ACTION ENGINE — exécute une action métier (contacter / réserver / rejoindre / acheter…) via l'edge.
+  // ACTION ENGINE — EXÉCUTE une action métier pour de vrai (pas un accusé de réception) :
+  //  • contacter/participer → mini-formulaire inline, livré dans la table contact_requests (mailbox) ;
+  //  • acheter/rejoindre/réserver → on annonce puis on emmène vers la VRAIE page /forfaits (Stripe/PawaPay).
   const vnpAction = useCallback(async (actionId, label) => {
     setError(''); setEngaged(true); setVnpActs([]);
+    if (actionId === 'contacter' || actionId === 'participer') {
+      setContactForm({ name: '', email: '', message: '', subject: `Contact via l'assistant ${(osBrand && osBrand.name) || osTenant}`, sending: false, sent: false, error: '' });
+      return;
+    }
     const gen = ++brainGenRef.current;
     setPresence('reflexion'); sThink();
     try {
-      const { data, error: fnErr } = await supabase.functions.invoke('vnp', {
+      const { data } = await supabase.functions.invoke('vnp', {
         body: { op: 'action', action: actionId, platformName: (osBrand && osBrand.name) || osTenant, payload: { label } },
       });
       if (brainGenRef.current !== gen) return;
-      if (fnErr) throw fnErr;
-      speak(String(data?.message || "C'est noté."));
-      // data.next.kind (checkout / booking / contact_form) = point d'extension (routage réel à brancher).
+      const msg = String(data?.message || "C'est noté.");
+      const kind = data?.next?.kind;
+      if (kind === 'checkout' || kind === 'booking') {
+        speak(msg, () => setTimeout(() => { window.location.assign('/forfaits'); }, 700)); // → vraie page de checkout
+        return;
+      }
+      speak(msg);
     } catch (_) {
       if (brainGenRef.current !== gen) return;
       speak('Un instant — réessayons dans un moment.');
     }
   }, [osBrand, osTenant, speak, sThink]);
+
+  // Livraison RÉELLE du contact : insertion dans contact_requests (même table que le ContactModal du site → mailbox).
+  const submitContact = useCallback(async () => {
+    const f = contactForm; if (!f || f.sending) return;
+    const email = (f.email || '').trim();
+    const message = (f.message || '').trim();
+    if (!/.+@.+\..+/.test(email)) { setContactForm((c) => ({ ...c, error: "Une adresse e-mail valide, s'il vous plaît." })); return; }
+    if (!message) { setContactForm((c) => ({ ...c, error: 'Écrivez-nous un petit message.' })); return; }
+    setContactForm((c) => ({ ...c, sending: true, error: '' }));
+    try {
+      const { error: dbErr } = await supabase.from('contact_requests')
+        .insert([{ name: (f.name || '').trim(), email, subject: f.subject, message }]);
+      if (dbErr) throw dbErr;
+      setContactForm((c) => ({ ...c, sending: false, sent: true }));
+      speak(`Merci${f.name ? `, ${f.name.trim()}` : ''} — votre message est bien parti. L'équipe de ${(osBrand && osBrand.name) || osTenant} vous répond vite.`);
+      setTimeout(() => setContactForm(null), 2800);
+    } catch (_) {
+      setContactForm((c) => ({ ...c, sending: false, error: 'Envoi impossible pour le moment — réessayez.' }));
+    }
+  }, [contactForm, osBrand, osTenant, speak]);
 
   const submitInput = useCallback(() => {
     const v = value.trim();
@@ -1431,7 +1463,7 @@ export default function CimolaceCreationAgent({ tenantSlug: tenantSlugProp = nul
 
       {/* VNP — Realm tenant : accueil = INTENTIONS (avant interaction) ; puis NAVIGATION GUIDÉE
           (sujets liés) + ACTION ENGINE (actions métier). Le visiteur ne clique pas des liens : des intentions. */}
-      {showActions && isTenantRealm && !tourActive && (
+      {showActions && isTenantRealm && !tourActive && !contactForm && (
         <div className="cca-in" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(238px, 1fr))', gap: 10, justifyItems: 'stretch', marginTop: 24, width: '100%', maxWidth: 560, position: 'relative', zIndex: 4, padding: '0 20px', boxSizing: 'border-box' }}>
           {/* Toujours proposé : la visite guidée (l'OS REND le site en scènes) */}
           <button className="cca-chip cca-chip-visit" onClick={(e) => { e.stopPropagation(); startTenantTour(); }} style={VNP_VISIT_CHIP}>
@@ -1475,6 +1507,37 @@ export default function CimolaceCreationAgent({ tenantSlug: tenantSlugProp = nul
               </button>
             );
           })}
+        </div>
+      )}
+
+      {/* ACTION ENGINE — formulaire de CONTACT inline (dans la conversation) → contact_requests */}
+      {isTenantRealm && contactForm && (
+        <div className="cca-in" onClick={(e) => e.stopPropagation()}
+          style={{ marginTop: 22, width: '100%', maxWidth: 440, position: 'relative', zIndex: 6, padding: '0 20px', boxSizing: 'border-box', display: 'flex', flexDirection: 'column', gap: 10 }}>
+          {contactForm.sent ? (
+            <div style={{ textAlign: 'center', color: GOLD, fontFamily: DISPLAY, fontSize: 20, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
+              <Check size={18} /> Message envoyé
+            </div>
+          ) : (
+            <>
+              <input className="cca-field" placeholder="Votre nom" value={contactForm.name}
+                onChange={(e) => setContactForm((c) => ({ ...c, name: e.target.value }))} style={VNP_FIELD} />
+              <input className="cca-field" type="email" placeholder="Votre e-mail" value={contactForm.email}
+                onChange={(e) => setContactForm((c) => ({ ...c, email: e.target.value }))} style={VNP_FIELD} />
+              <textarea placeholder={`Votre message pour ${tenantName}…`} value={contactForm.message} rows={3}
+                onChange={(e) => setContactForm((c) => ({ ...c, message: e.target.value }))} style={{ ...VNP_FIELD, resize: 'vertical', lineHeight: 1.4 }} />
+              {contactForm.error && <span style={{ color: '#f0997b', fontSize: 12.5 }}>{contactForm.error}</span>}
+              <div style={{ display: 'flex', gap: 8 }}>
+                <button onClick={(e) => { e.stopPropagation(); submitContact(); }} disabled={contactForm.sending}
+                  style={{ ...VNP_CHIP_BASE, flex: 1, justifyContent: 'center', fontWeight: 600, color: '#231208', background: TERRA, border: 'none', opacity: contactForm.sending ? 0.7 : 1 }}>
+                  {contactForm.sending ? <Loader2 size={15} className="animate-spin" /> : <Send size={15} />}
+                  {contactForm.sending ? 'Envoi…' : 'Envoyer'}
+                </button>
+                <button onClick={(e) => { e.stopPropagation(); setContactForm(null); }}
+                  style={{ ...VNP_NAV_CHIP, justifyContent: 'center', width: 108 }}>Annuler</button>
+              </div>
+            </>
+          )}
         </div>
       )}
 
