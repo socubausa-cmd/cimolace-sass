@@ -17,7 +17,7 @@ import {
   Pencil, PenLine, Type, Eraser,
   Square, Circle, Minus, Spline,
   Hand, MousePointer2, BoxSelect, Crosshair,
-  Compass, Ruler, Grid3x3,
+  Compass, Ruler, Eye, X,
 } from 'lucide-react';
 import { useLiveWhiteboardStore } from '@/components/liri/live-room/useLiveWhiteboardStore';
 
@@ -69,7 +69,15 @@ const FAMILIES: Family[] = [
 const SWATCHES = ['#ffffff', '#111111', '#d4a36a', '#e5484d', '#3b82f6', '#22c55e', '#eab308'];
 const SIZES = [2, 4, 8, 14];
 
-export default function ConsultationToolCockpit() {
+export default function ConsultationToolCockpit({
+  preview = false,
+  onPreviewChange,
+}: {
+  /** Mode APERÇU (partie C) : replie le cockpit → le praticien voit le tableau
+   *  propre, comme le patient. Purement local (le patient ne remarque rien). */
+  preview?: boolean;
+  onPreviewChange?: (v: boolean) => void;
+} = {}) {
   const tool = useLiveWhiteboardStore((s) => s.tool);
   const setTool = useLiveWhiteboardStore((s) => s.setTool);
   const color = useLiveWhiteboardStore((s) => s.color);
@@ -87,6 +95,28 @@ export default function ConsultationToolCockpit() {
     setOpenFamily((prev) => (prev === f.key ? null : f.key));
     if (f.surface) setBoardSurface(f.surface);
   };
+
+  // MODE APERÇU (C) : cockpit replié → seul un petit bouton « Quitter l'aperçu »
+  // reste. Le tableau se voit propre, comme côté patient. Local (le patient ne
+  // remarque rien : c'est juste l'overlay hôte qui disparaît).
+  if (preview) {
+    return (
+      <button
+        type="button"
+        onClick={() => onPreviewChange?.(false)}
+        title="Quitter l'aperçu patient"
+        style={{
+          position: 'absolute', left: 12, bottom: 12, zIndex: 31,
+          display: 'inline-flex', alignItems: 'center', gap: 7, padding: '9px 14px',
+          borderRadius: 999, border: `1px solid ${GOLD}`, background: 'rgba(24,20,16,0.92)',
+          color: GOLD, fontSize: 12, fontWeight: 700, cursor: 'pointer',
+          boxShadow: '0 10px 30px rgba(0,0,0,0.45)', backdropFilter: 'blur(8px)',
+        }}
+      >
+        <X size={15} aria-hidden="true" /> Aperçu patient · quitter
+      </button>
+    );
+  }
 
   return (
     <div
@@ -190,6 +220,21 @@ export default function ConsultationToolCockpit() {
             </button>
           );
         })}
+        {/* Aperçu (C) : voir le tableau comme le patient (replie le cockpit) */}
+        <div style={{ width: 1, background: 'rgba(255,255,255,0.09)', margin: '4px 2px' }} />
+        <button
+          type="button"
+          title="Aperçu — voir le tableau comme le patient"
+          onClick={() => onPreviewChange?.(true)}
+          style={{
+            minWidth: 44, height: 40, borderRadius: 10, cursor: 'pointer',
+            display: 'inline-flex', alignItems: 'center', gap: 5, padding: '0 9px',
+            border: '1px solid transparent', background: 'rgba(255,255,255,0.03)',
+            color: 'rgba(255,255,255,0.72)', fontSize: 11, fontWeight: 600,
+          }}
+        >
+          <Eye size={15} aria-hidden="true" /> Aperçu
+        </button>
       </div>
 
       <style>{`@keyframes ctcIn{from{opacity:0;transform:translateY(6px) scale(.97)}to{opacity:1;transform:none}}`}</style>

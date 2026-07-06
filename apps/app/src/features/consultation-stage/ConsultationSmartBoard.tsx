@@ -31,7 +31,7 @@
 // alourdir le bundle de la salle quand le tableau n'est pas ouvert. Konva est
 // déjà une dépendance du repo (utilisée par le compositeur).
 // ─────────────────────────────────────────────────────────────────────────────
-import React, { Suspense, useEffect, useMemo, useRef } from 'react';
+import React, { Suspense, useEffect, useMemo, useRef, useState } from 'react';
 import { Presentation } from 'lucide-react';
 import { mergeSmartboardSceneFlags } from '@/lib/smartboardNavigatorScenes';
 import { useLiveWhiteboardStore } from '@/components/liri/live-room/useLiveWhiteboardStore';
@@ -157,6 +157,12 @@ export default function ConsultationSmartBoard({
   // viewerMode explicite > déduction depuis isHost. Le patient ne navigue/dessine
   // pas ; il suit l'état diffusé par le praticien.
   const readOnly = typeof viewerMode === 'boolean' ? viewerMode : !isHost;
+  // Mode APERÇU (C) : le praticien replie le cockpit + le cadre pour voir le
+  // tableau propre, comme le patient. Local (n'affecte pas le patient).
+  const [preview, setPreview] = useState(false);
+  // Réserve basse pour le cockpit d'outils (partie B) : le tableau utile côté
+  // hôte = tout SAUF cette bande basse (où vivent les outils, non-dessinable).
+  const COCKPIT_RESERVED_BOTTOM = 128;
 
   // Patient (viewer) : à chaque nouvel état SmartBoard reçu du canal, on le
   // rejoue dans le stage (setActiveScene/setAnnotationStrokes/… en interne).
@@ -223,9 +229,31 @@ export default function ConsultationSmartBoard({
           onSceneChange={onSceneChange}
         />
       </Suspense>
-      {/* Cockpit d'outils groupés (praticien seul) : familles → rail overlay
-          compact dans un coin, au lieu du grand rail surchargé. */}
-      {!readOnly ? <ConsultationToolCockpit /> : null}
+      {/* B — Cadre « zone vue par le patient » : l'aire de travail utile côté
+          hôte = tout SAUF la bande basse des outils. Purement visuel (n'intercepte
+          pas le dessin) ; masqué en aperçu. Le patient voit ce contenu recadré
+          plein écran (auto-fit déjà en place). */}
+      {!readOnly && !preview ? (
+        <div
+          aria-hidden
+          style={{
+            position: 'absolute', top: 10, left: 10, right: 10,
+            bottom: COCKPIT_RESERVED_BOTTOM, zIndex: 12, pointerEvents: 'none',
+            border: '1.5px dashed rgba(212,163,106,0.35)', borderRadius: 12,
+          }}
+        >
+          <span style={{
+            position: 'absolute', top: -9, left: 12, padding: '1px 8px', borderRadius: 999,
+            background: '#1f1e1c', color: 'rgba(212,163,106,0.9)', fontSize: 9, fontWeight: 700,
+            letterSpacing: 0.3, textTransform: 'uppercase',
+          }}>Zone vue par le patient</span>
+        </div>
+      ) : null}
+      {/* A + C — Cockpit d'outils groupés (praticien) : familles → rail overlay
+          compact + bouton Aperçu. Remplace le grand rail surchargé. */}
+      {!readOnly ? (
+        <ConsultationToolCockpit preview={preview} onPreviewChange={setPreview} />
+      ) : null}
     </div>
   );
 }
