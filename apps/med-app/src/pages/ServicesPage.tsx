@@ -106,7 +106,8 @@ export default function ServicesPage() {
       const res = await fetch(`${API}/billing/catalog`, { headers: authHeaders() });
       const body = await res.json().catch(() => null);
       if (!res.ok) throw new Error(body?.error?.message || body?.message || `Erreur ${res.status}`);
-      const list = (body?.data ?? body ?? []) as Service[];
+      // L'API renvoie {data:{services:[…]}} (ré-emballé par l'intercepteur global).
+      const list = (body?.data?.services ?? body?.data ?? body ?? []) as Service[];
       setServices(Array.isArray(list) ? list : []);
     } catch (e) {
       setError((e as Error).message);
