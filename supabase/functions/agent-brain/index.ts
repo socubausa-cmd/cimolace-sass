@@ -58,9 +58,16 @@ Deno.serve(async (req: Request) => {
       '{\n' +
       '  "reply": "réponse chaleureuse et VIVANTE en français, 1 à 2 phrases ; tu peux poser une question pour faire avancer",\n' +
       '  "product": "school" | "medos" | "shop" | null,\n' +
+      '  "topic": "live" | "cours" | "ia" | "replay" | "compare" | "prix" | null,\n' +
       '  "hooks": ["relance courte 1", "relance courte 2"]\n' +
       '}\n' +
-      "Règles : \"product\" = le moteur qui correspond au besoin (sinon null si c'est ambigu ou une question générale). \"reply\" court, jamais robotique, orienté vers la création d'un espace. \"hooks\" = 2 max, questions/relances utiles (valeur, prix, comparaison à Zoom/aux autres, ou passer à la création). Réponds UNIQUEMENT en JSON valide.";
+      "Règles :\n" +
+      "- \"product\" = le moteur qui correspond au besoin (sinon null si ambigu ou question générale).\n" +
+      "- \"topic\" = si ta reply EXPLIQUE un aspect précis, lequel : \"live\" (cours en direct), \"cours\" (cours/leçons à la demande), \"ia\" (smartboard / assistant IA), \"replay\" (enregistrements / replay), \"compare\" (pourquoi Cimolace plutôt que Zoom / un concurrent), \"prix\" (tarifs). Sinon null.\n" +
+      "- \"reply\" court, jamais robotique, orienté vers la création d'un espace ; tu peux dérouler UN aspect à la fois (comme un tuto vivant) et enchaîner.\n" +
+      "- \"hooks\" = 2 max, relances utiles orientées valeur, prix, comparaison, ou passage à la création — de préférence vers un SUJET non encore abordé (voir contexte).\n" +
+      "- Plus l'utilisateur a déjà couvert de sujets (voir contexte), plus tu l'orientes clairement vers la CRÉATION de son espace.\n" +
+      "Réponds UNIQUEMENT en JSON valide.";
 
     const messages = [
       { role: 'system', content: system },
@@ -118,6 +125,9 @@ Deno.serve(async (req: Request) => {
     const product = ['school', 'medos', 'shop'].includes(String(parsed.product))
       ? String(parsed.product)
       : null;
+    const topic = ['live', 'cours', 'ia', 'replay', 'compare', 'prix'].includes(String(parsed.topic))
+      ? String(parsed.topic)
+      : null;
     const reply = String(parsed.reply || '').trim() || "Dites-m'en un peu plus sur votre projet ?";
     const trim = (h: unknown) => {
       const s = String(h).trim();
@@ -127,7 +137,7 @@ Deno.serve(async (req: Request) => {
       ? parsed.hooks.filter(Boolean).map(trim).filter((s) => s.length > 1).slice(0, 2)
       : [];
 
-    return jsonResponse({ reply, product, hooks });
+    return jsonResponse({ reply, product, topic, hooks });
   } catch (e) {
     return jsonResponse({ error: String((e as Error)?.message || e) }, 500);
   }

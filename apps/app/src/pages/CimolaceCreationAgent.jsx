@@ -109,7 +109,68 @@ const STYLE = `
 .cca-reflexion .cca-orbit{opacity:1;animation:ccaOrbit 2.3s linear infinite}
 .cca-ecriture .cca-glow{animation:ccaGlowPulse 1.5s ease-in-out infinite}
 .cca-amb{position:absolute;border-radius:50%;background:#d97757;pointer-events:none}
+@keyframes ccaDraw{to{stroke-dashoffset:0}}
+.cca-dr{stroke-dasharray:1;stroke-dashoffset:1;animation:ccaDraw .7s ease forwards}
 `;
+
+// ── Croquis « Précepteur » — se dessinent seuls (stroke-dashoffset), un par sujet ──
+const T_LABELS = { live: 'Live', cours: 'Cours', ia: 'IA', replay: 'Replay', compare: 'Comparé', prix: 'Prix' };
+const TOPIC_ORDER = ['live', 'cours', 'ia', 'replay', 'compare', 'prix'];
+function croquisFor(t) {
+  const dr = (d) => ({ className: 'cca-dr', style: { animationDelay: `${d}s` } });
+  const S = { stroke: '#d97757', strokeWidth: 2, fill: 'none', pathLength: 1 };
+  const G = { stroke: '#e6cc92', strokeWidth: 2, fill: 'none', pathLength: 1 };
+  const M = { stroke: 'rgba(244,239,230,.4)', strokeWidth: 2, fill: 'none', pathLength: 1 };
+  const wrap = (children) => (
+    <svg width="204" height="112" viewBox="0 0 220 120" fill="none" aria-hidden="true">{children}</svg>
+  );
+  if (t === 'live') return wrap(<>
+    <rect x="8" y="8" width="204" height="104" rx="8" {...S} {...dr(0.05)} />
+    <rect x="18" y="18" width="118" height="66" rx="5" {...G} {...dr(0.35)} />
+    <circle cx="77" cy="45" r="12" {...G} {...dr(0.55)} />
+    <rect x="146" y="18" width="56" height="30" rx="4" {...S} {...dr(0.7)} />
+    <rect x="146" y="54" width="56" height="30" rx="4" {...S} {...dr(0.8)} />
+    <circle cx="200" cy="98" r="4" fill="#e24b4a" />
+  </>);
+  if (t === 'cours') return wrap(<>
+    <rect x="82" y="8" width="56" height="24" rx="5" {...G} {...dr(0.05)} />
+    <line x1="110" y1="32" x2="110" y2="50" {...S} {...dr(0.3)} />
+    <line x1="40" y1="50" x2="180" y2="50" {...S} {...dr(0.42)} />
+    <line x1="40" y1="50" x2="40" y2="66" {...S} {...dr(0.54)} />
+    <line x1="110" y1="50" x2="110" y2="66" {...S} {...dr(0.6)} />
+    <line x1="180" y1="50" x2="180" y2="66" {...S} {...dr(0.66)} />
+    <rect x="16" y="68" width="48" height="40" rx="5" {...S} {...dr(0.78)} />
+    <rect x="86" y="68" width="48" height="40" rx="5" {...S} {...dr(0.9)} />
+    <rect x="156" y="68" width="48" height="40" rx="5" {...S} {...dr(1.02)} />
+  </>);
+  if (t === 'ia') return wrap(<>
+    <rect x="8" y="8" width="204" height="104" rx="8" {...S} {...dr(0.05)} />
+    <path d="M26 84 C54 40 86 104 120 64 C142 42 170 54 188 80" {...G} strokeWidth={2.4} {...dr(0.4)} />
+    <path d="M178 24 l4 10 l10 4 l-10 4 l-4 10 l-4 -10 l-10 -4 l10 -4 z" {...G} {...dr(1.05)} fill="rgba(230,204,146,.15)" />
+  </>);
+  if (t === 'replay') return wrap(<>
+    <line x1="22" y1="60" x2="198" y2="60" {...M} strokeWidth={3} {...dr(0.05)} />
+    <line x1="22" y1="60" x2="88" y2="60" {...S} strokeWidth={3} {...dr(0.4)} />
+    <circle cx="88" cy="60" r="7" fill="#e6cc92" />
+    <line x1="56" y1="52" x2="56" y2="68" {...M} {...dr(0.7)} />
+    <line x1="140" y1="52" x2="140" y2="68" {...M} {...dr(0.8)} />
+    <path d="M100 86 l0 24 l20 -12 z" {...S} {...dr(1)} fill="rgba(217,119,87,.2)" />
+  </>);
+  if (t === 'compare') return wrap(<>
+    <rect x="22" y="12" width="80" height="96" rx="8" {...S} {...dr(0.05)} />
+    <rect x="118" y="36" width="80" height="52" rx="8" {...M} {...dr(0.35)} />
+    <path d="M34 38 l6 6 l12 -12" {...G} strokeWidth={2.4} {...dr(0.6)} />
+    <path d="M34 62 l6 6 l12 -12" {...G} strokeWidth={2.4} {...dr(0.72)} />
+    <path d="M34 86 l6 6 l12 -12" {...G} strokeWidth={2.4} {...dr(0.84)} />
+    <path d="M132 62 l6 6 l12 -12" {...M} strokeWidth={2.4} {...dr(0.96)} />
+  </>);
+  return wrap(<>
+    <rect x="28" y="14" width="164" height="22" rx="6" {...M} {...dr(0.1)} />
+    <rect x="28" y="46" width="164" height="28" rx="7" stroke="#d97757" strokeWidth={2.4} fill="rgba(217,119,87,.14)" pathLength={1} {...dr(0.35)} />
+    <rect x="28" y="86" width="164" height="22" rx="6" {...M} {...dr(0.6)} />
+    <circle cx="178" cy="60" r="11" {...G} {...dr(0.85)} />
+  </>);
+}
 
 export default function CimolaceCreationAgent() {
   const navigate = useNavigate();
@@ -129,6 +190,9 @@ export default function CimolaceCreationAgent() {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
   const [brainHooks, setBrainHooks] = useState([]);
+  const [covered, setCovered] = useState([]);
+  const [topic, setTopic] = useState(null);
+  const coveredRef = useRef([]);
 
   const [inputOpen, setInputOpen] = useState(false);
   const [value, setValue] = useState('');
@@ -145,6 +209,7 @@ export default function CimolaceCreationAgent() {
   const inputAllowed = step === 'discovery' || step === 'brand_ask' || step === 'brain';
 
   useEffect(() => { mutedRef.current = muted; }, [muted]);
+  useEffect(() => { coveredRef.current = covered; }, [covered]);
 
   // ── Sons synthétisés (Web Audio, zéro asset) — subtils, coupables via mute ──
   const audio = useCallback(() => {
@@ -306,15 +371,19 @@ export default function CimolaceCreationAgent() {
     sThink();
     try {
       const { data, error: fnErr } = await supabase.functions.invoke('agent-brain', {
-        body: { message, chosen, covered: [] },
+        body: { message, chosen, covered: coveredRef.current },
       });
       if (fnErr) throw fnErr;
       const reply = String(data?.reply || '').trim() || "Je vous écoute — dites-m'en un peu plus ?";
       const product = data?.product && PRODUCT[data.product] ? data.product : null;
+      const t = TOPIC_ORDER.includes(data?.topic) ? data.topic : null;
+      setTopic(t);
+      if (t) setCovered((prev) => (prev.includes(t) ? prev : [...prev, t]));
       setBrainHooks(Array.isArray(data?.hooks) ? data.hooks : []);
       if (product) { setChosen(product); setStep('product'); speak(reply); }
       else { setStep('brain'); speak(reply); }
     } catch (_) {
+      setTopic(null);
       const k = guessKind(message);
       setChosen(k);
       setStep('product');
@@ -412,6 +481,21 @@ export default function CimolaceCreationAgent() {
         <span style={{ fontSize: 11, color: 'rgba(244,239,230,.55)', letterSpacing: '.03em' }}>assistant cimolace · connecté</span>
       </div>
 
+      {/* Barre de couverture — le « tunnel » : les sujets abordés s'allument */}
+      {covered.length > 0 && (
+        <div className="cca-in" style={{ position: 'absolute', top: 46, left: '50%', transform: 'translateX(-50%)', display: 'flex', gap: 11, alignItems: 'center', zIndex: 3, pointerEvents: 'none', flexWrap: 'wrap', justifyContent: 'center', maxWidth: '90%' }}>
+          {TOPIC_ORDER.map((tp) => {
+            const on = covered.includes(tp);
+            return (
+              <span key={tp} style={{ display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: 9.5, letterSpacing: '.04em', color: on ? '#e6cc92' : 'rgba(244,239,230,.26)' }}>
+                <span style={{ width: 5, height: 5, borderRadius: '50%', background: on ? '#d97757' : 'rgba(244,239,230,.18)' }} />
+                {T_LABELS[tp]}
+              </span>
+            );
+          })}
+        </div>
+      )}
+
       {/* Son on/off */}
       <button
         onClick={(e) => { e.stopPropagation(); setMuted((m) => !m); }}
@@ -443,6 +527,13 @@ export default function CimolaceCreationAgent() {
         <span className="cca-form cca-wave"><i /><i style={{ animationDelay: '.1s' }} /><i style={{ animationDelay: '.2s' }} /><i style={{ animationDelay: '.3s' }} /><i style={{ animationDelay: '.4s' }} /></span>
         <span className="cca-form cca-done"><Check size={20} /></span>
       </div>
+
+      {/* Croquis « Précepteur » — se dessine quand le cerveau explique un sujet */}
+      {topic && (step === 'brain' || step === 'product') && (
+        <div key={topic} className="cca-in" style={{ marginTop: 8, marginBottom: 2, display: 'flex', justifyContent: 'center' }}>
+          {croquisFor(topic)}
+        </div>
+      )}
 
       {/* Voix */}
       <div style={{ minHeight: 34, marginTop: 14, textAlign: 'center' }}>
@@ -497,19 +588,27 @@ export default function CimolaceCreationAgent() {
       )}
 
       {showActions && step === 'brain' && (
-        <div className="cca-in" style={{ display: 'flex', flexWrap: 'wrap', gap: 9, justifyContent: 'center', marginTop: 18, maxWidth: 480 }}>
-          {brainHooks.map((h, n) => (
-            <span key={`bh${n}`} className="cca-chip" onClick={(e) => { e.stopPropagation(); brain(h); }}
-              style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 12.5, color: GOLD, background: 'rgba(244,239,230,.05)', borderRadius: 999, padding: '7px 14px' }}>
-              <ArrowRight size={13} />{h}
-            </span>
-          ))}
-          {SUGG.map(({ kind, label, Icon }) => (
-            <span key={kind} className="cca-chip" onClick={(e) => { e.stopPropagation(); pickKind(kind); }}
-              style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 12.5, color: 'rgba(244,239,230,.6)', background: 'rgba(244,239,230,.04)', borderRadius: 999, padding: '7px 14px' }}>
-              <Icon size={13} />{label}
-            </span>
-          ))}
+        <div className="cca-in" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 12, marginTop: 16 }}>
+          {(covered.length >= 3 || covered.includes('prix')) && (
+            <button className="cca-chip" onClick={(e) => { e.stopPropagation(); chooseProduct(); }}
+              style={{ display: 'inline-flex', alignItems: 'center', gap: 7, fontSize: 14, fontWeight: 500, color: '#2a140c', background: TERRA, border: 'none', borderRadius: 12, padding: '11px 22px', cursor: 'pointer' }}>
+              Lancer {PRODUCT[chosen].tag} — dès 150 €/mois<ArrowRight size={16} />
+            </button>
+          )}
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 9, justifyContent: 'center', maxWidth: 480 }}>
+            {brainHooks.map((h, n) => (
+              <span key={`bh${n}`} className="cca-chip" onClick={(e) => { e.stopPropagation(); brain(h); }}
+                style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 12.5, color: GOLD, background: 'rgba(244,239,230,.05)', borderRadius: 999, padding: '7px 14px' }}>
+                <ArrowRight size={13} />{h}
+              </span>
+            ))}
+            {SUGG.map(({ kind, label, Icon }) => (
+              <span key={kind} className="cca-chip" onClick={(e) => { e.stopPropagation(); pickKind(kind); }}
+                style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 12.5, color: 'rgba(244,239,230,.6)', background: 'rgba(244,239,230,.04)', borderRadius: 999, padding: '7px 14px' }}>
+                <Icon size={13} />{label}
+              </span>
+            ))}
+          </div>
         </div>
       )}
 
