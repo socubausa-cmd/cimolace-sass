@@ -1,15 +1,14 @@
 // ─────────────────────────────────────────────────────────────────────────────
-// ConsultationToolCockpit — barre d'outils du TABLEAU de téléconsultation MEDOS,
-// façon logiciel d'édition (Figma/Canva).
+// ConsultationToolCockpit — outils du TABLEAU de téléconsultation MEDOS, façon
+// logiciel d'édition (Figma/Affinity) : BARRE D'EN-TÊTE + RAIL LATÉRAL CONTEXTUEL.
 //
-// ORGANISATION (demande USER) : une BARRE EN EN-TÊTE (haut du tableau), épurée :
-//   • seuls les OUTILS LES PLUS UTILISÉS sont visibles en permanence
-//     (Sélection · Crayon · Texte · Gomme) ;
-//   • les GROUPES sont des « déployeurs » (menus) qui s'ouvrent au clic
-//     (Formes · Math · Image) → on ne voit QUE ce dont on a besoin ;
-//   • le bouton d'un groupe montre le DERNIER outil choisi de ce groupe → un clic
-//     le re-sélectionne sans rouvrir le menu (le chevron rouvre le menu) ;
-//   • à droite : couleur + épaisseur (déployeurs), Annuler/Refaire, Aperçu/Avancé.
+// ORGANISATION (demande USER) :
+//   • BARRE EN HAUT, épurée : outils LES PLUS UTILISÉS toujours visibles
+//     (Sélection · Crayon · Texte · Gomme) + boutons de GROUPES (Formes · Math ·
+//     Image) + couleur/épaisseur + Annuler/Refaire + Aperçu/Avancé.
+//   • Cliquer un groupe (ex. Formes) → TOUS ses outils s'affichent dans un RAIL
+//     VERTICAL sur le CÔTÉ GAUCHE (contextuel : s'adapte au groupe cliqué) — pour
+//     ne PAS surcharger la barre du haut. Recliquer le groupe (ou ✕) referme.
 //
 // Purement client : lit/écrit `useLiveWhiteboardStore`. Rien en lecture seule.
 // ─────────────────────────────────────────────────────────────────────────────
@@ -18,8 +17,8 @@ import {
   MousePointer2, Pencil, Type, Eraser,
   Shapes, Square, Circle, Minus, MoveUpRight, Spline, Hexagon, Star,
   Ruler, Compass, Triangle, LineChart,
-  Image as ImageIcon, ChevronDown,
-  Undo2, Redo2, Trash2, Eye, X, SlidersHorizontal,
+  Image as ImageIcon, ChevronDown, X,
+  Undo2, Redo2, Trash2, Eye, SlidersHorizontal,
 } from 'lucide-react';
 import { useLiveWhiteboardStore } from '@/components/liri/live-room/useLiveWhiteboardStore';
 
@@ -36,7 +35,7 @@ const MOST_USED: Tool[] = [
   { id: 'eraser', label: 'Gomme', Icon: Eraser },
 ];
 
-// Groupes « déployés » au clic (mêmes ids que le moteur → aucune perte).
+// Groupes ouverts dans le RAIL latéral contextuel (mêmes ids que le moteur).
 const GROUPS: Group[] = [
   {
     key: 'formes', label: 'Formes', Icon: Shapes,
@@ -97,12 +96,10 @@ export default function ConsultationToolCockpit({
   const redoBoard = useLiveWhiteboardStore((s) => s.redoBoard);
   const clearBoard = useLiveWhiteboardStore((s) => s.clearBoard);
 
-  // Menu ouvert (null | clé de groupe | 'color' | 'size'). Dernier outil choisi
-  // par groupe (pour l'afficher sur le bouton du groupe).
-  const [openMenu, setOpenMenu] = useState<string | null>(null);
-  const [groupLast, setGroupLast] = useState<Record<string, string>>({});
+  // Groupe ouvert dans le rail latéral (null = fermé). Menu propriété (couleur/épaisseur).
+  const [sideGroup, setSideGroup] = useState<string | null>(null);
+  const [menu, setMenu] = useState<string | null>(null);
 
-  // APERÇU (C) : barre repliée → pastille « quitter ».
   if (preview) {
     return (
       <button
@@ -122,35 +119,33 @@ export default function ConsultationToolCockpit({
     );
   }
 
-  const pickTool = (id: string, groupKey?: string, surface?: string) => {
+  const pickTool = (id: string, surface?: string) => {
     if (surface) setBoardSurface(surface);
     setTool(id);
-    if (groupKey) setGroupLast((p) => ({ ...p, [groupKey]: id }));
-    setOpenMenu(null);
   };
-  const toggleMenu = (key: string) => setOpenMenu((m) => (m === key ? null : key));
-
   const toolBtn = (active: boolean) => ({
-    width: 36, height: 36, borderRadius: 9, cursor: 'pointer',
-    display: 'grid', placeItems: 'center',
+    width: 36, height: 36, borderRadius: 9, cursor: 'pointer', display: 'grid', placeItems: 'center',
     border: active ? `1px solid ${GOLD}` : '1px solid transparent',
     background: active ? 'rgba(212,163,106,0.16)' : 'rgba(255,255,255,0.04)',
     color: active ? GOLD : 'rgba(255,255,255,0.82)',
   } as const);
   const divider = <div style={{ width: 1, height: 24, background: 'rgba(255,255,255,0.09)' }} />;
-  const menuBox = {
+  const propMenu = {
     position: 'absolute', top: 'calc(100% + 6px)', left: 0, zIndex: 32,
-    display: 'flex', gap: 4, padding: 7, borderRadius: 12,
-    background: MENU_BG, border: `1px solid rgba(212,163,106,0.30)`,
-    boxShadow: '0 12px 36px rgba(0,0,0,0.5)', animation: 'ctcIn 0.15s cubic-bezier(0.2,0.7,0.3,1)',
+    display: 'flex', gap: 6, padding: 7, borderRadius: 12, background: MENU_BG,
+    border: `1px solid rgba(212,163,106,0.30)`, boxShadow: '0 12px 36px rgba(0,0,0,0.5)',
+    animation: 'ctcIn 0.15s cubic-bezier(0.2,0.7,0.3,1)',
   } as const;
+
+  const activeGroup = GROUPS.find((g) => g.key === sideGroup) || null;
 
   return (
     <>
-      {openMenu ? (
-        <div onClick={() => setOpenMenu(null)} style={{ position: 'absolute', inset: 0, zIndex: 29 }} />
+      {menu ? (
+        <div onClick={() => setMenu(null)} style={{ position: 'absolute', inset: 0, zIndex: 29 }} />
       ) : null}
 
+      {/* ── BARRE D'EN-TÊTE ─────────────────────────────────────────────── */}
       <div
         style={{
           position: 'absolute', top: 10, left: '50%', transform: 'translateX(-50%)', zIndex: 30,
@@ -160,7 +155,6 @@ export default function ConsultationToolCockpit({
           backdropFilter: 'blur(8px)',
         }}
       >
-        {/* Outils les plus utilisés — toujours visibles */}
         {MOST_USED.map((t) => (
           <button key={t.id} type="button" title={t.label} onClick={() => pickTool(t.id)} style={toolBtn(tool === t.id)}>
             <t.Icon size={17} aria-hidden="true" />
@@ -169,118 +163,63 @@ export default function ConsultationToolCockpit({
 
         {divider}
 
-        {/* Groupes = déployeurs. Le bouton montre le DERNIER outil choisi. */}
+        {/* Groupes : cliquer ouvre le RAIL latéral contextuel */}
         {GROUPS.map((g) => {
-          const lastId = groupLast[g.key];
-          const lastTool = g.tools.find((x) => x.id === lastId);
-          const Shown = lastTool?.Icon || g.Icon;
-          const active = g.tools.some((x) => x.id === tool);
+          const open = sideGroup === g.key;
+          const active = open || g.tools.some((x) => x.id === tool);
           return (
-            <div key={g.key} style={{ position: 'relative', display: 'inline-flex' }}>
-              <div
-                style={{
-                  display: 'inline-flex', alignItems: 'center', height: 36, borderRadius: 9, overflow: 'hidden',
-                  border: active ? `1px solid ${GOLD}` : '1px solid transparent',
-                  background: active ? 'rgba(212,163,106,0.14)' : 'rgba(255,255,255,0.04)',
-                }}
-              >
-                <button
-                  type="button"
-                  title={lastTool ? `${g.label} · ${lastTool.label}` : `${g.label} — choisir un outil`}
-                  onClick={() => (lastId ? pickTool(lastId, g.key, g.surface) : toggleMenu(g.key))}
-                  style={{
-                    display: 'inline-flex', alignItems: 'center', gap: 6, padding: '0 6px 0 9px', height: 36,
-                    border: 'none', background: 'transparent', cursor: 'pointer', fontSize: 12.5, fontWeight: 600,
-                    color: active ? GOLD : 'rgba(255,255,255,0.8)',
-                  }}
-                >
-                  <Shown size={16} aria-hidden="true" /> {g.label}
-                </button>
-                <button
-                  type="button" aria-label={`Ouvrir ${g.label}`} onClick={() => toggleMenu(g.key)}
-                  style={{
-                    display: 'grid', placeItems: 'center', width: 22, height: 36, border: 'none',
-                    background: openMenu === g.key ? 'rgba(212,163,106,0.18)' : 'transparent', cursor: 'pointer',
-                    color: active ? GOLD : 'rgba(255,255,255,0.6)',
-                  }}
-                >
-                  <ChevronDown size={14} aria-hidden="true" />
-                </button>
-              </div>
-              {openMenu === g.key ? (
-                <div style={menuBox}>
-                  {g.tools.map((t) => (
-                    <button
-                      key={t.id} type="button" title={t.label} onClick={() => pickTool(t.id, g.key, g.surface)}
-                      style={{
-                        width: 44, height: 44, borderRadius: 10, cursor: 'pointer', display: 'grid', placeItems: 'center', gap: 2,
-                        border: tool === t.id ? `1px solid ${GOLD}` : '1px solid rgba(255,255,255,0.08)',
-                        background: tool === t.id ? 'rgba(212,163,106,0.16)' : 'rgba(255,255,255,0.03)',
-                        color: tool === t.id ? GOLD : 'rgba(255,255,255,0.85)',
-                      }}
-                    >
-                      <t.Icon size={17} aria-hidden="true" />
-                      <span style={{ fontSize: 7.5, fontWeight: 600, lineHeight: 1 }}>{t.label}</span>
-                    </button>
-                  ))}
-                </div>
-              ) : null}
-            </div>
+            <button
+              key={g.key} type="button"
+              title={`${g.label} — outils dans le rail latéral`}
+              onClick={() => setSideGroup((k) => (k === g.key ? null : g.key))}
+              style={{
+                display: 'inline-flex', alignItems: 'center', gap: 6, height: 36, padding: '0 10px', borderRadius: 9,
+                border: active ? `1px solid ${GOLD}` : '1px solid transparent',
+                background: active ? 'rgba(212,163,106,0.14)' : 'rgba(255,255,255,0.04)',
+                color: active ? GOLD : 'rgba(255,255,255,0.8)', fontSize: 12.5, fontWeight: 600, cursor: 'pointer',
+              }}
+            >
+              <g.Icon size={16} aria-hidden="true" /> {g.label}
+              <ChevronDown size={13} aria-hidden="true" style={{ opacity: 0.7, transform: open ? 'rotate(180deg)' : 'none', transition: 'transform 0.15s' }} />
+            </button>
           );
         })}
 
         {divider}
 
-        {/* Couleur — déployeur */}
+        {/* Couleur */}
         <div style={{ position: 'relative', display: 'inline-flex' }}>
           <button
-            type="button" aria-label="Couleur" onClick={() => toggleMenu('color')}
-            style={{
-              display: 'inline-flex', alignItems: 'center', gap: 6, height: 36, padding: '0 8px', borderRadius: 9,
-              border: '1px solid transparent', background: 'rgba(255,255,255,0.04)', cursor: 'pointer',
-            }}
+            type="button" aria-label="Couleur" onClick={() => setMenu((m) => (m === 'color' ? null : 'color'))}
+            style={{ display: 'inline-flex', alignItems: 'center', gap: 6, height: 36, padding: '0 8px', borderRadius: 9, border: '1px solid transparent', background: 'rgba(255,255,255,0.04)', cursor: 'pointer' }}
           >
             <span style={{ width: 16, height: 16, borderRadius: '50%', background: color, border: '1px solid rgba(255,255,255,0.3)' }} />
             <ChevronDown size={14} aria-hidden="true" style={{ color: 'rgba(255,255,255,0.6)' }} />
           </button>
-          {openMenu === 'color' ? (
-            <div style={{ ...menuBox, gap: 6 }}>
+          {menu === 'color' ? (
+            <div style={propMenu}>
               {SWATCHES.map((c) => (
-                <button
-                  key={c} type="button" title={c} onClick={() => { setColor(c); setOpenMenu(null); }}
-                  style={{
-                    width: 22, height: 22, borderRadius: '50%', cursor: 'pointer', padding: 0, background: c,
-                    border: color === c ? `2px solid ${GOLD}` : '1px solid rgba(255,255,255,0.25)',
-                  }}
-                />
+                <button key={c} type="button" title={c} onClick={() => { setColor(c); setMenu(null); }}
+                  style={{ width: 22, height: 22, borderRadius: '50%', cursor: 'pointer', padding: 0, background: c, border: color === c ? `2px solid ${GOLD}` : '1px solid rgba(255,255,255,0.25)' }} />
               ))}
             </div>
           ) : null}
         </div>
 
-        {/* Épaisseur — déployeur */}
+        {/* Épaisseur */}
         <div style={{ position: 'relative', display: 'inline-flex' }}>
           <button
-            type="button" aria-label="Épaisseur" onClick={() => toggleMenu('size')}
-            style={{
-              display: 'inline-flex', alignItems: 'center', gap: 6, height: 36, padding: '0 8px', borderRadius: 9,
-              border: '1px solid transparent', background: 'rgba(255,255,255,0.04)', cursor: 'pointer',
-            }}
+            type="button" aria-label="Épaisseur" onClick={() => setMenu((m) => (m === 'size' ? null : 'size'))}
+            style={{ display: 'inline-flex', alignItems: 'center', gap: 6, height: 36, padding: '0 8px', borderRadius: 9, border: '1px solid transparent', background: 'rgba(255,255,255,0.04)', cursor: 'pointer' }}
           >
             <span style={{ width: 16, height: Math.max(2, size / 2), borderRadius: 9, background: 'rgba(255,255,255,0.85)' }} />
             <ChevronDown size={14} aria-hidden="true" style={{ color: 'rgba(255,255,255,0.6)' }} />
           </button>
-          {openMenu === 'size' ? (
-            <div style={{ ...menuBox, alignItems: 'center' }}>
+          {menu === 'size' ? (
+            <div style={{ ...propMenu, alignItems: 'center' }}>
               {SIZES.map((s) => (
-                <button
-                  key={s} type="button" title={`Épaisseur ${s}`} onClick={() => { setSize(s); setOpenMenu(null); }}
-                  style={{
-                    width: 34, height: 34, borderRadius: 8, cursor: 'pointer', display: 'grid', placeItems: 'center',
-                    border: size === s ? `1px solid ${GOLD}` : '1px solid rgba(255,255,255,0.1)',
-                    background: size === s ? 'rgba(212,163,106,0.16)' : 'rgba(255,255,255,0.03)',
-                  }}
-                >
+                <button key={s} type="button" title={`Épaisseur ${s}`} onClick={() => { setSize(s); setMenu(null); }}
+                  style={{ width: 34, height: 34, borderRadius: 8, cursor: 'pointer', display: 'grid', placeItems: 'center', border: size === s ? `1px solid ${GOLD}` : '1px solid rgba(255,255,255,0.1)', background: size === s ? 'rgba(212,163,106,0.16)' : 'rgba(255,255,255,0.03)' }}>
                   <span style={{ width: 18, height: Math.max(2, s / 2), borderRadius: 9, background: '#fff' }} />
                 </button>
               ))}
@@ -290,7 +229,6 @@ export default function ConsultationToolCockpit({
 
         {divider}
 
-        {/* Annuler / Refaire / Effacer */}
         {([
           { key: 'undo', title: 'Annuler', Icon: Undo2, run: () => undoBoard?.() },
           { key: 'redo', title: 'Refaire', Icon: Redo2, run: () => redoBoard?.() },
@@ -303,33 +241,58 @@ export default function ConsultationToolCockpit({
 
         {divider}
 
-        {/* Aperçu (C) + Avancé (rail complet) */}
-        <button
-          type="button" title="Aperçu — voir le tableau comme le patient"
-          onClick={() => onPreviewChange?.(true)}
-          style={{
-            display: 'inline-flex', alignItems: 'center', gap: 5, height: 36, padding: '0 10px', borderRadius: 9,
-            border: '1px solid transparent', background: 'rgba(255,255,255,0.04)', color: 'rgba(255,255,255,0.78)',
-            fontSize: 12, fontWeight: 600, cursor: 'pointer',
-          }}
-        >
+        <button type="button" title="Aperçu — voir le tableau comme le patient" onClick={() => onPreviewChange?.(true)}
+          style={{ display: 'inline-flex', alignItems: 'center', gap: 5, height: 36, padding: '0 10px', borderRadius: 9, border: '1px solid transparent', background: 'rgba(255,255,255,0.04)', color: 'rgba(255,255,255,0.78)', fontSize: 12, fontWeight: 600, cursor: 'pointer' }}>
           <Eye size={15} aria-hidden="true" /> Aperçu
         </button>
-        <button
-          type="button" title="Avancé — tous les outils (math avancé, NeuroInk IA, pages, groupes…)"
-          onClick={() => onAdvancedChange?.(!advancedOpen)}
-          style={{
-            display: 'inline-flex', alignItems: 'center', gap: 5, height: 36, padding: '0 10px', borderRadius: 9,
-            border: advancedOpen ? `1px solid ${GOLD}` : '1px solid transparent',
-            background: advancedOpen ? 'rgba(212,163,106,0.14)' : 'rgba(255,255,255,0.04)',
-            color: advancedOpen ? GOLD : 'rgba(255,255,255,0.78)', fontSize: 12, fontWeight: 600, cursor: 'pointer',
-          }}
-        >
+        <button type="button" title="Avancé — tous les outils (math avancé, NeuroInk IA, pages, groupes…)" onClick={() => onAdvancedChange?.(!advancedOpen)}
+          style={{ display: 'inline-flex', alignItems: 'center', gap: 5, height: 36, padding: '0 10px', borderRadius: 9, border: advancedOpen ? `1px solid ${GOLD}` : '1px solid transparent', background: advancedOpen ? 'rgba(212,163,106,0.14)' : 'rgba(255,255,255,0.04)', color: advancedOpen ? GOLD : 'rgba(255,255,255,0.78)', fontSize: 12, fontWeight: 600, cursor: 'pointer' }}>
           <SlidersHorizontal size={15} aria-hidden="true" /> Avancé
         </button>
       </div>
 
-      <style>{`@keyframes ctcIn{from{opacity:0;transform:translateY(-6px) scale(.97)}to{opacity:1;transform:none}}`}</style>
+      {/* ── RAIL LATÉRAL CONTEXTUEL (gauche) : outils du groupe cliqué ────── */}
+      {activeGroup ? (
+        <div
+          style={{
+            position: 'absolute', top: 58, left: 12, zIndex: 31,
+            display: 'flex', flexDirection: 'column', gap: 4, padding: 8, borderRadius: 14,
+            width: 78, maxHeight: 'calc(100% - 84px)', overflowY: 'auto',
+            background: MENU_BG, border: `1px solid rgba(212,163,106,0.28)`,
+            boxShadow: '0 12px 36px rgba(0,0,0,0.5)', backdropFilter: 'blur(8px)',
+            animation: 'ctcSideIn 0.18s cubic-bezier(0.2,0.7,0.3,1)',
+          }}
+        >
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '1px 3px 3px' }}>
+            <span style={{ fontSize: 9, fontWeight: 700, letterSpacing: 0.3, textTransform: 'uppercase', color: 'rgba(212,163,106,0.9)' }}>{activeGroup.label}</span>
+            <button type="button" aria-label="Fermer" onClick={() => setSideGroup(null)}
+              style={{ width: 18, height: 18, borderRadius: 6, border: 'none', background: 'transparent', color: 'rgba(255,255,255,0.5)', cursor: 'pointer', display: 'grid', placeItems: 'center' }}>
+              <X size={13} aria-hidden="true" />
+            </button>
+          </div>
+          {activeGroup.tools.map((t) => {
+            const active = tool === t.id;
+            return (
+              <button
+                key={t.id} type="button" title={t.label}
+                onClick={() => pickTool(t.id, activeGroup.surface)}
+                style={{
+                  width: '100%', height: 52, borderRadius: 10, cursor: 'pointer',
+                  display: 'grid', placeItems: 'center', gap: 3,
+                  border: active ? `1px solid ${GOLD}` : '1px solid rgba(255,255,255,0.08)',
+                  background: active ? 'rgba(212,163,106,0.16)' : 'rgba(255,255,255,0.03)',
+                  color: active ? GOLD : 'rgba(255,255,255,0.85)',
+                }}
+              >
+                <t.Icon size={18} aria-hidden="true" />
+                <span style={{ fontSize: 8, fontWeight: 600, lineHeight: 1, textAlign: 'center' }}>{t.label}</span>
+              </button>
+            );
+          })}
+        </div>
+      ) : null}
+
+      <style>{`@keyframes ctcIn{from{opacity:0;transform:translateY(-6px) scale(.97)}to{opacity:1;transform:none}}@keyframes ctcSideIn{from{opacity:0;transform:translateX(-8px)}to{opacity:1;transform:none}}`}</style>
     </>
   );
 }
