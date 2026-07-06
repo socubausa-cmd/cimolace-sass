@@ -15,9 +15,11 @@
 import { useState } from 'react';
 import {
   Pencil, PenLine, Type, Eraser,
-  Square, Circle, Minus, Spline,
+  Square, Circle, Minus, Spline, Hexagon, Star, MoveUpRight,
   Hand, MousePointer2, BoxSelect, Crosshair,
-  Compass, Ruler, Eye, X,
+  Compass, Ruler, Triangle, LineChart,
+  Image as ImageIcon, Undo2, Redo2, Trash2, SlidersHorizontal,
+  Eye, X,
 } from 'lucide-react';
 import { useLiveWhiteboardStore } from '@/components/liri/live-room/useLiveWhiteboardStore';
 
@@ -36,6 +38,7 @@ const FAMILIES: Family[] = [
       { id: 'poly', label: 'Stylo', Icon: PenLine },
       { id: 'text', label: 'Texte', Icon: Type },
       { id: 'eraser', label: 'Gomme', Icon: Eraser },
+      { id: 'eraser-stroke', label: 'Effacer objet', Icon: Eraser },
     ],
   },
   {
@@ -45,14 +48,20 @@ const FAMILIES: Family[] = [
       { id: 'circle', label: 'Cercle', Icon: Circle },
       { id: 'line', label: 'Ligne', Icon: Minus },
       { id: 'curve', label: 'Courbe', Icon: Spline },
+      { id: 'polygon', label: 'Polygone', Icon: Hexagon },
+      { id: 'star', label: 'Étoile', Icon: Star },
+      { id: 'arrow', label: 'Flèche', Icon: MoveUpRight },
     ],
   },
   {
     key: 'math', label: 'Math', Icon: Compass, surface: 'geoplan',
     tools: [
-      { id: 'line', label: 'Segment', Icon: Ruler },
-      { id: 'circle', label: 'Cercle', Icon: Compass },
-      { id: 'curve', label: 'Courbe', Icon: Spline },
+      { id: 'compass', label: 'Compas', Icon: Compass },
+      { id: 'protractor', label: 'Rapporteur', Icon: Triangle },
+      { id: 'ruler', label: 'Règle', Icon: Ruler },
+      { id: 'angle', label: 'Angle', Icon: Triangle },
+      { id: 'axes', label: 'Repère', Icon: LineChart },
+      { id: 'function-plot', label: 'Courbe f(x)', Icon: LineChart },
     ],
   },
   {
@@ -64,6 +73,12 @@ const FAMILIES: Family[] = [
       { id: 'laser', label: 'Laser', Icon: Crosshair },
     ],
   },
+  {
+    key: 'image', label: 'Image', Icon: ImageIcon,
+    tools: [
+      { id: 'image-place', label: 'Placer image', Icon: ImageIcon },
+    ],
+  },
 ];
 
 const SWATCHES = ['#ffffff', '#111111', '#d4a36a', '#e5484d', '#3b82f6', '#22c55e', '#eab308'];
@@ -72,11 +87,17 @@ const SIZES = [2, 4, 8, 14];
 export default function ConsultationToolCockpit({
   preview = false,
   onPreviewChange,
+  advancedOpen = false,
+  onAdvancedChange,
 }: {
   /** Mode APERÇU (partie C) : replie le cockpit → le praticien voit le tableau
    *  propre, comme le patient. Purement local (le patient ne remarque rien). */
   preview?: boolean;
   onPreviewChange?: (v: boolean) => void;
+  /** « Avancé » : révèle le rail complet d'origine (LiveWhiteboardToolsSidebar)
+   *  avec TOUS les outils niche (math avancé, NeuroInk IA, pages, groupes…). */
+  advancedOpen?: boolean;
+  onAdvancedChange?: (v: boolean) => void;
 } = {}) {
   const tool = useLiveWhiteboardStore((s) => s.tool);
   const setTool = useLiveWhiteboardStore((s) => s.setTool);
@@ -85,6 +106,9 @@ export default function ConsultationToolCockpit({
   const size = useLiveWhiteboardStore((s) => s.size);
   const setSize = useLiveWhiteboardStore((s) => s.setSize);
   const setBoardSurface = useLiveWhiteboardStore((s) => s.setBoardSurface);
+  const undoBoard = useLiveWhiteboardStore((s) => s.undoBoard);
+  const redoBoard = useLiveWhiteboardStore((s) => s.redoBoard);
+  const clearBoard = useLiveWhiteboardStore((s) => s.clearBoard);
 
   // Famille ouverte (null = seule la barre de familles est visible).
   const [openFamily, setOpenFamily] = useState<string | null>('write');
@@ -220,6 +244,39 @@ export default function ConsultationToolCockpit({
             </button>
           );
         })}
+        {/* Actions rapides : annuler / refaire / tout effacer */}
+        <div style={{ width: 1, background: 'rgba(255,255,255,0.09)', margin: '4px 2px' }} />
+        {([
+          { key: 'undo', title: 'Annuler', Icon: Undo2, run: () => undoBoard?.() },
+          { key: 'redo', title: 'Refaire', Icon: Redo2, run: () => redoBoard?.() },
+          { key: 'clear', title: 'Tout effacer', Icon: Trash2, run: () => clearBoard?.() },
+        ] as const).map((a) => (
+          <button
+            key={a.key} type="button" title={a.title} onClick={a.run}
+            style={{
+              width: 40, height: 40, borderRadius: 10, cursor: 'pointer', display: 'grid', placeItems: 'center',
+              border: '1px solid transparent', background: 'rgba(255,255,255,0.03)', color: 'rgba(255,255,255,0.72)',
+            }}
+          >
+            <a.Icon size={16} aria-hidden="true" />
+          </button>
+        ))}
+        {/* AVANCÉ : révèle le rail complet d'origine (tous les outils niche + IA) */}
+        <div style={{ width: 1, background: 'rgba(255,255,255,0.09)', margin: '4px 2px' }} />
+        <button
+          type="button"
+          title="Avancé — tous les outils (math avancé, NeuroInk IA, pages, groupes…)"
+          onClick={() => onAdvancedChange?.(!advancedOpen)}
+          style={{
+            minWidth: 44, height: 40, borderRadius: 10, cursor: 'pointer',
+            display: 'inline-flex', alignItems: 'center', gap: 5, padding: '0 9px',
+            border: advancedOpen ? `1px solid ${GOLD}` : '1px solid transparent',
+            background: advancedOpen ? 'rgba(212,163,106,0.14)' : 'rgba(255,255,255,0.03)',
+            color: advancedOpen ? GOLD : 'rgba(255,255,255,0.72)', fontSize: 11, fontWeight: 600,
+          }}
+        >
+          <SlidersHorizontal size={15} aria-hidden="true" /> Avancé
+        </button>
         {/* Aperçu (C) : voir le tableau comme le patient (replie le cockpit) */}
         <div style={{ width: 1, background: 'rgba(255,255,255,0.09)', margin: '4px 2px' }} />
         <button

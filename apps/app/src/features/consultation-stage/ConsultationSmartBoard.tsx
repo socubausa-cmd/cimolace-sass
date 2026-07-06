@@ -160,6 +160,8 @@ export default function ConsultationSmartBoard({
   // Mode APERÇU (C) : le praticien replie le cockpit + le cadre pour voir le
   // tableau propre, comme le patient. Local (n'affecte pas le patient).
   const [preview, setPreview] = useState(false);
+  // « Avancé » : révèle le grand rail d'origine (tous les outils niche + NeuroInk).
+  const [advancedOpen, setAdvancedOpen] = useState(false);
   // Réserve basse pour le cockpit d'outils (partie B) : le tableau utile côté
   // hôte = tout SAUF cette bande basse (où vivent les outils, non-dessinable).
   const COCKPIT_RESERVED_BOTTOM = 128;
@@ -223,8 +225,9 @@ export default function ConsultationSmartBoard({
           // Par défaut : rail outils VISIBLE (sinon le praticien n'aurait aucun
           // outil de dessin — cf. doc du prop).
           // Le grand rail d'outils est REMPLACÉ par le cockpit compact groupé
-          // (ci-dessous) côté praticien → on le masque toujours ici.
-          hideEmbeddedWhiteboardToolsRail={hideEmbeddedWhiteboardToolsRail || !readOnly}
+          // (ci-dessous) côté praticien → masqué par défaut ; RÉVÉLÉ quand le
+          // praticien active « Avancé » (accès à TOUS les outils niche + NeuroInk).
+          hideEmbeddedWhiteboardToolsRail={hideEmbeddedWhiteboardToolsRail || (!readOnly && !advancedOpen)}
           hideSceneDock={hideSceneDock}
           onSceneChange={onSceneChange}
         />
@@ -252,7 +255,12 @@ export default function ConsultationSmartBoard({
       {/* A + C — Cockpit d'outils groupés (praticien) : familles → rail overlay
           compact + bouton Aperçu. Remplace le grand rail surchargé. */}
       {!readOnly ? (
-        <ConsultationToolCockpit preview={preview} onPreviewChange={setPreview} />
+        <ConsultationToolCockpit
+          preview={preview}
+          onPreviewChange={setPreview}
+          advancedOpen={advancedOpen}
+          onAdvancedChange={setAdvancedOpen}
+        />
       ) : null}
     </div>
   );
