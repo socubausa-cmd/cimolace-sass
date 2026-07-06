@@ -48,6 +48,52 @@ function judgeAtelierLocal(scene, answer) {
 const isLessonIntent = (m) =>
   /enseigne|apprends?[ -]?moi|donne[ -]?moi un cours|fais[ -]?moi un cours|un vrai cours|cours (sur|de|complet|num[ée]rique)|je veux (comprendre|apprendre)|montre[ -]?moi un cours|le pr[ée]cepteur|suivre un cours/i.test(m || '');
 
+// Valide/coerce un cours généré (edge generate-lesson) — ne throw jamais ; null si inutilisable.
+function normalizeLesson(raw) {
+  try {
+    const src = raw && raw.course ? raw.course : raw;
+    if (!src || !Array.isArray(src.concepts)) return null;
+    const cut = (s, n) => String(s == null ? '' : s).slice(0, n);
+    const arr = (a, n, len) => (Array.isArray(a) ? a : []).slice(0, n).map((x) => cut(x, len)).filter(Boolean);
+    const concepts = src.concepts.slice(0, 2).map((c) => {
+      const scenes = (Array.isArray(c && c.scenes) ? c.scenes : []).map((s) => {
+        if (!s || typeof s !== 'object') return null;
+        if (s.type === 'lecon') {
+          const narration = cut(s.narration || s.board_text, 700);
+          return narration ? { type: 'lecon', title: cut(s.title, 80) || undefined, board_text: cut(s.board_text || s.narration, 220), narration } : null;
+        }
+        if (s.type === 'atelier') {
+          if (!s.question) return null;
+          const ack = s.ack_variants || {};
+          return {
+            type: 'atelier', address: '{{student_name}}', question: cut(s.question, 320), hint: cut(s.hint, 200) || undefined,
+            expected_answers: arr(s.expected_answers, 10, 40), expected_errors: arr(s.expected_errors, 10, 40),
+            ack_variants: { ok: arr(ack.ok, 4, 40), partial: arr(ack.partial, 4, 40), wrong: arr(ack.wrong, 4, 40) },
+            reveal_narration: cut(s.reveal_narration, 800),
+          };
+        }
+        if (s.type === 'transition') { const n = cut(s.narration, 220); return n ? { type: 'transition', narration: n } : null; }
+        return null; // jamais croquis/image (le rendu natif ne les joue pas)
+      }).filter(Boolean);
+      return scenes.length ? { title: cut(c && c.title, 80), scenes } : null;
+    }).filter(Boolean);
+    if (!concepts.length || !concepts.some((c) => c.scenes.some((s) => s.type === 'lecon'))) return null;
+    return { title: cut(src.title, 80) || 'Cours', concepts };
+  } catch { return null; }
+}
+
+// Extrait le sujet d'un message d'apprentissage (« enseigne-moi X », « un cours sur X »).
+function extractLessonTopic(m) {
+  const s = String(m || '').trim();
+  let t = '';
+  let mm = s.match(/cours (?:complet |num[ée]rique )?(?:sur|de|d'|d’|à propos de)\s+(.+)/i);
+  if (mm) t = mm[1];
+  if (!t) { mm = s.match(/(?:enseigne|apprends?|explique|montre|parle)[ -]?(?:moi|nous)?\s+(?:sur\s+|comment\s+|à\s+)?(.+)/i); if (mm) t = mm[1]; }
+  if (!t) { mm = s.match(/(?:sur|à propos de)\s+(.+)/i); if (mm) t = mm[1]; }
+  t = t.replace(/^(le |la |les |l'|l’)/i, '').replace(/[?.!\s]+$/, '').trim();
+  return t.length >= 3 ? t.slice(0, 90) : '';
+}
+
 // BG/BG_THINK/INK/TERRA/GOLD/SERIF importés depuis @/lib/agent/immersiveTheme (coque partagée)
 
 const GREETING = "Bonjour. Dites-moi ce que vous voulez lancer — je m'occupe du reste.";
@@ -519,6 +565,7 @@ export default function CimolaceCreationAgent() {
   const lessonTimer = useRef(null);
   const lessonGenRef = useRef(0);
   const atelierInputRef = useRef(null);
+  const pendingTopicRef = useRef(''); // sujet à générer (génération à la volée)
 
   const [inputOpen, setInputOpen] = useState(false);
   const [value, setValue] = useState('');
@@ -807,26 +854,54 @@ export default function CimolaceCreationAgent() {
     runLessonScene(L.gen, L.idx + 1);
   }, [atelier, answerAtelier, runLessonScene]);
 
-  const startLesson = useCallback((name) => {
+  const beginLesson = useCallback((course, name, tag, gen) => {
+    const scenes = (course.concepts || []).flatMap((c) => c.scenes || []);
+    lessonRef.current = { scenes, idx: 0, name, tag, gen };
+    setAtelier(null); setAtelierAck(''); setAtelierValue('');
+    setLessonActive(true); setLessonIdx(0);
+    runLessonScene(gen, 0);
+  }, [runLessonScene]);
+
+  const startLesson = useCallback(async (name, topic) => {
     stopTour(); exitScene();
     setPendingLesson(false);
     setBrainHooks([]); setKeyword(''); setTopic(null); setError('');
     setStep('brain');
-    const key = ['school', 'medos', 'shop'].includes(chosen) ? chosen : 'school';
-    const course = CIMOLACE_LESSONS[key] || CIMOLACE_LESSONS.school;
-    const scenes = (course.concepts || []).flatMap((c) => c.scenes || []);
-    const gen = ++lessonGenRef.current;
     const nm = String(name || '').trim() || 'toi';
-    lessonRef.current = { scenes, idx: 0, name: nm, tag: PRODUCT[key].tag, gen };
-    setLessonActive(true); setLessonIdx(0);
-    runLessonScene(gen, 0);
-  }, [stopTour, exitScene, chosen, runLessonScene]);
+    const key = ['school', 'medos', 'shop'].includes(chosen) ? chosen : 'school';
+    const t = String(topic || '').trim();
+    const gen = ++lessonGenRef.current;
+    if (!t) { // pas de sujet → cours on-brand canné du moteur choisi
+      beginLesson(CIMOLACE_LESSONS[key] || CIMOLACE_LESSONS.school, nm, PRODUCT[key].tag, gen);
+      return;
+    }
+    // GÉNÉRATION À LA VOLÉE : le Précepteur (cerveau) écrit le cours, Cimolace (OS) le rend natif.
+    setLessonActive(true); setLessonIdx(0); setAtelier(null); setAtelierAck('');
+    setPresence('reflexion'); sThink();
+    setMessage(`Je te prépare un cours sur « ${t} »…`);
+    try {
+      const { data, error: fnErr } = await supabase.functions.invoke('generate-lesson', { body: { topic: t, engine: key, studentName: nm } });
+      if (lessonGenRef.current !== gen) return;
+      if (fnErr) throw fnErr;
+      const course = normalizeLesson(data);
+      if (!course) throw new Error('empty');
+      beginLesson(course, nm, PRODUCT[key].tag, gen);
+    } catch (_) {
+      if (lessonGenRef.current !== gen) return; // repli non bloquant : le cours canné du moteur
+      beginLesson(CIMOLACE_LESSONS[key] || CIMOLACE_LESSONS.school, nm, PRODUCT[key].tag, gen);
+    }
+  }, [stopTour, exitScene, chosen, beginLesson, sThink]);
 
-  const askLessonName = useCallback(() => {
+  const askLessonName = useCallback((topic) => {
     stopTour(); stopLesson(); exitScene();
+    pendingTopicRef.current = String(topic || '').trim();
     setPendingLesson(true);
     setStep('brain');
-    speak("Avec plaisir — je vais t'enseigner ça moi-même. Comment tu t'appelles ? Je t'appellerai par ton prénom.", () => openInput());
+    const t = pendingTopicRef.current;
+    speak(t
+      ? `Avec plaisir — je te prépare un cours sur « ${t} ». Comment tu t'appelles ? Je t'appellerai par ton prénom.`
+      : "Avec plaisir — je vais t'enseigner ça moi-même. Comment tu t'appelles ? Je t'appellerai par ton prénom.",
+      () => openInput());
   }, [stopTour, stopLesson, exitScene, speak, openInput]);
 
   // « type-anywhere » — seulement là où le texte libre a du sens
@@ -896,7 +971,7 @@ export default function CimolaceCreationAgent() {
   // Le « cerveau » : appelle l'edge agent-brain (LLM) → reply générative + produit + hooks.
   // Repli hors-ligne : détection par mots-clés.
   const brain = useCallback(async (message) => {
-    if (isLessonIntent(message)) { askLessonName(); return; } // mode formation → cours natif
+    if (isLessonIntent(message)) { askLessonName(extractLessonTopic(message)); return; } // formation → cours natif (généré si sujet)
     if (isTourIntent(message)) { startTour(TOUR[chosen] ? chosen : guessKind(message)); return; }
     stopTour(); stopLesson();
     setError('');
@@ -940,7 +1015,7 @@ export default function CimolaceCreationAgent() {
     closeInput();
     if (!v) return;
     sPop();
-    if (pendingLesson) { startLesson(v); return; } // le prénom → on lance le cours
+    if (pendingLesson) { startLesson(v, pendingTopicRef.current); return; } // le prénom → on lance/génère le cours
     if (step === 'brand_ask') { submitName(v); return; }
     brain(v);
   }, [value, step, pendingLesson, closeInput, submitName, brain, startLesson, sPop]);
