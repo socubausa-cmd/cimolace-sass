@@ -1396,6 +1396,9 @@ export default function CimolaceCreationAgent({ tenantSlug: tenantSlugProp = nul
   // visiteur n'a pas interagi (pas de scène/tour/leçon/saisie en cours).
   const showTenantHero = isTenantRealm && !engaged && !scene && !tourActive && !lessonActive && !inputOpen;
   const tenantName = (osBrand && osBrand.name) || osTenant;
+  // Écran SCINDÉ : dès qu'une action (formulaire/RDV) est ouverte, on passe en 2 zones —
+  // le guide parle à GAUCHE, la zone d'action (qui s'étire) à DROITE.
+  const showSplitAction = isTenantRealm && !!(contactForm || bookingForm);
   // Scène plein écran (split/reader/tutorial) : la voix centrale + actions en flux s'effacent,
   // la scène porte le message ; `aside` garde la voix au centre.
   const fullscreenScene = !!scene && scene.type !== 'aside';
@@ -1529,8 +1532,8 @@ export default function CimolaceCreationAgent({ tenantSlug: tenantSlugProp = nul
         </div>
       )}
 
-      {/* Voix (masquée pendant l'accueil éditorial du tenant) */}
-      {!showTenantHero && (
+      {/* Voix (masquée pendant l'accueil éditorial OU l'écran scindé — le texte passe alors à gauche) */}
+      {!showTenantHero && !showSplitAction && (
         <div className={`cca-voicecol${fullscreenScene ? ' cca-dim' : ''}`} style={{ minHeight: 34, marginTop: 14, textAlign: 'center', position: 'relative', zIndex: 4 }}>
           {message ? (
             <p className="cca-in" style={{ fontFamily: isTenantRealm ? DISPLAY : SERIF, fontSize: isTenantRealm ? 23 : 19, lineHeight: 1.45, color: INK, maxWidth: isTenantRealm ? 560 : 470, margin: '0 auto' }}>
@@ -1597,77 +1600,86 @@ export default function CimolaceCreationAgent({ tenantSlug: tenantSlugProp = nul
         </div>
       )}
 
-      {/* ACTION ENGINE — formulaire de CONTACT inline (dans la conversation) → contact_requests */}
-      {isTenantRealm && contactForm && (
-        <div className="cca-in" onClick={(e) => e.stopPropagation()}
-          style={{ marginTop: 22, width: '100%', maxWidth: 440, position: 'relative', zIndex: 6, padding: '0 20px', boxSizing: 'border-box', display: 'flex', flexDirection: 'column', gap: 10 }}>
-          {contactForm.sent ? (
-            <div style={{ textAlign: 'center', color: GOLD, fontFamily: DISPLAY, fontSize: 20, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
-              <Check size={18} /> Message envoyé
-            </div>
-          ) : (
-            <>
-              <input className="cca-field" placeholder="Votre nom" value={contactForm.name}
-                onChange={(e) => setContactForm((c) => ({ ...c, name: e.target.value }))} style={VNP_FIELD} />
-              <input className="cca-field" type="email" placeholder="Votre e-mail" value={contactForm.email}
-                onChange={(e) => setContactForm((c) => ({ ...c, email: e.target.value }))} style={VNP_FIELD} />
-              <textarea placeholder={`Votre message pour ${tenantName}…`} value={contactForm.message} rows={3}
-                onChange={(e) => setContactForm((c) => ({ ...c, message: e.target.value }))} style={{ ...VNP_FIELD, resize: 'vertical', lineHeight: 1.4 }} />
-              {contactForm.error && <span style={{ color: '#f0997b', fontSize: 12.5 }}>{contactForm.error}</span>}
-              <div style={{ display: 'flex', gap: 8 }}>
-                <button onClick={(e) => { e.stopPropagation(); submitContact(); }} disabled={contactForm.sending}
-                  style={{ ...VNP_CHIP_BASE, flex: 1, justifyContent: 'center', fontWeight: 600, color: '#231208', background: TERRA, border: 'none', opacity: contactForm.sending ? 0.7 : 1 }}>
-                  {contactForm.sending ? <Loader2 size={15} className="animate-spin" /> : <Send size={15} />}
-                  {contactForm.sending ? 'Envoi…' : 'Envoyer'}
-                </button>
-                <button onClick={(e) => { e.stopPropagation(); setContactForm(null); }}
-                  style={{ ...VNP_NAV_CHIP, justifyContent: 'center', width: 108 }}>Annuler</button>
-              </div>
-            </>
-          )}
-        </div>
-      )}
+      {/* ACTION ENGINE — ÉCRAN SCINDÉ : le guide parle à GAUCHE, la ZONE D'ACTION (s'étire) à DROITE */}
+      {showSplitAction && (
+        <div className="cca-in cca-actionsplit" onClick={(e) => e.stopPropagation()}
+          style={{ display: 'flex', gap: 30, alignItems: 'center', width: '100%', maxWidth: 1000, margin: '8px auto 0', padding: '0 28px', boxSizing: 'border-box', position: 'relative', zIndex: 6 }}>
 
-      {/* ACTION ENGINE — prise de RDV inline : créneaux + email → vnp_booking_requests */}
-      {isTenantRealm && bookingForm && (
-        <div className="cca-in" onClick={(e) => e.stopPropagation()}
-          style={{ marginTop: 22, width: '100%', maxWidth: 470, position: 'relative', zIndex: 6, padding: '0 20px', boxSizing: 'border-box', display: 'flex', flexDirection: 'column', gap: 12 }}>
-          {bookingForm.sent ? (
-            <div style={{ textAlign: 'center', color: GOLD, fontFamily: DISPLAY, fontSize: 20, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
-              <Check size={18} /> Créneau demandé
-            </div>
-          ) : (
-            <>
-              <div className="cca-display" style={{ textAlign: 'center', fontSize: 19, color: INK }}>Réserver une {bookingForm.service}</div>
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: 8 }}>
-                {bookingSlots.map((s) => {
-                  const on = bookingForm.slotIso === s.iso;
-                  return (
-                    <button key={s.iso} onClick={(e) => { e.stopPropagation(); setBookingForm((c) => ({ ...c, slotIso: s.iso, error: '' })); }}
-                      style={{ ...VNP_CHIP_BASE, justifyContent: 'center', fontSize: 13.5, textTransform: 'capitalize',
-                        color: on ? '#231208' : 'rgba(244,239,230,.9)', background: on ? TERRA : 'rgba(244,239,230,.035)',
-                        border: on ? '1px solid transparent' : '1px solid rgba(230,204,146,.2)' }}>
-                      {s.label}
-                    </button>
-                  );
-                })}
+          {/* GAUCHE — la voix du guide */}
+          <div className="cca-actionsplit-text" style={{ flex: '1 1 44%', minWidth: 0 }}>
+            {message && (
+              <p className="cca-display" style={{ fontSize: 'clamp(18px, 1.9vw, 23px)', lineHeight: 1.5, color: 'rgba(244,239,230,.92)', margin: 0, textAlign: 'left', maxWidth: '42ch' }}>
+                {message}{(presence === 'ecriture') && <span className="cca-caret" />}
+              </p>
+            )}
+          </div>
+
+          {/* DROITE — zone d'action bordée, hauteur dynamique selon le contenu */}
+          <div className="cca-actionzone" style={{ flex: '1 1 56%', minWidth: 0, background: 'rgba(244,239,230,.03)', border: '1px solid rgba(230,204,146,.16)', borderRadius: 20, padding: 20, display: 'flex', flexDirection: 'column', gap: 11 }}>
+
+            {contactForm && (contactForm.sent ? (
+              <div style={{ textAlign: 'center', color: GOLD, fontFamily: DISPLAY, fontSize: 20, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 8, padding: '16px 0' }}>
+                <Check size={18} /> Message envoyé
               </div>
-              <input className="cca-field" placeholder="Votre nom" value={bookingForm.name}
-                onChange={(e) => setBookingForm((c) => ({ ...c, name: e.target.value }))} style={VNP_FIELD} />
-              <input className="cca-field" type="email" placeholder="Votre e-mail" value={bookingForm.email}
-                onChange={(e) => setBookingForm((c) => ({ ...c, email: e.target.value }))} style={VNP_FIELD} />
-              {bookingForm.error && <span style={{ color: '#f0997b', fontSize: 12.5 }}>{bookingForm.error}</span>}
-              <div style={{ display: 'flex', gap: 8 }}>
-                <button onClick={(e) => { e.stopPropagation(); submitBooking(); }} disabled={bookingForm.sending}
-                  style={{ ...VNP_CHIP_BASE, flex: 1, justifyContent: 'center', fontWeight: 600, color: '#231208', background: TERRA, border: 'none', opacity: bookingForm.sending ? 0.7 : 1 }}>
-                  {bookingForm.sending ? <Loader2 size={15} className="animate-spin" /> : <Calendar size={15} />}
-                  {bookingForm.sending ? 'Réservation…' : 'Confirmer le RDV'}
-                </button>
-                <button onClick={(e) => { e.stopPropagation(); setBookingForm(null); }}
-                  style={{ ...VNP_NAV_CHIP, justifyContent: 'center', width: 108 }}>Annuler</button>
+            ) : (
+              <>
+                <div className="cca-display" style={{ fontSize: 18, color: INK, marginBottom: 2 }}>Parlez-nous</div>
+                <input className="cca-field" placeholder="Votre nom" value={contactForm.name}
+                  onChange={(e) => setContactForm((c) => ({ ...c, name: e.target.value }))} style={VNP_FIELD} />
+                <input className="cca-field" type="email" placeholder="Votre e-mail" value={contactForm.email}
+                  onChange={(e) => setContactForm((c) => ({ ...c, email: e.target.value }))} style={VNP_FIELD} />
+                <textarea placeholder={`Votre message pour ${tenantName}…`} value={contactForm.message} rows={3}
+                  onChange={(e) => setContactForm((c) => ({ ...c, message: e.target.value }))} style={{ ...VNP_FIELD, resize: 'vertical', lineHeight: 1.4 }} />
+                {contactForm.error && <span style={{ color: '#f0997b', fontSize: 12.5 }}>{contactForm.error}</span>}
+                <div style={{ display: 'flex', gap: 8 }}>
+                  <button onClick={(e) => { e.stopPropagation(); submitContact(); }} disabled={contactForm.sending}
+                    style={{ ...VNP_CHIP_BASE, flex: 1, justifyContent: 'center', fontWeight: 600, color: '#231208', background: TERRA, border: 'none', opacity: contactForm.sending ? 0.7 : 1 }}>
+                    {contactForm.sending ? <Loader2 size={15} className="animate-spin" /> : <Send size={15} />}
+                    {contactForm.sending ? 'Envoi…' : 'Envoyer'}
+                  </button>
+                  <button onClick={(e) => { e.stopPropagation(); setContactForm(null); }}
+                    style={{ ...VNP_NAV_CHIP, justifyContent: 'center', width: 108 }}>Annuler</button>
+                </div>
+              </>
+            ))}
+
+            {bookingForm && (bookingForm.sent ? (
+              <div style={{ textAlign: 'center', color: GOLD, fontFamily: DISPLAY, fontSize: 20, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 8, padding: '16px 0' }}>
+                <Check size={18} /> Créneau demandé
               </div>
-            </>
-          )}
+            ) : (
+              <>
+                <div className="cca-display" style={{ fontSize: 18, color: INK, marginBottom: 2 }}>Réserver une {bookingForm.service}</div>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(132px, 1fr))', gap: 8 }}>
+                  {bookingSlots.map((s) => {
+                    const on = bookingForm.slotIso === s.iso;
+                    return (
+                      <button key={s.iso} onClick={(e) => { e.stopPropagation(); setBookingForm((c) => ({ ...c, slotIso: s.iso, error: '' })); }}
+                        style={{ ...VNP_CHIP_BASE, justifyContent: 'center', fontSize: 13, textTransform: 'capitalize',
+                          color: on ? '#231208' : 'rgba(244,239,230,.9)', background: on ? TERRA : 'rgba(244,239,230,.035)',
+                          border: on ? '1px solid transparent' : '1px solid rgba(230,204,146,.2)' }}>
+                        {s.label}
+                      </button>
+                    );
+                  })}
+                </div>
+                <input className="cca-field" placeholder="Votre nom" value={bookingForm.name}
+                  onChange={(e) => setBookingForm((c) => ({ ...c, name: e.target.value }))} style={VNP_FIELD} />
+                <input className="cca-field" type="email" placeholder="Votre e-mail" value={bookingForm.email}
+                  onChange={(e) => setBookingForm((c) => ({ ...c, email: e.target.value }))} style={VNP_FIELD} />
+                {bookingForm.error && <span style={{ color: '#f0997b', fontSize: 12.5 }}>{bookingForm.error}</span>}
+                <div style={{ display: 'flex', gap: 8 }}>
+                  <button onClick={(e) => { e.stopPropagation(); submitBooking(); }} disabled={bookingForm.sending}
+                    style={{ ...VNP_CHIP_BASE, flex: 1, justifyContent: 'center', fontWeight: 600, color: '#231208', background: TERRA, border: 'none', opacity: bookingForm.sending ? 0.7 : 1 }}>
+                    {bookingForm.sending ? <Loader2 size={15} className="animate-spin" /> : <Calendar size={15} />}
+                    {bookingForm.sending ? 'Réservation…' : 'Confirmer le RDV'}
+                  </button>
+                  <button onClick={(e) => { e.stopPropagation(); setBookingForm(null); }}
+                    style={{ ...VNP_NAV_CHIP, justifyContent: 'center', width: 108 }}>Annuler</button>
+                </div>
+              </>
+            ))}
+          </div>
         </div>
       )}
 
