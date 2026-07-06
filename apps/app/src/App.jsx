@@ -1345,7 +1345,9 @@ isLiriHostDevPreviewRoute;
       )}
 
       {/* Discovery Chat — pages publiques. Exclu de l'espace élève (collision avec le FAB de la sidebar) et des embeds. */}
-      {!isAdminRoute && !isImmersiveEmbed && !isEmbedRoute && !isLiveArenaRoute && !isEleveMobileRoute && !isCimolaceRoute && !isStudentSpaceShell && !location.pathname.startsWith('/creer-organisation/agent') && (
+      {/* CLOISON MEDOS : jamais l'assistant portail LIRI/prorascience par-dessus la
+          salle de téléconsultation santé (`/teleconsult*`), ni pendant ni à la fin. */}
+      {!isAdminRoute && !isImmersiveEmbed && !isEmbedRoute && !isLiveArenaRoute && !location.pathname.startsWith('/teleconsult') && !isEleveMobileRoute && !isCimolaceRoute && !isStudentSpaceShell && !location.pathname.startsWith('/creer-organisation/agent') && (
         <LazyShell>
           <DiscoveryChat />
         </LazyShell>
