@@ -22,6 +22,7 @@ import { getApiBaseUrl } from '@/lib/apiBase';
 import { useAuth } from '@/hooks/useAuth';
 import { authStore } from '@/lib/auth-store';
 import { supabase } from '@/lib/supabase';
+import { logEvent, logUnanswered } from '@/lib/agent/vnpStats';
 import { BG, BG_THINK, INK, TERRA, GOLD, SERIF, DISPLAY, STYLE } from '@/lib/agent/immersiveTheme';
 import Presence from '@/components/agent/Presence';
 import { CIMOLACE_LESSONS } from '@/lib/agent/cimolaceLessons';
@@ -117,6 +118,32 @@ const VNP_ACTION_CHIP = { ...VNP_CHIP_BASE, color: INK, background: 'rgba(217,11
 const VNP_VISIT_CHIP = { ...VNP_CHIP_BASE, fontWeight: 600, color: '#231208', background: TERRA, border: '1px solid transparent' };
 const VNP_CHIP_LABEL = { display: 'inline-flex', alignItems: 'center', gap: 10, minWidth: 0 };
 const VNP_FIELD = { width: '100%', boxSizing: 'border-box', background: 'rgba(244,239,230,.05)', border: '1px solid rgba(230,204,146,.22)', borderRadius: 12, padding: '11px 14px', color: INK, fontFamily: 'inherit', fontSize: 14, outline: 'none' };
+
+// Créneaux de RDV proposés (Action Engine « réserver ») : prochains jours ouvrés × 2 horaires.
+function fmtSlot(d) {
+  const day = d.toLocaleDateString('fr-FR', { weekday: 'short', day: 'numeric', month: 'short' });
+  const hh = String(d.getHours()).padStart(2, '0');
+  const mm = String(d.getMinutes()).padStart(2, '0');
+  return `${day} · ${hh}h${mm === '00' ? '' : mm}`;
+}
+function genSlots(count = 6) {
+  const out = [];
+  const times = [[10, 0], [15, 0]];
+  const d = new Date(); d.setHours(0, 0, 0, 0);
+  let guard = 0;
+  while (out.length < count && guard < 30) {
+    guard += 1;
+    d.setDate(d.getDate() + 1);
+    const dow = d.getDay();
+    if (dow === 0 || dow === 6) continue; // saute le week-end
+    for (const [h, m] of times) {
+      if (out.length >= count) break;
+      const slot = new Date(d); slot.setHours(h, m, 0, 0);
+      out.push({ iso: slot.toISOString(), label: fmtSlot(slot) });
+    }
+  }
+  return out;
+}
 const VNP_ACTION_META = {
   contacter: { label: 'Nous contacter', Icon: Mail },
   rejoindre: { label: 'Rejoindre', Icon: UserPlus },
@@ -1158,8 +1185,9 @@ export default function CimolaceCreationAgent({ tenantSlug: tenantSlugProp = nul
     brainGenRef.current += 1;
     setVnpSuggest(vnpRelated(g, nodeId, 3));
     setVnpActs(n.actions || []);
+    logEvent('node_opened', { nodeId, intention: n.intention || '' }, osTenant);
     speak(`${n.summary} ${n.content}`.replace(/\s+/g, ' ').trim().slice(0, 340) || n.title);
-  }, [vnpGraph, speak]);
+  }, [vnpGraph, speak, osTenant]);
 
   // Réponse à une QUESTION LIBRE via l'edge VNP (résout intention + nœud + suggestions + actions).
   const vnpChat = useCallback(async (message) => {
@@ -1179,6 +1207,8 @@ export default function CimolaceCreationAgent({ tenantSlug: tenantSlugProp = nul
         .map((id) => g && g.byId(id)).filter(Boolean).map((nn) => ({ nodeId: nn.id, label: nn.title })).slice(0, 3);
       setVnpSuggest(sug.length ? sug : (g && data?.nodeId ? vnpRelated(g, data.nodeId, 3) : []));
       setVnpActs(Array.isArray(data?.actions) ? data.actions.slice(0, 4) : []);
+      logEvent('vnp_chat', { intent: data?.intent || '', nodeId: data?.nodeId || '', onTopic: data?.onTopic !== false, sug: sug.length }, osTenant);
+      if (data?.onTopic === false) logUnanswered(message, osTenant);
       speak(reply);
     } catch (_) {
       if (brainGenRef.current !== gen) return;
@@ -1205,6 +1235,7 @@ export default function CimolaceCreationAgent({ tenantSlug: tenantSlugProp = nul
       if (brainGenRef.current !== gen) return;
       const msg = String(data?.message || "C'est noté.");
       const kind = data?.next?.kind;
+      logEvent('action_triggered', { action: actionId, next_kind: kind || '' }, osTenant);
       if (kind === 'checkout' || kind === 'booking') {
         speak(msg, () => setTimeout(() => { window.location.assign('/forfaits'); }, 700)); // → vraie page de checkout
         return;
@@ -1231,6 +1262,7 @@ export default function CimolaceCreationAgent({ tenantSlug: tenantSlugProp = nul
       });
       if (fnErr || !data?.ok) throw (fnErr || new Error('delivery failed'));
       setContactForm((c) => ({ ...c, sending: false, sent: true }));
+      logEvent('contact_submitted', {}, osTenant);
       speak(`Merci${f.name ? `, ${f.name.trim()}` : ''} — votre message est bien parti. L'équipe de ${(osBrand && osBrand.name) || osTenant} vous répond vite.`);
       setTimeout(() => setContactForm(null), 2800);
     } catch (_) {
@@ -1270,6 +1302,7 @@ export default function CimolaceCreationAgent({ tenantSlug: tenantSlugProp = nul
       if (!res.ok) throw new Error(body?.error?.message || body?.message || 'Création impossible. Réessayez.');
       const payload = body?.data ?? body;
       const createdSlug = payload?.tenant?.slug || slug;
+      logEvent('tenant_created', { slug: createdSlug, kind: chosen }, createdSlug);
       const nextUrl = payload?.next_url || `/t/${createdSlug}/admin`;
       authStore.setTenantSlug(createdSlug);
       setStep('pret');
