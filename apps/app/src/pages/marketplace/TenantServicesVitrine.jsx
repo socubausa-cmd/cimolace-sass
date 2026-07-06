@@ -54,7 +54,12 @@ export default function TenantServicesVitrine() {
         const brandData = b?.data ?? b ?? null;
         setBrand(brandData);
         const list = o?.data ?? o ?? [];
-        setOffers(Array.isArray(list) ? list : []);
+        // On n'affiche que de VRAIS services (pas les lignes de config internes :
+        // config boutique __storefront__*, category storefront_config…).
+        const services = (Array.isArray(list) ? list : []).filter(
+          (s) => s && s.category !== 'storefront_config' && !String(s.key || '').startsWith('__'),
+        );
+        setOffers(services);
       })
       .catch((e) => alive && setError(e?.message || 'Chargement impossible'))
       .finally(() => alive && setLoading(false));
