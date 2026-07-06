@@ -643,13 +643,16 @@ export default function CimolaceCreationAgent() {
     if (!t) return;
     if (i >= t.beats.length) { // dépassé la fin → décision
       setCovered((prev) => Array.from(new Set([...prev, 'prix'])));
+      setPresence('attente');
       setStep('product');
       stopTour();
       return;
     }
+    t.idx = i; // l'index vit dans le ref (jamais périmé pour skipBeat)
     const beat = t.beats[i];
     setTourIdx(i);
     setBrainHooks([]); setError('');
+    setMessage(''); // évite le flash du message précédent avant que le beat parle
     setKeyword(beat.keyword || '');
     const tp = TOPIC_ORDER.includes(beat.topic) ? beat.topic : null;
     setTopic(tp);
@@ -674,7 +677,7 @@ export default function CimolaceCreationAgent() {
     stopTour();
     const k = TOUR[kind] ? kind : 'school';
     const gen = ++tourGenRef.current;
-    tourRef.current = { kind: k, beats: TOUR[k], gen };
+    tourRef.current = { kind: k, beats: TOUR[k], gen, idx: 0 };
     setChosen(k); setError('');
     setTourActive(true); setTourIdx(0);
     runBeat(gen, 0);
@@ -685,8 +688,8 @@ export default function CimolaceCreationAgent() {
     if (!t) return;
     clearTimeout(tourTimer.current);
     genRef.current += 1;             // coupe la frappe en cours
-    runBeat(t.gen, tourIdx + 1);
-  }, [runBeat, tourIdx]);
+    runBeat(t.gen, t.idx + 1);       // index depuis le ref (jamais périmé)
+  }, [runBeat]);
 
   const endTour = useCallback(() => {
     stopTour();
