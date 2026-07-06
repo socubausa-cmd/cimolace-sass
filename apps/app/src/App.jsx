@@ -126,12 +126,10 @@ function CimolaceDomainHandler() {
       return;
     }
 
-    // Domaine officiel CIMOLACE : la racine publique doit ouvrir la vitrine produit,
-    // pas l'ancienne vitrine ISNA/PRORASCIENCE.
+    // LOT C — Domaine officiel CIMOLACE : la racine ouvre désormais l'ASSISTANT IMMERSIF (rendu par
+    // RootRedirect au `/`). On NE redirige PLUS `/` vers /cimolace ; le back-office /cimolace/* reste
+    // accessible en direct.
     if (CIMOLACE_PUBLIC_HOSTS.has(host) || host.endsWith('-cimolace.vercel.app')) {
-      if (path === '/' || path === '') {
-        navigate('/cimolace', { replace: true });
-      }
       return;
     }
 
