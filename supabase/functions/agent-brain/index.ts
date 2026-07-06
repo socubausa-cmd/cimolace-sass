@@ -164,7 +164,7 @@ Deno.serve(async (req: Request) => {
       const SIGNALS: Record<string, RegExp> = {
         aside: /prix|tarif|cout|coute|combien|palier|cher|budget|forfait|formule/,
         split: /difference|deux mondes|cote|coulisse|avant.*apres|versus| vs |oppos|compar/,
-        reader: /raconte|histoire|biographie|bio|qui est|fondateur|parcours|manikongo/,
+        reader: /raconte|histoire|biographie|bio|qui est|fondateur|parcours|origine|portrait|personnage|mascotte|figure|marque|presente|decris|recit/,
         tutorial: /comment (integ|branch|install|ajout|mettre|config)|tuto|etapes|pas a pas|embarqu|sur mon site/,
       };
       const sig = SIGNALS[String(scene.type)];

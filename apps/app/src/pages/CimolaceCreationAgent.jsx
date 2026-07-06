@@ -117,9 +117,9 @@ const STYLE = `
 .cca-presence-holder{transition:transform .6s cubic-bezier(.16,1,.3,1),opacity .5s ease}
 .cca-scene-on.cca-slot-aside{transform:translateX(-16%)}
 .cca-scene-on.cca-slot-aside.cca-aside-left{transform:translateX(16%)}
-.cca-scene-on.cca-slot-split{transform:translateY(-33vh) scale(.6)}
+.cca-scene-on.cca-slot-split{transform:translateY(-33vh) scale(.6);opacity:0}
 .cca-scene-on.cca-slot-reader{transform:translate(-42vw,-40vh) scale(.4);opacity:0}
-.cca-scene-on.cca-slot-tutorial{transform:translateY(-31vh) scale(.7)}
+.cca-scene-on.cca-slot-tutorial{transform:translateY(-31vh) scale(.7);opacity:0}
 /* Voix centrale / actions atténuées quand la scène occupe le plein écran */
 .cca-voicecol{transition:opacity .4s ease}
 .cca-voicecol.cca-dim{opacity:0;pointer-events:none}
@@ -197,7 +197,8 @@ const STYLE = `
 .cca-tuto-h{font-size:15.5px;color:${INK};font-weight:500;margin-bottom:2px}
 .cca-tuto-d{font-size:13px;color:rgba(244,239,230,.55);line-height:1.5}
 .cca-tuto-sketch{flex-shrink:0;opacity:.9}
-.cca-tuto-cta{align-self:flex-start;margin-top:6px}
+.cca-tuto-foot{display:flex;flex-wrap:wrap;align-items:center;gap:10px;margin-top:8px}
+.cca-tuto-cta{align-self:flex-start}
 
 /* reduced-motion : l'état final s'applique direct (cca-scene-on posé instantanément par enterScene) */
 @media (prefers-reduced-motion: reduce){
@@ -322,15 +323,15 @@ function normalizeScene(raw) {
           ? { label: cut(it.label, 24), value: cut(it.value, 40), note: cut(it.note, 80) || undefined } : null)
         .filter(Boolean);
       if (!items.length) return null;
-      return { type: 'aside', side: raw.side === 'left' ? 'left' : 'right',
+      return { type: 'aside', side: 'right', // toujours à droite : le rail des sujets occupe la gauche
         title: cut(raw.title, 80) || undefined, items,
         highlight: typeof raw.highlight === 'string' ? cut(raw.highlight, 24) : undefined };
     }
     if (raw.type === 'split') {
-      const pane = (o) => (o && o.title && Array.isArray(o.points) && o.points.length)
+      const pane = (o) => (o && o.title && Array.isArray(o.points) && o.points.length >= 2)
         ? { title: cut(o.title, 60), subtitle: cut(o.subtitle, 80) || undefined, points: arr(o.points, 4, 90) } : null;
       const left = pane(raw.left), right = pane(raw.right);
-      if (!left || !right || !left.points.length || !right.points.length) return null;
+      if (!left || !right || left.points.length < 2 || right.points.length < 2) return null;
       const tn = (v) => (v === 'terra' || v === 'gold') ? v : undefined;
       return { type: 'split', headline: cut(raw.headline, 80) || undefined, left, right,
         tone: { left: tn(raw.tone && raw.tone.left), right: tn(raw.tone && raw.tone.right) } };
@@ -393,8 +394,8 @@ function SceneStage({ scene, visible, readerIdx, setReaderIdx, onSuggest, onCta,
       style={{ position: 'absolute', inset: 0, pointerEvents: 'none', zIndex: 2 }}>
       {scene.type === 'aside' && <AsidePanel scene={scene} />}
       {scene.type === 'split' && <SplitWorlds scene={scene} hooks={hooks} onHook={onHook} />}
-      {scene.type === 'reader' && <ReaderView scene={scene} idx={readerIdx} setIdx={setReaderIdx} onSuggest={onSuggest} />}
-      {scene.type === 'tutorial' && <TutorialFlow scene={scene} onCta={onCta} />}
+      {scene.type === 'reader' && <ReaderView scene={scene} idx={readerIdx} setIdx={setReaderIdx} onSuggest={onSuggest} hooks={hooks} />}
+      {scene.type === 'tutorial' && <TutorialFlow scene={scene} onCta={onCta} hooks={hooks} onHook={onHook} />}
     </div>
   );
 }
@@ -448,8 +449,9 @@ function SplitWorlds({ scene, hooks, onHook }) {
   );
 }
 
-function ReaderView({ scene, idx, setIdx, onSuggest }) {
+function ReaderView({ scene, idx, setIdx, onSuggest, hooks }) {
   const scrollRef = useRef(null);
+  const chips = (scene.suggestions && scene.suggestions.length) ? scene.suggestions : (hooks || []);
   const onScroll = () => {
     const el = scrollRef.current; if (!el) return;
     const cRect = el.getBoundingClientRect();
@@ -490,9 +492,9 @@ function ReaderView({ scene, idx, setIdx, onSuggest }) {
           </button>
         ))}
       </nav>
-      {scene.suggestions && scene.suggestions.length > 0 && (
+      {chips.length > 0 && (
         <div className="cca-reader-suggests">
-          {scene.suggestions.map((s, i) => (
+          {chips.map((s, i) => (
             <span key={i} className="cca-chip" onClick={() => onSuggest(s)}
               style={{ fontSize: 12, color: GOLD, background: 'rgba(244,239,230,.05)', borderRadius: 999, padding: '6px 13px' }}>{s}</span>
           ))}
@@ -502,7 +504,7 @@ function ReaderView({ scene, idx, setIdx, onSuggest }) {
   );
 }
 
-function TutorialFlow({ scene, onCta }) {
+function TutorialFlow({ scene, onCta, hooks, onHook }) {
   return (
     <div className="cca-tuto" style={{ pointerEvents: 'auto' }}>
       <div className="cca-tuto-title">{scene.title}</div>
@@ -518,12 +520,18 @@ function TutorialFlow({ scene, onCta }) {
           </div>
         ))}
       </div>
-      {scene.cta && (
-        <button className="cca-chip cca-tuto-cta" onClick={onCta}
-          style={{ display: 'inline-flex', alignItems: 'center', gap: 7, color: '#2a140c', background: TERRA, border: 'none', borderRadius: 12, padding: '11px 22px', fontWeight: 500, fontSize: 13.5, cursor: 'pointer' }}>
-          {scene.cta}<ArrowRight size={16} />
-        </button>
-      )}
+      <div className="cca-tuto-foot">
+        {scene.cta && (
+          <button className="cca-chip cca-tuto-cta" onClick={onCta}
+            style={{ display: 'inline-flex', alignItems: 'center', gap: 7, color: '#2a140c', background: TERRA, border: 'none', borderRadius: 12, padding: '11px 22px', fontWeight: 500, fontSize: 13.5, cursor: 'pointer' }}>
+            {scene.cta}<ArrowRight size={16} />
+          </button>
+        )}
+        {hooks && hooks.length > 0 && hooks.map((h, i) => (
+          <span key={i} className="cca-chip" onClick={() => onHook(h)}
+            style={{ fontSize: 12.5, color: GOLD, background: 'rgba(244,239,230,.06)', borderRadius: 999, padding: '7px 14px' }}>{h}</span>
+        ))}
+      </div>
     </div>
   );
 }
@@ -557,6 +565,9 @@ export default function CimolaceCreationAgent() {
   const [readerIdx, setReaderIdx] = useState(0);
   const sceneRef = useRef(null);
   const sceneTimer = useRef(null);
+  const rafRef = useRef(null);
+  const brainGenRef = useRef(0); // invalide un brain() en vol (Retour / appels concurrents)
+  const historyRef = useRef([]); // mémoire conversationnelle envoyée à l'edge
 
   const [inputOpen, setInputOpen] = useState(false);
   const [value, setValue] = useState('');
@@ -661,7 +672,9 @@ export default function CimolaceCreationAgent() {
   // L6 — séquenceur d'entrée/sortie de scène. Le contenu est monté dès setScene ;
   // `sceneVisible` (classe cca-scene-on) ne pilote QUE le mouvement → jamais d'écran vide.
   const exitScene = useCallback((done) => {
+    brainGenRef.current += 1; // toute sortie de scène invalide un brain() en vol
     clearTimeout(sceneTimer.current);
+    cancelAnimationFrame(rafRef.current);
     if (!sceneRef.current) { setSceneVisible(false); if (done) done(); return; }
     setSceneVisible(false); // retire cca-scene-on → sortie animée, présence revient au centre
     const dur = (document.hidden || prefersReduced()) ? 0 : 320;
@@ -670,13 +683,17 @@ export default function CimolaceCreationAgent() {
 
   const enterScene = useCallback((next, speakReply) => {
     clearTimeout(sceneTimer.current);
+    cancelAnimationFrame(rafRef.current);
     if (!next) { exitScene(speakReply); return; }
     const instant = document.hidden || prefersReduced();
     setReaderIdx(0);
     setScene(next);
     if (instant) { setSceneVisible(true); if (speakReply) speakReply(); return; }
     setSceneVisible(false);
-    requestAnimationFrame(() => requestAnimationFrame(() => setSceneVisible(true)));
+    // Double rAF stocké/annulable → révèle seulement si une scène est toujours montée.
+    rafRef.current = requestAnimationFrame(() => {
+      rafRef.current = requestAnimationFrame(() => { if (sceneRef.current) setSceneVisible(true); });
+    });
     if (next.type === 'split') sThink(); // grand geste → appui sonore
     const voiceDelay = next.type === 'aside' ? 500 : 360; // laisse la scène se poser avant la voix
     sceneTimer.current = setTimeout(() => { if (speakReply) speakReply(); }, voiceDelay);
@@ -685,8 +702,16 @@ export default function CimolaceCreationAgent() {
   // Éveil
   useEffect(() => {
     const t = setTimeout(() => speak(GREETING), 900);
-    return () => { clearTimeout(t); clearInterval(typeTimer.current); clearTimeout(thinkTimer.current); clearTimeout(sceneTimer.current); };
+    return () => { clearTimeout(t); clearInterval(typeTimer.current); clearTimeout(thinkTimer.current); clearTimeout(sceneTimer.current); cancelAnimationFrame(rafRef.current); };
   }, [speak]);
+
+  // Filet anti-écran-vide : si l'onglet redevient visible et qu'une scène est montée
+  // mais restée invisible (rAF gelé en arrière-plan), on la révèle.
+  useEffect(() => {
+    const onVis = () => { if (!document.hidden && sceneRef.current && !sceneVisible) setSceneVisible(true); };
+    document.addEventListener('visibilitychange', onVis);
+    return () => document.removeEventListener('visibilitychange', onVis);
+  }, [sceneVisible]);
 
   const openInput = useCallback((prefill = '') => {
     setInputOpen(true);
@@ -761,13 +786,15 @@ export default function CimolaceCreationAgent() {
     setError('');
     setBrainHooks([]);
     setKeyword('');
-    exitScene(); // la scène précédente s'efface pendant que l'IA réfléchit
+    exitScene(); // efface la scène + invalide tout brain en vol (brainGenRef)
+    const gen = brainGenRef.current;
     setPresence('reflexion');
     sThink();
     try {
       const { data, error: fnErr } = await supabase.functions.invoke('agent-brain', {
-        body: { message, chosen, covered: coveredRef.current },
+        body: { message, chosen, covered: coveredRef.current, history: historyRef.current.slice(-6) },
       });
+      if (brainGenRef.current !== gen) return; // périmé (Retour / nouvel appel) → on abandonne
       if (fnErr) throw fnErr;
       setKeyword(String(data?.keyword || ''));
       const reply = String(data?.reply || '').trim() || "Je vous écoute — dites-m'en un peu plus ?";
@@ -776,11 +803,13 @@ export default function CimolaceCreationAgent() {
       setTopic(t);
       if (t) setCovered((prev) => (prev.includes(t) ? prev : [...prev, t]));
       setBrainHooks(Array.isArray(data?.hooks) ? data.hooks : []);
+      historyRef.current = [...historyRef.current, { role: 'user', content: message }, { role: 'assistant', content: reply }].slice(-12);
       const nextScene = normalizeScene(data?.scene); // autorité finale, ne throw jamais
       if (product) setChosen(product);
       setStep(product ? 'product' : 'brain');
       enterScene(nextScene, () => speak(reply)); // scene null → speak immédiat (mode L5)
     } catch (_) {
+      if (brainGenRef.current !== gen) return;
       exitScene();
       setTopic(null);
       const k = guessKind(message);
@@ -1075,7 +1104,7 @@ export default function CimolaceCreationAgent() {
       {/* Saisie « parler à la présence » */}
       {inputOpen && (
         <div className="cca-in" onClick={(e) => e.stopPropagation()}
-          style={{ position: 'absolute', left: '50%', bottom: 40, transform: 'translateX(-50%)', width: 'min(440px, 86vw)', display: 'flex', alignItems: 'center', gap: 8, background: 'rgba(244,239,230,.07)', borderRadius: 14, padding: '8px 8px 8px 15px' }}>
+          style={{ position: 'absolute', zIndex: 6, left: '50%', bottom: 40, transform: 'translateX(-50%)', width: 'min(440px, 86vw)', display: 'flex', alignItems: 'center', gap: 8, background: 'rgba(244,239,230,.07)', borderRadius: 14, padding: '8px 8px 8px 15px' }}>
           <input ref={inputRef} className="cca-field" value={value} onChange={(e) => setValue(e.target.value)}
             onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); submitInput(); } else if (e.key === 'Escape') { closeInput(); } }}
             placeholder={step === 'brand_ask' ? 'Nom de votre organisation…' : 'Parlez à la présence…'}
