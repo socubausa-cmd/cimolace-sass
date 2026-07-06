@@ -72,9 +72,20 @@ export const STYLE = `
 .cca-scene-on.cca-slot-tutorial{transform:translateY(-31vh) scale(.7);opacity:0}
 /* leçon (Précepteur embarqué) : la présence RESTE visible, petite, en haut — elle suit le cours */
 .cca-scene-on.cca-slot-lesson{transform:translateY(-41vh) scale(.5)}
-/* le tableau du Précepteur fondu dans la coque (papier chaud, pas une carte blanche « app ») + badge masqué */
-.cca-lesson .cca-board{background:#f4efe6!important;box-shadow:0 26px 70px -26px rgba(0,0,0,.6)!important;border:1px solid rgba(217,119,87,.14)!important}
+/* le Précepteur FONDU dans la coque : AUCUN arrière-plan, textes clairs → un seul système */
+.cca-lesson .cca-board{background:transparent!important;box-shadow:none!important;border:none!important}
 .cca-lesson .cca-board-badge{display:none!important}
+/* textes sombres (conçus pour tableau blanc) → clair sur la coque sombre */
+.cca-lesson .cca-board .text-slate-900,.cca-lesson .cca-board .text-slate-800,.cca-lesson .cca-board .text-slate-700,.cca-lesson .cca-board .text-slate-600,.cca-lesson .cca-board .text-slate-500{color:#f0e9db!important}
+/* le surlignage garde son texte sombre sur son fond clair (Sherpas : le mot-clé ressort) */
+.cca-lesson .cca-board mark.text-slate-900,.cca-lesson .cca-board mark{color:#1a1613!important}
+/* étiquettes d'accent : versions claires pour contraster sur le sombre */
+.cca-lesson .cca-board .text-amber-700{color:#e6cc92!important}
+.cca-lesson .cca-board .text-emerald-700{color:#7fe0a0!important}
+.cca-lesson .cca-board .text-blue-700{color:#88abff!important}
+/* boîtes de dispositifs (encadré/résumé) : fondues, plus de carte claire posée */
+.cca-lesson [class*="bg-emerald-50"]{background:rgba(127,224,160,.08)!important}
+.cca-lesson [class*="bg-white/[0.04]"]{background:rgba(244,239,230,.04)!important}
 /* Voix centrale / actions atténuées quand la scène occupe le plein écran */
 .cca-voicecol{transition:opacity .4s ease}
 .cca-voicecol.cca-dim{opacity:0;pointer-events:none}
