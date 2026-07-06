@@ -17,7 +17,7 @@
  */
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { GraduationCap, Stethoscope, ShoppingBag, ArrowUp, ArrowRight, Check, Loader2, Mail, Lock } from 'lucide-react';
+import { GraduationCap, Stethoscope, ShoppingBag, ArrowUp, ArrowRight, Check, Loader2, Mail, Lock, Volume2, VolumeX } from 'lucide-react';
 import { getApiBaseUrl } from '@/lib/apiBase';
 import { useAuth } from '@/hooks/useAuth';
 import { authStore } from '@/lib/auth-store';
@@ -135,8 +135,57 @@ export default function CimolaceCreationAgent() {
   const thinkTimer = useRef(null);
   const rootRef = useRef(null);
   const genRef = useRef(0);
+  const audioCtxRef = useRef(null);
+  const audioUnlocked = useRef(false);
+  const mutedRef = useRef(false);
+  const [muted, setMuted] = useState(false);
 
   const inputAllowed = step === 'discovery' || step === 'brand_ask';
+
+  useEffect(() => { mutedRef.current = muted; }, [muted]);
+
+  // ── Sons synthétisés (Web Audio, zéro asset) — subtils, coupables via mute ──
+  const audio = useCallback(() => {
+    if (mutedRef.current) return null;
+    try {
+      if (!audioCtxRef.current) audioCtxRef.current = new (window.AudioContext || window.webkitAudioContext)();
+    } catch { return null; }
+    const ctx = audioCtxRef.current;
+    if (!ctx) return null;
+    if (ctx.state === 'suspended') ctx.resume().catch(() => {});
+    return ctx;
+  }, []);
+  const tone = useCallback((freq, dur, gain, type, when) => {
+    const ctx = audio(); if (!ctx) return;
+    const t = ctx.currentTime + (when || 0);
+    const osc = ctx.createOscillator();
+    const g = ctx.createGain();
+    osc.type = type || 'sine';
+    osc.frequency.value = freq;
+    g.gain.setValueAtTime(0.0001, t);
+    g.gain.linearRampToValueAtTime(gain, t + 0.012);
+    g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+    osc.connect(g); g.connect(ctx.destination);
+    osc.start(t); osc.stop(t + dur + 0.03);
+  }, [audio]);
+  const sHello = useCallback(() => { tone(432, 0.16, 0.035, 'sine', 0); tone(648, 0.2, 0.03, 'sine', 0.09); }, [tone]);
+  const sThink = useCallback(() => { tone(196, 0.85, 0.024, 'sine', 0); tone(294, 0.85, 0.015, 'sine', 0); }, [tone]);
+  const sTick = useCallback(() => { tone(1180, 0.028, 0.011, 'triangle', 0); }, [tone]);
+  const sPop = useCallback(() => { tone(540, 0.07, 0.03, 'sine', 0); }, [tone]);
+  const sChime = useCallback(() => { tone(523, 0.14, 0.035, 'sine', 0); tone(659, 0.14, 0.03, 'sine', 0.1); tone(784, 0.22, 0.03, 'sine', 0.2); }, [tone]);
+
+  // Autoplay : le son ne peut démarrer qu'après un 1er geste utilisateur.
+  useEffect(() => {
+    const unlock = () => {
+      if (audioUnlocked.current) return;
+      audioUnlocked.current = true;
+      audio();
+      if (!mutedRef.current) sHello();
+    };
+    window.addEventListener('pointerdown', unlock);
+    window.addEventListener('keydown', unlock);
+    return () => { window.removeEventListener('pointerdown', unlock); window.removeEventListener('keydown', unlock); };
+  }, [audio, sHello]);
 
   // Typewriter robuste par « génération » : chaque speak() incrémente un jeton ; toute
   // frappe périmée (nouvelle frappe, ou double-mount StrictMode) s'arrête d'elle-même via
@@ -159,6 +208,7 @@ export default function CimolaceCreationAgent() {
       if (genRef.current !== gen) return; // périmée → stop
       i += 1;
       setMessage(text.slice(0, i));
+      if (i % 2 === 0 && text.charAt(i - 1) !== ' ') sTick();
       if (i >= text.length) {
         setPresence('attente');
         if (done) done();
@@ -167,13 +217,14 @@ export default function CimolaceCreationAgent() {
       typeTimer.current = setTimeout(tick, 22);
     };
     typeTimer.current = setTimeout(tick, 22);
-  }, []);
+  }, [sTick]);
 
   const think = useCallback((fn, delay = 1000) => {
     setPresence('reflexion');
+    sThink();
     clearTimeout(thinkTimer.current);
     thinkTimer.current = setTimeout(fn, delay);
-  }, []);
+  }, [sThink]);
 
   // Éveil
   useEffect(() => {
@@ -218,15 +269,17 @@ export default function CimolaceCreationAgent() {
 
   // ── Transitions de flux ────────────────────────────────────────────────
   const pickKind = useCallback((k) => {
+    sPop();
     setChosen(k);
     setError('');
     think(() => { setStep('product'); speak(PRODUCT[k].reply); });
-  }, [think, speak]);
+  }, [think, speak, sPop]);
 
   const chooseProduct = useCallback(() => {
+    sPop();
     setStep('brand_ask');
     speak("Comment s'appelle votre organisation ? Dites-le moi.", () => openInput());
-  }, [speak, openInput]);
+  }, [speak, openInput, sPop]);
 
   const submitName = useCallback((name) => {
     const s = slugify(name);
@@ -237,27 +290,31 @@ export default function CimolaceCreationAgent() {
   }, [think, speak, checkSlug]);
 
   const continueToAccount = useCallback(() => {
+    sPop();
     setStep('account');
     speak("Dernière étape : votre e-mail et un mot de passe (8 caractères min). Vous saisissez, je crée l'espace.");
-  }, [speak]);
+  }, [speak, sPop]);
 
   const submitInput = useCallback(() => {
     const v = value.trim();
     closeInput();
     if (!v) return;
+    sPop();
     if (step === 'brand_ask') { submitName(v); return; }
     const k = guessKind(v);
     setChosen(k);
     think(() => { setStep('product'); speak(PRODUCT[k].reply); });
-  }, [value, step, closeInput, submitName, think, speak]);
+  }, [value, step, closeInput, submitName, think, speak, sPop]);
 
   const createAccount = useCallback(async () => {
     setError('');
     if (!email.trim() || !password) { setError('E-mail et mot de passe requis.'); return; }
     if (password.length < 8) { setError('Mot de passe : 8 caractères minimum.'); return; }
     if (slug.length < 2) { setError("Le nom d'organisation ne produit pas d'identifiant valide."); return; }
+    sPop();
     setBusy(true);
     setPresence('reflexion');
+    sThink();
     try {
       const res = await fetch(`${getApiBaseUrl()}/signup/tenant`, {
         method: 'POST',
@@ -272,6 +329,7 @@ export default function CimolaceCreationAgent() {
       authStore.setTenantSlug(createdSlug);
       setStep('pret');
       setPresence('pret');
+      sChime();
       setMessage(`Votre espace ${PRODUCT[chosen].tag} est prêt.`);
       const { error: loginErr } = await login(email.trim(), password);
       setTimeout(() => navigate(loginErr ? '/login' : nextUrl, { replace: true }), 1500);
@@ -281,7 +339,7 @@ export default function CimolaceCreationAgent() {
     } finally {
       setBusy(false);
     }
-  }, [email, password, slug, orgName, chosen, login, navigate]);
+  }, [email, password, slug, orgName, chosen, login, navigate, sPop, sThink, sChime]);
 
   const onRootClick = (e) => {
     if (inputOpen || !inputAllowed) return;
@@ -317,6 +375,15 @@ export default function CimolaceCreationAgent() {
         </span>
         <span style={{ fontSize: 11, color: 'rgba(244,239,230,.55)', letterSpacing: '.03em' }}>assistant cimolace · connecté</span>
       </div>
+
+      {/* Son on/off */}
+      <button
+        onClick={(e) => { e.stopPropagation(); setMuted((m) => !m); }}
+        aria-label={muted ? 'Activer le son' : 'Couper le son'}
+        style={{ position: 'absolute', top: 16, right: 18, background: 'transparent', border: 'none', color: 'rgba(244,239,230,.4)', cursor: 'pointer', zIndex: 5, padding: 4, display: 'inline-flex' }}
+      >
+        {muted ? <VolumeX size={17} /> : <Volume2 size={17} />}
+      </button>
 
       {/* Présence */}
       <div className={`cca-${presence}`} style={{ position: 'relative', width: 200, height: 120, pointerEvents: 'none' }}>
