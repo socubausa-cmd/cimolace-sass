@@ -430,6 +430,7 @@ const SecretariatPage = lazy(() => import('@/pages/SecretariatPage'));
 const SchoolVitrinePage = lazy(() => import('@/pages/school/SchoolVitrinePage'));
 const SchoolVitrineTenantPage = lazy(() => import('@/pages/school/SchoolVitrineTenantPage'));
 const PaiementPage = lazy(() => import('@/pages/school/PaiementPage'));
+const TenantServicesVitrine = lazy(() => import('@/pages/marketplace/TenantServicesVitrine'));
 const ActivateAccountPage = lazy(() => import('@/pages/school/ActivateAccountPage'));
 const LiveJoinPage = lazy(() => import('@/pages/school/LiveJoinPage'));
 const LiveJoinLinksPage = lazy(() => import('@/pages/school/LiveJoinLinksPage'));
@@ -2410,6 +2411,9 @@ isLiriHostDevPreviewRoute;
               v6 classe les routes statiques (login/courses/paiement/admin) au-dessus
               de :vitrinePage → pas de collision. Cf. docs/CIMOLACE_ARCHITECTURE.md §7. */}
           <Route path="/t/:tenantSlug" element={<TenantVitrineHome />} />
+          {/* Vitrine marketplace : services du praticien (public, pilotée par le
+              catalogue). Static AVANT le catch-all :vitrinePage. */}
+          <Route path="/t/:tenantSlug/services" element={<TenantServicesVitrine />} />
           <Route path="/t/:tenantSlug/:vitrinePage" element={<TenantVitrinePage />} />
           {/* Domaine custom (prorascience.org) : vitrine + sous-pages en URLs PROPRES (tenant
               fondateur), sans /t/:slug. CimolaceDomainHandler strippe les anciens /t/isna/* ici. */}

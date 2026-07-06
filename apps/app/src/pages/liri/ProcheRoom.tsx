@@ -41,7 +41,7 @@ import { useBroadcastJoinRequest } from '@/features/medos-cockpit/useJoinRequest
 import { explainSharedScene } from '@/features/medos-cockpit/cockpit-api';
 import { useCockpitChannel } from '@/features/medos-cockpit/useCockpitChannel';
 import { getApiBaseUrl } from '@/lib/apiBase';
-import { ConsultationStage, CallEndedScreen, ChatPanel, AudioUnlockGate, RaiseHandButton, CONSULT_SHELL_CSS } from './ConsultationRoom';
+import { ConsultationStage, CallEndedScreen, ChatPanel, AudioUnlockGate, RaiseHandButton, CONSULT_SHELL_CSS, PrivateChatProvider } from './ConsultationRoom';
 import { ParticipantCaptions } from '@/features/consultation-stage/LiveCaptions';
 
 // Shell chaud LIRI (aligné sur ConsultationRoom / liveHostTheme).
@@ -331,6 +331,9 @@ function ProcheLiveRoom({ url, token, sessionId, inviteId, clinic, initialCam = 
       <LiveKitRoom serverUrl={url} token={token} connect audio={initialMic} video={initialCam}
         onDisconnected={(reason) => { if (reason === DisconnectReason.PARTICIPANT_REMOVED) setKicked(true); }}
         style={{ flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column' }}>
+        {/* Messagerie privée symétrique : l'invité peut aussi ouvrir un DM avec
+            l'hôte (ou un autre membre) depuis le rail quand le chat est ouvert. */}
+        <PrivateChatProvider chatOpen={chatOpen}>
         <div style={{ display: 'flex', flex: 1, minHeight: 0 }}>
           <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column' }}>
             <ProcheChrome />
@@ -362,6 +365,7 @@ function ProcheLiveRoom({ url, token, sessionId, inviteId, clinic, initialCam = 
               et capte les messages reçus panneau fermé. */}
           <ChatPanel open={chatOpen} onClose={() => setChatOpen(false)} />
         </div>
+        </PrivateChatProvider>
         <RoomAudioRenderer />
         <AudioUnlockGate />
       </LiveKitRoom>

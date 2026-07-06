@@ -131,6 +131,17 @@ export class CreateAppointmentDto {
   @IsString()
   @MaxLength(2000)
   reason?: string;
+
+  /**
+   * Marketplace praticien : clé du SERVICE du catalogue (billing_plans.key) auquel
+   * ce RDV est rattaché. Si le service est PAYANT, le serveur exige un access_pass
+   * actif (payé) avant de créer le RDV, et reprend le prix du service.
+   */
+  @ApiPropertyOptional({ description: 'Clé du service catalogue (billing_plans.key)' })
+  @IsOptional()
+  @IsString()
+  @MaxLength(160)
+  service_key?: string;
 }
 
 export class UpdateAppointmentDto {

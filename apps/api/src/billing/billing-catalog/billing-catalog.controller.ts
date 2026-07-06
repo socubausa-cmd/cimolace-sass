@@ -33,7 +33,9 @@ import {
  */
 @Controller('billing/catalog')
 @UseGuards(JwtAuthGuard, TenantGuard, RolesGuard)
-@Roles('owner', 'admin')
+// owner/admin gèrent tout le catalogue ; le PRATICIEN peut aussi créer/gérer ses
+// propres services (consultation, coaching, masterclass) = marketplace praticien.
+@Roles('owner', 'admin', 'practitioner')
 export class BillingCatalogController {
   constructor(private readonly svc: BillingCatalogService) {}
 

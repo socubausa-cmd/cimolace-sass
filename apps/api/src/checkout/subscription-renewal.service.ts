@@ -340,8 +340,63 @@ export class SubscriptionRenewalService implements OnApplicationBootstrap, OnMod
     // et la garde élève ne s'ouvre pas. Tolérant aux erreurs (ne casse jamais le fulfillment).
     await this.grantStudentAccess(userId, tenantId);
 
+    // Marketplace praticien : si ce plan est un SERVICE « bookable » (consultation,
+    // coaching…), poser un access_pass réutilisable qui débloque la prise de RDV.
+    await this.grantServiceAccessIfBookable(
+      userId,
+      tenantId,
+      planSlug,
+      opts.providerSubscriptionId ?? null,
+    );
+
     // Reçu : notification in-app + email de confirmation à l'élève (best-effort).
     await this.notifyStudentPayment(userId, tenantId, plan);
+  }
+
+  /**
+   * Marketplace praticien : un paiement d'un SERVICE marqué « bookable »
+   * (metadata.bookable=true dans billing_plans) pose un `access_passes`
+   * (resource_type='service', resource_id=<clé du service>) → débloque la prise de
+   * RDV (gate côté appointments.service). Idempotent (upsert onConflict). NE FAIT
+   * RIEN si le plan n'est pas bookable → n'affecte pas les offres école/cycles.
+   * Best-effort : ne casse jamais le fulfillment paiement.
+   */
+  private async grantServiceAccessIfBookable(
+    userId: string | null | undefined,
+    tenantId: string | null | undefined,
+    serviceKey: string | null | undefined,
+    paymentId: string | null,
+  ): Promise<void> {
+    if (!userId || !tenantId || !serviceKey) return;
+    try {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const { data: plan } = await (this.supabase as any)
+        .from('billing_plans')
+        .select('key, metadata')
+        .eq('tenant_id', tenantId)
+        .eq('key', serviceKey)
+        .maybeSingle();
+      if (!plan?.metadata?.bookable) return;
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      await (this.supabase as any).from('access_passes').upsert(
+        {
+          tenant_id: tenantId,
+          user_id: userId,
+          resource_type: 'service',
+          resource_id: serviceKey,
+          payment_id: paymentId,
+          status: 'active',
+        },
+        { onConflict: 'tenant_id,user_id,resource_type,resource_id' },
+      );
+      this.logger.log(
+        `access_pass service accordé — user=${userId} service=${serviceKey}`,
+      );
+    } catch (e) {
+      this.logger.warn(
+        `grantServiceAccessIfBookable (user=${userId}): ${(e as Error).message}`,
+      );
+    }
   }
 
   /**
@@ -640,6 +695,13 @@ export class SubscriptionRenewalService implements OnApplicationBootstrap, OnMod
         );
         // Don / offrande / consultation : reçu (notif + email) sans octroi d'accès.
         await this.notifyOneOffPayment(userId, meta.tenant_id ?? null, meta.kind, session.amount_total ?? null, session.currency ?? null);
+        // Marketplace : consultation payée en one-off → pass qui débloque la prise de RDV.
+        await this.grantServiceAccessIfBookable(
+          userId,
+          meta.tenant_id ?? null,
+          meta.plan_slug ?? null,
+          (session as any).payment_intent ?? session.id ?? null,
+        );
       }
       return;
     }
@@ -722,6 +784,13 @@ export class SubscriptionRenewalService implements OnApplicationBootstrap, OnMod
       // (notif + email). Le claim atomique ci-dessus garantit l'envoi UNIQUE
       // même si webhook et poller confirment le même dépôt.
       await this.notifyOneOffPayment(dep.user_id, dep.tenant_id ?? null, dep.kind, dep.amount_cents ?? undefined, dep.currency ?? undefined);
+      // Marketplace : consultation payée en one-off (Mobile Money) → pass RDV.
+      await this.grantServiceAccessIfBookable(
+        dep.user_id,
+        dep.tenant_id ?? null,
+        (dep as any).plan_slug ?? null,
+        (dep as any).deposit_id ?? null,
+      );
     }
   }
 

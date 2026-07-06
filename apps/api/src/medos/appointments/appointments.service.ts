@@ -222,6 +222,43 @@ export class AppointmentsService {
       throw new ForbiddenException('Vous ne pouvez créer que vos propres RDV');
     }
 
+    // ── Marketplace praticien : RDV rattaché à un SERVICE du catalogue ──────────
+    // Si le service est PAYANT (access_model=paid + price>0) et que c'est le
+    // PATIENT qui réserve, exiger un access_pass actif (posé au paiement, cf.
+    // subscription-renewal.grantServiceAccessIfBookable). Gratuit/communauté →
+    // autorisé sans paiement. Le staff (praticien/owner) réserve toujours librement.
+    let servicePrice: { price_cents: number | null; currency: string | null } | null = null;
+    if (dto.service_key) {
+      const { data: svc } = await (this.supabase.client as any)
+        .from('billing_plans')
+        .select('key, access_model, price_cents, currency')
+        .eq('tenant_id', tenant.id)
+        .eq('key', dto.service_key)
+        .maybeSingle();
+      if (svc) {
+        servicePrice = { price_cents: svc.price_cents ?? null, currency: svc.currency ?? null };
+        const isPaid =
+          Number(svc.price_cents ?? 0) > 0 && (svc.access_model ?? 'paid') === 'paid';
+        if (isPaid && actorRole === 'patient') {
+          const passUserId = (patient as any).patient_user_id || actorId;
+          const { data: pass } = await (this.supabase.client as any)
+            .from('access_passes')
+            .select('id')
+            .eq('tenant_id', tenant.id)
+            .eq('user_id', passUserId)
+            .eq('resource_type', 'service')
+            .eq('resource_id', dto.service_key)
+            .eq('status', 'active')
+            .maybeSingle();
+          if (!pass?.id) {
+            throw new ForbiddenException(
+              'Ce service est payant : complétez le paiement avant de réserver.',
+            );
+          }
+        }
+      }
+    }
+
     // Vérifier qu'aucun RDV n'existe au même créneau pour ce praticien
     const scheduledAt = new Date(dto.scheduled_at).toISOString();
     const duration = dto.duration_minutes ?? 30;
@@ -263,6 +300,10 @@ export class AppointmentsService {
         reason: dto.reason ?? null,
         status: initialStatus,
         confirmed_at: confirmedAt,
+        // Reprend le tarif du service marketplace rattaché (colonnes existantes).
+        ...(servicePrice
+          ? { price_cents: servicePrice.price_cents, currency: servicePrice.currency }
+          : {}),
       })
       .select('*')
       .single();

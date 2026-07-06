@@ -14,6 +14,7 @@ import { ProgramsList } from './pages/ProgramsList';
 import { ChartingPage } from './pages/ChartingPage';
 import { Threads } from './pages/Threads';
 import { Appointments } from './pages/Appointments';
+import ServicesPage from './pages/ServicesPage';
 import { AuditPage } from './pages/AuditPage';
 import { HandoffPage } from './pages/HandoffPage';
 import { ResetPasswordPage } from './pages/ResetPassword';
@@ -63,6 +64,7 @@ function AppRoutes() {
         <Route path="/charting" element={<ChartingPage />} />
         <Route path="/messages" element={<Threads />} />
         <Route path="/appointments" element={<Appointments />} />
+        <Route path="/services" element={<ServicesPage />} />
         <Route path="/audit" element={<AuditPage />} />
         <Route
           path="/twin/new"

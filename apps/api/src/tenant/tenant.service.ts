@@ -175,7 +175,7 @@ export class TenantService {
     const supabase = this.authService.getClient();
     const { data } = await supabase
       .from("billing_plans")
-      .select("key, label, tagline, description, price_cents, currency, billing_cycle, category, features, sort_order")
+      .select("key, label, tagline, description, price_cents, currency, billing_cycle, category, features, sort_order, access_model, metadata")
       .eq("tenant_id", tenantId)
       .eq("is_active", true)
       .order("sort_order", { ascending: true })

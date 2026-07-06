@@ -17,11 +17,12 @@
 // chaque flux est encadré en 16:9 (object-fit cover SANS écrasement). Token via
 // le chemin MÉDICAL (contrôle d'accès patient).
 // ─────────────────────────────────────────────────────────────────────────────
-import { useCallback, useEffect, useRef, useState, type CSSProperties, type ReactNode } from 'react';
+import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type CSSProperties, type ReactNode } from 'react';
 import { useParams } from 'react-router-dom';
 import {
   LiveKitRoom,
   ParticipantTile,
+  VideoTrack,
   RoomAudioRenderer,
   TrackToggle,
   useChat,
@@ -612,6 +613,10 @@ export default function ConsultationRoom() {
         <CallVideoFx camId={camId} micId={micId} detourage={detourage} />
         {/* Corps : colonne principale (chrome + scène + barre) + panneau de
             droite (discussion / copilote / récap), façon appel vidéo. */}
+        {/* Provider messagerie privée : le rail des membres et le ChatPanel
+            partagent le même fil DM → clic sur un membre (chat ouvert) ouvre la
+            conversation privée avec lui, son flux vidéo servant d'avatar. */}
+        <PrivateChatProvider chatOpen={rightPanel === 'chat'}>
         <div style={{ display: 'flex', flex: 1, minHeight: 0 }}>
           <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column' }}>
             <ConsultationChrome
@@ -703,6 +708,7 @@ export default function ConsultationRoom() {
               ) : null}
           </div>
         </div>
+        </PrivateChatProvider>
         <RoomAudioRenderer />
         <AudioUnlockGate />
         {/* Compteur non-lu Discussion → badge sur le bouton de la barre. */}
@@ -874,6 +880,76 @@ export function useHandRaise() {
   }, [localParticipant]);
 
   return { raised, localRaised, toggle };
+}
+
+// ── Messagerie PRIVÉE (DM) ───────────────────────────────────────────────────
+// Conversation 1-à-1 entre membres : `publishData` CIBLÉ (destinationIdentities)
+// → SEUL le destinataire reçoit (contrairement au chat de groupe LiveKit qui
+// diffuse à tous). Un fil par identité de membre + compteur non-lu. Éphémère
+// (aucun historique serveur, comme la main levée) — suffisant pour un aparté live.
+export type DmMsg = { from: string; fromName?: string; text: string; ts: number; mine: boolean };
+export function usePrivateMessages() {
+  const room = useRoomContext();
+  const { localParticipant } = useLocalParticipant();
+  const [threads, setThreads] = useState<Record<string, DmMsg[]>>({});
+  const [unread, setUnread] = useState<Record<string, number>>({});
+
+  useEffect(() => {
+    if (!room) return undefined;
+    const dec = new TextDecoder();
+    const onData = (payload: Uint8Array, participant?: any, _k?: unknown, topic?: string) => {
+      if (topic !== 'dm' || !participant?.identity) return;
+      let text = '';
+      let ts = 0;
+      try { const o = JSON.parse(dec.decode(payload)); text = String(o?.text || ''); ts = Number(o?.ts) || 0; } catch { return; }
+      if (!text) return;
+      const key = participant.identity;
+      setThreads((prev) => ({ ...prev, [key]: [...(prev[key] || []), { from: key, fromName: participant.name, text, ts: ts || 0, mine: false }] }));
+      setUnread((prev) => ({ ...prev, [key]: (prev[key] || 0) + 1 }));
+    };
+    room.on(RoomEvent.DataReceived, onData);
+    return () => { room.off(RoomEvent.DataReceived, onData); };
+  }, [room]);
+
+  const sendTo = useCallback((toIdentity: string, text: string, ts: number) => {
+    const t = text.trim();
+    if (!t || !toIdentity) return;
+    try {
+      const enc = new TextEncoder();
+      void localParticipant?.publishData(enc.encode(JSON.stringify({ text: t, ts })), { reliable: true, topic: 'dm', destinationIdentities: [toIdentity] });
+    } catch { /* ignore */ }
+    setThreads((prev) => ({ ...prev, [toIdentity]: [...(prev[toIdentity] || []), { from: localParticipant?.identity || 'me', text: t, ts, mine: true }] }));
+  }, [localParticipant]);
+
+  const markRead = useCallback((id: string) => setUnread((prev) => (prev[id] ? { ...prev, [id]: 0 } : prev)), []);
+
+  return { threads, unread, sendTo, markRead };
+}
+
+// Contexte messagerie privée partagé par le rail des membres (clic → ouvre la
+// conversation) ET le ChatPanel (rend la conversation active + envoie). Fourni
+// par <PrivateChatProvider> monté DANS <LiveKitRoom> (les deux salles : hôte +
+// invité) → le DM est symétrique sans dupliquer l'état.
+type PrivateChatCtx = ReturnType<typeof usePrivateMessages> & {
+  dmWith: string | null;
+  openDm: (id: string) => void;
+  closeDm: () => void;
+  chatOpen: boolean;
+};
+const PrivateChatContext = createContext<PrivateChatCtx | null>(null);
+export function usePrivateChat() { return useContext(PrivateChatContext); }
+
+export function PrivateChatProvider({ chatOpen, children }: { chatOpen: boolean; children: ReactNode }) {
+  const pm = usePrivateMessages();
+  const [dmWith, setDmWith] = useState<string | null>(null);
+  const { markRead } = pm;
+  const openDm = useCallback((id: string) => { setDmWith(id); markRead(id); }, [markRead]);
+  const closeDm = useCallback(() => setDmWith(null), []);
+  // Panneau Discussion fermé → on quitte aussi la conversation privée (au retour
+  // on retombe sur la vue de groupe, pas sur un DM orphelin).
+  useEffect(() => { if (!chatOpen) setDmWith(null); }, [chatOpen]);
+  const value = useMemo<PrivateChatCtx>(() => ({ ...pm, dmWith, openDm, closeDm, chatOpen }), [pm, dmWith, openDm, closeDm, chatOpen]);
+  return <PrivateChatContext.Provider value={value}>{children}</PrivateChatContext.Provider>;
 }
 
 // Bouton « Lever la main » — barre du bas (invité ET praticien). Icône seule en
@@ -1214,35 +1290,92 @@ function ChatUnreadTracker({ open, onUnread }: { open: boolean; onUnread: (n: nu
 }
 
 export function ChatPanel({ open = true, onClose }: { open?: boolean; onClose: () => void }) {
+  const pc = usePrivateChat();
+  const dmWith = pc?.dmWith ?? null;
   const { chatMessages, send, isSending } = useChat();
   const { localParticipant } = useLocalParticipant();
   const [text, setText] = useState('');
   const endRef = useRef<HTMLDivElement | null>(null);
 
+  // Flux vidéo du membre de la conversation privée = avatar du chat.
+  const camTracks = useTracks([{ source: Track.Source.Camera, withPlaceholder: true }], { onlySubscribed: false });
+  const dmTrackRef = dmWith ? camTracks.find((t) => t?.participant?.identity === dmWith) : undefined;
+  const dmName = dmTrackRef?.participant?.name || dmTrackRef?.participant?.identity || 'Membre';
+  const dmHasVideo = !!(dmTrackRef && 'publication' in dmTrackRef && (dmTrackRef as any).publication?.track && !(dmTrackRef as any).participant?.isCameraEnabled === false);
+
+  const isDm = !!dmWith;
+  const dmMsgs = isDm && pc ? (pc.threads[dmWith] || []) : [];
+
   useEffect(() => {
     if (!open) return;
     endRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [chatMessages.length, open]);
+  }, [chatMessages.length, dmMsgs.length, open, dmWith]);
 
   const submit = (e: React.FormEvent) => {
     e.preventDefault();
     const t = text.trim();
-    if (!t || isSending) return;
-    send(t).catch(() => {});
+    if (!t) return;
+    if (isDm && pc && dmWith) {
+      pc.sendTo(dmWith, t, Date.now());
+    } else {
+      if (isSending) return;
+      send(t).catch(() => {});
+    }
     setText('');
   };
 
   return (
     <div style={{ width: 340, flexShrink: 0, background: PANEL_BG, borderLeft: PANEL_BORDER, display: open ? 'flex' : 'none', flexDirection: 'column', minHeight: 0 }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '12px 14px', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
-        <MessageSquare size={16} color={GOLD} aria-hidden="true" />
-        <span style={{ fontWeight: 600, fontSize: 14, color: '#fff' }}>Discussion</span>
-        <button onClick={onClose} aria-label="Fermer la discussion" style={{ marginLeft: 'auto', background: 'transparent', border: 'none', color: '#9ca3af', cursor: 'pointer', display: 'inline-flex' }}>
-          <X size={16} />
-        </button>
-      </div>
+      {isDm ? (
+        <div style={{ display: 'flex', alignItems: 'center', gap: 9, padding: '9px 12px', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
+          <button onClick={pc?.closeDm} aria-label="Retour à la discussion de groupe" title="Discussion de groupe" style={{ background: 'transparent', border: 'none', color: '#9ca3af', cursor: 'pointer', display: 'inline-flex', padding: 2 }}>
+            <ChevronLeft size={18} />
+          </button>
+          <div style={{ width: 34, height: 34, borderRadius: '50%', overflow: 'hidden', flexShrink: 0, background: '#000', border: '1.5px solid rgba(212,163,106,0.55)' }}>
+            {dmHasVideo && dmTrackRef ? (
+              <VideoTrack trackRef={dmTrackRef as any} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+            ) : (
+              <div style={{ width: '100%', height: '100%', display: 'grid', placeItems: 'center', color: GOLD, background: 'rgba(212,163,106,0.12)' }}>
+                <Users size={15} />
+              </div>
+            )}
+          </div>
+          <div style={{ minWidth: 0, flex: 1 }}>
+            <div style={{ fontWeight: 600, fontSize: 13.5, color: '#fff', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{dmName}</div>
+            <div style={{ fontSize: 10.5, color: 'rgba(212,163,106,0.9)', display: 'flex', alignItems: 'center', gap: 4 }}>
+              <ShieldCheck size={11} /> Conversation privée
+            </div>
+          </div>
+          <button onClick={onClose} aria-label="Fermer" style={{ background: 'transparent', border: 'none', color: '#9ca3af', cursor: 'pointer', display: 'inline-flex' }}>
+            <X size={16} />
+          </button>
+        </div>
+      ) : (
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '12px 14px', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
+          <MessageSquare size={16} color={GOLD} aria-hidden="true" />
+          <span style={{ fontWeight: 600, fontSize: 14, color: '#fff' }}>Discussion</span>
+          <button onClick={onClose} aria-label="Fermer la discussion" style={{ marginLeft: 'auto', background: 'transparent', border: 'none', color: '#9ca3af', cursor: 'pointer', display: 'inline-flex' }}>
+            <X size={16} />
+          </button>
+        </div>
+      )}
       <div style={{ flex: 1, minHeight: 0, overflowY: 'auto', padding: 12, display: 'flex', flexDirection: 'column', gap: 9 }}>
-        {chatMessages.length === 0 ? (
+        {isDm ? (
+          dmMsgs.length === 0 ? (
+            <p style={{ margin: 'auto', textAlign: 'center', fontSize: 12.5, color: '#6b7280', maxWidth: 240, lineHeight: 1.5 }}>
+              Conversation privée avec {dmName} — visible de vous deux uniquement.
+            </p>
+          ) : (
+            dmMsgs.map((m, i) => (
+              <div key={i} style={{ alignSelf: m.mine ? 'flex-end' : 'flex-start', maxWidth: '86%' }}>
+                <div style={{ background: m.mine ? GOLD : 'rgba(255,255,255,0.08)', color: m.mine ? '#1a1a1a' : '#f3f4f6', padding: '8px 11px', borderRadius: 13, fontSize: 13.5, lineHeight: 1.45, whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>
+                  {m.text}
+                </div>
+                <div style={{ fontSize: 10, color: '#6b7280', textAlign: m.mine ? 'right' : 'left', margin: '2px 4px 0' }}>{fmtChatTime(m.ts)}</div>
+              </div>
+            ))
+          )
+        ) : chatMessages.length === 0 ? (
           <p style={{ margin: 'auto', textAlign: 'center', fontSize: 12.5, color: '#6b7280', maxWidth: 240, lineHeight: 1.5 }}>
             Aucun message. Écrivez ici pendant la consultation — visible par tous les participants.
           </p>
@@ -1268,14 +1401,14 @@ export function ChatPanel({ open = true, onClose }: { open?: boolean; onClose: (
         <input
           value={text}
           onChange={(e) => setText(e.target.value)}
-          placeholder="Écrire un message…"
+          placeholder={isDm ? `Message privé à ${dmName}…` : 'Écrire un message…'}
           style={{ flex: 1, minWidth: 0, padding: '10px 12px', borderRadius: 10, border: '1px solid rgba(255,255,255,0.14)', background: 'rgba(255,255,255,0.04)', color: '#fff', fontSize: 13.5, outline: 'none' }}
         />
         <button
           type="submit"
-          disabled={isSending || !text.trim()}
+          disabled={(!isDm && isSending) || !text.trim()}
           aria-label="Envoyer"
-          style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: 42, borderRadius: 10, border: 'none', cursor: 'pointer', background: GOLD, color: '#1a1a1a', opacity: !text.trim() || isSending ? 0.5 : 1 }}
+          style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: 42, borderRadius: 10, border: 'none', cursor: 'pointer', background: GOLD, color: '#1a1a1a', opacity: !text.trim() || (!isDm && isSending) ? 0.5 : 1 }}
         >
           <Send size={17} />
         </button>
@@ -1583,6 +1716,11 @@ export function ConsultationStage({
   }, [isHost, sessionId]);
   const [miniLayout, setMiniLayout] = useState<'band' | 'overlay'>('band');
   const [miniCollapsed, setMiniCollapsed] = useState(false);
+  // Messagerie privée : quand le panneau Discussion est ouvert, on GARDE le rail
+  // des membres visible (desktop) → l'utilisateur clique un membre pour ouvrir la
+  // conversation privée. Sinon le rail se cache (`!rightOpen`) dès l'ouverture du
+  // chat et l'entrée du DM serait injoignable.
+  const railChatOpen = !!usePrivateChat()?.chatOpen;
   // Disposition « overlay » IMMERSIVE : on RÉSERVE une marge droite dans le
   // contenu partagé (le jumeau/tableau/écran ne place JAMAIS d'information
   // dedans) et les miniatures y vivent, posées sur le MÊME fond — un seul
@@ -1838,7 +1976,7 @@ export function ConsultationStage({
           />
         ) : null}
       </div>
-      {!rightOpen && (!compact || miniLayout === 'band') && !immersive ? (
+      {(!rightOpen || (railChatOpen && !compact)) && (!compact || miniLayout === 'band') && !immersive ? (
         <MembersRail
           tracks={tracks}
           isHost={isHost}
@@ -1894,6 +2032,18 @@ function MembersRail({
   const pillStyle: React.CSSProperties = { display: 'inline-flex', alignItems: 'center', gap: 6, padding: '6px 12px', borderRadius: 999, border: '1px solid rgba(212,163,106,0.4)', background: 'rgba(24,20,16,0.92)', color: GOLD, fontSize: 12, fontWeight: 700, cursor: 'pointer', boxShadow: '0 6px 20px rgba(0,0,0,0.4)' };
   const miniBtn: React.CSSProperties = { border: 'none', background: 'rgba(24,20,16,0.9)', color: GOLD, cursor: 'pointer', borderRadius: 8, display: 'grid', placeItems: 'center' };
 
+  // Messagerie privée : quand le panneau Discussion est ouvert, un tap sur une
+  // pastille ouvre la conversation privée avec ce membre (au lieu de la grande
+  // vue). Sinon comportement inchangé (focus / grande vue).
+  const pc = usePrivateChat();
+  const dmMode = !!pc?.chatOpen;
+  const handleMemberClick = (id?: string) => {
+    if (!id) return;
+    if (dmMode && pc) { pc.openDm(id); return; }
+    onFocus?.(id);
+  };
+  const clickTitle = dmMode ? 'Message privé' : 'Agrandir';
+
   if (variant === 'band') {
     if (collapsed) {
       return (
@@ -1915,10 +2065,10 @@ function MembersRail({
         {cams.map((t, i) => (
           <div
             key={tileKey(t, i)}
-            onClick={() => { const id = t?.participant?.identity; if (id) onFocus?.(id); }}
+            onClick={() => handleMemberClick(t?.participant?.identity)}
             role="button"
-            title="Agrandir"
-            style={{ position: 'relative', height: '100%', aspectRatio: '1 / 1', flexShrink: 0, borderRadius: 8, overflow: 'hidden', background: '#000', border: '1px solid rgba(255,255,255,0.08)', cursor: 'pointer' }}
+            title={dmMode ? (pc?.dmWith === t?.participant?.identity ? 'Conversation privée active' : 'Message privé') : 'Agrandir'}
+            style={{ position: 'relative', height: '100%', aspectRatio: '1 / 1', flexShrink: 0, borderRadius: 8, overflow: 'hidden', background: '#000', border: '1px solid rgba(255,255,255,0.08)', cursor: 'pointer', outline: dmMode && pc?.dmWith === t?.participant?.identity ? `2px solid ${GOLD}` : undefined, outlineOffset: -2 }}
           >
             <ParticipantTile trackRef={t} style={{ width: '100%', height: '100%' }} />
             <RoleTag role={participantRole(t?.participant, !!isHost)} />
@@ -1970,10 +2120,10 @@ function MembersRail({
           <div
             key={tileKey(t, i)}
             className="cr-mini"
-            onClick={() => { const id = t?.participant?.identity; if (id) onFocus?.(id); }}
+            onClick={() => handleMemberClick(t?.participant?.identity)}
             role="button"
-            title="Agrandir"
-            style={{ position: 'relative', width: 80, aspectRatio: '1 / 1', flexShrink: 0, borderRadius: 10, overflow: 'hidden', background: '#000', boxShadow: '0 3px 12px rgba(0,0,0,0.25)', cursor: 'pointer' }}
+            title={dmMode ? (pc?.dmWith === t?.participant?.identity ? 'Conversation privée active' : 'Message privé') : 'Agrandir'}
+            style={{ position: 'relative', width: 80, aspectRatio: '1 / 1', flexShrink: 0, borderRadius: 10, overflow: 'hidden', background: '#000', boxShadow: '0 3px 12px rgba(0,0,0,0.25)', cursor: 'pointer', outline: dmMode && pc?.dmWith === t?.participant?.identity ? `2px solid ${GOLD}` : undefined, outlineOffset: -2 }}
           >
             <ParticipantTile trackRef={t} style={{ width: '100%', height: '100%' }} />
             <RoleTag role={participantRole(t?.participant, !!isHost)} />
@@ -2013,10 +2163,10 @@ function MembersRail({
         {cams.map((t, i) => (
           <div
             key={tileKey(t, i)}
-            onClick={() => { const id = t?.participant?.identity; if (id) onFocus?.(id); }}
+            onClick={() => handleMemberClick(t?.participant?.identity)}
             role="button"
-            title="Agrandir"
-            style={{ position: 'relative', width: '100%', aspectRatio: '16 / 9', flexShrink: 0, borderRadius: 10, overflow: 'hidden', background: '#000', border: '1px solid rgba(255,255,255,0.08)', cursor: 'pointer' }}
+            title={dmMode ? (pc?.dmWith === t?.participant?.identity ? 'Conversation privée active' : 'Message privé') : 'Agrandir'}
+            style={{ position: 'relative', width: '100%', aspectRatio: '16 / 9', flexShrink: 0, borderRadius: 10, overflow: 'hidden', background: '#000', border: '1px solid rgba(255,255,255,0.08)', cursor: 'pointer', outline: dmMode && pc?.dmWith === t?.participant?.identity ? `2px solid ${GOLD}` : undefined, outlineOffset: -2 }}
           >
             <ParticipantTile trackRef={t} style={{ width: '100%', height: '100%' }} />
             <RoleTag role={participantRole(t?.participant, !!isHost)} />
