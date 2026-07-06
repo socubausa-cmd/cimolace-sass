@@ -1145,6 +1145,7 @@ const AppContent = () => {
     '/login',
     '/signup',
     '/creer-organisation',
+    '/precepteur',      // Le Précepteur = secteur FORMATION de Cimolace — immersif plein écran, aucun header
     '/rejoindre',
     '/auth/callback',
     '/creator-dashboard',
