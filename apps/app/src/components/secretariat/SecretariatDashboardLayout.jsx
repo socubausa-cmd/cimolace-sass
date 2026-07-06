@@ -1,13 +1,14 @@
-import React, { useMemo } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/SupabaseAuthContext';
 import {
   LayoutDashboard, BookOpen, HeartHandshake as Handshake, Calendar, CalendarClock, Bell,
   HelpCircle, Users as UsersIcon, Award, PieChart, Inbox, FileCheck, FileText, GraduationCap,
-  Library, Video, Megaphone, CreditCard, Flame, Star, MessageCircle,
+  Library, Video, Megaphone, CreditCard, Flame, Star, MessageCircle, CalendarPlus,
 } from 'lucide-react';
 import NotificationDropdown from '@/components/notifications/NotificationDropdown';
 import LiriDashboardShell from '@/components/shell/LiriDashboardShell';
+import { supabase } from '@/lib/customSupabaseClient';
 
 // Accent secrétariat = OR (identité distincte conservée). Owner = violet.
 const SECRETARIAT_ACCENT = { color: 'var(--school-accent)', dim: 'rgba(212,175,55,0.12)', mid: 'rgba(212,175,55,0.28)' };
@@ -16,7 +17,26 @@ const SecretariatDashboardLayout = ({ children, activeTab, onTabChange }) => {
   const { user, logout, loading: isLoading } = useAuth();
   const navigate = useNavigate();
 
-  // 27 entrées regroupées en 6 familles (métier secrétariat) — chaque id/href inchangé.
+  // Compteur des demandes de RDV publiques (VNP) à traiter → badge de nav.
+  const [pendingVnp, setPendingVnp] = useState(0);
+  useEffect(() => {
+    let alive = true;
+    const fetchPending = async () => {
+      const { count } = await supabase
+        .from('vnp_booking_requests')
+        .select('id', { count: 'exact', head: true })
+        .eq('status', 'requested');
+      if (alive) setPendingVnp(count || 0);
+    };
+    fetchPending();
+    const channel = supabase
+      .channel('sec-nav-vnp-badge')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'vnp_booking_requests' }, fetchPending)
+      .subscribe();
+    return () => { alive = false; supabase.removeChannel(channel); };
+  }, []);
+
+  // 28 entrées regroupées en 6 familles (métier secrétariat) — chaque id/href inchangé.
   const menuGroups = useMemo(
     () => [
       {
@@ -24,6 +44,7 @@ const SecretariatDashboardLayout = ({ children, activeTab, onTabChange }) => {
         items: [
           { id: 'dashboard', icon: LayoutDashboard, label: 'Gestion élèves' },
           { id: 'rendez-vous', icon: CalendarClock, label: 'Rendez-vous actifs' },
+          { id: 'demandes-publiques', icon: CalendarPlus, label: 'Demandes du site', badge: pendingVnp || undefined },
           { id: 'calendrier', icon: Calendar, label: 'Calendrier rendez-vous' },
           { id: 'messagerie', icon: Inbox, label: 'Messagerie' },
         ],
@@ -77,7 +98,7 @@ const SecretariatDashboardLayout = ({ children, activeTab, onTabChange }) => {
         ],
       },
     ],
-    [],
+    [pendingVnp],
   );
 
   const allItems = useMemo(() => menuGroups.flatMap((g) => g.items), [menuGroups]);
