@@ -126,7 +126,8 @@ function getOsRealmSlug(propSlug) {
 // Fallback anti-flash + robustesse CORS : l'API branding bloque les origines vercel.app en preview
 // (le fetch réel confirme/affine en prod). Garantit nom + logo immédiats pour les tenants connus.
 const OS_REALM_FALLBACK = {
-  isna: { name: 'Prorascience', logo: '/logos/isna-logo.png' },
+  // Logo prorascience = l'ŒIL (Œil d'Horus + oreille), version blanche transparente pour le badge sombre.
+  isna: { name: 'Prorascience', logo: '/prorascience-eye.png' },
 };
 
 const SUGG = [
@@ -561,7 +562,10 @@ export default function CimolaceCreationAgent({ tenantSlug: tenantSlugProp = nul
     fetch(`${getApiBaseUrl()}/tenants/by-slug/${encodeURIComponent(osTenant)}/branding`)
       .then((r) => r.json()).then((b) => {
         const t = (b && b.data) ? b.data : b;
-        if (alive && t && t.slug) setOsBrand({ name: t.name || osTenant, logo: t.logo_url || t.logo || '' });
+        // Le logo du realm (OS_REALM_FALLBACK, ex. l'œil prorascience) PRIME sur celui de la DB
+        // (qui renvoie le wordmark ISNA) ; la DB ne sert qu'à affiner le NOM affiché.
+        const realmLogo = (OS_REALM_FALLBACK[osTenant] && OS_REALM_FALLBACK[osTenant].logo) || '';
+        if (alive && t && t.slug) setOsBrand({ name: t.name || osTenant, logo: realmLogo || t.logo_url || t.logo || '' });
       }).catch(() => {});
     return () => { alive = false; };
   }, [osTenant]);
@@ -1224,7 +1228,7 @@ export default function CimolaceCreationAgent({ tenantSlug: tenantSlugProp = nul
           <>
             <span style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '6px 15px', border: '1px solid rgba(230,204,146,.26)', borderRadius: 999, background: 'rgba(230,204,146,.045)' }}>
               {osBrand && osBrand.logo
-                ? <img src={osBrand.logo} alt="" style={{ height: 16, width: 'auto', maxWidth: 66, objectFit: 'contain' }} />
+                ? <img src={osBrand.logo} alt={tenantName} style={{ height: 21, width: 'auto', maxWidth: 40, objectFit: 'contain' }} />
                 : <span style={{ width: 7, height: 7, transform: 'rotate(45deg)', background: GOLD, borderRadius: 1, display: 'inline-block' }} />}
               <span style={{ fontFamily: DISPLAY, fontSize: 13, letterSpacing: '.2em', textTransform: 'uppercase', color: GOLD, fontWeight: 600 }}>{tenantName}</span>
             </span>
