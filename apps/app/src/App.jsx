@@ -25,16 +25,13 @@ function RootRedirect() {
   // Domaine custom d'un tenant → SA vitrine, rendue en URL PROPRE (sans /t/:slug). Multi-tenant.
   const hostTenant = getCachedHostTenant(host);
   if (hostTenant) return <TenantVitrineHome slug={hostTenant} />;
-  // Racine SaaS Cimolace → espace plateforme (et non un tenant). Modèle v2 unifié.
-  if (CIMOLACE_PUBLIC_HOSTS.has(host)) return <Navigate to="/cimolace" replace />;
   // Domaine fondateur (prorascience.org = tenant ISNA) → vitrine du fondateur en racine propre.
   if (host === 'prorascience.org' || host === 'www.prorascience.org') return <TenantVitrineHome slug={DEFAULT_TENANT_SLUG} />;
-  // Host neutre LIRI (liri.cimolace.space, localhost en dev) NON connecté → page d'accueil « 2 portes »
-  // (Créer mon espace / Rejoindre mon organisation), au lieu de /login. cimolace.space garde /cimolace.
-  if (isPlatformOrDevHost(host) && !hostTenant && !CIMOLACE_PUBLIC_HOSTS.has(host) && host !== 'prorascience.org' && host !== 'www.prorascience.org') {
-    return <LazyShell><LiriLandingPage /></LazyShell>;
-  }
-  return <Navigate to="/login" replace />;
+  // LOT C — Racine Cimolace (SaaS) → l'ASSISTANT IMMERSIF = le nouvel OS d'entrée (migration douce
+  // du site classique). Le back-office /cimolace, le funnel /creer-organisation et /login restent
+  // accessibles EN DIRECT ; seule la racine bascule vers l'assistant. CIMOLACE_PUBLIC_HOSTS /
+  // isPlatformOrDevHost / LiriLandingPage restent utilisés ailleurs (résolution tenant, etc.).
+  return <Navigate to="/creer-organisation/agent" replace />;
 }
 
 // DEV PREVIEW — composant sans auth
