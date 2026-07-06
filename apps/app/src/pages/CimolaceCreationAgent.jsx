@@ -206,7 +206,7 @@ export default function CimolaceCreationAgent() {
   const mutedRef = useRef(false);
   const [muted, setMuted] = useState(false);
 
-  const inputAllowed = step === 'discovery' || step === 'brand_ask' || step === 'brain';
+  const inputAllowed = step === 'discovery' || step === 'brand_ask' || step === 'brain' || step === 'product';
 
   useEffect(() => { mutedRef.current = muted; }, [muted]);
   useEffect(() => { coveredRef.current = covered; }, [covered]);
