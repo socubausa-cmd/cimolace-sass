@@ -1,6 +1,6 @@
 import React, { useMemo, useState, useRef, useEffect, useCallback } from 'react';
 import { GraduationCap } from 'lucide-react';
-import { STYLE, BG, INK, GOLD, TERRA, SERIF } from '@/lib/agent/immersiveTheme';
+import { STYLE, BG, INK, GOLD, TERRA, SERIF, GROTESQUE, SERIF_BODY } from '@/lib/agent/immersiveTheme';
 import Presence from '@/components/agent/Presence';
 import useImmersiveVoice from '@/lib/agent/useImmersiveVoice';
 import SketchRenderer from '@/components/school/course-builder/SketchRenderer';
@@ -42,9 +42,9 @@ function sceneKeyword(sc) {
   return q ? q[1].trim() : '';
 }
 
-// Polices composites (Fraunces/Inter déjà chargées par l'app ; les autres via Google Fonts).
-const F_GROTESQUE = "'Bricolage Grotesque', system-ui, sans-serif";
-const F_SERIF_BODY = "'Source Serif 4', Georgia, serif";
+// Polices « Punch » : SOURCE UNIQUE dans immersiveTheme (chargées par son @import, classes .sv-*).
+const F_GROTESQUE = GROTESQUE;
+const F_SERIF_BODY = SERIF_BODY;
 
 // Styles typographiques comparables LIVE via ?typo=punch|hybride|temple (défaut = punch).
 const TYPO = {
@@ -56,14 +56,8 @@ const TYPO = {
 // (hybride/temple restent dans TYPO pour référence, mais ne sont plus commutables par URL.)
 function currentTypo() { return TYPO.punch; }
 
-// CSS local du rendu « Sherpas » (mot qui pop + boîte dorée du mot-clé) + chargement des polices.
-const SV_STYLE = `
-@import url('https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=Source+Serif+4:opsz,wght@8..60,400;8..60,600&display=swap');
-@keyframes svPop{from{opacity:.12;transform:translateY(8px) scale(.88)}to{opacity:1;transform:none}}
-.sv-w{display:inline-block}
-.sv-pop{animation:svPop .3s cubic-bezier(.16,1,.3,1) both}
-.sv-key{color:#2a140c;background:${GOLD};border-radius:9px;padding:0 9px;font-weight:800;-webkit-box-decoration-break:clone;box-decoration-break:clone}
-`;
+// Rendu « Sherpas » (mot qui pop + boîte dorée) : classes .sv-* et polices désormais dans
+// immersiveTheme (STYLE), injecté ci-dessous — plus de CSS local dupliqué (source unique).
 
 /**
  * SherpasVoice — la voix serif rendue « à la Sherpas » : gros + gras, chaque mot RÉVÉLÉ
@@ -256,7 +250,6 @@ export default function FormationStage({ course }) {
       }}
     >
       <style>{STYLE}</style>
-      <style>{SV_STYLE}</style>
       <span className="cca-amb" style={{ width: 5, height: 5, top: '28%', left: '30%', opacity: 0.14, animation: 'ccaDriftA 11s ease-in-out infinite' }} />
       <span className="cca-amb" style={{ width: 4, height: 4, top: '64%', left: '68%', opacity: 0.12, background: GOLD, animation: 'ccaDriftB 14s ease-in-out infinite' }} />
 

@@ -13,8 +13,14 @@ export const INK = '#f4efe6';
 export const TERRA = '#d97757';
 export const GOLD = '#e6cc92';
 export const SERIF = "'Fraunces','Source Serif 4',Georgia,serif";
+// ── Système typo « Punch » (Sherpas) — les 4 rôles, source unique de marque ──
+// GROTESQUE = affichage/mot-clé (titre & boîte dorée MAJUSCULE) ; SERIF_BODY = corps de narration.
+// SERIF (Fraunces) reste la « voix » chaude des scènes. À importer par les DEUX agents.
+export const GROTESQUE = "'Bricolage Grotesque', system-ui, sans-serif";
+export const SERIF_BODY = "'Source Serif 4', Georgia, serif";
 
 export const STYLE = `
+@import url('https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=Source+Serif+4:opsz,wght@8..60,400;8..60,600&display=swap');
 @keyframes ccaBreath{0%,100%{transform:translate(-50%,-50%) scale(1);opacity:.6}50%{transform:translate(-50%,-50%) scale(1.18);opacity:.95}}
 @keyframes ccaLine{0%{background-position:-90px 0}100%{background-position:130px 0}}
 @keyframes ccaEq{0%,100%{transform:scaleY(.3)}50%{transform:scaleY(1)}}
@@ -190,4 +196,12 @@ export const STYLE = `
   .cca-reader-nav{grid-column:1;grid-row:3;flex-direction:row;flex-wrap:wrap;gap:6px 14px}
   .cca-reader-suggests{grid-row:4}
 }
+
+/* ═══ Voix « Punch » (Sherpas) — PARTAGÉE : l'Assistant vend et Le Précepteur enseigne
+   avec le MÊME punch. Révélation mot à mot + mot-clé en boîte dorée grotesque MAJUSCULE. ═══ */
+@keyframes svPop{0%{opacity:0;transform:translateY(6px) scale(.98)}60%{opacity:1;transform:translateY(0) scale(1.02)}100%{transform:translateY(0) scale(1)}}
+.sv-w{display:inline-block}
+.sv-pop{animation:svPop .3s cubic-bezier(.16,1,.3,1) both}
+.sv-key{font-family:${GROTESQUE};text-transform:uppercase;font-weight:800;letter-spacing:-.01em;color:#2a140c;background:${GOLD};border-radius:9px;padding:0 9px;-webkit-box-decoration-break:clone;box-decoration-break:clone}
+@media (prefers-reduced-motion: reduce){ .sv-pop{animation-duration:.001s!important} }
 `;

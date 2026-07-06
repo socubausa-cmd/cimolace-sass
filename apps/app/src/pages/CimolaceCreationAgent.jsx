@@ -211,7 +211,8 @@ const TOUR = {
   ],
 };
 
-// Surligne le mot-clé (style « Sherpas » : le terme fort ressort en accent) dans la reply.
+// Surligne le mot-clé dans la reply avec la boîte « Punch » PARTAGÉE (grotesque MAJUSCULE
+// dorée, classe `.sv-key` de immersiveTheme) : l'Assistant et Le Précepteur ont le MÊME punch.
 function highlightReply(text, kw) {
   if (!kw) return text;
   const i = text.toLowerCase().indexOf(kw.toLowerCase());
@@ -219,7 +220,7 @@ function highlightReply(text, kw) {
   return (
     <>
       {text.slice(0, i)}
-      <span style={{ color: '#e6cc92', fontWeight: 500 }}>{text.slice(i, i + kw.length)}</span>
+      <span className="sv-key">{text.slice(i, i + kw.length)}</span>
       {text.slice(i + kw.length)}
     </>
   );
