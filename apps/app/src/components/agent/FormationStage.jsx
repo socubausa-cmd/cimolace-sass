@@ -42,12 +42,28 @@ function sceneKeyword(sc) {
   return q ? q[1].trim() : '';
 }
 
-// CSS local du rendu « Sherpas » (mot qui pop + boîte dorée du mot-clé).
+// Polices composites (Fraunces/Inter déjà chargées par l'app ; les autres via Google Fonts).
+const F_GROTESQUE = "'Bricolage Grotesque', system-ui, sans-serif";
+const F_SERIF_BODY = "'Source Serif 4', Georgia, serif";
+
+// Styles typographiques comparables LIVE via ?typo=punch|hybride|temple (défaut = punch).
+const TYPO = {
+  punch: { body: F_SERIF_BODY, weight: 400, keyFont: F_GROTESQUE, upper: true },   // Sherpas max
+  hybride: { body: SERIF, weight: 600, keyFont: F_GROTESQUE, upper: true },          // voix temple + mot-clé punch
+  temple: { body: SERIF, weight: 600, keyFont: SERIF, upper: false },                // tout Fraunces
+};
+function currentTypo() {
+  try { return TYPO[new URLSearchParams(window.location.search).get('typo')] || TYPO.punch; }
+  catch { return TYPO.punch; }
+}
+
+// CSS local du rendu « Sherpas » (mot qui pop + boîte dorée du mot-clé) + chargement des polices.
 const SV_STYLE = `
+@import url('https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=Source+Serif+4:opsz,wght@8..60,400;8..60,600&display=swap');
 @keyframes svPop{from{opacity:.12;transform:translateY(8px) scale(.88)}to{opacity:1;transform:none}}
 .sv-w{display:inline-block}
 .sv-pop{animation:svPop .3s cubic-bezier(.16,1,.3,1) both}
-.sv-key{background:${GOLD};color:#2a140c;border-radius:9px;padding:0 9px;font-weight:800;-webkit-box-decoration-break:clone;box-decoration-break:clone}
+.sv-key{color:#2a140c;background:${GOLD};border-radius:9px;padding:0 9px;font-weight:800;-webkit-box-decoration-break:clone;box-decoration-break:clone}
 `;
 
 /**
@@ -55,18 +71,22 @@ const SV_STYLE = `
  * un à un (le dernier « pop »), et le mot-clé dans une BOÎTE DORÉE (notre équivalent du vert Sherpas).
  * `text` est le message déjà révélé mot à mot par speak() ; keyword = le terme fort à mettre en boîte.
  */
-function SherpasVoice({ text, keyword, live }) {
+function SherpasVoice({ text, keyword, live, typo }) {
+  const t = typo || TYPO.punch;
   const words = String(text || '').split(' ').filter(Boolean);
   const keys = new Set(String(keyword || '').toLowerCase().split(/\s+/).filter((w) => w.length > 1));
   return (
-    <p style={{ fontFamily: SERIF, fontSize: 'clamp(22px, 4.8vw, 32px)', fontWeight: 600, lineHeight: 1.32, letterSpacing: '-0.015em', color: INK, margin: 0 }}>
+    <p style={{ fontFamily: t.body, fontSize: 'clamp(22px, 4.8vw, 32px)', fontWeight: t.weight, lineHeight: 1.32, letterSpacing: '-0.015em', color: INK, margin: 0 }}>
       {words.map((w, i) => {
         const bare = w.toLowerCase().replace(/[.,;:!?«»"'’—()…]/g, '');
         const isKey = keys.has(bare);
         const last = i === words.length - 1;
         return (
           <React.Fragment key={i}>
-            <span className={`sv-w${last ? ' sv-pop' : ''}${isKey ? ' sv-key' : ''}`}>{w}</span>
+            <span
+              className={`sv-w${last ? ' sv-pop' : ''}${isKey ? ' sv-key' : ''}`}
+              style={isKey ? { fontFamily: t.keyFont, textTransform: t.upper ? 'uppercase' : 'none' } : undefined}
+            >{w}</span>
             {i < words.length - 1 ? ' ' : ''}
           </React.Fragment>
         );
@@ -108,6 +128,7 @@ export default function FormationStage({ course }) {
   const askGen = useRef(0);
 
   const sc = scenes[idx] || null;
+  const typo = useMemo(() => currentTypo(), []); // style typo (?typo=punch|hybride|temple)
 
   const openInput = useCallback((prefill = '') => {
     setInputOpen(true); setValue(prefill);
@@ -273,7 +294,7 @@ export default function FormationStage({ course }) {
       <div style={{ minHeight: 44, marginTop: 12, textAlign: 'center', maxWidth: 680, position: 'relative', zIndex: 2 }}>
         {message ? (
           <div className="cca-in" style={framed ? { border: `1.5px solid ${TERRA}55`, borderRadius: 18, padding: '18px 24px', background: 'rgba(217,119,87,.06)' } : undefined}>
-            <SherpasVoice text={message} keyword={sceneKeyword(sc)} live={presence === 'ecriture' || presence === 'attente'} />
+            <SherpasVoice text={message} keyword={sceneKeyword(sc)} live={presence === 'ecriture' || presence === 'attente'} typo={typo} />
             {showResume && (
               <ul style={{ listStyle: 'none', padding: 0, margin: '12px 0 0', textAlign: 'left', display: 'inline-block' }}>
                 {sc.points.map((p, i) => (
