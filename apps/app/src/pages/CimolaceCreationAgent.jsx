@@ -757,14 +757,17 @@ export default function CimolaceCreationAgent({ tenantSlug: tenantSlugProp = nul
   }, [speak, isTenantRealm]);
 
   // Bienvenue TENANT — accueil ÉDITORIAL : le hero (eyebrow + grand nom serif + filet + corps) est
-  // rendu statiquement (cf. bloc hero). On amène juste la présence à « attente » pour révéler
+  // rendu statiquement (cf. bloc hero). On amène la présence à « attente » pour révéler
   // hero + suggestions (pas de machine à écrire — l'accueil se pose, il ne se tape pas).
+  // ⚠️ NE dépend QUE de isTenantRealm : dépendre d'osBrand relancerait l'effet quand le fetch
+  // branding aboutit (sur le vrai domaine), son cleanup annulerait le timer → présence jamais « attente »
+  // → suggestions invisibles. (En preview le fetch est bloqué par CORS, donc le bug ne se voyait pas.)
   useEffect(() => {
-    if (!isTenantRealm || welcomedRef.current || !osBrand) return undefined;
+    if (!isTenantRealm || welcomedRef.current) return undefined;
     welcomedRef.current = true;
     const t = setTimeout(() => setPresence('attente'), 650);
     return () => clearTimeout(t);
-  }, [isTenantRealm, osBrand, osTenant]);
+  }, [isTenantRealm]);
 
   // Filet anti-écran-vide : si l'onglet redevient visible et qu'une scène est montée
   // mais restée invisible (rAF gelé en arrière-plan), on la révèle.
@@ -1301,10 +1304,10 @@ export default function CimolaceCreationAgent({ tenantSlug: tenantSlugProp = nul
       {/* Realm tenant — ACCUEIL ÉDITORIAL : eyebrow + grand nom serif (Cormorant) + filet losange + corps */}
       {showTenantHero && (
         <div className="cca-in" style={{ textAlign: 'center', marginTop: 14, maxWidth: 680, position: 'relative', zIndex: 4, padding: '0 20px' }}>
-          <div style={{ fontFamily: DISPLAY, fontSize: 13, letterSpacing: '.34em', textTransform: 'uppercase', color: TERRA, fontWeight: 600, marginBottom: 4 }}>
+          <div className="cca-display" style={{ fontSize: 13, letterSpacing: '.34em', textTransform: 'uppercase', color: TERRA, fontWeight: 600, marginBottom: 4 }}>
             Bienvenue sur
           </div>
-          <h1 style={{ fontFamily: DISPLAY, fontWeight: 600, fontSize: 'clamp(46px, 8.5vw, 90px)', lineHeight: 1.02, letterSpacing: '-0.005em', color: INK, margin: 0, textWrap: 'balance' }}>
+          <h1 className="cca-display" style={{ fontWeight: 600, fontSize: 'clamp(46px, 8.5vw, 90px)', lineHeight: 1.02, letterSpacing: '-0.005em', color: INK, margin: 0, textWrap: 'balance' }}>
             {tenantName}
           </h1>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 12, margin: '18px auto 16px', width: 220 }}>
@@ -1312,7 +1315,7 @@ export default function CimolaceCreationAgent({ tenantSlug: tenantSlugProp = nul
             <span style={{ width: 7, height: 7, transform: 'rotate(45deg)', background: TERRA, borderRadius: 1, opacity: 0.9, flexShrink: 0 }} />
             <span style={{ height: 1, flex: 1, background: 'linear-gradient(90deg, rgba(217,119,87,.5), transparent)' }} />
           </div>
-          <p style={{ fontFamily: DISPLAY, fontSize: 'clamp(19px, 2.3vw, 25px)', lineHeight: 1.42, color: 'rgba(244,239,230,.9)', margin: '0 auto', maxWidth: 500, textWrap: 'balance' }}>
+          <p className="cca-display" style={{ fontSize: 'clamp(19px, 2.3vw, 25px)', lineHeight: 1.42, color: 'rgba(244,239,230,.9)', margin: '0 auto', maxWidth: 500, textWrap: 'balance' }}>
             Je suis votre guide — je connais tout {tenantName}. Que souhaitez-vous découvrir ?
           </p>
         </div>

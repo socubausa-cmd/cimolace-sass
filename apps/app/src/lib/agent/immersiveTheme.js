@@ -48,6 +48,7 @@ export const STYLE = `
 .cca-pret .cca-done{opacity:1;animation:ccaHalo 2.6s ease-in-out infinite}
 .cca-pret .cca-glow{background:radial-gradient(circle,rgba(63,191,106,.16),transparent 60%)}
 .cca-in{animation:ccaFade .5s cubic-bezier(.22,1,.36,1) both}
+.cca-display{font-family:${DISPLAY}!important}
 .cca-chip{transition:background .16s ease,border-color .16s ease;cursor:pointer}
 .cca-chip:hover{background:rgba(230,204,146,.14)!important}
 button.cca-chip:hover{border-color:rgba(230,204,146,.42)!important}
