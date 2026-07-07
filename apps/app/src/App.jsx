@@ -45,6 +45,8 @@ function isCimolaceAssistantRoot(pathname) {
   if (getCachedHostTenant(host)) return false;
   // prorascience.org : header masqué UNIQUEMENT quand l'OS est actif (immersif) ; sinon maquettes (header visible).
   if (host === 'prorascience.org' || host === 'www.prorascience.org') return prorascienceOsEnabled();
+  // liri.cimolace.space rend le portail LIRI (LiriLandingPage), pas l'assistant → header géré normalement.
+  if (host === 'liri.cimolace.space' || host === 'www.liri.cimolace.space') return false;
   return true;
 }
 
@@ -65,6 +67,11 @@ function RootRedirect() {
   // Domaine fondateur (prorascience.org = tenant ISNA), OS désactivé (?os=0) → maquettes du fondateur.
   if (isProrascienceHost) {
     return <TenantVitrineHome slug={DEFAULT_TENANT_SLUG} />;
+  }
+  // liri.cimolace.space = host NEUTRE du PORTAIL LIRI (back-office « 2 portes ») — PAS l'OS Cimolace.
+  // (Le LOT C avait fait rendre l'OS à la racine de TOUS les hosts cimolace, ce qui écrasait cette entrée.)
+  if (host === 'liri.cimolace.space' || host === 'www.liri.cimolace.space') {
+    return <LiriLandingPage />;
   }
   // LOT C — Racine Cimolace (SaaS) → l'ASSISTANT IMMERSIF RENDU AU ROOT (l'URL reste `/`, pas de
   // redirection cliente). Le back-office /cimolace, le funnel /creer-organisation et /login restent
