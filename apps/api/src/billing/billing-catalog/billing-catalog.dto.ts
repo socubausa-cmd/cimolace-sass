@@ -19,6 +19,7 @@ export const CATALOG_CATEGORIES = [
   'temple',
   'consultation',
   'mentorat',
+  'masterclass',
   'custom',
 ] as const;
 
