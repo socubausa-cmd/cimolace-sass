@@ -1487,8 +1487,9 @@ export default function CimolaceCreationAgent({ tenantSlug: tenantSlugProp = nul
       <span className="cca-amb" style={{ width: 4, height: 4, top: '58%', left: '65%', opacity: 0.13, background: '#e6cc92', animation: 'ccaDriftB 14s ease-in-out infinite' }} />
       <span className="cca-amb" style={{ width: 3, height: 3, top: '44%', left: '70%', opacity: 0.12, animation: 'ccaDriftC 9s ease-in-out infinite' }} />
 
-      {/* L6 — Scène « réalisée » par l'IA : composition de toute la surface (fond, sous la voix) */}
-      {scene && (step === 'brain' || step === 'product') && (
+      {/* L6 — Scène « réalisée » par l'IA : composition de toute la surface (fond, sous la voix).
+         Realm tenant (prorascience) : rendre dès qu'une scène existe (le step Cimolace n'y vit pas). */}
+      {scene && (isTenantRealm || step === 'brain' || step === 'product') && (
         <SceneStage scene={scene} visible={sceneVisible} readerIdx={readerIdx} setReaderIdx={setReaderIdx}
           onSuggest={isTenantRealm ? vnpChat : brain} onCta={isTenantRealm ? vnpChat : chooseProduct}
           hooks={isTenantRealm ? [] : brainHooks} onHook={isTenantRealm ? vnpChat : brain} />
