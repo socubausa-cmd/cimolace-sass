@@ -438,6 +438,7 @@ const SchoolVitrinePage = lazy(() => import('@/pages/school/SchoolVitrinePage'))
 const SchoolVitrineTenantPage = lazy(() => import('@/pages/school/SchoolVitrineTenantPage'));
 const PaiementPage = lazy(() => import('@/pages/school/PaiementPage'));
 const TenantServicesVitrine = lazy(() => import('@/pages/marketplace/TenantServicesVitrine'));
+const TenantReservationPage = lazy(() => import('@/pages/marketplace/TenantReservationPage'));
 const ActivateAccountPage = lazy(() => import('@/pages/school/ActivateAccountPage'));
 const LiveJoinPage = lazy(() => import('@/pages/school/LiveJoinPage'));
 const LiveJoinLinksPage = lazy(() => import('@/pages/school/LiveJoinLinksPage'));
@@ -2421,6 +2422,7 @@ isLiriHostDevPreviewRoute;
           {/* Vitrine marketplace : services du praticien (public, pilotée par le
               catalogue). Static AVANT le catch-all :vitrinePage. */}
           <Route path="/t/:tenantSlug/services" element={<TenantServicesVitrine />} />
+          <Route path="/t/:tenantSlug/reserver" element={<TenantReservationPage />} />
           <Route path="/t/:tenantSlug/:vitrinePage" element={<TenantVitrinePage />} />
           {/* Domaine custom (prorascience.org) : vitrine + sous-pages en URLs PROPRES (tenant
               fondateur), sans /t/:slug. CimolaceDomainHandler strippe les anciens /t/isna/* ici. */}

@@ -31,6 +31,17 @@ function authHeaders(): HeadersInit {
   };
 }
 
+/** Id du praticien connecté (= sub du JWT) — stocké sur le service réservable pour
+ *  que la prise de RDV côté client sache avec quel praticien réserver. */
+function currentUserId(): string | null {
+  try {
+    const t = localStorage.getItem('supabase_token') || '';
+    return JSON.parse(atob(t.split('.')[1])).sub || null;
+  } catch {
+    return null;
+  }
+}
+
 type AccessModel = 'paid' | 'free' | 'community';
 type Category = 'consultation' | 'mentorat' | 'masterclass' | 'custom';
 
@@ -155,6 +166,8 @@ export default function ServicesPage() {
     if (form.bookable) {
       metadata.appointment_type = form.appointmentType;
       metadata.duration_minutes = Number(form.durationMinutes) || 30;
+      const pid = (editing !== 'new' && (editing as Service)?.metadata?.practitioner_id) || currentUserId();
+      if (pid) metadata.practitioner_id = pid;
     }
     const payload = {
       category: form.category,

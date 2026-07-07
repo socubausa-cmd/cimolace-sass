@@ -639,6 +639,135 @@ export class AppointmentsService {
 
     return slots;
   }
+
+  // ── Marketplace : réservation depuis un SERVICE du catalogue ────────────────
+  // Utilisé par le CLIENT (tout membre authentifié du tenant — pas seulement rôle
+  // 'patient', car après paiement il a le rôle 'student'). Résout/crée la fiche
+  // patient + le praticien, vérifie l'access_pass, puis crée le RDV (gate inclus).
+
+  /** Résout (ou crée à la volée) la fiche med_patients du user courant. */
+  async resolveMyPatient(
+    tenant: TenantContext,
+    userId: string,
+    info: { email?: string; first_name?: string; last_name?: string },
+  ): Promise<{ id: string; patient_user_id: string }> {
+    const { data: existing } = await (this.supabase.client as any)
+      .from('med_patients')
+      .select('id, patient_user_id')
+      .eq('tenant_id', tenant.id)
+      .eq('patient_user_id', userId)
+      .maybeSingle();
+    if (existing?.id) return existing;
+    const { data, error } = await (this.supabase.client as any)
+      .from('med_patients')
+      .insert({
+        tenant_id: tenant.id,
+        patient_user_id: userId,
+        first_name: info.first_name || (info.email ? info.email.split('@')[0] : 'Client'),
+        last_name: info.last_name || '',
+      })
+      .select('id, patient_user_id')
+      .single();
+    if (error || !data) {
+      this.logger.error('resolveMyPatient', error?.message);
+      throw new InternalServerErrorException('Création de la fiche patient impossible');
+    }
+    return data;
+  }
+
+  /** Praticien d'un service : metadata.practitioner_id, sinon 1er praticien du tenant. */
+  private async resolveServicePractitioner(
+    tenant: TenantContext,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    service: any,
+  ): Promise<string | null> {
+    const fromMeta = service?.metadata?.practitioner_id;
+    if (fromMeta) return fromMeta;
+    const { data } = await (this.supabase.client as any)
+      .from('med_practitioner_availability')
+      .select('practitioner_id')
+      .eq('tenant_id', tenant.id)
+      .eq('is_active', true)
+      .limit(1)
+      .maybeSingle();
+    return data?.practitioner_id ?? null;
+  }
+
+  /** Contexte de réservation d'un service : fiche patient + praticien + accès payé. */
+  async bookingContext(
+    tenant: TenantContext,
+    userId: string,
+    info: { email?: string; first_name?: string; last_name?: string },
+    serviceKey: string,
+  ) {
+    const { data: service } = await (this.supabase.client as any)
+      .from('billing_plans')
+      .select('key, label, price_cents, currency, category, access_model, metadata')
+      .eq('tenant_id', tenant.id)
+      .eq('key', serviceKey)
+      .maybeSingle();
+    if (!service) throw new NotFoundException('Service introuvable');
+    const patient = await this.resolveMyPatient(tenant, userId, info);
+    const practitionerId = await this.resolveServicePractitioner(tenant, service);
+    const isPaid =
+      Number(service.price_cents || 0) > 0 && (service.access_model ?? 'paid') === 'paid';
+    let hasPass = !isPaid;
+    if (isPaid) {
+      const { data: pass } = await (this.supabase.client as any)
+        .from('access_passes')
+        .select('id')
+        .eq('tenant_id', tenant.id)
+        .eq('user_id', userId)
+        .eq('resource_type', 'service')
+        .eq('resource_id', serviceKey)
+        .eq('status', 'active')
+        .maybeSingle();
+      hasPass = !!pass?.id;
+    }
+    return {
+      patient_id: patient.id,
+      practitioner_id: practitionerId,
+      service: {
+        key: service.key,
+        label: service.label,
+        price_cents: service.price_cents,
+        currency: service.currency,
+        appointment_type: service.metadata?.appointment_type || 'teleconsult',
+        duration_minutes: Number(service.metadata?.duration_minutes || 30),
+      },
+      is_paid: isPaid,
+      has_access: hasPass,
+      can_book: hasPass && !!practitionerId,
+    };
+  }
+
+  /** Crée le RDV depuis un service (après contrôle d'accès payé). */
+  async bookFromService(
+    tenant: TenantContext,
+    userId: string,
+    info: { email?: string; first_name?: string; last_name?: string },
+    serviceKey: string,
+    scheduledAt: string,
+  ): Promise<AppointmentRow> {
+    const ctx = await this.bookingContext(tenant, userId, info, serviceKey);
+    if (!ctx.has_access) {
+      throw new ForbiddenException('Paiement requis avant de réserver ce service.');
+    }
+    if (!ctx.practitioner_id) {
+      throw new BadRequestException('Aucun praticien disponible pour ce service.');
+    }
+    return this.create(tenant, userId, 'patient', {
+      patient_id: ctx.patient_id,
+      practitioner_id: ctx.practitioner_id,
+      scheduled_at: scheduledAt,
+      duration_minutes: ctx.service.duration_minutes,
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      appointment_type: ctx.service.appointment_type as any,
+      reason: `Réservation : ${ctx.service.label}`,
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      service_key: serviceKey,
+    } as any);
+  }
 }
 
 function startOfDay(ms: number): number {

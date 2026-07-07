@@ -15,9 +15,10 @@ export default function PaiementPage() {
   const [searchParams] = useSearchParams();
   const planSlug = searchParams.get('plan') || '';
   const typeParam = searchParams.get('type') || '';
+  const next = searchParams.get('next') || ''; // 'reserver' → après paiement, prise de RDV
 
   // Détermine la nature de l'offre depuis les query params
-  const offer = useMemo(() => {
+  const baseOffer = useMemo(() => {
     if (typeParam === 'don') {
       return { kind: 'donation', title: 'Offrande libre', subtitle: 'Soutenez le temple PRORASCIENCE', amountEditable: true, fixedLabel: null };
     }
@@ -76,28 +77,71 @@ export default function PaiementPage() {
     return () => { alive = false; };
   }, [paypalReturn, paypalOrderId]);
 
+  // Service réservable payé (carte/PayPal) + next=reserver → enchaîne vers le choix
+  // du créneau (l'access_pass est posé au webhook ; le gate serveur le vérifiera).
+  useEffect(() => {
+    const paid = cardReturn === 'success' || paypalCapture === 'done';
+    if (!paid || next !== 'reserver' || !planSlug) return undefined;
+    const t = setTimeout(() => {
+      window.location.assign(
+        `/t/${tenantSlug || DEFAULT_TENANT_SLUG}/reserver?service=${encodeURIComponent(planSlug)}`,
+      );
+    }, 1400);
+    return () => clearTimeout(t);
+  }, [cardReturn, paypalCapture, next, planSlug, tenantSlug]);
+
   // Modèle d'accès du service (lu depuis billing_plans) : free/community → débloqué SANS paiement.
   const [accessModel, setAccessModel] = useState(null);
+  const [planInfo, setPlanInfo] = useState(null);
   const [claiming, setClaiming] = useState(false);
   useEffect(() => {
     if (!planSlug) { setAccessModel('paid'); return undefined; }
     let alive = true;
     supabase
       .from('billing_plans')
-      .select('access_model')
+      .select('access_model, label, price_cents, currency, category, billing_cycle, metadata')
       .eq('key', planSlug)
       .maybeSingle()
-      .then(({ data }) => { if (alive) setAccessModel(data?.access_model || 'paid'); })
+      .then(({ data }) => { if (alive) { setAccessModel(data?.access_model || 'paid'); setPlanInfo(data || null); } })
       .catch(() => { if (alive) setAccessModel('paid'); });
     return () => { alive = false; };
   }, [planSlug]);
   const isFreeAccess = accessModel === 'free' || accessModel === 'community';
 
+  // ── Service marketplace à PRIX FIXE (consultation/coaching/masterclass) ──────
+  // Un plan du catalogue avec price_cents>0 = montant NON éditable = le prix du
+  // service (pas une offrande libre). Additif : ISNA (don/cycle/mentorat) inchangé.
+  const fmtEur = (cents, cur) => {
+    const c = Number(cents || 0) / 100;
+    const u = String(cur || 'EUR').toUpperCase();
+    if (u === 'XAF' || u === 'XOF') return `${Math.round(c * 100 / 100).toLocaleString('fr')} FCFA`;
+    return `${c.toLocaleString('fr', { minimumFractionDigits: 0 })} ${u === 'EUR' ? '€' : u === 'USD' ? '$' : u}`;
+  };
+  const SERVICE_CATS = ['consultation', 'mentorat', 'masterclass', 'custom'];
+  const isFixedService =
+    !!planInfo && Number(planInfo.price_cents || 0) > 0 &&
+    SERVICE_CATS.includes(String(planInfo.category || '')) && !isFreeAccess;
+  const fixedAmountCents = isFixedService ? Number(planInfo.price_cents) : null;
+  const isMonthly = isFixedService && planInfo.billing_cycle === 'monthly';
+  const offer = isFixedService
+    ? {
+        kind: isMonthly ? 'subscription' : 'consultation',
+        title: planInfo.label || baseOffer.title,
+        subtitle: isMonthly ? 'Prestation — abonnement mensuel' : 'Prestation — paiement unique',
+        amountEditable: false,
+        fixedLabel: fmtEur(planInfo.price_cents, planInfo.currency),
+      }
+    : baseOffer;
+
   const handleClaimFree = async () => {
     setClaiming(true);
     try {
       await offeringCheckoutApi.claimFree({ planSlug });
-      window.location.assign('/student-school-life/dashboard');
+      window.location.assign(
+        next === 'reserver' && planSlug
+          ? `/t/${tenantSlug || DEFAULT_TENANT_SLUG}/reserver?service=${encodeURIComponent(planSlug)}`
+          : '/student-school-life/dashboard',
+      );
     } catch (err) {
       setStatus({ state: 'error', message: err?.message || "Impossible de débloquer l'accès.", depositId: null });
       setClaiming(false);
@@ -156,7 +200,7 @@ export default function PaiementPage() {
       // Montant : calculé serveur pour un abonnement ; fourni pour offrande/consultation.
       let amountCents;
       if (offer.kind !== 'subscription') {
-        amountCents = Math.round(parseFloat(amountEur) * 100);
+        amountCents = fixedAmountCents != null ? fixedAmountCents : Math.round(parseFloat(amountEur) * 100);
         if (!amountCents || amountCents < 100) {
           setStatus({ state: 'error', message: 'Indiquez un montant valide (min 1,00 €).', depositId: null });
           return;
@@ -290,7 +334,12 @@ export default function PaiementPage() {
           {offer.fixedLabel ? (
             <p className="text-2xl font-semibold text-white">
               {offer.fixedLabel}
-              <span className="ml-2 text-sm font-normal text-gray-300">abonnement mensuel renouvelable</span>
+              {offer.kind === 'subscription' && (
+                <span className="ml-2 text-sm font-normal text-gray-300">abonnement mensuel renouvelable</span>
+              )}
+              {isFixedService && offer.kind !== 'subscription' && (
+                <span className="ml-2 text-sm font-normal text-gray-300">prix de la prestation</span>
+              )}
             </p>
           ) : (
             <p className="text-sm text-gray-200">

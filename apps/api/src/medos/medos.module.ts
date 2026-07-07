@@ -38,6 +38,7 @@ import {
   AvailabilityController,
 } from './appointments/appointments.controller';
 import { AppointmentsService } from './appointments/appointments.service';
+import { MedosBookingController } from './appointments/booking.controller';
 import { MessagingController } from './messaging/messaging.controller';
 import { MessagingService } from './messaging/messaging.service';
 import {
@@ -174,6 +175,7 @@ import { EmailEngineModule } from '../email-engine/email-engine.module';
     // Appointments
     AvailabilityController,
     AppointmentsController,
+    MedosBookingController,
     // Messaging
     MessagingController,
     // Programs
