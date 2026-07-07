@@ -1388,13 +1388,18 @@ export default function CimolaceCreationAgent({ tenantSlug: tenantSlugProp = nul
       setVnpActs(Array.isArray(data?.actions) ? data.actions.slice(0, 4) : []);
       logEvent('vnp_chat', { intent: data?.intent || '', nodeId: data?.nodeId || '', onTopic: data?.onTopic !== false, sug: sug.length }, osTenant);
       if (data?.onTopic === false) logUnanswered(message, osTenant);
-      speak(reply);
+      // Réponse DESIGNÉE : une question ON-TOPIC qui mappe un nœud → on REND sa scène designée
+      // (cards/frise/split/reader) + la voix contextuelle de l'edge. Sinon narration simple
+      // (refus hors-sujet, ou question sans nœud clair). Fallback exact = speak(reply).
+      const sc = (VNP_SCENES_V2 && data?.onTopic !== false && data?.nodeId)
+        ? normalizeScene(buildNodeScene(data.nodeId, OS_KNOWLEDGE[osTenant])) : null;
+      if (sc) enterScene(sc, () => speak(reply)); else speak(reply);
     } catch (_) {
       if (brainGenRef.current !== gen) return;
       setVnpSuggest([]); setVnpActs([]);
       speak(`Restons sur ${(osBrand && osBrand.name) || 'ce site'} — je vous écoute.`);
     }
-  }, [vnpGraph, osBrand, osTenant, speak, sThink]);
+  }, [vnpGraph, osBrand, osTenant, speak, sThink, enterScene]);
 
   // ACTION ENGINE — EXÉCUTE une action métier pour de vrai (pas un accusé de réception) :
   //  • contacter/participer → mini-formulaire inline, livré dans la table contact_requests (mailbox) ;
