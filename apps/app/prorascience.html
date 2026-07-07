@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <!-- HTML STATIQUE dédié au host prorascience.org (multi-page Vite + rewrite Vercel conditionné au host).
+         Sert les META correctes aux CRAWLERS et SCRAPERS SOCIAUX qui n'exécutent pas le JS (Google JS-render
+         + react-helmet corrigent aussi le rendu dynamique). Les autres hosts gardent index.html (LIRI). -->
+    <title>Prorascience — L'unification de la Science et de la Spiritualité</title>
+    <meta name="description" content="Prorascience (ISNA) : l'étude systématique, rationnelle et vérifiable des réalités visibles et invisibles. Cursus, modules et mentorat pour comprendre, pratiquer, exercer, puis évoluer." />
+    <meta name="robots" content="index, follow" />
+    <link rel="canonical" href="https://prorascience.org/" />
+    <link rel="icon" type="image/png" href="/prorascience-eye.png" />
+    <link rel="apple-touch-icon" href="/prorascience-eye.png" />
+
+    <!-- Open Graph -->
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="Prorascience" />
+    <meta property="og:locale" content="fr_FR" />
+    <meta property="og:title" content="Prorascience — Science & Spiritualité unifiées" />
+    <meta property="og:description" content="L'étude systématique et vérifiable des réalités visibles et invisibles. Comprendre, pratiquer, exercer, évoluer — sous la direction de Badika Jel David, Recteur de l'ISNA." />
+    <meta property="og:url" content="https://prorascience.org/" />
+    <meta property="og:image" content="https://prorascience.org/prorascience-eye.png" />
+
+    <!-- Twitter -->
+    <meta name="twitter:card" content="summary" />
+    <meta name="twitter:title" content="Prorascience — Science & Spiritualité unifiées" />
+    <meta name="twitter:description" content="L'étude systématique et vérifiable des réalités visibles et invisibles. Comprendre, pratiquer, exercer, évoluer." />
+    <meta name="twitter:image" content="https://prorascience.org/prorascience-eye.png" />
+
+    <!-- JSON-LD -->
+    <script type="application/ld+json">
+      {"@context":"https://schema.org","@type":"EducationalOrganization","name":"Prorascience","alternateName":"ISNA — Initiation aux Sciences Nocturnes Africaines","url":"https://prorascience.org","description":"L'étude systématique, rationnelle et vérifiable des réalités visibles et invisibles — l'unification de la science et de la spiritualité.","founder":{"@type":"Person","name":"Badika Jel David","jobTitle":"Recteur de l'ISNA"}}
+    </script>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600;0,9..144,700;1,9..144,500&family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>

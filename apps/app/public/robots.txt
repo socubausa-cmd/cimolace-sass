@@ -1,0 +1,26 @@
+# prorascience.org — site fondateur (ISNA / Prorascience)
+# Autorise l'indexation des pages publiques ; bloque les espaces privés (portails, admin, checkout).
+User-agent: *
+Allow: /
+
+# Espaces privés / applicatifs — hors indexation
+Disallow: /login
+Disallow: /signup
+Disallow: /admin
+Disallow: /owner-dashboard
+Disallow: /secretariat-space
+Disallow: /student-space
+Disallow: /teleconsult
+Disallow: /creer-organisation
+Disallow: /cimolace
+Disallow: /studio
+Disallow: /live
+Disallow: /paiement
+Disallow: /checkout
+Disallow: /billing
+Disallow: /activer
+Disallow: /appointment
+Disallow: /update-password
+Disallow: /forgot-password
+
+Sitemap: https://prorascience.org/sitemap.xml

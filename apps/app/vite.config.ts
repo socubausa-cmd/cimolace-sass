@@ -6,6 +6,12 @@ export default defineConfig({
   plugins: [react()],
   build: {
     rollupOptions: {
+      // Multi-page : index.html (LIRI/OS par défaut) + prorascience.html (host prorascience.org,
+      // META SEO statiques pour crawlers/scrapers no-JS). Les deux chargent le MÊME SPA (main.tsx).
+      input: {
+        main: path.resolve(__dirname, 'index.html'),
+        prorascience: path.resolve(__dirname, 'prorascience.html'),
+      },
       output: {
         // Isole les vendors lourds de node_modules en chunks séparés (cache long-terme,
         // sous-pages /t/isna plus légères). On ne regroupe QUE du node_modules — jamais
