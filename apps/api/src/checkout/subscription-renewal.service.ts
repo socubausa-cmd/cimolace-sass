@@ -376,7 +376,8 @@ export class SubscriptionRenewalService implements OnApplicationBootstrap, OnMod
         .eq('tenant_id', tenantId)
         .eq('key', serviceKey)
         .maybeSingle();
-      if (!plan?.metadata?.bookable) return;
+      // Service RÉSERVABLE (RDV) OU ÉVÉNEMENT/masterclass en direct → pass réutilisable.
+      if (!plan?.metadata?.bookable && !plan?.metadata?.event) return;
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       await (this.supabase as any).from('access_passes').upsert(
         {

@@ -724,6 +724,7 @@ export class AppointmentsService {
         .maybeSingle();
       hasPass = !!pass?.id;
     }
+    const isEvent = !!service.metadata?.event;
     return {
       patient_id: patient.id,
       practitioner_id: practitionerId,
@@ -734,10 +735,13 @@ export class AppointmentsService {
         currency: service.currency,
         appointment_type: service.metadata?.appointment_type || 'teleconsult',
         duration_minutes: Number(service.metadata?.duration_minutes || 30),
+        is_event: isEvent,
+        scheduled_at: service.metadata?.scheduled_at || null,
       },
       is_paid: isPaid,
       has_access: hasPass,
-      can_book: hasPass && !!practitionerId,
+      // Un événement (masterclass) n'a pas besoin de praticien/créneaux : l'accès payé suffit.
+      can_book: hasPass && (isEvent || !!practitionerId),
     };
   }
 

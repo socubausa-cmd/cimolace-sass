@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { DEFAULT_TENANT_SLUG } from '@/config/platform';
+import { getApiBaseUrl } from '@/lib/apiBase';
 import { Link, useParams, useSearchParams } from 'react-router-dom';
 import { Helmet } from 'react-helmet';
 import { offeringCheckoutApi } from '@/lib/api-v2';
@@ -16,6 +17,17 @@ export default function PaiementPage() {
   const planSlug = searchParams.get('plan') || '';
   const typeParam = searchParams.get('type') || '';
   const next = searchParams.get('next') || ''; // 'reserver' → après paiement, prise de RDV
+
+  // Nom du tenant (branding) → affiché à la place du « PRORASCIENCE » codé en dur.
+  const [brandName, setBrandName] = useState('');
+  useEffect(() => {
+    const s = tenantSlug || DEFAULT_TENANT_SLUG;
+    fetch(`${getApiBaseUrl()}/tenants/by-slug/${encodeURIComponent(s)}/branding`)
+      .then((r) => (r.ok ? r.json() : null))
+      .then((b) => setBrandName((b?.data ?? b)?.name || ''))
+      .catch(() => {});
+  }, [tenantSlug]);
+  const BRAND = brandName || 'PRORASCIENCE';
 
   // Détermine la nature de l'offre depuis les query params
   const baseOffer = useMemo(() => {
@@ -270,14 +282,14 @@ export default function PaiementPage() {
     return (
       <div className="min-h-screen bg-[#070b14] text-white">
         <Helmet>
-          <title>{offer.title} | PRORASCIENCE</title>
+          <title>{`${offer.title} | ${BRAND}`}</title>
         </Helmet>
         <header className="border-b border-white/10 px-4 py-4 sm:px-6">
           <div className="mx-auto flex max-w-3xl items-center justify-between">
             <Link to={`/t/${tenantSlug || DEFAULT_TENANT_SLUG}`} className="text-sm text-gray-300 hover:text-white">
               ← Retour
             </Link>
-            <span className="text-xs uppercase tracking-[0.24em] text-[var(--school-accent)]">PRORASCIENCE</span>
+            <span className="text-xs uppercase tracking-[0.24em] text-[var(--school-accent)]">{BRAND}</span>
           </div>
         </header>
         <main className="mx-auto max-w-2xl px-4 py-16 text-center sm:px-6">
@@ -313,7 +325,7 @@ export default function PaiementPage() {
   return (
     <div className="min-h-screen bg-[#070b14] text-white">
       <Helmet>
-        <title>Paiement | ISNA · PRORASCIENCE</title>
+        <title>{`Paiement | ${BRAND}`}</title>
       </Helmet>
 
       <header className="border-b border-white/10 px-4 py-4 sm:px-6">
@@ -321,7 +333,7 @@ export default function PaiementPage() {
           <Link to={`/t/${tenantSlug || DEFAULT_TENANT_SLUG}`} className="text-sm text-gray-300 hover:text-white">
             ← Retour
           </Link>
-          <span className="text-xs uppercase tracking-[0.24em] text-[var(--school-accent)]">PRORASCIENCE</span>
+          <span className="text-xs uppercase tracking-[0.24em] text-[var(--school-accent)]">{BRAND}</span>
         </div>
       </header>
 
@@ -525,10 +537,10 @@ export default function PaiementPage() {
 
         <p className="mt-8 text-xs text-gray-500">
           {method === 'card'
-            ? 'Paiement sécurisé par Stripe (carte). Aucune donnée bancaire n’est stockée par PRORASCIENCE.'
+            ? `Paiement sécurisé par Stripe (carte). Aucune donnée bancaire n’est stockée par ${BRAND}.`
             : method === 'paypal'
-              ? 'Paiement sécurisé par PayPal. Aucune donnée bancaire n’est stockée par PRORASCIENCE.'
-              : 'Paiement opéré par PawaPay (Mobile Money). Aucune donnée bancaire n’est stockée par PRORASCIENCE.'}
+              ? `Paiement sécurisé par PayPal. Aucune donnée bancaire n’est stockée par ${BRAND}.`
+              : `Paiement opéré par PawaPay (Mobile Money). Aucune donnée bancaire n’est stockée par ${BRAND}.`}
         </p>
       </main>
     </div>

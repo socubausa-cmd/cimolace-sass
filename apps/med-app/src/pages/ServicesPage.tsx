@@ -99,6 +99,7 @@ const EMPTY_FORM = {
   bookable: true,
   appointmentType: 'teleconsult',
   durationMinutes: 30,
+  eventDate: '', // masterclass/événement : date+heure (datetime-local)
 };
 
 export default function ServicesPage() {
@@ -149,6 +150,7 @@ export default function ServicesPage() {
       bookable: !!meta.bookable,
       appointmentType: meta.appointment_type || 'teleconsult',
       durationMinutes: Number(meta.duration_minutes || 30),
+      eventDate: meta.scheduled_at ? String(meta.scheduled_at).slice(0, 16) : '',
     });
     setEditing(s);
   }
@@ -162,12 +164,20 @@ export default function ServicesPage() {
     setError(null);
     const priceCents =
       form.accessModel === 'paid' ? Math.round(Number(form.priceMajor || '0') * 100) : 0;
-    const metadata: Record<string, any> = { bookable: form.bookable };
-    if (form.bookable) {
-      metadata.appointment_type = form.appointmentType;
-      metadata.duration_minutes = Number(form.durationMinutes) || 30;
-      const pid = (editing !== 'new' && (editing as Service)?.metadata?.practitioner_id) || currentUserId();
+    const isEvent = form.category === 'masterclass';
+    const pid = (editing !== 'new' && (editing as Service)?.metadata?.practitioner_id) || currentUserId();
+    let metadata: Record<string, any>;
+    if (isEvent) {
+      // Masterclass / événement en direct : pas de RDV 1-à-1, mais une date fixe.
+      metadata = { event: true, scheduled_at: form.eventDate || null };
       if (pid) metadata.practitioner_id = pid;
+    } else {
+      metadata = { bookable: form.bookable };
+      if (form.bookable) {
+        metadata.appointment_type = form.appointmentType;
+        metadata.duration_minutes = Number(form.durationMinutes) || 30;
+        if (pid) metadata.practitioner_id = pid;
+      }
     }
     const payload = {
       category: form.category,
@@ -433,6 +443,15 @@ function ServiceDialog({
             </div>
           )}
 
+          {form.category === 'masterclass' ? (
+            <div style={{ borderTop: '1px solid var(--zw-border)', paddingTop: 14 }}>
+              <span style={label}>Date &amp; heure de l'événement</span>
+              <input style={input} type="datetime-local" value={form.eventDate} onChange={(e) => set({ eventDate: e.target.value })} />
+              <div style={{ fontSize: 11.5, color: 'var(--zw-text-faint)', marginTop: 4 }}>
+                Le client paie sa place ; il rejoint le direct à cette date. Événement collectif (pas un RDV 1-à-1).
+              </div>
+            </div>
+          ) : (
           <div style={{ borderTop: '1px solid var(--zw-border)', paddingTop: 14 }}>
             <label style={{ display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer' }}>
               <input type="checkbox" checked={form.bookable} onChange={(e) => set({ bookable: e.target.checked })} />
@@ -459,6 +478,7 @@ function ServiceDialog({
               </div>
             )}
           </div>
+          )}
         </div>
 
         <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8, marginTop: 18 }}>

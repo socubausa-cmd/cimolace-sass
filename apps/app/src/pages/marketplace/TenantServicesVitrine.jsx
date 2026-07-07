@@ -83,8 +83,10 @@ export default function TenantServicesVitrine() {
 
   function ctaFor(o) {
     const bookable = !!o?.metadata?.bookable;
+    const isEvent = !!o?.metadata?.event;
     const am = o.access_model || (Number(o.price_cents || 0) > 0 ? 'paid' : 'free');
     if (am === 'community') return 'Rejoindre la communauté';
+    if (isEvent) return am === 'free' ? 'Réserver ma place (gratuit)' : 'Réserver ma place';
     if (am === 'free') return bookable ? 'Réserver gratuitement' : 'Accéder gratuitement';
     return bookable ? 'Payer & réserver' : 'Choisir cette offre';
   }
@@ -92,9 +94,9 @@ export default function TenantServicesVitrine() {
   function go(o) {
     // Réutilise le tunnel de paiement existant (/t/:slug/paiement) : il détecte
     // access_model (paid → Stripe/PawaPay ; free/community → claim), pose l'accès,
-    // puis — pour un service réservable — enchaîne la prise de RDV.
+    // puis — pour un service réservable OU un événement — enchaîne (/reserver).
     const params = new URLSearchParams({ plan: o.key });
-    if (o?.metadata?.bookable) params.set('next', 'reserver');
+    if (o?.metadata?.bookable || o?.metadata?.event) params.set('next', 'reserver');
     navigate(`/t/${encodeURIComponent(slug)}/paiement?${params.toString()}`);
   }
 
@@ -158,6 +160,8 @@ export default function TenantServicesVitrine() {
             const am = o.access_model || (Number(o.price_cents || 0) > 0 ? 'paid' : 'free');
             const isFree = am !== 'paid' || !(Number(o.price_cents || 0) > 0);
             const bookable = !!o?.metadata?.bookable;
+            const isEvent = !!o?.metadata?.event;
+            const eventDate = o?.metadata?.scheduled_at ? new Date(o.metadata.scheduled_at) : null;
             return (
               <div key={o.key} style={card}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
@@ -169,8 +173,18 @@ export default function TenantServicesVitrine() {
                       Sur RDV
                     </span>
                   )}
+                  {isEvent && (
+                    <span style={{ fontSize: 10.5, fontWeight: 700, color: '#b0673f', background: '#b0673f18', padding: '3px 9px', borderRadius: 999 }}>
+                      En direct
+                    </span>
+                  )}
                 </div>
                 <div style={{ fontSize: 18, fontWeight: 700, lineHeight: 1.25 }}>{o.label}</div>
+                {isEvent && eventDate && (
+                  <div style={{ fontSize: 13, fontWeight: 600, color: '#b0673f', textTransform: 'capitalize' }}>
+                    📅 {eventDate.toLocaleDateString('fr', { weekday: 'long', day: 'numeric', month: 'long' })} · {eventDate.toLocaleTimeString('fr', { hour: '2-digit', minute: '2-digit' })}
+                  </div>
+                )}
                 {o.tagline && <div style={{ fontSize: 13.5, color: '#6f6055', lineHeight: 1.5 }}>{o.tagline}</div>}
                 {Array.isArray(o.features) && o.features.length > 0 && (
                   <ul style={{ margin: '2px 0 0', padding: 0, listStyle: 'none', display: 'grid', gap: 5 }}>

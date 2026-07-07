@@ -73,7 +73,7 @@ export default function TenantReservationPage() {
       .then((c) => {
         if (!alive) return;
         setCtx(c);
-        if (c?.can_book) {
+        if (c?.can_book && !c?.service?.is_event) {
           setLoadingSlots(true);
           const from = new Date().toISOString();
           const to = new Date(Date.now() + 14 * 86400_000).toISOString();
@@ -150,6 +150,18 @@ export default function TenantReservationPage() {
   if (ctx && !ctx.practitioner_id) {
     return banner('Bientôt disponible', 'Aucun créneau n\'est ouvert pour ce service pour le moment. Réessayez plus tard.',
       <a href={`/t/${slug}/services`} style={btn}>Retour aux services</a>);
+  }
+
+  // — Événement / masterclass : accès payé → inscription confirmée (pas de créneau) —
+  if (ctx?.service?.is_event) {
+    const d = ctx.service.scheduled_at ? new Date(ctx.service.scheduled_at) : null;
+    return banner(
+      'Inscription confirmée ✓',
+      `Votre place pour « ${ctx.service.label} » est réservée.` +
+        (d ? ` Rendez-vous le ${d.toLocaleDateString('fr', { weekday: 'long', day: 'numeric', month: 'long' })} à ${d.toLocaleTimeString('fr', { hour: '2-digit', minute: '2-digit' })}.` : '') +
+        ' Le lien du direct vous sera envoyé par email.',
+      <a href={`/t/${slug}/services`} style={btn}>Voir d'autres offres</a>,
+    );
   }
 
   // — Succès —
