@@ -183,6 +183,20 @@ export const offeringCheckoutApi = {
   /** Accès GRATUIT (service free/community) → débloque sans paiement, renvoie { ok }. */
   claimFree: (body: Record<string, unknown>) =>
     apiV2.post<ApiEnvelope<any>>('/offering-checkout/claim-free', body).then(unwrap),
+
+  // ── INVITÉ (sans compte) : email+nom dans le body ; provisionne le compte serveur ──
+  /** INVITÉ — carte : { ...body, tenantSlug, email, first_name?, last_name? } → { checkoutUrl }. */
+  guestCard: (body: Record<string, unknown>) =>
+    apiV2.post<ApiEnvelope<any>>('/offering-checkout/guest-card', body).then(unwrap),
+  /** INVITÉ — Mobile Money : { ...body, tenantSlug, email, ... } → dépôt PawaPay. */
+  guestMobileMoney: (body: Record<string, unknown>) =>
+    apiV2.post<ApiEnvelope<any>>('/offering-checkout/guest-mobile-money', body).then(unwrap),
+  /** INVITÉ — PayPal : { ...body, tenantSlug, email, ... } → { orderId, approveUrl }. */
+  guestPaypal: (body: Record<string, unknown>) =>
+    apiV2.post<ApiEnvelope<any>>('/offering-checkout/guest-paypal/create-order', body).then(unwrap),
+  /** INVITÉ — accès gratuit : { planSlug, tenantSlug, email, first_name?, last_name? } → { ok }. */
+  guestClaimFree: (body: Record<string, unknown>) =>
+    apiV2.post<ApiEnvelope<any>>('/offering-checkout/guest-claim-free', body).then(unwrap),
 };
 
 /** Liens de live configurables (scénario A) — classe rejouable / individuel one-time. */

@@ -66,6 +66,39 @@ export class OfferingCheckoutController {
     return this.svc.claimFree(user.id, body?.planSlug);
   }
 
+  // ── INVITÉ (sans compte) : provisionne un compte par email, puis flux normal ──
+  /** Paiement CARTE invité → provisionne + checkout Stripe. Public (email requis). */
+  @Post('guest-card')
+  guestCard(
+    @Body() body: CreateOfferingCardDto & { email: string; first_name?: string; last_name?: string },
+  ) {
+    return this.svc.guestStripeCheckout(body);
+  }
+
+  /** Dépôt Mobile Money invité → provisionne + dépôt PawaPay. Public (email requis). */
+  @Post('guest-mobile-money')
+  guestMobileMoney(
+    @Body() body: CreateOfferingDepositDto & { email: string; first_name?: string; last_name?: string },
+  ) {
+    return this.svc.guestMobileMoney(body);
+  }
+
+  /** Ordre PayPal invité → provisionne + ordre. Public (email requis). */
+  @Post('guest-paypal/create-order')
+  guestPaypal(
+    @Body() body: CreateOfferingCardDto & { email: string; first_name?: string; last_name?: string },
+  ) {
+    return this.svc.guestPaypal(body);
+  }
+
+  /** Accès GRATUIT invité → provisionne + réclame. Public (email requis). */
+  @Post('guest-claim-free')
+  guestClaimFree(
+    @Body() body: { planSlug?: string; tenantSlug?: string; email: string; first_name?: string; last_name?: string },
+  ) {
+    return this.svc.guestClaimFree(body);
+  }
+
   @Get('mobile-money/:depositId/status')
   @UseGuards(JwtAuthGuard)
   status(@Param('depositId') depositId: string, @CurrentUser() user: AuthUser) {

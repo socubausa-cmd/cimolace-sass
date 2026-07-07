@@ -29,6 +29,23 @@ export default function PaiementPage() {
   }, [tenantSlug]);
   const BRAND = brandName || 'PRORASCIENCE';
 
+  // ── Session : connecté ? Sinon parcours INVITÉ (email + nom → compte provisionné serveur). ──
+  const payTenant = tenantSlug || DEFAULT_TENANT_SLUG;
+  const [isLoggedIn, setIsLoggedIn] = useState(null); // null = résolution en cours
+  const [guest, setGuest] = useState({ email: '', firstName: '', lastName: '' });
+  const [guestDone, setGuestDone] = useState(false);
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data }) => setIsLoggedIn(!!data?.session?.access_token));
+  }, []);
+  const isGuest = isLoggedIn === false;
+  const guestReady = !isGuest || (guest.email.trim().includes('@') && !!guest.firstName.trim());
+  const withGuest = (body) => ({
+    ...body,
+    email: guest.email.trim(),
+    first_name: guest.firstName.trim(),
+    last_name: guest.lastName.trim(),
+  });
+
   // Détermine la nature de l'offre depuis les query params
   const baseOffer = useMemo(() => {
     if (typeParam === 'don') {
@@ -94,13 +111,14 @@ export default function PaiementPage() {
   useEffect(() => {
     const paid = cardReturn === 'success' || paypalCapture === 'done';
     if (!paid || next !== 'reserver' || !planSlug) return undefined;
+    if (isLoggedIn !== true) return undefined; // invité : /reserver exige une session → bannière de confirmation à la place
     const t = setTimeout(() => {
       window.location.assign(
-        `/t/${tenantSlug || DEFAULT_TENANT_SLUG}/reserver?service=${encodeURIComponent(planSlug)}`,
+        `/t/${payTenant}/reserver?service=${encodeURIComponent(planSlug)}`,
       );
     }, 1400);
     return () => clearTimeout(t);
-  }, [cardReturn, paypalCapture, next, planSlug, tenantSlug]);
+  }, [cardReturn, paypalCapture, next, planSlug, payTenant, isLoggedIn]);
 
   // Modèle d'accès du service (lu depuis billing_plans) : free/community → débloqué SANS paiement.
   const [accessModel, setAccessModel] = useState(null);
@@ -146,12 +164,28 @@ export default function PaiementPage() {
     : baseOffer;
 
   const handleClaimFree = async () => {
+    if (isGuest && !guest.email.trim().includes('@')) {
+      setStatus({ state: 'error', message: 'Indiquez votre email pour réserver.', depositId: null });
+      return;
+    }
     setClaiming(true);
     try {
+      if (isGuest) {
+        await offeringCheckoutApi.guestClaimFree({
+          planSlug,
+          tenantSlug: payTenant,
+          email: guest.email.trim(),
+          first_name: guest.firstName.trim(),
+          last_name: guest.lastName.trim(),
+        });
+        setGuestDone(true);
+        setClaiming(false);
+        return;
+      }
       await offeringCheckoutApi.claimFree({ planSlug });
       window.location.assign(
         next === 'reserver' && planSlug
-          ? `/t/${tenantSlug || DEFAULT_TENANT_SLUG}/reserver?service=${encodeURIComponent(planSlug)}`
+          ? `/t/${payTenant}/reserver?service=${encodeURIComponent(planSlug)}`
           : '/student-school-life/dashboard',
       );
     } catch (err) {
@@ -207,6 +241,10 @@ export default function PaiementPage() {
 
   async function handleSubmit(e) {
     e.preventDefault();
+    if (isGuest && !guest.email.trim().includes('@')) {
+      setStatus({ state: 'error', message: 'Indiquez votre email pour recevoir votre accès.', depositId: null });
+      return;
+    }
     setStatus({ state: 'submitting', message: '', depositId: null });
     try {
       // Montant : calculé serveur pour un abonnement ; fourni pour offrande/consultation.
@@ -221,14 +259,16 @@ export default function PaiementPage() {
 
       // ── Carte bancaire (Stripe Checkout) → redirection ──
       if (method === 'card') {
-        const base = `${window.location.origin}/t/${tenantSlug || DEFAULT_TENANT_SLUG}/paiement${planSlug ? `?plan=${encodeURIComponent(planSlug)}` : ''}`;
+        const base = `${window.location.origin}/t/${payTenant}/paiement${planSlug ? `?plan=${encodeURIComponent(planSlug)}` : ''}`;
         const sep = base.includes('?') ? '&' : '?';
-        const body = { kind: offer.kind };
+        const body = { kind: offer.kind, tenantSlug: payTenant };
         if (offer.kind === 'subscription') body.planSlug = planSlug;
         else { body.amountCents = amountCents; if (planSlug) body.planSlug = planSlug; }
         body.successUrl = `${base}${sep}card=success&session_id={CHECKOUT_SESSION_ID}`;
         body.cancelUrl = `${base}${sep}card=cancel`;
-        const res = await offeringCheckoutApi.createCard(body);
+        const res = isGuest
+          ? await offeringCheckoutApi.guestCard(withGuest(body))
+          : await offeringCheckoutApi.createCard(body);
         if (res?.checkoutUrl) {
           window.location.href = res.checkoutUrl;
           return;
@@ -239,14 +279,16 @@ export default function PaiementPage() {
 
       // ── PayPal (Orders v2) → redirection vers l'approbation PayPal ──
       if (method === 'paypal') {
-        const base = `${window.location.origin}/t/${tenantSlug || DEFAULT_TENANT_SLUG}/paiement${planSlug ? `?plan=${encodeURIComponent(planSlug)}` : ''}`;
+        const base = `${window.location.origin}/t/${payTenant}/paiement${planSlug ? `?plan=${encodeURIComponent(planSlug)}` : ''}`;
         const sep = base.includes('?') ? '&' : '?';
-        const body = { kind: offer.kind };
+        const body = { kind: offer.kind, tenantSlug: payTenant };
         if (offer.kind === 'subscription') body.planSlug = planSlug;
         else { body.amountCents = amountCents; if (planSlug) body.planSlug = planSlug; }
         body.successUrl = `${base}${sep}paypal=success`;
         body.cancelUrl = `${base}${sep}paypal=cancel`;
-        const res = await offeringCheckoutApi.createPaypal(body);
+        const res = isGuest
+          ? await offeringCheckoutApi.guestPaypal(withGuest(body))
+          : await offeringCheckoutApi.createPaypal(body);
         if (res?.approveUrl) {
           window.location.href = res.approveUrl;
           return;
@@ -260,10 +302,12 @@ export default function PaiementPage() {
         setStatus({ state: 'error', message: 'Sélectionnez un pays et un opérateur Mobile Money.', depositId: null });
         return;
       }
-      const body = { kind: offer.kind, phoneNumber: phone.trim(), provider: mmOperator, country: mmCountry };
+      const body = { kind: offer.kind, phoneNumber: phone.trim(), provider: mmOperator, country: mmCountry, tenantSlug: payTenant };
       if (offer.kind === 'subscription') body.planSlug = planSlug;
       else { body.amountCents = amountCents; if (planSlug) body.planSlug = planSlug; }
-      const res = await offeringCheckoutApi.createMobileMoney(body);
+      const res = isGuest
+        ? await offeringCheckoutApi.guestMobileMoney(withGuest(body))
+        : await offeringCheckoutApi.createMobileMoney(body);
       setStatus({
         state: 'success',
         message: 'Demande envoyée. Validez le paiement avec votre code PIN Mobile Money sur votre téléphone.',
@@ -276,6 +320,87 @@ export default function PaiementPage() {
 
   const inputCls =
     'w-full rounded-lg border border-white/15 bg-white/5 px-4 py-2.5 text-white placeholder-gray-500 focus:border-[var(--school-accent)] focus:outline-none';
+
+  // Bloc « coordonnées invité » — affiché quand l'utilisateur n'est pas connecté.
+  const guestFields = (
+    <div className="space-y-3 rounded-2xl border border-white/10 bg-white/5 p-4">
+      <div>
+        <p className="text-sm font-semibold text-white">Vos coordonnées</p>
+        <p className="mt-0.5 text-xs text-gray-400">
+          Pas besoin de compte : on vous crée un espace et l'accès arrive par email.
+        </p>
+      </div>
+      <input
+        type="email"
+        required
+        autoComplete="email"
+        value={guest.email}
+        onChange={(e) => setGuest((g) => ({ ...g, email: e.target.value }))}
+        placeholder="Votre email"
+        className={inputCls}
+      />
+      <div className="grid grid-cols-2 gap-3">
+        <input
+          type="text"
+          required
+          autoComplete="given-name"
+          value={guest.firstName}
+          onChange={(e) => setGuest((g) => ({ ...g, firstName: e.target.value }))}
+          placeholder="Prénom"
+          className={inputCls}
+        />
+        <input
+          type="text"
+          autoComplete="family-name"
+          value={guest.lastName}
+          onChange={(e) => setGuest((g) => ({ ...g, lastName: e.target.value }))}
+          placeholder="Nom (optionnel)"
+          className={inputCls}
+        />
+      </div>
+    </div>
+  );
+
+  // Confirmation INVITÉ : accès gratuit réclamé, ou retour d'un paiement carte/PayPal réussi.
+  const guestConfirmed = guestDone || (isGuest && (cardReturn === 'success' || paypalCapture === 'done'));
+  if (guestConfirmed) {
+    const isEvent = !!planInfo?.metadata?.event;
+    const email = guest.email || 'votre email';
+    return (
+      <div className="min-h-screen bg-[#070b14] text-white">
+        <Helmet>
+          <title>{`Confirmation | ${BRAND}`}</title>
+        </Helmet>
+        <header className="border-b border-white/10 px-4 py-4 sm:px-6">
+          <div className="mx-auto flex max-w-3xl items-center justify-between">
+            <Link to={`/t/${payTenant}`} className="text-sm text-gray-300 hover:text-white">
+              ← Retour
+            </Link>
+            <span className="text-xs uppercase tracking-[0.24em] text-[var(--school-accent)]">{BRAND}</span>
+          </div>
+        </header>
+        <main className="mx-auto max-w-xl px-4 py-16 text-center sm:px-6">
+          <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-emerald-500/15 text-2xl text-emerald-300">
+            ✓
+          </div>
+          <h1 className="mt-5 text-2xl font-semibold sm:text-3xl">C'est confirmé</h1>
+          <p className="mt-3 text-gray-300">
+            {isEvent
+              ? `Votre place est réservée. Le lien du direct sera envoyé à ${email}.`
+              : `Votre accès est débloqué. Pour choisir votre créneau, connectez-vous avec ${email}.`}
+          </p>
+          {!isEvent && planSlug && (
+            <a
+              href={`/t/${payTenant}/login?next=${encodeURIComponent(`/t/${payTenant}/reserver?service=${planSlug}`)}`}
+              className="mt-8 inline-flex items-center justify-center rounded-xl bg-[var(--school-accent)] px-6 py-3 font-semibold text-black transition-opacity hover:opacity-90"
+            >
+              Me connecter pour choisir mon créneau
+            </a>
+          )}
+        </main>
+      </div>
+    );
+  }
 
   // Service gratuit / communauté → pas de paiement : on propose de débloquer l'accès directement.
   if (isFreeAccess) {
@@ -302,10 +427,11 @@ export default function PaiementPage() {
               ? 'Rejoins gratuitement cet espace communautaire — aucun paiement nécessaire.'
               : 'Cet accès est offert — aucun paiement nécessaire.'}
           </p>
+          {isGuest && <div className="mx-auto mt-6 max-w-md text-left">{guestFields}</div>}
           <button
             type="button"
             onClick={handleClaimFree}
-            disabled={claiming}
+            disabled={claiming || !guestReady}
             className="mt-8 inline-flex items-center justify-center gap-2 rounded-xl bg-[var(--school-accent)] px-6 py-3 font-semibold text-black transition-opacity hover:opacity-90 disabled:opacity-60"
           >
             {claiming
@@ -430,6 +556,7 @@ export default function PaiementPage() {
         </div>
 
         <form onSubmit={handleSubmit} className="mt-6 space-y-5">
+          {isGuest && guestFields}
           {offer.amountEditable && (
             <div>
               <label className="mb-1.5 block text-sm font-medium text-gray-200">Montant (EUR)</label>

@@ -1,6 +1,7 @@
 import {
   BadRequestException,
   Injectable,
+  InternalServerErrorException,
   Logger,
   NotFoundException,
   ServiceUnavailableException,
@@ -589,6 +590,105 @@ export class OfferingCheckoutService {
   /** Opérateurs Mobile Money disponibles (filtrable par pays ISO3). */
   async getProviders(country?: string) {
     return this.pawapay.getActiveConfig(country);
+  }
+
+  // ── Paiement INVITÉ (guest) ─────────────────────────────────────────────────
+  // Un client sans compte paie/réclame un service en donnant juste son email : on
+  // provisionne (ou retrouve) son compte à la volée, puis on réutilise le flux
+  // normal (createStripeCheckout / claimFree). Le webhook pose l'accès sur ce
+  // compte ; le client se connecte ensuite (email) pour réserver son créneau.
+
+  /** Provisionne (ou retrouve) un compte à partir d'un email + garantit le membership tenant. */
+  private async provisionGuestUser(
+    tenantId: string,
+    email: string,
+    firstName?: string,
+    lastName?: string,
+  ): Promise<string> {
+    const url = process.env.SUPABASE_URL;
+    const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
+    if (!url || !key) throw new InternalServerErrorException('Supabase non configuré (invité).');
+    const em = email.trim().toLowerCase();
+    const headers = { apikey: key, Authorization: `Bearer ${key}`, 'Content-Type': 'application/json' };
+    const findId = async (): Promise<string | undefined> => {
+      const r = await fetch(`${url}/auth/v1/admin/users?email=${encodeURIComponent(em)}`, { headers });
+      if (!r.ok) return undefined;
+      const d = (await r.json()) as { users?: { id: string; email?: string }[] };
+      return (d?.users || []).find((u) => u.email?.toLowerCase() === em)?.id;
+    };
+    let userId = await findId();
+    if (!userId) {
+      const createRes = await fetch(`${url}/auth/v1/admin/users`, {
+        method: 'POST',
+        headers,
+        body: JSON.stringify({
+          email: em,
+          email_confirm: true,
+          user_metadata: { first_name: firstName ?? null, last_name: lastName ?? null, created_via: 'guest-checkout' },
+        }),
+      });
+      userId = createRes.ok ? ((await createRes.json()) as { id: string }).id : await findId();
+      if (!userId) throw new InternalServerErrorException('Provisionnement du compte invité impossible.');
+    }
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    await (this.supabase as any).from('tenant_memberships').upsert(
+      { tenant_id: tenantId, user_id: userId, role: 'student', status: 'active' },
+      { onConflict: 'tenant_id,user_id', ignoreDuplicates: true },
+    );
+    return userId;
+  }
+
+  private async tenantIdBySlug(slug: string): Promise<string> {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { data } = await (this.supabase as any)
+      .from('tenants').select('id').eq('slug', slug).eq('status', 'active').maybeSingle();
+    if (!data?.id) throw new NotFoundException(`Tenant « ${slug} » introuvable.`);
+    return data.id as string;
+  }
+
+  /** Paiement carte INVITÉ : provisionne le compte par email puis crée le checkout Stripe. */
+  async guestStripeCheckout(
+    dto: CreateOfferingCardDto & { email: string; first_name?: string; last_name?: string },
+  ) {
+    if (!dto.email) throw new BadRequestException('Email requis pour le paiement invité.');
+    const tenantId = await this.tenantIdBySlug(this.resolveTenantSlug(dto.tenantSlug));
+    const userId = await this.provisionGuestUser(tenantId, dto.email, dto.first_name, dto.last_name);
+    return this.createStripeCheckout(userId, dto, dto.email);
+  }
+
+  /** Dépôt Mobile Money INVITÉ : provisionne le compte par email puis crée le dépôt PawaPay. */
+  async guestMobileMoney(
+    dto: CreateOfferingDepositDto & { email: string; first_name?: string; last_name?: string },
+  ) {
+    if (!dto.email) throw new BadRequestException('Email requis pour le paiement invité.');
+    const tenantId = await this.tenantIdBySlug(this.resolveTenantSlug(dto.tenantSlug));
+    const userId = await this.provisionGuestUser(tenantId, dto.email, dto.first_name, dto.last_name);
+    return this.createMobileMoneyDeposit(userId, dto);
+  }
+
+  /** Ordre PayPal INVITÉ : provisionne le compte par email puis crée l'ordre. */
+  async guestPaypal(
+    dto: CreateOfferingCardDto & { email: string; first_name?: string; last_name?: string },
+  ) {
+    if (!dto.email) throw new BadRequestException('Email requis pour le paiement invité.');
+    const tenantId = await this.tenantIdBySlug(this.resolveTenantSlug(dto.tenantSlug));
+    const userId = await this.provisionGuestUser(tenantId, dto.email, dto.first_name, dto.last_name);
+    return this.createPaypalOrder(userId, dto);
+  }
+
+  /** Accès GRATUIT INVITÉ : provisionne le compte puis réclame l'accès. */
+  async guestClaimFree(dto: {
+    planSlug?: string;
+    tenantSlug?: string;
+    email: string;
+    first_name?: string;
+    last_name?: string;
+  }) {
+    if (!dto.email) throw new BadRequestException('Email requis.');
+    const tenantId = await this.tenantIdBySlug(this.resolveTenantSlug(dto.tenantSlug));
+    const userId = await this.provisionGuestUser(tenantId, dto.email, dto.first_name, dto.last_name);
+    await this.claimFree(userId, dto.planSlug);
+    return { ok: true, email: dto.email };
   }
 
   /**
