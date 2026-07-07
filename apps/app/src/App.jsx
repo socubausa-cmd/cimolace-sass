@@ -35,49 +35,81 @@ function prorascienceOsEnabled() {
   return OS_DEFAULT_ON;
 }
 
+// ════════════════════════════════════════════════════════════════════════════════════════════
+// ⛔ RÈGLE DE ROUTAGE DÉFINITIVE — CHAQUE ADRESSE VA À SON PORTAIL. NE JAMAIS MÉLANGER LES PORTAILS.
+// ────────────────────────────────────────────────────────────────────────────────────────────
+// Un host = UN realm. INTERDIT : qu'un host tombe par DÉFAUT sur le portail d'un autre (c'est ce
+// bug — liri.cimolace.space qui rendait l'assistant OS — qui a coûté du temps). Le fallback
+// « host inconnu → OS » est BANNI. `HOST_PORTAL` est la SOURCE UNIQUE de vérité : tout le routage
+// racine (`RootRedirect`, `isCimolaceAssistantRoot`) passe par `resolveHostPortal()`.
+//
+// 👉 POUR TOUT AGENT / DEV : une NOUVELLE adresse publique DOIT être déclarée EXPLICITEMENT dans
+//    `HOST_PORTAL` ci-dessous. Ne route JAMAIS un host « par défaut » vers un portail de marque.
+//
+// Realms : 'cimolace-os' (assistant SaaS) · 'liri' (portail LIRI hébergé) · 'prorascience'
+//          (OS realm du tenant isna) · 'tenant' (domaine custom d'un tenant, résolu dynamiquement).
+// ════════════════════════════════════════════════════════════════════════════════════════════
+const HOST_PORTAL = {
+  // Cimolace OS (assistant / SaaS)
+  'cimolace.space': 'cimolace-os',
+  'www.cimolace.space': 'cimolace-os',
+  'app.cimolace.space': 'cimolace-os',
+  // Portail LIRI (back-office hébergé, « 2 portes »)
+  'liri.cimolace.space': 'liri',
+  'www.liri.cimolace.space': 'liri',
+  // OS realm du fondateur (tenant isna)
+  'prorascience.org': 'prorascience',
+  'www.prorascience.org': 'prorascience',
+};
+
+// Résout LE portail d'un host. Aucune supposition de marque : une adresse publique inconnue est
+// PRÉSUMÉE domaine custom d'un tenant (→ sa propre vitrine, JAMAIS l'OS ni LIRI). Seuls les hosts
+// de preview/dev tombent sur le bac à sable OS. Ainsi un host ne « vole » jamais le portail d'un autre.
+function resolveHostPortal(host) {
+  const h = String(host || (typeof window !== 'undefined' ? window.location.hostname : '')).toLowerCase();
+  if (HOST_PORTAL[h]) return HOST_PORTAL[h];                 // adresse officielle déclarée (source unique)
+  if (getCachedHostTenant(h)) return 'tenant';               // domaine custom d'un tenant (cache hydraté)
+  if (h.endsWith('-cimolace.vercel.app')) return 'cimolace-os'; // preview Vercel = bac à sable OS
+  if (isPlatformOrDevHost(h)) return 'cimolace-os';          // localhost / *.local / *.cimolace.space non déclaré (dev)
+  return 'tenant';                                           // adresse publique inconnue → PRÉSUMÉE tenant (jamais une marque)
+}
+
 // LOT C — l'assistant immersif est-il l'entrée à la RACINE `/` pour ce host ? (host Cimolace SaaS :
 // ni tenant custom, ni prorascience, ni callback OAuth). Sert à masquer le header/DiscoveryChat au `/`.
 function isCimolaceAssistantRoot(pathname) {
   if (typeof window === 'undefined') return false;
   if (pathname !== '/') return false;
   if (window.location.hash.includes('access_token')) return false;
-  const host = window.location.hostname.toLowerCase();
-  if (getCachedHostTenant(host)) return false;
-  // prorascience.org : header masqué UNIQUEMENT quand l'OS est actif (immersif) ; sinon maquettes (header visible).
-  if (host === 'prorascience.org' || host === 'www.prorascience.org') return prorascienceOsEnabled();
-  // liri.cimolace.space rend le portail LIRI (LiriLandingPage), pas l'assistant → header géré normalement.
-  if (host === 'liri.cimolace.space' || host === 'www.liri.cimolace.space') return false;
-  return true;
+  // Header/DiscoveryChat masqués UNIQUEMENT quand la racine est un OS immersif (source unique HOST_PORTAL) :
+  //  - portail 'cimolace-os' (assistant) ; - 'prorascience' quand l'OS est actif (sinon maquettes = header visible).
+  const portal = resolveHostPortal(window.location.hostname);
+  if (portal === 'prorascience') return prorascienceOsEnabled();
+  return portal === 'cimolace-os';
 }
 
 function RootRedirect() {
   const hash = typeof window !== 'undefined' ? window.location.hash : '';
   const host = typeof window !== 'undefined' ? window.location.hostname.toLowerCase() : '';
   if (hash.includes('access_token')) return <Navigate to="/auth/callback" replace />;
-  const isProrascienceHost = host === 'prorascience.org' || host === 'www.prorascience.org';
-  // P5 — prorascience.org → Cimolace OS (realm isolé). DOIT passer AVANT la résolution host→tenant :
-  // prorascience.org est un domaine custom du tenant `isna`, donc getCachedHostTenant renverrait 'isna'
-  // → les maquettes, court-circuitant l'OS. Kill-switch : ?os=0 (retombe alors sur les maquettes ci-dessous).
-  if (isProrascienceHost && prorascienceOsEnabled()) {
-    return <CimolaceCreationAgent tenantSlug={DEFAULT_TENANT_SLUG} />;
+  // ⛔ SOURCE UNIQUE — chaque adresse va à SON portail (jamais de mélange). Cf. HOST_PORTAL / resolveHostPortal.
+  switch (resolveHostPortal(host)) {
+    case 'prorascience':
+      // Realm du fondateur (tenant isna) : l'OS par défaut ; ?os=0 → maquettes figées du fondateur.
+      return prorascienceOsEnabled()
+        ? <CimolaceCreationAgent tenantSlug={DEFAULT_TENANT_SLUG} />
+        : <TenantVitrineHome slug={DEFAULT_TENANT_SLUG} />;
+    case 'liri':
+      // Portail LIRI hébergé (« 2 portes » Créer / Rejoindre + Se connecter).
+      return <LiriLandingPage />;
+    case 'tenant':
+      // Domaine custom d'un tenant → SA vitrine (URL propre, sans /t/:slug ; générique si cache froid).
+      return <TenantVitrineHome slug={getCachedHostTenant(host) || undefined} />;
+    case 'cimolace-os':
+    default:
+      // Assistant immersif Cimolace rendu au root (URL reste `/`). Back-office /cimolace, funnel
+      // /creer-organisation et /login restent accessibles EN DIRECT.
+      return <CimolaceCreationAgent />;
   }
-  // Domaine custom d'un tenant → SA vitrine, rendue en URL PROPRE (sans /t/:slug). Multi-tenant.
-  const hostTenant = getCachedHostTenant(host);
-  if (hostTenant) return <TenantVitrineHome slug={hostTenant} />;
-  // Domaine fondateur (prorascience.org = tenant ISNA), OS désactivé (?os=0) → maquettes du fondateur.
-  if (isProrascienceHost) {
-    return <TenantVitrineHome slug={DEFAULT_TENANT_SLUG} />;
-  }
-  // liri.cimolace.space = host NEUTRE du PORTAIL LIRI (back-office « 2 portes ») — PAS l'OS Cimolace.
-  // (Le LOT C avait fait rendre l'OS à la racine de TOUS les hosts cimolace, ce qui écrasait cette entrée.)
-  if (host === 'liri.cimolace.space' || host === 'www.liri.cimolace.space') {
-    return <LiriLandingPage />;
-  }
-  // LOT C — Racine Cimolace (SaaS) → l'ASSISTANT IMMERSIF RENDU AU ROOT (l'URL reste `/`, pas de
-  // redirection cliente). Le back-office /cimolace, le funnel /creer-organisation et /login restent
-  // accessibles EN DIRECT. CIMOLACE_PUBLIC_HOSTS / isPlatformOrDevHost / LiriLandingPage restent
-  // utilisés ailleurs (résolution tenant, etc.).
-  return <CimolaceCreationAgent />;
 }
 
 // DEV PREVIEW — composant sans auth
