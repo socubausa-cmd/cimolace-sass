@@ -26,7 +26,7 @@ import { logEvent, logUnanswered } from '@/lib/agent/vnpStats';
 import { BG, BG_THINK, INK, TERRA, GOLD, SERIF, DISPLAY, STYLE } from '@/lib/agent/immersiveTheme';
 import Presence from '@/components/agent/Presence';
 import { CIMOLACE_LESSONS } from '@/lib/agent/cimolaceLessons';
-import { OS_KNOWLEDGE, prorascienceKnowledgeText, buildTenantTour } from '@/lib/agent/prorascienceKnowledge';
+import { OS_KNOWLEDGE, prorascienceKnowledgeText, buildTenantTour, buildNodeScene } from '@/lib/agent/prorascienceKnowledge';
 import { buildVnpGraph, vnpSerialize, vnpRelated, vnpIntent } from '@/lib/agent/vnp';
 import { createProtocol } from '@/lib/agent/vnpProtocol';
 
@@ -148,6 +148,10 @@ function genSlots(count = 6) {
 // Protocole de Visite (spec §3) — reducer vnpProtocol branché mais OFF par défaut : le flux VNP actuel
 // reste la référence. Passer à true APRÈS validation preview pour piloter node/détail par la machine à états.
 const VNP_PROTOCOL_V2 = false;
+
+// Réponses DESIGNÉES : un clic de sujet compose une SCÈNE (buildNodeScene + normalizeScene) au lieu
+// d'un texte plat. Kill-switch instantané (fallback exact = narration speak()). ON par défaut.
+const VNP_SCENES_V2 = true;
 
 const VNP_ACTION_META = {
   contacter: { label: 'Nous contacter', Icon: Mail },
@@ -372,7 +376,7 @@ function croquisFor(t) {
 // composition de tout l'écran ; le front la met en scène + l'anime, puis revient
 // au mode de base. `reply` reste TOUJOURS la voix autonome (invariant anti-écran-vide).
 // ═══════════════════════════════════════════════════════════════════════════
-const SCENE_TYPES = ['aside', 'split', 'reader', 'tutorial'];
+const SCENE_TYPES = ['aside', 'split', 'reader', 'tutorial', 'cards'];
 const prefersReduced = () =>
   typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
@@ -419,6 +423,18 @@ function normalizeScene(raw) {
       if (!steps.length) return null;
       return { type: 'tutorial', title: cut(raw.title, 80) || 'Pas à pas', steps, cta: cut(raw.cta, 80) || undefined };
     }
+    if (raw.type === 'cards') {
+      const cards = (Array.isArray(raw.cards) ? raw.cards : []).slice(0, 6)
+        .map((c) => (c && c.title) ? {
+          title: cut(c.title, 40),
+          value: cut(c.value, 40) || undefined,
+          note: cut(c.note, 120) || undefined,
+          badge: cut(c.badge, 24) || undefined,
+          accent: (c.accent === 'terra' || c.accent === 'gold') ? c.accent : undefined,
+        } : null).filter(Boolean);
+      if (!cards.length) return null;
+      return { type: 'cards', title: cut(raw.title, 80) || undefined, cards };
+    }
     return null;
   } catch { return null; }
 }
@@ -461,6 +477,7 @@ function SceneStage({ scene, visible, readerIdx, setReaderIdx, onSuggest, onCta,
       {scene.type === 'split' && <SplitWorlds scene={scene} hooks={hooks} onHook={onHook} />}
       {scene.type === 'reader' && <ReaderView scene={scene} idx={readerIdx} setIdx={setReaderIdx} onSuggest={onSuggest} hooks={hooks} />}
       {scene.type === 'tutorial' && <TutorialFlow scene={scene} onCta={onCta} hooks={hooks} onHook={onHook} />}
+      {scene.type === 'cards' && <CardsScene scene={scene} />}
     </div>
   );
 }
@@ -480,6 +497,50 @@ function AsidePanel({ scene }) {
         </div>
       ))}
     </aside>
+  );
+}
+
+// cards — grille de cartes PLEIN ÉCRAN (forfaits/chiffres/valeurs), révélées en cascade.
+// CSS + slot injectés ici (valeurs littérales du thème → aucune dépendance d'import).
+const CARDS_CSS = `
+.cca-scene-on.cca-slot-cards{transform:translateY(-38vh) scale(.5);opacity:0}
+.cca-cards{position:absolute;inset:0;display:flex;flex-direction:column;justify-content:center;gap:16px;padding:11vh 5vw 5vh;overflow-y:auto;scrollbar-width:none}
+.cca-cards::-webkit-scrollbar{width:0}
+.cca-cards-title{font-family:'Fraunces','Source Serif 4',Georgia,serif;font-size:22px;color:#f4efe6;text-align:center;margin-bottom:2px;opacity:0;transform:translateY(10px);transition:opacity .5s ease,transform .5s cubic-bezier(.16,1,.3,1)}
+.cca-scene-on .cca-cards-title{opacity:1;transform:none}
+.cca-cards-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(215px,1fr));gap:13px;max-width:880px;width:100%;margin:0 auto}
+.cca-card{position:relative;background:rgba(244,239,230,.04);border:1px solid rgba(244,239,230,.1);border-radius:16px;padding:17px 17px 15px;display:flex;flex-direction:column;gap:5px;opacity:0;transform:translateY(16px) scale(.98);transition:opacity .5s ease,transform .5s cubic-bezier(.16,1,.3,1),border-color .2s ease,background .2s ease}
+.cca-scene-on .cca-card{opacity:1;transform:none}
+.cca-card:hover{border-color:rgba(230,204,146,.4);background:rgba(244,239,230,.06)}
+.cca-card-gold{border-color:rgba(230,204,146,.5);background:rgba(230,204,146,.05)}
+.cca-card-terra{border-color:rgba(217,119,87,.4)}
+.cca-card-badge{position:absolute;top:-9px;right:14px;background:#e6cc92;color:#2a140c;font-family:'Bricolage Grotesque',system-ui,sans-serif;font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.02em;padding:2px 9px;border-radius:999px}
+.cca-card-title{font-family:'Fraunces','Source Serif 4',Georgia,serif;font-size:16px;color:#f4efe6;font-weight:600}
+.cca-card-value{font-family:'Cormorant Garamond','Cormorant',Georgia,serif;font-size:31px;line-height:1;color:#e6cc92;margin:1px 0}
+.cca-card-terra .cca-card-value{color:#d97757}
+.cca-card-note{font-size:12.5px;line-height:1.45;color:rgba(244,239,230,.6)}
+@media (max-width:640px){.cca-cards{padding:7vh 5vw 4vh}.cca-cards-grid{grid-template-columns:1fr}.cca-card-value{font-size:27px}}
+`;
+function CardsScene({ scene }) {
+  return (
+    <div className="cca-cards" style={{ pointerEvents: 'auto' }}>
+      <style>{CARDS_CSS}</style>
+      {scene.title && <div className="cca-cards-title">{scene.title}</div>}
+      <div className="cca-cards-grid">
+        {scene.cards.map((c, i) => (
+          <div
+            key={i}
+            className={`cca-card${c.accent === 'gold' ? ' cca-card-gold' : c.accent === 'terra' ? ' cca-card-terra' : ''}`}
+            style={{ transitionDelay: `${i * 65 + 140}ms` }}
+          >
+            {c.badge && <span className="cca-card-badge">{c.badge}</span>}
+            <div className="cca-card-title">{c.title}</div>
+            {c.value && <div className="cca-card-value">{c.value}</div>}
+            {c.note && <div className="cca-card-note">{c.note}</div>}
+          </div>
+        ))}
+      </div>
+    </div>
   );
 }
 
@@ -1212,8 +1273,12 @@ export default function CimolaceCreationAgent({ tenantSlug: tenantSlugProp = nul
     setVnpSuggest(vnpRelated(g, nodeId, 3));
     setVnpActs(n.actions || []);
     logEvent('node_opened', { nodeId, intention: n.intention || '' }, osTenant);
+    // Réponse DESIGNÉE : compose une SCÈNE (buildNodeScene → normalizeScene) ; la voix suit.
+    // Fallback EXACT vers la narration plate si aucune scène (contact/support) ou flag OFF.
+    const sc = VNP_SCENES_V2 ? normalizeScene(buildNodeScene(nodeId, OS_KNOWLEDGE[osTenant])) : null;
+    if (sc) { enterScene(sc, () => speak(n.summary || n.title)); return; }
     speak(`${n.summary} ${n.content}`.replace(/\s+/g, ' ').trim().slice(0, 340) || n.title);
-  }, [vnpGraph, speak, osTenant, runEffects]);
+  }, [vnpGraph, speak, osTenant, runEffects, enterScene]);
 
   // Réponse à une QUESTION LIBRE via l'edge VNP (résout intention + nœud + suggestions + actions).
   const vnpChat = useCallback(async (message) => {

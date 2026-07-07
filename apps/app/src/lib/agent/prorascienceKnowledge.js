@@ -182,5 +182,136 @@ export function buildTenantTour(k = PRORASCIENCE_KNOWLEDGE, brandName) {
   return beats;
 }
 
+// buildNodeScene(nodeId, knowledge) — LE PROJECTEUR : pour un nœud VNP, compose une SCÈNE designée
+// (au lieu d'un pavé de texte plat). PUR, data-driven, borné. normalizeScene reste l'autorité finale
+// (null → narration `speak()` de repli). Réutilise les formes du tour (split/aside/tutorial/reader)
+// + le layout `cards` (grille) pour les nœuds « liste de faits homogènes » (forfaits, chiffres, valeurs).
+export function buildNodeScene(nodeId, k = PRORASCIENCE_KNOWLEDGE) {
+  if (!k) return null;
+  const id = k.identity || {};
+  const vision = k.vision || {};
+  const founder = k.founder || {};
+  const offers = k.offers || [];
+  const method = k.method || [];
+  const stats = id.stats || [];
+  const faqs = k.faq || [];
+  const values = vision.values || [];
+  const name = id.name || 'ce site';
+  const founderFacts = [
+    { k: 'Rôle', v: founder.title || 'Fondateur' },
+    { k: 'Mandat', v: 'Restaurer la dignité par la connaissance' },
+  ];
+
+  switch (nodeId) {
+    case 'identity':
+      return {
+        type: 'split', headline: `${name}${id.fullName ? ` — ${id.fullName}` : ''}`,
+        left: { title: "Ce que c'est", subtitle: 'La discipline', points: ["L'étude du visible ET de l'invisible", 'Unir physique et métaphysique', 'Une école ET un temple'] },
+        right: { title: 'Ce que ça change', subtitle: 'Pour vous', points: ['Comprendre, pas subir', 'Le pourquoi derrière le geste', 'Une transformation réelle'] },
+        tone: { left: 'gold', right: 'terra' },
+      };
+    case 'vision':
+      return {
+        type: 'split', headline: name,
+        left: { title: 'Le constat', subtitle: 'Le problème', points: ['On reproduit les gestes', 'On répète les traditions', 'La compréhension manque'] },
+        right: { title: 'La promesse', subtitle: name, points: ['Comprendre en profondeur', 'Maîtriser vraiment', 'Puis évoluer'] },
+        tone: { left: 'terra', right: 'gold' },
+      };
+    case 'mission':
+      return {
+        type: 'split', headline: 'Notre mission',
+        left: { title: 'Pourquoi', subtitle: 'Le sens', points: ['Restaurer la compréhension', 'Rendre la dignité intellectuelle', 'Unir rigueur et profondeur'] },
+        right: { title: "Ce qu'on vise", subtitle: 'Le cap', points: ['Comprendre', 'Maîtriser', 'Puis évoluer'] },
+        tone: { left: 'gold', right: 'terra' },
+      };
+    case 'valeurs':
+      return values.length ? {
+        type: 'cards', title: 'Nos valeurs',
+        cards: values.slice(0, 4).map((v) => ({ title: v.title, note: v.desc })),
+      } : null;
+    case 'services':
+      return method.length ? {
+        type: 'tutorial', title: 'La méthode, 4 temps',
+        steps: method.slice(0, 5).map((m) => ({ title: m.step, detail: `${m.kind ? m.kind + ' — ' : ''}${(m.items || []).join(', ')}` })),
+      } : null;
+    case 'solutions':
+      return method.length ? {
+        type: 'tutorial', title: 'Choisir son parcours',
+        steps: method.slice(0, 5).map((m) => ({ title: m.step, detail: m.foot || (m.items || []).slice(0, 2).join(', ') })),
+        cta: 'Comparer les forfaits',
+      } : null;
+    case 'produits':
+      return offers.length ? {
+        type: 'cards', title: 'Nos forfaits',
+        cards: offers.slice(0, 6).map((o) => ({
+          title: o.name, value: `${o.price}${o.suffix || ''}`, note: o.desc,
+          badge: o.popular ? 'Le plus choisi' : undefined, accent: o.popular ? 'gold' : undefined,
+        })),
+      } : null;
+    case 'realisations':
+      return stats.length ? {
+        type: 'cards', title: 'Nos réalisations',
+        cards: stats.slice(0, 6).map((s) => ({ title: s.label, value: s.value, accent: 'terra' })),
+      } : null;
+    case 'documentation':
+      return {
+        type: 'cards', title: 'Documentation',
+        cards: [
+          (k.navigation || []).includes('Les 21 sciences') ? { title: 'Les 21 sciences', note: 'Sciences nocturnes africaines', accent: 'gold' } : null,
+          ...method.slice(0, 4).map((m) => ({ title: m.kind || m.step, note: (m.items || []).slice(0, 2).join(', ') })),
+        ].filter(Boolean),
+      };
+    case 'ressources': {
+      const nav = (k.navigation || []).filter((n) => /formation|pro|mentorat|coaching|science/i.test(n));
+      return nav.length ? { type: 'cards', title: 'Ressources', cards: nav.slice(0, 6).map((n) => ({ title: n })) } : null;
+    }
+    case 'histoire':
+      return founder.name ? {
+        type: 'reader', title: 'Notre histoire',
+        profile: { name: founder.name, role: founder.title, avatarSeed: founder.name,
+          facts: [{ k: 'Mandat', v: 'Restaurer la dignité' }, ...stats.slice(0, 2).map((s) => ({ k: s.label, v: s.value }))] },
+        body: [{ h: "L'origine", p: founder.bio }, { h: 'Le mandat', p: vision.closing || vision.promise }],
+        suggestions: ['Le fondateur ?', 'Vos forfaits ?'],
+      } : null;
+    case 'fondateur':
+      return founder.name ? {
+        type: 'reader', title: 'Le fondateur',
+        profile: { name: founder.name, role: founder.title, avatarSeed: founder.name, facts: founderFacts },
+        body: [{ h: 'Sa vision', p: founder.bio }, { h: 'Son mandat', p: vision.closing }],
+        suggestions: ['Vos forfaits ?', 'La méthode ?'],
+      } : null;
+    case 'equipe':
+      return founder.name ? {
+        type: 'reader', title: 'Notre équipe',
+        profile: { name: founder.name, role: 'Recteur — direction', avatarSeed: founder.name,
+          facts: stats.filter((s) => /transmet|pays/i.test(s.label)).slice(0, 2).map((s) => ({ k: s.label, v: s.value })) },
+        body: [
+          { h: 'La direction', p: `Sous la direction de ${founder.name}, ${founder.title}.` },
+          { h: 'Les transmetteurs', p: 'Une communauté de transmetteurs accompagne chaque étudiant à travers le monde.' },
+        ],
+        suggestions: ['Le fondateur ?', 'Nous contacter'],
+      } : null;
+    case 'faq':
+      return faqs.length ? {
+        type: 'reader', title: 'Questions fréquentes',
+        profile: { name, role: 'Vos questions', avatarSeed: name, facts: [] },
+        body: faqs.slice(0, 6).map((f) => ({ h: f.q, p: f.a })),
+        suggestions: ['Vos forfaits ?', 'Nous contacter'],
+      } : null;
+    case 'actions':
+      return {
+        type: 'tutorial', title: "Passer à l'action",
+        steps: [
+          { title: 'Choisir un forfait', detail: offers.length ? `De ${offers[0].price}${offers[0].suffix || ''} au mentorat` : 'Selon votre intention' },
+          { title: 'Réserver', detail: 'Une consultation privée, 90 min' },
+          { title: 'Rejoindre', detail: 'Le cursus qui vous correspond' },
+        ],
+        cta: 'Voir les forfaits',
+      };
+    default:
+      return null; // contact / support : le formulaire inline est le meilleur rendu → speak court
+  }
+}
+
 // Table (extensible) : slug tenant → knowledge pack. Pour l'instant seul isna/prorascience.
 export const OS_KNOWLEDGE = { isna: PRORASCIENCE_KNOWLEDGE };
