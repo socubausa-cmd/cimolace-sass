@@ -664,6 +664,7 @@ const DashboardLiri = lazy(() => import('@/pages/liri/DashboardLiri').then((m) =
 // Portail LIRI — accueil/hub (rail Accueil/Lives/Forum/Studio/Biblio/Brain + stats live)
 const LiriPortalPage = lazy(() => import('@/pages/liri/LiriPortalPage').then((m) => ({ default: m.LiriPortalPage })));
 const LiriAccountPage = lazy(() => import('@/pages/liri/LiriAccountPage'));
+const LiriServicesPage = lazy(() => import('@/pages/liri/LiriServicesPage'));
 const LiriFinancesPage = lazy(() => import('@/pages/liri/LiriFinancesPage'));
 // Module ÉCOLE HORIZONTAL dans le portail LIRI (vertical = /t/:slug ; ici = app activable dans /liri)
 const LiriEcolePage = lazy(() => import('@/pages/liri/LiriEcolePage'));
@@ -1813,6 +1814,13 @@ isLiriHostDevPreviewRoute;
           <Route path="/liri/ecole" element={
             <ProtectedLiriRoute allowedRoles={['owner', 'admin']} allowTenantRole>
               <LiriEcolePage />
+            </ProtectedLiriRoute>
+          } />
+          {/* Services — catalogue vendable du tenant DANS le portail LIRI (remplace le
+              « Catalogue & tarifs » d'Academy). Créateur only (owner/admin). */}
+          <Route path="/liri/services" element={
+            <ProtectedLiriRoute allowedRoles={['owner', 'admin']} allowTenantRole>
+              <LiriServicesPage />
             </ProtectedLiriRoute>
           } />
           <Route path="/liri/ecole/knowledge-base" element={
