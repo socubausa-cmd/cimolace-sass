@@ -504,7 +504,8 @@ function AsidePanel({ scene }) {
 // CSS + slot injectés ici (valeurs littérales du thème → aucune dépendance d'import).
 const CARDS_CSS = `
 .cca-scene-on.cca-slot-cards{transform:translateY(-38vh) scale(.5);opacity:0}
-.cca-cards{position:absolute;inset:0;display:flex;flex-direction:column;justify-content:center;gap:16px;padding:11vh 5vw 5vh;overflow-y:auto;scrollbar-width:none}
+.cca-cards{position:absolute;inset:0;display:flex;flex-direction:column;justify-content:center;align-items:center;gap:14px;padding:9vh 5vw 18vh;overflow-y:auto;scrollbar-width:none}
+@media (max-height:760px){.cca-cards{justify-content:flex-start}}
 .cca-cards::-webkit-scrollbar{width:0}
 .cca-cards-title{font-family:'Fraunces','Source Serif 4',Georgia,serif;font-size:22px;color:#f4efe6;text-align:center;margin-bottom:2px;opacity:0;transform:translateY(10px);transition:opacity .5s ease,transform .5s cubic-bezier(.16,1,.3,1)}
 .cca-scene-on .cca-cards-title{opacity:1;transform:none}
@@ -1620,7 +1621,9 @@ export default function CimolaceCreationAgent({ tenantSlug: tenantSlugProp = nul
       {/* VNP — Realm tenant : accueil = INTENTIONS (avant interaction) ; puis NAVIGATION GUIDÉE
           (sujets liés) + ACTION ENGINE (actions métier). Le visiteur ne clique pas des liens : des intentions. */}
       {showActions && isTenantRealm && !tourActive && !contactForm && !bookingForm && (
-        <div className="cca-in" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(238px, 1fr))', gap: 10, justifyItems: 'stretch', marginTop: 24, width: '100%', maxWidth: 560, position: 'relative', zIndex: 4, padding: '0 20px', boxSizing: 'border-box' }}>
+        <div className="cca-in" style={fullscreenScene
+          ? { position: 'absolute', bottom: 16, left: '50%', transform: 'translateX(-50%)', display: 'flex', flexWrap: 'wrap', justifyContent: 'center', alignContent: 'flex-end', gap: 8, width: 'min(94vw, 820px)', padding: '10px 12px 0', boxSizing: 'border-box', zIndex: 6 }
+          : { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(238px, 1fr))', gap: 10, justifyItems: 'stretch', marginTop: 24, width: '100%', maxWidth: 560, position: 'relative', zIndex: 4, padding: '0 20px', boxSizing: 'border-box' }}>
           {/* Toujours proposé : la visite guidée (l'OS REND le site en scènes) */}
           <button className="cca-chip cca-chip-visit" onClick={(e) => { e.stopPropagation(); startTenantTour(); }} style={VNP_VISIT_CHIP}>
             <span style={{ display: 'inline-flex', alignItems: 'center', gap: 10 }}><Compass size={17} style={{ flexShrink: 0 }} /> Fais-moi visiter</span>
