@@ -148,9 +148,10 @@ export default function PaiementPage() {
     return `${c.toLocaleString('fr', { minimumFractionDigits: 0 })} ${u === 'EUR' ? '€' : u === 'USD' ? '$' : u}`;
   };
   const SERVICE_CATS = ['consultation', 'mentorat', 'masterclass', 'custom'];
-  const isFixedService =
-    !!planInfo && Number(planInfo.price_cents || 0) > 0 &&
-    SERVICE_CATS.includes(String(planInfo.category || '')) && !isFreeAccess;
+  // Service du catalogue tenant (consultation/coaching/masterclass…), payant OU gratuit :
+  // son libellé (planInfo.label) prime TOUJOURS sur le fallback générique « PRORASCIENCE ».
+  const isCatalogService = !!planInfo && SERVICE_CATS.includes(String(planInfo.category || ''));
+  const isFixedService = isCatalogService && Number(planInfo.price_cents || 0) > 0 && !isFreeAccess;
   const fixedAmountCents = isFixedService ? Number(planInfo.price_cents) : null;
   const isMonthly = isFixedService && planInfo.billing_cycle === 'monthly';
   const offer = isFixedService
@@ -161,7 +162,9 @@ export default function PaiementPage() {
         amountEditable: false,
         fixedLabel: fmtEur(planInfo.price_cents, planInfo.currency),
       }
-    : baseOffer;
+    : isCatalogService
+      ? { ...baseOffer, title: planInfo.label || baseOffer.title }
+      : baseOffer;
 
   const handleClaimFree = async () => {
     if (isGuest && !guest.email.trim().includes('@')) {
