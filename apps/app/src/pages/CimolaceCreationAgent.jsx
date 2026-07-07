@@ -431,6 +431,15 @@ function normalizeScene(raw) {
           note: cut(c.note, 120) || undefined,
           badge: cut(c.badge, 24) || undefined,
           accent: (c.accent === 'terra' || c.accent === 'gold') ? c.accent : undefined,
+          ref: (c.ref && typeof c.ref === 'object') ? {
+            kind: c.ref.kind === 'plan' ? 'plan' : 'info',
+            title: cut(c.ref.title, 60) || cut(c.title, 40),
+            value: cut(c.ref.value, 40) || undefined,
+            note: cut(c.ref.note, 340) || undefined,
+            actions: (Array.isArray(c.ref.actions) ? c.ref.actions : []).filter((a) => typeof a === 'string').slice(0, 4),
+            related: (Array.isArray(c.ref.related) ? c.ref.related : []).slice(0, 3)
+              .map((r) => (r && r.nodeId && r.label) ? { nodeId: cut(r.nodeId, 40), label: cut(r.label, 40) } : null).filter(Boolean),
+          } : undefined,
         } : null).filter(Boolean);
       if (!cards.length) return null;
       return { type: 'cards', title: cut(raw.title, 80) || undefined, cards };
@@ -468,7 +477,7 @@ function avatarFromSeed(seed) {
 
 // ── Renderer de scène + 4 sous-scènes. Contenu rendu dès scene!=null (jamais gaté
 //    sur `visible`) ; la classe cca-scene-on n'ajoute QUE le mouvement (anti onglet-masqué). ──
-function SceneStage({ scene, visible, readerIdx, setReaderIdx, onSuggest, onCta, hooks, onHook }) {
+function SceneStage({ scene, visible, readerIdx, setReaderIdx, onSuggest, onCta, hooks, onHook, onFocus }) {
   if (!scene) return null;
   return (
     <div className={`cca-scene cca-stage-${scene.type} ${visible ? 'cca-scene-on' : ''}`}
@@ -477,7 +486,7 @@ function SceneStage({ scene, visible, readerIdx, setReaderIdx, onSuggest, onCta,
       {scene.type === 'split' && <SplitWorlds scene={scene} hooks={hooks} onHook={onHook} />}
       {scene.type === 'reader' && <ReaderView scene={scene} idx={readerIdx} setIdx={setReaderIdx} onSuggest={onSuggest} hooks={hooks} />}
       {scene.type === 'tutorial' && <TutorialFlow scene={scene} onCta={onCta} hooks={hooks} onHook={onHook} />}
-      {scene.type === 'cards' && <CardsScene scene={scene} />}
+      {scene.type === 'cards' && <CardsScene scene={scene} onFocus={onFocus} />}
     </div>
   );
 }
@@ -520,26 +529,96 @@ const CARDS_CSS = `
 .cca-card-value{font-family:'Cormorant Garamond','Cormorant',Georgia,serif;font-size:31px;line-height:1;color:#e6cc92;margin:1px 0}
 .cca-card-terra .cca-card-value{color:#d97757}
 .cca-card-note{font-size:12.5px;line-height:1.45;color:rgba(244,239,230,.6)}
+.cca-card-click:hover{border-color:rgba(230,204,146,.55);background:rgba(244,239,230,.07);transform:translateY(-2px)}
+.cca-card-more{margin-top:7px;font-family:'Bricolage Grotesque',system-ui,sans-serif;font-size:10.5px;font-weight:700;letter-spacing:.03em;text-transform:uppercase;color:#e6cc92;opacity:.7;transition:opacity .2s ease}
+.cca-card-click:hover .cca-card-more{opacity:1}
 @media (max-width:640px){.cca-cards{padding:7vh 5vw 4vh}.cca-cards-grid{grid-template-columns:1fr}.cca-card-value{font-size:27px}}
 `;
-function CardsScene({ scene }) {
+function CardsScene({ scene, onFocus }) {
   return (
     <div className="cca-cards" style={{ pointerEvents: 'auto' }}>
       <style>{CARDS_CSS}</style>
       {scene.title && <div className="cca-cards-title">{scene.title}</div>}
       <div className="cca-cards-grid">
-        {scene.cards.map((c, i) => (
-          <div
-            key={i}
-            className={`cca-card${c.accent === 'gold' ? ' cca-card-gold' : c.accent === 'terra' ? ' cca-card-terra' : ''}`}
-            style={{ transitionDelay: `${i * 65 + 140}ms` }}
-          >
-            {c.badge && <span className="cca-card-badge">{c.badge}</span>}
-            <div className="cca-card-title">{c.title}</div>
-            {c.value && <div className="cca-card-value">{c.value}</div>}
-            {c.note && <div className="cca-card-note">{c.note}</div>}
+        {scene.cards.map((c, i) => {
+          const clickable = !!(c.ref && onFocus);
+          return (
+            <div
+              key={i}
+              className={`cca-card${c.accent === 'gold' ? ' cca-card-gold' : c.accent === 'terra' ? ' cca-card-terra' : ''}${clickable ? ' cca-card-click' : ''}`}
+              style={{ transitionDelay: `${i * 65 + 140}ms`, cursor: clickable ? 'pointer' : 'default' }}
+              onClick={clickable ? (e) => { e.stopPropagation(); onFocus(c.ref); } : undefined}
+              role={clickable ? 'button' : undefined}
+              tabIndex={clickable ? 0 : undefined}
+              onKeyDown={clickable ? (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onFocus(c.ref); } } : undefined}
+            >
+              {c.badge && <span className="cca-card-badge">{c.badge}</span>}
+              <div className="cca-card-title">{c.title}</div>
+              {c.value && <div className="cca-card-value">{c.value}</div>}
+              {c.note && <div className="cca-card-note">{c.note}</div>}
+              {clickable && <span className="cca-card-more">Voir le détail →</span>}
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+// FocusDrawer — MODE FOCUS : cliquer un élément (carte) ouvre un tiroir d'approfondissement INLINE
+// (détail + actions métier + sujets liés), sans quitter la conversation. Backdrop → ferme.
+const FOCUS_CSS = `
+@keyframes ccaFocusIn{from{opacity:0;transform:translateY(26px)}to{opacity:1;transform:none}}
+.cca-focus-back{position:fixed;inset:0;background:rgba(12,12,11,.62);backdrop-filter:blur(3px);-webkit-backdrop-filter:blur(3px);z-index:40;display:flex;align-items:flex-end;justify-content:center}
+.cca-focus{width:min(560px,94vw);max-height:82vh;overflow-y:auto;scrollbar-width:none;background:#211f1d;border:1px solid rgba(230,204,146,.2);border-bottom:none;border-radius:22px 22px 0 0;padding:22px 22px 26px;box-shadow:0 -20px 60px -20px rgba(0,0,0,.7);animation:ccaFocusIn .34s cubic-bezier(.16,1,.3,1) both}
+.cca-focus::-webkit-scrollbar{width:0}
+.cca-focus-grip{width:38px;height:4px;border-radius:2px;background:rgba(244,239,230,.2);margin:0 auto 16px}
+.cca-focus-title{font-family:'Fraunces','Source Serif 4',Georgia,serif;font-size:20px;color:#f4efe6;font-weight:600}
+.cca-focus-value{font-family:'Cormorant Garamond','Cormorant',Georgia,serif;font-size:38px;line-height:1.05;color:#e6cc92;margin:3px 0 10px}
+.cca-focus-note{font-size:14px;line-height:1.6;color:rgba(244,239,230,.78);margin-bottom:18px}
+.cca-focus-actions{display:flex;flex-direction:column;gap:9px;margin-bottom:16px}
+.cca-focus-act{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:13px 16px;border-radius:13px;border:1px solid rgba(217,119,87,.4);background:rgba(217,119,87,.12);color:#f4efe6;font-family:inherit;font-size:14px;font-weight:500;cursor:pointer;transition:background .16s ease,border-color .16s ease}
+.cca-focus-act:hover{background:rgba(217,119,87,.2);border-color:rgba(217,119,87,.6)}
+.cca-focus-act.sec{border-color:rgba(244,239,230,.14);background:rgba(244,239,230,.04)}
+.cca-focus-act.sec:hover{background:rgba(244,239,230,.08);border-color:rgba(244,239,230,.28)}
+.cca-focus-suites{display:flex;flex-wrap:wrap;gap:8px}
+.cca-focus-chip{display:inline-flex;align-items:center;gap:6px;padding:8px 13px;border-radius:999px;border:1px solid rgba(230,204,146,.24);background:rgba(230,204,146,.05);color:rgba(244,239,230,.85);font-family:inherit;font-size:12.5px;cursor:pointer;transition:background .16s ease,border-color .16s ease}
+.cca-focus-chip:hover{background:rgba(230,204,146,.13);border-color:rgba(230,204,146,.45)}
+.cca-focus-close{margin-top:16px;width:100%;padding:11px;border-radius:12px;border:none;background:transparent;color:rgba(244,239,230,.5);font-family:inherit;font-size:13px;cursor:pointer}
+.cca-focus-close:hover{color:rgba(244,239,230,.85)}
+`;
+function FocusDrawer({ item, brand, onClose, onAction, onNode }) {
+  if (!item) return null;
+  return (
+    <div className="cca-focus-back" onClick={onClose}>
+      <style>{FOCUS_CSS}</style>
+      <div className="cca-focus" onClick={(e) => e.stopPropagation()} role="dialog" aria-modal="true">
+        <div className="cca-focus-grip" />
+        <div className="cca-focus-title">{item.title}</div>
+        {item.value && <div className="cca-focus-value">{item.value}</div>}
+        {item.note && <div className="cca-focus-note">{item.note}</div>}
+        {item.actions && item.actions.length > 0 && (
+          <div className="cca-focus-actions">
+            {item.actions.map((a, i) => {
+              const m = VNP_ACTION_META[a];
+              if (!m) return null;
+              return (
+                <button key={a} className={`cca-focus-act${i > 0 ? ' sec' : ''}`} onClick={() => onAction(a, m.label)}>
+                  <span style={{ display: 'inline-flex', alignItems: 'center', gap: 10 }}><m.Icon size={17} /> {m.label}</span>
+                  <ArrowRight size={16} />
+                </button>
+              );
+            })}
           </div>
-        ))}
+        )}
+        {item.related && item.related.length > 0 && (
+          <div className="cca-focus-suites">
+            {item.related.map((r) => (
+              <button key={r.nodeId} className="cca-focus-chip" onClick={() => onNode(r.nodeId)}>{r.label} →</button>
+            ))}
+          </div>
+        )}
+        <button className="cca-focus-close" onClick={onClose}>Fermer</button>
       </div>
     </div>
   );
@@ -709,6 +788,7 @@ export default function CimolaceCreationAgent({ tenantSlug: tenantSlugProp = nul
   const [vnpSuggest, setVnpSuggest] = useState([]); // [{nodeId,label}] sujets liés
   const [vnpActs, setVnpActs] = useState([]);       // [intentId] actions disponibles
   const [contactForm, setContactForm] = useState(null); // Action Engine : {name,email,message,subject,sending,sent,error} | null
+  const [focusItem, setFocusItem] = useState(null); // MODE FOCUS : ref de l'élément approfondi (tiroir) | null
   const protocolRef = useRef(null); // Protocole de Visite (machine à états) — instancié si VNP_PROTOCOL_V2
   useEffect(() => {
     protocolRef.current = VNP_PROTOCOL_V2 && vnpGraph ? createProtocol({ graph: vnpGraph, order: vnpGraph.tourOrder }) : null;
@@ -1281,6 +1361,13 @@ export default function CimolaceCreationAgent({ tenantSlug: tenantSlugProp = nul
     speak(`${n.summary} ${n.content}`.replace(/\s+/g, ' ').trim().slice(0, 340) || n.title);
   }, [vnpGraph, speak, osTenant, runEffects, enterScene]);
 
+  // MODE FOCUS — cliquer un élément (carte) ouvre le tiroir d'approfondissement inline.
+  const openFocus = useCallback((ref) => {
+    if (!ref) return;
+    setFocusItem(ref);
+    try { logEvent('focus_open', { kind: ref.kind || '', title: ref.title || '' }, osTenant); } catch { /* non bloquant */ }
+  }, [osTenant]);
+
   // Réponse à une QUESTION LIBRE via l'edge VNP (résout intention + nœud + suggestions + actions).
   const vnpChat = useCallback(async (message) => {
     const g = vnpGraph;
@@ -1493,7 +1580,17 @@ export default function CimolaceCreationAgent({ tenantSlug: tenantSlugProp = nul
       {scene && (isTenantRealm || step === 'brain' || step === 'product') && (
         <SceneStage scene={scene} visible={sceneVisible} readerIdx={readerIdx} setReaderIdx={setReaderIdx}
           onSuggest={isTenantRealm ? vnpChat : brain} onCta={isTenantRealm ? vnpChat : chooseProduct}
-          hooks={isTenantRealm ? [] : brainHooks} onHook={isTenantRealm ? vnpChat : brain} />
+          hooks={isTenantRealm ? [] : brainHooks} onHook={isTenantRealm ? vnpChat : brain} onFocus={openFocus} />
+      )}
+
+      {/* MODE FOCUS — tiroir d'approfondissement inline (carte cliquée) */}
+      {isTenantRealm && (
+        <FocusDrawer
+          item={focusItem} brand={tenantName}
+          onClose={() => setFocusItem(null)}
+          onAction={(a, label) => { setFocusItem(null); vnpAction(a, label); }}
+          onNode={(id) => { setFocusItem(null); vnpOpenNode(id); }}
+        />
       )}
 
       {/* Identité du realm (où on est) : badge marque (logo + nom) + état connecté */}

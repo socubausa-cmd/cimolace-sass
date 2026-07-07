@@ -246,6 +246,12 @@ export function buildNodeScene(nodeId, k = PRORASCIENCE_KNOWLEDGE) {
         cards: offers.slice(0, 6).map((o) => ({
           title: o.name, value: `${o.price}${o.suffix || ''}`, note: o.desc,
           badge: o.popular ? 'Le plus choisi' : undefined, accent: o.popular ? 'gold' : undefined,
+          // MODE FOCUS : cliquer une carte ouvre le tiroir (détail + actions + suites).
+          ref: {
+            kind: 'plan', title: o.name, value: `${o.price}${o.suffix || ''}`, note: o.desc,
+            actions: ['acheter', 'reserver', 'contacter'],
+            related: [{ nodeId: 'services', label: 'La méthode' }, { nodeId: 'solutions', label: 'Les parcours' }],
+          },
         })),
       } : null;
     case 'realisations':
