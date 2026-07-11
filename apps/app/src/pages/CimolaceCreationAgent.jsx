@@ -729,7 +729,7 @@ const STATS_CSS = `
 .cca-st-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(158px,1fr));gap:14px;max-width:740px;width:100%;margin:0 auto}
 .cca-st-tile{background:rgba(244,239,230,.04);border:1px solid rgba(244,239,230,.1);border-radius:16px;padding:20px 18px;display:flex;flex-direction:column;gap:5px;opacity:0;transform:translateY(16px) scale(.98);transition:opacity .5s ease,transform .5s cubic-bezier(.16,1,.3,1),border-color .2s ease}
 .cca-scene-on .cca-st-tile{opacity:1;transform:none}
-.cca-st-tile.pct{background:rgba(230,204,146,.05);border-color:rgba(230,204,146,.22)}
+.cca-st-tile.pct{grid-column:1/-1;background:rgba(230,204,146,.05);border-color:rgba(230,204,146,.22)}
 .cca-st-tile.click{cursor:pointer}
 .cca-st-tile.click:hover{border-color:rgba(230,204,146,.4)}
 .cca-st-val{font-family:'Cormorant Garamond','Cormorant',Georgia,serif;font-size:44px;line-height:1;color:#e6cc92;font-weight:600}
