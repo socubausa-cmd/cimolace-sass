@@ -11,19 +11,63 @@
  * Public (pré-signup). Chaîne LLM éco : Groq → DeepSeek → OpenAI.
  * Front : supabase.functions.invoke('prorascience-brain', { body: { message, platformName, knowledge, history } }).
  */
-import { corsHeaders } from '../_shared/cors.ts';
+// CORS local — NE PAS toucher ../_shared/cors.ts (partagé par TOUTES les edges). Cette edge est
+// publique (--no-verify-jwt) : on restreint l'origine navigateur aux domaines connus (bloque l'embed
+// et le jailbreak du cerveau sous une marque arbitraire). Les appels hors-navigateur (curl) ignorent
+// CORS → ils sont freinés par le rate-limit ci-dessous.
+const CORS_HEADERS: Record<string, string> = {
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-user-jwt',
+  'Access-Control-Allow-Methods': 'POST, OPTIONS',
+  'Vary': 'Origin',
+};
+function allowedOrigin(req: Request): string | null {
+  const origin = req.headers.get('Origin') || '';
+  try {
+    const u = new URL(origin);
+    const host = u.hostname.toLowerCase();
+    const https = u.protocol === 'https:';
+    if (https && (host === 'prorascience.org' || host === 'www.prorascience.org')) return origin;
+    if (https && (host === 'cimolace.space' || host.endsWith('.cimolace.space'))) return origin; // *.cimolace.space
+    if (https && host.endsWith('-cimolace.vercel.app')) return origin;               // preview Vercel
+    if (host === 'localhost' || host === '127.0.0.1') return origin;                  // dev local
+  } catch { /* origine absente/invalide → non autorisée */ }
+  return null;
+}
+function corsFor(req: Request): Record<string, string> {
+  const o = allowedOrigin(req);
+  return o ? { ...CORS_HEADERS, 'Access-Control-Allow-Origin': o } : { ...CORS_HEADERS };
+}
+function withCors(res: Response, cors: Record<string, string>): Response {
+  for (const [k, v] of Object.entries(cors)) res.headers.set(k, v);
+  return res;
+}
+
+// Rate-limit LÉGER best-effort (mémoire d'isolat éphémère/multiple = frein anti-flood, pas un quota).
+const RL = new Map<string, number[]>();
+function rateLimited(ip: string, max: number, windowMs: number): boolean {
+  const now = Date.now();
+  const hits = (RL.get(ip) || []).filter((t) => now - t < windowMs);
+  hits.push(now);
+  RL.set(ip, hits);
+  if (RL.size > 5000) { for (const [k, v] of RL) { if (!v.some((t) => now - t < windowMs)) RL.delete(k); } }
+  return hits.length > max;
+}
 
 // @ts-ignore - Deno runtime
 function jsonResponse(obj: unknown, status = 200): Response {
+  // ACAO ajouté par withCors() au niveau du handler (selon l'Origin) — jamais '*' en dur.
   return new Response(JSON.stringify(obj), {
     status,
-    headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    headers: { ...CORS_HEADERS, 'Content-Type': 'application/json' },
   });
 }
 
 // @ts-ignore - Deno runtime
 Deno.serve(async (req: Request) => {
-  if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders });
+  const cors = corsFor(req);
+  if (req.method === 'OPTIONS') return new Response('ok', { headers: cors });
+  const ip = (req.headers.get('x-forwarded-for') || req.headers.get('x-real-ip') || '').split(',')[0].trim() || 'unknown';
+  if (rateLimited(ip, 20, 60_000)) return withCors(jsonResponse({ error: 'rate_limited' }, 429), cors);
 
   try {
     // @ts-ignore - Deno runtime
@@ -32,14 +76,14 @@ Deno.serve(async (req: Request) => {
     const deepseekKey = Deno.env.get('DEEPSEEK_API_KEY') || '';
     // @ts-ignore - Deno runtime
     const openaiKey = Deno.env.get('OPENAI_API_KEY') || '';
-    if (!groqKey && !deepseekKey && !openaiKey) return jsonResponse({ error: 'Missing LLM API keys' }, 500);
+    if (!groqKey && !deepseekKey && !openaiKey) return withCors(jsonResponse({ error: 'Missing LLM API keys' }, 500), cors);
 
     const body = await req.json().catch(() => ({}));
     const message: string = String(body?.message || '').trim();
     const platformName: string = String(body?.platformName || 'cette plateforme').trim().slice(0, 80);
     const knowledge: string = String(body?.knowledge || '').trim().slice(0, 6000);
     const history: Array<{ role: string; content: string }> = Array.isArray(body?.history) ? body.history.slice(-6) : [];
-    if (!message) return jsonResponse({ error: 'message is required' }, 400);
+    if (!message) return withCors(jsonResponse({ error: 'message is required' }, 400), cors);
 
     const system =
       `Tu es le GUIDE du site « ${platformName} » — chaleureux, incarné, clair. Tu accueilles le visiteur et tu l'orientes DANS le périmètre de ${platformName}, à partir de ce que tu SAIS (ci-dessous). Phrases courtes, français concret, tu/vous naturel, sans markdown.\n\n` +
@@ -76,7 +120,7 @@ Deno.serve(async (req: Request) => {
       (await callLLM('https://api.deepseek.com/chat/completions', deepseekKey, 'deepseek-chat', 32000)) ||
       (await callLLM('https://api.openai.com/v1/chat/completions', openaiKey, 'gpt-4o-mini'));
 
-    if (!raw) return jsonResponse({ error: 'LLM unavailable' }, 503);
+    if (!raw) return withCors(jsonResponse({ error: 'LLM unavailable' }, 503), cors);
 
     let parsed: { reply?: string; onTopic?: unknown } = {};
     try { const m = raw.match(/\{[\s\S]*\}/); if (m) parsed = JSON.parse(m[0]); } catch (_) { /* défaut */ }
@@ -85,8 +129,8 @@ Deno.serve(async (req: Request) => {
       String(parsed.reply || '').replace(/\*+/g, '').replace(/\s+/g, ' ').trim() ||
       `Restons sur ${platformName} — dites-m'en un peu plus ?`;
     const onTopic = parsed.onTopic === false ? false : true;
-    return jsonResponse({ reply, onTopic });
+    return withCors(jsonResponse({ reply, onTopic }), cors);
   } catch (e) {
-    return jsonResponse({ error: String((e as Error)?.message || e) }, 500);
+    return withCors(jsonResponse({ error: String((e as Error)?.message || e) }, 500), cors);
   }
 });
