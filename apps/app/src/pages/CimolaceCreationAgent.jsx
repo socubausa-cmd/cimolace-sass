@@ -17,7 +17,7 @@
  */
 import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { GraduationCap, Stethoscope, ShoppingBag, ArrowUp, ArrowRight, ArrowLeft, Check, Loader2, Mail, Lock, Volume2, VolumeX, Sparkles, SkipForward, X, Compass, BookOpen, Users, Tag, UserPlus, Calendar, Download, Scale, Send } from 'lucide-react';
+import { GraduationCap, Stethoscope, ShoppingBag, ArrowUp, ArrowRight, ArrowLeft, Check, Loader2, Mail, Lock, Volume2, VolumeX, Sparkles, SkipForward, X, Compass, BookOpen, Users, Tag, UserPlus, Calendar, Download, Scale, Send, Eye, Target, Gem, Hexagon } from 'lucide-react';
 import { getApiBaseUrl } from '@/lib/apiBase';
 import { useAuth } from '@/hooks/useAuth';
 import { authStore } from '@/lib/auth-store';
@@ -165,6 +165,16 @@ const VNP_ACTION_META = {
   telecharger: { label: 'Télécharger', Icon: Download },
   participer: { label: 'Participer', Icon: Users },
   __detail__: { label: 'Approfondir', Icon: BookOpen },
+};
+
+// Icônes décoratives du reader (badges ronds sur sections/faits), cyclées par index.
+const READER_ICONS = [BookOpen, Hexagon, Compass, Sparkles, Scale, Eye];
+const readerIcon = (i) => READER_ICONS[((i % READER_ICONS.length) + READER_ICONS.length) % READER_ICONS.length];
+// Icône par SUJET (puces « Poursuivre » de la barre suite) — repli sur une flèche.
+const NODE_ICONS = {
+  mission: Target, vision: Eye, valeurs: Gem, services: Compass, solutions: Scale, produits: Tag,
+  realisations: Sparkles, histoire: BookOpen, fondateur: Users, equipe: Users, faq: Sparkles,
+  contact: Mail, support: Mail, identity: Hexagon, documentation: BookOpen, ressources: Compass,
 };
 
 // Realms OS de marque AUTORISÉS. Rendre un realm = afficher le chrome « tenant » (badge marque,
@@ -586,11 +596,16 @@ function avatarFromSeed(seed) {
 const SCENE_SUGGEST_CSS = `
 .cca-ss{position:absolute;left:0;right:0;bottom:0;z-index:6;display:flex;flex-wrap:wrap;justify-content:center;align-items:center;gap:9px;padding:38px 5vw 20px;background:linear-gradient(to top,#262624 36%,rgba(38,38,36,.85) 64%,transparent);opacity:0;transform:translateY(10px);transition:opacity .5s ease .32s,transform .5s cubic-bezier(.16,1,.3,1) .32s;pointer-events:auto}
 .cca-scene-on .cca-ss{opacity:1;transform:none}
-.cca-ss-lead{width:100%;text-align:center;font-family:'Bricolage Grotesque',system-ui,sans-serif;font-size:9.5px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:rgba(244,239,230,.32);margin-bottom:3px}
+.cca-ss-lead{width:100%;display:flex;align-items:center;justify-content:center;gap:14px;margin-bottom:8px;font-family:'Bricolage Grotesque',system-ui,sans-serif;font-size:9.5px;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:rgba(244,239,230,.4)}
+.cca-ss-lead::before,.cca-ss-lead::after{content:'';height:1px;width:clamp(40px,14vw,130px)}
+.cca-ss-lead::before{background:linear-gradient(90deg,transparent,rgba(230,204,146,.42))}
+.cca-ss-lead::after{background:linear-gradient(90deg,rgba(230,204,146,.42),transparent)}
 .cca-ss-act{display:inline-flex;align-items:center;gap:8px;padding:10px 16px;border-radius:999px;border:1px solid rgba(217,119,87,.45);background:rgba(217,119,87,.14);color:#f4efe6;font-family:inherit;font-size:13px;font-weight:500;cursor:pointer;transition:background .16s ease,border-color .16s ease}
 .cca-ss-act:hover{background:rgba(217,119,87,.24);border-color:rgba(217,119,87,.65)}
-.cca-ss-chip{display:inline-flex;align-items:center;gap:6px;padding:9px 14px;border-radius:999px;border:1px solid rgba(230,204,146,.26);background:rgba(230,204,146,.05);color:rgba(244,239,230,.85);font-family:inherit;font-size:12.5px;cursor:pointer;transition:background .16s ease,border-color .16s ease}
+.cca-ss-chip{display:inline-flex;align-items:center;gap:8px;padding:9px 15px 9px 13px;border-radius:999px;border:1px solid rgba(230,204,146,.26);background:rgba(230,204,146,.05);color:rgba(244,239,230,.85);font-family:inherit;font-size:12.5px;cursor:pointer;transition:background .16s ease,border-color .16s ease}
 .cca-ss-chip:hover{background:rgba(230,204,146,.13);border-color:rgba(230,204,146,.48)}
+.cca-ss-chip>svg:first-of-type{color:#e6cc92}
+.cca-ss-arr{color:#e6cc92;opacity:.55;margin-left:1px}
 .cca-scene:has(.cca-ss) .cca-cards,.cca-scene:has(.cca-ss) .cca-tl,.cca-scene:has(.cca-ss) .cca-st,.cca-scene:has(.cca-ss) .cca-cmp,.cca-scene:has(.cca-ss) .cca-tuto{padding-bottom:104px}
 @media (max-width:640px){.cca-ss{padding:32px 4vw 15px;gap:7px}}
 `;
@@ -612,9 +627,14 @@ function SceneSuggest({ acts, suggest, onAct, onNode }) {
           <m.Icon size={15} /> {m.label}
         </button>
       ))}
-      {sugList.map((s) => (
-        <button key={s.nodeId} type="button" className="cca-ss-chip" onClick={() => onNode(s.nodeId)}>{s.label} →</button>
-      ))}
+      {sugList.map((s) => {
+        const Ic = NODE_ICONS[s.nodeId] || Sparkles;
+        return (
+          <button key={s.nodeId} type="button" className="cca-ss-chip" onClick={() => onNode(s.nodeId)}>
+            <Ic size={14} /><span>{s.label}</span><ArrowRight className="cca-ss-arr" size={13} />
+          </button>
+        );
+      })}
     </div>
   );
 }
@@ -1162,21 +1182,35 @@ function ReaderView({ scene, idx, setIdx, onSuggest, hooks, glossary, onTerm }) 
   return (
     <div className="cca-reader" style={{ pointerEvents: 'auto' }}>
       <div className="cca-reader-profile">
-        {avatarFromSeed(profile.avatarSeed || profile.name)}
+        <div className="cca-reader-avatar">{avatarFromSeed(profile.avatarSeed || profile.name)}</div>
         <div className="cca-reader-name">{profile.name}</div>
         {profile.role && <div className="cca-reader-role">{profile.role}</div>}
-        {(profile.facts || []).map((f, i) => (
-          <div key={i} className="cca-reader-fact"><span>{f.k}</span><b>{f.v}</b></div>
-        ))}
+        {(profile.facts || []).length > 0 && <div className="cca-reader-pdiv"><span /></div>}
+        {(profile.facts || []).map((f, i) => {
+          const Ic = readerIcon(i);
+          return (
+            <div key={i} className="cca-reader-fact">
+              <span className="cca-reader-fic"><Ic size={16} /></span>
+              <div className="cca-reader-fbody"><span>{f.k}</span><b>{f.v}</b></div>
+            </div>
+          );
+        })}
       </div>
       <div className="cca-reader-body" ref={scrollRef} onScroll={onScroll}>
         <h2 className="cca-reader-title">{scene.title}</h2>
-        {scene.body.map((s, i) => (
-          <section key={i} id={`cca-sec-${i}`}>
-            <h4 className="cca-reader-h">{s.h}</h4>
-            {s.p.split('\n\n').map((para, j) => (<p key={j} className="cca-reader-p">{glossify(para, glossary, onTerm)}</p>))}
-          </section>
-        ))}
+        <div className="cca-reader-rule"><span /></div>
+        {scene.body.map((s, i) => {
+          const Ic = readerIcon(i);
+          return (
+            <section key={i} id={`cca-sec-${i}`}>
+              <div className="cca-reader-sechead">
+                <span className="cca-reader-sic"><Ic size={19} /></span>
+                <h4 className="cca-reader-h">{s.h}</h4>
+              </div>
+              {s.p.split('\n\n').map((para, j) => (<p key={j} className="cca-reader-p">{glossify(para, glossary, onTerm)}</p>))}
+            </section>
+          );
+        })}
       </div>
       <nav className="cca-reader-nav">
         {scene.body.map((s, i) => (
