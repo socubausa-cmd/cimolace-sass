@@ -518,6 +518,7 @@ function normalizeScene(raw) {
       const steps = (Array.isArray(raw.steps) ? raw.steps : []).slice(0, 6)
         .map((s) => (s && s.title) ? {
           marker: cut(s.marker, 6) || undefined,
+          icon: (typeof s.icon === 'string' && s.icon.length < 16) ? s.icon : undefined,
           kicker: cut(s.kicker, 24) || undefined,
           title: cut(s.title, 48),
           detail: cut(s.detail, 200) || undefined,
@@ -532,6 +533,7 @@ function normalizeScene(raw) {
       const metrics = (Array.isArray(raw.metrics) ? raw.metrics : []).slice(0, 6)
         .map((m) => (m && m.label && m.value != null) ? {
           label: cut(m.label, 40), value: cut(m.value, 16),
+          icon: (typeof m.icon === 'string' && m.icon.length < 16) ? m.icon : undefined,
           note: cut(m.note, 80) || undefined,
           ref: normRef(m.ref, m.label),
         } : null).filter(Boolean);
@@ -542,6 +544,7 @@ function normalizeScene(raw) {
       const plans = (Array.isArray(raw.plans) ? raw.plans : []).slice(0, 4)
         .map((p) => (p && p.name) ? {
           name: cut(p.name, 28), value: cut(p.value, 24) || undefined,
+          icon: (typeof p.icon === 'string' && p.icon.length < 16) ? p.icon : undefined,
           popular: !!p.popular, ref: normRef(p.ref, p.name),
         } : null).filter(Boolean);
       const n = plans.length;
@@ -759,7 +762,7 @@ const TIMELINE_CSS = `
 .cca-tl-body{padding-top:4px}
 .cca-tl-body.click{cursor:pointer;border-radius:12px;transition:background .18s ease}
 .cca-tl-body.click:hover{background:rgba(244,239,230,.035)}
-.cca-tl-kicker{font-family:'Bricolage Grotesque',system-ui,sans-serif;font-size:10.5px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:rgba(230,204,146,.72)}
+.cca-tl-kicker{display:inline-flex;align-items:center;gap:5px;font-family:'Bricolage Grotesque',system-ui,sans-serif;font-size:10.5px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:rgba(230,204,146,.72)}
 .cca-tl-h{font-family:'Fraunces','Source Serif 4',Georgia,serif;font-size:19px;color:#f4efe6;font-weight:600;margin:1px 0 4px}
 .cca-tl-detail{font-size:13.5px;line-height:1.55;color:rgba(244,239,230,.66)}
 .cca-tl-foot{margin-top:6px;font-size:11.5px;color:rgba(244,239,230,.44)}
@@ -776,6 +779,7 @@ function TimelineFlow({ scene, onFocus, glossary, onTerm }) {
         {scene.steps.map((s, i) => {
           const clickable = !!(s.ref && onFocus);
           const open = clickable ? () => onFocus(s.ref) : undefined;
+          const TIc = s.icon ? CARD_ICON_MAP[s.icon] : null;
           return (
             <div key={i} className={`cca-tl-node${s.accent === 'terra' ? ' terra' : ''}`} style={{ transitionDelay: `${i * 90 + 150}ms` }}>
               <div className="cca-tl-rail">
@@ -785,7 +789,7 @@ function TimelineFlow({ scene, onFocus, glossary, onTerm }) {
               <div className={`cca-tl-body${clickable ? ' click' : ''}`}
                 onClick={open} role={clickable ? 'button' : undefined} tabIndex={clickable ? 0 : undefined}
                 onKeyDown={clickable ? (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); open(); } } : undefined}>
-                {s.kicker && <div className="cca-tl-kicker">{s.kicker}</div>}
+                {s.kicker && <div className="cca-tl-kicker">{TIc && <TIc size={12} />}{s.kicker}</div>}
                 <div className="cca-tl-h">{s.title}</div>
                 {s.detail && <div className="cca-tl-detail">{glossify(s.detail, glossary, onTerm)}</div>}
                 {s.foot && <div className="cca-tl-foot">{s.foot}</div>}
@@ -852,6 +856,8 @@ const STATS_CSS = `
 .cca-st-tile.pct{grid-column:1/-1;background:rgba(230,204,146,.05);border-color:rgba(230,204,146,.22)}
 .cca-st-tile.click{cursor:pointer}
 .cca-st-tile.click:hover{border-color:rgba(230,204,146,.4)}
+.cca-st-ic{width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;color:#e6cc92;border:1px solid rgba(230,204,146,.26);background:rgba(230,204,146,.05);margin-bottom:10px}
+.cca-st-tile.pct .cca-st-ic{border-color:rgba(230,204,146,.42);background:rgba(230,204,146,.09)}
 .cca-st-val{font-family:'Cormorant Garamond','Cormorant',Georgia,serif;font-size:44px;line-height:1;color:#e6cc92;font-weight:600}
 .cca-st-label{font-size:12.5px;line-height:1.4;color:rgba(244,239,230,.64)}
 .cca-st-note{font-size:11px;color:rgba(244,239,230,.42)}
@@ -870,11 +876,13 @@ function StatsPanel({ scene, visible, onFocus }) {
           const open = clickable ? () => onFocus(m.ref) : undefined;
           const pct = /%\s*$/.test(String(m.value));
           const pctNum = pct ? Math.max(0, Math.min(100, parseFloat(String(m.value)) || 0)) : 0;
+          const MIc = m.icon ? CARD_ICON_MAP[m.icon] : null;
           return (
             <div key={i} className={`cca-st-tile${pct ? ' pct' : ''}${clickable ? ' click' : ''}`}
               style={{ transitionDelay: `${i * 70 + 150}ms` }}
               onClick={open} role={clickable ? 'button' : undefined} tabIndex={clickable ? 0 : undefined}
               onKeyDown={clickable ? (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); open(); } } : undefined}>
+              {MIc && <span className="cca-st-ic"><MIc size={15} /></span>}
               <div className="cca-st-val"><StatValue raw={m.value} active={visible} /></div>
               <div className="cca-st-label">{m.label}</div>
               {m.note && <div className="cca-st-note">{m.note}</div>}
@@ -905,6 +913,7 @@ const COMPARATEUR_CSS = `
 .cca-scene-on .cca-cmp-ph{opacity:1;transform:none}
 .cca-cmp-ph.pop{background:rgba(230,204,146,.06);border-radius:14px 14px 0 0;box-shadow:inset 0 0 0 1px rgba(230,204,146,.22)}
 .cca-cmp-badge{display:inline-block;margin-bottom:6px;font-family:'Bricolage Grotesque',system-ui,sans-serif;font-size:9px;font-weight:800;text-transform:uppercase;letter-spacing:.02em;color:#2a140c;background:#e6cc92;padding:2px 8px;border-radius:999px}
+.cca-cmp-pic{width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;color:#e6cc92;border:1px solid rgba(230,204,146,.26);background:rgba(230,204,146,.05);margin:0 auto 8px}
 .cca-cmp-pname{display:block;font-family:'Fraunces','Source Serif 4',Georgia,serif;font-size:14px;color:#f4efe6;font-weight:600}
 .cca-cmp-price{display:block;font-family:'Cormorant Garamond','Cormorant',Georgia,serif;font-size:24px;color:#e6cc92;line-height:1.1;margin-top:1px}
 .cca-cmp-choose{margin-top:7px;font-family:'Bricolage Grotesque',system-ui,sans-serif;font-size:10.5px;font-weight:700;letter-spacing:.02em;text-transform:uppercase;color:#e6cc92;background:transparent;border:1px solid rgba(230,204,146,.32);border-radius:999px;padding:4px 11px;cursor:pointer;transition:background .16s ease,border-color .16s ease}
@@ -933,9 +942,11 @@ function ComparateurScene({ scene, onFocus, glossary, onTerm }) {
               <th className="cca-cmp-corner" aria-hidden="true" />
               {plans.map((p, i) => {
                 const clickable = !!(p.ref && onFocus);
+                const PIc = p.icon ? CARD_ICON_MAP[p.icon] : null;
                 return (
                   <th key={i} scope="col" className={`cca-cmp-ph${p.popular ? ' pop' : ''}`} style={{ transitionDelay: `${i * 70 + 160}ms` }}>
                     {p.popular && <span className="cca-cmp-badge">Le plus choisi</span>}
+                    {PIc && <span className="cca-cmp-pic"><PIc size={15} /></span>}
                     <span className="cca-cmp-pname">{p.name}</span>
                     {p.value && <span className="cca-cmp-price">{p.value}</span>}
                     {clickable && <button type="button" className="cca-cmp-choose" onClick={() => onFocus(p.ref)}>Choisir →</button>}

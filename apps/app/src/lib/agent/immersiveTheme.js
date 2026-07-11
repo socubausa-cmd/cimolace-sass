@@ -214,10 +214,19 @@ button.cca-chip-visit:hover{background:#e18b6b!important;border-color:transparen
   .cca-scene-on .cca-split-line{clip-path:inset(0 0 0 0)}
   .cca-split-col{padding:0 8vw}
   .cca-split-headline{top:max(58px,3vh);font-size:15px}
-  .cca-reader{grid-template-columns:1fr;grid-template-rows:auto 1fr auto;padding:7vh 6vw 3vh;gap:12px 0}
-  .cca-reader-profile{grid-column:1;grid-row:1;flex-direction:row;align-items:center;gap:12px;flex-wrap:wrap}
-  .cca-reader-body{grid-column:1;grid-row:2}
-  .cca-reader-nav{grid-column:1;grid-row:3;flex-direction:row;flex-wrap:wrap;gap:6px 14px}
+  .cca-reader{grid-template-columns:1fr;grid-template-rows:auto 1fr auto;padding:7vh 6vw 3vh;gap:14px 0;justify-content:stretch}
+  .cca-reader-profile{grid-column:1;grid-row:1;flex-direction:row;align-items:center;justify-content:flex-start;gap:14px;padding:14px 16px;border-radius:16px}
+  .cca-reader-avatar{transform:scale(.7);margin:-8px 0}
+  .cca-reader-name{margin-top:0;font-size:17px;text-align:left}
+  .cca-reader-role{text-align:left}
+  .cca-reader-pdiv,.cca-reader-fact{display:none}
+  .cca-reader-body{grid-column:1;grid-row:2;justify-content:flex-start}
+  .cca-reader-title{font-size:24px}
+  .cca-reader-sic{width:36px;height:36px}
+  .cca-reader-nav{grid-column:1;grid-row:3;flex-direction:row;flex-wrap:wrap;gap:6px 16px;padding-left:0;align-self:start}
+  .cca-reader-nav::before{display:none}
+  .cca-reader-nav button{display:inline-flex;align-items:center;gap:7px;padding:5px 0}
+  .cca-reader-nav .dot{position:static;left:auto;top:auto;box-shadow:none}
   .cca-reader-suggests{grid-row:4}
 }
 

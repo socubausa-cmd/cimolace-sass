@@ -280,6 +280,7 @@ export function buildNodeScene(nodeId, k = PRORASCIENCE_KNOWLEDGE) {
         type: 'timeline', title: 'La méthode, 4 temps',
         steps: method.slice(0, 6).map((m, i) => ({
           marker: String(i + 1),
+          icon: ['book', 'compass', 'users', 'sparkles'][i] || 'hexagon',
           kicker: m.kind || undefined,
           title: m.step,
           detail: (m.items || []).join(' · ') || undefined,
@@ -298,8 +299,9 @@ export function buildNodeScene(nodeId, k = PRORASCIENCE_KNOWLEDGE) {
       if (cmp && Array.isArray(cmp.plans) && cmp.plans.length >= 2 && Array.isArray(cmp.rows) && cmp.rows.length) {
         return {
           type: 'comparateur', title: 'Comparer les cycles', intro: cmp.intro || undefined,
-          plans: cmp.plans.slice(0, 4).map((p) => ({
+          plans: cmp.plans.slice(0, 4).map((p, i) => ({
             name: p.name, value: `${p.price}${p.suffix || ''}`, popular: !!p.popular,
+            icon: ['compass', 'grad', 'users', 'gem'][i] || 'sparkles',
             ref: {
               kind: 'plan', title: p.full || p.name, value: `${p.price}${p.suffix || ''}`, note: p.desc,
               actions: ['acheter', 'reserver', 'contacter'],
@@ -334,7 +336,7 @@ export function buildNodeScene(nodeId, k = PRORASCIENCE_KNOWLEDGE) {
       // Chiffres homogènes → dashboard de stats (gros chiffres + count-up, jauge pour les %).
       return stats.length ? {
         type: 'stats', title: 'Nos réalisations',
-        metrics: stats.slice(0, 6).map((s) => ({ label: s.label, value: s.value })),
+        metrics: stats.slice(0, 6).map((s, i) => ({ label: s.label, value: s.value, icon: ['grad', 'book', 'users', 'compass', 'sparkles'][i] || 'hexagon' })),
       } : null;
     case 'documentation':
       return {
