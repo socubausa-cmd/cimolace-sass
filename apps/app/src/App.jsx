@@ -4,6 +4,7 @@ import TenantFavicon from '@/components/TenantFavicon';
 import { DEFAULT_TENANT_SLUG } from '@/config/platform';
 import { getCachedHostTenant, isPlatformOrDevHost } from '@/lib/tenantResolver';
 import { resolveRequiresStudentDossier } from '@/lib/tenant/activeTenantConfig';
+import { canonicalTenantSlug } from '@/lib/tenant/tenantSlugAliases';
 import { joinApi } from '@/lib/api-v2';
 import { authStore } from '@/lib/auth-store';
 import LiveHostPage from '@/pages/liri/LiveHostPage';
@@ -344,17 +345,18 @@ const TENANT_VITRINES = {
     },
   },
 };
+TENANT_VITRINES.prorascience = TENANT_VITRINES.isna;
 
 function TenantVitrineHome({ slug: slugProp } = {}) {
   const { tenantSlug } = useParams();
-  const slug = String(slugProp || tenantSlug || '').toLowerCase();
+  const slug = canonicalTenantSlug(slugProp || tenantSlug);
   const Comp = TENANT_VITRINES[slug]?.home;
   return Comp ? <Comp /> : <SchoolVitrineTenantPage />;
 }
 
 function TenantVitrinePage({ slug: slugProp, page: pageProp } = {}) {
   const { tenantSlug, vitrinePage } = useParams();
-  const slug = String(slugProp || tenantSlug || '').toLowerCase();
+  const slug = canonicalTenantSlug(slugProp || tenantSlug);
   const page = String(pageProp || vitrinePage || '').toLowerCase();
   const entry = TENANT_VITRINES[slug];
   const Comp = entry?.pages?.[page];
@@ -665,6 +667,7 @@ const DashboardLiri = lazy(() => import('@/pages/liri/DashboardLiri').then((m) =
 const LiriPortalPage = lazy(() => import('@/pages/liri/LiriPortalPage').then((m) => ({ default: m.LiriPortalPage })));
 const LiriAccountPage = lazy(() => import('@/pages/liri/LiriAccountPage'));
 const LiriServicesPage = lazy(() => import('@/pages/liri/LiriServicesPage'));
+const LiriPagesPage = lazy(() => import('@/pages/liri/LiriPagesPage'));
 const LiriFinancesPage = lazy(() => import('@/pages/liri/LiriFinancesPage'));
 // Module ÉCOLE HORIZONTAL dans le portail LIRI (vertical = /t/:slug ; ici = app activable dans /liri)
 const LiriEcolePage = lazy(() => import('@/pages/liri/LiriEcolePage'));
@@ -1823,6 +1826,13 @@ isLiriHostDevPreviewRoute;
               <LiriServicesPage />
             </ProtectedLiriRoute>
           } />
+          {/* Pages — éditeur no-code de pages du tenant DANS le portail LIRI (blocs → /iri/pages,
+              publiées à <host>/p/:slug). Créateur only (owner/admin). */}
+          <Route path="/liri/pages" element={
+            <ProtectedLiriRoute allowedRoles={['owner', 'admin']} allowTenantRole>
+              <LiriPagesPage />
+            </ProtectedLiriRoute>
+          } />
           <Route path="/liri/ecole/knowledge-base" element={
             <ProtectedLiriRoute allowedRoles={['owner', 'admin']} allowTenantRole>
               <KnowledgeBaseManager />
@@ -1900,6 +1910,7 @@ isLiriHostDevPreviewRoute;
           <Route path="/creer-organisation/agent" element={<CimolaceCreationAgent />} />
           {/* Rejoindre une organisation par slug (self-join) — accessible connecté OU non */}
           <Route path="/rejoindre" element={<JoinOrgPage />} />
+          <Route path="/prorascience" element={<Navigate to="/t/prorascience/login" replace />} />
           {/* Alias publics — le lien "Inscription" du menu vitrine ne doit pas faire 404 */}
           <Route path="/inscription" element={<Navigate to="/signup" replace />} />
           <Route path="/register" element={<Navigate to="/signup" replace />} />

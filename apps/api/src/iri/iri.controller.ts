@@ -19,5 +19,8 @@ export class IriController {
   @Post('pages/:slug/publish') @UseGuards(JwtAuthGuard, TenantGuard, RolesGuard) @Roles('owner','admin') publishPage(@Param('slug') slug: string, @CurrentTenant() t: TenantContext) { return this.svc.publishPage(t.id, slug); }
   @Delete('pages/:slug') @UseGuards(JwtAuthGuard, TenantGuard, RolesGuard) @Roles('owner','admin') deletePage(@Param('slug') slug: string, @CurrentTenant() t: TenantContext) { return this.svc.deletePage(t.id, slug); }
 
-  @Get('p/:slug') getPublicPage(@Param('slug') slug: string) { return this.svc.getPublicPage(slug); }
+  @Get('p/:slug') getPublicPage(@Param('slug') slug: string, @Req() r: Request) {
+    const tenantSlug = String((r.headers['x-tenant-slug'] as string) || '').trim() || undefined;
+    return this.svc.getPublicPage(slug, tenantSlug);
+  }
 }

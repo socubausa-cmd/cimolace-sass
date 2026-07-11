@@ -42,8 +42,21 @@ export class IriService {
     await (this.supabase.client as any).from('iri_pages').delete().eq('slug', slug).eq('tenant_id', tenantId);
   }
 
-  async getPublicPage(slug: string) {
-    const { data } = await (this.supabase.client as any).from('iri_pages').select('*').eq('slug', slug).eq('status', 'published').single();
+  /**
+   * Page publique. SCOPÉE PAR TENANT via le slug du tenant (header X-Tenant-Slug, résolu par
+   * l'hôte côté front) → deux tenants peuvent avoir une page « accueil » sans collision (cloison).
+   * Sans slug tenant (appel direct hors hôte), repli legacy sur slug+published (best-effort).
+   */
+  async getPublicPage(slug: string, tenantSlug?: string) {
+    let tenantId: string | null = null;
+    if (tenantSlug) {
+      const { data: t } = await (this.supabase.client as any).from('tenants').select('id').eq('slug', tenantSlug).maybeSingle();
+      if (!t) return null; // hôte inconnu → aucune page (pas de fuite cross-tenant)
+      tenantId = t.id;
+    }
+    let q = (this.supabase.client as any).from('iri_pages').select('*').eq('slug', slug).eq('status', 'published');
+    if (tenantId) q = q.eq('tenant_id', tenantId);
+    const { data } = await q.maybeSingle();
     return data ?? null;
   }
 }
