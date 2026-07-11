@@ -619,20 +619,20 @@ function SceneSuggest({ acts, suggest, onAct, onNode }) {
   );
 }
 
-function SceneStage({ scene, visible, readerIdx, setReaderIdx, onSuggest, onCta, hooks, onHook, onFocus, suggest, acts, onNode, onAct }) {
+function SceneStage({ scene, visible, readerIdx, setReaderIdx, onSuggest, onCta, hooks, onHook, onFocus, suggest, acts, onNode, onAct, glossary, onTerm }) {
   if (!scene) return null;
   return (
     <div className={`cca-scene cca-stage-${scene.type} ${visible ? 'cca-scene-on' : ''}`}
       style={{ position: 'absolute', inset: 0, pointerEvents: 'none', zIndex: 2 }}>
       {scene.type === 'aside' && <AsidePanel scene={scene} />}
       {scene.type === 'split' && <SplitWorlds scene={scene} hooks={hooks} onHook={onHook} />}
-      {scene.type === 'reader' && <ReaderView scene={scene} idx={readerIdx} setIdx={setReaderIdx} onSuggest={onSuggest} hooks={hooks} />}
+      {scene.type === 'reader' && <ReaderView scene={scene} idx={readerIdx} setIdx={setReaderIdx} onSuggest={onSuggest} hooks={hooks} glossary={glossary} onTerm={onTerm} />}
       {scene.type === 'tutorial' && <TutorialFlow scene={scene} onCta={onCta} hooks={hooks} onHook={onHook} />}
       {scene.type === 'cards' && <CardsScene scene={scene} onFocus={onFocus} />}
       {scene.type === 'timeline' && <TimelineFlow scene={scene} onFocus={onFocus} />}
       {scene.type === 'stats' && <StatsPanel scene={scene} visible={visible} onFocus={onFocus} />}
       {scene.type === 'comparateur' && <ComparateurScene scene={scene} onFocus={onFocus} />}
-      {scene.type === 'faq' && <FaqScene scene={scene} />}
+      {scene.type === 'faq' && <FaqScene scene={scene} glossary={glossary} onTerm={onTerm} />}
       {scene.type !== 'aside' && <SceneSuggest acts={(scene.type === 'tutorial' && scene.cta) ? [] : acts} suggest={suggest} onAct={onAct} onNode={onNode} />}
     </div>
   );
@@ -957,7 +957,78 @@ const FAQ_CSS = `
 .cca-faq-a-txt{padding:0 18px 16px;margin:0;font-size:13.5px;line-height:1.6;color:rgba(244,239,230,.7)}
 @media (max-width:640px){.cca-faq{padding:7vh 5vw 4vh}.cca-faq-q{font-size:14.5px;padding:14px 15px}}
 `;
-function FaqScene({ scene }) {
+// ── Glossaire cliquable : glossify(text, glossary, onTerm) wrappe les termes de domaine (mot ENTIER,
+//    accents/casse ignorés via repli NFD + index-map, 1re occ/terme, cap 4, longest-first) → GlossTerm
+//    → tiroir focus. PUR, ne throw jamais ; texte sans terme (ou glossaire vide) = inchangé.
+const GLOSS_CSS = `
+.cca-gloss{display:inline;padding:0;margin:0;border:0;background:none;font:inherit;color:inherit;cursor:help;text-decoration:underline;text-decoration-style:dotted;text-decoration-thickness:1px;text-underline-offset:3px;text-decoration-color:rgba(230,204,146,.55);border-radius:3px;transition:color .16s ease,text-decoration-color .16s ease}
+.cca-gloss:hover{color:#e6cc92;text-decoration-color:#e6cc92}
+.cca-gloss:focus-visible{outline:2px solid rgba(230,204,146,.6);outline-offset:2px;color:#e6cc92}
+@media (prefers-reduced-motion:reduce){.cca-gloss{transition:none}}
+`;
+function GlossTerm({ term, onTerm }) {
+  return (
+    <button type="button" className="cca-gloss" onClick={(e) => { e.stopPropagation(); onTerm(); }}
+      aria-label={`Définition : ${term}`} title={`Définition : ${term}`}>{term}</button>
+  );
+}
+// Repli accent/casse-insensible AVEC map d'index vers le texte source (NFD change la longueur).
+function glossFold(str) {
+  let folded = ''; const map = [];
+  for (let i = 0; i < str.length; i += 1) {
+    const f = str[i].normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
+    for (let k = 0; k < f.length; k += 1) { folded += f[k]; map.push(i); }
+  }
+  map.push(str.length);
+  return { folded, map };
+}
+const glossIsWord = (c) => c !== undefined && /[\p{L}\p{N}]/u.test(c);
+function glossify(text, glossary, onTerm) {
+  try {
+    if (typeof text !== 'string' || !text) return [text];
+    if (!Array.isArray(glossary) || !glossary.length || typeof onTerm !== 'function') return [text];
+    const CAP = 4;
+    const { folded, map } = glossFold(text);
+    const forms = [];
+    for (const g of glossary) {
+      if (!g || typeof g.term !== 'string' || !g.term.trim() || typeof g.def !== 'string') continue;
+      const { folded: ff } = glossFold(g.term);
+      if (ff) forms.push({ key: g.term, term: g.term, def: g.def, ff, len: ff.length });
+    }
+    forms.sort((a, b) => b.len - a.len); // longest-match-first
+    const usedKeys = new Set(); const occupied = []; const hits = [];
+    const overlaps = (s, e) => occupied.some(([a, b]) => s < b && e > a);
+    for (const f of forms) {
+      if (hits.length >= CAP) break;
+      if (usedKeys.has(f.key)) continue;
+      let from = 0; let idx;
+      while ((idx = folded.indexOf(f.ff, from)) !== -1) {
+        const end = idx + f.ff.length;
+        const before = idx > 0 ? folded[idx - 1] : undefined;
+        const after = end < folded.length ? folded[end] : undefined;
+        if (!glossIsWord(before) && !glossIsWord(after) && !overlaps(idx, end)) {
+          occupied.push([idx, end]); usedKeys.add(f.key);
+          hits.push({ s: map[idx], e: map[end], term: f.term, def: f.def });
+          break; // une seule occurrence de CE terme
+        }
+        from = idx + 1;
+      }
+    }
+    if (!hits.length) return [text];
+    hits.sort((a, b) => a.s - b.s);
+    const out = []; let cursor = 0;
+    hits.forEach((h, i) => {
+      if (h.s > cursor) out.push(text.slice(cursor, h.s));
+      const label = text.slice(h.s, h.e); // libellé tel qu'écrit (casse/accents d'origine)
+      out.push(<GlossTerm key={`g${i}-${h.s}`} term={label} onTerm={() => onTerm(h.term, h.def)} />);
+      cursor = h.e;
+    });
+    if (cursor < text.length) out.push(text.slice(cursor));
+    return out;
+  } catch { return [typeof text === 'string' ? text : '']; }
+}
+
+function FaqScene({ scene, glossary, onTerm }) {
   const [open, setOpen] = useState(0);
   return (
     <div className="cca-faq" style={{ pointerEvents: 'auto' }}>
@@ -972,7 +1043,7 @@ function FaqScene({ scene }) {
                 <span>{it.q}</span>
                 <svg className="cca-faq-chev" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6" /></svg>
               </button>
-              <div className="cca-faq-a"><div><p className="cca-faq-a-txt">{it.a}</p></div></div>
+              <div className="cca-faq-a"><div><p className="cca-faq-a-txt">{glossify(it.a, glossary, onTerm)}</p></div></div>
             </div>
           );
         })}
@@ -1071,7 +1142,7 @@ function SplitWorlds({ scene, hooks, onHook }) {
   );
 }
 
-function ReaderView({ scene, idx, setIdx, onSuggest, hooks }) {
+function ReaderView({ scene, idx, setIdx, onSuggest, hooks, glossary, onTerm }) {
   const scrollRef = useRef(null);
   const chips = (scene.suggestions && scene.suggestions.length) ? scene.suggestions : (hooks || []);
   const onScroll = () => {
@@ -1103,7 +1174,7 @@ function ReaderView({ scene, idx, setIdx, onSuggest, hooks }) {
         {scene.body.map((s, i) => (
           <section key={i} id={`cca-sec-${i}`}>
             <h4 className="cca-reader-h">{s.h}</h4>
-            {s.p.split('\n\n').map((para, j) => (<p key={j} className="cca-reader-p">{para}</p>))}
+            {s.p.split('\n\n').map((para, j) => (<p key={j} className="cca-reader-p">{glossify(para, glossary, onTerm)}</p>))}
           </section>
         ))}
       </div>
@@ -1815,6 +1886,13 @@ export default function CimolaceCreationAgent({ tenantSlug: tenantSlugProp = nul
     try { logEvent('focus_open', { kind: ref.kind || '', title: ref.title || '' }, osTenant); } catch { /* non bloquant */ }
   }, [osTenant]);
 
+  // GLOSSAIRE cliquable : le pack de termes du tenant + le handler qui RÉUTILISE le tiroir focus.
+  const osGlossary = useMemo(
+    () => (isTenantRealm && OS_KNOWLEDGE[osTenant] && Array.isArray(OS_KNOWLEDGE[osTenant].glossary)) ? OS_KNOWLEDGE[osTenant].glossary : [],
+    [isTenantRealm, osTenant],
+  );
+  const handleTerm = useCallback((term, def) => { openFocus({ kind: 'info', title: term, note: def }); }, [openFocus]);
+
   // Réponse à une QUESTION LIBRE via l'edge VNP (résout intention + nœud + suggestions + actions).
   const vnpChat = useCallback(async (message) => {
     const g = vnpGraph;
@@ -2036,6 +2114,7 @@ export default function CimolaceCreationAgent({ tenantSlug: tenantSlugProp = nul
       }}
     >
       <style>{STYLE}</style>
+      <style>{GLOSS_CSS}</style>
 
       {/* SEO du realm fondateur (prorascience.org) — titre/description/OG/JSON-LD propres, sans « LIRI ».
          Ne monte QUE dans le realm tenant : le realm Cimolace (app.cimolace.space) garde son <head> par défaut. */}
@@ -2062,7 +2141,8 @@ export default function CimolaceCreationAgent({ tenantSlug: tenantSlugProp = nul
           onSuggest={isTenantRealm ? vnpChat : brain} onCta={isTenantRealm ? vnpChat : chooseProduct}
           hooks={isTenantRealm ? [] : brainHooks} onHook={isTenantRealm ? vnpChat : brain} onFocus={openFocus}
           suggest={isTenantRealm ? vnpSuggest : []} acts={isTenantRealm ? vnpActs : []}
-          onNode={vnpOpenNode} onAct={vnpAction} />
+          onNode={vnpOpenNode} onAct={vnpAction}
+          glossary={osGlossary} onTerm={handleTerm} />
       )}
 
       {/* MODE FOCUS — tiroir d'approfondissement inline (carte cliquée) */}

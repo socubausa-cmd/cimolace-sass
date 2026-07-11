@@ -100,6 +100,25 @@ export const PRORASCIENCE_KNOWLEDGE = {
     { q: "Faut-il déjà pratiquer pour rejoindre ?", a: "Non. Que vous cherchiez à comprendre, à maîtriser ou à pratiquer intelligemment, il y a un parcours pour vous." },
     { q: "Quelle est la méthode ?", a: "Comprendre, Pratiquer, Exercer, puis Évoluer — de la théorie aux techniques avancées." },
   ],
+
+  // Glossaire — termes de domaine rendus CLIQUABLES dans les scènes prose (reader/faq) via glossify()
+  // → tiroir focus. Définitions COURTES et fidèles (vision/method/faq + sens de domaine pour Maât/
+  // Manikongo). On EXCLUT les mots communs (« Raison », « Science », « pratique »…) pour éviter le
+  // sur-lienage : seuls les termes distinctifs. Forme = [{ term, def }] (matcher mot entier, accents ok).
+  glossary: [
+    { term: 'Prorascience', def: "L’étude systématique, rationnelle et vérifiable des réalités visibles ET invisibles, unifiant la physique et la métaphysique en une seule structure de connaissance." },
+    { term: 'ISNA', def: "Initiation aux Sciences Nocturnes Africaines — l’école-temple qui enseigne la Prorascience, dirigée par son recteur-fondateur." },
+    { term: 'métaphysique', def: "Le monde spirituel, l’invisible ; ce que la Prorascience unifie avec la physique (le monde matériel)." },
+    { term: 'Maât', def: "Principe africain ancien d’ordre, de vérité et de justice cosmiques ; sagesse ancestrale au fondement des Savoirs Africains." },
+    { term: 'Manikongo', def: "Titre du souverain historique du royaume Kongo ; porté par le fondateur comme « 5ᵉ Manikongo », recteur de l’ISNA." },
+    { term: 'cosmogonie totémique', def: "Vision de l’origine et de l’ordre du monde structurée autour des totems, l’un des Savoirs Africains transmis." },
+    { term: 'sciences nocturnes africaines', def: "Les savoirs spirituels africains de l’invisible enseignés par l’ISNA — présentés comme « les 21 sciences »." },
+    { term: 'Savoirs Africains', def: "Le troisième pilier : sagesse ancestrale (Maât), cosmogonie totémique, technologies spirituelles éprouvées et vision holistique de l’Univers." },
+    { term: 'libation', def: "Rite d’offrande consistant à verser un liquide (aux ancêtres ou aux esprits) ; module pratique du parcours." },
+    { term: 'talisman', def: "Objet chargé d’une fonction de protection ou d’action spirituelle ; module pratique du parcours." },
+    { term: 'transmetteur', def: "Enseignant-guide de l’ISNA qui transmet les savoirs et accompagne chaque étudiant à travers le monde." },
+    { term: 'Mentorat', def: "Le plus haut palier d’accompagnement : mentorat direct, cas complexes et secrets avancés." },
+  ],
 };
 
 // Sérialise la connaissance en TEXTE compact pour le system prompt du cerveau (borne le périmètre).
