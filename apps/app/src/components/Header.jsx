@@ -83,9 +83,9 @@ const Header = () => {
   // PORTAIL /liri (pas la home école) et n'est pas une « Academy ».
   const isLiriProductContext = !tenantSlugLc;
   const brandHomeTo = isLiriProductContext ? '/liri' : '/';
-  // « Academy » réservé au moteur école ; tout autre tenant (MEDOS/wellness) ou la
-  // plateforme neutre → « Portail » (un cabinet wellness n'est pas une « Academy »).
-  const brandSubtitle = isEcoleTenant ? 'Academy' : 'Portail';
+  // Sous-titre marque = « Portail » pour tous (Academy déconnecté au profit du portail
+  // LIRI). Plus de libellé « Academy » figé sur l'école — cohérent MEDOS/wellness/neutre.
+  const brandSubtitle = 'Portail';
   const isImmersivePrimaryRoute = useMemo(() => {
     const path = String(location.pathname || '').toLowerCase();
     return (
