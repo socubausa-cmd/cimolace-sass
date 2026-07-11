@@ -142,9 +142,10 @@ export default function ProcheRoom() {
     }
   }, [previewOn]);
 
-  const join = async () => {
+  const join = async (opts?: { auto?: boolean }) => {
     if (!inviteId) return;
-    requestAppFullscreen();
+    // Le plein écran exige un geste utilisateur → uniquement sur clic, pas en auto.
+    if (!opts?.auto) requestAppFullscreen();
     // Libère la caméra d'aperçu pour que LiveKit la reprenne proprement.
     streamRef.current?.getTracks().forEach((t) => t.stop());
     streamRef.current = null;
@@ -158,6 +159,20 @@ export default function ProcheRoom() {
       setJoining(false);
     }
   };
+
+  // Auto-rejoint dès que l'accès est accordé (consented/admitted) : l'invité n'a
+  // plus à cliquer un 2e bouton sur « Prêt·e à rejoindre ? » — cause du « il se
+  // connecte mais reste seul dans un autre panneau ». Le clic « Demander à
+  // rejoindre » de l'écran précédent (même document SPA) fournit l'activation
+  // utilisateur nécessaire à l'autoplay audio. Le bouton reste dispo en repli.
+  const autoJoinedRef = useRef(false);
+  useEffect(() => {
+    if (ready && !conn && !joining && !err && !autoJoinedRef.current) {
+      autoJoinedRef.current = true;
+      void join({ auto: true });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [ready, conn, joining, err]);
 
   if (conn && sessionId) {
     return <ProcheLiveRoom url={conn.url} token={conn.token} sessionId={sessionId} inviteId={inviteId} clinic={status?.clinic_name} initialCam={joinWithCam} initialMic={joinWithMic} />;
