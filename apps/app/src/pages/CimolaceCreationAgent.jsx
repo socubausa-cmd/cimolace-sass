@@ -477,7 +477,7 @@ function normalizeScene(raw) {
         .map((s) => (s && s.h && s.p) ? { h: cut(s.h, 60), p: cut(s.p, 700) } : null).filter(Boolean);
       if (!body.length || !(raw.profile && raw.profile.name)) return null;
       const facts = (Array.isArray(raw.profile.facts) ? raw.profile.facts : []).slice(0, 4)
-        .map((f) => (f && f.k && f.v) ? { k: cut(f.k, 24), v: cut(f.v, 60) } : null).filter(Boolean);
+        .map((f) => (f && f.k && f.v) ? { k: cut(f.k, 24), v: cut(f.v, 110) } : null).filter(Boolean);
       return { type: 'reader', title: cut(raw.title, 80) || 'Lecture',
         profile: { name: cut(raw.profile.name, 60), role: cut(raw.profile.role, 80) || undefined,
           avatarSeed: cut(raw.profile.avatarSeed, 40) || undefined, facts },
@@ -1285,6 +1285,23 @@ export default function CimolaceCreationAgent({ tenantSlug: tenantSlugProp = nul
       }).catch(() => {});
     return () => { alive = false; };
   }, [osTenant]);
+
+  // KNOWLEDGE OS depuis la BASE (tenants.metadata.os_knowledge) — le contenu du realm n'est plus
+  // hardcodé : l'agent Cimolace OS rend À PARTIR DE LA BASE (éditable, multi-tenant). Fallback sur
+  // OS_KNOWLEDGE embarqué si la base ne renvoie rien (zéro régression).
+  const [osKnowledge, setOsKnowledge] = useState(null);
+  useEffect(() => {
+    if (!osTenant) return undefined;
+    let alive = true;
+    fetch(`${getApiBaseUrl()}/tenants/by-slug/${encodeURIComponent(osTenant)}/os-knowledge`)
+      .then((r) => r.json()).then((b) => {
+        const k = (b && b.data !== undefined) ? b.data : b;
+        if (alive && k && typeof k === 'object' && k.identity) setOsKnowledge(k);
+      }).catch(() => {});
+    return () => { alive = false; };
+  }, [osTenant]);
+  // SOURCE DE VÉRITÉ du contenu du realm : base d'abord, fallback hardcodé ensuite.
+  const activeKnowledge = osKnowledge || (osTenant ? OS_KNOWLEDGE[osTenant] : null) || null;
 
   // SEO du realm tenant (prorascience.org) : titre/description/OG/JSON-LD PROPRES au fondateur,
   // injectés côté client par react-helmet (utile pour Googlebot, qui rend le JS). ⚠️ Les scrapers
