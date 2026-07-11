@@ -1302,6 +1302,8 @@ export default function CimolaceCreationAgent({ tenantSlug: tenantSlugProp = nul
   }, [osTenant]);
   // SOURCE DE VÉRITÉ du contenu du realm : base d'abord, fallback hardcodé ensuite.
   const activeKnowledge = osKnowledge || (osTenant ? OS_KNOWLEDGE[osTenant] : null) || null;
+  const knowledgeRef = useRef(null);
+  knowledgeRef.current = activeKnowledge; // callbacks : lecture toujours à jour, sans re-création
 
   // SEO du realm tenant (prorascience.org) : titre/description/OG/JSON-LD PROPRES au fondateur,
   // injectés côté client par react-helmet (utile pour Googlebot, qui rend le JS). ⚠️ Les scrapers
@@ -1309,7 +1311,7 @@ export default function CimolaceCreationAgent({ tenantSlug: tenantSlugProp = nul
   // host-aware à l'edge (cf. docs/SEO_EDGE_PRORASCIENCE.md). Ne rend RIEN hors realm tenant.
   const tenantSeo = useMemo(() => {
     if (!isTenantRealm) return null;
-    const k = (osTenant && OS_KNOWLEDGE[osTenant]) || null;
+    const k = activeKnowledge;
     const id = (k && k.identity) || {};
     const name = (osBrand && osBrand.name) || id.name || 'Prorascience';
     const host = String(id.website || 'prorascience.org').replace(/^https?:\/\//, '').replace(/\/$/, '');
@@ -1332,7 +1334,7 @@ export default function CimolaceCreationAgent({ tenantSlug: tenantSlugProp = nul
       ...(founder ? { founder: { '@type': 'Person', name: founder.name, jobTitle: founder.title } } : {}),
     };
     return { title, siteName: name, description, image: `${site}/og.png`, canonical: `${site}/`, jsonLd };
-  }, [isTenantRealm, osTenant, osBrand]);
+  }, [isTenantRealm, osTenant, osBrand, activeKnowledge]);
 
   const [presence, setPresence] = useState('connexion'); // connexion|attente|reflexion|ecriture|pret
   const [message, setMessage] = useState('');
@@ -1351,8 +1353,8 @@ export default function CimolaceCreationAgent({ tenantSlug: tenantSlugProp = nul
   const [brainHooks, setBrainHooks] = useState([]);
   // VNP — graphe de connaissance du tenant + suggestions de suite (navigation guidée) + actions dispo.
   const vnpGraph = useMemo(
-    () => (osTenant && OS_KNOWLEDGE[osTenant]) ? buildVnpGraph(OS_KNOWLEDGE[osTenant], (osBrand && osBrand.name) || osTenant) : null,
-    [osTenant, osBrand],
+    () => activeKnowledge ? buildVnpGraph(activeKnowledge, (osBrand && osBrand.name) || osTenant) : null,
+    [osTenant, osBrand, activeKnowledge],
   );
   const [vnpSuggest, setVnpSuggest] = useState([]); // [{nodeId,label}] sujets liés
   const [vnpActs, setVnpActs] = useState([]);       // [intentId] actions disponibles
@@ -1622,7 +1624,7 @@ export default function CimolaceCreationAgent({ tenantSlug: tenantSlugProp = nul
     if (!osTenant) return;
     setEngaged(true);
     stopTour();
-    const beats = buildTenantTour(OS_KNOWLEDGE[osTenant] || undefined, (osBrand && osBrand.name) || osTenant);
+    const beats = buildTenantTour(knowledgeRef.current || undefined, (osBrand && osBrand.name) || osTenant);
     if (!beats || !beats.length) return;
     const gen = ++tourGenRef.current;
     tourRef.current = { kind: 'tenant', beats, gen, idx: 0, tenant: true };
@@ -1883,7 +1885,7 @@ export default function CimolaceCreationAgent({ tenantSlug: tenantSlugProp = nul
     const gen = ++brainGenRef.current;
     setPresence('reflexion'); sThink();
     try {
-      const knowledge = OS_KNOWLEDGE[osTenant] ? prorascienceKnowledgeText(OS_KNOWLEDGE[osTenant]) : '';
+      const knowledge = knowledgeRef.current ? prorascienceKnowledgeText(knowledgeRef.current) : '';
       const { data, error: fnErr } = await supabase.functions.invoke('prorascience-brain', {
         body: { message, platformName: (osBrand && osBrand.name) || osTenant, knowledge, history: historyRef.current.slice(-6) },
       });
@@ -1925,7 +1927,7 @@ export default function CimolaceCreationAgent({ tenantSlug: tenantSlugProp = nul
     logEvent('node_opened', { nodeId, intention: n.intention || '' }, osTenant);
     // Réponse DESIGNÉE : compose une SCÈNE (buildNodeScene → normalizeScene) ; la voix suit.
     // Fallback EXACT vers la narration plate si aucune scène (contact/support) ou flag OFF.
-    const sc = VNP_SCENES_V2 ? normalizeScene(buildNodeScene(nodeId, OS_KNOWLEDGE[osTenant])) : null;
+    const sc = VNP_SCENES_V2 ? normalizeScene(buildNodeScene(nodeId, knowledgeRef.current)) : null;
     if (sc) { enterScene(sc, () => speak(n.summary || n.title)); return; }
     speak(`${n.summary} ${n.content}`.replace(/\s+/g, ' ').trim().slice(0, 340) || n.title);
   }, [vnpGraph, speak, osTenant, runEffects, enterScene]);
@@ -1939,8 +1941,8 @@ export default function CimolaceCreationAgent({ tenantSlug: tenantSlugProp = nul
 
   // GLOSSAIRE cliquable : le pack de termes du tenant + le handler qui RÉUTILISE le tiroir focus.
   const osGlossary = useMemo(
-    () => (isTenantRealm && OS_KNOWLEDGE[osTenant] && Array.isArray(OS_KNOWLEDGE[osTenant].glossary)) ? OS_KNOWLEDGE[osTenant].glossary : [],
-    [isTenantRealm, osTenant],
+    () => (isTenantRealm && activeKnowledge && Array.isArray(activeKnowledge.glossary)) ? activeKnowledge.glossary : [],
+    [isTenantRealm, osTenant, activeKnowledge],
   );
   const handleTerm = useCallback((term, def) => { openFocus({ kind: 'info', title: term, note: def }); }, [openFocus]);
 
@@ -1979,7 +1981,7 @@ export default function CimolaceCreationAgent({ tenantSlug: tenantSlugProp = nul
       const edgeScene = (VNP_SCENES_V2 && onTop && data?.scene && EDGE_OK[data.scene.type] && !DATA_NODES[data?.nodeId] && !sceneHasPrice)
         ? normalizeScene(data.scene) : null;
       const nodeScene = (!edgeScene && VNP_SCENES_V2 && onTop && data?.nodeId)
-        ? normalizeScene(buildNodeScene(data.nodeId, OS_KNOWLEDGE[osTenant])) : null;
+        ? normalizeScene(buildNodeScene(data.nodeId, knowledgeRef.current)) : null;
       const sc = edgeScene || nodeScene;
       if (sc) enterScene(sc, () => speak(reply)); else speak(reply);
       if (edgeScene) { try { logEvent('vnp_scene_composed', { type: edgeScene.type }, osTenant); } catch { /* non bloquant */ } }

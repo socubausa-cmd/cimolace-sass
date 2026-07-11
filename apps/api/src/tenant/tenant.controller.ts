@@ -19,6 +19,7 @@ import { RolesGuard } from "../common/guards/roles.guard";
 import { Roles } from "../common/decorators/roles.decorator";
 import { CimolaceStaffGuard } from "../cimolace-backoffice/cimolace-staff.guard";
 import { TenantService, isEmbeddedTenant, isPlatformOrigin } from "./tenant.service";
+import { canonicalTenantSlug } from "./tenant-slug-aliases";
 import { UpdateBrandingDto } from "./update-branding.dto";
 import { UpdateTenantSettingsDto } from "./update-tenant-settings.dto";
 
@@ -125,6 +126,8 @@ export class TenantController {
       // qui le traite comme « introuvable » sur le host neutre LIRI (on ne le
       // rejoint QUE par son domaine). Le branding reste renvoyé pour ses apps.
       embedded: isEmbeddedTenant(tenant),
+      public_slug: String(slug || "").trim().toLowerCase(),
+      canonical_slug: canonicalTenantSlug(slug),
       // Domaine propre (public) — cible de redirection du garde-fou : un membre
       // d'un tenant embarqué qui atterrit sur le host neutre est renvoyé ici.
       primary_domain: t.primary_domain ?? null,
@@ -182,6 +185,29 @@ export class TenantController {
       // null = non défini → le client retombe sur sa config (founder ISNA = true).
       requiresStudentDossier: t.metadata?.settings?.requiresStudentDossier ?? null,
     };
+  }
+
+  /**
+   * Public endpoint — KNOWLEDGE PACK OS d'un tenant par host. Sert au moteur Cimolace OS
+   * (agent immersif) qui rend un realm tenant À PARTIR DE LA BASE (`metadata.os_knowledge`)
+   * au lieu du fichier hardcodé. Renvoie null si absent → le client retombe sur son
+   * OS_KNOWLEDGE embarqué (fallback, zéro régression).
+   */
+  @Get("by-host/:host/os-knowledge")
+  async osKnowledgeByHost(@Param("host") host: string) {
+    const tenant = await this.tenantService.getTenantByHost(host);
+    if (!tenant) return null;
+    const t = tenant as { metadata?: { os_knowledge?: unknown } | null };
+    return t.metadata?.os_knowledge ?? null;
+  }
+
+  /** Idem par slug (le realm OS est aussi résolu par slug côté client). */
+  @Get("by-slug/:slug/os-knowledge")
+  async osKnowledgeBySlug(@Param("slug") slug: string) {
+    const tenant = await this.tenantService.getTenantBySlug(slug);
+    if (!tenant) return null;
+    const t = tenant as { metadata?: { os_knowledge?: unknown } | null };
+    return t.metadata?.os_knowledge ?? null;
   }
 
   /**
