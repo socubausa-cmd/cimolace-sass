@@ -150,21 +150,21 @@ button.cca-chip-visit:hover{background:#e18b6b!important;border-color:transparen
 
 /* reader — profil (gauche) · texte scrollable (centre, masque bas = « il reste du texte ») · nav (droite) · suggestions (bas) */
 .cca-reader{position:absolute;inset:0;display:grid;grid-template-columns:200px minmax(0,640px) 190px;grid-template-rows:1fr auto;justify-content:center;gap:0 clamp(28px,3vw,60px);padding:8.5vh 4vw 3vh}
-.cca-reader-profile{grid-column:1;grid-row:1;display:flex;flex-direction:column;gap:7px;align-self:start;opacity:0;transform:translateX(-24px);transition:opacity .5s ease,transform .5s cubic-bezier(.16,1,.3,1)}
+.cca-reader-profile{grid-column:1;grid-row:1;display:flex;flex-direction:column;gap:7px;align-self:center;opacity:0;transform:translateX(-24px);transition:opacity .5s ease,transform .5s cubic-bezier(.16,1,.3,1)}
 .cca-scene-on .cca-reader-profile{opacity:1;transform:none}
 .cca-reader-name{font-family:${SERIF};font-size:18px;color:${INK};margin-top:6px}
 .cca-reader-role{font-size:12px;color:${GOLD};letter-spacing:.02em}
 .cca-reader-fact{display:flex;flex-direction:column;gap:1px;margin-top:8px;font-size:12px}
 .cca-reader-fact span{color:rgba(244,239,230,.4);text-transform:uppercase;letter-spacing:.06em;font-size:10px}
 .cca-reader-fact b{color:rgba(244,239,230,.8);font-weight:500}
-.cca-reader-body{grid-column:2;grid-row:1;overflow-y:auto;max-width:640px;justify-self:center;width:100%;scrollbar-width:none;-webkit-mask-image:linear-gradient(#000 90%,transparent);mask-image:linear-gradient(#000 90%,transparent);opacity:0;transform:translateY(12px);transition:opacity .5s ease,transform .5s cubic-bezier(.16,1,.3,1)}
+.cca-reader-body{grid-column:2;grid-row:1;overflow-y:auto;max-width:640px;justify-self:center;width:100%;display:flex;flex-direction:column;justify-content:safe center;scrollbar-width:none;-webkit-mask-image:linear-gradient(#000 90%,transparent);mask-image:linear-gradient(#000 90%,transparent);opacity:0;transform:translateY(12px);transition:opacity .5s ease,transform .5s cubic-bezier(.16,1,.3,1)}
 .cca-scene-on .cca-reader-body{opacity:1;transform:none}
 .cca-reader-body::-webkit-scrollbar{width:0;height:0}
 .cca-reader-title{font-family:${SERIF};font-size:26px;color:${INK};line-height:1.2;margin:0 0 20px;text-wrap:balance}
 .cca-reader-body section{margin-bottom:22px}
 .cca-reader-h{font-family:${SERIF};font-size:15px;color:${GOLD};margin:0 0 7px;letter-spacing:.01em}
 .cca-reader-p{font-family:${SERIF};font-size:16px;line-height:1.62;color:rgba(244,239,230,.86);margin:0 0 9px;max-width:62ch}
-.cca-reader-nav{grid-column:3;grid-row:1;display:flex;flex-direction:column;gap:2px;align-self:start;opacity:0;transform:translateX(24px);transition:opacity .5s ease,transform .5s cubic-bezier(.16,1,.3,1)}
+.cca-reader-nav{grid-column:3;grid-row:1;display:flex;flex-direction:column;gap:2px;align-self:center;opacity:0;transform:translateX(24px);transition:opacity .5s ease,transform .5s cubic-bezier(.16,1,.3,1)}
 .cca-scene-on .cca-reader-nav{opacity:1;transform:none}
 .cca-reader-nav button{display:flex;align-items:center;gap:9px;background:none;border:none;cursor:pointer;color:rgba(244,239,230,.4);font:inherit;font-size:12.5px;padding:6px 0;text-align:left;transition:color .2s ease}
 .cca-reader-nav button.on{color:${GOLD}}
