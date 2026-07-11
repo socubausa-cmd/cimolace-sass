@@ -2005,8 +2005,20 @@ export default function CimolaceCreationAgent({ tenantSlug: tenantSlugProp = nul
       if (edgeScene) { try { logEvent('vnp_scene_composed', { type: edgeScene.type }, osTenant); } catch { /* non bloquant */ } }
     } catch (_) {
       if (brainGenRef.current !== gen) return;
-      setVnpSuggest([]); setVnpActs([]);
-      speak(`Restons sur ${(osBrand && osBrand.name) || 'ce site'} — je vous écoute.`);
+      // RÉSILIENCE (audit) : l'edge/LLM est momentanément indisponible, or la conversation est la SEULE
+      // navigation de l'OS → on ne laisse JAMAIS le visiteur dans un cul-de-sac. Repli sur le GRAPHE
+      // LOCAL : les clics de sujet (vnpOpenNode) et le formulaire de contact sont DÉTERMINISTES (zéro
+      // appel edge) → le visiteur peut continuer à explorer et à convertir sans le LLM.
+      const localNodes = g
+        ? (g.order || []).map((id) => g.byId(id)).filter(Boolean)
+            .filter((nn) => nn.id !== 'contact' && nn.id !== 'support')
+            .slice(0, 4).map((nn) => ({ nodeId: nn.id, label: nn.title }))
+        : [];
+      setVnpSuggest(localNodes);
+      setVnpActs(['contacter']); // le formulaire de contact s'ouvre en local, sans edge
+      speak(localNodes.length
+        ? `Je n'ai pas pu traiter votre demande à l'instant — mais vous pouvez explorer directement : choisissez un sujet ci-dessous, ou écrivez-nous.`
+        : `Un souci temporaire de mon côté — réessayez dans un instant.`);
     }
   }, [vnpGraph, osBrand, osTenant, speak, sThink, enterScene]);
 
