@@ -9,6 +9,12 @@
     "lint": "eslint .",
     "preview": "vite preview"
   },
+  "overrides": {
+    "react-beautiful-dnd": {
+      "react": "$react",
+      "react-dom": "$react-dom"
+    }
+  },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.80.0",
     "@capacitor/app": "^8.1.0",
