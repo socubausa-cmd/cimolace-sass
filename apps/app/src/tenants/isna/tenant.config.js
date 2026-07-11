@@ -43,7 +43,7 @@ export const isnaTenantConfig = {
   branding: {
     name: 'Prorascience',
     fullName: 'Prorascience — Science Africaine Totale',
-    logo: '/logos/isna-logo.png',
+    logo: '/prorascience-logo-2.jpeg',
     primaryColor: '#1a5f7a',
     secondaryColor: '#2c3e50',
     accentColor: '#D4AF37',
