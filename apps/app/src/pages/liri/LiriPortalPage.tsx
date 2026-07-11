@@ -26,6 +26,13 @@ import '../LiriPortal.css';
 const PORTAL_IS_TENANT = !!(activeTenantConfig && activeTenantConfig.slug);
 const PORTAL_BRAND =
   (activeTenantConfig && activeTenantConfig.branding && activeTenantConfig.branding.name) || 'LIRI';
+// Logo du tenant (ex. Œil d'Horus pour Prorascience). Sur un tenant, on affiche SON logo
+// (jamais le logo LIRI) ; sans logo → rien (juste le nom). Même règle anti-fuite que le shell.
+const _portalRawLogo = (activeTenantConfig && activeTenantConfig.branding && activeTenantConfig.branding.logo) || '';
+const PORTAL_LOGO =
+  PORTAL_IS_TENANT && _portalRawLogo && _portalRawLogo !== '/lirilogo.png' && _portalRawLogo !== '/liri-logo-mark.png'
+    ? _portalRawLogo
+    : '';
 
 interface Live { id: string; title?: string; status?: string; scheduled_at?: string; started_at?: string | null; ended_at?: string | null; price_cents?: number; }
 interface Stats { totalMembers: number; totalLives: number; totalCourses: number; totalRevenueCents: number; }
@@ -282,7 +289,9 @@ export function LiriPortalPage() {
         <div className="flex items-center gap-2.5">
           <button className="grid h-8 w-8 place-items-center rounded-xl lp-muted lp-railbtn lp-tr" aria-label="Menu"><Menu size={17} /></button>
           <span className="flex items-center gap-2">
-            {PORTAL_IS_TENANT ? null : <img src="/lirilogo.png" alt="LIRI" className="h-9 w-9 object-contain" />}
+            {PORTAL_IS_TENANT
+              ? (PORTAL_LOGO ? <img src={PORTAL_LOGO} alt={PORTAL_BRAND} className="h-9 w-9 rounded-lg object-contain" /> : null)
+              : <img src="/lirilogo.png" alt="LIRI" className="h-9 w-9 object-contain" />}
             <span className="text-[17px] font-semibold tracking-tight">{PORTAL_BRAND}</span>
           </span>
         </div>
