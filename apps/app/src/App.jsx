@@ -541,6 +541,31 @@ function OwnerDashboardLegacyRedirect() {
   const q = sp.toString();
   return <Navigate to={`/liri/ecole${q ? `?${q}` : ''}`} replace />;
 }
+
+// RETRAIT ACADEMY (tâche E) : l'ancien back-office `/t/:slug/admin*` (shell séparé
+// « Administration École ») est REMPLACÉ par le portail LIRI. `/liri/ecole` rend le
+// MÊME moteur (OwnerDashboardBody, ~24 onglets) → parité totale. On redirige donc toute
+// la surface `/t/:slug/admin*` vers l'onglet équivalent de `/liri/ecole` (?tab=<id>).
+// Une seule route `/t/:slug/admin/*` couvre le landing + tous les sous-chemins (RRv6).
+const ACADEMY_TAB_MAP = {
+  '': 'dashboard',
+  billing: 'payments',
+  'ai-billing': 'payments',
+  settings: 'settings',
+  members: 'users',
+  students: 'users',
+  courses: 'formations',
+  'parcours-scolaires': 'school-life',
+  calendar: 'school-life',
+  chat: 'forum',
+  notifications: 'notifications',
+};
+function AcademyToLiriRedirect() {
+  const params = useParams();
+  const sub = String(params['*'] || '').split('/')[0];
+  const tab = ACADEMY_TAB_MAP[sub] || 'dashboard';
+  return <Navigate to={tab === 'dashboard' ? '/liri/ecole' : `/liri/ecole?tab=${tab}`} replace />;
+}
 // Le Montage post-prod appartient au STUDIO LIRI (dans le portail). L'ancienne route
 // /owner-dashboard/* résout le tenant et renvoie vers son domaine (ex. prorascience.org
 // = chrome ISNA Academy externe) → on redirige vers /studio, en préservant le contentId.
@@ -2519,167 +2544,12 @@ isLiriHostDevPreviewRoute;
           <Route path="/live/rejoindre" element={<LiveJoinPage />} />
           <Route path="/live/:id/liens" element={<LiveJoinLinksPage />} />
 
-          {/* ── Dashboard admin école (route principale) ─────────────────── */}
-          <Route
-            path="/t/:tenantSlug/admin"
-            element={
-              <TenantProtectedRoute>
-                <SchoolAdminDashboard />
-              </TenantProtectedRoute>
-            }
-          />
-
-          {/* ── Sous-routes admin (protégées par appartenance au tenant) ──── */}
-          <Route
-            path="/t/:tenantSlug/admin/billing"
-            element={
-              <TenantProtectedRoute>
-                <SchoolBillingPage />
-              </TenantProtectedRoute>
-            }
-          />
-          <Route
-            path="/t/:tenantSlug/admin/settings"
-            element={
-              <TenantProtectedRoute>
-                <ErrorBoundary>
-                  <TenantAdminSettingsPage />
-                </ErrorBoundary>
-              </TenantProtectedRoute>
-            }
-          />
-          <Route
-            path="/t/:tenantSlug/admin/members"
-            element={
-              <TenantProtectedRoute>
-                <ErrorBoundary>
-                  <TenantMembersPage />
-                </ErrorBoundary>
-              </TenantProtectedRoute>
-            }
-          />
-          <Route
-            path="/t/:tenantSlug/admin/courses"
-            element={
-              <TenantProtectedRoute>
-                <ErrorBoundary>
-                  <TenantAdminCoursesPage />
-                </ErrorBoundary>
-              </TenantProtectedRoute>
-            }
-          />
-          <Route
-            path="/t/:tenantSlug/admin/courses/:courseId"
-            element={
-              <TenantProtectedRoute>
-                <ErrorBoundary>
-                  <TenantCourseDetailPage />
-                </ErrorBoundary>
-              </TenantProtectedRoute>
-            }
-          />
-          <Route
-            path="/t/:tenantSlug/admin/students"
-            element={
-              <TenantProtectedRoute>
-                <ErrorBoundary>
-                  <TenantAdminStudentsPage />
-                </ErrorBoundary>
-              </TenantProtectedRoute>
-            }
-          />
-          <Route
-            path="/t/:tenantSlug/admin/parcours-scolaires"
-            element={
-              <TenantProtectedRoute>
-                <ErrorBoundary>
-                  <TenantAdminSchoolPathsPage />
-                </ErrorBoundary>
-              </TenantProtectedRoute>
-            }
-          />
-          <Route
-            path="/t/:tenantSlug/admin/parcours-scolaires/:pathId/semaines"
-            element={
-              <TenantProtectedRoute>
-                <ErrorBoundary>
-                  <TenantAdminWeeklyProgramPage />
-                </ErrorBoundary>
-              </TenantProtectedRoute>
-            }
-          />
-          <Route
-            path="/t/:tenantSlug/admin/lives"
-            element={
-              <TenantProtectedRoute>
-                <TenantAdminLivesPage />
-              </TenantProtectedRoute>
-            }
-          />
-          <Route
-            path="/t/:tenantSlug/admin/smartboard"
-            element={
-              <TenantProtectedRoute>
-                <TenantAdminSmartboardPage />
-              </TenantProtectedRoute>
-            }
-          />
-          <Route
-            path="/t/:tenantSlug/admin/marketing"
-            element={
-              <TenantProtectedRoute>
-                <TenantAdminMarketingPage />
-              </TenantProtectedRoute>
-            }
-          />
-          <Route
-            path="/t/:tenantSlug/admin/studio"
-            element={
-              <TenantProtectedRoute>
-                <TenantAdminStudioPage />
-              </TenantProtectedRoute>
-            }
-          />
-          <Route
-            path="/t/:tenantSlug/admin/neuro-recall"
-            element={
-              <TenantProtectedRoute>
-                <TenantAdminNeuroRecallPage />
-              </TenantProtectedRoute>
-            }
-          />
-          <Route
-            path="/t/:tenantSlug/admin/ai-billing"
-            element={
-              <TenantProtectedRoute>
-                <TenantAdminAiBillingPage />
-              </TenantProtectedRoute>
-            }
-          />
-          <Route
-            path="/t/:tenantSlug/admin/calendar"
-            element={
-              <TenantProtectedRoute>
-                <TenantAdminCalendarPage />
-              </TenantProtectedRoute>
-            }
-          />
-          <Route
-            path="/t/:tenantSlug/admin/chat"
-            element={
-              <TenantProtectedRoute>
-                <TenantAdminChatPage />
-              </TenantProtectedRoute>
-            }
-          />
-          <Route
-            path="/t/:tenantSlug/admin/notifications"
-            element={
-              <TenantProtectedRoute>
-                <TenantAdminNotificationsPage />
-              </TenantProtectedRoute>
-            }
-          />
+          {/* ── Academy RETIRÉ (tâche E) : tout `/t/:slug/admin*` → portail LIRI ──
+              Le back-office école vit désormais dans `/liri/ecole` (même moteur
+              OwnerDashboardBody). Une seule route splat couvre le landing + tous les
+              sous-chemins (RRv6 : `/admin/*` matche aussi `/admin`). Mapping section
+              → onglet dans AcademyToLiriRedirect. */}
+          <Route path="/t/:tenantSlug/admin/*" element={<AcademyToLiriRedirect />} />
 
           <Route path="/owner/formations/create" element={
             <ProtectedOwnerRoute>
