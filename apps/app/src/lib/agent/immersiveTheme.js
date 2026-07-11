@@ -149,7 +149,7 @@ button.cca-chip-visit:hover{background:#e18b6b!important;border-color:transparen
 .cca-scene-on .cca-split-hooks{opacity:1}
 
 /* reader — profil (gauche) · texte scrollable (centre, masque bas = « il reste du texte ») · nav (droite) · suggestions (bas) */
-.cca-reader{position:absolute;inset:0;display:grid;grid-template-columns:210px minmax(0,1fr) 176px;grid-template-rows:1fr auto;gap:0 3vw;padding:8.5vh 4vw 3vh}
+.cca-reader{position:absolute;inset:0;display:grid;grid-template-columns:200px minmax(0,640px) 190px;grid-template-rows:1fr auto;justify-content:center;gap:0 clamp(28px,3vw,60px);padding:8.5vh 4vw 3vh}
 .cca-reader-profile{grid-column:1;grid-row:1;display:flex;flex-direction:column;gap:7px;align-self:start;opacity:0;transform:translateX(-24px);transition:opacity .5s ease,transform .5s cubic-bezier(.16,1,.3,1)}
 .cca-scene-on .cca-reader-profile{opacity:1;transform:none}
 .cca-reader-name{font-family:${SERIF};font-size:18px;color:${INK};margin-top:6px}
