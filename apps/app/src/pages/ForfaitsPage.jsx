@@ -1,7 +1,6 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { Helmet } from 'react-helmet';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
-import { useAuth } from '@/contexts/SupabaseAuthContext';
 import { motion, useReducedMotion } from 'framer-motion';
 import {
   ArrowRight,
@@ -176,7 +175,6 @@ const cycleKeyFromPlanParam = (raw) => {
 const ForfaitsPage = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const { user: authUser } = useAuth();
   const { subscription, status: billingStatus } = useBilling();
   const [plans, setPlans] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -363,13 +361,11 @@ const ForfaitsPage = () => {
     const paymentPath = `/t/${resolveTenantSlug()}/paiement?plan=${encodeURIComponent(planKey)}&type=subscription`
       + `${cycleLabel ? `&label=${encodeURIComponent(cycleLabel)}` : ''}`
       + `${priceLabel ? `&priceLabel=${encodeURIComponent(priceLabel)}` : ''}`;
-    if (!authUser) {
-      // Visiteur non connecté → inscription avec redirect direct vers le paiement.
-      const signupUrl = `/signup?redirect=${encodeURIComponent(paymentPath)}${cycleLabel ? `&planLabel=${encodeURIComponent(cycleLabel)}` : ''}`;
-      navigate(signupUrl);
-    } else {
-      navigate(paymentPath);
-    }
+    // Connecté OU non : on va DIRECTEMENT au checkout. La page /paiement gère le paiement INVITÉ
+    // (guestCard/guestPaypal/guestMobileMoney + provisionGuestUser crée le compte APRÈS paiement),
+    // donc on ne force plus le détour /signup avant de payer — c'était une chute de conversion
+    // majeure alors que le guest checkout est déjà déployé (audit conversion #11).
+    navigate(paymentPath);
     closePaymentDialog();
   };
 
