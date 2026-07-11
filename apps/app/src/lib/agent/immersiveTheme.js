@@ -183,6 +183,8 @@ button.cca-chip-visit:hover{background:#e18b6b!important;border-color:transparen
 .cca-reader-nav button.on .dot{background:${GOLD};box-shadow:0 0 0 3px #262624,0 0 10px rgba(230,204,146,.55)}
 .cca-reader-suggests{grid-column:1 / -1;grid-row:2;display:flex;gap:8px;flex-wrap:wrap;justify-content:center;padding-top:14px;opacity:0;transition:opacity .5s ease .4s}
 .cca-scene-on .cca-reader-suggests{opacity:1}
+/* Règle décorative partagée sous les titres de scène centrés (cohérence premium façon reader). */
+.cca-cards-title::after,.cca-tl-title::after,.cca-st-title::after,.cca-cmp-title::after,.cca-faq-title::after{content:'';display:block;width:46px;height:2px;margin:11px auto 0;background:linear-gradient(90deg,transparent,${GOLD},transparent);border-radius:2px}
 
 /* tutorial — étapes numérotées en cascade + CTA */
 .cca-tuto{position:absolute;inset:0;display:flex;flex-direction:column;gap:16px;justify-content:center;padding:10vh 8vw 6vh;overflow-y:auto;scrollbar-width:none}

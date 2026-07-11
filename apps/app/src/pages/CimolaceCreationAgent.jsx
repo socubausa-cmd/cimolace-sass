@@ -176,6 +176,8 @@ const NODE_ICONS = {
   realisations: Sparkles, histoire: BookOpen, fondateur: Users, equipe: Users, faq: Sparkles,
   contact: Mail, support: Mail, identity: Hexagon, documentation: BookOpen, ressources: Compass,
 };
+// Icône de CARTE (clé bornée → composant lucide). Les cartes forfaits reçoivent une icône par palier.
+const CARD_ICON_MAP = { calendar: Calendar, compass: Compass, grad: GraduationCap, users: Users, gem: Gem, sparkles: Sparkles, book: BookOpen, tag: Tag, hexagon: Hexagon };
 
 // Realms OS de marque AUTORISÉS. Rendre un realm = afficher le chrome « tenant » (badge marque,
 // « Connecté », branding fetché) par-dessus le MÊME moteur. Accepter un slug arbitraire via `?os=`
@@ -498,6 +500,7 @@ function normalizeScene(raw) {
           note: cut(c.note, 120) || undefined,
           badge: cut(c.badge, 24) || undefined,
           accent: (c.accent === 'terra' || c.accent === 'gold') ? c.accent : undefined,
+          icon: (typeof c.icon === 'string' && c.icon.length < 16) ? c.icon : undefined,
           ref: (c.ref && typeof c.ref === 'object') ? {
             kind: c.ref.kind === 'plan' ? 'plan' : 'info',
             title: cut(c.ref.title, 60) || cut(c.title, 40),
@@ -692,6 +695,8 @@ const CARDS_CSS = `
 .cca-card-gold{border-color:rgba(230,204,146,.5);background:rgba(230,204,146,.05)}
 .cca-card-terra{border-color:rgba(217,119,87,.4)}
 .cca-card-badge{position:absolute;top:-9px;right:14px;background:#e6cc92;color:#2a140c;font-family:'Bricolage Grotesque',system-ui,sans-serif;font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.02em;padding:2px 9px;border-radius:999px}
+.cca-card-ic{width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;color:#e6cc92;border:1px solid rgba(230,204,146,.28);background:rgba(230,204,146,.05);margin-bottom:11px}
+.cca-card-gold .cca-card-ic{border-color:rgba(230,204,146,.45);background:rgba(230,204,146,.09)}
 .cca-card-title{font-family:'Fraunces','Source Serif 4',Georgia,serif;font-size:16px;color:#f4efe6;font-weight:600}
 .cca-card-value{font-family:'Cormorant Garamond','Cormorant',Georgia,serif;font-size:31px;line-height:1;color:#e6cc92;margin:1px 0}
 .cca-card-terra .cca-card-value{color:#d97757}
@@ -709,6 +714,7 @@ function CardsScene({ scene, onFocus, glossary, onTerm }) {
       <div className="cca-cards-grid">
         {scene.cards.map((c, i) => {
           const clickable = !!(c.ref && onFocus);
+          const CIc = c.icon ? CARD_ICON_MAP[c.icon] : null;
           return (
             <div
               key={i}
@@ -720,6 +726,7 @@ function CardsScene({ scene, onFocus, glossary, onTerm }) {
               onKeyDown={clickable ? (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onFocus(c.ref); } } : undefined}
             >
               {c.badge && <span className="cca-card-badge">{c.badge}</span>}
+              {CIc && <span className="cca-card-ic"><CIc size={17} /></span>}
               <div className="cca-card-title">{c.title}</div>
               {c.value && <div className="cca-card-value">{c.value}</div>}
               {c.note && <div className="cca-card-note">{glossify(c.note, glossary, onTerm)}</div>}

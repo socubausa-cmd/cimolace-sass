@@ -318,8 +318,9 @@ export function buildNodeScene(nodeId, k = PRORASCIENCE_KNOWLEDGE) {
     case 'produits':
       return offers.length ? {
         type: 'cards', title: 'Nos forfaits',
-        cards: offers.slice(0, 6).map((o) => ({
+        cards: offers.slice(0, 6).map((o, i) => ({
           title: o.name, value: `${o.price}${o.suffix || ''}`, note: o.desc,
+          icon: ['calendar', 'compass', 'grad', 'users', 'gem'][i] || 'sparkles',
           badge: o.popular ? 'Le plus choisi' : undefined, accent: o.popular ? 'gold' : undefined,
           // MODE FOCUS : cliquer une carte ouvre le tiroir (détail + actions + suites).
           ref: {
