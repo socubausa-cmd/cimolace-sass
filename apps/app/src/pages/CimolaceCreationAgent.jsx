@@ -2440,6 +2440,10 @@ export default function CimolaceCreationAgent({ tenantSlug: tenantSlugProp = nul
                 <textarea placeholder={`Votre message pour ${tenantName}…`} value={contactForm.message} rows={3}
                   onChange={(e) => setContactForm((c) => ({ ...c, message: e.target.value }))} style={{ ...VNP_FIELD, resize: 'vertical', lineHeight: 1.4 }} />
                 {contactForm.error && <span style={{ color: '#f0997b', fontSize: 12.5 }}>{contactForm.error}</span>}
+                <span style={{ fontSize: 11.5, color: 'rgba(244,239,230,.6)', lineHeight: 1.35 }}>
+                  En envoyant, vous acceptez d'être recontacté(e) par {tenantName} au sujet de votre demande.{' '}
+                  <a href="/politique-confidentialite" target="_blank" rel="noopener noreferrer" style={{ color: GOLD, textDecoration: 'underline' }}>Politique de confidentialité</a>.
+                </span>
                 <div style={{ display: 'flex', gap: 8 }}>
                   <button onClick={(e) => { e.stopPropagation(); submitContact(); }} disabled={contactForm.sending}
                     style={{ ...VNP_CHIP_BASE, flex: 1, justifyContent: 'center', fontWeight: 600, color: '#231208', background: TERRA, border: 'none', opacity: contactForm.sending ? 0.7 : 1 }}>
@@ -2477,6 +2481,10 @@ export default function CimolaceCreationAgent({ tenantSlug: tenantSlugProp = nul
                 <input className="cca-field" type="email" placeholder="Votre e-mail" value={bookingForm.email}
                   onChange={(e) => setBookingForm((c) => ({ ...c, email: e.target.value }))} style={VNP_FIELD} />
                 {bookingForm.error && <span style={{ color: '#f0997b', fontSize: 12.5 }}>{bookingForm.error}</span>}
+                <span style={{ fontSize: 11.5, color: 'rgba(244,239,230,.6)', lineHeight: 1.35 }}>
+                  En demandant un créneau, vous acceptez d'être recontacté(e) par {tenantName} pour confirmer le rendez-vous.{' '}
+                  <a href="/politique-confidentialite" target="_blank" rel="noopener noreferrer" style={{ color: GOLD, textDecoration: 'underline' }}>Politique de confidentialité</a>.
+                </span>
                 <div style={{ display: 'flex', gap: 8 }}>
                   <button onClick={(e) => { e.stopPropagation(); submitBooking(); }} disabled={bookingForm.sending}
                     style={{ ...VNP_CHIP_BASE, flex: 1, justifyContent: 'center', fontWeight: 600, color: '#231208', background: TERRA, border: 'none', opacity: bookingForm.sending ? 0.7 : 1 }}>
