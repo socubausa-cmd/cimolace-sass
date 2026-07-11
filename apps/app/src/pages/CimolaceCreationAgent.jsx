@@ -559,7 +559,44 @@ function avatarFromSeed(seed) {
 
 // ── Renderer de scène + 4 sous-scènes. Contenu rendu dès scene!=null (jamais gaté
 //    sur `visible`) ; la classe cca-scene-on n'ajoute QUE le mouvement (anti onglet-masqué). ──
-function SceneStage({ scene, visible, readerIdx, setReaderIdx, onSuggest, onCta, hooks, onHook, onFocus }) {
+// SceneSuggest — la SUITE : barre basse d'orientation (le guide ne laisse JAMAIS un cul-de-sac).
+// Actions métier (terra, via VNP_ACTION_META) + sujets liés (chips → nœud). Dégradé de fond → le
+// contenu qui défile s'estompe dessous (pas de bord dur). Révélée avec la scène.
+const SCENE_SUGGEST_CSS = `
+.cca-ss{position:absolute;left:0;right:0;bottom:0;z-index:6;display:flex;flex-wrap:wrap;justify-content:center;align-items:center;gap:9px;padding:38px 5vw 20px;background:linear-gradient(to top,#262624 36%,rgba(38,38,36,.85) 64%,transparent);opacity:0;transform:translateY(10px);transition:opacity .5s ease .32s,transform .5s cubic-bezier(.16,1,.3,1) .32s;pointer-events:auto}
+.cca-scene-on .cca-ss{opacity:1;transform:none}
+.cca-ss-lead{width:100%;text-align:center;font-family:'Bricolage Grotesque',system-ui,sans-serif;font-size:9.5px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:rgba(244,239,230,.32);margin-bottom:3px}
+.cca-ss-act{display:inline-flex;align-items:center;gap:8px;padding:10px 16px;border-radius:999px;border:1px solid rgba(217,119,87,.45);background:rgba(217,119,87,.14);color:#f4efe6;font-family:inherit;font-size:13px;font-weight:500;cursor:pointer;transition:background .16s ease,border-color .16s ease}
+.cca-ss-act:hover{background:rgba(217,119,87,.24);border-color:rgba(217,119,87,.65)}
+.cca-ss-chip{display:inline-flex;align-items:center;gap:6px;padding:9px 14px;border-radius:999px;border:1px solid rgba(230,204,146,.26);background:rgba(230,204,146,.05);color:rgba(244,239,230,.85);font-family:inherit;font-size:12.5px;cursor:pointer;transition:background .16s ease,border-color .16s ease}
+.cca-ss-chip:hover{background:rgba(230,204,146,.13);border-color:rgba(230,204,146,.48)}
+.cca-scene:has(.cca-ss) .cca-cards,.cca-scene:has(.cca-ss) .cca-tl,.cca-scene:has(.cca-ss) .cca-st,.cca-scene:has(.cca-ss) .cca-cmp,.cca-scene:has(.cca-ss) .cca-tuto{padding-bottom:104px}
+@media (max-width:640px){.cca-ss{padding:32px 4vw 15px;gap:7px}}
+`;
+// Actions de CONVERSION (mises en avant dans la suite) ; les intentions « molles » (comprendre,
+// découvrir, comparer, visiter) sont couvertes par les chips de sujets, pas par un CTA terra.
+const SCENE_STRONG_ACTS = { rejoindre: 1, reserver: 1, acheter: 1, contacter: 1, telecharger: 1, participer: 1 };
+function SceneSuggest({ acts, suggest, onAct, onNode }) {
+  const actList = (acts || []).map((a) => ({ id: a, m: VNP_ACTION_META[a] })).filter((x) => x.m && SCENE_STRONG_ACTS[x.id]).slice(0, 2);
+  const sugList = (suggest || []).filter((s) => s && s.nodeId && s.label).slice(0, 3);
+  if (!actList.length && !sugList.length) return null;
+  return (
+    <div className="cca-ss">
+      <style>{SCENE_SUGGEST_CSS}</style>
+      <span className="cca-ss-lead">Poursuivre</span>
+      {actList.map(({ id, m }) => (
+        <button key={id} type="button" className="cca-ss-act" onClick={() => onAct(id, m.label)}>
+          <m.Icon size={15} /> {m.label}
+        </button>
+      ))}
+      {sugList.map((s) => (
+        <button key={s.nodeId} type="button" className="cca-ss-chip" onClick={() => onNode(s.nodeId)}>{s.label} →</button>
+      ))}
+    </div>
+  );
+}
+
+function SceneStage({ scene, visible, readerIdx, setReaderIdx, onSuggest, onCta, hooks, onHook, onFocus, suggest, acts, onNode, onAct }) {
   if (!scene) return null;
   return (
     <div className={`cca-scene cca-stage-${scene.type} ${visible ? 'cca-scene-on' : ''}`}
@@ -572,6 +609,7 @@ function SceneStage({ scene, visible, readerIdx, setReaderIdx, onSuggest, onCta,
       {scene.type === 'timeline' && <TimelineFlow scene={scene} onFocus={onFocus} />}
       {scene.type === 'stats' && <StatsPanel scene={scene} visible={visible} onFocus={onFocus} />}
       {scene.type === 'comparateur' && <ComparateurScene scene={scene} onFocus={onFocus} />}
+      {scene.type !== 'aside' && <SceneSuggest acts={(scene.type === 'tutorial' && scene.cta) ? [] : acts} suggest={suggest} onAct={onAct} onNode={onNode} />}
     </div>
   );
 }
@@ -1732,8 +1770,14 @@ export default function CimolaceCreationAgent({ tenantSlug: tenantSlugProp = nul
       // fabrique JAMAIS prix/chiffres/comparatifs (ceux-ci passent par buildNodeScene = donnée vérifiée).
       // Repli : scène du nœud (mapping figé) → narration plate. normalizeScene reste l'autorité finale.
       const EDGE_OK = { aside: 1, split: 1, reader: 1, tutorial: 1, timeline: 1 };
+      // Nœuds DONNÉE (prix/chiffres/comparatif) : TOUJOURS via buildNodeScene (rendu complet + vérifié).
+      // On refuse une scène composée si l'edge a ciblé un de ces nœuds OU si elle contient un motif de
+      // prix (€, /mois…) — sinon le LLM peut glisser un aside de forfaits TRONQUÉ (cap 4 items) au lieu
+      // des cartes complètes. Garde-fou double : nœud-donnée + scan de prix.
+      const DATA_NODES = { produits: 1, realisations: 1, solutions: 1 };
       const onTop = data?.onTopic !== false;
-      const edgeScene = (VNP_SCENES_V2 && onTop && data?.scene && EDGE_OK[data.scene.type])
+      const sceneHasPrice = (() => { try { return /[€£$]|\/\s?mois|\/\s?an|\btarif|\bprix\b/i.test(JSON.stringify(data?.scene || '')); } catch { return false; } })();
+      const edgeScene = (VNP_SCENES_V2 && onTop && data?.scene && EDGE_OK[data.scene.type] && !DATA_NODES[data?.nodeId] && !sceneHasPrice)
         ? normalizeScene(data.scene) : null;
       const nodeScene = (!edgeScene && VNP_SCENES_V2 && onTop && data?.nodeId)
         ? normalizeScene(buildNodeScene(data.nodeId, OS_KNOWLEDGE[osTenant])) : null;
@@ -1944,7 +1988,9 @@ export default function CimolaceCreationAgent({ tenantSlug: tenantSlugProp = nul
       {scene && (isTenantRealm || step === 'brain' || step === 'product') && (
         <SceneStage scene={scene} visible={sceneVisible} readerIdx={readerIdx} setReaderIdx={setReaderIdx}
           onSuggest={isTenantRealm ? vnpChat : brain} onCta={isTenantRealm ? vnpChat : chooseProduct}
-          hooks={isTenantRealm ? [] : brainHooks} onHook={isTenantRealm ? vnpChat : brain} onFocus={openFocus} />
+          hooks={isTenantRealm ? [] : brainHooks} onHook={isTenantRealm ? vnpChat : brain} onFocus={openFocus}
+          suggest={isTenantRealm ? vnpSuggest : []} acts={isTenantRealm ? vnpActs : []}
+          onNode={vnpOpenNode} onAct={vnpAction} />
       )}
 
       {/* MODE FOCUS — tiroir d'approfondissement inline (carte cliquée) */}
