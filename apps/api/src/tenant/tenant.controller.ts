@@ -222,7 +222,10 @@ export class TenantController {
     const tenant = (await this.tenantService.getTenantById(req.tenant.id)) as {
       metadata?: { os_knowledge?: unknown } | null;
     } | null;
-    return { data: tenant?.metadata?.os_knowledge ?? null };
+    // Retour BRUT : l'intercepteur de réponse global enveloppe en { data } (une
+    // seule fois). Un { data } manuel ici produirait un double-wrap → le client
+    // (unwrap = response.data.data) recevrait { data: … } au lieu du knowledge.
+    return tenant?.metadata?.os_knowledge ?? null;
   }
 
   /**
@@ -245,9 +248,8 @@ export class TenantController {
     if (!knowledge || typeof knowledge !== "object") {
       throw new BadRequestException("knowledge (objet) requis");
     }
-    return {
-      data: await this.tenantService.updateOsKnowledge(req.tenant.id, knowledge),
-    };
+    // Retour BRUT (cf. GET ci-dessus) : l'intercepteur enveloppe en { data }.
+    return this.tenantService.updateOsKnowledge(req.tenant.id, knowledge);
   }
 
   /**
