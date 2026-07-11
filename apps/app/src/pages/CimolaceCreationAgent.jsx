@@ -584,7 +584,9 @@ const SCENE_SUGGEST_CSS = `
 const SCENE_STRONG_ACTS = { rejoindre: 1, reserver: 1, acheter: 1, contacter: 1, telecharger: 1, participer: 1 };
 function SceneSuggest({ acts, suggest, onAct, onNode }) {
   const actList = (acts || []).map((a) => ({ id: a, m: VNP_ACTION_META[a] })).filter((x) => x.m && SCENE_STRONG_ACTS[x.id]).slice(0, 2);
-  const sugList = (suggest || []).filter((s) => s && s.nodeId && s.label).slice(0, 3);
+  // Dédup : un chip de sujet ne répète pas un CTA d'action déjà présent (ex. « Nous contacter »).
+  const actLabels = new Set(actList.map((x) => x.m.label.toLowerCase()));
+  const sugList = (suggest || []).filter((s) => s && s.nodeId && s.label && !actLabels.has(String(s.label).toLowerCase())).slice(0, 3);
   if (!actList.length && !sugList.length) return null;
   return (
     <div className="cca-ss">
