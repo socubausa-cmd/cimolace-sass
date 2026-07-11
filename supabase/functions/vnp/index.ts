@@ -81,24 +81,81 @@ async function callChat(message: string, platformName: string, graph: string, hi
   return json({ reply, intent, nodeId, suggestions, actions, onTopic });
 }
 
+// Notifie le STAFF du tenant par EMAIL (Resend) à chaque nouveau lead. Sans ça, un contact/RDV pris
+// hors horaires reste invisible jusqu'à ce qu'un membre ouvre l'écran secrétariat (alerte realtime
+// uniquement). Best-effort : n'échoue JAMAIS le lead. Destinataires = staff actif (owner/admin/secretariat).
+async function notifyStaff(tenantId: string, kind: 'contact' | 'booking', payload: any): Promise<{ recipients: number; sent: boolean; status?: number; error?: string }> {
+  const fail = { recipients: 0, sent: false };
+  // @ts-ignore - Deno
+  const url = Deno.env.get('SUPABASE_URL');
+  // @ts-ignore - Deno
+  const key = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
+  // @ts-ignore - Deno
+  const resendKey = Deno.env.get('RESEND_API_KEY') || '';
+  // @ts-ignore - Deno
+  const envFrom = Deno.env.get('RESEND_FROM') || '';
+  // Expéditeur PRIMAIRE = RESEND_FROM (domaine vérifié → livre à tout le staff). Repli mode-test ci-dessous.
+  const from = envFrom || 'onboarding@resend.dev';
+  if (!url || !key || !resendKey || !tenantId) return fail;
+  try {
+    const mr = await fetch(`${url}/rest/v1/tenant_memberships?tenant_id=eq.${tenantId}&status=eq.active&role=in.(owner,admin,secretariat)&select=user_id`, { headers: { apikey: key, Authorization: `Bearer ${key}` } });
+    if (!mr.ok) return fail;
+    const members = await mr.json();
+    const ids = Array.from(new Set((members || []).map((m: any) => m.user_id).filter(Boolean))).slice(0, 8);
+    const emails: string[] = [];
+    for (const uid of ids) {
+      const ur = await fetch(`${url}/auth/v1/admin/users/${uid}`, { headers: { apikey: key, Authorization: `Bearer ${key}` } });
+      if (ur.ok) { const u = await ur.json(); if (u && u.email) emails.push(u.email); }
+    }
+    if (!emails.length) return fail;
+    const brand = String(payload?.platformName || 'votre site');
+    const name = String(payload?.name || '(anonyme)').slice(0, 120);
+    const email = String(payload?.email || '').slice(0, 160);
+    const subject = kind === 'booking' ? `Nouvelle demande de RDV — ${brand}` : `Nouveau message — ${brand}`;
+    const detail = kind === 'booking'
+      ? `<p><b>Service :</b> ${String(payload?.service || 'Consultation')}<br><b>Créneau souhaité :</b> ${String(payload?.preferred_at || '—')}</p>`
+      : `<p><b>Message :</b><br>${String(payload?.message || '').slice(0, 800).replace(/</g, '&lt;')}</p>`;
+    const html = `<div style="font-family:system-ui,-apple-system,sans-serif;max-width:520px"><h2 style="margin:0 0 8px">${subject}</h2><p style="margin:0 0 4px"><b>${name}</b> &lt;${email}&gt;</p>${detail}<p style="color:#888;font-size:13px">Traitez la demande dans l'espace secrétariat → « Demandes du site ».</p></div>`;
+    const send = (fromAddr: string, to: string[]) => fetch('https://api.resend.com/emails', {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${resendKey}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ from: `${brand} <${fromAddr}>`, to, subject, html, reply_to: email || undefined }),
+    });
+    // 1) Envoi primaire : expéditeur configuré → tout le staff.
+    const rr = await send(from, emails);
+    if (rr.ok) return { recipients: emails.length, sent: true };
+    const errText = await rr.text().catch(() => '');
+    // 2) Repli MODE-TEST : Resend n'autorise l'envoi qu'à l'email du COMPTE tant qu'aucun domaine n'est
+    //    vérifié. On extrait cet email de l'erreur et on notifie AU MOINS le titulaire (le fondateur),
+    //    via l'expéditeur partagé vérifié. Dès qu'un domaine est vérifié (+ RESEND_FROM), tout le staff reçoit.
+    const owner = (errText.match(/own email address \(([^)]+)\)/) || [])[1];
+    if (owner) {
+      const rr2 = await send('onboarding@resend.dev', [owner]);
+      if (rr2.ok) return { recipients: 1, sent: true, error: 'fallback-owner (vérifiez un domaine Resend pour notifier tout le staff)' };
+    }
+    return { recipients: emails.length, sent: false, status: rr.status, error: errText.slice(0, 300) };
+  } catch (e) { return { ...fail, error: String((e as Error)?.message || e).slice(0, 200) }; }
+}
+
 // Livraison RÉELLE d'un lead : insertion server-side dans contact_requests avec la SERVICE ROLE
 // (contourne la RLS — l'insert anon est refusé). SUPABASE_URL / SUPABASE_SERVICE_ROLE_KEY sont
 // injectés automatiquement dans le runtime des edge functions.
-async function insertContact(payload: any): Promise<boolean> {
+async function insertContact(payload: any): Promise<{ ok: boolean; notified: { recipients: number; sent: boolean } }> {
+  const nope = { ok: false, notified: { recipients: 0, sent: false } };
   // @ts-ignore
   const url = Deno.env.get('SUPABASE_URL');
   // @ts-ignore
   const key = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
-  if (!url || !key) return false;
+  if (!url || !key) return nope;
   try {
     // contact_requests.tenant_id est NOT NULL → on résout l'UUID du tenant depuis son slug.
     const slug = String(payload?.slug || '').trim().toLowerCase();
-    if (!slug) return false;
+    if (!slug) return nope;
     const tr = await fetch(`${url}/rest/v1/tenants?slug=eq.${encodeURIComponent(slug)}&select=id`, { headers: { apikey: key, Authorization: `Bearer ${key}` } });
-    if (!tr.ok) return false;
+    if (!tr.ok) return nope;
     const rows = await tr.json();
     const tenantId = rows && rows[0] && rows[0].id;
-    if (!tenantId) return false;
+    if (!tenantId) return nope;
     const res = await fetch(`${url}/rest/v1/contact_requests`, {
       method: 'POST',
       headers: { apikey: key, Authorization: `Bearer ${key}`, 'Content-Type': 'application/json', Prefer: 'return=minimal' },
@@ -110,8 +167,10 @@ async function insertContact(payload: any): Promise<boolean> {
         message: String(payload?.message || '').slice(0, 4000),
       }),
     });
-    return res.ok;
-  } catch (_) { return false; }
+    let notified = { recipients: 0, sent: false };
+    if (res.ok) { try { notified = await notifyStaff(tenantId, 'contact', payload); } catch (_) { /* best-effort */ } }
+    return { ok: res.ok, notified };
+  } catch (_) { return nope; }
 }
 
 // Résout l'UUID d'un tenant depuis son slug (service role).
@@ -124,15 +183,16 @@ async function resolveTenantId(url: string, key: string, slug: string): Promise<
 }
 
 // Livraison RÉELLE d'une demande de RDV : insertion server-side dans vnp_booking_requests (service role).
-async function insertBooking(payload: any): Promise<boolean> {
+async function insertBooking(payload: any): Promise<{ ok: boolean; notified: { recipients: number; sent: boolean } }> {
+  const nope = { ok: false, notified: { recipients: 0, sent: false } };
   // @ts-ignore
   const url = Deno.env.get('SUPABASE_URL');
   // @ts-ignore
   const key = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
-  if (!url || !key) return false;
+  if (!url || !key) return nope;
   try {
     const tenantId = await resolveTenantId(url, key, String(payload?.slug || '').trim().toLowerCase());
-    if (!tenantId) return false;
+    if (!tenantId) return nope;
     const res = await fetch(`${url}/rest/v1/vnp_booking_requests`, {
       method: 'POST',
       headers: { apikey: key, Authorization: `Bearer ${key}`, 'Content-Type': 'application/json', Prefer: 'return=minimal' },
@@ -145,8 +205,10 @@ async function insertBooking(payload: any): Promise<boolean> {
         message: String(payload?.message || '').slice(0, 2000),
       }),
     });
-    return res.ok;
-  } catch (_) { return false; }
+    let notified = { recipients: 0, sent: false };
+    if (res.ok) { try { notified = await notifyStaff(tenantId, 'booking', payload); } catch (_) { /* best-effort */ } }
+    return { ok: res.ok, notified };
+  } catch (_) { return nope; }
 }
 
 // ACTION ENGINE (§ doc « Exécuter les actions métier »). EXÉCUTE l'action : le contact est LIVRÉ
@@ -165,10 +227,10 @@ async function runAction(action: string, platformName: string, payload: any) {
       const message = String(payload?.message || '').trim();
       // 2e temps : coordonnées fournies → on LIVRE le message.
       if (email && message) {
-        const ok = await insertContact({ ...payload, subject: payload?.subject || `Contact via l'assistant ${platformName}` });
-        return json(ok
-          ? { ok: true, message: `C'est envoyé${name ? `, ${name}` : ''} — l'équipe de ${platformName} vous recontacte très vite.` }
-          : { ok: false, message: 'Envoi impossible pour le moment — réessayez.' }, ok ? 200 : 502);
+        const r = await insertContact({ ...payload, platformName, subject: payload?.subject || `Contact via l'assistant ${platformName}` });
+        return json(r.ok
+          ? { ok: true, message: `C'est envoyé${name ? `, ${name}` : ''} — l'équipe de ${platformName} vous recontacte très vite.`, notified: r.notified }
+          : { ok: false, message: 'Envoi impossible pour le moment — réessayez.' }, r.ok ? 200 : 502);
       }
       // 1er temps : on demande le mini-formulaire.
       return json({ ok: true, message: `Laissez-nous un mot — ${platformName} vous répond vite.`,
@@ -179,10 +241,10 @@ async function runAction(action: string, platformName: string, payload: any) {
       const preferredAt = payload?.preferred_at;
       // 2e temps : créneau + email fournis → on ENREGISTRE la demande de RDV.
       if (email && preferredAt) {
-        const ok = await insertBooking({ ...payload, service: payload?.service || 'Consultation privée' });
-        return json(ok
-          ? { ok: true, message: `C'est réservé${name ? `, ${name}` : ''} — ${platformName} vous confirme le créneau par e-mail.` }
-          : { ok: false, message: 'Réservation impossible pour le moment — réessayez.' }, ok ? 200 : 502);
+        const r = await insertBooking({ ...payload, platformName, service: payload?.service || 'Consultation privée' });
+        return json(r.ok
+          ? { ok: true, message: `C'est réservé${name ? `, ${name}` : ''} — ${platformName} vous confirme le créneau par e-mail.`, notified: r.notified }
+          : { ok: false, message: 'Réservation impossible pour le moment — réessayez.' }, r.ok ? 200 : 502);
       }
       // 1er temps : on ouvre le sélecteur de créneaux.
       return json({ ok: true, message: `Choisissez un créneau — je réserve votre consultation.`,
