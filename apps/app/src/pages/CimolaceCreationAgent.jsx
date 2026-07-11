@@ -628,10 +628,10 @@ function SceneStage({ scene, visible, readerIdx, setReaderIdx, onSuggest, onCta,
       {scene.type === 'split' && <SplitWorlds scene={scene} hooks={hooks} onHook={onHook} />}
       {scene.type === 'reader' && <ReaderView scene={scene} idx={readerIdx} setIdx={setReaderIdx} onSuggest={onSuggest} hooks={hooks} glossary={glossary} onTerm={onTerm} />}
       {scene.type === 'tutorial' && <TutorialFlow scene={scene} onCta={onCta} hooks={hooks} onHook={onHook} />}
-      {scene.type === 'cards' && <CardsScene scene={scene} onFocus={onFocus} />}
-      {scene.type === 'timeline' && <TimelineFlow scene={scene} onFocus={onFocus} />}
+      {scene.type === 'cards' && <CardsScene scene={scene} onFocus={onFocus} glossary={glossary} onTerm={onTerm} />}
+      {scene.type === 'timeline' && <TimelineFlow scene={scene} onFocus={onFocus} glossary={glossary} onTerm={onTerm} />}
       {scene.type === 'stats' && <StatsPanel scene={scene} visible={visible} onFocus={onFocus} />}
-      {scene.type === 'comparateur' && <ComparateurScene scene={scene} onFocus={onFocus} />}
+      {scene.type === 'comparateur' && <ComparateurScene scene={scene} onFocus={onFocus} glossary={glossary} onTerm={onTerm} />}
       {scene.type === 'faq' && <FaqScene scene={scene} glossary={glossary} onTerm={onTerm} />}
       {scene.type !== 'aside' && <SceneSuggest acts={(scene.type === 'tutorial' && scene.cta) ? [] : acts} suggest={suggest} onAct={onAct} onNode={onNode} />}
     </div>
@@ -681,7 +681,7 @@ const CARDS_CSS = `
 .cca-card-click:hover .cca-card-more{opacity:1}
 @media (max-width:640px){.cca-cards{padding:7vh 5vw 4vh}.cca-cards-grid{grid-template-columns:1fr}.cca-card-value{font-size:27px}}
 `;
-function CardsScene({ scene, onFocus }) {
+function CardsScene({ scene, onFocus, glossary, onTerm }) {
   return (
     <div className="cca-cards" style={{ pointerEvents: 'auto' }}>
       <style>{CARDS_CSS}</style>
@@ -702,7 +702,7 @@ function CardsScene({ scene, onFocus }) {
               {c.badge && <span className="cca-card-badge">{c.badge}</span>}
               <div className="cca-card-title">{c.title}</div>
               {c.value && <div className="cca-card-value">{c.value}</div>}
-              {c.note && <div className="cca-card-note">{c.note}</div>}
+              {c.note && <div className="cca-card-note">{glossify(c.note, glossary, onTerm)}</div>}
               {clickable && <span className="cca-card-more">Voir le détail →</span>}
             </div>
           );
@@ -740,7 +740,7 @@ const TIMELINE_CSS = `
 .cca-tl-body.click:hover .cca-tl-more{opacity:.85}
 @media (max-width:640px){.cca-tl{padding:7vh 6vw 4vh}.cca-tl-node{grid-template-columns:42px 1fr;gap:13px}.cca-tl-num{width:38px;height:38px;font-size:21px}}
 `;
-function TimelineFlow({ scene, onFocus }) {
+function TimelineFlow({ scene, onFocus, glossary, onTerm }) {
   return (
     <div className="cca-tl" style={{ pointerEvents: 'auto' }}>
       <style>{TIMELINE_CSS}</style>
@@ -760,7 +760,7 @@ function TimelineFlow({ scene, onFocus }) {
                 onKeyDown={clickable ? (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); open(); } } : undefined}>
                 {s.kicker && <div className="cca-tl-kicker">{s.kicker}</div>}
                 <div className="cca-tl-h">{s.title}</div>
-                {s.detail && <div className="cca-tl-detail">{s.detail}</div>}
+                {s.detail && <div className="cca-tl-detail">{glossify(s.detail, glossary, onTerm)}</div>}
                 {s.foot && <div className="cca-tl-foot">{s.foot}</div>}
                 {clickable && <span className="cca-tl-more">Approfondir →</span>}
               </div>
@@ -892,7 +892,7 @@ const COMPARATEUR_CSS = `
 .cca-cmp-no{color:rgba(244,239,230,.3)}
 @media (max-width:640px){.cca-cmp{padding:7vh 4vw 4vh}.cca-cmp-price{font-size:20px}}
 `;
-function ComparateurScene({ scene, onFocus }) {
+function ComparateurScene({ scene, onFocus, glossary, onTerm }) {
   const plans = scene.plans;
   return (
     <div className="cca-cmp" style={{ pointerEvents: 'auto' }}>
@@ -920,7 +920,7 @@ function ComparateurScene({ scene, onFocus }) {
           <tbody>
             {scene.rows.map((r, ri) => (
               <tr key={ri} className="cca-cmp-row" style={{ transitionDelay: `${ri * 55 + 260}ms` }}>
-                <th scope="row" className="cca-cmp-feat">{r.feature}</th>
+                <th scope="row" className="cca-cmp-feat">{glossify(r.feature, glossary, onTerm)}</th>
                 {r.has.map((v, ci) => (
                   <td key={ci} className={`cca-cmp-cell${plans[ci] && plans[ci].popular ? ' pop' : ''}`}>
                     {v ? <span className="cca-cmp-yes" aria-label="inclus">✓</span> : <span className="cca-cmp-no" aria-label="non inclus">–</span>}
