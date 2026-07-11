@@ -211,6 +211,46 @@ export class TenantController {
   }
 
   /**
+   * Self-serve — le KNOWLEDGE PACK OS du tenant courant (celui que l'agent
+   * immersif rend). Owner/admin seulement : c'est l'identité publique + les
+   * offres du tenant. Sert à charger l'éditeur back-office (/liri → Contenu OS).
+   */
+  @Get("current/os-knowledge")
+  @UseGuards(JwtAuthGuard, TenantGuard, RolesGuard)
+  @Roles("owner", "admin")
+  async currentOsKnowledge(@Req() req: any) {
+    const tenant = (await this.tenantService.getTenantById(req.tenant.id)) as {
+      metadata?: { os_knowledge?: unknown } | null;
+    } | null;
+    return { data: tenant?.metadata?.os_knowledge ?? null };
+  }
+
+  /**
+   * Self-serve — met à jour le KNOWLEDGE PACK OS du tenant courant. Owner/admin
+   * seulement. Merge non destructif au niveau section (voir tenantService).
+   * L'agent immersif relira cette base au prochain rendu → aucune régénération
+   * de front nécessaire pour changer le contenu du site.
+   */
+  @Patch("current/os-knowledge")
+  @UseGuards(JwtAuthGuard, TenantGuard, RolesGuard)
+  @Roles("owner", "admin")
+  async updateOwnOsKnowledge(
+    @Req() req: any,
+    @Body() body: { knowledge?: Record<string, unknown> } | Record<string, unknown>,
+  ) {
+    const knowledge =
+      body && typeof body === "object" && "knowledge" in body
+        ? (body as { knowledge?: Record<string, unknown> }).knowledge
+        : (body as Record<string, unknown>);
+    if (!knowledge || typeof knowledge !== "object") {
+      throw new BadRequestException("knowledge (objet) requis");
+    }
+    return {
+      data: await this.tenantService.updateOsKnowledge(req.tenant.id, knowledge),
+    };
+  }
+
+  /**
    * Self-serve branding update — a tenant owner / admin editing their own
    * tenant from within apps/app. The TenantGuard resolves the tenant from
    * `X-Tenant-Slug` and we trust the auth context.

@@ -667,6 +667,7 @@ const DashboardLiri = lazy(() => import('@/pages/liri/DashboardLiri').then((m) =
 const LiriPortalPage = lazy(() => import('@/pages/liri/LiriPortalPage').then((m) => ({ default: m.LiriPortalPage })));
 const LiriAccountPage = lazy(() => import('@/pages/liri/LiriAccountPage'));
 const LiriServicesPage = lazy(() => import('@/pages/liri/LiriServicesPage'));
+const LiriContenuPage = lazy(() => import('@/pages/liri/LiriContenuPage'));
 const LiriPagesPage = lazy(() => import('@/pages/liri/LiriPagesPage'));
 const LiriFinancesPage = lazy(() => import('@/pages/liri/LiriFinancesPage'));
 // Module ÉCOLE HORIZONTAL dans le portail LIRI (vertical = /t/:slug ; ici = app activable dans /liri)
@@ -1824,6 +1825,13 @@ isLiriHostDevPreviewRoute;
           <Route path="/liri/services" element={
             <ProtectedLiriRoute allowedRoles={['owner', 'admin']} allowTenantRole>
               <LiriServicesPage />
+            </ProtectedLiriRoute>
+          } />
+          {/* Contenu du site — éditeur du KNOWLEDGE PACK OS (identité/fondateur/vision/offres/FAQ)
+              que l'agent immersif Cimolace OS lit pour RENDRE le site public. Créateur only. */}
+          <Route path="/liri/contenu" element={
+            <ProtectedLiriRoute allowedRoles={['owner', 'admin']} allowTenantRole>
+              <LiriContenuPage />
             </ProtectedLiriRoute>
           } />
           {/* Pages — éditeur no-code de pages du tenant DANS le portail LIRI (blocs → /iri/pages,

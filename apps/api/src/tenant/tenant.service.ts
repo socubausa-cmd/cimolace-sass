@@ -1,5 +1,6 @@
 import { Injectable } from "@nestjs/common";
 import { AuthService } from "../auth/auth.service";
+import { canonicalTenantSlug } from "./tenant-slug-aliases";
 
 /**
  * Un tenant est « EMBARQUÉ » (licence d'intégration : LIRI vit invisible dans SON
@@ -33,10 +34,11 @@ export class TenantService {
     const supabase = this.authService.getClient();
     // If slug provided, resolve by slug; otherwise get user's first tenant
     if (tenantSlug) {
+      const resolvedSlug = canonicalTenantSlug(tenantSlug);
       const { data: tenant } = await supabase
         .from("tenants")
         .select("*")
-        .eq("slug", tenantSlug)
+        .eq("slug", resolvedSlug)
         .single();
       if (!tenant) return null;
       const { data: membership } = await supabase
@@ -89,10 +91,11 @@ export class TenantService {
    */
   async joinAsStudent(userId: string, slug: string, fromPlatformHost = false) {
     const supabase = this.authService.getClient();
+    const resolvedSlug = canonicalTenantSlug(slug);
     const { data: tenant } = await supabase
       .from("tenants")
       .select("id, status, primary_domain, metadata")
-      .eq("slug", slug)
+      .eq("slug", resolvedSlug)
       .single();
     if (!tenant || (tenant as any).status !== "active") return null;
     // Séparation dure : un tenant EMBARQUÉ n'est PAS joignable depuis le host
@@ -124,10 +127,11 @@ export class TenantService {
 
   async getTenantBySlug(slug: string) {
     const supabase = this.authService.getClient();
+    const resolvedSlug = canonicalTenantSlug(slug);
     const { data } = await supabase
       .from("tenants")
       .select("slug, name, logo_url, brand_colors, status, metadata, primary_domain")
-      .eq("slug", slug)
+      .eq("slug", resolvedSlug)
       .single();
     if (!data || (data as any).status !== "active") return null;
     return data;
@@ -136,10 +140,11 @@ export class TenantService {
   /** Résout l'id d'un tenant ACTIF par slug — null sinon (aucune fuite de slugs). */
   private async getActiveTenantIdBySlug(slug: string): Promise<string | null> {
     const supabase = this.authService.getClient();
+    const resolvedSlug = canonicalTenantSlug(slug);
     const { data } = await supabase
       .from("tenants")
       .select("id, status")
-      .eq("slug", slug)
+      .eq("slug", resolvedSlug)
       .maybeSingle();
     if (!data || (data as any).status !== "active") return null;
     return (data as any).id as string;
@@ -365,5 +370,36 @@ export class TenantService {
       .select("*")
       .single();
     return data;
+  }
+
+  /**
+   * Base de connaissances de l'OS Cimolace (self-serve owner/admin), stockée dans
+   * `tenants.metadata.os_knowledge`. C'est la source lue par l'agent immersif
+   * (prorascience-brain / CimolaceCreationAgent) pour RENDRE le site du tenant —
+   * le contenu ne vit plus en dur dans le front. Merge NON destructif au niveau
+   * SECTION : un PATCH partiel (ex. {identity}) ne doit jamais effacer
+   * founder/offers/faq/vision/comparison déjà en base.
+   */
+  async updateOsKnowledge(
+    tenantId: string,
+    knowledge: Record<string, unknown>,
+  ) {
+    const supabase = this.authService.getClient();
+    const tenant = (await this.getTenantById(tenantId)) as
+      | { metadata?: Record<string, unknown> | null }
+      | null;
+    const metadata: Record<string, any> = { ...((tenant?.metadata as any) ?? {}) };
+    const existing: Record<string, any> = {
+      ...((metadata.os_knowledge as any) ?? {}),
+    };
+    metadata.os_knowledge = { ...existing, ...knowledge };
+    const { data } = await supabase
+      .from("tenants")
+      .update({ metadata })
+      .eq("id", tenantId)
+      .select("*")
+      .single();
+    return (data as { metadata?: { os_knowledge?: unknown } } | null)?.metadata
+      ?.os_knowledge ?? null;
   }
 }

@@ -64,6 +64,12 @@ export const tenantsApi = {
   // Cimolace actif (essai inclus).
   activateSchool: (active: boolean = true) =>
     apiV2.post<ApiEnvelope<any>>('/tenants/current/services/school/activate', { active }).then(unwrap),
+  // KNOWLEDGE PACK OS (owner/admin) — le contenu que l'agent immersif REND (identité,
+  // fondateur, offres, comparaison, FAQ…). Lu/écrit depuis tenants.metadata.os_knowledge.
+  getOsKnowledge: () =>
+    apiV2.get<ApiEnvelope<any>>('/tenants/current/os-knowledge').then(unwrap),
+  updateOsKnowledge: (knowledge: Record<string, unknown>) =>
+    apiV2.patch<ApiEnvelope<any>>('/tenants/current/os-knowledge', { knowledge }).then(unwrap),
   mine: () => apiV2.get<ApiEnvelope<any[]>>('/tenants/mine').then(unwrap),
   dashboard: () => apiV2.get<ApiEnvelope<any>>('/tenants/current/dashboard').then(unwrap),
   listMembers: () => apiV2.get<ApiEnvelope<any[]>>('/tenants/current/members').then(unwrap),
