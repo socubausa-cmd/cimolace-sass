@@ -687,21 +687,31 @@ function StatValue({ raw, active }) {
   const target = parsed ? parseFloat(parsed[2].replace(/[\s,]/g, '')) : NaN;
   const suffix = parsed ? parsed[3] : '';
   const [disp, setDisp] = useState(0);
+  const startedRef = useRef(false);
   useEffect(() => {
-    if (!Number.isFinite(target)) return undefined;
-    if (!active) { setDisp(0); return undefined; }
-    if (prefersReduced()) { setDisp(target); return undefined; }
-    let raf; let start;
+    // Anime UNE fois quand la scène devient visible. CORRECTNESS FIRST : le nombre affiché
+    // doit TOUJOURS finir sur la vraie valeur — jamais un partiel faux (ex. « 339+ » au lieu
+    // de « 2500+ ») si rAF est gelé (onglet masqué / throttling) ou reduced-motion.
+    if (!Number.isFinite(target) || !active || startedRef.current) return undefined;
+    startedRef.current = true;
+    if (prefersReduced() || (typeof document !== 'undefined' && document.hidden)) { setDisp(target); return undefined; }
+    let raf; let start; let done = false;
     const dur = 900;
     const ease = (t) => 1 - Math.pow(1 - t, 3);
+    const finish = () => { if (!done) { done = true; setDisp(target); } };
     const tick = (now) => {
       if (start == null) start = now;
       const t = Math.min(1, (now - start) / dur);
       setDisp(target * ease(t));
-      if (t < 1) raf = requestAnimationFrame(tick);
+      if (t < 1) raf = requestAnimationFrame(tick); else finish();
     };
+    // Filet anti-gel : setTimeout (bien moins throttlé que rAF onglet masqué) garantit la
+    // valeur finale ; + snap immédiat si l'onglet passe en arrière-plan pendant l'anim.
+    const safety = setTimeout(finish, dur + 500);
+    const onHide = () => { if (document.hidden) finish(); };
+    document.addEventListener('visibilitychange', onHide);
     raf = requestAnimationFrame(tick);
-    return () => cancelAnimationFrame(raf);
+    return () => { cancelAnimationFrame(raf); clearTimeout(safety); document.removeEventListener('visibilitychange', onHide); };
   }, [active, target]);
   if (!Number.isFinite(target)) return <span>{raw}</span>;
   const shown = new Intl.NumberFormat('fr-FR').format(Math.round(disp));
