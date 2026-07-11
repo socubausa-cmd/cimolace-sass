@@ -350,11 +350,10 @@ export function buildNodeScene(nodeId, k = PRORASCIENCE_KNOWLEDGE) {
         suggestions: ['Le fondateur ?', 'Nous contacter'],
       } : null;
     case 'faq':
+      // Q&R → accordéon interactif (chaque question se déplie), meilleur que le pavé reader.
       return faqs.length ? {
-        type: 'reader', title: 'Questions fréquentes',
-        profile: { name, role: 'Vos questions', avatarSeed: name, facts: [] },
-        body: faqs.slice(0, 6).map((f) => ({ h: f.q, p: f.a })),
-        suggestions: ['Vos forfaits ?', 'Nous contacter'],
+        type: 'faq', title: 'Questions fréquentes',
+        items: faqs.slice(0, 8).map((f) => ({ q: f.q, a: f.a })),
       } : null;
     case 'actions':
       return {

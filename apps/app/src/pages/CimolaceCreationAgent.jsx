@@ -408,7 +408,7 @@ function croquisFor(t) {
 // composition de tout l'écran ; le front la met en scène + l'anime, puis revient
 // au mode de base. `reply` reste TOUJOURS la voix autonome (invariant anti-écran-vide).
 // ═══════════════════════════════════════════════════════════════════════════
-const SCENE_TYPES = ['aside', 'split', 'reader', 'tutorial', 'cards', 'timeline', 'stats', 'comparateur'];
+const SCENE_TYPES = ['aside', 'split', 'reader', 'tutorial', 'cards', 'timeline', 'stats', 'comparateur', 'faq'];
 const prefersReduced = () =>
   typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
@@ -526,6 +526,12 @@ function normalizeScene(raw) {
       if (!rows.length) return null;
       return { type: 'comparateur', title: cut(raw.title, 80) || undefined, intro: cut(raw.intro, 120) || undefined, plans, rows };
     }
+    if (raw.type === 'faq') {
+      const items = (Array.isArray(raw.items) ? raw.items : []).slice(0, 8)
+        .map((it) => (it && it.q && it.a) ? { q: cut(it.q, 140), a: cut(it.a, 600) } : null).filter(Boolean);
+      if (!items.length) return null;
+      return { type: 'faq', title: cut(raw.title, 80) || undefined, items };
+    }
     return null;
   } catch { return null; }
 }
@@ -609,6 +615,7 @@ function SceneStage({ scene, visible, readerIdx, setReaderIdx, onSuggest, onCta,
       {scene.type === 'timeline' && <TimelineFlow scene={scene} onFocus={onFocus} />}
       {scene.type === 'stats' && <StatsPanel scene={scene} visible={visible} onFocus={onFocus} />}
       {scene.type === 'comparateur' && <ComparateurScene scene={scene} onFocus={onFocus} />}
+      {scene.type === 'faq' && <FaqScene scene={scene} />}
       {scene.type !== 'aside' && <SceneSuggest acts={(scene.type === 'tutorial' && scene.cta) ? [] : acts} suggest={suggest} onAct={onAct} onNode={onNode} />}
     </div>
   );
@@ -906,6 +913,52 @@ function ComparateurScene({ scene, onFocus }) {
             ))}
           </tbody>
         </table>
+      </div>
+    </div>
+  );
+}
+
+// faq — ACCORDÉON de questions fréquentes : chaque question se déplie (grid-rows 0fr→1fr = auto
+// height fluide), une seule ouverte à la fois, la 1re ouverte par défaut. CSS locale (hex littéraux).
+const FAQ_CSS = `
+.cca-faq{position:absolute;inset:0;display:flex;flex-direction:column;justify-content:center;align-items:center;padding:78px 5vw 7vh;overflow-y:auto;scrollbar-width:none}
+@media (max-height:820px){.cca-faq{justify-content:flex-start}}
+.cca-faq::-webkit-scrollbar{width:0}
+.cca-faq-title{font-family:'Fraunces','Source Serif 4',Georgia,serif;font-size:22px;color:#f4efe6;text-align:center;margin-bottom:20px;opacity:0;transform:translateY(10px);transition:opacity .5s ease,transform .5s cubic-bezier(.16,1,.3,1)}
+.cca-scene-on .cca-faq-title{opacity:1;transform:none}
+.cca-faq-list{width:100%;max-width:600px;margin:0 auto;display:flex;flex-direction:column;gap:10px}
+.cca-faq-item{background:rgba(244,239,230,.04);border:1px solid rgba(244,239,230,.1);border-radius:14px;overflow:hidden;opacity:0;transform:translateY(14px);transition:opacity .5s ease,transform .5s cubic-bezier(.16,1,.3,1),border-color .2s ease}
+.cca-scene-on .cca-faq-item{opacity:1;transform:none}
+.cca-faq-item.open{border-color:rgba(230,204,146,.34);background:rgba(244,239,230,.05)}
+.cca-faq-q{width:100%;display:flex;align-items:center;justify-content:space-between;gap:14px;padding:16px 18px;background:transparent;border:none;cursor:pointer;text-align:left;font-family:'Fraunces','Source Serif 4',Georgia,serif;font-size:15.5px;color:#f4efe6;font-weight:600;transition:color .16s ease}
+.cca-faq-q:hover{color:#e6cc92}
+.cca-faq-chev{flex-shrink:0;color:#e6cc92;transition:transform .3s cubic-bezier(.16,1,.3,1)}
+.cca-faq-item.open .cca-faq-chev{transform:rotate(180deg)}
+.cca-faq-a{display:grid;grid-template-rows:0fr;transition:grid-template-rows .32s cubic-bezier(.16,1,.3,1)}
+.cca-faq-item.open .cca-faq-a{grid-template-rows:1fr}
+.cca-faq-a>div{overflow:hidden}
+.cca-faq-a-txt{padding:0 18px 16px;margin:0;font-size:13.5px;line-height:1.6;color:rgba(244,239,230,.7)}
+@media (max-width:640px){.cca-faq{padding:7vh 5vw 4vh}.cca-faq-q{font-size:14.5px;padding:14px 15px}}
+`;
+function FaqScene({ scene }) {
+  const [open, setOpen] = useState(0);
+  return (
+    <div className="cca-faq" style={{ pointerEvents: 'auto' }}>
+      <style>{FAQ_CSS}</style>
+      {scene.title && <div className="cca-faq-title">{scene.title}</div>}
+      <div className="cca-faq-list">
+        {scene.items.map((it, i) => {
+          const isOpen = open === i;
+          return (
+            <div key={i} className={`cca-faq-item${isOpen ? ' open' : ''}`} style={{ transitionDelay: `${i * 55 + 140}ms` }}>
+              <button type="button" className="cca-faq-q" onClick={() => setOpen(isOpen ? -1 : i)} aria-expanded={isOpen}>
+                <span>{it.q}</span>
+                <svg className="cca-faq-chev" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6" /></svg>
+              </button>
+              <div className="cca-faq-a"><div><p className="cca-faq-a-txt">{it.a}</p></div></div>
+            </div>
+          );
+        })}
       </div>
     </div>
   );
