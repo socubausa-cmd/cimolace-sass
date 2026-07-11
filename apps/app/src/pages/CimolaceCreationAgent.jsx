@@ -167,19 +167,50 @@ const VNP_ACTION_META = {
   __detail__: { label: 'Approfondir', Icon: BookOpen },
 };
 
-// L'OS peut RENDRE un tenant existant (realm) — MÊME moteur/couleurs, seuls le logo (au coin),
-// le nom de la plateforme et le message de bienvenue changent. Résolution du slug tenant :
-// prop → ?os=<slug> (preview) → host dédié (prorascience.org → isna). Sinon null = realm Cimolace.
+// Realms OS de marque AUTORISÉS. Rendre un realm = afficher le chrome « tenant » (badge marque,
+// « Connecté », branding fetché) par-dessus le MÊME moteur. Accepter un slug arbitraire via `?os=`
+// laissait usurper N'IMPORTE QUELLE marque sur le domaine Cimolace (phishing visuel) → allow-list
+// stricte. Aujourd'hui, seul le tenant fondateur est un realm OS (cf. OS_KNOWLEDGE = { isna }).
+const OS_REALMS = new Set(['isna']);
+
+// Host dédié → son realm de marque (parité avec HOST_PORTAL dans App.jsx : prorascience.org = isna).
+function hostOsRealm(host) {
+  const h = String(host || '').toLowerCase();
+  if (h === 'prorascience.org' || h === 'www.prorascience.org') return 'isna';
+  return null;
+}
+
+// Hosts de preview/dev où l'on teste librement un realm autorisé (jamais un domaine public de prod).
+function isPreviewOrDevOsHost(host) {
+  const h = String(host || '').toLowerCase();
+  if (h === 'localhost' || h === '127.0.0.1' || h.endsWith('.localhost') || h.endsWith('.local')) return true;
+  if (h.endsWith('-cimolace.vercel.app')) return true; // preview Vercel = bac à sable OS
+  return false;
+}
+
+// L'OS peut RENDRE un tenant existant (realm) — MÊME moteur/couleurs, seuls le logo (au coin), le nom
+// de la plateforme et le message de bienvenue changent. Résolution du slug tenant (allow-list stricte) :
+//   prop (App.jsx ne la passe QUE pour un host de realm connu) → ?os=<slug> (preview/dev, ou prod SI
+//   == realm du host) → host dédié (prorascience.org → isna). Sinon null = realm Cimolace neutre.
 function getOsRealmSlug(propSlug) {
-  if (propSlug) return String(propSlug).trim().toLowerCase();
+  if (propSlug) {
+    const s = String(propSlug).trim().toLowerCase();
+    return OS_REALMS.has(s) ? s : null; // prop validée quand même (défense en profondeur)
+  }
   if (typeof window === 'undefined') return null;
+  const host = window.location.hostname.toLowerCase();
+  const realmOfHost = hostOsRealm(host); // 'isna' sur prorascience.org, sinon null
   try {
     const q = new URLSearchParams(window.location.search).get('os');
-    if (q && q.trim()) return q.trim().toLowerCase();
+    if (q && q.trim()) {
+      const s = q.trim().toLowerCase();
+      if (!OS_REALMS.has(s)) return realmOfHost;       // slug non autorisé → ignoré (retombe sur le host)
+      if (isPreviewOrDevOsHost(host)) return s;         // preview/dev : test libre des realms autorisés
+      if (realmOfHost && s === realmOfHost) return s;   // prod : uniquement le realm du host lui-même
+      return realmOfHost;                               // prod host sans ce realm (ex. cimolace.space) → ignoré
+    }
   } catch { /* ignore */ }
-  const host = window.location.hostname.toLowerCase();
-  if (host === 'prorascience.org' || host === 'www.prorascience.org') return 'isna';
-  return null;
+  return realmOfHost;
 }
 
 // Fallback anti-flash + robustesse CORS : l'API branding bloque les origines vercel.app en preview
@@ -1696,12 +1727,19 @@ export default function CimolaceCreationAgent({ tenantSlug: tenantSlugProp = nul
       setVnpActs(Array.isArray(data?.actions) ? data.actions.slice(0, 4) : []);
       logEvent('vnp_chat', { intent: data?.intent || '', nodeId: data?.nodeId || '', onTopic: data?.onTopic !== false, sug: sug.length }, osTenant);
       if (data?.onTopic === false) logUnanswered(message, osTenant);
-      // Réponse DESIGNÉE : une question ON-TOPIC qui mappe un nœud → on REND sa scène designée
-      // (cards/frise/split/reader) + la voix contextuelle de l'edge. Sinon narration simple
-      // (refus hors-sujet, ou question sans nœud clair). Fallback exact = speak(reply).
-      const sc = (VNP_SCENES_V2 && data?.onTopic !== false && data?.nodeId)
+      // Réponse DESIGNÉE. PRIORITÉ à la SCÈNE COMPOSÉE par l'edge (l'orchestrateur choisit le layout
+      // le mieux adapté à CETTE question) — restreinte aux types NARRATIFS (EDGE_OK) : le LLM ne
+      // fabrique JAMAIS prix/chiffres/comparatifs (ceux-ci passent par buildNodeScene = donnée vérifiée).
+      // Repli : scène du nœud (mapping figé) → narration plate. normalizeScene reste l'autorité finale.
+      const EDGE_OK = { aside: 1, split: 1, reader: 1, tutorial: 1, timeline: 1 };
+      const onTop = data?.onTopic !== false;
+      const edgeScene = (VNP_SCENES_V2 && onTop && data?.scene && EDGE_OK[data.scene.type])
+        ? normalizeScene(data.scene) : null;
+      const nodeScene = (!edgeScene && VNP_SCENES_V2 && onTop && data?.nodeId)
         ? normalizeScene(buildNodeScene(data.nodeId, OS_KNOWLEDGE[osTenant])) : null;
+      const sc = edgeScene || nodeScene;
       if (sc) enterScene(sc, () => speak(reply)); else speak(reply);
+      if (edgeScene) { try { logEvent('vnp_scene_composed', { type: edgeScene.type }, osTenant); } catch { /* non bloquant */ } }
     } catch (_) {
       if (brainGenRef.current !== gen) return;
       setVnpSuggest([]); setVnpActs([]);
