@@ -27,6 +27,7 @@ import { BG, BG_THINK, INK, TERRA, GOLD, SERIF, DISPLAY, STYLE } from '@/lib/age
 import Presence from '@/components/agent/Presence';
 import { CIMOLACE_LESSONS } from '@/lib/agent/cimolaceLessons';
 import { OS_KNOWLEDGE, prorascienceKnowledgeText, buildTenantTour, buildNodeScene } from '@/lib/agent/prorascienceKnowledge';
+import SEO from '@/components/SEO';
 import { buildVnpGraph, vnpSerialize, vnpRelated, vnpIntent } from '@/lib/agent/vnp';
 import { createProtocol } from '@/lib/agent/vnpProtocol';
 
@@ -376,7 +377,7 @@ function croquisFor(t) {
 // composition de tout l'écran ; le front la met en scène + l'anime, puis revient
 // au mode de base. `reply` reste TOUJOURS la voix autonome (invariant anti-écran-vide).
 // ═══════════════════════════════════════════════════════════════════════════
-const SCENE_TYPES = ['aside', 'split', 'reader', 'tutorial', 'cards'];
+const SCENE_TYPES = ['aside', 'split', 'reader', 'tutorial', 'cards', 'timeline', 'stats', 'comparateur'];
 const prefersReduced = () =>
   typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
@@ -386,6 +387,16 @@ function normalizeScene(raw) {
     if (!raw || typeof raw !== 'object' || !SCENE_TYPES.includes(raw.type)) return null;
     const cut = (s, n) => String(s == null ? '' : s).slice(0, n);
     const arr = (a, n, len) => (Array.isArray(a) ? a : []).slice(0, n).map((x) => cut(x, len)).filter(Boolean);
+    // ref MODE FOCUS partagé (cards/timeline/comparateur) : borné, jamais throw.
+    const normRef = (r, fallbackTitle) => (r && typeof r === 'object') ? {
+      kind: r.kind === 'plan' ? 'plan' : 'info',
+      title: cut(r.title, 60) || cut(fallbackTitle, 40),
+      value: cut(r.value, 40) || undefined,
+      note: cut(r.note, 340) || undefined,
+      actions: (Array.isArray(r.actions) ? r.actions : []).filter((a) => typeof a === 'string').slice(0, 4),
+      related: (Array.isArray(r.related) ? r.related : []).slice(0, 3)
+        .map((x) => (x && x.nodeId && x.label) ? { nodeId: cut(x.nodeId, 40), label: cut(x.label, 40) } : null).filter(Boolean),
+    } : undefined;
     if (raw.type === 'aside') {
       const items = (Array.isArray(raw.items) ? raw.items : []).slice(0, 4)
         .map((it) => (it && it.label && it.value)
@@ -444,6 +455,46 @@ function normalizeScene(raw) {
       if (!cards.length) return null;
       return { type: 'cards', title: cut(raw.title, 80) || undefined, cards };
     }
+    if (raw.type === 'timeline') {
+      const steps = (Array.isArray(raw.steps) ? raw.steps : []).slice(0, 6)
+        .map((s) => (s && s.title) ? {
+          marker: cut(s.marker, 6) || undefined,
+          kicker: cut(s.kicker, 24) || undefined,
+          title: cut(s.title, 48),
+          detail: cut(s.detail, 200) || undefined,
+          foot: cut(s.foot, 60) || undefined,
+          accent: (s.accent === 'terra' || s.accent === 'gold') ? s.accent : undefined,
+          ref: normRef(s.ref, s.title),
+        } : null).filter(Boolean);
+      if (!steps.length) return null;
+      return { type: 'timeline', title: cut(raw.title, 80) || undefined, steps };
+    }
+    if (raw.type === 'stats') {
+      const metrics = (Array.isArray(raw.metrics) ? raw.metrics : []).slice(0, 6)
+        .map((m) => (m && m.label && m.value != null) ? {
+          label: cut(m.label, 40), value: cut(m.value, 16),
+          note: cut(m.note, 80) || undefined,
+          ref: normRef(m.ref, m.label),
+        } : null).filter(Boolean);
+      if (!metrics.length) return null;
+      return { type: 'stats', title: cut(raw.title, 80) || undefined, metrics };
+    }
+    if (raw.type === 'comparateur') {
+      const plans = (Array.isArray(raw.plans) ? raw.plans : []).slice(0, 4)
+        .map((p) => (p && p.name) ? {
+          name: cut(p.name, 28), value: cut(p.value, 24) || undefined,
+          popular: !!p.popular, ref: normRef(p.ref, p.name),
+        } : null).filter(Boolean);
+      const n = plans.length;
+      if (n < 2) return null;
+      const rows = (Array.isArray(raw.rows) ? raw.rows : []).slice(0, 8)
+        .map((r) => (r && r.feature) ? {
+          feature: cut(r.feature, 60),
+          has: Array.from({ length: n }, (_, i) => !!(Array.isArray(r.has) && r.has[i])),
+        } : null).filter(Boolean);
+      if (!rows.length) return null;
+      return { type: 'comparateur', title: cut(raw.title, 80) || undefined, intro: cut(raw.intro, 120) || undefined, plans, rows };
+    }
     return null;
   } catch { return null; }
 }
@@ -487,6 +538,9 @@ function SceneStage({ scene, visible, readerIdx, setReaderIdx, onSuggest, onCta,
       {scene.type === 'reader' && <ReaderView scene={scene} idx={readerIdx} setIdx={setReaderIdx} onSuggest={onSuggest} hooks={hooks} />}
       {scene.type === 'tutorial' && <TutorialFlow scene={scene} onCta={onCta} hooks={hooks} onHook={onHook} />}
       {scene.type === 'cards' && <CardsScene scene={scene} onFocus={onFocus} />}
+      {scene.type === 'timeline' && <TimelineFlow scene={scene} onFocus={onFocus} />}
+      {scene.type === 'stats' && <StatsPanel scene={scene} visible={visible} onFocus={onFocus} />}
+      {scene.type === 'comparateur' && <ComparateurScene scene={scene} onFocus={onFocus} />}
     </div>
   );
 }
@@ -560,6 +614,219 @@ function CardsScene({ scene, onFocus }) {
             </div>
           );
         })}
+      </div>
+    </div>
+  );
+}
+
+// timeline — FRISE VERTICALE (séquence : méthode/parcours). Jalons révélés en cascade le long
+// d'un fil ; repère chiffré Cormorant, corps cliquable → focus. CSS locale (hex littéraux).
+const TIMELINE_CSS = `
+.cca-tl{position:absolute;inset:0;display:flex;flex-direction:column;justify-content:center;align-items:center;padding:78px 5vw 7vh;overflow-y:auto;scrollbar-width:none}
+@media (max-height:820px){.cca-tl{justify-content:flex-start}}
+.cca-tl::-webkit-scrollbar{width:0}
+.cca-tl-title{font-family:'Fraunces','Source Serif 4',Georgia,serif;font-size:22px;color:#f4efe6;text-align:center;margin-bottom:24px;opacity:0;transform:translateY(10px);transition:opacity .5s ease,transform .5s cubic-bezier(.16,1,.3,1)}
+.cca-scene-on .cca-tl-title{opacity:1;transform:none}
+.cca-tl-track{width:100%;max-width:540px;margin:0 auto}
+.cca-tl-node{position:relative;display:grid;grid-template-columns:48px 1fr;gap:16px;padding-bottom:26px;opacity:0;transform:translateY(16px);transition:opacity .55s ease,transform .55s cubic-bezier(.16,1,.3,1)}
+.cca-scene-on .cca-tl-node{opacity:1;transform:none}
+.cca-tl-node:last-child{padding-bottom:2px}
+.cca-tl-rail{position:relative;display:flex;justify-content:center}
+.cca-tl-num{position:relative;z-index:1;width:44px;height:44px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:'Cormorant Garamond','Cormorant',Georgia,serif;font-size:24px;line-height:1;color:#e6cc92;background:rgba(230,204,146,.09);border:1px solid rgba(230,204,146,.34)}
+.cca-tl-node.terra .cca-tl-num{color:#d97757;background:rgba(217,119,87,.09);border-color:rgba(217,119,87,.36)}
+.cca-tl-line{position:absolute;top:44px;bottom:-4px;left:50%;width:1px;transform:translateX(-.5px);background:linear-gradient(rgba(230,204,146,.5),rgba(230,204,146,.08))}
+.cca-tl-node:last-child .cca-tl-line{display:none}
+.cca-tl-body{padding-top:4px}
+.cca-tl-body.click{cursor:pointer;border-radius:12px;transition:background .18s ease}
+.cca-tl-body.click:hover{background:rgba(244,239,230,.035)}
+.cca-tl-kicker{font-family:'Bricolage Grotesque',system-ui,sans-serif;font-size:10.5px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:rgba(230,204,146,.72)}
+.cca-tl-h{font-family:'Fraunces','Source Serif 4',Georgia,serif;font-size:19px;color:#f4efe6;font-weight:600;margin:1px 0 4px}
+.cca-tl-detail{font-size:13.5px;line-height:1.55;color:rgba(244,239,230,.66)}
+.cca-tl-foot{margin-top:6px;font-size:11.5px;color:rgba(244,239,230,.44)}
+.cca-tl-more{display:inline-block;margin-top:8px;font-family:'Bricolage Grotesque',system-ui,sans-serif;font-size:10.5px;font-weight:700;letter-spacing:.03em;text-transform:uppercase;color:#e6cc92;opacity:0;transition:opacity .2s ease}
+.cca-tl-body.click:hover .cca-tl-more{opacity:.85}
+@media (max-width:640px){.cca-tl{padding:7vh 6vw 4vh}.cca-tl-node{grid-template-columns:42px 1fr;gap:13px}.cca-tl-num{width:38px;height:38px;font-size:21px}}
+`;
+function TimelineFlow({ scene, onFocus }) {
+  return (
+    <div className="cca-tl" style={{ pointerEvents: 'auto' }}>
+      <style>{TIMELINE_CSS}</style>
+      {scene.title && <div className="cca-tl-title">{scene.title}</div>}
+      <div className="cca-tl-track">
+        {scene.steps.map((s, i) => {
+          const clickable = !!(s.ref && onFocus);
+          const open = clickable ? () => onFocus(s.ref) : undefined;
+          return (
+            <div key={i} className={`cca-tl-node${s.accent === 'terra' ? ' terra' : ''}`} style={{ transitionDelay: `${i * 90 + 150}ms` }}>
+              <div className="cca-tl-rail">
+                <span className="cca-tl-num">{s.marker || (i + 1)}</span>
+                <span className="cca-tl-line" />
+              </div>
+              <div className={`cca-tl-body${clickable ? ' click' : ''}`}
+                onClick={open} role={clickable ? 'button' : undefined} tabIndex={clickable ? 0 : undefined}
+                onKeyDown={clickable ? (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); open(); } } : undefined}>
+                {s.kicker && <div className="cca-tl-kicker">{s.kicker}</div>}
+                <div className="cca-tl-h">{s.title}</div>
+                {s.detail && <div className="cca-tl-detail">{s.detail}</div>}
+                {s.foot && <div className="cca-tl-foot">{s.foot}</div>}
+                {clickable && <span className="cca-tl-more">Approfondir →</span>}
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+// StatValue — compteur animé (parse '2500+' / '95%' → nombre + suffixe), rAF maison, respecte
+// prefers-reduced-motion (garde-fou prefersReduced) ; non-numérique → valeur brute affichée.
+function StatValue({ raw, active }) {
+  const parsed = String(raw).match(/^(\D*)([\d\s.,]+)(.*)$/);
+  const prefix = parsed ? parsed[1] : '';
+  const target = parsed ? parseFloat(parsed[2].replace(/[\s,]/g, '')) : NaN;
+  const suffix = parsed ? parsed[3] : '';
+  const [disp, setDisp] = useState(0);
+  useEffect(() => {
+    if (!Number.isFinite(target)) return undefined;
+    if (!active) { setDisp(0); return undefined; }
+    if (prefersReduced()) { setDisp(target); return undefined; }
+    let raf; let start;
+    const dur = 900;
+    const ease = (t) => 1 - Math.pow(1 - t, 3);
+    const tick = (now) => {
+      if (start == null) start = now;
+      const t = Math.min(1, (now - start) / dur);
+      setDisp(target * ease(t));
+      if (t < 1) raf = requestAnimationFrame(tick);
+    };
+    raf = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(raf);
+  }, [active, target]);
+  if (!Number.isFinite(target)) return <span>{raw}</span>;
+  const shown = new Intl.NumberFormat('fr-FR').format(Math.round(disp));
+  return <span>{prefix}{shown}{suffix}</span>;
+}
+
+// stats — DASHBOARD de chiffres (réalisations) : gros nombres Cormorant en count-up ;
+// une jauge sous les métriques en % pour les différencier (pas de grille identique plate).
+const STATS_CSS = `
+.cca-st{position:absolute;inset:0;display:flex;flex-direction:column;justify-content:center;align-items:center;padding:78px 5vw 7vh;overflow-y:auto;scrollbar-width:none}
+@media (max-height:820px){.cca-st{justify-content:flex-start}}
+.cca-st::-webkit-scrollbar{width:0}
+.cca-st-title{font-family:'Fraunces','Source Serif 4',Georgia,serif;font-size:22px;color:#f4efe6;text-align:center;margin-bottom:20px;opacity:0;transform:translateY(10px);transition:opacity .5s ease,transform .5s cubic-bezier(.16,1,.3,1)}
+.cca-scene-on .cca-st-title{opacity:1;transform:none}
+.cca-st-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(158px,1fr));gap:14px;max-width:740px;width:100%;margin:0 auto}
+.cca-st-tile{background:rgba(244,239,230,.04);border:1px solid rgba(244,239,230,.1);border-radius:16px;padding:20px 18px;display:flex;flex-direction:column;gap:5px;opacity:0;transform:translateY(16px) scale(.98);transition:opacity .5s ease,transform .5s cubic-bezier(.16,1,.3,1),border-color .2s ease}
+.cca-scene-on .cca-st-tile{opacity:1;transform:none}
+.cca-st-tile.pct{background:rgba(230,204,146,.05);border-color:rgba(230,204,146,.22)}
+.cca-st-tile.click{cursor:pointer}
+.cca-st-tile.click:hover{border-color:rgba(230,204,146,.4)}
+.cca-st-val{font-family:'Cormorant Garamond','Cormorant',Georgia,serif;font-size:44px;line-height:1;color:#e6cc92;font-weight:600}
+.cca-st-label{font-size:12.5px;line-height:1.4;color:rgba(244,239,230,.64)}
+.cca-st-note{font-size:11px;color:rgba(244,239,230,.42)}
+.cca-st-bar{margin-top:9px;height:3px;border-radius:2px;background:rgba(244,239,230,.1);overflow:hidden}
+.cca-st-bar>span{display:block;height:100%;background:#e6cc92;border-radius:2px;width:0;transition:width 1s cubic-bezier(.16,1,.3,1) .25s}
+@media (max-width:640px){.cca-st{padding:7vh 6vw 4vh}.cca-st-grid{grid-template-columns:1fr 1fr}.cca-st-val{font-size:38px}}
+`;
+function StatsPanel({ scene, visible, onFocus }) {
+  return (
+    <div className="cca-st" style={{ pointerEvents: 'auto' }}>
+      <style>{STATS_CSS}</style>
+      {scene.title && <div className="cca-st-title">{scene.title}</div>}
+      <div className="cca-st-grid">
+        {scene.metrics.map((m, i) => {
+          const clickable = !!(m.ref && onFocus);
+          const open = clickable ? () => onFocus(m.ref) : undefined;
+          const pct = /%\s*$/.test(String(m.value));
+          const pctNum = pct ? Math.max(0, Math.min(100, parseFloat(String(m.value)) || 0)) : 0;
+          return (
+            <div key={i} className={`cca-st-tile${pct ? ' pct' : ''}${clickable ? ' click' : ''}`}
+              style={{ transitionDelay: `${i * 70 + 150}ms` }}
+              onClick={open} role={clickable ? 'button' : undefined} tabIndex={clickable ? 0 : undefined}
+              onKeyDown={clickable ? (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); open(); } } : undefined}>
+              <div className="cca-st-val"><StatValue raw={m.value} active={visible} /></div>
+              <div className="cca-st-label">{m.label}</div>
+              {m.note && <div className="cca-st-note">{m.note}</div>}
+              {pct && <div className="cca-st-bar"><span style={{ width: visible ? `${pctNum}%` : '0%' }} /></div>}
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+// comparateur — TABLEAU comparatif des cycles (tableau sémantique) : colonnes = forfaits,
+// lignes = features (✓/–), colonne « le plus choisi » mise en avant, en-tête → focus (choisir).
+const COMPARATEUR_CSS = `
+.cca-cmp{position:absolute;inset:0;display:flex;flex-direction:column;justify-content:center;align-items:center;padding:74px 4vw 7vh;overflow-y:auto;scrollbar-width:none}
+@media (max-height:860px){.cca-cmp{justify-content:flex-start}}
+.cca-cmp::-webkit-scrollbar{width:0}
+.cca-cmp-title{font-family:'Fraunces','Source Serif 4',Georgia,serif;font-size:22px;color:#f4efe6;text-align:center;opacity:0;transform:translateY(10px);transition:opacity .5s ease,transform .5s cubic-bezier(.16,1,.3,1)}
+.cca-scene-on .cca-cmp-title{opacity:1;transform:none}
+.cca-cmp-intro{font-size:13px;color:rgba(244,239,230,.56);text-align:center;margin:5px 0 18px;opacity:0;transition:opacity .5s ease .1s}
+.cca-scene-on .cca-cmp-intro{opacity:1}
+.cca-cmp-scroll{max-width:720px;width:100%;overflow-x:auto;scrollbar-width:none}
+.cca-cmp-scroll::-webkit-scrollbar{height:0}
+.cca-cmp-table{border-collapse:collapse;width:100%;min-width:500px}
+.cca-cmp-corner{width:32%}
+.cca-cmp-ph{vertical-align:bottom;padding:8px 10px 12px;text-align:center;position:relative;opacity:0;transform:translateY(-8px);transition:opacity .5s ease,transform .5s cubic-bezier(.16,1,.3,1)}
+.cca-scene-on .cca-cmp-ph{opacity:1;transform:none}
+.cca-cmp-ph.pop{background:rgba(230,204,146,.06);border-radius:14px 14px 0 0;box-shadow:inset 0 0 0 1px rgba(230,204,146,.22)}
+.cca-cmp-badge{display:inline-block;margin-bottom:6px;font-family:'Bricolage Grotesque',system-ui,sans-serif;font-size:9px;font-weight:800;text-transform:uppercase;letter-spacing:.02em;color:#2a140c;background:#e6cc92;padding:2px 8px;border-radius:999px}
+.cca-cmp-pname{display:block;font-family:'Fraunces','Source Serif 4',Georgia,serif;font-size:14px;color:#f4efe6;font-weight:600}
+.cca-cmp-price{display:block;font-family:'Cormorant Garamond','Cormorant',Georgia,serif;font-size:24px;color:#e6cc92;line-height:1.1;margin-top:1px}
+.cca-cmp-choose{margin-top:7px;font-family:'Bricolage Grotesque',system-ui,sans-serif;font-size:10.5px;font-weight:700;letter-spacing:.02em;text-transform:uppercase;color:#e6cc92;background:transparent;border:1px solid rgba(230,204,146,.32);border-radius:999px;padding:4px 11px;cursor:pointer;transition:background .16s ease,border-color .16s ease}
+.cca-cmp-choose:hover{background:rgba(230,204,146,.12);border-color:rgba(230,204,146,.55)}
+.cca-cmp-row{opacity:0;transition:opacity .45s ease}
+.cca-scene-on .cca-cmp-row{opacity:1}
+.cca-cmp-feat{text-align:left;font-size:12.5px;font-weight:400;color:rgba(244,239,230,.74);padding:11px 12px 11px 4px;border-top:1px solid rgba(244,239,230,.08)}
+.cca-cmp-cell{text-align:center;padding:11px 10px;border-top:1px solid rgba(244,239,230,.08);font-size:15px}
+.cca-cmp-cell.pop{background:rgba(230,204,146,.045)}
+.cca-cmp-row:last-child .cca-cmp-cell.pop{border-radius:0 0 14px 14px}
+.cca-cmp-yes{color:#e6cc92;font-weight:700}
+.cca-cmp-no{color:rgba(244,239,230,.3)}
+@media (max-width:640px){.cca-cmp{padding:7vh 4vw 4vh}.cca-cmp-price{font-size:20px}}
+`;
+function ComparateurScene({ scene, onFocus }) {
+  const plans = scene.plans;
+  return (
+    <div className="cca-cmp" style={{ pointerEvents: 'auto' }}>
+      <style>{COMPARATEUR_CSS}</style>
+      {scene.title && <div className="cca-cmp-title">{scene.title}</div>}
+      {scene.intro && <div className="cca-cmp-intro">{scene.intro}</div>}
+      <div className="cca-cmp-scroll">
+        <table className="cca-cmp-table">
+          <thead>
+            <tr>
+              <th className="cca-cmp-corner" aria-hidden="true" />
+              {plans.map((p, i) => {
+                const clickable = !!(p.ref && onFocus);
+                return (
+                  <th key={i} scope="col" className={`cca-cmp-ph${p.popular ? ' pop' : ''}`} style={{ transitionDelay: `${i * 70 + 160}ms` }}>
+                    {p.popular && <span className="cca-cmp-badge">Le plus choisi</span>}
+                    <span className="cca-cmp-pname">{p.name}</span>
+                    {p.value && <span className="cca-cmp-price">{p.value}</span>}
+                    {clickable && <button type="button" className="cca-cmp-choose" onClick={() => onFocus(p.ref)}>Choisir →</button>}
+                  </th>
+                );
+              })}
+            </tr>
+          </thead>
+          <tbody>
+            {scene.rows.map((r, ri) => (
+              <tr key={ri} className="cca-cmp-row" style={{ transitionDelay: `${ri * 55 + 260}ms` }}>
+                <th scope="row" className="cca-cmp-feat">{r.feature}</th>
+                {r.has.map((v, ci) => (
+                  <td key={ci} className={`cca-cmp-cell${plans[ci] && plans[ci].popular ? ' pop' : ''}`}>
+                    {v ? <span className="cca-cmp-yes" aria-label="inclus">✓</span> : <span className="cca-cmp-no" aria-label="non inclus">–</span>}
+                  </td>
+                ))}
+              </tr>
+            ))}
+          </tbody>
+        </table>
       </div>
     </div>
   );
@@ -764,6 +1031,37 @@ export default function CimolaceCreationAgent({ tenantSlug: tenantSlugProp = nul
       }).catch(() => {});
     return () => { alive = false; };
   }, [osTenant]);
+
+  // SEO du realm tenant (prorascience.org) : titre/description/OG/JSON-LD PROPRES au fondateur,
+  // injectés côté client par react-helmet (utile pour Googlebot, qui rend le JS). ⚠️ Les scrapers
+  // sociaux ne lisant PAS le JS, l'aperçu de partage complet exige en plus une injection <head>
+  // host-aware à l'edge (cf. docs/SEO_EDGE_PRORASCIENCE.md). Ne rend RIEN hors realm tenant.
+  const tenantSeo = useMemo(() => {
+    if (!isTenantRealm) return null;
+    const k = (osTenant && OS_KNOWLEDGE[osTenant]) || null;
+    const id = (k && k.identity) || {};
+    const name = (osBrand && osBrand.name) || id.name || 'Prorascience';
+    const host = String(id.website || 'prorascience.org').replace(/^https?:\/\//, '').replace(/\/$/, '');
+    const site = `https://${host}`;
+    const subtitle = (id.subtitle || '').replace(/\.\s*$/, '');
+    const title = subtitle ? `${name} — ${subtitle}` : name;
+    const description = (
+      `${id.fullName ? id.fullName + '. ' : ''}L’étude rationnelle et vérifiable des réalités ` +
+      `visibles et invisibles : comprendre, maîtriser, puis évoluer.`
+    );
+    const founder = (k && k.founder) || null;
+    const jsonLd = {
+      '@context': 'https://schema.org',
+      '@type': 'EducationalOrganization',
+      name: id.name || name,
+      alternateName: id.fullName || undefined,
+      url: site,
+      logo: `${site}/prorascience-eye.png`,
+      description,
+      ...(founder ? { founder: { '@type': 'Person', name: founder.name, jobTitle: founder.title } } : {}),
+    };
+    return { title, siteName: name, description, image: `${site}/og.png`, canonical: `${site}/`, jsonLd };
+  }, [isTenantRealm, osTenant, osBrand]);
 
   const [presence, setPresence] = useState('connexion'); // connexion|attente|reflexion|ecriture|pret
   const [message, setMessage] = useState('');
@@ -1574,6 +1872,19 @@ export default function CimolaceCreationAgent({ tenantSlug: tenantSlugProp = nul
       }}
     >
       <style>{STYLE}</style>
+
+      {/* SEO du realm fondateur (prorascience.org) — titre/description/OG/JSON-LD propres, sans « LIRI ».
+         Ne monte QUE dans le realm tenant : le realm Cimolace (app.cimolace.space) garde son <head> par défaut. */}
+      {tenantSeo && (
+        <SEO
+          title={tenantSeo.title}
+          siteName={tenantSeo.siteName}
+          description={tenantSeo.description}
+          image={tenantSeo.image}
+          canonical={tenantSeo.canonical}
+          jsonLd={tenantSeo.jsonLd}
+        />
+      )}
 
       {/* Particules ambiantes — le vide « respire » même au repos */}
       <span className="cca-amb" style={{ width: 5, height: 5, top: '34%', left: '32%', opacity: 0.16, animation: 'ccaDriftA 11s ease-in-out infinite' }} />

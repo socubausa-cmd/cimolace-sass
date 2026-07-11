@@ -66,6 +66,27 @@ export const PRORASCIENCE_KNOWLEDGE = {
     { name: 'Mentorat Souverain / Privilégié', price: '500 €', suffix: '/mois', desc: 'Le plus haut niveau : mentorat direct, cas complexes, secrets avancés.' },
   ],
 
+  // Comparateur des 4 cycles MENSUELS (la consultation, one-off, est comparée à part).
+  // Chaque case est DÉRIVÉE FIDÈLEMENT des descriptions ci-dessus (aucune feature inventée) :
+  // « cursus + modules » (Autonome), « encadré : … + suivi » (Académique), « coaching pour
+  // futurs praticiens » (Privé), « mentorat direct, cas complexes » (Mentorat).
+  comparison: {
+    intro: 'Les quatre cycles, du plus autonome au plus accompagné.',
+    plans: [
+      { name: 'Autonome', full: 'Cycle Autonome', price: '55 €', suffix: '/mois', desc: 'Accès aux cursus et modules pour apprendre en autonomie.' },
+      { name: 'Académique', full: 'Cycle Académique', price: '180 €', suffix: '/mois', popular: true, desc: 'Le parcours complet, encadré : cursus + modules + suivi.' },
+      { name: 'Privé', full: 'Cycle Privé', price: '300 €', suffix: '/mois', desc: 'Accompagnement rapproché et coaching pour futurs praticiens.' },
+      { name: 'Mentorat', full: 'Mentorat Souverain / Privilégié', price: '500 €', suffix: '/mois', desc: 'Le plus haut niveau : mentorat direct, cas complexes, secrets avancés.' },
+    ],
+    rows: [
+      { feature: 'Cursus — comprendre les lois', has: [true, true, true, true] },
+      { feature: 'Modules — pratiquer (libation, talisman…)', has: [true, true, true, true] },
+      { feature: 'Suivi encadré', has: [false, true, true, true] },
+      { feature: 'Coaching — exercer le métier', has: [false, false, true, true] },
+      { feature: 'Mentorat direct — cas complexes, secrets', has: [false, false, false, true] },
+    ],
+  },
+
   // Navigation du site (ce que l'OS doit savoir présenter).
   navigation: ['Forfaits', 'Formations', 'Les 21 sciences', 'ISNA Pro', 'À propos', 'Mentorat', 'Coaching', 'Fondateur', 'Équipe', 'FAQ', 'Contact'],
 
@@ -230,16 +251,46 @@ export function buildNodeScene(nodeId, k = PRORASCIENCE_KNOWLEDGE) {
         cards: values.slice(0, 4).map((v) => ({ title: v.title, note: v.desc })),
       } : null;
     case 'services':
+      // La méthode = une SÉQUENCE (Comprendre → Pratiquer → Exercer → Évoluer) → frise verticale.
       return method.length ? {
-        type: 'tutorial', title: 'La méthode, 4 temps',
-        steps: method.slice(0, 5).map((m) => ({ title: m.step, detail: `${m.kind ? m.kind + ' — ' : ''}${(m.items || []).join(', ')}` })),
+        type: 'timeline', title: 'La méthode, 4 temps',
+        steps: method.slice(0, 6).map((m, i) => ({
+          marker: String(i + 1),
+          kicker: m.kind || undefined,
+          title: m.step,
+          detail: (m.items || []).join(' · ') || undefined,
+          foot: m.foot || undefined,
+          accent: i === method.length - 1 ? 'gold' : 'terra',
+          ref: {
+            kind: 'info', title: m.step, value: m.kind || undefined,
+            note: `${(m.items || []).join(', ')}${m.foot ? ` — ${m.foot}` : ''}`,
+            related: [{ nodeId: 'solutions', label: 'Comparer les cycles' }, { nodeId: 'produits', label: 'Les forfaits' }],
+          },
+        })),
       } : null;
-    case 'solutions':
+    case 'solutions': {
+      // « Choisir son parcours » = comparer les cycles → tableau comparateur (données k.comparison).
+      const cmp = k.comparison;
+      if (cmp && Array.isArray(cmp.plans) && cmp.plans.length >= 2 && Array.isArray(cmp.rows) && cmp.rows.length) {
+        return {
+          type: 'comparateur', title: 'Comparer les cycles', intro: cmp.intro || undefined,
+          plans: cmp.plans.slice(0, 4).map((p) => ({
+            name: p.name, value: `${p.price}${p.suffix || ''}`, popular: !!p.popular,
+            ref: {
+              kind: 'plan', title: p.full || p.name, value: `${p.price}${p.suffix || ''}`, note: p.desc,
+              actions: ['acheter', 'reserver', 'contacter'],
+              related: [{ nodeId: 'services', label: 'La méthode' }, { nodeId: 'produits', label: 'Tous les forfaits' }],
+            },
+          })),
+          rows: cmp.rows.slice(0, 8).map((r) => ({ feature: r.feature, has: (r.has || []).slice(0, 4).map(Boolean) })),
+        };
+      }
       return method.length ? {
         type: 'tutorial', title: 'Choisir son parcours',
         steps: method.slice(0, 5).map((m) => ({ title: m.step, detail: m.foot || (m.items || []).slice(0, 2).join(', ') })),
-        cta: 'Comparer les forfaits',
+        cta: 'Voir les forfaits',
       } : null;
+    }
     case 'produits':
       return offers.length ? {
         type: 'cards', title: 'Nos forfaits',
@@ -250,14 +301,15 @@ export function buildNodeScene(nodeId, k = PRORASCIENCE_KNOWLEDGE) {
           ref: {
             kind: 'plan', title: o.name, value: `${o.price}${o.suffix || ''}`, note: o.desc,
             actions: ['acheter', 'reserver', 'contacter'],
-            related: [{ nodeId: 'services', label: 'La méthode' }, { nodeId: 'solutions', label: 'Les parcours' }],
+            related: [{ nodeId: 'services', label: 'La méthode' }, { nodeId: 'solutions', label: 'Comparer les cycles' }],
           },
         })),
       } : null;
     case 'realisations':
+      // Chiffres homogènes → dashboard de stats (gros chiffres + count-up, jauge pour les %).
       return stats.length ? {
-        type: 'cards', title: 'Nos réalisations',
-        cards: stats.slice(0, 6).map((s) => ({ title: s.label, value: s.value, accent: 'terra' })),
+        type: 'stats', title: 'Nos réalisations',
+        metrics: stats.slice(0, 6).map((s) => ({ label: s.label, value: s.value })),
       } : null;
     case 'documentation':
       return {
