@@ -170,6 +170,48 @@ jobs:
           VITE_API_URL: http://localhost:4000
 
   # ─────────────────────────────────────────────
+  # 3b. Build — OS Cimolace (apps/app : prorascience.org + app.cimolace.space)
+  #     + GARDE SEO : la prod du fondateur ne doit JAMAIS repartir sans prorascience.html/OG
+  # ─────────────────────────────────────────────
+  web-os:
+    name: web-os (apps/app Vite) — Build & Garde SEO prorascience
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: apps/app
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js ${{ env.NODE_VERSION }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          cache-dependency-path: apps/app/package.json
+
+      - name: Install dependencies
+        run: npm install --legacy-peer-deps
+
+      - name: Build Vite multi-page (index + prorascience)
+        run: npm run build
+        env:
+          VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
+          VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
+          VITE_API_URL: https://api.cimolace.space
+          VITE_APP_ENV: production
+
+      - name: Garde SEO — prorascience.html + OG + rewrites host (bloquant)
+        run: |
+          test -s dist/prorascience.html || { echo "❌ dist/prorascience.html manquant — l'entrée Vite 'prorascience' a disparu"; exit 1; }
+          grep -qi 'og:title'    dist/prorascience.html || { echo "❌ og:title absent de prorascience.html"; exit 1; }
+          grep -qi '<title>Prorascience' dist/prorascience.html || { echo "❌ <title> Prorascience absent de prorascience.html"; exit 1; }
+          grep -q 'prorascience.html' vercel.json || { echo "❌ rewrite host prorascience absent de apps/app/vercel.json"; exit 1; }
+          test -f middleware.ts || { echo "❌ apps/app/middleware.ts (racine SEO) manquant"; exit 1; }
+          echo "✅ SEO prorascience OK : prorascience.html + OG + <title> + rewrite + middleware présents"
+
+  # ─────────────────────────────────────────────
   # 4. Secrets scan — aucune clé dans le repo
   # ─────────────────────────────────────────────
   secrets-scan:
