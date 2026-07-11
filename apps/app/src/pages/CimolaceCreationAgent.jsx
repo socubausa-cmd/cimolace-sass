@@ -1827,7 +1827,7 @@ export default function CimolaceCreationAgent({ tenantSlug: tenantSlugProp = nul
       // On refuse une scène composée si l'edge a ciblé un de ces nœuds OU si elle contient un motif de
       // prix (€, /mois…) — sinon le LLM peut glisser un aside de forfaits TRONQUÉ (cap 4 items) au lieu
       // des cartes complètes. Garde-fou double : nœud-donnée + scan de prix.
-      const DATA_NODES = { produits: 1, realisations: 1, solutions: 1 };
+      const DATA_NODES = { produits: 1, realisations: 1, solutions: 1, faq: 1 };
       const onTop = data?.onTopic !== false;
       const sceneHasPrice = (() => { try { return /[€£$]|\/\s?mois|\/\s?an|\btarif|\bprix\b/i.test(JSON.stringify(data?.scene || '')); } catch { return false; } })();
       const edgeScene = (VNP_SCENES_V2 && onTop && data?.scene && EDGE_OK[data.scene.type] && !DATA_NODES[data?.nodeId] && !sceneHasPrice)
