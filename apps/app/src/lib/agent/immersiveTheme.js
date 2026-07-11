@@ -133,7 +133,7 @@ button.cca-chip-visit:hover{background:#e18b6b!important;border-color:transparen
 .cca-split{position:absolute;inset:0;display:grid;grid-template-columns:1fr 1fr}
 .cca-split-veil{position:absolute;inset:0;opacity:0;transform:scale(1.06);background:radial-gradient(circle at 50% 46%,transparent,rgba(20,22,27,.55));transition:opacity .5s ease,transform .6s cubic-bezier(.16,1,.3,1);pointer-events:none}
 .cca-scene-on .cca-split-veil{opacity:1;transform:scale(1)}
-.cca-split-headline{position:absolute;top:8.5vh;left:50%;transform:translateX(-50%);font-family:${SERIF};font-size:18px;color:rgba(244,239,230,.62);text-align:center;opacity:0;transition:opacity .5s ease .15s;white-space:nowrap}
+.cca-split-headline{position:absolute;top:max(64px,8.5vh);left:50%;transform:translateX(-50%);font-family:${SERIF};font-size:18px;color:rgba(244,239,230,.62);text-align:center;opacity:0;transition:opacity .5s ease .15s;white-space:normal;max-width:min(88vw,560px);text-wrap:balance}
 .cca-scene-on .cca-split-headline{opacity:1}
 .cca-split-line{position:absolute;left:50%;top:20%;bottom:16%;width:1px;transform:translateX(-50%);background:linear-gradient(180deg,transparent,#d97757,#e6cc92,transparent);clip-path:inset(0 0 100% 0);transition:clip-path .42s cubic-bezier(.16,1,.3,1) .12s}
 .cca-scene-on .cca-split-line{clip-path:inset(0 0 0 0)}
@@ -200,7 +200,7 @@ button.cca-chip-visit:hover{background:#e18b6b!important;border-color:transparen
   .cca-split-line{left:12%;right:12%;top:50%;bottom:auto;width:auto;height:1px;transform:translateY(-50%);background:linear-gradient(90deg,transparent,#d97757,#e6cc92,transparent);clip-path:inset(0 100% 0 0)}
   .cca-scene-on .cca-split-line{clip-path:inset(0 0 0 0)}
   .cca-split-col{padding:0 8vw}
-  .cca-split-headline{top:3vh;font-size:15px}
+  .cca-split-headline{top:max(58px,3vh);font-size:15px}
   .cca-reader{grid-template-columns:1fr;grid-template-rows:auto 1fr auto;padding:7vh 6vw 3vh;gap:12px 0}
   .cca-reader-profile{grid-column:1;grid-row:1;flex-direction:row;align-items:center;gap:12px;flex-wrap:wrap}
   .cca-reader-body{grid-column:1;grid-row:2}
