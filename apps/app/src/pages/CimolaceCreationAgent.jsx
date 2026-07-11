@@ -252,6 +252,21 @@ function guessKind(v) {
   return 'school';
 }
 
+// L'edge VNP renvoie next.target = le LIBELLÉ de l'offre choisie (ex. « Cycle Académique »).
+// On le mappe sur la clé de cycle de /forfaits (autonome|academique|prive|privilegie) pour
+// pré-sélectionner le bon palier au checkout. Retourne '?plan=<clé>' ou '' (pas de présélection :
+// la consultation est un one-off réservé en inline, jamais un cycle de /forfaits).
+function forfaitsPlanQuery(target) {
+  const s = String(target || '').toLowerCase();
+  let key = '';
+  if (/consultation/.test(s)) key = '';
+  else if (/privil[ée]gi|mentorat|souverain/.test(s)) key = 'privilegie';
+  else if (/acad[ée]miq/.test(s)) key = 'academique';
+  else if (/priv[ée]/.test(s)) key = 'prive';
+  else if (/autonom/.test(s)) key = 'autonome';
+  return key ? `?plan=${encodeURIComponent(key)}` : '';
+}
+
 // STYLE importé depuis @/lib/agent/immersiveTheme (coque partagée)
 
 // ── Croquis « Précepteur » — se dessinent seuls (stroke-dashoffset), un par sujet ──
@@ -1871,7 +1886,9 @@ export default function CimolaceCreationAgent({ tenantSlug: tenantSlugProp = nul
       const kind = data?.next?.kind;
       logEvent('action_triggered', { action: actionId, next_kind: kind || '' }, osTenant);
       if (kind === 'checkout' || kind === 'booking') {
-        speak(msg, () => setTimeout(() => { window.location.assign('/forfaits'); }, 700)); // → vraie page de checkout
+        // Checkout : on transmet l'offre choisie à /forfaits (?plan=<cycle>) pour la pré-sélectionner.
+        const dest = kind === 'checkout' ? `/forfaits${forfaitsPlanQuery(data?.next?.target)}` : '/forfaits';
+        speak(msg, () => setTimeout(() => { window.location.assign(dest); }, 700)); // → vraie page de checkout
         return;
       }
       speak(msg);

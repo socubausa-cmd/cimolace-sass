@@ -1,6 +1,6 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { Helmet } from 'react-helmet';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '@/contexts/SupabaseAuthContext';
 import { motion, useReducedMotion } from 'framer-motion';
 import {
@@ -155,8 +155,27 @@ const planTierFromSlug = (slugLike) => {
   return 0;
 };
 
+// Normalise le paramètre ?plan=… (transmis par l'assistant VNP) vers une clé de cycle canonique.
+// Accepte une clé de cycle nue (autonome), une clé billing_plans (autonome-monthly, cycle-autonome)
+// ou un libellé. Retourne '' si rien ne correspond (→ pas de pré-sélection).
+const cycleKeyFromPlanParam = (raw) => {
+  const s = String(raw || '').toLowerCase().trim();
+  if (!s) return '';
+  if (/consultation/.test(s)) return ''; // one-off, pas un cycle (évite le faux positif « privée »)
+  const base = s
+    .replace(/-(monthly|quarterly|yearly|mensuel|trimestriel|annuel)$/i, '')
+    .replace(/^cycle-/, '');
+  if (['autonome', 'academique', 'prive', 'privilegie'].includes(base)) return base;
+  if (/privil[ée]gi|mentorat|souverain/.test(base)) return 'privilegie';
+  if (/acad[ée]miq/.test(base)) return 'academique';
+  if (/autonom/.test(base)) return 'autonome';
+  if (/priv[ée]/.test(base)) return 'prive';
+  return '';
+};
+
 const ForfaitsPage = () => {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const { user: authUser } = useAuth();
   const { subscription, status: billingStatus } = useBilling();
   const [plans, setPlans] = useState([]);
@@ -164,6 +183,9 @@ const ForfaitsPage = () => {
   const [activeCycleKey, setActiveCycleKey] = useState('');
   const [paymentCycleKey, setPaymentCycleKey] = useState(null);
   const [selectedInterval, setSelectedInterval] = useState('monthly');
+  // Deep-link « Choisir un forfait » de l'assistant VNP : ?plan=<cycle> → pré-sélection.
+  const requestedCycleKey = cycleKeyFromPlanParam(searchParams.get('plan'));
+  const planPreselectDone = useRef(false);
 
   useEffect(() => {
     let alive = true;
@@ -234,6 +256,24 @@ const ForfaitsPage = () => {
   useEffect(() => {
     if (!activeCycleKey && cycles.length > 0) setActiveCycleKey(cycles[0].key);
   }, [activeCycleKey, cycles]);
+
+  // Pré-sélection depuis ?plan=… : on active le cycle demandé et on défile jusqu'à sa fiche,
+  // une seule fois, une fois les cycles chargés (deep-link de l'assistant VNP).
+  useEffect(() => {
+    if (planPreselectDone.current) return;
+    if (loading || cycles.length === 0 || !requestedCycleKey) return;
+    if (!cycles.some((c) => c.key === requestedCycleKey)) {
+      planPreselectDone.current = true;
+      return;
+    }
+    planPreselectDone.current = true;
+    setActiveCycleKey(requestedCycleKey);
+    requestAnimationFrame(() => {
+      setTimeout(() => {
+        document.getElementById('forfaits-fiche')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }, 400);
+    });
+  }, [loading, cycles, requestedCycleKey]);
 
   const activeCycle = useMemo(
     () => cycles.find((cycle) => cycle.key === activeCycleKey) || cycles[0] || null,
