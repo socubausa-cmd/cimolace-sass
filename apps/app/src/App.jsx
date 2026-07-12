@@ -2562,14 +2562,16 @@ isLiriHostDevPreviewRoute;
           <Route path="/t/:tenantSlug/services" element={<TenantServicesVitrine />} />
           <Route path="/t/:tenantSlug/reserver" element={<TenantReservationPage />} />
           <Route path="/t/:tenantSlug/:vitrinePage" element={<TenantVitrinePage />} />
-          {/* Domaine custom (prorascience.org) : vitrine + sous-pages en URLs PROPRES (tenant
-              fondateur), sans /t/:slug. CimolaceDomainHandler strippe les anciens /t/isna/* ici. */}
-          <Route path="/ecole" element={<TenantVitrinePage slug={DEFAULT_TENANT_SLUG} page="ecole" />} />
-          <Route path="/temple" element={<TenantVitrinePage slug={DEFAULT_TENANT_SLUG} page="temple" />} />
-          <Route path="/programme" element={<TenantVitrinePage slug={DEFAULT_TENANT_SLUG} page="programme" />} />
-          <Route path="/mission" element={<TenantVitrinePage slug={DEFAULT_TENANT_SLUG} page="mission" />} />
-          <Route path="/fondateur" element={<TenantVitrinePage slug={DEFAULT_TENANT_SLUG} page="fondateur" />} />
-          <Route path="/doctrine" element={<TenantVitrinePage slug={DEFAULT_TENANT_SLUG} page="doctrine" />} />
+          {/* Domaine custom (prorascience.org) — anciennes pages vitrine narratives Academy
+              DÉPRÉCIÉES : l'OS (/) est la face publique (il couvre mission/fondateur/temple/doctrine…
+              en conversationnel). On redirige donc ces pages vers l'OS. NB : le marketplace praticien
+              (/t/:slug/services + /reserver) reste FONCTIONNEL (flux réservation/paiement) — non touché. */}
+          <Route path="/ecole" element={<Navigate to="/" replace />} />
+          <Route path="/temple" element={<Navigate to="/" replace />} />
+          <Route path="/programme" element={<Navigate to="/" replace />} />
+          <Route path="/mission" element={<Navigate to="/" replace />} />
+          <Route path="/fondateur" element={<Navigate to="/" replace />} />
+          <Route path="/doctrine" element={<Navigate to="/" replace />} />
           {/* Academy RETIRÉ (login/signup) : l'accès membre passe par le portail LIRI (/login → /liri).
              Sur domaine custom (ex. prorascience.org) /login résout le tenant par le host. */}
           <Route path="/t/:tenantSlug/login" element={<Navigate to="/liri" replace />} />
