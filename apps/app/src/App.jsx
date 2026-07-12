@@ -477,10 +477,8 @@ const ActivateAccountPage = lazy(() => import('@/pages/school/ActivateAccountPag
 const LiveJoinPage = lazy(() => import('@/pages/school/LiveJoinPage'));
 const LiveJoinLinksPage = lazy(() => import('@/pages/school/LiveJoinLinksPage'));
 const SchoolBillingPage = lazy(() => import('@/pages/school/SchoolBillingPage'));
-const SchoolLoginPage = lazy(() => import('@/pages/school/SchoolLoginPage'));
 const SchoolGoogleCallback = lazy(() => import('@/pages/school/SchoolGoogleCallback'));
 const SchoolAdminDashboard = lazy(() => import('@/pages/school/SchoolAdminDashboard'));
-const SchoolSignupPage = lazy(() => import('@/pages/school/SchoolSignupPage'));
 const SchoolCoursesPage = lazy(() => import('@/pages/school/SchoolCoursesPage'));
 const TenantAdminLivesPage = lazy(() => import('@/pages/tenant/TenantAdminLivesPage'));
 const TenantAdminSmartboardPage = lazy(() => import('@/pages/tenant/TenantAdminSmartboardPage'));
