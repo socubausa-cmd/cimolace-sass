@@ -57,7 +57,7 @@ const GROUPS: Group[] = [
     ],
   },
   {
-    key: 'math', label: 'Math', Icon: Ruler, surface: 'geoplan',
+    key: 'math', label: 'Math', Icon: Ruler, surface: 'carreaux',
     tools: [
       { id: 'compass', label: 'Compas', Icon: Compass },
       { id: 'protractor', label: 'Rapporteur', Icon: Triangle },
@@ -70,7 +70,7 @@ const GROUPS: Group[] = [
     ],
   },
   {
-    key: 'graphs', label: 'Graphiques', Icon: BarChart3, surface: 'geoplan',
+    key: 'graphs', label: 'Graphiques', Icon: BarChart3, surface: 'carreaux',
     tools: [
       { id: 'function-plot', label: 'Courbe f(x)', Icon: LineChart },
       { id: 'histogram', label: 'Histogramme', Icon: BarChart3 },
