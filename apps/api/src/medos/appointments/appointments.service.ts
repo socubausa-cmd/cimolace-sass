@@ -825,17 +825,24 @@ export class AppointmentsService {
     const session = await this.resolveMasterclassSession(tenant, serviceKey, userId);
     if (!session) throw new InternalServerErrorException('Direct indisponible.');
     const db = this.supabase.client as any;
+    const wasLive = session.status === 'live';
     const patch: Record<string, unknown> = {};
     if (!session.host_user_id) {
       patch.host_user_id = userId;
       patch.teacher_id = userId;
     }
-    if (session.status !== 'live') {
+    if (!wasLive) {
       patch.status = 'live';
       patch.started_at = session.started_at ?? new Date().toISOString();
     }
     if (Object.keys(patch).length) {
       await db.from('live_sessions').update(patch).eq('id', session.id).eq('tenant_id', tenant.id);
+    }
+    // À la 1re ouverture du direct : email de rappel aux acheteurs avec le lien pour
+    // rejoindre. Best-effort, non bloquant (n'empêche pas l'hôte d'entrer). Pas de
+    // double envoi si l'hôte rouvre une salle déjà en direct.
+    if (!wasLive) {
+      void this.notifyMasterclassBuyers(tenant, serviceKey, session.title).catch(() => undefined);
     }
     return {
       session_id: session.id,
@@ -843,6 +850,60 @@ export class AppointmentsService {
       scheduled_at: session.scheduled_at,
       status: 'live',
     };
+  }
+
+  /**
+   * DIRECT PAYANT — prévient par email tous les acheteurs (pass `service` actif) que le
+   * direct commence, avec le lien pour rejoindre en un clic (page réservation → bouton
+   * « Rejoindre le direct », gaté au pass). Best-effort, séquentiel, jamais bloquant.
+   */
+  private async notifyMasterclassBuyers(
+    tenant: TenantContext,
+    serviceKey: string,
+    serviceLabel: string | null,
+  ): Promise<void> {
+    try {
+      const db = this.supabase.client as any;
+      const { data: passes } = await db
+        .from('access_passes')
+        .select('user_id')
+        .eq('tenant_id', tenant.id)
+        .eq('resource_type', 'service')
+        .eq('resource_id', serviceKey)
+        .eq('status', 'active');
+      const userIds = [
+        ...new Set((passes || []).map((p: any) => p.user_id).filter(Boolean)),
+      ] as string[];
+      if (!userIds.length) return;
+      const { data: t } = await db
+        .from('tenants')
+        .select('name, slug')
+        .eq('id', tenant.id)
+        .maybeSingle();
+      const clinic = (t as any)?.name || 'votre praticien';
+      const slug = (t as any)?.slug || '';
+      const label = serviceLabel || 'le direct';
+      const base = process.env.APP_URL || 'https://app.cimolace.space';
+      const joinUrl = `${base}/t/${encodeURIComponent(slug)}/reserver?service=${encodeURIComponent(serviceKey)}`;
+      const html = this.email.brandedHtml({
+        title: `« ${label} » — c'est en direct maintenant`,
+        body: `Le direct animé par ${clinic} vient de démarrer. Cliquez ci-dessous pour rejoindre la salle en un clic (réservé aux inscrits).`,
+        ctaLabel: 'Rejoindre le direct',
+        ctaUrl: joinUrl,
+      });
+      const subject = `🔴 En direct maintenant — ${label}`;
+      for (const uid of userIds) {
+        try {
+          const { data: u } = await db.auth.admin.getUserById(uid);
+          const to = String(u?.user?.email || '').trim();
+          if (to) await this.email.sendRaw(tenant.id, to, subject, html);
+        } catch {
+          /* acheteur ignoré, on continue */
+        }
+      }
+    } catch (e) {
+      this.logger.warn(`notifyMasterclassBuyers: ${String(e)}`);
+    }
   }
 
   /**
