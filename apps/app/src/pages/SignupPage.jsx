@@ -142,14 +142,14 @@ const SignupPage = () => {
   ];
 
   return (
-    <div className="min-h-screen bg-[#0F1419] flex">
-      <Helmet><title>Inscription | PRORASCIENCE ACADEMY</title></Helmet>
+    <div className="min-h-screen flex" style={{ '--school-accent': '#d97757', background: '#262624', color: '#f5f1e9' }}>
+      <Helmet><title>Inscription | Prorascience</title></Helmet>
 
       {/* ── LEFT PANEL – branding ── */}
       <div className="hidden lg:flex lg:w-1/2 relative flex-col justify-between p-12 overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-br from-[#0F1419] via-[#192734] to-[#0F1419]" />
-        <div className="absolute top-1/3 left-1/4 w-[500px] h-[500px] bg-[color-mix(in_srgb,var(--school-accent)_5%,transparent)] rounded-full blur-[150px]" />
-        <div className="absolute bottom-1/4 right-1/4 w-[300px] h-[300px] bg-violet-900/10 rounded-full blur-[120px]" />
+        <div className="absolute inset-0 bg-gradient-to-br from-[#1d1916] via-[#262624] to-[#1d1916]" />
+        <div className="absolute top-1/3 left-1/4 w-[500px] h-[500px] bg-[color-mix(in_srgb,var(--school-accent)_10%,transparent)] rounded-full blur-[150px]" />
+        <div className="absolute bottom-1/4 right-1/4 w-[300px] h-[300px] bg-[color-mix(in_srgb,var(--school-accent)_6%,transparent)] rounded-full blur-[120px]" />
         <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PGRlZnM+PHBhdHRlcm4gaWQ9ImdyaWQiIHdpZHRoPSI2MCIgaGVpZ2h0PSI2MCIgcGF0dGVyblVuaXRzPSJ1c2VyU3BhY2VPblVzZSI+PHBhdGggZD0iTSAxMCAwIEwgMCAwIDAgMTAiIGZpbGw9Im5vbmUiIHN0cm9rZT0id2hpdGUiIHN0cm9rZS13aWR0aD0iMC4yIiBzdHJva2Utb3BhY2l0eT0iMC4wNSIvPjwvcGF0dGVybj48L2RlZnM+PHJlY3Qgd2lkdGg9IjEwMCUiIGhlaWdodD0iMTAwJSIgZmlsbD0idXJsKCNncmlkKSIvPjwvc3ZnPg==')] opacity-40" />
 
         <div className="relative z-10">
@@ -161,7 +161,7 @@ const SignupPage = () => {
             />
             <div>
               <span className="block font-serif text-2xl font-bold text-white tracking-wider">PRORASCIENCE</span>
-              <span className="block text-[0.65rem] text-[var(--school-accent)] tracking-[0.4em] uppercase mt-0.5">Academy · ISNA</span>
+              <span className="block text-[0.65rem] text-[var(--school-accent)] tracking-[0.4em] uppercase mt-0.5">Science Africaine Totale</span>
             </div>
           </Link>
         </div>
@@ -173,12 +173,12 @@ const SignupPage = () => {
                 <h2 className="text-3xl font-serif font-bold text-white leading-snug mb-2">
                   {planLabel ? (
                     <>Une dernière étape<br />
-                    <span className="text-transparent bg-clip-text bg-gradient-to-r from-[var(--school-accent)] to-yellow-400">
+                    <span className="text-[var(--school-accent)]">
                       pour rejoindre {planLabel}
                     </span></>
                   ) : (
                     <>Créez votre compte<br />
-                    <span className="text-transparent bg-clip-text bg-gradient-to-r from-[var(--school-accent)] to-yellow-400">
+                    <span className="text-[var(--school-accent)]">
                       pour finaliser l&apos;inscription
                     </span></>
                   )}
@@ -189,7 +189,7 @@ const SignupPage = () => {
               <>
                 <h2 className="text-3xl font-serif font-bold text-white leading-snug mb-2">
                   Rejoignez l&apos;élite<br />
-                  <span className="text-transparent bg-clip-text bg-gradient-to-r from-[var(--school-accent)] to-yellow-400">
+                  <span className="text-[var(--school-accent)]">
                     de la connaissance
                   </span>
                 </h2>
@@ -240,7 +240,7 @@ const SignupPage = () => {
                 className="h-11 w-auto max-w-[min(260px,82vw)] object-contain py-1"
               />
               <span className="font-serif text-2xl font-bold text-white tracking-wider">PRORASCIENCE</span>
-              <span className="text-[0.6rem] text-[var(--school-accent)] tracking-[0.3em] uppercase">Academy</span>
+              <span className="text-[0.6rem] text-[var(--school-accent)] tracking-[0.3em] uppercase">Science Africaine Totale</span>
             </Link>
           </div>
 
@@ -299,7 +299,7 @@ const SignupPage = () => {
                 <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-500" />
                 <Input id="fullName" name="fullName" placeholder="Prénom Nom"
                   value={formData.fullName} onChange={handleChange}
-                  className={`pl-10 h-11 bg-[#192734] border-white/10 text-white focus:border-[var(--school-accent)] focus:ring-1 focus:ring-[color-mix(in_srgb,var(--school-accent)_30%,transparent)] ${formErrors.fullName ? 'border-red-500' : ''}`}
+                  className={`pl-10 h-11 bg-[#221f1b] border-white/10 text-white focus:border-[var(--school-accent)] focus:ring-1 focus:ring-[color-mix(in_srgb,var(--school-accent)_30%,transparent)] ${formErrors.fullName ? 'border-red-500' : ''}`}
                 />
               </div>
               {formErrors.fullName && <p className="text-xs text-red-400">{formErrors.fullName}</p>}
@@ -311,7 +311,7 @@ const SignupPage = () => {
                 <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-500" />
                 <Input id="email" name="email" type="email" autoComplete="email" placeholder="exemple@email.com"
                   value={formData.email} onChange={handleChange}
-                  className={`pl-10 h-11 bg-[#192734] border-white/10 text-white focus:border-[var(--school-accent)] focus:ring-1 focus:ring-[color-mix(in_srgb,var(--school-accent)_30%,transparent)] ${formErrors.email ? 'border-red-500' : ''}`}
+                  className={`pl-10 h-11 bg-[#221f1b] border-white/10 text-white focus:border-[var(--school-accent)] focus:ring-1 focus:ring-[color-mix(in_srgb,var(--school-accent)_30%,transparent)] ${formErrors.email ? 'border-red-500' : ''}`}
                 />
               </div>
               {formErrors.email && <p className="text-xs text-red-400">{formErrors.email}</p>}
@@ -323,7 +323,7 @@ const SignupPage = () => {
                 <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-500" />
                 <Input id="password" name="password" type="password" autoComplete="new-password" placeholder="••••••••"
                   value={formData.password} onChange={handleChange}
-                  className={`pl-10 h-11 bg-[#192734] border-white/10 text-white focus:border-[var(--school-accent)] focus:ring-1 focus:ring-[color-mix(in_srgb,var(--school-accent)_30%,transparent)] ${formErrors.password ? 'border-red-500' : ''}`}
+                  className={`pl-10 h-11 bg-[#221f1b] border-white/10 text-white focus:border-[var(--school-accent)] focus:ring-1 focus:ring-[color-mix(in_srgb,var(--school-accent)_30%,transparent)] ${formErrors.password ? 'border-red-500' : ''}`}
                 />
               </div>
               {formErrors.password && <p className="text-xs text-red-400">{formErrors.password}</p>}
@@ -342,14 +342,14 @@ const SignupPage = () => {
                 <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-500" />
                 <Input id="confirmPassword" name="confirmPassword" type="password" autoComplete="new-password" placeholder="••••••••"
                   value={formData.confirmPassword} onChange={handleChange}
-                  className={`pl-10 h-11 bg-[#192734] border-white/10 text-white focus:border-[var(--school-accent)] focus:ring-1 focus:ring-[color-mix(in_srgb,var(--school-accent)_30%,transparent)] ${formErrors.confirmPassword ? 'border-red-500' : ''}`}
+                  className={`pl-10 h-11 bg-[#221f1b] border-white/10 text-white focus:border-[var(--school-accent)] focus:ring-1 focus:ring-[color-mix(in_srgb,var(--school-accent)_30%,transparent)] ${formErrors.confirmPassword ? 'border-red-500' : ''}`}
                 />
               </div>
               {formErrors.confirmPassword && <p className="text-xs text-red-400">{formErrors.confirmPassword}</p>}
             </div>
 
             <Button type="submit"
-              className="w-full h-11 bg-[var(--school-accent)] hover:bg-[#bfa345] text-black font-bold text-base tracking-wide mt-2"
+              className="w-full h-11 bg-[var(--school-accent)] hover:bg-[#c2683f] text-white font-bold text-base tracking-wide mt-2"
               disabled={isLoading}
             >
               {isLoading

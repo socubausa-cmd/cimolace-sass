@@ -56,7 +56,7 @@ export default function LivesLibraryContent({ variant = 'default' }) {
         (Array.isArray(m?.weeks) ? m.weeks : []).forEach((w) => {
           [w?.openingLive, w?.closingLive].forEach((live) => {
             if (!live) return;
-            const liveData = { ...live, subtitle: [m?.title, w?.title].filter(Boolean).join(' • ') };
+            const liveData = { ...live, source: 'curriculum', subtitle: [m?.title, w?.title].filter(Boolean).join(' • ') };
             if (live.status === 'completed') past.push(liveData);
             else upcoming.push(liveData);
           });
@@ -68,6 +68,7 @@ export default function LivesLibraryContent({ variant = 'default' }) {
       const ended = s.status === 'ended' || s.status === 'completed' || !!s.ended_at;
       const item = {
         id: s.id,
+        source: 'session',
         title: s.title || 'Session live',
         date: s.scheduled_at || s.started_at || s.ended_at || s.created_at,
         subtitle: 'Session live',
@@ -277,6 +278,12 @@ function SectionTitle({ icon: Icon, children }) {
 }
 
 function UpcomingCard({ live }) {
+  const navigate = useNavigate();
+  // Un live programmé/en cours issu du Studio a un id de session réel → on ouvre la
+  // salle (`/live/:id` gère salle d'attente si pas encore démarré + accès côté serveur :
+  // free-caps / access_pass payant / rejet). Les jalons de cursus sans session ne sont pas
+  // joignables → bouton désactivé plutôt que mort.
+  const joinable = !!live.id && live.source === 'session';
   return (
     <Card className="border-[rgba(245,244,238,0.08)] bg-[#30302e]">
       <CardContent className="p-6">
@@ -287,8 +294,11 @@ function UpcomingCard({ live }) {
           <Clock className="h-3.5 w-3.5 shrink-0 text-[var(--school-accent)]" />
           {fmtDateTime(live.date)}
         </div>
-        <Button className="w-full border border-[color-mix(in_srgb,var(--school-accent)_32%,transparent)] bg-[color-mix(in_srgb,var(--school-accent)_15%,transparent)] text-[#f0d5c6] hover:bg-[color-mix(in_srgb,var(--school-accent)_24%,transparent)]">
-          S'inscrire / Rejoindre
+        <Button
+          onClick={() => joinable && navigate(`/live/${live.id}`)}
+          disabled={!joinable}
+          className="w-full border border-[color-mix(in_srgb,var(--school-accent)_32%,transparent)] bg-[color-mix(in_srgb,var(--school-accent)_15%,transparent)] text-[#f0d5c6] hover:bg-[color-mix(in_srgb,var(--school-accent)_24%,transparent)] disabled:cursor-not-allowed disabled:opacity-50">
+          {joinable ? 'Rejoindre' : 'Bientôt'}
         </Button>
       </CardContent>
     </Card>
@@ -323,6 +333,12 @@ function ReplayCard({ live }) {
 function LiveRow({ live, kind }) {
   const navigate = useNavigate();
   const canOpen = kind === 'replay' && !!live.replayable;
+  // Upcoming : joignable si session Studio réelle (pas un jalon de cursus).
+  const canJoin = kind !== 'replay' && !!live.id && live.kind !== 'curriculum';
+  const onAction = () => {
+    if (kind === 'replay') { if (canOpen) navigate(`/liri/forum/replay/${live.id}`); }
+    else if (canJoin) navigate(`/live/${live.id}`);
+  };
   return (
     <div className="flex items-center gap-4 rounded-xl border border-[rgba(245,244,238,0.08)] bg-[#30302e] px-4 py-3 transition-colors hover:border-[color-mix(in_srgb,var(--school-accent)_30%,transparent)]">
       <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-[color-mix(in_srgb,var(--school-accent)_14%,transparent)] text-[var(--school-accent)]">
@@ -334,8 +350,8 @@ function LiveRow({ live, kind }) {
           {kind === 'replay' ? fmtDate(live.date) : `${live.subtitle ? `${live.subtitle} · ` : ''}${fmtDateTime(live.date)}`}
         </p>
       </div>
-      <Button size="sm" onClick={() => canOpen && navigate(`/liri/forum/replay/${live.id}`)} className="shrink-0 border border-[color-mix(in_srgb,var(--school-accent)_32%,transparent)] bg-[color-mix(in_srgb,var(--school-accent)_15%,transparent)] text-[#f0d5c6] hover:bg-[color-mix(in_srgb,var(--school-accent)_24%,transparent)]">
-        {kind === 'replay' ? 'Revoir' : 'Rejoindre'}
+      <Button size="sm" onClick={onAction} disabled={kind === 'replay' ? !canOpen : !canJoin} className="shrink-0 border border-[color-mix(in_srgb,var(--school-accent)_32%,transparent)] bg-[color-mix(in_srgb,var(--school-accent)_15%,transparent)] text-[#f0d5c6] hover:bg-[color-mix(in_srgb,var(--school-accent)_24%,transparent)] disabled:cursor-not-allowed disabled:opacity-50">
+        {kind === 'replay' ? 'Revoir' : (canJoin ? 'Rejoindre' : 'Bientôt')}
       </Button>
     </div>
   );
