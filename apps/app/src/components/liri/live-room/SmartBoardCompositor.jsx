@@ -4037,15 +4037,12 @@ function WhiteboardScene({
                 margin: 0,
                 padding: 0,
                 border: 'none',
-                // CADRE NET + halo doré + ombre portée : le champ de saisie doit être
-                // VISIBLE. Avant : fond = couleur du tableau + contour fin pointillé →
-                // le champ se confond avec le tableau = « texte fantôme » (on ne voit
-                // pas où on tape). outline + boxShadow ne décalent PAS le texte (WYSIWYG
-                // conservé). Visible sur fond sombre ET clair.
-                outline: '2px solid #d4a36a',
-                outlineOffset: '3px',
-                boxShadow: '0 0 0 4px rgba(212,163,106,0.20), 0 10px 28px rgba(0,0,0,0.5)',
-                borderRadius: 4,
+                // Saisie « façon Word » : AUCUNE boîte autour du texte. Le texte s'écrit
+                // directement sur le tableau (fond transparent) et seul le CURSEUR (caret
+                // ambre clignotant) montre où l'on tape. La visibilité vient du z-index
+                // (le composer repasse au-dessus de la coque téléconsult), PAS d'un cadre.
+                outline: 'none',
+                boxShadow: 'none',
                 resize: 'none',
                 overflow: 'hidden',
                 whiteSpace: 'pre',
@@ -4058,7 +4055,7 @@ function WhiteboardScene({
                 minWidth: 48,
                 maxWidth: Math.max(120, textOverlayScreen.maxWidth || 480),
                 minHeight: textInPlace.lineHeightPx,
-                background: textInPlace.surfaceBg || 'rgba(20,18,16,0.55)',
+                background: 'transparent',
                 fontFamily: 'ui-sans-serif, system-ui, sans-serif',
                 fontSize: `${textInPlace.fontPx}px`,
                 fontWeight: textInPlace.weight,
