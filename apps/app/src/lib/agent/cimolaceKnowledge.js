@@ -2,21 +2,21 @@
  * cimolaceKnowledge — MÉMOIRE CENTRALISÉE de Cimolace (realm `cimolace`), au schéma EXACT de
  * PRORASCIENCE_KNOWLEDGE, pour donner au realm OS Cimolace un rendu VNP data-driven (comme
  * prorascience) au lieu du seul tunnel de création. Agrégé FIDÈLEMENT depuis le contenu réel
- * (vitrine apps/public-site, homepage OS immersive, pages produits MedOS/moteurs, grille SaaS).
+ * (vitrine apps/public-site, homepage OS immersive, pages produits, grille tarifaire réelle).
  *
- * ⚠️ DÉCISIONS PRODUIT EN ATTENTE (le contenu réel de Cimolace se contredit — à trancher par le
- * fondateur avant de figer / brancher le VNP) :
- *   - POSITIONNEMENT : la vitrine cimolace.space dit « L'OS qui crée des plateformes SaaS » (40+
- *     moteurs, dès 19 €/mois) ; la homepage OS dit « Infrastructure intelligente pour l'Afrique »
- *     (30+ moteurs, dès 150 €/mois). Ce pack retient la baseline vitrine pour `subtitle`.
- *   - PRIX : deux modèles coexistent — (a) grille SaaS interne 500 € setup + START 150 / BUSINESS
- *     200 / ENTREPRISE 300 (retenue ici, consigne) ; (b) vitrine « dès 19 €/mois » + paliers par
- *     infra (MedOS 0/19/49/99, École 79/199/349) + crédits IA LIRI. À unifier.
- *   - PRIX PAS EN DB : le tenant `cimolace` a 0 billing_plan (grille code-only, pas de stripe_price_id) →
- *     non payable en l'état. Prérequis avant de rendre les forfaits « achetables » comme prorascience.
- *   - RAILS PAIEMENT : vitrine « Stripe · CinetPay · MTN · Orange Money · Chariow » vs mémoire
- *     globale « PawaPay + Airtel (XAF/XOF) ». À réconcilier.
- * Voir le workflow `cimolace-knowledge-pack` (whygqajyf) pour les 31 « missing » détaillés.
+ * DÉCISIONS PRODUIT DU FONDATEUR (2026-07-11) :
+ *   - POSITIONNEMENT : « L'infrastructure SaaS intelligente pour l'Afrique » (homepage OS).
+ *   - TARIFICATION : le modèle VITRINE = par INFRASTRUCTURE, essai 14 j, sans engagement, à partir
+ *     de 0 € (MedOS Sprout). Source : apps/public-site/src/app/pricing/page.tsx (vérité).
+ *       École     : Starter 79 / Pro 199 / Business 349 €/mois
+ *       MedOS      : Sprout 0 / Solo 19 / Pro 49 / Clinic 99 €/mois
+ *       Bien-être  : Starter 29 / Pro 79 €/mois
+ *       Créateur   : Starter 49 / Pro 149 / Business 299 €/mois
+ * ⚠️ RESTE : les prix ne sont PAS en DB (tenant `cimolace` = 0 billing_plan) → non « achetables »
+ *   tant qu'on ne seede pas billing_plans + stripe_price_id. Rails de paiement à confirmer
+ *   (vitrine : Stripe · CinetPay · MTN · Orange Money · Chariow). Cf. workflow whygqajyf (missing[]).
+ * NB : les MOTEURS (LIRI/École/MedOS/Mbolo/Community) = les briques qui POWERent les infrastructures
+ *   vendues ci-dessus — d'où deux taxonomies (pillars = moteurs, offers = infrastructures priçées).
  */
 
 export const CIMOLACE_KNOWLEDGE = {
@@ -24,12 +24,12 @@ export const CIMOLACE_KNOWLEDGE = {
     slug: 'cimolace',
     name: 'Cimolace',
     fullName: 'Cimolace — ISNA Platform',
-    subtitle: "L'OS qui crée des plateformes SaaS — votre plateforme, vos règles, zéro code.",
+    subtitle: "L'infrastructure SaaS intelligente pour l'Afrique — lancez votre plateforme brandée, sans coder.",
     website: 'cimolace.space',
     stats: [
       { label: 'OS métier prêts', value: '7' },
       { label: 'moteurs IA', value: '30+' },
-      { label: 'stack unifiée', value: '1' },
+      { label: "essai gratuit", value: '14 j' },
     ],
   },
 
@@ -41,12 +41,12 @@ export const CIMOLACE_KNOWLEDGE = {
 
   vision: {
     whatIs: "Cimolace est une infrastructure SaaS multi-tenant qui fait tourner les produits de ses clients en coulisses — comme Stripe pour le paiement ou Zoom pour la vidéo. Le client garde sa marque, son domaine et ses données ; Cimolace reste invisible.",
-    problem: "Les entrepreneurs assemblent des outils qui ne se parlent pas : Stripe + Zoom/LiveKit + email transactionnel + LMS + CRM, sans isolation multi-tenant, et des mois d'intégration. En Afrique, le talent existe mais pas l'infrastructure.",
+    problem: "Les entrepreneurs assemblent des outils qui ne se parlent pas : paiement + vidéo + email + LMS + CRM, sans isolation multi-tenant, et des mois d'intégration. En Afrique, le talent existe mais pas l'infrastructure.",
     promise: "Lancer sa propre plateforme brandée, sans coder, en ~10 minutes — puis 1 à 2 heures pour brancher branding, paiements et premier produit.",
-    closing: "L'Afrique ne doit pas rattraper la technologie : elle peut sauter une étape. Choisissez vos OS, activez, encaissez — l'infrastructure suit.",
+    closing: "L'Afrique ne doit pas rattraper la technologie : elle peut sauter une étape. Choisissez votre infrastructure, activez, encaissez — l'infrastructure suit.",
     pillars: [
-      { title: 'LIRI — le moteur live & IA universel', points: ['Live HD (LiveKit WebRTC, jusqu\'à 1000 participants) + replay', 'IA temps réel : LIRI Brain, SmartBoard, transcription, TTS/STT, multilingue', 'Intégrable dans tout site via SDK, embed widget ou API REST', 'Produit horizontal, vendable seul'] },
-      { title: 'École (LIRI École) — votre école en ligne', points: ['Lives payants + cours vidéo', 'SmartBoard IA + replay VOD', 'Certifications', 'Marque blanche : votre domaine, votre marque, vos étudiants'] },
+      { title: 'LIRI — le moteur live & IA universel', points: ["Live HD (LiveKit WebRTC, jusqu'à 1000 participants) + replay", 'IA temps réel : LIRI Brain, SmartBoard, transcription, TTS/STT, multilingue', 'Intégrable dans tout site via SDK, embed widget ou API REST', 'Produit horizontal, vendable seul'] },
+      { title: 'École — votre école en ligne', points: ['Lives payants + cours vidéo', 'SmartBoard IA + replay VOD', 'Certifications', 'Marque blanche : votre domaine, votre marque, vos étudiants'] },
       { title: 'MedOS — l\'OS médical des praticiens (en production)', points: ['Dossiers patients (EHR) + notes SOAP', 'IA Charting : transcription + note SOAP en ~30 s', 'Téléconsultation + ordonnances PDF', 'RGPD natif : consentement, audit trail, chiffrement AES-256'] },
       { title: 'Mbolo — e-commerce mobile-first pour l\'Afrique', points: ['Catalogue + panier / commandes', 'Paiements mobile money', 'Moteur multi-tenant déjà présent dans l\'API Cimolace', 'Statut : à venir'] },
       { title: 'Community — votre communauté en ligne', points: ['Forums thématiques + modération', 'Événements & inscriptions, cotisations / adhésions', 'Chat (canaux publics & privés) + notifications + fil d\'actualité', 'Statut : à venir'] },
@@ -61,45 +61,47 @@ export const CIMOLACE_KNOWLEDGE = {
 
   // La méthode = les 3 temps d'adoption de Cimolace.
   method: [
-    { step: 'Choisissez', kind: 'Infrastructure', items: ['une infrastructure préconfigurée (École, MedOS, Boutique…)', 'ou construire la vôtre moteur par moteur'], foot: '01' },
+    { step: 'Choisissez', kind: 'Infrastructure', items: ['une infrastructure préconfigurée (École, MedOS, Bien-être, Créateur…)', 'ou construire la vôtre moteur par moteur'], foot: '01' },
     { step: 'Brandez', kind: 'Marque', items: ['logo', 'couleurs', 'domaine personnalisé'], foot: '02 — en 5 min' },
     { step: 'Lancez', kind: 'Mise en ligne', items: ['configurer les paiements', 'inviter l\'équipe', 'publier le premier produit'], foot: '03 — espace créé en ~10 min' },
   ],
 
-  // Offres — grille SaaS interne (⚠️ à unifier avec la tarification vitrine, cf. en-tête).
+  // Offres = les INFRASTRUCTURES vendues sur la vitrine (prix d'ENTRÉE ; échelle de paliers en desc).
+  // Tous les plans : essai 14 jours, sans engagement, constructeur d'infrastructure inclus.
   offers: [
-    { name: 'Installation', price: '500 €', suffix: '/une fois', desc: 'Pack création : votre plateforme brandée, prête en minutes.' },
-    { name: 'START', price: '150 €', suffix: '/mois', desc: 'Un espace prêt à l\'emploi (lives + replay, dossiers + téléconsult, ou catalogue + paiement). Zéro commission sur les ventes.' },
-    { name: 'BUSINESS', price: '200 €', suffix: '/mois', desc: 'Multi-classes, multi-praticiens ou multi-boutiques, avec IA.', popular: true },
-    { name: 'ENTREPRISE', price: '300 €', suffix: '/mois', desc: 'Puissance maximale, sans plafond.' },
+    { name: 'MedOS — OS médical', price: '0 €', suffix: '/mois (dès)', desc: 'Dossiers patients + note SOAP IA + téléconsultation. Sprout gratuit (3 patients) → Solo 19 € → Pro 49 € → Clinic 99 € (illimité, white label).' },
+    { name: 'École — école en ligne', price: '79 €', suffix: '/mois (dès)', desc: 'Lives + cours + SmartBoard IA + certifications. Starter 79 € → Pro 199 € (500 étudiants) → Business 349 € (white label, API).', popular: true },
+    { name: 'Bien-être — coaching', price: '29 €', suffix: '/mois (dès)', desc: 'Programmes de soins + téléconsult + automatisations email/SMS + paiements. Starter 29 € → Pro 79 €.' },
+    { name: 'Créateur — studio', price: '49 €', suffix: '/mois (dès)', desc: 'Studio live + monétisation directe + VOD. Starter 49 € → Pro 149 € (illimité) → Business 299 € (white label, régie pub).' },
   ],
 
+  // Comparateur des 4 infrastructures priçées (vitrine). Rows = dimensions communes dérivées FIDÈLEMENT.
   comparison: {
-    intro: 'La grille SaaS Cimolace, du palier d\'entrée à la pleine puissance — installation unique de 500 €, puis abonnement mensuel, zéro commission sur les ventes.',
+    intro: 'Des plans qui grandissent avec vous — sans engagement, 14 jours d\'essai, le constructeur d\'infrastructure inclus dans tous les plans.',
     plans: [
-      { name: 'START', full: 'START', price: '150 €', suffix: '/mois', desc: 'Un espace prêt à l\'emploi (lives / dossiers / catalogue).' },
-      { name: 'BUSINESS', full: 'BUSINESS', price: '200 €', suffix: '/mois', popular: true, desc: 'Multi-classes / multi-praticiens / multi-boutiques + IA.' },
-      { name: 'ENTREPRISE', full: 'ENTREPRISE', price: '300 €', suffix: '/mois', desc: 'Puissance maximale, sans plafond.' },
+      { name: 'MedOS', full: 'MedOS — OS médical', price: '0 €', suffix: '/mois', popular: true, desc: 'Praticiens & cliniques (en production).' },
+      { name: 'École', full: 'École — école en ligne', price: '79 €', suffix: '/mois', desc: 'Formateurs & instituts.' },
+      { name: 'Bien-être', full: 'Bien-être — coaching', price: '29 €', suffix: '/mois', desc: 'Coachs & thérapeutes.' },
+      { name: 'Créateur', full: 'Créateur — studio', price: '49 €', suffix: '/mois', desc: 'Créateurs & studios.' },
     ],
     rows: [
-      { feature: 'Installation unique (500 €)', has: [true, true, true] },
-      { feature: 'Zéro commission sur les ventes', has: [true, true, true] },
-      { feature: 'Un espace (lives / dossiers / catalogue)', has: [true, true, true] },
-      { feature: 'Multi-classes / multi-praticiens / multi-boutiques', has: [false, true, true] },
-      { feature: 'Moteurs IA embarqués', has: [false, true, true] },
-      { feature: 'Capacité sans plafond', has: [false, false, true] },
+      { feature: 'Essai 14 jours, sans engagement', has: [true, true, true, true] },
+      { feature: 'IA embarquée (SmartBoard / SOAP / …)', has: [true, true, true, true] },
+      { feature: 'Plan gratuit pour démarrer', has: [true, false, false, false] },
+      { feature: 'Marque blanche (domaine perso)', has: [true, true, false, true] },
+      { feature: 'Multi-utilisateurs (équipe)', has: [true, true, false, true] },
     ],
   },
 
   navigation: ['MedOS', 'Moteurs', 'Tarifs', 'Solutions', 'LIRI', 'Créer ma plateforme'],
 
   faq: [
-    { q: "C'est quoi Cimolace ?", a: "Un OS SaaS multi-tenant qui crée des plateformes. Vous choisissez une infrastructure (École, MedOS, Boutique…), vous la brandez, vous lancez. Sans coder." },
+    { q: "C'est quoi Cimolace ?", a: "L'infrastructure SaaS intelligente pour l'Afrique : un OS multi-tenant qui crée des plateformes. Vous choisissez une infrastructure (École, MedOS, Bien-être, Créateur…), vous la brandez, vous lancez. Sans coder." },
+    { q: "Combien ça coûte ?", a: "Ça dépend de l'infrastructure, à partir de 0 €/mois (MedOS Sprout). École dès 79 €, Bien-être dès 29 €, Créateur dès 49 €. Tous les plans : 14 jours d'essai, sans engagement." },
     { q: "Combien de temps pour être opérationnel ?", a: "10 minutes pour créer votre espace. 1 à 2 heures pour configurer branding, paiements et votre premier produit." },
-    { q: "Je peux avoir mon propre domaine ?", a: "Oui. La marque blanche avec domaine personnalisé est incluse dans les plans supérieurs." },
+    { q: "Je peux avoir mon propre domaine ?", a: "Oui — la marque blanche avec domaine personnalisé est incluse dans les plans supérieurs (École Business, MedOS Clinic, Créateur Business)." },
     { q: "La sécurité multi-tenant ?", a: "Triple couche : Garde API → Filtre Service → RLS PostgreSQL. Chaque client est isolé des autres." },
     { q: "Quels moyens de paiement ?", a: "Carte via Stripe, et mobile money pour l'Afrique. (Rails exacts à confirmer.)" },
-    { q: "Un plan gratuit ?", a: "MedOS propose un plan gratuit (3 patients). Essai gratuit pour découvrir les autres infrastructures." },
   ],
 };
 
