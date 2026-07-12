@@ -81,6 +81,14 @@ export const useLiveWhiteboardStore = create((set, get) => ({
     set({ textItalic: typeof textItalic === 'function' ? textItalic(get().textItalic) : textItalic }),
   textAlign: 'left',
   setTextAlign: (textAlign) => set({ textAlign }),
+  textUnderline: false,
+  setTextUnderline: (v) => set({ textUnderline: typeof v === 'function' ? v(get().textUnderline) : v }),
+  textFontFamily: 'sans',
+  setTextFontFamily: (textFontFamily) => set({ textFontFamily }),
+  textHighlight: null,
+  setTextHighlight: (textHighlight) => set({ textHighlight }),
+  textBorder: false,
+  setTextBorder: (v) => set({ textBorder: typeof v === 'function' ? v(get().textBorder) : v }),
 
   neuroInkOpen: false,
   setNeuroInkOpen: (v) =>

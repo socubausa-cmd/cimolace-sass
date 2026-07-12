@@ -22,6 +22,7 @@ import {
   UserSquare2, Move, ChevronLeft, ChevronRight, Home,
   HelpCircle, Link2, X, Smartphone,
   Bold, Italic, AlignLeft, AlignCenter, AlignRight, Sparkles,
+  Underline, Highlighter, Square,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { getActiveTenantBranding } from '@/lib/tenant/activeBranding';
@@ -57,6 +58,7 @@ import {
   measureWhiteboardTextBlock,
   hitTestWhiteboardTextStroke,
   WHITEBOARD_TEXT_PRESET_BASE,
+  WHITEBOARD_FONT_STACK,
 } from '@/lib/whiteboardTextCanvas';
 import { invokeWhiteboardTextAi } from '@/lib/liriWhiteboardTextAi';
 import {
@@ -1196,6 +1198,14 @@ function WhiteboardScene({
   const setTextAlign = useLiveWhiteboardStore((s) => s.setTextAlign);
   const setTextFontSize = useLiveWhiteboardStore((s) => s.setTextFontSize);
   const textFontSize = useLiveWhiteboardStore((s) => s.textFontSize);
+  const textUnderline = useLiveWhiteboardStore((s) => s.textUnderline);
+  const setTextUnderline = useLiveWhiteboardStore((s) => s.setTextUnderline);
+  const textFontFamily = useLiveWhiteboardStore((s) => s.textFontFamily);
+  const setTextFontFamily = useLiveWhiteboardStore((s) => s.setTextFontFamily);
+  const textHighlight = useLiveWhiteboardStore((s) => s.textHighlight);
+  const setTextHighlight = useLiveWhiteboardStore((s) => s.setTextHighlight);
+  const textBorder = useLiveWhiteboardStore((s) => s.textBorder);
+  const setTextBorder = useLiveWhiteboardStore((s) => s.setTextBorder);
 
   // Éditeur de texte « in-place » façon Word : on calque EXACTEMENT le rendu canvas
   // (police, taille mise à l'échelle écran, couleur, interligne 1.25) pour écrire directement
@@ -1224,8 +1234,11 @@ function WhiteboardScene({
       color: color || '#F7F2E8',
       surfaceBg,
       topPx: (textOverlayScreen.top || 0) - fontPx * 0.125,
+      fontFamily: WHITEBOARD_FONT_STACK[textFontFamily] || WHITEBOARD_FONT_STACK.sans,
+      underline: textUnderline,
+      highlight: textHighlight,
     };
-  }, [textFontSize, textPreset, textBold, textItalic, textAlign, color, boardSurface, textOverlayScreen]);
+  }, [textFontSize, textPreset, textBold, textItalic, textAlign, color, boardSurface, textOverlayScreen, textFontFamily, textUnderline, textHighlight]);
 
   const polyDraftRef = useRef(null);
   const compassDraftRef = useRef(null);
@@ -2198,6 +2211,10 @@ function WhiteboardScene({
           if ('size' in patch && (s.kind === 'path' || s.kind === undefined)) applied.size = patch.size;
           if ('fontSize' in patch && s.kind === 'text') applied.fontSize = patch.fontSize;
           if ('text' in patch && s.kind === 'text') applied.text = patch.text;
+          if ('underline' in patch && s.kind === 'text') applied.underline = patch.underline;
+          if ('fontFamily' in patch && s.kind === 'text') applied.fontFamily = patch.fontFamily;
+          if ('highlight' in patch && s.kind === 'text') applied.highlight = patch.highlight;
+          if ('border' in patch && s.kind === 'text') applied.border = patch.border;
           if ('opacity' in patch && s.kind === 'curtain') applied.opacity = patch.opacity;
           if ('fillColor' in patch) applied.fillColor = patch.fillColor;
           if ('fill' in patch) applied.fill = patch.fill;
@@ -2584,6 +2601,10 @@ function WhiteboardScene({
       textBold,
       textItalic,
       textAlign,
+      textUnderline,
+      textFontFamily,
+      textHighlight,
+      textBorder,
     } = stText;
     const canvas = canvasRef.current;
 
@@ -2606,6 +2627,10 @@ function WhiteboardScene({
               textBold,
               fontStyle: textItalic ? 'italic' : 'normal',
               textAlign,
+              underline: textUnderline,
+              fontFamily: textFontFamily,
+              highlight: textHighlight,
+              border: textBorder,
             }
             : s,
         );
@@ -2629,6 +2654,10 @@ function WhiteboardScene({
       textBold,
       fontStyle: textItalic ? 'italic' : 'normal',
       textAlign,
+      underline: textUnderline,
+      fontFamily: textFontFamily,
+      highlight: textHighlight,
+      border: textBorder,
     });
   }, [textDraft, readOnly, pushStroke, onStrokesChange, redrawSheet]);
 
@@ -2687,6 +2716,10 @@ function WhiteboardScene({
           wb.setTextAlign(s.textAlign === 'center' || s.textAlign === 'right' ? s.textAlign : 'left');
           if (typeof s.fontSize === 'number') wb.setTextFontSize(s.fontSize);
           wb.setColor(s.color || wb.color);
+          wb.setTextUnderline(s.underline === true);
+          wb.setTextFontFamily(WHITEBOARD_FONT_STACK[s.fontFamily] ? s.fontFamily : 'sans');
+          wb.setTextHighlight(s.highlight || null);
+          wb.setTextBorder(s.border === true);
           setTextDraft({
             mode: 'edit',
             index: i,
@@ -3585,6 +3618,10 @@ function WhiteboardScene({
             wb.setTextAlign(s.textAlign === 'center' || s.textAlign === 'right' ? s.textAlign : 'left');
             if (typeof s.fontSize === 'number') wb.setTextFontSize(s.fontSize);
             wb.setColor(s.color || wb.color);
+            wb.setTextUnderline(s.underline === true);
+            wb.setTextFontFamily(WHITEBOARD_FONT_STACK[s.fontFamily] ? s.fontFamily : 'sans');
+            wb.setTextHighlight(s.highlight || null);
+            wb.setTextBorder(s.border === true);
             setTextDraft({ mode: 'edit', index: editIdx, x: s.x, y: s.y, initialText: s.text || '' });
           } else {
             setTextDraft({ mode: 'create', x: start.x, y: start.y });
@@ -4055,11 +4092,14 @@ function WhiteboardScene({
                 minWidth: 48,
                 maxWidth: Math.max(120, textOverlayScreen.maxWidth || 480),
                 minHeight: textInPlace.lineHeightPx,
-                background: 'transparent',
-                fontFamily: 'ui-sans-serif, system-ui, sans-serif',
+                // Look « façon Word » préservé : pas de cadre (outline/boxShadow/border restent none).
+                // Seule exception autorisée : le fond de surlignage quand il est activé.
+                background: textInPlace.highlight || 'transparent',
+                fontFamily: textInPlace.fontFamily,
                 fontSize: `${textInPlace.fontPx}px`,
                 fontWeight: textInPlace.weight,
                 fontStyle: textInPlace.fontStyle,
+                textDecoration: textInPlace.underline ? 'underline' : 'none',
                 lineHeight: `${textInPlace.lineHeightPx}px`,
                 textAlign: textInPlace.textAlign,
                 color: textInPlace.color,
@@ -4168,6 +4208,69 @@ function WhiteboardScene({
                   )}
                 >
                   <Sparkles className="h-3 w-3 shrink-0 opacity-80" />
+                  {label}
+                </button>
+              ))}
+            </div>
+            {/* Mise en forme « façon Word » : souligner, surligner (fond), encadrer. */}
+            <div className="flex flex-wrap items-center gap-1">
+              <button
+                type="button"
+                title="Souligner"
+                onClick={() => setTextUnderline((v) => !v)}
+                className={cn(
+                  designerShellChipGhost,
+                  'h-8 w-8 p-0',
+                  textUnderline && 'border-amber-500/45 bg-amber-500/12 text-amber-100',
+                )}
+              >
+                <Underline className="mx-auto h-3.5 w-3.5" strokeWidth={2.2} />
+              </button>
+              <button
+                type="button"
+                title="Surligner (fond)"
+                onClick={() => setTextHighlight(textHighlight ? null : 'rgba(253,230,138,0.55)')}
+                className={cn(
+                  designerShellChipGhost,
+                  'h-8 w-8 p-0',
+                  textHighlight && 'border-amber-500/45 bg-amber-500/12 text-amber-100',
+                )}
+              >
+                <Highlighter className="mx-auto h-3.5 w-3.5" strokeWidth={2.2} />
+              </button>
+              <button
+                type="button"
+                title="Encadrer"
+                onClick={() => setTextBorder((v) => !v)}
+                className={cn(
+                  designerShellChipGhost,
+                  'h-8 w-8 p-0',
+                  textBorder && 'border-amber-500/45 bg-amber-500/12 text-amber-100',
+                )}
+              >
+                <Square className="mx-auto h-3.5 w-3.5" strokeWidth={2.2} />
+              </button>
+            </div>
+            {/* Police (typo) — aperçu de la typo sur chaque bouton. */}
+            <div className="flex flex-wrap items-center gap-1">
+              {[
+                { id: 'sans', label: 'Sans' },
+                { id: 'serif', label: 'Serif' },
+                { id: 'hand', label: 'Manuscrite' },
+                { id: 'mono', label: 'Mono' },
+              ].map(({ id, label }) => (
+                <button
+                  key={id}
+                  type="button"
+                  title={`Police ${label}`}
+                  onClick={() => setTextFontFamily(id)}
+                  style={{ fontFamily: WHITEBOARD_FONT_STACK[id] }}
+                  className={cn(
+                    designerShellChipGhost,
+                    'px-2 py-1 text-[9px] font-semibold',
+                    textFontFamily === id && 'border-amber-500/50 bg-amber-500/15 text-amber-100',
+                  )}
+                >
                   {label}
                 </button>
               ))}
