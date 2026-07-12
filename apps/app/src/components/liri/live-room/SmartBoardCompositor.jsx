@@ -4024,16 +4024,19 @@ function WhiteboardScene({
                 margin: 0,
                 padding: 0,
                 border: 'none',
-                // Contour pointillé + fond de surface AUSSI en création : sinon le champ
-                // est invisible et l'utilisateur ne voit pas ce qu'il tape (« texte
-                // fantôme »). L'outline ne décale pas le texte (WYSIWYG conservé).
-                outline: '1.5px dashed rgba(212,163,106,0.9)',
+                // CADRE NET + halo doré + ombre portée : le champ de saisie doit être
+                // VISIBLE. Avant : fond = couleur du tableau + contour fin pointillé →
+                // le champ se confond avec le tableau = « texte fantôme » (on ne voit
+                // pas où on tape). outline + boxShadow ne décalent PAS le texte (WYSIWYG
+                // conservé). Visible sur fond sombre ET clair.
+                outline: '2px solid #d4a36a',
                 outlineOffset: '3px',
-                boxShadow: 'none',
+                boxShadow: '0 0 0 4px rgba(212,163,106,0.20), 0 10px 28px rgba(0,0,0,0.5)',
+                borderRadius: 4,
                 resize: 'none',
                 overflow: 'hidden',
                 whiteSpace: 'pre',
-                width: Math.max(120, textOverlayScreen.maxWidth || 480),
+                width: Math.max(160, textOverlayScreen.maxWidth || 480),
                 minHeight: textInPlace.lineHeightPx,
                 background: textInPlace.surfaceBg || 'rgba(20,18,16,0.55)',
                 fontFamily: 'ui-sans-serif, system-ui, sans-serif',
@@ -4043,7 +4046,9 @@ function WhiteboardScene({
                 lineHeight: `${textInPlace.lineHeightPx}px`,
                 textAlign: textInPlace.textAlign,
                 color: textInPlace.color,
-                caretColor: textInPlace.color,
+                // Curseur ambre TOUJOURS visible (avant = couleur du texte → invisible
+                // si le texte matche le fond) → on voit clairement où on écrit.
+                caretColor: '#d4a36a',
               }}
             />
 
