@@ -155,7 +155,7 @@ const PowerPointViewer = ({ powerpoint, onComplete }) => {
         <div className="hidden sm:flex items-center gap-3">
           <div className="text-xs text-gray-500">{currentSlide + 1}/{slides.length}</div>
           <div className="w-40 h-1.5 rounded-full bg-gray-100 overflow-hidden">
-            <div className="h-full bg-[#2563EB]" style={{ width: `${progressPct}%` }} />
+            <div className="h-full bg-[#d97757]" style={{ width: `${progressPct}%` }} />
           </div>
         </div>
 
@@ -196,7 +196,7 @@ const PowerPointViewer = ({ powerpoint, onComplete }) => {
         </div>
 
         {currentSlide === slides.length - 1 && typeof onComplete === 'function' ? (
-          <Button onClick={onComplete} className="bg-[#2563EB] hover:bg-blue-700 text-white rounded-full h-9 px-4 text-xs font-bold">
+          <Button onClick={onComplete} className="bg-[#d97757] hover:brightness-110 text-white rounded-full h-9 px-4 text-xs font-bold">
             Continuer
           </Button>
         ) : (
@@ -233,12 +233,12 @@ const PowerPointViewer = ({ powerpoint, onComplete }) => {
                     }
                   >
                     <div className="flex items-start gap-3">
-                      <div className={idx === currentSlide ? 'mt-0.5 h-2.5 w-2.5 rounded-full bg-[#2563EB] shadow-[0_0_0_4px_rgba(37,99,235,0.15)]' : 'mt-0.5 h-2.5 w-2.5 rounded-full bg-gray-300'} />
+                      <div className={idx === currentSlide ? 'mt-0.5 h-2.5 w-2.5 rounded-full bg-[#d97757] shadow-[0_0_0_4px_rgba(217,119,87,0.18)]' : 'mt-0.5 h-2.5 w-2.5 rounded-full bg-gray-300'} />
                       <div className="min-w-0 flex-1">
                         <div className="flex items-center justify-between gap-2">
                           <div className="text-[11px] font-semibold text-gray-500">Slide {idx + 1}</div>
                           {idx === currentSlide ? (
-                            <div className="text-[11px] font-semibold text-[#2563EB]">Actif</div>
+                            <div className="text-[11px] font-semibold text-[#d97757]">Actif</div>
                           ) : null}
                         </div>
                         <div className="text-sm font-semibold text-gray-900 line-clamp-1 mt-0.5">{s.title || `Slide ${idx + 1}`}</div>
@@ -268,7 +268,7 @@ const PowerPointViewer = ({ powerpoint, onComplete }) => {
                 >
                   <div className="w-full max-w-3xl">
                     <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-gray-200 bg-gray-50 text-xs text-gray-600 mb-5">
-                      <span className="text-[#2563EB] font-semibold">Slide</span>
+                      <span className="text-[#d97757] font-semibold">Slide</span>
                       <span>{currentSlide + 1}</span>
                     </div>
                     <h2 className="text-3xl font-bold mb-6 text-gray-900">{slide.title}</h2>
