@@ -310,6 +310,8 @@ const StudentEvaluationsPage = lazy(() => import('@/pages/school/student-school-
 const StudentAbsencesPage = lazy(() => import('@/pages/school/student-school-life/StudentAbsencesPage'));
 const StudentDocumentsPage = lazy(() => import('@/pages/school/student-school-life/StudentDocumentsPage'));
 const StudentProfilePage = lazy(() => import('@/pages/school/student-school-life/StudentProfilePage'));
+const StudentNeuroRecallPage = lazy(() => import('@/pages/school/student-school-life/StudentNeuroRecallPage'));
+const LiriBookReaderPage = lazy(() => import('@/pages/liri/LiriBookReaderPage'));
 const StudentEnrollmentOnboardingPage = lazy(() => import('@/pages/school/student-school-life/StudentEnrollmentOnboardingPage'));
 const OnboardingPage = lazy(() => import('@/pages/OnboardingPage'));
 const NgowazuluIntakePage = lazy(() => import('@/pages/ngowazulu/NgowazuluIntakePage'));
@@ -592,6 +594,40 @@ function BoutiqueGateRedirect() {
   if (loading) return <div style={{ minHeight: '100vh', background: '#262624' }} />;
   if (user) return <Navigate to="/liri/boutique" replace />;
   return <BoutiquePage />;
+}
+
+// /student-school-life = ancien espace élève « legacy » (mêmes composants que /liri les enveloppe).
+// On le retire du WEB en mappant chaque onglet vers son équivalent /liri (y compris les 4 ex-orphelines
+// qui ont désormais un home /liri). VARIANT MOBILE NATIF (`VITE_APP_VARIANT=eleve`) : on GARDE l'espace
+// legacy — l'app hardcode ces chemins (EleveMobileRouteShell). Onglets sans équivalent (forum/formation,
+// forum/topic) → rendu legacy conservé (fail-safe, aucune perte).
+const SSLIFE_SIMPLE = {
+  '': '/liri', dashboard: '/liri', formations: '/liri/formations', agenda: '/liri/agenda',
+  evaluations: '/liri/evaluations', notes: '/liri/notes', absences: '/liri/absences',
+  documents: '/liri/documents', 'vie-scolaire': '/liri/vie-scolaire', profile: '/liri/profil',
+  'neuro-recall': '/liri/neuro-recall', 'bibliotheque-ressources': '/liri/bibliotheque-ressources',
+};
+function sslifeTarget(splat) {
+  const parts = String(splat || '').split('/').filter(Boolean);
+  const p0 = parts[0] || 'dashboard';
+  const rest = parts.slice(1).join('/');
+  if (!rest && SSLIFE_SIMPLE[p0] !== undefined) return SSLIFE_SIMPLE[p0];
+  if (p0 === 'cours' && rest) return `/liri/cours/${rest}`;
+  if (p0 === 'bibliotheque') return rest ? `/liri/bibliotheque/${rest}` : '/liri/bibliotheque';
+  if (p0 === 'forum') {
+    if (!rest) return '/liri/forum';
+    if (rest === 'new') return '/liri/forum/new';
+    if (rest.startsWith('thread/')) return `/liri/forum/${rest}`;
+    return null; // forum/formation, forum/topic : pas d'équivalent /liri → garder legacy
+  }
+  return null;
+}
+function StudentSchoolLifeGate() {
+  const params = useParams();
+  if (import.meta.env.VITE_APP_VARIANT === 'eleve') return <StudentSchoolLifePage />;
+  const target = sslifeTarget(params['*']);
+  if (target) return <Navigate to={target} replace />;
+  return <StudentSchoolLifePage />;
 }
 // Le Montage post-prod appartient au STUDIO LIRI (dans le portail). L'ancienne route
 // /owner-dashboard/* résout le tenant et renvoie vers son domaine (ex. prorascience.org
@@ -1961,6 +1997,12 @@ isLiriHostDevPreviewRoute;
           <Route path="/liri/bibliotheque" element={<ProtectedLiriRoute allowedRoles={['owner', 'admin', 'teacher', 'secretariat', 'student', 'practitioner', 'clinic_admin']} allowTenantRole><LiriSchoolShell active="biblio-eleve"><BibliothequePage embedded /></LiriSchoolShell></ProtectedLiriRoute>} />
           <Route path="/liri/documents" element={<ProtectedLiriRoute allowedRoles={['owner', 'admin', 'teacher', 'secretariat', 'student', 'practitioner', 'clinic_admin']} allowTenantRole><LiriSchoolShell active="documents"><StudentDocumentsPage /></LiriSchoolShell></ProtectedLiriRoute>} />
           <Route path="/liri/profil" element={<ProtectedLiriRoute allowedRoles={['owner', 'admin', 'teacher', 'secretariat', 'student', 'practitioner', 'clinic_admin']} allowTenantRole><LiriSchoolShell active="accueil"><StudentProfilePage /></LiriSchoolShell></ProtectedLiriRoute>} />
+          {/* Homes /liri des 4 sous-fonctions autrefois orphelines de /student-school-life (lecteur cours,
+              neuro-recall, lecteur livre, ressources) → plus rien n'est perdu au retrait de l'espace legacy. */}
+          <Route path="/liri/cours/:courseId" element={<ProtectedLiriRoute allowedRoles={['owner', 'admin', 'teacher', 'secretariat', 'student', 'practitioner', 'clinic_admin']} allowTenantRole><LiriSchoolShell active="formations"><Suspense fallback={null}><TenantCourseDetailPage /></Suspense></LiriSchoolShell></ProtectedLiriRoute>} />
+          <Route path="/liri/neuro-recall" element={<ProtectedLiriRoute allowedRoles={['owner', 'admin', 'teacher', 'secretariat', 'student', 'practitioner', 'clinic_admin']} allowTenantRole><LiriSchoolShell active="formations"><StudentNeuroRecallPage /></LiriSchoolShell></ProtectedLiriRoute>} />
+          <Route path="/liri/bibliotheque/:bookId" element={<ProtectedLiriRoute allowedRoles={['owner', 'admin', 'teacher', 'secretariat', 'student', 'practitioner', 'clinic_admin']} allowTenantRole><LiriBookReaderPage /></ProtectedLiriRoute>} />
+          <Route path="/liri/bibliotheque-ressources" element={<ProtectedLiriRoute allowedRoles={['owner', 'admin', 'teacher', 'secretariat', 'student', 'practitioner', 'clinic_admin']} allowTenantRole><LiriSchoolShell active="biblio-eleve"><LibraryPage embedded /></LiriSchoolShell></ProtectedLiriRoute>} />
 
           <Route path="/choose-account-type" element={
             <ProtectedRoute>
@@ -2249,7 +2291,8 @@ isLiriHostDevPreviewRoute;
           {/* 🎨 DESIGN PREVIEW — guards désactivés temporairement */}
           {/* Doublon legacy (même composant que /liri/semaine, guards en preview) → portail LIRI. */}
           <Route path="/student-school-life/semaine-courante" element={<Navigate to="/liri/semaine" replace />} />
-          <Route path="/student-school-life/*" element={<StudentSchoolLifePage />} />
+          {/* Ancien espace élève legacy → portail LIRI (web) ; conservé pour l'app mobile native. */}
+          <Route path="/student-school-life/*" element={<StudentSchoolLifeGate />} />
 
           {/* === CLASSROOM ROUTES (PROTECTED) === */}
           <Route path="/classroom" element={
