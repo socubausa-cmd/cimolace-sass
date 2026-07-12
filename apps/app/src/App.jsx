@@ -2247,7 +2247,8 @@ isLiriHostDevPreviewRoute;
 
           {/* Main Dashboard entry point */}
           {/* 🎨 DESIGN PREVIEW — guards désactivés temporairement */}
-          <Route path="/student-school-life/semaine-courante" element={<SslThemeProvider mode="light"><StudentWeeklySchedulePage /></SslThemeProvider>} />
+          {/* Doublon legacy (même composant que /liri/semaine, guards en preview) → portail LIRI. */}
+          <Route path="/student-school-life/semaine-courante" element={<Navigate to="/liri/semaine" replace />} />
           <Route path="/student-school-life/*" element={<StudentSchoolLifePage />} />
 
           {/* === CLASSROOM ROUTES (PROTECTED) === */}
@@ -2516,11 +2517,8 @@ isLiriHostDevPreviewRoute;
           {/* Redirigé vers le studio LIRI (dans le portail) — plus de bounce owner→domaine tenant (prorascience.org / ISNA). */}
           <Route path="/owner-dashboard/post-production/:contentId" element={<OwnerPostProdRedirect />} />
 
-          <Route path="/owner-dashboard/knowledge-base" element={
-            <ProtectedOwnerRoute>
-              <KnowledgeBaseManager />
-            </ProtectedOwnerRoute>
-          } />
+          {/* Doublon legacy (même composant que /liri/ecole/knowledge-base, 0 caller) → portail LIRI. */}
+          <Route path="/owner-dashboard/knowledge-base" element={<Navigate to="/liri/ecole/knowledge-base" replace />} />
 
           {/* Forum admin = forum riche élève (StudentForumRedesign monté dans l'onglet ?tab=forum).
               Ses sous-pages sont des chemins (forumBase dérivé de l'URL) → on les route ici sous
