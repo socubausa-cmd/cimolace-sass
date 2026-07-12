@@ -129,6 +129,8 @@ export function Step8Validation({ draft, updateDraft, onSubmit, creating, user, 
       // LIRI — Sécurité & Salle d'attente
       access_mode:         draft.access_mode || 'free',
       password:            draft.password || '',
+      price_cents:         draft.access_mode === 'paid' ? (draft.price_cents || 0) : 0,
+      currency:            draft.currency || 'EUR',
       waiting_room:        draft.waiting_room !== false,
       waiting_room_audio_enabled:   draft.waiting_room_audio_enabled || false,
       waiting_room_show_plan:       draft.waiting_room_show_plan || false,
@@ -174,6 +176,8 @@ export function Step8Validation({ draft, updateDraft, onSubmit, creating, user, 
       // LIRI — Sécurité & Salle d'attente
       access_mode:         draft.access_mode || 'free',
       password:            draft.password || '',
+      price_cents:         draft.access_mode === 'paid' ? (draft.price_cents || 0) : 0,
+      currency:            draft.currency || 'EUR',
       waiting_room:        draft.waiting_room !== false,
       waiting_room_audio_enabled:   draft.waiting_room_audio_enabled || false,
       waiting_room_show_plan:       draft.waiting_room_show_plan || false,
@@ -248,6 +252,7 @@ export function Step8Validation({ draft, updateDraft, onSubmit, creating, user, 
                   : draft.access_mode === 'password' ? 'Mot de passe'
                   : draft.access_mode === 'manual'   ? 'Validation hôte'
                   : draft.access_mode === 'double'   ? 'Double validation'
+                  : draft.access_mode === 'paid'     ? `Payant — ${((draft.price_cents || 0) / 100)} ${draft.currency || 'EUR'}`
                   : 'Libre'}
               </p>
             </div>

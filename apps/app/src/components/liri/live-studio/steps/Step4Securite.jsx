@@ -9,7 +9,7 @@ import { Switch } from '@/components/ui/switch';
 import { Textarea } from '@/components/ui/textarea';
 import {
   Lock, Eye, EyeOff, Users, DoorOpen, Volume2, FileText,
-  Bell, Mail, Clock, ShieldCheck, Key, CheckCircle, MessageSquare, Smartphone,
+  Bell, Mail, Clock, ShieldCheck, Key, CheckCircle, MessageSquare, Smartphone, Ticket,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -42,6 +42,13 @@ const ACCESS_MODES = [
     desc: 'Mot de passe + approbation manuelle de l\'hôte.',
     color: 'purple',
   },
+  {
+    id: 'paid',
+    icon: Ticket,
+    label: 'Payant',
+    desc: 'L\'invité paie pour accéder — checkout puis accès débloqué automatiquement.',
+    color: 'amber',
+  },
 ];
 
 const COLOR_MAP = {
@@ -49,6 +56,7 @@ const COLOR_MAP = {
   blue:    'border-blue-500/40 bg-blue-500/10 text-blue-300',
   violet:  'border-[#d97757]/40 bg-[#d97757]/10 text-[#d97757]',
   purple:  'border-purple-500/40 bg-purple-500/10 text-purple-300',
+  amber:   'border-amber-500/40 bg-amber-500/10 text-amber-300',
 };
 
 const VISIBILITY_OPTIONS = [
@@ -91,6 +99,7 @@ function ToggleRow({ icon: Icon, label, desc, checked, onChange }) {
 
 export function Step4Securite({ draft, updateDraft }) {
   const needsPassword = draft.access_mode === 'password' || draft.access_mode === 'double';
+  const isPaid = draft.access_mode === 'paid';
 
   return (
     <div className="space-y-6">
@@ -188,6 +197,37 @@ export function Step4Securite({ draft, updateDraft }) {
               placeholder="Entrer le mot de passe…"
               className="h-10 rounded-xl bg-[#0F1419] border-white/10 text-white text-sm"
             />
+          </div>
+        )}
+
+        {isPaid && (
+          <div className="pt-1 space-y-1.5">
+            <Label className="text-xs text-white/50 flex items-center gap-1.5">
+              <Ticket className="w-3 h-3" /> Prix d'accès au live
+            </Label>
+            <div className="flex gap-2">
+              <Input
+                type="number"
+                min={0}
+                step="0.01"
+                value={draft.price_cents ? draft.price_cents / 100 : ''}
+                onChange={(e) => updateDraft({ price_cents: Math.max(0, Math.round(Number(e.target.value || 0) * 100)) })}
+                placeholder="0"
+                className="h-10 flex-1 rounded-xl bg-[#0F1419] border-white/10 text-white text-sm"
+              />
+              <select
+                value={draft.currency || 'EUR'}
+                onChange={(e) => updateDraft({ currency: e.target.value })}
+                className="h-10 px-3 rounded-xl bg-[#0F1419] border border-white/10 text-white text-sm outline-none"
+              >
+                <option value="EUR">EUR €</option>
+                <option value="XAF">XAF</option>
+                <option value="XOF">XOF</option>
+              </select>
+            </div>
+            <p className="text-[10px] text-white/40 leading-relaxed">
+              L'invité verra « Payer pour accéder » → paiement → accès débloqué (un pass est posé automatiquement au paiement confirmé).
+            </p>
           </div>
         )}
       </motion.div>
