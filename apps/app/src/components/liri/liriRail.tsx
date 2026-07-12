@@ -2,7 +2,7 @@ import React from 'react';
 import {
   House, Video, MessagesSquare, MessageCircle, WandSparkles, Library, GraduationCap, Sparkles,
   CalendarDays, BookOpen, School, Calendar, FileText, Award, AlertTriangle, FolderOpen, Tag, Files,
-  SquarePen,
+  SquarePen, CreditCard,
 } from 'lucide-react';
 
 /**
@@ -16,7 +16,7 @@ import {
  *   (aucun flag)   → partagé (Accueil, Lives, Forum, Messages)
  */
 export type RailKey =
-  | 'accueil' | 'semaine' | 'formations'
+  | 'accueil' | 'forfaits' | 'semaine' | 'formations'
   | 'vie-scolaire' | 'agenda' | 'notes' | 'evaluations' | 'absences'
   | 'lives' | 'forum' | 'messages'
   | 'biblio-eleve' | 'documents'
@@ -29,6 +29,7 @@ export const RAIL_GROUPS: { section?: string; items: RailItem[] }[] = [
     { key: 'accueil', label: 'Accueil', icon: House, to: '/liri' },
   ] },
   { section: 'Parcours', items: [
+    { key: 'forfaits', label: 'Forfaits', icon: CreditCard, to: '/liri/forfaits' },
     { key: 'semaine', label: 'Ma semaine', icon: CalendarDays, to: '/liri/semaine', school: true },
     { key: 'formations', label: 'Mes cours', icon: BookOpen, to: '/liri/formations', school: true },
   ] },

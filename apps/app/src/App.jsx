@@ -566,6 +566,21 @@ function AcademyToLiriRedirect() {
   const tab = ACADEMY_TAB_MAP[sub] || 'dashboard';
   return <Navigate to={tab === 'dashboard' ? '/liri/ecole' : `/liri/ecole?tab=${tab}`} replace />;
 }
+
+// FORFAITS : l'ancienne vitrine standalone « Prorascience PORTAIL » (/forfaits) est retirée.
+//  • MEMBRE connecté → forfaits DANS le portail LIRI (/liri/forfaits, coque + rail), en
+//    préservant ?plan= (présélection depuis l'agent immersif).
+//  • VISITEUR → on rend les MÊMES offres mais SANS le header vitrine « PORTAIL » (retiré via
+//    hideHeaderRoutes) : page focalisée conversion + checkout invité intact. La découverte des
+//    forfaits pour un visiteur se fait dans l'agent immersif (prorascience.org).
+function ForfaitsGateRedirect() {
+  const { user, loading } = useAuth();
+  const [sp] = useSearchParams();
+  const q = sp.toString();
+  if (loading) return <div style={{ minHeight: '100vh', background: '#262624' }} />;
+  if (user) return <Navigate to={`/liri/forfaits${q ? `?${q}` : ''}`} replace />;
+  return <ForfaitsPage />;
+}
 // Le Montage post-prod appartient au STUDIO LIRI (dans le portail). L'ancienne route
 // /owner-dashboard/* résout le tenant et renvoie vers son domaine (ex. prorascience.org
 // = chrome ISNA Academy externe) → on redirige vers /studio, en préservant le contentId.
@@ -692,6 +707,7 @@ const DashboardLiri = lazy(() => import('@/pages/liri/DashboardLiri').then((m) =
 const LiriPortalPage = lazy(() => import('@/pages/liri/LiriPortalPage').then((m) => ({ default: m.LiriPortalPage })));
 const LiriAccountPage = lazy(() => import('@/pages/liri/LiriAccountPage'));
 const LiriServicesPage = lazy(() => import('@/pages/liri/LiriServicesPage'));
+const LiriForfaitsPage = lazy(() => import('@/pages/liri/LiriForfaitsPage'));
 const LiriContenuPage = lazy(() => import('@/pages/liri/LiriContenuPage'));
 const LiriPagesPage = lazy(() => import('@/pages/liri/LiriPagesPage'));
 const LiriFinancesPage = lazy(() => import('@/pages/liri/LiriFinancesPage'));
@@ -1249,6 +1265,8 @@ const AppContent = () => {
   const hideHeaderRoutes = [
     '/login',
     '/signup',
+    '/forfaits',        // Forfaits retirés de la vitrine « PORTAIL » : membre → /liri/forfaits (coque LIRI),
+                        // visiteur → page offres focalisée SANS l'ancien header Academy (agent immersif = découverte).
     '/creer-organisation',
     '/precepteur',      // Le Précepteur = secteur FORMATION de Cimolace — immersif plein écran, aucun header
     '/rejoindre',
@@ -1852,6 +1870,13 @@ isLiriHostDevPreviewRoute;
               <LiriServicesPage />
             </ProtectedLiriRoute>
           } />
+          {/* Forfaits — cycles/offres du tenant DANS le portail LIRI (membres) : remplace l'ancienne
+              vitrine standalone « Prorascience PORTAIL » (/forfaits). Visiteurs → agent immersif. */}
+          <Route path="/liri/forfaits" element={
+            <ProtectedLiriRoute allowedRoles={['owner', 'admin', 'teacher', 'secretariat', 'student', 'practitioner', 'clinic_admin']} allowTenantRole>
+              <LiriForfaitsPage />
+            </ProtectedLiriRoute>
+          } />
           {/* Contenu du site — éditeur du KNOWLEDGE PACK OS (identité/fondateur/vision/offres/FAQ)
               que l'agent immersif Cimolace OS lit pour RENDRE le site public. Créateur only. */}
           <Route path="/liri/contenu" element={
@@ -1968,7 +1993,7 @@ isLiriHostDevPreviewRoute;
           {/* === PUBLIC FORMATIONS & PRICING — pas de ProtectedRoute : le prospect doit voir les prix avant de s'inscrire === */}
           {/* Realm-neutre : /formations & /catalogue → liste publique (PublicFormationsPage via /formations/list). JAMAIS de redirection vers /t/:slug — sur le host neutre (liri.cimolace.space) ça basculerait le visiteur dans le tenant ISNA (fuite cross-realm ANY→ISNA). */}
           <Route path="/formations" element={<Navigate to="/formations/list" replace />} />
-          <Route path="/forfaits" element={<ForfaitsPage />} />
+          <Route path="/forfaits" element={<ForfaitsGateRedirect />} />
           <Route path="/pricing" element={<Navigate to="/forfaits" replace />} />
           <Route path="/formation/:id/learn" element={
             <ProtectedRoute>

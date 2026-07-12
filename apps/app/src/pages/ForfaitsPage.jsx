@@ -172,7 +172,9 @@ const cycleKeyFromPlanParam = (raw) => {
   return '';
 };
 
-const ForfaitsPage = () => {
+// `embedded` : rendu DANS le portail LIRI (LiriPortalShell fournit le fond + le scroll) →
+// on retire la coque plein écran (min-h-screen + fond) pour ne garder que le corps des offres.
+const ForfaitsPage = ({ embedded = false }) => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const { subscription, status: billingStatus } = useBilling();
@@ -376,7 +378,7 @@ const ForfaitsPage = () => {
   };
 
   return (
-    <div className="prs-forfaits-site relative min-h-screen overflow-x-hidden bg-[#1d1916] text-white pb-16">
+    <div className={`prs-forfaits-site relative overflow-x-hidden text-white pb-16 ${embedded ? '' : 'min-h-screen bg-[#1d1916]'}`}>
       <style>{PRORASCIENCE_MARKETING_HERO_CSS}</style>
       <Helmet>
         <title>{`${INITIATION_PRODUCT_NAME} | ${getActiveTenantBranding().name}`}</title>
