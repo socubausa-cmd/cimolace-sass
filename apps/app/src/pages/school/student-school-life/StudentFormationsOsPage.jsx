@@ -17,7 +17,8 @@ export default function StudentFormationsOsPage() {
   const navigate = useNavigate();
   const [courses, setCourses] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [focusCourse, setFocusCourse] = useState(null); // { course, modules } | null
+  const [focusCourse, setFocusCourse] = useState(null); // { course, modules } | null — niveau 2 (frise modules)
+  const [focusModule, setFocusModule] = useState(null); // { course, module, mIdx } | null — niveau 3 (jours)
   const [visible, setVisible] = useState(false);
 
   useEffect(() => {
@@ -33,7 +34,7 @@ export default function StudentFormationsOsPage() {
     setVisible(false);
     const t = setTimeout(() => setVisible(true), 90);
     return () => clearTimeout(t);
-  }, [focusCourse, loading]);
+  }, [focusCourse, focusModule, loading]);
 
   const modulesOf = (course) => {
     const meta = course?.meta && typeof course.meta === 'object' ? course.meta : {};
@@ -53,8 +54,43 @@ export default function StudentFormationsOsPage() {
     setFocusCourse({ course: full, modules: modulesOf(full) });
   };
 
+  // Aplatit les jours d'un module (semaines → jours) avec un libellé lisible.
+  const daysOfModule = (module) => {
+    const out = [];
+    (module?.weeks || []).forEach((w, wi) => {
+      (w.days || []).forEach((d, di) => {
+        out.push({ day: d, weekIdx: wi, dayIdx: di, weekTitle: w.title || `Semaine ${wi + 1}` });
+      });
+    });
+    return out;
+  };
+
   const scene = useMemo(() => {
     if (loading) return null;
+
+    // Niveau 3 — un module ouvert : cartes de ses jours (vidéo / support / quiz).
+    if (focusModule) {
+      const { course, module } = focusModule;
+      const list = daysOfModule(module);
+      return {
+        type: 'cards',
+        title: module.title || 'Module',
+        cards: list.length ? list.map((it, i) => {
+          const d = it.day || {};
+          const bits = [];
+          if ((Array.isArray(d.videos) ? d.videos.length : (d.video ? 1 : 0))) bits.push('Vidéo');
+          if (d.powerpoint || d.reader) bits.push('Support');
+          if (d.quiz) bits.push('Quiz');
+          if (d.mindmap || d.videos?.some?.((v) => v.mindmap)) bits.push('Mindmap');
+          return {
+            icon: 'book',
+            title: d.title || `Jour ${i + 1}`,
+            note: [it.weekTitle, bits.join(' · ')].filter(Boolean).join(' — '),
+            ref: `open:${course.id}`,
+          };
+        }) : [{ icon: 'book', title: 'Ouvrir la formation', note: 'Accéder au lecteur immersif', ref: `open:${course.id}` }],
+      };
+    }
 
     // Niveau 2 — une formation ouverte : frise verticale de ses modules.
     if (focusCourse) {
@@ -66,7 +102,7 @@ export default function StudentFormationsOsPage() {
           kicker: `Module ${i + 1}`,
           title: m.title || `Module ${i + 1}`,
           detail: m.description || (days ? `${days} jour${days > 1 ? 's' : ''}` : ''),
-          ref: `open:${course.id}`,
+          ref: `module:${i}`,
         };
       });
       return {
@@ -91,7 +127,7 @@ export default function StudentFormationsOsPage() {
         ref: `course:${c.id}`,
       })),
     };
-  }, [loading, focusCourse, courses]);
+  }, [loading, focusCourse, focusModule, courses]);
 
   const onFocus = (ref) => {
     if (!ref) return;
@@ -99,12 +135,24 @@ export default function StudentFormationsOsPage() {
       const id = ref.slice(7);
       const course = courses.find((c) => c.id === id);
       if (course) openCourse(course);
+    } else if (ref.startsWith('module:')) {
+      const mIdx = Number(ref.slice(7));
+      const module = focusCourse?.modules?.[mIdx];
+      if (module) { setVisible(false); setTimeout(() => setFocusModule({ course: focusCourse.course, module, mIdx }), 200); }
     } else if (ref.startsWith('open:')) {
       navigate(`/formation/${ref.slice(5)}/learn`);
     }
   };
 
-  const back = () => { setVisible(false); setTimeout(() => setFocusCourse(null), 200); };
+  // Retour hiérarchique : jours → modules → liste.
+  const back = () => {
+    setVisible(false);
+    setTimeout(() => {
+      if (focusModule) setFocusModule(null);
+      else setFocusCourse(null);
+    }, 200);
+  };
+  const backLabel = focusModule ? (focusCourse?.course?.title || 'Formation') : 'Mes formations';
 
   return (
     <div style={{ position: 'relative', width: '100%', height: '100%', minHeight: 'calc(100vh - 120px)', background: BG, color: INK, overflow: 'hidden', fontFamily: "'Inter', system-ui, sans-serif" }}>
@@ -115,13 +163,13 @@ export default function StudentFormationsOsPage() {
       <span className="cca-amb" style={{ width: 4, height: 4, top: '62%', left: '68%', opacity: 0.13, background: '#e6cc92', animation: 'ccaDriftB 14s ease-in-out infinite' }} />
       <span className="cca-amb" style={{ width: 3, height: 3, top: '46%', left: '72%', opacity: 0.12, animation: 'ccaDriftC 9s ease-in-out infinite' }} />
 
-      {focusCourse && (
+      {(focusCourse || focusModule) && (
         <button
           type="button"
           onClick={back}
-          style={{ position: 'absolute', top: 18, left: 20, zIndex: 8, display: 'inline-flex', alignItems: 'center', gap: 6, padding: '8px 14px', borderRadius: 999, border: '1px solid rgba(245,244,238,0.14)', background: 'rgba(38,38,36,.72)', backdropFilter: 'blur(6px)', color: INK, cursor: 'pointer', fontFamily: 'inherit', fontSize: 12.5, fontWeight: 500 }}
+          style={{ position: 'absolute', top: 18, left: 20, zIndex: 8, display: 'inline-flex', alignItems: 'center', gap: 6, padding: '8px 14px', borderRadius: 999, border: '1px solid rgba(245,244,238,0.14)', background: 'rgba(38,38,36,.72)', backdropFilter: 'blur(6px)', color: INK, cursor: 'pointer', fontFamily: 'inherit', fontSize: 12.5, fontWeight: 500, maxWidth: 320, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}
         >
-          <ArrowLeft size={14} /> Mes formations
+          <ArrowLeft size={14} /> {backLabel}
         </button>
       )}
 
