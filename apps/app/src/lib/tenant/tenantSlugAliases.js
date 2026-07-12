@@ -13,7 +13,10 @@ export function tenantSlugMatches(actual, expected) {
   return Boolean(a && e && a === e);
 }
 
+// Slug PUBLIC (celui des URLs /t/:slug qui rendent réellement) à partir du slug canonique interne.
+// Reverse de l'alias : 'isna' → 'prorascience'. Sans alias → identité (ex. 'zahirwellness').
 export function publicTenantSlug(slug) {
   const normalized = String(slug || '').trim().toLowerCase();
-  return normalized || slug;
+  const publicKey = Object.keys(TENANT_SLUG_ALIASES).find((k) => TENANT_SLUG_ALIASES[k] === normalized);
+  return publicKey || normalized || slug;
 }

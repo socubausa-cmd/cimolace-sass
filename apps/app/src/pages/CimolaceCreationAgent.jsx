@@ -19,6 +19,7 @@ import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { GraduationCap, Stethoscope, ShoppingBag, ArrowUp, ArrowRight, ArrowLeft, Check, Loader2, Mail, Lock, Volume2, VolumeX, Sparkles, SkipForward, X, Compass, BookOpen, Users, Tag, UserPlus, Calendar, Download, Scale, Send, Eye, Target, Gem, Hexagon } from 'lucide-react';
 import { getApiBaseUrl } from '@/lib/apiBase';
+import { publicTenantSlug } from '@/lib/tenant/tenantSlugAliases';
 import { useAuth } from '@/hooks/useAuth';
 import { authStore } from '@/lib/auth-store';
 import { supabase } from '@/lib/supabase';
@@ -1751,7 +1752,7 @@ export default function CimolaceCreationAgent({ tenantSlug: tenantSlugProp = nul
     try { logEvent('mon_espace', {}, osTenant); } catch { /* non bloquant */ }
     setHistOpen(false); closeInput();
     speak('Je vous emmène à votre espace — un instant.');
-    setTimeout(() => navigate(`/t/${encodeURIComponent(osTenant)}/login`), 650);
+    setTimeout(() => navigate(`/t/${encodeURIComponent(publicTenantSlug(osTenant))}/login`), 650);
   }, [osTenant, speak, navigate, closeInput]);
 
   // ── L8 — mode formation NATIF : Cimolace EST le moteur de rendu du cours ──
