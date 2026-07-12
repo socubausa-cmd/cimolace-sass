@@ -20,6 +20,7 @@ import SecretariatCalendarPage from '@/pages/secretariat/SecretariatCalendarPage
 import SecretariatMarketingPanelPage from '@/pages/secretariat/SecretariatMarketingPanelPage';
 import SecretariatAppointmentsPage from '@/pages/secretariat/SecretariatAppointmentsPage';
 import SecretariatVnpBookingsPage from '@/pages/secretariat/SecretariatVnpBookingsPage';
+import SecretariatVnpStatsPage from '@/pages/secretariat/SecretariatVnpStatsPage';
 import HowItWorksPage from '@/pages/HowItWorksPage';
 import CoursesPage from '@/pages/school/CoursesPage';
 import TeachersPage from '@/pages/school/TeachersPage';
@@ -53,7 +54,7 @@ const SecretariatForumPanel = () => {
   );
 };
 
-const VALID_TABS = ['dashboard', 'apercu', 'paiements', 'notifications', 'reports', 'formations', 'coaching-mentoring', 'workshops', 'ngowazulu-mentorat', 'ngowazulu-operations', 'reviews', 'certificates', 'support', 'school-life', 'forum', 'rendez-vous', 'demandes-publiques', 'calendrier', 'marketing', 'messagerie', 'teachers', 'how-it-works', 'courses', 'document-admin', 'cycles-disciple', 'cycles-initie', 'cycles-maitre'];
+const VALID_TABS = ['dashboard', 'apercu', 'paiements', 'notifications', 'reports', 'formations', 'coaching-mentoring', 'workshops', 'ngowazulu-mentorat', 'ngowazulu-operations', 'reviews', 'certificates', 'support', 'school-life', 'forum', 'rendez-vous', 'demandes-publiques', 'stats-vnp', 'calendrier', 'marketing', 'messagerie', 'teachers', 'how-it-works', 'courses', 'document-admin', 'cycles-disciple', 'cycles-initie', 'cycles-maitre'];
 
 const SecretariatDashboard = () => {
   const [activeTab, setActiveTab] = useState('dashboard');
@@ -131,6 +132,8 @@ const SecretariatDashboard = () => {
         return <SecretariatAppointmentsPage />;
       case 'demandes-publiques':
         return <SecretariatVnpBookingsPage />;
+      case 'stats-vnp':
+        return <SecretariatVnpStatsPage />;
       case 'calendrier':
         return <SecretariatCalendarPage />;
       case 'courrier-infos':

@@ -4,7 +4,7 @@ import { useAuth } from '@/contexts/SupabaseAuthContext';
 import {
   LayoutDashboard, BookOpen, HeartHandshake as Handshake, Calendar, CalendarClock, Bell,
   HelpCircle, Users as UsersIcon, Award, PieChart, Inbox, FileCheck, FileText, GraduationCap,
-  Library, Video, Megaphone, CreditCard, Flame, Star, MessageCircle, CalendarPlus,
+  Library, Video, Megaphone, CreditCard, Flame, Star, MessageCircle, CalendarPlus, BarChart3,
 } from 'lucide-react';
 import NotificationDropdown from '@/components/notifications/NotificationDropdown';
 import LiriDashboardShell from '@/components/shell/LiriDashboardShell';
@@ -45,6 +45,7 @@ const SecretariatDashboardLayout = ({ children, activeTab, onTabChange }) => {
           { id: 'dashboard', icon: LayoutDashboard, label: 'Gestion élèves' },
           { id: 'rendez-vous', icon: CalendarClock, label: 'Rendez-vous actifs' },
           { id: 'demandes-publiques', icon: CalendarPlus, label: 'Demandes du site', badge: pendingVnp || undefined },
+          { id: 'stats-vnp', icon: BarChart3, label: 'Trafic du site' },
           { id: 'calendrier', icon: Calendar, label: 'Calendrier rendez-vous' },
           { id: 'messagerie', icon: Inbox, label: 'Messagerie' },
         ],
