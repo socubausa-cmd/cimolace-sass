@@ -22,7 +22,7 @@ import {
   BarChart3, PieChart, LineChart, ScatterChart, Table2, Sigma, Divide, Network,
   FlipHorizontal2, RotateCw, Scaling,
   Image as ImageIcon, LayoutTemplate, ChevronDown, X, Search,
-  Undo2, Redo2, Trash2, Eye, LayoutGrid, PaintBucket, Zap, EyeOff, Sparkles,
+  Undo2, Redo2, Trash2, Trash, Eye, LayoutGrid, PaintBucket, Zap, EyeOff, Sparkles,
 } from 'lucide-react';
 import { useLiveWhiteboardStore } from '@/components/liri/live-room/useLiveWhiteboardStore';
 
@@ -142,6 +142,8 @@ export default function ConsultationToolCockpit({
   const undoBoard = useLiveWhiteboardStore((s) => s.undoBoard);
   const redoBoard = useLiveWhiteboardStore((s) => s.redoBoard);
   const clearBoard = useLiveWhiteboardStore((s) => s.clearBoard);
+  const boardSelection = useLiveWhiteboardStore((s) => s.boardSelection);
+  const deleteBoardSelection = useLiveWhiteboardStore((s) => s.deleteBoardSelection);
   const neuroInkOpen = useLiveWhiteboardStore((s) => s.neuroInkOpen);
   const setNeuroInkOpen = useLiveWhiteboardStore((s) => s.setNeuroInkOpen);
 
@@ -289,6 +291,19 @@ export default function ConsultationToolCockpit({
             <a.Icon size={16} aria-hidden="true" />
           </button>
         ))}
+        {/* Supprimer UNIQUEMENT l'objet sélectionné (distinct de « Tout effacer ») —
+            n'apparaît que si quelque chose est sélectionné. Alternative tactile à la
+            touche Suppr (absente sur tablette). */}
+        {Array.isArray(boardSelection) && boardSelection.length > 0 ? (
+          <button
+            type="button"
+            title={`Supprimer la sélection (${boardSelection.length})`}
+            onClick={() => deleteBoardSelection?.()}
+            style={{ ...toolBtn(false), color: '#e5484d', border: '1px solid rgba(229,72,77,0.45)', background: 'rgba(229,72,77,0.12)' }}
+          >
+            <Trash size={16} aria-hidden="true" />
+          </button>
+        ) : null}
         {divider}
         <button type="button" title="NeuroInk — assistant IA du tableau (décrire, structurer, embellir)" onClick={() => setNeuroInkOpen?.(!neuroInkOpen)} style={chip(neuroInkOpen)}>
           <Sparkles size={15} aria-hidden="true" /> IA

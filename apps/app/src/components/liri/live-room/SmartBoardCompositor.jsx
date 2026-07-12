@@ -3740,13 +3740,17 @@ function WhiteboardScene({
           {boardSelection.length === 1 && !readOnly && tool === 'select' ? (() => {
             const idx = boardSelection[0];
             const s = strokesRef.current[idx];
-            if (!s || !RESIZABLE_KINDS.has(s.kind || 'path')) return null;
+            if (!s) return null;
             const canvas = canvasRef.current;
             if (!canvas) return null;
             const ctx = canvas.getContext('2d');
             const b = strokeVisualBounds(ctx, s);
             if (!b) return null;
-            const handles = getResizeHandles(b);
+            // Poignées de redimensionnement : seulement pour les objets redimensionnables.
+            // MAIS on trace TOUJOURS un contour de sélection — y compris texte et tracé
+            // libre — pour que l'utilisateur VOIE l'objet sélectionné (donc déplaçable).
+            const resizable = RESIZABLE_KINDS.has(s.kind || 'path');
+            const handles = resizable ? getResizeHandles(b) : [];
             const cw = canvas.width || 800;
             const ch = canvas.height || 600;
             const svgKey = `${resizeRevision}-${idx}`;
@@ -3758,6 +3762,10 @@ function WhiteboardScene({
                 viewBox={`0 0 ${cw} ${ch}`}
                 aria-hidden
               >
+                <rect
+                  x={b.x - 3} y={b.y - 3} width={Math.max(0, b.w) + 6} height={Math.max(0, b.h) + 6}
+                  rx="3" fill="none" stroke="rgba(212,175,55,0.9)" strokeWidth="1.5" strokeDasharray="6 4"
+                />
                 {handles.map((h) => (
                   <rect
                     key={h.id}
@@ -4010,14 +4018,18 @@ function WhiteboardScene({
                 margin: 0,
                 padding: 0,
                 border: 'none',
-                outline: 'none',
+                // Contour pointillé + fond de surface AUSSI en création : sinon le champ
+                // est invisible et l'utilisateur ne voit pas ce qu'il tape (« texte
+                // fantôme »). L'outline ne décale pas le texte (WYSIWYG conservé).
+                outline: '1.5px dashed rgba(212,163,106,0.9)',
+                outlineOffset: '3px',
                 boxShadow: 'none',
                 resize: 'none',
                 overflow: 'hidden',
                 whiteSpace: 'pre',
                 width: Math.max(120, textOverlayScreen.maxWidth || 480),
                 minHeight: textInPlace.lineHeightPx,
-                background: textDraft.mode === 'edit' ? textInPlace.surfaceBg : 'transparent',
+                background: textInPlace.surfaceBg || 'rgba(20,18,16,0.55)',
                 fontFamily: 'ui-sans-serif, system-ui, sans-serif',
                 fontSize: `${textInPlace.fontPx}px`,
                 fontWeight: textInPlace.weight,
