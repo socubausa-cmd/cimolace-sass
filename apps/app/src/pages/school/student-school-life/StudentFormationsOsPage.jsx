@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { ArrowLeft, ArrowUp } from 'lucide-react';
+import { ArrowLeft, ArrowUp, MessageSquare, X, RotateCcw } from 'lucide-react';
 import { coursesApi } from '@/lib/api-v2';
 import { supabase } from '@/lib/customSupabaseClient';
 import { BG, INK, STYLE, TERRA, SERIF } from '@/lib/agent/immersiveTheme';
@@ -40,6 +40,9 @@ export default function StudentFormationsOsPage() {
   const [visible, setVisible] = useState(false);
   const [chat, setChat] = useState('');
   const [reply, setReply] = useState(null); // réponse « voix » de l'OS
+  const [history, setHistory] = useState([]); // fil de conversation [{ q, reply }]
+  const [histOpen, setHistOpen] = useState(false); // tiroir du fil
+  const [asking, setAsking] = useState(false);
 
   useEffect(() => {
     let alive = true;
@@ -176,43 +179,48 @@ export default function StudentFormationsOsPage() {
   };
   const backLabel = focusModule ? (focusCourse?.course?.title || 'Formation') : 'Mes formations';
 
-  // Conversation OS — l'élève parle à l'OS ; intents locaux scopés aux cours (navigation intelligente).
-  const onAsk = (e) => {
-    if (e) e.preventDefault();
-    const raw = chat.trim();
-    if (!raw) return;
-    const t = norm(raw);
-    setChat('');
+  // Enregistre un échange dans le fil + met à jour la « voix » courante.
+  const say = (q, r) => { setReply(r); setHistory((h) => [...h, { q, reply: r }]); };
 
+  // Conversation OS — l'élève parle à l'OS ; intents locaux scopés aux cours (navigation intelligente).
+  const handle = (raw) => {
+    const t = norm(raw);
     if (/(retour|accueil|mes formations|ma liste|liste des|toutes les)/.test(t)) {
       setOpenDay(null); setFocusModule(null); setFocusCourse(null);
-      setReply('Voici toutes tes formations.');
+      say(raw, 'Voici toutes tes formations.');
       return;
     }
     const jm = t.match(/jour\s*(\d+)/);
     if (jm && focusModule) {
       const entry = daysOfModule(focusModule.module)[Number(jm[1]) - 1];
-      if (entry?.day) { setOpenDay({ day: entry.day, moduleTitle: focusModule.module.title }); setReply(`J'ouvre : ${entry.day.title || 'Jour ' + jm[1]}.`); return; }
+      if (entry?.day) { setOpenDay({ day: entry.day, moduleTitle: focusModule.module.title }); say(raw, `J'ouvre : ${entry.day.title || 'Jour ' + jm[1]}.`); return; }
     }
     const mm = t.match(/module\s*(\d+)/);
     if (mm && focusCourse) {
       const i = Number(mm[1]) - 1;
       const module = focusCourse.modules?.[i];
-      if (module) { setOpenDay(null); setVisible(false); setTimeout(() => setFocusModule({ course: focusCourse.course, module, mIdx: i }), 150); setReply(`Module ${i + 1} — ${module.title}.`); return; }
+      if (module) { setOpenDay(null); setVisible(false); setTimeout(() => setFocusModule({ course: focusCourse.course, module, mIdx: i }), 150); say(raw, `Module ${i + 1} — ${module.title}.`); return; }
     }
     const cm = courses.find((c) => {
       const ct = norm(c.title);
       return ct && (ct.includes(t) || t.split(' ').some((w) => w.length > 3 && ct.includes(w)));
     });
-    if (cm) { openCourse(cm); setReply(`J'ouvre la formation « ${cm.title} ».`); return; }
+    if (cm) { openCourse(cm); say(raw, `J'ouvre la formation « ${cm.title} ».`); return; }
 
     // Question libre → cerveau Précepteur, scopé au contenu du cours (refuse le hors-sujet).
     const ctxCourse = focusCourse?.course || (courses.length === 1 ? courses[0] : null);
     if (ctxCourse) { askBrain(raw, ctxCourse); return; }
-    setReply('Ouvre une formation, puis pose-moi ta question sur son contenu.');
+    say(raw, 'Ouvre une formation, puis pose-moi ta question sur son contenu.');
   };
 
-  const [asking, setAsking] = useState(false);
+  const onAsk = (e) => {
+    if (e) e.preventDefault();
+    const raw = chat.trim();
+    if (!raw) return;
+    setChat('');
+    handle(raw);
+  };
+
   const askBrain = async (question, course) => {
     setAsking(true);
     setReply('…');
@@ -222,9 +230,9 @@ export default function StudentFormationsOsPage() {
         body: { question, course: knowledge, concept: openDay?.day?.title || focusModule?.module?.title || '' },
       });
       if (error) throw error;
-      setReply(String(data?.reply || 'Je n\'ai pas trouvé la réponse dans ce cours.'));
+      say(question, String(data?.reply || 'Je n\'ai pas trouvé la réponse dans ce cours.'));
     } catch {
-      setReply('Je ne peux pas répondre à l\'instant — réessaie dans un moment.');
+      say(question, 'Je ne peux pas répondre à l\'instant — réessaie dans un moment.');
     } finally {
       setAsking(false);
     }
@@ -254,6 +262,36 @@ export default function StudentFormationsOsPage() {
         >
           <ArrowLeft size={14} /> {backLabel}
         </button>
+      )}
+
+      {/* Tiroir CONVERSATION — bouton + panneau du fil d'échanges avec l'OS (navigation rapide dans le fil) */}
+      {!openDay && history.length > 0 && (
+        <button type="button" onClick={() => setHistOpen((o) => !o)} aria-label="Fil de conversation"
+          style={{ position: 'absolute', top: 18, right: 20, zIndex: 14, display: 'inline-flex', alignItems: 'center', gap: 7, padding: '8px 13px', borderRadius: 999, border: histOpen ? `1px solid ${TERRA}` : '1px solid rgba(245,244,238,.12)', background: histOpen ? 'rgba(217,119,87,.16)' : 'rgba(38,38,36,.72)', backdropFilter: 'blur(8px)', color: histOpen ? '#f0c3ac' : INK, cursor: 'pointer', fontFamily: 'inherit', fontSize: 12.5, fontWeight: 500 }}>
+          <MessageSquare size={14} /> Fil <span style={{ opacity: .55 }}>{history.length}</span>
+        </button>
+      )}
+      {!openDay && histOpen && (
+        <>
+          <div onClick={() => setHistOpen(false)} style={{ position: 'absolute', inset: 0, zIndex: 19, background: 'rgba(8,8,11,.35)' }} />
+          <aside style={{ position: 'absolute', top: 0, right: 0, bottom: 0, width: 'min(380px,86vw)', zIndex: 20, background: '#1f1e1c', borderLeft: '1px solid rgba(245,244,238,.09)', boxShadow: '-24px 0 60px rgba(0,0,0,.5)', display: 'flex', flexDirection: 'column' }}>
+            <div style={{ flexShrink: 0, padding: '16px 18px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: '1px solid rgba(245,244,238,.08)' }}>
+              <div style={{ fontFamily: SERIF, fontSize: 17, fontWeight: 600, color: '#f5f4ee' }}>Conversation</div>
+              <button type="button" onClick={() => setHistOpen(false)} aria-label="Fermer" style={{ background: 'transparent', border: 'none', color: 'rgba(245,244,238,.5)', cursor: 'pointer', display: 'inline-flex' }}><X size={18} /></button>
+            </div>
+            <div style={{ flex: 1, overflowY: 'auto', padding: '14px 16px', display: 'flex', flexDirection: 'column', gap: 18 }}>
+              {history.map((h, i) => (
+                <div key={i}>
+                  <button type="button" onClick={() => { setHistOpen(false); handle(h.q); }} title="Rejouer cette demande"
+                    style={{ display: 'flex', alignItems: 'center', gap: 8, width: '100%', textAlign: 'left', background: 'rgba(217,119,87,.10)', border: '1px solid rgba(217,119,87,.22)', borderRadius: 12, padding: '8px 12px', color: '#f0ede4', cursor: 'pointer', fontFamily: 'inherit', fontSize: 13.5, marginBottom: 7 }}>
+                    <span style={{ flex: 1 }}>{h.q}</span><RotateCcw size={13} style={{ opacity: .5, flexShrink: 0 }} />
+                  </button>
+                  <div style={{ fontSize: 13.5, lineHeight: 1.55, color: 'rgba(245,244,238,.72)', padding: '0 4px' }}>{h.reply}</div>
+                </div>
+              ))}
+            </div>
+          </aside>
+        </>
       )}
 
       {loading ? (
