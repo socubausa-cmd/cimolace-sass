@@ -7,10 +7,12 @@ import {
   Eye,
   EyeOff,
   CalendarCheck,
+  Radio,
   X,
   Loader2,
 } from 'lucide-react';
 import { useIsMobile } from '../lib/useIsMobile';
+import { useSupabase } from '../lib/auth';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Marketplace praticien — « Mes offres & services »
@@ -110,6 +112,54 @@ export default function ServicesPage() {
   const [editing, setEditing] = useState<null | 'new' | Service>(null);
   const [form, setForm] = useState({ ...EMPTY_FORM });
   const [saving, setSaving] = useState(false);
+  const { supabase } = useSupabase();
+  const [startingKey, setStartingKey] = useState<string | null>(null); // masterclass en cours de lancement
+
+  // DIRECT PAYANT — démarre le direct d'une masterclass puis ouvre la salle HÔTE sur
+  // app.cimolace.space via handoff SSO (code à usage unique, jamais de token dans l'URL).
+  async function startLive(s: Service) {
+    setStartingKey(s.key);
+    setError(null);
+    try {
+      const res = await fetch(`${API}/med/booking/live/start`, {
+        method: 'POST',
+        headers: authHeaders(),
+        body: JSON.stringify({ service_key: s.key }),
+      });
+      const body = await res.json().catch(() => null);
+      if (!res.ok) throw new Error(body?.error?.message || body?.message || `Erreur ${res.status}`);
+      const sessionId = (body?.data ?? body)?.session_id;
+      if (!sessionId) throw new Error('Direct indisponible.');
+      const studio = (import.meta.env.VITE_STUDIO_URL as string) || 'https://app.cimolace.space';
+      const nextPath = `/live/host/${sessionId}`;
+      let url = `${studio}${nextPath}`;
+      try {
+        if (supabase) {
+          const { data: sess } = await supabase.auth.getSession();
+          const refresh = sess?.session?.refresh_token;
+          if (refresh) {
+            const hr = await fetch(`${API}/auth/handoff`, {
+              method: 'POST',
+              headers: authHeaders(),
+              body: JSON.stringify({ refresh_token: refresh }),
+            });
+            if (hr.ok) {
+              const hd = await hr.json().catch(() => null);
+              const code = (hd?.data ?? hd)?.code;
+              if (code) url = `${studio}/handoff?code=${encodeURIComponent(code)}&next=${encodeURIComponent(nextPath)}`;
+            }
+          }
+        }
+      } catch {
+        /* fallback : ouverture directe (le studio demandera la connexion) */
+      }
+      window.open(url, '_blank', 'noopener,noreferrer');
+    } catch (e) {
+      setError((e as Error).message);
+    } finally {
+      setStartingKey(null);
+    }
+  }
 
   async function load() {
     setLoading(true);
@@ -312,7 +362,24 @@ export default function ServicesPage() {
                   {s.accessModel === 'paid' && s.category === 'mentorat' && s.billingCycle === 'monthly' ? <span style={{ fontSize: 12, fontWeight: 500, color: 'var(--zw-text-muted)' }}> / mois</span> : null}
                 </div>
               </div>
-              <div style={{ display: 'flex', gap: 6, flexShrink: 0 }}>
+              <div style={{ display: 'flex', gap: 6, flexShrink: 0, alignItems: 'center' }}>
+                {(cat === 'masterclass' || !!s.metadata?.event) && (
+                  <button
+                    onClick={() => startLive(s)}
+                    disabled={startingKey === s.key}
+                    title="Démarrer le direct et ouvrir la salle hôte"
+                    style={{
+                      display: 'inline-flex', alignItems: 'center', gap: 6, padding: '7px 12px',
+                      borderRadius: 8, border: 'none', background: '#dc2626', color: '#fff',
+                      fontSize: 13, fontWeight: 700, whiteSpace: 'nowrap',
+                      cursor: startingKey === s.key ? 'default' : 'pointer',
+                      opacity: startingKey === s.key ? 0.6 : 1,
+                    }}
+                  >
+                    {startingKey === s.key ? <Loader2 size={14} /> : <Radio size={14} />}
+                    {startingKey === s.key ? 'Ouverture…' : 'Démarrer le direct'}
+                  </button>
+                )}
                 <button onClick={() => toggleActive(s)} title={s.isActive ? 'Dépublier' : 'Publier'} style={iconBtn}>
                   {s.isActive ? <Eye size={16} /> : <EyeOff size={16} />}
                 </button>

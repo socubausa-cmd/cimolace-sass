@@ -745,6 +745,151 @@ export class AppointmentsService {
     };
   }
 
+  // ───────────────────────────────────────────────────────────────────────────
+  // DIRECT PAYANT — pont masterclass (billing_plan `metadata.event`) ↔ moteur live LIRI.
+  // Une masterclass vendue via la vitrine donne un access_pass `service`. Ici on la
+  // relie à une `live_session` (moteur live existant + gate payant de generateToken).
+  // Source de vérité du lien : `billing_plans.metadata.live_session_id`.
+  // La session est créée à la DEMANDE de l'hôte (host_user_id non-null garanti) ;
+  // l'acheteur qui arrive avant le lancement reçoit `session_id:null` (« pas encore démarré »).
+  // ───────────────────────────────────────────────────────────────────────────
+
+  /** Résout (et crée si `hostUserId` fourni) la live_session jumelle d'une masterclass. */
+  private async resolveMasterclassSession(
+    tenant: TenantContext,
+    serviceKey: string,
+    hostUserId?: string,
+  ): Promise<{
+    id: string;
+    status: string;
+    started_at: string | null;
+    scheduled_at: string | null;
+    title: string | null;
+    host_user_id: string | null;
+  } | null> {
+    const db = this.supabase.client as any;
+    const { data: plan } = await db
+      .from('billing_plans')
+      .select('id, key, label, price_cents, metadata')
+      .eq('tenant_id', tenant.id)
+      .eq('key', serviceKey)
+      .maybeSingle();
+    if (!plan) throw new NotFoundException('Masterclass introuvable');
+    if (!plan.metadata?.event) {
+      throw new BadRequestException("Ce service n'est pas un direct.");
+    }
+    const linkedId = plan.metadata?.live_session_id as string | undefined;
+    if (linkedId) {
+      const { data: existing } = await db
+        .from('live_sessions')
+        .select('id, status, started_at, scheduled_at, title, host_user_id')
+        .eq('id', linkedId)
+        .eq('tenant_id', tenant.id)
+        .maybeSingle();
+      if (existing?.id) return existing;
+    }
+    // Pas encore de session : on ne la crée QUE si un hôte est fourni (= démarrage hôte).
+    if (!hostUserId) return null;
+    const { data: created, error } = await db
+      .from('live_sessions')
+      .insert({
+        tenant_id: tenant.id,
+        host_user_id: hostUserId,
+        teacher_id: hostUserId,
+        title: plan.label || 'Masterclass',
+        price_cents: plan.price_cents ?? 0,
+        scheduled_at: plan.metadata?.scheduled_at ?? null,
+        status: 'scheduled',
+      })
+      .select('id, status, started_at, scheduled_at, title, host_user_id')
+      .single();
+    if (error || !created?.id) {
+      throw new InternalServerErrorException('Création du direct impossible.');
+    }
+    // Relier au plan pour l'idempotence future (best-effort).
+    await db
+      .from('billing_plans')
+      .update({ metadata: { ...(plan.metadata || {}), live_session_id: created.id } })
+      .eq('tenant_id', tenant.id)
+      .eq('id', plan.id);
+    return created;
+  }
+
+  /** HÔTE (staff) : démarre — ou rouvre — le direct d'une masterclass. Retourne la session à ouvrir. */
+  async masterclassStart(tenant: TenantContext, userId: string, serviceKey: string) {
+    const STAFF = new Set(['owner', 'admin', 'teacher', 'practitioner', 'secretariat']);
+    if (!STAFF.has(String(tenant.userRole ?? '').toLowerCase())) {
+      throw new ForbiddenException('Seul le praticien peut démarrer le direct.');
+    }
+    const session = await this.resolveMasterclassSession(tenant, serviceKey, userId);
+    if (!session) throw new InternalServerErrorException('Direct indisponible.');
+    const db = this.supabase.client as any;
+    const patch: Record<string, unknown> = {};
+    if (!session.host_user_id) {
+      patch.host_user_id = userId;
+      patch.teacher_id = userId;
+    }
+    if (session.status !== 'live') {
+      patch.status = 'live';
+      patch.started_at = session.started_at ?? new Date().toISOString();
+    }
+    if (Object.keys(patch).length) {
+      await db.from('live_sessions').update(patch).eq('id', session.id).eq('tenant_id', tenant.id);
+    }
+    return {
+      session_id: session.id,
+      title: session.title,
+      scheduled_at: session.scheduled_at,
+      status: 'live',
+    };
+  }
+
+  /**
+   * ACHETEUR : rejoint le direct. Le pass `service` (preuve d'achat) est vérifié,
+   * puis on octroie le pass `live_session` (idempotent) pour que le gate serveur de
+   * `POST /lives/:id/token` accepte l'acheteur. `session_id:null` si l'hôte n'a pas lancé.
+   */
+  async masterclassJoin(
+    tenant: TenantContext,
+    userId: string,
+    info: { email?: string; first_name?: string; last_name?: string },
+    serviceKey: string,
+  ) {
+    const ctx = await this.bookingContext(tenant, userId, info, serviceKey);
+    if (!ctx.service.is_event) {
+      throw new BadRequestException("Ce service n'est pas un direct.");
+    }
+    if (!ctx.has_access) {
+      throw new ForbiddenException('Paiement requis pour rejoindre ce direct.');
+    }
+    const session = await this.resolveMasterclassSession(tenant, serviceKey);
+    if (!session) {
+      return {
+        session_id: null,
+        status: 'not_started',
+        scheduled_at: ctx.service.scheduled_at,
+        title: ctx.service.label,
+      };
+    }
+    const db = this.supabase.client as any;
+    await db.from('access_passes').upsert(
+      {
+        tenant_id: tenant.id,
+        user_id: userId,
+        resource_type: 'live_session',
+        resource_id: session.id,
+        status: 'active',
+      },
+      { onConflict: 'tenant_id,user_id,resource_type,resource_id' },
+    );
+    return {
+      session_id: session.id,
+      status: session.status,
+      scheduled_at: session.scheduled_at,
+      title: session.title,
+    };
+  }
+
   /** Crée le RDV depuis un service (après contrôle d'accès payé). */
   async bookFromService(
     tenant: TenantContext,

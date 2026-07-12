@@ -39,6 +39,8 @@ export default function TenantReservationPage() {
   const [booking, setBooking] = useState(false);
   const [booked, setBooked] = useState(null); // le RDV créé
   const [error, setError] = useState(null);
+  const [joining, setJoining] = useState(false); // direct : connexion en cours
+  const [joinMsg, setJoinMsg] = useState(null); // direct : message (pas encore lancé / erreur)
 
   const authFetch = useCallback(
     async (path, opts = {}) => {
@@ -120,6 +122,28 @@ export default function TenantReservationPage() {
     }
   }
 
+  // Direct payant (masterclass) : l'acheteur rejoint. Le serveur vérifie le pass
+  // service, octroie le pass live_session, et renvoie la session à ouvrir.
+  async function joinLive() {
+    setJoining(true);
+    setJoinMsg(null);
+    try {
+      const r = await authFetch('/med/booking/live/join', {
+        method: 'POST',
+        body: JSON.stringify({ service_key: serviceKey }),
+      });
+      if (r?.session_id) {
+        window.location.assign(`/live/${r.session_id}`);
+      } else {
+        setJoinMsg("Le direct n'a pas encore démarré. Revenez à l'heure prévue — le lien s'ouvrira ici même.");
+      }
+    } catch (e) {
+      setJoinMsg(e.message);
+    } finally {
+      setJoining(false);
+    }
+  }
+
   const page = { minHeight: '100vh', background: 'linear-gradient(180deg,#faf6f1,#f3ece3)', color: '#2a2320', fontFamily: "'Inter',system-ui,sans-serif", padding: '0 0 64px' };
   const wrap = { maxWidth: 720, margin: '0 auto', padding: '0 20px' };
   const card = { background: '#fff', borderRadius: 16, border: '1px solid #eee', boxShadow: '0 6px 24px rgba(60,40,25,0.06)', padding: 22 };
@@ -152,15 +176,45 @@ export default function TenantReservationPage() {
       <a href={`/t/${slug}/services`} style={btn}>Retour aux services</a>);
   }
 
-  // — Événement / masterclass : accès payé → inscription confirmée (pas de créneau) —
+  // — Événement / masterclass : accès payé → rejoindre le direct (pas de créneau) —
   if (ctx?.service?.is_event) {
     const d = ctx.service.scheduled_at ? new Date(ctx.service.scheduled_at) : null;
-    return banner(
-      'Inscription confirmée ✓',
-      `Votre place pour « ${ctx.service.label} » est réservée.` +
-        (d ? ` Rendez-vous le ${d.toLocaleDateString('fr', { weekday: 'long', day: 'numeric', month: 'long' })} à ${d.toLocaleTimeString('fr', { hour: '2-digit', minute: '2-digit' })}.` : '') +
-        ' Le lien du direct vous sera envoyé par email.',
-      <a href={`/t/${slug}/services`} style={btn}>Voir d'autres offres</a>,
+    const when = d
+      ? `${d.toLocaleDateString('fr', { weekday: 'long', day: 'numeric', month: 'long' })} à ${d.toLocaleTimeString('fr', { hour: '2-digit', minute: '2-digit' })}`
+      : null;
+    return (
+      <div style={page}>
+        <main style={{ ...wrap, paddingTop: 60 }}>
+          <div style={{ ...card, textAlign: 'center' }}>
+            <div style={{ fontSize: 40, lineHeight: 1, marginBottom: 8 }}>🎥</div>
+            <h1 style={{ fontSize: 22, fontWeight: 800, margin: '0 0 8px' }}>Inscription confirmée ✓</h1>
+            <p style={{ color: '#6f6055', margin: '0 0 6px' }}>
+              Votre place pour «&nbsp;{ctx.service.label}&nbsp;» est réservée.
+            </p>
+            {when && (
+              <p style={{ color: '#3c322b', fontWeight: 600, margin: '0 0 18px', textTransform: 'capitalize' }}>
+                Direct prévu le {when}.
+              </p>
+            )}
+            <button
+              type="button"
+              onClick={joinLive}
+              disabled={joining}
+              style={{ ...btn, border: 'none', opacity: joining ? 0.6 : 1 }}
+            >
+              {joining ? 'Connexion…' : 'Rejoindre le direct'}
+            </button>
+            {joinMsg && (
+              <p style={{ color: '#8a7a6c', fontSize: 13.5, margin: '14px 0 0' }}>{joinMsg}</p>
+            )}
+            <div style={{ marginTop: 18 }}>
+              <a href={`/t/${slug}/services`} style={{ fontSize: 13, color: '#8a7a6c', textDecoration: 'none' }}>
+                Voir d&apos;autres offres
+              </a>
+            </div>
+          </div>
+        </main>
+      </div>
     );
   }
 

@@ -88,4 +88,31 @@ export class MedosBookingController {
       dto.scheduled_at,
     );
   }
+
+  /**
+   * DIRECT PAYANT — hôte (staff) : démarre/rouvre le direct d'une masterclass.
+   * Retourne `{ session_id }` → le front ouvre `/live/host/:session_id`.
+   */
+  @Post('live/start')
+  startLive(
+    @CurrentTenant() tenant: TenantContext,
+    @Req() req: AuthRequest,
+    @Body() dto: { service_key: string },
+  ) {
+    return this.appts.masterclassStart(tenant, req.user.id, dto.service_key);
+  }
+
+  /**
+   * DIRECT PAYANT — acheteur : rejoint le direct (gate access_pass service → octroi
+   * du pass live_session). `{ session_id }` → le front ouvre `/live/:session_id`,
+   * ou `session_id:null` si l'hôte n'a pas encore lancé.
+   */
+  @Post('live/join')
+  joinLive(
+    @CurrentTenant() tenant: TenantContext,
+    @Req() req: AuthRequest,
+    @Body() dto: { service_key: string },
+  ) {
+    return this.appts.masterclassJoin(tenant, req.user.id, actorInfo(req), dto.service_key);
+  }
 }
