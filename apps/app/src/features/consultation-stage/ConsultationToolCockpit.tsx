@@ -14,7 +14,7 @@
 //
 // Purement client : lit/écrit `useLiveWhiteboardStore`. Rien en lecture seule.
 // ─────────────────────────────────────────────────────────────────────────────
-import { useMemo, useState } from 'react';
+import { useMemo, useRef, useState, type ChangeEvent } from 'react';
 import {
   MousePointer2, Pencil, Type, Eraser,
   Shapes, Square, Circle, Minus, MoveUpRight, Spline, Hexagon, Star, SquareDashed, TriangleRight,
@@ -144,13 +144,46 @@ export default function ConsultationToolCockpit({
   const clearBoard = useLiveWhiteboardStore((s) => s.clearBoard);
   const boardSelection = useLiveWhiteboardStore((s) => s.boardSelection);
   const deleteBoardSelection = useLiveWhiteboardStore((s) => s.deleteBoardSelection);
+  const updateStrokeProperties = useLiveWhiteboardStore((s) => s.updateStrokeProperties);
+  const setPendingImage = useLiveWhiteboardStore((s) => s.setPendingImage);
   const neuroInkOpen = useLiveWhiteboardStore((s) => s.neuroInkOpen);
+  const hasSelection = Array.isArray(boardSelection) && boardSelection.length > 0;
   const setNeuroInkOpen = useLiveWhiteboardStore((s) => s.setNeuroInkOpen);
 
   const [sideGroup, setSideGroup] = useState<string | null>(null);
   const [menu, setMenu] = useState<string | null>(null); // 'color' | 'size' | 'fond'
   const [paletteOpen, setPaletteOpen] = useState(false);
   const [q, setQ] = useState('');
+
+  // « Placer image » : le compositeur attend un pendingImage {url,w,h}. On ouvre un
+  // sélecteur de fichier, on lit l'image, on calcule un gabarit (aspect conservé),
+  // puis on arme l'outil image-place → clic sur le tableau = pose. (Avant : sans effet.)
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
+  const handleImageFile = (e: ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    e.target.value = '';
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+      const url = String(reader.result || '');
+      if (!url) return;
+      const img = new Image();
+      img.onload = () => {
+        const maxW = 420;
+        const nw = img.naturalWidth || maxW;
+        const nh = img.naturalHeight || Math.round(maxW * 0.66);
+        const w = Math.min(maxW, nw);
+        const h = Math.max(20, Math.round(w * (nh / nw)));
+        setPendingImage?.({ url, w, h });
+        setTool('image-place');
+        setSideGroup(null);
+        setPaletteOpen(false);
+      };
+      img.onerror = () => { setPendingImage?.({ url, w: 300, h: 200 }); setTool('image-place'); };
+      img.src = url;
+    };
+    reader.readAsDataURL(file);
+  };
 
   if (preview) {
     return (
@@ -169,6 +202,13 @@ export default function ConsultationToolCockpit({
   }
 
   const pickTool = (id: string, surface?: string) => {
+    // « Placer image » ouvre d'abord le sélecteur de fichier (l'outil s'arme ensuite).
+    if (id === 'image-place') {
+      fileInputRef.current?.click();
+      setPaletteOpen(false);
+      setSideGroup(null);
+      return;
+    }
     if (surface) setBoardSurface(surface);
     setTool(id);
     setPaletteOpen(false);
@@ -201,6 +241,7 @@ export default function ConsultationToolCockpit({
 
   return (
     <>
+      <input ref={fileInputRef} type="file" accept="image/*" onChange={handleImageFile} style={{ display: 'none' }} aria-hidden="true" tabIndex={-1} />
       {(menu || paletteOpen) ? (
         <div onClick={() => { setMenu(null); setPaletteOpen(false); }} style={{ position: 'absolute', inset: 0, zIndex: 29 }} />
       ) : null}
@@ -257,7 +298,8 @@ export default function ConsultationToolCockpit({
           {menu === 'color' ? (
             <div style={propMenu}>
               {SWATCHES.map((c) => (
-                <button key={c} type="button" title={c} onClick={() => { setColor(c); setMenu(null); }}
+                <button key={c} type="button" title={hasSelection ? `Recolorer la sélection en ${c}` : c}
+                  onClick={() => { setColor(c); if (hasSelection) updateStrokeProperties?.({ color: c }); setMenu(null); }}
                   style={{ width: 22, height: 22, borderRadius: '50%', cursor: 'pointer', padding: 0, background: c, border: color === c ? `2px solid ${GOLD}` : '1px solid rgba(255,255,255,0.25)' }} />
               ))}
             </div>
@@ -273,7 +315,8 @@ export default function ConsultationToolCockpit({
           {menu === 'size' ? (
             <div style={{ ...propMenu, alignItems: 'center' }}>
               {SIZES.map((s) => (
-                <button key={s} type="button" title={`Épaisseur ${s}`} onClick={() => { setSize(s); setMenu(null); }}
+                <button key={s} type="button" title={hasSelection ? `Épaisseur ${s} (sélection)` : `Épaisseur ${s}`}
+                  onClick={() => { setSize(s); if (hasSelection) updateStrokeProperties?.({ lineWidth: s, size: s, fontSize: Math.max(12, s * 6) }); setMenu(null); }}
                   style={{ width: 34, height: 34, borderRadius: 8, cursor: 'pointer', display: 'grid', placeItems: 'center', border: size === s ? `1px solid ${GOLD}` : '1px solid rgba(255,255,255,0.1)', background: size === s ? 'rgba(212,163,106,0.16)' : 'rgba(255,255,255,0.03)' }}>
                   <span style={{ width: 18, height: Math.max(2, s / 2), borderRadius: 9, background: '#fff' }} />
                 </button>
