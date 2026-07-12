@@ -12,6 +12,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { supabase } from '@/lib/customSupabaseClient';
 
 // Type de live → pilote l'affichage par défaut en salle (cf. arenaLayoutForSessionType) :
 // Formation → SmartBoard · Conférence → grille membres · Débat → panel débatteurs.
@@ -36,6 +37,21 @@ const CATEGORIES = [
 export function Step1Informations({ draft, updateDraft, isStaff, teachers, selectedTeacherId, onTeacherChange }) {
   const titleLen = String(draft.title || '').length;
   const descLen = String(draft.description || '').length;
+
+  // Formations publiées du tenant (scopées par RLS) → rattacher le live à un cours.
+  const [formations, setFormations] = React.useState([]);
+  React.useEffect(() => {
+    let alive = true;
+    supabase
+      .from('courses')
+      .select('id, title')
+      .eq('status', 'published')
+      .order('created_at', { ascending: false })
+      .then(({ data }) => { if (alive) setFormations(Array.isArray(data) ? data : []); })
+      .catch(() => {});
+    return () => { alive = false; };
+  }, []);
+  const isFormationLive = draft.session_type === 'classe' || draft.session_type === 'formation';
 
   // Cloison MEDOS : en Live santé, Type + Catégorie sont forcés sur « Téléconsultation »
   // (les autres — Formation, Conférence, Débat… — sont grisés). Hors MEDOS, on restaure
@@ -85,6 +101,36 @@ export function Step1Informations({ draft, updateDraft, isStaff, teachers, selec
               ))}
             </SelectContent>
           </Select>
+        </motion.div>
+      )}
+
+      {isFormationLive && formations.length > 0 && (
+        <motion.div
+          initial={{ opacity: 0, y: 8 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="space-y-2 rounded-lg border border-[#2D3139]/90 bg-[#0a0c10]/50 p-4"
+        >
+          <Label className="flex items-center gap-1.5 text-white/90">
+            <GraduationCap className="h-4 w-4 text-[#d97757]" /> Formation rattachée
+            <span className="text-xs font-normal text-white/40">(optionnel)</span>
+          </Label>
+          <Select
+            value={draft.formation_id || '__none__'}
+            onValueChange={(v) => updateDraft({ formation_id: v === '__none__' ? null : v })}
+          >
+            <SelectTrigger className="h-12 rounded-lg border-[#2D3139] bg-[#0a0c10] text-white">
+              <SelectValue placeholder="Rattacher ce live à un cours" />
+            </SelectTrigger>
+            <SelectContent className="rounded-xl border-[#2D3139] bg-[#151a21]">
+              <SelectItem value="__none__" className="rounded-lg">Aucune formation</SelectItem>
+              {formations.map((f) => (
+                <SelectItem key={f.id} value={f.id} className="rounded-lg focus:bg-[#d97757]/10 focus:text-[#d97757]">
+                  {f.title}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <p className="text-[11px] text-white/40">Le live sera rattaché à cette formation (accessible depuis le cours).</p>
         </motion.div>
       )}
 
