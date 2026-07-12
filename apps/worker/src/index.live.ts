@@ -17,6 +17,7 @@
 import { startPingJob }        from './jobs/ping.js';
 import { pollEmailQueue }      from './jobs/email.js';
 import { pollLiveReminders }   from './jobs/live-reminders.js';
+import { pollMasterclassReminders } from './jobs/masterclass-reminders.js';
 import { pollLiveInvitations } from './jobs/live-invitations.js';
 import { pollLiveReplayShorts } from './jobs/short-generator.js';
 import { pollReplayPostprod } from './jobs/replay-postprod.js';
@@ -48,6 +49,18 @@ startPingJob();
       const n = await (pollLiveReminders as () => Promise<number>)();
       if (n > 0) console.log(`[worker:live] Rappels: ${n} enfilé(s)`);
     } catch (e: unknown) { console.error('[worker:live] Reminders error:', (e as Error)?.message || e); }
+    await sleep(60_000);
+  }
+})();
+
+// ── Rappels direct payant / masterclass, ~H-10 (60s) ─────────────────────────
+//    Piloté par la masterclass (billing_plans), pas la live_session (créée tard).
+(async () => {
+  while (true) {
+    try {
+      const n = await (pollMasterclassReminders as () => Promise<number>)();
+      if (n > 0) console.log(`[worker:live] Rappels masterclass: ${n} enfilé(s)`);
+    } catch (e: unknown) { console.error('[worker:live] Masterclass reminders error:', (e as Error)?.message || e); }
     await sleep(60_000);
   }
 })();
