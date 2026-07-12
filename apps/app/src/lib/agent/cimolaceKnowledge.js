@@ -98,10 +98,26 @@ export const CIMOLACE_KNOWLEDGE = {
   offers: [
     // `link` = Payment Link Stripe du tarif d'ENTRÉE payant de chaque infra (billing_plans.metadata,
     // mode test) → l'action « Acheter » ouvre le checkout hébergé Stripe. (Détail par palier = suivant.)
-    { name: 'MedOS — OS médical', price: '0 €', suffix: '/mois (dès)', desc: 'Dossiers patients + note SOAP IA + téléconsultation. Sprout gratuit (3 patients) → Solo 25 € → Pro 49 € → Clinic 99 € (illimité, white label).', link: 'https://buy.stripe.com/test_14A6oH8rhadx89N9Em5J607' },
-    { name: 'École — école en ligne', price: '79 €', suffix: '/mois (dès)', desc: 'Lives + cours + SmartBoard IA + certifications. Starter 79 € → Pro 199 € (500 étudiants) → Business 349 € (white label, API).', popular: true, link: 'https://buy.stripe.com/test_7sY9ATazpdpJ75JcQy5J604' },
-    { name: 'Bien-être — coaching', price: '29 €', suffix: '/mois (dès)', desc: 'Programmes de soins + téléconsult + automatisations email/SMS + paiements. Starter 29 € → Pro 79 €.', link: 'https://buy.stripe.com/test_cNifZh4b13P961FdUC5J60a' },
-    { name: 'Créateur — studio', price: '49 €', suffix: '/mois (dès)', desc: 'Studio live + monétisation directe + VOD. Starter 49 € → Pro 149 € (illimité) → Business 299 € (white label, régie pub).', link: 'https://buy.stripe.com/test_aFa3cv5f5fxR61F03M5J60c' },
+    { name: 'MedOS — OS médical', price: '0 €', suffix: '/mois (dès)', desc: 'Dossiers patients + note SOAP IA + téléconsultation. Sprout gratuit (3 patients) → Solo 25 € → Pro 49 € → Clinic 99 € (illimité, white label).', link: 'https://buy.stripe.com/test_14A6oH8rhadx89N9Em5J607', tiers: [
+      { label: 'Sprout', price: 'Gratuit', link: '' },
+      { label: 'Solo', price: '25 €/mois', link: 'https://buy.stripe.com/test_14A6oH8rhadx89N9Em5J607' },
+      { label: 'Pro', price: '49 €/mois', link: 'https://buy.stripe.com/test_28EaEX8rhadx2PtcQy5J608' },
+      { label: 'Clinic', price: '99 €/mois', link: 'https://buy.stripe.com/test_5kQaEX22T85p2PtaIq5J609' },
+    ] },
+    { name: 'École — école en ligne', price: '79 €', suffix: '/mois (dès)', desc: 'Lives + cours + SmartBoard IA + certifications. Starter 79 € → Pro 199 € (500 étudiants) → Business 349 € (white label, API).', popular: true, link: 'https://buy.stripe.com/test_7sY9ATazpdpJ75JcQy5J604', tiers: [
+      { label: 'Starter', price: '79 €/mois', link: 'https://buy.stripe.com/test_7sY9ATazpdpJ75JcQy5J604' },
+      { label: 'Pro', price: '199 €/mois', link: 'https://buy.stripe.com/test_8x2cN5fTJ5Xh3Tx2bU5J605' },
+      { label: 'Business', price: '349 €/mois', link: 'https://buy.stripe.com/test_9B600j5f5dpJ61Fg2K5J606' },
+    ] },
+    { name: 'Bien-être — coaching', price: '29 €', suffix: '/mois (dès)', desc: 'Programmes de soins + téléconsult + automatisations email/SMS + paiements. Starter 29 € → Pro 79 €.', link: 'https://buy.stripe.com/test_cNifZh4b13P961FdUC5J60a', tiers: [
+      { label: 'Starter', price: '29 €/mois', link: 'https://buy.stripe.com/test_cNifZh4b13P961FdUC5J60a' },
+      { label: 'Pro', price: '79 €/mois', link: 'https://buy.stripe.com/test_9B6bJ1gXN71l2Pt17Q5J60b' },
+    ] },
+    { name: 'Créateur — studio', price: '49 €', suffix: '/mois (dès)', desc: 'Studio live + monétisation directe + VOD. Starter 49 € → Pro 149 € (illimité) → Business 299 € (white label, régie pub).', link: 'https://buy.stripe.com/test_aFa3cv5f5fxR61F03M5J60c', tiers: [
+      { label: 'Starter', price: '49 €/mois', link: 'https://buy.stripe.com/test_aFa3cv5f5fxR61F03M5J60c' },
+      { label: 'Pro', price: '149 €/mois', link: 'https://buy.stripe.com/test_3cI9ATcHx99teyb9Em5J60d' },
+      { label: 'Business', price: '299 €/mois', link: 'https://buy.stripe.com/test_8x29AT0YP1H1fCf2bU5J60e' },
+    ] },
   ],
 
   // Comparateur des 4 infrastructures priçées (vitrine). Rows = dimensions communes dérivées FIDÈLEMENT.

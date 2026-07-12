@@ -376,7 +376,7 @@ export function buildNodeScene(nodeId, k = PRORASCIENCE_KNOWLEDGE) {
           badge: o.popular ? 'Le plus choisi' : undefined, accent: o.popular ? 'gold' : undefined,
           // MODE FOCUS : cliquer une carte ouvre le tiroir (détail + actions + suites).
           ref: {
-            kind: 'plan', title: o.name, value: `${o.price}${o.suffix || ''}`, note: o.desc, link: o.link,
+            kind: 'plan', title: o.name, value: `${o.price}${o.suffix || ''}`, note: o.desc, link: o.link, tiers: o.tiers,
             actions: o.link ? ['acheter'] : ['acheter', 'reserver', 'contacter'],
             related: [{ nodeId: 'services', label: 'La méthode' }, { nodeId: 'solutions', label: 'Comparer les cycles' }],
           },

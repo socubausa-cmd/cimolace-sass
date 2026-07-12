@@ -534,6 +534,11 @@ function normalizeScene(raw) {
             note: cut(c.ref.note, 340) || undefined,
             // Lien d'achat (Payment Link Stripe) — préservé UNIQUEMENT si c'est une URL https valide.
             link: (typeof c.ref.link === 'string' && /^https:\/\/[^\s"'<>]+$/.test(c.ref.link)) ? c.ref.link : undefined,
+            // Paliers (chacun son Payment Link) — label + prix + lien https validé.
+            tiers: Array.isArray(c.ref.tiers) ? c.ref.tiers.slice(0, 6).map((t) => (t && t.label) ? {
+              label: cut(t.label, 30), price: cut(t.price, 20) || undefined,
+              link: (typeof t.link === 'string' && /^https:\/\/[^\s"'<>]+$/.test(t.link)) ? t.link : undefined,
+            } : null).filter(Boolean) : undefined,
             actions: (Array.isArray(c.ref.actions) ? c.ref.actions : []).filter((a) => typeof a === 'string').slice(0, 4),
             related: (Array.isArray(c.ref.related) ? c.ref.related : []).slice(0, 3)
               .map((r) => (r && r.nodeId && r.label) ? { nodeId: cut(r.nodeId, 40), label: cut(r.label, 40) } : null).filter(Boolean),
@@ -1207,11 +1212,30 @@ function FocusDrawer({ item, brand, onClose, onAction, onNode }) {
         <div className="cca-focus-title">{item.title}</div>
         {item.value && <div className="cca-focus-value">{item.value}</div>}
         {item.note && <div className="cca-focus-note">{item.note}</div>}
+        {item.tiers && item.tiers.length > 0 && (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginTop: 6 }}>
+            {item.tiers.map((t) => (
+              t.link ? (
+                <a key={t.label} className="cca-focus-act" href={t.link} target="_blank" rel="noopener noreferrer" onClick={onClose} style={{ justifyContent: 'space-between' }}>
+                  <span style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}>{t.label}{t.price ? ` · ${t.price}` : ''}</span>
+                  <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontWeight: 600 }}>S'abonner <ArrowRight size={15} /></span>
+                </a>
+              ) : (
+                <div key={t.label} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '11px 15px', borderRadius: 12, border: '1px solid rgba(230,204,146,.16)', color: 'rgba(244,239,230,.7)', fontSize: 13.5 }}>
+                  <span>{t.label}{t.price ? ` · ${t.price}` : ''}</span>
+                  <span style={{ color: GOLD, fontWeight: 600 }}>Gratuit</span>
+                </div>
+              )
+            ))}
+          </div>
+        )}
         {item.actions && item.actions.length > 0 && (
           <div className="cca-focus-actions">
             {item.actions.map((a, i) => {
               const m = VNP_ACTION_META[a];
               if (!m) return null;
+              // Si des paliers sont listés ci-dessus (chacun son « S'abonner »), on masque le bouton générique.
+              if (a === 'acheter' && item.tiers && item.tiers.length) return null;
               // Forfait avec un Payment Link (Cimolace) : « Acheter » → lien DIRECT vers le checkout
               // Stripe hébergé (nouvel onglet), sans passer par l'edge.
               if (a === 'acheter' && item.link) {
