@@ -178,6 +178,9 @@ const NODE_ICONS = {
 };
 // Icône de CARTE (clé bornée → composant lucide). Les cartes forfaits reçoivent une icône par palier.
 const CARD_ICON_MAP = { calendar: Calendar, compass: Compass, grad: GraduationCap, users: Users, gem: Gem, sparkles: Sparkles, book: BookOpen, tag: Tag, hexagon: Hexagon };
+// Intention « MEMBRE QUI REVIENT » (déjà un compte) : une question tapée qui matche → on route
+// vers l'espace (login tenant), sans passer par l'edge. Complète le bouton « Mon espace ».
+const LOGIN_RE = /(me\s*connect|se\s*connect|connexion|connecter|mon\s*compte|mon\s*espace|espace\s*(membre|perso|client)|acc[eé]der\s*[àa]?\s*(mon|l['e ]|son)\s*(compte|espace)|identifi|\blog[\s-]?in\b|\bsign[\s-]?in\b|d[eé]j[àa]\s*(un\s*)?compte|me\s*logg)/i;
 
 // Realms OS de marque AUTORISÉS. Rendre un realm = afficher le chrome « tenant » (badge marque,
 // « Connecté », branding fetché) par-dessus le MÊME moteur. Accepter un slug arbitraire via `?os=`
@@ -1743,6 +1746,14 @@ export default function CimolaceCreationAgent({ tenantSlug: tenantSlugProp = nul
   }, []);
   const closeInput = useCallback(() => { setInputOpen(false); setValue(''); }, []);
 
+  // MON ESPACE — le membre qui a déjà un compte va à la connexion tenant (/t/:slug/login → son espace).
+  const goToSpace = useCallback(() => {
+    try { logEvent('mon_espace', {}, osTenant); } catch { /* non bloquant */ }
+    setHistOpen(false); closeInput();
+    speak('Je vous emmène à votre espace — un instant.');
+    setTimeout(() => navigate(`/t/${encodeURIComponent(osTenant)}/login`), 650);
+  }, [osTenant, speak, navigate, closeInput]);
+
   // ── L8 — mode formation NATIF : Cimolace EST le moteur de rendu du cours ──
   const stopLesson = useCallback(() => {
     lessonGenRef.current += 1;
@@ -2037,6 +2048,8 @@ export default function CimolaceCreationAgent({ tenantSlug: tenantSlugProp = nul
 
   // Réponse à une QUESTION LIBRE via l'edge VNP (résout intention + nœud + suggestions + actions).
   const vnpChat = useCallback(async (message) => {
+    // MEMBRE QUI REVIENT : une question de connexion → on l'emmène à son espace (pas l'edge).
+    if (isTenantRealm && LOGIN_RE.test(message)) { setEngaged(true); goToSpace(); return; }
     const g = vnpGraph;
     setError(''); setEngaged(true);
     const gen = ++brainGenRef.current;
@@ -2092,7 +2105,7 @@ export default function CimolaceCreationAgent({ tenantSlug: tenantSlugProp = nul
         ? `Je n'ai pas pu traiter votre demande à l'instant — mais vous pouvez explorer directement : choisissez un sujet ci-dessous, ou écrivez-nous.`
         : `Un souci temporaire de mon côté — réessayez dans un instant.`);
     }
-  }, [vnpGraph, osBrand, osTenant, speak, sThink, enterScene, pushTurn]);
+  }, [vnpGraph, osBrand, osTenant, speak, sThink, enterScene, pushTurn, isTenantRealm, goToSpace]);
 
   // ACTION ENGINE — EXÉCUTE une action métier pour de vrai (pas un accusé de réception) :
   //  • contacter/participer → mini-formulaire inline, livré dans la table contact_requests (mailbox) ;
@@ -2397,6 +2410,20 @@ export default function CimolaceCreationAgent({ tenantSlug: tenantSlugProp = nul
         </div>
       )}
 
+      {/* MON ESPACE — le membre qui a déjà un compte va à sa connexion tenant (toujours visible) */}
+      {isTenantRealm && (
+        <button
+          type="button"
+          onClick={(e) => { e.stopPropagation(); goToSpace(); }}
+          aria-label="Mon espace — se connecter"
+          title="Déjà un compte ? Accéder à mon espace"
+          style={{ position: 'absolute', top: 14, right: 88, zIndex: 7, display: 'inline-flex', alignItems: 'center', gap: 6, padding: '5px 12px', borderRadius: 999, border: '1px solid rgba(230,204,146,.28)', background: 'rgba(230,204,146,.05)', color: GOLD, cursor: 'pointer', fontFamily: 'inherit', fontSize: 12, fontWeight: 500 }}
+        >
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4" /><polyline points="10 17 15 12 10 7" /><line x1="15" y1="12" x2="3" y2="12" /></svg>
+          Mon espace
+        </button>
+      )}
+
       {/* Son on/off */}
       <button
         onClick={(e) => { e.stopPropagation(); setMuted((m) => !m); }}
@@ -2462,6 +2489,13 @@ export default function CimolaceCreationAgent({ tenantSlug: tenantSlugProp = nul
           <p className="cca-display" style={{ fontSize: 'clamp(19px, 2.3vw, 25px)', lineHeight: 1.42, color: 'rgba(244,239,230,.9)', margin: '0 auto', maxWidth: 500, textWrap: 'balance' }}>
             Je suis votre guide — je connais tout {tenantName}. Que souhaitez-vous découvrir ?
           </p>
+          <button
+            type="button"
+            onClick={(e) => { e.stopPropagation(); goToSpace(); }}
+            style={{ marginTop: 22, background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'inherit', fontSize: 13.5, color: 'rgba(244,239,230,.5)', display: 'inline-flex', alignItems: 'center', gap: 6 }}
+          >
+            Déjà membre ? <span style={{ color: GOLD, fontWeight: 500 }}>Accéder à mon espace →</span>
+          </button>
         </div>
       )}
 
