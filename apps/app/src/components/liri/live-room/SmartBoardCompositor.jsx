@@ -2197,6 +2197,7 @@ function WhiteboardScene({
           if ('lineWidth' in patch) applied.lineWidth = patch.lineWidth;
           if ('size' in patch && (s.kind === 'path' || s.kind === undefined)) applied.size = patch.size;
           if ('fontSize' in patch && s.kind === 'text') applied.fontSize = patch.fontSize;
+          if ('text' in patch && s.kind === 'text') applied.text = patch.text;
           if ('opacity' in patch && s.kind === 'curtain') applied.opacity = patch.opacity;
           if ('fillColor' in patch) applied.fillColor = patch.fillColor;
           if ('fill' in patch) applied.fill = patch.fill;
@@ -2212,6 +2213,8 @@ function WhiteboardScene({
           lineWidth: first.lineWidth || first.size || 2,
           kind: first.kind || 'path',
           opacity: first.opacity,
+          text: first.kind === 'text' ? (first.text || '') : undefined,
+          index: sel[0],
         });
       },
     });
@@ -2253,6 +2256,8 @@ function WhiteboardScene({
           lineWidth: s.lineWidth || s.size || 2,
           kind: s.kind || 'path',
           opacity: s.opacity ?? undefined,
+          text: s.kind === 'text' ? (s.text || '') : undefined,
+          index: boardSelection[0],
         });
         return;
       }

@@ -25,6 +25,7 @@ import {
   Undo2, Redo2, Trash2, Trash, Eye, LayoutGrid, PaintBucket, Zap, EyeOff, Sparkles,
 } from 'lucide-react';
 import { useLiveWhiteboardStore } from '@/components/liri/live-room/useLiveWhiteboardStore';
+import { supabase } from '@/lib/customSupabaseClient';
 
 const GOLD = '#d4a36a';
 const BAR_BG = 'rgba(24,20,16,0.96)';
@@ -146,8 +147,33 @@ export default function ConsultationToolCockpit({
   const deleteBoardSelection = useLiveWhiteboardStore((s) => s.deleteBoardSelection);
   const updateStrokeProperties = useLiveWhiteboardStore((s) => s.updateStrokeProperties);
   const setPendingImage = useLiveWhiteboardStore((s) => s.setPendingImage);
+  const selectedStrokeInfo = useLiveWhiteboardStore((s) => s.selectedStrokeInfo) as
+    | { kind?: string; text?: string } | null;
   const neuroInkOpen = useLiveWhiteboardStore((s) => s.neuroInkOpen);
   const hasSelection = Array.isArray(boardSelection) && boardSelection.length > 0;
+
+  // Correction orthographique IA du TEXTE sélectionné (edge board-correct-text →
+  // Groq/DeepSeek). Remplace le texte de l'objet via updateStrokeProperties({text}).
+  const [correcting, setCorrecting] = useState(false);
+  const selectedText = selectedStrokeInfo?.kind === 'text' ? String(selectedStrokeInfo?.text || '') : '';
+  const doCorrectText = async () => {
+    const text = selectedText.trim();
+    if (!text || correcting) return;
+    setCorrecting(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('board-correct-text', {
+        body: { text: selectedText, lang: 'fr' },
+      });
+      const corrected = (data as { corrected?: string } | null)?.corrected;
+      if (!error && corrected && corrected !== selectedText) {
+        updateStrokeProperties?.({ text: corrected });
+      }
+    } catch {
+      /* silencieux : la frappe/le spellcheck restent disponibles */
+    } finally {
+      setCorrecting(false);
+    }
+  };
   const setNeuroInkOpen = useLiveWhiteboardStore((s) => s.setNeuroInkOpen);
 
   const [sideGroup, setSideGroup] = useState<string | null>(null);
@@ -366,6 +392,18 @@ export default function ConsultationToolCockpit({
             style={{ ...toolBtn(false), color: '#e5484d', border: '1px solid rgba(229,72,77,0.45)', background: 'rgba(229,72,77,0.12)' }}
           >
             <Trash size={16} aria-hidden="true" />
+          </button>
+        ) : null}
+        {/* Corriger l'orthographe du TEXTE sélectionné via l'IA (edge board-correct-text). */}
+        {selectedText.trim() ? (
+          <button
+            type="button"
+            title="Corriger l'orthographe du texte sélectionné (IA)"
+            onClick={doCorrectText}
+            disabled={correcting}
+            style={{ display: 'inline-flex', alignItems: 'center', gap: 6, height: 36, padding: '0 10px', borderRadius: 9, border: '1px solid rgba(212,163,106,0.5)', background: 'rgba(212,163,106,0.12)', color: GOLD, fontSize: 12, fontWeight: 600, cursor: correcting ? 'default' : 'pointer', opacity: correcting ? 0.6 : 1 }}
+          >
+            <Sparkles size={14} aria-hidden="true" /> {correcting ? 'Correction…' : 'Corriger'}
           </button>
         ) : null}
         {divider}
