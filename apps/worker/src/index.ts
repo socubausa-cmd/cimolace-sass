@@ -13,6 +13,7 @@ import { pollZoomSync }               from './jobs/zoom-sync.js';
 import { pollShortGeneration }        from './jobs/short-generator.js';
 import { pollCourseRenderJobs }       from './jobs/courseRender.js';
 import { pollLiveReminders }          from './jobs/live-reminders.js';
+import { pollMasterclassReminders }   from './jobs/masterclass-reminders.js';
 import { pollLiveInvitations }        from './jobs/live-invitations.js';
 import { pollGdprExports }            from './jobs/gdpr-export.js';
 
@@ -79,6 +80,18 @@ console.log('[worker] ✓ Email poller (15s)');
   }
 })();
 console.log('[worker] ✓ Live reminders poller (60s)');
+
+// ── Rappels direct payant / masterclass (60s) ────────────────────────────
+(async () => {
+  while (true) {
+    try {
+      const count = await (pollMasterclassReminders as () => Promise<number>)();
+      if (count > 0) console.log(`[worker] Masterclass reminders: ${count} rappels enfilés`);
+    } catch (e: unknown) { console.error('[worker] Masterclass reminders error:', (e as Error).message); }
+    await sleep(60_000);
+  }
+})();
+console.log('[worker] ✓ Masterclass reminders poller (60s)');
 
 // ── Invitations live (120s) ──────────────────────────────────────────────
 (async () => {
