@@ -2141,6 +2141,27 @@ function MembersRail({
       </div>
     );
   }
+  // Desktop REPLIÉ (bouton de l'en-tête) : fine bande verticale (icône + compteur +
+  // chevron pour ré-ouvrir) → libère la largeur pour les panneaux d'outils du tableau.
+  if (collapsed) {
+    return (
+      <div
+        data-cr="members"
+        style={{ width: 42, flexShrink: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8, padding: '10px 4px', background: PANEL_BG, borderRadius: 14, border: PANEL_BORDER }}
+      >
+        <button
+          onClick={onToggleCollapsed}
+          aria-label={`Afficher les ${cams.length} participants`}
+          title="Afficher les participants"
+          style={{ ...miniBtn, width: 30, height: 30, background: 'rgba(255,255,255,0.07)' }}
+        >
+          <ChevronLeft size={16} aria-hidden="true" />
+        </button>
+        <Users size={15} color={GOLD} aria-hidden="true" />
+        <span style={{ fontSize: 11, color: '#9ca3af' }}>{cams.length}</span>
+      </div>
+    );
+  }
   return (
     <div data-cr="members" style={{ width: 224, flexShrink: 0, display: 'flex', flexDirection: 'column', minHeight: 0, background: PANEL_BG, borderRadius: 14, border: PANEL_BORDER, overflow: 'hidden' }}>
       <style>{`[data-cr="members"] .lk-participant-name{display:none!important}`}</style>
@@ -2148,6 +2169,14 @@ function MembersRail({
         <Users size={15} color={GOLD} aria-hidden="true" />
         <span style={{ fontWeight: 600, fontSize: 13, color: '#fff' }}>Participants</span>
         <span style={{ marginLeft: 'auto', fontSize: 11, color: '#9ca3af', background: 'rgba(255,255,255,0.06)', padding: '1px 8px', borderRadius: 999 }}>{cams.length}</span>
+        <button
+          onClick={onToggleCollapsed}
+          aria-label="Replier les participants"
+          title="Replier le panneau"
+          style={{ ...miniBtn, width: 24, height: 24, background: 'rgba(255,255,255,0.06)' }}
+        >
+          <ChevronRight size={14} aria-hidden="true" />
+        </button>
       </div>
       <div style={{ flex: 1, minHeight: 0, overflowY: 'auto', padding: 10, display: 'flex', flexDirection: 'column', gap: 10 }}>
         {screen ? (
