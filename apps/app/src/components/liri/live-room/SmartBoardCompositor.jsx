@@ -3983,7 +3983,8 @@ function WhiteboardScene({
               key={`${textDraft.mode}-${textDraft.x}-${textDraft.y}-${textDraft.mode === 'edit' ? textDraft.index : ''}`}
               rows={1}
               wrap="off"
-              spellCheck={false}
+              spellCheck
+              lang="fr"
               placeholder="Texte…"
               defaultValue={textDraft.mode === 'edit' ? String(textDraft.initialText ?? '') : ''}
               onInput={(ev) => {
