@@ -1286,6 +1286,8 @@ const AppContent = () => {
     '/creer-organisation',
     '/precepteur',      // Le Précepteur = secteur FORMATION de Cimolace — immersif plein écran, aucun header
     '/rejoindre',
+    '/choose-account-type', // sélecteur multi-rôles = page plein écran autonome (LiriWordmark) —
+                            // JAMAIS le header vitrine « PORTAIL Formations… » (chrome Academy déprécié)
     '/auth/callback',
     '/creator-dashboard',
     '/teacher-dashboard',
