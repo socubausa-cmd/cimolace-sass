@@ -1,11 +1,27 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { ArrowLeft, ArrowUp } from 'lucide-react';
 import { coursesApi } from '@/lib/api-v2';
+import { supabase } from '@/lib/customSupabaseClient';
 import { BG, INK, STYLE, TERRA, SERIF } from '@/lib/agent/immersiveTheme';
 import { SceneStage } from '@/pages/CimolaceCreationAgent';
 import FormationOsDayView from './FormationOsDayView';
 
 const norm = (s) => String(s || '').toLowerCase().normalize('NFD').replace(/\p{Diacritic}/gu, '');
+const strip = (html) => String(html || '').replace(/<[^>]+>/g, ' ').replace(/&nbsp;/g, ' ').replace(/\s+/g, ' ').trim();
+
+// Construit la « knowledge » du cours (concepts = mindmap + support) pour le cerveau Précepteur (scopé cours).
+const buildCourseKnowledge = (course, modulesOf) => {
+  const concepts = [];
+  (modulesOf(course) || []).forEach((m) => (m.weeks || []).forEach((w) => (w.days || []).forEach((d) => {
+    const mm = (Array.isArray(d.videos) ? d.videos.find((v) => v?.mindmap)?.mindmap : null) || d.mindmap;
+    if (mm) {
+      if (mm.summary) concepts.push({ title: mm.label || d.title || 'Leçon', lesson: mm.summary });
+      (mm.children || []).forEach((b) => concepts.push({ title: b.label || b.title || 'Concept', lesson: [b.summary, (b.keyPoints || []).join(', ')].filter(Boolean).join(' — ') }));
+    }
+    if (d.powerpoint?.slides) d.powerpoint.slides.forEach((s) => concepts.push({ title: s.title || 'Support', lesson: strip(s.content) }));
+  })));
+  return { title: course?.title || 'ce cours', concepts: concepts.filter((c) => c.title && c.lesson).slice(0, 12) };
+};
 
 /**
  * « Mes formations » RENDU PAR L'OS CIMOLACE.
@@ -190,11 +206,28 @@ export default function StudentFormationsOsPage() {
     });
     if (cm) { openCourse(cm); setReply(`J'ouvre la formation « ${cm.title} ».`); return; }
 
-    if (/(quiz|video|mindmap|carte mentale|support)/.test(t)) {
-      setReply(openDay ? 'Choisis le bloc avec les pastilles en haut du jour.' : 'Ouvre d\'abord un jour, puis choisis Vidéo · Support · Quiz · Mindmap.');
-      return;
+    // Question libre → cerveau Précepteur, scopé au contenu du cours (refuse le hors-sujet).
+    const ctxCourse = focusCourse?.course || (courses.length === 1 ? courses[0] : null);
+    if (ctxCourse) { askBrain(raw, ctxCourse); return; }
+    setReply('Ouvre une formation, puis pose-moi ta question sur son contenu.');
+  };
+
+  const [asking, setAsking] = useState(false);
+  const askBrain = async (question, course) => {
+    setAsking(true);
+    setReply('…');
+    try {
+      const knowledge = buildCourseKnowledge(course, modulesOf);
+      const { data, error } = await supabase.functions.invoke('precepteur-brain', {
+        body: { question, course: knowledge, concept: openDay?.day?.title || focusModule?.module?.title || '' },
+      });
+      if (error) throw error;
+      setReply(String(data?.reply || 'Je n\'ai pas trouvé la réponse dans ce cours.'));
+    } catch {
+      setReply('Je ne peux pas répondre à l\'instant — réessaie dans un moment.');
+    } finally {
+      setAsking(false);
     }
-    setReply('Dis-moi une formation par son nom, ou « ouvre le module 2 », « montre le jour 1 » — je t\'y emmène.');
   };
 
   return (
@@ -266,7 +299,7 @@ export default function StudentFormationsOsPage() {
                 style={{ flex: 1, minWidth: 0, background: 'transparent', border: 'none', outline: 'none', color: INK, fontFamily: 'inherit', fontSize: 14.5 }}
                 aria-label="Parler à l'OS"
               />
-              <button type="submit" disabled={!chat.trim()} aria-label="Envoyer"
+              <button type="submit" disabled={!chat.trim() || asking} aria-label="Envoyer"
                 style={{ flexShrink: 0, width: 34, height: 34, borderRadius: '50%', border: 'none', background: chat.trim() ? TERRA : 'rgba(245,244,238,.08)', color: chat.trim() ? '#231208' : 'rgba(245,244,238,.4)', cursor: chat.trim() ? 'pointer' : 'default', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', transition: 'all .18s ease' }}>
                 <ArrowUp size={17} />
               </button>
