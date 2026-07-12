@@ -518,6 +518,8 @@ function normalizeScene(raw) {
             title: cut(c.ref.title, 60) || cut(c.title, 40),
             value: cut(c.ref.value, 40) || undefined,
             note: cut(c.ref.note, 340) || undefined,
+            // Lien d'achat (Payment Link Stripe) — préservé UNIQUEMENT si c'est une URL https valide.
+            link: (typeof c.ref.link === 'string' && /^https:\/\/[^\s"'<>]+$/.test(c.ref.link)) ? c.ref.link : undefined,
             actions: (Array.isArray(c.ref.actions) ? c.ref.actions : []).filter((a) => typeof a === 'string').slice(0, 4),
             related: (Array.isArray(c.ref.related) ? c.ref.related : []).slice(0, 3)
               .map((r) => (r && r.nodeId && r.label) ? { nodeId: cut(r.nodeId, 40), label: cut(r.label, 40) } : null).filter(Boolean),
