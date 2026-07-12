@@ -1,10 +1,6 @@
-import React, { useState, useEffect, useMemo, useRef, lazy, Suspense } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { DEFAULT_TENANT_SLUG } from '@/config/platform';
 import { useDataSync } from '@/contexts/DataSyncContext';
-
-// Précepteur OS — l'agent immersif Cimolace embarqué dans la leçon (chargé à la demande).
-const CimolaceCreationAgent = lazy(() => import('@/pages/CimolaceCreationAgent'));
 import { useAuth } from '@/contexts/SupabaseAuthContext';
 import { useBilling } from '@/contexts/BillingContext';
 import { supabase } from '@/lib/customSupabaseClient';
@@ -2076,15 +2072,6 @@ const SupabaseCoursePlayerContent = ({ formationId, onExit }) => {
                         </div>
                       ) : null}
 
-                      {activePanel === 'precepteur' ? (
-                        <div className="w-full" style={{ height: 'calc(100vh - 132px)' }}>
-                          <Suspense fallback={<div className="h-full flex items-center justify-center text-[#82807a] text-sm">Chargement du Précepteur…</div>}>
-                            {/* OS Cimolace embarqué : agent immersif qui présente / explique le contenu (realm tenant). */}
-                            <CimolaceCreationAgent embedded tenantSlug={DEFAULT_TENANT_SLUG} />
-                          </Suspense>
-                        </div>
-                      ) : null}
-
                       {activePanel === 'presentation' ? (
                         <PowerPointViewer
                           powerpoint={currentDayPowerpoint}
@@ -2675,8 +2662,6 @@ const SupabaseCoursePlayerContent = ({ formationId, onExit }) => {
                   <div className="text-xs text-[#b0ada3] truncate">
                     {activePanel === 'video'
                       ? 'Vidéo'
-                      : activePanel === 'precepteur'
-                        ? 'Précepteur OS'
                       : activePanel === 'presentation'
                         ? 'Présentation'
                         : activePanel === 'quiz'
@@ -2695,14 +2680,6 @@ const SupabaseCoursePlayerContent = ({ formationId, onExit }) => {
                       className={activePanel === 'video' ? 'bg-white/10 text-white' : 'border-[rgba(245,244,238,0.09)] text-white hover:bg-white/5'}
                     >
                       Vidéo
-                    </Button>
-                    <Button
-                      size="sm"
-                      variant={activePanel === 'precepteur' ? 'secondary' : 'outline'}
-                      onClick={() => setActivePanel('precepteur')}
-                      className={activePanel === 'precepteur' ? 'bg-[var(--school-accent)]/20 text-white border border-[var(--school-accent)]/40' : 'border-[rgba(245,244,238,0.09)] text-white hover:bg-white/5'}
-                    >
-                      <Sparkles size={13} className="mr-1.5" style={{ color: 'var(--school-accent)' }} /> Précepteur
                     </Button>
                     <Button
                       size="sm"

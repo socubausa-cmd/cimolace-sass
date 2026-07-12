@@ -301,6 +301,8 @@ const StudentDashboardPage = lazy(() => import('@/pages/school/StudentDashboardP
 // ISNA Academy embarqué dans LIRI : pages école montées sous /liri/* (LiriSchoolShell).
 const LiriSchoolShell = lazy(() => import('@/pages/liri/LiriSchoolShell'));
 const StudentFormationsPage = lazy(() => import('@/pages/school/student-school-life/StudentFormationsPage'));
+// « Mes formations » rendu par le moteur OS Cimolace (immersif, branché sur les données de cours).
+const StudentFormationsOsPage = lazy(() => import('@/pages/school/student-school-life/StudentFormationsOsPage'));
 const StudentAgendaPage = lazy(() => import('@/pages/school/student-school-life/StudentAgendaPage'));
 const StudentNotesPage = lazy(() => import('@/pages/school/student-school-life/StudentNotesPage'));
 // Hub « Mes notes » (prise de notes multi-source) — remplace le bulletin sur /liri/notes ;
@@ -1986,7 +1988,7 @@ isLiriHostDevPreviewRoute;
               (student + créateurs, allowTenantRole). L'élève garde agenda/notes/cours/etc.
               sans jamais quitter LIRI. ═══ */}
           <Route path="/liri/semaine" element={<ProtectedLiriRoute allowedRoles={['owner', 'admin', 'teacher', 'secretariat', 'student', 'practitioner', 'clinic_admin']} allowTenantRole><LiriSchoolShell active="semaine"><StudentWeeklySchedulePage /></LiriSchoolShell></ProtectedLiriRoute>} />
-          <Route path="/liri/formations" element={<ProtectedLiriRoute allowedRoles={['owner', 'admin', 'teacher', 'secretariat', 'student', 'practitioner', 'clinic_admin']} allowTenantRole><LiriSchoolShell active="formations"><StudentFormationsPage /></LiriSchoolShell></ProtectedLiriRoute>} />
+          <Route path="/liri/formations" element={<ProtectedLiriRoute allowedRoles={['owner', 'admin', 'teacher', 'secretariat', 'student', 'practitioner', 'clinic_admin']} allowTenantRole><LiriSchoolShell active="formations"><StudentFormationsOsPage /></LiriSchoolShell></ProtectedLiriRoute>} />
           <Route path="/liri/vie-scolaire" element={<ProtectedLiriRoute allowedRoles={['owner', 'admin', 'teacher', 'secretariat', 'student', 'practitioner', 'clinic_admin']} allowTenantRole><LiriSchoolShell active="vie-scolaire"><SchoolLifePage embedded /></LiriSchoolShell></ProtectedLiriRoute>} />
           <Route path="/liri/agenda" element={<ProtectedLiriRoute allowedRoles={['owner', 'admin', 'teacher', 'secretariat', 'student', 'practitioner', 'clinic_admin']} allowTenantRole><LiriSchoolShell active="agenda"><StudentAgendaPage /></LiriSchoolShell></ProtectedLiriRoute>} />
           {/* Prise de rendez-vous EMBARQUÉE dans LIRI (anti-fuite : la version standalone /appointment/request est une page ISNA pleine). */}

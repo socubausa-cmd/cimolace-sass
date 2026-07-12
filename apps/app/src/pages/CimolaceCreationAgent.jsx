@@ -680,7 +680,7 @@ function SceneSuggest({ acts, suggest, onAct, onNode }) {
   );
 }
 
-function SceneStage({ scene, visible, readerIdx, setReaderIdx, onSuggest, onCta, hooks, onHook, onFocus, suggest, acts, onNode, onAct, glossary, onTerm }) {
+export function SceneStage({ scene, visible, readerIdx, setReaderIdx, onSuggest, onCta, hooks, onHook, onFocus, suggest, acts, onNode, onAct, glossary, onTerm }) {
   if (!scene) return null;
   return (
     <div className={`cca-scene cca-stage-${scene.type} ${visible ? 'cca-scene-on' : ''}`}
