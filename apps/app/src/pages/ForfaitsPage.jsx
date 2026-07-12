@@ -376,7 +376,7 @@ const ForfaitsPage = () => {
   };
 
   return (
-    <div className="prs-forfaits-site relative min-h-screen overflow-x-hidden bg-[#070b12] text-white pb-16">
+    <div className="prs-forfaits-site relative min-h-screen overflow-x-hidden bg-[#1d1916] text-white pb-16">
       <style>{PRORASCIENCE_MARKETING_HERO_CSS}</style>
       <Helmet>
         <title>{`${INITIATION_PRODUCT_NAME} | ${getActiveTenantBranding().name}`}</title>
@@ -385,7 +385,7 @@ const ForfaitsPage = () => {
 
       <div className="relative z-[2] mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         {loading ? (
-          <div className="flex items-center justify-center gap-2 border-b border-white/10 bg-[#070b12]/90 py-5 pt-20 text-gray-300 backdrop-blur-md md:pt-24">
+          <div className="flex items-center justify-center gap-2 border-b border-white/10 bg-[#1d1916]/90 py-5 pt-20 text-gray-300 backdrop-blur-md md:pt-24">
             <Loader2 className="h-5 w-5 animate-spin" />
             Chargement des cycles...
           </div>
@@ -393,9 +393,9 @@ const ForfaitsPage = () => {
           <Tabs value={activeCycle?.key || ''} onValueChange={setActiveCycleKey} className="space-y-0">
             <div
               id="forfaits-cycles"
-              className="sticky top-0 z-40 -mx-4 border-b border-white/10 bg-[#070b12]/92 px-4 pb-4 pt-16 shadow-[0_8px_32px_rgba(0,0,0,0.35)] backdrop-blur-md sm:-mx-6 sm:px-6 md:pt-20 lg:-mx-8 lg:px-8"
+              className="sticky top-0 z-40 -mx-4 border-b border-white/10 bg-[#1d1916]/92 px-4 pb-4 pt-16 shadow-[0_8px_32px_rgba(0,0,0,0.35)] backdrop-blur-md sm:-mx-6 sm:px-6 md:pt-20 lg:-mx-8 lg:px-8"
             >
-              <p className="mb-1 text-[11px] font-semibold uppercase tracking-[0.2em] text-[color-mix(in_srgb,var(--school-accent)_90%,transparent)]">
+              <p className="mb-1 text-[11px] font-semibold uppercase tracking-[0.2em] text-[color-mix(in_srgb,#d97757_90%,transparent)]">
                 {INITIATION_PRODUCT_NAME}
               </p>
               <p className="mb-3 text-[10px] text-white/45 md:text-[11px]">
@@ -442,7 +442,7 @@ const ForfaitsPage = () => {
                     hidden: { opacity: 0, y: 16 },
                     visible: { opacity: 1, y: 0, transition: { duration: 0.6, ease: easePremium } },
                   }}
-                  className="max-w-xl text-[11px] font-bold uppercase leading-snug tracking-[0.22em] text-[var(--school-accent)] md:text-xs"
+                  className="max-w-xl text-[11px] font-bold uppercase leading-snug tracking-[0.22em] text-[#d97757] md:text-xs"
                 >
                   {heroContent.heroGoldLine}
                 </motion.p>
@@ -475,7 +475,7 @@ const ForfaitsPage = () => {
                     hidden: { opacity: 0, y: 10 },
                     visible: { opacity: 1, y: 0, transition: { duration: 0.5, delay: 0.12 } },
                   }}
-                  className="mt-3 text-xs font-semibold uppercase tracking-[0.14em] text-[color-mix(in_srgb,var(--school-accent)_95%,transparent)] md:text-[13px]"
+                  className="mt-3 text-xs font-semibold uppercase tracking-[0.14em] text-[color-mix(in_srgb,#d97757_95%,transparent)] md:text-[13px]"
                 >
                   {heroContent.tierBadge}
                 </motion.p>
@@ -484,7 +484,7 @@ const ForfaitsPage = () => {
                     hidden: { opacity: 0, y: 12 },
                     visible: { opacity: 1, y: 0, transition: { duration: 0.55, delay: 0.16 } },
                   }}
-                  className="mt-4 max-w-xl border-l-2 border-[color-mix(in_srgb,var(--school-accent)_55%,transparent)] pl-4 text-lg font-medium leading-snug text-white md:text-xl"
+                  className="mt-4 max-w-xl border-l-2 border-[color-mix(in_srgb,#d97757_55%,transparent)] pl-4 text-lg font-medium leading-snug text-white md:text-xl"
                 >
                   {heroContent.tagline}
                 </motion.p>
@@ -513,7 +513,7 @@ const ForfaitsPage = () => {
                     <React.Fragment key={`${activeCycle?.key}-p-${i}`}>
                       {part}
                       {i < arr.length - 1 ? (
-                        <span className="font-semibold tracking-wide text-[#ebca5e]">LIRI</span>
+                        <span className="font-semibold tracking-wide text-[#c2683f]">LIRI</span>
                       ) : null}
                     </React.Fragment>
                   ))}
@@ -527,7 +527,7 @@ const ForfaitsPage = () => {
                 >
                   {(heroContent.includes || []).slice(0, 4).map((line) => (
                     <li key={line} className="flex gap-2.5">
-                      <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-[var(--school-accent)]" aria-hidden />
+                      <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-[#d97757]" aria-hidden />
                       <span>{line}</span>
                     </li>
                   ))}
@@ -538,7 +538,7 @@ const ForfaitsPage = () => {
                       hidden: { opacity: 0 },
                       visible: { opacity: 1, transition: { duration: 0.45, delay: 0.32 } },
                     }}
-                    className="mt-5 text-sm font-medium text-[var(--school-accent)] md:text-base"
+                    className="mt-5 text-sm font-medium text-[#d97757] md:text-base"
                   >
                     À partir de {heroPriceLabel} · contrat au choix
                   </motion.p>
@@ -553,7 +553,7 @@ const ForfaitsPage = () => {
                 >
                   <PremiumPressable>
                     <Button
-                      className="group prs-cta-primary h-12 bg-[var(--school-accent)] px-7 font-bold text-black hover:bg-[#ebca5e]"
+                      className="group prs-cta-primary h-12 bg-[#d97757] px-7 font-bold text-white hover:bg-[#c2683f]"
                       asChild
                     >
                       <Link to={COUNSELLOR_URL} className="inline-flex items-center">
@@ -580,7 +580,7 @@ const ForfaitsPage = () => {
                   variants={{ hidden: { opacity: 0 }, visible: { opacity: 1, transition: { duration: 0.45 } } }}
                   className="mt-8 flex flex-wrap items-center gap-2 text-xs text-white/55"
                 >
-                  <ShieldCheck className="h-4 w-4 text-[var(--school-accent)]" />
+                  <ShieldCheck className="h-4 w-4 text-[#d97757]" />
                   {`Système MK5 / Ngowazulu / ${getActiveTenantBranding().name}`}
                   <span className="mx-1 text-white/30">•</span>
                   Contrats flexibles
@@ -604,7 +604,7 @@ const ForfaitsPage = () => {
                     className={cn(
                       'relative w-full overflow-hidden',
                       activeCycle?.key === 'privilegie'
-                        ? 'min-h-[min(58vh,440px)] bg-[#0a0f18] md:min-h-[min(66vh,560px)] lg:min-h-[min(74vh,720px)]'
+                        ? 'min-h-[min(58vh,440px)] bg-[#221f1b] md:min-h-[min(66vh,560px)] lg:min-h-[min(74vh,720px)]'
                         : 'min-h-[min(52vh,380px)] md:min-h-[min(62vh,480px)] lg:min-h-[min(70vh,620px)]'
                     )}
                   >
@@ -617,11 +617,11 @@ const ForfaitsPage = () => {
                       )}
                       loading="eager"
                     />
-                    <div className="absolute inset-0 bg-gradient-to-t from-[#070b12] via-[#070b12]/15 to-[#070b12]/30" />
+                    <div className="absolute inset-0 bg-gradient-to-t from-[#1d1916] via-[#1d1916]/15 to-[#1d1916]/30" />
                     <div className="absolute bottom-4 left-4 right-4 flex flex-wrap items-center gap-2 rounded-xl border border-white/15 bg-black/50 px-4 py-3 text-xs text-white/88 backdrop-blur-md">
-                      <Globe2 className="h-4 w-4 shrink-0 text-[var(--school-accent)]" />
+                      <Globe2 className="h-4 w-4 shrink-0 text-[#d97757]" />
                       <span className="inline-flex flex-wrap items-baseline gap-x-1.5 gap-y-1">
-                        <span className="font-semibold tracking-wide text-[#ebca5e]">LIRI</span>
+                        <span className="font-semibold tracking-wide text-[#c2683f]">LIRI</span>
                         <span>
                           · immersion directe — cycle « {activeCycle?.label || heroContent.headline} » · accessible
                           depuis n&apos;importe quel pays
@@ -631,7 +631,7 @@ const ForfaitsPage = () => {
                   </div>
                 </div>
 
-                <div className="relative z-[1] -mt-8 mx-3 rounded-2xl border border-white/12 bg-[#0c111d]/90 p-4 shadow-xl backdrop-blur-lg md:mx-6 md:p-5">
+                <div className="relative z-[1] -mt-8 mx-3 rounded-2xl border border-white/12 bg-[#221f1b]/90 p-4 shadow-xl backdrop-blur-lg md:mx-6 md:p-5">
                   <div className="mb-3 flex items-center justify-between gap-2 border-b border-white/10 pb-3">
                     <span className="flex items-center gap-2 text-xs font-medium uppercase tracking-wider text-white/55">
                       <span className="relative flex h-2 w-2 shrink-0">
@@ -647,7 +647,7 @@ const ForfaitsPage = () => {
                         {[14, 10, 16, 12].map((h, i) => (
                           <span
                             key={i}
-                            className="w-0.5 rounded-full bg-[color-mix(in_srgb,var(--school-accent)_75%,transparent)] prs-wave-bar"
+                            className="w-0.5 rounded-full bg-[color-mix(in_srgb,#d97757_75%,transparent)] prs-wave-bar"
                             style={{ height: h }}
                           />
                         ))}
@@ -708,7 +708,7 @@ const ForfaitsPage = () => {
                   <div className="grid gap-4 lg:grid-cols-12 lg:gap-6">
                     <div
                       className={cn(
-                        'relative overflow-hidden rounded-3xl border border-[color-mix(in_srgb,var(--school-accent)_30%,transparent)] bg-[#0a0f18] lg:col-span-4',
+                        'relative overflow-hidden rounded-3xl border border-[color-mix(in_srgb,#d97757_30%,transparent)] bg-[#221f1b] lg:col-span-4',
                         cycle.key === 'privilegie'
                           ? 'min-h-[min(260px,55vw)] sm:min-h-[280px] lg:min-h-[min(320px,32vw)]'
                           : 'min-h-[220px]'
@@ -722,43 +722,43 @@ const ForfaitsPage = () => {
                           cycle.key === 'privilegie' ? 'object-contain object-center p-3 sm:p-4' : 'object-cover'
                         )}
                       />
-                      <div className="absolute inset-0 bg-gradient-to-t from-[#070b12] via-[#070b12]/75 to-[#070b12]/20" />
+                      <div className="absolute inset-0 bg-gradient-to-t from-[#1d1916] via-[#1d1916]/75 to-[#1d1916]/20" />
                       <div className="relative z-10 flex h-full flex-col items-center justify-center p-6 text-center">
-                        <div className="flex h-[4.75rem] w-[4.75rem] items-center justify-center rounded-2xl border border-[color-mix(in_srgb,var(--school-accent)_45%,transparent)] bg-[color-mix(in_srgb,var(--school-accent)_12%,transparent)] shadow-[0_0_48px_rgba(212,175,55,0.18)]">
-                          <TierIcon className="h-10 w-10 text-[var(--school-accent)]" aria-hidden />
+                        <div className="flex h-[4.75rem] w-[4.75rem] items-center justify-center rounded-2xl border border-[color-mix(in_srgb,#d97757_45%,transparent)] bg-[color-mix(in_srgb,#d97757_12%,transparent)] shadow-[0_0_48px_rgba(217,119,87,0.18)]">
+                          <TierIcon className="h-10 w-10 text-[#d97757]" aria-hidden />
                         </div>
-                        <p className="mt-5 text-xs font-semibold uppercase tracking-[0.22em] text-[var(--school-accent)]">
+                        <p className="mt-5 text-xs font-semibold uppercase tracking-[0.22em] text-[#d97757]">
                           Palier {content.tier}
                         </p>
                         <p className="mt-2 max-w-[14rem] text-[11px] leading-snug text-white/55">{content.tierBadge}</p>
                       </div>
                     </div>
 
-                    <div className="flex flex-col justify-between gap-6 rounded-3xl border border-white/10 bg-[#121a28]/95 p-6 shadow-[0_28px_80px_rgba(0,0,0,0.35)] md:p-8 lg:col-span-8">
+                    <div className="flex flex-col justify-between gap-6 rounded-3xl border border-white/10 bg-[#2a2621]/95 p-6 shadow-[0_28px_80px_rgba(0,0,0,0.35)] md:p-8 lg:col-span-8">
                       <div>
                         <div className="mb-3 inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.04] px-3 py-1 text-[10px] font-semibold uppercase tracking-widest text-white/55">
-                          <Layers className="h-3.5 w-3.5 text-[var(--school-accent)]" aria-hidden />
+                          <Layers className="h-3.5 w-3.5 text-[#d97757]" aria-hidden />
                           Synthèse du niveau
                         </div>
                         <h2 className="text-2xl font-bold tracking-tight text-white md:text-3xl lg:text-[2rem]">
                           {content.headline}
                         </h2>
-                        <p className="mt-2 text-base font-semibold leading-snug text-[#ebca5e] md:text-lg">
+                        <p className="mt-2 text-base font-semibold leading-snug text-[#c2683f] md:text-lg">
                           {content.tagline}
                         </p>
-                        <p className="mt-2 text-sm text-[color-mix(in_srgb,var(--school-accent)_85%,transparent)]">{content.positioning}</p>
+                        <p className="mt-2 text-sm text-[color-mix(in_srgb,#d97757_85%,transparent)]">{content.positioning}</p>
                         <p className="mt-4 line-clamp-4 text-sm leading-relaxed text-white/68">{content.pitch}</p>
                       </div>
                       <div className="flex flex-col gap-4 border-t border-white/10 pt-5 sm:flex-row sm:items-center sm:justify-between">
                         <div className="flex items-center gap-3">
-                          <div className="flex h-12 w-12 items-center justify-center rounded-2xl border border-[color-mix(in_srgb,var(--school-accent)_25%,transparent)] bg-[color-mix(in_srgb,var(--school-accent)_10%,transparent)]">
-                            <Wallet className="h-6 w-6 text-[var(--school-accent)]" aria-hidden />
+                          <div className="flex h-12 w-12 items-center justify-center rounded-2xl border border-[color-mix(in_srgb,#d97757_25%,transparent)] bg-[color-mix(in_srgb,#d97757_10%,transparent)]">
+                            <Wallet className="h-6 w-6 text-[#d97757]" aria-hidden />
                           </div>
                           <div>
                             <p className="text-[10px] font-semibold uppercase tracking-wider text-white/45">
                               {hasPrice ? 'À partir de' : 'Tarif'}
                             </p>
-                            <p className="text-xl font-bold tabular-nums text-[var(--school-accent)] md:text-2xl">
+                            <p className="text-xl font-bold tabular-nums text-[#d97757] md:text-2xl">
                               {hasPrice ? formatPrice(cyclePrice, currency) : 'Sur demande'}
                             </p>
                             <p className="text-[11px] text-white/40">
@@ -769,7 +769,7 @@ const ForfaitsPage = () => {
                         {hasSelectablePlan ? (
                           <Button
                             onClick={() => reserveCycle(cycle.key)}
-                            className="h-12 w-full bg-[var(--school-accent)] font-bold text-black shadow-xl shadow-[color-mix(in_srgb,var(--school-accent)_25%,transparent)] hover:bg-[#ebca5e] sm:w-auto sm:min-w-[200px]"
+                            className="h-12 w-full bg-[#d97757] font-bold text-white shadow-xl shadow-[color-mix(in_srgb,#d97757_25%,transparent)] hover:bg-[#c2683f] sm:w-auto sm:min-w-[200px]"
                           >
                             <CreditCard className="mr-2 h-4 w-4" />
                             Réserver ce niveau
@@ -777,7 +777,7 @@ const ForfaitsPage = () => {
                         ) : hasPrice ? (
                           <Button
                             disabled
-                            className="h-12 w-full bg-[var(--school-accent)] font-bold text-black disabled:opacity-50 sm:w-auto sm:min-w-[200px]"
+                            className="h-12 w-full bg-[#d97757] font-bold text-white disabled:opacity-50 sm:w-auto sm:min-w-[200px]"
                           >
                             <CheckCircle2 className="mr-2 h-4 w-4" />
                             Niveau actif
@@ -786,7 +786,7 @@ const ForfaitsPage = () => {
                           <Button
                             asChild
                             variant="outline"
-                            className="h-12 w-full border-[color-mix(in_srgb,var(--school-accent)_50%,transparent)] font-bold text-[var(--school-accent)] hover:bg-[color-mix(in_srgb,var(--school-accent)_10%,transparent)] sm:w-auto sm:min-w-[200px]"
+                            className="h-12 w-full border-[color-mix(in_srgb,#d97757_50%,transparent)] font-bold text-[#d97757] hover:bg-[color-mix(in_srgb,#d97757_10%,transparent)] sm:w-auto sm:min-w-[200px]"
                           >
                             <Link to={COUNSELLOR_URL}>
                               <PhoneCall className="mr-2 h-4 w-4" />
@@ -800,16 +800,16 @@ const ForfaitsPage = () => {
 
                   {/* Montée en gamme — bande illustrée */}
                   {nextCycle && nextContent ? (
-                    <div className="relative overflow-hidden rounded-2xl border border-[color-mix(in_srgb,var(--school-accent)_35%,transparent)] bg-gradient-to-r from-[#2a1f0c]/95 via-[#151a21] to-[#101824] p-5 md:flex md:items-center md:justify-between md:pr-6">
-                      <div className="pointer-events-none absolute -right-6 top-1/2 h-40 w-40 -translate-y-1/2 rounded-full bg-[color-mix(in_srgb,var(--school-accent)_12%,transparent)] blur-3xl" />
+                    <div className="relative overflow-hidden rounded-2xl border border-[color-mix(in_srgb,#d97757_35%,transparent)] bg-gradient-to-r from-[#2a201a]/95 via-[#262624] to-[#262624] p-5 md:flex md:items-center md:justify-between md:pr-6">
+                      <div className="pointer-events-none absolute -right-6 top-1/2 h-40 w-40 -translate-y-1/2 rounded-full bg-[color-mix(in_srgb,#d97757_12%,transparent)] blur-3xl" />
                       <div className="relative flex flex-1 items-start gap-4 md:items-center">
-                        <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl border border-[color-mix(in_srgb,var(--school-accent)_40%,transparent)] bg-[color-mix(in_srgb,var(--school-accent)_15%,transparent)] shadow-[0_0_32px_rgba(212,175,55,0.12)]">
-                          <NextTierIcon className="h-7 w-7 text-[var(--school-accent)]" aria-hidden />
+                        <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl border border-[color-mix(in_srgb,#d97757_40%,transparent)] bg-[color-mix(in_srgb,#d97757_15%,transparent)] shadow-[0_0_32px_rgba(217,119,87,0.12)]">
+                          <NextTierIcon className="h-7 w-7 text-[#d97757]" aria-hidden />
                         </div>
                         <div className="min-w-0 flex-1 pr-2">
                           <div className="flex flex-wrap items-center gap-2">
-                            <TrendingUp className="h-4 w-4 text-[var(--school-accent)]" aria-hidden />
-                            <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-[var(--school-accent)]">
+                            <TrendingUp className="h-4 w-4 text-[#d97757]" aria-hidden />
+                            <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-[#d97757]">
                               Montée en gamme
                             </p>
                           </div>
@@ -820,7 +820,7 @@ const ForfaitsPage = () => {
                       <Button
                         type="button"
                         variant="outline"
-                        className="relative mt-4 h-11 shrink-0 border-[color-mix(in_srgb,var(--school-accent)_50%,transparent)] text-[var(--school-accent)] hover:bg-[color-mix(in_srgb,var(--school-accent)_10%,transparent)] md:mt-0"
+                        className="relative mt-4 h-11 shrink-0 border-[color-mix(in_srgb,#d97757_50%,transparent)] text-[#d97757] hover:bg-[color-mix(in_srgb,#d97757_10%,transparent)] md:mt-0"
                         onClick={() => setActiveCycleKey(content.nextTierKey)}
                       >
                         Niveau supérieur
@@ -830,13 +830,13 @@ const ForfaitsPage = () => {
                   ) : null}
 
                   {/* 02 · Grille visuelle inclus / limites */}
-                  <div className="rounded-3xl border border-white/10 bg-[#0f141f]/95 p-5 md:p-8">
+                  <div className="rounded-3xl border border-white/10 bg-[#221f1b]/95 p-5 md:p-8">
                     <div className="mb-6 flex flex-col gap-3 border-b border-white/10 pb-5 sm:flex-row sm:items-end sm:justify-between">
                       <div className="flex items-start gap-4">
-                        <span className="text-4xl font-black leading-none text-[color-mix(in_srgb,var(--school-accent)_20%,transparent)] tabular-nums">02</span>
+                        <span className="text-4xl font-black leading-none text-[color-mix(in_srgb,#d97757_20%,transparent)] tabular-nums">02</span>
                         <div>
                           <div className="flex items-center gap-2 text-white">
-                            <Sparkles className="h-5 w-5 text-[var(--school-accent)]" aria-hidden />
+                            <Sparkles className="h-5 w-5 text-[#d97757]" aria-hidden />
                             <h3 className="text-lg font-bold md:text-xl">Ce que vous activez</h3>
                           </div>
                           <p className="mt-1 text-sm text-white/50">
@@ -897,7 +897,7 @@ const ForfaitsPage = () => {
                         </div>
                       ) : content.experience?.length ? (
                         <div>
-                          <p className="mb-3 flex items-center gap-2 text-[11px] font-bold uppercase tracking-[0.18em] text-[var(--school-accent)]">
+                          <p className="mb-3 flex items-center gap-2 text-[11px] font-bold uppercase tracking-[0.18em] text-[#d97757]">
                             <Zap className="h-4 w-4" aria-hidden />
                             Expérience
                           </p>
@@ -907,10 +907,10 @@ const ForfaitsPage = () => {
                               return (
                                 <div
                                   key={item}
-                                  className="flex gap-3 rounded-2xl border border-[color-mix(in_srgb,var(--school-accent)_20%,transparent)] bg-[var(--school-accent)]/[0.06] p-4"
+                                  className="flex gap-3 rounded-2xl border border-[color-mix(in_srgb,#d97757_20%,transparent)] bg-[#d97757]/[0.06] p-4"
                                 >
-                                  <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl border border-[color-mix(in_srgb,var(--school-accent)_30%,transparent)] bg-[color-mix(in_srgb,var(--school-accent)_10%,transparent)]">
-                                    <ExpIcon className="h-6 w-6 text-[var(--school-accent)]" aria-hidden />
+                                  <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl border border-[color-mix(in_srgb,#d97757_30%,transparent)] bg-[color-mix(in_srgb,#d97757_10%,transparent)]">
+                                    <ExpIcon className="h-6 w-6 text-[#d97757]" aria-hidden />
                                   </div>
                                   <p className="text-sm leading-snug text-white/88">{item}</p>
                                 </div>
@@ -922,10 +922,10 @@ const ForfaitsPage = () => {
                     </div>
 
                     {content.objective?.length ? (
-                      <div className="mt-8 rounded-2xl border border-[color-mix(in_srgb,var(--school-accent)_30%,transparent)] bg-gradient-to-r from-[var(--school-accent)]/[0.08] to-transparent p-5 md:p-6">
+                      <div className="mt-8 rounded-2xl border border-[color-mix(in_srgb,#d97757_30%,transparent)] bg-gradient-to-r from-[#d97757]/[0.08] to-transparent p-5 md:p-6">
                         <div className="mb-3 flex items-center gap-2">
-                          <Crown className="h-5 w-5 text-[var(--school-accent)]" aria-hidden />
-                          <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-[var(--school-accent)]">
+                          <Crown className="h-5 w-5 text-[#d97757]" aria-hidden />
+                          <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-[#d97757]">
                             Trajectoire visée
                           </p>
                         </div>
@@ -935,7 +935,7 @@ const ForfaitsPage = () => {
                               key={item}
                               className="flex items-center gap-2 rounded-xl border border-white/10 bg-black/20 px-3 py-2.5 text-sm text-white/90"
                             >
-                              <span className="text-[var(--school-accent)]" aria-hidden>
+                              <span className="text-[#d97757]" aria-hidden>
                                 ◆
                               </span>
                               {item}
@@ -948,12 +948,12 @@ const ForfaitsPage = () => {
 
                   {/* 03 · Profil + contrats */}
                   <div className="grid gap-4 lg:grid-cols-5 lg:gap-6">
-                    <div className="rounded-3xl border border-white/10 bg-[#121a28]/92 p-6 lg:col-span-3">
+                    <div className="rounded-3xl border border-white/10 bg-[#2a2621]/92 p-6 lg:col-span-3">
                       <div className="mb-5 flex items-start gap-4 border-b border-white/10 pb-4">
-                        <span className="text-4xl font-black leading-none text-[color-mix(in_srgb,var(--school-accent)_20%,transparent)] tabular-nums">03</span>
+                        <span className="text-4xl font-black leading-none text-[color-mix(in_srgb,#d97757_20%,transparent)] tabular-nums">03</span>
                         <div>
                           <div className="flex items-center gap-2 text-white">
-                            <Target className="h-5 w-5 text-[var(--school-accent)]" aria-hidden />
+                            <Target className="h-5 w-5 text-[#d97757]" aria-hidden />
                             <h3 className="text-lg font-bold">Profil recommandé</h3>
                           </div>
                           <p className="mt-1 text-sm text-white/50">Qui tire le meilleur parti de ce palier</p>
@@ -967,8 +967,8 @@ const ForfaitsPage = () => {
                               key={item}
                               className="flex gap-3 rounded-2xl border border-white/10 bg-gradient-to-br from-white/[0.06] to-transparent p-4"
                             >
-                              <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-[color-mix(in_srgb,var(--school-accent)_12%,transparent)]">
-                                <Deco className="h-5 w-5 text-[var(--school-accent)]" aria-hidden />
+                              <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-[color-mix(in_srgb,#d97757_12%,transparent)]">
+                                <Deco className="h-5 w-5 text-[#d97757]" aria-hidden />
                               </div>
                               <p className="text-sm leading-snug text-white/88">{item}</p>
                             </div>
@@ -977,11 +977,11 @@ const ForfaitsPage = () => {
                       </div>
                     </div>
 
-                    <div className="rounded-3xl border border-[color-mix(in_srgb,var(--school-accent)_25%,transparent)] bg-gradient-to-b from-[#1a1610]/95 to-[#121a28]/95 p-6 lg:col-span-2">
-                      <div className="mb-4 flex items-start gap-3 border-b border-[color-mix(in_srgb,var(--school-accent)_20%,transparent)] pb-4">
-                        <CalendarDays className="mt-0.5 h-6 w-6 text-[var(--school-accent)]" aria-hidden />
+                    <div className="rounded-3xl border border-[color-mix(in_srgb,#d97757_25%,transparent)] bg-gradient-to-b from-[#211d17]/95 to-[#2a2621]/95 p-6 lg:col-span-2">
+                      <div className="mb-4 flex items-start gap-3 border-b border-[color-mix(in_srgb,#d97757_20%,transparent)] pb-4">
+                        <CalendarDays className="mt-0.5 h-6 w-6 text-[#d97757]" aria-hidden />
                         <div>
-                          <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-[var(--school-accent)]">
+                          <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-[#d97757]">
                             Rythme de facturation
                           </p>
                           <p className="mt-1 text-sm text-white/55">Montant indicatif par période</p>
@@ -996,16 +996,16 @@ const ForfaitsPage = () => {
                               key={intervalType}
                               className={`flex items-center justify-between gap-3 rounded-xl border px-3 py-3 ${
                                 available
-                                  ? 'border-[color-mix(in_srgb,var(--school-accent)_30%,transparent)] bg-[var(--school-accent)]/[0.07]'
+                                  ? 'border-[color-mix(in_srgb,#d97757_30%,transparent)] bg-[#d97757]/[0.07]'
                                   : 'border-white/10 bg-white/[0.02] opacity-55'
                               }`}
                             >
                               <div className="flex items-center gap-2.5">
-                                <CalendarClock className="h-4 w-4 shrink-0 text-[color-mix(in_srgb,var(--school-accent)_90%,transparent)]" aria-hidden />
+                                <CalendarClock className="h-4 w-4 shrink-0 text-[color-mix(in_srgb,#d97757_90%,transparent)]" aria-hidden />
                                 <span className="text-sm font-medium text-white">{formatInterval(intervalType)}</span>
                               </div>
                               {available ? (
-                                <span className="text-sm font-bold tabular-nums text-[var(--school-accent)]">
+                                <span className="text-sm font-bold tabular-nums text-[#d97757]">
                                   {formatPrice(plan.price_amount, plan.price_currency)}
                                 </span>
                               ) : (
@@ -1022,9 +1022,9 @@ const ForfaitsPage = () => {
                   </div>
 
                   {/* Témoignages — cartes illustrées */}
-                  <div className="rounded-3xl border border-white/10 bg-[#121a28]/90 p-6 md:p-8">
+                  <div className="rounded-3xl border border-white/10 bg-[#2a2621]/90 p-6 md:p-8">
                     <div className="mb-5 flex items-center gap-3">
-                      <Quote className="h-6 w-6 text-[var(--school-accent)]" aria-hidden />
+                      <Quote className="h-6 w-6 text-[#d97757]" aria-hidden />
                       <div>
                         <h3 className="text-lg font-bold text-white">Voix des parcours</h3>
                         <p className="text-sm text-white/50">Retours sur ce type de niveau</p>
@@ -1039,7 +1039,7 @@ const ForfaitsPage = () => {
                           className="relative overflow-hidden rounded-2xl border border-white/10 bg-gradient-to-br from-white/[0.07] to-transparent p-5"
                         >
                           <div className="mb-3 flex items-center gap-3">
-                            <div className="flex h-11 w-11 items-center justify-center rounded-full border border-[color-mix(in_srgb,var(--school-accent)_35%,transparent)] bg-[color-mix(in_srgb,var(--school-accent)_15%,transparent)] text-sm font-bold text-[var(--school-accent)]">
+                            <div className="flex h-11 w-11 items-center justify-center rounded-full border border-[color-mix(in_srgb,#d97757_35%,transparent)] bg-[color-mix(in_srgb,#d97757_15%,transparent)] text-sm font-bold text-[#d97757]">
                               {t.name
                                 .split(/\s+/)
                                 .map((w) => w[0])
@@ -1047,7 +1047,7 @@ const ForfaitsPage = () => {
                                 .slice(0, 2)
                                 .toUpperCase()}
                             </div>
-                            <p className="text-sm font-semibold text-[var(--school-accent)]">{t.name}</p>
+                            <p className="text-sm font-semibold text-[#d97757]">{t.name}</p>
                           </div>
                           <p className="text-sm italic leading-relaxed text-white/80">&ldquo;{t.text}&rdquo;</p>
                         </motion.div>
@@ -1055,7 +1055,7 @@ const ForfaitsPage = () => {
                     </div>
                   </div>
 
-                  <section className="rounded-3xl border border-white/10 bg-gradient-to-br from-[#1a2234]/80 to-[#121a28] p-6 md:flex md:items-center md:justify-between md:p-8">
+                  <section className="rounded-3xl border border-white/10 bg-gradient-to-br from-[#2a2621]/80 to-[#2a2621] p-6 md:flex md:items-center md:justify-between md:p-8">
                     <div className="max-w-xl">
                       <h3 className="text-lg font-bold text-white md:text-xl">Encore un doute sur le palier ?</h3>
                       <p className="mt-2 text-sm text-white/55">
@@ -1063,7 +1063,7 @@ const ForfaitsPage = () => {
                       </p>
                     </div>
                     <div className="mt-5 flex flex-wrap gap-3 md:mt-0">
-                      <Button className="bg-[var(--school-accent)] font-bold text-black hover:bg-[#ebca5e]" asChild>
+                      <Button className="bg-[#d97757] font-bold text-white hover:bg-[#c2683f]" asChild>
                         <Link to={COUNSELLOR_URL}>
                           Conseiller
                           <ArrowRight className="ml-2 h-4 w-4" />
@@ -1086,8 +1086,8 @@ const ForfaitsPage = () => {
       </div>
 
       <Dialog open={Boolean(paymentCycle)} onOpenChange={(open) => !open && closePaymentDialog()}>
-        <DialogContent className="premium-panel overflow-hidden bg-gradient-to-br from-[#111a2a] via-[#0d1420] to-[#0a1019] border-white/15 text-white max-w-3xl">
-          <div className="pointer-events-none absolute -top-16 right-12 h-36 w-36 rounded-full bg-[color-mix(in_srgb,var(--school-accent)_20%,transparent)] blur-3xl" />
+        <DialogContent className="premium-panel overflow-hidden bg-gradient-to-br from-[#262624] via-[#262624] to-[#221f1b] border-white/15 text-white max-w-3xl">
+          <div className="pointer-events-none absolute -top-16 right-12 h-36 w-36 rounded-full bg-[color-mix(in_srgb,#d97757_20%,transparent)] blur-3xl" />
           <DialogHeader>
             <DialogTitle>Choisir le type de contrat</DialogTitle>
             <DialogDescription>
@@ -1119,14 +1119,14 @@ const ForfaitsPage = () => {
                 transition={{ duration: 0.24 }}
                 className="mt-3"
               >
-                <Card className={`premium-panel h-full border ${row.available ? 'border-white/15 bg-white/[0.045]' : 'border-white/10 bg-white/5 opacity-60'} ${isRecommended ? 'ring-1 ring-[color-mix(in_srgb,var(--school-accent)_45%,transparent)]' : ''}`}>
+                <Card className={`premium-panel h-full border ${row.available ? 'border-white/15 bg-white/[0.045]' : 'border-white/10 bg-white/5 opacity-60'} ${isRecommended ? 'ring-1 ring-[color-mix(in_srgb,#d97757_45%,transparent)]' : ''}`}>
                   <CardHeader className="pb-3">
                     <div className="flex items-center justify-between gap-2">
                       <CardTitle className="text-base">{formatInterval(row.intervalType)}</CardTitle>
                       {!isPlanSelectable(row.plan) && row.available ? (
                         <Badge className="bg-white/10 text-gray-300 border border-white/20">Actuel / Non upgradable</Badge>
                       ) : isRecommended ? (
-                        <Badge className="bg-[var(--school-accent)] text-black border-none">Recommande</Badge>
+                        <Badge className="bg-[#d97757] text-white border-none">Recommande</Badge>
                       ) : null}
                     </div>
                     <CardDescription className="text-lg font-semibold text-white">
@@ -1144,7 +1144,7 @@ const ForfaitsPage = () => {
                     <Button
                       disabled={!row.available || !isPlanSelectable(row.plan)}
                       onClick={() => row.available && isPlanSelectable(row.plan) && chooseInterval(row.plan.id, row.intervalType)}
-                      className="w-full bg-[var(--school-accent)] text-black hover:bg-[#c4a030] font-bold disabled:opacity-50 shadow-lg shadow-[color-mix(in_srgb,var(--school-accent)_20%,transparent)]"
+                      className="w-full bg-[#d97757] text-white hover:bg-[#c2683f] font-bold disabled:opacity-50 shadow-lg shadow-[color-mix(in_srgb,#d97757_20%,transparent)]"
                     >
                       {!row.available ? 'Indisponible' : isPlanSelectable(row.plan) ? 'Continuer' : 'Forfait actif'}
                     </Button>
@@ -1160,7 +1160,7 @@ const ForfaitsPage = () => {
         to={COUNSELLOR_URL}
         className="fixed bottom-5 right-5 z-[120] md:bottom-8 md:right-8"
       >
-        <Button className="bg-[var(--school-accent)] text-black hover:bg-[#c4a030] font-bold gap-2 shadow-xl shadow-[color-mix(in_srgb,var(--school-accent)_20%,transparent)]">
+        <Button className="bg-[#d97757] text-white hover:bg-[#c2683f] font-bold gap-2 shadow-xl shadow-[color-mix(in_srgb,#d97757_20%,transparent)]">
           <PhoneCall className="w-4 h-4" />
           Conseiller
         </Button>
