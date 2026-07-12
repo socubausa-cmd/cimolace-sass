@@ -1,13 +1,9 @@
-import React, { useEffect, useMemo, useState, lazy, Suspense } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { ArrowLeft } from 'lucide-react';
 import { coursesApi } from '@/lib/api-v2';
-import { BG, INK, STYLE, TERRA } from '@/lib/agent/immersiveTheme';
+import { BG, INK, STYLE } from '@/lib/agent/immersiveTheme';
 import { SceneStage } from '@/pages/CimolaceCreationAgent';
-
-// Lecteur immersif (vidéo / support / quiz / mindmap) — embarqué DANS le portail
-// (on reste dans /liri, le rail reste) plutôt que de router vers le plein-écran.
-const EmbeddedCoursePlayer = lazy(() =>
-  import('@/components/school/formations/CoursePlayerInterface').then((m) => ({ default: m.SupabaseCoursePlayerContent })));
+import FormationOsDayView from './FormationOsDayView';
 
 /**
  * « Mes formations » RENDU PAR L'OS CIMOLACE.
@@ -22,7 +18,7 @@ export default function StudentFormationsOsPage() {
   const [loading, setLoading] = useState(true);
   const [focusCourse, setFocusCourse] = useState(null); // { course, modules } | null — niveau 2 (frise modules)
   const [focusModule, setFocusModule] = useState(null); // { course, module, mIdx } | null — niveau 3 (jours)
-  const [openCourseId, setOpenCourseId] = useState(null); // niveau 4 — lecteur immersif embarqué
+  const [openDay, setOpenDay] = useState(null); // { day, moduleTitle } | null — niveau 4 (jour rendu NATIVEMENT par l'OS)
   const [visible, setVisible] = useState(false);
 
   useEffect(() => {
@@ -90,9 +86,9 @@ export default function StudentFormationsOsPage() {
             icon: 'book',
             title: d.title || `Jour ${i + 1}`,
             note: [it.weekTitle, bits.join(' · ')].filter(Boolean).join(' — '),
-            ref: `open:${course.id}`,
+            ref: `day:${i}`,
           };
-        }) : [{ icon: 'book', title: 'Ouvrir la formation', note: 'Accéder au lecteur immersif', ref: `open:${course.id}` }],
+        }) : [{ icon: 'book', title: 'Aucun jour', note: 'Le contenu de ce module arrive bientôt.' }],
       };
     }
 
@@ -143,8 +139,10 @@ export default function StudentFormationsOsPage() {
       const mIdx = Number(ref.slice(7));
       const module = focusCourse?.modules?.[mIdx];
       if (module) { setVisible(false); setTimeout(() => setFocusModule({ course: focusCourse.course, module, mIdx }), 200); }
-    } else if (ref.startsWith('open:')) {
-      setOpenCourseId(ref.slice(5)); // lecteur embarqué, on reste dans le portail
+    } else if (ref.startsWith('day:')) {
+      const dIdx = Number(ref.slice(4));
+      const entry = focusModule ? daysOfModule(focusModule.module)[dIdx] : null;
+      if (entry?.day) setOpenDay({ day: entry.day, moduleTitle: focusModule?.module?.title || 'Programme' });
     }
   };
 
@@ -162,12 +160,10 @@ export default function StudentFormationsOsPage() {
     <div style={{ position: 'relative', width: '100%', height: '100%', minHeight: 'calc(100vh - 120px)', background: BG, color: INK, overflow: 'hidden', fontFamily: "'Inter', system-ui, sans-serif" }}>
       <style>{STYLE}</style>
 
-      {/* Niveau 4 — lecteur immersif embarqué (vidéo / support / quiz / mindmap), on reste dans le portail */}
-      {openCourseId && (
-        <div style={{ position: 'absolute', inset: 0, zIndex: 30, background: BG, overflow: 'auto' }}>
-          <Suspense fallback={<div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'rgba(245,244,238,.5)', fontSize: 14 }}>Ouverture du cours…</div>}>
-            <EmbeddedCoursePlayer formationId={openCourseId} onExit={() => setOpenCourseId(null)} />
-          </Suspense>
+      {/* Niveau 4 — le JOUR rendu NATIVEMENT par l'OS (vidéo bord-à-bord, support en scène reader, quiz natif) : aucune carte */}
+      {openDay && (
+        <div style={{ position: 'absolute', inset: 0, zIndex: 30, background: BG }}>
+          <FormationOsDayView day={openDay.day} backLabel={openDay.moduleTitle} onBack={() => setOpenDay(null)} />
         </div>
       )}
 
