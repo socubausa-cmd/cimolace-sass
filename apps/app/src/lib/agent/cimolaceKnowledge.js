@@ -96,7 +96,7 @@ export const CIMOLACE_KNOWLEDGE = {
   // Offres = les INFRASTRUCTURES vendues sur la vitrine (prix d'ENTRÉE ; échelle de paliers en desc).
   // Tous les plans : essai 14 jours, sans engagement, constructeur d'infrastructure inclus.
   offers: [
-    { name: 'MedOS — OS médical', price: '0 €', suffix: '/mois (dès)', desc: 'Dossiers patients + note SOAP IA + téléconsultation. Sprout gratuit (3 patients) → Solo 19 € → Pro 49 € → Clinic 99 € (illimité, white label).' },
+    { name: 'MedOS — OS médical', price: '0 €', suffix: '/mois (dès)', desc: 'Dossiers patients + note SOAP IA + téléconsultation. Sprout gratuit (3 patients) → Solo 25 € → Pro 49 € → Clinic 99 € (illimité, white label).' },
     { name: 'École — école en ligne', price: '79 €', suffix: '/mois (dès)', desc: 'Lives + cours + SmartBoard IA + certifications. Starter 79 € → Pro 199 € (500 étudiants) → Business 349 € (white label, API).', popular: true },
     { name: 'Bien-être — coaching', price: '29 €', suffix: '/mois (dès)', desc: 'Programmes de soins + téléconsult + automatisations email/SMS + paiements. Starter 29 € → Pro 79 €.' },
     { name: 'Créateur — studio', price: '49 €', suffix: '/mois (dès)', desc: 'Studio live + monétisation directe + VOD. Starter 49 € → Pro 149 € (illimité) → Business 299 € (white label, régie pub).' },
