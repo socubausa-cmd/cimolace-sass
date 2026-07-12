@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <!-- HTML STATIQUE dédié aux hosts Cimolace (app.cimolace.space / cimolace.space), servi via
+         multi-page Vite + rewrite Vercel conditionné au host + middleware racine. Donne des META
+         correctes aux CRAWLERS et SCRAPERS SOCIAUX (qui n'exécutent pas le JS) — avant, ces hosts
+         servaient index.html = <title>LIRI</title>. Boote le MÊME SPA (realm Cimolace résolu par host). -->
+    <title>Cimolace — L'infrastructure SaaS intelligente pour l'Afrique</title>
+    <meta name="description" content="Cimolace fournit des moteurs embarquables — LIRI (studio live + IA), École, MEDOS (santé), mbolo (commerce), Community — pour lancer et opérer des plateformes intelligentes en Afrique, du live à la boutique, avec paiement mobile money." />
+    <meta name="robots" content="index, follow" />
+    <link rel="canonical" href="https://cimolace.space/" />
+    <link rel="icon" type="image/svg+xml" href="/logo.svg" />
+    <link rel="icon" type="image/png" href="/logo.png" />
+    <link rel="apple-touch-icon" href="/logo.png" />
+
+    <!-- Open Graph -->
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="Cimolace" />
+    <meta property="og:locale" content="fr_FR" />
+    <meta property="og:title" content="Cimolace — L'infrastructure intelligente des plateformes africaines" />
+    <meta property="og:description" content="Des moteurs prêts à l'emploi (live + IA, école, santé, commerce, communauté) pour bâtir votre plateforme en Afrique — paiement carte et mobile money." />
+    <meta property="og:url" content="https://cimolace.space/" />
+    <meta property="og:image" content="https://cimolace.space/logo.png" />
+
+    <!-- Twitter -->
+    <meta name="twitter:card" content="summary" />
+    <meta name="twitter:title" content="Cimolace — L'infrastructure intelligente des plateformes africaines" />
+    <meta name="twitter:description" content="Des moteurs prêts à l'emploi (live + IA, école, santé, commerce, communauté) pour bâtir votre plateforme en Afrique." />
+    <meta name="twitter:image" content="https://cimolace.space/logo.png" />
+
+    <!-- JSON-LD -->
+    <script type="application/ld+json">
+      {"@context":"https://schema.org","@type":"Organization","name":"Cimolace","url":"https://cimolace.space","description":"Plateforme d'infrastructure SaaS intelligente pour l'Afrique : moteurs embarquables (LIRI studio live + IA, École, MEDOS santé, mbolo commerce, Community) pour lancer et opérer des plateformes.","areaServed":"Africa"}
+    </script>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600;0,9..144,700;1,9..144,500&family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>

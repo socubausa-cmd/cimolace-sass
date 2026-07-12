@@ -6,6 +6,9 @@
   "rewrites": [
     { "source": "/(.*)", "has": [{ "type": "host", "value": "prorascience.org" }], "destination": "/prorascience.html" },
     { "source": "/(.*)", "has": [{ "type": "host", "value": "www.prorascience.org" }], "destination": "/prorascience.html" },
+    { "source": "/(.*)", "has": [{ "type": "host", "value": "cimolace.space" }], "destination": "/cimolace.html" },
+    { "source": "/(.*)", "has": [{ "type": "host", "value": "www.cimolace.space" }], "destination": "/cimolace.html" },
+    { "source": "/creer-organisation(.*)", "has": [{ "type": "host", "value": "app.cimolace.space" }], "destination": "/cimolace.html" },
     { "source": "/(.*)", "destination": "/index.html" }
   ],
   "headers": [

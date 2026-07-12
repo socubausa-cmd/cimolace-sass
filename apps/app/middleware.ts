@@ -6,11 +6,18 @@
 // les autres hosts (LIRI, app…) passent (return undefined) → index.html.
 export const config = { matcher: '/' };
 
+// Hosts Cimolace (app + vitrine) → racine sur cimolace.html (SEO « Cimolace », fini « LIRI »).
+const CIMOLACE_HOSTS = new Set(['app.cimolace.space', 'cimolace.space', 'www.cimolace.space']);
+
 export default function middleware(request: Request): Response | undefined {
   const host = (request.headers.get('host') || '').toLowerCase();
+  const url = new URL(request.url);
   if (host === 'prorascience.org' || host === 'www.prorascience.org') {
-    const url = new URL(request.url);
     url.pathname = '/prorascience.html';
+    return new Response(null, { headers: { 'x-middleware-rewrite': url.toString() } });
+  }
+  if (CIMOLACE_HOSTS.has(host)) {
+    url.pathname = '/cimolace.html';
     return new Response(null, { headers: { 'x-middleware-rewrite': url.toString() } });
   }
   return undefined;

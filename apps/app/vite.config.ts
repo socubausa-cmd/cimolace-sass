@@ -11,6 +11,7 @@ export default defineConfig({
       input: {
         main: path.resolve(__dirname, 'index.html'),
         prorascience: path.resolve(__dirname, 'prorascience.html'),
+        cimolace: path.resolve(__dirname, 'cimolace.html'),
       },
       output: {
         // Isole les vendors lourds de node_modules en chunks séparés (cache long-terme,
