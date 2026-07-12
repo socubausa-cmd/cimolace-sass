@@ -2373,7 +2373,17 @@ function WhiteboardScene({
     if (!draft) return null;
     const { color: c, size: lw, shapeFill, schoolConfig, boardFillColor, boardFillColorEnabled } = useLiveWhiteboardStore.getState();
     const fillColorProp = boardFillColorEnabled && boardFillColor ? boardFillColor : undefined;
-    const { kind, x0, y0, x1, y1 } = draft;
+    const { kind, x0, y0 } = draft;
+    let { x1, y1 } = draft;
+    // CLIC SIMPLE = TAMPON : sans glisser (len ~0), chaque forme a un seuil `len < N`
+    // qui renvoyait null → un simple clic ne posait RIEN (« outils figés »). On pose
+    // désormais une taille par défaut au point cliqué. Le GLISSER reste inchangé.
+    if (Math.hypot(x1 - x0, y1 - y0) < 6) {
+      const linear = kind === 'line' || kind === 'arrow' || kind === 'vector' || kind === 'segment';
+      const D = linear ? 140 : 120;
+      x1 = x0 + D;
+      y1 = y0 + (linear ? 0 : D);
+    }
     const len = Math.hypot(x1 - x0, y1 - y0);
 
     if (kind === 'line') {
