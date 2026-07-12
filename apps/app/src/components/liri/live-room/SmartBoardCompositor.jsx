@@ -4049,7 +4049,14 @@ function WhiteboardScene({
                 resize: 'none',
                 overflow: 'hidden',
                 whiteSpace: 'pre',
-                width: Math.max(160, textOverlayScreen.maxWidth || 480),
+                // Le champ ÉPOUSE le texte (field-sizing) au lieu de prendre toute la
+                // largeur du tableau (avant : gros cadre pleine largeur, pas discret).
+                // Capé à l'espace dispo. Fallback (Safari/Firefox sans field-sizing) :
+                // width auto = largeur modérée (~20 car.), pas pleine largeur.
+                fieldSizing: 'content',
+                width: 'auto',
+                minWidth: 48,
+                maxWidth: Math.max(120, textOverlayScreen.maxWidth || 480),
                 minHeight: textInPlace.lineHeightPx,
                 background: textInPlace.surfaceBg || 'rgba(20,18,16,0.55)',
                 fontFamily: 'ui-sans-serif, system-ui, sans-serif',
