@@ -908,17 +908,27 @@ export function Step2Couverture({ draft, updateDraft }) {
                   transition={{ duration: 2, repeat: Infinity, ease: 'easeInOut' }}
                 >
                   <span className="absolute inset-0 rounded-full bg-[#d97757]/25 blur-xl" />
+                  {/* Anneau d'accent qui tourne */}
                   <motion.span
                     className="absolute inset-2 rounded-full border-2 border-[#d97757]/50 border-t-transparent"
                     animate={{ rotate: 360 }}
                     transition={{ duration: 1.1, repeat: Infinity, ease: 'linear' }}
                   />
-                  <img
-                    src="/liri-logo-mark.png"
+                  {/* Second anneau contra-rotatif — logo LIRI bien vivant */}
+                  <motion.span
+                    className="absolute inset-0 rounded-full border border-[#f0b89a]/25 border-b-transparent"
+                    animate={{ rotate: -360 }}
+                    transition={{ duration: 2.6, repeat: Infinity, ease: 'linear' }}
+                  />
+                  {/* Logo LIRI officiel (marque dorée), animé : respiration + halo */}
+                  <motion.img
+                    src="/liri-mark.png"
                     alt=""
                     aria-hidden
                     draggable={false}
-                    className="relative z-[1] h-10 w-10 object-contain drop-shadow-[0_0_14px_rgba(217,119,87,0.45)]"
+                    className="relative z-[1] h-10 w-10 object-contain drop-shadow-[0_0_16px_rgba(217,119,87,0.55)]"
+                    animate={{ scale: [1, 1.12, 1], opacity: [0.9, 1, 0.9] }}
+                    transition={{ duration: 1.8, repeat: Infinity, ease: 'easeInOut' }}
                   />
                 </motion.div>
                 <div className="space-y-1 text-center">
