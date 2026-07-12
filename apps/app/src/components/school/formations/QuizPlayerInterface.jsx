@@ -51,16 +51,16 @@ const QuizPlayerInterface = ({ quiz, onComplete, onCancel }) => {
 
   if (!started) {
      return (
-        <Card className="bg-[#192734] border-white/10 max-w-2xl mx-auto mt-10 text-white">
+        <Card className="bg-[#30302e] border-[rgba(245,244,238,0.09)] max-w-2xl mx-auto mt-10 text-white">
            <CardContent className="p-8 text-center space-y-6">
               <div className="w-20 h-20 rounded-full bg-[color-mix(in_srgb,var(--school-accent)_20%,transparent)] flex items-center justify-center mx-auto">
                  <CheckCircle className="w-10 h-10 text-[var(--school-accent)]"/>
               </div>
               <div>
                  <h2 className="text-2xl font-bold mb-2">{quiz.title}</h2>
-                 <p className="text-gray-400">{quiz.description}</p>
+                 <p className="text-[#b0ada3]">{quiz.description}</p>
               </div>
-              <div className="flex justify-center gap-8 text-sm text-gray-400">
+              <div className="flex justify-center gap-8 text-sm text-[#b0ada3]">
                  <span>{quiz.questions.length} Questions</span>
                  <span>~{quiz.questions.length * 2} Minutes</span>
                  <span>Passage: 60%</span>
@@ -75,7 +75,7 @@ const QuizPlayerInterface = ({ quiz, onComplete, onCancel }) => {
 
   if (finished) {
      return (
-        <Card className="bg-[#192734] border-white/10 max-w-3xl mx-auto mt-10 text-white animate-in fade-in zoom-in-95">
+        <Card className="bg-[#30302e] border-[rgba(245,244,238,0.09)] max-w-3xl mx-auto mt-10 text-white animate-in fade-in zoom-in-95">
            <CardContent className="p-8">
               <div className="text-center mb-8">
                  {passed ? (
@@ -102,10 +102,10 @@ const QuizPlayerInterface = ({ quiz, onComplete, onCancel }) => {
                           <p className="font-bold mb-2">{idx + 1}. {q.statement}</p>
                           <div className="flex justify-between text-sm">
                              <span>Votre réponse: <span className={isCorrect ? 'text-green-400' : 'text-red-400'}>{q.options[answers[idx]]}</span></span>
-                             {!isCorrect && <span className="text-gray-400">Correct: {q.options[q.correctAnswer]}</span>}
+                             {!isCorrect && <span className="text-[#b0ada3]">Correct: {q.options[q.correctAnswer]}</span>}
                           </div>
                           {q.explanation && (
-                             <div className="mt-2 text-sm text-gray-400 border-t border-white/5 pt-2">
+                             <div className="mt-2 text-sm text-[#b0ada3] border-t border-[rgba(245,244,238,0.05)] pt-2">
                                 <strong>Explication:</strong> {q.explanation}
                              </div>
                           )}
@@ -116,7 +116,7 @@ const QuizPlayerInterface = ({ quiz, onComplete, onCancel }) => {
 
               <div className="flex gap-4 justify-center">
                  {!passed && (
-                    <Button onClick={() => { setFinished(false); setCurrentQIndex(0); setAnswers({}); }} variant="outline" className="border-white/10 text-white">
+                    <Button onClick={() => { setFinished(false); setCurrentQIndex(0); setAnswers({}); }} variant="outline" className="border-[rgba(245,244,238,0.09)] text-white">
                        <RefreshCcw className="w-4 h-4 mr-2"/> Réessayer
                     </Button>
                  )}
@@ -133,7 +133,7 @@ const QuizPlayerInterface = ({ quiz, onComplete, onCancel }) => {
     <div className="max-w-3xl mx-auto mt-10 space-y-6 text-white">
        {/* Progress Bar */}
        <div className="space-y-2">
-          <div className="flex justify-between text-sm text-gray-400">
+          <div className="flex justify-between text-sm text-[#b0ada3]">
              <span>Question {currentQIndex + 1} sur {quiz.questions.length}</span>
              <span>{Math.round(progress)}%</span>
           </div>
@@ -147,14 +147,14 @@ const QuizPlayerInterface = ({ quiz, onComplete, onCancel }) => {
              animate={{ opacity: 1, x: 0 }}
              exit={{ opacity: 0, x: -20 }}
           >
-             <Card className="bg-[#192734] border-white/10">
+             <Card className="bg-[#30302e] border-[rgba(245,244,238,0.09)]">
                 <CardContent className="p-8">
                    <h3 className="text-xl font-bold mb-6">{currentQ.statement}</h3>
                    
                    <RadioGroup value={answers[currentQIndex]?.toString()} onValueChange={handleAnswer} className="space-y-4">
                       {currentQ.options.map((opt, oIdx) => (
-                         <div key={oIdx} className={`flex items-center space-x-3 p-4 rounded-lg border transition-all cursor-pointer ${answers[currentQIndex] === oIdx ? 'border-[var(--school-accent)] bg-[color-mix(in_srgb,var(--school-accent)_10%,transparent)]' : 'border-white/10 hover:bg-white/5'}`}>
-                            <RadioGroupItem value={oIdx.toString()} id={`opt-${oIdx}`} className="border-white/50 text-[var(--school-accent)]" />
+                         <div key={oIdx} className={`flex items-center space-x-3 p-4 rounded-lg border transition-all cursor-pointer ${answers[currentQIndex] === oIdx ? 'border-[var(--school-accent)] bg-[color-mix(in_srgb,var(--school-accent)_10%,transparent)]' : 'border-[rgba(245,244,238,0.09)] hover:bg-white/5'}`}>
+                            <RadioGroupItem value={oIdx.toString()} id={`opt-${oIdx}`} className="border-[rgba(245,244,238,0.5)] text-[var(--school-accent)]" />
                             <Label htmlFor={`opt-${oIdx}`} className="flex-1 cursor-pointer text-base">{opt}</Label>
                          </div>
                       ))}

@@ -139,13 +139,13 @@ const DemoCoursePlayerContent = () => {
   };
 
   return (
-    <div className="min-h-screen bg-[#0b0b0f] text-white flex flex-col">
+    <div className="min-h-screen bg-[#262624] text-white flex flex-col">
       {/* Header Progress */}
-      <div className="h-16 border-b border-white/10 flex items-center px-8 bg-[#262624]">
+      <div className="h-16 border-b border-[rgba(245,244,238,0.09)] flex items-center px-8 bg-[#262624]">
          <div className="flex-1">
            <h1 className="text-lg font-bold flex items-center gap-2">
-             <span className="text-gray-400">{module?.title}</span> <ChevronRight className="h-4 w-4"/>
-             <span className="text-gray-400">{week?.title}</span> <ChevronRight className="h-4 w-4"/>
+             <span className="text-[#b0ada3]">{module?.title}</span> <ChevronRight className="h-4 w-4"/>
+             <span className="text-[#b0ada3]">{week?.title}</span> <ChevronRight className="h-4 w-4"/>
              <span className="text-[var(--school-accent)]">{day.title}</span>
            </h1>
          </div>
@@ -160,10 +160,10 @@ const DemoCoursePlayerContent = () => {
         <AnimatePresence mode='wait'>
           {step === 1 && (
             <motion.div key="video" initial={{opacity: 0, x: 20}} animate={{opacity: 1, x: 0}} exit={{opacity: 0, x: -20}}>
-               <Card className="bg-black border border-white/10 aspect-video flex items-center justify-center relative group">
+               <Card className="bg-black border border-[rgba(245,244,238,0.09)] aspect-video flex items-center justify-center relative group">
                   <div className="text-center">
                     <Play className="h-20 w-20 text-white opacity-50 group-hover:opacity-100 transition-opacity cursor-pointer"/>
-                    <p className="mt-4 text-gray-400">Simulation: Vidéo terminée</p>
+                    <p className="mt-4 text-[#b0ada3]">Simulation: Vidéo terminée</p>
                   </div>
                </Card>
                <div className="mt-6 flex justify-end">
@@ -176,7 +176,7 @@ const DemoCoursePlayerContent = () => {
 
           {step === 2 && (
             <motion.div key="summary" initial={{opacity: 0, x: 20}} animate={{opacity: 1, x: 0}} exit={{opacity: 0, x: -20}}>
-               <Card className="bg-[#2e2b28] border border-white/10 p-8">
+               <Card className="bg-[#30302e] border border-[rgba(245,244,238,0.09)] p-8">
                   <h2 className="text-2xl font-bold mb-6 flex items-center gap-3">
                     <BookOpen className="text-[var(--school-accent)]"/> Ce que tu dois retenir
                   </h2>
@@ -192,18 +192,18 @@ const DemoCoursePlayerContent = () => {
 
           {step === 3 && (
             <motion.div key="writing" initial={{opacity: 0, x: 20}} animate={{opacity: 1, x: 0}} exit={{opacity: 0, x: -20}}>
-               <Card className="bg-[#2e2b28] border border-white/10 p-8">
+               <Card className="bg-[#30302e] border border-[rgba(245,244,238,0.09)] p-8">
                   <h2 className="text-2xl font-bold mb-4 flex items-center gap-3">
                     <PenTool className="text-[var(--school-accent)]"/> Qu'as-tu retenu ?
                   </h2>
-                  <p className="text-gray-400 mb-6">{day.content.writingPrompt}</p>
+                  <p className="text-[#b0ada3] mb-6">{day.content.writingPrompt}</p>
                   <Textarea 
                     value={writingText}
                     onChange={(e) => setWritingText(e.target.value)}
                     placeholder="Écris ta réponse ici (min. 50 caractères)..."
-                    className="h-64 bg-[#0b0b0f] border-white/10 text-white"
+                    className="h-64 bg-[#262624] border-[rgba(245,244,238,0.09)] text-white"
                   />
-                  <div className="text-right text-sm text-gray-500 mt-2">
+                  <div className="text-right text-sm text-[#82807a] mt-2">
                     {writingText.length} caractères
                   </div>
                </Card>
@@ -217,7 +217,7 @@ const DemoCoursePlayerContent = () => {
 
           {step === 4 && (
             <motion.div key="quiz" initial={{opacity: 0, x: 20}} animate={{opacity: 1, x: 0}} exit={{opacity: 0, x: -20}}>
-               <Card className="bg-[#2e2b28] border border-white/10 p-8">
+               <Card className="bg-[#30302e] border border-[rgba(245,244,238,0.09)] p-8">
                   <h2 className="text-2xl font-bold mb-6">Quiz de validation</h2>
                   <div className="space-y-8">
                      {day.content.quiz.map((q, idx) => (
@@ -227,7 +227,7 @@ const DemoCoursePlayerContent = () => {
                             {q.options.map((opt, optIdx) => (
                               <div key={optIdx} className="flex items-center space-x-2">
                                 <RadioGroupItem value={optIdx.toString()} id={`q${idx}-${optIdx}`} className="border-white/20 text-[var(--school-accent)]" />
-                                <Label htmlFor={`q${idx}-${optIdx}`} className="text-gray-300">{opt}</Label>
+                                <Label htmlFor={`q${idx}-${optIdx}`} className="text-[#c9c5bb]">{opt}</Label>
                               </div>
                             ))}
                          </RadioGroup>
@@ -249,9 +249,9 @@ const DemoCoursePlayerContent = () => {
                   <CheckCircle className="h-16 w-16 text-green-500" />
                 </div>
                 <h2 className="text-4xl font-bold text-white mb-4">Félicitations !</h2>
-                <p className="text-xl text-gray-400 mb-8">Vous avez complété le jour {day.dayNumber} avec succès.</p>
+                <p className="text-xl text-[#b0ada3] mb-8">Vous avez complété le jour {day.dayNumber} avec succès.</p>
                 <div className="flex justify-center gap-4">
-                   <Button variant="outline" onClick={() => navigate('/formations')} className="border-white/10 text-white">
+                   <Button variant="outline" onClick={() => navigate('/formations')} className="border-[rgba(245,244,238,0.09)] text-white">
                      Retour aux formations
                    </Button>
                    <Button className="bg-[var(--school-accent)] text-black">
@@ -1012,15 +1012,15 @@ const SupabaseCoursePlayerContent = ({ formationId, onExit }) => {
     setPath({ mIdx: safeMIdx, wIdx: safeWIdx, dIdx: safeDIdx });
   };
 
-  if (loading) return <div className="min-h-screen bg-[#0b0b0f] text-white p-10">Chargement…</div>;
+  if (loading) return <div className="min-h-screen bg-[#262624] text-white p-10">Chargement…</div>;
   if (error) {
     return (
-      <div className="min-h-screen bg-[#0b0b0f] text-white p-10">
+      <div className="min-h-screen bg-[#262624] text-white p-10">
         <div className="max-w-xl space-y-4">
           <div className="text-lg font-semibold">Accès indisponible</div>
-          <div className="text-sm text-gray-300">{error}</div>
+          <div className="text-sm text-[#c9c5bb]">{error}</div>
           <div className="pt-2">
-            <Button variant="outline" className="border-white/10 text-white" onClick={() => navigate('/formations')}>
+            <Button variant="outline" className="border-[rgba(245,244,238,0.09)] text-white" onClick={() => navigate('/formations')}>
               Retour aux formations
             </Button>
           </div>
@@ -1038,14 +1038,14 @@ const SupabaseCoursePlayerContent = ({ formationId, onExit }) => {
   };
 
   return (
-    <div className="min-h-screen bg-[#0b0b0f] text-white flex flex-col relative overflow-hidden">
+    <div className="min-h-screen bg-[#262624] text-white flex flex-col relative overflow-hidden">
       <style>{`
         @keyframes cpiFloat { 0%,100%{transform:translate3d(0,0,0) scale(1)} 50%{transform:translate3d(0,-22px,0) scale(1.07)} }
         .cpi-orb{ filter: blur(86px); opacity:.2; animation: cpiFloat 16s ease-in-out infinite; will-change: transform; }
         .cpi-orb.alt{ animation-duration:20s; animation-delay:-4s; }
         @media (prefers-reduced-motion: reduce){ .cpi-orb{ animation:none } }
         /* Fond noir sur le lecteur vidéo en attente de chargement — évite le rectangle gris */
-        video { background: #0b0b0f !important; }
+        video { background: #262624 !important; }
       `}</style>
       {/* Ambient background — MÊME scène immersive que le détail du cours (TenantCourseDetailPage) */}
       <div className="fixed inset-0 pointer-events-none -z-10 overflow-hidden">
@@ -1069,16 +1069,16 @@ const SupabaseCoursePlayerContent = ({ formationId, onExit }) => {
         initial={{ opacity: 0, y: -10 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.4 }}
-        className="h-16 border-b border-white/[0.06] flex items-center px-6 bg-[#0b0b0f]/55 backdrop-blur-xl sticky top-0 z-20"
+        className="h-16 border-b border-[rgba(245,244,238,0.06)] flex items-center px-6 bg-[#262624]/55 backdrop-blur-xl sticky top-0 z-20"
       >
-        <Button variant="ghost" onClick={handleExit} className="text-gray-400 hover:text-white hover:bg-white/5 -ml-2">
+        <Button variant="ghost" onClick={handleExit} className="text-[#b0ada3] hover:text-white hover:bg-white/5 -ml-2">
           <ChevronRight className="w-4 h-4 rotate-180 mr-1" /> Retour
         </Button>
         <div className="flex-1 px-6 min-w-0">
-          <h1 className="truncate" style={{ fontFamily: "'Fraunces','Cormorant Garamond',Georgia,serif", fontWeight: 600, fontSize: 18, color: '#f5f1e9' }}>
+          <h1 className="truncate" style={{ fontFamily: "'Source Serif 4',Georgia,serif", fontWeight: 600, fontSize: 18, color: '#f5f4ee' }}>
             {formation?.title || 'Formation'}
           </h1>
-          <div className="flex items-center gap-2 text-xs text-gray-500 mt-0.5">
+          <div className="flex items-center gap-2 text-xs text-[#82807a] mt-0.5">
             <Layers className="w-3.5 h-3.5 text-[color-mix(in_srgb,var(--school-accent)_80%,transparent)]" />
             <span className="truncate">{m?.title || ''}{w?.title ? ` › ${w.title}` : ''}{d?.title ? ` › ${d.title}` : ''}</span>
           </div>
@@ -1097,8 +1097,8 @@ const SupabaseCoursePlayerContent = ({ formationId, onExit }) => {
         {!d ? (
           <div className="flex flex-col items-center text-center pt-12 pb-4">
             <BookOpen className="w-12 h-12 text-gray-600 mb-3" />
-            <p className="text-gray-300 font-medium">Sélectionne un jour dans le programme</p>
-            <p className="text-sm text-gray-500 mt-1">pour afficher le contenu</p>
+            <p className="text-[#c9c5bb] font-medium">Sélectionne un jour dans le programme</p>
+            <p className="text-sm text-[#82807a] mt-1">pour afficher le contenu</p>
           </div>
         ) : (
           <motion.div
@@ -1116,7 +1116,7 @@ const SupabaseCoursePlayerContent = ({ formationId, onExit }) => {
                 {[m?.title, w?.title].filter(Boolean).join(' · ')}
               </div>
             )}
-            <h2 className="mt-2" style={{ fontFamily: "'Fraunces','Cormorant Garamond',Georgia,serif", fontWeight: 600, fontSize: 'clamp(30px, 4.4vw, 46px)', lineHeight: 1.08, letterSpacing: '-0.01em', color: '#f5f1e9', textWrap: 'balance' }}>{d.title}</h2>
+            <h2 className="mt-2" style={{ fontFamily: "'Source Serif 4',Georgia,serif", fontWeight: 600, fontSize: 'clamp(30px, 4.4vw, 46px)', lineHeight: 1.08, letterSpacing: '-0.01em', color: '#f5f4ee', textWrap: 'balance' }}>{d.title}</h2>
             {contentCards.length > 0 ? (
               <button
                 type="button"
@@ -1127,7 +1127,7 @@ const SupabaseCoursePlayerContent = ({ formationId, onExit }) => {
                 <Play className="w-4 h-4" /> Commencer la leçon
               </button>
             ) : (
-              <p className="mt-4 text-sm text-gray-500">Aucun contenu pour ce jour.</p>
+              <p className="mt-4 text-sm text-[#82807a]">Aucun contenu pour ce jour.</p>
             )}
           </motion.div>
         )}
@@ -1191,7 +1191,7 @@ const SupabaseCoursePlayerContent = ({ formationId, onExit }) => {
       </div>
 
       <Dialog open={!!activeItem} onOpenChange={(open) => { if (!open) setActiveItem(null); }}>
-        <DialogContent className="max-w-[98vw] w-full h-[92vh] bg-[#0b0b0f] border border-white/10 p-0 overflow-hidden text-white [&>button]:hidden">
+        <DialogContent className="max-w-[98vw] w-full h-[92vh] bg-[#262624] border border-[rgba(245,244,238,0.09)] p-0 overflow-hidden text-white [&>button]:hidden">
           <DialogHeader className="sr-only">
             <DialogTitle>Lecteur de cours</DialogTitle>
           </DialogHeader>
@@ -1275,7 +1275,7 @@ const SupabaseCoursePlayerContent = ({ formationId, onExit }) => {
             };
 
             return (
-              <div className="relative h-full text-white flex flex-col overflow-hidden" style={{ background: '#0b0b0f' }}>
+              <div className="relative h-full text-white flex flex-col overflow-hidden" style={{ background: '#262624' }}>
                 {/* Ambiance immersive identique aux autres écrans : orbes flottants + halos + rayon conique */}
                 {/* Halos de fond : restent à z-0 pour la couche basse (profondeur derrière tout) */}
                 <div className="absolute inset-0 pointer-events-none overflow-hidden" style={{ zIndex: 0 }}>
@@ -1292,7 +1292,7 @@ const SupabaseCoursePlayerContent = ({ formationId, onExit }) => {
                   <span className="cpi-orb absolute rounded-full" style={{ background: '#c98b6a', opacity: 0.045, left: '20%', bottom: '5%', width: '40vw', height: '40vh', filter: 'blur(120px)' }} />
                 </div>
                 {/* CSS leçon — fond noir sur la vidéo (état de chargement gris → noir) */}
-                <style>{`video{background:#0b0b0f!important}`}</style>
+                <style>{`video{background:#262624!important}`}</style>
                 {/* Header transparent — flottant sur la scène, sans fond opaque */}
                 <header className="h-14 flex items-center justify-between px-4 md:px-6 shrink-0 relative" style={{ zIndex: 20, background: 'linear-gradient(to bottom, rgba(11,11,15,0.85), transparent)' }}>
                   <div className="flex items-center gap-4 min-w-0">
@@ -1302,7 +1302,7 @@ const SupabaseCoursePlayerContent = ({ formationId, onExit }) => {
                           <Menu className="w-6 h-6" />
                         </Button>
                       </SheetTrigger>
-                      <SheetContent side="left" className="p-0 bg-[#2e2b28] border-r border-white/10 w-[85%] sm:w-[350px]">
+                      <SheetContent side="left" className="p-0 bg-[#30302e] border-r border-[rgba(245,244,238,0.09)] w-[85%] sm:w-[350px]">
                         <ProgressivePlaylist
                           playlistData={playlistData}
                           currentFormationId={formationId}
@@ -1345,7 +1345,7 @@ const SupabaseCoursePlayerContent = ({ formationId, onExit }) => {
 
                     <div className="min-w-0">
                       <h1 className="font-bold text-sm md:text-lg leading-tight truncate max-w-[220px] md:max-w-md">{activeItem?.title || 'Vidéo'}</h1>
-                      <p className="text-[10px] md:text-sm text-gray-400 truncate max-w-[260px] md:max-w-xl">
+                      <p className="text-[10px] md:text-sm text-[#b0ada3] truncate max-w-[260px] md:max-w-xl">
                         {activeItem?.ctx?.moduleTitle ? activeItem.ctx.moduleTitle : ''}
                         {activeItem?.ctx?.weekTitle ? ` • ${activeItem.ctx.weekTitle}` : ''}
                         {activeItem?.ctx?.dayTitle ? ` • ${activeItem.ctx.dayTitle}` : ''}
@@ -1360,7 +1360,7 @@ const SupabaseCoursePlayerContent = ({ formationId, onExit }) => {
                         if (!formationForumBase) return;
                         navigate(formationForumBase);
                       }}
-                      className="md:hidden border-white/10 text-white hover:bg-white/5 font-bold text-xs h-8"
+                      className="md:hidden border-[rgba(245,244,238,0.09)] text-white hover:bg-white/5 font-bold text-xs h-8"
                     >
                       Forum
                     </Button>
@@ -1372,7 +1372,7 @@ const SupabaseCoursePlayerContent = ({ formationId, onExit }) => {
                         if (!formationForumBase) return;
                         navigate(formationForumBase);
                       }}
-                      className="border-white/10 text-white hover:bg-white/5 font-bold text-xs h-8"
+                      className="border-[rgba(245,244,238,0.09)] text-white hover:bg-white/5 font-bold text-xs h-8"
                     >
                       Forum
                     </Button>
@@ -1424,7 +1424,7 @@ const SupabaseCoursePlayerContent = ({ formationId, onExit }) => {
                               SmartBoard
                             </button>
                             <div className="pointer-events-none absolute -inset-12 -z-10 rounded-full" style={{ background: 'radial-gradient(ellipse at 50% 46%, rgba(217,119,87,0.17), rgba(8,8,11,0) 62%)', filter: 'blur(34px)' }} />
-                            <div className="relative overflow-hidden rounded-3xl" style={{ background: '#0b0b0f', boxShadow: '0 0 160px 60px rgba(217,119,87,0.10), 0 0 100px 30px rgba(217,119,87,0.07), 0 50px 120px rgba(0,0,0,0.5), inset 0 0 120px 48px #08080b' }}>
+                            <div className="relative overflow-hidden rounded-3xl" style={{ background: '#262624', boxShadow: '0 0 160px 60px rgba(217,119,87,0.10), 0 0 100px 30px rgba(217,119,87,0.07), 0 50px 120px rgba(0,0,0,0.5), inset 0 0 120px 48px #08080b' }}>
                           <VideoPlayer
                             ref={videoPlayerRef}
                             video={currentVideoMemo}
@@ -1483,7 +1483,7 @@ const SupabaseCoursePlayerContent = ({ formationId, onExit }) => {
                               className={
                                 videoDone
                                   ? 'border-green-500/40 text-green-300 hover:bg-white/5 font-bold'
-                                  : 'border-white/10 text-white hover:bg-white/5 font-bold'
+                                  : 'border-[rgba(245,244,238,0.09)] text-white hover:bg-white/5 font-bold'
                               }
                             >
                               {videoDone ? '✓ Vidéo vue' : "J'ai vu la vidéo"}
@@ -1494,7 +1494,7 @@ const SupabaseCoursePlayerContent = ({ formationId, onExit }) => {
                               className={
                                 liked
                                   ? 'border-[var(--school-accent)] text-[var(--school-accent)] hover:bg-white/5 font-bold'
-                                  : 'border-white/10 text-white hover:bg-white/5 font-bold'
+                                  : 'border-[rgba(245,244,238,0.09)] text-white hover:bg-white/5 font-bold'
                               }
                               onClick={() => setLiked((v) => !v)}
                             >
@@ -1518,19 +1518,19 @@ const SupabaseCoursePlayerContent = ({ formationId, onExit }) => {
                                   mode="reformulation"
                                   panelHeightClass="h-[420px]"
                                 />
-                                <p className="text-[11px] text-gray-500">Les slides défilent avec la vidéo. Tu peux aussi naviguer carte par carte.</p>
+                                <p className="text-[11px] text-[#82807a]">Les slides défilent avec la vidéo. Tu peux aussi naviguer carte par carte.</p>
                               </div>
                             );
                           })()}
 
                           <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-                            <div className="lg:col-span-2 border border-white/10 rounded-xl bg-[#2e2b28]/60 backdrop-blur p-5">
+                            <div className="lg:col-span-2 border border-[rgba(245,244,238,0.09)] rounded-xl bg-[#30302e]/60 backdrop-blur p-5">
                               <div className="text-xs text-[var(--school-accent)] uppercase tracking-wider font-semibold mb-2">Résumé</div>
                               <div className="text-sm text-gray-200 whitespace-pre-wrap mt-2">
                                 {String(currentVideoMemo?.summary || currentVideoMemo?.description || '').trim() || '—'}
                               </div>
                             </div>
-                            <div className="border border-white/10 rounded-xl bg-[#2e2b28]/60 backdrop-blur p-5">
+                            <div className="border border-[rgba(245,244,238,0.09)] rounded-xl bg-[#30302e]/60 backdrop-blur p-5">
                               <div className="text-xs text-[var(--school-accent)] uppercase tracking-wider font-semibold mb-2">Points clés</div>
                               <div className="text-sm text-gray-200 whitespace-pre-wrap mt-2">
                                 {String(currentVideoMemo?.keyPoints || '').trim() || '—'}
@@ -1539,7 +1539,7 @@ const SupabaseCoursePlayerContent = ({ formationId, onExit }) => {
                           </div>
 
                           <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-                            <div className="border border-white/10 rounded-xl bg-[#2e2b28]/60 backdrop-blur p-5">
+                            <div className="border border-[rgba(245,244,238,0.09)] rounded-xl bg-[#30302e]/60 backdrop-blur p-5">
                               <ChapterList
                                 timestamps={Array.isArray(currentVideoMemo?.timestamps) ? currentVideoMemo.timestamps : []}
                                 currentTimeSeconds={videoCurrentTime}
@@ -1549,7 +1549,7 @@ const SupabaseCoursePlayerContent = ({ formationId, onExit }) => {
                           </div>
 
                           <div className="flex flex-wrap items-center justify-end gap-2">
-                            <div className="border border-white/10 rounded-xl bg-white/5 px-3 py-2">
+                            <div className="border border-[rgba(245,244,238,0.09)] rounded-xl bg-white/5 px-3 py-2">
                               <TranscriptPanel
                                 transcript={Array.isArray(currentVideoMemo?.transcript) ? currentVideoMemo.transcript : []}
                                 currentTimeSeconds={videoCurrentTime}
@@ -1573,7 +1573,7 @@ const SupabaseCoursePlayerContent = ({ formationId, onExit }) => {
                                     title={!mindmapUnlocked ? (!videoDone ? 'Termine la vidéo pour accéder à la salle de révision' : 'Aucune mindmap disponible') : undefined}
                                     className={mindmapUnlocked
                                       ? 'border-[var(--school-accent)] text-[var(--school-accent)] hover:bg-[color-mix(in_srgb,var(--school-accent)_10%,transparent)] font-bold gap-2'
-                                      : 'border-white/10 text-gray-500 cursor-not-allowed opacity-50 gap-2'
+                                      : 'border-[rgba(245,244,238,0.09)] text-[#82807a] cursor-not-allowed opacity-50 gap-2'
                                     }
                                     onClick={() => { if (mindmapUnlocked) { setMindmapTab('mindmap'); setMindmapOpen(true); } }}
                                   >
@@ -1631,12 +1631,12 @@ const SupabaseCoursePlayerContent = ({ formationId, onExit }) => {
 
                                 {mindmapMinimized ? (
                                   <div className="absolute bottom-4 right-4">
-                                    <div className="bg-[#0b0b0f]/95 border border-white/10 rounded-xl shadow-2xl backdrop-blur px-3 py-2 flex items-center gap-2">
+                                    <div className="bg-[#262624]/95 border border-[rgba(245,244,238,0.09)] rounded-xl shadow-2xl backdrop-blur px-3 py-2 flex items-center gap-2">
                                       <div className="text-xs text-gray-200 font-semibold">Mindmap</div>
                                       <Button
                                         type="button"
                                         variant="outline"
-                                        className="h-7 px-2 border-white/10 text-white hover:bg-white/5"
+                                        className="h-7 px-2 border-[rgba(245,244,238,0.09)] text-white hover:bg-white/5"
                                         onClick={() => setMindmapMinimized(false)}
                                       >
                                         Ouvrir
@@ -1644,7 +1644,7 @@ const SupabaseCoursePlayerContent = ({ formationId, onExit }) => {
                                       <Button
                                         type="button"
                                         variant="outline"
-                                        className="h-7 px-2 border-white/10 text-white hover:bg-white/5"
+                                        className="h-7 px-2 border-[rgba(245,244,238,0.09)] text-white hover:bg-white/5"
                                         onClick={() => {
                                           setMindmapMinimized(false);
                                           setMindmapOpen(false);
@@ -1656,7 +1656,7 @@ const SupabaseCoursePlayerContent = ({ formationId, onExit }) => {
                                   </div>
                                 ) : (
                                   <div className="absolute inset-0 flex items-end md:items-center justify-center p-3 md:p-6">
-                                    <div className="w-[98vw] md:w-[1100px] h-[82vh] bg-[#0b0b0f]/95 border border-white/10 rounded-2xl overflow-hidden shadow-2xl backdrop-blur">
+                                    <div className="w-[98vw] md:w-[1100px] h-[82vh] bg-[#262624]/95 border border-[rgba(245,244,238,0.09)] rounded-2xl overflow-hidden shadow-2xl backdrop-blur">
                                       {(() => {
                                         const mindmapData = currentVideoMemo?.mindmap || null;
                                         const countNodes = (n) => n ? 1 + (n.children || []).reduce((s, c) => s + countNodes(c), 0) : 0;
@@ -1667,7 +1667,7 @@ const SupabaseCoursePlayerContent = ({ formationId, onExit }) => {
                                         const allNodesClicked = !GATING_ENABLED || (quizThreshold > 0 && clickedMindmapNodeIds.size >= quizThreshold);
                                         return (
                                           <>
-                                            <div className="h-12 px-3 flex items-center justify-between border-b border-white/10 bg-black/30">
+                                            <div className="h-12 px-3 flex items-center justify-between border-b border-[rgba(245,244,238,0.09)] bg-black/30">
                                               <div className="flex items-center gap-1">
                                                 <button
                                                   type="button"
@@ -1675,7 +1675,7 @@ const SupabaseCoursePlayerContent = ({ formationId, onExit }) => {
                                                   className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors ${
                                                     mindmapTab === 'mindmap'
                                                       ? 'bg-[color-mix(in_srgb,var(--school-accent)_15%,transparent)] text-[var(--school-accent)] border border-[color-mix(in_srgb,var(--school-accent)_30%,transparent)]'
-                                                      : 'text-gray-400 hover:text-white'
+                                                      : 'text-[#b0ada3] hover:text-white'
                                                   }`}
                                                 >
                                                   🗺️ Mindmap
@@ -1692,7 +1692,7 @@ const SupabaseCoursePlayerContent = ({ formationId, onExit }) => {
                                                       ? 'text-gray-600 cursor-not-allowed'
                                                       : mindmapTab === 'quiz'
                                                       ? 'bg-[#d97757]/15 text-[#e58a5f] border border-[#d97757]/30'
-                                                      : 'text-gray-400 hover:text-white'
+                                                      : 'text-[#b0ada3] hover:text-white'
                                                   }`}
                                                 >
                                                   {allNodesClicked ? '🏆' : '🔒'} Quiz
@@ -1703,7 +1703,7 @@ const SupabaseCoursePlayerContent = ({ formationId, onExit }) => {
                                                   className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors ${
                                                     mindmapTab === 'question'
                                                       ? 'bg-[#e0926a]/15 text-[#e0926a] border border-[#e0926a]/30'
-                                                      : 'text-gray-400 hover:text-white'
+                                                      : 'text-[#b0ada3] hover:text-white'
                                                   }`}
                                                 >
                                                   💬 Question
@@ -1714,15 +1714,15 @@ const SupabaseCoursePlayerContent = ({ formationId, onExit }) => {
                                                   className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors ${
                                                     mindmapTab === 'slides'
                                                       ? 'bg-[color-mix(in_srgb,var(--school-accent)_15%,transparent)] text-[var(--school-accent)] border border-[color-mix(in_srgb,var(--school-accent)_30%,transparent)]'
-                                                      : 'text-gray-400 hover:text-white'
+                                                      : 'text-[#b0ada3] hover:text-white'
                                                   }`}
                                                 >
                                                   🃏 Slides
                                                 </button>
                                               </div>
                                               <div className="flex items-center gap-2">
-                                                <Button type="button" variant="outline" className="h-8 border-white/10 text-white hover:bg-white/5" onClick={() => setMindmapMinimized(true)}>Réduire</Button>
-                                                <Button type="button" variant="outline" className="h-8 border-white/10 text-white hover:bg-white/5" onClick={() => { setMindmapMinimized(false); setMindmapOpen(false); }}>Fermer</Button>
+                                                <Button type="button" variant="outline" className="h-8 border-[rgba(245,244,238,0.09)] text-white hover:bg-white/5" onClick={() => setMindmapMinimized(true)}>Réduire</Button>
+                                                <Button type="button" variant="outline" className="h-8 border-[rgba(245,244,238,0.09)] text-white hover:bg-white/5" onClick={() => { setMindmapMinimized(false); setMindmapOpen(false); }}>Fermer</Button>
                                               </div>
                                             </div>
                                             {mindmapTab === 'mindmap' && (
@@ -1768,7 +1768,7 @@ const SupabaseCoursePlayerContent = ({ formationId, onExit }) => {
                                                   const mm = currentVideoMemo?.mindmap || null;
                                                   const chs = Array.isArray(currentVideoMemo?.chapters) ? currentVideoMemo.chapters : [];
                                                   if (!mm || !chs.length) {
-                                                    return <div className="h-full flex items-center justify-center text-sm text-gray-500">Aucune carte disponible pour ce cours.</div>;
+                                                    return <div className="h-full flex items-center justify-center text-sm text-[#82807a]">Aucune carte disponible pour ce cours.</div>;
                                                   }
                                                   return (
                                                     <StudentSmartboardDeck
@@ -1796,14 +1796,14 @@ const SupabaseCoursePlayerContent = ({ formationId, onExit }) => {
                                             {mindmapTab === 'question' && (
                                               <div className="h-[calc(82vh-3rem)] flex flex-col overflow-hidden">
                                                 {/* Sub-tab bar */}
-                                                <div className="flex-shrink-0 flex items-center gap-1 px-4 py-2 border-b border-white/10 bg-black/20">
+                                                <div className="flex-shrink-0 flex items-center gap-1 px-4 py-2 border-b border-[rgba(245,244,238,0.09)] bg-black/20">
                                                   <button
                                                     type="button"
                                                     onClick={() => setQuestionsSubTab('ia')}
                                                     className={`px-3 py-1 rounded-lg text-xs font-semibold transition-colors ${
                                                       questionsSubTab === 'ia'
                                                         ? 'bg-[#e0926a]/15 text-[#e0926a] border border-[#e0926a]/30'
-                                                        : 'text-gray-400 hover:text-white'
+                                                        : 'text-[#b0ada3] hover:text-white'
                                                     }`}
                                                   >
                                                     🤖 IA · ProraScience
@@ -1814,7 +1814,7 @@ const SupabaseCoursePlayerContent = ({ formationId, onExit }) => {
                                                     className={`px-3 py-1 rounded-lg text-xs font-semibold transition-colors ${
                                                       questionsSubTab === 'manual'
                                                         ? 'bg-[color-mix(in_srgb,var(--school-accent)_15%,transparent)] text-[var(--school-accent)] border border-[color-mix(in_srgb,var(--school-accent)_30%,transparent)]'
-                                                        : 'text-gray-400 hover:text-white'
+                                                        : 'text-[#b0ada3] hover:text-white'
                                                     }`}
                                                   >
                                                     ✍️ Manikongo
@@ -1840,14 +1840,14 @@ const SupabaseCoursePlayerContent = ({ formationId, onExit }) => {
                                                 {/* Manikongo sub-tab — moteur complet */}
                                                 {questionsSubTab === 'manual' && (
                                                   <div className="flex-1 overflow-y-auto">
-                                                    <div className="border border-white/10 rounded-xl bg-white/5 p-5 space-y-3 m-3">
+                                                    <div className="border border-[rgba(245,244,238,0.09)] rounded-xl bg-white/5 p-5 space-y-3 m-3">
                                                       <div className="font-bold text-[var(--school-accent)]">✍️ Poser une question à Manikongo</div>
-                                                      <div className="text-sm text-gray-300">
+                                                      <div className="text-sm text-[#c9c5bb]">
                                                         Pose ta question sur cette leçon. Tu peux la rendre publique (visible dans le forum du cours) ou privée (uniquement pour l&apos;équipe enseignante).
 
                                                         {currentVideoMemo?.storagePath ? (
                                                           <div className="mt-3 space-y-3">
-                                                            <div className="border border-white/10 rounded-lg overflow-hidden bg-black">
+                                                            <div className="border border-[rgba(245,244,238,0.09)] rounded-lg overflow-hidden bg-black">
                                                               <video
                                                                 ref={clipVideoRef}
                                                                 src={clipPlayableUrl || ''}
@@ -1869,14 +1869,14 @@ const SupabaseCoursePlayerContent = ({ formationId, onExit }) => {
                                                               />
                                                             </div>
                                                             <div className="flex flex-wrap items-center gap-2">
-                                                              <Button size="sm" variant="outline" className="border-white/10 text-white hover:bg-white/5"
+                                                              <Button size="sm" variant="outline" className="border-[rgba(245,244,238,0.09)] text-white hover:bg-white/5"
                                                                 onClick={() => {
                                                                   const t = clipVideoRef.current ? Number(clipVideoRef.current.currentTime || 0) : 0;
                                                                   setClipStartSafe(Math.round(Math.max(0, t) * 2) / 2);
                                                                 }}>
                                                                 Définir IN
                                                               </Button>
-                                                              <Button size="sm" variant="outline" className="border-white/10 text-white hover:bg-white/5"
+                                                              <Button size="sm" variant="outline" className="border-[rgba(245,244,238,0.09)] text-white hover:bg-white/5"
                                                                 onClick={() => {
                                                                   const t = clipVideoRef.current ? Number(clipVideoRef.current.currentTime || 0) : 0;
                                                                   setClipEndSafe(Math.round(Math.max(0, t) * 2) / 2);
@@ -1901,7 +1901,7 @@ const SupabaseCoursePlayerContent = ({ formationId, onExit }) => {
                                                             </div>
                                                             {clipDuration != null ? (
                                                               <div className="space-y-2">
-                                                                <div className="text-xs text-gray-400">Navigation visuelle</div>
+                                                                <div className="text-xs text-[#b0ada3]">Navigation visuelle</div>
                                                                 <div className="grid grid-cols-1 gap-2">
                                                                   <input type="range" min="0" max={Math.floor(clipDuration)} step="0.5"
                                                                     value={questionClipStart === '' ? 0 : Number(questionClipStart)}
@@ -1914,13 +1914,13 @@ const SupabaseCoursePlayerContent = ({ formationId, onExit }) => {
                                                             ) : null}
                                                           </div>
                                                         ) : (
-                                                          <div className="mt-3 text-xs text-gray-400">
+                                                          <div className="mt-3 text-xs text-[#b0ada3]">
                                                             La sélection visuelle IN/OUT est disponible pour les vidéos uploadées (lecteur HTML5). Pour YouTube/Vimeo, utilise les champs ci-dessous.
                                                           </div>
                                                         )}
                                                       </div>
 
-                                                      <div className="text-xs text-gray-400">
+                                                      <div className="text-xs text-[#b0ada3]">
                                                         {questionStatus === 'loading' ? 'Envoi…'
                                                           : questionStatus === 'error' ? "Erreur: impossible d'envoyer la question."
                                                           : questionStatus === 'sent' ? 'Question envoyée.'
@@ -1928,29 +1928,29 @@ const SupabaseCoursePlayerContent = ({ formationId, onExit }) => {
                                                       </div>
 
                                                       <div className="flex items-center gap-3">
-                                                        <label className="text-sm text-gray-300 flex items-center gap-2">
+                                                        <label className="text-sm text-[#c9c5bb] flex items-center gap-2">
                                                           <input type="radio" name="question_visibility_modal" checked={questionIsPublic} onChange={() => setQuestionIsPublic(true)} />
                                                           Publique
                                                         </label>
-                                                        <label className="text-sm text-gray-300 flex items-center gap-2">
+                                                        <label className="text-sm text-[#c9c5bb] flex items-center gap-2">
                                                           <input type="radio" name="question_visibility_modal" checked={!questionIsPublic} onChange={() => setQuestionIsPublic(false)} />
                                                           Privée
                                                         </label>
                                                       </div>
 
-                                                      <div className="border border-white/10 rounded-lg p-3 bg-black/20">
-                                                        <div className="text-xs text-gray-400 uppercase tracking-wider">Séquence (clip)</div>
-                                                        <div className="text-sm text-gray-300 mt-1">Référence une séquence de la vidéo (en secondes). Optionnel.</div>
+                                                      <div className="border border-[rgba(245,244,238,0.09)] rounded-lg p-3 bg-black/20">
+                                                        <div className="text-xs text-[#b0ada3] uppercase tracking-wider">Séquence (clip)</div>
+                                                        <div className="text-sm text-[#c9c5bb] mt-1">Référence une séquence de la vidéo (en secondes). Optionnel.</div>
                                                         <div className="grid grid-cols-2 gap-3 mt-3">
                                                           <div className="space-y-1">
-                                                            <div className="text-xs text-gray-400">Début (s)</div>
+                                                            <div className="text-xs text-[#b0ada3]">Début (s)</div>
                                                             <input type="number" min="0" step="0.5" value={questionClipStart} onChange={(e) => setClipStartSafe(e.target.value)}
-                                                              className="w-full px-3 py-2 rounded bg-[#0b0b0f] border border-white/10 text-white" placeholder="ex: 12" />
+                                                              className="w-full px-3 py-2 rounded bg-[#262624] border border-[rgba(245,244,238,0.09)] text-white" placeholder="ex: 12" />
                                                           </div>
                                                           <div className="space-y-1">
-                                                            <div className="text-xs text-gray-400">Fin (s)</div>
+                                                            <div className="text-xs text-[#b0ada3]">Fin (s)</div>
                                                             <input type="number" min="0" step="0.5" value={questionClipEnd} onChange={(e) => setClipEndSafe(e.target.value)}
-                                                              className="w-full px-3 py-2 rounded bg-[#0b0b0f] border border-white/10 text-white" placeholder="ex: 32" />
+                                                              className="w-full px-3 py-2 rounded bg-[#262624] border border-[rgba(245,244,238,0.09)] text-white" placeholder="ex: 32" />
                                                           </div>
                                                         </div>
                                                       </div>
@@ -1964,7 +1964,7 @@ const SupabaseCoursePlayerContent = ({ formationId, onExit }) => {
                                                           if (m) { setMentionQuery(m[2] || ''); }
                                                           else { setMentionQuery(''); setMentionCandidates([]); }
                                                         }}
-                                                        className="bg-[#0b0b0f] border-white/10 min-h-[180px] text-white"
+                                                        className="bg-[#262624] border-[rgba(245,244,238,0.09)] min-h-[180px] text-white"
                                                         placeholder="Écris ta question ici..."
                                                       />
 
@@ -1973,7 +1973,7 @@ const SupabaseCoursePlayerContent = ({ formationId, onExit }) => {
                                                           {selectedMentions.map((m) => (
                                                             <button key={m.id} type="button"
                                                               onClick={() => setSelectedMentions((prev) => prev.filter((x) => x.id !== m.id))}
-                                                              className="px-2 py-1 rounded bg-white/10 border border-white/10 text-xs text-white hover:bg-white/15"
+                                                              className="px-2 py-1 rounded bg-white/10 border border-[rgba(245,244,238,0.09)] text-xs text-white hover:bg-white/15"
                                                               title="Cliquer pour retirer">
                                                               @{m.name}
                                                             </button>
@@ -1982,12 +1982,12 @@ const SupabaseCoursePlayerContent = ({ formationId, onExit }) => {
                                                       ) : null}
 
                                                       {mentionQuery !== '' ? (
-                                                        <div className="border border-white/10 rounded-lg bg-[#0b0b0f] overflow-hidden">
-                                                          <div className="px-3 py-2 text-xs text-gray-400 border-b border-white/10">Mentionner un prof / admin</div>
+                                                        <div className="border border-[rgba(245,244,238,0.09)] rounded-lg bg-[#262624] overflow-hidden">
+                                                          <div className="px-3 py-2 text-xs text-[#b0ada3] border-b border-[rgba(245,244,238,0.09)]">Mentionner un prof / admin</div>
                                                           {mentionLoading ? (
-                                                            <div className="px-3 py-2 text-sm text-gray-400">Recherche…</div>
+                                                            <div className="px-3 py-2 text-sm text-[#b0ada3]">Recherche…</div>
                                                           ) : mentionCandidates.length === 0 ? (
-                                                            <div className="px-3 py-2 text-sm text-gray-400">Aucun résultat</div>
+                                                            <div className="px-3 py-2 text-sm text-[#b0ada3]">Aucun résultat</div>
                                                           ) : (
                                                             <div className="max-h-[180px] overflow-y-auto">
                                                               {mentionCandidates.map((c) => (
@@ -1999,7 +1999,7 @@ const SupabaseCoursePlayerContent = ({ formationId, onExit }) => {
                                                                     setMentionQuery(''); setMentionCandidates([]);
                                                                   }}>
                                                                   <div className="text-sm text-white">{c.name}</div>
-                                                                  <div className="text-[10px] text-gray-400">{c.role}</div>
+                                                                  <div className="text-[10px] text-[#b0ada3]">{c.role}</div>
                                                                 </button>
                                                               ))}
                                                             </div>
@@ -2007,28 +2007,28 @@ const SupabaseCoursePlayerContent = ({ formationId, onExit }) => {
                                                         </div>
                                                       ) : null}
 
-                                                      <div className="border border-white/10 rounded-lg p-3 bg-black/20">
-                                                        <div className="text-xs text-gray-400 uppercase tracking-wider">Mes questions sur cette vidéo</div>
+                                                      <div className="border border-[rgba(245,244,238,0.09)] rounded-lg p-3 bg-black/20">
+                                                        <div className="text-xs text-[#b0ada3] uppercase tracking-wider">Mes questions sur cette vidéo</div>
                                                         {myQuestionsLoading ? (
-                                                          <div className="text-sm text-gray-400 mt-2">Chargement…</div>
+                                                          <div className="text-sm text-[#b0ada3] mt-2">Chargement…</div>
                                                         ) : myQuestions.length === 0 ? (
-                                                          <div className="text-sm text-gray-400 mt-2">Aucune question pour l&apos;instant.</div>
+                                                          <div className="text-sm text-[#b0ada3] mt-2">Aucune question pour l&apos;instant.</div>
                                                         ) : (
                                                           <div className="mt-3 space-y-2">
                                                             {myQuestions.map((q) => {
                                                               const editable = canEditQuestion(q.created_at);
                                                               const shareUrl = formationForumBase ? `${window.location.origin}${formationForumBase}?questionId=${q.id}` : '';
                                                               return (
-                                                                <div key={q.id} className="border border-white/10 rounded-lg p-3 bg-[#0b0b0f]">
-                                                                  <div className="text-xs text-gray-500">{new Date(q.created_at).toLocaleString()}</div>
+                                                                <div key={q.id} className="border border-[rgba(245,244,238,0.09)] rounded-lg p-3 bg-[#262624]">
+                                                                  <div className="text-xs text-[#82807a]">{new Date(q.created_at).toLocaleString()}</div>
                                                                   <div className="text-sm text-gray-200 whitespace-pre-wrap mt-1">{q.question}</div>
-                                                                  <div className="text-xs text-gray-400 mt-1">Séquence: {q.clip_start_seconds ?? '—'}s → {q.clip_end_seconds ?? '—'}s</div>
+                                                                  <div className="text-xs text-[#b0ada3] mt-1">Séquence: {q.clip_start_seconds ?? '—'}s → {q.clip_end_seconds ?? '—'}s</div>
                                                                   <div className="flex flex-wrap items-center justify-end gap-2 mt-3">
-                                                                    <Button size="sm" variant="outline" className="border-white/10 text-white hover:bg-white/5"
+                                                                    <Button size="sm" variant="outline" className="border-[rgba(245,244,238,0.09)] text-white hover:bg-white/5"
                                                                       onClick={async () => { if (!shareUrl) return; try { await navigator.clipboard.writeText(shareUrl); setQuestionToast('Lien copié.'); } catch { setQuestionToast('Impossible de copier.'); } }}>
                                                                       Partager
                                                                     </Button>
-                                                                    <Button size="sm" variant="outline" className="border-white/10 text-white hover:bg-white/5" disabled={!editable}
+                                                                    <Button size="sm" variant="outline" className="border-[rgba(245,244,238,0.09)] text-white hover:bg-white/5" disabled={!editable}
                                                                       onClick={() => { setEditingQuestionId(q.id); setEditingCreatedAt(q.created_at); setQuestionText(q.question || ''); setQuestionIsPublic(!!q.is_public); setClipStartSafe(q.clip_start_seconds ?? ''); setClipEndSafe(q.clip_end_seconds ?? ''); }}>
                                                                       Modifier (15 min)
                                                                     </Button>
@@ -2046,7 +2046,7 @@ const SupabaseCoursePlayerContent = ({ formationId, onExit }) => {
 
                                                       <div className="flex items-center justify-end gap-2">
                                                         <Button variant="outline" onClick={() => setQuestionsSubTab('ia')}
-                                                          className="border-white/10 text-white hover:bg-white/5">
+                                                          className="border-[rgba(245,244,238,0.09)] text-white hover:bg-white/5">
                                                           ← Retour IA
                                                         </Button>
                                                         <Button onClick={submitQuestion}
@@ -2096,10 +2096,10 @@ const SupabaseCoursePlayerContent = ({ formationId, onExit }) => {
 
                       {activePanel === 'notes' ? (
                         <div className="max-w-3xl mx-auto">
-                          <div className="border border-white/10 rounded-xl bg-white/5 p-5 space-y-3">
+                          <div className="border border-[rgba(245,244,238,0.09)] rounded-xl bg-white/5 p-5 space-y-3">
                             <div className="font-bold">Cahier de synthèse</div>
-                            <div className="text-sm text-gray-300">Qu'est-ce que tu as retenu ? Écris avec tes mots.</div>
-                            <div className="text-xs text-gray-400">
+                            <div className="text-sm text-[#c9c5bb]">Qu'est-ce que tu as retenu ? Écris avec tes mots.</div>
+                            <div className="text-xs text-[#b0ada3]">
                               {notesStatus === 'loading'
                                 ? 'Chargement / enregistrement…'
                                 : notesStatus === 'error'
@@ -2110,20 +2110,20 @@ const SupabaseCoursePlayerContent = ({ formationId, onExit }) => {
                                       : 'Enregistré'
                                     : ''}
                             </div>
-                            <div className={notesWordCount >= MIN_NOTES_WORDS ? 'text-xs text-green-400' : 'text-xs text-gray-400'}>
+                            <div className={notesWordCount >= MIN_NOTES_WORDS ? 'text-xs text-green-400' : 'text-xs text-[#b0ada3]'}>
                               {notesWordCount}/{MIN_NOTES_WORDS} mots
                             </div>
                             <Textarea
                               value={notesText}
                               onChange={(e) => setNotesText(e.target.value)}
-                              className="bg-[#0b0b0f] border-white/10 min-h-[220px] text-white"
+                              className="bg-[#262624] border-[rgba(245,244,238,0.09)] min-h-[220px] text-white"
                               placeholder="Écris ici..."
                             />
                             <div className="flex items-center justify-end gap-2">
                               <Button
                                 variant="outline"
                                 onClick={() => setActivePanel('video')}
-                                className="border-white/10 text-white hover:bg-white/5"
+                                className="border-[rgba(245,244,238,0.09)] text-white hover:bg-white/5"
                               >
                                 Retour
                               </Button>
@@ -2139,8 +2139,8 @@ const SupabaseCoursePlayerContent = ({ formationId, onExit }) => {
                                 disabled={!questionsUnlocked}
                                 className={
                                   questionsUnlocked
-                                    ? 'border-white/10 text-white hover:bg-white/5'
-                                    : 'border-white/10 text-white/40 opacity-60 cursor-not-allowed'
+                                    ? 'border-[rgba(245,244,238,0.09)] text-white hover:bg-white/5'
+                                    : 'border-[rgba(245,244,238,0.09)] text-white/40 opacity-60 cursor-not-allowed'
                                 }
                               >
                                 J'ai une question
@@ -2169,14 +2169,14 @@ const SupabaseCoursePlayerContent = ({ formationId, onExit }) => {
 
                       {activePanel === 'questions' ? (
                         <div className="max-w-3xl mx-auto">
-                          <div className="border border-white/10 rounded-xl bg-white/5 p-5 space-y-3">
+                          <div className="border border-[rgba(245,244,238,0.09)] rounded-xl bg-white/5 p-5 space-y-3">
                             <div className="font-bold">Poser une question</div>
-                            <div className="text-sm text-gray-300">
+                            <div className="text-sm text-[#c9c5bb]">
                               Pose ta question sur cette leçon. Tu peux la rendre publique (visible dans le forum du cours) ou privée (uniquement pour l'équipe enseignante).
 
                               {currentVideoMemo?.storagePath ? (
                                 <div className="mt-3 space-y-3">
-                                  <div className="border border-white/10 rounded-lg overflow-hidden bg-black">
+                                  <div className="border border-[rgba(245,244,238,0.09)] rounded-lg overflow-hidden bg-black">
                                     <video
                                       ref={clipVideoRef}
                                       src={clipPlayableUrl || ''}
@@ -2202,7 +2202,7 @@ const SupabaseCoursePlayerContent = ({ formationId, onExit }) => {
                                     <Button
                                       size="sm"
                                       variant="outline"
-                                      className="border-white/10 text-white hover:bg-white/5"
+                                      className="border-[rgba(245,244,238,0.09)] text-white hover:bg-white/5"
                                       onClick={() => {
                                         const t = clipVideoRef.current ? Number(clipVideoRef.current.currentTime || 0) : 0;
                                         const v = Math.round(Math.max(0, t) * 2) / 2;
@@ -2214,7 +2214,7 @@ const SupabaseCoursePlayerContent = ({ formationId, onExit }) => {
                                     <Button
                                       size="sm"
                                       variant="outline"
-                                      className="border-white/10 text-white hover:bg-white/5"
+                                      className="border-[rgba(245,244,238,0.09)] text-white hover:bg-white/5"
                                       onClick={() => {
                                         const t = clipVideoRef.current ? Number(clipVideoRef.current.currentTime || 0) : 0;
                                         const v = Math.round(Math.max(0, t) * 2) / 2;
@@ -2245,7 +2245,7 @@ const SupabaseCoursePlayerContent = ({ formationId, onExit }) => {
 
                                   {clipDuration != null ? (
                                     <div className="space-y-2">
-                                      <div className="text-xs text-gray-400">Navigation visuelle</div>
+                                      <div className="text-xs text-[#b0ada3]">Navigation visuelle</div>
                                       <div className="grid grid-cols-1 gap-2">
                                         <input
                                           type="range"
@@ -2268,13 +2268,13 @@ const SupabaseCoursePlayerContent = ({ formationId, onExit }) => {
                                   ) : null}
                                 </div>
                               ) : (
-                                <div className="mt-3 text-xs text-gray-400">
+                                <div className="mt-3 text-xs text-[#b0ada3]">
                                   La sélection visuelle IN/OUT est disponible pour les vidéos uploadées (lecteur HTML5). Pour YouTube/Vimeo, utilise les champs ci-dessous.
                                 </div>
                               )}
 
                             </div>
-                            <div className="text-xs text-gray-400">
+                            <div className="text-xs text-[#b0ada3]">
                               {questionStatus === 'loading'
                                 ? 'Envoi…'
                                 : questionStatus === 'error'
@@ -2284,7 +2284,7 @@ const SupabaseCoursePlayerContent = ({ formationId, onExit }) => {
                                     : ''}
                             </div>
                             <div className="flex items-center gap-3">
-                              <label className="text-sm text-gray-300 flex items-center gap-2">
+                              <label className="text-sm text-[#c9c5bb] flex items-center gap-2">
                                 <input
                                   type="radio"
                                   name="question_visibility"
@@ -2293,7 +2293,7 @@ const SupabaseCoursePlayerContent = ({ formationId, onExit }) => {
                                 />
                                 Publique
                               </label>
-                              <label className="text-sm text-gray-300 flex items-center gap-2">
+                              <label className="text-sm text-[#c9c5bb] flex items-center gap-2">
                                 <input
                                   type="radio"
                                   name="question_visibility"
@@ -2304,33 +2304,33 @@ const SupabaseCoursePlayerContent = ({ formationId, onExit }) => {
                               </label>
                             </div>
 
-                            <div className="border border-white/10 rounded-lg p-3 bg-black/20">
-                              <div className="text-xs text-gray-400 uppercase tracking-wider">Séquence (clip)</div>
-                              <div className="text-sm text-gray-300 mt-1">
+                            <div className="border border-[rgba(245,244,238,0.09)] rounded-lg p-3 bg-black/20">
+                              <div className="text-xs text-[#b0ada3] uppercase tracking-wider">Séquence (clip)</div>
+                              <div className="text-sm text-[#c9c5bb] mt-1">
                                 Référence une séquence de la vidéo (en secondes). Optionnel.
                               </div>
                               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-3">
                                 <div className="space-y-1">
-                                  <div className="text-xs text-gray-400">Début (s)</div>
+                                  <div className="text-xs text-[#b0ada3]">Début (s)</div>
                                   <input
                                     type="number"
                                     min="0"
                                     step="0.5"
                                     value={questionClipStart}
                                     onChange={(e) => setClipStartSafe(e.target.value)}
-                                    className="w-full px-3 py-2 rounded bg-[#0b0b0f] border border-white/10 text-white"
+                                    className="w-full px-3 py-2 rounded bg-[#262624] border border-[rgba(245,244,238,0.09)] text-white"
                                     placeholder="ex: 12"
                                   />
                                 </div>
                                 <div className="space-y-1">
-                                  <div className="text-xs text-gray-400">Fin (s)</div>
+                                  <div className="text-xs text-[#b0ada3]">Fin (s)</div>
                                   <input
                                     type="number"
                                     min="0"
                                     step="0.5"
                                     value={questionClipEnd}
                                     onChange={(e) => setClipEndSafe(e.target.value)}
-                                    className="w-full px-3 py-2 rounded bg-[#0b0b0f] border border-white/10 text-white"
+                                    className="w-full px-3 py-2 rounded bg-[#262624] border border-[rgba(245,244,238,0.09)] text-white"
                                     placeholder="ex: 32"
                                   />
                                 </div>
@@ -2349,7 +2349,7 @@ const SupabaseCoursePlayerContent = ({ formationId, onExit }) => {
                                   setMentionCandidates([]);
                                 }
                               }}
-                              className="bg-[#0b0b0f] border-white/10 min-h-[180px] text-white"
+                              className="bg-[#262624] border-[rgba(245,244,238,0.09)] min-h-[180px] text-white"
                               placeholder="Écris ta question ici..."
                             />
 
@@ -2360,7 +2360,7 @@ const SupabaseCoursePlayerContent = ({ formationId, onExit }) => {
                                     key={m.id}
                                     type="button"
                                     onClick={() => setSelectedMentions((prev) => prev.filter((x) => x.id !== m.id))}
-                                    className="px-2 py-1 rounded bg-white/10 border border-white/10 text-xs text-white hover:bg-white/15"
+                                    className="px-2 py-1 rounded bg-white/10 border border-[rgba(245,244,238,0.09)] text-xs text-white hover:bg-white/15"
                                     title="Cliquer pour retirer"
                                   >
                                     @{m.name}
@@ -2370,14 +2370,14 @@ const SupabaseCoursePlayerContent = ({ formationId, onExit }) => {
                             ) : null}
 
                             {mentionQuery !== '' ? (
-                              <div className="border border-white/10 rounded-lg bg-[#0b0b0f] overflow-hidden">
-                                <div className="px-3 py-2 text-xs text-gray-400 border-b border-white/10">
+                              <div className="border border-[rgba(245,244,238,0.09)] rounded-lg bg-[#262624] overflow-hidden">
+                                <div className="px-3 py-2 text-xs text-[#b0ada3] border-b border-[rgba(245,244,238,0.09)]">
                                   Mentionner un prof / admin
                                 </div>
                                 {mentionLoading ? (
-                                  <div className="px-3 py-2 text-sm text-gray-400">Recherche…</div>
+                                  <div className="px-3 py-2 text-sm text-[#b0ada3]">Recherche…</div>
                                 ) : mentionCandidates.length === 0 ? (
-                                  <div className="px-3 py-2 text-sm text-gray-400">Aucun résultat</div>
+                                  <div className="px-3 py-2 text-sm text-[#b0ada3]">Aucun résultat</div>
                                 ) : (
                                   <div className="max-h-[180px] overflow-y-auto">
                                     {mentionCandidates.map((c) => (
@@ -2396,7 +2396,7 @@ const SupabaseCoursePlayerContent = ({ formationId, onExit }) => {
                                         }}
                                       >
                                         <div className="text-sm text-white">{c.name}</div>
-                                        <div className="text-[10px] text-gray-400">{c.role}</div>
+                                        <div className="text-[10px] text-[#b0ada3]">{c.role}</div>
                                       </button>
                                     ))}
                                   </div>
@@ -2404,29 +2404,29 @@ const SupabaseCoursePlayerContent = ({ formationId, onExit }) => {
                               </div>
                             ) : null}
 
-                            <div className="border border-white/10 rounded-lg p-3 bg-black/20">
-                              <div className="text-xs text-gray-400 uppercase tracking-wider">Mes questions sur cette vidéo</div>
+                            <div className="border border-[rgba(245,244,238,0.09)] rounded-lg p-3 bg-black/20">
+                              <div className="text-xs text-[#b0ada3] uppercase tracking-wider">Mes questions sur cette vidéo</div>
                               {myQuestionsLoading ? (
-                                <div className="text-sm text-gray-400 mt-2">Chargement…</div>
+                                <div className="text-sm text-[#b0ada3] mt-2">Chargement…</div>
                               ) : myQuestions.length === 0 ? (
-                                <div className="text-sm text-gray-400 mt-2">Aucune question pour l'instant.</div>
+                                <div className="text-sm text-[#b0ada3] mt-2">Aucune question pour l'instant.</div>
                               ) : (
                                 <div className="mt-3 space-y-2">
                                   {myQuestions.map((q) => {
                                     const editable = canEditQuestion(q.created_at);
                                     const shareUrl = formationForumBase ? `${window.location.origin}${formationForumBase}?questionId=${q.id}` : '';
                                     return (
-                                      <div key={q.id} className="border border-white/10 rounded-lg p-3 bg-[#0b0b0f]">
-                                        <div className="text-xs text-gray-500">{new Date(q.created_at).toLocaleString()}</div>
+                                      <div key={q.id} className="border border-[rgba(245,244,238,0.09)] rounded-lg p-3 bg-[#262624]">
+                                        <div className="text-xs text-[#82807a]">{new Date(q.created_at).toLocaleString()}</div>
                                         <div className="text-sm text-gray-200 whitespace-pre-wrap mt-1">{q.question}</div>
-                                        <div className="text-xs text-gray-400 mt-1">
+                                        <div className="text-xs text-[#b0ada3] mt-1">
                                           Séquence: {q.clip_start_seconds ?? '—'}s → {q.clip_end_seconds ?? '—'}s
                                         </div>
                                         <div className="flex flex-wrap items-center justify-end gap-2 mt-3">
                                           <Button
                                             size="sm"
                                             variant="outline"
-                                            className="border-white/10 text-white hover:bg-white/5"
+                                            className="border-[rgba(245,244,238,0.09)] text-white hover:bg-white/5"
                                             onClick={async () => {
                                               if (!shareUrl) return;
                                               try {
@@ -2442,7 +2442,7 @@ const SupabaseCoursePlayerContent = ({ formationId, onExit }) => {
                                           <Button
                                             size="sm"
                                             variant="outline"
-                                            className="border-white/10 text-white hover:bg-white/5"
+                                            className="border-[rgba(245,244,238,0.09)] text-white hover:bg-white/5"
                                             disabled={!editable}
                                             onClick={() => {
                                               setEditingQuestionId(q.id);
@@ -2486,7 +2486,7 @@ const SupabaseCoursePlayerContent = ({ formationId, onExit }) => {
                               <Button
                                 variant="outline"
                                 onClick={() => setActivePanel('video')}
-                                className="border-white/10 text-white hover:bg-white/5"
+                                className="border-[rgba(245,244,238,0.09)] text-white hover:bg-white/5"
                               >
                                 Retour
                               </Button>
@@ -2504,32 +2504,32 @@ const SupabaseCoursePlayerContent = ({ formationId, onExit }) => {
 
                       {activePanel === 'discussion' ? (
                         <div className="max-w-3xl mx-auto">
-                          <div className="border border-white/10 rounded-xl bg-white/5 p-5 space-y-4">
+                          <div className="border border-[rgba(245,244,238,0.09)] rounded-xl bg-white/5 p-5 space-y-4">
                             <div>
                               <div className="font-bold flex items-center gap-2">
                                 <BookOpen className="w-4 h-4 text-[var(--school-accent)]" />
                                 Discussion de la vidéo
                               </div>
-                              <div className="text-sm text-gray-300 mt-1">
+                              <div className="text-sm text-[#c9c5bb] mt-1">
                                 Échange avec les autres inscrits et l'équipe enseignante autour de cette vidéo. Les messages restent visibles uniquement par les personnes ayant accès au cours.
                               </div>
                             </div>
 
                             {!discussionVideoId ? (
-                              <div className="text-sm text-gray-400 border border-white/10 rounded-lg bg-black/20 p-4">
+                              <div className="text-sm text-[#b0ada3] border border-[rgba(245,244,238,0.09)] rounded-lg bg-black/20 p-4">
                                 La discussion sera disponible dès que cette vidéo sera enregistrée dans le cours.
                               </div>
                             ) : discussionError ? (
-                              <div className="text-sm text-gray-400 border border-white/10 rounded-lg bg-black/20 p-4">
+                              <div className="text-sm text-[#b0ada3] border border-[rgba(245,244,238,0.09)] rounded-lg bg-black/20 p-4">
                                 Discussion momentanément indisponible. Tu dois être inscrit à ce cours pour y participer.
                               </div>
                             ) : (
                               <>
-                                <div className="border border-white/10 rounded-lg bg-black/20 p-3 max-h-[320px] overflow-auto space-y-3">
+                                <div className="border border-[rgba(245,244,238,0.09)] rounded-lg bg-black/20 p-3 max-h-[320px] overflow-auto space-y-3">
                                   {discussionLoading && !discussionMessages.length ? (
-                                    <div className="text-xs text-gray-500 py-6 text-center">Chargement de la discussion…</div>
+                                    <div className="text-xs text-[#82807a] py-6 text-center">Chargement de la discussion…</div>
                                   ) : !discussionMessages.length ? (
-                                    <div className="text-xs text-gray-500 py-6 text-center">
+                                    <div className="text-xs text-[#82807a] py-6 text-center">
                                       Aucun message pour l'instant. Lance la discussion !
                                     </div>
                                   ) : (
@@ -2548,7 +2548,7 @@ const SupabaseCoursePlayerContent = ({ formationId, onExit }) => {
                                             {m.content}
                                           </div>
                                           {m.created_at ? (
-                                            <div className="text-[10px] text-gray-500 mt-1 px-1">
+                                            <div className="text-[10px] text-[#82807a] mt-1 px-1">
                                               {new Date(m.created_at).toLocaleString()}
                                             </div>
                                           ) : null}
@@ -2562,7 +2562,7 @@ const SupabaseCoursePlayerContent = ({ formationId, onExit }) => {
                                   <Textarea
                                     value={discussionText}
                                     onChange={(e) => setDiscussionText(e.target.value)}
-                                    className="bg-[#0b0b0f] border-white/10 min-h-[90px] text-white"
+                                    className="bg-[#262624] border-[rgba(245,244,238,0.09)] min-h-[90px] text-white"
                                     placeholder={discussionTopic?.id ? 'Écris ton message…' : 'Ouverture de la discussion…'}
                                     disabled={!discussionTopic?.id || discussionTopic?.status === 'closed'}
                                     onKeyDown={(e) => {
@@ -2573,7 +2573,7 @@ const SupabaseCoursePlayerContent = ({ formationId, onExit }) => {
                                     }}
                                   />
                                   <div className="flex items-center justify-between gap-2">
-                                    <div className="text-[11px] text-gray-500">
+                                    <div className="text-[11px] text-[#82807a]">
                                       {discussionTopic?.status === 'closed'
                                         ? 'Discussion clôturée.'
                                         : 'Astuce : Cmd/Ctrl + Entrée pour envoyer.'}
@@ -2582,7 +2582,7 @@ const SupabaseCoursePlayerContent = ({ formationId, onExit }) => {
                                       <Button
                                         variant="outline"
                                         onClick={() => setActivePanel('video')}
-                                        className="border-white/10 text-white hover:bg-white/5"
+                                        className="border-[rgba(245,244,238,0.09)] text-white hover:bg-white/5"
                                       >
                                         Retour
                                       </Button>
@@ -2606,16 +2606,16 @@ const SupabaseCoursePlayerContent = ({ formationId, onExit }) => {
                   </div>
 
                   {!panelOpen && (
-                    <button type="button" onClick={() => setPanelOpen(true)} className="hidden md:flex absolute top-1/2 right-0 -translate-y-1/2 z-30 items-center gap-1.5 pl-3 pr-2 py-5 rounded-l-2xl bg-[#141318]/70 backdrop-blur-md border border-r-0 border-white/10 text-[var(--school-accent)] hover:bg-[#141318]/90 transition-colors" aria-label="Ouvrir le programme">
+                    <button type="button" onClick={() => setPanelOpen(true)} className="hidden md:flex absolute top-1/2 right-0 -translate-y-1/2 z-30 items-center gap-1.5 pl-3 pr-2 py-5 rounded-l-2xl bg-[#141318]/70 backdrop-blur-md border border-r-0 border-[rgba(245,244,238,0.09)] text-[var(--school-accent)] hover:bg-[#141318]/90 transition-colors" aria-label="Ouvrir le programme">
                       <ChevronRight className="w-4 h-4 rotate-180" />
                       <span className="text-[10px] tracking-[0.16em]" style={{ writingMode: 'vertical-rl', transform: 'rotate(180deg)' }}>PROGRAMME</span>
                     </button>
                   )}
                   <div className={cn(
-                    "hidden md:flex flex-col absolute top-0 right-0 h-full w-[380px] lg:w-[420px] bg-[#141318]/95 backdrop-blur-2xl border-l border-white/10 z-40 shadow-2xl transition-transform duration-300 ease-out",
+                    "hidden md:flex flex-col absolute top-0 right-0 h-full w-[380px] lg:w-[420px] bg-[#141318]/95 backdrop-blur-2xl border-l border-[rgba(245,244,238,0.09)] z-40 shadow-2xl transition-transform duration-300 ease-out",
                     panelOpen ? "translate-x-0" : "translate-x-full"
                   )}>
-                    <button type="button" onClick={() => setPanelOpen(false)} className="absolute top-3 right-3 z-10 w-8 h-8 rounded-full flex items-center justify-center text-gray-300 hover:text-white hover:bg-white/10 transition-colors" aria-label="Fermer le panneau">
+                    <button type="button" onClick={() => setPanelOpen(false)} className="absolute top-3 right-3 z-10 w-8 h-8 rounded-full flex items-center justify-center text-[#c9c5bb] hover:text-white hover:bg-white/10 transition-colors" aria-label="Fermer le panneau">
                       <ChevronRight className="w-5 h-5" />
                     </button>
                     <ProgressivePlaylist
@@ -2658,8 +2658,8 @@ const SupabaseCoursePlayerContent = ({ formationId, onExit }) => {
                   </div>
                 </div>
 
-                <div className="shrink-0 border-t border-white/10 bg-[#262624] px-3 md:px-6 py-3 flex items-center justify-between gap-3">
-                  <div className="text-xs text-gray-400 truncate">
+                <div className="shrink-0 border-t border-[rgba(245,244,238,0.09)] bg-[#262624] px-3 md:px-6 py-3 flex items-center justify-between gap-3">
+                  <div className="text-xs text-[#b0ada3] truncate">
                     {activePanel === 'video'
                       ? 'Vidéo'
                       : activePanel === 'presentation'
@@ -2677,7 +2677,7 @@ const SupabaseCoursePlayerContent = ({ formationId, onExit }) => {
                       size="sm"
                       variant={activePanel === 'video' ? 'secondary' : 'outline'}
                       onClick={() => setActivePanel('video')}
-                      className={activePanel === 'video' ? 'bg-white/10 text-white' : 'border-white/10 text-white hover:bg-white/5'}
+                      className={activePanel === 'video' ? 'bg-white/10 text-white' : 'border-[rgba(245,244,238,0.09)] text-white hover:bg-white/5'}
                     >
                       Vidéo
                     </Button>
@@ -2686,7 +2686,7 @@ const SupabaseCoursePlayerContent = ({ formationId, onExit }) => {
                       variant={activePanel === 'presentation' ? 'secondary' : 'outline'}
                       disabled={!canShowPresentation}
                       onClick={() => setActivePanel('presentation')}
-                      className={activePanel === 'presentation' ? 'bg-white/10 text-white' : 'border-white/10 text-white hover:bg-white/5'}
+                      className={activePanel === 'presentation' ? 'bg-white/10 text-white' : 'border-[rgba(245,244,238,0.09)] text-white hover:bg-white/5'}
                     >
                       Présentation
                     </Button>
@@ -2695,7 +2695,7 @@ const SupabaseCoursePlayerContent = ({ formationId, onExit }) => {
                       variant={activePanel === 'quiz' ? 'secondary' : 'outline'}
                       disabled={!canShowQuiz}
                       onClick={() => setActivePanel('quiz')}
-                      className={activePanel === 'quiz' ? 'bg-white/10 text-white' : 'border-white/10 text-white hover:bg-white/5'}
+                      className={activePanel === 'quiz' ? 'bg-white/10 text-white' : 'border-[rgba(245,244,238,0.09)] text-white hover:bg-white/5'}
                     >
                       Quiz
                     </Button>
@@ -2703,7 +2703,7 @@ const SupabaseCoursePlayerContent = ({ formationId, onExit }) => {
                       size="sm"
                       variant={activePanel === 'notes' ? 'secondary' : 'outline'}
                       onClick={() => setActivePanel('notes')}
-                      className={activePanel === 'notes' ? 'bg-white/10 text-white' : 'border-white/10 text-white hover:bg-white/5'}
+                      className={activePanel === 'notes' ? 'bg-white/10 text-white' : 'border-[rgba(245,244,238,0.09)] text-white hover:bg-white/5'}
                     >
                       Cahier
                     </Button>
@@ -2722,8 +2722,8 @@ const SupabaseCoursePlayerContent = ({ formationId, onExit }) => {
                         activePanel === 'questions'
                           ? 'bg-white/10 text-white'
                           : !questionsUnlocked
-                            ? 'border-white/10 text-white/40 opacity-60 cursor-not-allowed'
-                            : 'border-white/10 text-white hover:bg-white/5'
+                            ? 'border-[rgba(245,244,238,0.09)] text-white/40 opacity-60 cursor-not-allowed'
+                            : 'border-[rgba(245,244,238,0.09)] text-white hover:bg-white/5'
                       }
                     >
                       Question
@@ -2743,8 +2743,8 @@ const SupabaseCoursePlayerContent = ({ formationId, onExit }) => {
                         activePanel === 'discussion'
                           ? 'bg-white/10 text-white'
                           : !questionsUnlocked
-                            ? 'border-white/10 text-white/40 opacity-60 cursor-not-allowed'
-                            : 'border-white/10 text-white hover:bg-white/5'
+                            ? 'border-[rgba(245,244,238,0.09)] text-white/40 opacity-60 cursor-not-allowed'
+                            : 'border-[rgba(245,244,238,0.09)] text-white hover:bg-white/5'
                       }
                     >
                       Discussion
@@ -2761,22 +2761,22 @@ const SupabaseCoursePlayerContent = ({ formationId, onExit }) => {
             </div>
           ) : activeItem?.kind === 'quiz' ? (
             <div className="h-full overflow-auto p-6">
-              <div className="max-w-3xl mx-auto border border-white/10 rounded-lg p-4 bg-white/5 space-y-3">
-                <div className="text-sm text-gray-300">{activeItem?.payload?.questions?.length || 0} questions</div>
+              <div className="max-w-3xl mx-auto border border-[rgba(245,244,238,0.09)] rounded-lg p-4 bg-white/5 space-y-3">
+                <div className="text-sm text-[#c9c5bb]">{activeItem?.payload?.questions?.length || 0} questions</div>
                 <div className="space-y-2">
                   {(activeItem?.payload?.questions || []).slice(0, 5).map((q, idx) => (
-                    <div key={idx} className="border border-white/10 rounded p-3 bg-black/20">
+                    <div key={idx} className="border border-[rgba(245,244,238,0.09)] rounded p-3 bg-black/20">
                       <div className="text-sm font-semibold">{idx + 1}. {q?.question || q?.title || 'Question'}</div>
                     </div>
                   ))}
                 </div>
                 {(activeItem?.payload?.questions || []).length > 5 ? (
-                  <div className="text-xs text-gray-500">+ {(activeItem.payload.questions.length - 5)} autres questions...</div>
+                  <div className="text-xs text-[#82807a]">+ {(activeItem.payload.questions.length - 5)} autres questions...</div>
                 ) : null}
               </div>
             </div>
           ) : (
-            <div className="p-6 text-gray-400">Aucun contenu.</div>
+            <div className="p-6 text-[#b0ada3]">Aucun contenu.</div>
           )}
         </DialogContent>
       </Dialog>
