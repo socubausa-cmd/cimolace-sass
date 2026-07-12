@@ -38,7 +38,7 @@ import LiveDataSaverEffect from '@/features/live/LiveDataSaverEffect';
 import { useLiveDataSaver } from '@/hooks/useLiveDataSaver';
 import { useMatchMediaAtMost } from '@/hooks/useLiriMobileBreakpoint';
 import LiriProductBadge from '@/components/brand/LiriProductBadge';
-import { Stethoscope, PhoneOff, Share2, Pencil, Users, Presentation, MonitorUp, Eraser, UserPlus, Copy, Check, ShieldCheck, X, MessageSquare, Send, Sparkles, Brain, Music2, Play, Pause, FileText, LayoutTemplate, Radio, Upload, ChevronUp, ChevronDown, ChevronRight, ChevronLeft, PanelRight, PanelBottom, Maximize, Minimize, Hand } from 'lucide-react';
+import { Stethoscope, PhoneOff, Share2, Pencil, Users, Presentation, MonitorUp, Eraser, UserPlus, Copy, Check, ShieldCheck, X, MessageSquare, Send, Sparkles, Brain, Music2, Play, Pause, FileText, LayoutTemplate, Radio, Upload, ChevronUp, ChevronDown, ChevronRight, ChevronLeft, PanelRight, PanelBottom, Maximize, Minimize, Hand, MicOff, UserX } from 'lucide-react';
 import { createPortal } from 'react-dom';
 import '@livekit/components-styles';
 import { useAuth } from '@/contexts/SupabaseAuthContext';
@@ -1973,6 +1973,7 @@ export function ConsultationStage({
             onSwitchLayout={() => setMiniLayout('band')}
             onFocus={focusMember}
             raisedHands={raisedHands}
+            sessionId={sessionId}
           />
         ) : null}
       </div>
@@ -1986,6 +1987,7 @@ export function ConsultationStage({
           onSwitchLayout={() => setMiniLayout('overlay')}
           onFocus={focusMember}
           raisedHands={raisedHands}
+          sessionId={sessionId}
         />
       ) : null}
     </div>
@@ -2011,6 +2013,7 @@ function MembersRail({
   onSwitchLayout,
   onFocus,
   raisedHands,
+  sessionId,
 }: {
   tracks: any[];
   isHost?: boolean;
@@ -2022,6 +2025,8 @@ function MembersRail({
   onFocus?: (participantIdentity: string) => void;
   /** Identités avec la main levée → badge ✋ sur la pastille. */
   raisedHands?: Set<string>;
+  /** Modération hôte (sourdine/expulsion via LiveKit) — id de la session live. */
+  sessionId?: string | null;
 }) {
   const cams = tracks.filter((t) => t?.source === Track.Source.Camera);
   // Écran partagé : vignette dédiée EN TÊTE du rail (label ambre) → quand un
@@ -2031,6 +2036,39 @@ function MembersRail({
 
   const pillStyle: React.CSSProperties = { display: 'inline-flex', alignItems: 'center', gap: 6, padding: '6px 12px', borderRadius: 999, border: '1px solid rgba(212,163,106,0.4)', background: 'rgba(24,20,16,0.92)', color: GOLD, fontSize: 12, fontWeight: 700, cursor: 'pointer', boxShadow: '0 6px 20px rgba(0,0,0,0.4)' };
   const miniBtn: React.CSSProperties = { border: 'none', background: 'rgba(24,20,16,0.9)', color: GOLD, cursor: 'pointer', borderRadius: 8, display: 'grid', placeItems: 'center' };
+
+  // Modération HÔTE au clic sur la vignette : petits boutons Sourdine + Faire sortir
+  // en coin de chaque membre distant (LiveKit côté serveur via teleconsultApi).
+  // e.stopPropagation → le clic sur le bouton n'agrandit PAS la vignette.
+  const [modBusy, setModBusy] = useState<string | null>(null);
+  const hostTileBtn: React.CSSProperties = { width: 22, height: 22, borderRadius: 6, border: 'none', background: 'rgba(20,16,14,0.86)', color: '#e5e7eb', cursor: 'pointer', display: 'grid', placeItems: 'center' };
+  const muteMember = async (id?: string) => {
+    if (!id || !sessionId) return;
+    setModBusy(id + ':m');
+    try { await teleconsultApi.muteParticipant(sessionId, id); } catch { /* ignore */ } finally { setModBusy(null); }
+  };
+  const kickMember = async (id?: string, name?: string) => {
+    if (!id || !sessionId) return;
+    if (typeof window !== 'undefined' && !window.confirm(`Faire sortir ${name || 'ce participant'} du direct ?`)) return;
+    setModBusy(id + ':x');
+    try { await teleconsultApi.removeParticipant(sessionId, id); } catch { /* ignore */ } finally { setModBusy(null); }
+  };
+  // Contrôles hôte pour une vignette (null si non-hôte, pas de session, ou soi-même).
+  const HostTileControls = ({ t }: { t: any }) => {
+    const id = t?.participant?.identity;
+    if (!isHost || !sessionId || !id || t?.participant?.isLocal) return null;
+    const name = t?.participant?.name || id;
+    return (
+      <div style={{ position: 'absolute', top: 4, right: 4, display: 'flex', gap: 3, zIndex: 4 }} onClick={(e) => e.stopPropagation()}>
+        <button type="button" onClick={() => muteMember(id)} disabled={modBusy === id + ':m'} title="Couper le micro" aria-label={`Couper le micro de ${name}`} style={hostTileBtn}>
+          <MicOff size={12} aria-hidden="true" />
+        </button>
+        <button type="button" onClick={() => kickMember(id, name)} disabled={modBusy === id + ':x'} title="Faire sortir du direct" aria-label={`Faire sortir ${name}`} style={{ ...hostTileBtn, color: '#fca5a5' }}>
+          <UserX size={12} aria-hidden="true" />
+        </button>
+      </div>
+    );
+  };
 
   // Messagerie privée : quand le panneau Discussion est ouvert, un tap sur une
   // pastille ouvre la conversation privée avec ce membre (au lieu de la grande
@@ -2073,6 +2111,7 @@ function MembersRail({
             <ParticipantTile trackRef={t} style={{ width: '100%', height: '100%' }} />
             <RoleTag role={participantRole(t?.participant, !!isHost)} />
             <RaisedHandBadge show={!!raisedHands?.has(t?.participant?.identity)} />
+            <HostTileControls t={t} />
           </div>
         ))}
         <div style={{ marginLeft: 'auto', display: 'flex', flexDirection: 'column', gap: 4, flexShrink: 0 }}>
@@ -2128,6 +2167,7 @@ function MembersRail({
             <ParticipantTile trackRef={t} style={{ width: '100%', height: '100%' }} />
             <RoleTag role={participantRole(t?.participant, !!isHost)} />
             <RaisedHandBadge show={!!raisedHands?.has(t?.participant?.identity)} />
+            <HostTileControls t={t} />
           </div>
         ))}
         <div style={{ display: 'flex', justifyContent: 'center', gap: 4 }}>
@@ -2200,6 +2240,7 @@ function MembersRail({
             <ParticipantTile trackRef={t} style={{ width: '100%', height: '100%' }} />
             <RoleTag role={participantRole(t?.participant, !!isHost)} />
             <RaisedHandBadge show={!!raisedHands?.has(t?.participant?.identity)} />
+            <HostTileControls t={t} />
           </div>
         ))}
       </div>
