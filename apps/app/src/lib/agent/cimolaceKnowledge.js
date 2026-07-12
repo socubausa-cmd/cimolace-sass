@@ -12,9 +12,10 @@
  *       MedOS      : Sprout 0 / Solo 19 / Pro 49 / Clinic 99 €/mois
  *       Bien-être  : Starter 29 / Pro 79 €/mois
  *       Créateur   : Starter 49 / Pro 149 / Business 299 €/mois
- * ⚠️ RESTE : les prix ne sont PAS en DB (tenant `cimolace` = 0 billing_plan) → non « achetables »
- *   tant qu'on ne seede pas billing_plans + stripe_price_id. Rails de paiement à confirmer
- *   (vitrine : Stripe · CinetPay · MTN · Orange Money · Chariow). Cf. workflow whygqajyf (missing[]).
+ * ÉTAT PAIEMENT (2026-07-12) : prix en DB (billing_plans tenant `cimolace`) + prix Stripe TEST +
+ *   Payment Links (billing_plans.metadata.payment_link). Le VNP rend un bouton « S'abonner » PAR
+ *   PALIER (offer.tiers) → checkout Stripe hébergé (mode TEST). RESTE : passer en `sk_live` pour du
+ *   vrai argent ; provisionner l'org au paiement (webhook) ; rails de paiement à confirmer.
  * NB : les MOTEURS (LIRI/École/MedOS/Mbolo/Community) = les briques qui POWERent les infrastructures
  *   vendues ci-dessus — d'où deux taxonomies (pillars = moteurs, offers = infrastructures priçées).
  */
