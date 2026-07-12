@@ -93,6 +93,9 @@ const resolveCurrentTenantSlug = () => {
  * juste des aller-retours réseau redondants.
  */
 const studentMembershipEnsuredFor = new Set();
+// Garde-fou « un seul refresh de session par user » : après un self-join, on re-minte le token
+// UNE fois pour qu'il porte le claim tenant_role (cf. ensureStudentMembership).
+const studentMembershipRefreshedFor = new Set();
 
 /**
  * Rattache l'utilisateur courant au tenant de l'école (role=student, idempotent)
@@ -121,6 +124,23 @@ const ensureStudentMembership = async (authUser) => {
       // Ne pas désactiver définitivement : permet un nouvel essai au prochain login.
       studentMembershipEnsuredFor.delete(authUser.id);
       console.warn('[auth] ensure_student_membership:', error.message);
+      return;
+    }
+    // Course JWT : la membership vient d'être garantie, mais le token COURANT a été minté au
+    // signup AVANT elle → il ne porte pas encore le claim `tenant_role` (posé par le hook DB
+    // custom_access_token_hook). Sans lui, DashboardRedirect envoie l'élève vers /liri que la
+    // garde rejette (tenant_role vide) → boucle /dashboard↔/liri. On force UN SEUL refresh de
+    // session pour re-minter un token PORTANT tenant_role → l'accès marche « du premier coup ».
+    if (!studentMembershipRefreshedFor.has(authUser.id)) {
+      studentMembershipRefreshedFor.add(authUser.id);
+      let hasClaim = false;
+      try {
+        const { data: sess } = await supabase.auth.getSession();
+        hasClaim = Boolean((decodeJwtClaims(sess?.session?.access_token).app_metadata || {}).tenant_role);
+      } catch { /* ignore */ }
+      if (!hasClaim) {
+        try { await supabase.auth.refreshSession(); } catch { /* non bloquant */ }
+      }
     }
   } catch (e) {
     studentMembershipEnsuredFor.delete(authUser.id);
