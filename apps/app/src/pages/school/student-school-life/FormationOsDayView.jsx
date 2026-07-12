@@ -70,11 +70,7 @@ export default function FormationOsDayView({ day, onBack, backLabel = 'Programme
 
         {step === 'quiz' && quiz && <OsQuiz quiz={quiz} />}
 
-        {step === 'mindmap' && (
-          <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'rgba(245,244,238,.5)', fontSize: 14, textAlign: 'center', padding: 24 }}>
-            La carte mentale de cette leçon sera rendue ici par l'OS.
-          </div>
-        )}
+        {step === 'mindmap' && mindmap && <OsMindmap mindmap={mindmap} title={day?.title} />}
       </div>
     </div>
   );
@@ -94,6 +90,53 @@ function OsReader({ support, title }) {
           </section>
         )) : (
           <div style={{ color: 'rgba(245,244,238,.5)', fontSize: 14 }}>Support de présentation externe.</div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+// Mindmap NATIF OS — carte mentale fondue dans la surface : nœud central + branches
+// (nœud coral + points-clés), pas de carte. L'OS « affiche » l'arbre de concepts.
+function OsMindmap({ mindmap, title }) {
+  const root = mindmap || {};
+  const rootLabel = root.label || root.title || root.name || title || 'Carte mentale';
+  const branches = Array.isArray(root.children) ? root.children : [];
+  return (
+    <div style={{ position: 'absolute', inset: 0, overflowY: 'auto', padding: 'clamp(22px,5vh,54px) clamp(18px,6vw,90px) 60px' }}>
+      <div style={{ maxWidth: 1040, margin: '0 auto' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 12, marginBottom: 40 }}>
+          <span style={{ width: 13, height: 13, borderRadius: '50%', background: TERRA, boxShadow: '0 0 0 6px rgba(217,119,87,.14)' }} />
+          <div style={{ fontFamily: SERIF, fontSize: 'clamp(24px,3.4vw,38px)', fontWeight: 600, color: '#f5f4ee', textAlign: 'center' }}>{rootLabel}</div>
+        </div>
+        {branches.length ? (
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(240px,1fr))', gap: 'clamp(18px,2.6vw,34px)' }}>
+            {branches.map((b, i) => {
+              const kp = Array.isArray(b.keyPoints) ? b.keyPoints : [];
+              const kids = Array.isArray(b.children) ? b.children : [];
+              return (
+                <div key={i}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 9, marginBottom: 7 }}>
+                    <span style={{ width: 8, height: 8, borderRadius: '50%', background: 'rgba(217,119,87,.85)', flexShrink: 0 }} />
+                    <div style={{ fontFamily: SERIF, fontSize: 18, fontWeight: 600, color: '#f0ede4' }}>{b.label || b.title || `Idée ${i + 1}`}</div>
+                  </div>
+                  {b.summary && <div style={{ fontSize: 13.5, color: 'rgba(245,244,238,.6)', margin: '0 0 8px 17px' }}>{b.summary}</div>}
+                  {kp.length > 0 && (
+                    <ul style={{ margin: '0 0 0 17px', padding: 0, listStyle: 'none', display: 'flex', flexDirection: 'column', gap: 4 }}>
+                      {kp.map((k, ki) => (<li key={ki} style={{ fontSize: 13.5, color: 'rgba(245,244,238,.72)', display: 'flex', gap: 8 }}><span style={{ color: TERRA }}>·</span>{k}</li>))}
+                    </ul>
+                  )}
+                  {kids.length > 0 && (
+                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, margin: '10px 0 0 17px' }}>
+                      {kids.map((c, ci) => (<span key={ci} style={{ fontSize: 12, padding: '4px 10px', borderRadius: 999, background: 'rgba(245,244,238,.05)', border: '1px solid rgba(245,244,238,.08)', color: 'rgba(245,244,238,.7)' }}>{c.label || c.title || c.name}</span>))}
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        ) : (
+          <div style={{ textAlign: 'center', color: 'rgba(245,244,238,.5)', fontSize: 14 }}>Carte mentale de la leçon.</div>
         )}
       </div>
     </div>
