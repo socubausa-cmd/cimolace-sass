@@ -3970,7 +3970,10 @@ function WhiteboardScene({
               position: 'fixed',
               left: Math.max(4, textOverlayScreen.left || 0),
               top: Math.max(4, textInPlace.topPx),
-              zIndex: 6000,
+              // z-index MAX : en téléconsult, la coque `.consult-shell` est un overlay
+              // plein écran à z-index 2147483000 → un composer à 6000 était ENTERRÉ
+              // dessous (invisible = « texte fantôme »). On repasse au-dessus de la coque.
+              zIndex: 2147483600,
               display: 'flex',
               flexDirection: 'column',
               alignItems: 'flex-start',
