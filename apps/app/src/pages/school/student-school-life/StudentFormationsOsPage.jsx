@@ -264,17 +264,11 @@ export default function StudentFormationsOsPage() {
         </button>
       )}
 
-      {/* Tiroir CONVERSATION — bouton + panneau du fil d'échanges avec l'OS (navigation rapide dans le fil) */}
-      {!openDay && history.length > 0 && (
-        <button type="button" onClick={() => setHistOpen((o) => !o)} aria-label="Fil de conversation"
-          style={{ position: 'absolute', top: 18, right: 20, zIndex: 14, display: 'inline-flex', alignItems: 'center', gap: 7, padding: '8px 13px', borderRadius: 999, border: histOpen ? `1px solid ${TERRA}` : '1px solid rgba(245,244,238,.12)', background: histOpen ? 'rgba(217,119,87,.16)' : 'rgba(38,38,36,.72)', backdropFilter: 'blur(8px)', color: histOpen ? '#f0c3ac' : INK, cursor: 'pointer', fontFamily: 'inherit', fontSize: 12.5, fontWeight: 500 }}>
-          <MessageSquare size={14} /> Fil <span style={{ opacity: .55 }}>{history.length}</span>
-        </button>
-      )}
-      {!openDay && histOpen && (
+      {/* Tiroir CONVERSATION — panneau du fil d'échanges avec l'OS (navigation rapide) ; disponible partout, jour compris */}
+      {histOpen && (
         <>
-          <div onClick={() => setHistOpen(false)} style={{ position: 'absolute', inset: 0, zIndex: 19, background: 'rgba(8,8,11,.35)' }} />
-          <aside style={{ position: 'absolute', top: 0, right: 0, bottom: 0, width: 'min(380px,86vw)', zIndex: 20, background: '#1f1e1c', borderLeft: '1px solid rgba(245,244,238,.09)', boxShadow: '-24px 0 60px rgba(0,0,0,.5)', display: 'flex', flexDirection: 'column' }}>
+          <div onClick={() => setHistOpen(false)} style={{ position: 'absolute', inset: 0, zIndex: 49, background: 'rgba(8,8,11,.35)' }} />
+          <aside style={{ position: 'absolute', top: 0, right: 0, bottom: 0, width: 'min(380px,86vw)', zIndex: 50, background: '#1f1e1c', borderLeft: '1px solid rgba(245,244,238,.09)', boxShadow: '-24px 0 60px rgba(0,0,0,.5)', display: 'flex', flexDirection: 'column' }}>
             <div style={{ flexShrink: 0, padding: '16px 18px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: '1px solid rgba(245,244,238,.08)' }}>
               <div style={{ fontFamily: SERIF, fontSize: 17, fontWeight: 600, color: '#f5f4ee' }}>Conversation</div>
               <button type="button" onClick={() => setHistOpen(false)} aria-label="Fermer" style={{ background: 'transparent', border: 'none', color: 'rgba(245,244,238,.5)', cursor: 'pointer', display: 'inline-flex' }}><X size={18} /></button>
@@ -318,22 +312,28 @@ export default function StudentFormationsOsPage() {
         )
       )}
 
-      {/* Conversation OS — présence + champ de saisie pour parler à l'OS (masqué quand un jour est ouvert) */}
-      {!openDay && !loading && (
-        <div style={{ position: 'absolute', left: 0, right: 0, bottom: 0, padding: '0 clamp(16px,6vw,90px) 22px', zIndex: 12, pointerEvents: 'none' }}>
+      {/* Conversation OS — présence + saisie ; TOUJOURS visible (jour compris), au-dessus de tout */}
+      {!loading && (
+        <div style={{ position: 'absolute', left: 0, right: 0, bottom: 0, padding: '0 clamp(16px,6vw,90px) 22px', zIndex: 40, pointerEvents: 'none' }}>
           <div style={{ maxWidth: 680, margin: '0 auto', pointerEvents: 'auto' }}>
             {reply && (
-              <div style={{ marginBottom: 12, fontFamily: SERIF, fontSize: 16, color: 'rgba(245,244,238,.85)', textAlign: 'center', lineHeight: 1.4 }}>{reply}</div>
+              <div style={{ marginBottom: 12, fontFamily: SERIF, fontSize: 16, color: 'rgba(245,244,238,.9)', textAlign: 'center', lineHeight: 1.4, textShadow: '0 2px 14px rgba(8,8,11,.7)' }}>{reply}</div>
             )}
-            <form onSubmit={onAsk} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '7px 7px 7px 16px', borderRadius: 999, border: '1px solid rgba(245,244,238,.12)', background: 'rgba(31,30,28,.85)', backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)', boxShadow: '0 12px 44px rgba(0,0,0,.42)' }}>
-              <span style={{ position: 'relative', width: 9, height: 9, flexShrink: 0 }}>
+            <form onSubmit={onAsk} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '7px 7px 7px 12px', borderRadius: 999, border: '1px solid rgba(245,244,238,.12)', background: 'rgba(31,30,28,.92)', backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)', boxShadow: '0 12px 44px rgba(0,0,0,.5)' }}>
+              {history.length > 0 && (
+                <button type="button" onClick={() => setHistOpen((o) => !o)} aria-label="Fil de conversation" title="Fil de conversation"
+                  style={{ flexShrink: 0, display: 'inline-flex', alignItems: 'center', gap: 5, padding: '5px 9px', borderRadius: 999, border: '1px solid rgba(245,244,238,.10)', background: histOpen ? 'rgba(217,119,87,.18)' : 'rgba(245,244,238,.04)', color: histOpen ? '#f0c3ac' : 'rgba(245,244,238,.66)', cursor: 'pointer', fontFamily: 'inherit', fontSize: 12, fontWeight: 600 }}>
+                  <MessageSquare size={13} />{history.length}
+                </button>
+              )}
+              <span style={{ position: 'relative', width: 9, height: 9, flexShrink: 0, marginLeft: 2 }}>
                 <span style={{ position: 'absolute', inset: 0, borderRadius: '50%', background: TERRA }} />
                 <span style={{ position: 'absolute', inset: -4, borderRadius: '50%', border: '1.5px solid rgba(217,119,87,.4)', animation: 'ccaPing 1.9s ease-out infinite' }} />
               </span>
               <input
                 value={chat}
                 onChange={(e) => setChat(e.target.value)}
-                placeholder="Parle à l'OS : « ouvre le module 2 », « montre le jour 1 »…"
+                placeholder={openDay ? "Demande à l'OS sur cette leçon…" : "Parle à l'OS : « ouvre le module 2 », « montre le jour 1 »…"}
                 style={{ flex: 1, minWidth: 0, background: 'transparent', border: 'none', outline: 'none', color: INK, fontFamily: 'inherit', fontSize: 14.5 }}
                 aria-label="Parler à l'OS"
               />

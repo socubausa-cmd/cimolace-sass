@@ -80,7 +80,7 @@ export default function FormationOsDayView({ day, onBack, backLabel = 'Programme
 function OsReader({ support, title }) {
   const slides = Array.isArray(support?.slides) ? support.slides : [];
   return (
-    <div style={{ position: 'absolute', inset: 0, overflowY: 'auto', padding: 'clamp(18px,4vh,44px) clamp(18px,7vw,120px) 60px' }}>
+    <div style={{ position: 'absolute', inset: 0, overflowY: 'auto', padding: 'clamp(18px,4vh,44px) clamp(18px,7vw,120px) 118px' }}>
       <div style={{ maxWidth: 720, margin: '0 auto' }}>
         <div style={{ fontFamily: SERIF, fontSize: 'clamp(22px,3vw,32px)', fontWeight: 600, color: '#f5f4ee', marginBottom: 26 }}>{support?.title || title || 'Support'}</div>
         {slides.length ? slides.map((s, i) => (
@@ -103,7 +103,7 @@ function OsMindmap({ mindmap, title }) {
   const rootLabel = root.label || root.title || root.name || title || 'Carte mentale';
   const branches = Array.isArray(root.children) ? root.children : [];
   return (
-    <div style={{ position: 'absolute', inset: 0, overflowY: 'auto', padding: 'clamp(22px,5vh,54px) clamp(18px,6vw,90px) 60px' }}>
+    <div style={{ position: 'absolute', inset: 0, overflowY: 'auto', padding: 'clamp(22px,5vh,54px) clamp(18px,6vw,90px) 118px' }}>
       <div style={{ maxWidth: 1040, margin: '0 auto' }}>
         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 12, marginBottom: 40 }}>
           <span style={{ width: 13, height: 13, borderRadius: '50%', background: TERRA, boxShadow: '0 0 0 6px rgba(217,119,87,.14)' }} />
@@ -152,7 +152,7 @@ function OsQuiz({ quiz }) {
   const score = submitted ? questions.reduce((a, q, i) => a + (answers[i] === correctOf(q) ? 1 : 0), 0) : 0;
 
   return (
-    <div style={{ position: 'absolute', inset: 0, overflowY: 'auto', padding: 'clamp(18px,4vh,44px) clamp(18px,7vw,120px) 60px' }}>
+    <div style={{ position: 'absolute', inset: 0, overflowY: 'auto', padding: 'clamp(18px,4vh,44px) clamp(18px,7vw,120px) 118px' }}>
       <div style={{ maxWidth: 760, margin: '0 auto' }}>
         <div style={{ fontFamily: SERIF, fontSize: 'clamp(22px,3vw,32px)', fontWeight: 600, color: '#f5f4ee', marginBottom: 6 }}>{quiz.title || 'Quiz de validation'}</div>
         <div style={{ fontSize: 13, color: 'rgba(245,244,238,.5)', marginBottom: 28 }}>{questions.length} question{questions.length > 1 ? 's' : ''}</div>
