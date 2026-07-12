@@ -1196,6 +1196,16 @@ function FocusDrawer({ item, brand, onClose, onAction, onNode }) {
             {item.actions.map((a, i) => {
               const m = VNP_ACTION_META[a];
               if (!m) return null;
+              // Forfait avec un Payment Link (Cimolace) : « Acheter » → lien DIRECT vers le checkout
+              // Stripe hébergé (nouvel onglet), sans passer par l'edge.
+              if (a === 'acheter' && item.link) {
+                return (
+                  <a key={a} className="cca-focus-act" href={item.link} target="_blank" rel="noopener noreferrer" onClick={onClose}>
+                    <span style={{ display: 'inline-flex', alignItems: 'center', gap: 10 }}><m.Icon size={17} /> S'abonner</span>
+                    <ArrowRight size={16} />
+                  </a>
+                );
+              }
               return (
                 <button key={a} className={`cca-focus-act${i > 0 ? ' sec' : ''}`} onClick={() => onAction(a, m.label)}>
                   <span style={{ display: 'inline-flex', alignItems: 'center', gap: 10 }}><m.Icon size={17} /> {m.label}</span>
