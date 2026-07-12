@@ -1,9 +1,13 @@
-import React, { useEffect, useMemo, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useEffect, useMemo, useState, lazy, Suspense } from 'react';
 import { ArrowLeft } from 'lucide-react';
 import { coursesApi } from '@/lib/api-v2';
 import { BG, INK, STYLE, TERRA } from '@/lib/agent/immersiveTheme';
 import { SceneStage } from '@/pages/CimolaceCreationAgent';
+
+// Lecteur immersif (vidéo / support / quiz / mindmap) — embarqué DANS le portail
+// (on reste dans /liri, le rail reste) plutôt que de router vers le plein-écran.
+const EmbeddedCoursePlayer = lazy(() =>
+  import('@/components/school/formations/CoursePlayerInterface').then((m) => ({ default: m.SupabaseCoursePlayerContent })));
 
 /**
  * « Mes formations » RENDU PAR L'OS CIMOLACE.
@@ -14,11 +18,11 @@ import { SceneStage } from '@/pages/CimolaceCreationAgent';
  * aucun marketing, aucun VNP : seulement le contenu des formations.
  */
 export default function StudentFormationsOsPage() {
-  const navigate = useNavigate();
   const [courses, setCourses] = useState([]);
   const [loading, setLoading] = useState(true);
   const [focusCourse, setFocusCourse] = useState(null); // { course, modules } | null — niveau 2 (frise modules)
   const [focusModule, setFocusModule] = useState(null); // { course, module, mIdx } | null — niveau 3 (jours)
+  const [openCourseId, setOpenCourseId] = useState(null); // niveau 4 — lecteur immersif embarqué
   const [visible, setVisible] = useState(false);
 
   useEffect(() => {
@@ -140,7 +144,7 @@ export default function StudentFormationsOsPage() {
       const module = focusCourse?.modules?.[mIdx];
       if (module) { setVisible(false); setTimeout(() => setFocusModule({ course: focusCourse.course, module, mIdx }), 200); }
     } else if (ref.startsWith('open:')) {
-      navigate(`/formation/${ref.slice(5)}/learn`);
+      setOpenCourseId(ref.slice(5)); // lecteur embarqué, on reste dans le portail
     }
   };
 
@@ -157,6 +161,15 @@ export default function StudentFormationsOsPage() {
   return (
     <div style={{ position: 'relative', width: '100%', height: '100%', minHeight: 'calc(100vh - 120px)', background: BG, color: INK, overflow: 'hidden', fontFamily: "'Inter', system-ui, sans-serif" }}>
       <style>{STYLE}</style>
+
+      {/* Niveau 4 — lecteur immersif embarqué (vidéo / support / quiz / mindmap), on reste dans le portail */}
+      {openCourseId && (
+        <div style={{ position: 'absolute', inset: 0, zIndex: 30, background: BG, overflow: 'auto' }}>
+          <Suspense fallback={<div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'rgba(245,244,238,.5)', fontSize: 14 }}>Ouverture du cours…</div>}>
+            <EmbeddedCoursePlayer formationId={openCourseId} onExit={() => setOpenCourseId(null)} />
+          </Suspense>
+        </div>
+      )}
 
       {/* particules ambiantes — le vide « respire » */}
       <span className="cca-amb" style={{ width: 5, height: 5, top: '30%', left: '28%', opacity: 0.16, animation: 'ccaDriftA 11s ease-in-out infinite' }} />
