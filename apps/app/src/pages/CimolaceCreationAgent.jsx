@@ -1112,6 +1112,63 @@ const FOCUS_CSS = `
 .cca-focus-close{margin-top:16px;width:100%;padding:11px;border-radius:12px;border:none;background:transparent;color:rgba(244,239,230,.5);font-family:inherit;font-size:13px;cursor:pointer}
 .cca-focus-close:hover{color:rgba(244,239,230,.85)}
 `;
+// Historique de conversation + navigation rapide (realm tenant). Le flux central ne garde pas les
+// échanges → ce panneau « messagerie » (droite) les liste tous, et le mini-rail permet d'y sauter.
+const CONV_CSS = `
+@keyframes ccaConvIn{from{opacity:0;transform:translateX(26px)}to{opacity:1;transform:none}}
+.cca-conv-back{position:fixed;inset:0;z-index:44;background:rgba(12,12,11,.42);backdrop-filter:blur(2px);-webkit-backdrop-filter:blur(2px)}
+.cca-conv{position:fixed;top:0;right:0;bottom:0;z-index:45;width:min(384px,92vw);background:#211f1d;border-left:1px solid rgba(230,204,146,.16);box-shadow:-24px 0 70px -24px rgba(0,0,0,.7);display:flex;flex-direction:column;animation:ccaConvIn .3s cubic-bezier(.16,1,.3,1) both}
+.cca-conv-head{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:18px 18px 13px;border-bottom:1px solid rgba(244,239,230,.08)}
+.cca-conv-title{font-family:'Fraunces','Source Serif 4',Georgia,serif;font-size:16px;color:#f4efe6;font-weight:600}
+.cca-conv-close{background:none;border:none;color:rgba(244,239,230,.5);cursor:pointer;padding:4px;display:inline-flex}
+.cca-conv-close:hover{color:#f4efe6}
+.cca-conv-list{flex:1;overflow-y:auto;padding:13px 14px 22px;scrollbar-width:none;display:flex;flex-direction:column;gap:8px}
+.cca-conv-list::-webkit-scrollbar{width:0}
+.cca-conv-turn{text-align:left;background:rgba(244,239,230,.03);border:1px solid rgba(244,239,230,.08);border-radius:13px;padding:11px 13px;cursor:pointer;transition:background .16s ease,border-color .16s ease;display:flex;flex-direction:column;gap:4px;font-family:inherit}
+.cca-conv-turn:hover{background:rgba(244,239,230,.06);border-color:rgba(230,204,146,.28)}
+.cca-conv-turn.on{border-color:rgba(230,204,146,.5);background:rgba(230,204,146,.07)}
+.cca-conv-idx{font-family:'Bricolage Grotesque',system-ui,sans-serif;font-size:9px;font-weight:800;letter-spacing:.08em;color:rgba(230,204,146,.6)}
+.cca-conv-q{font-family:'Fraunces','Source Serif 4',Georgia,serif;font-size:13.5px;color:#f4efe6;line-height:1.35}
+.cca-conv-a{font-size:12px;color:rgba(244,239,230,.55);line-height:1.45;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
+.cca-mini{position:absolute;top:50%;right:15px;transform:translateY(-50%);z-index:6;display:flex;flex-direction:column;gap:8px;align-items:flex-end;pointer-events:auto}
+.cca-mini-dot{height:2px;width:16px;border-radius:2px;background:rgba(244,239,230,.26);cursor:pointer;transition:width .2s ease,background .2s ease;padding:0;border:none}
+.cca-mini-dot:hover{background:rgba(244,239,230,.6);width:24px}
+.cca-mini-dot.on{background:#e6cc92;width:30px;height:2.5px}
+@media (max-width:640px){.cca-mini{display:none}}
+`;
+function ConvPanel({ turns, curTurn, onGo, onClose }) {
+  return (
+    <div className="cca-conv-back" onClick={onClose}>
+      <div className="cca-conv" onClick={(e) => e.stopPropagation()} role="dialog" aria-modal="true" aria-label="Votre conversation">
+        <div className="cca-conv-head">
+          <span className="cca-conv-title">Votre conversation</span>
+          <button type="button" className="cca-conv-close" onClick={onClose} aria-label="Fermer"><X size={17} /></button>
+        </div>
+        <div className="cca-conv-list">
+          {turns.map((t, i) => (
+            <button key={t.id} type="button" className={`cca-conv-turn${i === curTurn ? ' on' : ''}`} onClick={() => onGo(i)}>
+              <span className="cca-conv-idx">{String(i + 1).padStart(2, '0')}</span>
+              <span className="cca-conv-q">{t.q}</span>
+              {t.reply && <span className="cca-conv-a">{t.reply}</span>}
+            </button>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+function MiniNav({ turns, curTurn, onGo }) {
+  if (turns.length < 2) return null;
+  return (
+    <div className="cca-mini" aria-label="Navigation rapide de la conversation">
+      {turns.map((t, i) => (
+        <button key={t.id} type="button" className={`cca-mini-dot${i === curTurn ? ' on' : ''}`} title={t.q}
+          aria-label={`Aller à : ${t.q}`} onClick={(e) => { e.stopPropagation(); onGo(i); }} />
+      ))}
+    </div>
+  );
+}
+
 function FocusDrawer({ item, brand, onClose, onAction, onNode }) {
   if (!item) return null;
   return (
@@ -1398,6 +1455,18 @@ export default function CimolaceCreationAgent({ tenantSlug: tenantSlugProp = nul
   const rafRef = useRef(null);
   const brainGenRef = useRef(0); // invalide un brain() en vol (Retour / appels concurrents)
   const historyRef = useRef([]); // mémoire conversationnelle envoyée à l'edge
+
+  // HISTORIQUE DE CONVERSATION (realm tenant) : chaque échange = 1 tour navigable. Alimente le
+  // panneau latéral (messagerie), le mini-rail de navigation rapide et le Retour (recule d'un tour).
+  const [turns, setTurns] = useState([]);       // [{ id, q, reply, scene }]
+  const [curTurn, setCurTurn] = useState(-1);   // tour affiché (-1 = accueil)
+  const [histOpen, setHistOpen] = useState(false);
+  const turnSeqRef = useRef(0);
+  const pushTurn = useCallback((entry) => {
+    setTurns((prev) => [...prev, { id: (turnSeqRef.current += 1), ...entry }].slice(-50));
+  }, []);
+  // Chaque nouveau tour → on l'affiche (dernier index). La navigation manuelle (goToTurn) écrase ensuite.
+  useEffect(() => { setCurTurn(turns.length - 1); }, [turns.length]);
 
   // L7 — « Fais-moi le tour » : l'IA enchaîne les scènes toute seule
   const [tourActive, setTourActive] = useState(false);
@@ -1946,9 +2015,11 @@ export default function CimolaceCreationAgent({ tenantSlug: tenantSlugProp = nul
     // Réponse DESIGNÉE : compose une SCÈNE (buildNodeScene → normalizeScene) ; la voix suit.
     // Fallback EXACT vers la narration plate si aucune scène (contact/support) ou flag OFF.
     const sc = VNP_SCENES_V2 ? normalizeScene(buildNodeScene(nodeId, knowledgeRef.current)) : null;
-    if (sc) { enterScene(sc, () => speak(n.summary || n.title)); return; }
-    speak(`${n.summary} ${n.content}`.replace(/\s+/g, ' ').trim().slice(0, 340) || n.title);
-  }, [vnpGraph, speak, osTenant, runEffects, enterScene]);
+    if (sc) { pushTurn({ q: n.title, reply: n.summary || n.title, scene: sc }); enterScene(sc, () => speak(n.summary || n.title)); return; }
+    const flat = `${n.summary} ${n.content}`.replace(/\s+/g, ' ').trim().slice(0, 340) || n.title;
+    pushTurn({ q: n.title, reply: flat, scene: null });
+    speak(flat);
+  }, [vnpGraph, speak, osTenant, runEffects, enterScene, pushTurn]);
 
   // MODE FOCUS — cliquer un élément (carte) ouvre le tiroir d'approfondissement inline.
   const openFocus = useCallback((ref) => {
@@ -2001,6 +2072,7 @@ export default function CimolaceCreationAgent({ tenantSlug: tenantSlugProp = nul
       const nodeScene = (!edgeScene && VNP_SCENES_V2 && onTop && data?.nodeId)
         ? normalizeScene(buildNodeScene(data.nodeId, knowledgeRef.current)) : null;
       const sc = edgeScene || nodeScene;
+      pushTurn({ q: message, reply, scene: sc || null });
       if (sc) enterScene(sc, () => speak(reply)); else speak(reply);
       if (edgeScene) { try { logEvent('vnp_scene_composed', { type: edgeScene.type }, osTenant); } catch { /* non bloquant */ } }
     } catch (_) {
@@ -2020,7 +2092,7 @@ export default function CimolaceCreationAgent({ tenantSlug: tenantSlugProp = nul
         ? `Je n'ai pas pu traiter votre demande à l'instant — mais vous pouvez explorer directement : choisissez un sujet ci-dessous, ou écrivez-nous.`
         : `Un souci temporaire de mon côté — réessayez dans un instant.`);
     }
-  }, [vnpGraph, osBrand, osTenant, speak, sThink, enterScene]);
+  }, [vnpGraph, osBrand, osTenant, speak, sThink, enterScene, pushTurn]);
 
   // ACTION ENGINE — EXÉCUTE une action métier pour de vrai (pas un accusé de réception) :
   //  • contacter/participer → mini-formulaire inline, livré dans la table contact_requests (mailbox) ;
@@ -2152,6 +2224,15 @@ export default function CimolaceCreationAgent({ tenantSlug: tenantSlugProp = nul
     }
   }, [email, password, slug, orgName, chosen, login, navigate, sPop, sThink, sChime, exitScene, stopTour, stopLesson]);
 
+  // Rejouer un tour de conversation (clic sur le rail/panneau) : restaure sa scène + sa voix.
+  const goToTurn = useCallback((i) => {
+    const t = turns[i]; if (!t) return;
+    sPop(); setError(''); setBusy(false); closeInput(); stopTour(); stopLesson(); setPendingLesson(false);
+    setHistOpen(false); setEngaged(true); setContactForm(null); setBookingForm(null); setFocusItem(null);
+    setCurTurn(i);
+    if (t.scene) enterScene(t.scene, () => speak(t.reply)); else { exitScene(); speak(t.reply); }
+  }, [turns, sPop, closeInput, stopTour, stopLesson, enterScene, exitScene, speak]);
+
   const goBack = useCallback(() => {
     sPop();
     setError('');
@@ -2159,12 +2240,20 @@ export default function CimolaceCreationAgent({ tenantSlug: tenantSlugProp = nul
     closeInput();
     stopTour(); stopLesson();
     setPendingLesson(false);
+    setHistOpen(false);
+    // Realm TENANT : le Retour recule dans l'HISTORIQUE (jamais vers le tunnel Cimolace).
+    if (isTenantRealm) {
+      setContactForm(null); setBookingForm(null); setFocusItem(null);
+      if (curTurn > 0 && turns[curTurn - 1]) { goToTurn(curTurn - 1); return; }
+      exitScene(); setCurTurn(-1); setEngaged(false); // → accueil éditorial (hero)
+      return;
+    }
     exitScene();
     if (step === 'product' || step === 'brain') { setStep('discovery'); speak(GREETING); }
     else if (step === 'brand_ask') { setStep('product'); speak(PRODUCT[chosen].reply); }
     else if (step === 'brand_confirm') { setStep('brand_ask'); speak("Quel nom pour votre organisation ?", () => openInput()); }
     else if (step === 'account') { setStep('brand_confirm'); speak(`On reprend — cimolace.space/t/${slug}. On continue ?`); }
-  }, [step, chosen, slug, sPop, closeInput, speak, openInput, exitScene, stopTour, stopLesson]);
+  }, [isTenantRealm, curTurn, turns, goToTurn, step, chosen, slug, sPop, closeInput, speak, openInput, exitScene, stopTour, stopLesson]);
 
   const onRootClick = (e) => {
     if (inputOpen || !inputAllowed) return;
@@ -2238,6 +2327,28 @@ export default function CimolaceCreationAgent({ tenantSlug: tenantSlugProp = nul
         />
       )}
 
+      {/* NAVIGATION DE CONVERSATION (realm tenant) : mini-rail rapide (bord droit) + panneau messagerie */}
+      {isTenantRealm && (<style>{CONV_CSS}</style>)}
+      {isTenantRealm && engaged && !histOpen && !contactForm && !bookingForm && (
+        <MiniNav turns={turns} curTurn={curTurn} onGo={goToTurn} />
+      )}
+      {isTenantRealm && histOpen && turns.length > 0 && (
+        <ConvPanel turns={turns} curTurn={curTurn} onGo={goToTurn} onClose={() => setHistOpen(false)} />
+      )}
+
+      {/* Écrire — affordance TOUJOURS accessible pour (ré)ouvrir la saisie (anti-blocage) */}
+      {isTenantRealm && engaged && !inputOpen && !histOpen && !contactForm && !bookingForm && (
+        <button
+          type="button"
+          onClick={(e) => { e.stopPropagation(); openInput(); }}
+          aria-label="Poser une question"
+          style={{ position: 'absolute', bottom: 18, left: 20, zIndex: 8, display: 'inline-flex', alignItems: 'center', gap: 7, padding: '9px 15px', borderRadius: 999, border: '1px solid rgba(230,204,146,.3)', background: 'rgba(38,38,36,.72)', backdropFilter: 'blur(6px)', WebkitBackdropFilter: 'blur(6px)', color: GOLD, cursor: 'pointer', fontFamily: 'inherit', fontSize: 12.5, fontWeight: 500 }}
+        >
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M12 20h9" /><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z" /></svg>
+          Écrire
+        </button>
+      )}
+
       {/* Identité du realm (où on est) : badge marque (logo + nom) + état connecté */}
       <div style={{ position: 'absolute', top: 18, left: '50%', transform: 'translateX(-50%)', display: 'flex', alignItems: 'center', gap: 14, pointerEvents: 'none', zIndex: 6 }}>
         {isTenantRealm ? (
@@ -2290,17 +2401,30 @@ export default function CimolaceCreationAgent({ tenantSlug: tenantSlugProp = nul
       <button
         onClick={(e) => { e.stopPropagation(); setMuted((m) => !m); }}
         aria-label={muted ? 'Activer le son' : 'Couper le son'}
-        style={{ position: 'absolute', top: 16, right: 18, background: 'transparent', border: 'none', color: 'rgba(244,239,230,.4)', cursor: 'pointer', zIndex: 5, padding: 4, display: 'inline-flex' }}
+        style={{ position: 'absolute', top: 16, right: isTenantRealm ? 52 : 18, background: 'transparent', border: 'none', color: 'rgba(244,239,230,.4)', cursor: 'pointer', zIndex: 7, padding: 4, display: 'inline-flex' }}
       >
         {muted ? <VolumeX size={17} /> : <Volume2 size={17} />}
       </button>
 
-      {/* Retour — jamais bloqué */}
-      {step !== 'discovery' && step !== 'pret' && (
+      {/* Historique de conversation (realm tenant) — ouvre le panneau « messagerie » */}
+      {isTenantRealm && turns.length > 0 && (
+        <button
+          onClick={(e) => { e.stopPropagation(); setHistOpen((v) => !v); }}
+          aria-label="Voir la conversation"
+          title="Voir la conversation"
+          style={{ position: 'absolute', top: 15, right: 16, background: histOpen ? 'rgba(230,204,146,.14)' : 'transparent', border: '1px solid', borderColor: histOpen ? 'rgba(230,204,146,.4)' : 'rgba(244,239,230,.14)', borderRadius: 9, color: histOpen ? GOLD : 'rgba(244,239,230,.55)', cursor: 'pointer', zIndex: 7, padding: '5px 6px', display: 'inline-flex', alignItems: 'center', gap: 5 }}
+        >
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" /><line x1="8" y1="9" x2="16" y2="9" /><line x1="8" y1="13" x2="13" y2="13" /></svg>
+          <span style={{ fontSize: 11.5, fontWeight: 600 }}>{turns.length}</span>
+        </button>
+      )}
+
+      {/* Retour — jamais bloqué. Realm tenant : visible dès qu'on a interagi (recule dans l'historique). */}
+      {((isTenantRealm && engaged) || (!isTenantRealm && step !== 'discovery' && step !== 'pret')) && (
         <button
           onClick={(e) => { e.stopPropagation(); goBack(); }}
           aria-label="Revenir en arrière"
-          style={{ position: 'absolute', top: 16, left: 18, background: 'transparent', border: 'none', color: 'rgba(244,239,230,.5)', cursor: 'pointer', zIndex: 5, display: 'inline-flex', alignItems: 'center', gap: 5, fontSize: 12.5, fontFamily: 'inherit' }}
+          style={{ position: 'absolute', top: 16, left: 18, background: 'transparent', border: 'none', color: 'rgba(244,239,230,.5)', cursor: 'pointer', zIndex: 7, display: 'inline-flex', alignItems: 'center', gap: 5, fontSize: 12.5, fontFamily: 'inherit' }}
         >
           <ArrowLeft size={16} /> Retour
         </button>
