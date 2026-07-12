@@ -581,6 +581,20 @@ function ForfaitsGateRedirect() {
   if (user) return <Navigate to={`/liri/forfaits${q ? `?${q}` : ''}`} replace />;
   return <ForfaitsPage />;
 }
+
+// NGOWAZULU standalone → portail LIRI (retrait Academy). Le Temple (/ngowazulu) était déjà
+// membre-only → redirection directe vers /liri/temple (en préservant la section). La Boutique
+// (/boutique-sacree) est publique → membre vers /liri/boutique, visiteur garde la page publique.
+function NgowazuluTempleRedirect() {
+  const { section } = useParams();
+  return <Navigate to={section ? `/liri/temple/${section}` : '/liri/temple'} replace />;
+}
+function BoutiqueGateRedirect() {
+  const { user, loading } = useAuth();
+  if (loading) return <div style={{ minHeight: '100vh', background: '#262624' }} />;
+  if (user) return <Navigate to="/liri/boutique" replace />;
+  return <BoutiquePage />;
+}
 // Le Montage post-prod appartient au STUDIO LIRI (dans le portail). L'ancienne route
 // /owner-dashboard/* résout le tenant et renvoie vers son domaine (ex. prorascience.org
 // = chrome ISNA Academy externe) → on redirige vers /studio, en préservant le contentId.
@@ -1998,7 +2012,8 @@ isLiriHostDevPreviewRoute;
           <Route path="/isna/produits/:slug" element={<Navigate to={TENANT_COURSES_PATH} replace />} /> {/* Legacy ISNA route - redirects to tenant system */}
           <Route path="/products" element={<ProductsPage />} />
           <Route path="/boutique" element={<MboloStorefrontPage />} />
-          <Route path="/boutique-sacree" element={<BoutiquePage />} />
+          {/* Boutique Sacrée : membre → /liri/boutique (portail) ; visiteur → page publique. */}
+          <Route path="/boutique-sacree" element={<BoutiqueGateRedirect />} />
           <Route path="/services-spirituels" element={<ServicesSpirituelsPage />} />
           <Route path="/product/:id" element={<ProductDetailPage />} />
           <Route path="/checkout-success" element={<CheckoutSuccessPage />} />
@@ -2224,16 +2239,9 @@ isLiriHostDevPreviewRoute;
               <NgowazuluIntakePage />
             </ProtectedRoute>
           } />
-          <Route path="/ngowazulu" element={
-            <ProtectedRoute>
-              <NgowazuluTemplePage />
-            </ProtectedRoute>
-          } />
-          <Route path="/ngowazulu/:section" element={
-            <ProtectedRoute>
-              <NgowazuluTemplePage />
-            </ProtectedRoute>
-          } />
+          {/* Temple Ngowazulu RETIRÉ du standalone → embarqué dans /liri/temple (portail LIRI). */}
+          <Route path="/ngowazulu" element={<NgowazuluTempleRedirect />} />
+          <Route path="/ngowazulu/:section" element={<NgowazuluTempleRedirect />} />
 
           {/* === STUDENT SCHOOL LIFE (AUTHENTICATED) === */}
 
