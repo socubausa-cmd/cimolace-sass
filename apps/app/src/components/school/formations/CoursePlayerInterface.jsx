@@ -1,6 +1,10 @@
-import React, { useState, useEffect, useMemo, useRef } from 'react';
+import React, { useState, useEffect, useMemo, useRef, lazy, Suspense } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import { DEFAULT_TENANT_SLUG } from '@/config/platform';
 import { useDataSync } from '@/contexts/DataSyncContext';
+
+// Précepteur OS — l'agent immersif Cimolace embarqué dans la leçon (chargé à la demande).
+const CimolaceCreationAgent = lazy(() => import('@/pages/CimolaceCreationAgent'));
 import { useAuth } from '@/contexts/SupabaseAuthContext';
 import { useBilling } from '@/contexts/BillingContext';
 import { supabase } from '@/lib/customSupabaseClient';
@@ -1385,11 +1389,11 @@ const SupabaseCoursePlayerContent = ({ formationId, onExit }) => {
 
                 <div className="flex-1 flex overflow-hidden relative" style={{ zIndex: 1 }}>
                   <div className="flex-1 flex flex-col overflow-y-auto">
-                    <div className="p-4 md:p-6 max-w-6xl mx-auto w-full">
+                    <div className="w-full">
                       {activePanel === 'video' ? (
                         <div className="space-y-6">
-                          {/* Vidéo FONDUE dans le fond immersif : halo or autour + vignette (inset) qui dissout les bords dans le noir — pas de cadre */}
-                          <div className="relative mx-auto w-full pt-2 md:pt-6" style={{ maxWidth: '1040px' }}>
+                          {/* Écran UNIQUE plein-bleed : la vidéo occupe tout l'espace, fondue dans le fond immersif (vignette inset), sans cadre ni carte flottante */}
+                          <div className="relative w-full">
                             {/* Bouton SmartBoard flottant — hors du container overflow-hidden, toujours visible en haut à droite de la vidéo */}
                             <button
                               type="button"
@@ -1423,8 +1427,8 @@ const SupabaseCoursePlayerContent = ({ formationId, onExit }) => {
                               <Sparkles size={12} />
                               SmartBoard
                             </button>
-                            <div className="pointer-events-none absolute -inset-12 -z-10 rounded-full" style={{ background: 'radial-gradient(ellipse at 50% 46%, rgba(217,119,87,0.17), rgba(8,8,11,0) 62%)', filter: 'blur(34px)' }} />
-                            <div className="relative overflow-hidden rounded-3xl" style={{ background: '#262624', boxShadow: '0 0 160px 60px rgba(217,119,87,0.10), 0 0 100px 30px rgba(217,119,87,0.07), 0 50px 120px rgba(0,0,0,0.5), inset 0 0 120px 48px #08080b' }}>
+                            <div className="pointer-events-none absolute -inset-24 -z-10" style={{ background: 'radial-gradient(ellipse at 50% 42%, rgba(217,119,87,0.12), rgba(8,8,11,0) 66%)', filter: 'blur(40px)' }} />
+                            <div className="relative overflow-hidden" style={{ background: '#262624', boxShadow: 'inset 0 0 160px 70px #08080b' }}>
                           <VideoPlayer
                             ref={videoPlayerRef}
                             video={currentVideoMemo}
@@ -2072,6 +2076,15 @@ const SupabaseCoursePlayerContent = ({ formationId, onExit }) => {
                         </div>
                       ) : null}
 
+                      {activePanel === 'precepteur' ? (
+                        <div className="w-full" style={{ height: 'calc(100vh - 132px)' }}>
+                          <Suspense fallback={<div className="h-full flex items-center justify-center text-[#82807a] text-sm">Chargement du Précepteur…</div>}>
+                            {/* OS Cimolace embarqué : agent immersif qui présente / explique le contenu (realm tenant). */}
+                            <CimolaceCreationAgent embedded tenantSlug={DEFAULT_TENANT_SLUG} />
+                          </Suspense>
+                        </div>
+                      ) : null}
+
                       {activePanel === 'presentation' ? (
                         <PowerPointViewer
                           powerpoint={currentDayPowerpoint}
@@ -2662,6 +2675,8 @@ const SupabaseCoursePlayerContent = ({ formationId, onExit }) => {
                   <div className="text-xs text-[#b0ada3] truncate">
                     {activePanel === 'video'
                       ? 'Vidéo'
+                      : activePanel === 'precepteur'
+                        ? 'Précepteur OS'
                       : activePanel === 'presentation'
                         ? 'Présentation'
                         : activePanel === 'quiz'
@@ -2680,6 +2695,14 @@ const SupabaseCoursePlayerContent = ({ formationId, onExit }) => {
                       className={activePanel === 'video' ? 'bg-white/10 text-white' : 'border-[rgba(245,244,238,0.09)] text-white hover:bg-white/5'}
                     >
                       Vidéo
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant={activePanel === 'precepteur' ? 'secondary' : 'outline'}
+                      onClick={() => setActivePanel('precepteur')}
+                      className={activePanel === 'precepteur' ? 'bg-[var(--school-accent)]/20 text-white border border-[var(--school-accent)]/40' : 'border-[rgba(245,244,238,0.09)] text-white hover:bg-white/5'}
+                    >
+                      <Sparkles size={13} className="mr-1.5" style={{ color: 'var(--school-accent)' }} /> Précepteur
                     </Button>
                     <Button
                       size="sm"

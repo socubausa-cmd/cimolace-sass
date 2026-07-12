@@ -102,13 +102,13 @@ const PowerPointViewer = ({ powerpoint, onComplete }) => {
     })();
 
     if (!iframeSrc) {
-      return <div className="p-4 text-center text-gray-500">Aucun contenu disponible</div>;
+      return <div className="p-4 text-center text-[#82807a]">Aucun contenu disponible</div>;
     }
 
     return (
       <div className="w-full space-y-3">
         <div className="flex items-center justify-between gap-3">
-          <div className="text-sm font-semibold text-gray-900 truncate">{powerpoint?.title || 'Support Gamma'}</div>
+          <div className="text-sm font-semibold text-[#f5f4ee] truncate">{powerpoint?.title || 'Support Gamma'}</div>
           <Button asChild variant="outline" size="sm" className="rounded-full">
             <a href={safe || iframeSrc} target="_blank" rel="noreferrer">
               Ouvrir
@@ -116,7 +116,7 @@ const PowerPointViewer = ({ powerpoint, onComplete }) => {
           </Button>
         </div>
 
-        <div className="w-full aspect-[16/9] bg-white rounded-2xl overflow-hidden border border-gray-200 shadow-[0_18px_60px_rgba(15,23,42,0.10)]">
+        <div className="w-full aspect-[16/9] bg-[#2b2926] rounded-2xl overflow-hidden border border-[rgba(245,244,238,0.09)] shadow-[0_18px_60px_rgba(0,0,0,0.45)]">
           <iframe
             src={iframeSrc}
             className="w-full h-full"
@@ -125,7 +125,7 @@ const PowerPointViewer = ({ powerpoint, onComplete }) => {
           />
         </div>
 
-        <div className="text-xs text-gray-500">
+        <div className="text-xs text-[#82807a]">
           Si Gamma bloque l'affichage ("n\'autorise pas la connexion"), utilise le bouton « Ouvrir ».
         </div>
       </div>
@@ -143,18 +143,18 @@ const PowerPointViewer = ({ powerpoint, onComplete }) => {
     const progressPct = slides.length > 1 ? (currentSlide / (slides.length - 1)) * 100 : 0;
 
     const containerClasses =
-      'rounded-2xl overflow-hidden border border-gray-200 bg-white text-gray-900 flex flex-col h-[560px] shadow-[0_20px_80px_rgba(15,23,42,0.12)]';
+      'rounded-2xl overflow-hidden border border-[rgba(245,244,238,0.09)] bg-[#2b2926] text-[#f5f4ee] flex flex-col h-[560px] shadow-[0_20px_80px_rgba(0,0,0,0.5)]';
 
     const headerBar = (
-      <div className="px-4 py-3 border-b border-gray-200 bg-white flex items-center gap-3">
+      <div className="px-4 py-3 border-b border-[rgba(245,244,238,0.09)] bg-[#2b2926] flex items-center gap-3">
         <div className="min-w-0 flex-1">
-          <div className="text-xs text-gray-500">Support</div>
+          <div className="text-xs text-[#82807a]">Support</div>
           <div className="text-sm font-semibold truncate">{powerpoint?.title || 'Présentation'}</div>
         </div>
 
         <div className="hidden sm:flex items-center gap-3">
-          <div className="text-xs text-gray-500">{currentSlide + 1}/{slides.length}</div>
-          <div className="w-40 h-1.5 rounded-full bg-gray-100 overflow-hidden">
+          <div className="text-xs text-[#82807a]">{currentSlide + 1}/{slides.length}</div>
+          <div className="w-40 h-1.5 rounded-full bg-[rgba(245,244,238,0.08)] overflow-hidden">
             <div className="h-full bg-[#d97757]" style={{ width: `${progressPct}%` }} />
           </div>
         </div>
@@ -163,7 +163,7 @@ const PowerPointViewer = ({ powerpoint, onComplete }) => {
           variant="outline"
           size="sm"
           onClick={() => setViewMode((v) => (v === 'split' ? 'focus' : 'split'))}
-          className="border-gray-200 bg-white hover:bg-gray-50 text-gray-900 rounded-full"
+          className="border-[rgba(245,244,238,0.09)] bg-[#2b2926] hover:bg-[rgba(245,244,238,0.06)] text-[#f5f4ee] rounded-full"
         >
           {viewMode === 'split' ? 'Focus' : 'Split'}
         </Button>
@@ -171,8 +171,8 @@ const PowerPointViewer = ({ powerpoint, onComplete }) => {
     );
 
     const controlsBar = (
-      <div className="px-4 py-3 flex items-center justify-between border-t border-gray-200 bg-white">
-        <div className="text-xs text-gray-500">Slide {currentSlide + 1} / {slides.length}</div>
+      <div className="px-4 py-3 flex items-center justify-between border-t border-[rgba(245,244,238,0.09)] bg-[#2b2926]">
+        <div className="text-xs text-[#82807a]">Slide {currentSlide + 1} / {slides.length}</div>
 
         <div className="flex items-center gap-2">
           <Button
@@ -180,7 +180,7 @@ const PowerPointViewer = ({ powerpoint, onComplete }) => {
             size="icon"
             onClick={() => goTo(currentSlide - 1)}
             disabled={currentSlide === 0}
-            className="border-gray-200 bg-white text-gray-900 hover:bg-gray-50 rounded-full"
+            className="border-[rgba(245,244,238,0.09)] bg-[#2b2926] text-[#f5f4ee] hover:bg-[rgba(245,244,238,0.06)] rounded-full"
           >
             <ChevronLeft className="h-4 w-4" />
           </Button>
@@ -189,7 +189,7 @@ const PowerPointViewer = ({ powerpoint, onComplete }) => {
             size="icon"
             onClick={() => goTo(currentSlide + 1)}
             disabled={currentSlide === slides.length - 1}
-            className="border-gray-200 bg-white text-gray-900 hover:bg-gray-50 rounded-full"
+            className="border-[rgba(245,244,238,0.09)] bg-[#2b2926] text-[#f5f4ee] hover:bg-[rgba(245,244,238,0.06)] rounded-full"
           >
             <ChevronRight className="h-4 w-4" />
           </Button>
@@ -201,7 +201,7 @@ const PowerPointViewer = ({ powerpoint, onComplete }) => {
           </Button>
         ) : (
           <div className="flex items-center gap-2">
-            <Button variant="ghost" size="icon" className="text-gray-500 hover:text-gray-900 hover:bg-gray-50 rounded-full">
+            <Button variant="ghost" size="icon" className="text-[#82807a] hover:text-[#f5f4ee] hover:bg-[rgba(245,244,238,0.06)] rounded-full">
               <Maximize className="h-4 w-4" />
             </Button>
           </div>
@@ -214,10 +214,10 @@ const PowerPointViewer = ({ powerpoint, onComplete }) => {
         {headerBar}
         <div className={viewMode === 'split' ? 'flex-1 grid grid-cols-12 min-h-0' : 'flex-1 min-h-0'}>
           {viewMode === 'split' ? (
-            <div className="col-span-4 min-h-0 border-r border-gray-200 bg-gray-50/60">
+            <div className="col-span-4 min-h-0 border-r border-[rgba(245,244,238,0.09)] bg-[rgba(245,244,238,0.04)]">
               <div className="px-3 pt-3">
-                <div className="text-xs font-semibold text-gray-700">Sommaire</div>
-                <div className="text-[11px] text-gray-500 mt-1">Clique pour naviguer</div>
+                <div className="text-xs font-semibold text-[#cfccc3]">Sommaire</div>
+                <div className="text-[11px] text-[#82807a] mt-1">Clique pour naviguer</div>
               </div>
               <div className="overflow-y-auto h-full px-3 pb-3 pt-3 space-y-2">
                 {slides.map((s, idx) => (
@@ -228,21 +228,21 @@ const PowerPointViewer = ({ powerpoint, onComplete }) => {
                     whileHover={{ y: -1 }}
                     className={
                       idx === currentSlide
-                        ? 'w-full text-left rounded-xl border border-gray-200 bg-white shadow-[0_12px_30px_rgba(15,23,42,0.10)] p-3'
-                        : 'w-full text-left rounded-xl border border-transparent bg-transparent hover:border-gray-200 hover:bg-white p-3'
+                        ? 'w-full text-left rounded-xl border border-[rgba(245,244,238,0.09)] bg-[#2b2926] shadow-[0_12px_30px_rgba(0,0,0,0.45)] p-3'
+                        : 'w-full text-left rounded-xl border border-transparent bg-transparent hover:border-[rgba(245,244,238,0.12)] hover:bg-[rgba(245,244,238,0.05)] p-3'
                     }
                   >
                     <div className="flex items-start gap-3">
-                      <div className={idx === currentSlide ? 'mt-0.5 h-2.5 w-2.5 rounded-full bg-[#d97757] shadow-[0_0_0_4px_rgba(217,119,87,0.18)]' : 'mt-0.5 h-2.5 w-2.5 rounded-full bg-gray-300'} />
+                      <div className={idx === currentSlide ? 'mt-0.5 h-2.5 w-2.5 rounded-full bg-[#d97757] shadow-[0_0_0_4px_rgba(217,119,87,0.18)]' : 'mt-0.5 h-2.5 w-2.5 rounded-full bg-[#4a4844]'} />
                       <div className="min-w-0 flex-1">
                         <div className="flex items-center justify-between gap-2">
-                          <div className="text-[11px] font-semibold text-gray-500">Slide {idx + 1}</div>
+                          <div className="text-[11px] font-semibold text-[#82807a]">Slide {idx + 1}</div>
                           {idx === currentSlide ? (
                             <div className="text-[11px] font-semibold text-[#d97757]">Actif</div>
                           ) : null}
                         </div>
-                        <div className="text-sm font-semibold text-gray-900 line-clamp-1 mt-0.5">{s.title || `Slide ${idx + 1}`}</div>
-                        <div className="text-xs text-gray-600 mt-1 line-clamp-2">{previewText(s.content)}</div>
+                        <div className="text-sm font-semibold text-[#f5f4ee] line-clamp-1 mt-0.5">{s.title || `Slide ${idx + 1}`}</div>
+                        <div className="text-xs text-[#b0ada3] mt-1 line-clamp-2">{previewText(s.content)}</div>
                       </div>
                     </div>
                   </motion.button>
@@ -252,7 +252,7 @@ const PowerPointViewer = ({ powerpoint, onComplete }) => {
           ) : null}
 
           <div className={viewMode === 'split' ? 'col-span-8 min-h-0' : 'min-h-0'}>
-            <div className="h-full overflow-hidden bg-white">
+            <div className="h-full overflow-hidden bg-[#2b2926]">
               <AnimatePresence mode="wait" initial={false}>
                 <motion.div
                   key={currentSlide}
@@ -267,12 +267,12 @@ const PowerPointViewer = ({ powerpoint, onComplete }) => {
                   }
                 >
                   <div className="w-full max-w-3xl">
-                    <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-gray-200 bg-gray-50 text-xs text-gray-600 mb-5">
+                    <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-[rgba(245,244,238,0.09)] bg-[rgba(245,244,238,0.05)] text-xs text-[#b0ada3] mb-5">
                       <span className="text-[#d97757] font-semibold">Slide</span>
                       <span>{currentSlide + 1}</span>
                     </div>
-                    <h2 className="text-3xl font-bold mb-6 text-gray-900">{slide.title}</h2>
-                    <SafeHtml className="prose max-w-none text-lg text-gray-700" html={slide.content} />
+                    <h2 className="text-3xl font-bold mb-6 text-[#f5f4ee]">{slide.title}</h2>
+                    <SafeHtml className="prose prose-invert max-w-none text-lg text-[#cfccc3]" html={slide.content} />
                     {slide.image ? (
                       <img src={slide.image} alt="Slide visual" className="mt-6 max-h-64 object-contain mx-auto" />
                     ) : null}
@@ -288,7 +288,7 @@ const PowerPointViewer = ({ powerpoint, onComplete }) => {
     );
   }
 
-  return <div className="p-4 text-center text-gray-500">Aucun contenu disponible</div>;
+  return <div className="p-4 text-center text-[#82807a]">Aucun contenu disponible</div>;
 };
 
 export default PowerPointViewer;

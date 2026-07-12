@@ -1402,7 +1402,7 @@ function TutorialFlow({ scene, onCta, hooks, onHook }) {
   );
 }
 
-export default function CimolaceCreationAgent({ tenantSlug: tenantSlugProp = null } = {}) {
+export default function CimolaceCreationAgent({ tenantSlug: tenantSlugProp = null, embedded = false } = {}) {
   const navigate = useNavigate();
   const { login } = useAuth();
 
@@ -2373,7 +2373,8 @@ export default function CimolaceCreationAgent({ tenantSlug: tenantSlugProp = nul
       onClick={onRootClick}
       className={inputOpen ? 'cca-input-open' : undefined}
       style={{
-        minHeight: '100vh', background: bg, transition: 'background .8s ease',
+        minHeight: embedded ? '100%' : '100vh', height: embedded ? '100%' : undefined,
+        background: bg, transition: 'background .8s ease',
         display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
         position: 'relative', overflow: 'hidden', padding: '0 24px',
         fontFamily: "'Inter', system-ui, sans-serif", cursor: inputOpen || !inputAllowed ? 'default' : 'text',
@@ -2384,7 +2385,7 @@ export default function CimolaceCreationAgent({ tenantSlug: tenantSlugProp = nul
 
       {/* SEO du realm fondateur (prorascience.org) — titre/description/OG/JSON-LD propres, sans « LIRI ».
          Ne monte QUE dans le realm tenant : le realm Cimolace (app.cimolace.space) garde son <head> par défaut. */}
-      {tenantSeo && (
+      {!embedded && tenantSeo && (
         <SEO
           title={tenantSeo.title}
           siteName={tenantSeo.siteName}
