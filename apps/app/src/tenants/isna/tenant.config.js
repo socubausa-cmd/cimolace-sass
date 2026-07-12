@@ -46,7 +46,11 @@ export const isnaTenantConfig = {
     logo: '/prorascience-logo-2.jpeg',
     primaryColor: '#1a5f7a',
     secondaryColor: '#2c3e50',
-    accentColor: '#D4AF37',
+    // Accent de marque ALIGNÉ sur le site immersif (prorascience.org, agent OS) : coral
+    // chaud au lieu de l'or historique, pour un funnel cohérent (le vitrine + le header
+    // partagé lisent cet accent via --school-accent, résolu par l'hôte dans main.tsx).
+    // Tenant-scopé : les autres tenants gardent LEUR accent (aucune fuite cross-tenant).
+    accentColor: '#d97757',
     backgroundColor: '#f8f9fa',
     domain: 'isna.pro',
     /** Origine publique canonique (Helmet, OG, JSON-LD vitrine). `domain` reste l'hôte applicatif / e-mail. */
