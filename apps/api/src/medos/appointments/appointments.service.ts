@@ -798,7 +798,8 @@ export class AppointmentsService {
         teacher_id: hostUserId,
         title: plan.label || 'Masterclass',
         price_cents: plan.price_cents ?? 0,
-        scheduled_at: plan.metadata?.scheduled_at ?? null,
+        // scheduled_at est NOT NULL en base : défaut = maintenant (l'hôte lance le direct).
+        scheduled_at: plan.metadata?.scheduled_at || new Date().toISOString(),
         status: 'scheduled',
       })
       .select('id, status, started_at, scheduled_at, title, host_user_id')
