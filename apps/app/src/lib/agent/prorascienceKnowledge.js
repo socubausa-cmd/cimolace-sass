@@ -119,6 +119,34 @@ export const PRORASCIENCE_KNOWLEDGE = {
     { term: 'transmetteur', def: "Enseignant-guide de l’ISNA qui transmet les savoirs et accompagne chaque étudiant à travers le monde." },
     { term: 'Mentorat', def: "Le plus haut palier d’accompagnement : mentorat direct, cas complexes et secrets avancés." },
   ],
+
+  // TEMPLE — le « Pôle Ngowazulu » de Prorascience (dimension mystique/spirituelle, distincte de
+  // l’école). L’agent OS s’en sert pour PRÉSENTER le temple aux visiteurs (consultations, cultes,
+  // boutique sacrée, mentorat « veille patrimoniale »). Tables ngowazulu_* portées en base.
+  temple: {
+    name: "Le Temple Ngowazulu",
+    tagline: "Le Pôle Temple de Prorascience — transformation, intervention et guérison.",
+    raison: "Transformer ce que vous ne pouviez pas résoudre seul : une prise en charge sérieuse des blocages profonds, avec méthode, confidentialité et responsabilité.",
+    master: "5ᵉ Manikongo (Badika Jel David), sous le sacerdoce du Génie Kimbangu.",
+    sections: [
+      { title: "Culte en ligne", desc: "Ouverture dominicale et fermeture du vendredi pour les membres." },
+      { title: "Consultations", desc: "Diagnostic, orientation et résolution des cas spirituels." },
+      { title: "Interventions mystiques", desc: "Délivrance, purification et rupture karmique selon le cas." },
+      { title: "Hôpital traditionnel", desc: "Prise en charge profonde des cas lourds et suivi d'évolution." },
+      { title: "Voyages initiatiques", desc: "Rites de passage, débaptisation et sortie des anciens pactes." },
+      { title: "Communauté Ngowazulu", desc: "Membres actifs, entraide structurée et accompagnement collectif." },
+    ],
+    services: [
+      { name: "Consultation privée", price: "50 €", suffix: "/90 min" },
+      { name: "Mentorat Essentiel", price: "55 €", suffix: "/mois · 1 rencontre/mois" },
+      { name: "Mentorat Confort", price: "180 €", suffix: "/mois · 1 rencontre/semaine" },
+      { name: "Mentorat Intensif", price: "300 €", suffix: "/mois · 2 rencontres/semaine" },
+      { name: "Mentorat Souverain", price: "500 €", suffix: "/mois · jusqu'à 3 rencontres/semaine" },
+      { name: "Boutique Sacrée (pack)", price: "700 €", suffix: "· 9 objets rituels, activation + suivi 3 mois" },
+    ],
+    boutique: ["Savon NVOURIMPARA", "Huile BUMBALOWAH", "Poudre MPEVELO", "Poudre ZAZI", "Bougie IMBONGA", "Cloche Sacrée", "Séguelebélé", "Saquet et Manadrome", "Poudre de Souhaits"],
+    policy: "Entrée encadrée : paiement d'ouverture + formulaire + serment de confidentialité et disclaimer médical + 3 pièces (photo, identité, preuve d'habitation). Gouvernance : le secrétariat qualifie et suit l'administratif ; le maître donne l'orientation et le protocole spirituel. Confidentialité stricte.",
+  },
 };
 
 // Sérialise la connaissance en TEXTE compact pour le system prompt du cerveau (borne le périmètre).
@@ -133,6 +161,14 @@ export function prorascienceKnowledgeText(k = PRORASCIENCE_KNOWLEDGE) {
   lines.push(`NAVIGATION DU SITE : ${k.navigation.join(', ')}.`);
   lines.push(`FAQ : ${k.faq.map((f) => `Q:${f.q} R:${f.a}`).join(' | ')}.`);
   lines.push(`CHIFFRES : ${k.identity.stats.map((s) => `${s.value} ${s.label}`).join(', ')}.`);
+  if (k.temple) {
+    const t = k.temple;
+    lines.push(`TEMPLE (Pôle Ngowazulu) : ${t.tagline} ${t.raison} Maître : ${t.master}`);
+    lines.push(`TEMPLE — SECTIONS : ${(t.sections || []).map((s) => `${s.title} (${s.desc})`).join(' ; ')}.`);
+    lines.push(`TEMPLE — SERVICES : ${(t.services || []).map((s) => `${s.name} ${s.price}${s.suffix ? ' ' + s.suffix : ''}`).join(' ; ')}.`);
+    if (t.boutique) lines.push(`TEMPLE — BOUTIQUE SACRÉE (pack indivisible) : ${t.boutique.join(', ')}.`);
+    if (t.policy) lines.push(`TEMPLE — POLITIQUE : ${t.policy}`);
+  }
   return lines.join('\n');
 }
 
