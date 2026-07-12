@@ -11,69 +11,69 @@ import { getActiveTenantBranding } from '@/lib/tenant/activeBranding';
 const libraryPageTitle = () => `Bibliothèque ${getActiveTenantBranding().name}`;
 
 /**
- * Catalogue de la bibliothèque ISNA — ouvrages du programme fondamental.
- * Les contenus (chapitres) sont en cours de rédaction par l'institut : les ouvrages
- * sont présentés en « à venir » (comingSoon) tant que le contenu n'est pas publié.
+ * Catalogue de la bibliothèque Prorascience — le corpus du 5ᵉ Manikongo (Ngowazulu).
+ * Ces 4 ouvrages sont RÉELLEMENT LISIBLES en plein texte : chaque carte ouvre le lecteur
+ * intégré (/liri/bibliotheque/:bookId → LiriBookReaderPage → FondDeToutPage, etc.).
  */
 const books = [
   {
-    id: 'fondements-tajwid',
-    title: 'Les Fondements du Tajwîd',
-    subtitle: 'Niveau 1',
-    description: "Les règles essentielles de la récitation : points d'articulation (makharij), Noûn Sâkinah et Tanwîn, les Madd et les attributs des lettres.",
-    category: 'Tajwîd',
-    serie: 'Programme fondamental',
-    chapters: 8,
+    id: 'fond-de-tout',
+    title: 'Fond de Tout — Livre I',
+    subtitle: 'Ontologie',
+    description: "Livre I de la Prorascience par le 5ᵉ Manikongo — l'ontologie fondamentale : la racine de tout ce qui est et la structure première du réel.",
+    category: 'Ontologie',
+    serie: 'Corpus Prorascience',
+    chapters: 7,
     color: 'gold',
     icon: BookOpen,
-    tags: ['Makharij', 'Noûn Sâkinah', 'Madd', 'Sifât'],
-    status: 'En préparation',
-    comingSoon: true,
+    tags: ['Ontologie', 'Métaphysique', 'Manikongo'],
+    status: 'Disponible',
+    comingSoon: false,
     order: 1,
   },
   {
-    id: 'sciences-coran',
-    title: 'Introduction aux Sciences du Coran',
-    subtitle: 'Niveau 1',
-    description: "ʿUlûm al-Qurʾân : la révélation, les causes de descente (asbâb an-nuzûl), la compilation et les premières clés de compréhension du texte.",
-    category: 'Sciences du Coran',
-    serie: 'Programme fondamental',
-    chapters: 6,
+    id: 'dialogue-physique',
+    title: 'Dialogue Physique',
+    subtitle: 'Physique & conscience',
+    description: "Un dialogue entre la matière et la conscience — la lecture prorascientifique du réel physique et de ses lois profondes.",
+    category: 'Physique',
+    serie: 'Corpus Prorascience',
+    chapters: 10,
     color: 'gold',
     icon: ScrollText,
-    tags: ['Asbâb an-nuzûl', 'Révélation', 'Compilation', 'Tafsîr'],
-    status: 'En préparation',
-    comingSoon: true,
+    tags: ['Physique', 'Conscience', 'Dialogue'],
+    status: 'Disponible',
+    comingSoon: false,
     order: 2,
   },
   {
-    id: 'fiqh-adorations',
-    title: 'Fiqh des Adorations',
-    subtitle: 'Niveau 1',
-    description: "Purification, prière, jeûne et zakât : les piliers pratiques de l'adoration expliqués pas à pas, avec leurs conditions et obligations.",
-    category: 'Fiqh',
-    serie: 'Programme fondamental',
+    id: 'ontodynamique',
+    title: 'Ontodynamique',
+    subtitle: "Dynamique de l'être",
+    description: "La dynamique de l'être : mouvement, transformation et forces à l'œuvre dans l'existence, selon la Prorascience.",
+    category: 'Métaphysique',
+    serie: 'Corpus Prorascience',
     chapters: 7,
     color: 'gold',
     icon: BookMarked,
-    tags: ['Tahâra', 'Salât', 'Sawm', 'Zakât'],
-    status: 'En préparation',
-    comingSoon: true,
+    tags: ['Être', 'Dynamique', 'Transformation'],
+    status: 'Disponible',
+    comingSoon: false,
     order: 3,
   },
   {
-    id: 'grammaire-arabe',
-    title: 'Grammaire Arabe Fondamentale',
-    subtitle: 'Niveau 1',
-    description: "Les bases de la langue : phrase nominale et verbale, la déclinaison (iʿrâb), la conjugaison et les premières lectures guidées.",
-    category: 'Langue arabe',
-    serie: 'Programme fondamental',
-    chapters: 9,
+    id: 'manuel-initiatique-bris-de-sort',
+    title: 'Manuel Initiatique — Bris de Sort',
+    subtitle: 'Initiation',
+    description: "Transmission du 5ᵉ Manikongo (Ngowazulu) — 8 chapitres d'initiation : protection, dénouement et bris de sort.",
+    category: 'Initiation',
+    serie: 'Corpus Prorascience',
+    chapters: 8,
     color: 'gold',
     icon: GraduationCap,
-    tags: ['Nahw', 'Sarf', 'Jumla', 'Iʿrâb'],
-    status: 'En préparation',
-    comingSoon: true,
+    tags: ['Initiation', 'Protection', 'Bris de sort'],
+    status: 'Disponible',
+    comingSoon: false,
     order: 4,
   },
 ];
@@ -96,7 +96,9 @@ const BookCard = ({ book, viewMode, embedded = false }) => {
   const c = colorMap[book.color] || colorMap.gold;
   const Icon = book.icon;
   const soon = book.comingSoon;
-  const to = embedded ? `/student-school-life/bibliotheque/${book.id}` : `/bibliotheque/${book.id}`;
+  // Portail LIRI (embedded) → lecteur intégré /liri/bibliotheque/:bookId (LiriBookReaderPage).
+  // Hors portail → route lecteur publique /bibliotheque/:bookId.
+  const to = embedded ? `/liri/bibliotheque/${book.id}` : `/bibliotheque/${book.id}`;
   const Wrapper = soon ? 'div' : Link;
   const wp = soon ? {} : { to };
 
@@ -258,17 +260,16 @@ const BibliothequePage = ({ embedded = false }) => {
         <div className="space-y-3">
           {[...books].sort((a, b) => a.order - b.order).map((book, i) => {
             const c = colorMap[book.color] || colorMap.gold;
-            const Icon = book.icon;
+            const to = embedded ? `/liri/bibliotheque/${book.id}` : `/bibliotheque/${book.id}`;
             return (
-              <div key={book.id} className="flex items-center gap-4 p-3 rounded-xl">
+              <Link key={book.id} to={to} className="group flex items-center gap-4 p-3 rounded-xl transition-colors hover:bg-white/[0.03]">
                 <div className={`w-9 h-9 rounded-lg ${c.bg} ${c.border} border flex items-center justify-center shrink-0`}><span className={`text-sm font-bold ${c.text}`}>{i + 1}</span></div>
                 <div className="flex-1 min-w-0">
-                  <h3 className="text-sm font-bold text-white">{book.title}</h3>
+                  <h3 className="text-sm font-bold text-white transition-colors group-hover:text-[var(--school-accent)]">{book.title}</h3>
                   <p className="text-xs text-gray-500 truncate">{book.subtitle} — {book.chapters} chapitres</p>
                 </div>
-                <span className="text-[10px] px-2 py-0.5 rounded-full bg-white/5 text-gray-300 border border-white/10 font-bold">Bientôt</span>
-                <Icon className={`w-4 h-4 ${c.text} opacity-50`} />
-              </div>
+                <span className="text-xs font-bold text-[var(--school-accent)] flex items-center gap-1 transition-all group-hover:gap-2">Lire <ArrowRight className="w-3 h-3" /></span>
+              </Link>
             );
           })}
         </div>
@@ -286,7 +287,7 @@ const BibliothequePage = ({ embedded = false }) => {
           </div>
           <div>
             <h1 className="text-2xl font-serif font-bold text-white">{libraryPageTitle()}</h1>
-            <p className="text-gray-400 text-sm">{books.length} ouvrages — {books.reduce((s, b) => s + b.chapters, 0)} chapitres · programme fondamental</p>
+            <p className="text-gray-400 text-sm">{books.length} ouvrages — {books.reduce((s, b) => s + b.chapters, 0)} chapitres · corpus Prorascience</p>
           </div>
         </div>
         <div className="max-w-5xl mx-auto px-0 mb-8"><Filters /></div>
@@ -299,7 +300,7 @@ const BibliothequePage = ({ embedded = false }) => {
     <div className="min-h-screen bg-[#18130f] text-white">
       <SEO
         title={libraryPageTitle()}
-        description={`Bibliothèque ${getActiveTenantBranding().name} : ouvrages du programme fondamental — Tajwîd, Sciences du Coran, Fiqh et Langue arabe.`}
+        description={`Bibliothèque ${getActiveTenantBranding().name} : le corpus de la Prorascience — Fond de Tout, Dialogue Physique, Ontodynamique et Manuel Initiatique.`}
       />
       <section className="relative py-24 md:py-32 px-6 overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-b from-[#18130f] via-[#2b2219]/40 to-[#18130f]" />
@@ -309,10 +310,10 @@ const BibliothequePage = ({ embedded = false }) => {
             <Library className="w-4 h-4" /> {libraryPageTitle()}
           </span>
           <h1 className="text-4xl md:text-5xl lg:text-6xl font-serif font-bold text-white leading-tight">
-            Les ouvrages du<br /><span className="text-transparent bg-clip-text bg-gradient-to-r from-[var(--school-accent)] via-yellow-400 to-[var(--school-accent)]">programme</span>
+            Le corpus de la<br /><span className="text-[var(--school-accent)]">Prorascience</span>
           </h1>
           <p className="text-gray-400 text-lg max-w-xl mx-auto">
-            {`Tajwîd, Sciences du Coran, Fiqh et Langue arabe — la bibliothèque ${getActiveTenantBranding().name}.`}
+            {`Ontologie, physique, ontodynamique et initiation — la bibliothèque ${getActiveTenantBranding().name}.`}
           </p>
           <div className="flex items-center justify-center gap-6 text-sm text-gray-500">
             <span className="flex items-center gap-1.5"><BookOpen className="w-4 h-4 text-[var(--school-accent)]" /> <strong className="text-white">{books.length}</strong> ouvrages</span>
