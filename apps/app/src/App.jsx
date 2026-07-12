@@ -2519,7 +2519,7 @@ isLiriHostDevPreviewRoute;
           <Route path="/doctrine" element={<TenantVitrinePage slug={DEFAULT_TENANT_SLUG} page="doctrine" />} />
           {/* Academy RETIRÉ (login/signup) : l'accès membre passe par le portail LIRI (/login → /liri).
              Sur domaine custom (ex. prorascience.org) /login résout le tenant par le host. */}
-          <Route path="/t/:tenantSlug/login" element={<Navigate to="/login" replace />} />
+          <Route path="/t/:tenantSlug/login" element={<Navigate to="/liri" replace />} />
           <Route path="/t/:tenantSlug/signup" element={<Navigate to="/signup" replace />} />
           <Route
             path="/t/:tenantSlug/auth/callback"
