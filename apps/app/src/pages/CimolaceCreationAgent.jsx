@@ -291,6 +291,20 @@ function forfaitsPlanQuery(target) {
   return key ? `?plan=${encodeURIComponent(key)}` : '';
 }
 
+// Descriptions courtes des intentions d'accueil (liste « Explorez » épurée). Robuste aux
+// variations de libellé (match par mots-clés sur intent+label) — data-driven, réutilisable.
+function exploreDesc(a) {
+  const s = `${(a && a.intent) || ''} ${(a && a.label) || ''}`.toLowerCase();
+  if (/forfait|prix|tarif|offre/.test(s)) return 'Choisissez le forfait adapté à vos besoins.';
+  if (/mission/.test(s)) return "Comprendre notre engagement et notre raison d'être.";
+  if (/vision/.test(s)) return "Explorer notre vision pour aujourd'hui et pour demain.";
+  if (/fondateur|manikongo|recteur/.test(s)) return "Découvrez l'histoire et l'engagement de notre fondateur.";
+  if (/contact|question|parler/.test(s)) return 'Une question ? Parlons-en, nous sommes là pour vous.';
+  if (/temple|ngowazulu|spirit|consultation/.test(s)) return 'Le pôle temple : consultations, cultes et accompagnement.';
+  if (/qu'?est|c'?est quoi|comprendre|approche|découvrir|présent/.test(s)) return 'Découvrez notre approche, nos valeurs et notre univers.';
+  return 'En savoir plus.';
+}
+
 // STYLE importé depuis @/lib/agent/immersiveTheme (coque partagée)
 
 // ── Croquis « Précepteur » — se dessinent seuls (stroke-dashoffset), un par sujet ──
@@ -2535,43 +2549,72 @@ export default function CimolaceCreationAgent({ tenantSlug: tenantSlugProp = nul
         </div>
       )}
 
-      {/* Realm tenant — ACCUEIL ÉDITORIAL : eyebrow + grand nom serif (Cormorant) + filet losange + corps */}
+      {/* Realm tenant — ACCUEIL ÉDITORIAL ÉPURÉ : DEUX COLONNES (héros à gauche + liste « Explorez »
+          à droite avec descriptions). Empile en une colonne < 860px. Remplace la grille de chips
+          (jugée trop chargée). L'engagé garde la grille d'intentions/actions classique plus bas. */}
       {showTenantHero && (
-        <div className="cca-in" style={{ textAlign: 'center', marginTop: 14, maxWidth: 680, position: 'relative', zIndex: 4, padding: '0 20px' }}>
-          <div className="cca-display" style={{ fontSize: 13, letterSpacing: '.34em', textTransform: 'uppercase', color: TERRA, fontWeight: 600, marginBottom: 4 }}>
-            Bienvenue sur
+        <div className="cca-in cca-accueil2" style={{ display: 'flex', gap: 'clamp(28px, 5vw, 72px)', alignItems: 'center', width: '100%', maxWidth: 1080, margin: '10px auto 0', padding: '0 28px', boxSizing: 'border-box', position: 'relative', zIndex: 4, textAlign: 'left' }}>
+          <style>{`
+            @media (max-width: 860px) {
+              .cca-accueil2 { flex-direction: column !important; align-items: stretch !important; gap: 30px !important; }
+              .cca-accueil2 .cca-acc-hero { text-align: center !important; align-items: center !important; }
+              .cca-accueil2 .cca-acc-hero .cca-acc-cta { align-items: center !important; }
+              .cca-accueil2 .cca-acc-rule { margin-left: auto !important; margin-right: auto !important; }
+            }
+          `}</style>
+
+          {/* GAUCHE — le héros éditorial */}
+          <div className="cca-acc-hero" style={{ flex: '1 1 46%', minWidth: 0, display: 'flex', flexDirection: 'column' }}>
+            <div className="cca-display" style={{ fontSize: 13, letterSpacing: '.34em', textTransform: 'uppercase', color: TERRA, fontWeight: 600, marginBottom: 6 }}>Bienvenue sur</div>
+            <h1 className="cca-display" style={{ fontWeight: 600, fontSize: 'clamp(44px, 6vw, 82px)', lineHeight: 1.02, letterSpacing: '-0.005em', color: INK, margin: 0, textWrap: 'balance' }}>{tenantName}</h1>
+            <div className="cca-acc-rule" style={{ display: 'flex', alignItems: 'center', gap: 12, margin: '18px 0 16px', width: 200 }}>
+              <span style={{ height: 1, flex: 1, background: 'linear-gradient(90deg, rgba(217,119,87,.5), transparent)' }} />
+              <span style={{ width: 7, height: 7, transform: 'rotate(45deg)', background: TERRA, borderRadius: 1, opacity: 0.9, flexShrink: 0 }} />
+              <span style={{ height: 1, flex: 1, background: 'linear-gradient(90deg, rgba(217,119,87,.5), transparent)' }} />
+            </div>
+            <p className="cca-display" style={{ fontSize: 'clamp(18px, 2vw, 23px)', lineHeight: 1.42, color: 'rgba(244,239,230,.9)', margin: 0, maxWidth: 460, textWrap: 'balance' }}>
+              Je suis votre guide — je connais tout {tenantName}. Que souhaitez-vous découvrir ?
+            </p>
+            <div className="cca-acc-cta" style={{ marginTop: 26, display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: 14 }}>
+              <button type="button" onClick={(e) => { e.stopPropagation(); goToSignup(); }}
+                style={{ display: 'inline-flex', alignItems: 'center', gap: 9, padding: '13px 28px', borderRadius: 999, border: 'none', cursor: 'pointer', fontFamily: 'inherit', fontSize: 15, fontWeight: 600, color: '#1c1a17', background: TERRA, boxShadow: '0 14px 36px rgba(217,119,87,.34)' }}
+                onMouseEnter={(e) => { e.currentTarget.style.filter = 'brightness(1.06)'; }}
+                onMouseLeave={(e) => { e.currentTarget.style.filter = 'none'; }}>
+                Créer un compte
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><line x1="5" y1="12" x2="19" y2="12" /><polyline points="12 5 19 12 12 19" /></svg>
+              </button>
+              <button type="button" onClick={(e) => { e.stopPropagation(); goToSpace(); }}
+                style={{ background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'inherit', fontSize: 13.5, color: 'rgba(244,239,230,.5)', display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+                Déjà membre ? <span style={{ color: GOLD, fontWeight: 500 }}>Accéder à mon espace →</span>
+              </button>
+              <button type="button" onClick={(e) => { e.stopPropagation(); startTenantTour(); }}
+                style={{ background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'inherit', fontSize: 13.5, color: 'rgba(244,239,230,.55)', display: 'inline-flex', alignItems: 'center', gap: 7, marginTop: 2 }}>
+                <Compass size={15} style={{ color: TERRA, flexShrink: 0 }} /> Ou laissez-vous guider — <span style={{ color: GOLD }}>Fais-moi visiter →</span>
+              </button>
+            </div>
           </div>
-          <h1 className="cca-display" style={{ fontWeight: 600, fontSize: 'clamp(46px, 8.5vw, 90px)', lineHeight: 1.02, letterSpacing: '-0.005em', color: INK, margin: 0, textWrap: 'balance' }}>
-            {tenantName}
-          </h1>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 12, margin: '18px auto 16px', width: 220 }}>
-            <span style={{ height: 1, flex: 1, background: 'linear-gradient(90deg, transparent, rgba(217,119,87,.5))' }} />
-            <span style={{ width: 7, height: 7, transform: 'rotate(45deg)', background: TERRA, borderRadius: 1, opacity: 0.9, flexShrink: 0 }} />
-            <span style={{ height: 1, flex: 1, background: 'linear-gradient(90deg, rgba(217,119,87,.5), transparent)' }} />
-          </div>
-          <p className="cca-display" style={{ fontSize: 'clamp(19px, 2.3vw, 25px)', lineHeight: 1.42, color: 'rgba(244,239,230,.9)', margin: '0 auto', maxWidth: 500, textWrap: 'balance' }}>
-            Je suis votre guide — je connais tout {tenantName}. Que souhaitez-vous découvrir ?
-          </p>
-          <div style={{ marginTop: 26, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 13 }}>
-            {/* NOUVEAU visiteur → création de compte (rattaché au tenant par le host) */}
-            <button
-              type="button"
-              onClick={(e) => { e.stopPropagation(); goToSignup(); }}
-              style={{ display: 'inline-flex', alignItems: 'center', gap: 9, padding: '13px 28px', borderRadius: 999, border: 'none', cursor: 'pointer', fontFamily: 'inherit', fontSize: 15, fontWeight: 600, color: '#1c1a17', background: TERRA, boxShadow: '0 14px 36px rgba(217,119,87,.34)' }}
-              onMouseEnter={(e) => { e.currentTarget.style.filter = 'brightness(1.06)'; }}
-              onMouseLeave={(e) => { e.currentTarget.style.filter = 'none'; }}
-            >
-              Créer un compte
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><line x1="5" y1="12" x2="19" y2="12" /><polyline points="12 5 19 12 12 19" /></svg>
-            </button>
-            {/* Membre existant → son espace LIRI */}
-            <button
-              type="button"
-              onClick={(e) => { e.stopPropagation(); goToSpace(); }}
-              style={{ background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'inherit', fontSize: 13.5, color: 'rgba(244,239,230,.5)', display: 'inline-flex', alignItems: 'center', gap: 6 }}
-            >
-              Déjà membre ? <span style={{ color: GOLD, fontWeight: 500 }}>Accéder à mon espace →</span>
-            </button>
+
+          {/* DROITE — « Explorez » : liste épurée (icône + titre + description + flèche) */}
+          <div className="cca-acc-explore" style={{ flex: '1 1 54%', minWidth: 0, display: 'flex', flexDirection: 'column' }}>
+            <div style={{ fontSize: 12, letterSpacing: '.22em', textTransform: 'uppercase', color: TERRA, fontWeight: 600, marginBottom: 4 }}>Explorez {tenantName}</div>
+            <div style={{ display: 'flex', flexDirection: 'column' }}>
+              {(vnpGraph ? vnpGraph.accueil.filter((a) => a.intent !== 'visiter') : []).slice(0, 6).map((a, i, arr) => {
+                const Icon = chipIconFor(a.label);
+                return (
+                  <button key={a.label} onClick={(e) => { e.stopPropagation(); if (a.nodeId) vnpOpenNode(a.nodeId); else vnpChat(a.label); }}
+                    style={{ display: 'flex', alignItems: 'center', gap: 14, padding: '15px 6px', background: 'none', border: 'none', borderBottom: i < arr.length - 1 ? '1px solid rgba(244,239,230,.09)' : 'none', cursor: 'pointer', fontFamily: 'inherit', textAlign: 'left', width: '100%', borderRadius: 8 }}
+                    onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(244,239,230,.035)'; }}
+                    onMouseLeave={(e) => { e.currentTarget.style.background = 'none'; }}>
+                    <Icon size={19} style={{ color: GOLD, flexShrink: 0 }} />
+                    <span style={{ flex: 1, minWidth: 0 }}>
+                      <span style={{ display: 'block', fontSize: 15.5, fontWeight: 600, color: INK }}>{a.label}</span>
+                      <span style={{ display: 'block', fontSize: 12.5, color: 'rgba(244,239,230,.5)', marginTop: 2 }}>{exploreDesc(a)}</span>
+                    </span>
+                    <ArrowRight size={16} style={{ color: TERRA, flexShrink: 0 }} />
+                  </button>
+                );
+              })}
+            </div>
           </div>
         </div>
       )}
@@ -2597,7 +2640,7 @@ export default function CimolaceCreationAgent({ tenantSlug: tenantSlugProp = nul
 
       {/* VNP — Realm tenant : accueil = INTENTIONS (avant interaction) ; puis NAVIGATION GUIDÉE
           (sujets liés) + ACTION ENGINE (actions métier). Le visiteur ne clique pas des liens : des intentions. */}
-      {showActions && isTenantRealm && !tourActive && !fullscreenScene && !contactForm && !bookingForm && (
+      {showActions && isTenantRealm && !tourActive && !fullscreenScene && !contactForm && !bookingForm && !showTenantHero && (
         <div className="cca-in" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(238px, 1fr))', gap: 10, justifyItems: 'stretch', marginTop: 24, width: '100%', maxWidth: 560, position: 'relative', zIndex: 4, padding: '0 20px', boxSizing: 'border-box' }}>
           {/* Toujours proposé : la visite guidée (l'OS REND le site en scènes) */}
           <button className="cca-chip cca-chip-visit" onClick={(e) => { e.stopPropagation(); startTenantTour(); }} style={VNP_VISIT_CHIP}>
