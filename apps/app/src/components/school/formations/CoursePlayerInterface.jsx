@@ -167,7 +167,7 @@ const DemoCoursePlayerContent = () => {
                   </div>
                </Card>
                <div className="mt-6 flex justify-end">
-                  <Button onClick={() => setStep(2)} className="bg-[var(--school-accent)] text-black hover:bg-yellow-500">
+                  <Button onClick={() => setStep(2)} className="bg-[var(--school-accent)] text-black hover:brightness-110">
                     J'ai terminé la vidéo <ArrowRight className="ml-2 h-4 w-4"/>
                   </Button>
                </div>
@@ -183,7 +183,7 @@ const DemoCoursePlayerContent = () => {
                   <SafeHtml className="prose prose-invert max-w-none" html={day.content.summary} />
                </Card>
                <div className="mt-6 flex justify-end">
-                  <Button onClick={() => setStep(3)} className="bg-[var(--school-accent)] text-black hover:bg-yellow-500">
+                  <Button onClick={() => setStep(3)} className="bg-[var(--school-accent)] text-black hover:brightness-110">
                     J'ai bien lu et compris <ArrowRight className="ml-2 h-4 w-4"/>
                   </Button>
                </div>
@@ -208,7 +208,7 @@ const DemoCoursePlayerContent = () => {
                   </div>
                </Card>
                <div className="mt-6 flex justify-end">
-                  <Button onClick={handleWritingSubmit} className="bg-[var(--school-accent)] text-black hover:bg-yellow-500">
+                  <Button onClick={handleWritingSubmit} className="bg-[var(--school-accent)] text-black hover:brightness-110">
                     Soumettre ma réponse <ArrowRight className="ml-2 h-4 w-4"/>
                   </Button>
                </div>
@@ -236,7 +236,7 @@ const DemoCoursePlayerContent = () => {
                   </div>
                </Card>
                <div className="mt-6 flex justify-end">
-                  <Button onClick={handleQuizSubmit} className="bg-[var(--school-accent)] text-black hover:bg-yellow-500">
+                  <Button onClick={handleQuizSubmit} className="bg-[var(--school-accent)] text-black hover:brightness-110">
                     Valider le Quiz <CheckCircle className="ml-2 h-4 w-4"/>
                   </Button>
                </div>
@@ -1050,11 +1050,11 @@ const SupabaseCoursePlayerContent = ({ formationId, onExit }) => {
       {/* Ambient background — MÊME scène immersive que le détail du cours (TenantCourseDetailPage) */}
       <div className="fixed inset-0 pointer-events-none -z-10 overflow-hidden">
         <div className="absolute inset-0" style={{ background:
-          'radial-gradient(80% 50% at 50% -5%, rgba(212,175,55,0.12), transparent 55%),' +
-          'radial-gradient(65% 55% at 92% 104%, rgba(111,76,255,0.06), transparent 62%),' +
-          'radial-gradient(55% 50% at 4% 98%, rgba(15,179,255,0.045), transparent 62%)' }} />
+          'radial-gradient(80% 50% at 50% -5%, rgba(217,119,87,0.12), transparent 55%),' +
+          'radial-gradient(65% 55% at 92% 104%, rgba(217,119,87,0.06), transparent 62%),' +
+          'radial-gradient(55% 50% at 4% 98%, rgba(226,146,106,0.045), transparent 62%)' }} />
         <div className="absolute left-1/2 top-0 h-[140vh] w-[140vh] -translate-x-1/2" style={{
-          background: 'conic-gradient(from 198deg at 50% 32%, transparent 0deg, rgba(212,175,55,0.09) 38deg, transparent 80deg, transparent 188deg, rgba(15,179,255,0.04) 224deg, transparent 300deg)',
+          background: 'conic-gradient(from 198deg at 50% 32%, transparent 0deg, rgba(217,119,87,0.09) 38deg, transparent 80deg, transparent 188deg, rgba(226,146,106,0.04) 224deg, transparent 300deg)',
           opacity: 0.42, filter: 'blur(3px)',
           WebkitMaskImage: 'radial-gradient(ellipse 50% 40% at 50% 28%, #000 0%, transparent 72%)',
           maskImage: 'radial-gradient(ellipse 50% 40% at 50% 28%, #000 0%, transparent 72%)' }} />
@@ -1069,13 +1069,13 @@ const SupabaseCoursePlayerContent = ({ formationId, onExit }) => {
         initial={{ opacity: 0, y: -10 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.4 }}
-        className="h-16 border-b border-white/10 flex items-center px-6 bg-[#2e2b28]/80 backdrop-blur-xl sticky top-0 z-20"
+        className="h-16 border-b border-white/[0.06] flex items-center px-6 bg-[#0b0b0f]/55 backdrop-blur-xl sticky top-0 z-20"
       >
         <Button variant="ghost" onClick={handleExit} className="text-gray-400 hover:text-white hover:bg-white/5 -ml-2">
           <ChevronRight className="w-4 h-4 rotate-180 mr-1" /> Retour
         </Button>
         <div className="flex-1 px-6 min-w-0">
-          <h1 className="text-lg font-bold truncate text-white">
+          <h1 className="truncate" style={{ fontFamily: "'Fraunces','Cormorant Garamond',Georgia,serif", fontWeight: 600, fontSize: 18, color: '#f5f1e9' }}>
             {formation?.title || 'Formation'}
           </h1>
           <div className="flex items-center gap-2 text-xs text-gray-500 mt-0.5">
@@ -1106,23 +1106,23 @@ const SupabaseCoursePlayerContent = ({ formationId, onExit }) => {
             initial={{ opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.35 }}
-            className="flex flex-col items-center text-center pt-6"
+            className="flex flex-col items-center text-center pt-16 pb-4"
           >
-            <span className="w-12 h-12 rounded-2xl flex items-center justify-center" style={{ background: 'rgba(212,175,55,0.12)', border: '1px solid rgba(212,175,55,0.28)', color: 'var(--school-accent)' }}>
+            <span className="w-12 h-12 rounded-2xl flex items-center justify-center" style={{ background: 'rgba(217,119,87,0.12)', border: '1px solid rgba(217,119,87,0.28)', color: 'var(--school-accent)' }}>
               <Play className="w-6 h-6" />
             </span>
             {[m?.title, w?.title].filter(Boolean).length > 0 && (
-              <div className="mt-3 text-[11px] tracking-[0.14em] uppercase" style={{ color: 'rgba(245,245,247,0.5)' }}>
+              <div className="mt-5 text-[11px] tracking-[0.28em] uppercase" style={{ color: 'var(--school-accent)', opacity: 0.85 }}>
                 {[m?.title, w?.title].filter(Boolean).join(' · ')}
               </div>
             )}
-            <h2 className="mt-1.5 text-2xl md:text-3xl font-bold text-white" style={{ letterSpacing: '-0.02em' }}>{d.title}</h2>
+            <h2 className="mt-2" style={{ fontFamily: "'Fraunces','Cormorant Garamond',Georgia,serif", fontWeight: 600, fontSize: 'clamp(30px, 4.4vw, 46px)', lineHeight: 1.08, letterSpacing: '-0.01em', color: '#f5f1e9', textWrap: 'balance' }}>{d.title}</h2>
             {contentCards.length > 0 ? (
               <button
                 type="button"
                 onClick={() => setActiveItem(contentCards[0])}
-                className="mt-6 inline-flex items-center gap-2 rounded-xl px-6 py-3 text-sm font-bold transition-transform active:scale-[0.99]"
-                style={{ background: 'var(--school-accent)', color: '#0b0b0f', boxShadow: '0 12px 36px rgba(212,175,55,0.3)' }}
+                className="mt-8 inline-flex items-center gap-2 rounded-full px-7 py-3 text-sm font-semibold transition-transform active:scale-[0.99]"
+                style={{ background: 'var(--school-accent)', color: '#1c1a17', boxShadow: '0 14px 40px rgba(217,119,87,0.28)' }}
               >
                 <Play className="w-4 h-4" /> Commencer la leçon
               </button>
@@ -1146,7 +1146,7 @@ const SupabaseCoursePlayerContent = ({ formationId, onExit }) => {
                       onClick={() => selectSafe({ mIdx })}
                       className="w-full flex items-center gap-3 px-2 py-3 text-left transition-colors hover:bg-white/[0.025]"
                     >
-                      <span className="w-6 h-6 rounded-full flex items-center justify-center text-[11px] font-bold shrink-0" style={mOpen ? { background: 'rgba(212,175,55,0.18)', color: 'var(--school-accent)' } : { background: 'rgba(255,255,255,0.08)', color: 'rgba(245,245,247,0.5)' }}>{mIdx + 1}</span>
+                      <span className="w-6 h-6 rounded-full flex items-center justify-center text-[11px] font-bold shrink-0" style={mOpen ? { background: 'rgba(217,119,87,0.18)', color: 'var(--school-accent)' } : { background: 'rgba(255,255,255,0.08)', color: 'rgba(245,245,247,0.5)' }}>{mIdx + 1}</span>
                       <span className="flex-1 text-sm font-medium truncate" style={{ color: mOpen ? '#fff' : 'rgba(245,245,247,0.8)' }}>{mod.title || `Module ${mIdx + 1}`}</span>
                       <ChevronRight className="w-4 h-4 shrink-0 transition-transform" style={{ color: 'rgba(245,245,247,0.4)', transform: mOpen ? 'rotate(90deg)' : 'none' }} />
                     </button>
@@ -1162,14 +1162,14 @@ const SupabaseCoursePlayerContent = ({ formationId, onExit }) => {
                             const dOpen = dIdx === path.dIdx;
                             return (
                               <div key={day.id || dIdx}>
-                                <button type="button" onClick={() => selectSafe({ mIdx, wIdx, dIdx })} className="w-full flex items-center gap-2 pl-16 pr-3 py-2 text-left text-sm transition-colors" style={{ color: dOpen ? 'var(--school-accent)' : 'rgba(245,245,247,0.5)' }} onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(212,175,55,0.06)'; }} onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; }}>
+                                <button type="button" onClick={() => selectSafe({ mIdx, wIdx, dIdx })} className="w-full flex items-center gap-2 pl-16 pr-3 py-2 text-left text-sm transition-colors" style={{ color: dOpen ? 'var(--school-accent)' : 'rgba(245,245,247,0.5)' }} onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(217,119,87,0.06)'; }} onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; }}>
                                   <Play className="w-3.5 h-3.5 opacity-80 shrink-0" />
                                   <span className="flex-1 truncate">{day.title || `Jour ${dIdx + 1}`}</span>
                                 </button>
                                 {dOpen && contentCards.map((c) => {
                                   const Icon = c.kind === 'video' ? Video : c.kind === 'support' ? Presentation : FileText;
                                   return (
-                                    <button key={c.key} type="button" onClick={() => setActiveItem(c)} className="w-full flex items-center gap-2.5 pr-3 py-2 text-left transition-colors" style={{ paddingLeft: '5.5rem' }} onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(212,175,55,0.06)'; }} onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; }}>
+                                    <button key={c.key} type="button" onClick={() => setActiveItem(c)} className="w-full flex items-center gap-2.5 pr-3 py-2 text-left transition-colors" style={{ paddingLeft: '5.5rem' }} onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(217,119,87,0.06)'; }} onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; }}>
                                       <Icon className="w-3.5 h-3.5 shrink-0" style={{ color: 'var(--school-accent)' }} />
                                       <span className="flex-1 truncate text-[13px] text-white">{c.title}</span>
                                       <span className="text-[10px] uppercase tracking-wide shrink-0" style={{ color: 'var(--school-accent)' }}>{c.kind === 'video' ? 'Vidéo' : c.kind === 'support' ? 'Support' : 'Texte'}</span>
@@ -1280,9 +1280,9 @@ const SupabaseCoursePlayerContent = ({ formationId, onExit }) => {
                 {/* Halos de fond : restent à z-0 pour la couche basse (profondeur derrière tout) */}
                 <div className="absolute inset-0 pointer-events-none overflow-hidden" style={{ zIndex: 0 }}>
                   <div className="absolute inset-0" style={{ background:
-                    'radial-gradient(80% 50% at 50% -5%, rgba(212,175,55,0.12), transparent 55%),' +
-                    'radial-gradient(65% 55% at 92% 104%, rgba(111,76,255,0.06), transparent 62%),' +
-                    'radial-gradient(55% 50% at 4% 98%, rgba(15,179,255,0.045), transparent 62%)' }} />
+                    'radial-gradient(80% 50% at 50% -5%, rgba(217,119,87,0.12), transparent 55%),' +
+                    'radial-gradient(65% 55% at 92% 104%, rgba(217,119,87,0.06), transparent 62%),' +
+                    'radial-gradient(55% 50% at 4% 98%, rgba(226,146,106,0.045), transparent 62%)' }} />
                   <div className="absolute inset-0" style={{ boxShadow: 'inset 0 0 220px 50px rgba(0,0,0,0.5)' }} />
                 </div>
                 {/* Orbes flottants larges z-4 — couvrent TOUTE la scène vidéo (pointer-events-none, contrôles natifs toujours accessibles) */}
@@ -1405,10 +1405,10 @@ const SupabaseCoursePlayerContent = ({ formationId, onExit }) => {
                                 padding: '5px 10px',
                                 borderRadius: '20px',
                                 background: smartboardOn
-                                  ? 'rgba(212,175,55,0.22)'
+                                  ? 'rgba(217,119,87,0.22)'
                                   : 'rgba(15,15,18,0.72)',
                                 border: smartboardOn
-                                  ? '1px solid rgba(212,175,55,0.55)'
+                                  ? '1px solid rgba(217,119,87,0.55)'
                                   : '1px solid rgba(255,255,255,0.12)',
                                 color: smartboardOn ? '#d97757' : 'rgba(255,255,255,0.55)',
                                 fontSize: '11px',
@@ -1423,8 +1423,8 @@ const SupabaseCoursePlayerContent = ({ formationId, onExit }) => {
                               <Sparkles size={12} />
                               SmartBoard
                             </button>
-                            <div className="pointer-events-none absolute -inset-12 -z-10 rounded-full" style={{ background: 'radial-gradient(ellipse at 50% 46%, rgba(212,175,55,0.17), rgba(8,8,11,0) 62%)', filter: 'blur(34px)' }} />
-                            <div className="relative overflow-hidden rounded-3xl" style={{ background: '#0b0b0f', boxShadow: '0 0 160px 60px rgba(212,175,55,0.10), 0 0 100px 30px rgba(111,76,255,0.07), 0 50px 120px rgba(0,0,0,0.5), inset 0 0 120px 48px #08080b' }}>
+                            <div className="pointer-events-none absolute -inset-12 -z-10 rounded-full" style={{ background: 'radial-gradient(ellipse at 50% 46%, rgba(217,119,87,0.17), rgba(8,8,11,0) 62%)', filter: 'blur(34px)' }} />
+                            <div className="relative overflow-hidden rounded-3xl" style={{ background: '#0b0b0f', boxShadow: '0 0 160px 60px rgba(217,119,87,0.10), 0 0 100px 30px rgba(217,119,87,0.07), 0 50px 120px rgba(0,0,0,0.5), inset 0 0 120px 48px #08080b' }}>
                           <VideoPlayer
                             ref={videoPlayerRef}
                             video={currentVideoMemo}
@@ -1883,7 +1883,7 @@ const SupabaseCoursePlayerContent = ({ formationId, onExit }) => {
                                                                 }}>
                                                                 Définir OUT
                                                               </Button>
-                                                              <Button size="sm" className="bg-[var(--school-accent)] text-black hover:bg-yellow-500 font-bold"
+                                                              <Button size="sm" className="bg-[var(--school-accent)] text-black hover:brightness-110 font-bold"
                                                                 disabled={!clipVideoRef.current || questionClipStart === '' || questionClipEnd === ''}
                                                                 onClick={() => {
                                                                   if (!clipVideoRef.current) return;
@@ -2051,7 +2051,7 @@ const SupabaseCoursePlayerContent = ({ formationId, onExit }) => {
                                                         </Button>
                                                         <Button onClick={submitQuestion}
                                                           disabled={questionSending || !String(questionText || '').trim()}
-                                                          className="bg-[var(--school-accent)] text-black hover:bg-yellow-500 font-bold">
+                                                          className="bg-[var(--school-accent)] text-black hover:brightness-110 font-bold">
                                                           {questionSending ? 'Envoi...' : editingQuestionId ? 'Enregistrer' : 'Envoyer à Manikongo'}
                                                         </Button>
                                                       </div>
@@ -2148,7 +2148,7 @@ const SupabaseCoursePlayerContent = ({ formationId, onExit }) => {
                               <Button
                                 onClick={saveNotes}
                                 disabled={notesSaving}
-                                className="bg-[var(--school-accent)] text-black hover:bg-yellow-500 font-bold"
+                                className="bg-[var(--school-accent)] text-black hover:brightness-110 font-bold"
                               >
                                 {notesSaving ? 'Enregistrement...' : 'Enregistrer'}
                               </Button>
@@ -2225,7 +2225,7 @@ const SupabaseCoursePlayerContent = ({ formationId, onExit }) => {
                                     </Button>
                                     <Button
                                       size="sm"
-                                      className="bg-[var(--school-accent)] text-black hover:bg-yellow-500 font-bold"
+                                      className="bg-[var(--school-accent)] text-black hover:brightness-110 font-bold"
                                       disabled={!clipVideoRef.current || questionClipStart === '' || questionClipEnd === ''}
                                       onClick={() => {
                                         if (!clipVideoRef.current) return;
@@ -2493,7 +2493,7 @@ const SupabaseCoursePlayerContent = ({ formationId, onExit }) => {
                               <Button
                                 onClick={submitQuestion}
                                 disabled={questionSending || !String(questionText || '').trim()}
-                                className="bg-[var(--school-accent)] text-black hover:bg-yellow-500 font-bold"
+                                className="bg-[var(--school-accent)] text-black hover:brightness-110 font-bold"
                               >
                                 {questionSending ? 'Envoi...' : editingQuestionId ? 'Enregistrer' : 'Envoyer'}
                               </Button>
@@ -2589,7 +2589,7 @@ const SupabaseCoursePlayerContent = ({ formationId, onExit }) => {
                                       <Button
                                         onClick={handleSendDiscussion}
                                         disabled={!discussionTopic?.id || discussionSending || !discussionText.trim() || discussionTopic?.status === 'closed'}
-                                        className="bg-[var(--school-accent)] text-black hover:bg-yellow-500 font-bold"
+                                        className="bg-[var(--school-accent)] text-black hover:brightness-110 font-bold"
                                       >
                                         {discussionSending ? 'Envoi…' : 'Envoyer'}
                                       </Button>
