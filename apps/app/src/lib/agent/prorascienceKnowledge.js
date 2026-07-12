@@ -60,14 +60,14 @@ export const PRORASCIENCE_KNOWLEDGE = {
   // Offres — alignées sur les prix RÉELLEMENT facturés par /forfaits (billing_plans isna,
   // famille `*-monthly` que ForfaitsPage requête). NE PAS diverger : tout changement de prix
   // se décide en base (billing_plans) PUIS se recopie ici. Clés → montants :
-  // consultation-privee 50 €, autonome-monthly 29 €, academique-monthly 79 €,
-  // prive-monthly 199 €, privilegie-monthly 390 €.
+  // consultation-privee 50 €, autonome-monthly 30 €, academique-monthly 50 €,
+  // prive-monthly 200 €, privilegie-monthly 390 €. (repositionnement fondateur 2026-07-12)
   offers: [
     { name: 'Consultation privée', price: '50 €', suffix: '/90 min', desc: 'Un diagnostic et une orientation personnalisés avec un praticien.' },
-    { name: 'Cycle Autonome', price: '29 €', suffix: '/mois', desc: 'Accès aux cursus et modules pour apprendre en autonomie.' },
-    { name: 'Cycle Académique', price: '79 €', suffix: '/mois', desc: 'Le parcours complet, encadré : cursus + modules + suivi.', popular: true },
-    { name: 'Cycle Privé', price: '199 €', suffix: '/mois', desc: 'Accompagnement rapproché et coaching pour futurs praticiens.' },
-    { name: 'Cycle Privilégié', price: '390 €', suffix: '/mois', desc: 'Le plus haut niveau : mentorat direct, cas complexes, secrets avancés.' },
+    { name: 'Cycle Autonome', price: '30 €', suffix: '/mois', desc: 'Apprendre seul, par les enregistrements : formations, corpus et forum.' },
+    { name: 'Cycle Académique', price: '50 €', suffix: '/mois', desc: "L'école en salle de classe : cours en direct, préparation à l'initiation (n'enseigne pas le métier).", popular: true },
+    { name: 'Cycle Privé', price: '200 €', suffix: '/mois', desc: 'Suivi personnel : assistant spirituel, séances privées, prières et interventions pour les cas particuliers.' },
+    { name: 'Cycle Privilégié', price: '390 €', suffix: '/mois', desc: 'Devenir praticien : formation métier (mage/ganga), jours personnalisés et stages pratiques.' },
   ],
 
   // Comparateur des 4 cycles MENSUELS (la consultation, one-off, est comparée à part).
@@ -78,10 +78,10 @@ export const PRORASCIENCE_KNOWLEDGE = {
   comparison: {
     intro: 'Les quatre cycles, du plus autonome au plus accompagné.',
     plans: [
-      { name: 'Autonome', full: 'Cycle Autonome', price: '29 €', suffix: '/mois', desc: 'Accès aux cursus et modules pour apprendre en autonomie.' },
-      { name: 'Académique', full: 'Cycle Académique', price: '79 €', suffix: '/mois', popular: true, desc: 'Le parcours complet, encadré : cursus + modules + suivi.' },
-      { name: 'Privé', full: 'Cycle Privé', price: '199 €', suffix: '/mois', desc: 'Accompagnement rapproché et coaching pour futurs praticiens.' },
-      { name: 'Privilégié', full: 'Cycle Privilégié', price: '390 €', suffix: '/mois', desc: 'Le plus haut niveau : mentorat direct, cas complexes, secrets avancés.' },
+      { name: 'Autonome', full: 'Cycle Autonome', price: '30 €', suffix: '/mois', desc: 'Apprendre seul, par les enregistrements.' },
+      { name: 'Académique', full: 'Cycle Académique', price: '50 €', suffix: '/mois', popular: true, desc: "L'école en salle de classe : préparation à l'initiation." },
+      { name: 'Privé', full: 'Cycle Privé', price: '200 €', suffix: '/mois', desc: 'Suivi personnel : séances privées, prières et interventions.' },
+      { name: 'Privilégié', full: 'Cycle Privilégié', price: '390 €', suffix: '/mois', desc: 'Devenir praticien : formation métier, stages pratiques.' },
     ],
     rows: [
       { feature: 'Cursus — comprendre les lois', has: [true, true, true, true] },
