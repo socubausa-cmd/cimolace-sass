@@ -120,6 +120,17 @@ export default function PaiementPage() {
     return () => clearTimeout(t);
   }, [cardReturn, paypalCapture, next, planSlug, payTenant, isLoggedIn]);
 
+  // Paiement confirmé (carte/PayPal) SANS enchaînement « réserver » → on ramène l'élève
+  // CONNECTÉ dans SON espace (portail LIRI) au lieu de le laisser bloqué sur /paiement.
+  // (Invité : pas de session → bannière de confirmation + lien de connexion à la place.)
+  useEffect(() => {
+    const paid = cardReturn === 'success' || paypalCapture === 'done';
+    if (!paid || next === 'reserver') return undefined; // 'reserver' est déjà géré ci-dessus
+    if (isLoggedIn !== true) return undefined;
+    const t = setTimeout(() => { window.location.assign('/liri'); }, 2200);
+    return () => clearTimeout(t);
+  }, [cardReturn, paypalCapture, next, isLoggedIn]);
+
   // Modèle d'accès du service (lu depuis billing_plans) : free/community → débloqué SANS paiement.
   const [accessModel, setAccessModel] = useState(null);
   const [planInfo, setPlanInfo] = useState(null);
@@ -189,7 +200,7 @@ export default function PaiementPage() {
       window.location.assign(
         next === 'reserver' && planSlug
           ? `/t/${payTenant}/reserver?service=${encodeURIComponent(planSlug)}`
-          : '/student-school-life/dashboard',
+          : '/liri',
       );
     } catch (err) {
       setStatus({ state: 'error', message: err?.message || "Impossible de débloquer l'accès.", depositId: null });
@@ -497,6 +508,12 @@ export default function PaiementPage() {
           <div className="mt-6 rounded-xl border border-emerald-500/30 bg-emerald-500/10 p-4 text-sm text-emerald-200">
             Paiement par carte confirmé.{' '}
             {offer.kind === 'subscription' ? 'Votre abonnement est actif.' : 'Merci pour votre contribution.'}
+            {isLoggedIn === true && next !== 'reserver' && (
+              <>
+                {' '}Redirection vers votre espace…{' '}
+                <a href="/liri" className="font-semibold text-emerald-100 underline underline-offset-2">Accéder maintenant →</a>
+              </>
+            )}
           </div>
         )}
         {cardReturn === 'cancel' && (
@@ -514,6 +531,12 @@ export default function PaiementPage() {
           <div className="mt-6 rounded-xl border border-emerald-500/30 bg-emerald-500/10 p-4 text-sm text-emerald-200">
             Paiement PayPal confirmé.{' '}
             {offer.kind === 'subscription' ? 'Votre abonnement est actif.' : 'Merci pour votre contribution.'}
+            {isLoggedIn === true && next !== 'reserver' && (
+              <>
+                {' '}Redirection vers votre espace…{' '}
+                <a href="/liri" className="font-semibold text-emerald-100 underline underline-offset-2">Accéder maintenant →</a>
+              </>
+            )}
           </div>
         )}
         {paypalReturn === 'success' && paypalCapture === 'error' && (

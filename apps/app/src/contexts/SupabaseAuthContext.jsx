@@ -147,11 +147,21 @@ const isStudentSpacePath = () => {
 };
 
 /**
- * Self-heal rattachement élève, GATÉ sur les espaces élève (mobile + web).
- * Fire-and-forget.
+ * Self-heal rattachement élève. Fire-and-forget, idempotent, SÛR (la RPC ne crée qu'un
+ * role='student', jamais d'escalade, ON CONFLICT DO NOTHING → owner/teacher gardent leur rôle).
+ *
+ * Déclencheurs :
+ *  (a) espaces élève explicites (/m/eleve, /student-school-life), OU
+ *  (b) tout DOMAINE DE TENANT résolu (getCachedHostTenant ≠ '') — couvre le NOUVEL atterrissage
+ *      élève `/liri`, le login, et tout parcours élève sur le domaine propre du tenant
+ *      (prorascience.org → isna). Sans ça, un élève qui atterrit sur /liri restait orphelin.
+ * JAMAIS sur le host NEUTRE plateforme (getCachedHostTenant='') hors espace élève explicite :
+ *  là l'utilisateur choisit son org (/rejoindre) — le fallback isna serait un FAUX rattachement.
  */
 const maybeEnsureStudentMembership = (authUser) => {
-  if (!isStudentSpacePath()) return;
+  let hostTenant = '';
+  try { hostTenant = getCachedHostTenant(window.location.hostname) || ''; } catch { hostTenant = ''; }
+  if (!hostTenant && !isStudentSpacePath()) return;
   void ensureStudentMembership(authUser);
 };
 
