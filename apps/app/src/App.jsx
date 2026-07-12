@@ -971,23 +971,23 @@ const DashboardRedirect = () => {
       return <Navigate to="/liri" replace />;
     }
     if (resolveRequiresStudentDossier() && isPremiumActive && !user?.student_profile_completed) return <Navigate to="/onboarding/eleve" replace />;
-    if (isPremiumActive && user?.student_profile_completed) return <Navigate to="/student-school-life/dashboard" replace />;
-    // Vitrine douce : un visiteur inscrit (même sans abonnement) entre dans son tableau de bord —
-    // le hub d'offres + l'entretien gratuit l'y attendent, le contenu premium restant verrouillé en
-    // douceur à l'intérieur. (Avant : atterrissage cul-de-sac sur /prospect/entretien.)
-    return <Navigate to="/student-school-life/dashboard" replace />;
+    // Espace élève UNIFIÉ = le portail LIRI (/liri) : vue adaptative par rôle (Mes cours, Ma
+    // semaine, Vie scolaire, Notes, Évals… via le rail `school:true`), plus riche que l'ancien
+    // /student-school-life (legacy). La garde /liri (LiriAccessGate) laisse passer l'élève d'un
+    // tenant qui A LIRI (isna grandfathered) et n'affiche le mur d'upgrade que pour un tenant sans.
+    return <Navigate to="/liri" replace />;
   }
 
   if (resolveRequiresStudentDossier() && role === 'student' && isPremiumActive && !user?.student_profile_completed) {
     return <Navigate to="/onboarding/eleve" replace />;
   }
   if (role === 'student' && isPremiumActive && user?.student_profile_completed) {
-    return <Navigate to="/student-school-life/dashboard" replace />;
+    return <Navigate to="/liri" replace />;
   }
 
-  // Vitrine douce : pas d'abonnement actif ⇒ on entre quand même dans le tableau de bord
-  // (offres + upsell à l'intérieur) au lieu de rejeter vers /forfaits.
-  return <Navigate to="/student-school-life/dashboard" replace />;
+  // Espace élève unifié = portail LIRI (cf. plus haut). Même sans abonnement actif, on entre
+  // dans /liri : la garde gère l'éligibilité (upgrade en douceur à l'intérieur si besoin).
+  return <Navigate to="/liri" replace />;
 };
 
 // Helper component to redirect authenticated users away from login/signup

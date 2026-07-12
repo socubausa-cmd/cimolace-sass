@@ -1770,6 +1770,16 @@ export default function CimolaceCreationAgent({ tenantSlug: tenantSlugProp = nul
     setTimeout(() => navigate('/liri'), 650);
   }, [osTenant, speak, navigate, closeInput]);
 
+  // CRÉER UN COMPTE — le NOUVEAU visiteur (pas encore de compte) s'inscrit. /signup est
+  // tenant-aware par le HOST (prorascience.org → tenant isna) : le compte est rattaché au
+  // bon tenant (RPC ensure_student_membership). Complète « Mon espace » (membre existant).
+  const goToSignup = useCallback(() => {
+    try { logEvent('creer_compte', {}, osTenant); } catch { /* non bloquant */ }
+    setHistOpen(false); closeInput();
+    speak('Parfait — je vous ouvre la création de compte.');
+    setTimeout(() => navigate('/signup'), 620);
+  }, [osTenant, speak, navigate, closeInput]);
+
   // ── L8 — mode formation NATIF : Cimolace EST le moteur de rendu du cours ──
   const stopLesson = useCallback(() => {
     lessonGenRef.current += 1;
@@ -2530,13 +2540,27 @@ export default function CimolaceCreationAgent({ tenantSlug: tenantSlugProp = nul
           <p className="cca-display" style={{ fontSize: 'clamp(19px, 2.3vw, 25px)', lineHeight: 1.42, color: 'rgba(244,239,230,.9)', margin: '0 auto', maxWidth: 500, textWrap: 'balance' }}>
             Je suis votre guide — je connais tout {tenantName}. Que souhaitez-vous découvrir ?
           </p>
-          <button
-            type="button"
-            onClick={(e) => { e.stopPropagation(); goToSpace(); }}
-            style={{ marginTop: 22, background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'inherit', fontSize: 13.5, color: 'rgba(244,239,230,.5)', display: 'inline-flex', alignItems: 'center', gap: 6 }}
-          >
-            Déjà membre ? <span style={{ color: GOLD, fontWeight: 500 }}>Accéder à mon espace →</span>
-          </button>
+          <div style={{ marginTop: 26, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 13 }}>
+            {/* NOUVEAU visiteur → création de compte (rattaché au tenant par le host) */}
+            <button
+              type="button"
+              onClick={(e) => { e.stopPropagation(); goToSignup(); }}
+              style={{ display: 'inline-flex', alignItems: 'center', gap: 9, padding: '13px 28px', borderRadius: 999, border: 'none', cursor: 'pointer', fontFamily: 'inherit', fontSize: 15, fontWeight: 600, color: '#1c1a17', background: TERRA, boxShadow: '0 14px 36px rgba(217,119,87,.34)' }}
+              onMouseEnter={(e) => { e.currentTarget.style.filter = 'brightness(1.06)'; }}
+              onMouseLeave={(e) => { e.currentTarget.style.filter = 'none'; }}
+            >
+              Créer un compte
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><line x1="5" y1="12" x2="19" y2="12" /><polyline points="12 5 19 12 12 19" /></svg>
+            </button>
+            {/* Membre existant → son espace LIRI */}
+            <button
+              type="button"
+              onClick={(e) => { e.stopPropagation(); goToSpace(); }}
+              style={{ background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'inherit', fontSize: 13.5, color: 'rgba(244,239,230,.5)', display: 'inline-flex', alignItems: 'center', gap: 6 }}
+            >
+              Déjà membre ? <span style={{ color: GOLD, fontWeight: 500 }}>Accéder à mon espace →</span>
+            </button>
+          </div>
         </div>
       )}
 
