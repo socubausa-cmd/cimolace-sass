@@ -27,6 +27,11 @@ import { BG, BG_THINK, INK, TERRA, GOLD, SERIF, DISPLAY, STYLE } from '@/lib/age
 import Presence from '@/components/agent/Presence';
 import { CIMOLACE_LESSONS } from '@/lib/agent/cimolaceLessons';
 import { OS_KNOWLEDGE, prorascienceKnowledgeText, buildTenantTour, buildNodeScene } from '@/lib/agent/prorascienceKnowledge';
+import { CIMOLACE_KNOWLEDGE } from '@/lib/agent/cimolaceKnowledge';
+
+// Carte knowledge de TOUS les realms OS = tenants (OS_KNOWLEDGE = { isna }) + Cimolace lui-même.
+// Cimolace devient un realm VNP à part entière (guide data-driven), en plus de son tunnel de création.
+const OS_KNOWLEDGE_ALL = { ...OS_KNOWLEDGE, cimolace: CIMOLACE_KNOWLEDGE };
 import SEO from '@/components/SEO';
 import { buildVnpGraph, vnpSerialize, vnpRelated, vnpIntent } from '@/lib/agent/vnp';
 import { createProtocol } from '@/lib/agent/vnpProtocol';
@@ -186,12 +191,15 @@ const LOGIN_RE = /(me\s*connect|se\s*connect|connexion|connecter|mon\s*compte|mo
 // « Connecté », branding fetché) par-dessus le MÊME moteur. Accepter un slug arbitraire via `?os=`
 // laissait usurper N'IMPORTE QUELLE marque sur le domaine Cimolace (phishing visuel) → allow-list
 // stricte. Aujourd'hui, seul le tenant fondateur est un realm OS (cf. OS_KNOWLEDGE = { isna }).
-const OS_REALMS = new Set(['isna']);
+const OS_REALMS = new Set(['isna', 'cimolace']);
 
 // Host dédié → son realm de marque (parité avec HOST_PORTAL dans App.jsx : prorascience.org = isna).
+// Cimolace lui-même est un realm VNP (guide) sur ses propres hosts — le tunnel de création reste
+// accessible via l'action « Créer ma plateforme » (funnelMode), sans quitter l'OS.
 function hostOsRealm(host) {
   const h = String(host || '').toLowerCase();
   if (h === 'prorascience.org' || h === 'www.prorascience.org') return 'isna';
+  if (h === 'app.cimolace.space' || h === 'cimolace.space' || h === 'www.cimolace.space') return 'cimolace';
   return null;
 }
 
@@ -233,6 +241,7 @@ function getOsRealmSlug(propSlug) {
 const OS_REALM_FALLBACK = {
   // Logo prorascience = l'ŒIL (Œil d'Horus + oreille), version blanche transparente pour le badge sombre.
   isna: { name: 'Prorascience', logo: '/prorascience-eye.png' },
+  cimolace: { name: 'Cimolace', logo: '/logo.svg' },
 };
 
 const SUGG = [
@@ -1348,7 +1357,12 @@ export default function CimolaceCreationAgent({ tenantSlug: tenantSlugProp = nul
   // L8-P1 — realm : si un tenant est ciblé, l'OS REND ce tenant (même moteur, autre identité) au lieu
   // du tunnel de création Cimolace. isTenantRealm gate tout le flux « créer une org Cimolace ».
   const osTenant = getOsRealmSlug(tenantSlugProp);
-  const isTenantRealm = !!osTenant;
+  const isCimolaceRealm = osTenant === 'cimolace'; // Cimolace lui-même : guide VNP + tunnel de création.
+  // funnelMode : dans le realm Cimolace, « Créer ma plateforme » bascule du guide VNP vers le tunnel de
+  // création (= comportement Cimolace historique, isTenantRealm=false). JAMAIS activé hors Cimolace,
+  // donc le realm tenant (prorascience) est strictement inchangé.
+  const [funnelMode, setFunnelMode] = useState(false);
+  const isTenantRealm = !!osTenant && !funnelMode;
   const [osBrand, setOsBrand] = useState(() => (osTenant ? (OS_REALM_FALLBACK[osTenant] || { name: osTenant, logo: '' }) : null)); // { name, logo }
   useEffect(() => {
     if (!osTenant) return undefined;
@@ -1379,7 +1393,7 @@ export default function CimolaceCreationAgent({ tenantSlug: tenantSlugProp = nul
     return () => { alive = false; };
   }, [osTenant]);
   // SOURCE DE VÉRITÉ du contenu du realm : base d'abord, fallback hardcodé ensuite.
-  const activeKnowledge = osKnowledge || (osTenant ? OS_KNOWLEDGE[osTenant] : null) || null;
+  const activeKnowledge = osKnowledge || (osTenant ? OS_KNOWLEDGE_ALL[osTenant] : null) || null;
   const knowledgeRef = useRef(null);
   knowledgeRef.current = activeKnowledge; // callbacks : lecture toujours à jour, sans re-création
 
@@ -2115,6 +2129,8 @@ export default function CimolaceCreationAgent({ tenantSlug: tenantSlugProp = nul
   const vnpAction = useCallback(async (actionId, label) => {
     setError(''); setEngaged(true); setVnpActs([]);
     if (actionId === '__detail__') { if (protocolRef.current) runEffects(protocolRef.current.dispatch({ type: 'WANT_DETAIL' }).effects); return; }
+    // Cimolace : « Créer ma plateforme » quitte le guide VNP pour le tunnel de création (funnelMode).
+    if (actionId === 'creer_plateforme') { setFunnelMode(true); setStep('discovery'); return; }
     if (actionId === 'contacter' || actionId === 'participer') {
       setContactForm({ name: '', email: '', message: '', subject: `Contact via l'assistant ${(osBrand && osBrand.name) || osTenant}`, sending: false, sent: false, error: '' });
       return;
@@ -2361,6 +2377,29 @@ export default function CimolaceCreationAgent({ tenantSlug: tenantSlugProp = nul
         >
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M12 20h9" /><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z" /></svg>
           Écrire
+        </button>
+      )}
+
+      {/* Cimolace (mode guide VNP) : CTA primaire de conversion → bascule vers le tunnel de création. */}
+      {isCimolaceRealm && isTenantRealm && !inputOpen && !histOpen && !contactForm && !bookingForm && (
+        <button
+          type="button"
+          onClick={(e) => { e.stopPropagation(); vnpAction('creer_plateforme'); }}
+          style={{ position: 'absolute', bottom: 18, right: 20, zIndex: 8, display: 'inline-flex', alignItems: 'center', gap: 8, padding: '10px 18px', borderRadius: 999, border: 'none', background: TERRA, color: '#231208', cursor: 'pointer', fontFamily: 'inherit', fontSize: 13, fontWeight: 700, boxShadow: '0 4px 18px rgba(217,119,87,.35)' }}
+        >
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M12 5v14M5 12h14" /></svg>
+          Créer ma plateforme
+        </button>
+      )}
+      {/* Cimolace (mode tunnel) : retour au guide VNP. */}
+      {isCimolaceRealm && funnelMode && (
+        <button
+          type="button"
+          onClick={(e) => { e.stopPropagation(); setFunnelMode(false); }}
+          aria-label="Revenir à la découverte de Cimolace"
+          style={{ position: 'absolute', top: 18, left: 20, zIndex: 8, display: 'inline-flex', alignItems: 'center', gap: 6, padding: '8px 14px', borderRadius: 999, border: '1px solid rgba(230,204,146,.3)', background: 'rgba(38,38,36,.72)', backdropFilter: 'blur(6px)', WebkitBackdropFilter: 'blur(6px)', color: GOLD, cursor: 'pointer', fontFamily: 'inherit', fontSize: 12.5, fontWeight: 500 }}
+        >
+          ← Découvrir Cimolace
         </button>
       )}
 
