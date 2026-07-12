@@ -645,7 +645,9 @@ const SCENE_SUGGEST_CSS = `
 .cca-ss-chip:hover{background:rgba(230,204,146,.13);border-color:rgba(230,204,146,.48)}
 .cca-ss-chip>svg:first-of-type{color:#e6cc92}
 .cca-ss-arr{color:#e6cc92;opacity:.55;margin-left:1px}
-.cca-scene:has(.cca-ss) .cca-cards,.cca-scene:has(.cca-ss) .cca-tl,.cca-scene:has(.cca-ss) .cca-st,.cca-scene:has(.cca-ss) .cca-cmp,.cca-scene:has(.cca-ss) .cca-tuto{padding-bottom:104px}
+.cca-scene:has(.cca-ss) .cca-cards,.cca-scene:has(.cca-ss) .cca-tl,.cca-scene:has(.cca-ss) .cca-st,.cca-scene:has(.cca-ss) .cca-cmp,.cca-scene:has(.cca-ss) .cca-tuto{padding-bottom:120px;transition:padding-bottom .28s cubic-bezier(.16,1,.3,1)}
+/* Champ « écrire » ouvert : la scène AMÉNAGE l'espace (recule) pour ne pas être recouverte par la barre de saisie. */
+.cca-input-open .cca-scene:has(.cca-ss) .cca-cards,.cca-input-open .cca-scene:has(.cca-ss) .cca-tl,.cca-input-open .cca-scene:has(.cca-ss) .cca-st,.cca-input-open .cca-scene:has(.cca-ss) .cca-cmp,.cca-input-open .cca-scene:has(.cca-ss) .cca-tuto{padding-bottom:184px}
 @media (max-width:640px){.cca-ss{padding:32px 4vw 15px;gap:7px}}
 `;
 // Actions de CONVERSION (mises en avant dans la suite) ; les intentions « molles » (comprendre,
@@ -1127,8 +1129,8 @@ function FaqScene({ scene, glossary, onTerm }) {
 // (détail + actions métier + sujets liés), sans quitter la conversation. Backdrop → ferme.
 const FOCUS_CSS = `
 @keyframes ccaFocusIn{from{opacity:0;transform:translateY(26px)}to{opacity:1;transform:none}}
-.cca-focus-back{position:fixed;inset:0;background:rgba(12,12,11,.62);backdrop-filter:blur(3px);-webkit-backdrop-filter:blur(3px);z-index:40;display:flex;align-items:flex-end;justify-content:center}
-.cca-focus{width:min(560px,94vw);max-height:82vh;overflow-y:auto;scrollbar-width:none;background:#211f1d;border:1px solid rgba(230,204,146,.2);border-bottom:none;border-radius:22px 22px 0 0;padding:22px 22px 26px;box-shadow:0 -20px 60px -20px rgba(0,0,0,.7);animation:ccaFocusIn .34s cubic-bezier(.16,1,.3,1) both}
+.cca-focus-back{position:fixed;inset:0;background:rgba(10,10,9,.76);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);z-index:40;display:flex;align-items:center;justify-content:center;padding:22px;box-sizing:border-box}
+.cca-focus{width:min(520px,94vw);max-height:84vh;overflow-y:auto;scrollbar-width:none;background:#262320;border:1px solid rgba(230,204,146,.28);border-radius:22px;padding:24px 24px 26px;box-shadow:0 34px 90px -22px rgba(0,0,0,.75),0 0 0 1px rgba(230,204,146,.06);animation:ccaFocusIn .3s cubic-bezier(.16,1,.3,1) both}
 .cca-focus::-webkit-scrollbar{width:0}
 .cca-focus-grip{width:38px;height:4px;border-radius:2px;background:rgba(244,239,230,.2);margin:0 auto 16px}
 .cca-focus-title{font-family:'Fraunces','Source Serif 4',Georgia,serif;font-size:20px;color:#f4efe6;font-weight:600}
@@ -2369,6 +2371,7 @@ export default function CimolaceCreationAgent({ tenantSlug: tenantSlugProp = nul
     <div
       ref={rootRef}
       onClick={onRootClick}
+      className={inputOpen ? 'cca-input-open' : undefined}
       style={{
         minHeight: '100vh', background: bg, transition: 'background .8s ease',
         display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
