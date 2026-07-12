@@ -2464,7 +2464,15 @@ export default function CimolaceCreationAgent({ tenantSlug: tenantSlugProp = nul
       )}
 
       {/* Identité du realm (où on est) : badge marque (logo + nom) + état connecté */}
-      <div style={{ position: 'absolute', top: 18, left: '50%', transform: 'translateX(-50%)', display: 'flex', alignItems: 'center', gap: 14, pointerEvents: 'none', zIndex: 6 }}>
+      <style>{`
+        @media (max-width: 640px) {
+          .cca-topbrand { left: 12px !important; transform: none !important; gap: 8px !important; max-width: calc(100vw - 150px); }
+          .cca-connecte { display: none !important; }
+          .cca-monespace-label { display: none !important; }
+          .cca-monespace { padding: 6px 8px !important; }
+        }
+      `}</style>
+      <div className="cca-topbrand" style={{ position: 'absolute', top: 18, left: '50%', transform: 'translateX(-50%)', display: 'flex', alignItems: 'center', gap: 14, pointerEvents: 'none', zIndex: 6 }}>
         {isTenantRealm ? (
           <>
             <span style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '6px 15px', border: '1px solid rgba(230,204,146,.26)', borderRadius: 999, background: 'rgba(230,204,146,.045)' }}>
@@ -2473,7 +2481,7 @@ export default function CimolaceCreationAgent({ tenantSlug: tenantSlugProp = nul
                 : <span style={{ width: 7, height: 7, transform: 'rotate(45deg)', background: GOLD, borderRadius: 1, display: 'inline-block' }} />}
               <span style={{ fontFamily: DISPLAY, fontSize: 13, letterSpacing: '.2em', textTransform: 'uppercase', color: GOLD, fontWeight: 600 }}>{tenantName}</span>
             </span>
-            <span style={{ display: 'inline-flex', alignItems: 'center', gap: 7 }}>
+            <span className="cca-connecte" style={{ display: 'inline-flex', alignItems: 'center', gap: 7 }}>
               <span style={{ position: 'relative', display: 'inline-flex', width: 9, height: 9 }}>
                 <span style={{ position: 'absolute', inset: 0, borderRadius: '50%', border: '1.5px solid #3fbf6a', animation: 'ccaPing 1.9s ease-out infinite' }} />
                 <span style={{ width: 9, height: 9, borderRadius: '50%', border: '1.5px solid #3fbf6a' }} />
@@ -2518,10 +2526,11 @@ export default function CimolaceCreationAgent({ tenantSlug: tenantSlugProp = nul
           onClick={(e) => { e.stopPropagation(); goToSpace(); }}
           aria-label="Mon espace — se connecter"
           title="Déjà un compte ? Accéder à mon espace"
+          className="cca-monespace"
           style={{ position: 'absolute', top: 14, right: 88, zIndex: 7, display: 'inline-flex', alignItems: 'center', gap: 6, padding: '5px 12px', borderRadius: 999, border: '1px solid rgba(230,204,146,.28)', background: 'rgba(230,204,146,.05)', color: GOLD, cursor: 'pointer', fontFamily: 'inherit', fontSize: 12, fontWeight: 500 }}
         >
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4" /><polyline points="10 17 15 12 10 7" /><line x1="15" y1="12" x2="3" y2="12" /></svg>
-          Mon espace
+          <span className="cca-monespace-label">Mon espace</span>
         </button>
       )}
 
