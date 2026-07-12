@@ -708,6 +708,8 @@ const LiriPortalPage = lazy(() => import('@/pages/liri/LiriPortalPage').then((m)
 const LiriAccountPage = lazy(() => import('@/pages/liri/LiriAccountPage'));
 const LiriServicesPage = lazy(() => import('@/pages/liri/LiriServicesPage'));
 const LiriForfaitsPage = lazy(() => import('@/pages/liri/LiriForfaitsPage'));
+const LiriTemplePage = lazy(() => import('@/pages/liri/LiriTemplePage'));
+const LiriBoutiquePage = lazy(() => import('@/pages/liri/LiriBoutiquePage'));
 const LiriContenuPage = lazy(() => import('@/pages/liri/LiriContenuPage'));
 const LiriPagesPage = lazy(() => import('@/pages/liri/LiriPagesPage'));
 const LiriFinancesPage = lazy(() => import('@/pages/liri/LiriFinancesPage'));
@@ -1875,6 +1877,24 @@ isLiriHostDevPreviewRoute;
           <Route path="/liri/forfaits" element={
             <ProtectedLiriRoute allowedRoles={['owner', 'admin', 'teacher', 'secretariat', 'student', 'practitioner', 'clinic_admin']} allowTenantRole>
               <LiriForfaitsPage />
+            </ProtectedLiriRoute>
+          } />
+          {/* Temple Ngowazulu (Pôle Temple) DANS le portail LIRI — 7 sections (tables ngowazulu_*).
+              Membres. Remplace la page standalone /ngowazulu. */}
+          <Route path="/liri/temple" element={
+            <ProtectedLiriRoute allowedRoles={['owner', 'admin', 'teacher', 'secretariat', 'student', 'practitioner', 'clinic_admin']} allowTenantRole>
+              <LiriTemplePage />
+            </ProtectedLiriRoute>
+          } />
+          <Route path="/liri/temple/:section" element={
+            <ProtectedLiriRoute allowedRoles={['owner', 'admin', 'teacher', 'secretariat', 'student', 'practitioner', 'clinic_admin']} allowTenantRole>
+              <LiriTemplePage />
+            </ProtectedLiriRoute>
+          } />
+          {/* Boutique Sacrée Ngowazulu DANS le portail LIRI. Remplace /boutique-sacree standalone. */}
+          <Route path="/liri/boutique" element={
+            <ProtectedLiriRoute allowedRoles={['owner', 'admin', 'teacher', 'secretariat', 'student', 'practitioner', 'clinic_admin']} allowTenantRole>
+              <LiriBoutiquePage />
             </ProtectedLiriRoute>
           } />
           {/* Contenu du site — éditeur du KNOWLEDGE PACK OS (identité/fondateur/vision/offres/FAQ)

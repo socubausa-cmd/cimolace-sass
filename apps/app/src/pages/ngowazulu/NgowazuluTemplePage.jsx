@@ -125,7 +125,7 @@ const SECTION_ITEMS = [
   },
 ];
 
-export default function NgowazuluTemplePage() {
+export default function NgowazuluTemplePage({ embedded = false, basePath = '/ngowazulu' }) {
   const { user } = useAuth();
   const { toast } = useToast();
   const { section } = useParams();
@@ -316,7 +316,9 @@ export default function NgowazuluTemplePage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#0F1419] text-white pt-24 pb-12 px-4 md:px-8">
+    <div className={embedded
+      ? 'text-white pb-12 px-4 md:px-6'
+      : 'min-h-screen bg-[#0F1419] text-white pt-24 pb-12 px-4 md:px-8'}>
       <div className="max-w-6xl mx-auto space-y-6">
         <div className="rounded-2xl border border-[color-mix(in_srgb,var(--school-accent)_25%,transparent)] bg-[color-mix(in_srgb,var(--school-accent)_10%,transparent)] p-6 md:p-8">
           <p className="text-xs uppercase tracking-[0.2em] text-[var(--school-accent)] mb-2">PRORASCIENCE · Temple</p>
@@ -348,7 +350,7 @@ export default function NgowazuluTemplePage() {
               </CardHeader>
               <CardContent className="space-y-3">
                 <p className="text-sm text-gray-300">{item.description}</p>
-                <Link to={`/ngowazulu/${item.id}`}>
+                <Link to={`${basePath}/${item.id}`}>
                   <Button variant="outline" className="w-full border-white/15 text-white hover:bg-white/5">
                     Ouvrir
                   </Button>

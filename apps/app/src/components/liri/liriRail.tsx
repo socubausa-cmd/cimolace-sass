@@ -2,7 +2,7 @@ import React from 'react';
 import {
   House, Video, MessagesSquare, MessageCircle, WandSparkles, Library, GraduationCap, Sparkles,
   CalendarDays, BookOpen, School, Calendar, FileText, Award, AlertTriangle, FolderOpen, Tag, Files,
-  SquarePen, CreditCard,
+  SquarePen, CreditCard, Flame, ShoppingBag,
 } from 'lucide-react';
 
 /**
@@ -20,6 +20,7 @@ export type RailKey =
   | 'vie-scolaire' | 'agenda' | 'notes' | 'evaluations' | 'absences'
   | 'lives' | 'forum' | 'messages'
   | 'biblio-eleve' | 'documents'
+  | 'temple' | 'boutique'
   | 'studio' | 'ecole' | 'services' | 'pages' | 'contenu' | 'biblio' | 'brain' | 'integrations' | 'reglages';
 
 export type RailItem = { key: RailKey; label: string; icon: typeof House; to: string; creator?: boolean; school?: boolean };
@@ -48,6 +49,10 @@ export const RAIL_GROUPS: { section?: string; items: RailItem[] }[] = [
   { section: 'Ressources', items: [
     { key: 'biblio-eleve', label: 'Biblio.', icon: Library, to: '/liri/bibliotheque', school: true },
     { key: 'documents', label: 'Documents', icon: FolderOpen, to: '/liri/documents', school: true },
+  ] },
+  { section: 'Temple', items: [
+    { key: 'temple', label: 'Temple', icon: Flame, to: '/liri/temple' },
+    { key: 'boutique', label: 'Boutique', icon: ShoppingBag, to: '/liri/boutique' },
   ] },
   { section: 'Création', items: [
     { key: 'studio', label: 'Studio', icon: WandSparkles, to: '/studio/liri', creator: true },

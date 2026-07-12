@@ -30,7 +30,7 @@ import {
 } from '@/lib/boutiqueSacreeContent';
 import { ELEVE_MOBILE } from '@/lib/eleveMobileRoutes';
 
-const BoutiquePage = () => {
+const BoutiquePage = ({ embedded = false }) => {
   const navigate = useNavigate();
   const BUY_URL = import.meta?.env?.VITE_BOUTIQUE_BUY_URL;
   const shouldUseNativeBoutique =
@@ -55,7 +55,9 @@ const BoutiquePage = () => {
   }
 
   return (
-    <div className="min-h-screen bg-[#0F1419] text-white pt-20 font-sans pb-16">
+    <div className={embedded
+      ? 'relative text-white font-sans pb-16'
+      : 'min-h-screen bg-[#0F1419] text-white pt-20 font-sans pb-16'}>
       <Helmet>
         <title>Boutique | PRORASCIENCE</title>
         <meta name="description" content="Boutique Sacrée NGOWAZULU — Temple du Feu, de la Lumière et de la Purification Ancestrale" />
