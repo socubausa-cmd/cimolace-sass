@@ -185,6 +185,21 @@ export default function ConsultationToolCockpit({
     reader.readAsDataURL(file);
   };
 
+  // « LaTeX » : le compositeur écoute l'event 'liri:wb:latex-pending' {formula} puis
+  // pose la formule au prochain clic (outil 'latex'). Avant : bouton sans effet (aucun
+  // champ formule). Ici : mini-champ + exemples → arme l'event → clic sur le tableau.
+  const [latexOpen, setLatexOpen] = useState(false);
+  const [latexValue, setLatexValue] = useState('');
+  const placeLatex = () => {
+    const formula = latexValue.trim();
+    if (!formula) return;
+    try {
+      window.dispatchEvent(new CustomEvent('liri:wb:latex-pending', { detail: { formula, displayMode: true } }));
+    } catch { /* noop */ }
+    setTool('latex');
+    setLatexOpen(false);
+  };
+
   if (preview) {
     return (
       <button
@@ -205,6 +220,12 @@ export default function ConsultationToolCockpit({
     // « Placer image » ouvre d'abord le sélecteur de fichier (l'outil s'arme ensuite).
     if (id === 'image-place') {
       fileInputRef.current?.click();
+      setPaletteOpen(false);
+      setSideGroup(null);
+      return;
+    }
+    if (id === 'latex') {
+      setLatexOpen(true);
       setPaletteOpen(false);
       setSideGroup(null);
       return;
@@ -242,8 +263,8 @@ export default function ConsultationToolCockpit({
   return (
     <>
       <input ref={fileInputRef} type="file" accept="image/*" onChange={handleImageFile} style={{ display: 'none' }} aria-hidden="true" tabIndex={-1} />
-      {(menu || paletteOpen) ? (
-        <div onClick={() => { setMenu(null); setPaletteOpen(false); }} style={{ position: 'absolute', inset: 0, zIndex: 29 }} />
+      {(menu || paletteOpen || latexOpen) ? (
+        <div onClick={() => { setMenu(null); setPaletteOpen(false); setLatexOpen(false); }} style={{ position: 'absolute', inset: 0, zIndex: 29 }} />
       ) : null}
 
       {/* ── BARRE D'EN-TÊTE ─────────────────────────────────────────────── */}
@@ -425,6 +446,41 @@ export default function ConsultationToolCockpit({
               ))}
             </>
           )}
+        </div>
+      ) : null}
+
+      {/* ── Formule LaTeX (mini-champ + exemples) ────────────────────────── */}
+      {latexOpen ? (
+        <div style={{
+          position: 'absolute', top: 64, left: '50%', transform: 'translateX(-50%)', zIndex: 34,
+          width: 'min(460px, calc(100% - 40px))', padding: 14, borderRadius: 16, background: MENU_BG,
+          border: `1px solid rgba(212,163,106,0.3)`, boxShadow: '0 24px 60px rgba(0,0,0,0.6)',
+          backdropFilter: 'blur(10px)', animation: 'ctcIn 0.16s cubic-bezier(0.2,0.7,0.3,1)',
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
+            <span style={{ display: 'inline-flex', alignItems: 'center', gap: 7, fontSize: 13, fontWeight: 700, color: GOLD }}>
+              <Sigma size={16} aria-hidden="true" /> Formule LaTeX
+            </span>
+            <button type="button" aria-label="Fermer" onClick={() => setLatexOpen(false)}
+              style={{ width: 28, height: 28, borderRadius: 8, border: 'none', background: 'rgba(255,255,255,0.05)', color: 'rgba(255,255,255,0.7)', cursor: 'pointer', display: 'grid', placeItems: 'center' }}>
+              <X size={15} aria-hidden="true" />
+            </button>
+          </div>
+          <input autoFocus value={latexValue} onChange={(e) => setLatexValue(e.target.value)}
+            onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); placeLatex(); } }}
+            placeholder="ex : \frac{a}{b} , x^2 + 1 , \sqrt{x}"
+            style={{ width: '100%', height: 40, padding: '0 12px', borderRadius: 10, border: '1px solid rgba(255,255,255,0.14)', background: 'rgba(255,255,255,0.05)', color: '#fff', fontSize: 15, outline: 'none', boxSizing: 'border-box', fontFamily: 'ui-monospace, monospace' }} />
+          <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', margin: '8px 0 2px' }}>
+            {['\\frac{a}{b}', 'x^2', '\\sqrt{x}', '\\sum_{i=1}^{n}', '\\int_a^b', '\\pi'].map((ex) => (
+              <button key={ex} type="button" onClick={() => setLatexValue((v) => (v ? `${v} ${ex}` : ex))}
+                style={{ padding: '5px 9px', borderRadius: 8, border: '1px solid rgba(255,255,255,0.1)', background: 'rgba(255,255,255,0.04)', color: 'rgba(255,255,255,0.8)', fontSize: 12, cursor: 'pointer', fontFamily: 'ui-monospace, monospace' }}>{ex}</button>
+            ))}
+          </div>
+          <button type="button" onClick={placeLatex} disabled={!latexValue.trim()}
+            style={{ width: '100%', marginTop: 8, height: 40, borderRadius: 10, border: 'none', background: latexValue.trim() ? GOLD : 'rgba(212,163,106,0.4)', color: '#1a140e', fontSize: 14, fontWeight: 700, cursor: latexValue.trim() ? 'pointer' : 'default' }}>
+            Placer sur le tableau
+          </button>
+          <p style={{ fontSize: 11, color: 'rgba(255,255,255,0.5)', margin: '8px 2px 0', textAlign: 'center' }}>Puis clique à l'endroit voulu sur le tableau.</p>
         </div>
       ) : null}
 
