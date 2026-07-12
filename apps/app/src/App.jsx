@@ -1943,7 +1943,8 @@ isLiriHostDevPreviewRoute;
           <Route path="/creer-organisation/agent" element={<CimolaceCreationAgent />} />
           {/* Rejoindre une organisation par slug (self-join) — accessible connecté OU non */}
           <Route path="/rejoindre" element={<JoinOrgPage />} />
-          <Route path="/prorascience" element={<Navigate to="/t/prorascience/login" replace />} />
+          {/* Academy RETIRÉ : /prorascience allait vers l'ancien login Academy → portail LIRI. */}
+          <Route path="/prorascience" element={<Navigate to="/liri" replace />} />
           {/* Alias publics — le lien "Inscription" du menu vitrine ne doit pas faire 404 */}
           <Route path="/inscription" element={<Navigate to="/signup" replace />} />
           <Route path="/register" element={<Navigate to="/signup" replace />} />
@@ -2516,17 +2517,13 @@ isLiriHostDevPreviewRoute;
           <Route path="/mission" element={<TenantVitrinePage slug={DEFAULT_TENANT_SLUG} page="mission" />} />
           <Route path="/fondateur" element={<TenantVitrinePage slug={DEFAULT_TENANT_SLUG} page="fondateur" />} />
           <Route path="/doctrine" element={<TenantVitrinePage slug={DEFAULT_TENANT_SLUG} page="doctrine" />} />
-          <Route
-            path="/t/:tenantSlug/login"
-            element={<SchoolLoginPage />}
-          />
+          {/* Academy RETIRÉ (login/signup) : l'accès membre passe par le portail LIRI (/login → /liri).
+             Sur domaine custom (ex. prorascience.org) /login résout le tenant par le host. */}
+          <Route path="/t/:tenantSlug/login" element={<Navigate to="/login" replace />} />
+          <Route path="/t/:tenantSlug/signup" element={<Navigate to="/signup" replace />} />
           <Route
             path="/t/:tenantSlug/auth/callback"
             element={<SchoolGoogleCallback />}
-          />
-          <Route
-            path="/t/:tenantSlug/signup"
-            element={<SchoolSignupPage />}
           />
           <Route
             path="/t/:tenantSlug/courses"
