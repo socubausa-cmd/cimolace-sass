@@ -146,11 +146,17 @@ export function buildTenantTour(k = PRORASCIENCE_KNOWLEDGE, brandName) {
   const pillars = k.vision.pillars || [];
   const beats = [];
 
+  // Pack data-driven (champ `scenes`, ex. Cimolace) → tour GÉNÉRIQUE ; sinon tour prorascience hardcodé
+  // (inchangé). Chaque bout spécifique prorascience est gâté `generic ? … : <hardcode>`.
+  const generic = !!k.scenes;
+
   // 1 — La vision : le constat vs la promesse (split).
   beats.push({
-    reply: `Bienvenue sur ${name}. Tout part d'un constat simple : on vous a appris quoi faire, jamais pourquoi.`,
-    keyword: 'jamais pourquoi',
-    scene: {
+    reply: generic
+      ? `Bienvenue sur ${name}. Laissez-moi vous montrer l'essentiel.`
+      : `Bienvenue sur ${name}. Tout part d'un constat simple : on vous a appris quoi faire, jamais pourquoi.`,
+    keyword: generic ? "l'essentiel" : 'jamais pourquoi',
+    scene: (k.scenes && k.scenes.vision) || {
       type: 'split', headline: name,
       left: { title: 'Le constat', subtitle: 'Le problème', points: ['On reproduit les gestes', 'On répète les traditions', 'La compréhension manque'] },
       right: { title: 'La promesse', subtitle: name, points: ['Comprendre en profondeur', 'Maîtriser vraiment', 'Puis évoluer'] },
@@ -161,10 +167,12 @@ export function buildTenantTour(k = PRORASCIENCE_KNOWLEDGE, brandName) {
   // 2 — Les trois piliers (aside).
   if (pillars.length >= 2) {
     beats.push({
-      reply: `Tout repose sur trois piliers : la Raison, la Science, et les Savoirs Africains.`,
-      keyword: 'trois piliers',
+      reply: generic
+        ? `${name} tient sur ${pillars.length} piliers.`
+        : `Tout repose sur trois piliers : la Raison, la Science, et les Savoirs Africains.`,
+      keyword: generic ? 'piliers' : 'trois piliers',
       scene: {
-        type: 'aside', side: 'right', title: 'Les trois piliers',
+        type: 'aside', side: 'right', title: generic ? 'Les piliers' : 'Les trois piliers',
         items: pillars.slice(0, 4).map((p) => ({ label: p.title, value: (p.points && p.points[0]) || '—', note: (p.points || []).slice(1, 3).join(' · ') || undefined })),
       },
     });
@@ -173,7 +181,9 @@ export function buildTenantTour(k = PRORASCIENCE_KNOWLEDGE, brandName) {
   // 3 — La méthode, un chemin en 4 temps (tutorial, sans CTA Cimolace).
   if ((k.method || []).length) {
     beats.push({
-      reply: `La méthode est un chemin : comprendre, pratiquer, exercer, puis évoluer.`,
+      reply: generic
+        ? `La méthode, un chemin : ${k.method.map((m) => m.step.toLowerCase()).join(', ')}.`
+        : `La méthode est un chemin : comprendre, pratiquer, exercer, puis évoluer.`,
       keyword: 'un chemin',
       scene: {
         type: 'tutorial', title: 'La méthode, 4 temps',
@@ -206,7 +216,7 @@ export function buildTenantTour(k = PRORASCIENCE_KNOWLEDGE, brandName) {
         type: 'reader', title: 'Le fondateur',
         profile: {
           name: k.founder.name, role: k.founder.title, avatarSeed: k.founder.name,
-          facts: [{ k: 'Rôle', v: 'Recteur de l’ISNA' }, { k: 'Mandat', v: 'Restaurer la dignité par la connaissance' }],
+          facts: k.founder.facts || [{ k: 'Rôle', v: 'Recteur de l’ISNA' }, { k: 'Mandat', v: 'Restaurer la dignité par la connaissance' }],
         },
         body: [
           { h: 'Sa vision', p: k.founder.bio },
@@ -242,10 +252,14 @@ export function buildNodeScene(nodeId, k = PRORASCIENCE_KNOWLEDGE) {
   const faqs = k.faq || [];
   const values = vision.values || [];
   const name = id.name || 'ce site';
-  const founderFacts = [
+  const founderFacts = founder.facts || [
     { k: 'Rôle', v: founder.title || 'Fondateur' },
     { k: 'Mandat', v: 'Restaurer la dignité par la connaissance' },
   ];
+
+  // Scène DESIGNÉE fournie par le pack (data-driven, ex. Cimolace) → surcharge le hardcode ci-dessous,
+  // qui reste le fallback pour prorascience (isna, qui n'a pas de champ `scenes`).
+  if (k.scenes && k.scenes[nodeId]) return k.scenes[nodeId];
 
   switch (nodeId) {
     case 'identity':
@@ -354,7 +368,7 @@ export function buildNodeScene(nodeId, k = PRORASCIENCE_KNOWLEDGE) {
       return founder.name ? {
         type: 'reader', title: 'Notre histoire',
         profile: { name: founder.name, role: founder.title, avatarSeed: founder.name,
-          facts: [{ k: 'Mandat', v: 'Restaurer la dignité' }, ...stats.slice(0, 2).map((s) => ({ k: s.label, v: s.value }))] },
+          facts: [...(founder.facts ? founder.facts.slice(0, 1) : [{ k: 'Mandat', v: 'Restaurer la dignité' }]), ...stats.slice(0, 2).map((s) => ({ k: s.label, v: s.value }))] },
         body: [{ h: "L'origine", p: founder.bio }, { h: 'Le mandat', p: vision.closing || vision.promise }],
         suggestions: ['Le fondateur ?', 'Vos forfaits ?'],
       } : null;

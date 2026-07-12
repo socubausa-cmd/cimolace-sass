@@ -37,6 +37,33 @@ export const CIMOLACE_KNOWLEDGE = {
     name: 'Ngowazulu',
     title: 'Fondateur de Cimolace',
     bio: "Fondateur de Cimolace et de l'écosystème ISNA / Prorascience. Cimolace est né d'une frustration d'entrepreneur africain : « J'avais une boutique, une formation, une communauté. Mais 80 % de mon temps partait à gérer des outils qui ne se parlaient pas. » Le problème n'était pas les outils, mais l'absence d'un système conçu pour l'Afrique.",
+    facts: [
+      { k: 'Rôle', v: 'Fondateur de Cimolace' },
+      { k: 'Mandat', v: 'Donner à l\'Afrique son infrastructure SaaS' },
+    ],
+  },
+
+  // Scènes DESIGNÉES (splits) fournies par le pack — surchargent le hardcode prorascience de
+  // buildNodeScene/buildTenantTour (qui reste le fallback pour isna). Rend le VNP data-driven par tenant.
+  scenes: {
+    identity: {
+      type: 'split', headline: 'Cimolace',
+      left: { title: "Ce que c'est", subtitle: 'La plateforme', points: ['Une infra SaaS multi-tenant', 'Des moteurs prêts à l\'emploi', 'Invisible, comme Stripe ou Zoom'] },
+      right: { title: 'Ce que ça change', subtitle: 'Pour vous', points: ['Votre marque, votre domaine', 'Du live à la boutique', 'Pensé pour l\'Afrique'] },
+      tone: { left: 'gold', right: 'terra' },
+    },
+    vision: {
+      type: 'split', headline: 'Cimolace',
+      left: { title: 'Le problème', subtitle: 'Aujourd\'hui', points: ['Des outils qui ne se parlent pas', 'Des mois d\'intégration', 'Pas d\'infra pensée pour l\'Afrique'] },
+      right: { title: 'La promesse', subtitle: 'Cimolace', points: ['Votre plateforme brandée', 'Sans coder, en ~10 min', 'Vous encaissez, l\'infra suit'] },
+      tone: { left: 'terra', right: 'gold' },
+    },
+    mission: {
+      type: 'split', headline: 'Notre mission',
+      left: { title: 'Pourquoi', subtitle: 'Le constat', points: ['Le talent existe, pas l\'infra', 'Trop d\'outils qui ne parlent pas', 'L\'Afrique peut sauter une étape'] },
+      right: { title: 'Ce qu\'on vise', subtitle: 'Le cap', points: ['Lancer sans coder', 'Encaisser (carte + mobile money)', 'La souveraineté numérique africaine'] },
+      tone: { left: 'gold', right: 'terra' },
+    },
   },
 
   vision: {
