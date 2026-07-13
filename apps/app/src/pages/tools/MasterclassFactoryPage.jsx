@@ -2297,3 +2297,5 @@ function MasterclassFactoryPage() {
     </LiriPortalShell>
   );
 }
+
+export default MasterclassFactoryPage;
