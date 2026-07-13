@@ -4,6 +4,7 @@ import { coursesApi } from '@/lib/api-v2';
 import { supabase } from '@/lib/customSupabaseClient';
 import { BG, INK, STYLE, TERRA, SERIF } from '@/lib/agent/immersiveTheme';
 import { SceneStage } from '@/pages/CimolaceCreationAgent';
+import { useFormationStructure } from '@/hooks/useFormationStructure';
 import FormationOsDayView from './FormationOsDayView';
 
 const norm = (s) => String(s || '').toLowerCase().normalize('NFD').replace(/\p{Diacritic}/gu, '');
@@ -44,6 +45,7 @@ export default function StudentFormationsOsPage() {
   const [histOpen, setHistOpen] = useState(false); // tiroir du fil
   const [asking, setAsking] = useState(false);
   const [typed, setTyped] = useState(''); // voix de l'OS qui s'écrit (typewriter)
+  const { fetchStructure } = useFormationStructure(); // lit la structure relationnelle réelle des cours studio
 
   // Effet machine à écrire sur la réponse courante (sauf l'état « … » de réflexion).
   useEffect(() => {
@@ -88,7 +90,17 @@ export default function StudentFormationsOsPage() {
       const detail = await coursesApi.get(course.id);
       if (detail) full = detail;
     } catch { /* liste suffit si get échoue */ }
-    setFocusCourse({ course: full, modules: modulesOf(full) });
+    // Le contenu RÉEL d'un cours créé au studio vit dans les tables relationnelles
+    // (modules → formation_weeks → formation_days → formation_day_contents), lu via
+    // fetchStructure — la MÊME source que les vrais lecteurs (EleveCoursePage,
+    // CoursePlayerInterface). `meta.modules` n'existe que pour les vieux cours migrés V1,
+    // d'où le fallback : sans ce branchement, un cours studio s'affiche VIDE dans l'OS.
+    let modules = modulesOf(full);
+    try {
+      const { data: struct } = await fetchStructure(course.id);
+      if (Array.isArray(struct) && struct.length) modules = struct;
+    } catch { /* garde le fallback meta.modules */ }
+    setFocusCourse({ course: full, modules });
   };
 
   // Aplatit les jours d'un module (semaines → jours) avec un libellé lisible.
@@ -253,7 +265,11 @@ export default function StudentFormationsOsPage() {
     setAsking(true);
     setReply('…');
     try {
-      const knowledge = buildCourseKnowledge(course, modulesOf);
+      // Utilise les modules RÉSOLUS (fetchStructure) du cours ouvert, pas meta.modules (vide au studio).
+      const resolved = (focusCourse?.course?.id === course?.id && Array.isArray(focusCourse?.modules))
+        ? focusCourse.modules
+        : modulesOf(course);
+      const knowledge = buildCourseKnowledge(course, () => resolved);
       const { data, error } = await supabase.functions.invoke('precepteur-brain', {
         body: { question, course: knowledge, concept: openDay?.day?.title || focusModule?.module?.title || '' },
       });

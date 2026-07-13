@@ -1,7 +1,7 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { MessageCircle } from 'lucide-react';
-import OwnerFormationBuilder from '@/components/school/formations/OwnerFormationBuilder';
+import StudioFormationPage from '@/pages/studio-creator/studio/StudioFormationPage';
 import { FORUM_COMMUNITY_PATH } from '@/lib/forumDashboardPaths';
 
 /**
@@ -19,7 +19,9 @@ export default function CreatorDashboardShell() {
           Forum communauté
         </Link>
       </div>
-      <OwnerFormationBuilder />
+      {/* StudioFormationPage = OwnerFormationBuilder + câblage complet create/edit + save
+          (sans lui, le builder nu crashait au save). */}
+      <StudioFormationPage />
     </div>
   );
 }

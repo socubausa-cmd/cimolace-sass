@@ -1610,6 +1610,15 @@ isLiriHostDevPreviewRoute;
               </React.Suspense>
             } />
           )}
+          {/* DEV — aperçu de « Mes formations » rendu par l'OS, SANS auth (preuve du branchement
+              fetchStructure → contenu réel des cours studio). Retiré du build prod. */}
+          {import.meta.env.DEV && (
+            <Route path="/dev/os-formations" element={
+              <React.Suspense fallback={<div className="flex h-screen items-center justify-center bg-[#262624] text-white/60">Chargement…</div>}>
+                <StudentFormationsOsPage />
+              </React.Suspense>
+            } />
+          )}
           {/* Cours-démo PUBLIC (watchable, sans auth) — le « prof virtuel » qui se joue seul */}
           <Route path="/cours-demo" element={
             <React.Suspense fallback={<div className="flex h-screen items-center justify-center bg-[#262624] text-white/60">Chargement du cours…</div>}>
@@ -2650,9 +2659,12 @@ isLiriHostDevPreviewRoute;
               → onglet dans AcademyToLiriRedirect. */}
           <Route path="/t/:tenantSlug/admin/*" element={<AcademyToLiriRedirect />} />
 
+          {/* Le constructeur complet (header + structure + save) vit dans StudioFormationPage
+              (/studio/formation). On redirige pour réutiliser CE câblage : monter
+              <OwnerFormationBuilder/> nu (sans onSave) crashait au moment du save. */}
           <Route path="/owner/formations/create" element={
             <ProtectedOwnerRoute>
-               <OwnerFormationBuilder />
+               <Navigate to="/studio/formation" replace />
             </ProtectedOwnerRoute>
           } />
 
