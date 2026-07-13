@@ -43,6 +43,20 @@ export default function StudentFormationsOsPage() {
   const [history, setHistory] = useState([]); // fil de conversation [{ q, reply }]
   const [histOpen, setHistOpen] = useState(false); // tiroir du fil
   const [asking, setAsking] = useState(false);
+  const [typed, setTyped] = useState(''); // voix de l'OS qui s'écrit (typewriter)
+
+  // Effet machine à écrire sur la réponse courante (sauf l'état « … » de réflexion).
+  useEffect(() => {
+    if (!reply || reply === '…') { setTyped(reply || ''); return undefined; }
+    setTyped('');
+    let i = 0;
+    const id = setInterval(() => {
+      i += 2;
+      setTyped(reply.slice(0, i));
+      if (i >= reply.length) clearInterval(id);
+    }, 16);
+    return () => clearInterval(id);
+  }, [reply]);
 
   useEffect(() => {
     let alive = true;
@@ -317,7 +331,7 @@ export default function StudentFormationsOsPage() {
         <div style={{ position: 'absolute', left: 0, right: 0, bottom: 0, padding: '0 clamp(16px,6vw,90px) 22px', zIndex: 40, pointerEvents: 'none' }}>
           <div style={{ maxWidth: 680, margin: '0 auto', pointerEvents: 'auto' }}>
             {reply && (
-              <div style={{ marginBottom: 12, fontFamily: SERIF, fontSize: 16, color: 'rgba(245,244,238,.9)', textAlign: 'center', lineHeight: 1.4, textShadow: '0 2px 14px rgba(8,8,11,.7)' }}>{reply}</div>
+              <div style={{ marginBottom: 12, fontFamily: SERIF, fontSize: 16, color: 'rgba(245,244,238,.9)', textAlign: 'center', lineHeight: 1.4, textShadow: '0 2px 14px rgba(8,8,11,.7)' }}>{typed || reply}</div>
             )}
             <form onSubmit={onAsk} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '7px 7px 7px 12px', borderRadius: 999, border: '1px solid rgba(245,244,238,.12)', background: 'rgba(31,30,28,.92)', backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)', boxShadow: '0 12px 44px rgba(0,0,0,.5)' }}>
               {history.length > 0 && (
