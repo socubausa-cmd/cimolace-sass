@@ -24,23 +24,26 @@ const fmtTime = (sec) => { const s = Math.max(0, Math.round(sec)); const m = Mat
  */
 export default function FormationOsDayView({ day, onBack, backLabel = 'Programme', onAsk, onOsSay }) {
   const videos = Array.isArray(day?.videos) ? day.videos : (day?.video ? [day.video] : []);
+  // Une « vidéo » sans url/fichier ne porte souvent qu'un mindmap (cours slides-only) :
+  // on ne l'affiche PAS comme lecteur (sinon écran noir), mais son mindmap reste détecté.
+  const playableVideos = videos.filter((v) => String(v?.url || '').trim() || v?.storagePath || v?.storage_path);
   const support = day?.powerpoint || day?.reader || null;
   const quiz = day?.quiz || null;
   const mindmap = day?.mindmap || videos.find?.((v) => v?.mindmap)?.mindmap || null;
 
   const blocks = useMemo(() => {
     const b = [];
-    if (videos.length) b.push({ key: 'video', label: 'Vidéo', Icon: Play });
+    if (playableVideos.length) b.push({ key: 'video', label: 'Vidéo', Icon: Play });
     if (support) b.push({ key: 'support', label: 'Support', Icon: FileText });
     if (quiz) b.push({ key: 'quiz', label: 'Quiz', Icon: HelpCircle });
     if (mindmap) b.push({ key: 'mindmap', label: 'Mindmap', Icon: Network });
     return b;
-  }, [videos.length, support, quiz, mindmap]);
+  }, [playableVideos.length, support, quiz, mindmap]);
 
-  const [step, setStep] = useState(blocks[0]?.key || 'video');
+  const [step, setStep] = useState(blocks[0]?.key || 'support');
   const videoRef = useRef(null);
 
-  const currentVideo = videos[0] ? { url: videos[0].url, type: videos[0].type, storagePath: videos[0].storagePath || videos[0].storage_path, title: videos[0].title } : null;
+  const currentVideo = playableVideos[0] ? { url: playableVideos[0].url, type: playableVideos[0].type, storagePath: playableVideos[0].storagePath || playableVideos[0].storage_path, title: playableVideos[0].title } : null;
 
   // Placer la vidéo à un instant (depuis un nœud du mindmap) → bascule sur la vidéo + seek.
   const seekTo = useCallback((sec) => {
