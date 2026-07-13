@@ -51,7 +51,7 @@ const Footer = () => {
                </li>
               <li><BrandLink to="/profil/mon-profil" accentColor={accentColor}>Mon Profil</BrandLink></li>
               <li><BrandLink to="/settings" accentColor={accentColor}>Paramètres</BrandLink></li>
-              <li><BrandLink to="/appointment/request" accentColor={accentColor}>Contacter un conseiller</BrandLink></li>
+              <li><BrandLink to="/" accentColor={accentColor}>Contacter un conseiller</BrandLink></li>
             </ul>
           </div>
 

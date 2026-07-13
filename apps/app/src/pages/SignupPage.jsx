@@ -131,7 +131,7 @@ const SignupPage = () => {
 
   const PERKS = isPaidFlow ? [
     { icon: ShieldCheck,  text: 'Compte sécurisé créé en 30 secondes' },
-    { icon: CreditCard,   text: 'Paiement sécurisé — Chariow (carte ou mobile money)' },
+    { icon: CreditCard,   text: 'Paiement sécurisé — carte (Stripe) & Mobile Money (PawaPay)' },
     { icon: CheckCircle2, text: 'Accès immédiat à votre espace élève après paiement' },
     { icon: CheckCircle2, text: 'Suivi de progression, cours live et bibliothèque inclus' },
   ] : [

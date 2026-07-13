@@ -66,7 +66,9 @@ const stripParens = (s) =>
     .replace(/\s+/g, ' ')
     .trim();
 
-const COUNSELLOR_URL = '/appointment/request';
+// « Conseiller » → l'OS (qui possède le contact en inline), PAS l'ancien moteur RDV
+// /appointment/request (gated → éjectait un prospect non connecté vers /login = cul-de-sac).
+const COUNSELLOR_URL = '/';
 const INTERVAL_ORDER = ['monthly', 'quarterly', 'yearly'];
 
 /** Image produit par défaut si le slug ne mappe pas un cycle connu */
@@ -401,8 +403,8 @@ const ForfaitsPage = ({ embedded = false }) => {
                 {INITIATION_PRODUCT_NAME}
               </p>
               <p className="mb-3 text-[10px] text-white/45 md:text-[11px]">
-                Quatre cycles = quatre niveaux d&apos;accès aux 21 modules de la formation —
-                choisissez votre profondeur d&apos;initiation, le contenu reste le même socle.
+                Quatre cycles, quatre chemins distincts — de l&apos;apprentissage en autonomie
+                jusqu&apos;à la formation de praticien. Choisissez le vôtre.
               </p>
               <PremiumSegmentedSelector
                 value={activeCycle?.key || ''}
