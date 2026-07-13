@@ -244,6 +244,15 @@ const OS_REALM_FALLBACK = {
   cimolace: { name: 'Cimolace', logo: '/logo.svg' },
 };
 
+// Positionnement des 4 cycles (prix depuis billing_plans → jamais recopiés ici). Le « pour qui » guide
+// le choix : 4 chemins DISTINCTS. Temple/cultes ouverts dès l'Autonome ; le Privilégié = la pratique.
+const CYCLE_META = {
+  autonome:   { name: 'Autonome',   for: 'Apprendre en autonomie — Temple & cultes inclus.' },
+  academique: { name: 'Académique', for: 'Le cursus complet, encadré par l’équipe.' },
+  prive:      { name: 'Privé',      for: 'Accompagnement rapproché, en petit comité.' },
+  privilegie: { name: 'Privilégié', for: 'Pour ceux qui veulent pratiquer — mentorat souverain.' },
+};
+
 const SUGG = [
   { kind: 'school', label: 'École / cours en ligne', Icon: GraduationCap },
   { kind: 'medos', label: 'Clinique / santé', Icon: Stethoscope },
@@ -1511,6 +1520,7 @@ export default function CimolaceCreationAgent({ tenantSlug: tenantSlugProp = nul
   const [bookingForm, setBookingForm] = useState(null); // Action Engine RDV : {service,slotIso,name,email,sending,sent,error} | null
   const [signupForm, setSignupForm] = useState(null);   // Inscription INLINE (l'OS possède l'identité) : {name,email,password,sending,sent,error} | null
   const [authForm, setAuthForm] = useState(null);       // Connexion INLINE : {email,password,sending,error} | null
+  const [plansPanel, setPlansPanel] = useState(null);   // Achat INLINE : les 4 cycles du tenant DANS l'OS (jamais de saut dur vers /forfaits) : { loading, plans, error } | null
   const bookingSlots = useMemo(() => genSlots(6), []); // créneaux proposés (stables sur la session)
   const [covered, setCovered] = useState([]);
   const [topic, setTopic] = useState(null);
@@ -1839,6 +1849,34 @@ export default function CimolaceCreationAgent({ tenantSlug: tenantSlugProp = nul
     speak("Parfait — créons votre espace. Un e-mail, un mot de passe, et c'est à vous.");
     setEngaged(true);
     setSignupForm({ name: '', email: '', password: '', sending: false, sent: false, error: '' });
+  }, [osTenant, speak, closeInput]);
+
+  // CHOISIR UN FORFAIT — les 4 cycles du tenant rendus DANS l'OS (jamais de saut dur vers /forfaits, qui
+  // détruisait l'expérience). Prix lus depuis billing_plans (source de vérité). Chaque « S'abonner » ouvre
+  // le checkout ÉPROUVÉ (/t/:slug/paiement — Stripe + Mobile Money, checkout invité) dans un NOUVEL onglet,
+  // pour que l'OS reste vivant derrière.
+  const openForfaits = useCallback(async () => {
+    try { logEvent('voir_forfaits', {}, osTenant); } catch { /* non bloquant */ }
+    setHistOpen(false); closeInput();
+    setContactForm(null); setBookingForm(null); setSignupForm(null); setAuthForm(null);
+    setEngaged(true);
+    setPlansPanel({ loading: true, plans: [], error: '' });
+    speak('Quatre chemins, quatre niveaux d’accès. Choisissez le vôtre — le paiement est sécurisé.');
+    try {
+      const { data, error } = await supabase.from('billing_plans')
+        .select('key,label,price_cents,currency,is_active')
+        .eq('is_active', true).order('price_cents', { ascending: true });
+      if (error) throw error;
+      const ORDER = ['autonome', 'academique', 'prive', 'privilegie'];
+      const plans = (data || [])
+        .filter((p) => /^(autonome|academique|prive|privilegie)-monthly$/.test(String(p.key || '').toLowerCase()))
+        .map((p) => ({ key: p.key, label: p.label, cycle: String(p.key).toLowerCase().replace(/-monthly$/, ''),
+          price: Math.round(Number(p.price_cents || 0) / 100), currency: p.currency || 'EUR' }))
+        .sort((a, b) => ORDER.indexOf(a.cycle) - ORDER.indexOf(b.cycle));
+      setPlansPanel({ loading: false, error: plans.length ? '' : 'unavailable', plans });
+    } catch (_) {
+      setPlansPanel({ loading: false, plans: [], error: 'unavailable' });
+    }
   }, [osTenant, speak, closeInput]);
 
   // ── L8 — mode formation NATIF : Cimolace EST le moteur de rendu du cours ──
@@ -2210,6 +2248,8 @@ export default function CimolaceCreationAgent({ tenantSlug: tenantSlugProp = nul
       setBookingForm({ service: 'Consultation privée', slotIso: '', name: '', email: '', sending: false, sent: false, error: '' });
       return;
     }
+    // Acheter / Rejoindre = devenir membre → les forfaits s'affichent DANS l'OS (jamais de saut vers /forfaits).
+    if (actionId === 'acheter' || actionId === 'rejoindre') { openForfaits(); return; }
     const gen = ++brainGenRef.current;
     setPresence('reflexion'); sThink();
     try {
@@ -2220,10 +2260,9 @@ export default function CimolaceCreationAgent({ tenantSlug: tenantSlugProp = nul
       const msg = String(data?.message || "C'est noté.");
       const kind = data?.next?.kind;
       logEvent('action_triggered', { action: actionId, next_kind: kind || '' }, osTenant);
-      if (kind === 'checkout' || kind === 'booking') {
-        // Checkout : on transmet l'offre choisie à /forfaits (?plan=<cycle>) pour la pré-sélectionner.
-        const dest = kind === 'checkout' ? `/forfaits${forfaitsPlanQuery(data?.next?.target)}` : '/forfaits';
-        speak(msg, () => setTimeout(() => { window.location.assign(dest); }, 700)); // → vraie page de checkout
+      if (kind === 'checkout') { openForfaits(); return; }                 // Forfaits INLINE (remplace le saut dur vers /forfaits qui détruisait l'OS)
+      if (kind === 'booking') {                                            // RDV inline (repli si non intercepté plus haut)
+        setBookingForm({ service: data?.next?.target || 'Consultation privée', slotIso: '', name: '', email: '', sending: false, sent: false, error: '' });
         return;
       }
       speak(msg);
@@ -2231,7 +2270,7 @@ export default function CimolaceCreationAgent({ tenantSlug: tenantSlugProp = nul
       if (brainGenRef.current !== gen) return;
       speak('Un instant — réessayons dans un moment.');
     }
-  }, [osBrand, osTenant, speak, sThink]);
+  }, [osBrand, osTenant, speak, sThink, openForfaits]);
 
   // Livraison RÉELLE du contact : insertion dans contact_requests (même table que le ContactModal du site → mailbox).
   const submitContact = useCallback(async () => {
@@ -2410,7 +2449,7 @@ export default function CimolaceCreationAgent({ tenantSlug: tenantSlugProp = nul
   const tenantName = (osBrand && osBrand.name) || osTenant;
   // Écran SCINDÉ : dès qu'une action (formulaire/RDV) est ouverte, on passe en 2 zones —
   // le guide parle à GAUCHE, la zone d'action (qui s'étire) à DROITE.
-  const showSplitAction = isTenantRealm && !!(contactForm || bookingForm || signupForm || authForm);
+  const showSplitAction = isTenantRealm && !!(contactForm || bookingForm || signupForm || authForm || plansPanel);
   // Scène plein écran (split/reader/tutorial) : la voix centrale + actions en flux s'effacent,
   // la scène porte le message ; `aside` garde la voix au centre.
   const fullscreenScene = !!scene && scene.type !== 'aside';
@@ -2473,7 +2512,7 @@ export default function CimolaceCreationAgent({ tenantSlug: tenantSlugProp = nul
 
       {/* NAVIGATION DE CONVERSATION (realm tenant) : mini-rail rapide (bord droit) + panneau messagerie */}
       {isTenantRealm && (<style>{CONV_CSS}</style>)}
-      {isTenantRealm && engaged && !histOpen && !contactForm && !bookingForm && !signupForm && !authForm && (
+      {isTenantRealm && engaged && !histOpen && !contactForm && !bookingForm && !signupForm && !authForm && !plansPanel && (
         <MiniNav turns={turns} curTurn={curTurn} onGo={goToTurn} />
       )}
       {isTenantRealm && histOpen && turns.length > 0 && (
@@ -2481,7 +2520,7 @@ export default function CimolaceCreationAgent({ tenantSlug: tenantSlugProp = nul
       )}
 
       {/* Écrire — affordance TOUJOURS accessible pour (ré)ouvrir la saisie (anti-blocage) */}
-      {isTenantRealm && engaged && !inputOpen && !histOpen && !contactForm && !bookingForm && !signupForm && !authForm && (
+      {isTenantRealm && engaged && !inputOpen && !histOpen && !contactForm && !bookingForm && !signupForm && !authForm && !plansPanel && (
         <button
           type="button"
           onClick={(e) => { e.stopPropagation(); openInput(); }}
@@ -2494,7 +2533,7 @@ export default function CimolaceCreationAgent({ tenantSlug: tenantSlugProp = nul
       )}
 
       {/* Cimolace (mode guide VNP) : CTA primaire de conversion → bascule vers le tunnel de création. */}
-      {isCimolaceRealm && isTenantRealm && !inputOpen && !histOpen && !contactForm && !bookingForm && !signupForm && !authForm && (
+      {isCimolaceRealm && isTenantRealm && !inputOpen && !histOpen && !contactForm && !bookingForm && !signupForm && !authForm && !plansPanel && (
         <button
           type="button"
           onClick={(e) => { e.stopPropagation(); vnpAction('creer_plateforme'); }}
@@ -2726,7 +2765,7 @@ export default function CimolaceCreationAgent({ tenantSlug: tenantSlugProp = nul
 
       {/* VNP — Realm tenant : accueil = INTENTIONS (avant interaction) ; puis NAVIGATION GUIDÉE
           (sujets liés) + ACTION ENGINE (actions métier). Le visiteur ne clique pas des liens : des intentions. */}
-      {showActions && isTenantRealm && !tourActive && !fullscreenScene && !contactForm && !bookingForm && !signupForm && !authForm && !showTenantHero && (
+      {showActions && isTenantRealm && !tourActive && !fullscreenScene && !contactForm && !bookingForm && !signupForm && !authForm && !plansPanel && !showTenantHero && (
         <div className="cca-in" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(238px, 1fr))', gap: 10, justifyItems: 'stretch', marginTop: 24, width: '100%', maxWidth: 560, position: 'relative', zIndex: 4, padding: '0 20px', boxSizing: 'border-box' }}>
           {/* Toujours proposé : la visite guidée (l'OS REND le site en scènes) */}
           <button className="cca-chip cca-chip-visit" onClick={(e) => { e.stopPropagation(); startTenantTour(); }} style={VNP_VISIT_CHIP}>
@@ -2916,6 +2955,47 @@ export default function CimolaceCreationAgent({ tenantSlug: tenantSlugProp = nul
                   style={{ background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'inherit', fontSize: 12.5, color: 'rgba(244,239,230,.55)', textAlign: 'left', padding: 0, marginTop: 2 }}>
                   Pas encore de compte ? <span style={{ color: GOLD }}>Créer mon espace →</span>
                 </button>
+              </>
+            )}
+
+            {/* CHOISIR UN FORFAIT — les 4 cycles rendus DANS l'OS ; « S'abonner » ouvre le checkout en nouvel onglet */}
+            {plansPanel && (
+              <>
+                <div className="cca-display" style={{ fontSize: 18, color: INK, marginBottom: 2 }}>Choisir votre forfait</div>
+                {plansPanel.loading && (
+                  <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8, color: 'rgba(244,239,230,.7)', fontSize: 13.5, padding: '10px 0' }}>
+                    <Loader2 size={15} className="animate-spin" /> Chargement des forfaits…
+                  </div>
+                )}
+                {!plansPanel.loading && plansPanel.error && (
+                  <span style={{ color: '#f0997b', fontSize: 12.5 }}>Les forfaits sont momentanément indisponibles — réessayez dans un instant.</span>
+                )}
+                {!plansPanel.loading && !plansPanel.error && plansPanel.plans.map((p) => {
+                  const meta = CYCLE_META[p.cycle] || {};
+                  return (
+                    <button key={p.key} onClick={(e) => { e.stopPropagation();
+                        try { logEvent('forfait_checkout', { cycle: p.cycle }, osTenant); } catch { /* non bloquant */ }
+                        window.open(`/t/${osTenant}/paiement?plan=${encodeURIComponent(p.key)}&type=subscription`, '_blank', 'noopener'); }}
+                      style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, textAlign: 'left', cursor: 'pointer',
+                        padding: '12px 15px', borderRadius: 13, border: '1px solid rgba(230,204,146,.18)', background: 'rgba(244,239,230,.035)', fontFamily: 'inherit', width: '100%' }}>
+                      <span style={{ minWidth: 0 }}>
+                        <span style={{ display: 'block', color: INK, fontWeight: 600, fontSize: 14.5 }}>{meta.name || p.label}</span>
+                        <span style={{ display: 'block', color: 'rgba(244,239,230,.6)', fontSize: 12, lineHeight: 1.35, marginTop: 2 }}>{meta.for || ''}</span>
+                      </span>
+                      <span style={{ display: 'inline-flex', alignItems: 'center', gap: 8, flexShrink: 0 }}>
+                        <span style={{ color: GOLD, fontWeight: 600, fontSize: 13.5, whiteSpace: 'nowrap' }}>{p.price} €<span style={{ color: 'rgba(244,239,230,.5)', fontWeight: 400 }}>/mois</span></span>
+                        <ArrowRight size={15} style={{ color: TERRA }} />
+                      </span>
+                    </button>
+                  );
+                })}
+                {!plansPanel.loading && (
+                  <span style={{ fontSize: 11.5, color: 'rgba(244,239,230,.55)', lineHeight: 1.35, marginTop: 2 }}>
+                    Paiement sécurisé — carte (Stripe) ou Mobile Money (PawaPay), dans un nouvel onglet. Trimestre & année proposés au paiement.
+                  </span>
+                )}
+                <button onClick={(e) => { e.stopPropagation(); setPlansPanel(null); }}
+                  style={{ ...VNP_NAV_CHIP, justifyContent: 'center', width: 108, alignSelf: 'flex-start' }}>Fermer</button>
               </>
             )}
           </div>
