@@ -1857,7 +1857,7 @@ export default function CimolaceCreationAgent({ tenantSlug: tenantSlugProp = nul
   // pour que l'OS reste vivant derrière.
   const openForfaits = useCallback(async () => {
     try { logEvent('voir_forfaits', {}, osTenant); } catch { /* non bloquant */ }
-    setHistOpen(false); closeInput();
+    setHistOpen(false); closeInput(); exitScene(); // referme la scène comparateur pour ne pas la superposer
     setContactForm(null); setBookingForm(null); setSignupForm(null); setAuthForm(null);
     setEngaged(true);
     setPlansPanel({ loading: true, plans: [], error: '' });
@@ -1877,7 +1877,7 @@ export default function CimolaceCreationAgent({ tenantSlug: tenantSlugProp = nul
     } catch (_) {
       setPlansPanel({ loading: false, plans: [], error: 'unavailable' });
     }
-  }, [osTenant, speak, closeInput]);
+  }, [osTenant, speak, closeInput, exitScene]);
 
   // ── L8 — mode formation NATIF : Cimolace EST le moteur de rendu du cours ──
   const stopLesson = useCallback(() => {
