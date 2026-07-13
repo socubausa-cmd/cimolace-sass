@@ -5,6 +5,18 @@ import { INK, TERRA, SERIF } from '@/lib/agent/immersiveTheme';
 
 const htmlToText = (html) => String(html || '').replace(/<br\s*\/?>(?=)/gi, '\n').replace(/<\/(p|div|li|h[1-6])>/gi, '\n\n').replace(/<[^>]+>/g, ' ').replace(/&nbsp;/g, ' ').replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/[ \t]+/g, ' ').replace(/\n{3,}/g, '\n\n').trim();
 
+// « 1:54 » / « 0:04 » / nombre → secondes (null si vide/invalide).
+const parseTime = (t) => {
+  if (typeof t === 'number') return Number.isFinite(t) ? t : null;
+  const s = String(t || '').trim();
+  if (!s) return null;
+  if (/^\d+(\.\d+)?$/.test(s)) return Number(s);
+  const parts = s.split(':').map(Number);
+  if (!parts.length || parts.some((n) => !Number.isFinite(n))) return null;
+  return parts.reduce((a, p) => a * 60 + p, 0);
+};
+const fmtTime = (sec) => { const s = Math.max(0, Math.round(sec)); const m = Math.floor(s / 60); return `${m}:${String(s % 60).padStart(2, '0')}`; };
+
 /**
  * Rendu NATIF d'un jour de cours par l'OS — aucune carte/conteneur, tout fondu
  * dans la surface immersive. La vidéo est bord-à-bord, le support passe par la
@@ -26,8 +38,16 @@ export default function FormationOsDayView({ day, onBack, backLabel = 'Programme
   }, [videos.length, support, quiz, mindmap]);
 
   const [step, setStep] = useState(blocks[0]?.key || 'video');
+  const videoRef = useRef(null);
 
   const currentVideo = videos[0] ? { url: videos[0].url, type: videos[0].type, storagePath: videos[0].storagePath || videos[0].storage_path, title: videos[0].title } : null;
+
+  // Placer la vidéo à un instant (depuis un nœud du mindmap) → bascule sur la vidéo + seek.
+  const seekTo = useCallback((sec) => {
+    if (sec == null) return;
+    setStep('video');
+    setTimeout(() => { try { videoRef.current?.seekTo?.(sec); } catch { /* */ } }, 80);
+  }, []);
 
   return (
     <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
@@ -55,12 +75,13 @@ export default function FormationOsDayView({ day, onBack, backLabel = 'Programme
 
       {/* Corps du bloc — plein, sans carte */}
       <div style={{ position: 'relative', flex: 1, minHeight: 0 }}>
-        {step === 'video' && currentVideo && (
-          <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '8px clamp(16px,6vw,90px) 150px' }}>
+        {/* Vidéo TOUJOURS montée (masquée hors « vidéo ») → la ref reste valide pour le seek depuis le mindmap */}
+        {currentVideo && (
+          <div style={{ position: 'absolute', inset: 0, display: step === 'video' ? 'flex' : 'none', alignItems: 'center', justifyContent: 'center', padding: '8px clamp(16px,6vw,90px) 150px' }}>
             <div style={{ position: 'relative', width: '100%', maxWidth: 1180 }}>
               <div style={{ position: 'absolute', inset: '-8%', pointerEvents: 'none', background: 'radial-gradient(ellipse at 50% 45%, rgba(217,119,87,0.13), rgba(8,8,11,0) 66%)', filter: 'blur(46px)' }} />
               <div style={{ position: 'relative', borderRadius: 8, overflow: 'hidden', boxShadow: 'inset 0 0 140px 60px #08080b' }}>
-                <VideoPlayer video={currentVideo} />
+                <VideoPlayer ref={videoRef} video={currentVideo} />
               </div>
             </div>
           </div>
@@ -70,7 +91,7 @@ export default function FormationOsDayView({ day, onBack, backLabel = 'Programme
 
         {step === 'quiz' && quiz && <OsQuiz quiz={quiz} />}
 
-        {step === 'mindmap' && mindmap && <OsMindmap mindmap={mindmap} title={day?.title} onAsk={onAsk} />}
+        {step === 'mindmap' && mindmap && <OsMindmap mindmap={mindmap} title={day?.title} onAsk={onAsk} onSeek={currentVideo ? seekTo : null} />}
       </div>
     </div>
   );
@@ -97,24 +118,33 @@ function OsReader({ support, title }) {
 }
 
 // Un nœud-branche de la carte (aligné vers le centre : dot côté centre, texte à l'opposé).
-function MindBranch({ b, i, side, dotRef, onAsk }) {
+function MindBranch({ b, i, side, dotRef, onAsk, onSeek }) {
   const kp = Array.isArray(b.keyPoints) ? b.keyPoints : [];
   const kids = Array.isArray(b.children) ? b.children : [];
   const isLeft = side === 'left';
   const label = b.label || b.title || `Idée ${i + 1}`;
+  const sec = onSeek ? parseTime(b.timeSeconds ?? b.time) : null;
   const [hover, setHover] = useState(false);
   return (
     <div style={{ display: 'flex', flexDirection: isLeft ? 'row-reverse' : 'row', alignItems: 'flex-start', gap: 10, textAlign: isLeft ? 'right' : 'left' }}>
       <span ref={dotRef} style={{ width: 9, height: 9, borderRadius: '50%', background: 'rgba(217,119,87,.9)', flexShrink: 0, marginTop: 7, boxShadow: '0 0 0 4px rgba(217,119,87,.12)' }} />
-      <div style={{ minWidth: 0 }}>
-        <div
-          onClick={onAsk ? () => onAsk(`Explique-moi : ${label}`) : undefined}
-          onMouseEnter={() => onAsk && setHover(true)} onMouseLeave={() => setHover(false)}
-          role={onAsk ? 'button' : undefined} tabIndex={onAsk ? 0 : undefined}
-          onKeyDown={onAsk ? (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onAsk(`Explique-moi : ${label}`); } } : undefined}
-          title={onAsk ? "Demander à l'OS d'expliquer" : undefined}
-          style={{ fontFamily: SERIF, fontSize: 17.5, fontWeight: 600, color: hover ? TERRA : '#f0ede4', lineHeight: 1.2, cursor: onAsk ? 'pointer' : 'default', transition: 'color .15s ease', display: 'inline-block' }}>
-          {label}
+      <div style={{ minWidth: 0, textAlign: isLeft ? 'right' : 'left' }}>
+        <div style={{ display: 'flex', flexDirection: isLeft ? 'row-reverse' : 'row', alignItems: 'baseline', gap: 8, flexWrap: 'wrap' }}>
+          <div
+            onClick={onAsk ? () => onAsk(`Explique-moi : ${label}`) : undefined}
+            onMouseEnter={() => onAsk && setHover(true)} onMouseLeave={() => setHover(false)}
+            role={onAsk ? 'button' : undefined} tabIndex={onAsk ? 0 : undefined}
+            onKeyDown={onAsk ? (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onAsk(`Explique-moi : ${label}`); } } : undefined}
+            title={onAsk ? "Demander à l'OS d'expliquer" : undefined}
+            style={{ fontFamily: SERIF, fontSize: 17.5, fontWeight: 600, color: hover ? TERRA : '#f0ede4', lineHeight: 1.2, cursor: onAsk ? 'pointer' : 'default', transition: 'color .15s ease' }}>
+            {label}
+          </div>
+          {sec != null && (
+            <button type="button" onClick={(e) => { e.stopPropagation(); onSeek(sec); }} title="Placer la vidéo à ce moment"
+              style={{ display: 'inline-flex', alignItems: 'center', gap: 3, padding: '2px 8px', borderRadius: 999, border: '1px solid rgba(217,119,87,.3)', background: 'rgba(217,119,87,.10)', color: '#f0c3ac', cursor: 'pointer', fontFamily: 'inherit', fontSize: 11.5, fontWeight: 600, whiteSpace: 'nowrap' }}>
+              <Play size={9} /> {fmtTime(sec)}
+            </button>
+          )}
         </div>
         {b.summary && <div style={{ fontSize: 13, color: 'rgba(245,244,238,.6)', marginTop: 5, lineHeight: 1.5 }}>{b.summary}</div>}
         {kp.length > 0 && (
@@ -134,7 +164,7 @@ function MindBranch({ b, i, side, dotRef, onAsk }) {
 
 // Mindmap NATIF OS — VRAIE carte mentale : nœud central + branches gauche/droite reliées
 // par des connecteurs SVG courbes. Fondu dans la surface, sans carte. Fallback empilé si étroit.
-function OsMindmap({ mindmap, title, onAsk }) {
+function OsMindmap({ mindmap, title, onAsk, onSeek }) {
   const root = mindmap || {};
   const rootLabel = root.label || root.title || root.name || title || 'Carte mentale';
   const branches = Array.isArray(root.children) ? root.children : [];
@@ -203,11 +233,11 @@ function OsMindmap({ mindmap, title, onAsk }) {
       ) : wide ? (
         <div style={{ position: 'relative', zIndex: 1, maxWidth: 1180, margin: '0 auto', display: 'grid', gridTemplateColumns: '1fr auto 1fr', alignItems: 'center', gap: 'clamp(28px,4vw,64px)' }}>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 'clamp(18px,3vh,34px)' }}>
-            {left.map((b, i) => <MindBranch key={i} b={b} i={i} side="left" onAsk={onAsk} dotRef={(el) => { dotRefs.current[i] = el; }} />)}
+            {left.map((b, i) => <MindBranch key={i} b={b} i={i} side="left" onAsk={onAsk} onSeek={onSeek} dotRef={(el) => { dotRefs.current[i] = el; }} />)}
           </div>
           {centerNode}
           <div style={{ display: 'flex', flexDirection: 'column', gap: 'clamp(18px,3vh,34px)' }}>
-            {right.map((b, i) => <MindBranch key={i} b={b} i={half + i} side="right" onAsk={onAsk} dotRef={(el) => { dotRefs.current[half + i] = el; }} />)}
+            {right.map((b, i) => <MindBranch key={i} b={b} i={half + i} side="right" onAsk={onAsk} onSeek={onSeek} dotRef={(el) => { dotRefs.current[half + i] = el; }} />)}
           </div>
         </div>
       ) : (
@@ -215,7 +245,7 @@ function OsMindmap({ mindmap, title, onAsk }) {
         <div style={{ position: 'relative', zIndex: 1, maxWidth: 620, margin: '0 auto' }}>
           <div style={{ marginBottom: 30 }}>{centerNode}</div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
-            {branches.map((b, i) => <MindBranch key={i} b={b} i={i} side="right" onAsk={onAsk} dotRef={() => {}} />)}
+            {branches.map((b, i) => <MindBranch key={i} b={b} i={i} side="right" onAsk={onAsk} onSeek={onSeek} dotRef={() => {}} />)}
           </div>
         </div>
       )}
