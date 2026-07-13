@@ -1319,6 +1319,10 @@ const AppContent = () => {
     '/signup',
     '/forfaits',        // Forfaits retirés de la vitrine « PORTAIL » : membre → /liri/forfaits (coque LIRI),
                         // visiteur → page offres focalisée SANS l'ancien header Academy (agent immersif = découverte).
+    '/paiement',        // Checkout focalisé : la page a son propre header minimal (« ← Retour »). Le bandeau
+                        // « PORTAIL » (nav Formations/Boutique + sélecteur de rôle) juste avant de payer =
+                        // chrome incohérent + fuite de confiance. Couvre /paiement et /paiements (custom domain
+                        // strippe /t/:slug/paiement → /paiement). Le checkout INVITÉ reste intact.
     '/creer-organisation',
     '/precepteur',      // Le Précepteur = secteur FORMATION de Cimolace — immersif plein écran, aucun header
     '/rejoindre',

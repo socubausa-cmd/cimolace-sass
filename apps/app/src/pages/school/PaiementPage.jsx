@@ -463,7 +463,7 @@ export default function PaiementPage() {
     const isEvent = !!planInfo?.metadata?.event;
     const email = guest.email || 'votre email';
     return (
-      <div className="min-h-screen bg-[#070b14] text-white">
+      <div className="min-h-screen bg-[#262624] text-white">
         <Helmet>
           <title>{`Confirmation | ${BRAND}`}</title>
         </Helmet>
@@ -501,7 +501,7 @@ export default function PaiementPage() {
   // Service gratuit / communauté → pas de paiement : on propose de débloquer l'accès directement.
   if (isFreeAccess) {
     return (
-      <div className="min-h-screen bg-[#070b14] text-white">
+      <div className="min-h-screen bg-[#262624] text-white">
         <Helmet>
           <title>{`${offer.title} | ${BRAND}`}</title>
         </Helmet>
@@ -545,7 +545,7 @@ export default function PaiementPage() {
   }
 
   return (
-    <div className="min-h-screen bg-[#070b14] text-white">
+    <div className="min-h-screen bg-[#262624] text-white">
       <Helmet>
         <title>{`Paiement | ${BRAND}`}</title>
       </Helmet>
@@ -695,7 +695,7 @@ export default function PaiementPage() {
                     <label className="mb-1.5 block text-sm font-medium text-gray-200">Pays</label>
                     <select value={mmCountry} onChange={(e) => onCountryChange(e.target.value)} className={inputCls}>
                       {mmCountries.map((c) => (
-                        <option key={c.country} value={c.country} className="bg-[#0b1115]">
+                        <option key={c.country} value={c.country} className="bg-[#312d29]">
                           {c.displayName?.fr || c.displayName?.en || c.country}
                         </option>
                       ))}
@@ -706,7 +706,7 @@ export default function PaiementPage() {
                     <label className="mb-1.5 block text-sm font-medium text-gray-200">Opérateur Mobile Money</label>
                     <select value={mmOperator} onChange={(e) => setMmOperator(e.target.value)} className={inputCls}>
                       {mmOperators.map((p) => (
-                        <option key={p.provider} value={p.provider} className="bg-[#0b1115]">
+                        <option key={p.provider} value={p.provider} className="bg-[#312d29]">
                           {p.displayName || p.provider}
                         </option>
                       ))}
@@ -733,7 +733,7 @@ export default function PaiementPage() {
           <button
             type="submit"
             disabled={status.state === 'submitting' || (method === 'mobile_money' && (['success', 'completed', 'pending_email'].includes(status.state) || mmOperators.length === 0))}
-            className="w-full cursor-pointer rounded-lg bg-[var(--school-accent)] px-5 py-3 font-semibold text-black hover:bg-[#e5c04a] disabled:opacity-60"
+            className="w-full cursor-pointer rounded-lg bg-[var(--school-accent)] px-5 py-3 font-semibold text-black hover:bg-[#c9673f] disabled:opacity-60"
           >
             {status.state === 'submitting'
               ? method === 'mobile_money'
