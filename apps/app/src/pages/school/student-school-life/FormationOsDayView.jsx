@@ -22,7 +22,7 @@ const fmtTime = (sec) => { const s = Math.max(0, Math.round(sec)); const m = Mat
  * dans la surface immersive. La vidéo est bord-à-bord, le support passe par la
  * scène `reader` de l'OS, le quiz est rendu nativement. L'OS « affiche tout ».
  */
-export default function FormationOsDayView({ day, onBack, backLabel = 'Programme', onAsk }) {
+export default function FormationOsDayView({ day, onBack, backLabel = 'Programme', onAsk, onOsSay }) {
   const videos = Array.isArray(day?.videos) ? day.videos : (day?.video ? [day.video] : []);
   const support = day?.powerpoint || day?.reader || null;
   const quiz = day?.quiz || null;
@@ -48,6 +48,17 @@ export default function FormationOsDayView({ day, onBack, backLabel = 'Programme
     setStep('video');
     setTimeout(() => { try { videoRef.current?.seekTo?.(sec); } catch { /* */ } }, 80);
   }, []);
+
+  // Fin de quiz → l'OS réagit (voix) + renvoie au mindmap si à consolider.
+  const handleQuizDone = useCallback((score, total) => {
+    const ratio = total ? score / total : 0;
+    let msg;
+    if (ratio >= 1) msg = `Parfait — ${score}/${total} ! Tu maîtrises « ${day?.title || 'cette leçon'} ». On peut enchaîner.`;
+    else if (ratio >= 0.6) msg = `${score}/${total} — bien joué. Encore quelques points à consolider : reprends le mindmap pour revoir les concepts clés.`;
+    else msg = `${score}/${total}. Pas de souci : reviens sur la vidéo et le mindmap, puis retente. Clique un concept et je te le réexplique.`;
+    onOsSay?.(msg);
+    if (ratio < 0.6 && mindmap) setTimeout(() => setStep('mindmap'), 900);
+  }, [day, mindmap, onOsSay]);
 
   return (
     <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
@@ -89,7 +100,7 @@ export default function FormationOsDayView({ day, onBack, backLabel = 'Programme
 
         {step === 'support' && support && <OsReader support={support} title={day?.title} />}
 
-        {step === 'quiz' && quiz && <OsQuiz quiz={quiz} />}
+        {step === 'quiz' && quiz && <OsQuiz quiz={quiz} onDone={handleQuizDone} />}
 
         {step === 'mindmap' && mindmap && <OsMindmap mindmap={mindmap} title={day?.title} onAsk={onAsk} onSeek={currentVideo ? seekTo : null} />}
       </div>
@@ -254,7 +265,7 @@ function OsMindmap({ mindmap, title, onAsk, onSeek }) {
 }
 
 // Quiz NATIF OS — questions fondues dans la surface, options en pastilles, validation inline.
-function OsQuiz({ quiz }) {
+function OsQuiz({ quiz, onDone }) {
   const questions = Array.isArray(quiz?.questions) ? quiz.questions : [];
   const [answers, setAnswers] = useState({});
   const [submitted, setSubmitted] = useState(false);
@@ -294,7 +305,7 @@ function OsQuiz({ quiz }) {
           );
         })}
         {!submitted ? (
-          <button type="button" onClick={() => setSubmitted(true)} disabled={Object.keys(answers).length < questions.length}
+          <button type="button" onClick={() => { const sc = questions.reduce((a, q, i) => a + (answers[i] === correctOf(q) ? 1 : 0), 0); setSubmitted(true); onDone?.(sc, questions.length); }} disabled={Object.keys(answers).length < questions.length}
             style={{ marginTop: 6, padding: '12px 22px', borderRadius: 999, border: 'none', background: TERRA, color: '#231208', fontFamily: 'inherit', fontSize: 14, fontWeight: 700, cursor: Object.keys(answers).length < questions.length ? 'not-allowed' : 'pointer', opacity: Object.keys(answers).length < questions.length ? 0.5 : 1 }}>
             Valider le quiz
           </button>
