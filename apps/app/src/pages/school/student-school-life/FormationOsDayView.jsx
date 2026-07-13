@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useMemo, useState, useRef, useLayoutEffect, useCallback } from 'react';
 import { ArrowLeft, Play, FileText, HelpCircle, Network, Check, X } from 'lucide-react';
 import VideoPlayer from '@/components/school/formations/VideoPlayer';
 import { INK, TERRA, SERIF } from '@/lib/agent/immersiveTheme';
@@ -96,49 +96,119 @@ function OsReader({ support, title }) {
   );
 }
 
-// Mindmap NATIF OS — carte mentale fondue dans la surface : nœud central + branches
-// (nœud coral + points-clés), pas de carte. L'OS « affiche » l'arbre de concepts.
+// Un nœud-branche de la carte (aligné vers le centre : dot côté centre, texte à l'opposé).
+function MindBranch({ b, i, side, dotRef }) {
+  const kp = Array.isArray(b.keyPoints) ? b.keyPoints : [];
+  const kids = Array.isArray(b.children) ? b.children : [];
+  const isLeft = side === 'left';
+  return (
+    <div style={{ display: 'flex', flexDirection: isLeft ? 'row-reverse' : 'row', alignItems: 'flex-start', gap: 10, textAlign: isLeft ? 'right' : 'left' }}>
+      <span ref={dotRef} style={{ width: 9, height: 9, borderRadius: '50%', background: 'rgba(217,119,87,.9)', flexShrink: 0, marginTop: 7, boxShadow: '0 0 0 4px rgba(217,119,87,.12)' }} />
+      <div style={{ minWidth: 0 }}>
+        <div style={{ fontFamily: SERIF, fontSize: 17.5, fontWeight: 600, color: '#f0ede4', lineHeight: 1.2 }}>{b.label || b.title || `Idée ${i + 1}`}</div>
+        {b.summary && <div style={{ fontSize: 13, color: 'rgba(245,244,238,.6)', marginTop: 5, lineHeight: 1.5 }}>{b.summary}</div>}
+        {kp.length > 0 && (
+          <ul style={{ margin: '7px 0 0', padding: 0, listStyle: 'none', display: 'flex', flexDirection: 'column', gap: 3 }}>
+            {kp.map((k, ki) => (<li key={ki} style={{ fontSize: 13, color: 'rgba(245,244,238,.72)', display: 'flex', flexDirection: isLeft ? 'row-reverse' : 'row', gap: 7 }}><span style={{ color: TERRA }}>·</span>{k}</li>))}
+          </ul>
+        )}
+        {kids.length > 0 && (
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginTop: 9, justifyContent: isLeft ? 'flex-end' : 'flex-start' }}>
+            {kids.map((c, ci) => (<span key={ci} style={{ fontSize: 12, padding: '4px 10px', borderRadius: 999, background: 'rgba(245,244,238,.05)', border: '1px solid rgba(245,244,238,.08)', color: 'rgba(245,244,238,.7)' }}>{c.label || c.title || c.name}</span>))}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+// Mindmap NATIF OS — VRAIE carte mentale : nœud central + branches gauche/droite reliées
+// par des connecteurs SVG courbes. Fondu dans la surface, sans carte. Fallback empilé si étroit.
 function OsMindmap({ mindmap, title }) {
   const root = mindmap || {};
   const rootLabel = root.label || root.title || root.name || title || 'Carte mentale';
   const branches = Array.isArray(root.children) ? root.children : [];
+  const half = Math.ceil(branches.length / 2);
+  const left = branches.slice(0, half);
+  const right = branches.slice(half);
+
+  const wrapRef = useRef(null);
+  const centerRef = useRef(null);
+  const dotRefs = useRef([]);
+  const [paths, setPaths] = useState([]);
+  const [dims, setDims] = useState({ w: 0, h: 0 });
+  const [wide, setWide] = useState(true);
+
+  const measure = useCallback(() => {
+    const wrap = wrapRef.current, c = centerRef.current;
+    if (!wrap || !c) return;
+    const wr = wrap.getBoundingClientRect();
+    const isWide = wr.width >= 760;
+    setWide(isWide);
+    setDims({ w: wr.width, h: wr.height });
+    if (!isWide) { setPaths([]); return; }
+    const cc = c.getBoundingClientRect();
+    const cx = cc.left + cc.width / 2 - wr.left;
+    const cy = cc.top + cc.height / 2 - wr.top;
+    const next = [];
+    dotRefs.current.forEach((el) => {
+      if (!el) return;
+      const b = el.getBoundingClientRect();
+      const bx = b.left + b.width / 2 - wr.left;
+      const by = b.top + b.height / 2 - wr.top;
+      const mx = (cx + bx) / 2;
+      next.push(`M ${cx.toFixed(1)} ${cy.toFixed(1)} C ${mx.toFixed(1)} ${cy.toFixed(1)} ${mx.toFixed(1)} ${by.toFixed(1)} ${bx.toFixed(1)} ${by.toFixed(1)}`);
+    });
+    setPaths(next);
+  }, [branches.length]);
+
+  useLayoutEffect(() => {
+    measure();
+    const ro = typeof ResizeObserver !== 'undefined' ? new ResizeObserver(() => measure()) : null;
+    if (ro && wrapRef.current) ro.observe(wrapRef.current);
+    window.addEventListener('resize', measure);
+    const t = setTimeout(measure, 250); // après reflow des polices
+    return () => { if (ro) ro.disconnect(); window.removeEventListener('resize', measure); clearTimeout(t); };
+  }, [measure]);
+
+  const centerNode = (
+    <div ref={centerRef} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 12, flexShrink: 0 }}>
+      <span style={{ width: 15, height: 15, borderRadius: '50%', background: TERRA, boxShadow: '0 0 0 7px rgba(217,119,87,.14), 0 0 40px rgba(217,119,87,.35)' }} />
+      <div style={{ fontFamily: SERIF, fontSize: 'clamp(21px,2.8vw,32px)', fontWeight: 600, color: '#f5f4ee', textAlign: 'center', maxWidth: 260, lineHeight: 1.14 }}>{rootLabel}</div>
+    </div>
+  );
+
   return (
-    <div style={{ position: 'absolute', inset: 0, overflowY: 'auto', padding: 'clamp(22px,5vh,54px) clamp(18px,6vw,90px) 118px' }}>
-      <div style={{ maxWidth: 1040, margin: '0 auto' }}>
-        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 12, marginBottom: 40 }}>
-          <span style={{ width: 13, height: 13, borderRadius: '50%', background: TERRA, boxShadow: '0 0 0 6px rgba(217,119,87,.14)' }} />
-          <div style={{ fontFamily: SERIF, fontSize: 'clamp(24px,3.4vw,38px)', fontWeight: 600, color: '#f5f4ee', textAlign: 'center' }}>{rootLabel}</div>
+    <div ref={wrapRef} style={{ position: 'absolute', inset: 0, overflowY: 'auto', padding: 'clamp(22px,5vh,54px) clamp(18px,5vw,70px) 118px' }}>
+      {wide && paths.length > 0 && (
+        <svg width={dims.w} height={dims.h} viewBox={`0 0 ${dims.w} ${dims.h}`} style={{ position: 'absolute', top: 0, left: 0, pointerEvents: 'none', zIndex: 0 }} aria-hidden>
+          {paths.map((d, i) => (<path key={i} d={d} fill="none" stroke="rgba(217,119,87,0.34)" strokeWidth="1.5" />))}
+        </svg>
+      )}
+
+      {!branches.length ? (
+        <div style={{ position: 'relative', maxWidth: 1040, margin: '0 auto', textAlign: 'center' }}>
+          {centerNode}
         </div>
-        {branches.length ? (
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(240px,1fr))', gap: 'clamp(18px,2.6vw,34px)' }}>
-            {branches.map((b, i) => {
-              const kp = Array.isArray(b.keyPoints) ? b.keyPoints : [];
-              const kids = Array.isArray(b.children) ? b.children : [];
-              return (
-                <div key={i}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 9, marginBottom: 7 }}>
-                    <span style={{ width: 8, height: 8, borderRadius: '50%', background: 'rgba(217,119,87,.85)', flexShrink: 0 }} />
-                    <div style={{ fontFamily: SERIF, fontSize: 18, fontWeight: 600, color: '#f0ede4' }}>{b.label || b.title || `Idée ${i + 1}`}</div>
-                  </div>
-                  {b.summary && <div style={{ fontSize: 13.5, color: 'rgba(245,244,238,.6)', margin: '0 0 8px 17px' }}>{b.summary}</div>}
-                  {kp.length > 0 && (
-                    <ul style={{ margin: '0 0 0 17px', padding: 0, listStyle: 'none', display: 'flex', flexDirection: 'column', gap: 4 }}>
-                      {kp.map((k, ki) => (<li key={ki} style={{ fontSize: 13.5, color: 'rgba(245,244,238,.72)', display: 'flex', gap: 8 }}><span style={{ color: TERRA }}>·</span>{k}</li>))}
-                    </ul>
-                  )}
-                  {kids.length > 0 && (
-                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, margin: '10px 0 0 17px' }}>
-                      {kids.map((c, ci) => (<span key={ci} style={{ fontSize: 12, padding: '4px 10px', borderRadius: 999, background: 'rgba(245,244,238,.05)', border: '1px solid rgba(245,244,238,.08)', color: 'rgba(245,244,238,.7)' }}>{c.label || c.title || c.name}</span>))}
-                    </div>
-                  )}
-                </div>
-              );
-            })}
+      ) : wide ? (
+        <div style={{ position: 'relative', zIndex: 1, maxWidth: 1180, margin: '0 auto', display: 'grid', gridTemplateColumns: '1fr auto 1fr', alignItems: 'center', gap: 'clamp(28px,4vw,64px)' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 'clamp(18px,3vh,34px)' }}>
+            {left.map((b, i) => <MindBranch key={i} b={b} i={i} side="left" dotRef={(el) => { dotRefs.current[i] = el; }} />)}
           </div>
-        ) : (
-          <div style={{ textAlign: 'center', color: 'rgba(245,244,238,.5)', fontSize: 14 }}>Carte mentale de la leçon.</div>
-        )}
-      </div>
+          {centerNode}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 'clamp(18px,3vh,34px)' }}>
+            {right.map((b, i) => <MindBranch key={i} b={b} i={half + i} side="right" dotRef={(el) => { dotRefs.current[half + i] = el; }} />)}
+          </div>
+        </div>
+      ) : (
+        // étroit : empilé, sans connecteurs (lisibilité mobile)
+        <div style={{ position: 'relative', zIndex: 1, maxWidth: 620, margin: '0 auto' }}>
+          <div style={{ marginBottom: 30 }}>{centerNode}</div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
+            {branches.map((b, i) => <MindBranch key={i} b={b} i={i} side="right" dotRef={() => {}} />)}
+          </div>
+        </div>
+      )}
     </div>
   );
 }
