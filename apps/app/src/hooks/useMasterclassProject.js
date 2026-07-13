@@ -14,7 +14,6 @@
  * `docs/LIRI_MASTERCLASS_BLOCS_CHAPITRES_CAHIER_DES_CHARGES.md`
  */
 import { useState, useCallback, useRef, useEffect } from 'react';
-import { resolveApiOrigin } from '@/lib/androidApiHost';
 import { supabase } from '@/lib/supabase';
 import {
   validateStructuredDocument,
@@ -485,47 +484,10 @@ export function useMasterclassProject() {
         return null;
       });
 
-      // Essai via liri-orchestrator-start (en parallèle de l'analyse structurée)
-      try {
-        const origin = resolveApiOrigin();
-        const res = await fetch(`${origin}/.netlify/functions/liri-orchestrator-start`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ rawText: cleaned }),
-          signal: ctrl.signal,
-        });
-        const data = await res.json().catch(() => ({}));
-        if (data.projectId) {
-          // Poll max 20s
-          for (let i = 0; i < 7; i++) {
-            await new Promise(r => setTimeout(r, 3000));
-            if (ctrl.signal.aborted) return;
-            const sr = await fetch(`${origin}/.netlify/functions/liri-orchestrator-status?projectId=${data.projectId}`);
-            const sd = await sr.json().catch(() => ({}));
-            // Rejeter les chapitres génériques "Chapitre 1, 2, 3" sans contenu
-            const hasRealChapters = sd.chapters?.some(c =>
-              c.title && !/^Chapitre\s*\d+$/i.test(c.title.trim()) && (c.objective || c.summary || c.content)
-            );
-            if (hasRealChapters || sd.status === 'completed') {
-              const firstSentence = cleaned.split(/[.!?]\s+/)[0]?.slice(0, 100);
-              analysis = {
-                global_subject:      hasRealChapters ? sd.chapters[0].title : (firstSentence || cleaned.slice(0, 80)),
-                target_audience:     sd.audience   || 'Chercheurs spirituels, grand public',
-                estimated_duration:  sd.duration   || `${(sd.chapters?.length || 3) * 20} min`,
-                level:               sd.level      || 'Intermédiaire — Avancé',
-                pedagogical_tone:    sd.tone       || 'Doctrinal & Pédagogique',
-                key_revelations:     sd.chapters
-                  ?.map(ch => ch.objective || ch.summary || ch.title)
-                  .filter(t => t && !/^Chapitre\s*\d+$/i.test(t.trim()))
-                  .slice(0, 6) || [],
-                chapters_count:      sd.chapters?.length || 0,
-                raw_chapters:        hasRealChapters ? sd.chapters : [],
-              };
-              break;
-            }
-          }
-        }
-      } catch { /* fallback ci-dessous */ }
+      // NB : l'ancien essai `liri-orchestrator-start`/`-status` visait des fonctions
+      // Netlify MORTES (cf. commentaire callFn) → il ne pouvait JAMAIS produire d'analyse
+      // et n'ajoutait que du bruit réseau (404). Retiré : la vraie analyse vient de l'edge
+      // `liri-masterclass-document-analyze` (docPromise ci-dessus) avec repli regex local.
 
       // Fallback local si l'IA n'a pas répondu
       if (!analysis) {
@@ -831,7 +793,6 @@ export function useMasterclassProject() {
         'Expérience de pensée','Révélation','Leçon simple','Leçon développée','Analogies',
         'Exemples','Reformulation','Atelier','Erreurs attendues','Correction','JE RETIENS',
         'Test','Cas réel','Lien conceptuel','Niveau de maîtrise','Transition'];
-      const origin = resolveApiOrigin();
 
       const minSegmentsComplete = pedagogicalModelRef.current === 'failure-v2' ? 26 : 21;
 
@@ -865,25 +826,19 @@ export function useMasterclassProject() {
             status:       'done',
           }));
         } else {
-          // ── Priorité 2 : appel IA liri-pedagogy-generate ─────────────────────
+          // ── Priorité 2 : appel IA liri-pedagogy-generate (edge Supabase) ──────
+          // (Anciennement fetch `.netlify/functions/…` MORTE. Migré sur supabase.functions
+          //  via callFn : actif si l'edge est déployée, repli propre 'pending' sinon.)
           let aiSegments = null;
           try {
-            const res = await fetch(`${origin}/.netlify/functions/liri-pedagogy-generate`, {
-              method:  'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body:    JSON.stringify({
-                chapterTitle:     ch.title,
-                chapterContent:   ch.content || ch.summary || '',
-                chapterObjective: ch.objective || '',
-                lang:             'fr',
-              }),
-              signal: ctrl.signal,
-            });
-            if (res.ok) {
-              const data = await res.json().catch(() => ({}));
-              if (data.segments && typeof data.segments === 'object') {
-                aiSegments = data.segments;
-              }
+            const data = await callFn('liri-pedagogy-generate', {
+              chapterTitle:     ch.title,
+              chapterContent:   ch.content || ch.summary || '',
+              chapterObjective: ch.objective || '',
+              lang:             'fr',
+            }, ctrl.signal);
+            if (data?.segments && typeof data.segments === 'object') {
+              aiSegments = data.segments;
             }
           } catch (e) {
             if (ctrl.signal.aborted) return;
