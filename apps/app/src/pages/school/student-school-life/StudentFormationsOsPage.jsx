@@ -193,6 +193,20 @@ export default function StudentFormationsOsPage() {
   };
   const backLabel = focusModule ? (focusCourse?.course?.title || 'Formation') : 'Mes formations';
 
+  // Suggestions contextuelles — l'OS propose des questions selon l'endroit (comme un précepteur).
+  const suggestions = useMemo(() => {
+    if (openDay) {
+      const d = openDay.day || {};
+      const mm = (Array.isArray(d.videos) ? d.videos.find((v) => v?.mindmap)?.mindmap : null) || d.mindmap;
+      const branches = Array.isArray(mm?.children) ? mm.children : [];
+      if (branches.length) return branches.slice(0, 3).map((b) => { const l = b.label || b.title || 'ce point'; return { label: l, q: `Explique-moi : ${l}` }; });
+      return [{ label: 'Résume cette leçon', q: 'Résume-moi cette leçon' }];
+    }
+    if (focusModule) return [{ label: 'Résume ce module', q: 'Résume-moi ce module' }, { label: 'Par où commencer ?', q: 'Par où je commence dans ce module ?' }];
+    if (focusCourse) return [{ label: 'Résume la formation', q: 'Résume-moi cette formation' }, { label: 'Par où commencer ?', q: 'Par où je commence cette formation ?' }];
+    return [];
+  }, [openDay, focusModule, focusCourse]);
+
   // Enregistre un échange dans le fil + met à jour la « voix » courante.
   const say = (q, r) => { setReply(r); setHistory((h) => [...h, { q, reply: r }]); };
 
@@ -334,6 +348,16 @@ export default function StudentFormationsOsPage() {
           <div style={{ maxWidth: 680, margin: '0 auto', pointerEvents: 'auto', position: 'relative' }}>
             {reply && (
               <div style={{ marginBottom: 12, fontFamily: SERIF, fontSize: 16, color: 'rgba(245,244,238,.9)', textAlign: 'center', lineHeight: 1.4, textShadow: '0 2px 14px rgba(8,8,11,.7)' }}>{typed || reply}</div>
+            )}
+            {suggestions.length > 0 && !asking && (
+              <div style={{ display: 'flex', gap: 8, justifyContent: 'center', flexWrap: 'wrap', marginBottom: 10 }}>
+                {suggestions.map((s, i) => (
+                  <button key={i} type="button" onClick={() => handle(s.q)} title={s.q}
+                    style={{ maxWidth: 260, padding: '6px 13px', borderRadius: 999, border: '1px solid rgba(217,119,87,.26)', background: 'rgba(217,119,87,.08)', color: '#f0c3ac', cursor: 'pointer', fontFamily: 'inherit', fontSize: 12.5, fontWeight: 600, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                    {s.label}
+                  </button>
+                ))}
+              </div>
             )}
             <form onSubmit={onAsk} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '7px 7px 7px 12px', borderRadius: 999, border: '1px solid rgba(245,244,238,.12)', background: 'rgba(31,30,28,.92)', backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)', boxShadow: '0 12px 44px rgba(0,0,0,.5)' }}>
               {history.length > 0 && (
