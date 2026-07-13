@@ -1404,7 +1404,7 @@ function TutorialFlow({ scene, onCta, hooks, onHook }) {
 
 export default function CimolaceCreationAgent({ tenantSlug: tenantSlugProp = null, embedded = false } = {}) {
   const navigate = useNavigate();
-  const { login } = useAuth();
+  const { login, signup, ensureStudentMembership, user } = useAuth();
 
   // L8-P1 — realm : si un tenant est ciblé, l'OS REND ce tenant (même moteur, autre identité) au lieu
   // du tunnel de création Cimolace. isTenantRealm gate tout le flux « créer une org Cimolace ».
@@ -1509,6 +1509,8 @@ export default function CimolaceCreationAgent({ tenantSlug: tenantSlugProp = nul
     protocolRef.current = VNP_PROTOCOL_V2 && vnpGraph ? createProtocol({ graph: vnpGraph, order: vnpGraph.tourOrder }) : null;
   }, [vnpGraph]);
   const [bookingForm, setBookingForm] = useState(null); // Action Engine RDV : {service,slotIso,name,email,sending,sent,error} | null
+  const [signupForm, setSignupForm] = useState(null);   // Inscription INLINE (l'OS possède l'identité) : {name,email,password,sending,sent,error} | null
+  const [authForm, setAuthForm] = useState(null);       // Connexion INLINE : {email,password,sending,error} | null
   const bookingSlots = useMemo(() => genSlots(6), []); // créneaux proposés (stables sur la session)
   const [covered, setCovered] = useState([]);
   const [topic, setTopic] = useState(null);
@@ -1812,25 +1814,32 @@ export default function CimolaceCreationAgent({ tenantSlug: tenantSlugProp = nul
   }, []);
   const closeInput = useCallback(() => { setInputOpen(false); setValue(''); }, []);
 
-  // MON ESPACE — le membre qui a déjà un compte va à la connexion tenant (/t/:slug/login → son espace).
+  // MON ESPACE — connecté → son portail LIRI ; déconnecté → CONNEXION EN LIGNE dans l'OS
+  // (jamais de saut vers /login : l'OS possède l'identité, comme le contact/RDV).
   const goToSpace = useCallback(() => {
     try { logEvent('mon_espace', {}, osTenant); } catch { /* non bloquant */ }
     setHistOpen(false); closeInput();
-    speak('Je vous emmène à votre espace — un instant.');
-    // Espace membre = le PORTAIL LIRI (/liri) — PAS l'ancien Academy /t/:slug/login (déprécié).
-    // Connecté → sa surface LIRI directement ; déconnecté → /login puis redirigé vers /liri.
-    setTimeout(() => navigate('/liri'), 650);
-  }, [osTenant, speak, navigate, closeInput]);
+    if (user?.id) {
+      speak('Je vous emmène à votre espace — un instant.');
+      setTimeout(() => navigate('/liri'), 650);
+      return;
+    }
+    setContactForm(null); setBookingForm(null); setSignupForm(null);
+    speak('Content de vous revoir. Connectez-vous ici même.');
+    setEngaged(true);
+    setAuthForm({ email: '', password: '', sending: false, error: '' });
+  }, [osTenant, speak, navigate, closeInput, user]);
 
-  // CRÉER UN COMPTE — le NOUVEAU visiteur (pas encore de compte) s'inscrit. /signup est
-  // tenant-aware par le HOST (prorascience.org → tenant isna) : le compte est rattaché au
-  // bon tenant (RPC ensure_student_membership). Complète « Mon espace » (membre existant).
+  // CRÉER UN COMPTE — INSCRIPTION EN LIGNE dans l'OS (jamais de saut vers /signup). Le compte
+  // est rattaché au tenant par le HOST (RPC ensure_student_membership) dans submitSignup.
   const goToSignup = useCallback(() => {
     try { logEvent('creer_compte', {}, osTenant); } catch { /* non bloquant */ }
     setHistOpen(false); closeInput();
-    speak('Parfait — je vous ouvre la création de compte.');
-    setTimeout(() => navigate('/signup'), 620);
-  }, [osTenant, speak, navigate, closeInput]);
+    setContactForm(null); setBookingForm(null); setAuthForm(null);
+    speak("Parfait — créons votre espace. Un e-mail, un mot de passe, et c'est à vous.");
+    setEngaged(true);
+    setSignupForm({ name: '', email: '', password: '', sending: false, sent: false, error: '' });
+  }, [osTenant, speak, closeInput]);
 
   // ── L8 — mode formation NATIF : Cimolace EST le moteur de rendu du cours ──
   const stopLesson = useCallback(() => {
@@ -2268,6 +2277,46 @@ export default function CimolaceCreationAgent({ tenantSlug: tenantSlugProp = nul
     }
   }, [bookingForm, osBrand, osTenant, speak]);
 
+  // Inscription INLINE — l'OS crée le compte (signup tenant-aware par host) SANS quitter l'expérience.
+  const submitSignup = useCallback(async () => {
+    const f = signupForm; if (!f || f.sending) return;
+    const email = (f.email || '').trim();
+    const password = f.password || '';
+    if (!/.+@.+\..+/.test(email)) { setSignupForm((c) => ({ ...c, error: "Une adresse e-mail valide, s'il vous plaît." })); return; }
+    if (password.length < 6) { setSignupForm((c) => ({ ...c, error: "Un mot de passe d'au moins 6 caractères." })); return; }
+    setSignupForm((c) => ({ ...c, sending: true, error: '' }));
+    try {
+      const { data, error } = await signup(email, password, { name: (f.name || '').trim() });
+      if (error) throw error;
+      if (data?.session?.user) { try { await ensureStudentMembership(data.session.user); } catch { /* non bloquant */ } }
+      setSignupForm((c) => ({ ...c, sending: false, sent: true }));
+      try { logEvent('signup_inline', {}, osTenant); } catch { /* non bloquant */ }
+      speak(`Bienvenue${f.name ? `, ${f.name.trim()}` : ''} — votre espace ${tenantName} est prêt.`);
+      setTimeout(() => navigate('/liri'), 1500);
+    } catch (e) {
+      const msg = String(e?.message || '');
+      setSignupForm((c) => ({ ...c, sending: false, error: /registered|already/i.test(msg) ? 'Cet e-mail a déjà un compte — connectez-vous.' : 'Inscription impossible — réessayez.' }));
+    }
+  }, [signupForm, signup, ensureStudentMembership, osTenant, tenantName, speak, navigate]);
+
+  // Connexion INLINE — l'OS ouvre la session SANS naviguer vers /login.
+  const submitLogin = useCallback(async () => {
+    const f = authForm; if (!f || f.sending) return;
+    const email = (f.email || '').trim();
+    const password = f.password || '';
+    if (!/.+@.+\..+/.test(email) || !password) { setAuthForm((c) => ({ ...c, error: "E-mail et mot de passe, s'il vous plaît." })); return; }
+    setAuthForm((c) => ({ ...c, sending: true, error: '' }));
+    try {
+      const { error } = await login(email, password);
+      if (error) throw error;
+      try { logEvent('login_inline', {}, osTenant); } catch { /* non bloquant */ }
+      speak('Content de vous revoir — je vous emmène à votre espace.');
+      setTimeout(() => navigate('/liri'), 800);
+    } catch (e) {
+      setAuthForm((c) => ({ ...c, sending: false, error: 'Identifiants incorrects — réessayez.' }));
+    }
+  }, [authForm, login, osTenant, speak, navigate]);
+
   const submitInput = useCallback(() => {
     const v = value.trim();
     closeInput();
@@ -2361,7 +2410,7 @@ export default function CimolaceCreationAgent({ tenantSlug: tenantSlugProp = nul
   const tenantName = (osBrand && osBrand.name) || osTenant;
   // Écran SCINDÉ : dès qu'une action (formulaire/RDV) est ouverte, on passe en 2 zones —
   // le guide parle à GAUCHE, la zone d'action (qui s'étire) à DROITE.
-  const showSplitAction = isTenantRealm && !!(contactForm || bookingForm);
+  const showSplitAction = isTenantRealm && !!(contactForm || bookingForm || signupForm || authForm);
   // Scène plein écran (split/reader/tutorial) : la voix centrale + actions en flux s'effacent,
   // la scène porte le message ; `aside` garde la voix au centre.
   const fullscreenScene = !!scene && scene.type !== 'aside';
@@ -2424,7 +2473,7 @@ export default function CimolaceCreationAgent({ tenantSlug: tenantSlugProp = nul
 
       {/* NAVIGATION DE CONVERSATION (realm tenant) : mini-rail rapide (bord droit) + panneau messagerie */}
       {isTenantRealm && (<style>{CONV_CSS}</style>)}
-      {isTenantRealm && engaged && !histOpen && !contactForm && !bookingForm && (
+      {isTenantRealm && engaged && !histOpen && !contactForm && !bookingForm && !signupForm && !authForm && (
         <MiniNav turns={turns} curTurn={curTurn} onGo={goToTurn} />
       )}
       {isTenantRealm && histOpen && turns.length > 0 && (
@@ -2432,7 +2481,7 @@ export default function CimolaceCreationAgent({ tenantSlug: tenantSlugProp = nul
       )}
 
       {/* Écrire — affordance TOUJOURS accessible pour (ré)ouvrir la saisie (anti-blocage) */}
-      {isTenantRealm && engaged && !inputOpen && !histOpen && !contactForm && !bookingForm && (
+      {isTenantRealm && engaged && !inputOpen && !histOpen && !contactForm && !bookingForm && !signupForm && !authForm && (
         <button
           type="button"
           onClick={(e) => { e.stopPropagation(); openInput(); }}
@@ -2445,7 +2494,7 @@ export default function CimolaceCreationAgent({ tenantSlug: tenantSlugProp = nul
       )}
 
       {/* Cimolace (mode guide VNP) : CTA primaire de conversion → bascule vers le tunnel de création. */}
-      {isCimolaceRealm && isTenantRealm && !inputOpen && !histOpen && !contactForm && !bookingForm && (
+      {isCimolaceRealm && isTenantRealm && !inputOpen && !histOpen && !contactForm && !bookingForm && !signupForm && !authForm && (
         <button
           type="button"
           onClick={(e) => { e.stopPropagation(); vnpAction('creer_plateforme'); }}
@@ -2677,7 +2726,7 @@ export default function CimolaceCreationAgent({ tenantSlug: tenantSlugProp = nul
 
       {/* VNP — Realm tenant : accueil = INTENTIONS (avant interaction) ; puis NAVIGATION GUIDÉE
           (sujets liés) + ACTION ENGINE (actions métier). Le visiteur ne clique pas des liens : des intentions. */}
-      {showActions && isTenantRealm && !tourActive && !fullscreenScene && !contactForm && !bookingForm && !showTenantHero && (
+      {showActions && isTenantRealm && !tourActive && !fullscreenScene && !contactForm && !bookingForm && !signupForm && !authForm && !showTenantHero && (
         <div className="cca-in" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(238px, 1fr))', gap: 10, justifyItems: 'stretch', marginTop: 24, width: '100%', maxWidth: 560, position: 'relative', zIndex: 4, padding: '0 20px', boxSizing: 'border-box' }}>
           {/* Toujours proposé : la visite guidée (l'OS REND le site en scènes) */}
           <button className="cca-chip cca-chip-visit" onClick={(e) => { e.stopPropagation(); startTenantTour(); }} style={VNP_VISIT_CHIP}>
@@ -2811,6 +2860,64 @@ export default function CimolaceCreationAgent({ tenantSlug: tenantSlugProp = nul
                 </div>
               </>
             ))}
+
+            {/* INSCRIPTION EN LIGNE — l'OS possède l'identité (miroir de contactForm) */}
+            {signupForm && (signupForm.sent ? (
+              <div style={{ textAlign: 'center', color: GOLD, fontFamily: DISPLAY, fontSize: 20, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 8, padding: '16px 0' }}>
+                <Check size={18} /> Bienvenue{signupForm.name ? `, ${signupForm.name.trim()}` : ''} !
+              </div>
+            ) : (
+              <>
+                <div className="cca-display" style={{ fontSize: 18, color: INK, marginBottom: 2 }}>Créer votre espace {tenantName}</div>
+                <input className="cca-field" placeholder="Votre nom (optionnel)" value={signupForm.name}
+                  onChange={(e) => setSignupForm((c) => ({ ...c, name: e.target.value }))} style={VNP_FIELD} />
+                <input className="cca-field" type="email" placeholder="Votre e-mail" value={signupForm.email} autoComplete="email"
+                  onChange={(e) => setSignupForm((c) => ({ ...c, email: e.target.value }))} style={VNP_FIELD} />
+                <input className="cca-field" type="password" placeholder="Un mot de passe (6+ caractères)" value={signupForm.password} autoComplete="new-password"
+                  onChange={(e) => setSignupForm((c) => ({ ...c, password: e.target.value }))}
+                  onKeyDown={(e) => { if (e.key === 'Enter') { e.stopPropagation(); submitSignup(); } }} style={VNP_FIELD} />
+                {signupForm.error && <span style={{ color: '#f0997b', fontSize: 12.5 }}>{signupForm.error}</span>}
+                <div style={{ display: 'flex', gap: 8 }}>
+                  <button onClick={(e) => { e.stopPropagation(); submitSignup(); }} disabled={signupForm.sending}
+                    style={{ ...VNP_CHIP_BASE, flex: 1, justifyContent: 'center', fontWeight: 600, color: '#231208', background: TERRA, border: 'none', opacity: signupForm.sending ? 0.7 : 1 }}>
+                    {signupForm.sending ? <Loader2 size={15} className="animate-spin" /> : <Check size={15} />}
+                    {signupForm.sending ? 'Création…' : 'Créer mon espace'}
+                  </button>
+                  <button onClick={(e) => { e.stopPropagation(); setSignupForm(null); }}
+                    style={{ ...VNP_NAV_CHIP, justifyContent: 'center', width: 108 }}>Annuler</button>
+                </div>
+                <button onClick={(e) => { e.stopPropagation(); setSignupForm(null); setAuthForm({ email: signupForm.email || '', password: '', sending: false, error: '' }); }}
+                  style={{ background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'inherit', fontSize: 12.5, color: 'rgba(244,239,230,.55)', textAlign: 'left', padding: 0, marginTop: 2 }}>
+                  Déjà un compte ? <span style={{ color: GOLD }}>Se connecter →</span>
+                </button>
+              </>
+            ))}
+
+            {/* CONNEXION EN LIGNE */}
+            {authForm && (
+              <>
+                <div className="cca-display" style={{ fontSize: 18, color: INK, marginBottom: 2 }}>Connexion à {tenantName}</div>
+                <input className="cca-field" type="email" placeholder="Votre e-mail" value={authForm.email} autoComplete="email"
+                  onChange={(e) => setAuthForm((c) => ({ ...c, email: e.target.value }))} style={VNP_FIELD} />
+                <input className="cca-field" type="password" placeholder="Votre mot de passe" value={authForm.password} autoComplete="current-password"
+                  onChange={(e) => setAuthForm((c) => ({ ...c, password: e.target.value }))}
+                  onKeyDown={(e) => { if (e.key === 'Enter') { e.stopPropagation(); submitLogin(); } }} style={VNP_FIELD} />
+                {authForm.error && <span style={{ color: '#f0997b', fontSize: 12.5 }}>{authForm.error}</span>}
+                <div style={{ display: 'flex', gap: 8 }}>
+                  <button onClick={(e) => { e.stopPropagation(); submitLogin(); }} disabled={authForm.sending}
+                    style={{ ...VNP_CHIP_BASE, flex: 1, justifyContent: 'center', fontWeight: 600, color: '#231208', background: TERRA, border: 'none', opacity: authForm.sending ? 0.7 : 1 }}>
+                    {authForm.sending ? <Loader2 size={15} className="animate-spin" /> : null}
+                    {authForm.sending ? 'Connexion…' : 'Se connecter'}
+                  </button>
+                  <button onClick={(e) => { e.stopPropagation(); setAuthForm(null); }}
+                    style={{ ...VNP_NAV_CHIP, justifyContent: 'center', width: 108 }}>Annuler</button>
+                </div>
+                <button onClick={(e) => { e.stopPropagation(); setAuthForm(null); setSignupForm({ name: '', email: authForm.email || '', password: '', sending: false, sent: false, error: '' }); }}
+                  style={{ background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'inherit', fontSize: 12.5, color: 'rgba(244,239,230,.55)', textAlign: 'left', padding: 0, marginTop: 2 }}>
+                  Pas encore de compte ? <span style={{ color: GOLD }}>Créer mon espace →</span>
+                </button>
+              </>
+            )}
           </div>
         </div>
       )}
