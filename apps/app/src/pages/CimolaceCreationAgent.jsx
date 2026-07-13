@@ -2291,13 +2291,13 @@ export default function CimolaceCreationAgent({ tenantSlug: tenantSlugProp = nul
       if (data?.session?.user) { try { await ensureStudentMembership(data.session.user); } catch { /* non bloquant */ } }
       setSignupForm((c) => ({ ...c, sending: false, sent: true }));
       try { logEvent('signup_inline', {}, osTenant); } catch { /* non bloquant */ }
-      speak(`Bienvenue${f.name ? `, ${f.name.trim()}` : ''} — votre espace ${tenantName} est prêt.`);
+      speak(`Bienvenue${f.name ? `, ${f.name.trim()}` : ''} — votre espace ${(osBrand && osBrand.name) || osTenant} est prêt.`);
       setTimeout(() => navigate('/liri'), 1500);
     } catch (e) {
       const msg = String(e?.message || '');
       setSignupForm((c) => ({ ...c, sending: false, error: /registered|already/i.test(msg) ? 'Cet e-mail a déjà un compte — connectez-vous.' : 'Inscription impossible — réessayez.' }));
     }
-  }, [signupForm, signup, ensureStudentMembership, osTenant, tenantName, speak, navigate]);
+  }, [signupForm, signup, ensureStudentMembership, osTenant, osBrand, speak, navigate]);
 
   // Connexion INLINE — l'OS ouvre la session SANS naviguer vers /login.
   const submitLogin = useCallback(async () => {
