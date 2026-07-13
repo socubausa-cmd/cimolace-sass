@@ -245,7 +245,7 @@ export default function StudentFormationsOsPage() {
       {/* Niveau 4 — le JOUR rendu NATIVEMENT par l'OS (vidéo bord-à-bord, support en scène reader, quiz natif) : aucune carte */}
       {openDay && (
         <div style={{ position: 'absolute', inset: 0, zIndex: 30, background: BG }}>
-          <FormationOsDayView day={openDay.day} backLabel={openDay.moduleTitle} onBack={() => setOpenDay(null)} />
+          <FormationOsDayView day={openDay.day} backLabel={openDay.moduleTitle} onBack={() => setOpenDay(null)} onAsk={handle} />
         </div>
       )}
 

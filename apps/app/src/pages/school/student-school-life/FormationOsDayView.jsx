@@ -10,7 +10,7 @@ const htmlToText = (html) => String(html || '').replace(/<br\s*\/?>(?=)/gi, '\n'
  * dans la surface immersive. La vidéo est bord-à-bord, le support passe par la
  * scène `reader` de l'OS, le quiz est rendu nativement. L'OS « affiche tout ».
  */
-export default function FormationOsDayView({ day, onBack, backLabel = 'Programme' }) {
+export default function FormationOsDayView({ day, onBack, backLabel = 'Programme', onAsk }) {
   const videos = Array.isArray(day?.videos) ? day.videos : (day?.video ? [day.video] : []);
   const support = day?.powerpoint || day?.reader || null;
   const quiz = day?.quiz || null;
@@ -70,7 +70,7 @@ export default function FormationOsDayView({ day, onBack, backLabel = 'Programme
 
         {step === 'quiz' && quiz && <OsQuiz quiz={quiz} />}
 
-        {step === 'mindmap' && mindmap && <OsMindmap mindmap={mindmap} title={day?.title} />}
+        {step === 'mindmap' && mindmap && <OsMindmap mindmap={mindmap} title={day?.title} onAsk={onAsk} />}
       </div>
     </div>
   );
@@ -97,15 +97,25 @@ function OsReader({ support, title }) {
 }
 
 // Un nœud-branche de la carte (aligné vers le centre : dot côté centre, texte à l'opposé).
-function MindBranch({ b, i, side, dotRef }) {
+function MindBranch({ b, i, side, dotRef, onAsk }) {
   const kp = Array.isArray(b.keyPoints) ? b.keyPoints : [];
   const kids = Array.isArray(b.children) ? b.children : [];
   const isLeft = side === 'left';
+  const label = b.label || b.title || `Idée ${i + 1}`;
+  const [hover, setHover] = useState(false);
   return (
     <div style={{ display: 'flex', flexDirection: isLeft ? 'row-reverse' : 'row', alignItems: 'flex-start', gap: 10, textAlign: isLeft ? 'right' : 'left' }}>
       <span ref={dotRef} style={{ width: 9, height: 9, borderRadius: '50%', background: 'rgba(217,119,87,.9)', flexShrink: 0, marginTop: 7, boxShadow: '0 0 0 4px rgba(217,119,87,.12)' }} />
       <div style={{ minWidth: 0 }}>
-        <div style={{ fontFamily: SERIF, fontSize: 17.5, fontWeight: 600, color: '#f0ede4', lineHeight: 1.2 }}>{b.label || b.title || `Idée ${i + 1}`}</div>
+        <div
+          onClick={onAsk ? () => onAsk(`Explique-moi : ${label}`) : undefined}
+          onMouseEnter={() => onAsk && setHover(true)} onMouseLeave={() => setHover(false)}
+          role={onAsk ? 'button' : undefined} tabIndex={onAsk ? 0 : undefined}
+          onKeyDown={onAsk ? (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onAsk(`Explique-moi : ${label}`); } } : undefined}
+          title={onAsk ? "Demander à l'OS d'expliquer" : undefined}
+          style={{ fontFamily: SERIF, fontSize: 17.5, fontWeight: 600, color: hover ? TERRA : '#f0ede4', lineHeight: 1.2, cursor: onAsk ? 'pointer' : 'default', transition: 'color .15s ease', display: 'inline-block' }}>
+          {label}
+        </div>
         {b.summary && <div style={{ fontSize: 13, color: 'rgba(245,244,238,.6)', marginTop: 5, lineHeight: 1.5 }}>{b.summary}</div>}
         {kp.length > 0 && (
           <ul style={{ margin: '7px 0 0', padding: 0, listStyle: 'none', display: 'flex', flexDirection: 'column', gap: 3 }}>
@@ -124,7 +134,7 @@ function MindBranch({ b, i, side, dotRef }) {
 
 // Mindmap NATIF OS — VRAIE carte mentale : nœud central + branches gauche/droite reliées
 // par des connecteurs SVG courbes. Fondu dans la surface, sans carte. Fallback empilé si étroit.
-function OsMindmap({ mindmap, title }) {
+function OsMindmap({ mindmap, title, onAsk }) {
   const root = mindmap || {};
   const rootLabel = root.label || root.title || root.name || title || 'Carte mentale';
   const branches = Array.isArray(root.children) ? root.children : [];
@@ -193,11 +203,11 @@ function OsMindmap({ mindmap, title }) {
       ) : wide ? (
         <div style={{ position: 'relative', zIndex: 1, maxWidth: 1180, margin: '0 auto', display: 'grid', gridTemplateColumns: '1fr auto 1fr', alignItems: 'center', gap: 'clamp(28px,4vw,64px)' }}>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 'clamp(18px,3vh,34px)' }}>
-            {left.map((b, i) => <MindBranch key={i} b={b} i={i} side="left" dotRef={(el) => { dotRefs.current[i] = el; }} />)}
+            {left.map((b, i) => <MindBranch key={i} b={b} i={i} side="left" onAsk={onAsk} dotRef={(el) => { dotRefs.current[i] = el; }} />)}
           </div>
           {centerNode}
           <div style={{ display: 'flex', flexDirection: 'column', gap: 'clamp(18px,3vh,34px)' }}>
-            {right.map((b, i) => <MindBranch key={i} b={b} i={half + i} side="right" dotRef={(el) => { dotRefs.current[half + i] = el; }} />)}
+            {right.map((b, i) => <MindBranch key={i} b={b} i={half + i} side="right" onAsk={onAsk} dotRef={(el) => { dotRefs.current[half + i] = el; }} />)}
           </div>
         </div>
       ) : (
@@ -205,7 +215,7 @@ function OsMindmap({ mindmap, title }) {
         <div style={{ position: 'relative', zIndex: 1, maxWidth: 620, margin: '0 auto' }}>
           <div style={{ marginBottom: 30 }}>{centerNode}</div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
-            {branches.map((b, i) => <MindBranch key={i} b={b} i={i} side="right" dotRef={() => {}} />)}
+            {branches.map((b, i) => <MindBranch key={i} b={b} i={i} side="right" onAsk={onAsk} dotRef={() => {}} />)}
           </div>
         </div>
       )}
