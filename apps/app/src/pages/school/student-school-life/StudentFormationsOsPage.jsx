@@ -329,7 +329,9 @@ export default function StudentFormationsOsPage() {
       {/* Conversation OS — présence + saisie ; TOUJOURS visible (jour compris), au-dessus de tout */}
       {!loading && (
         <div style={{ position: 'absolute', left: 0, right: 0, bottom: 0, padding: '0 clamp(16px,6vw,90px) 22px', zIndex: 40, pointerEvents: 'none' }}>
-          <div style={{ maxWidth: 680, margin: '0 auto', pointerEvents: 'auto' }}>
+          {/* Dégradé de fondu : le contenu s'estompe vers le fond derrière la barre (anti-chevauchement) */}
+          <div style={{ position: 'absolute', left: 0, right: 0, bottom: 0, height: 210, background: 'linear-gradient(to top, #262624 46%, rgba(38,38,36,0.82) 72%, rgba(38,38,36,0))', pointerEvents: 'none', zIndex: -1 }} />
+          <div style={{ maxWidth: 680, margin: '0 auto', pointerEvents: 'auto', position: 'relative' }}>
             {reply && (
               <div style={{ marginBottom: 12, fontFamily: SERIF, fontSize: 16, color: 'rgba(245,244,238,.9)', textAlign: 'center', lineHeight: 1.4, textShadow: '0 2px 14px rgba(8,8,11,.7)' }}>{typed || reply}</div>
             )}

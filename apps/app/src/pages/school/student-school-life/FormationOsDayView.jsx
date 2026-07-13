@@ -56,7 +56,7 @@ export default function FormationOsDayView({ day, onBack, backLabel = 'Programme
       {/* Corps du bloc — plein, sans carte */}
       <div style={{ position: 'relative', flex: 1, minHeight: 0 }}>
         {step === 'video' && currentVideo && (
-          <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '0 clamp(16px,6vw,90px) 24px' }}>
+          <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '8px clamp(16px,6vw,90px) 150px' }}>
             <div style={{ position: 'relative', width: '100%', maxWidth: 1180 }}>
               <div style={{ position: 'absolute', inset: '-8%', pointerEvents: 'none', background: 'radial-gradient(ellipse at 50% 45%, rgba(217,119,87,0.13), rgba(8,8,11,0) 66%)', filter: 'blur(46px)' }} />
               <div style={{ position: 'relative', borderRadius: 8, overflow: 'hidden', boxShadow: 'inset 0 0 140px 60px #08080b' }}>
@@ -80,7 +80,7 @@ export default function FormationOsDayView({ day, onBack, backLabel = 'Programme
 function OsReader({ support, title }) {
   const slides = Array.isArray(support?.slides) ? support.slides : [];
   return (
-    <div style={{ position: 'absolute', inset: 0, overflowY: 'auto', padding: 'clamp(18px,4vh,44px) clamp(18px,7vw,120px) 118px' }}>
+    <div style={{ position: 'absolute', inset: 0, overflowY: 'auto', padding: 'clamp(18px,4vh,44px) clamp(18px,7vw,120px) 175px' }}>
       <div style={{ maxWidth: 720, margin: '0 auto' }}>
         <div style={{ fontFamily: SERIF, fontSize: 'clamp(22px,3vw,32px)', fontWeight: 600, color: '#f5f4ee', marginBottom: 26 }}>{support?.title || title || 'Support'}</div>
         {slides.length ? slides.map((s, i) => (
@@ -189,7 +189,7 @@ function OsMindmap({ mindmap, title, onAsk }) {
   );
 
   return (
-    <div ref={wrapRef} style={{ position: 'absolute', inset: 0, overflowY: 'auto', padding: 'clamp(22px,5vh,54px) clamp(18px,5vw,70px) 118px' }}>
+    <div ref={wrapRef} style={{ position: 'absolute', inset: 0, overflowY: 'auto', padding: 'clamp(22px,5vh,54px) clamp(18px,5vw,70px) 175px' }}>
       {wide && paths.length > 0 && (
         <svg width={dims.w} height={dims.h} viewBox={`0 0 ${dims.w} ${dims.h}`} style={{ position: 'absolute', top: 0, left: 0, pointerEvents: 'none', zIndex: 0 }} aria-hidden>
           {paths.map((d, i) => (<path key={i} d={d} fill="none" stroke="rgba(217,119,87,0.34)" strokeWidth="1.5" />))}
@@ -232,7 +232,7 @@ function OsQuiz({ quiz }) {
   const score = submitted ? questions.reduce((a, q, i) => a + (answers[i] === correctOf(q) ? 1 : 0), 0) : 0;
 
   return (
-    <div style={{ position: 'absolute', inset: 0, overflowY: 'auto', padding: 'clamp(18px,4vh,44px) clamp(18px,7vw,120px) 118px' }}>
+    <div style={{ position: 'absolute', inset: 0, overflowY: 'auto', padding: 'clamp(18px,4vh,44px) clamp(18px,7vw,120px) 175px' }}>
       <div style={{ maxWidth: 760, margin: '0 auto' }}>
         <div style={{ fontFamily: SERIF, fontSize: 'clamp(22px,3vw,32px)', fontWeight: 600, color: '#f5f4ee', marginBottom: 6 }}>{quiz.title || 'Quiz de validation'}</div>
         <div style={{ fontSize: 13, color: 'rgba(245,244,238,.5)', marginBottom: 28 }}>{questions.length} question{questions.length > 1 ? 's' : ''}</div>
