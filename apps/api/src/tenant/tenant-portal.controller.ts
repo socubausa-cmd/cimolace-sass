@@ -488,6 +488,11 @@ export class TenantPortalController {
   @Post('domains')
   async addDomain(@Req() req: any, @Body() body: { domain?: string }) {
     if (!['owner', 'admin'].includes(req.tenant?.userRole)) throw new BadRequestException('Rôle owner/admin requis.');
+    // P5 — offre HÉBERGÉE : pas de domaine personnalisé (réservé Customisé/Intégration).
+    const { data: tRow } = await this.db.from('tenants').select('metadata').eq('id', req.tenant.id).maybeSingle();
+    if ((tRow as any)?.metadata?.hosting_mode === 'hosted') {
+      throw new BadRequestException('Domaine personnalisé réservé aux offres Customisé et Intégration.');
+    }
     const domain = this.normalizeDomain(body?.domain);
     // Déjà revendiqué par un AUTRE tenant → erreur claire (UNIQUE(domain,usage) en filet).
     const { data: existing } = await this.db

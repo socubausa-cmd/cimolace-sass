@@ -1,4 +1,4 @@
-import { Injectable } from "@nestjs/common";
+import { Injectable, ForbiddenException } from "@nestjs/common";
 import { AuthService } from "../auth/auth.service";
 import { canonicalTenantSlug } from "./tenant-slug-aliases";
 
@@ -310,6 +310,22 @@ export class TenantService {
     },
   ) {
     const supabase = this.authService.getClient();
+
+    // P5 — GATE BRANDING PAR OFFRE : un tenant HÉBERGÉ (offre 1) ne personnalise pas
+    // logo/couleurs/domaine (marque Cimolace verrouillée). name + site restent permis.
+    // Ne verrouille QUE hosting_mode='hosted' explicite → rétro-compatible (les tenants
+    // existants sans hosting_mode ou en customized/embedded ne sont pas affectés).
+    const wantsVisualBranding =
+      dto.logo_url !== undefined || dto.primary_domain !== undefined || dto.brand_colors !== undefined;
+    if (wantsVisualBranding) {
+      const t = (await this.getTenantById(tenantId)) as { metadata?: { hosting_mode?: string } | null } | null;
+      if (t?.metadata?.hosting_mode === "hosted") {
+        throw new ForbiddenException(
+          "Personnalisation (logo, couleurs, domaine) réservée aux offres Customisé et Intégration.",
+        );
+      }
+    }
+
     const patch: Record<string, unknown> = {};
     if (dto.name !== undefined) patch.name = dto.name;
     if (dto.logo_url !== undefined) patch.logo_url = dto.logo_url;
