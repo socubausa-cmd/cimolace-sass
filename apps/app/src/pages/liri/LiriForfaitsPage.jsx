@@ -1,5 +1,6 @@
 import { LiriPortalShell } from '@/components/liri/LiriPortalShell';
 import ForfaitsPage from '@/pages/ForfaitsPage';
+import TierAccessPanel from '@/components/liri/TierAccessPanel';
 
 /**
  * LiriForfaitsPage — les FORFAITS/cycles du tenant DANS le portail LIRI (`/liri/forfaits`).
@@ -13,6 +14,7 @@ export default function LiriForfaitsPage() {
   return (
     <LiriPortalShell active="forfaits" rail>
       <div className="lp-scroll relative min-h-0 overflow-y-auto" style={{ background: 'var(--base)', color: 'var(--ink)' }}>
+        <TierAccessPanel />
         <ForfaitsPage embedded />
       </div>
     </LiriPortalShell>
