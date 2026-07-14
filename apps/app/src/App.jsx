@@ -256,6 +256,7 @@ import ImmersiveBootLoader from '@/components/liri/ImmersiveBootLoader';
 import ProtectedRoleRoute from '@/components/ProtectedRoleRoute';
 import ProtectedSubscriptionRoute from '@/components/ProtectedSubscriptionRoute';
 import ProtectedLiriRoute from '@/components/ProtectedLiriRoute';
+import PublicBookGate from '@/components/liri/PublicBookGate';
 import { BillingProvider, useBilling } from '@/contexts/BillingContext';
 const GraceBanner = lazy(() => import('@/components/billing/GraceBanner'));
 const DiscoveryChat = lazy(() => import('@/components/booking/DiscoveryChat').then((m) => ({ default: m.DiscoveryChat })));
@@ -2715,12 +2716,14 @@ isLiriHostDevPreviewRoute;
           <Route path="/ecoles" element={<EcolesProrasciencePage />} />
           <Route path="/doctrine-pedagogique" element={<DoctrinePedagogiquePage />} />
           <Route path="/origine-appel" element={<OrigineAppelPage />} />
-          <Route path="/fond-de-tout" element={<FondDeToutPage />} />
-          <Route path="/dialogue-physique" element={<DialoguePhysiquePage />} />
-          <Route path="/ontodynamique" element={<OntodynamiquePage />} />
+          {/* Corpus premium (texte intégral) : aperçu court + mur pour les non-abonnés (fin de la fuite
+              où un prospect déconnecté lisait tout gratuitement). SEO préservé (contenu plein au 1er paint/crawler). */}
+          <Route path="/fond-de-tout" element={<PublicBookGate><FondDeToutPage /></PublicBookGate>} />
+          <Route path="/dialogue-physique" element={<PublicBookGate><DialoguePhysiquePage /></PublicBookGate>} />
+          <Route path="/ontodynamique" element={<PublicBookGate><OntodynamiquePage /></PublicBookGate>} />
           <Route path="/bibliotheque" element={<BibliothequePage />} />
           <Route path="/grande-bibliotheque" element={<LibraryPage />} />
-          <Route path="/manuel-initiatique-bris-de-sort" element={<ManuelInitiatiqueBrisDeSortPage />} />
+          <Route path="/manuel-initiatique-bris-de-sort" element={<PublicBookGate><ManuelInitiatiqueBrisDeSortPage /></PublicBookGate>} />
           <Route path="/communaute" element={<CommunautePage />} />
           <Route path="/curriculum/first-year" element={<CurriculumPage />} />
           <Route path="/curriculum/module/:id" element={<ModuleDetailPage />} />

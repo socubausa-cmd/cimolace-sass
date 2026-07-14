@@ -1,5 +1,8 @@
 import React, { useState, useEffect, useMemo } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Helmet } from 'react-helmet';
+import { useMemberEntitlements } from '@/hooks/useMemberEntitlements';
+import { resolveTenantSlug } from '@/lib/tenant/activeBranding';
 import { motion } from 'framer-motion';
 import {
   Search,
@@ -91,11 +94,26 @@ const ResCatPill = ({ active, label, count, Icon, onClick }) => {
 
 const ResCard = ({ r, delay }) => {
   const [hov, setHov] = useState(false);
+  const navigate = useNavigate();
+  const { can, isStaff, loading, upsellFor } = useMemberEntitlements();
   const tm = TYPE_META[r.resource_type] || TYPE_META.pdf;
   const meta = r.duration_label || r.size_label;
   const premium = r.access_level === 'academique_plus';
+  // academique_plus → feature coursLive (Académique+) ; ressource de base → 'library' (tout forfait).
+  const gateFeature = premium ? 'coursLive' : 'library';
+  const u = upsellFor(gateFeature);
+  const locked = !loading && !isStaff && !can(gateFeature); // pas de flash de mur pendant le chargement billing
   const TypeIcon = tm.Icon;
-  const open = () => { if (r.url && r.url !== '#') window.open(r.url, '_blank', 'noopener'); };
+  const open = () => {
+    if (locked) { // verrouillé pour ce palier → on VEND au lieu d'ouvrir
+      const slug = resolveTenantSlug();
+      navigate((u.planKey && slug)
+        ? `/t/${slug}/paiement?plan=${encodeURIComponent(u.planKey)}&type=subscription`
+        : '/liri/forfaits');
+      return;
+    }
+    if (r.url && r.url !== '#') window.open(r.url, '_blank', 'noopener');
+  };
   return (
     <article
       onClick={open}
@@ -118,14 +136,14 @@ const ResCard = ({ r, delay }) => {
         }}>
           <TypeIcon size={18} color={tm.col} />
         </div>
-        {premium ? (
+        {locked ? (
           <span style={{
             display: 'inline-flex', alignItems: 'center', gap: 4,
             fontFamily: T.mono, fontSize: 9.5, fontWeight: 700, letterSpacing: '0.04em',
             color: T.gold, background: T.goldDim, border: `1px solid ${T.goldMid}`,
             borderRadius: 20, padding: '2px 8px',
           }}>
-            <Lock size={10} /> Académique+
+            <Lock size={10} /> dès {u.minCycleLabel || 'un forfait'}
           </span>
         ) : (
           <Download size={15} color={hov ? T.t2 : T.t4} style={{ transition: 'color 180ms', marginTop: 4 }} />

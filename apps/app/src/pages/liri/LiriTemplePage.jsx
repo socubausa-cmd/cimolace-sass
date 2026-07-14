@@ -1,4 +1,5 @@
 import { LiriPortalShell } from '@/components/liri/LiriPortalShell';
+import UpsellLock from '@/components/liri/UpsellLock';
 import NgowazuluTemplePage from '@/pages/ngowazulu/NgowazuluTemplePage';
 
 /**
@@ -12,7 +13,15 @@ export default function LiriTemplePage() {
   return (
     <LiriPortalShell active="temple" rail>
       <div className="lp-scroll relative min-h-0 overflow-y-auto py-6" style={{ background: 'var(--base)', color: 'var(--ink)' }}>
-        <NgowazuluTemplePage embedded basePath="/liri/temple" />
+        {/* Temple & cultes = inclus DÈS Autonome (feature 'temple', rang 1). Un membre sans forfait
+            actif (rank 0) voit la carte de vente ; tout abonné (ou staff) accède au Temple entier. */}
+        <UpsellLock
+          feature="temple"
+          title="Temple & cultes — Espace Ngowazulu"
+          benefit="Cultes en ligne, consultations spirituelles, interventions mystiques, voyages initiatiques et communauté. Inclus dès le forfait Autonome."
+        >
+          <NgowazuluTemplePage embedded basePath="/liri/temple" />
+        </UpsellLock>
       </div>
     </LiriPortalShell>
   );
