@@ -1,4 +1,4 @@
-import { Injectable, BadRequestException, NotFoundException, Logger, OnApplicationBootstrap } from "@nestjs/common";
+import { Injectable, BadRequestException, NotFoundException, InternalServerErrorException, Logger, OnApplicationBootstrap } from "@nestjs/common";
 import { randomUUID, createHmac, timingSafeEqual } from "crypto";
 import { AuthService } from "../auth/auth.service";
 import { PawaPayService } from "../pawapay/pawapay.service";
@@ -332,6 +332,9 @@ export class BillingService implements OnApplicationBootstrap {
     if (!inv) return { received: true, matched: false };
 
     if (cb.status === "COMPLETED") {
+      // Idempotence : un 2e callback COMPLETED ne doit PAS ré-étendre la période d'un
+      // cycle entier. Si la facture est déjà payée, rien à refaire.
+      if (inv.status === "paid") return { received: true, matched: true, status: "already_paid" };
       await sb.from("billing_invoices").update({ status: "paid", paid_at: new Date().toISOString(), updated_at: new Date().toISOString() }).eq("id", inv.id);
       if (inv.subscription_id) {
         const start = new Date();
@@ -789,8 +792,20 @@ export class BillingService implements OnApplicationBootstrap {
     if (c === "yearly") d.setFullYear(d.getFullYear() + 1);
     else if (c === "quarterly") d.setMonth(d.getMonth() + 3);
     else if (c === "weekly") d.setDate(d.getDate() + 7);
+    else if (c === "one_time" || c === "lifetime") d.setFullYear(d.getFullYear() + 100); // achat unique → sans expiration pratique
     else d.setMonth(d.getMonth() + 1);
     return d;
+  }
+
+  /** Cycle plan → intervalle Stripe (interval + interval_count) pour un prix INLINE
+   *  (fix : un 'quarterly' inline était facturé chaque MOIS au prix trimestriel). */
+  private static cycleToStripeInterval(cycle: string | null | undefined): { interval: string; count: number } {
+    switch (String(cycle ?? "monthly").toLowerCase()) {
+      case "yearly": return { interval: "year", count: 1 };
+      case "quarterly": return { interval: "month", count: 3 };
+      case "weekly": return { interval: "week", count: 1 };
+      default: return { interval: "month", count: 1 };
+    }
   }
 
   /** Cycle de facturation d'un plan (pour calculer l'échéance). Défaut mensuel. */
@@ -859,13 +874,21 @@ export class BillingService implements OnApplicationBootstrap {
     return "hosted";
   }
 
-  /** Slug URL-safe (accents retirés, [a-z0-9-], 2..38 car.). */
+  private static RESERVED_SLUGS = new Set([
+    "admin", "api", "app", "www", "cimolace", "liri", "login", "logout", "static",
+    "assets", "public", "dashboard", "billing", "webhook", "medos", "mbolo", "isna",
+    "support", "help", "new", "creer-organisation", "t", "auth", "signup",
+  ]);
+
+  /** Slug URL-safe (accents retirés, [a-z0-9-], 2..38 car.), hors mots réservés. */
   private static slugify(s: string): string {
-    const base = String(s || "")
+    let base = String(s || "")
       .normalize("NFD").replace(/[̀-ͯ]/g, "")
       .toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "")
       .slice(0, 38) || "tenant";
-    return base.length < 2 ? `${base}-t` : base;
+    if (base.length < 2) base = `${base}-t`;
+    if (BillingService.RESERVED_SLUGS.has(base)) base = `${base}-org`;
+    return base;
   }
 
   /** Crée/retrouve un user par email (sans password) via Supabase admin. Rôle owner. */
@@ -928,6 +951,8 @@ export class BillingService implements OnApplicationBootstrap {
     intent?: "new_tenant" | "existing";
     existingTenantId?: string;
     providerRef?: string;
+    stripeSubscriptionId?: string;
+    stripeCustomerId?: string;
     firstName?: string;
     lastName?: string;
     locale?: string;
@@ -947,11 +972,12 @@ export class BillingService implements OnApplicationBootstrap {
       }
     }
 
-    // 1) Plan (cycle + catégorie→kind + offre)
+    // 1) Plan (cycle + catégorie→kind + offre + prix pour l'abo)
     const { data: plan } = await sb.from("billing_plans")
-      .select("key, billing_cycle, category, offer_tier").eq("key", p.planKey).maybeSingle();
+      .select("key, billing_cycle, category, offer_tier, price_cents, currency").eq("key", p.planKey).maybeSingle();
     if (!plan) throw new NotFoundException(`Plan « ${p.planKey} » introuvable`);
-    const offerTier = String(p.offerTier ?? (plan as any).offer_tier ?? "hosted").toLowerCase();
+    // offer_tier = STRICTEMENT le plan (jamais l'appelant → branding lié au payé).
+    const offerTier = String((plan as any).offer_tier ?? "hosted").toLowerCase();
     const kind = BillingService.categoryToKind((plan as any).category);
     const hostingMode = BillingService.hostingModeForOffer(offerTier);
 
@@ -987,16 +1013,35 @@ export class BillingService implements OnApplicationBootstrap {
     // 5) PROVISIONING des moteurs (fail-safe : n'échoue jamais l'activation)
     await this.provisionPlanServices(tenantId, p.planKey);
 
-    // 6) Abonnement actif, durée = cycle du plan
+    // 6) Abonnement actif, durée = cycle, LIÉ au subscription Stripe (sinon les
+    //    renouvellements/annulations Stripe n'atteignent jamais cet abo → accès figé).
     const start = new Date();
     const end = BillingService.addCycle(start, String((plan as any).billing_cycle));
     const { data: sub, error: subErr } = await sb.from("billing_subscriptions").insert({
       tenant_id: tenantId, user_id: userId, plan_id: p.planKey, status: "active",
+      provider: "stripe",
       provider_checkout_id: p.providerRef ?? null,
+      provider_subscription_id: p.stripeSubscriptionId ?? null,
+      provider_customer_id: p.stripeCustomerId ?? null,
+      amount_cents: Number((plan as any).price_cents ?? 0),
+      currency: String((plan as any).currency ?? "EUR"),
       current_period_start: start.toISOString(), current_period_end: end.toISOString(),
       metadata: { offer_tier: offerTier, acquisition: true },
     }).select("id").maybeSingle();
-    if (subErr) this.logger.warn(`[acquisition] abo non enregistré (tenant=${tenantId}, plan=${p.planKey}): ${subErr.message}`);
+    // FATAL : sans abo, le tenant est provisionné mais vu comme NON payé (gating) et
+    // l'idempotence (providerRef) est annulée → double tenant au rejeu. On lève, et si
+    // le tenant venait d'être CRÉÉ on nettoie l'orphelin (best-effort) pour qu'un retry
+    // Stripe reparte propre (sinon collision de slug → tenant en double).
+    if (subErr) {
+      if (created) {
+        await sb.from("tenant_services").delete().eq("tenant_id", tenantId);
+        await sb.from("tenant_memberships").delete().eq("tenant_id", tenantId);
+        await sb.from("tenants").delete().eq("id", tenantId);
+      }
+      throw new InternalServerErrorException(`Abonnement d'acquisition non enregistré: ${subErr.message}`);
+    }
+    // L'abo payé remplace tout autre abo actif (essai) — parité avec les autres flux.
+    await this.supersedeOtherActiveSubscriptions(tenantId, (sub as any)?.id);
 
     this.logger.log(`[acquisition] tenant ${created ? "créé" : "rattaché"} ${tenantId} (plan=${p.planKey}, offre=${offerTier}, kind=${kind}) pour ${email}`);
     return { tenantId, userId, subscriptionId: (sub as any)?.id ?? null, created };
@@ -1027,13 +1072,18 @@ export class BillingService implements OnApplicationBootstrap {
     if (intent === "existing" && !dto.existingTenantId) throw new BadRequestException("existingTenantId requis pour rattacher");
 
     const { data: plan } = await sb.from("billing_plans")
-      .select("key, stripe_price_id, label, price_cents, currency, billing_cycle, offer_tier, is_active")
+      .select("key, stripe_price_id, label, price_cents, currency, billing_cycle, offer_tier, is_active, features")
       .eq("key", dto.planKey).maybeSingle();
     if (!plan || (plan as any).is_active === false) throw new NotFoundException("Offre inconnue ou inactive");
     const priceId = (plan as any).stripe_price_id;
     const amountCents = Number((plan as any).price_cents ?? 0);
     if (!priceId && amountCents <= 0) throw new BadRequestException("Aucun prix carte configuré pour ce plan");
-    const offerTier = String(dto.offerTier ?? (plan as any).offer_tier ?? "hosted").toLowerCase();
+    // Ne jamais encaisser un plan qui ne débloque AUCUN moteur (paiement sans produit).
+    if (!resolvePlanServices(dto.planKey, (plan as any).features).length) {
+      throw new BadRequestException("Ce plan n'active aucun produit — souscription bloquée");
+    }
+    // offer_tier = STRICTEMENT le plan (jamais dto.offerTier → sinon branding découplé du payé).
+    const offerTier = String((plan as any).offer_tier ?? "hosted").toLowerCase();
 
     const frontend = process.env.FRONTEND_URL || "https://app.cimolace.space";
     const params = new URLSearchParams();
@@ -1042,10 +1092,11 @@ export class BillingService implements OnApplicationBootstrap {
       params.append("line_items[0][price]", priceId);
     } else {
       const currency = String((plan as any).currency ?? "EUR").toLowerCase();
-      const interval = String((plan as any).billing_cycle ?? "monthly").toLowerCase() === "yearly" ? "year" : "month";
+      const { interval, count } = BillingService.cycleToStripeInterval((plan as any).billing_cycle);
       params.append("line_items[0][price_data][currency]", currency);
       params.append("line_items[0][price_data][unit_amount]", String(amountCents));
       params.append("line_items[0][price_data][recurring][interval]", interval);
+      params.append("line_items[0][price_data][recurring][interval_count]", String(count));
       params.append("line_items[0][price_data][product_data][name]", String((plan as any).label ?? dto.planKey));
     }
     params.append("line_items[0][quantity]", "1");
@@ -1257,9 +1308,11 @@ export class BillingService implements OnApplicationBootstrap {
           return { received: true, ignored: type };
       }
     } catch (e) {
-      // Erreur applicative : on loggue et on ACK pour ne pas boucler ; à monitorer.
+      // On loggue ET on RE-LÈVE : Stripe doit RÉESSAYER un échec transitoire (sinon un
+      // paiement encaissé peut être perdu sans provisioning — cf. revue chaînon). Stripe
+      // abandonne après ~3 j (pas de boucle infinie) ; l'événement reste visible côté Stripe.
       console.error(`[billing webhook] échec traitement ${type}:`, (e as Error).message);
-      return { received: true, type, error: (e as Error).message };
+      throw e;
     }
     return { received: true, type };
   }
@@ -1355,6 +1408,12 @@ export class BillingService implements OnApplicationBootstrap {
     return true; // fail-open : mieux vaut retraiter (idempotent) que perdre l'événement
   }
 
+  /** Relâche un claim d'événement (échec de traitement → permettre le retry Stripe). */
+  private async releaseWebhookEvent(eventId: string): Promise<void> {
+    try { await this.supabase.from("billing_webhook_events").delete().eq("event_id", eventId); }
+    catch (e) { this.logger.warn(`[webhook dedup] release échec (${eventId}): ${(e as Error).message}`); }
+  }
+
   /** checkout.session.completed (mode subscription) → lie l'abo au sub Stripe + active. */
   private async onCheckoutCompleted(session: any, eventId?: string) {
     if (session?.mode && session.mode !== "subscription") return; // ignore le setup one-off
@@ -1365,21 +1424,40 @@ export class BillingService implements OnApplicationBootstrap {
     // SILENCIEUX (payé, rien provisionné). Dédup event.id = anti double-tenant au retry.
     const meta = session?.metadata ?? {};
     if (meta.intent === "new_tenant" || meta.intent === "existing") {
+      // Dédup atomique (event_id) AVANT le travail : empêche 2 livraisons concurrentes
+      // de créer 2 tenants. Sur échec, on RELÂCHE le claim + on RE-LÈVE (retry Stripe).
       if (eventId && !(await this.claimWebhookEvent(eventId))) {
         this.logger.log(`[acquisition] event ${eventId} déjà traité — ignoré`);
         return;
       }
-      const email = meta.org_email || session.customer_email || session.customer_details?.email;
-      await this.createTenantFromPurchase({
-        email,
-        orgName: meta.org_name,
-        slug: meta.org_slug,
-        planKey: meta.plan_key,
-        offerTier: meta.offer_tier,
-        intent: meta.intent,
-        existingTenantId: meta.existing_tenant_id || undefined,
-        providerRef: session.id,
-      });
+      // Ne provisionner QUE si le paiement est réellement abouti (async/impayé → non).
+      const paid = session.payment_status === "paid" || session.status === "complete";
+      if (!paid) {
+        this.logger.warn(`[acquisition] session ${session.id} non payée (payment_status=${session.payment_status}) — ignorée`);
+        if (eventId) await this.releaseWebhookEvent(eventId); // un futur 'completed' pourra retenter
+        return;
+      }
+      // Email AUTORITAIRE = celui vérifié par Stripe au paiement (pas la metadata client).
+      const email = session.customer_details?.email || session.customer_email || meta.org_email;
+      try {
+        await this.createTenantFromPurchase({
+          email,
+          orgName: meta.org_name,
+          slug: meta.org_slug,
+          planKey: meta.plan_key,
+          offerTier: meta.offer_tier,
+          intent: meta.intent,
+          existingTenantId: meta.existing_tenant_id || undefined,
+          providerRef: session.id,
+          stripeSubscriptionId: session.subscription || undefined,
+          stripeCustomerId: session.customer || undefined,
+        });
+      } catch (e) {
+        // Échec : libérer le claim + RE-LEVER → non-2xx → Stripe rejoue (l'orchestrateur
+        // est idempotent sur providerRef). Sinon paiement encaissé, perdu sans rejeu.
+        if (eventId) await this.releaseWebhookEvent(eventId);
+        throw e;
+      }
       return;
     }
 
@@ -1400,7 +1478,12 @@ export class BillingService implements OnApplicationBootstrap {
 
     const matchCol = rowId ? "id" : "provider_checkout_id";
     const matchVal = rowId || session.id;
-    const { data: updatedRows } = await sb.from("billing_subscriptions").update(patch).eq(matchCol, matchVal).select("id");
+    const { data: updatedRows, error: updErr } = await sb.from("billing_subscriptions").update(patch).eq(matchCol, matchVal).select("id");
+    if (updErr) {
+      // Erreur DB réelle (≠ 0 ligne légitime) : re-lever → retry Stripe.
+      this.logger.error(`[billing webhook] échec UPDATE abo (session=${session.id}): ${updErr.message}`);
+      throw new InternalServerErrorException(updErr.message);
+    }
     if (!updatedRows || updatedRows.length === 0) {
       // Fix du DROP SILENCIEUX : un UPDATE PostgREST sans ligne correspondante ne lève
       // rien. On loggue au lieu de laisser un paiement encaissé sans provisioning ni trace.
