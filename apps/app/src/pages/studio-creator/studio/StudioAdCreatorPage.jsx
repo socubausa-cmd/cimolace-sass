@@ -14,6 +14,7 @@ import {
 } from 'lucide-react';
 import { supabase } from '@/lib/customSupabaseClient';
 import { resolveNetlifyApiUrl } from '@/lib/resolveNetlifyApiUrl';
+import { getApiBaseUrl } from '@/lib/apiBase';
 import { useToast } from '@/components/ui/use-toast';
 import {
   Dialog,
@@ -346,7 +347,9 @@ export default function StudioAdCreatorPage() {
     }
     setGenerating(true);
     try {
-      const payload = await authFetch('/api/ad/copy-generate', {
+      // Endpoint RÉEL = NestJS POST /ai-utils/ad-copy/generate. L'ancien '/api/ad/copy-generate'
+      // pointait sur une fonction Netlily morte → 404. URL absolue → passthrough resolveNetlifyApiUrl.
+      const payload = await authFetch(`${getApiBaseUrl()}/ai-utils/ad-copy/generate`, {
         method: 'POST',
         body: JSON.stringify({
           platform: selectedPlatform,
@@ -357,13 +360,14 @@ export default function StudioAdCreatorPage() {
           tone: 'professional',
         }),
       });
+      const ad = payload?.data ?? payload ?? {}; // enveloppe NestJS { data: ... }
       setAdContent({
-        headline: payload.headline || '',
-        description: payload.description || '',
-        cta: payload.cta || 'Commencer maintenant',
-        hashtags: payload.hashtags || [],
-        hook: payload.hook || '',
-        variations: payload.variations || [],
+        headline: ad.headline || '',
+        description: ad.description || '',
+        cta: ad.cta || 'Commencer maintenant',
+        hashtags: ad.hashtags || [],
+        hook: ad.hook || '',
+        variations: ad.variations || [],
       });
       setActiveVariation(null);
       toast({ title: 'Publicité générée', description: 'Contenu IA créé avec succès.' });
