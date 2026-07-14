@@ -27,8 +27,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { LiriPortalShell } from '@/components/liri/LiriPortalShell';
 import ErrorBoundary from '@/components/ErrorBoundary';
-import { PrecepteurPlayer } from '@/pages/dev/PrecepteurDemoPage';
-import NoteComposer from '@/components/liri/NoteComposer';
+import FormationStage from '@/components/agent/FormationStage';
 import { CANONICAL_COURSE } from '@/pages/dev/precepteurCanonicalCourse';
 import { masterclassApi } from '@/lib/api-v2';
 
@@ -173,19 +172,10 @@ export default function LiriPrecepteurPage() {
       />
     );
   } else {
-    // Seul chemin qui monte le MOTEUR partagé — non re-skinné (rendu Précepteur tel quel).
-    inner = (
-      <>
-        <PrecepteurPlayer course={course} />
-        <div style={{ maxWidth: 900, margin: '18px auto 0', padding: '0 16px 8px' }}>
-          <div style={{ background: 'rgba(0,0,0,0.16)', border: '1px solid rgba(245,244,238,0.08)', borderRadius: 16, padding: 16 }}>
-            {/* Prise de notes rattachée à CE cours Précepteur → hub « Mes notes ».
-                Démo (sans masterclassId) : id stable 'precepteur-canonical' pour tester. */}
-            <NoteComposer sourceType="precepteur" sourceId={masterclassId || 'precepteur-canonical'} sourceTitle={course?.title || 'Le Précepteur'} />
-          </div>
-        </div>
-      </>
-    );
+    // MOTEUR UNIFIÉ : le MÊME que /precepteur/cours/:id (FormationStage = secteur formation
+    // immersif de Cimolace : voix Sherpas, croquis, atelier NOMINATIF, Q&A scopé precepteur-brain).
+    // Plein écran (fixed inset-0) → il couvre la coque, comme sur la surface principale.
+    inner = <FormationStage course={course} />;
   }
 
   return (

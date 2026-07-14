@@ -360,6 +360,19 @@ verify_jwt = false
 [functions.oauth-callback]
 verify_jwt = false
 
+# Cerveaux « brain » PUBLICS (Q&A sans état ni tenant, knowledge passé dans le body) : joués sur
+# des surfaces CAPTURABLES DÉCONNECTÉES (/precepteur, OS d'un tenant, démos, /dev). verify_jwt
+# DOIT être false, sinon Supabase renvoie 401 pour un visiteur anonyme. Sûrs : scopés au contenu
+# fourni, refusent le hors-sujet, aucune donnée sensible ni action. (cf. entêtes « --no-verify-jwt »).
+[functions.precepteur-brain]
+verify_jwt = false
+
+[functions.prorascience-brain]
+verify_jwt = false
+
+[functions.agent-brain]
+verify_jwt = false
+
 [edge_runtime]
 enabled = true
 # Supported request policies: `oneshot`, `per_worker`.
