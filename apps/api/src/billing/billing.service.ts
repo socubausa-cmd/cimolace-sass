@@ -335,12 +335,13 @@ export class BillingService implements OnApplicationBootstrap {
       await sb.from("billing_invoices").update({ status: "paid", paid_at: new Date().toISOString(), updated_at: new Date().toISOString() }).eq("id", inv.id);
       if (inv.subscription_id) {
         const start = new Date();
-        const end = new Date(); end.setMonth(end.getMonth() + 1);
         // Moyen de paiement : le numéro/opérateur utilisé (stocké sur la facture au moment du collect).
         const payMethod = (inv.metadata as any)?.payer_phone
           ? { type: "mobile_money", provider: (inv.metadata as any).payer_provider ?? null, phone: (inv.metadata as any).payer_phone }
           : null;
-        const { data: subRow } = await sb.from("billing_subscriptions").select("metadata, user_id, tenant_id").eq("id", inv.subscription_id).maybeSingle();
+        const { data: subRow } = await sb.from("billing_subscriptions").select("metadata, user_id, tenant_id, plan_id").eq("id", inv.subscription_id).maybeSingle();
+        // Échéance selon le CYCLE du plan (fix : un abonnement yearly ne recevait que 30 jours).
+        const end = BillingService.addCycle(start, await this.planBillingCycle((subRow as any)?.plan_id));
         await sb.from("billing_subscriptions").update({
           status: "active",
           current_period_start: start.toISOString(),
@@ -348,6 +349,13 @@ export class BillingService implements OnApplicationBootstrap {
           metadata: { ...((subRow as any)?.metadata ?? {}), ...(payMethod ? { payment_method: payMethod } : {}) },
           updated_at: new Date().toISOString(),
         }).eq("id", inv.subscription_id);
+        // PROVISIONING (fix : le mobile money n'activait AUCUN moteur) + remplacement de
+        // l'essai, en parité avec le flux carte (confirmCardPayment).
+        const tid = (subRow as any)?.tenant_id;
+        if (tid) {
+          await this.supersedeOtherActiveSubscriptions(tid, inv.subscription_id);
+          await this.provisionPlanServices(tid, (subRow as any)?.plan_id);
+        }
         // Reçu email de confirmation (best-effort ; no-op silencieux si Resend non configuré).
         void this.sendPaymentReceiptEmail(inv, subRow, payMethod, end);
       }
@@ -743,8 +751,11 @@ export class BillingService implements OnApplicationBootstrap {
     const s = (await res.json()) as { payment_status?: string; status?: string; subscription?: string; customer?: string };
     const paid = s.payment_status === "paid" || s.status === "complete";
     if (paid) {
-      const end = new Date(); end.setMonth(end.getMonth() + 1);
-      await sb.from("billing_subscriptions").update({ status: "active", provider_subscription_id: s.subscription ?? null, provider_customer_id: s.customer ?? null, current_period_end: end.toISOString(), updated_at: new Date().toISOString() }).eq("id", subscriptionId);
+      // Échéance selon le CYCLE (fix : yearly ne donnait que 30 jours). Bootstrap ;
+      // pour un abonnement récurrent Stripe, le webhook resynchronise ensuite la période réelle.
+      const start = new Date();
+      const end = BillingService.addCycle(start, await this.planBillingCycle((sub as any).plan_id));
+      await sb.from("billing_subscriptions").update({ status: "active", provider_subscription_id: s.subscription ?? null, provider_customer_id: s.customer ?? null, current_period_start: start.toISOString(), current_period_end: end.toISOString(), updated_at: new Date().toISOString() }).eq("id", subscriptionId);
       await sb.from("billing_invoices").update({ status: "paid", provider: "stripe", paid_at: new Date().toISOString(), updated_at: new Date().toISOString() }).eq("subscription_id", subscriptionId).in("status", ["pending", "processing", "failed"]);
       // Le forfait payé remplace les autres abonnements actifs (ex: l'essai medos_standard).
       await this.supersedeOtherActiveSubscriptions(tenantId, subscriptionId);
@@ -765,6 +776,29 @@ export class BillingService implements OnApplicationBootstrap {
       .eq("tenant_id", tenantId)
       .eq("status", "active")
       .neq("id", keepSubscriptionId);
+  }
+
+  /**
+   * Fin de période selon le CYCLE du plan (yearly/quarterly/weekly/monthly).
+   * Remplace le `setMonth(+1)` codé en dur qui sous-livrait les abonnements
+   * annuels (un plan local yearly ne donnait que 30 jours d'accès).
+   */
+  private static addCycle(from: Date, cycle: string | null | undefined): Date {
+    const c = String(cycle ?? "monthly").toLowerCase();
+    const d = new Date(from);
+    if (c === "yearly") d.setFullYear(d.getFullYear() + 1);
+    else if (c === "quarterly") d.setMonth(d.getMonth() + 3);
+    else if (c === "weekly") d.setDate(d.getDate() + 7);
+    else d.setMonth(d.getMonth() + 1);
+    return d;
+  }
+
+  /** Cycle de facturation d'un plan (pour calculer l'échéance). Défaut mensuel. */
+  private async planBillingCycle(planKey: string | null | undefined): Promise<string> {
+    if (!planKey) return "monthly";
+    const { data } = await this.supabase
+      .from("billing_plans").select("billing_cycle").eq("key", planKey).maybeSingle();
+    return String((data as any)?.billing_cycle ?? "monthly").toLowerCase();
   }
 
   /**
