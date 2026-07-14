@@ -779,6 +779,7 @@ const StudioLiriRouter = lazy(() => import('@/pages/studio-creator/studio/Studio
 const LiveHostPageNativeGate = lazy(() => import('@/components/eleve-mobile/LiveHostPageNativeGate'));
 const LiveGuestPage = lazy(() => import('@/pages/liri/LiveGuestPage'));
 const ProcheRoom = lazy(() => import('@/pages/liri/ProcheRoom'));
+const LiveInvitePage = lazy(() => import('@/pages/liri/LiveInvitePage'));
 const TeleconsultJoinPage = lazy(() => import('@/pages/liri/TeleconsultJoinPage'));
 const DevLiriHostEntry = lazy(() => import('@/pages/dev/DevLiriHostEntry'));
 const TableauVivantDemoPage = lazy(() => import('@/pages/dev/TableauVivantDemoPage'));
@@ -2531,6 +2532,14 @@ isLiriHostDevPreviewRoute;
                 <LiveGuestPage />
               </ErrorBoundary>
             </ProtectedRoute>
+          } />
+
+          {/* Live PAYANT — invité SANS login (lien token-gaté après achat sur le site tenant).
+              Route PUBLIQUE (pas de ProtectedRoute) ; la barrière réelle est le token invité serveur. */}
+          <Route path="/live/:sessionId/invite/:inviteId" element={
+            <ErrorBoundary>
+              <LiveInvitePage />
+            </ErrorBoundary>
           } />
 
           {/* Lien d'invitation live — accessible à tout membre connecté */}
