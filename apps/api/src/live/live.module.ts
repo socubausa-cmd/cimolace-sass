@@ -9,6 +9,7 @@ import { LiveService } from "./live.service";
 import { LiveController } from "./live.controller";
 import { LiveReplayFileController } from "./live-replay-file.controller";
 import { LiriAdminController } from "./liri-admin.controller";
+import { LiveGuestPublicController } from "./live-guest-public.controller";
 import { LiveEmbedService } from "./embed/live-embed.service";
 import { LiveEmbedController } from "./embed/live-embed.controller";
 import { LiveEmbedTokenGuard } from "./embed/live-embed-token.guard";
@@ -35,6 +36,7 @@ import { LiveKitWebhookService } from "../livekit/livekit-webhook.service";
     LiveReplayFileController,
     LiveController,
     LiriAdminController,
+    LiveGuestPublicController,
     LiveKitWebhookController,
   ],
   providers: [

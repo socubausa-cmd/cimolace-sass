@@ -641,6 +641,79 @@ export class LiveService {
   }
 
   /**
+   * PUBLIC (sans login) — token invité pour un live PAYANT, gardé par un access_pass
+   * `live_session` dont l'id sert de jeton d'URL (créé après paiement sur le SITE du
+   * tenant, cf appointments.service guestLiveAccess). ADDITIF : ne touche pas
+   * generateToken. L'invité est un simple participant (canSubscribe only). La barrière
+   * SERVEUR = l'existence d'un pass ACTIF pour CETTE session (le pass = preuve d'achat).
+   */
+  async generateGuestLiveToken(sessionId: string, inviteId: string, tenantSlug?: string) {
+    const { data: pass } = await (this.supabase as any)
+      .from("access_passes")
+      .select("id, user_id, tenant_id, resource_type, resource_id, status")
+      .eq("id", inviteId)
+      .maybeSingle();
+    if (
+      !pass ||
+      (pass as any).resource_type !== "live_session" ||
+      (pass as any).resource_id !== sessionId ||
+      (pass as any).status !== "active"
+    ) {
+      throw new ForbiddenException("Lien d'accès invalide ou expiré.");
+    }
+    const { data: session } = await this.supabase
+      .from("live_sessions")
+      .select("tenant_id, status, started_at, tenants(slug)")
+      .eq("id", sessionId)
+      .single();
+    if (!session) throw new NotFoundException("Session introuvable");
+    if ((session as any).tenant_id !== (pass as any).tenant_id) {
+      throw new ForbiddenException("Accès refusé.");
+    }
+    const slug = tenantSlug ?? (session as any)?.tenants?.slug ?? sessionId;
+    const roomName = LiveKitService.scopedRoomName(slug, sessionId);
+    const identity = `guest_${inviteId}`;
+
+    // Caps forfait gratuit — mêmes règles que les participants non-host.
+    const { limits } = await this.entitlements.resolveLimits((session as any).tenant_id);
+    let cappedTtlSeconds: number | undefined;
+    if (limits.maxLiveMinutes !== null) {
+      const startedAt = (session as any).started_at
+        ? new Date((session as any).started_at).getTime()
+        : null;
+      const isLive = (session as any).status === "live" && startedAt !== null;
+      if (isLive) {
+        const remainingMs = startedAt! + limits.maxLiveMinutes * 60_000 - Date.now();
+        if (remainingMs <= 0) {
+          throw new ForbiddenException(
+            `Forfait gratuit : ce live a atteint sa limite de ${limits.maxLiveMinutes} minutes.`,
+          );
+        }
+        cappedTtlSeconds = Math.max(30, Math.floor(remainingMs / 1000));
+      } else {
+        cappedTtlSeconds = limits.maxLiveMinutes * 60;
+      }
+    }
+    if (limits.maxParticipants !== null) {
+      const present = await this.liveKit.listParticipantIdentities(roomName);
+      if (!present.includes(identity) && present.length >= limits.maxParticipants) {
+        throw new ForbiddenException(
+          `Forfait gratuit : ${limits.maxParticipants} participants maximum dans un live.`,
+        );
+      }
+    }
+
+    await this.liveKit.ensureRoom(roomName, sessionId, (pass as any).user_id);
+    const token = await this.liveKit.generateParticipantToken(
+      roomName,
+      identity,
+      undefined,
+      cappedTtlSeconds ?? "1h",
+    );
+    return { token, room: roomName, role: "guest" as const, identity };
+  }
+
+  /**
    * Démarre l'egress UNE fois pour la session. Best-effort (avale les erreurs), NO-OP si
    * R2 non configuré (CF_R2_BUCKET absent) ou si un enregistrement a déjà été lancé.
    * Appelé par le WEBHOOK quand l'HÔTE rejoint la room (room ACTIVE → l'egress démarre).

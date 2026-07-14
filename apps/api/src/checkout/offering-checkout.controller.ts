@@ -15,6 +15,7 @@ import type { Request } from 'express';
 import type { AuthUser } from '../auth/current-user.decorator';
 import { CurrentUser } from '../auth/current-user.decorator';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
+import { ApiKeyGuard } from '../auth/api-key.guard';
 import { SkipResponseWrapper } from '../common/decorators/skip-response-wrapper.decorator';
 import { OfferingCheckoutService } from './offering-checkout.service';
 import { SubscriptionRenewalService } from './subscription-renewal.service';
@@ -73,6 +74,22 @@ export class OfferingCheckoutController {
     @Body() body: CreateOfferingCardDto & { email: string; first_name?: string; last_name?: string },
   ) {
     return this.svc.guestStripeCheckout(body);
+  }
+
+  /**
+   * Déblocage d'accès APRÈS un paiement encaissé par le TENANT sur SON propre
+   * Stripe (paiement natif hors tunnel Cimolace — ex : masterclass réglée sur le
+   * site du tenant). Authentifié par CLÉ TENANT (cml_) : le tenant = celui de la
+   * clé (jamais du corps). Le tenant vérifie le paiement (webhook Stripe signé) AVANT.
+   */
+  @Post('tenant-grant')
+  @UseGuards(ApiKeyGuard)
+  tenantGrant(
+    @Req() req: any,
+    @Body()
+    body: { planSlug?: string; email?: string; first_name?: string; last_name?: string; payment_ref?: string },
+  ) {
+    return this.svc.tenantGrantServiceAccess(req.tenant.id, body);
   }
 
   /** Dépôt Mobile Money invité → provisionne + dépôt PawaPay. Public (email requis). */
