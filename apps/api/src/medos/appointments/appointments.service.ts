@@ -1073,11 +1073,25 @@ export class AppointmentsService {
     if (!url || !key) throw new InternalServerErrorException('Supabase non configuré (guest).');
     const em = email.trim().toLowerCase();
     const headers = { apikey: key, Authorization: `Bearer ${key}`, 'Content-Type': 'application/json' };
+    // ⚠️ GoTrue IGNORE le filtre `?email=` et renvoie la liste paginée. Sans pagination,
+    // tout utilisateur au-delà de la 1re page (ex. un client déjà enregistré) est vu comme
+    // « inexistant » → tentative de création en doublon (422) → 500 « Provisionnement invité
+    // impossible » → le RDV retombe silencieusement sur Zoom. On PAGINE donc (per_page=200,
+    // honoré par GoTrue) jusqu'à trouver l'email ou épuiser les pages.
     const findId = async (): Promise<string | undefined> => {
-      const r = await fetch(`${url}/auth/v1/admin/users?email=${encodeURIComponent(em)}`, { headers });
-      if (!r.ok) return undefined;
-      const d = (await r.json()) as { users?: { id: string; email?: string }[] };
-      return (d?.users || []).find((u) => u.email?.toLowerCase() === em)?.id;
+      for (let page = 1; page <= 200; page++) {
+        const r = await fetch(
+          `${url}/auth/v1/admin/users?page=${page}&per_page=200`,
+          { headers },
+        );
+        if (!r.ok) return undefined;
+        const d = (await r.json()) as { users?: { id: string; email?: string }[] };
+        const users = d?.users || [];
+        if (users.length === 0) return undefined; // dernière page dépassée
+        const hit = users.find((u) => u.email?.toLowerCase() === em)?.id;
+        if (hit) return hit;
+      }
+      return undefined;
     };
     let userId = await findId();
     if (!userId) {
