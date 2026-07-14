@@ -1002,6 +1002,80 @@ export class BillingService implements OnApplicationBootstrap {
     return { tenantId, userId, subscriptionId: (sub as any)?.id ?? null, created };
   }
 
+  /**
+   * P2 — ENTRÉE ACQUISITION (carte) : un PROSPECT sans tenant démarre un achat.
+   * Crée une Stripe Checkout Session PORTANT l'intention (offre + org) en metadata,
+   * que le webhook (onCheckoutCompleted) lira pour appeler createTenantFromPurchase.
+   * Prix depuis billing_plans (jamais du client). Route publique (pas de tenant requis).
+   */
+  async createAcquisitionCheckout(dto: {
+    email?: string;
+    planKey?: string;
+    offerTier?: string;
+    intent?: "new_tenant" | "existing";
+    orgName?: string;
+    slug?: string;
+    existingTenantId?: string;
+  }): Promise<{ url: string }> {
+    const auth = this.stripeAuth();
+    const sb = this.supabase;
+    const email = String(dto?.email || "").trim().toLowerCase();
+    if (!email || !/.+@.+\..+/.test(email)) throw new BadRequestException("Email valide requis");
+    if (!dto?.planKey) throw new BadRequestException("planKey requis");
+    const intent = dto.intent === "existing" ? "existing" : "new_tenant";
+    if (intent === "new_tenant" && !dto.orgName) throw new BadRequestException("Le nom de l'organisation est requis");
+    if (intent === "existing" && !dto.existingTenantId) throw new BadRequestException("existingTenantId requis pour rattacher");
+
+    const { data: plan } = await sb.from("billing_plans")
+      .select("key, stripe_price_id, label, price_cents, currency, billing_cycle, offer_tier, is_active")
+      .eq("key", dto.planKey).maybeSingle();
+    if (!plan || (plan as any).is_active === false) throw new NotFoundException("Offre inconnue ou inactive");
+    const priceId = (plan as any).stripe_price_id;
+    const amountCents = Number((plan as any).price_cents ?? 0);
+    if (!priceId && amountCents <= 0) throw new BadRequestException("Aucun prix carte configuré pour ce plan");
+    const offerTier = String(dto.offerTier ?? (plan as any).offer_tier ?? "hosted").toLowerCase();
+
+    const frontend = process.env.FRONTEND_URL || "https://app.cimolace.space";
+    const params = new URLSearchParams();
+    params.append("mode", "subscription");
+    if (priceId) {
+      params.append("line_items[0][price]", priceId);
+    } else {
+      const currency = String((plan as any).currency ?? "EUR").toLowerCase();
+      const interval = String((plan as any).billing_cycle ?? "monthly").toLowerCase() === "yearly" ? "year" : "month";
+      params.append("line_items[0][price_data][currency]", currency);
+      params.append("line_items[0][price_data][unit_amount]", String(amountCents));
+      params.append("line_items[0][price_data][recurring][interval]", interval);
+      params.append("line_items[0][price_data][product_data][name]", String((plan as any).label ?? dto.planKey));
+    }
+    params.append("line_items[0][quantity]", "1");
+    params.append("success_url", `${frontend}/creer-organisation/succes?session_id={CHECKOUT_SESSION_ID}`);
+    params.append("cancel_url", `${frontend}/creer-organisation?annule=1`);
+    params.append("customer_email", email);
+    // Intention d'ACQUISITION — lue par le webhook (createTenantFromPurchase).
+    params.append("metadata[intent]", intent);
+    params.append("metadata[plan_key]", dto.planKey);
+    params.append("metadata[offer_tier]", offerTier);
+    params.append("metadata[org_email]", email);
+    if (dto.orgName) params.append("metadata[org_name]", dto.orgName);
+    if (dto.slug) params.append("metadata[org_slug]", dto.slug);
+    if (dto.existingTenantId) params.append("metadata[existing_tenant_id]", dto.existingTenantId);
+    // Miroir sur l'abonnement Stripe (metadata persistée pour les renouvellements).
+    params.append("subscription_data[metadata][intent]", intent);
+    params.append("subscription_data[metadata][plan_key]", dto.planKey);
+    params.append("subscription_data[metadata][offer_tier]", offerTier);
+
+    const res = await fetch("https://api.stripe.com/v1/checkout/sessions", {
+      method: "POST",
+      headers: { Authorization: auth, "Content-Type": "application/x-www-form-urlencoded" },
+      body: params.toString(),
+    });
+    if (!res.ok) throw new BadRequestException(`Stripe checkout ${res.status}: ${await res.text()}`);
+    const s = (await res.json()) as { url?: string };
+    if (!s.url) throw new BadRequestException("Session Stripe créée sans URL");
+    return { url: s.url };
+  }
+
   // ─── Retraits / versements mobile money (payouts PawaPay) ─────────────────
   private static ZERO_DECIMAL = new Set(["XAF", "XOF", "XPF", "BIF", "CLP", "DJF", "GNF", "JPY", "KMF", "KRW", "MGA", "PYG", "RWF", "UGX", "VND", "VUV"]);
 
@@ -1164,7 +1238,7 @@ export class BillingService implements OnApplicationBootstrap {
     try {
       switch (type) {
         case "checkout.session.completed":
-          await this.onCheckoutCompleted(obj);
+          await this.onCheckoutCompleted(obj, event.id);
           break;
         case "invoice.paid":
         case "invoice.payment_succeeded":
@@ -1267,10 +1341,48 @@ export class BillingService implements OnApplicationBootstrap {
     }
   }
 
+  /**
+   * Dédup d'événements webhook (anti double-traitement au retry Stripe).
+   * INSERT dans billing_webhook_events (event_id PK) : true au 1er passage, false si
+   * déjà vu (23505). Fail-open sur erreur DB — l'idempotence best-effort de
+   * createTenantFromPurchase (providerRef) reste un 2e filet contre le double-tenant.
+   */
+  private async claimWebhookEvent(eventId: string): Promise<boolean> {
+    const { error } = await this.supabase.from("billing_webhook_events").insert({ event_id: eventId });
+    if (!error) return true;
+    if ((error as { code?: string }).code === "23505") return false;
+    this.logger.warn(`[webhook dedup] claim échec (${eventId}): ${error.message}`);
+    return true; // fail-open : mieux vaut retraiter (idempotent) que perdre l'événement
+  }
+
   /** checkout.session.completed (mode subscription) → lie l'abo au sub Stripe + active. */
-  private async onCheckoutCompleted(session: any) {
+  private async onCheckoutCompleted(session: any, eventId?: string) {
     if (session?.mode && session.mode !== "subscription") return; // ignore le setup one-off
     const sb = this.supabase;
+
+    // ── P4 — ACQUISITION : un checkout portant une INTENTION org CRÉE le tenant.
+    // Sans ça, un prospect sans sub préexistante tombait dans un UPDATE 0-ligne
+    // SILENCIEUX (payé, rien provisionné). Dédup event.id = anti double-tenant au retry.
+    const meta = session?.metadata ?? {};
+    if (meta.intent === "new_tenant" || meta.intent === "existing") {
+      if (eventId && !(await this.claimWebhookEvent(eventId))) {
+        this.logger.log(`[acquisition] event ${eventId} déjà traité — ignoré`);
+        return;
+      }
+      const email = meta.org_email || session.customer_email || session.customer_details?.email;
+      await this.createTenantFromPurchase({
+        email,
+        orgName: meta.org_name,
+        slug: meta.org_slug,
+        planKey: meta.plan_key,
+        offerTier: meta.offer_tier,
+        intent: meta.intent,
+        existingTenantId: meta.existing_tenant_id || undefined,
+        providerRef: session.id,
+      });
+      return;
+    }
+
     const rowId = session.client_reference_id || session?.metadata?.subscription_id || null;
     const stripeSubId = session.subscription || null;
     const sub = stripeSubId ? await this.fetchStripeSubscription(stripeSubId) : null;
@@ -1288,7 +1400,13 @@ export class BillingService implements OnApplicationBootstrap {
 
     const matchCol = rowId ? "id" : "provider_checkout_id";
     const matchVal = rowId || session.id;
-    await sb.from("billing_subscriptions").update(patch).eq(matchCol, matchVal);
+    const { data: updatedRows } = await sb.from("billing_subscriptions").update(patch).eq(matchCol, matchVal).select("id");
+    if (!updatedRows || updatedRows.length === 0) {
+      // Fix du DROP SILENCIEUX : un UPDATE PostgREST sans ligne correspondante ne lève
+      // rien. On loggue au lieu de laisser un paiement encaissé sans provisioning ni trace.
+      this.logger.warn(`[billing webhook] checkout.session.completed sans abonnement correspondant (session=${session.id}, ref=${rowId ?? "∅"}) — aucun provisioning`);
+      return;
+    }
     if (rowId) {
       await sb
         .from("billing_invoices")

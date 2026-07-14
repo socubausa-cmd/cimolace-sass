@@ -43,4 +43,24 @@ export class BillingWebhookController {
     if (body?.payoutId) return this.billingService.applyPayoutCallbackFromWebhook(body);
     return this.billingService.applyPawaPayDepositFromWebhook(body);
   }
+
+  /**
+   * P2 — ACQUISITION (carte) : un PROSPECT sans tenant démarre un achat. PUBLIC.
+   * Renvoie l'URL Stripe Checkout ; le tenant est provisionné au webhook (paiement).
+   * Le prix vient du catalogue (billing_plans), jamais du client.
+   */
+  @Post('acquisition/checkout')
+  async acquisitionCheckout(
+    @Body() body: {
+      email?: string;
+      planKey?: string;
+      offerTier?: string;
+      intent?: 'new_tenant' | 'existing';
+      orgName?: string;
+      slug?: string;
+      existingTenantId?: string;
+    },
+  ) {
+    return this.billingService.createAcquisitionCheckout(body);
+  }
 }
