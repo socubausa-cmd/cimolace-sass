@@ -88,4 +88,40 @@ export function precepteurCourseToClassroomDraft(pc, opts = {}) {
   };
 }
 
+/**
+ * Convertit la sortie de l'edge `liri-agent-course-generate` (Formation LLM Builder) en draft.
+ * `cours` = { titre, objectif?, sous_titre?, etapes: [{ numero?, tag?, smartboard: {titre, contenu?, idee?} }] }.
+ * Une étape → un « jour » (slide de support) ; les étapes → une mindmap de révision.
+ * @param {object} cours
+ * @param {{title?:string, status?:string}} [opts]
+ */
+export function agentCourseToClassroomDraft(cours, opts = {}) {
+  const etapes = Array.isArray(cours?.etapes) ? cours.etapes : [];
+  const days = etapes.map((st, i) => {
+    const sb = st?.smartboard || {};
+    const title = sb.titre || st?.tag || `Étape ${st?.numero || i + 1}`;
+    const content = sb.contenu || sb.idee || '';
+    return { title, powerpoint: { type: 'slides', title, slides: [{ title, content: toHtml(content) }] } };
+  });
+  if (days.length) {
+    days[0].videos = [{
+      url: '', type: 'upload', title: 'Carte du cours',
+      mindmap: {
+        label: cours?.titre || 'Le cours',
+        summary: clip(cours?.objectif || cours?.sous_titre || '', 200),
+        children: etapes.map((st, i) => {
+          const sb = st?.smartboard || {};
+          return { label: sb.titre || st?.tag || `Étape ${i + 1}`, summary: clip(sb.contenu || sb.idee || ''), keyPoints: [] };
+        }),
+      },
+    }];
+  }
+  return {
+    title: cours?.titre || opts.title || 'Cours',
+    description: cours?.objectif || cours?.sous_titre || '',
+    status: opts.status || 'published',
+    modules: days.length ? [{ title: 'Programme', weeks: [{ title: 'Parcours', days }] }] : [],
+  };
+}
+
 export default precepteurCourseToClassroomDraft;
