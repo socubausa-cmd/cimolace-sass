@@ -15,7 +15,9 @@ import { canonicalTenantSlug } from "./tenant-slug-aliases";
 export function isEmbeddedTenant(tenant: any): boolean {
   const mode = tenant?.metadata?.hosting_mode;
   if (mode === "embedded") return true;
-  if (mode === "hosted") return false;
+  // 'customized' = offre 2 (marque/domaine du tenant mais UI Cimolace hébergée) :
+  // reste JOIGNABLE (pas embarqué), sinon son domaine propre le ferait présumer embarqué.
+  if (mode === "hosted" || mode === "customized") return false;
   return !!tenant?.primary_domain;
 }
 

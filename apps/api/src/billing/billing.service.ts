@@ -831,6 +831,177 @@ export class BillingService implements OnApplicationBootstrap {
     }
   }
 
+  // ═══════════════════════════════════════════════════════════════════════════
+  // ACQUISITION — orchestrateur « createTenantFromPurchase » (LE chaînon manquant).
+  // Aucun webhook ne créait de tenant depuis un paiement : tout supposait un tenant
+  // préexistant → un prospect qui payait tombait dans un drop silencieux. Ce service
+  // matérialise le tenant au paiement abouti. Idempotent (claim sur providerRef).
+  // ⚠️ Untestable hors runtime — à valider APRÈS déploiement Railway, avant tout
+  // paiement réel. Appelé par les handlers de webhook (COMPLETED), pas exposé en HTTP.
+  // ═══════════════════════════════════════════════════════════════════════════
+
+  /** Catégorie de plan → kind tenant (CHECK infrastructure_type). Défaut 'liri'. */
+  private static categoryToKind(category: string | null | undefined): string {
+    const c = String(category || "").toLowerCase();
+    if (c.includes("medos")) return "medos";
+    if (c.includes("ecole") || c.includes("school")) return "school";
+    if (c.includes("bienetre") || c.includes("wellness")) return "wellness";
+    if (c.includes("createur") || c.includes("creator")) return "creator";
+    if (c.includes("mbolo") || c.includes("commerce")) return "mbolo";
+    return "liri";
+  }
+
+  /** Offre → hosting_mode. customized = valeur dédiée (tier hébergé + marque tenant). */
+  private static hostingModeForOffer(offerTier: string | null | undefined): string {
+    const o = String(offerTier || "hosted").toLowerCase();
+    if (o === "integration") return "embedded";
+    if (o === "customized") return "customized";
+    return "hosted";
+  }
+
+  /** Slug URL-safe (accents retirés, [a-z0-9-], 2..38 car.). */
+  private static slugify(s: string): string {
+    const base = String(s || "")
+      .normalize("NFD").replace(/[̀-ͯ]/g, "")
+      .toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "")
+      .slice(0, 38) || "tenant";
+    return base.length < 2 ? `${base}-t` : base;
+  }
+
+  /** Crée/retrouve un user par email (sans password) via Supabase admin. Rôle owner. */
+  private async provisionUserByEmail(email: string, firstName?: string, lastName?: string): Promise<string> {
+    const url = process.env.SUPABASE_URL;
+    const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
+    if (!url || !key) throw new BadRequestException("Supabase non configuré (acquisition).");
+    const em = email.trim().toLowerCase();
+    const headers = { apikey: key, Authorization: `Bearer ${key}`, "Content-Type": "application/json" };
+    const findId = async (): Promise<string | undefined> => {
+      const r = await fetch(`${url}/auth/v1/admin/users?email=${encodeURIComponent(em)}`, { headers });
+      if (!r.ok) return undefined;
+      const d = (await r.json()) as { users?: { id: string; email?: string }[] };
+      return (d?.users || []).find((u) => u.email?.toLowerCase() === em)?.id;
+    };
+    let userId = await findId();
+    if (!userId) {
+      const createRes = await fetch(`${url}/auth/v1/admin/users`, {
+        method: "POST", headers,
+        body: JSON.stringify({ email: em, email_confirm: true, user_metadata: { first_name: firstName ?? null, last_name: lastName ?? null, role: "owner", created_via: "acquisition" } }),
+      });
+      userId = createRes.ok ? ((await createRes.json()) as { id: string }).id : await findId();
+      if (!userId) throw new BadRequestException("Provisionnement du compte impossible.");
+    }
+    return userId;
+  }
+
+  /** INSERT tenant avec gestion de collision de slug (23505 → suffixe -2, -3…). */
+  private async insertTenantForPurchase(p: { name: string; baseSlug: string; ownerUserId: string; kind: string; hostingMode: string; locale: string; timezone: string }): Promise<string> {
+    const sb = this.supabase;
+    for (let attempt = 0; attempt < 5; attempt++) {
+      const slug = attempt === 0 ? p.baseSlug : `${p.baseSlug}-${attempt + 1}`;
+      const { data, error } = await sb.from("tenants").insert({
+        name: p.name, slug, owner_user_id: p.ownerUserId, infrastructure_type: p.kind,
+        status: "active", plan: "free", billing_status: "free", locale: p.locale, timezone: p.timezone,
+        metadata: { hosting_mode: p.hostingMode, created_via: "acquisition" },
+      }).select("id").single();
+      if (!error && data) return (data as any).id as string;
+      const code = (error as { code?: string } | null)?.code;
+      const msg = String((error as { message?: string } | null)?.message || "").toLowerCase();
+      if (code === "23505" || /duplicate|unique|already exists/.test(msg)) continue; // slug pris → suffixe
+      throw new BadRequestException(`Création du tenant échouée: ${(error as { message?: string } | null)?.message ?? "inconnue"}`);
+    }
+    throw new BadRequestException("Impossible de générer un slug unique (5 tentatives).");
+  }
+
+  /**
+   * LE CHAÎNON : crée/active un tenant à partir d'un ACHAT abouti.
+   * intent='new_tenant' → crée user+tenant+membership+moteurs+abo actif.
+   * intent='existing'   → rattache l'achat à un tenant dont l'user est owner (anti-hijack).
+   * Idempotent : si providerRef a déjà produit un abo, ressort tel quel sans rien recréer.
+   * ⚠️ Idempotence forte (dédup event.id atomique) = responsabilité de l'appelant webhook (P4).
+   */
+  async createTenantFromPurchase(p: {
+    email: string;
+    orgName?: string;
+    slug?: string;
+    planKey: string;
+    offerTier?: string;
+    intent?: "new_tenant" | "existing";
+    existingTenantId?: string;
+    providerRef?: string;
+    firstName?: string;
+    lastName?: string;
+    locale?: string;
+    timezone?: string;
+  }): Promise<{ tenantId: string; userId: string; subscriptionId: string | null; created: boolean }> {
+    const sb = this.supabase;
+    const email = String(p.email || "").trim().toLowerCase();
+    if (!email) throw new BadRequestException("email requis pour provisionner l'achat");
+    if (!p.planKey) throw new BadRequestException("planKey requis");
+
+    // 0) IDEMPOTENCE (best-effort) : ce paiement a-t-il déjà provisionné un abo ?
+    if (p.providerRef) {
+      const { data: seen } = await sb.from("billing_subscriptions")
+        .select("id, tenant_id, user_id").eq("provider_checkout_id", p.providerRef).maybeSingle();
+      if ((seen as any)?.tenant_id) {
+        return { tenantId: (seen as any).tenant_id, userId: (seen as any).user_id, subscriptionId: (seen as any).id, created: false };
+      }
+    }
+
+    // 1) Plan (cycle + catégorie→kind + offre)
+    const { data: plan } = await sb.from("billing_plans")
+      .select("key, billing_cycle, category, offer_tier").eq("key", p.planKey).maybeSingle();
+    if (!plan) throw new NotFoundException(`Plan « ${p.planKey} » introuvable`);
+    const offerTier = String(p.offerTier ?? (plan as any).offer_tier ?? "hosted").toLowerCase();
+    const kind = BillingService.categoryToKind((plan as any).category);
+    const hostingMode = BillingService.hostingModeForOffer(offerTier);
+
+    // 2) USER par email (sans password)
+    const userId = await this.provisionUserByEmail(email, p.firstName, p.lastName);
+
+    // 3) TENANT — rattacher (existing, owner requis) ou créer (new)
+    let tenantId: string;
+    let created = false;
+    if (p.intent === "existing" && p.existingTenantId) {
+      const { data: t } = await sb.from("tenants").select("id, owner_user_id").eq("id", p.existingTenantId).maybeSingle();
+      if (!t) throw new NotFoundException("Tenant cible introuvable");
+      const { data: mem } = await sb.from("tenant_memberships")
+        .select("role").eq("tenant_id", p.existingTenantId).eq("user_id", userId).maybeSingle();
+      const owner = (t as any).owner_user_id === userId || ["owner", "admin"].includes(String((mem as any)?.role || ""));
+      if (!owner) throw new BadRequestException("Rattachement refusé : vous n'êtes pas propriétaire de ce tenant");
+      tenantId = (t as any).id as string;
+    } else {
+      const baseSlug = BillingService.slugify(p.slug || p.orgName || email.split("@")[0]);
+      tenantId = await this.insertTenantForPurchase({
+        name: p.orgName || baseSlug, baseSlug, ownerUserId: userId, kind, hostingMode,
+        locale: p.locale ?? "fr", timezone: p.timezone ?? "Europe/Paris",
+      });
+      created = true;
+    }
+
+    // 4) Membership owner (idempotent)
+    await sb.from("tenant_memberships").upsert(
+      { tenant_id: tenantId, user_id: userId, role: "owner", status: "active" },
+      { onConflict: "tenant_id,user_id" },
+    );
+
+    // 5) PROVISIONING des moteurs (fail-safe : n'échoue jamais l'activation)
+    await this.provisionPlanServices(tenantId, p.planKey);
+
+    // 6) Abonnement actif, durée = cycle du plan
+    const start = new Date();
+    const end = BillingService.addCycle(start, String((plan as any).billing_cycle));
+    const { data: sub, error: subErr } = await sb.from("billing_subscriptions").insert({
+      tenant_id: tenantId, user_id: userId, plan_id: p.planKey, status: "active",
+      provider_checkout_id: p.providerRef ?? null,
+      current_period_start: start.toISOString(), current_period_end: end.toISOString(),
+      metadata: { offer_tier: offerTier, acquisition: true },
+    }).select("id").maybeSingle();
+    if (subErr) this.logger.warn(`[acquisition] abo non enregistré (tenant=${tenantId}, plan=${p.planKey}): ${subErr.message}`);
+
+    this.logger.log(`[acquisition] tenant ${created ? "créé" : "rattaché"} ${tenantId} (plan=${p.planKey}, offre=${offerTier}, kind=${kind}) pour ${email}`);
+    return { tenantId, userId, subscriptionId: (sub as any)?.id ?? null, created };
+  }
+
   // ─── Retraits / versements mobile money (payouts PawaPay) ─────────────────
   private static ZERO_DECIMAL = new Set(["XAF", "XOF", "XPF", "BIF", "CLP", "DJF", "GNF", "JPY", "KMF", "KRW", "MGA", "PYG", "RWF", "UGX", "VND", "VUV"]);
 
