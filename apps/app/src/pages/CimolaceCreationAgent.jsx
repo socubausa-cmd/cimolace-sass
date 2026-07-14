@@ -1851,6 +1851,18 @@ export default function CimolaceCreationAgent({ tenantSlug: tenantSlugProp = nul
     setSignupForm({ name: '', email: '', password: '', sending: false, sent: false, error: '' });
   }, [osTenant, speak, closeInput]);
 
+  // B — INTENTION D'AUTH depuis l'URL (?auth=login|signup). /login (repli) renvoie l'utilisateur
+  // déconnecté ICI → l'OS ouvre AUTOMATIQUEMENT son formulaire inline (une seule fois). Realm tenant only.
+  const authIntentRef = useRef(false);
+  useEffect(() => {
+    if (authIntentRef.current || !isTenantRealm) return;
+    let intent = null;
+    try { intent = new URLSearchParams(window.location.search).get('auth'); } catch { /* ignore */ }
+    if (intent !== 'login' && intent !== 'signup') return;
+    authIntentRef.current = true;
+    if (intent === 'signup') goToSignup(); else goToSpace();
+  }, [isTenantRealm, goToSpace, goToSignup]);
+
   // CHOISIR UN FORFAIT — les 4 cycles du tenant rendus DANS l'OS (jamais de saut dur vers /forfaits, qui
   // détruisait l'expérience). Prix lus depuis billing_plans (source de vérité). Chaque « S'abonner » ouvre
   // le checkout ÉPROUVÉ (/t/:slug/paiement — Stripe + Mobile Money, checkout invité) dans un NOUVEL onglet,

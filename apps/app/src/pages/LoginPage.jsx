@@ -99,6 +99,19 @@ const LoginPage = () => {
   const isLiriMobileAuth = location.pathname.startsWith('/m/eleve/login');
   const spLogin = new URLSearchParams(location?.search || '');
   const redirectParam = spLogin.get('redirect') || spLogin.get('next');
+
+  // B — LA CONNEXION PASSE PAR L'OS IMMERSIF (l'OS possède l'identité — décision fondateur). Sur
+  // prorascience.org, /login n'est qu'un REPLI : on renvoie vers la home OS avec l'intention
+  // « login » → l'OS ouvre son formulaire inline. Échappatoire debug : ?legacy=1. Autres hosts inchangés.
+  useLayoutEffect(() => {
+    if (typeof window === 'undefined' || isLiriMobileAuth) return;
+    const h = window.location.hostname.toLowerCase();
+    if (h !== 'prorascience.org' && h !== 'www.prorascience.org') return;
+    if (spLogin.get('legacy') === '1') return;
+    const back = redirectParam || location.state?.from?.pathname || '';
+    navigate(`/?auth=login${back ? `&redirect=${encodeURIComponent(back)}` : ''}`, { replace: true });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
   // Défaut post-login : sur l'hôte PLATEFORME LIRI (localhost / liri.cimolace.space, sans
   // tenant résolu) → le PORTAIL LIRI (/liri), surtout PAS /dashboard qui retombe sur la
   // chrome ISNA Academy. Sur un domaine de tenant → son /dashboard (son académie).
