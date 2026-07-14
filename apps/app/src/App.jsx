@@ -256,7 +256,6 @@ import ImmersiveBootLoader from '@/components/liri/ImmersiveBootLoader';
 import ProtectedRoleRoute from '@/components/ProtectedRoleRoute';
 import ProtectedSubscriptionRoute from '@/components/ProtectedSubscriptionRoute';
 import ProtectedLiriRoute from '@/components/ProtectedLiriRoute';
-import PublicBookGate from '@/components/liri/PublicBookGate';
 import { BillingProvider, useBilling } from '@/contexts/BillingContext';
 const GraceBanner = lazy(() => import('@/components/billing/GraceBanner'));
 const DiscoveryChat = lazy(() => import('@/components/booking/DiscoveryChat').then((m) => ({ default: m.DiscoveryChat })));
@@ -2716,14 +2715,14 @@ isLiriHostDevPreviewRoute;
           <Route path="/ecoles" element={<EcolesProrasciencePage />} />
           <Route path="/doctrine-pedagogique" element={<DoctrinePedagogiquePage />} />
           <Route path="/origine-appel" element={<OrigineAppelPage />} />
-          {/* Corpus premium (texte intégral) : aperçu court + mur pour les non-abonnés (fin de la fuite
-              où un prospect déconnecté lisait tout gratuitement). SEO préservé (contenu plein au 1er paint/crawler). */}
-          <Route path="/fond-de-tout" element={<PublicBookGate><FondDeToutPage /></PublicBookGate>} />
-          <Route path="/dialogue-physique" element={<PublicBookGate><DialoguePhysiquePage /></PublicBookGate>} />
-          <Route path="/ontodynamique" element={<PublicBookGate><OntodynamiquePage /></PublicBookGate>} />
-          <Route path="/bibliotheque" element={<BibliothequePage />} />
-          <Route path="/grande-bibliotheque" element={<LibraryPage />} />
-          <Route path="/manuel-initiatique-bris-de-sort" element={<PublicBookGate><ManuelInitiatiqueBrisDeSortPage /></PublicBookGate>} />
+          {/* Livres & bibliothèque : PLUS de page standalone à l'ancien chrome « PORTAIL » (Academy).
+              TOUT passe par le portail LIRI qui embarque tout (LiriSchoolShell chaud + gate forfait). */}
+          <Route path="/fond-de-tout" element={<Navigate to="/liri/bibliotheque/fond-de-tout" replace />} />
+          <Route path="/dialogue-physique" element={<Navigate to="/liri/bibliotheque/dialogue-physique" replace />} />
+          <Route path="/ontodynamique" element={<Navigate to="/liri/bibliotheque/ontodynamique" replace />} />
+          <Route path="/bibliotheque" element={<Navigate to="/liri/bibliotheque" replace />} />
+          <Route path="/grande-bibliotheque" element={<Navigate to="/liri/bibliotheque-ressources" replace />} />
+          <Route path="/manuel-initiatique-bris-de-sort" element={<Navigate to="/liri/bibliotheque/manuel-initiatique-bris-de-sort" replace />} />
           <Route path="/communaute" element={<CommunautePage />} />
           <Route path="/curriculum/first-year" element={<CurriculumPage />} />
           <Route path="/curriculum/module/:id" element={<ModuleDetailPage />} />
