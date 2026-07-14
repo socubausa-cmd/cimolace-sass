@@ -253,6 +253,16 @@ const CYCLE_META = {
   privilegie: { name: 'Privilégié', for: 'Pour ceux qui veulent pratiquer — mentorat souverain.' },
 };
 
+// Logo Google (SVG inline — lucide n'expose pas les marques) pour « Continuer avec Google ».
+const GoogleGlyph = () => (
+  <svg width="16" height="16" viewBox="0 0 48 48" aria-hidden="true" style={{ flexShrink: 0 }}>
+    <path fill="#FFC107" d="M43.6 20.5h-1.9V20H24v8h11.3C33.7 32.9 29.3 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.9 1.2 8 3.1l5.7-5.7C34.6 6.1 29.6 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20 20-8.9 20-20c0-1.3-.1-2.3-.4-3.5z"/>
+    <path fill="#FF3D00" d="M6.3 14.7l6.6 4.8C14.7 16 19 12 24 12c3.1 0 5.9 1.2 8 3.1l5.7-5.7C34.6 6.1 29.6 4 24 4 16.3 4 9.7 8.3 6.3 14.7z"/>
+    <path fill="#4CAF50" d="M24 44c5.2 0 10-2 13.6-5.2l-6.3-5.3C29.2 35.1 26.7 36 24 36c-5.3 0-9.7-3.1-11.3-7.9l-6.5 5C9.6 39.6 16.2 44 24 44z"/>
+    <path fill="#1976D2" d="M43.6 20.5H24v8h11.3c-.8 2.3-2.3 4.2-4.3 5.5l6.3 5.3C40.9 36.3 44 30.7 44 24c0-1.3-.1-2.3-.4-3.5z"/>
+  </svg>
+);
+
 const SUGG = [
   { kind: 'school', label: 'École / cours en ligne', Icon: GraduationCap },
   { kind: 'medos', label: 'Clinique / santé', Icon: Stethoscope },
@@ -1413,7 +1423,7 @@ function TutorialFlow({ scene, onCta, hooks, onHook }) {
 
 export default function CimolaceCreationAgent({ tenantSlug: tenantSlugProp = null, embedded = false } = {}) {
   const navigate = useNavigate();
-  const { login, signup, ensureStudentMembership, user } = useAuth();
+  const { login, signup, ensureStudentMembership, user, loginWithOAuth } = useAuth();
 
   // L8-P1 — realm : si un tenant est ciblé, l'OS REND ce tenant (même moteur, autre identité) au lieu
   // du tunnel de création Cimolace. isTenantRealm gate tout le flux « créer une org Cimolace ».
@@ -2368,6 +2378,20 @@ export default function CimolaceCreationAgent({ tenantSlug: tenantSlugProp = nul
     }
   }, [authForm, login, osTenant, speak, navigate]);
 
+  // Connexion GOOGLE inline — beaucoup de comptes prorascience sont des comptes Google (indispensable).
+  // Redirige vers Google puis revient à /liri (ou ?redirect). L'OS possède l'identité, jamais /login.
+  const handleGoogleAuth = useCallback(async () => {
+    let redirect = '/liri';
+    try { redirect = new URLSearchParams(window.location.search).get('redirect') || '/liri'; } catch { /* ignore */ }
+    try { logEvent('google_login_inline', {}, osTenant); } catch { /* non bloquant */ }
+    try {
+      await loginWithOAuth('google', redirect); // redirige la page vers Google
+    } catch (e) {
+      setAuthForm((c) => (c ? { ...c, error: 'Connexion Google indisponible — réessayez.' } : c));
+      setSignupForm((c) => (c ? { ...c, error: 'Connexion Google indisponible — réessayez.' } : c));
+    }
+  }, [loginWithOAuth, osTenant]);
+
   const submitInput = useCallback(() => {
     const v = value.trim();
     closeInput();
@@ -2937,6 +2961,15 @@ export default function CimolaceCreationAgent({ tenantSlug: tenantSlugProp = nul
                   <button onClick={(e) => { e.stopPropagation(); setSignupForm(null); }}
                     style={{ ...VNP_NAV_CHIP, justifyContent: 'center', width: 108 }}>Annuler</button>
                 </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8, margin: '4px 0 2px' }}>
+                  <div style={{ flex: 1, height: 1, background: 'rgba(244,239,230,.12)' }} />
+                  <span style={{ fontSize: 10.5, color: 'rgba(244,239,230,.4)', textTransform: 'uppercase', letterSpacing: '.1em' }}>ou</span>
+                  <div style={{ flex: 1, height: 1, background: 'rgba(244,239,230,.12)' }} />
+                </div>
+                <button onClick={(e) => { e.stopPropagation(); handleGoogleAuth(); }} disabled={signupForm.sending}
+                  style={{ ...VNP_CHIP_BASE, width: '100%', justifyContent: 'center', gap: 10, fontWeight: 600, color: INK, background: 'rgba(244,239,230,.05)', border: '1px solid rgba(244,239,230,.18)' }}>
+                  <GoogleGlyph /> Continuer avec Google
+                </button>
                 <button onClick={(e) => { e.stopPropagation(); setSignupForm(null); setAuthForm({ email: signupForm.email || '', password: '', sending: false, error: '' }); }}
                   style={{ background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'inherit', fontSize: 12.5, color: 'rgba(244,239,230,.55)', textAlign: 'left', padding: 0, marginTop: 2 }}>
                   Déjà un compte ? <span style={{ color: GOLD }}>Se connecter →</span>
@@ -2963,6 +2996,15 @@ export default function CimolaceCreationAgent({ tenantSlug: tenantSlugProp = nul
                   <button onClick={(e) => { e.stopPropagation(); setAuthForm(null); }}
                     style={{ ...VNP_NAV_CHIP, justifyContent: 'center', width: 108 }}>Annuler</button>
                 </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8, margin: '4px 0 2px' }}>
+                  <div style={{ flex: 1, height: 1, background: 'rgba(244,239,230,.12)' }} />
+                  <span style={{ fontSize: 10.5, color: 'rgba(244,239,230,.4)', textTransform: 'uppercase', letterSpacing: '.1em' }}>ou</span>
+                  <div style={{ flex: 1, height: 1, background: 'rgba(244,239,230,.12)' }} />
+                </div>
+                <button onClick={(e) => { e.stopPropagation(); handleGoogleAuth(); }} disabled={authForm.sending}
+                  style={{ ...VNP_CHIP_BASE, width: '100%', justifyContent: 'center', gap: 10, fontWeight: 600, color: INK, background: 'rgba(244,239,230,.05)', border: '1px solid rgba(244,239,230,.18)' }}>
+                  <GoogleGlyph /> Continuer avec Google
+                </button>
                 <button onClick={(e) => { e.stopPropagation(); setAuthForm(null); setSignupForm({ name: '', email: authForm.email || '', password: '', sending: false, sent: false, error: '' }); }}
                   style={{ background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'inherit', fontSize: 12.5, color: 'rgba(244,239,230,.55)', textAlign: 'left', padding: 0, marginTop: 2 }}>
                   Pas encore de compte ? <span style={{ color: GOLD }}>Créer mon espace →</span>
