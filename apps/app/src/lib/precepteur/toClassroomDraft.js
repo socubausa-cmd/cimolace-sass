@@ -124,4 +124,43 @@ export function agentCourseToClassroomDraft(cours, opts = {}) {
   };
 }
 
+/**
+ * Convertit le `course` de l'éditeur SmartBoard Konva (useCourseCopilotStore) en draft.
+ * `course` = { title?, slides: [{ title, content: { mainIdea?, keyPoints?: string[] } }] }.
+ * Le deck ENTIER → un « jour » (support = toutes les slides) + une mindmap de révision.
+ * @param {object} course
+ * @param {{title?:string, description?:string, status?:string}} [opts]
+ */
+export function smartboardCourseToClassroomDraft(course, opts = {}) {
+  const slides = Array.isArray(course?.slides) ? course.slides : [];
+  const pptSlides = slides.map((s, i) => {
+    const c = s?.content || {};
+    const kp = Array.isArray(c.keyPoints) ? c.keyPoints.filter(Boolean) : [];
+    const body = [c.mainIdea, kp.length ? kp.map((k) => `• ${k}`).join('\n') : ''].filter(Boolean).join('\n\n');
+    return { title: s?.title || `Slide ${i + 1}`, content: toHtml(body || s?.title || '') };
+  });
+  const title = course?.title || opts.title || 'Cours SmartBoard';
+  const days = pptSlides.length ? [{
+    title,
+    powerpoint: { type: 'slides', title, slides: pptSlides },
+    videos: [{
+      url: '', type: 'upload', title: 'Carte du cours',
+      mindmap: {
+        label: title, summary: '',
+        children: slides.map((s, i) => ({
+          label: s?.title || `Slide ${i + 1}`,
+          summary: clip(s?.content?.mainIdea || ''),
+          keyPoints: Array.isArray(s?.content?.keyPoints) ? s.content.keyPoints.filter(Boolean).slice(0, 4) : [],
+        })),
+      },
+    }],
+  }] : [];
+  return {
+    title,
+    description: opts.description || '',
+    status: opts.status || 'published',
+    modules: days.length ? [{ title: 'Programme', weeks: [{ title: 'Parcours', days }] }] : [],
+  };
+}
+
 export default precepteurCourseToClassroomDraft;

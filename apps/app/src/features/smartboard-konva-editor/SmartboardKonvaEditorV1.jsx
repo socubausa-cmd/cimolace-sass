@@ -46,6 +46,8 @@ import { useSmartboardCollab } from './hooks/useSmartboardCollab';
 import { useSmartboardDesignKeyboardShortcuts } from './hooks/useSmartboardDesignKeyboardShortcuts';
 import { analyzeSlideQuality, analyzeProjectQuality } from './lib/slideQualityAnalyzer';
 import { useCourseCopilotStore } from './store/useCourseCopilotStore';
+import { usePublishToClassroom } from '@/hooks/usePublishToClassroom';
+import { smartboardCourseToClassroomDraft } from '@/lib/precepteur/toClassroomDraft';
 import {
   activateKonvaSceneAndSyncSlide,
   buildWorkspacePayloadFromStores,
@@ -645,6 +647,30 @@ const SmartboardKonvaEditorV1 = forwardRef(function SmartboardKonvaEditorV1({
     a.download = `smartboard-slide-${Date.now()}.png`;
     a.click();
   }, []);
+
+  // ── Publier en classe : le deck SmartBoard (course.slides) → formation réelle ───────────
+  const { publish: publishToClassroom } = usePublishToClassroom();
+  const [publishingClassroom, setPublishingClassroom] = useState(false);
+  const onPublishClassroom = useCallback(async () => {
+    const c = useCourseCopilotStore.getState().course;
+    const slides = Array.isArray(c?.slides) ? c.slides : [];
+    if (!slides.length) {
+      window.alert('Aucune slide à publier — crée ou charge un cours dans l’éditeur d’abord.');
+      return;
+    }
+    setPublishingClassroom(true);
+    try {
+      const draft = smartboardCourseToClassroomDraft(c);
+      const { id, error } = await publishToClassroom(draft);
+      if (error) { window.alert('Publication impossible : ' + (error.message || error)); return; }
+      window.alert('SmartBoard publié en classe ✅ — retrouve-le dans « Mes formations ».');
+      window.location.assign(id ? `/liri/formations?course=${id}` : '/liri/formations');
+    } catch (e) {
+      window.alert('Publication impossible : ' + (e?.message || e));
+    } finally {
+      setPublishingClassroom(false);
+    }
+  }, [publishToClassroom]);
 
   // ── Export PPTX (pptxgenjs + Konva toDataURL) ───────────────────────────
   const onExportPptx = useCallback(async () => {
@@ -1652,6 +1678,8 @@ const SmartboardKonvaEditorV1 = forwardRef(function SmartboardKonvaEditorV1({
                       setImageUrlDraft={setImageUrlDraft}
                       onExportPdf={onExportPdf}
                       onExportPptx={onExportPptx}
+                      onPublishClassroom={onPublishClassroom}
+                      publishingClassroom={publishingClassroom}
                       onExportScript={onExportScript}
                       onExportStudentSheet={onExportStudentSheet}
                       onExportFlashcards={onExportFlashcards}
