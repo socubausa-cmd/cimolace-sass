@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import {
   ArrowRight, ArrowUpRight, Check, GraduationCap, HeartPulse, Radio, Sparkles, Loader2,
 } from 'lucide-react';
+import { getApiBaseUrl } from '@/lib/apiBase';
 
 /**
  * Page publique d'ACQUISITION Cimolace — « Souscrire une offre ».
@@ -77,8 +78,7 @@ export default function CimolaceSubscribePage() {
     setLoading(true);
     setError('');
     try {
-      const apiBase = import.meta.env.VITE_API_BASE ?? '/api';
-      const res = await fetch(`${apiBase}/billing/acquisition/checkout`, {
+      const res = await fetch(`${getApiBaseUrl()}/billing/acquisition/checkout`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
