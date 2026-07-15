@@ -15,6 +15,7 @@ import {
 } from './engine/secretary-matching';
 import { detectVisitorContext } from './engine/timezone-routing';
 import { buildAvailability } from './engine/availability';
+import { NotificationsService } from '../notifications/notifications.service';
 import type { TenantContext } from '../tenant/tenant.types';
 import type { CreateAppointmentDto, CreateSlotDto, SetPreparationDto, SubmitFeedbackDto, UpdateAppointmentDto } from './dto/booking.dto';
 
@@ -25,6 +26,7 @@ export class BookingService {
   constructor(
     private readonly supabase: SupabaseService,
     private readonly live: LiveService,
+    private readonly notifications: NotificationsService,
   ) {}
 
   // ── Slots (disponibilités) ───────────────────────────────────────────────
@@ -204,7 +206,57 @@ export class BookingService {
       .select('id')
       .maybeSingle();
     if (error) throw new BadRequestException(error.message);
+
+    // Notifications (in-app + email brandé tenant) — best-effort, ne bloque JAMAIS le RDV.
+    void this.notifyAppointmentRequest(tenantId, userId, { subject, email, whatsapp, chosenStart });
+
     return { ok: true, requestId: data?.id ?? null, slotId, startAt };
+  }
+
+  /** Confirme l'élève + alerte le secrétariat/staff d'une nouvelle demande de RDV. Best-effort. */
+  private async notifyAppointmentRequest(
+    tenantId: string,
+    userId: string,
+    info: { subject: string; email: string; whatsapp: string; chosenStart: Date | null },
+  ): Promise<void> {
+    try {
+      const whenTxt = info.chosenStart
+        ? ` pour le ${new Intl.DateTimeFormat('fr-FR', { dateStyle: 'full', timeStyle: 'short', timeZone: 'Europe/Paris' }).format(info.chosenStart)}`
+        : '';
+      // 1) Élève : confirmation.
+      await this.notifications.send(tenantId, userId, {
+        title: info.chosenStart ? 'Rendez-vous enregistré ✓' : 'Demande de rendez-vous reçue ✓',
+        body: info.chosenStart
+          ? `Ton rendez-vous « ${info.subject} »${whenTxt} est enregistré. Le secrétariat te confirme bientôt.`
+          : `Ta demande « ${info.subject} » est bien reçue. Le secrétariat te proposera un créneau.`,
+        type: 'success',
+        email: true,
+        actionUrl: '/liri/rendez-vous',
+      });
+      // 2) Secrétariat / staff : alerte nouvelle demande.
+      const { data: staff } = await (this.supabase.client as any)
+        .from('tenant_memberships')
+        .select('user_id, role')
+        .eq('tenant_id', tenantId)
+        .in('role', ['secretariat', 'owner', 'admin']);
+      const seen = new Set<string>();
+      for (const m of (staff ?? []) as Array<{ user_id?: string }>) {
+        const uid = m.user_id;
+        if (!uid || seen.has(uid) || uid === userId) continue;
+        seen.add(uid);
+        await this.notifications
+          .send(tenantId, uid, {
+            title: 'Nouvelle demande de rendez-vous',
+            body: `« ${info.subject} »${whenTxt} — ${info.email} · ${info.whatsapp}`,
+            type: 'info',
+            email: true,
+            actionUrl: '/secretariat/rendez-vous',
+          })
+          .catch(() => {});
+      }
+    } catch (e) {
+      this.logger.warn(`RDV notif: ${(e as Error).message}`);
+    }
   }
 
   async updateAppointment(
