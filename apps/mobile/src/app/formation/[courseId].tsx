@@ -4,7 +4,8 @@ import { useEffect, useMemo, useState } from 'react';
 import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 
 import { LiriFonts as F, softShadow, type LiriPalette } from '@/constants/liri-theme';
-import { fetchCourseCurriculum, type CourseCurriculum } from '@/lib/learning-api';
+import LessonPlayer from '@/components/lesson-player';
+import { fetchCourseCurriculum, type CourseCurriculum, type CurriculumLesson } from '@/lib/learning-api';
 import { useTheme } from '@/lib/theme';
 
 export default function CourseDetailScreen() {
@@ -15,6 +16,7 @@ export default function CourseDetailScreen() {
   const [data, setData] = useState<CourseCurriculum | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [expanded, setExpanded] = useState<Record<string, boolean>>({});
+  const [openLesson, setOpenLesson] = useState<CurriculumLesson | null>(null);
 
   useEffect(() => {
     if (!courseId) {
@@ -122,16 +124,27 @@ export default function CourseDetailScreen() {
                         {module.description ? <Text selectable style={styles.moduleDescription}>{module.description}</Text> : null}
                         {module.lessons.map((lesson, lessonIndex) => {
                           const complete = completedIds.has(lesson.id);
+                          const kindLabel =
+                            lesson.contentType === 'video' ? 'Vidéo'
+                            : lesson.contentType === 'quiz' ? 'Quiz'
+                            : lesson.contentType === 'powerpoint' ? 'Support'
+                            : 'Cours';
                           return (
-                            <View key={lesson.id} style={styles.lesson}>
+                            <Pressable
+                              key={lesson.id}
+                              accessibilityRole="button"
+                              onPress={() => setOpenLesson(lesson)}
+                              style={({ pressed }) => [styles.lesson, pressed && styles.pressed]}
+                            >
                               <View style={[styles.lessonIcon, complete && styles.lessonIconDone]}>
-                                <Feather name={complete ? 'check' : lesson.video_url ? 'play' : 'file-text'} size={14} color={complete ? '#fff' : C.coral} />
+                                <Feather name={complete ? 'check' : lesson.contentType === 'video' ? 'play' : lesson.contentType === 'quiz' ? 'help-circle' : 'file-text'} size={14} color={complete ? '#fff' : C.coral} />
                               </View>
                               <View style={styles.lessonCopy}>
-                                <Text selectable style={styles.lessonTitle}>{lesson.title || `Leçon ${lessonIndex + 1}`}</Text>
-                                <Text selectable style={styles.lessonMeta}>{lesson.video_url ? 'Vidéo' : 'Cours'} · Leçon {lessonIndex + 1}</Text>
+                                <Text style={styles.lessonTitle}>{lesson.title || `Leçon ${lessonIndex + 1}`}</Text>
+                                <Text style={styles.lessonMeta}>{kindLabel} · Leçon {lessonIndex + 1}</Text>
                               </View>
-                            </View>
+                              <Feather name="chevron-right" size={16} color={C.faint} />
+                            </Pressable>
                           );
                         })}
                         {module.lessons.length === 0 ? <Text selectable style={styles.emptyLesson}>Aucune leçon dans ce module.</Text> : null}
@@ -144,6 +157,7 @@ export default function CourseDetailScreen() {
           </>
         ) : null}
       </ScrollView>
+      <LessonPlayer lesson={openLesson} onClose={() => setOpenLesson(null)} />
     </View>
   );
 }

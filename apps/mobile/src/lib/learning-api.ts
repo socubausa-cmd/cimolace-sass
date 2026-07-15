@@ -8,9 +8,15 @@ export interface LessonProgress {
   completed_at?: string | null;
 }
 
+/** Leçon enrichie : porte le TYPE + les DONNÉES du content pour le lecteur natif. */
+export interface CurriculumLesson extends CourseLesson {
+  contentType?: 'video' | 'powerpoint' | 'quiz' | string;
+  contentData?: Record<string, unknown>;
+}
+
 export interface CourseCurriculum {
   course: Course;
-  modules: (CourseModule & { lessons: CourseLesson[] })[];
+  modules: (CourseModule & { lessons: CurriculumLesson[] })[];
   progress: LessonProgress[];
 }
 
@@ -45,7 +51,7 @@ export async function fetchStudentCourses(): Promise<Course[]> {
   return published.length > 0 ? published : courses.filter((course) => course.status !== 'archived');
 }
 
-type OutlineModule = CourseModule & { lessons: CourseLesson[] };
+type OutlineModule = CourseModule & { lessons: CurriculumLesson[] };
 
 const num = (v: unknown): number => (Number.isFinite(Number(v)) ? Number(v) : 0);
 
@@ -76,7 +82,7 @@ async function fetchFormationOutline(courseId: string): Promise<OutlineModule[]>
     .slice()
     .sort((a: any, b: any) => num(a.sort_order) - num(b.sort_order))
     .map((m: any, mi: number): OutlineModule => {
-      const lessons: CourseLesson[] = [];
+      const lessons: CurriculumLesson[] = [];
       (m.formation_weeks ?? [])
         .slice()
         .sort((a: any, b: any) => num(a.sort_order) - num(b.sort_order))
@@ -98,6 +104,8 @@ async function fetchFormationOutline(courseId: string): Promise<OutlineModule[]>
                     title: label,
                     // sentinelle truthy : l'écran affiche l'icône ▷ pour une vidéo (le player résout l'URL réelle).
                     video_url: c.type === 'video' ? '1' : undefined,
+                    contentType: String(c.type || ''),
+                    contentData: cd,
                   });
                 }),
             ),
