@@ -557,6 +557,8 @@ function normalizeScene(raw) {
             tiers: Array.isArray(c.ref.tiers) ? c.ref.tiers.slice(0, 6).map((t) => (t && t.label) ? {
               label: cut(t.label, 30), price: cut(t.price, 20) || undefined,
               link: (typeof t.link === 'string' && /^https:\/\/[^\s"'<>]+$/.test(t.link)) ? t.link : undefined,
+              // planKey = souscription via le chaînon d'acquisition (org + Stripe + provisioning).
+              planKey: (typeof t.planKey === 'string' && /^[a-z0-9-]{3,60}$/.test(t.planKey)) ? t.planKey : undefined,
             } : null).filter(Boolean) : undefined,
             actions: (Array.isArray(c.ref.actions) ? c.ref.actions : []).filter((a) => typeof a === 'string').slice(0, 4),
             related: (Array.isArray(c.ref.related) ? c.ref.related : []).slice(0, 3)
@@ -1224,6 +1226,28 @@ function MiniNav({ turns, curTurn, onGo }) {
 }
 
 function FocusDrawer({ item, brand, onClose, onAction, onNode }) {
+  // Acquisition (offre Cimolace) : « S'abonner » d'un palier porteur d'un planKey ouvre un
+  // champ « nom de l'organisation » inline → POST /billing/acquisition/checkout → Stripe.
+  // Le tenant est provisionné au paiement (chaînon). Reste dans l'OS (pas de page à part).
+  const [acqPlan, setAcqPlan] = useState(null); // { planKey, label } en cours
+  const [acqOrg, setAcqOrg] = useState('');
+  const [acqBusy, setAcqBusy] = useState(false);
+  const [acqErr, setAcqErr] = useState('');
+  async function startAcquisition() {
+    if (!acqPlan || acqOrg.trim().length < 2 || acqBusy) return;
+    setAcqBusy(true); setAcqErr('');
+    try {
+      const res = await fetch(`${getApiBaseUrl()}/billing/acquisition/checkout`, {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ planKey: acqPlan.planKey, orgName: acqOrg.trim(), intent: 'new_tenant' }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(data?.message || data?.error || `Erreur ${res.status}`);
+      const url = data?.data?.url ?? data?.url;
+      if (!url) throw new Error('Paiement indisponible pour le moment.');
+      window.location.href = url;
+    } catch (e) { setAcqErr(e?.message || 'Souscription impossible.'); setAcqBusy(false); }
+  }
   if (!item) return null;
   return (
     <div className="cca-focus-back" onClick={onClose}>
@@ -1236,7 +1260,12 @@ function FocusDrawer({ item, brand, onClose, onAction, onNode }) {
         {item.tiers && item.tiers.length > 0 && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginTop: 6 }}>
             {item.tiers.map((t) => (
-              t.link ? (
+              t.planKey ? (
+                <button key={t.label} type="button" className="cca-focus-act" onClick={() => { setAcqPlan({ planKey: t.planKey, label: t.label }); setAcqOrg(''); setAcqErr(''); }} style={{ justifyContent: 'space-between' }}>
+                  <span style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}>{t.label}{t.price ? ` · ${t.price}` : ''}</span>
+                  <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontWeight: 600 }}>S'abonner <ArrowRight size={15} /></span>
+                </button>
+              ) : t.link ? (
                 <a key={t.label} className="cca-focus-act" href={t.link} target="_blank" rel="noopener noreferrer" onClick={onClose} style={{ justifyContent: 'space-between' }}>
                   <span style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}>{t.label}{t.price ? ` · ${t.price}` : ''}</span>
                   <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontWeight: 600 }}>S'abonner <ArrowRight size={15} /></span>
@@ -1248,6 +1277,24 @@ function FocusDrawer({ item, brand, onClose, onAction, onNode }) {
                 </div>
               )
             ))}
+          </div>
+        )}
+        {acqPlan && (
+          <div style={{ marginTop: 12, padding: 14, borderRadius: 12, border: '1px solid rgba(230,204,146,.35)', background: 'rgba(230,204,146,.06)', display: 'flex', flexDirection: 'column', gap: 10 }}>
+            <div style={{ fontSize: 13.5, color: 'rgba(244,239,230,.85)' }}>Souscrire <b>{acqPlan.label}</b> — le nom de ton organisation :</div>
+            <input
+              autoFocus value={acqOrg} onChange={(e) => setAcqOrg(e.target.value)}
+              onKeyDown={(e) => { if (e.key === 'Enter') startAcquisition(); }}
+              placeholder="Ex. Cabinet Lumière"
+              style={{ width: '100%', boxSizing: 'border-box', borderRadius: 10, background: 'rgba(0,0,0,.28)', border: '1px solid rgba(244,239,230,.18)', padding: '10px 13px', color: '#f4efe6', fontSize: 14, outline: 'none' }}
+            />
+            {acqErr && <div style={{ fontSize: 12.5, color: '#e6a2a2' }}>{acqErr}</div>}
+            <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+              <button type="button" className="cca-focus-act" onClick={startAcquisition} disabled={acqBusy || acqOrg.trim().length < 2} style={{ flex: 1, justifyContent: 'center', opacity: (acqBusy || acqOrg.trim().length < 2) ? 0.5 : 1 }}>
+                <span style={{ display: 'inline-flex', alignItems: 'center', gap: 8, fontWeight: 600 }}>{acqBusy ? 'Redirection…' : 'Continuer vers le paiement'}{!acqBusy && <ArrowRight size={16} />}</span>
+              </button>
+              <button type="button" onClick={() => setAcqPlan(null)} style={{ background: 'none', border: 'none', color: 'rgba(244,239,230,.55)', fontSize: 13, cursor: 'pointer', padding: '0 6px' }}>Annuler</button>
+            </div>
           </div>
         )}
         {item.actions && item.actions.length > 0 && (
