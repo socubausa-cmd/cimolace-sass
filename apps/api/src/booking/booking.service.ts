@@ -517,6 +517,11 @@ export class BookingService {
     ) {
       throw new BadRequestException('Fenêtre invalide (windowStart/windowEnd requis)');
     }
+    // Aligne le début sur le prochain multiple de 30 min → créneaux RONDS (09:00, 09:30…),
+    // pas 09:03/09:33 (sinon la grille part de « maintenant »). UX Calendly propre.
+    windowStart.setSeconds(0, 0);
+    const rem = windowStart.getMinutes() % 30;
+    if (rem !== 0) windowStart.setMinutes(windowStart.getMinutes() + (30 - rem));
 
     const secretaries = await this.loadTenantSecretaries(tenant.id);
     if (secretaries.length === 0) {
