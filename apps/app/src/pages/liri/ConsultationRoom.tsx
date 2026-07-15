@@ -2004,6 +2004,42 @@ export function ConsultationStage({
 // jamais rien) ; overlay = pile verticale par-dessus le bord droit de la
 // scène (partage 100 % hauteur, style Meet/Zoom) ; les deux repliables en
 // pastille « N participants ».
+
+// Feedback discret de modération (sourdine) — l'action serveur était muette.
+function ModToast({ text, ok }: { text: string; ok: boolean }) {
+  return (
+    <div style={{ position: 'fixed', left: '50%', bottom: 96, transform: 'translateX(-50%)', zIndex: 2147483600, background: PANEL_BG, border: PANEL_BORDER, borderRadius: 12, padding: '10px 16px', color: '#f5f4ee', fontSize: 13.5, fontWeight: 600, boxShadow: '0 18px 50px rgba(0,0,0,0.5)', display: 'inline-flex', alignItems: 'center', gap: 9, WebkitBackdropFilter: 'blur(8px)', backdropFilter: 'blur(8px)', maxWidth: 'calc(100vw - 32px)' }}>
+      <span style={{ width: 8, height: 8, borderRadius: '50%', background: ok ? GOLD : '#f87171', flexShrink: 0 }} />
+      {text}
+    </div>
+  );
+}
+
+// Confirmation d'expulsion à la charte LIRI (remplace le confirm() natif moche).
+function KickConfirmDialog({ name, onCancel, onConfirm }: { name: string; onCancel: () => void; onConfirm: () => void }) {
+  return (
+    <div role="dialog" aria-modal="true" onClick={onCancel} style={{ position: 'fixed', inset: 0, zIndex: 2147483600, background: 'rgba(10,9,8,0.62)', display: 'grid', placeItems: 'center', padding: 20, WebkitBackdropFilter: 'blur(3px)', backdropFilter: 'blur(3px)' }}>
+      <div onClick={(e) => e.stopPropagation()} style={{ width: '100%', maxWidth: 360, background: PANEL_BG, border: PANEL_BORDER, borderRadius: 18, padding: 22, boxShadow: '0 30px 80px rgba(0,0,0,0.55)', textAlign: 'center' }}>
+        <div style={{ width: 44, height: 44, margin: '0 auto 12px', borderRadius: 12, background: 'rgba(248,113,113,0.14)', display: 'grid', placeItems: 'center' }}>
+          <UserX size={22} color="#fca5a5" aria-hidden="true" />
+        </div>
+        <h3 style={{ margin: '0 0 6px', fontSize: 17, fontWeight: 700, color: '#f5f4ee' }}>Faire sortir ce participant ?</h3>
+        <p style={{ margin: '0 0 18px', fontSize: 13.5, color: '#b8b3ab', lineHeight: 1.5 }}>
+          <strong style={{ color: '#f5f4ee' }}>{name}</strong> sera retiré·e du direct. La personne pourra rejoindre à nouveau avec son lien tant que la consultation reste ouverte.
+        </p>
+        <div style={{ display: 'flex', gap: 10 }}>
+          <button type="button" onClick={onCancel} style={{ flex: 1, padding: '11px 16px', borderRadius: 11, border: PANEL_BORDER, background: 'transparent', color: '#f5f4ee', fontSize: 14, fontWeight: 600, cursor: 'pointer' }}>
+            Annuler
+          </button>
+          <button type="button" onClick={onConfirm} style={{ flex: 1, padding: '11px 16px', borderRadius: 11, border: 'none', background: '#b1372f', color: '#fff', fontSize: 14, fontWeight: 700, cursor: 'pointer' }}>
+            Faire sortir
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function MembersRail({
   tracks,
   isHost,
@@ -2041,31 +2077,53 @@ function MembersRail({
   // en coin de chaque membre distant (LiveKit côté serveur via teleconsultApi).
   // e.stopPropagation → le clic sur le bouton n'agrandit PAS la vignette.
   const [modBusy, setModBusy] = useState<string | null>(null);
+  // Modération hôte : confirmation d'expulsion (modale LIRI, pas confirm() natif) +
+  // retour visuel de la sourdine (l'appel serveur était silencieux → l'hôte ne
+  // savait pas si le micro avait vraiment été coupé).
+  const [confirmKick, setConfirmKick] = useState<{ id: string; name: string } | null>(null);
+  const [muteFb, setMuteFb] = useState<{ id: string; text: string; ok: boolean } | null>(null);
+  const muteFbTimer = useRef<number | null>(null);
+  const flashMute = (id: string, text: string, ok: boolean) => {
+    setMuteFb({ id, text, ok });
+    if (muteFbTimer.current) window.clearTimeout(muteFbTimer.current);
+    muteFbTimer.current = window.setTimeout(() => setMuteFb(null), 2800);
+  };
   const hostTileBtn: React.CSSProperties = { width: 22, height: 22, borderRadius: 6, border: 'none', background: 'rgba(20,16,14,0.86)', color: '#e5e7eb', cursor: 'pointer', display: 'grid', placeItems: 'center' };
-  const muteMember = async (id?: string) => {
+  const muteMember = async (id?: string, name?: string) => {
     if (!id || !sessionId) return;
     setModBusy(id + ':m');
-    try { await teleconsultApi.muteParticipant(sessionId, id); } catch { /* ignore */ } finally { setModBusy(null); }
+    try {
+      const r = await teleconsultApi.muteParticipant(sessionId, id);
+      const n = Number((r as { muted?: number } | undefined)?.muted ?? 0);
+      flashMute(id, n > 0 ? `Micro de ${name || 'ce participant'} coupé` : 'Aucun micro actif à couper', n > 0);
+    } catch {
+      flashMute(id, 'Impossible de couper le micro — réessayez', false);
+    } finally { setModBusy(null); }
   };
-  const kickMember = async (id?: string, name?: string) => {
-    if (!id || !sessionId) return;
-    if (typeof window !== 'undefined' && !window.confirm(`Faire sortir ${name || 'ce participant'} du direct ?`)) return;
-    setModBusy(id + ':x');
-    try { await teleconsultApi.removeParticipant(sessionId, id); } catch { /* ignore */ } finally { setModBusy(null); }
+  const doKick = async () => {
+    const c = confirmKick;
+    if (!c || !sessionId) return;
+    setConfirmKick(null);
+    setModBusy(c.id + ':x');
+    // Succès = le participant disparaît de la grille (retour visuel) → pas de toast.
+    try { await teleconsultApi.removeParticipant(sessionId, c.id); } catch { flashMute(c.id, 'Impossible de retirer ce participant', false); } finally { setModBusy(null); }
   };
   // Contrôles hôte pour une vignette (null si non-hôte, pas de session, ou soi-même).
   const HostTileControls = ({ t }: { t: any }) => {
     const id = t?.participant?.identity;
     if (!isHost || !sessionId || !id || t?.participant?.isLocal) return null;
     const name = t?.participant?.name || id;
+    const fb = muteFb && muteFb.id === id ? muteFb : null;
     return (
       <div style={{ position: 'absolute', top: 4, right: 4, display: 'flex', gap: 3, zIndex: 4 }} onClick={(e) => e.stopPropagation()}>
-        <button type="button" onClick={() => muteMember(id)} disabled={modBusy === id + ':m'} title="Couper le micro" aria-label={`Couper le micro de ${name}`} style={hostTileBtn}>
+        <button type="button" onClick={() => muteMember(id, name)} disabled={modBusy === id + ':m'} title="Couper le micro" aria-label={`Couper le micro de ${name}`} style={hostTileBtn}>
           <MicOff size={12} aria-hidden="true" />
         </button>
-        <button type="button" onClick={() => kickMember(id, name)} disabled={modBusy === id + ':x'} title="Faire sortir du direct" aria-label={`Faire sortir ${name}`} style={{ ...hostTileBtn, color: '#fca5a5' }}>
+        <button type="button" onClick={() => setConfirmKick({ id, name })} disabled={modBusy === id + ':x'} title="Faire sortir du direct" aria-label={`Faire sortir ${name}`} style={{ ...hostTileBtn, color: '#fca5a5' }}>
           <UserX size={12} aria-hidden="true" />
         </button>
+        {fb ? createPortal(<ModToast text={fb.text} ok={fb.ok} />, document.body) : null}
+        {confirmKick && confirmKick.id === id ? createPortal(<KickConfirmDialog name={confirmKick.name} onCancel={() => setConfirmKick(null)} onConfirm={doKick} />, document.body) : null}
       </div>
     );
   };
