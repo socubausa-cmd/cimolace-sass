@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { Calendar, Plus, X, Video, Phone, MapPin, Home } from 'lucide-react';
+import { Calendar, Plus, X, Video, Phone, MapPin, Home, PlayCircle } from 'lucide-react';
 import { useSupabase } from '../lib/auth';
 
 const API = import.meta.env.VITE_API_URL || 'http://localhost:4002';
@@ -13,6 +13,7 @@ type Appointment = {
   appointment_type: string;
   status: string;
   reason?: string | null;
+  teleconsult_session_id?: string | null;
 };
 
 const APP_TYPES = [
@@ -38,6 +39,8 @@ export function MyAppointments() {
   const { supabase } = useSupabase();
   const [appointments, setAppointments] = useState<Appointment[]>([]);
   const [error, setError] = useState<string | null>(null);
+  // Sessions téléconsult qui ONT un enregistrement prêt → bouton « Revoir ».
+  const [replayIds, setReplayIds] = useState<Set<string>>(new Set());
 
   // Request modal
   const [reqOpen, setReqOpen] = useState(false);
@@ -63,6 +66,76 @@ export function MyAppointments() {
   useEffect(() => {
     fetchAppointments();
   }, [fetchAppointments]);
+
+  // Détecte les enregistrements disponibles : pour chaque téléconsult PASSÉE avec
+  // une session, on lit GET /med/teleconsult/:id/recording (parallèle, N borné) →
+  // set des sessions avec un replay. N'affiche « Revoir » que si une vidéo existe.
+  useEffect(() => {
+    const nowMs = Date.now();
+    const candidates = appointments.filter(
+      (a) =>
+        a.appointment_type === 'teleconsult' &&
+        a.teleconsult_session_id &&
+        (new Date(a.scheduled_at).getTime() < nowMs ||
+          ['completed', 'ended', 'cancelled'].includes(a.status)),
+    );
+    if (candidates.length === 0) {
+      setReplayIds(new Set());
+      return;
+    }
+    let alive = true;
+    (async () => {
+      const found = await Promise.all(
+        candidates.map(async (a) => {
+          const sid = a.teleconsult_session_id as string;
+          try {
+            const r = await fetch(API + '/med/teleconsult/' + sid + '/recording', {
+              headers: authHeaders(),
+            });
+            if (!r.ok) return null;
+            const d = await r.json();
+            return (d?.data || d)?.has_replay ? sid : null;
+          } catch {
+            return null;
+          }
+        }),
+      );
+      if (alive) setReplayIds(new Set(found.filter(Boolean) as string[]));
+    })();
+    return () => {
+      alive = false;
+    };
+  }, [appointments]);
+
+  // Ouvre la page REPLAY (studio, autre origine) via handoff SSO à usage unique —
+  // même mécanique que joinTeleconsult, mais vers /teleconsult/:id/replay.
+  async function openReplay(sessionId: string) {
+    const studio = (import.meta.env.VITE_STUDIO_URL || 'https://app.cimolace.space').replace(/\/$/, '');
+    const slug = localStorage.getItem('tenant_slug') || '';
+    const next = `/teleconsult/${sessionId}/replay${slug ? `?tenant=${encodeURIComponent(slug)}` : ''}`;
+    let target = `${studio}${next}`;
+    try {
+      if (supabase) {
+        const { data: sess } = await supabase.auth.getSession();
+        const refresh = sess?.session?.refresh_token;
+        if (refresh) {
+          const hr = await fetch(API + '/auth/handoff', {
+            method: 'POST',
+            headers: { ...authHeaders(), 'Content-Type': 'application/json' },
+            body: JSON.stringify({ refresh_token: refresh }),
+          });
+          if (hr.ok) {
+            const hb = await hr.json();
+            const code = (hb?.data || hb)?.code;
+            if (code) target = `${studio}/handoff?code=${encodeURIComponent(code)}&next=${encodeURIComponent(next)}`;
+          }
+        }
+      }
+    } catch {
+      /* fallback : ouvrir directement (login requis) */
+    }
+    window.open(target, '_blank', 'noopener,noreferrer');
+  }
 
   async function handleRequest(e: React.FormEvent) {
     e.preventDefault();
@@ -247,6 +320,7 @@ export function MyAppointments() {
             a={a}
             onCancel={() => handleCancel(a.id)}
             onJoinTeleconsult={() => joinTeleconsult(a.id)}
+            onReplay={a.teleconsult_session_id && replayIds.has(a.teleconsult_session_id) ? () => openReplay(a.teleconsult_session_id as string) : undefined}
             canCancel
           />
         ))}
@@ -258,7 +332,14 @@ export function MyAppointments() {
             Historique ({past.length})
           </h3>
           {past.slice(0, 10).map((a) => (
-            <AppointmentCard key={a.id} a={a} onCancel={() => {}} onJoinTeleconsult={() => {}} canCancel={false} />
+            <AppointmentCard
+              key={a.id}
+              a={a}
+              onCancel={() => {}}
+              onJoinTeleconsult={() => {}}
+              onReplay={a.teleconsult_session_id && replayIds.has(a.teleconsult_session_id) ? () => openReplay(a.teleconsult_session_id as string) : undefined}
+              canCancel={false}
+            />
           ))}
         </section>
       )}
@@ -321,11 +402,13 @@ function AppointmentCard({
   a,
   onCancel,
   onJoinTeleconsult,
+  onReplay,
   canCancel,
 }: {
   a: Appointment;
   onCancel: () => void;
   onJoinTeleconsult: () => void;
+  onReplay?: () => void;
   canCancel: boolean;
 }) {
   const dt = new Date(a.scheduled_at);
@@ -378,6 +461,16 @@ function AppointmentCard({
           style={{ display: 'flex', alignItems: 'center', gap: 4, padding: '6px 12px', background: '#7c3aed', color: '#fff', border: 'none', borderRadius: 6, fontSize: 12, fontWeight: 600, cursor: 'pointer' }}
         >
           <Video size={14} /> Rejoindre
+        </button>
+      )}
+
+      {onReplay && (
+        <button
+          onClick={onReplay}
+          title="Revoir l'enregistrement vidéo de cette téléconsultation"
+          style={{ display: 'flex', alignItems: 'center', gap: 4, padding: '6px 12px', background: '#fff', color: 'var(--brand-primary)', border: '1px solid var(--brand-primary)', borderRadius: 6, fontSize: 12, fontWeight: 600, cursor: 'pointer' }}
+        >
+          <PlayCircle size={14} /> Revoir
         </button>
       )}
 

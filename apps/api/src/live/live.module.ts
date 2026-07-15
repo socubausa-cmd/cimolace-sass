@@ -5,6 +5,7 @@ import { TenantModule } from "../tenant/tenant.module";
 import { LiveKitModule } from "../livekit/livekit.module";
 import { LiriEntitlementsModule } from "../billing/liri-entitlements.module";
 import { SupabaseModule } from "../supabase/supabase.module";
+import { EmailEngineModule } from "../email-engine/email-engine.module";
 import { LiveService } from "./live.service";
 import { LiveController } from "./live.controller";
 import { LiveReplayFileController } from "./live-replay-file.controller";
@@ -24,6 +25,9 @@ import { LiveKitWebhookService } from "../livekit/livekit-webhook.service";
     LiveKitModule,
     LiriEntitlementsModule,
     SupabaseModule,
+    // Email « replay prêt » envoyé au patient + praticien quand l'egress d'une
+    // TÉLÉCONSULTATION se termine (dispatch dans LiveKitWebhookService).
+    EmailEngineModule,
     // JwtModule pour signer/vérifier les embed tokens LIRI (30 min lifetime).
     // Le secret est résolu à la demande via ConfigService dans les services
     // — on ne le passe pas ici pour éviter de coupler au bootstrap.
