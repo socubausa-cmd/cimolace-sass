@@ -32,7 +32,7 @@ import {
   useRoomContext,
   useTracks,
 } from '@livekit/components-react';
-import { Track, ConnectionState, RoomEvent, LocalAudioTrack, type LocalTrackPublication } from 'livekit-client';
+import { Track, ConnectionState, RoomEvent, LocalAudioTrack, ParticipantEvent, type LocalTrackPublication } from 'livekit-client';
 import { getStableLiveKitRoomOptions, stableLiveKitConnectOptions } from '@/lib/livekitStableClient';
 import LiveDataSaverEffect from '@/features/live/LiveDataSaverEffect';
 import { useLiveDataSaver } from '@/hooks/useLiveDataSaver';
@@ -2040,6 +2040,30 @@ function KickConfirmDialog({ name, onCancel, onConfirm }: { name: string; onCanc
   );
 }
 
+// Badge PERMANENT « micro coupé » sur la vignette — lecture continue de l'état
+// micro LiveKit (self-mute OU sourdine hôte). L'hôte voit en continu qui est en
+// sourdine, plus seulement un toast fugace.
+function MicMutedBadge({ participant }: { participant: any }) {
+  const [muted, setMuted] = useState(false);
+  useEffect(() => {
+    if (!participant) return undefined;
+    const update = () => {
+      const pub = participant.getTrackPublication?.(Track.Source.Microphone);
+      setMuted(pub ? !!pub.isMuted : false);
+    };
+    update();
+    const evs = [ParticipantEvent.TrackMuted, ParticipantEvent.TrackUnmuted, ParticipantEvent.TrackPublished, ParticipantEvent.TrackUnpublished];
+    evs.forEach((e) => participant.on(e, update));
+    return () => { evs.forEach((e) => participant.off(e, update)); };
+  }, [participant]);
+  if (!muted) return null;
+  return (
+    <div style={{ position: 'absolute', bottom: 6, left: 6, zIndex: 4, display: 'inline-flex', alignItems: 'center', gap: 4, padding: '3px 8px', borderRadius: 999, background: 'rgba(177,55,47,0.94)', color: '#fff', fontSize: 11, fontWeight: 700, pointerEvents: 'none', boxShadow: '0 2px 8px rgba(0,0,0,0.4)' }}>
+      <MicOff size={11} aria-hidden="true" /> Coupé
+    </div>
+  );
+}
+
 function MembersRail({
   tracks,
   isHost,
@@ -2115,16 +2139,19 @@ function MembersRail({
     const name = t?.participant?.name || id;
     const fb = muteFb && muteFb.id === id ? muteFb : null;
     return (
-      <div style={{ position: 'absolute', top: 4, right: 4, display: 'flex', gap: 3, zIndex: 4 }} onClick={(e) => e.stopPropagation()}>
-        <button type="button" onClick={() => muteMember(id, name)} disabled={modBusy === id + ':m'} title="Couper le micro" aria-label={`Couper le micro de ${name}`} style={hostTileBtn}>
-          <MicOff size={12} aria-hidden="true" />
-        </button>
-        <button type="button" onClick={() => setConfirmKick({ id, name })} disabled={modBusy === id + ':x'} title="Faire sortir du direct" aria-label={`Faire sortir ${name}`} style={{ ...hostTileBtn, color: '#fca5a5' }}>
-          <UserX size={12} aria-hidden="true" />
-        </button>
-        {fb ? createPortal(<ModToast text={fb.text} ok={fb.ok} />, document.body) : null}
-        {confirmKick && confirmKick.id === id ? createPortal(<KickConfirmDialog name={confirmKick.name} onCancel={() => setConfirmKick(null)} onConfirm={doKick} />, document.body) : null}
-      </div>
+      <>
+        <div style={{ position: 'absolute', top: 4, right: 4, display: 'flex', gap: 3, zIndex: 4 }} onClick={(e) => e.stopPropagation()}>
+          <button type="button" onClick={() => muteMember(id, name)} disabled={modBusy === id + ':m'} title="Couper le micro" aria-label={`Couper le micro de ${name}`} style={hostTileBtn}>
+            <MicOff size={12} aria-hidden="true" />
+          </button>
+          <button type="button" onClick={() => setConfirmKick({ id, name })} disabled={modBusy === id + ':x'} title="Faire sortir du direct" aria-label={`Faire sortir ${name}`} style={{ ...hostTileBtn, color: '#fca5a5' }}>
+            <UserX size={12} aria-hidden="true" />
+          </button>
+          {fb ? createPortal(<ModToast text={fb.text} ok={fb.ok} />, document.body) : null}
+          {confirmKick && confirmKick.id === id ? createPortal(<KickConfirmDialog name={confirmKick.name} onCancel={() => setConfirmKick(null)} onConfirm={doKick} />, document.body) : null}
+        </div>
+        <MicMutedBadge participant={t?.participant} />
+      </>
     );
   };
 
