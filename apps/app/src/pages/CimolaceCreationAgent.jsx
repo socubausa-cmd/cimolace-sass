@@ -1231,18 +1231,24 @@ function FocusDrawer({ item, brand, onClose, onAction, onNode }) {
   // Le tenant est provisionné au paiement (chaînon). Reste dans l'OS (pas de page à part).
   const [acqPlan, setAcqPlan] = useState(null); // { planKey, label } en cours
   const [acqOrg, setAcqOrg] = useState('');
+  const [acqEmail, setAcqEmail] = useState('');
   const [acqBusy, setAcqBusy] = useState(false);
   const [acqErr, setAcqErr] = useState('');
+  const acqReady = acqOrg.trim().length >= 2 && /.+@.+\..+/.test(acqEmail.trim());
   async function startAcquisition() {
-    if (!acqPlan || acqOrg.trim().length < 2 || acqBusy) return;
+    if (!acqPlan || !acqReady || acqBusy) return;
     setAcqBusy(true); setAcqErr('');
     try {
       const res = await fetch(`${getApiBaseUrl()}/billing/acquisition/checkout`, {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ planKey: acqPlan.planKey, orgName: acqOrg.trim(), intent: 'new_tenant' }),
+        body: JSON.stringify({ planKey: acqPlan.planKey, orgName: acqOrg.trim(), email: acqEmail.trim().toLowerCase(), intent: 'new_tenant' }),
       });
       const data = await res.json().catch(() => ({}));
-      if (!res.ok) throw new Error(data?.message || data?.error || `Erreur ${res.status}`);
+      if (!res.ok) {
+        // Le back renvoie {error:{message}} OU {message}. On déballe proprement (sinon « [object Object] »).
+        const msg = data?.error?.message || data?.message || data?.error || `Erreur ${res.status}`;
+        throw new Error(typeof msg === 'string' ? msg : `Erreur ${res.status}`);
+      }
       const url = data?.data?.url ?? data?.url;
       if (!url) throw new Error('Paiement indisponible pour le moment.');
       window.location.href = url;
@@ -1261,7 +1267,7 @@ function FocusDrawer({ item, brand, onClose, onAction, onNode }) {
           <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginTop: 6 }}>
             {item.tiers.map((t) => (
               t.planKey ? (
-                <button key={t.label} type="button" className="cca-focus-act" onClick={() => { setAcqPlan({ planKey: t.planKey, label: t.label }); setAcqOrg(''); setAcqErr(''); }} style={{ justifyContent: 'space-between' }}>
+                <button key={t.label} type="button" className="cca-focus-act" onClick={() => { setAcqPlan({ planKey: t.planKey, label: t.label }); setAcqOrg(''); setAcqEmail(''); setAcqErr(''); }} style={{ justifyContent: 'space-between' }}>
                   <span style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}>{t.label}{t.price ? ` · ${t.price}` : ''}</span>
                   <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontWeight: 600 }}>S'abonner <ArrowRight size={15} /></span>
                 </button>
@@ -1281,16 +1287,22 @@ function FocusDrawer({ item, brand, onClose, onAction, onNode }) {
         )}
         {acqPlan && (
           <div style={{ marginTop: 12, padding: 14, borderRadius: 12, border: '1px solid rgba(230,204,146,.35)', background: 'rgba(230,204,146,.06)', display: 'flex', flexDirection: 'column', gap: 10 }}>
-            <div style={{ fontSize: 13.5, color: 'rgba(244,239,230,.85)' }}>Souscrire <b>{acqPlan.label}</b> — le nom de ton organisation :</div>
+            <div style={{ fontSize: 13.5, color: 'rgba(244,239,230,.85)' }}>Souscrire <b>{acqPlan.label}</b> — crée ton espace :</div>
             <input
               autoFocus value={acqOrg} onChange={(e) => setAcqOrg(e.target.value)}
               onKeyDown={(e) => { if (e.key === 'Enter') startAcquisition(); }}
-              placeholder="Ex. Cabinet Lumière"
+              placeholder="Nom de ton organisation — ex. Cabinet Lumière"
+              style={{ width: '100%', boxSizing: 'border-box', borderRadius: 10, background: 'rgba(0,0,0,.28)', border: '1px solid rgba(244,239,230,.18)', padding: '10px 13px', color: '#f4efe6', fontSize: 14, outline: 'none' }}
+            />
+            <input
+              type="email" inputMode="email" autoComplete="email" value={acqEmail} onChange={(e) => setAcqEmail(e.target.value)}
+              onKeyDown={(e) => { if (e.key === 'Enter') startAcquisition(); }}
+              placeholder="Ton email — pour créer ton accès"
               style={{ width: '100%', boxSizing: 'border-box', borderRadius: 10, background: 'rgba(0,0,0,.28)', border: '1px solid rgba(244,239,230,.18)', padding: '10px 13px', color: '#f4efe6', fontSize: 14, outline: 'none' }}
             />
             {acqErr && <div style={{ fontSize: 12.5, color: '#e6a2a2' }}>{acqErr}</div>}
             <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-              <button type="button" className="cca-focus-act" onClick={startAcquisition} disabled={acqBusy || acqOrg.trim().length < 2} style={{ flex: 1, justifyContent: 'center', opacity: (acqBusy || acqOrg.trim().length < 2) ? 0.5 : 1 }}>
+              <button type="button" className="cca-focus-act" onClick={startAcquisition} disabled={acqBusy || !acqReady} style={{ flex: 1, justifyContent: 'center', opacity: (acqBusy || !acqReady) ? 0.5 : 1 }}>
                 <span style={{ display: 'inline-flex', alignItems: 'center', gap: 8, fontWeight: 600 }}>{acqBusy ? 'Redirection…' : 'Continuer vers le paiement'}{!acqBusy && <ArrowRight size={16} />}</span>
               </button>
               <button type="button" onClick={() => setAcqPlan(null)} style={{ background: 'none', border: 'none', color: 'rgba(244,239,230,.55)', fontSize: 13, cursor: 'pointer', padding: '0 6px' }}>Annuler</button>
