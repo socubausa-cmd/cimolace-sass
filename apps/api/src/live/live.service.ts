@@ -2,6 +2,7 @@ import { BadRequestException, ForbiddenException, Injectable, NotFoundException,
 import { AuthService } from "../auth/auth.service";
 import { LiveKitService } from "../livekit/livekit.service";
 import { LiriEntitlementsService } from "../billing/liri-entitlements.service";
+import { Cycle, cycleFromPlanId, cycleCan, rankOfCycle } from "../billing/member-tier";
 
 @Injectable()
 export class LiveService {
@@ -525,6 +526,32 @@ export class LiveService {
    * Le nom de room est scopé par tenant : {tenantSlug}_{sessionId} pour
    * garantir l'isolation multi-tenant au niveau LiveKit.
    */
+  /**
+   * Résout le CYCLE de forfait PERSONNEL d'un membre (axe B) depuis billing_subscriptions :
+   * abo cycle-scoped { user_id, tenant_id, plan_id:'academique-monthly', status:'active' }.
+   * Retourne le cycle du PLUS HAUT rang parmi ses abos actifs MAPPABLES ; ignore les plans
+   * non-cycle (liri-trial, forfait tenant…). User-scoped → ne matche jamais l'abo tenant-level.
+   * null = aucun forfait cycle actif.
+   */
+  private async resolveMemberCycle(tenantId: string, userId: string): Promise<Cycle | null> {
+    if (!tenantId || !userId) return null;
+    const { data: subs } = await this.supabase
+      .from("billing_subscriptions")
+      .select("plan_id, status, current_period_end")
+      .eq("tenant_id", tenantId)
+      .eq("user_id", userId)
+      .eq("status", "active");
+    let best: Cycle | null = null;
+    for (const s of subs ?? []) {
+      const endStr = (s as any).current_period_end;
+      const end = endStr ? new Date(endStr).getTime() : null;
+      if (end !== null && end < Date.now()) continue; // défense : période expirée
+      const c = cycleFromPlanId((s as any).plan_id);
+      if (c && rankOfCycle(c) > rankOfCycle(best)) best = c;
+    }
+    return best;
+  }
+
   async generateToken(
     sessionId: string,
     userId: string,
@@ -535,7 +562,7 @@ export class LiveService {
     // pour l'enforcement de la durée (palier gratuit). 1 requête.
     const { data: session } = await this.supabase
       .from("live_sessions")
-      .select("host_user_id, tenant_id, status, started_at, price_cents, tenants(slug)")
+      .select("host_user_id, tenant_id, status, started_at, price_cents, formation_id, tenants(slug)")
       .eq("id", sessionId)
       .single();
     if (!session) throw new NotFoundException("Session introuvable");
@@ -579,6 +606,24 @@ export class LiveService {
       if (!pass?.id) {
         throw new ForbiddenException(
           "Ce live est payant : complétez votre paiement pour y accéder.",
+        );
+      }
+    }
+
+    // ── Gate PALIER MEMBRE (Couche C) : un live de CURSUS (rattaché à une formation) exige le
+    //    forfait Académique+ (feature liveCursus, rang 2). Barrière SERVEUR non contournable —
+    //    la garde front (useMemberEntitlements/UpsellLock) est contournable via l'URL directe.
+    //    • host/staff : bypass (role==='host' déjà tranché serveur plus haut).
+    //    • live Temple/gratuit (formation_id NULL) : NON gaté (rang 1, ouvert à tout membre).
+    //    • placé APRÈS le gate payant : un live cursus payant exige pass ET palier.
+    if (role !== "host" && (session as any).formation_id) {
+      const cycle = await this.resolveMemberCycle(
+        (session as any).tenant_id,
+        userId,
+      );
+      if (!cycleCan(cycle, "liveCursus")) {
+        throw new ForbiddenException(
+          "Ce live fait partie d'un cursus : un forfait Académique ou supérieur est requis pour y accéder.",
         );
       }
     }
