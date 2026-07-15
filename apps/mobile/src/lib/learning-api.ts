@@ -1,4 +1,5 @@
 import { API_BASE, currentToken, TENANT_SLUG, type Course, type CourseLesson, type CourseModule } from '@/lib/liri-api';
+import { supabase } from '@/lib/supabase';
 
 export interface LessonProgress {
   lesson_id: string;
@@ -44,19 +45,91 @@ export async function fetchStudentCourses(): Promise<Course[]> {
   return published.length > 0 ? published : courses.filter((course) => course.status !== 'archived');
 }
 
+type OutlineModule = CourseModule & { lessons: CourseLesson[] };
+
+const num = (v: unknown): number => (Number.isFinite(Number(v)) ? Number(v) : 0);
+
+/**
+ * Lit la structure RELATIONNELLE réelle d'un cours (modules → formation_weeks → formation_days →
+ * formation_day_contents) — la MÊME source que le portail web (`useFormationStructure`) et que les
+ * constructeurs écrivent réellement (`saveStructure`). Aplatie en modules→leçons (1 content = 1
+ * leçon), la forme que l'écran natif rend déjà.
+ *
+ * ⚠️ Avant : l'écran lisait `/courses/:id/modules` + `/courses/modules/:id/lessons` (NestJS →
+ * `course_modules`/`course_lessons`), tables MORTES qu'aucun builder ne remplit → programme VIDE
+ * pour tout cours créé au studio. On lit désormais les bonnes tables via Supabase (RLS tenant).
+ */
+async function fetchFormationOutline(courseId: string): Promise<OutlineModule[]> {
+  const { data, error } = await supabase
+    .from('modules')
+    .select(
+      `id, title, description, sort_order,
+       formation_weeks ( id, sort_order,
+         formation_days ( id, sort_order,
+           formation_day_contents ( id, type, sort_order, data ) ) )`,
+    )
+    .eq('formation_id', courseId)
+    .order('sort_order', { ascending: true });
+  if (error) throw new Error(error.message);
+
+  return (data ?? [])
+    .slice()
+    .sort((a: any, b: any) => num(a.sort_order) - num(b.sort_order))
+    .map((m: any, mi: number): OutlineModule => {
+      const lessons: CourseLesson[] = [];
+      (m.formation_weeks ?? [])
+        .slice()
+        .sort((a: any, b: any) => num(a.sort_order) - num(b.sort_order))
+        .forEach((w: any) =>
+          (w.formation_days ?? [])
+            .slice()
+            .sort((a: any, b: any) => num(a.sort_order) - num(b.sort_order))
+            .forEach((d: any) =>
+              (d.formation_day_contents ?? [])
+                .slice()
+                .sort((a: any, b: any) => num(a.sort_order) - num(b.sort_order))
+                .forEach((c: any) => {
+                  const cd = (c.data ?? {}) as Record<string, unknown>;
+                  const label = String(
+                    cd.title || cd.name || (c.type === 'video' ? 'Vidéo' : c.type || 'Contenu'),
+                  ).trim();
+                  lessons.push({
+                    id: String(c.id),
+                    title: label,
+                    // sentinelle truthy : l'écran affiche l'icône ▷ pour une vidéo (le player résout l'URL réelle).
+                    video_url: c.type === 'video' ? '1' : undefined,
+                  });
+                }),
+            ),
+        );
+      return { id: String(m.id), title: m.title, description: m.description, order_index: num(m.sort_order) || mi, lessons };
+    });
+}
+
 export async function fetchCourseCurriculum(courseId: string): Promise<CourseCurriculum> {
-  const [course, modules, progress] = await Promise.all([
+  const [course, outline, progress] = await Promise.all([
     readJson<Course>(`/courses/${encodeURIComponent(courseId)}`),
-    readJson<CourseModule[]>(`/courses/${encodeURIComponent(courseId)}/modules`),
+    fetchFormationOutline(courseId).catch(() => [] as OutlineModule[]),
     readJson<LessonProgress[]>(`/courses/${encodeURIComponent(courseId)}/progress`).catch(() => []),
   ]);
-  const hydrated = await Promise.all(
-    modules.map(async (module) => ({
-      ...module,
-      lessons: await readJson<CourseLesson[]>(
-        `/courses/modules/${encodeURIComponent(module.id)}/lessons`,
-      ),
-    })),
-  );
-  return { course, modules: hydrated, progress };
+
+  let modules: OutlineModule[] = outline;
+  // Repli LEGACY : cours anciens sans structure relationnelle (course_modules/course_lessons via NestJS).
+  if (modules.length === 0) {
+    try {
+      const legacy = await readJson<CourseModule[]>(`/courses/${encodeURIComponent(courseId)}/modules`);
+      modules = await Promise.all(
+        legacy.map(async (module) => ({
+          ...module,
+          lessons: await readJson<CourseLesson[]>(
+            `/courses/modules/${encodeURIComponent(module.id)}/lessons`,
+          ).catch(() => [] as CourseLesson[]),
+        })),
+      );
+    } catch {
+      modules = [];
+    }
+  }
+
+  return { course, modules, progress };
 }
