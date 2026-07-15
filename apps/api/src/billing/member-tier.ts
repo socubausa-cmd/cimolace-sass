@@ -64,3 +64,35 @@ export function subscriptionCan(
   if (!active) return false;
   return cycleCan(cycleFromPlanId(sub.plan_id), feature);
 }
+
+/**
+ * Résout le PLUS HAUT cycle actif d'un membre (abonnement PERSONNEL user-scopé) via un client
+ * Supabase service-role passé en argument (garde ce module sans dépendance Nest). Ignore les
+ * abonnements expirés (current_period_end < now). Retourne null si aucun forfait actif.
+ *
+ * ⚠️ Axe MEMBRE (le forfait que l'élève paie) — distinct de l'abonnement TENANT. Utilisé par
+ * l'enforcement serveur (live token, signature vidéo cours…) pour gater par palier.
+ */
+export async function resolveMemberCycle(
+  client: any,
+  tenantId: string,
+  userId: string,
+): Promise<Cycle | null> {
+  if (!client || !tenantId || !userId) return null;
+  const nowIso = new Date().toISOString();
+  const { data } = await client
+    .from('billing_subscriptions')
+    .select('plan_id, status, current_period_end')
+    .eq('tenant_id', tenantId)
+    .eq('user_id', userId)
+    .eq('status', 'active');
+  const rows = Array.isArray(data) ? data : [];
+  let best: Cycle | null = null;
+  for (const r of rows) {
+    if (r?.current_period_end && String(r.current_period_end) < nowIso) continue;
+    const c = cycleFromPlanId(r?.plan_id);
+    if (!c) continue;
+    if (!best || rankOfCycle(c) > rankOfCycle(best)) best = c;
+  }
+  return best;
+}

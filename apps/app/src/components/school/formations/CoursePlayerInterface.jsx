@@ -4,6 +4,7 @@ import { useDataSync } from '@/contexts/DataSyncContext';
 import { useAuth } from '@/contexts/SupabaseAuthContext';
 import { useBilling } from '@/contexts/BillingContext';
 import { supabase } from '@/lib/customSupabaseClient';
+import { api } from '@/lib/api';
 import { useFormationStructure, normalizeFormationVideoPayload } from '@/hooks/useFormationStructure';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
@@ -468,6 +469,18 @@ const SupabaseCoursePlayerContent = ({ formationId, onExit }) => {
     return { ...keyed, url: normalizedUrl };
   }, [activeItem?.kind, activeItem?.payload]);
 
+  // Objet vidéo RÉELLEMENT passé au lecteur. Pour une vidéo HÉBERGÉE (storagePath), on n'expose
+  // QUE l'URL signée par l'API gatée (`clipPlayableUrl`) et on retire `storagePath` pour que
+  // VideoPlayer ne re-signe PAS lui-même (sinon il rouvrirait le trou via la RLS storage). Le
+  // montage post-prod (renderedUrl) et les vidéos externes restent inchangés.
+  const playerVideo = useMemo(() => {
+    const v = currentVideoMemo;
+    if (!v) return null;
+    if (v.renderedUrl || !v.storagePath) return v; // montage ou vidéo externe → tel quel
+    if (!clipPlayableUrl) return { ...v, storagePath: undefined, url: '' };
+    return { ...v, storagePath: undefined, url: clipPlayableUrl, renderedUrl: clipPlayableUrl };
+  }, [currentVideoMemo, clipPlayableUrl]);
+
   // « Salle de classe » immersive (plein écran, non destructif) — disponible
   // uniquement si le cours a déjà son contenu généré (mindmap post-prod).
   const [showClassroom, setShowClassroom] = useState(false);
@@ -775,24 +788,32 @@ const SupabaseCoursePlayerContent = ({ formationId, onExit }) => {
       const v = activeItem?.payload;
       const storagePath = v?.storagePath;
       const url = v?.url || '';
+      const contentId = v?.id;
 
-      // Only build a preview URL when we can reliably use <video>.
+      // Vidéo EXTERNE (youtube/vimeo/url brute, pas de fichier hébergé) → lecture directe.
       if (!storagePath) {
         setClipPlayableUrl(url);
         return;
       }
 
+      // Vidéo HÉBERGÉE (bucket privé `videos`) → l'URL signée est délivrée par l'API GATÉE
+      // (POST /courses/:id/video-url) qui vérifie palier + inscription CÔTÉ SERVEUR. On ne
+      // signe JAMAIS directement côté client : sinon un lien partagé / un mauvais palier
+      // contournerait le gate (la RLS storage laisse passer tout authentifié).
+      if (!effectiveFormationId || !contentId) {
+        setClipPlayableUrl('');
+        return;
+      }
       try {
-        const { data, error: err } = await supabase.storage.from('videos').createSignedUrl(storagePath, 60 * 60);
+        const { data: resp } = await api.post(`/courses/${effectiveFormationId}/video-url`, { contentId });
         if (!alive) return;
-        if (err) {
-          setClipPlayableUrl(url);
-          return;
-        }
-        setClipPlayableUrl(data?.signedUrl || url);
+        const signed = resp?.data?.url || resp?.url || '';
+        setClipPlayableUrl(signed); // vide si refus serveur → le lecteur ne montre rien
       } catch {
         if (!alive) return;
-        setClipPlayableUrl(url);
+        // Refus (403) ou erreur : PAS de repli vers l'URL brute pour une vidéo hébergée
+        // (cela ré-ouvrirait le trou). La vidéo n'est simplement pas lue.
+        setClipPlayableUrl('');
       }
     };
 
@@ -800,7 +821,7 @@ const SupabaseCoursePlayerContent = ({ formationId, onExit }) => {
     return () => {
       alive = false;
     };
-  }, [activeItem?.kind, activeItem?.payload]);
+  }, [activeItem?.kind, activeItem?.payload, effectiveFormationId]);
 
   useEffect(() => {
     let alive = true;
@@ -1427,7 +1448,7 @@ const SupabaseCoursePlayerContent = ({ formationId, onExit }) => {
                             <div className="relative overflow-hidden" style={{ background: '#262624', boxShadow: 'inset 0 0 160px 70px #08080b' }}>
                           <VideoPlayer
                             ref={videoPlayerRef}
-                            video={currentVideoMemo}
+                            video={playerVideo}
                             onEnded={handleVideoEnded}
                             onTimeUpdate={(t) => {
                               setVideoCurrentTime(t);
