@@ -250,7 +250,7 @@ export class BookingService {
             body: `« ${info.subject} »${whenTxt} — ${info.email} · ${info.whatsapp}`,
             type: 'info',
             email: true,
-            actionUrl: '/secretariat/rendez-vous',
+            actionUrl: '/secretariat-space/rendez-vous', // liste RDV du secrétariat (staff/owner)
           })
           .catch(() => {});
       }
