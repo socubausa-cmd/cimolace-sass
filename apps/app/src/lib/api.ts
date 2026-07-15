@@ -902,6 +902,15 @@ export interface TeleconsultInvite {
   created_at?: string;
 }
 
+export interface TeleconsultRecordingState {
+  recording: boolean; // egress en cours
+  has_replay: boolean; // enregistrement complété disponible
+  playback_url: string | null; // URL présignée fraîche (R2, TTL court) si prête
+  started_at: string | null;
+  completed_at: string | null;
+  duration_seconds: number | null;
+}
+
 export const teleconsultApi = {
   list: (patientId?: string) =>
     api.get<ApiEnvelope<TeleconsultSession[]>>("/med/teleconsult", { params: { patient_id: patientId } }).then(unwrap),
@@ -949,6 +958,21 @@ export const teleconsultApi = {
   /** MODÉRATION HÔTE : expulse un participant du live. */
   removeParticipant: (id: string, identity: string) =>
     api.post<ApiEnvelope<{ ok: true }>>(`/med/teleconsult/${id}/participants/remove`, { identity }).then(unwrap),
+  /** HÔTE : démarre l'enregistrement vidéo de la séance (egress → MP4 R2). */
+  startRecording: (id: string) =>
+    api
+      .post<ApiEnvelope<{ recording: boolean; recording_active: boolean }>>(`/med/teleconsult/${id}/recording/start`)
+      .then(unwrap),
+  /** HÔTE : arrête l'enregistrement en cours (finalise le MP4). */
+  stopRecording: (id: string) =>
+    api
+      .post<ApiEnvelope<{ recording: boolean; stopped: boolean }>>(`/med/teleconsult/${id}/recording/stop`)
+      .then(unwrap),
+  /** HÔTE ou PATIENT : état d'enregistrement + URL de replay présignée si prête. */
+  getRecording: (id: string) =>
+    api
+      .get<ApiEnvelope<TeleconsultRecordingState>>(`/med/teleconsult/${id}/recording`)
+      .then(unwrap),
 };
 
 // ─── Attachments ────────────────────────────────────────────────────────────

@@ -140,6 +140,8 @@ const SHARE_STAGE_BG: React.CSSProperties = {
 // tableau pour que les carreaux le traversent. Préfixé `.consult-shell` → Formation
 // (LiveHostPage, hors de ce scope) reste INTACTE.
 export const CONSULT_SHELL_CSS = `
+/* Pastille d'enregistrement (RGPD) : point rouge pulsant. */
+@keyframes crRecPulse{0%{box-shadow:0 0 0 0 rgba(239,68,68,0.55)}70%{box-shadow:0 0 0 7px rgba(239,68,68,0)}100%{box-shadow:0 0 0 0 rgba(239,68,68,0)}}
 .consult-shell [class*="lh-stage-bg"]{
   background-color:#1f1e1c !important;
   background-image:
@@ -392,6 +394,52 @@ export default function ConsultationRoom() {
   // Contrôleur d'ambiance partagé : piloté DANS le panneau Réglages ET reflété par
   // la pastille flottante (host) — même état audio des deux côtés.
   const ambient = useAmbientAudio();
+  // ── Enregistrement vidéo de la séance (replay praticien + patient) ───────────
+  // channel.recording = état SYNCHRONISÉ (l'hôte diffuse, le patient reçoit →
+  // pastille RGPD « ● Enregistrement »). recBusy verrouille le bouton pendant
+  // l'appel ; recWarn = avertissement NON fatal auto-effacé (≠ setError, qui
+  // sort de la salle).
+  const [recBusy, setRecBusy] = useState(false);
+  const [recWarn, setRecWarn] = useState<string | null>(null);
+  useEffect(() => {
+    if (!recWarn) return undefined;
+    const t = window.setTimeout(() => setRecWarn(null), 4500);
+    return () => window.clearTimeout(t);
+  }, [recWarn]);
+  // Synchro initiale HÔTE (refresh en pleine séance) : l'egress tourne toujours
+  // mais lastRecordingRef est reparti à false → on relit l'état serveur et on
+  // rediffuse. (Le patient reçoit l'état via request_state du canal cockpit.)
+  useEffect(() => {
+    if (!isHost || !conn || !sessionId) return undefined;
+    let alive = true;
+    teleconsultApi
+      .getRecording(sessionId)
+      .then((r) => { if (alive && r?.recording) channel.shareRecording(true); })
+      .catch(() => {});
+    return () => { alive = false; };
+  }, [isHost, conn, sessionId]);
+  const handleToggleRecording = useCallback(async () => {
+    if (!sessionId || recBusy) return;
+    const turningOn = !channel.recording;
+    setRecBusy(true);
+    try {
+      if (turningOn) {
+        const r: any = await teleconsultApi.startRecording(sessionId);
+        if (r && r.recording_active === false) {
+          setRecWarn('Enregistrement indisponible (stockage vidéo non configuré).');
+        } else {
+          channel.shareRecording(true);
+        }
+      } else {
+        await teleconsultApi.stopRecording(sessionId);
+        channel.shareRecording(false);
+      }
+    } catch (e: any) {
+      setRecWarn(e?.message || "Action d'enregistrement impossible.");
+    } finally {
+      setRecBusy(false);
+    }
+  }, [sessionId, recBusy, channel.recording, channel.shareRecording]);
   const hasScene = !!scene && scene.kind !== 'clear';
   // Annotable seulement quand il y a une surface à annoter : le tableau, ou un
   // partage avec un artefact réellement affiché (pas sur un partage vide).
@@ -540,7 +588,7 @@ export default function ConsultationRoom() {
     );
   }
 
-  if (left) return <CallEndedScreen />;
+  if (left) return <CallEndedScreen sessionId={sessionId ?? undefined} tenantSlug={tenantSlug} />;
 
   const content = (
     <div
@@ -665,6 +713,20 @@ export default function ConsultationRoom() {
                 {/* Fond sonore piloté inline dans le panneau Réglages. */}
                 <AmbientInlineControls ctl={ambient} host={isHost} />
               </ConsultationSettings>
+              {/* Pastille RGPD — visible des DEUX côtés dès que l'hôte enregistre
+                  (channel.recording est synchronisé host→patient). Fixe, au-dessus
+                  de tout, non cliquable. */}
+              {channel.recording ? (
+                <div style={{ position: 'fixed', top: 14, left: '50%', transform: 'translateX(-50%)', zIndex: 2147483646, display: 'inline-flex', alignItems: 'center', gap: 8, padding: '6px 14px', borderRadius: 999, background: 'rgba(24,20,16,0.92)', border: '1px solid rgba(239,68,68,0.6)', boxShadow: '0 8px 26px rgba(0,0,0,0.45)', pointerEvents: 'none' }}>
+                  <span aria-hidden="true" style={{ width: 10, height: 10, borderRadius: '50%', background: '#ef4444', animation: 'crRecPulse 1.5s ease-out infinite' }} />
+                  <span style={{ color: '#fca5a5', fontSize: 12.5, fontWeight: 700, letterSpacing: 0.2 }}>Enregistrement en cours</span>
+                </div>
+              ) : null}
+              {recWarn ? (
+                <div style={{ position: 'fixed', top: channel.recording ? 54 : 14, left: '50%', transform: 'translateX(-50%)', zIndex: 2147483646, maxWidth: '86%', padding: '8px 14px', borderRadius: 12, background: 'rgba(24,20,16,0.95)', border: '1px solid rgba(251,191,36,0.5)', boxShadow: '0 8px 26px rgba(0,0,0,0.45)', color: '#fde68a', fontSize: 12.5, fontWeight: 600, textAlign: 'center' }}>
+                  {recWarn}
+                </div>
+              ) : null}
               <ConsultationBar
                 isHost={isHost}
                 annotatable={annotatable}
@@ -682,6 +744,9 @@ export default function ConsultationRoom() {
                 onToggleScript={() => setRightPanel((p) => (p === 'script' ? null : 'script'))}
                 onOpenStudio={() => openLiveStudio(false)}
                 onLaunchLive={() => openLiveStudio(true)}
+                recording={channel.recording}
+                recBusy={recBusy}
+                onToggleRecording={handleToggleRecording}
                 settingsOpen={settingsOpen}
                 onToggleSettings={() => setSettingsOpen((v) => !v)}
                 captionSlot={isHost ? <HostCaptionToggle channel={channel} /> : undefined}
@@ -2395,6 +2460,9 @@ function ConsultationBar({
   onToggleScript,
   onOpenStudio,
   onLaunchLive,
+  recording,
+  recBusy,
+  onToggleRecording,
   settingsOpen,
   onToggleSettings,
   captionSlot,
@@ -2415,6 +2483,9 @@ function ConsultationBar({
   onToggleScript: () => void;
   onOpenStudio: () => void;
   onLaunchLive: () => void;
+  recording: boolean;
+  recBusy: boolean;
+  onToggleRecording: () => void;
   settingsOpen: boolean;
   onToggleSettings: () => void;
   captionSlot?: ReactNode;
@@ -2482,6 +2553,39 @@ function ConsultationBar({
       {isHost ? (
         <button onClick={onOpenStudio} title="Préparer un live (studio complet)" style={barBtn(false)}>
           <LayoutTemplate size={16} aria-hidden="true" />
+        </button>
+      ) : null}
+      {/* Enregistrement vidéo de la séance (replay praticien + patient). Le
+          patient voit la pastille REC (RGPD) diffusée par le canal cockpit. */}
+      {isHost ? (
+        <button
+          type="button"
+          onClick={onToggleRecording}
+          disabled={recBusy}
+          aria-pressed={recording}
+          title={recording ? "Arrêter l'enregistrement" : 'Enregistrer la consultation (vidéo + replay)'}
+          style={{
+            display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 6,
+            height: 38, width: recording ? 'auto' : 38, padding: recording ? '0 12px' : 0,
+            borderRadius: 9,
+            border: `1px solid ${recording ? 'rgba(239,68,68,0.75)' : 'rgba(255,255,255,0.12)'}`,
+            background: recording ? 'rgba(239,68,68,0.18)' : 'rgba(255,255,255,0.04)',
+            color: recording ? '#fca5a5' : 'rgba(255,255,255,0.82)',
+            cursor: recBusy ? 'wait' : 'pointer', opacity: recBusy ? 0.55 : 1,
+            fontSize: 13, fontWeight: 700, flexShrink: 0,
+          }}
+        >
+          {recording ? (
+            <>
+              <span aria-hidden="true" style={{ width: 10, height: 10, borderRadius: 2, background: '#ef4444', animation: 'crRecPulse 1.5s ease-out infinite' }} />
+              REC
+            </>
+          ) : (
+            <span aria-hidden="true" style={{ position: 'relative', display: 'inline-flex', width: 16, height: 16 }}>
+              <span style={{ position: 'absolute', inset: 0, borderRadius: '50%', border: '2px solid currentColor' }} />
+              <span style={{ position: 'absolute', inset: 4, borderRadius: '50%', background: '#ef4444' }} />
+            </span>
+          )}
         </button>
       ) : null}
       <BarSep />
@@ -3107,13 +3211,38 @@ export function AudioUnlockGate() {
 }
 
 // Écran de fin neutre (patient / proche) : pas de redirection vers un portail.
-export function CallEndedScreen({ title, text }: { title?: string; text?: string } = {}) {
+// Si `sessionId` est fourni (salle patient/host, PAS le proche) et qu'un
+// enregistrement existe, on propose « Revoir l'enregistrement » → route replay
+// durable (?tenant préserve le contexte tenant même à froid).
+export function CallEndedScreen({ title, text, sessionId, tenantSlug }: { title?: string; text?: string; sessionId?: string; tenantSlug?: string | null } = {}) {
+  const [replayHref, setReplayHref] = useState<string | null>(null);
+  useEffect(() => {
+    if (!sessionId) return undefined;
+    let alive = true;
+    teleconsultApi
+      .getRecording(sessionId)
+      .then((r) => {
+        if (!alive || !r) return;
+        // Un enregistrement existe (prêt OU en finalisation) → proposer le replay.
+        if (r.has_replay || r.recording || r.started_at) {
+          const q = tenantSlug ? `?tenant=${encodeURIComponent(tenantSlug)}` : '';
+          setReplayHref(`/teleconsult/${sessionId}/replay${q}`);
+        }
+      })
+      .catch(() => {});
+    return () => { alive = false; };
+  }, [sessionId, tenantSlug]);
   return (
     <Screen>
       <div style={{ textAlign: 'center', color: '#cbd5e1', maxWidth: 360 }}>
         <Stethoscope size={28} color={GOLD} style={{ marginBottom: 10 }} aria-hidden="true" />
         <h2 style={{ margin: '0 0 6px', fontSize: 18, color: '#fff' }}>{title || 'Consultation terminée'}</h2>
         <p style={{ fontSize: 13.5, lineHeight: 1.55 }}>{text || 'Vous avez quitté la consultation. Vous pouvez fermer cette fenêtre.'}</p>
+        {replayHref ? (
+          <a href={replayHref} style={{ display: 'inline-flex', alignItems: 'center', gap: 8, marginTop: 16, height: 40, padding: '0 18px', borderRadius: 10, border: `1px solid ${GOLD}`, background: 'rgba(212,163,106,0.14)', color: GOLD, fontSize: 13.5, fontWeight: 600, textDecoration: 'none' }}>
+            <Play size={16} aria-hidden="true" /> Revoir l'enregistrement
+          </a>
+        ) : null}
       </div>
     </Screen>
   );

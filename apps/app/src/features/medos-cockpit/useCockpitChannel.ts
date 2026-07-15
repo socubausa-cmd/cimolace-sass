@@ -43,6 +43,10 @@ export function useCockpitChannel(
   // demande une explication → elle s'affiche chez TOUS. Persistante (rejouée au
   // join) → un arrivant tardif voit l'explication en cours. null = fermée.
   const [explain, setExplain] = useState<{ title: string; text: string; id: number } | null>(null);
+  // Enregistrement vidéo EN COURS (RGPD) : l'hôte le diffuse → le patient voit la
+  // pastille « ● Enregistrement ». Persistant (rejoué au join) → un arrivant
+  // tardif voit qu'on enregistre.
+  const [recording, setRecording] = useState(false);
   const channelRef = useRef<any>(null);
   const lastSentRef = useRef<CockpitScene | null>(null);
   const lastViewRef = useRef<ConsultView>('conversation');
@@ -50,6 +54,7 @@ export function useCockpitChannel(
   const lastHostNameRef = useRef<string | null>(null);
   const lastSmartboardRef = useRef<Record<string, unknown>>({});
   const lastExplainRef = useRef<{ title: string; text: string; id: number } | null>(null);
+  const lastRecordingRef = useRef(false);
 
   useEffect(() => {
     if (!sessionId) return undefined;
@@ -124,6 +129,14 @@ export function useCockpitChannel(
       setExplain(next);
     });
 
+    // Enregistrement vidéo actif/inactif (RGPD) → pastille « ● Enregistrement »
+    // chez le patient.
+    channel.on('broadcast', { event: 'recording' }, (msg: any) => {
+      const on = Boolean(msg?.payload?.on);
+      lastRecordingRef.current = on;
+      setRecording(on);
+    });
+
     // Host : un patient demande l'état → on renvoie vue + scène + annotations.
     channel.on('broadcast', { event: 'request_state' }, () => {
       if (mode !== 'host') return;
@@ -142,6 +155,9 @@ export function useCockpitChannel(
       }
       if (lastExplainRef.current) {
         channel.send({ type: 'broadcast', event: 'explain', payload: lastExplainRef.current });
+      }
+      if (lastRecordingRef.current) {
+        channel.send({ type: 'broadcast', event: 'recording', payload: { on: true } });
       }
     });
 
@@ -260,5 +276,13 @@ export function useCockpitChannel(
     channelRef.current?.send({ type: 'broadcast', event: 'explain', payload: null });
   }, []);
 
-  return { scene, view, strokes, hostName, smartboard, caption, explain, shareScene, pushView, clearScene, shareStrokes, clearStrokes, shareHostName, shareSmartboard, shareCaption, shareExplain, clearExplain };
+  /** Host : diffuse l'état d'enregistrement (RGPD) → pastille REC chez tous
+   *  (+ reflet local immédiat). Rejoué aux arrivants tardifs (request_state). */
+  const shareRecording = useCallback((on: boolean) => {
+    lastRecordingRef.current = on;
+    setRecording(on);
+    channelRef.current?.send({ type: 'broadcast', event: 'recording', payload: { on } });
+  }, []);
+
+  return { scene, view, strokes, hostName, smartboard, caption, explain, recording, shareScene, pushView, clearScene, shareStrokes, clearStrokes, shareHostName, shareSmartboard, shareCaption, shareExplain, clearExplain, shareRecording };
 }

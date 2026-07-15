@@ -782,6 +782,7 @@ const LiveGuestPage = lazy(() => import('@/pages/liri/LiveGuestPage'));
 const ProcheRoom = lazy(() => import('@/pages/liri/ProcheRoom'));
 const LiveInvitePage = lazy(() => import('@/pages/liri/LiveInvitePage'));
 const TeleconsultJoinPage = lazy(() => import('@/pages/liri/TeleconsultJoinPage'));
+const TeleconsultReplayPage = lazy(() => import('@/pages/liri/TeleconsultReplayPage'));
 const DevLiriHostEntry = lazy(() => import('@/pages/dev/DevLiriHostEntry'));
 const TableauVivantDemoPage = lazy(() => import('@/pages/dev/TableauVivantDemoPage'));
 const CourseDemoPage = lazy(() => import('@/pages/dev/CourseDemoPage'));
@@ -2504,6 +2505,19 @@ isLiriHostDevPreviewRoute;
               <ErrorBoundary>
                 <Suspense fallback={<ImmersiveBootLoader />}>
                   <ConsultationRoom />
+                </Suspense>
+              </ErrorBoundary>
+            </ProtectedRoute>
+          } />
+
+          {/* Replay durable de la séance — PRATICIEN + PATIENT (auth). Le backend
+              garde l'accès (patient-propriétaire) ; le proche invité (sans compte
+              tenant) reçoit 403 → secret médical préservé. */}
+          <Route path="/teleconsult/:sessionId/replay" element={
+            <ProtectedRoute>
+              <ErrorBoundary>
+                <Suspense fallback={<ImmersiveBootLoader message="Chargement du replay…" />}>
+                  <TeleconsultReplayPage />
                 </Suspense>
               </ErrorBoundary>
             </ProtectedRoute>

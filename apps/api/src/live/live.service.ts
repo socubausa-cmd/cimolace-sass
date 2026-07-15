@@ -122,7 +122,6 @@ export class LiveService {
    * pas configuré (clés manquantes), renvoie egressId null sans casser le live.
    */
   async startRecording(tenantId: string, sessionId: string) {
-    const session: any = await this.findOne(tenantId, sessionId);
     // ── Enforcement palier : enregistrement/replay = feature PAYANTE ──
     // Point d'étranglement unique : couvre l'appel explicite (POST /recording/start)
     // ET l'auto-enregistrement (maybeStartRecording, best-effort → l'exception est
@@ -133,6 +132,30 @@ export class LiveService {
         "Forfait gratuit : l'enregistrement et le replay ne sont pas inclus. Passez à un forfait LIRI pour enregistrer et rediffuser vos lives.",
       );
     }
+    return this._startEgressForSession(tenantId, sessionId);
+  }
+
+  /**
+   * Enregistrement d'une TÉLÉCONSULTATION MEDOS. Réutilise l'egress du moteur
+   * live — même room `scopedRoomName(slug, id)` grâce au miroir live_sessions
+   * (kind='teleconsult', id == id téléconsult) — mais SANS le paywall LIRI
+   * `canReplay` : MEDOS est un produit médical payant à part entière et
+   * l'enregistrement du dossier est une fonction clinique, pas un palier de
+   * replay LIRI. L'accès en LECTURE est gardé côté médical (praticien du tenant
+   * OU patient-propriétaire) par TeleconsultService — jamais exposé aux élèves.
+   */
+  async startRecordingForTeleconsult(tenantId: string, sessionId: string) {
+    return this._startEgressForSession(tenantId, sessionId);
+  }
+
+  /**
+   * Cœur egress PARTAGÉ (LIRI live + téléconsult MEDOS) : démarre l'egress
+   * LiveKit → MP4 R2, enregistre la ligne live_recordings et active le replay.
+   * Si l'egress n'est pas configuré (clés R2 manquantes), renvoie egressId null
+   * sans casser l'appel.
+   */
+  private async _startEgressForSession(tenantId: string, sessionId: string) {
+    const session: any = await this.findOne(tenantId, sessionId);
     // Le slug DOIT être identique à celui de generateToken/ensureRoom — sinon l'egress
     // vise une room inexistante (`_<id>` au lieu de `isna_<id>`) → échec. Or
     // live_sessions.tenant_slug est souvent NULL → on lit le slug du TENANT.
@@ -246,6 +269,20 @@ export class LiveService {
     sessionId: string,
     opts?: { force?: "published" | "pending_review"; actorId?: string },
   ) {
+    // Les TÉLÉCONSULTATIONS MEDOS ne passent JAMAIS par le replay LIRI (état
+    // recall élève + Sujet du forum de cours) : leur replay est servi par
+    // l'endpoint médical GET /med/teleconsult/:id/recording, gardé
+    // praticien/patient. On coupe ici (le webhook egress_ended appelle
+    // publishReplay pour TOUT egress) pour ne jamais exposer une vidéo médicale
+    // dans une surface pédagogique.
+    const { data: kindRow } = await this.supabase
+      .from("live_sessions")
+      .select("kind")
+      .eq("id", sessionId)
+      .maybeSingle();
+    if ((kindRow as any)?.kind === "teleconsult") {
+      return { published: false, reason: "teleconsult" as const };
+    }
     if (
       opts?.actorId &&
       !(await this.isSessionEditor(tenantId, sessionId, opts.actorId))
@@ -374,6 +411,65 @@ export class LiveService {
     const url = await this.liveKit.presignReplayGet(filepath, 3600);
     if (!url) throw new ServiceUnavailableException("Stockage replay indisponible");
     return url;
+  }
+
+  /**
+   * État d'enregistrement d'une TÉLÉCONSULTATION (pour l'UI médicale) : un egress
+   * est-il en cours ('recording') et/ou un enregistrement complété est-il
+   * disponible (replay) ? Lit live_recordings keyé par live_session_id (== id
+   * téléconsult grâce au miroir). Aucun contrôle d'accès ici — l'appelant
+   * (TeleconsultService) garde côté médical.
+   */
+  async getTeleconsultRecordingState(sessionId: string): Promise<{
+    recording: boolean;
+    hasReplay: boolean;
+    startedAt: string | null;
+    completedAt: string | null;
+    durationSeconds: number | null;
+  }> {
+    const { data: rows } = await this.supabase
+      .from("live_recordings")
+      .select(
+        "status, started_at, completed_at, duration_seconds, storage_filepath",
+      )
+      .eq("live_session_id", sessionId)
+      .order("created_at", { ascending: false })
+      .limit(10);
+    const list = ((rows as any[]) || []).filter(Boolean);
+    const active = list.find((r) => r.status === "recording");
+    const done = list.find(
+      (r) => r.status === "completed" && r.storage_filepath,
+    );
+    return {
+      recording: Boolean(active),
+      hasReplay: Boolean(done),
+      startedAt: active?.started_at ?? done?.started_at ?? null,
+      completedAt: done?.completed_at ?? null,
+      durationSeconds: done?.duration_seconds ?? null,
+    };
+  }
+
+  /**
+   * URL de LECTURE du replay d'une TÉLÉCONSULTATION (endpoint médical
+   * GET /med/teleconsult/:id/recording). Comme resolveReplayPlaybackUrl mais
+   * SANS canViewReplay : l'accès médical (praticien du tenant OU
+   * patient-propriétaire) est vérifié EN AMONT par TeleconsultService. Renvoie
+   * null si aucun enregistrement complété n'est encore disponible (egress en
+   * cours de finalisation) → le front affiche « bientôt disponible ».
+   */
+  async resolveTeleconsultReplayUrl(sessionId: string): Promise<string | null> {
+    const { data: rec } = await this.supabase
+      .from("live_recordings")
+      .select("storage_filepath")
+      .eq("live_session_id", sessionId)
+      .eq("status", "completed")
+      .not("storage_filepath", "is", null)
+      .order("completed_at", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+    const filepath = (rec as any)?.storage_filepath as string | undefined;
+    if (!filepath) return null;
+    return this.liveKit.presignReplayGet(filepath, 3600);
   }
 
   /** Dépublie le replay (revue hôte) : repasse en 'pending_review' (invisible élève). */
