@@ -892,7 +892,7 @@ export class BillingService implements OnApplicationBootstrap {
   }
 
   /** Crée/retrouve un user par email (sans password) via Supabase admin. Rôle owner. */
-  private async provisionUserByEmail(email: string, firstName?: string, lastName?: string): Promise<string> {
+  private async provisionUserByEmail(email: string, firstName?: string, lastName?: string): Promise<{ id: string; isNew: boolean }> {
     const url = process.env.SUPABASE_URL;
     const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
     if (!url || !key) throw new BadRequestException("Supabase non configuré (acquisition).");
@@ -904,16 +904,63 @@ export class BillingService implements OnApplicationBootstrap {
       const d = (await r.json()) as { users?: { id: string; email?: string }[] };
       return (d?.users || []).find((u) => u.email?.toLowerCase() === em)?.id;
     };
-    let userId = await findId();
-    if (!userId) {
-      const createRes = await fetch(`${url}/auth/v1/admin/users`, {
-        method: "POST", headers,
-        body: JSON.stringify({ email: em, email_confirm: true, user_metadata: { first_name: firstName ?? null, last_name: lastName ?? null, role: "owner", created_via: "acquisition" } }),
+    const existing = await findId();
+    if (existing) return { id: existing, isNew: false };
+    const createRes = await fetch(`${url}/auth/v1/admin/users`, {
+      method: "POST", headers,
+      body: JSON.stringify({ email: em, email_confirm: true, user_metadata: { first_name: firstName ?? null, last_name: lastName ?? null, role: "owner", created_via: "acquisition" } }),
+    });
+    if (createRes.ok) return { id: ((await createRes.json()) as { id: string }).id, isNew: true };
+    // Course (2 webhooks en //) : l'user a pu être créé entre-temps → on le retrouve.
+    const raced = await findId();
+    if (!raced) throw new BadRequestException("Provisionnement du compte impossible.");
+    return { id: raced, isNew: false };
+  }
+
+  /** Lien d'action Supabase (magiclink = connexion 1-clic, recovery = définir mot de passe).
+   *  NE dépend PAS du SMTP Supabase : le lien est renvoyé, on l'envoie via notre email (Resend). */
+  private async generateAuthLink(email: string, type: "magiclink" | "recovery", redirectTo: string): Promise<string | null> {
+    const url = process.env.SUPABASE_URL;
+    const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
+    if (!url || !key) return null;
+    try {
+      const r = await fetch(`${url}/auth/v1/admin/generate_link`, {
+        method: "POST",
+        headers: { apikey: key, Authorization: `Bearer ${key}`, "Content-Type": "application/json" },
+        body: JSON.stringify({ type, email: email.trim().toLowerCase(), options: { redirect_to: redirectTo } }),
       });
-      userId = createRes.ok ? ((await createRes.json()) as { id: string }).id : await findId();
-      if (!userId) throw new BadRequestException("Provisionnement du compte impossible.");
+      if (!r.ok) return null;
+      const d = (await r.json()) as any;
+      return d?.action_link || d?.properties?.action_link || null;
+    } catch { return null; }
+  }
+
+  /** Email de BIENVENUE + ACCÈS après un achat abouti : le client entre en 1 clic (magic-link)
+   *  et, s'il est nouveau, peut définir son mot de passe (recovery). Fail-safe : n'échoue JAMAIS
+   *  le provisioning (le paiement est déjà encaissé). */
+  private async sendAcquisitionWelcome(tenantId: string, email: string, orgName: string, userIsNew: boolean): Promise<void> {
+    try {
+      const frontend = (process.env.FRONTEND_URL || "https://app.cimolace.space").replace(/\/$/, "");
+      const dest = `${frontend}/cimolace/billing`;
+      const magic = await this.generateAuthLink(email, "magiclink", dest);
+      const recover = userIsNew ? await this.generateAuthLink(email, "recovery", dest) : null;
+      const accessUrl = magic || `${frontend}/cimolace/login`;
+      const org = orgName || "votre organisation";
+      const secondary = recover
+        ? `<p style="font-size:14px;line-height:1.6;margin:14px 0 0">Vous préférez un mot de passe ? <a href="${recover}" style="color:#b6893c;font-weight:600">Définissez-le ici</a> (lien valable un moment).</p>`
+        : `<p style="font-size:13px;line-height:1.6;margin:14px 0 0;color:#8a978f">Astuce : une fois connecté, vous pouvez définir un mot de passe dans les réglages de votre espace.</p>`;
+      const html = this.email.brandedHtml({
+        title: `Bienvenue sur Cimolace — ${org}`,
+        body: `Votre paiement est confirmé et votre espace <b>${org}</b> est prêt : votre abonnement est actif et vos outils sont activés. Cliquez ci-dessous pour accéder à votre espace tout de suite.`,
+        ctaLabel: "Accéder à mon espace",
+        ctaUrl: accessUrl,
+        brand: "#b6893c",
+      }) + secondary;
+      const res = await this.email.sendRaw(tenantId, email, `Votre espace ${org} est prêt — accédez-y`, html);
+      this.logger.log(`[acquisition] email d'accès → ${email} (${(res as any)?.status ?? "?"}, magic=${!!magic}, recover=${!!recover})`);
+    } catch (e) {
+      this.logger.warn(`[acquisition] email d'accès non envoyé à ${email}: ${(e as Error).message}`);
     }
-    return userId;
   }
 
   /** INSERT tenant avec gestion de collision de slug (23505 → suffixe -2, -3…). */
@@ -981,8 +1028,8 @@ export class BillingService implements OnApplicationBootstrap {
     const kind = BillingService.categoryToKind((plan as any).category);
     const hostingMode = BillingService.hostingModeForOffer(offerTier);
 
-    // 2) USER par email (sans password)
-    const userId = await this.provisionUserByEmail(email, p.firstName, p.lastName);
+    // 2) USER par email (sans password) — isNew pilote l'email « définir mot de passe ».
+    const { id: userId, isNew: userIsNew } = await this.provisionUserByEmail(email, p.firstName, p.lastName);
 
     // 3) TENANT — rattacher (existing, owner requis) ou créer (new)
     let tenantId: string;
@@ -1042,6 +1089,12 @@ export class BillingService implements OnApplicationBootstrap {
     }
     // L'abo payé remplace tout autre abo actif (essai) — parité avec les autres flux.
     await this.supersedeOtherActiveSubscriptions(tenantId, (sub as any)?.id);
+
+    // 7) EMAIL D'ACCÈS — tient la promesse de la page de succès (« vous recevez un email »).
+    //    Uniquement sur création d'un espace (acquisition) ; fail-safe (n'échoue pas l'achat).
+    if (created && p.intent !== "existing") {
+      await this.sendAcquisitionWelcome(tenantId, email, p.orgName || "", userIsNew);
+    }
 
     this.logger.log(`[acquisition] tenant ${created ? "créé" : "rattaché"} ${tenantId} (plan=${p.planKey}, offre=${offerTier}, kind=${kind}) pour ${email}`);
     return { tenantId, userId, subscriptionId: (sub as any)?.id ?? null, created };

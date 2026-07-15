@@ -40,9 +40,9 @@ export default function CimolaceSubscribeSuccessPage() {
           style={{ background: `linear-gradient(135deg, ${GOLD}, ${GOLD_SOFT})` }}>
           Accéder à mon espace <ArrowRight className="w-4 h-4" />
         </Link>
-        <Link to="/souscrire" className="text-sm text-[#aeb6bf] hover:text-[#f4efe6] transition-colors px-4 py-3">
+        <a href="https://cimolace.space" className="text-sm text-[#aeb6bf] hover:text-[#f4efe6] transition-colors px-4 py-3">
           Retour aux offres
-        </Link>
+        </a>
       </div>
 
       <p className="mt-10 text-[11px] text-[#5b636e] max-w-[420px]">
