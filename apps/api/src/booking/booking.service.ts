@@ -136,7 +136,13 @@ export class BookingService {
   async requestAppointmentNoSlot(
     tenantId: string,
     userId: string,
-    dto: { subject?: string; description?: string; email?: string; whatsapp?: string },
+    dto: {
+      subject?: string;
+      description?: string;
+      email?: string;
+      whatsapp?: string;
+      preferredIso?: string; // créneau choisi par l'élève (grille de dispo) — optionnel
+    },
   ) {
     const subject = String(dto?.subject || '').trim();
     const email = String(dto?.email || '').trim();
@@ -145,19 +151,52 @@ export class BookingService {
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) throw new BadRequestException('E-mail invalide.');
     if (whatsapp.replace(/\D/g, '').length < 8) throw new BadRequestException('Numéro WhatsApp invalide.');
 
+    // Créneau choisi ? On le MATÉRIALISE : un booking_slot est créé à l'heure demandée puis
+    // réservé, et le RDV y est rattaché (slot_id). Sinon → demande sans créneau (le secrétariat
+    // proposera un horaire). Permet un vrai parcours « choisis ta date » même sans slots pré-publiés.
+    const client = this.supabase.client as any;
+    let chosenStart: Date | null = null;
+    if (dto?.preferredIso) {
+      const d = new Date(dto.preferredIso);
+      if (!Number.isNaN(d.getTime()) && d.getTime() > Date.now() - 60_000) chosenStart = d;
+    }
+
     const notes = [
       `Sujet : ${subject}`,
       `Description : ${String(dto?.description || '').trim() || '—'}`,
       `E-mail : ${email}`,
       `WhatsApp : ${whatsapp}`,
-    ].join('\n');
+      chosenStart ? `Créneau souhaité : ${chosenStart.toISOString()}` : null,
+    ].filter(Boolean).join('\n');
 
-    const { data, error } = await (this.supabase.client as any)
+    let slotId: string | null = null;
+    let startAt: string | null = null;
+    if (chosenStart) {
+      const end = new Date(chosenStart.getTime() + 30 * 60_000);
+      const { data: slot, error: slotErr } = await client
+        .from('booking_slots')
+        .insert({
+          tenant_id: tenantId,
+          created_by: userId,
+          start_at: chosenStart.toISOString(),
+          end_at: end.toISOString(),
+          title: subject.slice(0, 120),
+          type: 'consultation',
+          status: 'booked', // directement réservé par cette demande
+        })
+        .select('id, start_at')
+        .maybeSingle();
+      if (slotErr) throw new BadRequestException(slotErr.message);
+      slotId = slot?.id ?? null;
+      startAt = slot?.start_at ?? null;
+    }
+
+    const { data, error } = await client
       .from('appointments')
       .insert({
         tenant_id: tenantId,
         student_id: userId,
-        slot_id: null,
+        slot_id: slotId,
         status: 'requested',
         notes,
         source: 'liri-rdv-chat',
@@ -165,7 +204,7 @@ export class BookingService {
       .select('id')
       .maybeSingle();
     if (error) throw new BadRequestException(error.message);
-    return { ok: true, requestId: data?.id ?? null };
+    return { ok: true, requestId: data?.id ?? null, slotId, startAt };
   }
 
   async updateAppointment(

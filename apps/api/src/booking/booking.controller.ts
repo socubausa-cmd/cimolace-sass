@@ -145,7 +145,7 @@ export class BookingController {
   // Pas de @Roles : tout membre authentifié du tenant peut faire une demande.
   @Post('appointment-request')
   requestAppointmentNoSlot(
-    @Body() dto: { subject?: string; description?: string; email?: string; whatsapp?: string },
+    @Body() dto: { subject?: string; description?: string; email?: string; whatsapp?: string; preferredIso?: string },
     @CurrentTenant() tenant: TenantContext,
     @Req() req: Request,
   ) {
