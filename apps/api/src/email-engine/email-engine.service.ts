@@ -70,13 +70,28 @@ export class EmailEngineService {
     if (!this.enabled) return { status: 'disabled' };
     if (!to) return { status: 'skipped', message: 'no recipient' };
     const from = await this.resolveFrom(tenantId);
-    try {
-      const resp = await fetch('https://api.resend.com/emails', {
+    const post = (fromAddr: string) =>
+      fetch('https://api.resend.com/emails', {
         method: 'POST',
         headers: { Authorization: `Bearer ${this.resendKey}`, 'Content-Type': 'application/json' },
-        body: JSON.stringify({ from, to: [to], subject, html }),
+        body: JSON.stringify({ from: fromAddr, to: [to], subject, html }),
       });
-      return resp.ok ? { status: 'sent', from } : { status: 'failed', code: resp.status };
+    try {
+      let resp = await post(from);
+      if (resp.ok) return { status: 'sent', from };
+      // Domaine tenant NON VÉRIFIÉ dans Resend (403) → repli sur l'expéditeur Resend universel
+      // (garanti délivrable), en gardant le nom d'affichage du tenant, pour que l'email PARTE.
+      // ⚠️ À remplacer par le domaine tenant dès qu'il est vérifié (resend.com/domains).
+      const body = await resp.text().catch(() => '');
+      if (resp.status === 403 && /not verified/i.test(body)) {
+        const name = from.includes('<') ? from.split('<')[0].trim() : '';
+        const fallbackFrom = `${name || 'Notification'} <onboarding@resend.dev>`;
+        resp = await post(fallbackFrom);
+        return resp.ok
+          ? { status: 'sent', from: fallbackFrom, message: 'fallback-unverified-domain' }
+          : { status: 'failed', code: resp.status };
+      }
+      return { status: 'failed', code: resp.status };
     } catch (e) {
       return { status: 'error', message: String(e) };
     }
