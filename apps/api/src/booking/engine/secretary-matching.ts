@@ -72,8 +72,10 @@ export function normalizeSecretaryProfile(row: SecretaryRow): Secretary {
     country: row.country_code || null,
     startHour: Number(row.availability_start_hour ?? defaultHours.startHour),
     endHour: Number(row.availability_end_hour ?? defaultHours.endHour),
-    active: Boolean(row.is_secretariat_active),
-    online: Boolean(row.is_secretariat_online),
+    // Défaut ACTIF + EN LIGNE quand les champs secrétariat sont absents (schéma prod sans ces
+    // colonnes) → tout membre staff est un secrétaire disponible par défaut (moteur v1 sans config).
+    active: row?.is_secretariat_active == null ? true : Boolean(row.is_secretariat_active),
+    online: row?.is_secretariat_online == null ? true : Boolean(row.is_secretariat_online),
     lastSeenAt: row.secretariat_last_seen_at || null,
     slaMs: Number(row.secretariat_sla_ms || 300_000),
   };

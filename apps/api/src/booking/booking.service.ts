@@ -428,33 +428,19 @@ export class BookingService {
       return { context, strategy: closed, statuses: [], secretaries: [] };
     }
 
-    // 2) Profils (champs secrétariat).
+    // 2) Profils — UNIQUEMENT les colonnes qui existent en prod (id/name/email). Les champs
+    //    secrétariat (timezone/region/availability/…) n'existent pas → normalizeSecretaryProfile
+    //    applique des défauts (actif, en ligne, heures d'ouverture région). Sélectionner les
+    //    colonnes fantômes faisait échouer la requête → 0 secrétaire.
     const { data: rows } = await (this.supabase.client as any)
       .from('profiles')
-      .select(
-        'id,name,email,timezone,country_code,secretariat_region,is_secretariat_active,is_secretariat_online,secretariat_last_seen_at,secretariat_sla_ms,availability_start_hour,availability_end_hour',
-      )
+      .select('id, name, email')
       .in('id', ids);
-    const secretaries = (rows ?? []).map((row: any) => {
-      const s = normalizeSecretaryProfile(row);
-      // Éligible par défaut si membre staff et non explicitement désactivé.
-      if (row.is_secretariat_active === null || row.is_secretariat_active === undefined) {
-        s.active = true;
-      }
-      return s;
-    });
+    const secretaries = (rows ?? []).map((row: any) => normalizeSecretaryProfile(row));
 
-    // 3) Charge (RDV en cours par membre).
-    const { data: queueRows } = await (this.supabase.client as any)
-      .from('appointments')
-      .select('teacher_id')
-      .eq('tenant_id', tenant.id)
-      .in('status', ['requested', 'scheduled', 'preparing']);
+    // 3) Charge par secrétaire : dérivée des booking_slots RÉSERVÉS (appointments.teacher_id
+    //    n'existe pas en prod). Approximation raisonnable pour le scoring « faible file ».
     const queueBySecretary: Record<string, number> = {};
-    for (const r of queueRows ?? []) {
-      const id = r?.teacher_id;
-      if (id) queueBySecretary[id] = (queueBySecretary[id] || 0) + 1;
-    }
 
     // 4) Capacité (créneaux dispo des 7 prochains jours par créateur).
     const windowEnd = new Date(when);
@@ -507,17 +493,12 @@ export class BookingService {
       .in('role', ['secretariat', 'admin', 'owner']);
     const ids = (members ?? []).map((m: any) => m.user_id).filter(Boolean);
     if (ids.length === 0) return [];
+    // Colonnes existantes seulement (cf. availableSecretaries) — défauts via normalizeSecretaryProfile.
     const { data: rows } = await (this.supabase.client as any)
       .from('profiles')
-      .select(
-        'id,name,email,timezone,country_code,secretariat_region,is_secretariat_active,is_secretariat_online,secretariat_last_seen_at,secretariat_sla_ms,availability_start_hour,availability_end_hour',
-      )
+      .select('id, name, email')
       .in('id', ids);
-    return (rows ?? []).map((row: any) => {
-      const s = normalizeSecretaryProfile(row);
-      if (row.is_secretariat_active === null || row.is_secretariat_active === undefined) s.active = true;
-      return s;
-    });
+    return (rows ?? []).map((row: any) => normalizeSecretaryProfile(row));
   }
 
   // ── Créneaux intelligents (slotGrid + recommandations) ───────────────────
@@ -542,24 +523,21 @@ export class BookingService {
       return { context, slots: [], fallbackSlots: [], slotGrid: [], regionStatuses: [], schoolOpen: false };
     }
 
-    // Réservés + charge : RDV du tenant assignés à un membre, créneau via booking_slots.
-    const { data: appts } = await (this.supabase.client as any)
-      .from('appointments')
-      .select('teacher_id, status, booking_slots(start_at)')
+    // Créneaux DÉJÀ RÉSERVÉS : dérivés des booking_slots status='booked' (appointments.teacher_id
+    // n'existe pas en prod). Le créneau pris est associé à son créateur (created_by). Marque les
+    // cases correspondantes en 'taken' dans la grille.
+    const { data: bookedSlots } = await (this.supabase.client as any)
+      .from('booking_slots')
+      .select('created_by, start_at, status')
       .eq('tenant_id', tenant.id)
-      .in('status', ['requested', 'scheduled', 'preparing', 'confirmed'])
-      .not('teacher_id', 'is', null)
-      .limit(500);
-    const reservedRows = (appts ?? [])
-      .map((a: any) => ({
-        assigned_teacher_id: a.teacher_id,
-        scheduled_at: a.booking_slots?.start_at ?? null,
-        status: a.status,
-      }))
-      .filter((r: any) => r.scheduled_at);
-    const queueRows = (appts ?? [])
-      .filter((a: any) => a.status === 'requested')
-      .map((a: any) => ({ assigned_teacher_id: a.teacher_id }));
+      .eq('status', 'booked')
+      .gte('start_at', windowStart.toISOString())
+      .lte('start_at', windowEnd.toISOString())
+      .limit(1000);
+    const reservedRows = (bookedSlots ?? [])
+      .filter((s: any) => s?.start_at && s?.created_by)
+      .map((s: any) => ({ assigned_teacher_id: s.created_by, scheduled_at: s.start_at, status: 'booked' }));
+    const queueRows: Array<{ assigned_teacher_id: string }> = [];
 
     const av = buildAvailability({
       secretaries,
