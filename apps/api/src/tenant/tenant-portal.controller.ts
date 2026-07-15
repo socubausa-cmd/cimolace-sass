@@ -3,15 +3,23 @@ import { randomBytes } from 'crypto';
 import { resolve4, resolveCname } from 'dns/promises';
 import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
 import { TenantGuard } from '../common/guards/tenant.guard';
+import { RolesGuard } from '../common/guards/roles.guard';
+import { Roles } from '../common/decorators/roles.decorator';
 import { SupabaseService } from '../supabase/supabase.service';
 
 /**
  * Back-office TENANT (self-service) — endpoints scoped au tenant courant via
  * TenantGuard (req.tenant.{id,slug,userRole}, appartenance déjà validée).
  * Sert les onglets API & clés, Marketplace et Support du dashboard tenant.
+ *
+ * RolesGuard au niveau classe : les handlers SANS @Roles restent lisibles par
+ * tout membre (profile, support/tickets = données propres) ; les reads sensibles
+ * (members/webhooks/domains/usage/marketplace) et les actions billing (subscribe,
+ * cancel, billing-portal) portent @Roles('owner','admin'). Les writes équipe/
+ * webhook/domaine gardent leur check manuel (déjà fail-closed).
  */
 @Controller('tenant-portal')
-@UseGuards(JwtAuthGuard, TenantGuard)
+@UseGuards(JwtAuthGuard, TenantGuard, RolesGuard)
 export class TenantPortalController {
   constructor(private readonly supabase: SupabaseService) {}
 
@@ -24,6 +32,7 @@ export class TenantPortalController {
 
   /** Catalogue Cimolace souscriptible + ce que le tenant a déjà. */
   @Get('marketplace')
+  @Roles('owner', 'admin')
   async marketplace(@Req() req: any) {
     const [plansRes, subsRes] = await Promise.all([
       this.db.from('billing_plans').select('key, label, description, price_cents, currency, billing_cycle, features').eq('is_active', true),
@@ -51,6 +60,7 @@ export class TenantPortalController {
 
   /** Souscrit (pending) un plan — le tenant paie ensuite par carte (card-checkout). */
   @Post('marketplace/subscribe')
+  @Roles('owner', 'admin')
   async subscribe(@Req() req: any, @Body() body: { plan?: string }) {
     const planKey = body?.plan;
     if (!planKey) throw new BadRequestException('Plan requis');
@@ -121,6 +131,7 @@ export class TenantPortalController {
 
   /** Synthèse d'usage du tenant (onglet Monitoring). */
   @Get('usage')
+  @Roles('owner', 'admin')
   async usage(@Req() req: any) {
     const tid = req.tenant.id;
     const [svc, keys, members, subs, invoices] = await Promise.all([
@@ -166,6 +177,7 @@ export class TenantPortalController {
 
   /** Annule un abonnement du tenant (après vérification d'appartenance). */
   @Post('subscriptions/:id/cancel')
+  @Roles('owner', 'admin')
   async cancelSub(@Req() req: any, @Param('id') id: string) {
     const { data: sub } = await this.db.from('billing_subscriptions').select('id, tenant_id').eq('id', id).maybeSingle();
     if (!sub || sub.tenant_id !== req.tenant.id) throw new NotFoundException('Abonnement introuvable pour ce tenant');
@@ -214,6 +226,7 @@ export class TenantPortalController {
 
   /** Liste les membres du tenant (email + rôle + statut). */
   @Get('members')
+  @Roles('owner', 'admin')
   async members(@Req() req: any) {
     const { data: memberships } = await this.db
       .from('tenant_memberships')
@@ -292,6 +305,7 @@ export class TenantPortalController {
    * pour le client Stripe du tenant. Renvoie l'URL de la session.
    */
   @Post('billing-portal')
+  @Roles('owner', 'admin')
   async billingPortal(@Req() req: any) {
     const { data: sub } = await this.db
       .from('billing_subscriptions')
@@ -328,6 +342,7 @@ export class TenantPortalController {
 
   /** Liste les webhooks du tenant (sans le secret). */
   @Get('webhooks')
+  @Roles('owner', 'admin')
   async webhooks(@Req() req: any) {
     const { data } = await this.db
       .from('tenant_webhooks')
@@ -474,6 +489,7 @@ export class TenantPortalController {
 
   /** Domaines du tenant + instructions DNS (pour l'onglet « Domaine »). */
   @Get('domains')
+  @Roles('owner', 'admin')
   async listDomains(@Req() req: any) {
     const { data } = await this.db
       .from('tenant_domains')

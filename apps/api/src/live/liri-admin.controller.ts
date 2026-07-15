@@ -8,6 +8,8 @@ import {
 } from "@nestjs/common";
 import { JwtAuthGuard } from "../common/guards/jwt-auth.guard";
 import { TenantGuard } from "../common/guards/tenant.guard";
+import { RolesGuard } from "../common/guards/roles.guard";
+import { Roles } from "../common/decorators/roles.decorator";
 import { LiveService } from "./live.service";
 
 /**
@@ -21,7 +23,7 @@ import { LiveService } from "./live.service";
  * the existing CimolaceStaffGuard pattern.
  */
 @Controller("liri/admin")
-@UseGuards(JwtAuthGuard, TenantGuard)
+@UseGuards(JwtAuthGuard, TenantGuard, RolesGuard)
 export class LiriAdminController {
   constructor(private readonly live: LiveService) {}
 
@@ -32,7 +34,10 @@ export class LiriAdminController {
    *   [{ purpose, session_count, total_seconds, total_minutes }, ...]
    * Open sessions (no ended_at yet) are excluded.
    */
+  // Consommation vidéo/billing du tenant = réservé au staff (« any staff role »
+  // du docstring), jamais aux élèves/membres simples.
   @Get("consumption")
+  @Roles("owner", "admin", "teacher", "secretariat", "practitioner", "clinic_admin")
   async consumption(
     @Req() req: any,
     @Query("from") fromQuery?: string,

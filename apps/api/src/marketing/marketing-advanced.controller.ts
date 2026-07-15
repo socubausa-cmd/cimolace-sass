@@ -45,13 +45,15 @@ export class MarketingAdvancedController {
   // ─── Analytics / Logs / Publish / Orchestrate ────────────────────────────
 
   @Get('analytics')
-  @UseGuards(JwtAuthGuard, TenantGuard)
+  @UseGuards(JwtAuthGuard, TenantGuard, RolesGuard)
+  @Roles('owner', 'admin')
   analytics(@CurrentTenant() t: TenantContext) {
     return this.svc.getAnalytics(t.id);
   }
 
   @Get('logs')
-  @UseGuards(JwtAuthGuard, TenantGuard)
+  @UseGuards(JwtAuthGuard, TenantGuard, RolesGuard)
+  @Roles('owner', 'admin')
   logs(
     @CurrentTenant() t: TenantContext,
     @Query('limit') limit?: string,
@@ -90,7 +92,8 @@ export class MarketingAdvancedController {
   }
 
   @Post('ai-suggest-message')
-  @UseGuards(JwtAuthGuard, TenantGuard)
+  @UseGuards(JwtAuthGuard, TenantGuard, RolesGuard)
+  @Roles('owner', 'admin')
   aiSuggest(@Body() body: { objective?: string; segment?: string; tone?: string }) {
     return this.svc.aiSuggestMessage(body);
   }
@@ -98,7 +101,8 @@ export class MarketingAdvancedController {
   // ─── Campaigns ───────────────────────────────────────────────────────────
 
   @Get('campaigns')
-  @UseGuards(JwtAuthGuard, TenantGuard)
+  @UseGuards(JwtAuthGuard, TenantGuard, RolesGuard)
+  @Roles('owner', 'admin')
   listCampaigns(
     @CurrentTenant() t: TenantContext,
     @Query('status') status?: string,
@@ -132,7 +136,8 @@ export class MarketingAdvancedController {
   // ─── Funnels ─────────────────────────────────────────────────────────────
 
   @Get('funnels')
-  @UseGuards(JwtAuthGuard, TenantGuard)
+  @UseGuards(JwtAuthGuard, TenantGuard, RolesGuard)
+  @Roles('owner', 'admin')
   listFunnels(@CurrentTenant() t: TenantContext) {
     return this.svc.listFunnels(t.id);
   }
@@ -147,7 +152,8 @@ export class MarketingAdvancedController {
   // ─── Automations ─────────────────────────────────────────────────────────
 
   @Get('automations')
-  @UseGuards(JwtAuthGuard, TenantGuard)
+  @UseGuards(JwtAuthGuard, TenantGuard, RolesGuard)
+  @Roles('owner', 'admin')
   listAutomations(@CurrentTenant() t: TenantContext) {
     return this.svc.listAutomations(t.id);
   }
@@ -181,7 +187,8 @@ export class MarketingAdvancedController {
   }
 
   @Get('automations/audit')
-  @UseGuards(JwtAuthGuard, TenantGuard)
+  @UseGuards(JwtAuthGuard, TenantGuard, RolesGuard)
+  @Roles('owner', 'admin')
   listAutomationAudit(@CurrentTenant() t: TenantContext) {
     return this.svc.listAutomationAudit(t.id);
   }
@@ -196,7 +203,8 @@ export class MarketingAdvancedController {
   // ─── Leads ───────────────────────────────────────────────────────────────
 
   @Get('leads')
-  @UseGuards(JwtAuthGuard, TenantGuard)
+  @UseGuards(JwtAuthGuard, TenantGuard, RolesGuard)
+  @Roles('owner', 'admin')
   listLeads(
     @CurrentTenant() t: TenantContext,
     @Query('status') status?: string,

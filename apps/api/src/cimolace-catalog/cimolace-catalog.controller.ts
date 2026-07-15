@@ -26,8 +26,10 @@ export class CimolaceCatalogController {
     return this.catalogService.getTemplates();
   }
 
-  /** Services actifs du tenant courant */
+  /** Services actifs du tenant courant (config tenant → owner/admin) */
   @Get('tenant-services')
+  @UseGuards(RolesGuard)
+  @Roles('owner', 'admin')
   getTenantServices(@CurrentTenant() tenant: TenantContext) {
     return this.catalogService.getTenantServices(tenant.id);
   }

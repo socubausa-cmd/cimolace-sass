@@ -14,6 +14,8 @@ import {
 import type { Response } from 'express';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { TenantGuard } from '../tenant/tenant.guard';
+import { RolesGuard } from '../common/guards/roles.guard';
+import { Roles } from '../common/decorators/roles.decorator';
 import { SocialOAuthService } from './social-oauth.service';
 
 @Controller('social-publisher/oauth')
@@ -25,7 +27,8 @@ export class SocialOAuthController {
    * d'autorisation de la plateforme, vers laquelle le front redirige.
    */
   @Get(':platform/start')
-  @UseGuards(JwtAuthGuard, TenantGuard)
+  @UseGuards(JwtAuthGuard, TenantGuard, RolesGuard)
+  @Roles('owner', 'admin')
   async start(@Param('platform') platform: string, @Req() req: any) {
     if (!this.oauth.isPlatform(platform)) {
       throw new BadRequestException('Plateforme inconnue');
@@ -41,7 +44,8 @@ export class SocialOAuthController {
 
   /** Back-office : statut des plateformes (configurée ? connectée ?). */
   @Get('status')
-  @UseGuards(JwtAuthGuard, TenantGuard)
+  @UseGuards(JwtAuthGuard, TenantGuard, RolesGuard)
+  @Roles('owner', 'admin')
   status(@Req() req: any) {
     return this.oauth.getStatus(req.tenant.id);
   }

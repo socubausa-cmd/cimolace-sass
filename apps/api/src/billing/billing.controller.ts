@@ -10,14 +10,17 @@ import { BillingService } from "./billing.service";
 @UseGuards(JwtAuthGuard, TenantGuard, RolesGuard)
 export class BillingController {
   constructor(private svc: BillingService) {}
-  @Get("subscription") async getSubscription(@Req() req: any) { return { data: await this.svc.getSubscription(req.tenant.id) }; }
-  @Post("subscription") async create(@Req() req: any, @Body() b: any) { return { data: await this.svc.createSubscription(req.tenant.id, b.plan, b.provider) }; }
-  @Get("invoices") async getInvoices(@Req() req: any) { return { data: await this.svc.getInvoices(req.tenant.id) }; }
+  // Données financières du tenant + écritures d'abonnement : owner/admin seulement
+  // (défense en profondeur — un student membre ne doit pas lire le billing/solde
+  // ni créer d'abo au nom du tenant). Ferme la priv-esc intra-tenant.
+  @Get("subscription") @Roles("owner", "admin") async getSubscription(@Req() req: any) { return { data: await this.svc.getSubscription(req.tenant.id) }; }
+  @Post("subscription") @Roles("owner", "admin") async create(@Req() req: any, @Body() b: any) { return { data: await this.svc.createSubscription(req.tenant.id, b.plan, b.provider) }; }
+  @Get("invoices") @Roles("owner", "admin") async getInvoices(@Req() req: any) { return { data: await this.svc.getInvoices(req.tenant.id) }; }
 
   // Abonnement plateforme (billing_*) + collecte mobile money PawaPay
   // Valeur brute renvoyée : le ResponseInterceptor global emballe en { data: ... }
   // (renvoyer { data } ici produirait un double-emballage).
-  @Get("plan") async plan(@Req() req: any) { return this.svc.getTenantSubscription(req.tenant.id); }
+  @Get("plan") @Roles("owner", "admin") async plan(@Req() req: any) { return this.svc.getTenantSubscription(req.tenant.id); }
   // SELF-SERVE : choisir un forfait Cimolace (grille LIRI) → crée l'abo 'pending' à
   // payer ensuite via card-checkout (Stripe) ou collect (PawaPay). Body { planKey, provider? }.
   // Écritures qui engagent de l'argent (créer un abo, déclencher une collecte/
@@ -32,7 +35,7 @@ export class BillingController {
   }
   // Mobile money : polling du statut (compte PawaPay partagé → pas de webhook cimolace).
   // Le front appelle ceci après « Demande envoyée » jusqu'à activation de l'abo.
-  @Post("mobile-money/sync") async syncMobileMoney(@Req() req: any) {
+  @Post("mobile-money/sync") @Roles("owner", "admin") async syncMobileMoney(@Req() req: any) {
     return this.svc.syncPendingPawaPayDeposits(req.tenant.id);
   }
   // Remboursement à l'annulation (owner/admin — ⚠️ déplace de l'argent réel vers le payeur)
@@ -41,7 +44,7 @@ export class BillingController {
     return this.svc.refundSubscriptionPayment(req.tenant.id, id);
   }
   // Polling du statut de remboursement (le front l'appelle jusqu'à 'refunded')
-  @Post("refunds/sync") async syncRefunds(@Req() req: any) {
+  @Post("refunds/sync") @Roles("owner", "admin") async syncRefunds(@Req() req: any) {
     return this.svc.syncPendingRefunds(req.tenant.id);
   }
   // Carte bancaire (Stripe — Europe / international) — owner/admin (engage un paiement)
@@ -53,9 +56,9 @@ export class BillingController {
   }
 
   // Retraits / versements mobile money (PawaPay payouts) — owner/admin
-  @Get("payouts") async listPayouts(@Req() req: any) { return this.svc.listPayouts(req.tenant.id); }
+  @Get("payouts") @Roles("owner", "admin") async listPayouts(@Req() req: any) { return this.svc.listPayouts(req.tenant.id); }
   // Solde estimé (encaissé mobile money − retiré) pour l'écran « Mes finances ».
-  @Get("balance") async balance(@Req() req: any) { return this.svc.getBalance(req.tenant.id); }
+  @Get("balance") @Roles("owner", "admin") async balance(@Req() req: any) { return this.svc.getBalance(req.tenant.id); }
   @Post("payouts") @UseGuards(RolesGuard) @Roles("owner", "admin") async createPayout(@Req() req: any, @Body() b: any) {
     return this.svc.createPayout(req.tenant.id, req.user?.id ?? null, b);
   }

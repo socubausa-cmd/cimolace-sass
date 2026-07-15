@@ -51,6 +51,14 @@ export class TenantService {
         .eq("status", "active")
         .single();
       const role = (membership?.role ?? null) as string | null;
+      // FAIL-CLOSED : un utilisateur authentifié SANS membership active ne reçoit
+      // AUCUN contexte tenant (comme la 2e branche ci-dessous, ligne ~72). Sinon un
+      // non-membre obtenait `{...tenant, userRole:null}` (truthy) et passait
+      // TenantGuard → BOLA cross-tenant sur tout endpoint sans @Roles effectif
+      // (masterclass GET, billing, forum…). Les rares surfaces qui doivent servir un
+      // non-membre (viewer live public, assistant IA invité) passent par
+      // `resolveTenantAllowNonMember` via le décorateur @AllowNonMember.
+      if (!role) return null;
       // Both `role` (legacy callers) and `userRole` (TenantContext required by
       // RolesGuard) are returned so we don't break either side.
       // `data_region` (additive) defaults to 'global' if the column is absent
@@ -81,6 +89,40 @@ export class TenantService {
 
   async resolveForUser(slug: string, userId: string) {
     return this.resolveTenant(userId, slug);
+  }
+
+  /**
+   * Variante OPT-IN (décorateur @AllowNonMember) de resolveTenant : résout le tenant
+   * par slug SANS exiger de membership active — `userRole` peut être null. Réservé
+   * aux endpoints qui doivent servir un utilisateur authentifié non-membre (viewer
+   * live public mbolo, token viewer immersive-live, assistant IA invité longia) et
+   * qui n'exposent PAS de données tenant sensibles. Renvoie null si le slug n'existe
+   * pas (le tenant doit exister).
+   */
+  async resolveTenantAllowNonMember(userId: string, tenantSlug?: string) {
+    if (!tenantSlug) return null;
+    const supabase = this.authService.getClient();
+    const resolvedSlug = canonicalTenantSlug(tenantSlug);
+    const { data: tenant } = await supabase
+      .from("tenants")
+      .select("*")
+      .eq("slug", resolvedSlug)
+      .single();
+    if (!tenant) return null;
+    const { data: membership } = await supabase
+      .from("tenant_memberships")
+      .select("role")
+      .eq("tenant_id", tenant.id)
+      .eq("user_id", userId)
+      .eq("status", "active")
+      .single();
+    const role = (membership?.role ?? null) as string | null;
+    return {
+      ...tenant,
+      role,
+      userRole: role,
+      data_region: (tenant as any).data_region ?? "global",
+    };
   }
 
   /**
