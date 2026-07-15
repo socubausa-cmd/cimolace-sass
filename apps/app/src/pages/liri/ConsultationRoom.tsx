@@ -38,7 +38,7 @@ import LiveDataSaverEffect from '@/features/live/LiveDataSaverEffect';
 import { useLiveDataSaver } from '@/hooks/useLiveDataSaver';
 import { useMatchMediaAtMost } from '@/hooks/useLiriMobileBreakpoint';
 import LiriProductBadge from '@/components/brand/LiriProductBadge';
-import { Stethoscope, PhoneOff, Share2, Pencil, Users, Presentation, MonitorUp, Eraser, UserPlus, Copy, Check, ShieldCheck, X, MessageSquare, Send, Sparkles, Brain, Music2, Play, Pause, FileText, LayoutTemplate, Radio, Upload, ChevronUp, ChevronDown, ChevronRight, ChevronLeft, PanelRight, PanelBottom, Maximize, Minimize, Hand, MicOff, UserX } from 'lucide-react';
+import { Stethoscope, PhoneOff, Share2, Pencil, Users, Presentation, MonitorUp, Eraser, UserPlus, Copy, Check, ShieldCheck, X, MessageSquare, Send, Sparkles, Brain, Music2, Play, Pause, FileText, LayoutTemplate, Radio, Upload, ChevronUp, ChevronDown, ChevronRight, ChevronLeft, PanelRight, PanelBottom, Maximize, Minimize, Hand, MicOff, UserX, MoreVertical } from 'lucide-react';
 import { createPortal } from 'react-dom';
 import '@livekit/components-styles';
 import { useAuth } from '@/contexts/SupabaseAuthContext';
@@ -2005,6 +2005,11 @@ export function ConsultationStage({
 // scène (partage 100 % hauteur, style Meet/Zoom) ; les deux repliables en
 // pastille « N participants ».
 
+// Item de menu de modération (charte LIRI).
+function modItemStyle(color?: string): CSSProperties {
+  return { display: 'flex', alignItems: 'center', gap: 10, width: '100%', padding: '11px 14px', border: 'none', background: 'transparent', color: color || '#f5f4ee', fontSize: 14, fontWeight: 600, cursor: 'pointer', textAlign: 'left' };
+}
+
 // Feedback discret de modération (sourdine) — l'action serveur était muette.
 function ModToast({ text, ok }: { text: string; ok: boolean }) {
   return (
@@ -2105,6 +2110,7 @@ function MembersRail({
   // retour visuel de la sourdine (l'appel serveur était silencieux → l'hôte ne
   // savait pas si le micro avait vraiment été coupé).
   const [confirmKick, setConfirmKick] = useState<{ id: string; name: string } | null>(null);
+  const [modMenu, setModMenu] = useState<{ id: string; name: string; x: number; y: number } | null>(null);
   const [muteFb, setMuteFb] = useState<{ id: string; text: string; ok: boolean } | null>(null);
   const muteFbTimer = useRef<number | null>(null);
   const flashMute = (id: string, text: string, ok: boolean) => {
@@ -2138,18 +2144,41 @@ function MembersRail({
     if (!isHost || !sessionId || !id || t?.participant?.isLocal) return null;
     const name = t?.participant?.name || id;
     const fb = muteFb && muteFb.id === id ? muteFb : null;
+    // Menu de modération : clic sur « ⋮ » OU clic droit sur la vignette (fini les 2
+    // petits boutons qui se chevauchaient). Menu flottant en portail (échappe au
+    // découpage de la vignette).
+    const openMenu = (e: any) => {
+      e.preventDefault?.();
+      e.stopPropagation?.();
+      const MENU_W = 210;
+      const x = Math.max(8, Math.min(e.clientX ?? 0, (typeof window !== 'undefined' ? window.innerWidth : 400) - MENU_W - 8));
+      const y = Math.min(e.clientY ?? 0, (typeof window !== 'undefined' ? window.innerHeight : 600) - 140);
+      setModMenu({ id, name, x, y });
+    };
     return (
       <>
-        <div style={{ position: 'absolute', top: 4, right: 4, display: 'flex', gap: 3, zIndex: 4 }} onClick={(e) => e.stopPropagation()}>
-          <button type="button" onClick={() => muteMember(id, name)} disabled={modBusy === id + ':m'} title="Couper le micro" aria-label={`Couper le micro de ${name}`} style={hostTileBtn}>
-            <MicOff size={12} aria-hidden="true" />
+        <div style={{ position: 'absolute', top: 4, right: 4, zIndex: 4 }} onClick={(e) => e.stopPropagation()}>
+          <button type="button" onClick={openMenu} onContextMenu={openMenu} title="Modérer ce participant" aria-label={`Modérer ${name}`} style={hostTileBtn}>
+            <MoreVertical size={13} aria-hidden="true" />
           </button>
-          <button type="button" onClick={() => setConfirmKick({ id, name })} disabled={modBusy === id + ':x'} title="Faire sortir du direct" aria-label={`Faire sortir ${name}`} style={{ ...hostTileBtn, color: '#fca5a5' }}>
-            <UserX size={12} aria-hidden="true" />
-          </button>
-          {fb ? createPortal(<ModToast text={fb.text} ok={fb.ok} />, document.body) : null}
-          {confirmKick && confirmKick.id === id ? createPortal(<KickConfirmDialog name={confirmKick.name} onCancel={() => setConfirmKick(null)} onConfirm={doKick} />, document.body) : null}
         </div>
+        {fb ? createPortal(<ModToast text={fb.text} ok={fb.ok} />, document.body) : null}
+        {confirmKick && confirmKick.id === id ? createPortal(<KickConfirmDialog name={confirmKick.name} onCancel={() => setConfirmKick(null)} onConfirm={doKick} />, document.body) : null}
+        {modMenu && modMenu.id === id ? createPortal(
+          <>
+            <div onClick={() => setModMenu(null)} onContextMenu={(e) => { e.preventDefault(); setModMenu(null); }} style={{ position: 'fixed', inset: 0, zIndex: 2147483500 }} />
+            <div role="menu" style={{ position: 'fixed', left: modMenu.x, top: modMenu.y, zIndex: 2147483501, width: 210, background: PANEL_BG, border: PANEL_BORDER, borderRadius: 12, boxShadow: '0 20px 56px rgba(0,0,0,0.55)', overflow: 'hidden', WebkitBackdropFilter: 'blur(10px)', backdropFilter: 'blur(10px)' }}>
+              <div style={{ padding: '9px 14px 7px', fontSize: 11, fontWeight: 700, color: '#b8b3ab', textTransform: 'uppercase', letterSpacing: '0.05em', borderBottom: PANEL_BORDER, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{modMenu.name}</div>
+              <button type="button" onClick={() => { const m = modMenu; setModMenu(null); muteMember(m.id, m.name); }} style={modItemStyle()}>
+                <MicOff size={15} aria-hidden="true" /> Couper le micro
+              </button>
+              <button type="button" onClick={() => { const m = modMenu; setModMenu(null); setConfirmKick({ id: m.id, name: m.name }); }} style={modItemStyle('#fca5a5')}>
+                <UserX size={15} aria-hidden="true" /> Faire sortir du direct
+              </button>
+            </div>
+          </>,
+          document.body,
+        ) : null}
         <MicMutedBadge participant={t?.participant} />
       </>
     );
