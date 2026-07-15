@@ -114,7 +114,7 @@ export class CoursesService {
     // 1. Le cours existe-t-il DANS ce tenant ?
     const { data: course } = await client
       .from('courses')
-      .select('id, status, meta')
+      .select('id, status, meta, price_cents')
       .eq('id', courseId)
       .eq('tenant_id', tenant.id)
       .maybeSingle();
@@ -141,8 +141,17 @@ export class CoursesService {
     const STAFF = ['owner', 'admin', 'teacher', 'creator', 'secretariat'];
     const isStaff = STAFF.includes(String(tenant.userRole || '').toLowerCase());
     if (!isStaff) {
+      // Membre du tenant EXIGÉ : TenantGuard peut poser userRole=null pour un non-membre
+      // (resolveTenant fail-open) → sans ce garde, un non-membre obtiendrait une vidéo de
+      // cours gratuite via l'API (service_role bypasse la RLS can_sign_course_video).
+      if (!tenant.userRole) {
+        throw new ForbiddenException('Accès réservé aux membres inscrits de ce tenant.');
+      }
       const meta = course?.meta && typeof course.meta === 'object' ? (course.meta as Record<string, any>) : {};
-      const accessMode = meta.access_mode || meta?.access?.mode || 'free';
+      // Défaut : payant (one_time) si le cours a un prix, sinon gratuit — pour qu'un cours
+      // payant sans meta.access_mode explicite ne soit pas servi sans inscription.
+      const accessMode =
+        meta.access_mode || meta?.access?.mode || (Number(course.price_cents) > 0 ? 'one_time' : 'free');
 
       if (accessMode === 'subscription') {
         const cycle = await resolveMemberCycle(client, tenant.id, userId);
