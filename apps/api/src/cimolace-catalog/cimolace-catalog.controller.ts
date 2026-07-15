@@ -26,10 +26,14 @@ export class CimolaceCatalogController {
     return this.catalogService.getTemplates();
   }
 
-  /** Services actifs du tenant courant (config tenant → owner/admin) */
+  /**
+   * Services actifs du tenant courant. LECTURE = tout MEMBRE (pas seulement owner/admin) :
+   * le front en a besoin pour rendre la nav élève (`useSchoolActive` = mode ÉCOLE vs SIMPLE).
+   * Ce sont des feature-flags non sensibles (aucun secret/PII). Restreindre cette lecture à
+   * owner/admin (fait par le durcissement TenantGuard) masquait tout le menu école aux élèves.
+   * Les ÉCRITURES (POST ci-dessous) restent owner/admin.
+   */
   @Get('tenant-services')
-  @UseGuards(RolesGuard)
-  @Roles('owner', 'admin')
   getTenantServices(@CurrentTenant() tenant: TenantContext) {
     return this.catalogService.getTenantServices(tenant.id);
   }

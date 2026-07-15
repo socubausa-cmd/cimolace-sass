@@ -10,23 +10,27 @@ import { supabase } from '@/lib/customSupabaseClient';
  * Retourne : null tant qu'inconnu (chargement), puis true/false. Cache module-level d'un
  * résultat DÉFINITIF uniquement.
  *
- * ⚠️ PIÈGE réparé : la requête `tenant_services` est protégée par RLS (membre du tenant). Si
- * elle tourne AVANT que la session soit restaurée (race au chargement / SPA multi-onglets), la
- * RLS renvoie VIDE → on concluait `school=false` ET on le cachait DÉFINITIVEMENT → le menu école
- * restait masqué toute la session même après login. Désormais : on n'accepte un résultat que
- * pour un utilisateur CONNECTÉ (sinon indéterminé = on réessaie sur onAuthStateChange), et on ne
- * cache jamais un négatif issu d'une lecture non authentifiée / en erreur.
+ * ⚠️ PIÈGE réparé (2×). `tenant_services` est protégé par RLS (membre actif du tenant). Si la
+ * requête tourne AVANT que la session soit prête (race au chargement), la RLS renvoie VIDE.
+ *   • Bug v1 : on concluait `false` ET on le cachait DÉFINITIVEMENT → menu école gelé masqué.
+ *   • Bug v2 (ma 1re correction) : gater sur `supabase.auth.getSession()` — mais `supabase` est
+ *     un SHIM compat (lib/supabase) dont l'auth ne passe pas par getSession → renvoyait toujours
+ *     null → menu jamais révélé.
+ * Correction robuste : on ne dépend PLUS de getSession. On RÉESSAIE simplement la requête (que
+ * l'ancien code faisait déjà) jusqu'à obtenir une réponse NON VIDE — un membre authentifié a
+ * toujours ≥1 service, donc `[]` = pas-encore-authentifié → on retente sans rien cacher. On ne
+ * cache QUE des réponses non vides (autoritatives : école présente=true, ou services sans école=false).
  */
-let _schoolCache = null; // null = inconnu ; { active: boolean } = DÉFINITIF (positif ou négatif)
+let _schoolCache = null; // null = inconnu ; { active: boolean } = DÉFINITIF
 
-async function resolveSchoolActive() {
-  // Exige une session : sans auth.uid(), la RLS renvoie vide → un « false » trompeur.
-  const { data: sess } = await supabase.auth.getSession();
-  if (!sess?.session?.user) return null; // pas encore connecté → indéterminé
-  const { data, error } = await supabase.from('tenant_services').select('service_key, active');
-  if (error) return null; // erreur transitoire → indéterminé (on réessaiera)
-  // Réponse authoritative d'un utilisateur connecté (liste, même vide, = définitive).
-  return Array.isArray(data) && data.some((s) => s.service_key === 'school' && s.active);
+async function fetchServices() {
+  try {
+    const { data, error } = await supabase.from('tenant_services').select('service_key, active');
+    if (error) return null;
+    return Array.isArray(data) ? data : null;
+  } catch {
+    return null;
+  }
 }
 
 export function useSchoolActive() {
@@ -36,22 +40,28 @@ export function useSchoolActive() {
     let alive = true;
     if (_schoolCache) { setActive(_schoolCache.active); return undefined; }
 
-    const run = async () => {
-      if (_schoolCache) { if (alive) setActive(_schoolCache.active); return; }
-      const res = await resolveSchoolActive();
-      if (res == null) return; // indéterminé → ne rien cacher, attendre un changement d'auth
-      _schoolCache = { active: res };
-      if (alive) setActive(res);
+    let tries = 0;
+    let timer = null;
+    const attempt = async () => {
+      if (!alive) return;
+      if (_schoolCache) { setActive(_schoolCache.active); return; }
+      const rows = await fetchServices();
+      // Réponse NON VIDE = autoritative (l'utilisateur est authentifié et membre d'≥1 tenant).
+      if (rows && rows.length > 0) {
+        const on = rows.some((s) => s.service_key === 'school' && s.active);
+        _schoolCache = { active: on };
+        if (alive) setActive(on);
+        return;
+      }
+      // Vide/erreur = probablement pré-auth (RLS renvoie 0 sans auth.uid()). NE PAS cacher → réessayer.
+      tries += 1;
+      if (alive && tries < 10) timer = window.setTimeout(attempt, 700); // ~7 s max, puis on renonce
     };
+    attempt();
 
-    run();
-    // Réévalue quand la session arrive/change (restauration async au chargement, login…).
-    const { data: authSub } = supabase.auth.onAuthStateChange(() => {
-      if (!_schoolCache) run();
-    });
     return () => {
       alive = false;
-      try { authSub?.subscription?.unsubscribe?.(); } catch { /* */ }
+      if (timer) window.clearTimeout(timer);
     };
   }, []);
 
