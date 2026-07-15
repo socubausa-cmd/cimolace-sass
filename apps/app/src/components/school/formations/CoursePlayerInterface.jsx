@@ -3,6 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { useDataSync } from '@/contexts/DataSyncContext';
 import { useAuth } from '@/contexts/SupabaseAuthContext';
 import { useBilling } from '@/contexts/BillingContext';
+import useMemberEntitlements from '@/hooks/useMemberEntitlements';
 import { supabase } from '@/lib/customSupabaseClient';
 import { api } from '@/lib/api';
 import { useFormationStructure, normalizeFormationVideoPayload } from '@/hooks/useFormationStructure';
@@ -272,6 +273,12 @@ const SupabaseCoursePlayerContent = ({ formationId, onExit }) => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const { status: billingStatus, inGrace } = useBilling();
+  // Palier MEMBRE (axe forfait) — MÊME source que le gate serveur POST /courses/:id/video-url.
+  // On gate l'accès aux cours `subscription` sur le forfait de l'élève (coursReplay = tout forfait
+  // actif), pas sur le statut d'abo tenant. Staff → can()===true (bypass).
+  const memberEnt = useMemberEntitlements();
+  const memberCanReplay = memberEnt.can('coursReplay');
+  const memberBillingLoading = memberEnt.loading;
   const { fetchStructure } = useFormationStructure();
 
   const effectiveFormationId = formationId || id;
@@ -863,12 +870,15 @@ const SupabaseCoursePlayerContent = ({ formationId, onExit }) => {
           const accessMode = meta.access_mode || meta?.access?.mode || 'free';
 
           if (accessMode === 'subscription') {
-            const hasSubscription = billingStatus === 'active' || (billingStatus === 'past_due' && inGrace);
-            if (!hasSubscription) {
+            // Accès aux cours enregistrés = FORFAIT du membre (coursReplay = tout forfait actif),
+            // même axe que le gate serveur. On attend la fin du chargement du billing avant de
+            // bloquer (sinon on rejetterait un abonné pendant le chargement). Le serveur reste
+            // l'autorité : la vidéo ne se signe pas sans forfait de toute façon.
+            if (!memberBillingLoading && !memberCanReplay) {
               if (!alive) return;
               setFormation(formationRow || null);
               setModules([]);
-              setError("Cette formation nécessite un abonnement actif. Va sur l'onglet Tarifs pour t'abonner.");
+              setError("Ce cours est réservé aux membres avec un forfait actif. Choisis un forfait pour y accéder.");
               return;
             }
           }
@@ -927,7 +937,7 @@ const SupabaseCoursePlayerContent = ({ formationId, onExit }) => {
       alive = false;
     };
     // NOTE: keep deps minimal to avoid reloading loop due to identity changes in contexts.
-  }, [effectiveFormationId, fetchStructure, user?.id, user?.role, billingStatus, inGrace]);
+  }, [effectiveFormationId, fetchStructure, user?.id, user?.role, billingStatus, inGrace, memberCanReplay, memberBillingLoading]);
 
   const m = modules[path.mIdx] || null;
   const w = m?.weeks?.[path.wIdx] || null;
