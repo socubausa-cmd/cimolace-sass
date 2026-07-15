@@ -63,6 +63,7 @@ function AppTabs() {
       <Tabs.Screen name="live-room" options={fullScreen} />
       <Tabs.Screen name="creer-formation" options={{ href: null }} />
       <Tabs.Screen name="creer-masterclass" options={{ href: null }} />
+      <Tabs.Screen name="precepteur/[masterclassId]" options={fullScreen} />
       <Tabs.Screen name="creer-arena" options={{ href: null }} />
       <Tabs.Screen name="creer-discussion" options={{ href: null }} />
       {/* Moteurs natifs immersifs — plein écran : masqués de la barre ET barre cachée à l'affichage */}
