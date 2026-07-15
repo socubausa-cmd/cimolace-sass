@@ -127,6 +127,47 @@ export class BookingService {
     return data;
   }
 
+  /**
+   * Demande de RDV SANS créneau, depuis le chat conversationnel LIRI (LiriRendezVousPage).
+   * Le secrétariat planifie ensuite le créneau. Insert service-role dans `appointments`
+   * (slot_id NULL, status='requested'). Remplace l'edge function `liri-appointment-request`
+   * (non déployée + visait des tables inexistantes student_appointments/appointment_requests).
+   */
+  async requestAppointmentNoSlot(
+    tenantId: string,
+    userId: string,
+    dto: { subject?: string; description?: string; email?: string; whatsapp?: string },
+  ) {
+    const subject = String(dto?.subject || '').trim();
+    const email = String(dto?.email || '').trim();
+    const whatsapp = String(dto?.whatsapp || '').trim();
+    if (subject.length < 3) throw new BadRequestException('Sujet trop court (3 caractères minimum).');
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) throw new BadRequestException('E-mail invalide.');
+    if (whatsapp.replace(/\D/g, '').length < 8) throw new BadRequestException('Numéro WhatsApp invalide.');
+
+    const notes = [
+      `Sujet : ${subject}`,
+      `Description : ${String(dto?.description || '').trim() || '—'}`,
+      `E-mail : ${email}`,
+      `WhatsApp : ${whatsapp}`,
+    ].join('\n');
+
+    const { data, error } = await (this.supabase.client as any)
+      .from('appointments')
+      .insert({
+        tenant_id: tenantId,
+        student_id: userId,
+        slot_id: null,
+        status: 'requested',
+        notes,
+        source: 'liri-rdv-chat',
+      })
+      .select('id')
+      .maybeSingle();
+    if (error) throw new BadRequestException(error.message);
+    return { ok: true, requestId: data?.id ?? null };
+  }
+
   async updateAppointment(
     appointmentId: string,
     tenantId: string,

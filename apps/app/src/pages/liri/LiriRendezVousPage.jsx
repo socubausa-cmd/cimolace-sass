@@ -17,6 +17,7 @@ import { Sparkles, Check, ArrowRight, ArrowLeft, ShieldCheck, RefreshCw, Calenda
 import LiriSchoolShell from '@/pages/liri/LiriSchoolShell';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/lib/customSupabaseClient';
+import { api } from '@/lib/api';
 
 const C = {
   ink: '#f5f1e9', muted: 'rgba(245,241,233,0.64)', faint: 'rgba(245,241,233,0.42)',
@@ -75,10 +76,13 @@ export default function LiriRendezVousPage() {
   const submit = async () => {
     setSubmitting(true); setErrorMsg('');
     try {
-      const { data, error } = await supabase.functions.invoke('liri-appointment-request', {
-        body: { subject: answers.subject, description: answers.description, email: answers.email, whatsapp: answers.whatsapp },
+      // Via l'API NestJS (POST /booking/appointment-request) au lieu de l'edge function
+      // `liri-appointment-request` (non déployée + visait des tables inexistantes).
+      const resp = await api.post('/booking/appointment-request', {
+        subject: answers.subject, description: answers.description, email: answers.email, whatsapp: answers.whatsapp,
       });
-      if (error || !data?.ok) throw new Error(error?.message || data?.error || 'submit_failed');
+      const body = resp?.data;
+      if (!(body?.data?.ok || body?.ok)) throw new Error('submit_failed');
       setStep(5);
     } catch (e) {
       // eslint-disable-next-line no-console

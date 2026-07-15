@@ -141,6 +141,17 @@ export class BookingController {
     return this.booking.requestAppointment(tenant, userId, dto);
   }
 
+  // Demande de RDV SANS créneau (chat conversationnel LIRI) — le secrétariat planifie ensuite.
+  // Pas de @Roles : tout membre authentifié du tenant peut faire une demande.
+  @Post('appointment-request')
+  requestAppointmentNoSlot(
+    @Body() dto: { subject?: string; description?: string; email?: string; whatsapp?: string },
+    @CurrentTenant() tenant: TenantContext,
+    @Req() req: Request,
+  ) {
+    return this.booking.requestAppointmentNoSlot(tenant.id, (req as any).user?.id, dto ?? {});
+  }
+
   @Get('appointments')
   listAppointments(
     @CurrentTenant() tenant: TenantContext,
