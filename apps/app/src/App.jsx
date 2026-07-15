@@ -521,6 +521,7 @@ const SignupPage = lazy(() => import('@/pages/SignupPage'));
 const OnboardingOrgPage = lazy(() => import('@/pages/OnboardingOrgPage'));
 const CimolaceCreationAgent = lazy(() => import('@/pages/CimolaceCreationAgent'));
 const CimolaceSubscribePage = lazy(() => import('@/pages/cimolace/CimolaceSubscribePage'));
+const CimolaceSubscribeSuccessPage = lazy(() => import('@/pages/cimolace/CimolaceSubscribeSuccessPage'));
 const LiriLandingPage = lazy(() => import('@/pages/LiriLandingPage'));
 const JoinOrgPage = lazy(() => import('@/pages/JoinOrgPage'));
 const ForgotPasswordPage = lazy(() => import('@/pages/ForgotPasswordPage'));
@@ -2059,6 +2060,8 @@ isLiriHostDevPreviewRoute;
           <Route path="/creer-organisation" element={<OnboardingOrgPage />} />
           {/* Acquisition self-service : choisir une offre → payer → tenant provisionné (chaînon) */}
           <Route path="/souscrire" element={<CimolaceSubscribePage />} />
+          {/* Succès paiement d'acquisition (success_url du Checkout Stripe) */}
+          <Route path="/creer-organisation/succes" element={<CimolaceSubscribeSuccessPage />} />
           {/* Assistant conversationnel immersif (preview L1) — présence 5 états + parler-à-la-présence */}
           <Route path="/creer-organisation/agent" element={<CimolaceCreationAgent />} />
           {/* Rejoindre une organisation par slug (self-join) — accessible connecté OU non */}
