@@ -39,6 +39,7 @@ import {
 } from '@/lib/smartboardDesignCanvas';
 import { AnimatePresence, motion } from 'framer-motion';
 import { getDocumentEmbedSrc } from '@/lib/liveSceneNormalize';
+import { useSmartboardCanvasSrc } from '@/lib/smartboardCanvasUrl';
 import {
   resolveSmartboardEdgeFeatherPercent,
   smartboardEdgeFeatherMaskStyle,
@@ -50,10 +51,12 @@ export const SB_TACTICAL_SYNC_V = 1;
 
 /** Image cliquable (hôte) → modale synchronisée salle ; stopPropagation pour ne pas avancer la lecture progressive. */
 function ExpandableHostImage({ src, alt, onExpand, imgClassName = 'h-full w-full object-contain' }) {
+  // Bucket privé : la source stockée (URL publique périmée / chemin) est re-signée au rendu.
+  const resolvedSrc = useSmartboardCanvasSrc(src);
   const can = Boolean(onExpand && src && /^https?:\/\//i.test(String(src)));
   const inner = (
     <img
-      src={src}
+      src={resolvedSrc}
       alt={alt || ''}
       className={cn(can && 'pointer-events-none', imgClassName)}
       referrerPolicy="no-referrer"
@@ -67,7 +70,9 @@ function ExpandableHostImage({ src, alt, onExpand, imgClassName = 'h-full w-full
       className="h-full w-full cursor-zoom-in rounded-xl border-0 bg-transparent p-0 text-left"
       onClick={(e) => {
         e.stopPropagation();
-        onExpand({ url: src, label: alt || '' });
+        // On diffuse l'URL signée (bearer, auto-suffisante ~1 h) pour la modale synchronisée
+        // de la salle ; repli sur la valeur durable si la signature n'est pas encore prête.
+        onExpand({ url: resolvedSrc || src, label: alt || '' });
       }}
       title="Agrandir pour toute la salle"
     >

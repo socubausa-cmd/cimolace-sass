@@ -38,6 +38,7 @@ import {
   designerShellChipGhost,
   designerShellEmbedPanel,
 } from '@/lib/liriDesignerShellClasses';
+import SmartboardCanvasImage from '@/components/media/SmartboardCanvasImage';
 import SlideParallaxStage from './SlideParallaxStage';
 import SlideAnnotationOverlay from './SlideAnnotationOverlay';
 import NeuroInkPanel from './NeuroInkPanel';
@@ -5927,7 +5928,7 @@ export default function SmartBoardCompositor({
               <div className={cn('absolute inset-0 flex items-center justify-center', SCENE_STAGE_GRID)}>
                 {sharedImageSrc ? (
                   <>
-                    <img src={sharedImageSrc} alt="Partagé" className="max-h-full max-w-full object-contain" />
+                    <SmartboardCanvasImage src={sharedImageSrc} alt="Partagé" className="max-h-full max-w-full object-contain" />
                     {!readOnlySceneNavigator && sharedGalleryLength > 0 && (
                       <div
                         className={cn(

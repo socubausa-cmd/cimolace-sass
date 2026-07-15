@@ -1,6 +1,7 @@
 import React, { useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Sparkles, BookOpen, Lightbulb, Target } from 'lucide-react';
+import SmartboardCanvasImage from '@/components/media/SmartboardCanvasImage';
 
 function toArray(value) {
   if (Array.isArray(value)) return value;
@@ -58,7 +59,7 @@ function GammaSlide({ segment, ai, mode, illustrationUrl, unitLabel = 'Chapitre'
       {/* Illustration background (blurred, 30% opacity) */}
       {illustrationUrl && (
         <div className="absolute inset-0 pointer-events-none">
-          <img
+          <SmartboardCanvasImage
             src={illustrationUrl}
             alt=""
             className="w-full h-full object-cover"

@@ -3,6 +3,7 @@
  * Tabs : Modeles · Elements · Texte · Fonds · Icones · Blocs · Theme · Fichier
  */
 import React, { useState, useRef, useMemo, useCallback, useEffect } from 'react';
+import SmartboardCanvasImage from '@/components/media/SmartboardCanvasImage';
 import {
   Type, Square, Circle as CircleIcon, Triangle, Star, Minus, Diamond,
   Image as ImageIcon, Upload, Download, Save, FolderOpen, Loader2, Code,
@@ -770,7 +771,7 @@ export default function CanvaDesignPanel({
                         onClick={() => addObject(mkImageObject(h.url, { width: 480, height: 275 }))}
                         className="shrink-0 overflow-hidden rounded border border-white/10 hover:border-violet-400/40"
                       >
-                        <img src={h.url} alt="" className="h-11 w-16 object-cover" loading="lazy" />
+                        <SmartboardCanvasImage src={h.url} alt="" className="h-11 w-16 object-cover" loading="lazy" />
                       </button>
                     ))}
                   </div>

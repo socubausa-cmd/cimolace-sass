@@ -7,6 +7,7 @@
  */
 import React, { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Link, useLocation, useNavigate, useSearchParams } from 'react-router-dom';
+import SmartboardCanvasImage from '@/components/media/SmartboardCanvasImage';
 import {
   Type, Square, Circle, Image as ImageIcon, LayoutGrid, Layers, Cpu,
   UploadCloud, Sparkles, Box, Zap, FileImage, ChevronRight, Radio, FileOutput,
@@ -2543,7 +2544,7 @@ function ContextualPanel({ tool, onClose }) {
                       key={h.id || h.url}
                       className="flex gap-2 rounded-lg border border-white/[0.08] bg-black/30 p-1.5"
                     >
-                      <img
+                      <SmartboardCanvasImage
                         src={h.url}
                         alt=""
                         className="h-14 w-20 shrink-0 rounded-md object-cover"

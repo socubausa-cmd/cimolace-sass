@@ -4,6 +4,7 @@
  * centré (repère natif 1037×750), panneaux droite (calques / propriétés / coach), bandeau scènes.
  */
 import React, { useRef, useEffect, useLayoutEffect, useState, useCallback, useMemo, forwardRef, useImperativeHandle } from 'react';
+import SmartboardCanvasImage from '@/components/media/SmartboardCanvasImage';
 import { createPortal } from 'react-dom';
 import {
   Type, Square, Circle as CircleIcon, Image as ImageIcon, Sparkles, Atom,
@@ -2530,7 +2531,7 @@ const SmartboardKonvaEditorV1 = forwardRef(function SmartboardKonvaEditorV1({
             </div>
             <div className="max-h-[calc(92vh-52px)] overflow-auto p-4">
               {assetPreview.kind === 'image' && assetPreview.obj?.content?.src ? (
-                <img src={assetPreview.obj.content.src} alt="" className="mx-auto max-h-[75vh] w-auto max-w-full object-contain" />
+                <SmartboardCanvasImage src={assetPreview.obj.content.src} alt="" className="mx-auto max-h-[75vh] w-auto max-w-full object-contain" />
               ) : null}
               {assetPreview.kind === 'icon' ? (
                 <div className="flex min-h-[200px] items-center justify-center p-8 text-[140px] leading-none text-[var(--school-accent)]">★</div>

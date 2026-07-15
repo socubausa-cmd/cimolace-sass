@@ -1,5 +1,6 @@
 import { SMARTBOARD_DESIGN_HEIGHT, SMARTBOARD_DESIGN_WIDTH } from '@/lib/smartboardDesignCanvas';
 import { useTenantBranding } from '@/hooks/useTenantBranding';
+import SmartboardCanvasImage from '@/components/media/SmartboardCanvasImage';
 
 export function LiveSceneSlide({ slide }) {
   const { branding } = useTenantBranding();
@@ -58,7 +59,7 @@ export function LiveSceneSlide({ slide }) {
           <div key={el.id} style={{ ...style, borderLeft: '3px solid #C8960C', paddingLeft: '12px', display: 'flex', alignItems: 'center', fontSize: 'clamp(11px,1.4vw,14px)', color: 'rgba(255,255,255,.88)', fontStyle: 'italic', lineHeight: 1.6, overflow: 'hidden' }}>{el.content}</div>
         );
         if (el.type === 'image' && el.src) return (
-          <img key={el.id} src={el.src} alt={el.content || ''} style={{ ...style, objectFit: 'cover', borderRadius: '4px' }} />
+          <SmartboardCanvasImage key={el.id} src={el.src} alt={el.content || ''} style={{ ...style, objectFit: 'cover', borderRadius: '4px' }} />
         );
         if (el.type === 'document' && el.src) {
           const embedSrc = el.documentKind === 'office'

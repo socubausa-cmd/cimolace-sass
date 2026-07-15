@@ -2,10 +2,19 @@ import React, { forwardRef, useCallback, useEffect, useImperativeHandle, useRef,
 import { Film, Square, Trash2, ListVideo, Video, Loader2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { uploadSmartboardCinemaTake } from '@/lib/uploadSmartboardCinemaTake';
+import { useSmartboardCanvasSrc } from '@/lib/smartboardCanvasUrl';
 import { useCourseCopilotStore } from '../store/useCourseCopilotStore';
 import { useSmartboardKonvaStore } from '../store/useSmartboardKonvaStore';
 import { activateKonvaSceneAndSyncSlide } from '../store/smartboardWorkspaceApi';
 import CinemaPedagogyTimeline from './CinemaPedagogyTimeline';
+
+/** Lecture d'une prise cinéma : URL signée du bucket privé, repli sur l'aperçu local (blob). */
+function CinemaTakeVideo({ recordingPublicUrl, previewUrl, ...rest }) {
+  const signed = useSmartboardCanvasSrc(recordingPublicUrl);
+  const src = signed || previewUrl || '';
+  if (!src) return null;
+  return <video src={src} {...rest} />;
+}
 
 function pickRecorderMime() {
   const candidates = ['video/webm;codecs=vp9', 'video/webm;codecs=vp8', 'video/webm'];
@@ -347,8 +356,9 @@ const CinemaPedagogyBar = forwardRef(function CinemaPedagogyBar(
                     </div>
                   ) : null}
                   {t.recordingPublicUrl || t.previewUrl ? (
-                    <video
-                      src={t.recordingPublicUrl || t.previewUrl}
+                    <CinemaTakeVideo
+                      recordingPublicUrl={t.recordingPublicUrl}
+                      previewUrl={t.previewUrl}
                       controls
                       className="max-h-24 w-full rounded border border-white/10 bg-black/40"
                       playsInline

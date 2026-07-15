@@ -1,4 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
+import { signSmartboardCanvasUrl } from '@/lib/smartboardCanvasUrl';
 import Konva from 'konva';
 import {
   Text,
@@ -360,12 +361,24 @@ function KonvaBoardImage({ obj, common }) {
 
   useEffect(() => {
     const src = obj.content?.src;
-    if (!src) { setImg(null); return; }
-    const im = new window.Image();
-    im.crossOrigin = 'anonymous';
-    im.onload = () => setImg(im);
-    im.onerror = () => setImg(null);
-    im.src = src;
+    if (!src) { setImg(null); return undefined; }
+    let alive = true;
+    let im = null;
+    // Bucket privé : on re-signe la source (URL publique périmée ou chemin) avant de charger.
+    // Les data:/blob:/URL externes reviennent inchangées (pas d'appel réseau).
+    signSmartboardCanvasUrl(src).then((resolved) => {
+      if (!alive) return;
+      if (!resolved) { setImg(null); return; }
+      im = new window.Image();
+      im.crossOrigin = 'anonymous';
+      im.onload = () => { if (alive) setImg(im); };
+      im.onerror = () => { if (alive) setImg(null); };
+      im.src = resolved;
+    });
+    return () => {
+      alive = false;
+      if (im) { im.onload = null; im.onerror = null; }
+    };
   }, [obj.content?.src]);
 
   // Applique les filtres Konva apres rendu (étalonnage type NLE + HSL teinte)
