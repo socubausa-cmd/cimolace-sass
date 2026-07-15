@@ -633,10 +633,14 @@ export default function PaiementPage() {
         )}
 
         {/* Choix du moyen de paiement */}
-        <div className="mt-8 grid grid-cols-3 gap-3" role="tablist" aria-label="Moyen de paiement">
+        <div className={`mt-8 grid gap-3 ${isGuest ? 'grid-cols-2' : 'grid-cols-3'}`} role="tablist" aria-label="Moyen de paiement">
           {[
             { id: 'card', label: 'Carte bancaire', sub: 'Visa · Mastercard' },
-            { id: 'paypal', label: 'PayPal', sub: 'Compte PayPal' },
+            // PayPal MASQUÉ pour les INVITÉS : la capture au retour (paypal/capture) est JWT-only
+            // et il n'existe pas de guest-paypal/capture → un invité serait débité SANS fulfillment.
+            // Carte + Mobile Money couvrent l'invité (fulfillment par webhook). À réactiver le jour
+            // où un endpoint guest-paypal/capture existera.
+            ...(isGuest ? [] : [{ id: 'paypal', label: 'PayPal', sub: 'Compte PayPal' }]),
             { id: 'mobile_money', label: 'Mobile Money', sub: 'MTN · Orange' },
           ].map((m) => {
             const active = method === m.id;
