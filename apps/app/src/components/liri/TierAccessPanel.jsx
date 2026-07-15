@@ -7,11 +7,11 @@
  * Piloté par useMemberEntitlements (axe membre) + billing_plans (prix = source de vérité).
  */
 import { useEffect, useState } from 'react';
-import { Check, Lock, Sparkles, ArrowRight } from 'lucide-react';
+import { Check, Lock, Sparkles, ArrowRight, X } from 'lucide-react';
 import { supabase } from '@/lib/customSupabaseClient';
 import { resolveTenantSlug } from '@/lib/tenant/activeBranding';
 import { useMemberEntitlements } from '@/hooks/useMemberEntitlements';
-import { CYCLE_KEYS } from '@/lib/liri/memberTier';
+import { CYCLE_KEYS, CYCLE_RANK, FEATURE_MIN_RANK } from '@/lib/liri/memberTier';
 
 const GROUPS = [
   { title: 'Apprentissage', items: [
@@ -39,9 +39,33 @@ const CYCLE_HINT = {
 };
 const CYCLE_LABEL = { autonome: 'Autonome', academique: 'Académique', prive: 'Privé', privilegie: 'Privilégié' };
 
+// Détail « En savoir plus » de chaque forfait.
+const CYCLE_DETAIL = {
+  autonome: {
+    pitch: "Le socle de la Prorascience, en autonomie. Vous étudiez à votre rythme par les enregistrements, avec le Temple et les cultes en ligne.",
+    forWhom: 'Pour qui veut découvrir le corpus, apprendre seul et pratiquer le rituel — sans accompagnement.',
+  },
+  academique: {
+    pitch: "L'école en salle de classe. Le cursus complet et encadré, avec les cours EN DIRECT (temps réel, questions au professeur) et la préparation à l'initiation.",
+    forWhom: 'Pour qui veut être encadré, suivre un parcours structuré et interagir en direct avec les enseignants.',
+  },
+  prive: {
+    pitch: 'Un suivi personnel rapproché. Des séances privées 1:1 incluses et une messagerie directe avec un mentor, en petit comité.',
+    forWhom: 'Pour qui veut un accompagnement individuel, des séances privées et un suivi personnalisé.',
+  },
+  privilegie: {
+    pitch: 'Devenir praticien. Le mentorat souverain, la formation au métier (mage / ganga), les stages pratiques et le cercle des praticiens.',
+    forWhom: "Pour qui veut EXERCER : apprendre le métier, être formé et rejoindre le cercle des praticiens.",
+  },
+};
+
+// Liste plate de toutes les features (label + rang requis) — pour la vue détail.
+const ALL_FEATURES = GROUPS.flatMap((g) => g.items.map(([key, text]) => ({ key, text, min: FEATURE_MIN_RANK[key] || 1 })));
+
 export default function TierAccessPanel() {
   const { label, cycle, isStaff, hasForfait, upsellFor } = useMemberEntitlements();
   const [plans, setPlans] = useState([]);
+  const [detailCycle, setDetailCycle] = useState(null); // « En savoir plus » : cycle affiché en détail
 
   useEffect(() => {
     let alive = true;
@@ -127,6 +151,10 @@ export default function TierAccessPanel() {
                       <Sparkles className="h-3.5 w-3.5" /> Passer <ArrowRight className="h-3.5 w-3.5" />
                     </a>
                   )}
+                  <button type="button" onClick={() => setDetailCycle(p.cycle)}
+                    className="mt-2 text-[11px] text-white/45 underline underline-offset-2 transition-colors hover:text-white/75">
+                    En savoir plus
+                  </button>
                 </div>
               );
             })}
@@ -134,6 +162,56 @@ export default function TierAccessPanel() {
           <p className="mt-3 text-xs text-white/40">Paiement sécurisé — carte (Stripe) ou Mobile Money. Trimestre &amp; année proposés au paiement.</p>
         </div>
       )}
+
+      {/* « En savoir plus » — détail complet d'un forfait */}
+      {detailCycle && (() => {
+        const r = CYCLE_RANK[detailCycle] || 0;
+        const d = CYCLE_DETAIL[detailCycle] || {};
+        const p = plans.find((x) => x.cycle === detailCycle);
+        const isCurrent = detailCycle === cycle;
+        const included = ALL_FEATURES.filter((f) => r >= f.min);
+        const locked = ALL_FEATURES.filter((f) => r < f.min);
+        return (
+          <div className="fixed inset-0 z-[130] flex items-center justify-center overflow-y-auto bg-black/60 p-4" onClick={() => setDetailCycle(null)} role="dialog" aria-modal="true">
+            <div className="my-8 w-full max-w-lg rounded-2xl border border-white/10 bg-[#221f1c] p-6 sm:p-7" onClick={(e) => e.stopPropagation()}>
+              <div className="flex items-start justify-between gap-4">
+                <div>
+                  <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-[#e58a5f]">Forfait{isCurrent ? ' · le vôtre' : ''}</p>
+                  <h3 className="mt-1 text-2xl font-black text-white">{CYCLE_LABEL[detailCycle]}</h3>
+                  {p && <p className="mt-0.5 text-lg font-bold text-white">{p.price} €<span className="text-xs font-normal text-white/45">/mois</span></p>}
+                </div>
+                <button type="button" onClick={() => setDetailCycle(null)} aria-label="Fermer" className="rounded-full border border-white/15 p-1.5 text-white/60 transition-colors hover:text-white"><X className="h-4 w-4" /></button>
+              </div>
+              {d.pitch && <p className="mt-4 text-sm leading-relaxed text-white/80">{d.pitch}</p>}
+              {d.forWhom && <p className="mt-2 text-[13px] italic leading-relaxed text-white/55">{d.forWhom}</p>}
+              <div className="mt-5">
+                <p className="mb-2 text-[11px] font-bold uppercase tracking-wider text-white/45">Ce qui est inclus</p>
+                <ul className="space-y-1.5">
+                  {included.map((f) => (
+                    <li key={f.key} className="flex items-start gap-2 text-[13px] text-white/85"><Check className="mt-0.5 h-3.5 w-3.5 shrink-0 text-[#d97757]" />{f.text}</li>
+                  ))}
+                </ul>
+              </div>
+              {locked.length > 0 && (
+                <div className="mt-4">
+                  <p className="mb-2 text-[11px] font-bold uppercase tracking-wider text-white/35">Aux paliers supérieurs</p>
+                  <ul className="space-y-1.5">
+                    {locked.map((f) => (
+                      <li key={f.key} className="flex items-start gap-2 text-[13px] text-white/40"><Lock className="mt-0.5 h-3 w-3 shrink-0" /><span>{f.text} <span className="text-[#e58a5f]/70">· dès {CYCLE_LABEL[CYCLE_KEYS.find((c) => CYCLE_RANK[c] >= f.min)]}</span></span></li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+              {!isCurrent && p && (
+                <a href={checkout(p.key)} className="mt-6 flex items-center justify-center gap-2 rounded-xl bg-[#d97757] px-4 py-2.5 text-sm font-bold text-white transition-colors hover:bg-[#c9673f]">
+                  <Sparkles className="h-4 w-4" /> Passer à {CYCLE_LABEL[detailCycle]} · {p.price} €/mois <ArrowRight className="h-4 w-4" />
+                </a>
+              )}
+              {isCurrent && <p className="mt-6 text-center text-xs text-white/45">C'est votre forfait actuel.</p>}
+            </div>
+          </div>
+        );
+      })()}
     </div>
   );
 }
