@@ -303,6 +303,21 @@ export class MedosFormsController {
     );
   }
 
+  /**
+   * Configure le scoring d'un formulaire EXISTANT (grille roue + champs mesure) →
+   * active le pont roue/jumeau sans le recréer. { config: { [fieldId]: {…} } }.
+   */
+  @Patch(':id/scoring')
+  @UseGuards(RolesGuard)
+  @Roles('owner', 'practitioner', 'clinic_admin')
+  setScoring(
+    @Param('id') id: string,
+    @Body() dto: { config?: Record<string, { scoring?: unknown[]; biomarker_code?: string; unit?: string }> },
+    @CurrentTenant() tenant: TenantContext,
+  ) {
+    return this.medosService.setFormScoring(tenant, id, dto?.config ?? {});
+  }
+
   @Post(':id/responses')
   @UseGuards(RolesGuard)
   @Roles('owner', 'practitioner', 'clinic_admin', 'patient')
