@@ -1,15 +1,54 @@
-import { useMemo, useRef, useState } from 'react';
+import { useMemo, useRef, useState, type CSSProperties } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   Type, AlignLeft, Hash, Calendar, List, ListChecks, CheckSquare, Upload,
   Plus, Trash2, Copy, GripVertical, ChevronLeft, Check, Loader2, Monitor, Smartphone,
-  Eye, Settings2, CircleAlert, X,
+  Eye, Settings2, CircleAlert, X, Activity, Gauge,
 } from 'lucide-react';
 import { FormRenderer, type FieldType, type FormField } from './FormRenderer';
 
 const API = import.meta.env.VITE_API_URL || 'http://localhost:4002';
 
-type BuilderField = { _uid: number; label: string; type: FieldType; required?: boolean; options?: string[] };
+type BuilderField = {
+  _uid: number; label: string; type: FieldType; required?: boolean; options?: string[];
+  // Config « mesure » (type 'measure') → biomarqueur du jumeau.
+  biomarker_code?: string; unit?: string;
+  // Config « scoring roue » : axe alimenté + scores (par option OU plage numérique).
+  scoreAxis?: string;                       // '' = ne compte pas dans la roue
+  optionScores?: Record<string, number>;    // select/multi/checkbox : valeur → 0..100
+  numRange?: { min: number; max: number; invert?: boolean }; // number : plage → 0..100
+};
+
+// Axes de la roue de transformation (= WHEEL_DOMAINS backend).
+const AXES: { value: string; label: string }[] = [
+  { value: '', label: '— ne compte pas dans la roue —' },
+  { value: 'digestion', label: 'Digestion' }, { value: 'sleep', label: 'Sommeil' },
+  { value: 'stress', label: 'Stress' }, { value: 'energy', label: 'Énergie' },
+  { value: 'inflammation', label: 'Inflammation' }, { value: 'immunity', label: 'Immunité' },
+  { value: 'metabolism', label: 'Métabolisme' }, { value: 'hormones', label: 'Hormones' },
+  { value: 'physical_activity', label: 'Activité physique' }, { value: 'cognition', label: 'Cognition' },
+  { value: 'environment', label: 'Environnement' }, { value: 'emotions', label: 'Émotions' },
+];
+// Constantes objectives déclarables → biomarqueurs du jumeau (whitelist backend).
+const BIOMARKERS: { code: string; label: string; unit: string }[] = [
+  { code: 'WEIGHT', label: 'Poids', unit: 'kg' },
+  { code: 'BP_SYSTOLIC', label: 'Tension systolique', unit: 'mmHg' },
+  { code: 'BP_DIASTOLIC', label: 'Tension diastolique', unit: 'mmHg' },
+  { code: 'HEART_RATE', label: 'Fréquence cardiaque', unit: 'bpm' },
+  { code: 'GLUCOSE', label: 'Glycémie', unit: 'mg/dL' },
+  { code: 'SPO2', label: 'Saturation O₂', unit: '%' },
+  { code: 'BODY_TEMP', label: 'Température', unit: '°C' },
+];
+const SCORABLE = new Set<FieldType>(['select', 'multi', 'checkbox', 'number']);
+
+// Styles inline de l'éditeur de config (mesure / scoring roue) — self-contained.
+const cfgBox: CSSProperties = { marginTop: 10, padding: '10px 11px', borderRadius: 9, background: 'color-mix(in srgb, var(--fb-accent, #7c3aed) 6%, #fff)', border: '1px solid color-mix(in srgb, var(--fb-accent, #7c3aed) 22%, transparent)' };
+const cfgHead: CSSProperties = { display: 'flex', alignItems: 'center', gap: 6, fontSize: 11.5, fontWeight: 700, color: 'var(--fb-accent, #7c3aed)', marginBottom: 7, textTransform: 'uppercase', letterSpacing: 0.3 };
+const cfgSel: CSSProperties = { width: '100%', padding: '7px 9px', borderRadius: 7, border: '1px solid var(--zw-border, #e5e0d8)', fontSize: 13, background: '#fff', color: 'var(--zw-text, #1e1e1e)' };
+const cfgRow: CSSProperties = { display: 'flex', alignItems: 'center', gap: 8 };
+const cfgLbl: CSSProperties = { flex: 1, fontSize: 12.5, color: 'var(--zw-text-soft, #4b5563)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' };
+const cfgNum: CSSProperties = { width: 78, padding: '5px 8px', borderRadius: 6, border: '1px solid var(--zw-border, #e5e0d8)', fontSize: 13, textAlign: 'right' };
+const cfgHint: CSSProperties = { fontSize: 11, color: 'var(--zw-text-muted, #8a8580)', marginTop: 2 };
 
 // Catégories alignées sur l'enum backend (create-form.dto : IsIn).
 const CATEGORIES = [
@@ -28,6 +67,7 @@ const TYPES: { value: FieldType; label: string; icon: typeof Type }[] = [
   { value: 'select', label: 'Choix', icon: List },
   { value: 'multi', label: 'Choix multiples', icon: ListChecks },
   { value: 'checkbox', label: 'Case à cocher', icon: CheckSquare },
+  { value: 'measure', label: 'Mesure (jumeau)', icon: Activity },
   { value: 'file', label: 'Fichier', icon: Upload },
 ];
 const typeMeta = (t: FieldType) => TYPES.find((x) => x.value === t) || TYPES[0];
@@ -101,12 +141,16 @@ export function FormBuilder() {
     title, description,
     fields: fields.map((f): FormField => ({
       id: `q_${f._uid}`, _uid: f._uid, label: f.label, type: f.type, required: f.required,
-      options: f.options,
+      options: f.options, biomarker_code: f.biomarker_code, unit: f.unit,
     })),
   }), [title, description, fields]);
 
+  // Construit les champs (POST) + la config de scoring/mesure keyée par l'id
+  // généré (PATCH /scoring — la validation DTO gutte le scoring imbriqué sur POST,
+  // d'où le PATCH séparé, body non typé).
   function buildPayload() {
     const used = new Set<string>();
+    const config: Record<string, { scoring?: unknown[]; biomarker_code?: string; unit?: string }> = {};
     const out = fields.filter((f) => f.label.trim()).map((f, i) => {
       let id = slugify(f.label) || `champ_${i + 1}`;
       while (used.has(id)) id = `${id}_${i + 1}`;
@@ -114,14 +158,31 @@ export function FormBuilder() {
       const field: any = { id, label: f.label.trim(), type: f.type };
       if (f.required) field.required = true;
       if (f.type === 'select' || f.type === 'multi') field.options = (f.options || []).map((o) => o.trim()).filter(Boolean);
+      if (f.type === 'measure' && f.biomarker_code) { field.biomarker_code = f.biomarker_code; field.unit = f.unit; }
+
+      // Config à PATCHer.
+      const cfg: { scoring?: unknown[]; biomarker_code?: string; unit?: string } = {};
+      if (f.type === 'measure' && f.biomarker_code) { cfg.biomarker_code = f.biomarker_code; cfg.unit = f.unit; }
+      if (f.scoreAxis && SCORABLE.has(f.type)) {
+        if (f.type === 'number' && f.numRange) {
+          cfg.scoring = [{ axis: f.scoreAxis, range: { min: Number(f.numRange.min) || 0, max: Number(f.numRange.max) || 100, invert: !!f.numRange.invert } }];
+        } else if (f.optionScores) {
+          const map: Record<string, number> = {};
+          for (const [k, val] of Object.entries(f.optionScores)) {
+            if (val != null && String(val) !== '' && Number.isFinite(Number(val))) map[k] = Number(val);
+          }
+          if (Object.keys(map).length) cfg.scoring = [{ axis: f.scoreAxis, map }];
+        }
+      }
+      if (cfg.scoring || cfg.biomarker_code) config[id] = cfg;
       return field;
     });
-    return out;
+    return { fields: out, config };
   }
 
   async function save() {
     if (!title.trim()) { setError('Donnez un titre au formulaire.'); window.scrollTo({ top: 0, behavior: 'smooth' }); return; }
-    const fieldsPayload = buildPayload();
+    const { fields: fieldsPayload, config } = buildPayload();
     if (fieldsPayload.length === 0) { setError('Ajoutez au moins une question avec un libellé.'); return; }
     setSaving(true); setError(null);
     try {
@@ -136,6 +197,14 @@ export function FormBuilder() {
         }),
       });
       if (!res.ok) { const b = await res.json().catch(() => ({})); throw new Error(b?.error?.message || b?.message || `Erreur ${res.status}`); }
+      // Scoring roue + mesures → PATCH dédié (préserve la config imbriquée).
+      const created = await res.json().catch(() => ({}));
+      const formId = (created?.data || created)?.id;
+      if (formId && Object.keys(config).length > 0) {
+        await fetch(API + '/med/forms/' + formId + '/scoring', {
+          method: 'PATCH', headers: authHeaders(true), body: JSON.stringify({ config }),
+        }).catch(() => { /* best-effort : le formulaire est créé, le scoring pourra être re-réglé */ });
+      }
       navigate('/forms', { state: { created: true } });
     } catch (e: any) {
       setError(e?.message || 'Échec de l’enregistrement');
@@ -257,6 +326,64 @@ export function FormBuilder() {
                               </div>
                             ))}
                             <button className="fb-opt-add" onClick={(e) => { e.stopPropagation(); patch(f._uid, { options: [...(f.options || []), `Option ${(f.options?.length || 0) + 1}`] }); }}><Plus size={13} /> Ajouter une option</button>
+                          </div>
+                        )}
+
+                        {/* Champ MESURE → biomarqueur du jumeau */}
+                        {f.type === 'measure' && (
+                          <div style={cfgBox} onClick={(e) => e.stopPropagation()}>
+                            <div style={cfgHead}><Activity size={13} /> Constante mesurée — alimente le jumeau</div>
+                            <select
+                              style={cfgSel}
+                              value={f.biomarker_code || ''}
+                              onChange={(e) => { const b = BIOMARKERS.find((x) => x.code === e.target.value); patch(f._uid, { biomarker_code: e.target.value || undefined, unit: b?.unit }); }}
+                            >
+                              <option value="">— choisir une constante —</option>
+                              {BIOMARKERS.map((b) => <option key={b.code} value={b.code}>{b.label} ({b.unit})</option>)}
+                            </select>
+                          </div>
+                        )}
+
+                        {/* Scoring ROUE — pour les champs scorables */}
+                        {SCORABLE.has(f.type) && (
+                          <div style={cfgBox} onClick={(e) => e.stopPropagation()}>
+                            <div style={cfgHead}><Gauge size={13} /> Alimente la roue de transformation</div>
+                            <select style={cfgSel} value={f.scoreAxis || ''} onChange={(e) => patch(f._uid, { scoreAxis: e.target.value })}>
+                              {AXES.map((a) => <option key={a.value} value={a.value}>{a.label}</option>)}
+                            </select>
+                            {f.scoreAxis && (f.type === 'select' || f.type === 'multi') && (
+                              <div style={{ display: 'flex', flexDirection: 'column', gap: 5, marginTop: 8 }}>
+                                {(f.options || []).filter((o) => o.trim()).map((o, oi) => (
+                                  <div key={oi} style={cfgRow}>
+                                    <span style={cfgLbl}>{o}</span>
+                                    <input type="number" min={0} max={100} placeholder="0-100" style={cfgNum}
+                                      value={f.optionScores?.[o] ?? ''}
+                                      onChange={(e) => patch(f._uid, { optionScores: { ...(f.optionScores || {}), [o]: e.target.value === '' ? (undefined as any) : Number(e.target.value) } })} />
+                                  </div>
+                                ))}
+                                <span style={cfgHint}>Score 0–100 par réponse (moyenné si plusieurs questions visent le même axe).</span>
+                              </div>
+                            )}
+                            {f.scoreAxis && f.type === 'checkbox' && (
+                              <div style={{ ...cfgRow, marginTop: 8 }}>
+                                <span style={cfgLbl}>Coché =</span>
+                                <input type="number" min={0} max={100} placeholder="0-100" style={cfgNum}
+                                  value={f.optionScores?.['true'] ?? ''}
+                                  onChange={(e) => patch(f._uid, { optionScores: { true: e.target.value === '' ? (undefined as any) : Number(e.target.value) } })} />
+                              </div>
+                            )}
+                            {f.scoreAxis && f.type === 'number' && (
+                              <div style={{ display: 'flex', flexDirection: 'column', gap: 5, marginTop: 8 }}>
+                                <div style={cfgRow}><span style={cfgLbl}>Valeur min → 0</span>
+                                  <input type="number" style={cfgNum} value={f.numRange?.min ?? ''} onChange={(e) => patch(f._uid, { numRange: { min: Number(e.target.value), max: f.numRange?.max ?? 100, invert: f.numRange?.invert } })} /></div>
+                                <div style={cfgRow}><span style={cfgLbl}>Valeur max → 100</span>
+                                  <input type="number" style={cfgNum} value={f.numRange?.max ?? ''} onChange={(e) => patch(f._uid, { numRange: { min: f.numRange?.min ?? 0, max: Number(e.target.value), invert: f.numRange?.invert } })} /></div>
+                                <label style={{ ...cfgHint, display: 'inline-flex', alignItems: 'center', gap: 6, cursor: 'pointer' }}>
+                                  <input type="checkbox" checked={!!f.numRange?.invert} onChange={(e) => patch(f._uid, { numRange: { min: f.numRange?.min ?? 0, max: f.numRange?.max ?? 100, invert: e.target.checked } })} />
+                                  Inverser (valeur haute = score bas, ex. stress)
+                                </label>
+                              </div>
+                            )}
                           </div>
                         )}
 

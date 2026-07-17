@@ -8,9 +8,11 @@ const API = import.meta.env.VITE_API_URL || 'http://localhost:4002';
 type FieldDef = {
   key: string;
   label: string;
-  type: 'text' | 'textarea' | 'checkbox' | 'select' | 'multi' | 'signature' | 'number' | 'date';
+  type: 'text' | 'textarea' | 'checkbox' | 'select' | 'multi' | 'signature' | 'number' | 'date' | 'measure';
   required?: boolean;
   options?: string[];
+  unit?: string;
+  biomarker_code?: string;
 };
 
 type FormDef = {
@@ -494,6 +496,26 @@ function FieldRenderer({
           <span style={{ fontSize: 11, color: '#b0aaa2', marginTop: 4, display: 'block' }}>
             Votre signature electronique a valeur juridique.
           </span>
+        </label>
+      );
+    case 'measure':
+      return (
+        <label>
+          {labelEl}
+          <div style={{ position: 'relative' }}>
+            <input
+              type="number"
+              inputMode="decimal"
+              value={(value as string) ?? ''}
+              onChange={(e) => onChange(e.target.value === '' ? null : Number(e.target.value))}
+              style={{ ...baseInput, paddingRight: (field as any).unit ? 54 : undefined }}
+            />
+            {(field as any).unit && (
+              <span style={{ position: 'absolute', right: 13, top: '50%', transform: 'translateY(-50%)', color: '#8a8580', fontSize: 13, fontWeight: 600, pointerEvents: 'none' }}>
+                {(field as any).unit}
+              </span>
+            )}
+          </div>
         </label>
       );
     case 'number':
