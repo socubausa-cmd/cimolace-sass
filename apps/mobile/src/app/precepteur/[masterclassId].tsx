@@ -1,5 +1,6 @@
 import { Feather } from '@expo/vector-icons';
 import { useLocalSearchParams } from 'expo-router';
+import * as Speech from 'expo-speech';
 import { useEffect, useMemo, useState } from 'react';
 import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 
@@ -91,6 +92,7 @@ export default function PrecepteurScreen() {
   const [q, setQ] = useState('');
   const [reply, setReply] = useState<string | null>(null);
   const [asking, setAsking] = useState(false);
+  const [muted, setMuted] = useState(false);
 
   useEffect(() => {
     let alive = true;
@@ -151,6 +153,15 @@ export default function PrecepteurScreen() {
     return () => clearInterval(t);
   }, [idx, full]);
 
+  // Voix du Précepteur — expo-speech (Web Speech API sur web, TTS natif sur device).
+  useEffect(() => {
+    Speech.stop();
+    if (muted || !full) return undefined;
+    Speech.speak(full, { language: 'fr-FR', rate: 0.98 });
+    return () => { Speech.stop(); };
+  }, [idx, full, muted]);
+  useEffect(() => () => { Speech.stop(); }, []);
+
   const knowledge = useMemo(
     () => ({
       title: course?.title || 'ce cours',
@@ -173,7 +184,9 @@ export default function PrecepteurScreen() {
         body: { question, course: knowledge, concept: cur?.conceptTitle || '' },
       });
       if (error) throw error;
-      setReply(String((data as { reply?: string } | null)?.reply || 'Je n’ai pas trouvé la réponse dans ce cours.'));
+      const r = String((data as { reply?: string } | null)?.reply || 'Je n’ai pas trouvé la réponse dans ce cours.');
+      setReply(r);
+      if (!muted) { Speech.stop(); Speech.speak(r, { language: 'fr-FR', rate: 0.98 }); }
     } catch {
       setReply('Je ne peux pas répondre à l’instant — réessaie dans un moment.');
     } finally {
@@ -188,7 +201,12 @@ export default function PrecepteurScreen() {
 
   return (
     <View style={styles.root}>
-      <Text style={styles.mode}>CIMOLACE · MODE FORMATION</Text>
+      <View style={styles.topbar}>
+        <Text style={styles.mode}>CIMOLACE · MODE FORMATION</Text>
+        <Pressable onPress={() => setMuted((m) => !m)} hitSlop={10} style={styles.muteBtn}>
+          <Feather name={muted ? 'volume-x' : 'volume-2'} size={18} color={muted ? C.faint : C.coral} />
+        </Pressable>
+      </View>
       <Pressable style={styles.stage} onPress={cur?.type === 'atelier' ? undefined : advance}>
         <ScrollView contentContainerStyle={styles.stageBody} keyboardShouldPersistTaps="handled">
           <View style={styles.presence} />
@@ -198,7 +216,7 @@ export default function PrecepteurScreen() {
               {!revealed ? (
                 <>
                   <TextInput value={answer} onChangeText={setAnswer} placeholder="Ta réponse…" placeholderTextColor={C.faint} style={styles.answerInput} multiline />
-                  <Pressable onPress={() => setRevealed(true)} style={styles.revealBtn}><Text style={styles.revealTxt}>Voir la réponse</Text></Pressable>
+                  <Pressable onPress={() => { setRevealed(true); if (!muted) { Speech.stop(); Speech.speak(cur.reveal_narration || 'Bien vu.', { language: 'fr-FR', rate: 0.98 }); } }} style={styles.revealBtn}><Text style={styles.revealTxt}>Voir la réponse</Text></Pressable>
                 </>
               ) : (
                 <>
@@ -230,7 +248,9 @@ export default function PrecepteurScreen() {
 const makeStyles = (C: LiriPalette) => StyleSheet.create({
   root: { flex: 1, backgroundColor: C.base },
   center: { flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: C.base },
-  mode: { textAlign: 'center', color: C.coral, fontSize: 11, fontWeight: '800', letterSpacing: 1.4, paddingTop: 56, paddingBottom: 8, fontFamily: F.sans },
+  topbar: { flexDirection: 'row', alignItems: 'center', paddingTop: 54, paddingHorizontal: 18, paddingBottom: 8 },
+  mode: { flex: 1, textAlign: 'center', color: C.coral, fontSize: 11, fontWeight: '800', letterSpacing: 1.4, fontFamily: F.sans, marginLeft: 26 },
+  muteBtn: { width: 26, alignItems: 'flex-end' },
   stage: { flex: 1 },
   stageBody: { flexGrow: 1, justifyContent: 'center', paddingHorizontal: 26, paddingVertical: 30, gap: 22 },
   presence: { alignSelf: 'center', width: 46, height: 46, borderRadius: 23, backgroundColor: C.coralTint, borderWidth: 1, borderColor: C.coral, marginBottom: 8 },
