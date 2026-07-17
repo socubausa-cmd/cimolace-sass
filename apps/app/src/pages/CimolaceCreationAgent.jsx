@@ -2586,7 +2586,7 @@ export default function CimolaceCreationAgent({ tenantSlug: tenantSlugProp = nul
 
       {/* L6 — Scène « réalisée » par l'IA : composition de toute la surface (fond, sous la voix).
          Realm tenant (prorascience) : rendre dès qu'une scène existe (le step Cimolace n'y vit pas). */}
-      {scene && (isTenantRealm || step === 'brain' || step === 'product') && (
+      {scene && !showSplitAction && (isTenantRealm || step === 'brain' || step === 'product') && (
         <SceneStage scene={scene} visible={sceneVisible} readerIdx={readerIdx} setReaderIdx={setReaderIdx}
           onSuggest={isTenantRealm ? vnpChat : brain} onCta={isTenantRealm ? vnpChat : chooseProduct}
           hooks={isTenantRealm ? [] : brainHooks} onHook={isTenantRealm ? vnpChat : brain} onFocus={openFocus}
