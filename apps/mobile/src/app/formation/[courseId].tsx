@@ -87,6 +87,15 @@ export default function CourseDetailScreen() {
               </View>
             </View>
 
+            <Pressable
+              accessibilityRole="button"
+              onPress={() => router.push(`/precepteur/${courseId}` as never)}
+              style={({ pressed }) => [styles.precepteurCta, pressed && styles.pressed]}
+            >
+              <Feather name="message-circle" size={16} color="#fff" />
+              <Text style={styles.precepteurCtaText}>Suivre avec Le Précepteur</Text>
+            </Pressable>
+
             <View style={styles.progressCard}>
               <View style={styles.progressHead}>
                 <Text selectable style={styles.progressTitle}>Ta progression</Text>
@@ -175,6 +184,8 @@ const makeStyles = (C: LiriPalette) => StyleSheet.create({
   stats: { flexDirection: 'row', flexWrap: 'wrap', gap: 10, paddingTop: 4 },
   stat: { flexDirection: 'row', alignItems: 'center', gap: 7, paddingHorizontal: 11, paddingVertical: 8, borderRadius: 12, backgroundColor: C.coralTint },
   statText: { color: C.ink, fontSize: 12, fontWeight: '600', fontFamily: F.sans },
+  precepteurCta: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 9, paddingVertical: 14, borderRadius: 14, backgroundColor: C.coral, ...softShadow },
+  precepteurCtaText: { color: '#fff', fontSize: 14.5, fontWeight: '700', fontFamily: F.sans },
   progressCard: { gap: 10, padding: 16, borderRadius: 18, backgroundColor: C.panel, borderWidth: 1, borderColor: C.line, ...softShadow },
   progressHead: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
   progressTitle: { color: C.ink, fontSize: 15, fontWeight: '700', fontFamily: F.sans },

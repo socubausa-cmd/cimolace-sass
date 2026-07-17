@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 
 import { LiriFonts as F, type LiriPalette } from '@/constants/liri-theme';
+import { fetchCourseCurriculum, type CourseCurriculum } from '@/lib/learning-api';
 import { supabase } from '@/lib/supabase';
 import { useTheme } from '@/lib/theme';
 
@@ -51,6 +52,31 @@ function sceneText(s: Scene | undefined): string {
   return s.board_text || s.narration || '';
 }
 
+const htmlToText = (html?: string): string =>
+  String(html ?? '').replace(/<[^>]+>/g, ' ').replace(/&nbsp;/g, ' ').replace(/&amp;/g, '&').replace(/\s+/g, ' ').trim();
+
+/** Convertit une formation (curriculum modules→leçons) en cours Précepteur (concepts→scènes) :
+ *  chaque support (slides) devient des scènes « leçon ». Permet de JOUER n'importe quel cours au Précepteur. */
+function curriculumToPrecepteur(curr: CourseCurriculum): PrecepteurCourse {
+  const concepts: Concept[] = (curr.modules ?? [])
+    .map((m) => {
+      const scenes: Scene[] = (m.lessons ?? []).flatMap((l) => {
+        const cd = (l.contentData ?? {}) as Record<string, unknown>;
+        const slides = Array.isArray(cd.slides) ? (cd.slides as { title?: string; content?: string }[]) : [];
+        if (l.contentType === 'powerpoint' && slides.length) {
+          return slides.map((s): Scene => ({ type: 'lecon', title: s.title, narration: htmlToText(s.content) || s.title || '' }));
+        }
+        if (l.contentType === 'video') {
+          return [{ type: 'lecon', title: l.title, narration: `Regarde attentivement la vidéo « ${l.title || 'la leçon'} », puis pose-moi tes questions.` } as Scene];
+        }
+        return [{ type: 'lecon', title: l.title, narration: l.title || '' } as Scene];
+      }).filter((s) => (s.narration || '').trim());
+      return { title: m.title || 'Module', scenes };
+    })
+    .filter((c) => c.scenes.length);
+  return { title: curr.course.title || 'Cours', concepts };
+}
+
 export default function PrecepteurScreen() {
   const { masterclassId } = useLocalSearchParams<{ masterclassId?: string }>();
   const { colors: C } = useTheme();
@@ -74,10 +100,30 @@ export default function PrecepteurScreen() {
         setLoading(false);
         return;
       }
+      // 1) Masterclass avec un cours Précepteur enrichi (créé par la Factory web).
       const { data } = await supabase.from('masterclasses').select('precepteur_course').eq('id', masterclassId).maybeSingle();
       if (!alive) return;
       const pc = (data?.precepteur_course ?? null) as PrecepteurCourse | null;
-      setCourse(pc && Array.isArray(pc.concepts) && pc.concepts.length ? pc : DEMO);
+      if (pc && Array.isArray(pc.concepts) && pc.concepts.length) {
+        setCourse(pc);
+        setLoading(false);
+        return;
+      }
+      // 2) Sinon : jouer une FORMATION (structure relationnelle) convertie en scènes.
+      try {
+        const curr = await fetchCourseCurriculum(masterclassId);
+        if (!alive) return;
+        const conv = curriculumToPrecepteur(curr);
+        if ((conv.concepts ?? []).length) {
+          setCourse(conv);
+          setLoading(false);
+          return;
+        }
+      } catch {
+        /* ni masterclass ni formation → démo */
+      }
+      if (!alive) return;
+      setCourse(DEMO);
       setLoading(false);
     };
     void load();
