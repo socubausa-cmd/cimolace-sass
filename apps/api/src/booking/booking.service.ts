@@ -273,11 +273,40 @@ export class BookingService {
       .update(patch)
       .eq('id', appointmentId)
       .eq('tenant_id', tenantId)
-      .select('*')
+      .select('*, booking_slots(start_at)')
       .single();
 
     if (error || !data) throw new NotFoundException('Rendez-vous introuvable');
+
+    // Boucle du parcours : le secrétariat confirme/annule → l'élève est notifié (in-app + email).
+    if (dto.status === 'confirmed' || dto.status === 'cancelled') {
+      void this.notifyAppointmentDecision(tenantId, data);
+    }
     return data;
+  }
+
+  /** Notifie l'ÉLÈVE quand le secrétariat confirme/annule son RDV. Best-effort. */
+  private async notifyAppointmentDecision(tenantId: string, appt: any): Promise<void> {
+    try {
+      const studentId = appt?.student_id;
+      if (!studentId) return;
+      const startAt = appt?.booking_slots?.start_at;
+      const whenTxt = startAt
+        ? ` — ${new Intl.DateTimeFormat('fr-FR', { dateStyle: 'full', timeStyle: 'short', timeZone: 'Europe/Paris' }).format(new Date(startAt))}`
+        : '';
+      const confirmed = appt?.status === 'confirmed';
+      await this.notifications.send(tenantId, studentId, {
+        title: confirmed ? 'Rendez-vous confirmé ✓' : 'Rendez-vous annulé',
+        body: confirmed
+          ? `Ton rendez-vous est confirmé${whenTxt}. À bientôt !`
+          : `Ton rendez-vous${whenTxt} a été annulé par le secrétariat. Tu peux refaire une demande quand tu veux.`,
+        type: confirmed ? 'success' : 'info',
+        email: true,
+        actionUrl: '/liri/rendez-vous',
+      });
+    } catch (e) {
+      this.logger.warn(`RDV decision notif: ${(e as Error).message}`);
+    }
   }
 
   async listAppointments(
