@@ -26,15 +26,15 @@ export class CimolaceBackofficeController {
 
   @Get('clients') listClients() { return this.svc.listClients(); }
   @Post('clients') createClient(@Body() d: CreateClientDto) { return this.svc.createClient(d); }
-  @Patch('clients/:id') updateClient(@Param('id') id: string, @Body() d: UpdateClientDto) { return this.svc.updateClient(id, d); }
+  @Patch('clients/:id') updateClient(@Req() req: any, @Param('id') id: string, @Body() d: UpdateClientDto) { return this.svc.updateClient(id, d, req.user?.email ?? req.user?.id ?? undefined); }
   @Get('sites') listSites() { return this.svc.listSites(); }
   @Get('clients/:clientId/sites') getClientSites(@Param('clientId') cid: string) { return this.svc.getClientSites(cid); }
   @Get('clients/:id/control-plane') getControlPlane(@Param('id') id: string) { return this.svc.getClientControlPlane(id); }
   @Get('clients/:id/diagnostics') getDiagnostics(@Param('id') id: string) { return this.svc.getClientDiagnostics(id); }
-  @Post('clients/:id/invoices') createInvoice(@Param('id') id: string, @Body() body: any) { return this.svc.createTenantInvoice(id, body); }
-  @Patch('clients/:clientId/services/:serviceId') updateService(@Param('clientId') cid: string, @Param('serviceId') sid: string, @Body() body: any) { return this.svc.updateTenantService(cid, sid, body); }
-  @Post('clients/:id/operations') runOperation(@Param('id') id: string, @Body() body: any) { return this.svc.runTenantOperation(id, body); }
-  @Post('clients/:id/tickets') createTicket(@Param('id') id: string, @Body() body: any) { return this.svc.createTenantTicket(id, body); }
+  @Post('clients/:id/invoices') createInvoice(@Req() req: any, @Param('id') id: string, @Body() body: any) { return this.svc.createTenantInvoice(id, body, req.user?.email ?? req.user?.id ?? undefined); }
+  @Patch('clients/:clientId/services/:serviceId') updateService(@Req() req: any, @Param('clientId') cid: string, @Param('serviceId') sid: string, @Body() body: any) { return this.svc.updateTenantService(cid, sid, body, req.user?.email ?? req.user?.id ?? undefined); }
+  @Post('clients/:id/operations') runOperation(@Req() req: any, @Param('id') id: string, @Body() body: any) { return this.svc.runTenantOperation(id, body, req.user?.email ?? req.user?.id ?? undefined); }
+  @Post('clients/:id/tickets') createTicket(@Req() req: any, @Param('id') id: string, @Body() body: any) { return this.svc.createTenantTicket(id, body, req.user?.email ?? req.user?.id ?? undefined); }
   @Post('clients/:id/credentials') createCredential(@Param('id') id: string, @Body() body: any) { return this.svc.createCredentialReference(id, body); }
   @Post('clients/:clientId/credentials/:credentialId/rotate') rotateCredential(@Param('clientId') cid: string, @Param('credentialId') credId: string, @Body() body: any) { return this.svc.rotateCredential(cid, credId, body); }
   @Post('clients/:id/school-model/activate-engines') smEngines(@Param('id') id: string, @Body() body: any) { return this.svc.activateSchoolModelEngines(id, body); }

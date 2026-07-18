@@ -180,14 +180,14 @@ export class CimolaceBackofficeService {
     return data;
   }
 
-  async updateClient(clientId: string, dto: UpdateClientDto) {
+  async updateClient(clientId: string, dto: UpdateClientDto, actor?: string) {
     const patch: any = {};
     if (dto.name) patch.name = dto.name;
     if (dto.email !== undefined) patch.email = dto.email;
     if (dto.status) patch.status = dto.status;
     const { data, error } = await (this.supabase.client as any).from('cimolace_clients').update(patch).eq('id', clientId).select('*').single();
     if (error || !data) throw new NotFoundException('Client introuvable');
-    await this.logChange(clientId, 'client:update', `Fiche client mise à jour (${Object.keys(patch).join(', ') || '—'})`);
+    await this.logChange(clientId, 'client:update', `Fiche client mise à jour (${Object.keys(patch).join(', ') || '—'})`, actor);
     return data;
   }
 
@@ -210,14 +210,17 @@ export class CimolaceBackofficeService {
   }
 
   /** Journalise une action opérateur dans cimolace_change_history (best-effort). */
-  private async logChange(clientId: string, action: string, description: string, changedBy = 'Cimolace Ops') {
+  // SÉCURITÉ §15 : audit ATTRIBUABLE — `actor` = email/id de l'opérateur (req.user),
+  // pour savoir QUI a suspendu/facturé/basculé un tenant. À défaut → 'Cimolace Ops (non attribué)'
+  // (rend visible toute écriture non tracée au lieu de la masquer sous un libellé générique).
+  private async logChange(clientId: string, action: string, description: string, actor?: string) {
     try {
       await (this.supabase.client as any).from('cimolace_change_history').insert({
         action,
         entity_type: 'cimolace_client',
         entity_id: clientId,
         description,
-        changed_by: changedBy,
+        changed_by: (actor && actor.trim()) || 'Cimolace Ops (non attribué)',
       });
     } catch {
       /* journalisation best-effort : ne bloque jamais l'opération */
@@ -583,7 +586,7 @@ export class CimolaceBackofficeService {
    * Crée une facture manuelle billing_invoices pour le tenant applicatif du
    * client. Accepte `amount` (unités) ou `amount_cents`.
    */
-  async createTenantInvoice(clientId: string, dto: any) {
+  async createTenantInvoice(clientId: string, dto: any, actor?: string) {
     const client = await this.getClientOrThrow(clientId);
     if (!client.tenant_id) {
       throw new BadRequestException('Tenant applicatif requis pour créer une facture.');
@@ -609,7 +612,7 @@ export class CimolaceBackofficeService {
       .select('*')
       .single();
     if (error) throw new BadRequestException(error.message);
-    await this.logChange(clientId, 'invoice:create', `Facture ${data.invoice_number ?? data.id} créée`);
+    await this.logChange(clientId, 'invoice:create', `Facture ${data.invoice_number ?? data.id} créée`, actor);
     return data;
   }
 
@@ -619,7 +622,7 @@ export class CimolaceBackofficeService {
    * `{ active: boolean }`. Renvoie la ligne mappée (status/config) comme
    * dans le control plane.
    */
-  async updateTenantService(clientId: string, serviceId: string, dto: any) {
+  async updateTenantService(clientId: string, serviceId: string, dto: any, actor?: string) {
     const client = await this.getClientOrThrow(clientId);
     if (!client.tenant_id) {
       throw new BadRequestException('Tenant applicatif requis pour gérer les moteurs.');
@@ -642,7 +645,7 @@ export class CimolaceBackofficeService {
       .maybeSingle();
     if (error) throw new BadRequestException(error.message);
     if (!data) throw new NotFoundException('Moteur introuvable pour ce tenant');
-    await this.logChange(clientId, `service:${data.active ? 'active' : 'suspended'}`, `Moteur ${data.service_key} → ${data.active ? 'actif' : 'suspendu'}`);
+    await this.logChange(clientId, `service:${data.active ? 'active' : 'suspended'}`, `Moteur ${data.service_key} → ${data.active ? 'actif' : 'suspendu'}`, actor);
     return {
       ...data,
       status: data.active ? 'active' : 'suspended',
@@ -659,7 +662,7 @@ export class CimolaceBackofficeService {
    * `record_readiness_check` (journal dans tenants.metadata.readiness).
    * Ne renvoie PAS `controlPlane` → le frontend recharge l'état après coup.
    */
-  async runTenantOperation(clientId: string, dto: any) {
+  async runTenantOperation(clientId: string, dto: any, actor?: string) {
     const client = await this.getClientOrThrow(clientId);
     const tenantId: string | null = client.tenant_id ?? null;
     const db = this.supabase.client as any;
@@ -726,7 +729,7 @@ export class CimolaceBackofficeService {
     }
 
     if (done.length) {
-      await this.logChange(clientId, `operation:${done[0]}`, `Opération(s): ${done.join(', ')}${dto?.reason ? ` — ${dto.reason}` : ''}`);
+      await this.logChange(clientId, `operation:${done[0]}`, `Opération(s): ${done.join(', ')}${dto?.reason ? ` — ${dto.reason}` : ''}`, actor);
     }
     return { ok: true, operations: done, reason: dto?.reason ?? null, at: now };
   }
@@ -735,7 +738,7 @@ export class CimolaceBackofficeService {
    * Crée un ticket support (cimolace_tickets) rattaché au client via
    * `contact_email` (le control plane relit les tickets par cet email).
    */
-  async createTenantTicket(clientId: string, dto: any) {
+  async createTenantTicket(clientId: string, dto: any, actor?: string) {
     const client = await this.getClientOrThrow(clientId);
     const db = this.supabase.client as any;
     const { data: sites } = await db.from('cimolace_sites').select('id').eq('client_id', clientId).limit(1);
@@ -758,7 +761,7 @@ export class CimolaceBackofficeService {
       .select('*')
       .single();
     if (error) throw new BadRequestException(error.message);
-    await this.logChange(clientId, 'ticket:create', `Ticket ${data.ticket_number ?? data.id} créé : ${data.subject ?? ''}`);
+    await this.logChange(clientId, 'ticket:create', `Ticket ${data.ticket_number ?? data.id} créé : ${data.subject ?? ''}`, actor);
     return data;
   }
 

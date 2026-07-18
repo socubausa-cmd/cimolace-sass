@@ -182,20 +182,25 @@ export class ApiKeyGuard implements CanActivate {
     }
 
     // ─── Least-privilege : scope moteur par préfixe de clé ────────────────────
-    // Une clé `mbk_`/`mdk_` ne doit pas ouvrir un autre moteur (cml_ = wildcard).
-    // Déployé en OBSERVE (warn) par défaut → 0 régression ; passe en 403 dur via
-    // API_KEY_SCOPE_ENFORCE=1 une fois les logs confirmés propres.
+    // Une clé `mbk_`/`mdk_` ne doit pas ouvrir un autre moteur (cml_ = wildcard) —
+    // sinon une clé mbolo fuitée atteint les endpoints MEDOS/PHI. ENFORCE PAR DÉFAUT
+    // (fail-closed) ; échappatoire instantanée sans redeploy : API_KEY_SCOPE_ENFORCE=0
+    // (repasse en OBSERVE si une intégration légitime venait à casser).
     const reqPath = req.originalUrl || req.path || (req as any).url || '';
     const violation = apiKeyScopeViolation(raw, reqPath);
     if (violation) {
-      if (process.env.API_KEY_SCOPE_ENFORCE === '1') {
+      if (process.env.API_KEY_SCOPE_ENFORCE !== '0') {
+        this.logger.warn(
+          `[api-key scope] BLOQUÉ clé ${violation.keyEngine} sur endpoint ${violation.endpointEngine} ` +
+            `(tenant=${key.tenant_id}, key=${key.id})`,
+        );
         throw new ForbiddenException(
           `Clé « ${violation.keyEngine} » non autorisée sur un endpoint « ${violation.endpointEngine} ». Utilisez une clé cml_ (générique) ou ${violation.endpointEngine}.`,
         );
       }
       this.logger.warn(
         `[api-key scope] clé ${violation.keyEngine} sur endpoint ${violation.endpointEngine} ` +
-          `(tenant=${key.tenant_id}, key=${key.id}) — OBSERVÉ (flip API_KEY_SCOPE_ENFORCE=1 pour bloquer)`,
+          `(tenant=${key.tenant_id}, key=${key.id}) — OBSERVÉ (API_KEY_SCOPE_ENFORCE=0)`,
       );
     }
 
