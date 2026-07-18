@@ -1,13 +1,17 @@
 import { Injectable, NotFoundException, BadRequestException, InternalServerErrorException } from '@nestjs/common';
 import { createHash, randomBytes } from 'crypto';
 import { SupabaseService } from '../supabase/supabase.service';
+import { LiriEntitlementsService } from '../billing/liri-entitlements.service';
 
 const STOREFRONT_BASE = 'https://api.cimolace.space/v1/mbolo/storefront';
 const MBOLO_DOCS_URL = 'https://cimolace.space/mbolo/integration';
 
 @Injectable()
 export class MboloService {
-  constructor(private readonly supabase: SupabaseService) {}
+  constructor(
+    private readonly supabase: SupabaseService,
+    private readonly entitlements: LiriEntitlementsService,
+  ) {}
 
   /**
    * « Installer Mbolo » — provisionne tout ce qu'il faut pour connecter un site
@@ -130,6 +134,10 @@ export class MboloService {
   }
   async createProduct(tenantId: string, dto: any) {
     if (!dto?.name || dto?.priceCents == null) throw new BadRequestException('name et priceCents requis');
+    // PLAFOND D'OFFRE (monétisation) : cap catalog_size du plan (ex. cimolace-mbolo-marche-local = 50).
+    const { count: productCount } = await (this.supabase.client as any)
+      .from('mbolo_products').select('id', { count: 'exact', head: true }).eq('tenant_id', tenantId);
+    await this.entitlements.assertWithinCap(tenantId, 'catalog_size', productCount ?? 0);
     const { data, error } = await (this.supabase.client as any).from('mbolo_products').insert({
       tenant_id: tenantId,
       name: dto.name,

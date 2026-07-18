@@ -10,6 +10,7 @@ import {
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { SupabaseService } from '../supabase/supabase.service';
+import { LiriEntitlementsService } from '../billing/liri-entitlements.service';
 import { NotificationsService } from '../notifications/notifications.service';
 import { TwinService } from './twin/twin.service';
 import {
@@ -91,6 +92,7 @@ export class MedosService {
     private readonly config: ConfigService,
     private readonly notifications: NotificationsService,
     private readonly twin: TwinService,
+    private readonly entitlements: LiriEntitlementsService,
   ) {}
 
   /**
@@ -246,6 +248,13 @@ export class MedosService {
         dto.last_name,
       );
     }
+
+    // PLAFOND D'OFFRE (monétisation) : cap `patients` du plan (ex. cimolace-medos-solo-local = 200).
+    const { count: patientCount } = await this.supabase.client
+      .from('med_patients')
+      .select('id', { count: 'exact', head: true })
+      .eq('tenant_id', tenant.id);
+    await this.entitlements.assertWithinCap(tenant.id, 'patients', patientCount ?? 0);
 
     const { data, error } = await this.supabase.client
       .from('med_patients')

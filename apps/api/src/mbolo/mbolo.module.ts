@@ -8,6 +8,7 @@ import { AuthModule } from '../auth/auth.module';
 // Mbolo routes ALL video through Liri. We never import LiveKitModule here
 // — that would re-introduce the bypass the P5 refactor eliminated for MEDOS.
 import { LiveModule } from '../live/live.module';
+import { LiriEntitlementsModule } from '../billing/liri-entitlements.module';
 // ApiKeyGuard authentifie les appels storefront par clé API tenant (mbk_…).
 // Sa seule dépendance est SupabaseService (fourni par SupabaseModule, importé ici).
 import { ApiKeyGuard } from '../auth/api-key.guard';
@@ -20,7 +21,7 @@ import { MboloLiveController } from './mbolo-live.controller';
 import { MboloLiveService } from './mbolo-live.service';
 
 @Module({
-  imports: [SupabaseModule, TenantModule, AuthModule, LiveModule],
+  imports: [SupabaseModule, TenantModule, AuthModule, LiveModule, LiriEntitlementsModule],
   providers: [MboloService, MboloLiveService, ApiKeyGuard, EngineEnabledGuard],
   controllers: [MboloController, MboloStorefrontController, MboloEmbedController, MboloLiveController],
   exports: [MboloService],

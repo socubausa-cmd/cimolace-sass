@@ -6,6 +6,7 @@ import { TenantGuard } from '../common/guards/tenant.guard';
 import { RolesGuard } from '../common/guards/roles.guard';
 import { Roles } from '../common/decorators/roles.decorator';
 import { SupabaseService } from '../supabase/supabase.service';
+import { LiriEntitlementsService } from '../billing/liri-entitlements.service';
 
 /**
  * Back-office TENANT (self-service) — endpoints scoped au tenant courant via
@@ -21,7 +22,10 @@ import { SupabaseService } from '../supabase/supabase.service';
 @Controller('tenant-portal')
 @UseGuards(JwtAuthGuard, TenantGuard, RolesGuard)
 export class TenantPortalController {
-  constructor(private readonly supabase: SupabaseService) {}
+  constructor(
+    private readonly supabase: SupabaseService,
+    private readonly entitlements: LiriEntitlementsService,
+  ) {}
 
   private get db(): any {
     return this.supabase.client as any;
@@ -252,6 +256,62 @@ export class TenantPortalController {
     };
   }
 
+  /**
+   * Annuaire messagerie — LISIBLE PAR TOUT MEMBRE actif (pas de @Roles ; reste
+   * borné par JwtAuthGuard + TenantGuard = membership active + scope tenant).
+   * Distinct de `members` (owner/admin, gestion d'équipe : annuaire complet + emails).
+   *
+   * Rôle-aware & fail-fermé côté vie privée :
+   *  - Le STAFF (owner/admin/teacher/secretariat) voit TOUS les membres (il enseigne /
+   *    encadre) et reçoit les emails (comme `members`).
+   *  - Un NON-staff (student/member/viewer…) ne voit QUE le staff joignable — jamais
+   *    l'annuaire des pairs. On ne fuit donc AUCUN email d'élève à un autre élève.
+   *
+   * Sert le sélecteur de destinataire de la messagerie (MessagingContext) : un élève
+   * doit pouvoir écrire à son/ses formateur(s) SANS recevoir 403 sur `members`
+   * (même classe de bug que le menu école, cf. tenant-services gardé owner/admin).
+   */
+  @Get('directory')
+  async directory(@Req() req: any) {
+    // Rôles STAFF = joignables par tous + voient tout le monde. Volontairement LARGE
+    // (couvre école ET clinique MEDOS) mais N'INCLUT JAMAIS les rôles « end-user »
+    // pairs (student, patient, member, viewer) — eux ne voient QUE le staff.
+    const STAFF = new Set([
+      'owner', 'admin', 'teacher', 'practitioner', 'clinic_admin', 'receptionist', 'secretariat',
+    ]);
+    const viewerIsStaff = STAFF.has(req.tenant?.userRole);
+    const { data: memberships } = await this.db
+      .from('tenant_memberships')
+      .select('user_id, role, status, created_at')
+      .eq('tenant_id', req.tenant.id)
+      .eq('status', 'active')
+      .order('created_at', { ascending: true });
+    let rows = memberships ?? [];
+    // Non-staff : ne voit que le staff joignable (pas les pairs).
+    if (!viewerIsStaff) rows = rows.filter((m: any) => STAFF.has(m.role));
+    const ids = rows.map((m: any) => m.user_id).filter(Boolean);
+    let profiles: any[] = [];
+    if (ids.length) {
+      const { data } = await this.db.from('profiles').select('id, email, full_name').in('id', ids);
+      profiles = data ?? [];
+    }
+    const byId: Record<string, any> = Object.fromEntries(profiles.map((p: any) => [p.id, p]));
+    return {
+      data: rows.map((m: any) => {
+        // Email exposé au staff (annuaire complet) OU quand le membre listé est du
+        // staff (contact officiel joignable par l'élève). Jamais l'email d'un pair élève.
+        const exposeEmail = viewerIsStaff || STAFF.has(m.role);
+        return {
+          user_id: m.user_id,
+          role: m.role,
+          status: m.status,
+          email: exposeEmail ? (byId[m.user_id]?.email ?? null) : null,
+          full_name: byId[m.user_id]?.full_name ?? null,
+        };
+      }),
+    };
+  }
+
   /** Ajoute un membre par email (l'utilisateur doit déjà avoir un compte). Owner/admin. */
   @Post('members')
   async inviteMember(@Req() req: any, @Body() body: { email?: string; role?: string }) {
@@ -274,6 +334,15 @@ export class TenantPortalController {
     if (existing?.id) {
       await this.db.from('tenant_memberships').update({ role, status: 'active' }).eq('id', existing.id);
     } else {
+      // PLAFOND D'OFFRE (monétisation) : cap `seats` du plan (membres d'équipe = tout sauf
+      // élèves/patients/visiteurs). Ex. cimolace-medos-solo-local = 1, ecole-petite-local = 2.
+      const { count: seatCount } = await this.db
+        .from('tenant_memberships')
+        .select('id', { count: 'exact', head: true })
+        .eq('tenant_id', req.tenant.id)
+        .eq('status', 'active')
+        .not('role', 'in', '("student","patient","visitor")');
+      await this.entitlements.assertWithinCap(req.tenant.id, 'seats', seatCount ?? 0);
       await this.db.from('tenant_memberships').insert({ tenant_id: req.tenant.id, user_id: prof.id, role, status: 'active' });
     }
     return { data: { ok: true, email, role } };

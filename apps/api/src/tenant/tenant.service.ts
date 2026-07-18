@@ -1,5 +1,6 @@
 import { Injectable, ForbiddenException } from "@nestjs/common";
 import { AuthService } from "../auth/auth.service";
+import { LiriEntitlementsService } from "../billing/liri-entitlements.service";
 import { canonicalTenantSlug } from "./tenant-slug-aliases";
 
 /**
@@ -30,7 +31,10 @@ export function isPlatformOrigin(originOrReferer: string | undefined): boolean {
 
 @Injectable()
 export class TenantService {
-  constructor(private authService: AuthService) {}
+  constructor(
+    private authService: AuthService,
+    private entitlements: LiriEntitlementsService,
+  ) {}
 
   async resolveTenant(userId: string, tenantSlug?: string) {
     const supabase = this.authService.getClient();
@@ -161,6 +165,16 @@ export class TenantService {
       }
       return { ok: true, joined: false, role: (existing as any).role };
     }
+    // PLAFOND D'OFFRE (monétisation) : bloque le énième étudiant au-delà du cap du plan
+    // (ex. cimolace-ecole-petite-local = 80). Cap absent (plan premium) = illimité. 403 si atteint.
+    const { count: studentCount } = await supabase
+      .from("tenant_memberships")
+      .select("id", { count: "exact", head: true })
+      .eq("tenant_id", tenantId)
+      .eq("role", "student")
+      .eq("status", "active");
+    await this.entitlements.assertWithinCap(tenantId, "students", studentCount ?? 0);
+
     const { error } = await supabase
       .from("tenant_memberships")
       .insert({ tenant_id: tenantId, user_id: userId, role: "student", status: "active" });
