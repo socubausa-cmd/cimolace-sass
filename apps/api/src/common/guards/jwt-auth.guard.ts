@@ -41,6 +41,10 @@ export class JwtAuthGuard implements CanActivate {
         tenant_id: medosPayload.tenant_id,
         tenant_slug: medosPayload.tenant_slug,
         _source: 'medos',
+        // Impersonation encadrée (§15) : rendre le contexte visible aux endpoints/audit/bannière.
+        ...(medosPayload.imp
+          ? { impersonation: { active: true, operator: medosPayload.impersonator ?? null, reason: medosPayload.imp_reason ?? null } }
+          : {}),
       };
       return true;
     }

@@ -35,6 +35,11 @@ export class CimolaceBackofficeController {
   @Patch('clients/:clientId/services/:serviceId') updateService(@Req() req: any, @Param('clientId') cid: string, @Param('serviceId') sid: string, @Body() body: any) { return this.svc.updateTenantService(cid, sid, body, req.user?.email ?? req.user?.id ?? undefined); }
   @Post('clients/:id/operations') runOperation(@Req() req: any, @Param('id') id: string, @Body() body: any) { return this.svc.runTenantOperation(id, body, req.user?.email ?? req.user?.id ?? undefined); }
   @Post('clients/:id/tickets') createTicket(@Req() req: any, @Param('id') id: string, @Body() body: any) { return this.svc.createTenantTicket(id, body, req.user?.email ?? req.user?.id ?? undefined); }
+
+  // ─── Impersonation encadrée (§15) — motif obligatoire, durée bornée, log début+fin ───
+  @Post('clients/:id/impersonate') startImpersonation(@Req() req: any, @Param('id') id: string, @Body() body: { reason?: string; durationMinutes?: number; role?: string }) { return this.svc.startImpersonation({ id: req.user?.id, email: req.user?.email }, id, body || {}); }
+  @Post('clients/:id/impersonate/end') endImpersonation(@Req() req: any, @Param('id') id: string, @Body() body: { reason?: string }) { return this.svc.endImpersonation({ id: req.user?.id, email: req.user?.email }, id, body || {}); }
+  @Get('impersonations/active') activeImpersonations() { return this.svc.listActiveImpersonations(); }
   @Post('clients/:id/credentials') createCredential(@Param('id') id: string, @Body() body: any) { return this.svc.createCredentialReference(id, body); }
   @Post('clients/:clientId/credentials/:credentialId/rotate') rotateCredential(@Param('clientId') cid: string, @Param('credentialId') credId: string, @Body() body: any) { return this.svc.rotateCredential(cid, credId, body); }
   @Post('clients/:id/school-model/activate-engines') smEngines(@Param('id') id: string, @Body() body: any) { return this.svc.activateSchoolModelEngines(id, body); }

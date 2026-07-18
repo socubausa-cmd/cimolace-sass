@@ -3,6 +3,7 @@ import { randomUUID } from 'crypto';
 import { SupabaseService } from '../supabase/supabase.service';
 import { PawaPayService } from '../pawapay/pawapay.service';
 import { AirtelMoneyService } from '../airtel/airtel.service';
+import { AuthService } from '../auth/auth.service';
 import { CreateClientDto, UpdateClientDto } from './dto/backoffice.dto';
 import { ProvisionSchoolDto } from './dto/provision-school.dto';
 import type { InitiateSchoolCheckoutDto } from './school-onboarding.controller';
@@ -22,7 +23,88 @@ export class CimolaceBackofficeService {
     private readonly supabase: SupabaseService,
     private readonly pawapay: PawaPayService,
     private readonly airtel: AirtelMoneyService,
+    private readonly auth: AuthService,
   ) {}
+
+  // ─── IMPERSONATION ENCADRÉE (§15) ─────────────────────────────────────────
+  // « Agir en tant que tenant » JAMAIS silencieux : motif obligatoire, durée bornée,
+  // token court-terme, log dédié au début ET à la fin, expiration automatique.
+  private static readonly IMP_MAX_MINUTES = 120;
+  private static readonly IMP_DEFAULT_MINUTES = 30;
+
+  async startImpersonation(
+    operator: { id?: string; email?: string } | null,
+    clientId: string,
+    dto: { reason?: string; durationMinutes?: number; role?: string },
+  ) {
+    const operatorEmail = String(operator?.email || '').trim();
+    const operatorId = String(operator?.id || '').trim();
+    if (!operatorEmail && !operatorId) throw new BadRequestException('Opérateur non identifié.');
+    const reason = String(dto?.reason || '').trim();
+    if (reason.length < 5) throw new BadRequestException('Motif d’impersonation obligatoire (≥ 5 caractères).');
+
+    const client = await this.getClientOrThrow(clientId);
+    const tenantId: string | null = client.tenant_id ?? null;
+    if (!tenantId) throw new BadRequestException('Ce client n’a pas de tenant applicatif à impersonater.');
+    const { data: tenant } = await (this.supabase.client as any)
+      .from('tenants').select('id, slug, name').eq('id', tenantId).maybeSingle();
+    if (!tenant) throw new NotFoundException('Tenant introuvable.');
+
+    // Rôle d'impersonation borné (défaut admin : voir/dépanner sans être owner). owner sur demande.
+    const role = dto?.role === 'owner' ? 'owner' : 'admin';
+    const minutes = Math.min(
+      CimolaceBackofficeService.IMP_MAX_MINUTES,
+      Math.max(5, Number(dto?.durationMinutes) || CimolaceBackofficeService.IMP_DEFAULT_MINUTES),
+    );
+    const token = this.auth.generateImpersonationToken(
+      { operatorId: operatorId || operatorEmail, operatorEmail: operatorEmail || operatorId, tenantId, tenantSlug: tenant.slug, role, reason },
+      minutes,
+    );
+    const expiresAt = new Date(Date.now() + minutes * 60 * 1000).toISOString();
+
+    // LOG DÉDIÉ (attribuable, entity=tenant) — début d'impersonation.
+    await this.logChange(
+      clientId,
+      'impersonation:start',
+      `Impersonation de « ${tenant.name || tenant.slug} » (rôle ${role}, ${minutes} min) — motif : ${reason}`,
+      operatorEmail || operatorId,
+    );
+
+    return { token, tenantId, tenantSlug: tenant.slug, tenantName: tenant.name ?? null, role, reason, expiresAt };
+  }
+
+  async endImpersonation(
+    operator: { id?: string; email?: string } | null,
+    clientId: string,
+    dto: { reason?: string },
+  ) {
+    const operatorLabel = String(operator?.email || operator?.id || '').trim();
+    const client = await this.getClientOrThrow(clientId);
+    await this.logChange(
+      clientId,
+      'impersonation:end',
+      `Fin d’impersonation${dto?.reason ? ` — ${String(dto.reason).trim()}` : ''}`,
+      operatorLabel || undefined,
+    );
+    return { ok: true, clientId, tenantId: client.tenant_id ?? null };
+  }
+
+  /** Oversight : impersonations démarrées récemment sans fin correspondante (best-effort). */
+  async listActiveImpersonations() {
+    const since = new Date(Date.now() - CimolaceBackofficeService.IMP_MAX_MINUTES * 60 * 1000).toISOString();
+    const { data } = await (this.supabase.client as any)
+      .from('cimolace_change_history')
+      .select('entity_id, action, description, changed_by, created_at')
+      .in('action', ['impersonation:start', 'impersonation:end'])
+      .gte('created_at', since)
+      .order('created_at', { ascending: false });
+    const rows = (data as any[]) || [];
+    const endedTenants = new Set(rows.filter((r) => r.action === 'impersonation:end').map((r) => r.entity_id));
+    const active = rows
+      .filter((r) => r.action === 'impersonation:start' && !endedTenants.has(r.entity_id))
+      .map((r) => ({ tenantId: r.entity_id, operator: r.changed_by, description: r.description, startedAt: r.created_at }));
+    return { active, windowMinutes: CimolaceBackofficeService.IMP_MAX_MINUTES };
+  }
 
   // ─── Finances PLATEFORME (console SaaS Cimolace) ──────────────────────────
   private static ZERO_DECIMAL = new Set(['XAF', 'XOF', 'XPF', 'BIF', 'CLP', 'DJF', 'GNF', 'JPY', 'KMF', 'KRW', 'MGA', 'PYG', 'RWF', 'UGX', 'VND', 'VUV']);

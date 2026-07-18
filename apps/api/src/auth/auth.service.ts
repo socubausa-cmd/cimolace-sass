@@ -12,6 +12,10 @@ export interface MedosTokenPayload {
   tenant_id: string;
   tenant_slug: string;
   iss: 'medos';
+  // ─── Impersonation encadrée (§15) — présents UNIQUEMENT sur un token opérateur ───
+  imp?: true;              // marque « ce token est une impersonation »
+  impersonator?: string;   // email/id de l'opérateur Cimolace RÉEL
+  imp_reason?: string;     // motif obligatoire (traçabilité)
 }
 
 /** Identité Cimolace enrichie renvoyée par GET /auth/me. */
@@ -218,6 +222,35 @@ export class AuthService {
       membershipRole = null; // fail-closed : pas de membership prouvé → rôle plancher
     }
     return capMedosRole(membershipRole, requestedRole);
+  }
+
+  /**
+   * IMPERSONATION ENCADRÉE (§15) : token opérateur court-terme pour « agir en tant que
+   * tenant ». Émis en iss=medos (donc accepté par le JwtAuthGuard commun sur la surface
+   * tenant), mais porte `imp:true` + l'identité RÉELLE de l'opérateur + le motif, pour que
+   * chaque garde/audit/bannière sache que c'est une impersonation tracée. `sub` = opérateur
+   * (les actions restent imputables à l'opérateur) ; `tenant_id` = tenant cible.
+   */
+  generateImpersonationToken(
+    payload: { operatorId: string; operatorEmail: string; tenantId: string; tenantSlug: string; role: string; reason: string },
+    expiresInMinutes: number,
+  ): string {
+    if (!this.jwtSecret) throw new Error('MEDOS_JWT_SECRET manquant');
+    const body: MedosTokenPayload = {
+      sub: payload.operatorId,
+      email: payload.operatorEmail,
+      role: payload.role,
+      tenant_id: payload.tenantId,
+      tenant_slug: payload.tenantSlug,
+      iss: 'medos',
+      imp: true,
+      impersonator: payload.operatorEmail || payload.operatorId,
+      imp_reason: payload.reason,
+    };
+    return jwt.sign(body, this.jwtSecret, {
+      expiresIn: `${Math.max(1, Math.round(expiresInMinutes))}m`,
+      algorithm: 'HS256',
+    });
   }
 
   /** Vérifie un JWT émis par MedOS (pont tenant externe). */
