@@ -760,6 +760,9 @@ export const cimolaceBackofficeApi = {
     apiV2.post<ApiEnvelope<any>>(`/cimolace-backoffice/clients/${clientId}/credentials/${credentialId}/rotate`, body).then(unwrap),
   createTenantTicket: (clientId: string, body: Record<string, unknown>) =>
     apiV2.post<ApiEnvelope<any>>(`/cimolace-backoffice/clients/${clientId}/tickets`, body).then(unwrap),
+  // Impersonation encadrée (§15) — démarre une session (motif obligatoire) et renvoie le token + contexte.
+  startImpersonation: (clientId: string, body: { reason: string; durationMinutes?: number; role?: string }) =>
+    apiV2.post<ApiEnvelope<any>>(`/cimolace-backoffice/clients/${clientId}/impersonate`, body).then(unwrap),
   createTenantInvoice: (clientId: string, body: Record<string, unknown>) =>
     apiV2.post<ApiEnvelope<any>>(`/cimolace-backoffice/clients/${clientId}/invoices`, body).then(unwrap),
   listSites: () => apiV2.get<ApiEnvelope<any[]>>('/cimolace-backoffice/sites').then(unwrap),

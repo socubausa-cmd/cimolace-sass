@@ -521,6 +521,8 @@ const SignupPage = lazy(() => import('@/pages/SignupPage'));
 const OnboardingOrgPage = lazy(() => import('@/pages/OnboardingOrgPage'));
 const CimolaceCreationAgent = lazy(() => import('@/pages/CimolaceCreationAgent'));
 const CimolaceSubscribeSuccessPage = lazy(() => import('@/pages/cimolace/CimolaceSubscribeSuccessPage'));
+const ImpersonateBootstrap = lazy(() => import('@/pages/cimolace/ImpersonateBootstrap'));
+const ImpersonationBanner = lazy(() => import('@/components/cimolace/ImpersonationBanner'));
 const LiriLandingPage = lazy(() => import('@/pages/LiriLandingPage'));
 const JoinOrgPage = lazy(() => import('@/pages/JoinOrgPage'));
 const ForgotPasswordPage = lazy(() => import('@/pages/ForgotPasswordPage'));
@@ -730,6 +732,7 @@ const AdminIriBuilderPage = lazy(() => import('@/pages/admin/IriBuilderPage'));
 const IriPublicPage = lazy(() => import('@/pages/public/IriPublicPage'));
 const AdminCommunitiesPage = lazy(() => import('@/pages/admin/AdminCommunitiesPage'));
 const AdminMarketingPage = lazy(() => import('@/pages/admin/AdminMarketingPage'));
+const LiriCrmPage = lazy(() => import('@/pages/liri/LiriCrmPage'));
 const AdminTenantEmbedPage = lazy(() => import('@/pages/admin/AdminTenantEmbedPage'));
 const AdminTenantBrandingPage = lazy(() => import('@/pages/admin/AdminTenantBrandingPage'));
 const MarketingToolsSuitePage = lazy(() => import('@/pages/admin/MarketingToolsSuitePage'));
@@ -1506,6 +1509,10 @@ isLiriHostDevPreviewRoute;
 
   return (
     <div className={appShellClassName}>
+      {/* Impersonation encadrée (§15) — bannière globale, se masque hors impersonation. */}
+      <LazyShell>
+        <ImpersonationBanner />
+      </LazyShell>
       {!isLiveArenaRoute && !isTeleconsultRoute && !isEleveMobileRoute && !isCimolaceRoute && !isAdminRoute && (
         <LazyShell>
           <GraceBanner />
@@ -1584,6 +1591,8 @@ isLiriHostDevPreviewRoute;
 
           {/* CIMOLACE - SaaS complètement isolé - Router séparé, en dehors du main */}
           <Route path="/cimolace/*" element={<CimolaceRouter />} />
+          {/* Impersonation encadrée (§15) — amorçage en nouvel onglet (hash #imp=) */}
+          <Route path="/impersonate" element={<ImpersonateBootstrap />} />
           {/* IRI — page dynamique par slug (tenant résolu par Host côté API) */}
           <Route path="/p/:slug" element={<IriPublicPage />} />
 
@@ -1940,6 +1949,13 @@ isLiriHostDevPreviewRoute;
               <LiriServicesPage />
             </ProtectedLiriRoute>
           } />
+          {/* CRM / Growth Engine (leads, campagnes, funnels, automation, analytics) DANS le
+              portail LIRI (rail « CRM », créateur owner/admin). Remplace /admin/marketing. */}
+          <Route path="/liri/crm" element={
+            <ProtectedLiriRoute allowedRoles={['owner', 'admin']} allowTenantRole>
+              <LiriCrmPage />
+            </ProtectedLiriRoute>
+          } />
           {/* Forfaits — cycles/offres du tenant DANS le portail LIRI (membres) : remplace l'ancienne
               vitrine standalone « Prorascience PORTAIL » (/forfaits). Visiteurs → agent immersif. */}
           <Route path="/liri/forfaits" element={
@@ -2235,7 +2251,9 @@ isLiriHostDevPreviewRoute;
               <AdminIriBuilderPage />
             </ProtectedRoleRoute>
           } />
-          <Route path="/admin/marketing" element={
+          {/* Ancienne coque /admin/marketing (header vitrine) RETIRÉE → CRM dans le portail LIRI. */}
+          <Route path="/admin/marketing" element={<Navigate to="/liri/crm" replace />} />
+          <Route path="/admin/marketing-legacy" element={
             <ProtectedRoleRoute allowedRoles={['admin', 'owner']} allowTenantRole>
               <AdminMarketingPage />
             </ProtectedRoleRoute>
