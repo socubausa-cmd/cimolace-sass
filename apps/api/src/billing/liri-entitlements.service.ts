@@ -160,11 +160,26 @@ export class LiriEntitlementsService {
    */
   async assertWithinCap(tenantId: string, capKey: string, currentCount: number): Promise<void> {
     const features = await this.resolvePlanFeatures(tenantId);
-    const cap = features?.[capKey];
-    if (typeof cap === "number" && Number.isFinite(cap) && currentCount >= cap) {
+    const cap = capBreached(features, capKey, currentCount);
+    if (cap !== null) {
       throw new ForbiddenException(
         `Limite de votre offre atteinte (${capKey} : ${cap}). Passez à l'offre supérieure pour augmenter ce plafond.`,
       );
     }
   }
+}
+
+/**
+ * DÉCISION PURE (testable) du plafond : renvoie le cap dépassé (nombre) si `currentCount`
+ * l'ATTEINT, sinon null (autorisé). Cap absent/non numérique = illimité (null). Le `>=`
+ * bloque la Nᵉ création quand le cap = N-1 déjà atteint (ex. cap 80, 80 existants → le 81ᵉ bloqué).
+ */
+export function capBreached(
+  features: Record<string, unknown> | null | undefined,
+  capKey: string,
+  currentCount: number,
+): number | null {
+  const cap = features?.[capKey];
+  if (typeof cap === "number" && Number.isFinite(cap) && currentCount >= cap) return cap;
+  return null;
 }
