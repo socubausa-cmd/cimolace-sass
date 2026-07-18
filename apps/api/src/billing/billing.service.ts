@@ -77,7 +77,7 @@ export class BillingService implements OnApplicationBootstrap {
    * `current_period_end = null` = actif sans échéance (bootstrap) jusqu'à ce que
    * le paiement Stripe prenne le relais et pose les vraies dates de période.
    */
-  async activateTenantSubscription(tenantId: string, planKey = "zahir-forfait") {
+  async activateTenantSubscription(tenantId: string, planKey = "zahir-forfait", actor?: string) {
     const sb = this.supabase;
     const { data: plan } = await sb
       .from("billing_plans")
@@ -125,6 +125,19 @@ export class BillingService implements OnApplicationBootstrap {
 
     // Provisioning produit : activer les moteurs du plan (parité avec le paiement).
     await this.provisionPlanServices(tenantId, (plan as any).key);
+
+    // SÉCURITÉ §15 : trace attribuable (QUI a activé le forfait + armé le gating).
+    try {
+      await sb.from("cimolace_change_history").insert({
+        action: "billing:activate",
+        entity_type: "tenant",
+        entity_id: tenantId,
+        description: `Forfait ${(plan as any).key} activé + gating armé`,
+        changed_by: (actor && actor.trim()) || "Cimolace Ops (non attribué)",
+      });
+    } catch {
+      /* audit best-effort : ne bloque jamais l'opération */
+    }
 
     return { subscription, gating_enabled: true, plan: (plan as any).key };
   }

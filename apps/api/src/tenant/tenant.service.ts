@@ -319,6 +319,7 @@ export class TenantService {
     tenantId: string,
     serviceKey: string,
     active: boolean,
+    actor?: string,
   ) {
     const supabase = this.authService.getClient();
     const { data, error } = await supabase
@@ -337,6 +338,18 @@ export class TenantService {
       throw new Error(
         `Mise à jour service ${serviceKey} impossible pour tenant ${tenantId}: ${error.message}`,
       );
+    }
+    // SÉCURITÉ §15 : trace attribuable (QUI a basculé quel moteur sur quel tenant).
+    try {
+      await supabase.from("cimolace_change_history").insert({
+        action: `service:${active ? "active" : "suspended"}`,
+        entity_type: "tenant",
+        entity_id: tenantId,
+        description: `Moteur ${serviceKey} → ${active ? "actif" : "suspendu"}`,
+        changed_by: (actor && actor.trim()) || "Cimolace Ops (non attribué)",
+      });
+    } catch {
+      /* audit best-effort : ne bloque jamais l'opération */
     }
     return data;
   }

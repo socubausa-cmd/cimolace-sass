@@ -79,8 +79,8 @@ export class AdminBillingController {
    */
   @Post("tenants/:tenantId/activate")
   @UseGuards(JwtAuthGuard, CimolaceStaffGuard)
-  async activate(@Param("tenantId") tenantId: string, @Body() body: { plan?: string }) {
-    return { data: await this.svc.activateTenantSubscription(tenantId, body?.plan || "zahir-forfait") };
+  async activate(@Req() req: any, @Param("tenantId") tenantId: string, @Body() body: { plan?: string }) {
+    return { data: await this.svc.activateTenantSubscription(tenantId, body?.plan || "zahir-forfait", req.user?.email ?? req.user?.id ?? undefined) };
   }
 }
 
