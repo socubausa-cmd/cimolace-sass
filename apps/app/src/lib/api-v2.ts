@@ -562,6 +562,11 @@ export const growthApi = {
 export const crmApi = {
   summary: () => apiV2.get<ApiEnvelope<any>>('/crm/summary').then(unwrap),
 
+  // Timeline d'activités — GET renvoie { activities: [...] } (flux récent ou filtré par entité).
+  listActivities: (params?: Record<string, string>): Promise<any[]> =>
+    apiV2.get<ApiEnvelope<{ activities?: any[] }>>('/crm/activities', { params }).then(unwrap)
+      .then((r: any) => (Array.isArray(r) ? r : (r?.activities ?? []))),
+
   listCompanies: (params?: { search?: string; limit?: number; offset?: number }): Promise<any[]> =>
     apiV2.get<ApiEnvelope<{ companies?: any[] }>>('/crm/companies', { params }).then(unwrap)
       .then((r: any) => (Array.isArray(r) ? r : (r?.companies ?? []))),

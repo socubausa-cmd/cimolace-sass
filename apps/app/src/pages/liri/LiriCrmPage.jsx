@@ -6,6 +6,7 @@ import AdminMarketingPage from '@/pages/admin/AdminMarketingPage';
 import CrmPipelineBoard from '@/components/liri/crm/CrmPipelineBoard';
 import CrmContacts from '@/components/liri/crm/CrmContacts';
 import CrmCompanies from '@/components/liri/crm/CrmCompanies';
+import CrmActivity from '@/components/liri/crm/CrmActivity';
 
 /**
  * CRM DANS le portail LIRI (rail « CRM », créateur owner/admin).
@@ -27,6 +28,7 @@ const CRM_VIEWS = [
   { value: 'pipeline', label: 'Pipeline' },
   { value: 'contacts', label: 'Contacts' },
   { value: 'companies', label: 'Sociétés' },
+  { value: 'activity', label: 'Activité' },
   { value: 'growth', label: 'Croissance' },
 ];
 const VALID_VIEWS = new Set(CRM_VIEWS.map((v) => v.value));
@@ -76,6 +78,7 @@ function LiriCrmContent() {
       {view === 'pipeline' && <CrmPipelineBoard />}
       {view === 'contacts' && <CrmContacts />}
       {view === 'companies' && <CrmCompanies />}
+      {view === 'activity' && <CrmActivity />}
     </div>
   );
 }
