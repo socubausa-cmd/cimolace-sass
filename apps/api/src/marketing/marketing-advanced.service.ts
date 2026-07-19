@@ -1,12 +1,18 @@
 /**
- * MarketingAdvancedService — Port des ~20 lambdas v1 marketing-* en NestJS.
+ * MarketingAdvancedService — Moteur CRM/marketing multi-tenant.
  *
- * Tables principales : marketing_campaigns, marketing_logs, funnels, funnel_steps,
- * automation_flows, automation_actions, leads, lead_segments, segments,
- * payment_failures, notifications, billing_payments.
- *
- * Le filtre tenant est toujours appliqué via `cimolace_tenant_id` (legacy column
- * name conservé pour compat avec les tables v1).
+ * ⚠️ RÉCONCILIÉ SUR LE SCHÉMA RÉEL DE LA PROD (2026-07-18). Le port v1 visait un
+ * schéma fantôme (cimolace_tenant_id, automation_flows/actions, funnel_steps,
+ * marketing_logs, payment_failures, lead_segments, segments) qui N'EXISTE PAS en
+ * base. Le schéma réel, propre et tenant-scopé (colonne `tenant_id`), est :
+ *   • leads(id, tenant_id, email, name, source, status, score, created_at)
+ *   • marketing_campaigns(id, tenant_id, name, type, channel, content, status, started_at, created_at)
+ *   • marketing_funnels(id, tenant_id, name, steps jsonb, status, created_at)
+ *   • marketing_automations(id, tenant_id, name, trigger_condition, actions jsonb, status, created_at)
+ * Les fonctionnalités avancées qui exigeaient des tables absentes (journaux
+ * détaillés, segments, relance paiement persistée, tracking comportemental) sont
+ * DÉGRADÉES proprement (no-op sûr + commentaire), pas supprimées de la surface API :
+ * elles pourront être réactivées par une migration ultérieure (colonnes metadata/logs).
  */
 
 import { BadRequestException, ForbiddenException, Injectable, Logger, NotFoundException } from '@nestjs/common';
@@ -24,6 +30,8 @@ const VALID_OBJECTIVES = new Set(['acquisition', 'conversion', 'relance', 'react
 const VALID_STEP_TYPES = new Set([
   'landing', 'capture', 'presentation', 'offer', 'payment', 'confirmation',
 ]);
+// Pipeline CRM (texte libre en base — aucune contrainte CHECK).
+const LEAD_STATUSES = new Set(['new', 'warm', 'hot', 'customer', 'lost']);
 
 const TEMPLATES: Record<string, string[]> = {
   acquisition: [
@@ -54,6 +62,10 @@ export class MarketingAdvancedService {
     return (this.supabase.client as any);
   }
 
+  /**
+   * Journal marketing : la table `marketing_logs` n'existe pas en prod → no-op
+   * (trace applicative uniquement). Réactivable via migration `marketing_logs`.
+   */
   private async log(entry: {
     tenantId?: string | null;
     action: string;
@@ -63,26 +75,14 @@ export class MarketingAdvancedService {
     lead_id?: string | null;
     channel?: string | null;
   }) {
-    try {
-      await this.db().from('marketing_logs').insert({
-        cimolace_tenant_id: entry.tenantId ?? null,
-        action: entry.action,
-        result: entry.result,
-        payload_json: entry.payload ?? {},
-        campaign_id: entry.campaign_id ?? null,
-        lead_id: entry.lead_id ?? null,
-        channel: entry.channel ?? null,
-      });
-    } catch (e) {
-      this.logger.warn(`marketing_log insert failed: ${(e as Error).message}`);
-    }
+    this.logger.debug(`[mkt:${entry.tenantId ?? '-'}] ${entry.action} → ${entry.result}`);
   }
 
   private normalizeLeadStatus(score: number, currentStatus = 'new'): string {
     if (currentStatus === 'customer') return 'customer';
     if (score >= 70) return 'hot';
     if (score >= 35) return 'warm';
-    return currentStatus || 'new';
+    return LEAD_STATUSES.has(currentStatus) ? currentStatus : 'new';
   }
 
   // ═══════════════════════════════════════════════════════════════════════════
@@ -91,31 +91,19 @@ export class MarketingAdvancedService {
 
   async getAnalytics(tenantId: string) {
     const db = this.db();
-    const [campaignsRes, leadsRes, paymentsRes, funnelsRes, logsRes] = await Promise.all([
-      db.from('marketing_campaigns').select('id,status,objective,channel').eq('cimolace_tenant_id', tenantId),
-      db.from('leads').select('id,status,score').eq('cimolace_tenant_id', tenantId),
-      db.from('billing_payments').select('id,payment_status,price_amount').eq('cimolace_tenant_id', tenantId),
-      db.from('funnels').select('id,status,name').eq('cimolace_tenant_id', tenantId),
-      db.from('marketing_logs').select('id,action').eq('cimolace_tenant_id', tenantId).limit(2000),
+    const [campaignsRes, leadsRes, funnelsRes] = await Promise.all([
+      db.from('marketing_campaigns').select('id,status,type,channel').eq('tenant_id', tenantId),
+      db.from('leads').select('id,status,score').eq('tenant_id', tenantId),
+      db.from('marketing_funnels').select('id,status,name').eq('tenant_id', tenantId),
     ]);
 
     const campaigns = campaignsRes.data ?? [];
     const leads = leadsRes.data ?? [];
-    const payments = paymentsRes.data ?? [];
     const funnels = funnelsRes.data ?? [];
-    const logs = logsRes.data ?? [];
 
     const totalLeads = leads.length;
     const hot = leads.filter((l: any) => Number(l.score || 0) >= 70 || l.status === 'hot').length;
     const customers = leads.filter((l: any) => l.status === 'customer').length;
-    const confirmed = payments.filter((p: any) => p.payment_status === 'confirmed');
-    const failed = payments.filter((p: any) =>
-      ['failed', 'canceled', 'partially_paid'].includes(String(p.payment_status || '').toLowerCase()),
-    );
-    const revenue = confirmed.reduce((s: number, p: any) => s + Number(p.price_amount || 0), 0);
-    const sent = logs.filter((l: any) => /publish|send_email/.test(l.action || '')).length;
-    const clicked = logs.filter((l: any) => /click/.test(l.action || '')).length;
-    const opened = logs.filter((l: any) => /open/.test(l.action || '')).length;
 
     return {
       campaigns: {
@@ -125,36 +113,31 @@ export class MarketingAdvancedService {
         completed: campaigns.filter((c: any) => c.status === 'completed').length,
       },
       leads: { total: totalLeads, hot, customers },
-      payments: { confirmed: confirmed.length, failed: failed.length },
+      // Revenu/relances : `billing_payments` n'expose pas payment_status/price_amount
+      // dans ce schéma → 0 (à rebrancher sur la vraie source de paiement plus tard).
+      payments: { confirmed: 0, failed: 0 },
       funnels: {
         total: funnels.length,
         active: funnels.filter((f: any) => f.status === 'active').length,
       },
       metrics: {
         conversionRate: Number((totalLeads ? (customers / totalLeads) * 100 : 0).toFixed(2)),
-        clickRate: Number((sent ? (clicked / sent) * 100 : 0).toFixed(2)),
-        openRate: Number((sent ? (opened / sent) * 100 : 0).toFixed(2)),
-        revenue: Number(revenue.toFixed(2)),
+        // click/open rate : nécessitent le journal marketing (absent) → 0.
+        clickRate: 0,
+        openRate: 0,
+        revenue: 0,
       },
     };
   }
 
   async listLogs(
-    tenantId: string,
+    _tenantId: string,
     opts: { limit: number; offset: number; actionPrefix?: string },
   ) {
+    // Journal marketing absent en prod → liste vide (surface conservée).
     const limit = Math.min(500, Math.max(1, opts.limit));
     const offset = Math.max(0, opts.offset);
-    let q = this.db()
-      .from('marketing_logs')
-      .select('*', { count: 'exact' })
-      .eq('cimolace_tenant_id', tenantId)
-      .order('created_at', { ascending: false })
-      .range(offset, offset + limit - 1);
-    if (opts.actionPrefix) q = q.like('action', `${opts.actionPrefix}%`);
-    const { data, count, error } = await q;
-    if (error) throw new BadRequestException(error.message);
-    return { logs: data ?? [], total: count ?? (data?.length ?? 0), limit, offset };
+    return { logs: [], total: 0, limit, offset };
   }
 
   async publish(tenantId: string, body: any) {
@@ -180,154 +163,49 @@ export class MarketingAdvancedService {
   }
 
   // ═══════════════════════════════════════════════════════════════════════════
-  // ORCHESTRATE / PAYMENT RECOVERY / SCORE REFRESH
+  // ORCHESTRATE / PAYMENT RECOVERY / SCORE REFRESH  (dégradés — voir en-tête)
   // ═══════════════════════════════════════════════════════════════════════════
-
-  private async queueNotification(userId: string | null, type: string, title: string, message: string, payload: any = {}) {
-    if (!userId) return;
-    try {
-      await this.db().from('notifications').insert({
-        user_id: userId, type, title, message, payload, read: false,
-      });
-    } catch (e) {
-      this.logger.warn(`notification insert failed: ${(e as Error).message}`);
-    }
-  }
 
   async orchestrate(tenantId: string, body: { leadId?: string }) {
     const db = this.db();
     let lead: any = null;
     if (body.leadId) {
-      const { data } = await db.from('leads').select('*').eq('id', body.leadId).eq('cimolace_tenant_id', tenantId).maybeSingle();
+      const { data } = await db.from('leads').select('*').eq('id', body.leadId).eq('tenant_id', tenantId).maybeSingle();
       lead = data;
     } else {
       const { data } = await db.from('leads')
-        .select('*').eq('cimolace_tenant_id', tenantId)
+        .select('*').eq('tenant_id', tenantId)
         .in('status', ['hot', 'warm', 'new'])
         .order('score', { ascending: false }).limit(1);
       lead = (data ?? [])[0] ?? null;
     }
     if (!lead) throw new NotFoundException('Lead not found');
 
-    const behavior = (lead.behavior_json && typeof lead.behavior_json === 'object') ? lead.behavior_json : {};
-    const executed: any[] = [];
-
-    executed.push({ step: 'funnel_followup', result: 'queued' });
-    await this.log({ tenantId, lead_id: lead.id, action: 'orchestrate_funnel_followup', result: 'queued', payload: { leadStatus: lead.status, score: lead.score } });
-
+    // Plan d'orchestration recommandé (les actions à écriture — notifications ciblées,
+    // relance paiement persistée — exigent owner_user_id / payment_failures absents ici :
+    // renvoyées comme plan à exécuter par les automations/canaux, pas écrites en base).
+    const executed: any[] = [{ step: 'funnel_followup', result: 'queued' }];
     if (['hot', 'warm'].includes(String(lead.status || '').toLowerCase())) {
-      await this.queueNotification(lead.owner_user_id, 'marketing_booking', 'Proposer un rendez-vous',
-        "Lead prioritaire détecté. Envoyez le lien d'entretien immersif.",
-        { lead_id: lead.id, booking_link: '/appointment/request' });
-      executed.push({ step: 'booking_proposal', result: 'notified' });
-      await this.log({ tenantId, lead_id: lead.id, action: 'orchestrate_booking_proposal', result: 'notified' });
+      executed.push({ step: 'booking_proposal', result: 'recommended', booking_link: '/appointment/request' });
     }
-
-    if (behavior.paymentFailure || behavior.abandon) {
-      const { data: failure } = await db.from('payment_failures').insert({
-        cimolace_tenant_id: tenantId,
-        user_id: lead.owner_user_id ?? null,
-        lead_id: lead.id,
-        reason: behavior.paymentFailure ? 'payment_failed_detected' : 'checkout_abandon_detected',
-        status: 'open',
-        recovery_link: '/forfaits',
-      }).select('*').single();
-      await this.queueNotification(lead.owner_user_id, 'payment_recovery', 'Relance paiement',
-        'Un lead a besoin d’une relance de paiement.',
-        { lead_id: lead.id, payment_failure_id: failure?.id ?? null, recovery_link: '/forfaits' });
-      executed.push({ step: 'payment_recovery', result: 'created' });
-      await this.log({ tenantId, lead_id: lead.id, action: 'orchestrate_payment_recovery', result: 'created', payload: { paymentFailureId: failure?.id ?? null } });
-    }
-
     if (String(lead.status || '').toLowerCase() === 'customer') {
-      await this.queueNotification(lead.owner_user_id, 'marketing_onboarding', 'Onboarding client',
-        'Client converti détecté. Démarrer onboarding.', { lead_id: lead.id });
-      executed.push({ step: 'onboarding', result: 'notified' });
-      await this.log({ tenantId, lead_id: lead.id, action: 'orchestrate_onboarding', result: 'notified' });
+      executed.push({ step: 'onboarding', result: 'recommended' });
     }
-
+    await this.log({ tenantId, lead_id: lead.id, action: 'orchestrate', result: 'planned' });
     return { leadId: lead.id, executed };
   }
 
-  async paymentRecovery(tenantId: string, body: any) {
-    const db = this.db();
-    const manualUserId = String(body?.userId || '').trim() || null;
-    const manualReason = String(body?.reason || '').trim();
-    const recoveryLink = String(body?.recoveryLink || '/forfaits').trim();
-    const created: any[] = [];
-
-    if (manualUserId && manualReason) {
-      const { data, error } = await db.from('payment_failures').insert({
-        cimolace_tenant_id: tenantId,
-        user_id: manualUserId,
-        reason: manualReason,
-        status: 'open',
-        recovery_link: recoveryLink,
-      }).select('*').single();
-      if (error) throw new BadRequestException(error.message);
-      created.push(data);
-    } else {
-      const { data: failedPayments } = await db.from('billing_payments')
-        .select('id,user_id,payment_status,created_at')
-        .eq('cimolace_tenant_id', tenantId)
-        .in('payment_status', ['failed', 'canceled', 'partially_paid'])
-        .order('created_at', { ascending: false })
-        .limit(50);
-      for (const p of failedPayments ?? []) {
-        const { data } = await db.from('payment_failures').insert({
-          cimolace_tenant_id: tenantId,
-          user_id: p.user_id,
-          reason: `payment_${p.payment_status}`,
-          status: 'open',
-          payment_id: p.id,
-          recovery_link: '/forfaits',
-        }).select('*').single();
-        if (data) created.push(data);
-      }
-    }
-
-    for (const row of created) {
-      if (row.user_id) {
-        await this.queueNotification(row.user_id, 'payment_recovery', 'Paiement à régulariser',
-          'Nous avons détecté un problème de paiement.', { payment_failure_id: row.id, recovery_link: row.recovery_link });
-      }
-      await this.log({ tenantId, action: 'payment_recovery_event', result: row.status, payload: { paymentFailureId: row.id, userId: row.user_id, reason: row.reason } });
-    }
-
-    return { createdCount: created.length, failures: created };
+  async paymentRecovery(tenantId: string, _body: any) {
+    // `payment_failures` absent en prod → relance non persistée. Surface conservée.
+    await this.log({ tenantId, action: 'payment_recovery', result: 'noop_no_table' });
+    return { createdCount: 0, failures: [], note: 'payment_failures indisponible sur ce schéma' };
   }
 
   async scoreRefresh(tenantId: string) {
-    const db = this.db();
-    const { data: leads, error } = await db.from('leads').select('*').eq('cimolace_tenant_id', tenantId).limit(1000);
-    if (error) throw new BadRequestException(error.message);
-
-    let updated = 0;
-    for (const lead of leads ?? []) {
-      const b = (lead.behavior_json && typeof lead.behavior_json === 'object') ? lead.behavior_json : {};
-      let score = 0;
-      if (b.visitedLanding) score += 10;
-      if (b.visitedOfferPage) score += 15;
-      if (b.clicked) score += 15;
-      if (b.startedCheckout) score += 20;
-      if (b.bookedAppointment) score += 20;
-      if (b.completedModule) score += 15;
-      if (b.abandon) score -= 5;
-      if (b.paymentFailure) score -= 10;
-      score = Math.max(0, Math.min(100, score));
-      const status = this.normalizeLeadStatus(score, lead.status || 'new');
-      if (Number(lead.score || 0) === score && (lead.status || '') === status) continue;
-      const { error: upErr } = await db.from('leads').update({
-        score, status,
-        updated_at: new Date().toISOString(),
-        last_activity_at: new Date().toISOString(),
-      }).eq('id', lead.id);
-      if (!upErr) {
-        updated++;
-        await this.log({ tenantId, lead_id: lead.id, action: 'lead_score_refresh', result: 'updated', payload: { score, status } });
-      }
-    }
-    return { total: leads?.length ?? 0, updated };
+    // Le tracking comportemental (behavior_json) n'existe pas sur `leads` (schéma
+    // minimal) → le score est géré manuellement à la capture. No-op sûr.
+    const { count } = await this.db().from('leads').select('id', { count: 'exact', head: true }).eq('tenant_id', tenantId);
+    return { total: count ?? 0, updated: 0, note: 'scoring comportemental désactivé (schéma minimal)' };
   }
 
   aiSuggestMessage(body: { objective?: string; segment?: string; tone?: string }) {
@@ -345,7 +223,7 @@ export class MarketingAdvancedService {
   }
 
   // ═══════════════════════════════════════════════════════════════════════════
-  // CAMPAIGNS
+  // CAMPAIGNS  (table réelle : marketing_campaigns)
   // ═══════════════════════════════════════════════════════════════════════════
 
   async listCampaigns(tenantId: string, opts: { status?: string; limit: number; offset: number }) {
@@ -354,7 +232,7 @@ export class MarketingAdvancedService {
     let q = this.db()
       .from('marketing_campaigns')
       .select('*', { count: 'exact' })
-      .eq('cimolace_tenant_id', tenantId)
+      .eq('tenant_id', tenantId)
       .order('created_at', { ascending: false })
       .range(offset, offset + limit - 1);
     if (opts.status) q = q.eq('status', opts.status.toLowerCase());
@@ -365,17 +243,18 @@ export class MarketingAdvancedService {
 
   async createCampaign(tenantId: string, body: any) {
     const name = String(body?.name || '').trim();
-    const objective = String(body?.objective || 'acquisition').toLowerCase();
+    const objective = String(body?.objective || body?.type || 'acquisition').toLowerCase();
     const channel = String(body?.channel || 'email').toLowerCase();
     if (!name) throw new BadRequestException('name is required');
     if (!VALID_OBJECTIVES.has(objective)) throw new BadRequestException('invalid objective');
 
+    // Schéma réel : name, type, channel, content, status, started_at.
     const { data, error } = await this.db().from('marketing_campaigns').insert({
-      cimolace_tenant_id: tenantId,
-      name, objective, channel,
-      audience: String(body?.audience || '').trim() || null,
-      content_message: String(body?.contentMessage || body?.content_message || '').trim() || null,
-      scheduled_at: body?.scheduledAt ?? null,
+      tenant_id: tenantId,
+      name,
+      type: objective,
+      channel,
+      content: String(body?.contentMessage || body?.content_message || body?.content || '').trim() || null,
       status: 'draft',
     }).select('*').single();
     if (error) throw new BadRequestException(error.message);
@@ -389,85 +268,54 @@ export class MarketingAdvancedService {
     if (!campaignId) throw new BadRequestException('campaignId is required');
 
     const db = this.db();
-    const { data: current } = await db.from('marketing_campaigns').select('*').eq('id', campaignId).eq('cimolace_tenant_id', tenantId).maybeSingle();
+    const { data: current } = await db.from('marketing_campaigns').select('*').eq('id', campaignId).eq('tenant_id', tenantId).maybeSingle();
     if (!current) throw new NotFoundException('Campaign not found');
 
     if (action === 'duplicate') {
       const { data: duplicated, error } = await db.from('marketing_campaigns').insert({
-        cimolace_tenant_id: tenantId,
+        tenant_id: tenantId,
         name: `${current.name} (copie)`,
-        objective: current.objective,
+        type: current.type,
         channel: current.channel,
-        audience: current.audience,
-        content_message: current.content_message,
+        content: current.content,
         status: 'draft',
-        scheduled_at: null,
       }).select('*').single();
       if (error) throw new BadRequestException(error.message);
       await this.log({ tenantId, campaign_id: duplicated.id, action: 'campaign_duplicate', result: 'success', channel: duplicated.channel });
       return { campaign: duplicated };
     }
 
-    const patch: any = { updated_at: new Date().toISOString() };
-    if (action === 'start') { patch.status = 'active'; patch.started_at = patch.updated_at; }
+    // Schéma réel : seules les colonnes status + started_at existent.
+    const patch: any = {};
+    if (action === 'start') { patch.status = 'active'; patch.started_at = new Date().toISOString(); }
     else if (action === 'pause') patch.status = 'paused';
-    else if (action === 'archive') { patch.status = 'archived'; patch.archived_at = patch.updated_at; }
-    else if (action === 'complete') { patch.status = 'completed'; patch.completed_at = patch.updated_at; }
+    else if (action === 'archive') patch.status = 'archived';
+    else if (action === 'complete') patch.status = 'completed';
     else throw new BadRequestException('Unsupported action');
 
-    const { data, error } = await db.from('marketing_campaigns').update(patch).eq('id', campaignId).eq('cimolace_tenant_id', tenantId).select('*').single();
+    const { data, error } = await db.from('marketing_campaigns').update(patch).eq('id', campaignId).eq('tenant_id', tenantId).select('*').single();
     if (error) throw new BadRequestException(error.message);
     await this.log({ tenantId, campaign_id: data.id, action: `campaign_${action}`, result: data.status, channel: data.channel });
     return { campaign: data };
   }
 
   // ═══════════════════════════════════════════════════════════════════════════
-  // FUNNELS
+  // FUNNELS  (table réelle : marketing_funnels, steps en JSONB inline)
   // ═══════════════════════════════════════════════════════════════════════════
 
   async listFunnels(tenantId: string) {
-    const db = this.db();
-    const { data: funnels, error } = await db.from('funnels')
-      .select('*').eq('cimolace_tenant_id', tenantId)
+    const { data: funnels, error } = await this.db().from('marketing_funnels')
+      .select('*').eq('tenant_id', tenantId)
       .order('created_at', { ascending: false }).limit(200);
     if (error) throw new BadRequestException(error.message);
 
-    const ids = (funnels ?? []).map((f: any) => f.id);
-    const [stepsRes, logsRes] = await Promise.all([
-      ids.length
-        ? db.from('funnel_steps').select('*').in('funnel_id', ids).order('order_index', { ascending: true })
-        : Promise.resolve({ data: [] }),
-      db.from('marketing_logs').select('action,payload_json')
-        .eq('cimolace_tenant_id', tenantId)
-        .order('created_at', { ascending: false }).limit(1000),
-    ]);
-
-    const stepsByFunnel: Record<string, any[]> = {};
-    (stepsRes.data ?? []).forEach((s: any) => {
-      (stepsByFunnel[s.funnel_id] ??= []).push(s);
-    });
-
-    const perfByFunnel: Record<string, any> = {};
-    (logsRes.data ?? []).forEach((l: any) => {
-      const fid = l.payload_json?.funnelId;
-      if (!fid) return;
-      const perf = (perfByFunnel[fid] ??= { visits: 0, captures: 0, payments: 0, confirmations: 0 });
-      const a = String(l.action || '').toLowerCase();
-      if (a.includes('visit')) perf.visits++;
-      if (a.includes('capture')) perf.captures++;
-      if (a.includes('payment')) perf.payments++;
-      if (a.includes('confirmation')) perf.confirmations++;
-    });
-
     return {
-      funnels: (funnels ?? []).map((f: any) => {
-        const perf = perfByFunnel[f.id] ?? { visits: 0, captures: 0, payments: 0, confirmations: 0 };
-        return {
-          ...f,
-          steps: stepsByFunnel[f.id] ?? [],
-          performance: { ...perf, conversionRate: Number((perf.visits ? (perf.confirmations / perf.visits) * 100 : 0).toFixed(2)) },
-        };
-      }),
+      funnels: (funnels ?? []).map((f: any) => ({
+        ...f,
+        steps: Array.isArray(f.steps) ? f.steps : [],
+        // Perf par étape : nécessite le journal marketing (absent) → 0.
+        performance: { visits: 0, captures: 0, payments: 0, confirmations: 0, conversionRate: 0 },
+      })),
     };
   }
 
@@ -475,38 +323,29 @@ export class MarketingAdvancedService {
     const name = String(body?.name || '').trim();
     if (!name) throw new BadRequestException('name is required');
 
-    const db = this.db();
-    const { data: funnel, error: fErr } = await db.from('funnels').insert({
-      cimolace_tenant_id: tenantId,
-      name,
-      linked_product_id: body?.linkedProductId ?? null,
-      linked_formation_id: body?.linkedFormationId ?? null,
-      linked_live_session_id: body?.linkedLiveSessionId ?? null,
-      linked_appointment_type: body?.linkedAppointmentType ?? null,
-      status: 'draft',
-    }).select('*').single();
-    if (fErr) throw new BadRequestException(fErr.message);
-
     const steps = (Array.isArray(body?.steps) ? body.steps : [])
       .map((s: any, idx: number) => ({
-        funnel_id: funnel.id,
         step_type: String(s.step_type || s.stepType || '').toLowerCase(),
         order_index: Number.isFinite(Number(s.order_index)) ? Number(s.order_index) : idx,
-        config_json: s.config_json ?? s.config ?? {},
+        config: s.config_json ?? s.config ?? {},
       }))
       .filter((s: any) => VALID_STEP_TYPES.has(s.step_type))
       .sort((a: any, b: any) => a.order_index - b.order_index);
 
-    if (steps.length) {
-      const { error: sErr } = await db.from('funnel_steps').insert(steps);
-      if (sErr) throw new BadRequestException(sErr.message);
-    }
+    const { data: funnel, error } = await this.db().from('marketing_funnels').insert({
+      tenant_id: tenantId,
+      name,
+      steps, // JSONB inline
+      status: 'draft',
+    }).select('*').single();
+    if (error) throw new BadRequestException(error.message);
     await this.log({ tenantId, action: 'funnel_create', result: 'success', payload: { funnelId: funnel.id, steps: steps.length } });
     return { funnel, steps };
   }
 
   // ═══════════════════════════════════════════════════════════════════════════
-  // AUTOMATIONS
+  // AUTOMATIONS  (table réelle : marketing_automations, trigger_condition + actions JSONB)
+  // Structure du JSONB `actions` : { conditions: {...}, steps: [{action_type, order_index, config}] }
   // ═══════════════════════════════════════════════════════════════════════════
 
   private normalizeConditions(payload: any) {
@@ -516,14 +355,13 @@ export class MarketingAdvancedService {
       .map((rule: any) => ({ type: String(rule?.type || 'none').toLowerCase() }))
       .filter((rule: any) => Boolean(rule.type));
     return {
-      ...incoming,
       operator: String(incoming.operator || 'AND').toUpperCase() === 'OR' ? 'OR' : 'AND',
       rules: normalizedRules,
       type: String(incoming.type || normalizedRules[0]?.type || 'none').toLowerCase(),
     };
   }
 
-  private normalizeActions(flowId: string, actionsInput: any[]) {
+  private normalizeSteps(actionsInput: any[]) {
     return (actionsInput ?? [])
       .map((a: any, idx: number) => {
         const actionType = String(a.action_type || a.actionType || '').toLowerCase();
@@ -531,30 +369,33 @@ export class MarketingAdvancedService {
         const config = (a.config_json && typeof a.config_json === 'object') ? a.config_json
           : (a.config && typeof a.config === 'object') ? a.config : {};
         const branch = String(config.branch || a.branch || 'yes').toLowerCase() === 'no' ? 'no' : 'yes';
-        return {
-          flow_id: flowId, action_type: actionType, order_index: orderIndex,
-          config_json: { ...config, branch },
-        };
+        return { action_type: actionType, order_index: orderIndex, config: { ...config, branch } };
       })
       .filter((a: any) => VALID_ACTIONS.has(a.action_type))
       .sort((a: any, b: any) => a.order_index - b.order_index);
   }
 
+  /** Reshape une ligne marketing_automations vers la forme attendue par le front (flow + actions[]). */
+  private shapeFlow(row: any) {
+    const bag = (row?.actions && typeof row.actions === 'object' && !Array.isArray(row.actions)) ? row.actions : { conditions: {}, steps: [] };
+    return {
+      id: row.id,
+      tenant_id: row.tenant_id,
+      name: row.name,
+      trigger: row.trigger_condition,
+      status: row.status,
+      created_at: row.created_at,
+      conditions_json: bag.conditions ?? {},
+      actions: Array.isArray(bag.steps) ? bag.steps : [],
+    };
+  }
+
   async listAutomations(tenantId: string) {
-    const db = this.db();
-    const { data: flows, error } = await db.from('automation_flows')
-      .select('*').eq('cimolace_tenant_id', tenantId)
+    const { data: flows, error } = await this.db().from('marketing_automations')
+      .select('*').eq('tenant_id', tenantId)
       .order('created_at', { ascending: false }).limit(200);
     if (error) throw new BadRequestException(error.message);
-
-    const ids = (flows ?? []).map((f: any) => f.id);
-    const { data: actions } = ids.length
-      ? await db.from('automation_actions').select('*').in('flow_id', ids).order('order_index', { ascending: true })
-      : { data: [] };
-
-    const grouped: Record<string, any[]> = {};
-    (actions ?? []).forEach((a: any) => { (grouped[a.flow_id] ??= []).push(a); });
-    return { flows: (flows ?? []).map((f: any) => ({ ...f, actions: grouped[f.id] ?? [] })) };
+    return { flows: (flows ?? []).map((f: any) => this.shapeFlow(f)) };
   }
 
   async createAutomation(tenantId: string, body: any) {
@@ -564,22 +405,17 @@ export class MarketingAdvancedService {
     if (!VALID_TRIGGERS.has(trigger)) throw new BadRequestException('invalid trigger');
 
     const conditions = this.normalizeConditions(body?.conditions_json ?? body?.conditions ?? {});
-    const db = this.db();
-    const { data: flow, error: flowErr } = await db.from('automation_flows').insert({
-      cimolace_tenant_id: tenantId,
-      name, trigger,
-      conditions_json: conditions,
+    const steps = this.normalizeSteps(body?.actions ?? []);
+    const { data: flow, error } = await this.db().from('marketing_automations').insert({
+      tenant_id: tenantId,
+      name,
+      trigger_condition: trigger,
+      actions: { conditions, steps }, // JSONB inline
       status: String(body?.status || 'active').toLowerCase(),
     }).select('*').single();
-    if (flowErr) throw new BadRequestException(flowErr.message);
-
-    const actions = this.normalizeActions(flow.id, body?.actions ?? []);
-    if (actions.length) {
-      const { error: aErr } = await db.from('automation_actions').insert(actions);
-      if (aErr) throw new BadRequestException(aErr.message);
-    }
-    await this.log({ tenantId, action: 'automation_flow_create', result: 'success', payload: { flowId: flow.id, trigger, actions: actions.length } });
-    return { flow, actions };
+    if (error) throw new BadRequestException(error.message);
+    await this.log({ tenantId, action: 'automation_create', result: 'success', payload: { flowId: flow.id, trigger, actions: steps.length } });
+    return this.shapeFlow(flow);
   }
 
   async updateAutomation(tenantId: string, body: any) {
@@ -591,39 +427,28 @@ export class MarketingAdvancedService {
     if (!VALID_TRIGGERS.has(trigger)) throw new BadRequestException('invalid trigger');
 
     const conditions = this.normalizeConditions(body?.conditions_json ?? body?.conditions ?? {});
-    const db = this.db();
-    const { data: flow, error: updateErr } = await db.from('automation_flows').update({
-      name, trigger,
+    const steps = this.normalizeSteps(body?.actions ?? []);
+    const { data: flow, error } = await this.db().from('marketing_automations').update({
+      name,
+      trigger_condition: trigger,
+      actions: { conditions, steps },
       status: String(body?.status || 'active').toLowerCase(),
-      conditions_json: conditions,
-      updated_at: new Date().toISOString(),
-    }).eq('id', flowId).eq('cimolace_tenant_id', tenantId).select('*').single();
-    if (updateErr) throw new BadRequestException(updateErr.message);
+    }).eq('id', flowId).eq('tenant_id', tenantId).select('*').single();
+    if (error) throw new BadRequestException(error.message);
     if (!flow) throw new NotFoundException('Flow not found');
-
-    await db.from('automation_actions').delete().eq('flow_id', flowId);
-    const actions = this.normalizeActions(flowId, body?.actions ?? []);
-    if (actions.length) {
-      const { error: insErr } = await db.from('automation_actions').insert(actions);
-      if (insErr) throw new BadRequestException(insErr.message);
-    }
-    await this.log({ tenantId, action: 'automation_flow_update', result: 'success', payload: { flowId, trigger, actions: actions.length } });
-    return { flow, actions };
+    await this.log({ tenantId, action: 'automation_update', result: 'success', payload: { flowId, trigger, actions: steps.length } });
+    return this.shapeFlow(flow);
   }
 
   async deleteAutomation(tenantId: string, body: { flowId: string }) {
     const flowId = String(body?.flowId || '').trim();
     if (!flowId) throw new BadRequestException('flowId is required');
-
     const db = this.db();
-    // Vérifier appartenance au tenant avant suppression
-    const { data: flow } = await db.from('automation_flows').select('id').eq('id', flowId).eq('cimolace_tenant_id', tenantId).maybeSingle();
+    const { data: flow } = await db.from('marketing_automations').select('id').eq('id', flowId).eq('tenant_id', tenantId).maybeSingle();
     if (!flow) throw new NotFoundException('Flow not found');
-
-    await db.from('automation_actions').delete().eq('flow_id', flowId);
-    const { error } = await db.from('automation_flows').delete().eq('id', flowId).eq('cimolace_tenant_id', tenantId);
+    const { error } = await db.from('marketing_automations').delete().eq('id', flowId).eq('tenant_id', tenantId);
     if (error) throw new BadRequestException(error.message);
-    await this.log({ tenantId, action: 'automation_flow_delete', result: 'success', payload: { flowId } });
+    await this.log({ tenantId, action: 'automation_delete', result: 'success', payload: { flowId } });
     return { ok: true, flowId };
   }
 
@@ -649,37 +474,20 @@ export class MarketingAdvancedService {
 
   private async runActionForFlow(action: any, ctx: { lead: any | null; trigger: string; context: any }) {
     const type = String(action.action_type || '').toLowerCase();
-    const cfg = (action.config_json && typeof action.config_json === 'object') ? action.config_json : {};
+    const cfg = (action.config && typeof action.config === 'object') ? action.config : {};
     const lead = ctx.lead;
     const db = this.db();
 
-    if (type === 'assign_segment') {
-      const segName = String(cfg.segmentName || '').trim();
-      if (!segName || !lead?.id) return { type, result: 'skipped' };
-      const { data: seg } = await db.from('segments').select('id,name').eq('name', segName).maybeSingle();
-      if (!seg?.id) return { type, result: 'segment_not_found' };
-      await db.from('lead_segments').upsert({ lead_id: lead.id, segment_id: seg.id }, { onConflict: 'lead_id,segment_id' });
-      return { type, result: 'segment_assigned' };
-    }
-    if (type === 'send_notification' && lead?.owner_user_id) {
-      await db.from('notifications').insert({
-        user_id: lead.owner_user_id,
-        type: 'marketing_followup',
-        title: String(cfg.title || 'Relance marketing'),
-        message: String(cfg.message || 'Action automatique exécutée.'),
-        payload: { lead_id: lead.id, flow_id: action.flow_id },
-        read: false,
-      });
-      return { type, result: 'notification_sent' };
-    }
     if (type === 'launch_campaign') {
       const campaignId = String(cfg.campaignId || '').trim();
       if (!campaignId) return { type, result: 'missing_campaign' };
       await db.from('marketing_campaigns').update({
-        status: 'active', started_at: new Date().toISOString(), updated_at: new Date().toISOString(),
-      }).eq('id', campaignId);
+        status: 'active', started_at: new Date().toISOString(),
+      }).eq('id', campaignId).eq('tenant_id', lead?.tenant_id ?? ctx.context?.tenantId);
       return { type, result: 'campaign_started' };
     }
+    if (type === 'assign_segment') return { type, result: 'segment_unavailable' }; // segments absents du schéma
+    if (type === 'send_notification') return { type, result: 'notification_planned' };
     if (type === 'propose_appointment') return { type, result: 'appointment_link_prepared' };
     if (type === 'send_funnel_link') return { type, result: 'funnel_link_prepared' };
     if (type === 'send_email') return { type, result: 'email_queued' };
@@ -691,71 +499,50 @@ export class MarketingAdvancedService {
     if (!trigger) throw new BadRequestException('trigger is required');
 
     const db = this.db();
-    const { data: flows, error: fErr } = await db.from('automation_flows')
+    const { data: flows, error } = await db.from('marketing_automations')
       .select('*')
-      .eq('cimolace_tenant_id', tenantId)
-      .eq('trigger', trigger)
+      .eq('tenant_id', tenantId)
+      .eq('trigger_condition', trigger)
       .eq('status', 'active')
       .order('created_at', { ascending: true });
-    if (fErr) throw new BadRequestException(fErr.message);
+    if (error) throw new BadRequestException(error.message);
 
     let lead: any = null;
     if (body.leadId) {
-      const { data } = await db.from('leads').select('*').eq('id', body.leadId).eq('cimolace_tenant_id', tenantId).maybeSingle();
+      const { data } = await db.from('leads').select('*').eq('id', body.leadId).eq('tenant_id', tenantId).maybeSingle();
       lead = data;
     }
 
     const executed: any[] = [];
-    for (const flow of flows ?? []) {
+    for (const row of flows ?? []) {
+      const flow = this.shapeFlow(row);
       const match = this.evaluateCondition(flow.conditions_json ?? {}, lead, body.context ?? {});
-      const { data: actions } = await db.from('automation_actions').select('*').eq('flow_id', flow.id).order('order_index', { ascending: true });
-      for (const action of actions ?? []) {
-        const branch = String(action?.config_json?.branch || 'yes').toLowerCase();
+      for (const action of flow.actions) {
+        const branch = String(action?.config?.branch || 'yes').toLowerCase();
         const shouldRun = branch === 'yes' ? match : branch === 'no' ? !match : true;
         if (!shouldRun) {
-          executed.push({ flowId: flow.id, actionId: action.id, type: action.action_type, result: 'skipped_due_branch', branch });
+          executed.push({ flowId: flow.id, type: action.action_type, result: 'skipped_due_branch', branch });
           continue;
         }
-        const result = await this.runActionForFlow(action, { lead, trigger, context: body.context ?? {} });
-        executed.push({ flowId: flow.id, actionId: action.id, branch, conditionMatch: match, ...result });
-        await this.log({
-          tenantId, lead_id: lead?.id ?? null,
-          action: `automation_${result.type}`, result: result.result,
-          payload: { flowId: flow.id, actionId: action.id, trigger, branch, conditionMatch: match },
-        });
+        const result = await this.runActionForFlow(action, { lead, trigger, context: { ...(body.context ?? {}), tenantId } });
+        executed.push({ flowId: flow.id, branch, conditionMatch: match, ...result });
       }
     }
     return { trigger, executedCount: executed.length, executed };
   }
 
-  async listAutomationAudit(tenantId: string) {
-    const { data, error } = await this.db().from('marketing_logs')
-      .select('*')
-      .eq('cimolace_tenant_id', tenantId)
-      .like('action', 'automation_%')
-      .order('created_at', { ascending: false }).limit(200);
-    if (error) throw new BadRequestException(error.message);
-    return { logs: data ?? [] };
+  async listAutomationAudit(_tenantId: string) {
+    // Journal marketing absent → audit vide (surface conservée).
+    return { logs: [] };
   }
 
   async recordAutomationAudit(tenantId: string, body: any) {
-    const actionType = String(body?.actionType || '').trim().toLowerCase();
-    const selectedFlowIds = Array.isArray(body?.selectedFlowIds) ? body.selectedFlowIds : [];
-    const successCount = Number(body?.successCount || 0);
-    const failCount = Number(body?.failCount || 0);
-    const total = Number(body?.total || selectedFlowIds.length || 0);
-
-    await this.log({
-      tenantId,
-      action: `automation_bulk_${actionType || 'unknown'}`,
-      result: failCount > 0 ? 'partial' : 'success',
-      payload: { actionType, total, successCount, failCount, selectedFlowIds },
-    });
+    await this.log({ tenantId, action: `automation_bulk_${String(body?.actionType || 'unknown')}`, result: 'recorded' });
     return { ok: true };
   }
 
   // ═══════════════════════════════════════════════════════════════════════════
-  // LEADS
+  // LEADS  (table réelle : leads = tenant_id, email, name, source, status, score)
   // ═══════════════════════════════════════════════════════════════════════════
 
   async listLeads(
@@ -764,53 +551,37 @@ export class MarketingAdvancedService {
   ) {
     const limit = Math.min(200, Math.max(1, opts.limit));
     const offset = Math.max(0, opts.offset);
-    const db = this.db();
-
-    let q = db.from('leads')
+    let q = this.db().from('leads')
       .select('*', { count: 'exact' })
-      .eq('cimolace_tenant_id', tenantId)
+      .eq('tenant_id', tenantId)
       .order('created_at', { ascending: false })
       .range(offset, offset + limit - 1);
     if (opts.status) q = q.eq('status', opts.status.toLowerCase());
     if (opts.search) {
       const escaped = opts.search.replace(/[%_]/g, (c) => `\\${c}`);
       const pattern = `%${escaped}%`;
-      q = q.or(`name.ilike.${pattern},email.ilike.${pattern},phone.ilike.${pattern}`);
+      q = q.or(`name.ilike.${pattern},email.ilike.${pattern}`);
     }
-
     const { data: leads, count, error } = await q;
     if (error) throw new BadRequestException(error.message);
-    const list = leads ?? [];
-    const ids = list.map((l: any) => l.id);
-
-    const segsByLead: Record<string, string[]> = {};
-    if (ids.length) {
-      const { data: joins } = await db.from('lead_segments').select('lead_id,segments(name)').in('lead_id', ids);
-      (joins ?? []).forEach((j: any) => {
-        const segName = j?.segments?.name;
-        if (!segName) return;
-        (segsByLead[j.lead_id] ??= []).push(segName);
-      });
-    }
-
-    const enriched = list.map((l: any) => ({ ...l, segments: segsByLead[l.id] ?? [] }));
-    const output = opts.segment ? enriched.filter((l: any) => (l.segments ?? []).includes(opts.segment)) : enriched;
+    // segments absents du schéma → tableau vide (surface conservée).
+    const output = (leads ?? []).map((l: any) => ({ ...l, segments: [] }));
     return { leads: output, total: count ?? output.length, limit, offset };
   }
 
   async captureLead(body: any) {
     const db = this.db();
     const email = String(body?.email || '').trim().toLowerCase();
-    const phone = String(body?.phone || '').trim() || null;
     const name = String(body?.name || '').trim() || null;
     const source = String(body?.source || 'web').trim();
-    if (!email && !phone) throw new BadRequestException('email or phone is required');
+    if (!email) throw new BadRequestException('email is required');
 
-    const tenantId = String(body?.tenant_id || body?.cimolace_tenant_id || '').trim() || null;
+    const tenantId = String(body?.tenant_id || body?.tenantId || '').trim();
+    if (!tenantId) throw new BadRequestException('tenant_id is required');
+
     const scoreInput = Number(body?.score);
     let score = Number.isFinite(scoreInput) ? Math.max(0, Math.min(100, scoreInput)) : 0;
     if (!Number.isFinite(scoreInput)) {
-      // derive from behavior
       const b = body?.behavior && typeof body.behavior === 'object' ? body.behavior : {};
       if (b.visitedLanding) score += 10;
       if (b.visitedOfferPage) score += 15;
@@ -820,50 +591,32 @@ export class MarketingAdvancedService {
       score = Math.max(0, Math.min(100, score));
     }
     const status = this.normalizeLeadStatus(score, String(body?.status || 'new').toLowerCase());
-    const behavior = body?.behavior && typeof body.behavior === 'object' ? body.behavior : {};
 
+    // Upsert par (tenant_id, email) — contrainte UNIQUE du schéma.
+    const { data: existing } = await db.from('leads').select('*').eq('tenant_id', tenantId).ilike('email', email).maybeSingle();
     let lead: any = null;
-    if (email) {
-      let existingReq = db.from('leads').select('*').ilike('email', email);
-      existingReq = tenantId ? existingReq.eq('cimolace_tenant_id', tenantId) : existingReq.is('cimolace_tenant_id', null);
-      const { data: existing } = await existingReq.maybeSingle();
-      if (existing) {
-        const nextScore = Math.max(Number(existing.score || 0), score);
-        const { data, error } = await db.from('leads').update({
-          name: name || existing.name,
-          phone: phone || existing.phone,
-          source,
-          score: nextScore,
-          status: this.normalizeLeadStatus(nextScore, existing.status),
-          behavior_json: { ...(existing.behavior_json ?? {}), ...behavior },
-          last_activity_at: new Date().toISOString(),
-          updated_at: new Date().toISOString(),
-          cimolace_tenant_id: existing.cimolace_tenant_id || tenantId,
-        }).eq('id', existing.id).select('*').single();
-        if (error) throw new BadRequestException(error.message);
-        lead = data;
-      }
-    }
-
-    if (!lead) {
+    if (existing) {
+      const nextScore = Math.max(Number(existing.score || 0), score);
+      const { data, error } = await db.from('leads').update({
+        name: name || existing.name,
+        source,
+        score: nextScore,
+        status: this.normalizeLeadStatus(nextScore, existing.status),
+      }).eq('id', existing.id).select('*').single();
+      if (error) throw new BadRequestException(error.message);
+      lead = data;
+    } else {
       const { data, error } = await db.from('leads').insert({
-        name, email: email || null, phone, source, score, status,
-        behavior_json: behavior,
-        last_activity_at: new Date().toISOString(),
-        cimolace_tenant_id: tenantId,
+        tenant_id: tenantId, email, name, source, score, status,
       }).select('*').single();
       if (error) throw new BadRequestException(error.message);
       lead = data;
     }
 
-    await this.log({
-      tenantId: lead.cimolace_tenant_id ?? null,
-      lead_id: lead.id, action: 'lead_capture', result: 'captured',
-      payload: { source, score: lead.score },
-    });
+    await this.log({ tenantId, lead_id: lead.id, action: 'lead_capture', result: 'captured', payload: { source, score: lead.score } });
     return { lead, automationTrigger: 'lead_created' };
   }
 }
 
-// silence unused import warnings (ForbiddenException kept for future use)
+// silence unused import warning (ForbiddenException conservé pour usage futur)
 void ForbiddenException;
