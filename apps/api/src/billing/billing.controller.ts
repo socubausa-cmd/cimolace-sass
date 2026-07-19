@@ -29,14 +29,8 @@ export class BillingController {
   @Post("subscribe") @Roles("owner", "admin") async subscribe(@Req() req: any, @Body() b: { planKey?: string; provider?: string }) {
     return this.svc.subscribeToPlan(req.tenant.id, b?.planKey ?? "", b?.provider);
   }
-
-  // RÉSILIATION SELF-SERVE (§11) — en fin de période, réversible tant qu'elle n'a pas pris effet.
-  @Post("subscription/cancel") @Roles("owner", "admin") async cancelSub(@Req() req: any, @Body() b: { reason?: string }) {
-    return { data: await this.svc.cancelSubscription(req.tenant.id, { reason: b?.reason, actor: req.user?.email ?? req.user?.id }) };
-  }
-  @Post("subscription/reactivate") @Roles("owner", "admin") async reactivateSub(@Req() req: any) {
-    return { data: await this.svc.reactivateSubscription(req.tenant.id) };
-  }
+  // RÉSILIATION §11 : politique unique (fin de période) portée par tenant-portal
+  // (POST /tenant-portal/subscriptions/:id/cancel + /reactivate), que le front utilise déjà.
   // Mobile money (PawaPay — Afrique)
   @Post("subscriptions/:id/collect") @Roles("owner", "admin") async collect(@Req() req: any, @Param("id") id: string, @Body() b: any) {
     return this.svc.collectSubscriptionViaPawaPay(req.tenant.id, id, b);

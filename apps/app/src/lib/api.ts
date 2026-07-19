@@ -186,6 +186,8 @@ export const tenantPortalApi = {
   profile: () => api.get<ApiEnvelope<any>>("/tenant-portal/profile").then(unwrap).then(peel),
   cancelSubscription: (id: string) =>
     api.post<ApiEnvelope<any>>(`/tenant-portal/subscriptions/${id}/cancel`).then(unwrap).then(peel),
+  reactivateSubscription: (id: string) =>
+    api.post<ApiEnvelope<any>>(`/tenant-portal/subscriptions/${id}/reactivate`).then(unwrap).then(peel),
   requestDeletion: (reason?: string) =>
     api.post<ApiEnvelope<any>>("/tenant-portal/account/request-deletion", { reason }).then(unwrap).then(peel),
   billingPortal: () =>

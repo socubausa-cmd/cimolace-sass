@@ -534,10 +534,18 @@ export default function CimolaceBillingDashboardPage() {
     catch (e) { setError(e?.message || 'Demande impossible (seul le owner peut supprimer le compte)'); }
     finally { setBusy(null); }
   };
+  // RÉSILIATION §11 — FIN DE PÉRIODE : accès conservé jusqu'à l'échéance, aucun remboursement, réversible.
   const cancelSub = async (id) => {
+    setRefundConfirm(null);
     setBusy(`cancel-${id}`); setError(null);
-    try { withSlug(); await tenantPortalApi.cancelSubscription(id); await loadAll(activeSlug); setNotice('Abonnement annulé.'); }
-    catch (e) { setError(e?.message || 'Annulation impossible'); }
+    try { withSlug(); await tenantPortalApi.cancelSubscription(id); await loadAll(activeSlug); setNotice('Résiliation programmée — votre accès reste actif jusqu\'à la fin de la période en cours.'); }
+    catch (e) { setError(e?.message || 'Résiliation impossible'); }
+    finally { setBusy(null); }
+  };
+  const reactivateSub = async (id) => {
+    setBusy(`react-${id}`); setError(null);
+    try { withSlug(); await tenantPortalApi.reactivateSubscription(id); await loadAll(activeSlug); setNotice('Résiliation annulée — votre abonnement continue normalement.'); }
+    catch (e) { setError(e?.message || 'Réactivation impossible'); }
     finally { setBusy(null); }
   };
   // Annulation AVEC remboursement du dernier paiement mobile money (PawaPay).
@@ -806,9 +814,15 @@ export default function CimolaceBillingDashboardPage() {
                                     ) : refundState?.subId === s.id && refundState.status === 'pending' ? (
                                       <span className="flex items-center gap-1.5 text-xs text-white/60"><Loader2 className="w-3.5 h-3.5 animate-spin" /> Remboursement en cours…</span>
                                     ) : (
-                                      <button onClick={() => setRefundConfirm(s)} disabled={busy === `refund-${s.id}`} className="text-xs px-3 py-1.5 rounded-lg border border-red-400/30 text-red-300 hover:bg-red-400/10 flex items-center gap-1.5 disabled:opacity-50">
-                                        {busy === `refund-${s.id}` ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <RefreshCw className="w-3.5 h-3.5" />} Annuler et être remboursé
-                                      </button>
+                                      s.metadata?.cancel_at_period_end ? (
+                                        <button onClick={() => reactivateSub(s.id)} disabled={busy === `react-${s.id}`} className="text-xs px-3 py-1.5 rounded-lg border border-emerald-400/30 text-emerald-300 hover:bg-emerald-400/10 flex items-center gap-1.5 disabled:opacity-50" title="Résiliation programmée en fin de période">
+                                          {busy === `react-${s.id}` ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <RefreshCw className="w-3.5 h-3.5" />} Résiliation programmée · Réactiver
+                                        </button>
+                                      ) : (
+                                        <button onClick={() => setRefundConfirm(s)} disabled={busy === `cancel-${s.id}`} className="text-xs px-3 py-1.5 rounded-lg border border-red-400/30 text-red-300 hover:bg-red-400/10 flex items-center gap-1.5 disabled:opacity-50">
+                                          {busy === `cancel-${s.id}` ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <RefreshCw className="w-3.5 h-3.5" />} Résilier
+                                        </button>
+                                      )
                                     )
                                   )}
                                 </div>
@@ -1226,14 +1240,14 @@ export default function CimolaceBillingDashboardPage() {
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4" onClick={() => setRefundConfirm(null)}>
           <div className="w-full max-w-sm rounded-2xl border border-white/[0.1] bg-[#1b1712] p-6 shadow-2xl" onClick={(e) => e.stopPropagation()}>
             <div className="flex items-center gap-3 mb-4">
-              <div className="w-10 h-10 rounded-full bg-[#d97757]/15 flex items-center justify-center shrink-0"><RefreshCw className="w-5 h-5 text-[#d97757]" /></div>
-              <h3 className="font-bold text-white text-lg leading-tight">Annuler et rembourser</h3>
+              <div className="w-10 h-10 rounded-full bg-[#d97757]/15 flex items-center justify-center shrink-0"><AlertCircle className="w-5 h-5 text-[#d97757]" /></div>
+              <h3 className="font-bold text-white text-lg leading-tight">Résilier l'abonnement</h3>
             </div>
-            <p className="text-sm text-white/70 mb-3">Annuler <strong className="text-white capitalize">{planName(refundConfirm)}</strong> et renvoyer <strong className="text-white">{eur(refundConfirm.amount_cents, refundConfirm.currency)}</strong> sur le numéro Mobile Money du payeur ?</p>
-            <div className="rounded-xl border border-[#d97757]/25 bg-[#d97757]/[0.07] px-3.5 py-2.5 text-xs text-white/65 mb-5 flex items-start gap-2"><AlertCircle className="w-4 h-4 text-[#e0926a] shrink-0 mt-px" /> Remboursement d'argent réel, immédiat et irréversible.</div>
+            <p className="text-sm text-white/70 mb-3">Résilier <strong className="text-white capitalize">{planName(refundConfirm)}</strong> ? Vous conservez l'accès jusqu'à la fin de la période{refundConfirm.current_period_end ? <> (le <strong className="text-white">{new Date(refundConfirm.current_period_end).toLocaleDateString('fr-FR')}</strong>)</> : ''}, puis l'abonnement s'arrête. Aucun remboursement.</p>
+            <div className="rounded-xl border border-white/[0.1] bg-white/[0.04] px-3.5 py-2.5 text-xs text-white/65 mb-5 flex items-start gap-2"><RefreshCw className="w-4 h-4 text-[#e0926a] shrink-0 mt-px" /> Réversible : vous pourrez réactiver tant que la période n'est pas terminée.</div>
             <div className="flex gap-2.5">
               <button onClick={() => setRefundConfirm(null)} className="flex-1 px-4 py-2.5 rounded-xl border border-white/[0.12] text-white/70 text-sm font-medium hover:bg-white/[0.06] transition-colors">Garder l'abo</button>
-              <button onClick={() => cancelAndRefund(refundConfirm)} className="flex-1 px-4 py-2.5 rounded-xl bg-[#d97757] text-white text-sm font-bold hover:bg-[#c9673f] flex items-center justify-center gap-2 transition-colors"><RefreshCw className="w-4 h-4" /> Rembourser</button>
+              <button onClick={() => cancelSub(refundConfirm.id)} className="flex-1 px-4 py-2.5 rounded-xl bg-[#d97757] text-white text-sm font-bold hover:bg-[#c9673f] flex items-center justify-center gap-2 transition-colors">Résilier</button>
             </div>
           </div>
         </div>

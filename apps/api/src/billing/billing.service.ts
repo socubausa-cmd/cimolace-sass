@@ -1441,99 +1441,10 @@ export class BillingService implements OnApplicationBootstrap {
     return res.json();
   }
 
-  /**
-   * POST /v1/subscriptions/{id} cancel_at_period_end=<bool> — résiliation/réactivation
-   * d'un VRAI abonnement récurrent Stripe (id `sub_…`). Best-effort : ne concerne que les
-   * abos récurrents Stripe (les plans vitrine inline et le mobile money n'ont pas de sub_id
-   * et sont gérés par le flag local + le saut du cron de renouvellement).
-   */
-  private async setStripeCancelAtPeriodEnd(subId: string, cancel: boolean): Promise<boolean> {
-    if (!subId || !subId.startsWith("sub_") || !process.env.STRIPE_SECRET_KEY) return false;
-    try {
-      const res = await fetch(`https://api.stripe.com/v1/subscriptions/${subId}`, {
-        method: "POST",
-        headers: { Authorization: this.stripeAuth(), "Content-Type": "application/x-www-form-urlencoded" },
-        body: `cancel_at_period_end=${cancel ? "true" : "false"}`,
-      });
-      if (!res.ok) { console.error(`[billing cancel] Stripe ${subId} → ${res.status}`); return false; }
-      return true;
-    } catch (e) {
-      console.error(`[billing cancel] Stripe ${subId} exception: ${(e as Error).message}`);
-      return false;
-    }
-  }
-
-  /**
-   * RÉSILIATION SELF-SERVE (§11) — en FIN DE PÉRIODE : l'accès est conservé jusqu'à
-   * `current_period_end` (choix standard, équitable), puis l'abo expire naturellement
-   * (le palier retombe en gratuit). On pose un flag local `cancel_at_period_end` (que le
-   * cron de renouvellement mobile-money saute) et, pour un vrai abo récurrent Stripe, on
-   * programme l'annulation chez Stripe. Idempotent. Aucun remboursement (accès conservé).
-   */
-  async cancelSubscription(tenantId: string, opts?: { reason?: string; actor?: string }) {
-    const sb = this.supabase;
-    const { data: sub } = await sb
-      .from("billing_subscriptions")
-      .select("id, provider, provider_subscription_id, current_period_end, metadata, plan_id")
-      .eq("tenant_id", tenantId)
-      .eq("status", "active")
-      .order("created_at", { ascending: false })
-      .maybeSingle();
-    if (!sub) throw new NotFoundException("Aucun abonnement actif à résilier.");
-    const s = sub as any;
-    let stripeScheduled = false;
-    if (s.provider === "stripe" && s.provider_subscription_id) {
-      stripeScheduled = await this.setStripeCancelAtPeriodEnd(s.provider_subscription_id, true);
-    }
-    const meta = { ...(s.metadata ?? {}) };
-    meta.cancel_at_period_end = true;
-    meta.cancel_requested_at = new Date().toISOString();
-    if (opts?.reason) meta.cancel_reason = String(opts.reason).slice(0, 500);
-    if (opts?.actor) meta.canceled_by = opts.actor;
-    await sb.from("billing_subscriptions")
-      .update({ metadata: meta, updated_at: new Date().toISOString() })
-      .eq("id", s.id);
-    this.notifyTenant(tenantId, "billing.subscription.cancel_scheduled", {
-      subscription_id: s.id, plan_id: s.plan_id, effective_until: s.current_period_end ?? null,
-    });
-    return {
-      ok: true,
-      cancel_at_period_end: true,
-      effective_until: s.current_period_end ?? null,
-      stripe_scheduled: stripeScheduled,
-      message: s.current_period_end
-        ? `Résiliation programmée. Votre accès reste actif jusqu'au ${new Date(s.current_period_end).toLocaleDateString("fr-FR")}.`
-        : "Résiliation programmée. Votre accès reste actif jusqu'à la fin de la période en cours.",
-    };
-  }
-
-  /** Annule la résiliation programmée tant que la période n'est pas terminée. */
-  async reactivateSubscription(tenantId: string) {
-    const sb = this.supabase;
-    const { data: sub } = await sb
-      .from("billing_subscriptions")
-      .select("id, provider, provider_subscription_id, metadata")
-      .eq("tenant_id", tenantId)
-      .eq("status", "active")
-      .order("created_at", { ascending: false })
-      .maybeSingle();
-    if (!sub) throw new NotFoundException("Aucun abonnement actif.");
-    const s = sub as any;
-    if (!s.metadata?.cancel_at_period_end) return { ok: true, cancel_at_period_end: false, message: "Aucune résiliation à annuler." };
-    if (s.provider === "stripe" && s.provider_subscription_id) {
-      await this.setStripeCancelAtPeriodEnd(s.provider_subscription_id, false);
-    }
-    const meta = { ...(s.metadata ?? {}) };
-    delete meta.cancel_at_period_end;
-    delete meta.cancel_requested_at;
-    delete meta.cancel_reason;
-    meta.reactivated_at = new Date().toISOString();
-    await sb.from("billing_subscriptions")
-      .update({ metadata: meta, updated_at: new Date().toISOString() })
-      .eq("id", s.id);
-    this.notifyTenant(tenantId, "billing.subscription.reactivated", { subscription_id: s.id });
-    return { ok: true, cancel_at_period_end: false, message: "Résiliation annulée — votre abonnement continue normalement." };
-  }
+  // RÉSILIATION §11 : politique unique (fin de période) = tenant-portal
+  // (POST /tenant-portal/subscriptions/:id/cancel + /reactivate). Le flag local
+  // metadata.cancel_at_period_end est respecté par renewDueSubscriptions (le cron saute
+  // les résiliés → l'abo expire à l'échéance). (Ancien doublon /billing/subscription/cancel retiré.)
 
   private unixToIso(unix?: number | null): string | null {
     return unix ? new Date(unix * 1000).toISOString() : null;

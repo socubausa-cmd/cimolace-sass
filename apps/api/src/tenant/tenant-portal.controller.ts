@@ -180,20 +180,46 @@ export class TenantPortalController {
   }
 
   /** Annule un abonnement du tenant (après vérification d'appartenance). */
+  // RÉSILIATION SELF-SERVE (§11) — politique unique = FIN DE PÉRIODE : l'accès est conservé
+  // jusqu'à current_period_end (aucun remboursement), puis l'abo expire (le cron de
+  // renouvellement mobile-money saute les résiliés). Réversible tant que la période court.
   @Post('subscriptions/:id/cancel')
   @Roles('owner', 'admin')
-  async cancelSub(@Req() req: any, @Param('id') id: string) {
-    const { data: sub } = await this.db.from('billing_subscriptions').select('id, tenant_id').eq('id', id).maybeSingle();
+  async cancelSub(@Req() req: any, @Param('id') id: string, @Body() body: { reason?: string }) {
+    const { data: sub } = await this.db
+      .from('billing_subscriptions')
+      .select('id, tenant_id, current_period_end, metadata')
+      .eq('id', id).maybeSingle();
     if (!sub || sub.tenant_id !== req.tenant.id) throw new NotFoundException('Abonnement introuvable pour ce tenant');
-    const now = new Date().toISOString();
+    const meta = { ...(sub.metadata || {}), cancel_at_period_end: true, cancel_requested_at: new Date().toISOString() };
+    if (body?.reason) meta.cancel_reason = String(body.reason).slice(0, 500);
+    if (req.user?.email || req.user?.id) meta.canceled_by = req.user?.email ?? req.user?.id;
     const { data, error } = await this.db
       .from('billing_subscriptions')
-      .update({ status: 'canceled', canceled_at: now, updated_at: now })
-      .eq('id', id)
-      .select('*')
-      .single();
+      .update({ metadata: meta, updated_at: new Date().toISOString() })
+      .eq('id', id).select('*').single();
     if (error) throw new BadRequestException(error.message);
-    return { data };
+    return { data: { ...data, cancel_at_period_end: true, effective_until: sub.current_period_end ?? null } };
+  }
+
+  /** Annule la résiliation programmée tant que la période court. */
+  @Post('subscriptions/:id/reactivate')
+  @Roles('owner', 'admin')
+  async reactivateSub(@Req() req: any, @Param('id') id: string) {
+    const { data: sub } = await this.db
+      .from('billing_subscriptions')
+      .select('id, tenant_id, metadata')
+      .eq('id', id).maybeSingle();
+    if (!sub || sub.tenant_id !== req.tenant.id) throw new NotFoundException('Abonnement introuvable pour ce tenant');
+    const meta = { ...(sub.metadata || {}) };
+    delete meta.cancel_at_period_end; delete meta.cancel_requested_at; delete meta.cancel_reason;
+    meta.reactivated_at = new Date().toISOString();
+    const { data, error } = await this.db
+      .from('billing_subscriptions')
+      .update({ metadata: meta, updated_at: new Date().toISOString() })
+      .eq('id', id).select('*').single();
+    if (error) throw new BadRequestException(error.message);
+    return { data: { ...data, cancel_at_period_end: false } };
   }
 
   /**
