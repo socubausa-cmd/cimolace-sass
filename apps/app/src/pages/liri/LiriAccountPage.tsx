@@ -3,12 +3,13 @@ import { useNavigate } from 'react-router-dom';
 import {
   ChevronLeft, UserRound, Building2, Users, CreditCard, Wallet, LogOut, Trash2,
   X, Loader2, Sparkles, Check, ArrowUpRight, SlidersHorizontal, Settings2,
-  Eye, EyeOff, Copy, ShieldCheck, UserPlus, FileText, Globe,
+  Eye, EyeOff, Copy, ShieldCheck, UserPlus, FileText, Globe, Palette, KeyRound, Image as ImageIcon,
 } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import { authStore } from '@/lib/auth-store';
 import { getApiBaseUrl } from '@/lib/apiBase';
 import { useAuth } from '@/hooks/useAuth';
+import { supabase } from '@/lib/supabase';
 import LiriDomainSettings from '@/components/liri/LiriDomainSettings';
 import LiriMobileMoneySettings from '@/components/liri/LiriMobileMoneySettings';
 import '../LiriPortal.css';
@@ -69,6 +70,23 @@ export default function LiriAccountPage() {
   const [nameEditing, setNameEditing] = useState(false);
   const [nameDraft, setNameDraft] = useState('');
   const [nameSaving, setNameSaving] = useState(false);
+
+  // Marque & identité (logo, couleurs, slogan) — PATCH /tenants/current/branding, INLINE.
+  const [brandLoaded, setBrandLoaded] = useState(false);
+  const [logoUrl, setLogoUrl] = useState('');
+  const [brandName, setBrandName] = useState('');
+  const [accent, setAccent] = useState('#d97757');
+  const [primary, setPrimary] = useState('');
+  const [slogan, setSlogan] = useState('');
+  const [brandSaving, setBrandSaving] = useState(false);
+  const [brandMsg, setBrandMsg] = useState<{ ok: boolean; text: string } | null>(null);
+
+  // Sécurité — changement de mot de passe (Supabase auth, l'utilisateur saisit le sien).
+  const [pw1, setPw1] = useState('');
+  const [pw2, setPw2] = useState('');
+  const [showPw, setShowPw] = useState(false);
+  const [pwSaving, setPwSaving] = useState(false);
+  const [pwMsg, setPwMsg] = useState<{ ok: boolean; text: string } | null>(null);
 
   const orgName = org?.name || slugLabel;
   const orgSlug = org?.slug || slug;
@@ -206,8 +224,10 @@ export default function LiriAccountPage() {
   type NavItem = { key: string; label: string; icon: LucideIcon; group: 'compte' | 'org' };
   const NAV: NavItem[] = [
     { key: 'profil', label: 'Profil', icon: UserRound, group: 'compte' },
+    { key: 'securite', label: 'Sécurité', icon: KeyRound, group: 'compte' },
     { key: 'prefs', label: 'Préférences', icon: Settings2, group: 'compte' },
     { key: 'general', label: 'Général', icon: SlidersHorizontal, group: 'org' },
+    { key: 'marque', label: 'Marque', icon: Palette, group: 'org' },
     { key: 'membres', label: 'Membres', icon: Users, group: 'org' },
     { key: 'facturation', label: 'Facturation', icon: CreditCard, group: 'org' },
     { key: 'encaissements', label: 'Encaissements', icon: Wallet, group: 'org' },
@@ -245,6 +265,64 @@ export default function LiriAccountPage() {
       .then((d) => { let a: any = d; while (a && typeof a === 'object' && !Array.isArray(a) && 'data' in a) a = a.data; if (Array.isArray(a)) setMembers(a as Member[]); setMemLoaded(true); })
       .catch(() => setMemLoaded(true));
   }, [active, base, token, slug, memLoaded]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Charge (lazy) l'identité de marque quand la section Marque s'ouvre.
+  useEffect(() => {
+    if (active !== 'marque' || !token || brandLoaded) return;
+    const h = { Authorization: `Bearer ${token}`, 'X-Tenant-Slug': slug } as Record<string, string>;
+    fetch(`${base}/tenants/current`, { headers: h }).then((r) => (r.ok ? r.json() : null))
+      .then((d) => {
+        let t: any = d; while (t && typeof t === 'object' && 'data' in t) t = t.data;
+        if (t) {
+          setBrandName(t.name ?? '');
+          setLogoUrl(t.logo_url ?? '');
+          const c = (t.brand_colors && typeof t.brand_colors === 'object') ? t.brand_colors : {};
+          setAccent(c.accent || '#d97757');
+          setPrimary(c.primary || '');
+          const site = (t.metadata?.site && typeof t.metadata.site === 'object') ? t.metadata.site : {};
+          setSlogan(site.slogan || '');
+        }
+        setBrandLoaded(true);
+      })
+      .catch(() => setBrandLoaded(true));
+  }, [active, base, token, slug, brandLoaded]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Enregistre l'identité de marque (logo, couleurs, nom, slogan) — merge non destructif côté API.
+  const saveBranding = async () => {
+    if (brandSaving) return;
+    setBrandSaving(true); setBrandMsg(null);
+    try {
+      const h = { 'Content-Type': 'application/json', Authorization: `Bearer ${token}`, 'X-Tenant-Slug': slug } as Record<string, string>;
+      const body: Record<string, unknown> = {
+        logo_url: logoUrl.trim(),
+        brand_colors: { accent, ...(primary.trim() ? { primary: primary.trim() } : {}) },
+        site: { slogan: slogan.trim() },
+      };
+      if (brandName.trim()) body.name = brandName.trim();
+      const res = await fetch(`${base}/tenants/current/branding`, { method: 'PATCH', headers: h, body: JSON.stringify(body) });
+      if (!res.ok) { const e = await res.json().catch(() => ({})); throw new Error(e?.error?.message || e?.message || 'Échec de l’enregistrement.'); }
+      if (brandName.trim()) setOrg((o) => (o ? { ...o, name: brandName.trim() } : o));
+      setBrandMsg({ ok: true, text: 'Identité enregistrée — elle s’applique à votre espace et votre vitrine.' });
+    } catch (err: any) {
+      setBrandMsg({ ok: false, text: err?.message || 'Échec de l’enregistrement.' });
+    } finally { setBrandSaving(false); }
+  };
+
+  // Changement de mot de passe (l'utilisateur saisit le sien ; Supabase auth).
+  const changePassword = async () => {
+    if (pwSaving) return;
+    if (pw1.length < 8) { setPwMsg({ ok: false, text: 'Mot de passe : 8 caractères minimum.' }); return; }
+    if (pw1 !== pw2) { setPwMsg({ ok: false, text: 'Les deux mots de passe ne correspondent pas.' }); return; }
+    setPwSaving(true); setPwMsg(null);
+    try {
+      const { error } = await supabase.auth.updateUser({ password: pw1 });
+      if (error) throw new Error(error.message || 'Échec.');
+      setPw1(''); setPw2('');
+      setPwMsg({ ok: true, text: 'Mot de passe mis à jour.' });
+    } catch (err: any) {
+      setPwMsg({ ok: false, text: err?.message || 'Échec de la mise à jour.' });
+    } finally { setPwSaving(false); }
+  };
 
   const initials = orgName.slice(0, 2).toUpperCase();
 
@@ -315,6 +393,86 @@ export default function LiriAccountPage() {
           <div>
             <Header title="Préférences" subtitle="Notifications, langue et options personnelles" />
             <div className="mt-5"><Linkish label="Préférences du compte" sub="Gérez vos notifications et vos options d’affichage." btn="Ouvrir les préférences" onClick={() => nav('/profil/parametres')} /></div>
+          </div>
+        );
+      case 'securite':
+        return (
+          <div>
+            <Header title="Sécurité" subtitle="Votre email de connexion et votre mot de passe" />
+            <div className="mt-5 border-t lp-line">
+              <Row label="Email de connexion" value={email || '—'} action={<GhostBtn onClick={() => nav('/profil/modifier')}>Modifier</GhostBtn>} />
+            </div>
+            <div className="mt-6 rounded-2xl border lp-line lp-panel70 p-5">
+              <p className="text-[14px] font-medium lp-ink">Changer le mot de passe</p>
+              <p className="mt-0.5 text-[12px] lp-faint">8 caractères minimum. Vous resterez connecté.</p>
+              <label className="mt-4 block text-[12px] font-medium lp-faint">Nouveau mot de passe</label>
+              <div className="relative mt-1.5">
+                <input type={showPw ? 'text' : 'password'} value={pw1} onChange={(e) => setPw1(e.target.value)} autoComplete="new-password" placeholder="••••••••" className="w-full rounded-xl border lp-line bg-[rgba(255,255,255,.04)] px-3 py-2.5 pr-10 text-[13px] text-white placeholder:text-white/25 focus:border-[rgba(217,119,87,.5)] focus:outline-none" />
+                <button type="button" onClick={() => setShowPw((v) => !v)} className="absolute right-2 top-1/2 grid h-7 w-7 -translate-y-1/2 place-items-center rounded-lg lp-faint lp-tr hover:bg-[rgba(255,255,255,.06)]" aria-label="Afficher / masquer">{showPw ? <EyeOff size={15} /> : <Eye size={15} />}</button>
+              </div>
+              <label className="mt-4 block text-[12px] font-medium lp-faint">Confirmer</label>
+              <input type={showPw ? 'text' : 'password'} value={pw2} onChange={(e) => setPw2(e.target.value)} onKeyDown={(e) => { if (e.key === 'Enter') changePassword(); }} autoComplete="new-password" placeholder="••••••••" className="mt-1.5 w-full rounded-xl border lp-line bg-[rgba(255,255,255,.04)] px-3 py-2.5 text-[13px] text-white placeholder:text-white/25 focus:border-[rgba(217,119,87,.5)] focus:outline-none" />
+              {pwMsg && <p className="mt-3 text-[12.5px]" style={{ color: pwMsg.ok ? '#7bbf6a' : '#ef6a52' }}>{pwMsg.text}</p>}
+              <div className="mt-5">
+                <button onClick={changePassword} disabled={pwSaving || !pw1 || !pw2} className="flex items-center gap-2 rounded-xl px-4 py-2.5 text-[13px] font-semibold text-white lp-tr disabled:opacity-50" style={{ background: 'linear-gradient(90deg,#e2855f,#c2683f)' }}>{pwSaving ? <><Loader2 size={15} className="animate-spin" /> Mise à jour…</> : <><KeyRound size={15} /> Mettre à jour</>}</button>
+              </div>
+            </div>
+          </div>
+        );
+      case 'marque':
+        return (
+          <div>
+            <Header title="Marque & identité" subtitle="Votre logo, vos couleurs et votre nom — appliqués à votre espace, votre vitrine et vos emails." />
+            {!brandLoaded ? (
+              <div className="mt-6 flex items-center gap-2 text-[13px] lp-faint"><Loader2 size={15} className="animate-spin" /> Chargement…</div>
+            ) : (
+              <div className="mt-5 space-y-5">
+                {/* Logo */}
+                <div className="rounded-2xl border lp-line lp-panel70 p-5">
+                  <p className="text-[13px] font-medium lp-ink">Logo</p>
+                  <p className="mt-0.5 text-[12px] lp-faint">Collez l’URL de votre logo (PNG/SVG carré recommandé).</p>
+                  <div className="mt-3 flex items-center gap-4">
+                    <span className="grid h-14 w-14 shrink-0 place-items-center overflow-hidden rounded-2xl border lp-line" style={{ background: 'rgba(255,255,255,.04)' }}>
+                      {logoUrl.trim() ? <img src={logoUrl.trim()} alt="logo" className="h-full w-full object-contain" /> : <ImageIcon size={20} className="lp-faint" />}
+                    </span>
+                    <input type="url" value={logoUrl} onChange={(e) => setLogoUrl(e.target.value)} placeholder="https://…/logo.png" autoComplete="off" spellCheck={false} className="min-w-0 flex-1 rounded-xl border lp-line bg-[rgba(255,255,255,.04)] px-3 py-2.5 text-[13px] text-white placeholder:text-white/25 focus:border-[rgba(217,119,87,.5)] focus:outline-none" />
+                  </div>
+                </div>
+
+                {/* Nom + slogan */}
+                <div className="rounded-2xl border lp-line lp-panel70 p-5">
+                  <label className="block text-[12px] font-medium lp-faint">Nom de la marque</label>
+                  <input value={brandName} onChange={(e) => setBrandName(e.target.value)} placeholder={orgName} className="mt-1.5 w-full rounded-xl border lp-line bg-[rgba(255,255,255,.04)] px-3 py-2.5 text-[13px] text-white placeholder:text-white/25 focus:border-[rgba(217,119,87,.5)] focus:outline-none" />
+                  <label className="mt-4 block text-[12px] font-medium lp-faint">Slogan <span className="lp-faint">(vitrine)</span></label>
+                  <input value={slogan} onChange={(e) => setSlogan(e.target.value)} placeholder="Ex : L’école de la Prorascience" className="mt-1.5 w-full rounded-xl border lp-line bg-[rgba(255,255,255,.04)] px-3 py-2.5 text-[13px] text-white placeholder:text-white/25 focus:border-[rgba(217,119,87,.5)] focus:outline-none" />
+                </div>
+
+                {/* Couleurs */}
+                <div className="rounded-2xl border lp-line lp-panel70 p-5">
+                  <p className="text-[13px] font-medium lp-ink">Couleurs</p>
+                  <p className="mt-0.5 text-[12px] lp-faint">L’accent pilote les boutons et éléments actifs de votre espace.</p>
+                  <div className="mt-3 flex flex-wrap gap-5">
+                    <div>
+                      <label className="block text-[12px] font-medium lp-faint">Accent</label>
+                      <div className="mt-1.5 flex items-center gap-2">
+                        <input type="color" value={/^#[0-9a-fA-F]{6}$/.test(accent) ? accent : '#d97757'} onChange={(e) => setAccent(e.target.value)} className="h-9 w-12 cursor-pointer rounded-lg border lp-line bg-transparent p-0.5" aria-label="Couleur d’accent" />
+                        <input value={accent} onChange={(e) => setAccent(e.target.value)} className="w-28 rounded-lg border lp-line bg-[rgba(255,255,255,.04)] px-2.5 py-2 font-mono text-[12px] text-white focus:border-[rgba(217,119,87,.5)] focus:outline-none" />
+                      </div>
+                    </div>
+                    <div>
+                      <label className="block text-[12px] font-medium lp-faint">Primaire <span className="lp-faint">(optionnel)</span></label>
+                      <div className="mt-1.5 flex items-center gap-2">
+                        <input type="color" value={/^#[0-9a-fA-F]{6}$/.test(primary) ? primary : '#262624'} onChange={(e) => setPrimary(e.target.value)} className="h-9 w-12 cursor-pointer rounded-lg border lp-line bg-transparent p-0.5" aria-label="Couleur primaire" />
+                        <input value={primary} onChange={(e) => setPrimary(e.target.value)} placeholder="—" className="w-28 rounded-lg border lp-line bg-[rgba(255,255,255,.04)] px-2.5 py-2 font-mono text-[12px] text-white placeholder:text-white/25 focus:border-[rgba(217,119,87,.5)] focus:outline-none" />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {brandMsg && <p className="text-[12.5px]" style={{ color: brandMsg.ok ? '#7bbf6a' : '#ef6a52' }}>{brandMsg.text}</p>}
+                <button onClick={saveBranding} disabled={brandSaving} className="flex items-center gap-2 rounded-xl px-4 py-2.5 text-[13px] font-semibold text-white lp-tr disabled:opacity-50" style={{ background: 'linear-gradient(90deg,#e2855f,#c2683f)' }}>{brandSaving ? <><Loader2 size={15} className="animate-spin" /> Enregistrement…</> : <><Palette size={15} /> Enregistrer l’identité</>}</button>
+              </div>
+            )}
           </div>
         );
       case 'membres':
@@ -518,10 +676,13 @@ export default function LiriAccountPage() {
       <div className="lp-glow"><span style={{ width: 480, height: 380, left: '24%', top: -150, background: 'rgba(217,119,87,.08)' }} /></div>
 
       <div className="relative z-10 mx-auto w-full max-w-4xl px-4 py-6 sm:px-6">
-        {/* topbar */}
+        {/* topbar — console de réglages dédiée */}
         <div className="mb-5 flex items-center gap-3">
-          <button onClick={() => nav('/liri')} className="grid h-9 w-9 place-items-center rounded-xl lp-muted lp-railbtn lp-tr" aria-label="Retour au portail"><ChevronLeft size={18} /></button>
-          <h1 className="lp-serif text-[22px] font-medium">Mon compte</h1>
+          <button onClick={() => nav('/liri')} className="grid h-9 w-9 shrink-0 place-items-center rounded-xl lp-muted lp-railbtn lp-tr" aria-label="Retour au portail"><ChevronLeft size={18} /></button>
+          <div className="min-w-0">
+            <h1 className="lp-serif text-[22px] font-medium leading-tight">Réglages &amp; personnalisation</h1>
+            <p className="text-[12.5px] lp-faint">Profil, sécurité, marque, paiements, domaine — tout votre espace au même endroit.</p>
+          </div>
         </div>
 
         <div className="overflow-hidden" style={{ background: 'rgba(34,31,27,.55)' }}>
