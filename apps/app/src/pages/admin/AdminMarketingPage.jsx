@@ -1076,14 +1076,16 @@ export default function AdminMarketingPage() {
   }, [authFetch, loadKnowledgeBase, toast]);
 
   return (
-    <div className="space-y-6 overflow-x-hidden min-w-0 max-w-full">
-      <div className="premium-panel p-6 flex flex-wrap items-center justify-between gap-3">
+    // Conteneur CENTRÉ + contraint (comme LiriServicesPage) — sinon le contenu s'étale sur toute
+    // la largeur de l'écran (« trop large, pas centré »). Padding aéré, pas de scroll horizontal.
+    <div className="mx-auto w-full max-w-5xl space-y-5 overflow-x-hidden min-w-0 px-4 py-6 sm:px-6 sm:py-8">
+      <div className="premium-panel p-5 flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-bold text-white flex items-center gap-2">
-            <Megaphone className="w-6 h-6 text-[var(--school-accent)]" />
+          <h1 className="text-xl font-bold text-white flex items-center gap-2">
+            <Megaphone className="w-5 h-5 text-[var(--school-accent)]" />
             PRORASCIENCE Growth Engine
           </h1>
-          <p className="text-sm text-gray-400 mt-1">Campaigns, funnels, leads, automation et analytics connectes au booking/paiement.</p>
+          <p className="text-[13px] text-gray-400 mt-1">Campaigns, funnels, leads, automation et analytics connectés au booking/paiement.</p>
         </div>
         <Button
           variant="outline"
