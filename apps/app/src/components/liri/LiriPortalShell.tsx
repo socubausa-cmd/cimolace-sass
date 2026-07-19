@@ -2,7 +2,7 @@ import { useNavigate } from 'react-router-dom';
 import { useEffect, useRef, useState } from 'react';
 import {
   Menu, Sparkles, Bell, Settings, House, Video, MessagesSquare, MessageCircle,
-  WandSparkles, Library, Blocks, Settings2, GraduationCap, ChevronRight, ChevronDown, MoreHorizontal,
+  WandSparkles, Library, Settings2, GraduationCap, ChevronRight, ChevronDown, MoreHorizontal,
   CalendarDays, BookOpen, School, Calendar, FileText, Award, AlertTriangle, FolderOpen,
 } from 'lucide-react';
 import type { ReactNode } from 'react';
@@ -247,7 +247,6 @@ function LiriPortalShellInner({
           {isCreator && (
             <>
               <div className="my-1 h-px w-9" style={{ background: 'rgba(245,244,238,.08)' }} />
-              <button onClick={() => nav('/liri')} className="lp-nav flex w-[74px] flex-col items-center gap-0.5 rounded-2xl py-2 lp-tr"><span className="lp-ni grid h-6 w-6 place-items-center"><Blocks size={19} /></span><span className="lp-nl text-[9px] font-medium">Intégr.</span></button>
               <button onClick={() => nav('/liri/compte')} className="lp-nav flex w-[74px] flex-col items-center gap-0.5 rounded-2xl py-2 lp-tr"><span className="lp-ni grid h-6 w-6 place-items-center"><Settings2 size={19} /></span><span className="lp-nl text-[9px] font-medium">Réglages</span></button>
             </>
           )}
