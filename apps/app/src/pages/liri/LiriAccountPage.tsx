@@ -13,6 +13,7 @@ import { supabase } from '@/lib/supabase';
 import LiriDomainSettings from '@/components/liri/LiriDomainSettings';
 import LiriMobileMoneySettings from '@/components/liri/LiriMobileMoneySettings';
 import { LiriPortalShell } from '@/components/liri/LiriPortalShell';
+import PremiumSegmentedSelector from '@/components/ui/premium-segmented-selector';
 import '../LiriPortal.css';
 
 interface Org { name: string; slug: string; role?: string | null; plan?: string | null; }
@@ -677,7 +678,7 @@ export default function LiriAccountPage() {
   };
 
   return (
-    <LiriPortalShell active="reglages" hideDesktopRail>
+    <LiriPortalShell active="reglages">
       <div className="lp-root relative flex h-full w-full flex-col items-center overflow-y-auto">
       <div className="lp-glow"><span style={{ width: 480, height: 380, left: '24%', top: -150, background: 'rgba(217,119,87,.08)' }} /></div>
 
@@ -688,32 +689,21 @@ export default function LiriAccountPage() {
           <p className="text-[12.5px] lp-faint">Profil, sécurité, marque, paiements, domaine — tout votre espace au même endroit.</p>
         </div>
 
-        <div className="overflow-hidden" style={{ background: 'rgba(34,31,27,.55)' }}>
-          <div className="md:grid md:grid-cols-[212px_1fr]">
-            {/* ── SIDEBAR (desktop) ── */}
-            <aside className="hidden md:flex md:flex-col gap-1 border-r lp-line p-3.5" style={{ background: 'rgba(22,19,16,.6)' }}>
-              <div className="flex items-center gap-2.5 px-1.5 pb-3 pt-1">
-                <span className="grid h-9 w-9 shrink-0 place-items-center rounded-xl text-[12px] font-semibold text-white lp-ember">{initials}</span>
-                <div className="min-w-0"><p className="truncate text-[12.5px] font-medium lp-ink">{orgName}</p><p className="truncate text-[10.5px] lp-faint">{billing.label}</p></div>
-              </div>
-              <p className="px-2 pb-1 pt-1 text-[10px] font-semibold uppercase tracking-[0.13em] lp-faint">Compte</p>
-              {visibleNav.filter((n) => n.group === 'compte').map((it) => <NavBtn key={it.key} it={it} />)}
-              {canManageOrg && <>
-                <p className="px-2 pb-1 pt-3 text-[10px] font-semibold uppercase tracking-[0.13em] lp-faint">Organisation</p>
-                {visibleNav.filter((n) => n.group === 'org').map((it) => <NavBtn key={it.key} it={it} />)}
-              </>}
-              <button onClick={() => logout()} className="mt-3 flex items-center gap-2.5 rounded-lg border-t lp-line px-2.5 py-2 pt-3 text-[13px] lp-muted lp-tr hover:bg-[rgba(255,255,255,.04)]"><LogOut size={16} className="lp-faint" /> Déconnexion</button>
-            </aside>
-
-            {/* ── TABS (mobile) ── */}
-            <div className="flex items-center gap-1.5 overflow-x-auto border-b lp-line p-2.5 md:hidden">
-              {visibleNav.map((it) => <NavBtn key={it.key} it={it} horizontal />)}
-              <button onClick={() => logout()} className="flex shrink-0 items-center gap-2 rounded-lg px-3 py-2 text-[13px] lp-muted lp-tr"><LogOut size={15} /></button>
-            </div>
-
-            {/* ── CONTENU ── */}
-            <section className="p-5 sm:p-7">{renderPane()}</section>
-          </div>
+        {/* Sections en ONGLETS (même logique de nav que les autres pages du portail — CRM…),
+            plus de sidebar 212px distincte : on reste dans la MÊME expérience que les moteurs. */}
+        <div className="overflow-x-auto no-scrollbar">
+          <PremiumSegmentedSelector
+            value={active}
+            onChange={setSection}
+            options={visibleNav.map((n) => ({ value: n.key, label: n.label, icon: n.icon }))}
+            layoutId="reglages-sections"
+            compact
+            className="min-w-max"
+          />
+        </div>
+        <section className="mt-6">{renderPane()}</section>
+        <div className="mt-8 border-t lp-line pt-4">
+          <button onClick={() => logout()} className="flex items-center gap-2 rounded-lg px-3 py-2 text-[13px] lp-muted lp-tr hover:bg-[rgba(255,255,255,.04)]"><LogOut size={16} className="lp-faint" /> Déconnexion</button>
         </div>
       </div>
 
