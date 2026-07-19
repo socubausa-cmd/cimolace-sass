@@ -194,6 +194,16 @@ export class CrmController {
     return this.svc.listTags(t.id);
   }
 
+  // Tags attachés à une entité (pour la fiche détail contact/société/deal).
+  @Get('entity-tags')
+  listEntityTags(
+    @CurrentTenant() t: TenantContext,
+    @Query('entity_type') entityType: string,
+    @Query('entity_id') entityId: string,
+  ) {
+    return this.svc.listEntityTags(t.id, entityType, entityId);
+  }
+
   @Post('tags')
   createTag(@CurrentTenant() t: TenantContext, @Body() body: any) {
     return this.svc.createTag(t.id, body);

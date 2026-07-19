@@ -453,6 +453,20 @@ export class CrmService {
     return { tags: data ?? [] };
   }
 
+  /** Tags ATTACHÉS à une entité (jointure crm_taggables → crm_tags), tenant-scopé. */
+  async listEntityTags(tenantId: string, entityType: string, entityId: string) {
+    CrmService.assertEntityType(entityType);
+    CrmService.requireId(entityId, 'entity_id');
+    const { data, error } = await this.db()
+      .from('crm_taggables')
+      .select('tag:crm_tags(id,name,color)')
+      .eq('tenant_id', tenantId)
+      .eq('entity_type', entityType)
+      .eq('entity_id', entityId);
+    if (error) throw new BadRequestException(error.message);
+    return { tags: (data ?? []).map((r: any) => r.tag).filter(Boolean) };
+  }
+
   async createTag(tenantId: string, body: any) {
     const name = String(body?.name || '').trim();
     if (!name) throw new BadRequestException('name requis');
