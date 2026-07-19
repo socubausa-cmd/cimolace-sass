@@ -77,7 +77,8 @@ export class BillingService implements OnApplicationBootstrap {
    * `current_period_end = null` = actif sans échéance (bootstrap) jusqu'à ce que
    * le paiement Stripe prenne le relais et pose les vraies dates de période.
    */
-  async activateTenantSubscription(tenantId: string, planKey = "zahir-forfait", actor?: string) {
+  async activateTenantSubscription(tenantId: string, planKey: string, actor?: string) {
+    if (!planKey) throw new BadRequestException("planKey requis (aucun forfait par défaut — neutralité §1).");
     const sb = this.supabase;
     const { data: plan } = await sb
       .from("billing_plans")

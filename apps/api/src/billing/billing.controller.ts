@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Param, Req, UseGuards, Headers, UnauthorizedException } from "@nestjs/common";
+import { Controller, Get, Post, Body, Param, Req, UseGuards, Headers, UnauthorizedException, BadRequestException } from "@nestjs/common";
 import { JwtAuthGuard } from "../common/guards/jwt-auth.guard";
 import { CimolaceStaffGuard } from "../cimolace-backoffice/cimolace-staff.guard";
 import { TenantGuard } from "../common/guards/tenant.guard";
@@ -77,12 +77,17 @@ export class AdminBillingController {
 
   /**
    * Active le forfait d'un tenant (crée billing_subscriptions actif + arme le
-   * gating). Body optionnel : { plan?: string } (défaut "zahir-forfait").
+   * gating). Body REQUIS : { plan: string } — clé d'un plan billing_plans.
+   * NEUTRALITÉ (§1) : plus de défaut « zahir-forfait » codé en dur ; l'appelant DOIT
+   * nommer le plan (le back-office le passe déjà explicitement). Un tenant quelconque
+   * n'active donc plus silencieusement le bundle d'un autre tenant.
    */
   @Post("tenants/:tenantId/activate")
   @UseGuards(JwtAuthGuard, CimolaceStaffGuard)
   async activate(@Req() req: any, @Param("tenantId") tenantId: string, @Body() body: { plan?: string }) {
-    return { data: await this.svc.activateTenantSubscription(tenantId, body?.plan || "zahir-forfait", req.user?.email ?? req.user?.id ?? undefined) };
+    const plan = String(body?.plan ?? "").trim();
+    if (!plan) throw new BadRequestException("plan requis (clé billing_plans) — aucun forfait par défaut.");
+    return { data: await this.svc.activateTenantSubscription(tenantId, plan, req.user?.email ?? req.user?.id ?? undefined) };
   }
 }
 
