@@ -14,6 +14,7 @@ import { StudentInviteModule } from './student-invite/student-invite.module';
 import { LiveJoinModule } from './live-join/live-join.module';
 import { LiveModule } from './live/live.module';
 import { MarketingModule } from './marketing/marketing.module';
+import { CrmModule } from './crm/crm.module';
 import { NotificationsModule } from './notifications/notifications.module';
 // ── LIRI School Engines ───────────────────────────────────────────────────────
 import { CourseBuilderModule } from './course-builder/course-builder.module';
@@ -85,6 +86,7 @@ import { SchoolPathsModule } from './school-paths/school-paths.module';
     LiveJoinModule,
     LiveModule,
     MarketingModule,
+    CrmModule,
     NotificationsModule,
     // ── École : cours, RDV, secrétariat, forum (FIX bug wiring) ──────────────
     CoursesModule,         // ← FIX : 9 endpoints cours/leçons/progression
