@@ -508,7 +508,8 @@ export class MarketingAdvancedService {
       // risque d'email-bombing : (1) clé Resend PROPRE au tenant obligatoire (jamais la clé
       // globale Cimolace) ; (2) cooldown par destinataire NORMALISÉ (anti plus-addressing) ;
       // (3) plafond horaire par tenant. sendRaw reste best-effort (ne jette jamais).
-      const to = String(lead?.email || '').trim();
+      // Destinataire : le lead (lead_created) OU un email du contexte (payment/signup — pas de lead).
+      const to = String(lead?.email || ctx.context?.email || '').trim();
       if (!to) return { type, result: 'skipped_no_recipient' };
       const emailTenantId = String(lead?.tenant_id ?? ctx.context?.tenantId ?? '').trim();
       if (!emailTenantId) return { type, result: 'skipped_no_tenant' };

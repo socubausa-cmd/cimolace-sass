@@ -9,6 +9,7 @@ import {
 import { createHash, randomBytes } from 'crypto';
 import { AuthService } from '../auth/auth.service';
 import { LiriEntitlementsService } from '../billing/liri-entitlements.service';
+import { MarketingAdvancedService } from '../marketing/marketing-advanced.service';
 
 /**
  * Accès élève par CODE OTP à usage unique (L5). Décision produit :
@@ -34,6 +35,7 @@ export class StudentInviteService {
   constructor(
     private readonly auth: AuthService,
     private readonly entitlements: LiriEntitlementsService,
+    private readonly marketing: MarketingAdvancedService,
   ) {}
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -242,6 +244,18 @@ export class StudentInviteService {
       { tenant_id: tenantId, user_id: userId, role, status: 'active' },
       { onConflict: 'tenant_id,user_id', ignoreDuplicates: true },
     );
+
+    // Vague 3 — trigger 'signup' : automations marketing du tenant, UNIQUEMENT sur une adhésion
+    // NEUVE (anti re-tir). Fire-and-forget : n'affecte jamais l'inscription (best-effort, tracé).
+    if (!existingMem?.id) {
+      void this.marketing
+        .runAutomation(tenantId, { trigger: 'signup', context: { email, role } })
+        .then((r) => {
+          if (r?.executedCount)
+            this.logger.log(`[mkt:${tenantId}] signup → ${r.executedCount} action(s)`);
+        })
+        .catch((e) => this.logger.warn(`[mkt:${tenantId}] signup automations failed: ${(e as Error)?.message || e}`));
+    }
     // Promeut le rôle GLOBAL visitor→student (jamais de downgrade).
     try {
       const { data: profile } = await this.db.from('profiles').select('role').eq('id', userId).maybeSingle();

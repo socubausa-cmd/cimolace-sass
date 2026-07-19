@@ -9,6 +9,7 @@ import { randomUUID } from 'crypto';
 import { AuthService } from '../auth/auth.service';
 import { PawaPayService } from '../pawapay/pawapay.service';
 import { TenantPaymentConfigService } from '../billing/tenant-payment-config/tenant-payment-config.service';
+import { MarketingAdvancedService } from '../marketing/marketing-advanced.service';
 import {
   verifyStripeSignature,
   stripeFetchSubscription,
@@ -38,6 +39,7 @@ export class SubscriptionRenewalService implements OnApplicationBootstrap, OnMod
     private readonly auth: AuthService,
     private readonly pawapay: PawaPayService,
     private readonly tenantPayments: TenantPaymentConfigService,
+    private readonly marketing: MarketingAdvancedService,
   ) {}
 
   /**
@@ -443,6 +445,16 @@ export class SubscriptionRenewalService implements OnApplicationBootstrap, OnMod
       const { data: u } = await (this.supabase as any).auth.admin.getUserById(userId);
       const to = u?.user?.email;
       if (!to) return;
+
+      // Vague 3 — trigger 'payment' : automations marketing du tenant (ex. onboarding/upsell),
+      // DISTINCT de l'email de reçu ci-dessous. Fire-and-forget : n'affecte JAMAIS le paiement.
+      void this.marketing
+        .runAutomation(tenantId, { trigger: 'payment', context: { email: to, plan: plan?.key, amount } })
+        .then((r) => {
+          if (r?.executedCount)
+            this.logger.log(`[mkt:${tenantId}] payment → ${r.executedCount} action(s)`);
+        })
+        .catch((e) => this.logger.warn(`[mkt:${tenantId}] payment automations failed: ${(e as Error)?.message || e}`));
 
       // ACCÈS 1-CLIC : un acheteur INVITÉ (checkout guest-*) a un compte SANS mot de passe et
       // sans session → « payé mais ne peut pas entrer ». On injecte ici, dans le SEUL email
