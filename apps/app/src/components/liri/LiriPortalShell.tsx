@@ -285,7 +285,7 @@ function LiriPortalShellInner({
         <footer className={`items-center justify-between border-t lp-line lp-rail-bg px-5 py-1.5 text-[11px] lp-muted ${rail ? 'hidden md:flex' : 'flex'}`}>
           <span className="flex items-center gap-2">
             {live ? <span className="h-1.5 w-1.5 rounded-full" style={{ background: '#e2553f' }} /> : <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" />}
-            {live ? 'En direct' : 'Connecté'} · <span className="capitalize">{tenant}</span>
+            {live ? 'En direct' : 'Connecté'} · <span className="capitalize">{sessionSchool || tenant}</span>
           </span>
           <span className="lp-faint flex items-center gap-1.5">{_shellBrand} v2.0</span>
         </footer>
