@@ -5,10 +5,16 @@ import ProtectedRoleRoute from '@/components/ProtectedRoleRoute';
 import { useBilling } from '@/contexts/BillingContext';
 import { useAuth } from '@/hooks/useAuth';
 import { catalogApi } from '@/lib/api-v2';
+import { authStore } from '@/lib/auth-store';
 import LiriUpgradeWall from '@/components/liri/LiriUpgradeWall';
 
 // Rôles « staff » — font tourner l'école, exemptés du forfait par-membre.
 const STAFF_ROLES = ['owner', 'admin', 'teacher', 'secretariat', 'practitioner', 'clinic_admin'];
+
+// Cache module-level du résultat « ce tenant a-t-il LIRI ? » (par slug). Sans lui, le garde
+// refait getTenantServices à CHAQUE navigation gardée → spinner plein écran à chaque clic
+// (Forum→Messages→Temple…). Avec le cache, il résout instantanément dès la 2e page.
+const _svcCache = new Map(); // slug -> { hasLiri, errored }
 
 /**
  * Gate « produit LIRI » : l'accès au portail créateur LIRI (/liri, /studio/*) est
@@ -50,29 +56,34 @@ const Loader = () => (
 
 function LiriAccessGate({ children }) {
   const { loading: billingLoading, status, inGrace } = useBilling();
-  const { user } = useAuth();
+  const { user, tenantRole } = useAuth();
   const location = useLocation();
-  const [svc, setSvc] = useState({ loading: true, hasLiri: false, errored: false });
+  const slug = authStore.getTenantSlug?.() || '';
+  const cached = _svcCache.get(slug);
+  const [svc, setSvc] = useState(cached ? { loading: false, ...cached } : { loading: true, hasLiri: false, errored: false });
 
   useEffect(() => {
+    const hit = _svcCache.get(slug);
+    if (hit) { setSvc({ loading: false, ...hit }); return; } // cache → aucun spinner à la 2e navigation
     let alive = true;
     catalogApi
       .getTenantServices()
       .then((rows) => {
-        if (!alive) return;
         const hasLiri = (Array.isArray(rows) ? rows : []).some(
           (s) => s?.active && LIRI_SERVICE_KEYS.has(String(s?.service_key)),
         );
-        setSvc({ loading: false, hasLiri, errored: false });
+        _svcCache.set(slug, { hasLiri, errored: false });
+        if (alive) setSvc({ loading: false, hasLiri, errored: false });
       })
       .catch(() => {
         // Incertitude technique → fail-open (ne pas enfermer le client).
+        _svcCache.set(slug, { hasLiri: false, errored: true });
         if (alive) setSvc({ loading: false, hasLiri: false, errored: true });
       });
     return () => {
       alive = false;
     };
-  }, []);
+  }, [slug]);
 
   if (billingLoading || svc.loading) return <Loader />;
 
@@ -88,7 +99,10 @@ function LiriAccessGate({ children }) {
   // donc le grandfathering TENANT ne fait plus passer un élève sans forfait.
   const role = String(user?.role || '').toLowerCase();
   const tRole = String(user?.tenant_role || '').toLowerCase();
-  const isStaff = STAFF_ROLES.includes(role) || STAFF_ROLES.includes(tRole);
+  // `tenantRole` = rôle décodé du JWT (fiable, présent tôt) → un owner/staff n'est jamais
+  // renvoyé vers le mur d'upgrade quand `user.role`/`user.tenant_role` tardent à se résoudre.
+  const jwtRole = String(tenantRole || '').toLowerCase();
+  const isStaff = STAFF_ROLES.includes(role) || STAFF_ROLES.includes(tRole) || STAFF_ROLES.includes(jwtRole);
   const path = String(location?.pathname || '');
   const isBillingPath = path.startsWith('/liri/forfaits') || path.startsWith('/liri/compte');
   const subOk = status === 'active' || (status === 'past_due' && inGrace);
