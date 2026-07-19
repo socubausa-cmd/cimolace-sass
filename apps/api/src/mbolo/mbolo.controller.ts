@@ -25,6 +25,12 @@ export class MboloController {
   install(@Body() d: any, @CurrentTenant() t: TenantContext, @Req() r: Request) {
     return this.svc.installStorefront(t.id, (t as any).slug, (r as any).user?.id ?? null, { withSample: d?.withSample === true });
   }
+  // ─── Clé d'administration catalogue (mba_) — brut retourné UNE SEULE FOIS ───
+  // À injecter côté storefront (CIMOLACE_ADMIN_API_KEY) pour écrire via /v1/mbolo/admin/*.
+  @Post('admin-key') @UseGuards(RolesGuard) @Roles('owner','admin')
+  provisionAdminKey(@CurrentTenant() t: TenantContext, @Req() r: Request) {
+    return this.svc.provisionAdminKey(t.id, (t as any).slug, (r as any).user?.id ?? null);
+  }
   // ─── Catégories ───
   @Get('categories') listCategories(@CurrentTenant() t: TenantContext) { return this.svc.listCategories(t.id); }
   @Post('categories') @UseGuards(RolesGuard) @Roles('owner','admin') @RequireEngine('mbolo') createCategory(@Body() d: any, @CurrentTenant() t: TenantContext) { return this.svc.createCategory(t.id, d); }

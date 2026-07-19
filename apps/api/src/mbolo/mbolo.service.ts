@@ -96,6 +96,37 @@ export class MboloService {
     };
   }
 
+  /**
+   * Provisionne une clé d'ADMINISTRATION mbolo `mba_<slug>_<hex>` (hashée SHA-256,
+   * brut retourné UNE SEULE FOIS). À injecter côté storefront (CIMOLACE_ADMIN_API_KEY)
+   * pour que le back-office ÉCRIVE le catalogue tenant via /v1/mbolo/admin/*.
+   * Chaque appel crée une nouvelle clé (révoquer les anciennes au besoin).
+   */
+  async provisionAdminKey(tenantId: string, tenantSlug: string, createdBy: string | null) {
+    if (!/^[a-z0-9-]{1,40}$/.test(tenantSlug || '')) {
+      throw new BadRequestException('Slug tenant invalide pour la génération de clé');
+    }
+    const client = this.supabase.client as any;
+    const random = randomBytes(24).toString('hex'); // 48 hex
+    const rawKey = `mba_${tenantSlug}_${random}`;
+    const keyPrefix = `mba_${tenantSlug}_${random.slice(0, 4)}…`;
+    const keyHash = createHash('sha256').update(rawKey).digest('hex');
+    const { data: keyRow, error: keyErr } = await client
+      .from('tenant_api_keys')
+      .insert({ tenant_id: tenantId, label: 'Mbolo Admin', key_prefix: keyPrefix, key_hash: keyHash, created_by: createdBy })
+      .select('id, key_prefix, created_at')
+      .single();
+    if (keyErr || !keyRow) {
+      throw new InternalServerErrorException(`Création de la clé admin impossible : ${keyErr?.message ?? 'inconnue'}`);
+    }
+    return {
+      api_key: rawKey, // ⚠️ retourné une seule fois
+      key_prefix: keyRow.key_prefix,
+      scope: 'mbolo:admin — écriture catalogue tenant-scopée (produits/catégories)',
+      usage: 'Variable storefront CIMOLACE_ADMIN_API_KEY ; endpoints /v1/mbolo/admin/*',
+    };
+  }
+
   // ─── Catalogue : catégories ──────────────────────────────────────────────
   async listCategories(tenantId: string) {
     const { data } = await (this.supabase.client as any)
@@ -159,6 +190,15 @@ export class MboloService {
       seo_title: dto.seoTitle ?? null,
       seo_description: dto.seoDescription ?? null,
       is_active: true,
+      // ─── Champs riches (parité zahir) — JSONB additifs, aucun impact sur l'existant ───
+      name_en: dto.nameEn ?? null,
+      name_fr: dto.nameFr ?? null,
+      visibility: dto.visibility ?? 'public',
+      pricing: dto.pricing ?? {},
+      inventory: dto.inventory ?? {},
+      logistics: dto.logistics ?? {},
+      merchandising: dto.merchandising ?? {},
+      meta: dto.meta ?? {},
     }).select('*').single();
     if (error) throw new BadRequestException(error.message);
     return data;
@@ -171,6 +211,10 @@ export class MboloService {
       description: 'description', tagline: 'tagline', priceCents: 'price_cents',
       compareAtPriceCents: 'compare_at_price_cents', currency: 'currency',
       stock: 'stock', isFeatured: 'is_featured', imageUrl: 'image_url', isActive: 'is_active',
+      // Champs riches (parité zahir) — remplacent le JSONB entier envoyé par l'admin.
+      nameEn: 'name_en', nameFr: 'name_fr', visibility: 'visibility',
+      pricing: 'pricing', inventory: 'inventory', logistics: 'logistics',
+      merchandising: 'merchandising', meta: 'meta',
     };
     const patch: Record<string, any> = {};
     for (const [k, col] of Object.entries(map)) if (dto?.[k] !== undefined) patch[col] = dto[k];

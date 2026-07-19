@@ -16,14 +16,16 @@ import { EngineEnabledGuard } from '../common/guards/engine-enabled.guard';
 import { MboloController } from './mbolo.controller';
 import { MboloService } from './mbolo.service';
 import { MboloStorefrontController } from './mbolo-storefront.controller';
+import { MboloAdminController } from './mbolo-admin.controller';
+import { MboloAdminKeyGuard } from './mbolo-admin-key.guard';
 import { MboloEmbedController } from './mbolo-embed.controller';
 import { MboloLiveController } from './mbolo-live.controller';
 import { MboloLiveService } from './mbolo-live.service';
 
 @Module({
   imports: [SupabaseModule, TenantModule, AuthModule, LiveModule, LiriEntitlementsModule],
-  providers: [MboloService, MboloLiveService, ApiKeyGuard, EngineEnabledGuard],
-  controllers: [MboloController, MboloStorefrontController, MboloEmbedController, MboloLiveController],
+  providers: [MboloService, MboloLiveService, ApiKeyGuard, EngineEnabledGuard, MboloAdminKeyGuard],
+  controllers: [MboloController, MboloStorefrontController, MboloAdminController, MboloEmbedController, MboloLiveController],
   exports: [MboloService],
 })
 export class MboloModule {}
