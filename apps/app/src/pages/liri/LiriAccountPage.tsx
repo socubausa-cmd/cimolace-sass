@@ -347,10 +347,10 @@ export default function LiriAccountPage() {
 
   // ── Lignes & blocs réutilisables ──
   const Row = ({ label, value, action }: { label: string; value?: ReactNode; action?: ReactNode }) => (
-    <div className="flex items-center justify-between gap-4 border-b lp-line py-4">
+    <div className="flex items-center justify-between gap-4 rounded-2xl border lp-line lp-panel70 px-5 py-4">
       <div className="min-w-0">
-        <p className="text-[13px] lp-faint">{label}</p>
-        {value !== undefined && <div className="mt-0.5 text-[14px] lp-ink">{value}</div>}
+        <p className="text-[11px] font-semibold uppercase tracking-[0.08em] lp-faint">{label}</p>
+        {value !== undefined && <div className="mt-1.5 text-[15px] lp-ink">{value}</div>}
       </div>
       {action}
     </div>
@@ -405,7 +405,7 @@ export default function LiriAccountPage() {
         return (
           <div>
             <Header title="Sécurité" subtitle="Votre email de connexion et votre mot de passe" />
-            <div className="mt-5 border-t lp-line">
+            <div className="mt-6 flex flex-col gap-2.5">
               <Row label="Email de connexion" value={email || '—'} action={<GhostBtn onClick={() => nav('/profil/modifier')}>Modifier</GhostBtn>} />
             </div>
             <div className="mt-6 rounded-2xl border lp-line lp-panel70 p-5">
@@ -526,7 +526,7 @@ export default function LiriAccountPage() {
         return (
           <div>
             <Header title="Facturation & abonnement" subtitle="Votre forfait LIRI, vos renouvellements et vos factures — sans quitter le portail." />
-            <div className="mt-5 border-t lp-line">
+            <div className="mt-6 flex flex-col gap-2.5">
               <Row label="Plan actuel" value={billing.label} />
               {billing.endLabel && <Row label={billing.isPaid ? 'Prochain renouvellement' : "Fin de l’essai"} value={billing.endLabel} />}
             </div>
@@ -632,9 +632,9 @@ export default function LiriAccountPage() {
         return (
           <div>
             <Header title="Général" subtitle="Informations de votre organisation" />
-            <div className="mt-5 border-t lp-line">
+            <div className="mt-6 flex flex-col gap-2.5">
               {nameEditing ? (
-                <div className="flex items-center gap-2 border-b lp-line py-3.5">
+                <div className="flex items-center gap-2 rounded-2xl border lp-line lp-panel70 px-5 py-4">
                   <input autoFocus value={nameDraft} onChange={(e) => setNameDraft(e.target.value)} onKeyDown={(e) => { if (e.key === 'Enter') saveName(); if (e.key === 'Escape') setNameEditing(false); }} className="min-w-0 flex-1 rounded-lg border lp-line bg-[rgba(255,255,255,.04)] px-3 py-2 text-[14px] text-white focus:border-[rgba(217,119,87,.5)] focus:outline-none" />
                   <button onClick={saveName} disabled={nameSaving} className="flex shrink-0 items-center gap-1.5 rounded-lg px-3.5 py-2 text-[12.5px] font-semibold text-white lp-tr disabled:opacity-50" style={{ background: 'linear-gradient(90deg,#e2855f,#c2683f)' }}>{nameSaving ? <Loader2 size={14} className="animate-spin" /> : 'Enregistrer'}</button>
                   <button onClick={() => setNameEditing(false)} className="shrink-0 rounded-lg border px-3 py-2 text-[12.5px] font-medium lp-muted lp-tr" style={{ borderColor: 'rgba(245,244,238,.14)' }}>Annuler</button>
@@ -667,7 +667,7 @@ export default function LiriAccountPage() {
             )}
 
             {isOwner && (
-              <div className="mt-8 flex items-center justify-between gap-4 border-t pt-5" style={{ borderColor: 'rgba(226,85,63,.18)' }}>
+              <div className="mt-6 flex items-center justify-between gap-4 rounded-2xl border px-5 py-4" style={{ borderColor: 'rgba(226,85,63,.22)', background: 'rgba(226,85,63,.04)' }}>
                 <div className="min-w-0"><p className="text-[14px] font-medium" style={{ color: '#ef6a52' }}>Supprimer l’organisation</p><p className="mt-0.5 text-[12.5px] lp-faint">Ouvre une demande de fermeture, réversible avant traitement.</p></div>
                 <GhostBtn danger onClick={() => setDelOpen(true)}>Supprimer</GhostBtn>
               </div>
