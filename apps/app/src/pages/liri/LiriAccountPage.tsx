@@ -26,7 +26,7 @@ const DAY = 86_400_000;
 
 export default function LiriAccountPage() {
   const nav = useNavigate();
-  const { user, logout, tenantRole } = useAuth();
+  const { user, logout, tenantRole, refreshProfile } = useAuth() as any;
   const base = getApiBaseUrl();
   const token = authStore.getToken();
   const slug = authStore.getTenantSlug();
@@ -89,6 +89,15 @@ export default function LiriAccountPage() {
   const [showPw, setShowPw] = useState(false);
   const [pwSaving, setPwSaving] = useState(false);
   const [pwMsg, setPwMsg] = useState<{ ok: boolean; text: string } | null>(null);
+
+  // Profil perso INLINE (nom via table profiles, email via Supabase auth) — jamais /profil/* (vieux shell).
+  const [pnEditing, setPnEditing] = useState(false);
+  const [pnDraft, setPnDraft] = useState('');
+  const [pnSaving, setPnSaving] = useState(false);
+  const [emEditing, setEmEditing] = useState(false);
+  const [emDraft, setEmDraft] = useState('');
+  const [emSaving, setEmSaving] = useState(false);
+  const [emMsg, setEmMsg] = useState<{ ok: boolean; text: string } | null>(null);
 
   const orgName = org?.name || slugLabel;
   const orgSlug = org?.slug || slug;
@@ -330,6 +339,36 @@ export default function LiriAccountPage() {
     } finally { setPwSaving(false); }
   };
 
+  // Nom personnel → table profiles (même mécanisme qu'EditProfilePage), INLINE.
+  const saveProfileName = async () => {
+    const nm = pnDraft.trim();
+    if (pnSaving || !nm) { setPnEditing(false); return; }
+    setPnSaving(true);
+    try {
+      const uid = user?.id;
+      const { error } = await (supabase as any).from('profiles').update({ name: nm, updated_at: new Date().toISOString() }).eq('id', uid);
+      if (error) throw error;
+      if (typeof refreshProfile === 'function') await refreshProfile();
+      setPnEditing(false);
+    } catch { if (typeof window !== 'undefined') window.alert('Le renommage a échoué.'); }
+    finally { setPnSaving(false); }
+  };
+
+  // Email de connexion → Supabase auth (un email de confirmation est envoyé), INLINE.
+  const saveEmail = async () => {
+    const em = emDraft.trim().toLowerCase();
+    if (emSaving || !em || em === email) { setEmEditing(false); return; }
+    setEmSaving(true); setEmMsg(null);
+    try {
+      const { error } = await supabase.auth.updateUser({ email: em });
+      if (error) throw new Error(error.message);
+      setEmEditing(false);
+      setEmMsg({ ok: true, text: `Email de confirmation envoyé à ${em}. Le changement s’applique après validation.` });
+    } catch (err: any) {
+      setEmMsg({ ok: false, text: err?.message || 'Échec du changement d’email.' });
+    } finally { setEmSaving(false); }
+  };
+
   const initials = orgName.slice(0, 2).toUpperCase();
 
   const NavBtn = ({ it, horizontal }: { it: NavItem; horizontal?: boolean }) => {
@@ -391,14 +430,29 @@ export default function LiriAccountPage() {
                 <p className="truncate text-[13px] lp-faint">{email}</p>
               </div>
             </div>
-            <div className="mt-6"><GhostBtn onClick={() => nav('/profil/modifier')}>Modifier mon profil</GhostBtn></div>
+            <div className="mt-6 flex flex-col gap-2.5">
+              {pnEditing ? (
+                <div className="flex items-center gap-2 rounded-2xl border lp-line lp-panel70 px-5 py-4">
+                  <input autoFocus value={pnDraft} onChange={(e) => setPnDraft(e.target.value)} onKeyDown={(e) => { if (e.key === 'Enter') saveProfileName(); if (e.key === 'Escape') setPnEditing(false); }} className="min-w-0 flex-1 rounded-lg border lp-line bg-[rgba(255,255,255,.04)] px-3 py-2 text-[14px] text-white focus:border-[rgba(217,119,87,.5)] focus:outline-none" />
+                  <button onClick={saveProfileName} disabled={pnSaving} className="flex shrink-0 items-center gap-1.5 rounded-lg px-3.5 py-2 text-[12.5px] font-semibold text-white lp-tr disabled:opacity-50" style={{ background: 'linear-gradient(90deg,#e2855f,#c2683f)' }}>{pnSaving ? <Loader2 size={14} className="animate-spin" /> : 'Enregistrer'}</button>
+                  <button onClick={() => setPnEditing(false)} className="shrink-0 rounded-lg border px-3 py-2 text-[12.5px] font-medium lp-muted lp-tr" style={{ borderColor: 'rgba(245,244,238,.14)' }}>Annuler</button>
+                </div>
+              ) : (
+                <Row label="Nom affiché" value={user?.name || '—'} action={<GhostBtn onClick={() => { setPnDraft(user?.name || ''); setPnEditing(true); }}>Modifier</GhostBtn>} />
+              )}
+              <Row label="Email" value={email || '—'} action={<GhostBtn onClick={() => setSection('securite')}>Gérer</GhostBtn>} />
+            </div>
           </div>
         );
       case 'prefs':
         return (
           <div>
             <Header title="Préférences" subtitle="Notifications, langue et options personnelles" />
-            <div className="mt-5"><Linkish label="Préférences du compte" sub="Gérez vos notifications et vos options d’affichage." btn="Ouvrir les préférences" onClick={() => nav('/profil/parametres')} /></div>
+            <div className="mt-6 rounded-2xl border lp-line lp-panel70 p-5">
+              <p className="text-[14px] font-medium lp-ink">Notifications par email</p>
+              <p className="mt-1 text-[13px] lp-faint">Nouveaux messages, lives programmés, inscriptions — bientôt configurables ici même.</p>
+              <span className="mt-3 inline-flex items-center gap-2 rounded-lg px-3 py-1.5 text-[12px] font-medium lp-faint" style={{ background: 'rgba(255,255,255,.04)' }}>À venir</span>
+            </div>
           </div>
         );
       case 'securite':
@@ -406,7 +460,16 @@ export default function LiriAccountPage() {
           <div>
             <Header title="Sécurité" subtitle="Votre email de connexion et votre mot de passe" />
             <div className="mt-6 flex flex-col gap-2.5">
-              <Row label="Email de connexion" value={email || '—'} action={<GhostBtn onClick={() => nav('/profil/modifier')}>Modifier</GhostBtn>} />
+              {emEditing ? (
+                <div className="flex items-center gap-2 rounded-2xl border lp-line lp-panel70 px-5 py-4">
+                  <input autoFocus type="email" value={emDraft} onChange={(e) => setEmDraft(e.target.value)} onKeyDown={(e) => { if (e.key === 'Enter') saveEmail(); if (e.key === 'Escape') setEmEditing(false); }} className="min-w-0 flex-1 rounded-lg border lp-line bg-[rgba(255,255,255,.04)] px-3 py-2 text-[14px] text-white focus:border-[rgba(217,119,87,.5)] focus:outline-none" />
+                  <button onClick={saveEmail} disabled={emSaving} className="flex shrink-0 items-center gap-1.5 rounded-lg px-3.5 py-2 text-[12.5px] font-semibold text-white lp-tr disabled:opacity-50" style={{ background: 'linear-gradient(90deg,#e2855f,#c2683f)' }}>{emSaving ? <Loader2 size={14} className="animate-spin" /> : 'Enregistrer'}</button>
+                  <button onClick={() => setEmEditing(false)} className="shrink-0 rounded-lg border px-3 py-2 text-[12.5px] font-medium lp-muted lp-tr" style={{ borderColor: 'rgba(245,244,238,.14)' }}>Annuler</button>
+                </div>
+              ) : (
+                <Row label="Email de connexion" value={email || '—'} action={<GhostBtn onClick={() => { setEmDraft(email); setEmEditing(true); setEmMsg(null); }}>Modifier</GhostBtn>} />
+              )}
+              {emMsg && <p className="text-[12.5px]" style={{ color: emMsg.ok ? '#7bbf6a' : '#ef6a52' }}>{emMsg.text}</p>}
             </div>
             <div className="mt-6 rounded-2xl border lp-line lp-panel70 p-5">
               <p className="text-[14px] font-medium lp-ink">Changer le mot de passe</p>
