@@ -1,4 +1,5 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import {
   X, StickyNote, CheckSquare, Square, Tag as TagIcon, Plus, Trash2, Clock,
   Building2, Mail, Phone, Briefcase, Loader2, Activity,
@@ -124,14 +125,14 @@ export default function CrmContactDetail({ contact, onClose, onChanged }) {
 
   if (!contact) return null;
 
-  return (
-    <div className="fixed inset-0 z-50 flex justify-end" onClick={onClose}>
+  return createPortal(
+    <div className="fixed inset-0 z-[60] flex justify-end" onClick={onClose}>
       <div className="absolute inset-0" style={{ background: 'rgba(0,0,0,.5)' }} />
       <div
         role="dialog"
         aria-modal="true"
         aria-label={`Fiche ${contactName(contact)}`}
-        className="lp-rise relative h-full w-full max-w-md overflow-y-auto border-l lp-line"
+        className="relative h-[100dvh] w-full max-w-md overflow-y-auto border-l lp-line"
         style={{ background: '#211f1b' }}
         onClick={(e) => e.stopPropagation()}
       >
@@ -309,6 +310,7 @@ export default function CrmContactDetail({ contact, onClose, onChanged }) {
           </div>
         )}
       </div>
-    </div>
+    </div>,
+    document.body,
   );
 }
