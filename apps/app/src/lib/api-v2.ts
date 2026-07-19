@@ -106,8 +106,14 @@ export const socialApi = {
 // ── Lives ───────────────────────────────────────────────────────────────────
 
 export const livesApi = {
-  list: (limit = 20, offset = 0) =>
-    apiV2.get<ApiEnvelope<any[]>>(`/lives?limit=${limit}&offset=${offset}`).then(unwrap),
+  // ⚠️ GET /lives est DOUBLE-enveloppé : le controller renvoie { data: [...] } ET
+  // l'interceptor global re-wrappe → unwrap (=r.data.data) rend { data: [...] } (objet),
+  // pas un tableau. On extrait toujours le TABLEAU, sinon TenantAdminLivesPage (garde
+  // Array.isArray→[]) affiche silencieusement 0 live.
+  list: (limit = 20, offset = 0): Promise<any[]> =>
+    apiV2.get<ApiEnvelope<{ data?: any[] } | any[]>>(`/lives?limit=${limit}&offset=${offset}`)
+      .then(unwrap)
+      .then((r: any) => (Array.isArray(r) ? r : (r?.data ?? []))),
   get: (id: string) => apiV2.get<ApiEnvelope<any>>(`/lives/${id}`).then(unwrap),
   create: (body: Record<string, unknown>) =>
     apiV2.post<ApiEnvelope<any>>('/lives', body).then(unwrap),

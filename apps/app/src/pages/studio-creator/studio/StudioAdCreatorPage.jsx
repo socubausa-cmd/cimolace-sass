@@ -891,7 +891,7 @@ export default function StudioAdCreatorPage() {
           </div>
         </div>
         <Link
-          to="/admin/marketing?tab=analytics"
+          to="/liri/crm?tab=analytics"
           className="text-xs text-[var(--school-accent,#D4AF37)] border rounded-lg px-3 py-1.5 hover:bg-white/[0.06] transition-colors flex items-center gap-1.5"
           style={{ borderColor: 'color-mix(in srgb, var(--school-accent, #D4AF37) 25%, transparent)' }}
         >

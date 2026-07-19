@@ -421,7 +421,7 @@ const OwnerDashboardOverview = () => {
               <QuickAction icon={FileText} label="Quiz" tone="amber" />
               <QuickAction icon={Sparkles} label="Studio Createur" tone="violet" to="/studio" full />
               <QuickAction icon={Link2} label="Chariow Externes" tone="emerald" to="/admin/billing?tab=external" full />
-              <QuickAction icon={Workflow} label="Marketing & automation" tone="indigo" to="/admin/marketing?tab=automation" full />
+              <QuickAction icon={Workflow} label="Marketing & automation" tone="indigo" to="/liri/crm?tab=automation" full />
               <QuickAction icon={CalendarDays} label="Calendrier — prise de RDV" tone="sky" to="/appointment/request" full />
             </div>
           </div>

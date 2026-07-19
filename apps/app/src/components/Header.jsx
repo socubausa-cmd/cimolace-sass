@@ -462,7 +462,7 @@ const Header = () => {
                     className="border-violet-500/40 text-violet-300 hover:bg-violet-500/15"
                     title="Automation marketing et funnels"
                   >
-                    <Link to="/admin/marketing?tab=automation">Marketing Automation</Link>
+                    <Link to="/liri/crm?tab=automation">Marketing Automation</Link>
                   </Button>
                 </>
               )}
@@ -629,7 +629,7 @@ const Header = () => {
                     size="sm"
                     className="text-violet-300 border border-violet-500/35 rounded-full px-3 hover:bg-violet-500/15"
                   >
-                    <Link to="/admin/marketing?tab=automation">MKT</Link>
+                    <Link to="/liri/crm?tab=automation">MKT</Link>
                   </Button>
                 </>
               )}
