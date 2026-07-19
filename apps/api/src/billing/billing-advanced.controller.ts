@@ -74,12 +74,21 @@ export class BillingAdvancedController {
     @Req() req: Request,
     @Query('paymentId') paymentId: string,
     @Res() res: Response,
+    @Query('format') format?: string,
   ) {
     const userId = (req as any).user?.sub ?? (req as any).user?.id;
-    const { html, filename } = await this.svc.renderInvoiceHtml(userId, paymentId);
-    res.setHeader('Content-Type', 'text/html; charset=utf-8');
+    // §11 : PDF par défaut (vraie facture téléchargeable). HTML conservé en repli (?format=html).
+    if (String(format || '').toLowerCase() === 'html') {
+      const { html, filename } = await this.svc.renderInvoiceHtml(userId, paymentId);
+      res.setHeader('Content-Type', 'text/html; charset=utf-8');
+      res.setHeader('Content-Disposition', `inline; filename="${filename}"`);
+      res.send(html);
+      return;
+    }
+    const { pdf, filename } = await this.svc.renderInvoicePdf(userId, paymentId);
+    res.setHeader('Content-Type', 'application/pdf');
     res.setHeader('Content-Disposition', `inline; filename="${filename}"`);
-    res.send(html);
+    res.send(Buffer.from(pdf));
   }
 
   @Post('invoices/resend')
