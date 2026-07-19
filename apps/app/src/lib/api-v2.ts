@@ -920,9 +920,15 @@ export type CreateCatalogServiceBody = Partial<CatalogService> &
   Pick<CatalogService, 'category' | 'label'>;
 
 export const billingCatalogApi = {
-  /** Liste des services du tenant (tous statuts confondus). */
-  list: () =>
-    apiV2.get<ApiEnvelope<CatalogService[]>>('/billing/catalog').then(unwrap),
+  /** Liste des services du tenant (tous statuts confondus).
+   *  ⚠️ `/billing/catalog` renvoie `{ data: { services: [...] } }` (enveloppe objet)
+   *  et non `{ data: [...] }` → on extrait toujours un TABLEAU (robuste aux 2 formes),
+   *  sinon l'appelant (LiriServicesPage `items.filter`) crashe. */
+  list: (): Promise<CatalogService[]> =>
+    apiV2
+      .get<ApiEnvelope<{ services?: CatalogService[] } | CatalogService[]>>('/billing/catalog')
+      .then(unwrap)
+      .then((r: any) => (Array.isArray(r) ? r : (r?.services ?? []))),
   /** Crée un service. */
   create: (body: CreateCatalogServiceBody) =>
     apiV2.post<ApiEnvelope<CatalogService>>('/billing/catalog', body).then(unwrap),

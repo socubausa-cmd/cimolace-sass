@@ -25,6 +25,34 @@ import {
 } from 'lucide-react';
 import { resolveNetlifyApiUrl } from '@/lib/resolveNetlifyApiUrl';
 import { fetchTenantContext } from '@/lib/tenant/fetchTenantContext';
+import { getApiBaseUrl } from '@/lib/apiBase';
+import { authStore } from '@/lib/auth-store';
+
+// ── Migration Netlify(mort sur Vercel) → API NestJS `/marketing/*` (2026-07-18) ──
+// Mappe chaque chemin legacy `/api/marketing/*` vers sa route NestJS réelle.
+// `method` (optionnel) surcharge le verbe (ex : update automation = PATCH côté Nest).
+const MARKETING_ROUTE_MAP = {
+  '/api/marketing/analytics':          { path: '/marketing/analytics' },
+  '/api/marketing/leads':              { path: '/marketing/leads' },
+  '/api/marketing/funnels':            { path: '/marketing/funnels' },
+  '/api/marketing/campaigns':          { path: '/marketing/campaigns' },
+  '/api/marketing/logs':               { path: '/marketing/logs' },
+  '/api/marketing/orchestrate':        { path: '/marketing/orchestrate' },
+  '/api/marketing/publish':            { path: '/marketing/publish' },
+  '/api/marketing/score/refresh':      { path: '/marketing/score-refresh' },
+  '/api/marketing/payment/recovery':   { path: '/marketing/payment-recovery' },
+  '/api/marketing/ai/suggest-message': { path: '/marketing/ai-suggest-message' },
+  '/api/marketing/campaign/create':    { path: '/marketing/campaigns', method: 'POST' },
+  '/api/marketing/campaign/start':     { path: '/marketing/campaigns/action', method: 'POST' },
+  '/api/marketing/funnel/create':      { path: '/marketing/funnels', method: 'POST' },
+  '/api/marketing/lead/capture':       { path: '/marketing/leads/capture', method: 'POST' },
+  '/api/marketing/automation/list':    { path: '/marketing/automations' },
+  '/api/marketing/automation/audit':   { path: '/marketing/automations/audit' },
+  '/api/marketing/automation/create':  { path: '/marketing/automations', method: 'POST' },
+  '/api/marketing/automation/update':  { path: '/marketing/automations', method: 'PATCH' },
+  '/api/marketing/automation/delete':  { path: '/marketing/automations/delete', method: 'POST' },
+  '/api/marketing/automation/run':     { path: '/marketing/automations/run', method: 'POST' },
+};
 
 const objectiveOptions = [
   { value: 'acquisition', label: 'Acquisition' },
@@ -134,13 +162,45 @@ export default function AdminMarketingPage() {
     const params = new URLSearchParams(location.search || '');
     if (params.get('tab') === tab) return;
     params.set('tab', tab);
-    navigate(`/admin/marketing?${params.toString()}`, { replace: true });
-  }, [location.search, navigate, tab]);
+    // Synchronise l'onglet sur la route COURANTE (ex. /liri/crm), pas sur un chemin
+    // codé en dur : `/admin/marketing` redirige vers /liri/crm en perdant le ?tab=,
+    // ce qui créait une boucle de redirection infinie (spinner permanent).
+    navigate(`${location.pathname}?${params.toString()}`, { replace: true });
+  }, [location.pathname, location.search, navigate, tab]);
 
   const authFetch = useCallback(async (url, options = {}) => {
     const { data: sessData } = await supabase.auth.getSession();
     const token = sessData?.session?.access_token;
     if (!token) throw new Error('Session invalide');
+
+    // Route les chemins marketing vers l'API NestJS (le backend Netlify est mort).
+    const [rawPath, rawQs = ''] = String(url).split('?');
+    const mapping = MARKETING_ROUTE_MAP[rawPath];
+    if (mapping) {
+      const slug = authStore.getTenantSlug();
+      // Le tenant passe par l'en-tête X-Tenant-Slug (TenantGuard), pas par ?tenant_slug=.
+      const qs = new URLSearchParams(rawQs);
+      qs.delete('tenant_slug');
+      const suffix = qs.toString() ? `?${qs.toString()}` : '';
+      const res = await fetch(`${getApiBaseUrl()}${mapping.path}${suffix}`, {
+        ...options,
+        method: mapping.method || options.method || 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+          ...(slug ? { 'X-Tenant-Slug': slug } : {}),
+          ...(options.headers || {}),
+        },
+      });
+      const payload = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        throw new Error(payload?.error?.message || payload?.message || payload?.error || 'Erreur API');
+      }
+      // L'API NestJS enveloppe la réponse dans { data: ... } → on dépile.
+      return payload && typeof payload === 'object' && 'data' in payload ? payload.data : payload;
+    }
+
+    // Repli (chemin non mappé) : ancien comportement Netlify.
     const resolved = resolveNetlifyApiUrl(url);
     const res = await fetch(resolved, {
       ...options,
@@ -1039,11 +1099,10 @@ export default function AdminMarketingPage() {
       </div>
 
       {import.meta.env.DEV ? (
-        <div className="rounded-xl border border-amber-500/35 bg-amber-500/10 px-4 py-3 text-sm text-amber-100">
-          <strong className="text-amber-50">Développement local :</strong> les routes{' '}
-          <code className="rounded bg-black/30 px-1 text-xs">/api/marketing/*</code> sont servies par Netlify Functions. Lancez{' '}
-          <code className="rounded bg-black/30 px-1 text-xs">netlify dev</code> (port 8888) en parallèle de{' '}
-          <code className="rounded bg-black/30 px-1 text-xs">npm run dev</code> — le proxy Vite redirige déjà vers les fonctions.
+        <div className="rounded-xl border border-emerald-500/35 bg-emerald-500/10 px-4 py-3 text-sm text-emerald-100">
+          <strong className="text-emerald-50">Moteur CRM :</strong> les routes marketing sont désormais servies par l’API NestJS{' '}
+          <code className="rounded bg-black/30 px-1 text-xs">api.cimolace.space/marketing/*</code> (tenant-scopé via{' '}
+          <code className="rounded bg-black/30 px-1 text-xs">X-Tenant-Slug</code>). Le backend Netlify est retiré.
         </div>
       ) : null}
 
