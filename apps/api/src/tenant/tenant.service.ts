@@ -281,6 +281,31 @@ export class TenantService {
   }
 
   /**
+   * Résout un tenant_id à partir d'un HÔTE D'ORIGINE de requête (Origin/Referer),
+   * pour les endpoints PUBLICS où le tenant NE PEUT PAS venir du body (spoofable).
+   * Matche un domaine tenant ENREGISTRÉ dans `tenant_domains` — funnel hébergé
+   * (usage='custom_host') OU embarqué (usage='embed_origin') — et actif. Un même
+   * domaine pouvant exister sous les deux usages, on ordonne (custom_host = preuve
+   * de propriété, prioritaire) puis on limite à 1 pour éviter le multi-row.
+   * Renvoie null si l'hôte n'est pas un domaine tenant reconnu → l'appelant rejette.
+   */
+  async resolveTenantIdByOrigin(host: string): Promise<string | null> {
+    const supabase = this.authService.getClient();
+    const normalized = (host ?? "").trim().toLowerCase();
+    if (!normalized) return null;
+    const { data } = await supabase
+      .from("tenant_domains")
+      .select("tenant_id, usage")
+      .eq("domain", normalized)
+      .in("usage", ["custom_host", "embed_origin"])
+      .eq("status", "active")
+      .order("usage", { ascending: true })
+      .limit(1);
+    const row = Array.isArray(data) ? data[0] : (data as any);
+    return (row?.tenant_id as string | undefined) ?? null;
+  }
+
+  /**
    * Returns all tenants the given user is a member of, with their role.
    * Used by the frontend TenantProtectedRoute to verify membership.
    * Response shape mirrors the legacy Netlify tenant-context lambda so

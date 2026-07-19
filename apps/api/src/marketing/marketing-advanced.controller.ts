@@ -29,18 +29,35 @@
  *   POST   /marketing/leads/capture             → PUBLIC : capture lead
  */
 
-import { Body, Controller, Get, Param, Patch, Post, Query, UseGuards } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  ForbiddenException,
+  Get,
+  HttpException,
+  HttpStatus,
+  Param,
+  Patch,
+  Post,
+  Query,
+  Req,
+  UseGuards,
+} from '@nestjs/common';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { Roles } from '../common/decorators/roles.decorator';
 import { RolesGuard } from '../common/guards/roles.guard';
 import { CurrentTenant } from '../tenant/current-tenant.decorator';
 import { TenantGuard } from '../tenant/tenant.guard';
 import type { TenantContext } from '../tenant/tenant.types';
+import { TenantService } from '../tenant/tenant.service';
 import { MarketingAdvancedService } from './marketing-advanced.service';
 
 @Controller('marketing')
 export class MarketingAdvancedController {
-  constructor(private readonly svc: MarketingAdvancedService) {}
+  constructor(
+    private readonly svc: MarketingAdvancedService,
+    private readonly tenants: TenantService,
+  ) {}
 
   // ─── Analytics / Logs / Publish / Orchestrate ────────────────────────────
 
@@ -222,9 +239,76 @@ export class MarketingAdvancedController {
     });
   }
 
-  // PUBLIC : capture sans auth (typiquement appelé depuis landing)
+  // Anti-spam mémoire : fenêtre glissante par IP (endpoint public sans auth).
+  private static readonly CAPTURE_WINDOW_MS = 10 * 60 * 1000; // 10 min
+  private static readonly CAPTURE_MAX_PER_WINDOW = 30;
+  private readonly captureHits = new Map<string, { count: number; resetAt: number }>();
+
+  /**
+   * PUBLIC : capture de lead sans auth (appelé depuis une landing / un funnel).
+   *
+   * SÉCURITÉ : le `tenant_id` n'est JAMAIS lu du body (spoofable → un tiers
+   * pourrait injecter des leads dans n'importe quel tenant). Il est résolu depuis
+   * l'ORIGINE de la requête (header Origin, sinon Referer), qui doit correspondre
+   * à un domaine tenant ENREGISTRÉ (`tenant_domains`, custom_host ou embed_origin,
+   * actif). Origine inconnue → 403. Un rate-limit par IP freine le spam.
+   */
   @Post('leads/capture')
-  captureLead(@Body() body: any) {
-    return this.svc.captureLead(body);
+  async captureLead(@Req() req: any, @Body() body: any) {
+    this.throttleCapture(req);
+    const originHost = this.captureOriginHost(req);
+    const tenantId = originHost
+      ? await this.tenants.resolveTenantIdByOrigin(originHost)
+      : null;
+    if (!tenantId) {
+      throw new ForbiddenException(
+        "Origine de capture non reconnue : le domaine doit être enregistré pour un tenant.",
+      );
+    }
+    // On IMPOSE le tenant résolu et on neutralise toute valeur du body.
+    return this.svc.captureLead({ ...body, tenant_id: tenantId, tenantId });
+  }
+
+  /** Hôte (host:port) de l'origine de la requête, depuis Origin puis Referer. */
+  private captureOriginHost(req: any): string | null {
+    const raw = String(req?.headers?.origin || req?.headers?.referer || '').trim();
+    if (!raw) return null;
+    try {
+      return new URL(raw).host.toLowerCase();
+    } catch {
+      return null;
+    }
+  }
+
+  /** Rate-limit mémoire par IP ; lève 429 au-delà du plafond dans la fenêtre. */
+  private throttleCapture(req: any): void {
+    const ip = String(
+      (req?.headers?.['x-forwarded-for'] || '').split(',')[0].trim() ||
+        req?.ip ||
+        req?.socket?.remoteAddress ||
+        'unknown',
+    );
+    const now = Date.now();
+    // Purge opportuniste des entrées expirées (borne la mémoire de l'endpoint public).
+    if (this.captureHits.size > 5000) {
+      for (const [k, v] of this.captureHits) {
+        if (now > v.resetAt) this.captureHits.delete(k);
+      }
+    }
+    const cur = this.captureHits.get(ip);
+    if (!cur || now > cur.resetAt) {
+      this.captureHits.set(ip, {
+        count: 1,
+        resetAt: now + MarketingAdvancedController.CAPTURE_WINDOW_MS,
+      });
+      return;
+    }
+    cur.count += 1;
+    if (cur.count > MarketingAdvancedController.CAPTURE_MAX_PER_WINDOW) {
+      throw new HttpException(
+        'Trop de captures depuis cette adresse, réessayez plus tard.',
+        HttpStatus.TOO_MANY_REQUESTS,
+      );
+    }
   }
 }
