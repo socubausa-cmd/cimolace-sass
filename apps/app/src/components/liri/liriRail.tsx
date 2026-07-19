@@ -32,7 +32,7 @@ export type RailKey =
 
 export type RailItem = { key: RailKey; label: string; icon: typeof House; to: string; creator?: boolean; school?: boolean };
 export type RailGroup = { section?: string; items: RailItem[] };
-export type EngineDef = { key: EngineKey; label: string; sub: string; icon: typeof House; groups: RailGroup[] };
+export type EngineDef = { key: EngineKey; label: string; sub: string; icon: typeof House; groups: RailGroup[]; home?: string };
 
 /** Les moteurs et leurs rails (sections → items). Ordre = ordre du sélecteur d'en-tête. */
 export const ENGINES: EngineDef[] = [
@@ -87,7 +87,9 @@ export const ENGINES: EngineDef[] = [
     ],
   },
   {
-    key: 'crea', label: 'Créa', sub: 'Studio', icon: WandSparkles,
+    // home = page portail (Contenu) et non le Studio plein écran, pour que le SÉLECTEUR
+    // reste visible au clic « Créa ». Le Studio (builder immersif) s'ouvre depuis le rail.
+    key: 'crea', label: 'Créa', sub: 'Studio', icon: WandSparkles, home: '/liri/contenu',
     groups: [
       { section: 'Studio', items: [
         { key: 'studio', label: 'Studio', icon: WandSparkles, to: '/studio/liri', creator: true },
@@ -129,10 +131,12 @@ export function getVisibleEngines(f: Filter): EngineDef[] {
   return ENGINES.filter((e) => engineGroups(e.key, f).length > 0);
 }
 
-/** Route d'accueil d'un moteur = 1er item visible (donc rôle-correct : créateur ≠ élève). */
+/** Route d'accueil d'un moteur : `home` explicite (si le 1er item est un builder plein écran
+ *  sans sélecteur, ex. Studio), sinon le 1er item visible (rôle-correct : créateur ≠ élève). */
 export function engineHome(engine: EngineKey, f: Filter): string {
+  const def = ENGINES.find((e) => e.key === engine);
   const groups = engineGroups(engine, f);
-  return groups[0]?.items[0]?.to || '/liri';
+  return def?.home || groups[0]?.items[0]?.to || '/liri';
 }
 
 /** Liste PLATE des items du moteur actif (source de la barre de nav basse mobile). */
