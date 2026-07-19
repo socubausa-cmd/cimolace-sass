@@ -20,7 +20,7 @@ import {
  *   (aucun flag)   → partagé (Accueil, Lives, Forum, Messages, Boutique…)
  * Un moteur n'apparaît dans le sélecteur QUE s'il a ≥ 1 item visible pour l'utilisateur.
  */
-export type EngineKey = 'liri' | 'ecole' | 'mbolo' | 'medos' | 'crea';
+export type EngineKey = 'liri' | 'ecole' | 'mbolo' | 'medos' | 'studio' | 'crea';
 
 export type RailKey =
   | 'accueil' | 'forfaits' | 'semaine' | 'formations'
@@ -87,12 +87,21 @@ export const ENGINES: EngineDef[] = [
     ],
   },
   {
-    // home = page portail (Contenu) et non le Studio plein écran, pour que le SÉLECTEUR
-    // reste visible au clic « Créa ». Le Studio (builder immersif) s'ouvre depuis le rail.
-    key: 'crea', label: 'Créa', sub: 'Studio', icon: WandSparkles, home: '/liri/contenu',
+    // STUDIO = moteur À PART ENTIÈRE (détaché de Créa) : écosystème immersif PLEIN ÉCRAN avec
+    // sa PROPRE coque + sa propre nav interne (Formation/Designer/Cours/Live/Bibliothèque…).
+    // Le clic « Studio » LANCE ce monde ; on n'y groupe donc rien d'autre côté portail.
+    key: 'studio', label: 'Studio', sub: 'Création', icon: WandSparkles, home: '/studio/liri',
     groups: [
-      { section: 'Studio', items: [
+      { items: [
         { key: 'studio', label: 'Studio', icon: WandSparkles, to: '/studio/liri', creator: true },
+      ] },
+    ],
+  },
+  {
+    // Créa = outils de CONTENU portail (hors Studio) : CMS + IA. Studio en est détaché ↑.
+    key: 'crea', label: 'Créa', sub: 'Contenu', icon: SquarePen,
+    groups: [
+      { section: 'Contenu', items: [
         { key: 'contenu', label: 'Contenu', icon: SquarePen, to: '/liri/contenu', creator: true },
         { key: 'pages', label: 'Pages', icon: Files, to: '/liri/pages', creator: true },
       ] },
