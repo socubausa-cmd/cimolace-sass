@@ -23,6 +23,7 @@ import {
 import { SubscriptionRenewalService } from './subscription-renewal.service';
 import { TenantPaymentConfigService } from '../billing/tenant-payment-config/tenant-payment-config.service';
 import { EmailEngineService } from '../email-engine/email-engine.service';
+import { LiriEntitlementsService } from '../billing/liri-entitlements.service';
 
 /**
  * Montants des paliers mentorat Ngowazulu, en centimes EUR.
@@ -48,6 +49,7 @@ export class OfferingCheckoutService {
     private readonly renewals: SubscriptionRenewalService,
     private readonly tenantPayments: TenantPaymentConfigService,
     private readonly email: EmailEngineService,
+    private readonly entitlements: LiriEntitlementsService,
   ) {}
 
   /**
@@ -631,6 +633,18 @@ export class OfferingCheckoutService {
       });
       userId = createRes.ok ? ((await createRes.json()) as { id: string }).id : await findId();
       if (!userId) throw new InternalServerErrorException('Provisionnement du compte invité impossible.');
+    }
+    // PLAFOND D'OFFRE (monétisation) : un NOUVEL élève invité consomme un slot 'students'
+    // (upsert ignoreDuplicates → un membre existant est no-op, donc on ne vérifie que les nouveaux).
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { data: existingMem } = await (this.supabase as any)
+      .from('tenant_memberships').select('id').eq('tenant_id', tenantId).eq('user_id', userId).maybeSingle();
+    if (!existingMem?.id) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const { count } = await (this.supabase as any)
+        .from('tenant_memberships').select('id', { count: 'exact', head: true })
+        .eq('tenant_id', tenantId).eq('status', 'active').eq('role', 'student');
+      await this.entitlements.assertWithinCap(tenantId, 'students', count ?? 0);
     }
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     await (this.supabase as any).from('tenant_memberships').upsert(

@@ -99,10 +99,11 @@ export class CimolaceBackofficeService {
       .gte('created_at', since)
       .order('created_at', { ascending: false });
     const rows = (data as any[]) || [];
-    const endedTenants = new Set(rows.filter((r) => r.action === 'impersonation:end').map((r) => r.entity_id));
+    // entity_id = clientId (cimolace_clients.id), PAS tenants.id — l'audit logChange keye par client.
+    const endedClients = new Set(rows.filter((r) => r.action === 'impersonation:end').map((r) => r.entity_id));
     const active = rows
-      .filter((r) => r.action === 'impersonation:start' && !endedTenants.has(r.entity_id))
-      .map((r) => ({ tenantId: r.entity_id, operator: r.changed_by, description: r.description, startedAt: r.created_at }));
+      .filter((r) => r.action === 'impersonation:start' && !endedClients.has(r.entity_id))
+      .map((r) => ({ clientId: r.entity_id, operator: r.changed_by, description: r.description, startedAt: r.created_at }));
     return { active, windowMinutes: CimolaceBackofficeService.IMP_MAX_MINUTES };
   }
 

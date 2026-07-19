@@ -250,10 +250,12 @@ export class MedosService {
     }
 
     // PLAFOND D'OFFRE (monétisation) : cap `patients` du plan (ex. cimolace-medos-solo-local = 200).
+    // Exclut les dossiers archived/deceased (sinon sur-blocage d'un client payant sur des dossiers clos).
     const { count: patientCount } = await this.supabase.client
       .from('med_patients')
       .select('id', { count: 'exact', head: true })
-      .eq('tenant_id', tenant.id);
+      .eq('tenant_id', tenant.id)
+      .not('status', 'in', '("archived","deceased")');
     await this.entitlements.assertWithinCap(tenant.id, 'patients', patientCount ?? 0);
 
     const { data, error } = await this.supabase.client

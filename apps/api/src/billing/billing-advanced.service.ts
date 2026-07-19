@@ -181,9 +181,9 @@ export class BillingAdvancedService {
     let y = 780;
     const zero = new Set(['XAF', 'XOF', 'XPF', 'BIF', 'CLP', 'DJF', 'GNF', 'JPY', 'KMF', 'KRW', 'MGA', 'PYG', 'RWF', 'UGX', 'VND', 'VUV']);
     const cur = String(a.currency).toUpperCase();
-    const amountStr = zero.has(cur)
-      ? `${Math.round(a.amount).toLocaleString('fr-FR')} ${cur}`
-      : `${(a.amount / 100).toLocaleString('fr-FR', { minimumFractionDigits: 2 })} ${cur}`;
+    // `a.amount` est en UNITÉS MAJEURES (billing_payments.amount ; cohérent avec renderInvoiceHtml
+    // qui l'affiche tel quel) — NE PAS diviser par 100, sinon 150 EUR s'imprimerait « 1,50 EUR ».
+    const amountStr = `${a.amount.toLocaleString('fr-FR', { minimumFractionDigits: zero.has(cur) ? 0 : 2, maximumFractionDigits: 2 })} ${cur}`;
     // Sanitize : les polices standard PDF (WinAnsi) n'encodent pas les espaces insécables
     // fines (U+202F/U+2009) ni l'insécable (U+00A0) que toLocaleString('fr-FR') insère entre
     // les milliers → drawText crasherait sinon. On les remplace par une espace normale.

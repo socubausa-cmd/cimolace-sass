@@ -8,6 +8,7 @@ import {
 } from '@nestjs/common';
 import { createHash, randomBytes } from 'crypto';
 import { AuthService } from '../auth/auth.service';
+import { LiriEntitlementsService } from '../billing/liri-entitlements.service';
 
 /**
  * Accès élève par CODE OTP à usage unique (L5). Décision produit :
@@ -30,7 +31,10 @@ export class StudentInviteService {
   // Alphabet sans caractères ambigus (0/O, 1/I/L) — code lisible/tapable.
   private static readonly ALPHABET = 'ABCDEFGHJKMNPQRSTUVWXYZ23456789';
 
-  constructor(private readonly auth: AuthService) {}
+  constructor(
+    private readonly auth: AuthService,
+    private readonly entitlements: LiriEntitlementsService,
+  ) {}
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   private get db(): any {
@@ -220,6 +224,19 @@ export class StudentInviteService {
     // Succès : compte + mot de passe + membership. Le rôle vient de l'INVITATION.
     const role = ['student', 'teacher', 'member'].includes(String(inv.role)) ? String(inv.role) : 'student';
     const userId = await this.ensureUserWithPassword(email, password);
+
+    // PLAFOND D'OFFRE (monétisation) : une NOUVELLE adhésion consomme un slot (élève ou siège).
+    // L'upsert ignoreDuplicates → un membre existant est no-op, donc on ne vérifie que les nouveaux.
+    const { data: existingMem } = await this.db
+      .from('tenant_memberships').select('id').eq('tenant_id', tenantId).eq('user_id', userId).maybeSingle();
+    if (!existingMem?.id) {
+      const isSeat = !['student', 'patient', 'visitor'].includes(role);
+      let q = this.db.from('tenant_memberships')
+        .select('id', { count: 'exact', head: true }).eq('tenant_id', tenantId).eq('status', 'active');
+      q = isSeat ? q.not('role', 'in', '("student","patient","visitor")') : q.eq('role', 'student');
+      const { count } = await q;
+      await this.entitlements.assertWithinCap(tenantId, isSeat ? 'seats' : 'students', count ?? 0);
+    }
 
     await this.db.from('tenant_memberships').upsert(
       { tenant_id: tenantId, user_id: userId, role, status: 'active' },

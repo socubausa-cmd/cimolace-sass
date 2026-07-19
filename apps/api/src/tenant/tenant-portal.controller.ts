@@ -183,14 +183,36 @@ export class TenantPortalController {
   // RÉSILIATION SELF-SERVE (§11) — politique unique = FIN DE PÉRIODE : l'accès est conservé
   // jusqu'à current_period_end (aucun remboursement), puis l'abo expire (le cron de
   // renouvellement mobile-money saute les résiliés). Réversible tant que la période court.
+  /**
+   * Propage la (dé)programmation de fin de période à un VRAI abonnement récurrent Stripe
+   * (id `sub_…`). Sinon (plans inline / mobile money : pas de sub_id) le flag local + le saut
+   * du cron suffisent. Best-effort : n'échoue jamais la résiliation locale.
+   */
+  private async setStripeCancelAtPeriodEnd(provider?: string, subId?: string, cancel = true): Promise<void> {
+    if (provider !== 'stripe' || !subId || !subId.startsWith('sub_') || !process.env.STRIPE_SECRET_KEY) return;
+    try {
+      const auth = `Bearer ${process.env.STRIPE_SECRET_KEY}`;
+      const res = await fetch(`https://api.stripe.com/v1/subscriptions/${subId}`, {
+        method: 'POST',
+        headers: { Authorization: auth, 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: `cancel_at_period_end=${cancel ? 'true' : 'false'}`,
+      });
+      if (!res.ok) console.error(`[tenant-portal cancel] Stripe ${subId} → ${res.status}`);
+    } catch (e) {
+      console.error(`[tenant-portal cancel] Stripe ${subId} exception: ${(e as Error).message}`);
+    }
+  }
+
   @Post('subscriptions/:id/cancel')
   @Roles('owner', 'admin')
   async cancelSub(@Req() req: any, @Param('id') id: string, @Body() body: { reason?: string }) {
     const { data: sub } = await this.db
       .from('billing_subscriptions')
-      .select('id, tenant_id, current_period_end, metadata')
+      .select('id, tenant_id, provider, provider_subscription_id, current_period_end, metadata')
       .eq('id', id).maybeSingle();
     if (!sub || sub.tenant_id !== req.tenant.id) throw new NotFoundException('Abonnement introuvable pour ce tenant');
+    // Propage à Stripe pour un vrai abo récurrent (sinon prélèvements continus + accès jamais coupé).
+    await this.setStripeCancelAtPeriodEnd(sub.provider, sub.provider_subscription_id, true);
     const meta = { ...(sub.metadata || {}), cancel_at_period_end: true, cancel_requested_at: new Date().toISOString() };
     if (body?.reason) meta.cancel_reason = String(body.reason).slice(0, 500);
     if (req.user?.email || req.user?.id) meta.canceled_by = req.user?.email ?? req.user?.id;
@@ -208,9 +230,10 @@ export class TenantPortalController {
   async reactivateSub(@Req() req: any, @Param('id') id: string) {
     const { data: sub } = await this.db
       .from('billing_subscriptions')
-      .select('id, tenant_id, metadata')
+      .select('id, tenant_id, provider, provider_subscription_id, metadata')
       .eq('id', id).maybeSingle();
     if (!sub || sub.tenant_id !== req.tenant.id) throw new NotFoundException('Abonnement introuvable pour ce tenant');
+    await this.setStripeCancelAtPeriodEnd(sub.provider, sub.provider_subscription_id, false);
     const meta = { ...(sub.metadata || {}) };
     delete meta.cancel_at_period_end; delete meta.cancel_requested_at; delete meta.cancel_reason;
     meta.reactivated_at = new Date().toISOString();
@@ -338,6 +361,21 @@ export class TenantPortalController {
     };
   }
 
+  // PLAFOND D'OFFRE (monétisation) : « seat » = membre d'équipe (tout SAUF élève/patient/visiteur).
+  private static isSeatRole(role?: string) {
+    return !!role && !['student', 'patient', 'visitor'].includes(String(role).toLowerCase());
+  }
+  /** Lève 403 si le tenant a déjà atteint son plafond de sièges. À appeler AVANT d'ajouter un siège. */
+  private async assertSeatCap(tenantId: string) {
+    const { count } = await this.db
+      .from('tenant_memberships')
+      .select('id', { count: 'exact', head: true })
+      .eq('tenant_id', tenantId)
+      .eq('status', 'active')
+      .not('role', 'in', '("student","patient","visitor")');
+    await this.entitlements.assertWithinCap(tenantId, 'seats', count ?? 0);
+  }
+
   /** Ajoute un membre par email (l'utilisateur doit déjà avoir un compte). Owner/admin. */
   @Post('members')
   async inviteMember(@Req() req: any, @Body() body: { email?: string; role?: string }) {
@@ -353,22 +391,19 @@ export class TenantPortalController {
     }
     const { data: existing } = await this.db
       .from('tenant_memberships')
-      .select('id')
+      .select('id, role, status')
       .eq('tenant_id', req.tenant.id)
       .eq('user_id', prof.id)
       .maybeSingle();
+    // Cap sièges : bloque quand on AJOUTE un siège — nouveau membre, OU réactivation/promotion
+    // d'un membership existant qui n'était pas déjà un siège actif (sinon contournement du cap).
+    const wasActiveSeat = existing?.status === 'active' && TenantPortalController.isSeatRole(existing?.role);
+    if (TenantPortalController.isSeatRole(role) && !wasActiveSeat) {
+      await this.assertSeatCap(req.tenant.id);
+    }
     if (existing?.id) {
       await this.db.from('tenant_memberships').update({ role, status: 'active' }).eq('id', existing.id);
     } else {
-      // PLAFOND D'OFFRE (monétisation) : cap `seats` du plan (membres d'équipe = tout sauf
-      // élèves/patients/visiteurs). Ex. cimolace-medos-solo-local = 1, ecole-petite-local = 2.
-      const { count: seatCount } = await this.db
-        .from('tenant_memberships')
-        .select('id', { count: 'exact', head: true })
-        .eq('tenant_id', req.tenant.id)
-        .eq('status', 'active')
-        .not('role', 'in', '("student","patient","visitor")');
-      await this.entitlements.assertWithinCap(req.tenant.id, 'seats', seatCount ?? 0);
       await this.db.from('tenant_memberships').insert({ tenant_id: req.tenant.id, user_id: prof.id, role, status: 'active' });
     }
     return { data: { ok: true, email, role } };
@@ -391,6 +426,14 @@ export class TenantPortalController {
     if (req.tenant?.userRole !== 'owner') throw new BadRequestException('Rôle owner requis.');
     const role = body?.role;
     if (!role) throw new BadRequestException('Rôle requis');
+    // Cap sièges : une PROMOTION d'un rôle non-siège vers un rôle siège consomme un siège.
+    const { data: cur } = await this.db
+      .from('tenant_memberships').select('role, status')
+      .eq('tenant_id', req.tenant.id).eq('user_id', userId).maybeSingle();
+    const wasActiveSeat = cur?.status === 'active' && TenantPortalController.isSeatRole(cur?.role);
+    if (TenantPortalController.isSeatRole(role) && !wasActiveSeat) {
+      await this.assertSeatCap(req.tenant.id);
+    }
     await this.db.from('tenant_memberships').update({ role }).eq('tenant_id', req.tenant.id).eq('user_id', userId);
     return { data: { ok: true, role } };
   }

@@ -135,8 +135,10 @@ export class MboloService {
   async createProduct(tenantId: string, dto: any) {
     if (!dto?.name || dto?.priceCents == null) throw new BadRequestException('name et priceCents requis');
     // PLAFOND D'OFFRE (monétisation) : cap catalog_size du plan (ex. cimolace-mbolo-marche-local = 50).
+    // Compte le catalogue ACTIF (un produit désactivé ne consomme pas de slot).
     const { count: productCount } = await (this.supabase.client as any)
-      .from('mbolo_products').select('id', { count: 'exact', head: true }).eq('tenant_id', tenantId);
+      .from('mbolo_products').select('id', { count: 'exact', head: true })
+      .eq('tenant_id', tenantId).eq('is_active', true);
     await this.entitlements.assertWithinCap(tenantId, 'catalog_size', productCount ?? 0);
     const { data, error } = await (this.supabase.client as any).from('mbolo_products').insert({
       tenant_id: tenantId,

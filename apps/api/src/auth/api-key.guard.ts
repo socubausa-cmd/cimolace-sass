@@ -186,7 +186,10 @@ export class ApiKeyGuard implements CanActivate {
     // sinon une clé mbolo fuitée atteint les endpoints MEDOS/PHI. ENFORCE PAR DÉFAUT
     // (fail-closed) ; échappatoire instantanée sans redeploy : API_KEY_SCOPE_ENFORCE=0
     // (repasse en OBSERVE si une intégration légitime venait à casser).
-    const reqPath = req.originalUrl || req.path || (req as any).url || '';
+    // SÉCURITÉ : classifier le moteur sur le PATH SEUL. originalUrl inclut la query string,
+    // et endpointEngineFromPath fait un simple .includes('/medos') → `?x=/medos` ferait résoudre
+    // un endpoint mbolo à 'medos' et contournerait l'enforce de scope. On retire la query.
+    const reqPath = (req.originalUrl || req.path || (req as any).url || '').split('?')[0];
     const violation = apiKeyScopeViolation(raw, reqPath);
     if (violation) {
       if (process.env.API_KEY_SCOPE_ENFORCE !== '0') {
