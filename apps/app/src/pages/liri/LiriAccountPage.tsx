@@ -24,7 +24,7 @@ const DAY = 86_400_000;
 
 export default function LiriAccountPage() {
   const nav = useNavigate();
-  const { user, logout } = useAuth();
+  const { user, logout, tenantRole } = useAuth();
   const base = getApiBaseUrl();
   const token = authStore.getToken();
   const slug = authStore.getTenantSlug();
@@ -92,7 +92,11 @@ export default function LiriAccountPage() {
   const orgSlug = org?.slug || slug;
   const role = (org?.role ?? '') as string;
   const isOwner = role === 'owner';
-  const canManageOrg = ['owner', 'admin', 'secretariat'].includes(role);
+  // Rôle FIABLE : celui de /tenants/current OU celui du JWT (tenantRole) — évite que la
+  // console d'org disparaisse quand /tenants/current fail-close (ex. résolution tenant en
+  // cours) alors que l'utilisateur EST owner (cf. socuba owner d'isna côté DB).
+  const manageRole = ['owner', 'admin', 'secretariat'];
+  const canManageOrg = manageRole.includes(role) || manageRole.includes(String(tenantRole || '').toLowerCase());
   const email = user?.email || '';
 
   useEffect(() => {
