@@ -145,6 +145,10 @@ export default function AdminMarketingPage() {
     []
   );
 
+  // Sync URL → onglet : UNIQUEMENT quand l'URL change (deep-link, bouton retour).
+  // ⚠️ NE PAS mettre `tab` dans les deps : sinon un clic (setTab) redéclenche cet
+  // effet, qui lit l'URL encore périmée et REVERT l'onglet → les onglets ne se
+  // cliquaient plus. L'autre sens (onglet → URL) est géré par l'effet suivant.
   useEffect(() => {
     const params = new URLSearchParams(location.search || '');
     const queryTab = String(params.get('tab') || '').toLowerCase();
@@ -152,7 +156,8 @@ export default function AdminMarketingPage() {
       skipNextTabNavigateRef.current = true;
       setTab(queryTab);
     }
-  }, [location.search, tab, validTabs]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [location.search, validTabs]);
 
   useEffect(() => {
     if (skipNextTabNavigateRef.current) {
