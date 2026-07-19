@@ -24,7 +24,11 @@ export default function ImpersonateBootstrap() {
       }
       impersonationStore.set(ctx);
       // Nettoie le hash (retire le token de la barre d'adresse) puis entre dans l'espace.
-      const to = typeof ctx.to === 'string' && ctx.to.startsWith('/') ? ctx.to : '/liri';
+      // SÉCURITÉ : `to` vient d'un hash NON signé (contrôlé par l'appelant) → chemin INTERNE
+      // strict uniquement : un seul '/' initial NON suivi de '/' ou '\' — sinon '//evil.com' ou
+      // '/\evil.com' (URL protocol-relative) passeraient un simple startsWith('/') → open redirect.
+      const rawTo = typeof ctx.to === 'string' ? ctx.to : '';
+      const to = /^\/(?![/\\])/.test(rawTo) ? rawTo : '/liri';
       window.location.replace(to);
     } catch {
       setError("Impossible de démarrer l'impersonation.");
