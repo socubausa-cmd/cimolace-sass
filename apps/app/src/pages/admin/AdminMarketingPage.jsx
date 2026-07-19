@@ -27,6 +27,7 @@ import { resolveNetlifyApiUrl } from '@/lib/resolveNetlifyApiUrl';
 import { fetchTenantContext } from '@/lib/tenant/fetchTenantContext';
 import { getApiBaseUrl } from '@/lib/apiBase';
 import { authStore } from '@/lib/auth-store';
+import { crmApi } from '@/lib/api-v2';
 
 // ── Migration Netlify(mort sur Vercel) → API NestJS `/marketing/*` (2026-07-18) ──
 // Mappe chaque chemin legacy `/api/marketing/*` vers sa route NestJS réelle.
@@ -246,6 +247,23 @@ export default function AdminMarketingPage() {
       setLoading(false);
     }
   }, [authFetch, toast]);
+
+  // Conversion d'un lead (Growth Engine) en contact sales-CRM (POST /crm/contacts/convert-lead).
+  // crmApi passe par api-v2 (token + X-Tenant-Slug auto) ; le backend passe le lead à status='customer'.
+  const [convertingLeadId, setConvertingLeadId] = useState(null);
+  const convertLeadToContact = useCallback(async (lead) => {
+    if (!lead?.id) return;
+    setConvertingLeadId(lead.id);
+    try {
+      await crmApi.convertLead(lead.id);
+      toast({ title: 'Lead converti', description: 'Un contact CRM a été créé (onglet Contacts).' });
+      await loadData();
+    } catch (e) {
+      toast({ title: 'Conversion', description: String(e?.message || e), variant: 'destructive' });
+    } finally {
+      setConvertingLeadId(null);
+    }
+  }, [loadData, toast]);
 
   /** Flows + audit — chargé à la demande (onglet Automation) pour éviter de tout charger d'un coup */
   const loadAutomationData = useCallback(async () => {
@@ -1219,12 +1237,35 @@ export default function AdminMarketingPage() {
             <Badge className="bg-emerald-500/20 text-emerald-200 border-emerald-500/30">🔥 Chauds : {heatBreakdown.hot}</Badge>
           </div>
           <div className="space-y-2">
-            {leads.slice(0, 30).map((lead) => (
-              <div key={lead.id} className="rounded-lg border border-white/10 p-3 bg-[#0F1419]/70">
-                <p className="text-sm text-white">{lead.name || lead.email || lead.phone || 'Lead'}</p>
-                <p className="text-xs text-gray-400 mt-1">
-                  {lead.email || '-'} | score {lead.score} | status {lead.status}
-                </p>
+            {[...leads]
+              .sort((a, b) => (a.status === 'customer' ? 1 : 0) - (b.status === 'customer' ? 1 : 0))
+              .slice(0, 50)
+              .map((lead) => (
+              <div
+                key={lead.id}
+                className="rounded-lg border border-white/10 p-3 bg-[#0F1419]/70 flex items-center justify-between gap-3"
+              >
+                <div className="min-w-0">
+                  <p className="text-sm text-white truncate">{lead.name || lead.email || lead.phone || 'Lead'}</p>
+                  <p className="text-xs text-gray-400 mt-1">
+                    {lead.email || '-'} | score {lead.score} | status {lead.status}
+                  </p>
+                </div>
+                {lead.status === 'customer' ? (
+                  <span className="shrink-0 rounded-md px-2 py-0.5 text-[11px] text-white/70 border border-white/15">
+                    Contact CRM
+                  </span>
+                ) : (
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="shrink-0"
+                    disabled={convertingLeadId === lead.id}
+                    onClick={() => void convertLeadToContact(lead)}
+                  >
+                    {convertingLeadId === lead.id ? 'Conversion…' : 'Convertir en contact'}
+                  </Button>
+                )}
               </div>
             ))}
           </div>

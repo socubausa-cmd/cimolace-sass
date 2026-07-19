@@ -1,16 +1,81 @@
-import React from 'react';
+import React, { useMemo } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { LiriPortalShell } from '@/components/liri/LiriPortalShell';
+import { usePortalTabs, usePortalCrumb } from '@/components/liri/portalHeader';
 import AdminMarketingPage from '@/pages/admin/AdminMarketingPage';
+import CrmPipelineBoard from '@/components/liri/crm/CrmPipelineBoard';
+import CrmContacts from '@/components/liri/crm/CrmContacts';
+import CrmCompanies from '@/components/liri/crm/CrmCompanies';
 
 /**
- * CRM / Growth Engine DANS le portail LIRI (rail « CRM », créateur owner/admin).
- * Le moteur marketing (leads, campagnes, funnels, automation, analytics) rendu sous
- * le chrome unifié LIRI — remplace l'ancienne coque `/admin/marketing` (header vitrine).
+ * CRM DANS le portail LIRI (rail « CRM », créateur owner/admin).
+ *
+ * /liri/crm est désormais un HÔTE d'onglets d'en-tête :
+ *   - Pipeline   → CrmPipelineBoard (kanban sales-CRM, backend /crm)  ← vue par défaut
+ *   - Contacts   → CrmContacts
+ *   - Sociétés   → CrmCompanies
+ *   - Croissance → AdminMarketingPage (Growth Engine marketing, INCHANGÉ)
+ *
+ * Les onglets sont poussés dans la TOPBAR via usePortalTabs (règle menus niveau 3 : pas de
+ * barre d'onglets dans le corps). L'état de vue est persisté dans `?view=` — volontairement
+ * DISTINCT du `?tab=` d'AdminMarketingPage (qui gère ses propres sous-onglets marketing) pour
+ * éviter toute collision d'URL. Le shell (chrome + PortalHeaderProvider) est fourni UNE fois ;
+ * les corps sont shell-less → pas de double-shell.
  */
+
+const CRM_VIEWS = [
+  { value: 'pipeline', label: 'Pipeline' },
+  { value: 'contacts', label: 'Contacts' },
+  { value: 'companies', label: 'Sociétés' },
+  { value: 'growth', label: 'Croissance' },
+];
+const VALID_VIEWS = new Set(CRM_VIEWS.map((v) => v.value));
+
 export default function LiriCrmPage() {
   return (
     <LiriPortalShell active="crm" rail>
-      <AdminMarketingPage />
+      <LiriCrmContent />
     </LiriPortalShell>
+  );
+}
+
+/** Rendu DANS le shell → le PortalHeaderProvider (topbar) est disponible pour usePortalTabs. */
+function LiriCrmContent() {
+  const [searchParams, setSearchParams] = useSearchParams();
+  const view = useMemo(() => {
+    const v = String(searchParams.get('view') || '').toLowerCase();
+    return VALID_VIEWS.has(v) ? v : 'pipeline';
+  }, [searchParams]);
+
+  const setView = (next) => {
+    setSearchParams(
+      (prev) => {
+        const p = new URLSearchParams(prev);
+        p.set('view', next);
+        // Le ?tab= appartient au sous-nav marketing (onglet Croissance). En quittant
+        // Croissance, on le retire pour ne pas laisser traîner un onglet marketing
+        // périmé dans les liens partagés des vues sales-CRM.
+        if (next !== 'growth') p.delete('tab');
+        return p;
+      },
+      { replace: true },
+    );
+  };
+
+  const activeLabel = CRM_VIEWS.find((v) => v.value === view)?.label ?? 'Pipeline';
+  usePortalTabs(CRM_VIEWS, view, setView);
+  usePortalCrumb(['CRM', activeLabel]);
+
+  // Onglet Croissance : AdminMarketingPage porte SON PROPRE conteneur centré (mx-auto max-w-5xl)
+  // → on le rend nu, sans wrapper, pour ne rien casser du Growth Engine.
+  if (view === 'growth') return <AdminMarketingPage />;
+
+  // Vues sales-CRM : pleine largeur (le kanban a besoin d'espace), padding portail cohérent.
+  return (
+    <div className="w-full px-4 py-6 sm:px-6 sm:py-8">
+      {view === 'pipeline' && <CrmPipelineBoard />}
+      {view === 'contacts' && <CrmContacts />}
+      {view === 'companies' && <CrmCompanies />}
+    </div>
   );
 }

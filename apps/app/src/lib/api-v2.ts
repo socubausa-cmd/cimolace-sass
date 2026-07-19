@@ -553,6 +553,89 @@ export const growthApi = {
     apiV2.patch<ApiEnvelope<any>>(`/growth/leads/${id}/score`, { score }).then(unwrap),
 };
 
+// ── CRM (cœur sales — Vague 2) ────────────────────────────────────────────────
+// Le backend enveloppe déjà dans { data }, et unwrap = response.data.data → il reste
+// la valeur BRUTE du controller. Or les listes CRM renvoient des OBJETS à clé nommée
+// ({ companies:[] }, { contacts:[] }, …), PAS des tableaux : chaque list* extrait donc
+// son tableau nommé (piège « enveloppe {data:{clé:[]}} → non-tableau »). board/summary
+// = objets voulus (kanban) → NE PAS extraire.
+export const crmApi = {
+  summary: () => apiV2.get<ApiEnvelope<any>>('/crm/summary').then(unwrap),
+
+  listCompanies: (params?: { search?: string; limit?: number; offset?: number }): Promise<any[]> =>
+    apiV2.get<ApiEnvelope<{ companies?: any[] }>>('/crm/companies', { params }).then(unwrap)
+      .then((r: any) => (Array.isArray(r) ? r : (r?.companies ?? []))),
+  createCompany: (body: Record<string, unknown>) =>
+    apiV2.post<ApiEnvelope<any>>('/crm/companies', body).then(unwrap),
+  updateCompany: (id: string, body: Record<string, unknown>) =>
+    apiV2.patch<ApiEnvelope<any>>(`/crm/companies/${id}`, body).then(unwrap),
+  deleteCompany: (id: string) =>
+    apiV2.delete<ApiEnvelope<any>>(`/crm/companies/${id}`).then(unwrap),
+
+  listContacts: (params?: Record<string, string>): Promise<any[]> =>
+    apiV2.get<ApiEnvelope<{ contacts?: any[] }>>('/crm/contacts', { params }).then(unwrap)
+      .then((r: any) => (Array.isArray(r) ? r : (r?.contacts ?? []))),
+  createContact: (body: Record<string, unknown>) =>
+    apiV2.post<ApiEnvelope<any>>('/crm/contacts', body).then(unwrap),
+  updateContact: (id: string, body: Record<string, unknown>) =>
+    apiV2.patch<ApiEnvelope<any>>(`/crm/contacts/${id}`, body).then(unwrap),
+  deleteContact: (id: string) =>
+    apiV2.delete<ApiEnvelope<any>>(`/crm/contacts/${id}`).then(unwrap),
+  convertLead: (leadId: string) =>
+    apiV2.post<ApiEnvelope<any>>('/crm/contacts/convert-lead', { lead_id: leadId }).then(unwrap),
+
+  listPipelines: (): Promise<any[]> =>
+    apiV2.get<ApiEnvelope<{ pipelines?: any[] }>>('/crm/pipelines').then(unwrap)
+      .then((r: any) => (Array.isArray(r) ? r : (r?.pipelines ?? []))),
+  createPipeline: (body: Record<string, unknown>) =>
+    apiV2.post<ApiEnvelope<any>>('/crm/pipelines', body).then(unwrap),
+  listStages: (pipelineId: string): Promise<any[]> =>
+    apiV2.get<ApiEnvelope<{ stages?: any[] }>>(`/crm/pipelines/${pipelineId}/stages`).then(unwrap)
+      .then((r: any) => (Array.isArray(r) ? r : (r?.stages ?? []))),
+
+  // Kanban — OBJET par design : { pipeline, stages:[{...,deals:[]}], orphans } → NE PAS extraire.
+  dealsBoard: (pipelineId?: string) =>
+    apiV2
+      .get<ApiEnvelope<any>>('/crm/deals/board', { params: pipelineId ? { pipeline_id: pipelineId } : {} })
+      .then(unwrap),
+  createDeal: (body: Record<string, unknown>) =>
+    apiV2.post<ApiEnvelope<any>>('/crm/deals', body).then(unwrap),
+  updateDeal: (id: string, body: Record<string, unknown>) =>
+    apiV2.patch<ApiEnvelope<any>>(`/crm/deals/${id}`, body).then(unwrap),
+  deleteDeal: (id: string) =>
+    apiV2.delete<ApiEnvelope<any>>(`/crm/deals/${id}`).then(unwrap),
+
+  listNotes: (entityType: string, entityId: string): Promise<any[]> =>
+    apiV2
+      .get<ApiEnvelope<{ notes?: any[] }>>('/crm/notes', { params: { entity_type: entityType, entity_id: entityId } })
+      .then(unwrap)
+      .then((r: any) => (Array.isArray(r) ? r : (r?.notes ?? []))),
+  createNote: (body: Record<string, unknown>) =>
+    apiV2.post<ApiEnvelope<any>>('/crm/notes', body).then(unwrap),
+  deleteNote: (id: string) =>
+    apiV2.delete<ApiEnvelope<any>>(`/crm/notes/${id}`).then(unwrap),
+
+  listTasks: (params?: Record<string, string>): Promise<any[]> =>
+    apiV2.get<ApiEnvelope<{ tasks?: any[] }>>('/crm/tasks', { params }).then(unwrap)
+      .then((r: any) => (Array.isArray(r) ? r : (r?.tasks ?? []))),
+  createTask: (body: Record<string, unknown>) =>
+    apiV2.post<ApiEnvelope<any>>('/crm/tasks', body).then(unwrap),
+  updateTask: (id: string, body: Record<string, unknown>) =>
+    apiV2.patch<ApiEnvelope<any>>(`/crm/tasks/${id}`, body).then(unwrap),
+  deleteTask: (id: string) =>
+    apiV2.delete<ApiEnvelope<any>>(`/crm/tasks/${id}`).then(unwrap),
+
+  listTags: (): Promise<any[]> =>
+    apiV2.get<ApiEnvelope<{ tags?: any[] }>>('/crm/tags').then(unwrap)
+      .then((r: any) => (Array.isArray(r) ? r : (r?.tags ?? []))),
+  createTag: (body: Record<string, unknown>) =>
+    apiV2.post<ApiEnvelope<any>>('/crm/tags', body).then(unwrap),
+  attachTag: (body: Record<string, unknown>) =>
+    apiV2.post<ApiEnvelope<any>>('/crm/tags/attach', body).then(unwrap),
+  detachTag: (body: Record<string, unknown>) =>
+    apiV2.post<ApiEnvelope<any>>('/crm/tags/detach', body).then(unwrap),
+};
+
 // ── IRI ─────────────────────────────────────────────────────────────────────
 
 export const iriApi = {
