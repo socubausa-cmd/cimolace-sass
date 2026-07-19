@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react'
 import { Search, Plus, Pencil, Trash2, X, Users, Building2 } from 'lucide-react';
 import { crmApi } from '@/lib/api-v2';
 import { useToast } from '@/components/ui/use-toast';
+import CrmContactDetail from './CrmContactDetail';
 
 /**
  * CRM · Section CONTACTS (portail LIRI). Corps de section seul :
@@ -64,6 +65,7 @@ export default function CrmContacts() {
 
   const [pendingDelete, setPendingDelete] = useState(null);
   const [deleting, setDeleting] = useState(false);
+  const [detail, setDetail] = useState(null); // contact ouvert dans le drawer de détail
 
   const fetchContacts = useCallback(
     async (q) => {
@@ -304,6 +306,12 @@ export default function CrmContacts() {
                 className="rounded-xl border lp-line lp-panel70 p-4 lp-tr lp-lift"
               >
                 <div className="flex items-start gap-3">
+                  <button
+                    type="button"
+                    onClick={() => setDetail(c)}
+                    aria-label={`Ouvrir la fiche de ${name}`}
+                    className="flex min-w-0 flex-1 cursor-pointer items-start gap-3 text-left"
+                  >
                   <div
                     className="grid h-10 w-10 shrink-0 place-items-center rounded-full lp-coral-tint text-[13px] font-semibold lp-ink"
                     aria-hidden="true"
@@ -331,6 +339,7 @@ export default function CrmContacts() {
                       <p className="mt-1 text-[12.5px] lp-faint">Aucune coordonnée</p>
                     )}
                   </div>
+                  </button>
                   <div className="flex shrink-0 items-center gap-1">
                     <button
                       type="button"
@@ -545,6 +554,14 @@ export default function CrmContacts() {
             </div>
           </div>
         </div>
+      )}
+
+      {detail && (
+        <CrmContactDetail
+          contact={detail}
+          onClose={() => setDetail(null)}
+          onChanged={() => {}}
+        />
       )}
     </div>
   );

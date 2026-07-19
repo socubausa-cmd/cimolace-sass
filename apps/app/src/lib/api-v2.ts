@@ -633,6 +633,11 @@ export const crmApi = {
   listTags: (): Promise<any[]> =>
     apiV2.get<ApiEnvelope<{ tags?: any[] }>>('/crm/tags').then(unwrap)
       .then((r: any) => (Array.isArray(r) ? r : (r?.tags ?? []))),
+  listEntityTags: (entityType: string, entityId: string): Promise<any[]> =>
+    apiV2
+      .get<ApiEnvelope<{ tags?: any[] }>>('/crm/entity-tags', { params: { entity_type: entityType, entity_id: entityId } })
+      .then(unwrap)
+      .then((r: any) => (Array.isArray(r) ? r : (r?.tags ?? []))),
   createTag: (body: Record<string, unknown>) =>
     apiV2.post<ApiEnvelope<any>>('/crm/tags', body).then(unwrap),
   attachTag: (body: Record<string, unknown>) =>
