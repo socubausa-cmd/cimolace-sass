@@ -10,7 +10,7 @@ import { authStore } from '@/lib/auth-store';
 import { useAuth } from '@/hooks/useAuth';
 import { isCreatorRole } from '@/lib/liri/creatorRole';
 import { useSchoolActive } from '@/hooks/useSchoolActive';
-import { LiriRailGroups, getRailItems } from './liriRail';
+import { LiriRailGroups, getRailItems, LiriEngineSwitcher, getActiveEngine } from './liriRail';
 import type { RailKey } from './liriRail';
 import { getApiBaseUrl } from '@/lib/apiBase';
 import activeTenantConfig from '@/lib/tenant/activeTenantConfig';
@@ -167,8 +167,10 @@ function LiriPortalShellInner({
   // Suffixe affiché seulement s'il apporte une info ET qu'aucun fil d'Ariane ne prend le relais.
   const _schoolSuffix = !crumb && sessionSchool && sessionSchool !== _shellBrand ? sessionSchool : '';
 
-  // Items du rail (filtrés rôle + mode école) pour la barre de nav basse mobile (< md).
-  const mobileNavItems = getRailItems({ isCreator, schoolActive });
+  // Moteur actif déduit de la section courante → rail + sélecteur d'en-tête cohérents.
+  const activeEngine = getActiveEngine(active);
+  // Items du rail DU MOTEUR ACTIF (filtrés rôle + mode école) pour la barre de nav basse mobile (< md).
+  const mobileNavItems = getRailItems({ isCreator, schoolActive, engine: activeEngine });
 
   return (
     <div className="lp-root relative grid h-[100dvh] w-full grid-rows-[56px_1fr_auto] overflow-hidden">
@@ -208,9 +210,12 @@ function LiriPortalShellInner({
           )}
         </div>
 
-        {/* zone centrale : sous-vues de la section active (à gauche en mobile pour scroller, à droite ≥ md) */}
-        <div className="flex min-w-0 flex-1 justify-start md:justify-end">
-          <HeaderTabs />
+        {/* zone centrale : SÉLECTEUR DE MOTEUR (gauche) + sous-vues de la section active (droite) */}
+        <div className="flex min-w-0 flex-1 items-center gap-2 md:gap-4">
+          <LiriEngineSwitcher activeEngine={activeEngine} isCreator={isCreator} schoolActive={schoolActive} onNav={nav} />
+          <div className="flex min-w-0 flex-1 justify-start md:justify-end">
+            <HeaderTabs />
+          </div>
         </div>
 
         <div className="flex shrink-0 items-center gap-1.5">
@@ -231,7 +236,7 @@ function LiriPortalShellInner({
       <div className={`z-10 grid min-h-0 ${rail ? 'grid-cols-[1fr] md:grid-cols-[92px_1fr]' : 'grid-cols-[1fr]'}`}>
         {rail && (
         <aside className="hidden min-h-0 flex-col items-center gap-0.5 overflow-y-auto lp-rail-bg border-r lp-line py-3 lp-rail-scroll md:flex">
-          <LiriRailGroups active={active} isCreator={isCreator} schoolActive={schoolActive} live={live} onNav={nav} />
+          <LiriRailGroups engine={activeEngine} active={active} isCreator={isCreator} schoolActive={schoolActive} live={live} onNav={nav} />
           {isCreator && (
             <>
               <div className="my-1 h-px w-9" style={{ background: 'rgba(245,244,238,.08)' }} />
