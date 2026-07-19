@@ -5,6 +5,7 @@ import {
   Building2,
   Globe,
   MapPin,
+  Users,
   Pencil,
   Trash2,
   X,
@@ -13,17 +14,32 @@ import {
 import { crmApi } from '@/lib/api-v2';
 import { useToast } from '@/components/ui/use-toast';
 
+/* ── Liste sociétés (grille) — comptes & organisations du CRM ──
+   Design : en-tête d'écran, cartes à pastille coral, actions révélées au survol. */
+
 const inputCls =
-  'w-full rounded-xl border lp-line bg-transparent px-3 py-2.5 text-[14px] lp-ink outline-none placeholder:text-[var(--faint)] focus:border-[var(--coral)]';
+  'w-full rounded-xl border lp-line bg-[rgba(245,244,238,.03)] px-3 py-2.5 text-[14px] lp-ink outline-none placeholder:text-[var(--faint)] lp-tr focus:border-[var(--coral)]';
 
 const SIZE_OPTIONS = ['1-10', '11-50', '51-200', '201-500', '500+'];
 
 function Field({ label, children }) {
   return (
     <label className="block">
-      <span className="mb-1.5 block text-[12px] font-medium lp-muted">{label}</span>
+      <span className="mb-1.5 block text-[11px] font-semibold uppercase tracking-[.07em] lp-muted">
+        {label}
+      </span>
       {children}
     </label>
+  );
+}
+
+function Meta({ icon: Icon, children }) {
+  if (!children) return null;
+  return (
+    <div className="flex items-center gap-1.5 text-[12.5px] lp-muted">
+      <Icon size={12.5} className="shrink-0 lp-faint" aria-hidden="true" />
+      <span className="truncate">{children}</span>
+    </div>
   );
 }
 
@@ -43,6 +59,18 @@ function normalizeHref(website) {
   const w = String(website).trim();
   if (!w) return null;
   return /^https?:\/\//i.test(w) ? w : `https://${w}`;
+}
+
+function companyInitials(name) {
+  const n = String(name || '').trim();
+  if (!n) return '?';
+  return (
+    n
+      .split(/\s+/)
+      .slice(0, 2)
+      .map((s) => s[0]?.toUpperCase() || '')
+      .join('') || '?'
+  );
 }
 
 export default function CrmCompanies() {
@@ -196,34 +224,45 @@ export default function CrmCompanies() {
   );
 
   const hasSearch = search.trim().length > 0;
+  const subtitle = loading
+    ? 'Chargement…'
+    : companies.length
+      ? `${companies.length} société${companies.length > 1 ? 's' : ''}`
+      : 'Vos comptes et organisations';
 
   return (
     <div className="lp-rise">
-      {/* Barre haut : recherche + action */}
+      {/* En-tête d'écran : titre + sous-titre à gauche, action à droite */}
       <div className="mb-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <div className="relative w-full sm:max-w-sm">
-          <Search
-            size={16}
-            className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 lp-faint"
-            aria-hidden="true"
-          />
-          <input
-            type="search"
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            placeholder="Rechercher une société…"
-            aria-label="Rechercher une société"
-            className={`${inputCls} pl-9`}
-          />
+        <div className="min-w-0">
+          <h1 className="text-[18px] font-semibold leading-tight lp-ink">Sociétés</h1>
+          <p className="mt-0.5 text-[13px] lp-muted">{subtitle}</p>
         </div>
         <button
           type="button"
           onClick={openCreate}
-          className="inline-flex cursor-pointer items-center justify-center gap-2 rounded-xl px-4 py-2 text-[13.5px] font-medium text-white lp-tr lp-ember disabled:opacity-60"
+          className="inline-flex shrink-0 cursor-pointer items-center justify-center gap-2 rounded-xl px-4 py-2 text-[13.5px] font-medium text-white lp-tr lp-ember disabled:opacity-60"
         >
           <Plus size={16} />
           Nouvelle société
         </button>
+      </div>
+
+      {/* Barre de recherche */}
+      <div className="relative mb-5 w-full sm:max-w-sm">
+        <Search
+          size={16}
+          className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 lp-faint"
+          aria-hidden="true"
+        />
+        <input
+          type="search"
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          placeholder="Rechercher une société…"
+          aria-label="Rechercher une société"
+          className={`${inputCls} pl-9`}
+        />
       </div>
 
       {/* Corps */}
@@ -234,24 +273,32 @@ export default function CrmCompanies() {
               key={i}
               className="rounded-2xl border lp-line lp-panel animate-pulse p-4"
             >
-              <div className="mb-3 h-4 w-2/3 rounded lp-line" style={{ background: 'var(--line)' }} />
-              <div className="mb-2 h-3 w-1/2 rounded" style={{ background: 'var(--line)' }} />
-              <div className="h-3 w-1/3 rounded" style={{ background: 'var(--line)' }} />
+              <div className="flex items-start gap-3">
+                <div className="h-11 w-11 shrink-0 rounded-2xl" style={{ background: 'var(--line)' }} />
+                <div className="min-w-0 flex-1 pt-1">
+                  <div className="mb-2 h-3.5 w-2/3 rounded" style={{ background: 'var(--line)' }} />
+                  <div className="h-3 w-1/2 rounded" style={{ background: 'var(--line)' }} />
+                </div>
+              </div>
+              <div className="mt-4 h-3 w-1/3 rounded" style={{ background: 'var(--line)' }} />
             </div>
           ))}
         </div>
       ) : companies.length === 0 ? (
-        <div className="rounded-2xl border lp-line lp-panel70 px-6 py-14 text-center">
+        <div className="rounded-2xl border lp-line lp-panel70 px-6 py-16 text-center">
           <div
             className="mx-auto mb-4 grid h-12 w-12 place-items-center rounded-2xl lp-coral-tint"
             aria-hidden="true"
           >
-            <Building2 size={22} />
+            <Building2 size={22} className="lp-coral" />
           </div>
-          <p className="mx-auto max-w-sm text-[14px] lp-muted">
+          <h3 className="text-[15px] font-semibold lp-ink">
+            {hasSearch ? 'Aucun résultat' : 'Aucune société'}
+          </h3>
+          <p className="mx-auto mt-1.5 max-w-sm text-[13px] lp-muted">
             {hasSearch
               ? 'Aucune société ne correspond à votre recherche.'
-              : "Vous n'avez pas encore de société. Créez la première pour commencer à organiser vos comptes."}
+              : "Créez la première pour commencer à organiser vos comptes et vos prospects."}
           </p>
           {!hasSearch && (
             <button
@@ -268,74 +315,93 @@ export default function CrmCompanies() {
         <div className="grid gap-4" style={gridStyle}>
           {companies.map((c) => {
             const href = normalizeHref(c?.website);
-            const sub = [c?.industry, c?.city, c?.country]
-              .filter(Boolean)
-              .join(' · ');
+            const industry = c?.industry || '';
+            const loc = [c?.city, c?.country].filter(Boolean).join(', ');
             return (
               <div
                 key={c.id}
-                className="flex flex-col rounded-2xl border lp-line lp-panel70 p-4 lp-tr lp-lift"
+                className="group relative flex flex-col rounded-2xl border lp-line lp-panel70 p-4 lp-tr lp-lift"
               >
-                <div className="flex items-start justify-between gap-3">
-                  <div className="min-w-0">
-                    <h3 className="truncate text-[15px] font-semibold lp-ink">
-                      {c?.name || 'Sans nom'}
-                    </h3>
-                    {sub && (
-                      <p className="mt-1 flex items-center gap-1.5 truncate text-[12.5px] lp-muted">
-                        <MapPin size={12} className="shrink-0 lp-faint" aria-hidden="true" />
-                        <span className="truncate">{sub}</span>
-                      </p>
-                    )}
-                  </div>
-                  {c?.size && (
-                    <span className="shrink-0 rounded-md px-2 py-0.5 text-[11px] lp-coral-tint">
-                      {c.size}
-                    </span>
-                  )}
-                </div>
-
-                {href && (
-                  <a
-                    href={href}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="mt-3 inline-flex w-fit max-w-full cursor-pointer items-center gap-1.5 truncate text-[12.5px] lp-tr"
-                    style={{ color: 'var(--coral)' }}
-                  >
-                    <Globe size={13} className="shrink-0" aria-hidden="true" />
-                    <span className="truncate">
-                      {c.website.replace(/^https?:\/\//i, '')}
-                    </span>
-                  </a>
-                )}
-
-                {c?.description && (
-                  <p className="mt-2 line-clamp-2 text-[12.5px] lp-faint">
-                    {c.description}
-                  </p>
-                )}
-
-                <div className="mt-4 flex items-center gap-2 border-t lp-line pt-3">
+                {/* Actions révélées au survol */}
+                <div className="absolute right-3 top-3 flex items-center gap-1 opacity-0 lp-tr group-hover:opacity-100 focus-within:opacity-100">
                   <button
                     type="button"
                     onClick={() => openEdit(c)}
                     aria-label={`Éditer ${c?.name || 'la société'}`}
-                    className="inline-flex cursor-pointer items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-[12.5px] font-medium lp-muted lp-railbtn lp-tr"
+                    className="grid h-7 w-7 cursor-pointer place-items-center rounded-lg lp-muted lp-railbtn lp-tr"
                   >
                     <Pencil size={13} />
-                    Éditer
                   </button>
                   <button
                     type="button"
                     onClick={() => setDeleteTarget(c)}
                     aria-label={`Supprimer ${c?.name || 'la société'}`}
-                    className="inline-flex cursor-pointer items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-[12.5px] font-medium lp-muted lp-railbtn lp-tr"
+                    className="grid h-7 w-7 cursor-pointer place-items-center rounded-lg lp-railbtn lp-tr"
+                    style={{ color: '#e0a48f' }}
                   >
                     <Trash2 size={13} />
-                    Supprimer
                   </button>
                 </div>
+
+                {/* Identité */}
+                <div className="flex items-start gap-3 pr-14">
+                  <div
+                    className="grid h-11 w-11 shrink-0 place-items-center rounded-2xl text-[14px] font-semibold text-white"
+                    style={{ background: 'linear-gradient(140deg,#d97757,#c2683f)' }}
+                    aria-hidden="true"
+                  >
+                    {companyInitials(c?.name)}
+                  </div>
+                  <div className="min-w-0 flex-1 pt-0.5">
+                    <h3 className="truncate text-[15px] font-semibold leading-tight lp-ink">
+                      {c?.name || 'Sans nom'}
+                    </h3>
+                    {industry && (
+                      <p className="mt-0.5 truncate text-[12.5px] lp-muted">{industry}</p>
+                    )}
+                  </div>
+                </div>
+
+                {/* Méta */}
+                {(loc || href) && (
+                  <div className="mt-3 space-y-1.5">
+                    <Meta icon={MapPin}>{loc}</Meta>
+                    {href && (
+                      <a
+                        href={href}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex w-fit max-w-full cursor-pointer items-center gap-1.5 truncate text-[12.5px] lp-tr"
+                        style={{ color: 'var(--coral)' }}
+                      >
+                        <Globe size={12.5} className="shrink-0" aria-hidden="true" />
+                        <span className="truncate">
+                          {c.website.replace(/^https?:\/\//i, '')}
+                        </span>
+                      </a>
+                    )}
+                  </div>
+                )}
+
+                {/* Chip taille */}
+                {c?.size && (
+                  <div className="mt-3 flex flex-wrap items-center gap-1.5">
+                    <span
+                      className="inline-flex items-center gap-1.5 rounded-full py-1 pl-2 pr-2.5 text-[11px] font-medium"
+                      style={{ background: 'rgba(217,119,87,.13)', color: '#e08a63' }}
+                    >
+                      <Users size={11} className="shrink-0" aria-hidden="true" />
+                      {c.size}
+                    </span>
+                  </div>
+                )}
+
+                {/* Description */}
+                {c?.description && (
+                  <p className="mt-3 line-clamp-2 border-t lp-line pt-3 text-[12.5px] leading-relaxed lp-faint">
+                    {c.description}
+                  </p>
+                )}
               </div>
             );
           })}
@@ -346,32 +412,46 @@ export default function CrmCompanies() {
       {modalOpen && (
         <div
           className="fixed inset-0 z-50 flex items-end justify-center sm:items-center"
-          style={{ background: 'rgba(0,0,0,.55)' }}
+          style={{ background: 'rgba(15,12,10,.55)', backdropFilter: 'blur(2px)' }}
           onClick={closeModal}
         >
           <div
-            className="max-h-[92vh] w-full max-w-lg overflow-y-auto rounded-t-3xl border lp-line p-5 sm:rounded-3xl"
+            className="max-h-[92vh] w-full max-w-lg overflow-y-auto rounded-t-3xl border lp-line p-5 shadow-2xl sm:rounded-3xl"
             style={{ background: '#221f1b' }}
             onClick={(e) => e.stopPropagation()}
             role="dialog"
             aria-modal="true"
             aria-label={editing ? 'Éditer la société' : 'Nouvelle société'}
           >
-            <div className="flex items-center justify-between">
-              <h2 className="text-[17px] font-semibold lp-ink">
-                {editing ? 'Éditer la société' : 'Nouvelle société'}
-              </h2>
+            <div className="flex items-start gap-3">
+              <div
+                className="grid h-10 w-10 shrink-0 place-items-center rounded-2xl text-white"
+                style={{ background: 'linear-gradient(140deg,#d97757,#c2683f)' }}
+                aria-hidden="true"
+              >
+                <Building2 size={18} />
+              </div>
+              <div className="min-w-0 flex-1 pt-0.5">
+                <h2 className="text-[17px] font-semibold leading-tight lp-ink">
+                  {editing ? 'Éditer la société' : 'Nouvelle société'}
+                </h2>
+                <p className="mt-0.5 text-[12.5px] lp-muted">
+                  {editing
+                    ? 'Mettez à jour les informations du compte.'
+                    : 'Ajoutez un nouveau compte à votre CRM.'}
+                </p>
+              </div>
               <button
                 type="button"
                 onClick={closeModal}
                 aria-label="Fermer"
-                className="grid h-8 w-8 cursor-pointer place-items-center rounded-lg lp-muted lp-railbtn"
+                className="-mr-1 -mt-1 grid h-8 w-8 shrink-0 cursor-pointer place-items-center rounded-lg lp-muted lp-railbtn lp-tr"
               >
                 <X size={17} />
               </button>
             </div>
 
-            <form onSubmit={handleSubmit} className="mt-4 grid gap-3.5">
+            <form onSubmit={handleSubmit} className="mt-5 grid gap-3.5">
               <Field label="Nom *">
                 <input
                   className={inputCls}
@@ -485,37 +565,45 @@ export default function CrmCompanies() {
       {deleteTarget && (
         <div
           className="fixed inset-0 z-50 flex items-end justify-center sm:items-center"
-          style={{ background: 'rgba(0,0,0,.55)' }}
+          style={{ background: 'rgba(15,12,10,.55)', backdropFilter: 'blur(2px)' }}
           onClick={() => !deleting && setDeleteTarget(null)}
         >
           <div
-            className="w-full max-w-sm rounded-t-3xl border lp-line p-5 sm:rounded-3xl"
+            className="w-full max-w-sm rounded-t-3xl border lp-line p-5 shadow-2xl sm:rounded-3xl"
             style={{ background: '#221f1b' }}
             onClick={(e) => e.stopPropagation()}
             role="dialog"
             aria-modal="true"
             aria-label="Confirmer la suppression"
           >
-            <div className="flex items-center justify-between">
-              <h2 className="text-[17px] font-semibold lp-ink">
-                Supprimer la société
-              </h2>
+            <div className="flex items-start gap-3">
+              <div
+                className="grid h-10 w-10 shrink-0 place-items-center rounded-2xl lp-coral-tint"
+                aria-hidden="true"
+              >
+                <Trash2 size={18} className="lp-coral" />
+              </div>
+              <div className="min-w-0 flex-1 pt-0.5">
+                <h2 className="text-[17px] font-semibold leading-tight lp-ink">
+                  Supprimer la société
+                </h2>
+                <p className="mt-1 text-[13px] leading-relaxed lp-muted">
+                  Voulez-vous vraiment supprimer{' '}
+                  <span className="font-medium lp-ink">
+                    {deleteTarget?.name || 'cette société'}
+                  </span>{' '}
+                  ? Cette action est irréversible.
+                </p>
+              </div>
               <button
                 type="button"
                 onClick={() => !deleting && setDeleteTarget(null)}
                 aria-label="Fermer"
-                className="grid h-8 w-8 cursor-pointer place-items-center rounded-lg lp-muted lp-railbtn"
+                className="-mr-1 -mt-1 grid h-8 w-8 shrink-0 cursor-pointer place-items-center rounded-lg lp-muted lp-railbtn lp-tr"
               >
                 <X size={17} />
               </button>
             </div>
-            <p className="mt-3 text-[13.5px] lp-muted">
-              Voulez-vous vraiment supprimer{' '}
-              <span className="lp-ink font-medium">
-                {deleteTarget?.name || 'cette société'}
-              </span>{' '}
-              ? Cette action est irréversible.
-            </p>
             <div className="mt-5 flex items-center justify-end gap-2">
               <button
                 type="button"

@@ -37,18 +37,21 @@ import {
 import { crmApi } from '@/lib/api-v2';
 import { useToast } from '@/components/ui/use-toast';
 
-/* ── Portail chaud : tout coral, jamais vert/rouge. won/lost = tint coral / opacité ── */
+/* ── Pipeline commercial — craft premium LIRI (fiche contact = référence).
+      Portail chaud : tout coral, jamais vert/rouge. won/lost = tint coral / opacité. ── */
 
 const ORPHAN_ID = '__orphans__';
 const CURRENCIES = ['EUR', 'XAF', 'XOF', 'USD'];
 
 const inputCls =
-  'w-full rounded-xl border lp-line bg-transparent px-3 py-2.5 text-[14px] lp-ink outline-none placeholder:text-[var(--faint)] focus:border-[var(--coral)]';
+  'w-full rounded-xl border lp-line bg-[rgba(245,244,238,.03)] px-3.5 py-2.5 text-[14px] lp-ink outline-none placeholder:text-[var(--faint)] lp-tr focus:border-[var(--coral)]';
 
 function Field({ label, htmlFor, children }) {
   return (
     <label className="block" htmlFor={htmlFor}>
-      <span className="mb-1.5 block text-[12px] font-medium lp-muted">{label}</span>
+      <span className="mb-1.5 block text-[11px] font-semibold uppercase tracking-[.08em] lp-muted">
+        {label}
+      </span>
       {children}
     </label>
   );
@@ -196,7 +199,7 @@ function DealCard({ deal, stages, onAction }) {
     <div
       ref={setNodeRef}
       style={style}
-      className={`group relative rounded-2xl border lp-line lp-panel70 p-3 lp-tr ${
+      className={`group relative rounded-2xl border lp-line lp-panel70 p-3.5 lp-tr hover:bg-[rgba(245,244,238,.04)] ${
         isWon || isLost ? 'opacity-70' : ''
       }`}
     >
@@ -213,7 +216,7 @@ function DealCard({ deal, stages, onAction }) {
 
         <div className="min-w-0 flex-1">
           <div className="flex items-start justify-between gap-2">
-            <p className="min-w-0 break-words text-[13.5px] font-medium lp-ink">
+            <p className="min-w-0 break-words text-[13.5px] font-semibold leading-snug lp-ink">
               {deal.title || 'Sans titre'}
             </p>
             <button
@@ -223,7 +226,9 @@ function DealCard({ deal, stages, onAction }) {
               aria-haspopup="menu"
               aria-expanded={menuOpen}
               onClick={() => (menuOpen ? close() : openMenu())}
-              className="grid h-7 w-7 shrink-0 cursor-pointer place-items-center rounded-lg lp-muted lp-railbtn lp-tr"
+              className={`grid h-7 w-7 shrink-0 cursor-pointer place-items-center rounded-lg lp-muted lp-railbtn lp-tr ${
+                menuOpen ? 'opacity-100' : 'opacity-0 focus:opacity-100 group-hover:opacity-100'
+              }`}
             >
               <MoreVertical size={15} />
             </button>
@@ -235,7 +240,10 @@ function DealCard({ deal, stages, onAction }) {
                   onClick={() => act('won')}
                   className={`${itemCls} lp-ink`}
                 >
-                  <Award size={14} className="lp-coral" /> Marquer gagné
+                  <span className="grid h-5 w-5 shrink-0 place-items-center rounded-md lp-coral-tint">
+                    <Award size={13} className="lp-coral" />
+                  </span>
+                  Marquer gagné
                 </button>
                 <button
                   type="button"
@@ -243,12 +251,17 @@ function DealCard({ deal, stages, onAction }) {
                   onClick={() => act('lost')}
                   className={`${itemCls} lp-muted`}
                 >
-                  <Ban size={14} /> Marquer perdu
+                  <span className="grid h-5 w-5 shrink-0 place-items-center rounded-md lp-tint-muted">
+                    <Ban size={13} className="lp-muted" />
+                  </span>
+                  Marquer perdu
                 </button>
 
                 {otherStages.length > 0 && (
                   <div className="my-1 border-t lp-line pt-1">
-                    <p className="px-3 pb-1 text-[11px] font-medium lp-faint">Déplacer vers</p>
+                    <p className="px-3 pb-1 text-[11px] font-semibold uppercase tracking-[.08em] lp-faint">
+                      Déplacer vers
+                    </p>
                     <div className="max-h-40 overflow-y-auto">
                       {otherStages.map((s) => (
                         <button
@@ -281,20 +294,20 @@ function DealCard({ deal, stages, onAction }) {
             )}
           </div>
 
-          <div className="mt-1 text-[13px] font-semibold lp-coral">
+          <div className="mt-1.5 text-[15px] font-semibold lp-coral tabular-nums">
             {fmtMoney(deal.amount, deal.currency)}
           </div>
 
           {(deal.company?.name || deal.contact) && (
-            <div className="mt-1.5 flex flex-wrap items-center gap-x-3 gap-y-0.5 text-[12px] lp-muted">
+            <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-[12px] lp-muted">
               {deal.company?.name && (
-                <span className="inline-flex min-w-0 items-center gap-1">
+                <span className="inline-flex min-w-0 items-center gap-1.5">
                   <Building2 size={12} className="shrink-0 lp-faint" />
                   <span className="truncate">{deal.company.name}</span>
                 </span>
               )}
               {deal.contact && (
-                <span className="inline-flex min-w-0 items-center gap-1">
+                <span className="inline-flex min-w-0 items-center gap-1.5">
                   <Users size={12} className="shrink-0 lp-faint" />
                   <span className="truncate">{contactName(deal.contact)}</span>
                 </span>
@@ -303,12 +316,16 @@ function DealCard({ deal, stages, onAction }) {
           )}
 
           {(isWon || isLost) && (
-            <div className="mt-2">
+            <div className="mt-2.5">
               <span
-                className={`rounded-md px-2 py-0.5 text-[11px] ${
-                  isWon ? 'lp-coral-tint lp-coral' : 'lp-tint-muted'
+                className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[11px] font-medium ${
+                  isWon ? 'lp-coral-tint lp-coral' : 'lp-tint-muted lp-muted'
                 }`}
               >
+                <span
+                  className="h-1.5 w-1.5 rounded-full"
+                  style={{ background: 'currentColor', opacity: isWon ? 1 : 0.55 }}
+                />
                 {isWon ? 'Gagné' : 'Perdu'}
               </span>
             </div>
@@ -328,14 +345,30 @@ function BoardColumn({ column, stages, onAction }) {
 
   return (
     <div className="flex min-w-[280px] max-w-[300px] flex-shrink-0 flex-col rounded-2xl lp-panel lp-line border">
-      <div className="flex items-center justify-between gap-2 border-b lp-line px-3.5 py-3">
-        <div className="flex min-w-0 items-center gap-2">
-          <h3 className="truncate text-[13.5px] font-semibold lp-ink">{column.name}</h3>
-          <span className="shrink-0 rounded-md px-1.5 py-0.5 text-[11px] lp-coral-tint lp-coral">
+      <div className="border-b lp-line px-3.5 py-3">
+        <div className="flex items-center justify-between gap-2">
+          <div className="flex min-w-0 items-center gap-2">
+            {(column.isWon || column.isLost) && (
+              <span className="grid h-5 w-5 shrink-0 place-items-center rounded-md lp-coral-tint">
+                {column.isWon ? (
+                  <Award size={12} className="lp-coral" />
+                ) : (
+                  <Ban size={12} className="lp-muted" />
+                )}
+              </span>
+            )}
+            <h3 className="truncate text-[12px] font-semibold uppercase tracking-[.08em] lp-muted">
+              {column.name}
+            </h3>
+          </div>
+          <span
+            className="shrink-0 rounded-full px-2 py-0.5 text-[11px] font-semibold tabular-nums"
+            style={{ background: 'rgba(217,119,87,.13)', color: '#e08a63' }}
+          >
             {column.deals.length}
           </span>
         </div>
-        {total && <span className="shrink-0 text-[11.5px] lp-muted">{total}</span>}
+        {total && <div className="mt-1.5 text-[12px] lp-faint tabular-nums">{total}</div>}
       </div>
 
       <div
@@ -351,8 +384,11 @@ function BoardColumn({ column, stages, onAction }) {
           ))}
         </SortableContext>
         {column.deals.length === 0 && (
-          <div className="grid place-items-center rounded-xl border border-dashed lp-line py-6 text-center text-[12px] lp-faint">
-            Déposez un deal ici
+          <div className="grid place-items-center gap-2 rounded-xl border border-dashed lp-line py-8 text-center">
+            <span className="grid h-8 w-8 place-items-center rounded-xl lp-coral-tint">
+              <Inbox size={15} className="lp-coral" />
+            </span>
+            <span className="text-[12px] lp-faint">Déposez un deal ici</span>
           </div>
         )}
       </div>
@@ -442,30 +478,41 @@ function NewDealModal({ stages, onClose, onCreated }) {
   return (
     <div
       className="fixed inset-0 z-50 flex items-end justify-center sm:items-center"
-      style={{ background: 'rgba(0,0,0,.55)' }}
+      style={{ background: 'rgba(15,12,10,.55)' }}
       onClick={onClose}
     >
       <div
         role="dialog"
         aria-modal="true"
         aria-label="Nouveau deal"
-        className="max-h-[92vh] w-full max-w-lg overflow-y-auto rounded-t-3xl border lp-line p-5 sm:rounded-3xl"
+        className="max-h-[92vh] w-full max-w-lg overflow-y-auto rounded-t-3xl border lp-line p-5 shadow-2xl sm:rounded-3xl"
         style={{ background: '#221f1b' }}
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-center justify-between">
-          <h2 className="text-[17px] font-semibold lp-ink">Nouveau deal</h2>
+          <div className="flex items-center gap-3">
+            <span
+              className="grid h-10 w-10 shrink-0 place-items-center rounded-2xl text-white"
+              style={{ background: 'linear-gradient(140deg,#d97757,#c2683f)' }}
+            >
+              <Handshake size={18} />
+            </span>
+            <div>
+              <h2 className="text-[17px] font-semibold leading-tight lp-ink">Nouveau deal</h2>
+              <p className="text-[12.5px] lp-muted">Ajoutez une opportunité au pipeline.</p>
+            </div>
+          </div>
           <button
             type="button"
             aria-label="Fermer"
             onClick={onClose}
-            className="grid h-8 w-8 cursor-pointer place-items-center rounded-lg lp-muted lp-railbtn"
+            className="grid h-8 w-8 shrink-0 cursor-pointer place-items-center rounded-lg lp-muted lp-railbtn lp-tr"
           >
             <X size={17} />
           </button>
         </div>
 
-        <form onSubmit={submit} className="mt-4 space-y-3.5">
+        <form onSubmit={submit} className="mt-5 space-y-3.5">
           <Field label="Titre" htmlFor="deal-title">
             <input
               id="deal-title"
@@ -485,7 +532,7 @@ function NewDealModal({ stages, onClose, onCreated }) {
                 type="number"
                 min="0"
                 step="1"
-                className={inputCls}
+                className={`${inputCls} tabular-nums`}
                 value={form.amount}
                 onChange={set('amount')}
                 placeholder="0"
@@ -612,19 +659,26 @@ function ConfirmDeleteModal({ title, message, busy, onCancel, onConfirm }) {
   return (
     <div
       className="fixed inset-0 z-50 flex items-end justify-center sm:items-center"
-      style={{ background: 'rgba(0,0,0,.55)' }}
+      style={{ background: 'rgba(15,12,10,.55)' }}
       onClick={busy ? undefined : onCancel}
     >
       <div
         role="alertdialog"
         aria-modal="true"
         aria-label={title}
-        className="w-full max-w-sm rounded-t-3xl border lp-line p-5 sm:rounded-3xl"
+        className="w-full max-w-sm rounded-t-3xl border lp-line p-5 shadow-2xl sm:rounded-3xl"
         style={{ background: '#221f1b' }}
         onClick={(e) => e.stopPropagation()}
       >
-        <h2 className="text-[16px] font-semibold lp-ink">{title}</h2>
-        <p className="mt-2 text-[13.5px] lp-muted">{message}</p>
+        <div className="flex items-start gap-3">
+          <span className="grid h-10 w-10 shrink-0 place-items-center rounded-2xl lp-coral-tint">
+            <Trash2 size={17} className="lp-coral" />
+          </span>
+          <div className="min-w-0">
+            <h2 className="text-[16px] font-semibold lp-ink">{title}</h2>
+            <p className="mt-1 text-[13.5px] lp-muted">{message}</p>
+          </div>
+        </div>
         <div className="mt-5 flex items-center justify-end gap-2">
           <button
             type="button"
@@ -653,12 +707,18 @@ function ConfirmDeleteModal({ title, message, busy, onCancel, onConfirm }) {
 
 function StatCard({ icon: Icon, label, value }) {
   return (
-    <div className="rounded-2xl border lp-line lp-panel70 p-4">
-      <div className="flex items-center gap-2 text-[12px] lp-muted">
-        <Icon size={15} className="lp-coral" />
-        <span>{label}</span>
+    <div className="rounded-2xl border lp-line lp-panel70 p-4 lp-tr hover:bg-[rgba(245,244,238,.04)]">
+      <div className="flex items-center gap-2.5">
+        <span className="grid h-8 w-8 shrink-0 place-items-center rounded-xl lp-coral-tint">
+          <Icon size={15} className="lp-coral" />
+        </span>
+        <span className="text-[11px] font-semibold uppercase tracking-[.09em] lp-muted">
+          {label}
+        </span>
       </div>
-      <div className="mt-1.5 truncate text-[20px] font-semibold lp-ink">{value}</div>
+      <div className="mt-3 truncate text-[21px] font-semibold leading-none lp-ink tabular-nums">
+        {value}
+      </div>
     </div>
   );
 }
@@ -670,7 +730,7 @@ function BoardSkeleton() {
     <div className="lp-rise space-y-5">
       <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
         {[0, 1, 2, 3].map((i) => (
-          <div key={i} className="h-[86px] rounded-2xl lp-panel animate-pulse" />
+          <div key={i} className="h-[92px] rounded-2xl lp-panel animate-pulse" />
         ))}
       </div>
       <div className="flex gap-4 overflow-x-auto">
@@ -892,20 +952,28 @@ export default function CrmPipelineBoard() {
     <div className="lp-rise space-y-5">
       {/* En-tête */}
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <h2 className="text-[18px] font-semibold lp-ink">Pipeline commercial</h2>
-          <p className="text-[13px] lp-muted">
-            {board?.pipeline?.name
-              ? board.pipeline.name
-              : 'Suivez vos opportunités du premier contact à la signature.'}
-          </p>
+        <div className="flex items-center gap-3">
+          <div
+            className="grid h-11 w-11 shrink-0 place-items-center rounded-2xl text-white"
+            style={{ background: 'linear-gradient(140deg,#d97757,#c2683f)' }}
+          >
+            <Handshake size={19} />
+          </div>
+          <div className="min-w-0">
+            <h2 className="text-[18px] font-semibold leading-tight lp-ink">Pipeline commercial</h2>
+            <p className="truncate text-[13px] lp-muted">
+              {board?.pipeline?.name
+                ? board.pipeline.name
+                : 'Suivez vos opportunités du premier contact à la signature.'}
+            </p>
+          </div>
         </div>
         <div className="flex items-center gap-2">
           <button
             type="button"
             aria-label="Rafraîchir"
             onClick={load}
-            className="grid h-9 w-9 cursor-pointer place-items-center rounded-xl lp-muted lp-railbtn lp-tr"
+            className="grid h-9 w-9 shrink-0 cursor-pointer place-items-center rounded-xl lp-muted lp-railbtn lp-tr"
           >
             <RefreshCw size={16} />
           </button>
@@ -929,12 +997,17 @@ export default function CrmPipelineBoard() {
 
       {/* Erreur */}
       {error && (
-        <div className="rounded-2xl border lp-line lp-panel70 p-5 text-center">
-          <p className="text-[13.5px] lp-muted">Impossible de charger le pipeline pour le moment.</p>
+        <div className="rounded-2xl border lp-line lp-panel70 px-6 py-10 text-center">
+          <div className="mx-auto grid h-11 w-11 place-items-center rounded-2xl lp-coral-tint">
+            <RefreshCw size={19} className="lp-coral" />
+          </div>
+          <p className="mx-auto mt-3 max-w-sm text-[13.5px] lp-muted">
+            Impossible de charger le pipeline pour le moment.
+          </p>
           <button
             type="button"
             onClick={load}
-            className="mt-3 inline-flex cursor-pointer items-center gap-2 rounded-xl px-4 py-2 text-[13.5px] font-medium text-white lp-tr lp-ember"
+            className="mt-4 inline-flex cursor-pointer items-center gap-2 rounded-xl px-4 py-2 text-[13.5px] font-medium text-white lp-tr lp-ember"
           >
             <RefreshCw size={15} /> Réessayer
           </button>
