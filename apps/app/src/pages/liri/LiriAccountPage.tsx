@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState, type ReactNode } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
-  ChevronLeft, UserRound, Building2, Users, CreditCard, Wallet, LogOut, Trash2,
+  UserRound, Building2, Users, CreditCard, Wallet, LogOut, Trash2,
   X, Loader2, Sparkles, Check, ArrowUpRight, SlidersHorizontal, Settings2,
   Eye, EyeOff, Copy, ShieldCheck, UserPlus, FileText, Globe, Palette, KeyRound, Image as ImageIcon,
 } from 'lucide-react';
@@ -12,6 +12,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/lib/supabase';
 import LiriDomainSettings from '@/components/liri/LiriDomainSettings';
 import LiriMobileMoneySettings from '@/components/liri/LiriMobileMoneySettings';
+import { LiriPortalShell } from '@/components/liri/LiriPortalShell';
 import '../LiriPortal.css';
 
 interface Org { name: string; slug: string; role?: string | null; plan?: string | null; }
@@ -676,17 +677,15 @@ export default function LiriAccountPage() {
   };
 
   return (
-    <div className="lp-root relative min-h-[100dvh] w-full overflow-y-auto">
+    <LiriPortalShell active="reglages" hideDesktopRail>
+      <div className="lp-root relative flex h-full w-full flex-col items-center overflow-y-auto">
       <div className="lp-glow"><span style={{ width: 480, height: 380, left: '24%', top: -150, background: 'rgba(217,119,87,.08)' }} /></div>
 
-      <div className="relative z-10 mx-auto w-full max-w-4xl px-4 py-6 sm:px-6">
-        {/* topbar — console de réglages dédiée */}
-        <div className="mb-5 flex items-center gap-3">
-          <button onClick={() => nav('/liri')} className="grid h-9 w-9 shrink-0 place-items-center rounded-xl lp-muted lp-railbtn lp-tr" aria-label="Retour au portail"><ChevronLeft size={18} /></button>
-          <div className="min-w-0">
-            <h1 className="lp-serif text-[22px] font-medium leading-tight">Réglages &amp; personnalisation</h1>
-            <p className="text-[12.5px] lp-faint">Profil, sécurité, marque, paiements, domaine — tout votre espace au même endroit.</p>
-          </div>
+      <div className="relative z-10 w-full max-w-4xl px-4 py-6 sm:px-6">
+        {/* en-tête de section (le chrome LIRI — sélecteur de moteur, marque — est fourni par LiriPortalShell) */}
+        <div className="mb-5">
+          <h1 className="lp-serif text-[22px] font-medium leading-tight">Réglages &amp; personnalisation</h1>
+          <p className="text-[12.5px] lp-faint">Profil, sécurité, marque, paiements, domaine — tout votre espace au même endroit.</p>
         </div>
 
         <div className="overflow-hidden" style={{ background: 'rgba(34,31,27,.55)' }}>
@@ -748,6 +747,7 @@ export default function LiriAccountPage() {
           </div>
         </div>
       )}
-    </div>
+      </div>
+    </LiriPortalShell>
   );
 }
