@@ -156,7 +156,7 @@ const ECOLE_SERVICE_KEYS = ['course_builder', 'school', 'school_module', 'format
 
 export default function LiriEcolePage() {
   return (
-    <LiriPortalShell active="ecole">
+    <LiriPortalShell active="ecole" hideDesktopRail>
       <EcoleBody />
     </LiriPortalShell>
   );
