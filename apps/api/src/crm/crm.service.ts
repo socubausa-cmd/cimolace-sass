@@ -173,14 +173,27 @@ export class CrmService {
   }
 
   // ─── Pipelines & stages ──────────────────────────────────────────────────────
+  // ⚠️ CLÉS HOMOGÈNES OBLIGATOIRES : l'insert en lot PostgREST exige que TOUS les objets
+  // aient EXACTEMENT les mêmes clés (sinon 400/échec silencieux → pipeline sans étapes).
+  // Donc is_won ET is_lost sont explicites sur CHAQUE étape.
   private static DEFAULT_STAGES = [
-    { name: 'Nouveau', position: 0, win_probability: 10 },
-    { name: 'Qualifié', position: 1, win_probability: 25 },
-    { name: 'Proposition', position: 2, win_probability: 50 },
-    { name: 'Négociation', position: 3, win_probability: 75 },
-    { name: 'Gagné', position: 4, win_probability: 100, is_won: true },
-    { name: 'Perdu', position: 5, win_probability: 0, is_lost: true },
+    { name: 'Nouveau', position: 0, win_probability: 10, is_won: false, is_lost: false },
+    { name: 'Qualifié', position: 1, win_probability: 25, is_won: false, is_lost: false },
+    { name: 'Proposition', position: 2, win_probability: 50, is_won: false, is_lost: false },
+    { name: 'Négociation', position: 3, win_probability: 75, is_won: false, is_lost: false },
+    { name: 'Gagné', position: 4, win_probability: 100, is_won: true, is_lost: false },
+    { name: 'Perdu', position: 5, win_probability: 0, is_won: false, is_lost: true },
   ];
+
+  private async seedDefaultStages(tenantId: string, pipelineId: string) {
+    const stages = CrmService.DEFAULT_STAGES.map((s) => ({
+      ...s,
+      tenant_id: tenantId,
+      pipeline_id: pipelineId,
+    }));
+    const { error } = await this.db().from('crm_stages').insert(stages);
+    if (error) throw new BadRequestException(error.message);
+  }
 
   async listPipelines(tenantId: string) {
     const { data, error } = await this.db()
@@ -196,16 +209,22 @@ export class CrmService {
       .from('crm_pipelines').select('*').eq('tenant_id', tenantId)
       .order('is_default', { ascending: false }).order('position', { ascending: true })
       .limit(1).maybeSingle();
-    if (existing) return existing;
+    if (existing) {
+      // Auto-réparation : un pipeline sans étape (échec partiel d'un seed antérieur) est re-seedé.
+      const { count } = await this.db()
+        .from('crm_stages')
+        .select('id', { count: 'exact', head: true })
+        .eq('tenant_id', tenantId)
+        .eq('pipeline_id', existing.id);
+      if (!count) await this.seedDefaultStages(tenantId, existing.id);
+      return existing;
+    }
 
     const { data: pipeline, error } = await this.db().from('crm_pipelines')
       .insert({ tenant_id: tenantId, name: 'Pipeline commercial', is_default: true, position: 0 })
       .select().single();
     if (error) throw new BadRequestException(error.message);
-
-    const stages = CrmService.DEFAULT_STAGES.map((s) => ({ ...s, tenant_id: tenantId, pipeline_id: pipeline.id }));
-    const { error: se } = await this.db().from('crm_stages').insert(stages);
-    if (se) throw new BadRequestException(se.message);
+    await this.seedDefaultStages(tenantId, pipeline.id);
     return pipeline;
   }
 
