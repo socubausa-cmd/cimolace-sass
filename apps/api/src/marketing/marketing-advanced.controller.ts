@@ -199,7 +199,11 @@ export class MarketingAdvancedController {
   @Post('automations/run')
   @UseGuards(JwtAuthGuard, TenantGuard, RolesGuard)
   @Roles('owner', 'admin')
-  runAutomation(@CurrentTenant() t: TenantContext, @Body() body: { trigger: string; leadId?: string; context?: any }) {
+  runAutomation(
+    @CurrentTenant() t: TenantContext,
+    @Body() body: { trigger: string; leadId?: string; context?: any; dryRun?: boolean },
+  ) {
+    // dryRun=true : aperçu (matche + planifie) SANS envoyer d'email réel — à utiliser pour les tests UI.
     return this.svc.runAutomation(t.id, body);
   }
 

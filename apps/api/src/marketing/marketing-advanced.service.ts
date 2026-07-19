@@ -17,6 +17,7 @@
 
 import { BadRequestException, ForbiddenException, Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { SupabaseService } from '../supabase/supabase.service';
+import { EmailEngineService } from '../email-engine/email-engine.service';
 
 const VALID_TRIGGERS = new Set([
   'lead_created', 'email_click', 'signup', 'payment',
@@ -56,7 +57,18 @@ const TEMPLATES: Record<string, string[]> = {
 export class MarketingAdvancedService {
   private readonly logger = new Logger(MarketingAdvancedService.name);
 
-  constructor(private readonly supabase: SupabaseService) {}
+  // Anti-abus des envois d'automation (déclencheur = capture PUBLIQUE, origine spoofable) —
+  // in-memory / par-réplica. Durcissement DB (audit + idempotence + double opt-in) = suivi.
+  private static readonly AUTO_EMAIL_TENANT_CAP = 100; // max emails d'automation / heure / tenant
+  private static readonly AUTO_EMAIL_WINDOW_MS = 60 * 60 * 1000;
+  private static readonly AUTO_EMAIL_RECIP_COOLDOWN_MS = 30 * 60 * 1000;
+  private readonly autoEmailTenantHits = new Map<string, { count: number; resetAt: number }>();
+  private readonly autoEmailRecipHits = new Map<string, number>();
+
+  constructor(
+    private readonly supabase: SupabaseService,
+    private readonly email: EmailEngineService,
+  ) {}
 
   private db() {
     return (this.supabase.client as any);
@@ -490,13 +502,102 @@ export class MarketingAdvancedService {
     if (type === 'send_notification') return { type, result: 'notification_planned' };
     if (type === 'propose_appointment') return { type, result: 'appointment_link_prepared' };
     if (type === 'send_funnel_link') return { type, result: 'funnel_link_prepared' };
-    if (type === 'send_email') return { type, result: 'email_queued' };
+    if (type === 'send_email') {
+      // Action RÉELLE (Vague 3) : envoi transactionnel via Resend, CLÉ PAR TENANT.
+      // Le déclencheur (capture de lead) étant PUBLIC + l'origine SPOOFABLE, on borne le
+      // risque d'email-bombing : (1) clé Resend PROPRE au tenant obligatoire (jamais la clé
+      // globale Cimolace) ; (2) cooldown par destinataire NORMALISÉ (anti plus-addressing) ;
+      // (3) plafond horaire par tenant. sendRaw reste best-effort (ne jette jamais).
+      const to = String(lead?.email || '').trim();
+      if (!to) return { type, result: 'skipped_no_recipient' };
+      const emailTenantId = String(lead?.tenant_id ?? ctx.context?.tenantId ?? '').trim();
+      if (!emailTenantId) return { type, result: 'skipped_no_tenant' };
+      const blocked = await this.guardAutomationEmail(emailTenantId, to);
+      if (blocked) return { type, result: blocked, to };
+      const subject = String(cfg.subject || 'Merci de nous avoir contactés').slice(0, 200);
+      const html = this.marketingEmailHtml(cfg, subject);
+      const res = await this.email.sendRaw(emailTenantId, to, subject, html);
+      return {
+        type,
+        result: res.status === 'sent' ? 'email_sent' : `email_${res.status}`,
+        to,
+        ...(res.from ? { from: res.from } : {}),
+      };
+    }
     return { type, result: 'unsupported_action' };
   }
 
-  async runAutomation(tenantId: string, body: { trigger: string; leadId?: string; context?: any }) {
+  /** Normalise un destinataire pour le cooldown : minuscule + retrait du +tag (anti plus-addressing). */
+  private normalizeRecipient(email: string): string {
+    const e = String(email || '').trim().toLowerCase();
+    const at = e.indexOf('@');
+    if (at < 0) return e;
+    const local = e.slice(0, at).replace(/\+.*$/, '');
+    return `${local}@${e.slice(at + 1)}`;
+  }
+
+  /**
+   * Garde-fou d'envoi d'automation depuis un déclencheur PUBLIC (anti email-bombing).
+   * Renvoie une RAISON de skip (string) si bloqué, sinon null (autorisé — le slot est réservé).
+   * NB : in-memory/par-réplica ; un audit + une idempotence DB restent un durcissement de suivi.
+   */
+  private async guardAutomationEmail(tenantId: string, to: string): Promise<string | null> {
+    // (1) Exiger la clé Resend PROPRE au tenant (ne jamais envoyer via la clé globale Cimolace).
+    const { data: ns } = await this.db()
+      .from('tenant_notification_settings')
+      .select('resend_api_key')
+      .eq('tenant_id', tenantId)
+      .maybeSingle();
+    const key = ns?.resend_api_key ? String(ns.resend_api_key).trim() : '';
+    if (!key || key === 'replace_me') return 'email_skipped_no_tenant_key';
+
+    const now = Date.now();
+    // (3) Plafond horaire par tenant.
+    let cap = this.autoEmailTenantHits.get(tenantId);
+    if (!cap || now > cap.resetAt) {
+      cap = { count: 0, resetAt: now + MarketingAdvancedService.AUTO_EMAIL_WINDOW_MS };
+      this.autoEmailTenantHits.set(tenantId, cap);
+    }
+    if (cap.count >= MarketingAdvancedService.AUTO_EMAIL_TENANT_CAP) return 'email_skipped_tenant_cap';
+
+    // (2) Cooldown par destinataire normalisé.
+    const rkey = `${tenantId}|${this.normalizeRecipient(to)}`;
+    if (now < (this.autoEmailRecipHits.get(rkey) || 0)) return 'email_skipped_recipient_cooldown';
+
+    // Autorisé → réserver le slot (conservateur : un envoi qui échouera consomme quand même le slot).
+    cap.count += 1;
+    this.autoEmailRecipHits.set(rkey, now + MarketingAdvancedService.AUTO_EMAIL_RECIP_COOLDOWN_MS);
+    if (this.autoEmailRecipHits.size > 10000) {
+      for (const [k, v] of this.autoEmailRecipHits) if (now > v) this.autoEmailRecipHits.delete(k);
+    }
+    return null;
+  }
+
+  /** Gabarit email marketing NEUTRE (white-label, pas de mention « espace santé » MEDOS). */
+  private marketingEmailHtml(cfg: any, subject: string): string {
+    const accent = String(cfg?.brand || '#d97757');
+    const title = String(cfg?.title || subject || 'Bonjour');
+    const body = String(
+      cfg?.body || 'Merci de votre intérêt — notre équipe revient vers vous très vite.',
+    );
+    const cta = cfg?.ctaUrl
+      ? `<p style="margin:26px 0"><a href="${String(cfg.ctaUrl)}" style="background:${accent};color:#fff;text-decoration:none;padding:12px 22px;border-radius:10px;font-weight:600;display:inline-block">${String(cfg.ctaLabel || 'En savoir plus')}</a></p>`
+      : '';
+    return `<div style="font-family:-apple-system,Segoe UI,Roboto,sans-serif;max-width:520px;margin:0 auto;color:#1c1c1a">
+      <h2 style="color:${accent};font-size:20px;margin:0 0 12px">${title}</h2>
+      <p style="font-size:15px;line-height:1.6;margin:0 0 8px">${body}</p>
+      ${cta}
+      <p style="font-size:12px;color:#8a8a84;margin-top:28px">Vous recevez cet email suite à votre demande de contact.</p>
+    </div>`;
+  }
+
+  async runAutomation(
+    tenantId: string,
+    body: { trigger: string; leadId?: string; context?: any; dryRun?: boolean },
+  ) {
     const trigger = String(body?.trigger || '').trim().toLowerCase();
     if (!trigger) throw new BadRequestException('trigger is required');
+    const dryRun = !!body?.dryRun; // aperçu : matche + planifie sans exécuter les actions (anti preview-as-send)
 
     const db = this.db();
     const { data: flows, error } = await db.from('marketing_automations')
@@ -524,11 +625,21 @@ export class MarketingAdvancedService {
           executed.push({ flowId: flow.id, type: action.action_type, result: 'skipped_due_branch', branch });
           continue;
         }
-        const result = await this.runActionForFlow(action, { lead, trigger, context: { ...(body.context ?? {}), tenantId } });
+        if (dryRun) {
+          executed.push({ flowId: flow.id, branch, conditionMatch: match, type: action.action_type, result: 'dry_run' });
+          continue;
+        }
+        // Isolation par action : un échec d'action ne fait pas tomber tout le run (les autres continuent).
+        let result: any;
+        try {
+          result = await this.runActionForFlow(action, { lead, trigger, context: { ...(body.context ?? {}), tenantId } });
+        } catch (e: any) {
+          result = { type: action.action_type, result: 'action_error', message: String(e?.message || e) };
+        }
         executed.push({ flowId: flow.id, branch, conditionMatch: match, ...result });
       }
     }
-    return { trigger, executedCount: executed.length, executed };
+    return { trigger, dryRun, executedCount: executed.length, executed };
   }
 
   async listAutomationAudit(_tenantId: string) {
@@ -592,8 +703,11 @@ export class MarketingAdvancedService {
     }
     const status = this.normalizeLeadStatus(score, String(body?.status || 'new').toLowerCase());
 
-    // Upsert par (tenant_id, email) — contrainte UNIQUE du schéma.
-    const { data: existing } = await db.from('leads').select('*').eq('tenant_id', tenantId).ilike('email', email).maybeSingle();
+    // Upsert par (tenant_id, email) — contrainte UNIQUE du schéma. `_`/`%` sont des
+    // jokers LIKE (supabase-js n'échappe PAS) → on les échappe, sinon un email neuf comme
+    // `a_b@x.com` matcherait `axb@x.com` (faux positif : automation non déclenchée + upsert erroné).
+    const emailLike = email.replace(/[%_]/g, (c) => `\\${c}`);
+    const { data: existing } = await db.from('leads').select('*').eq('tenant_id', tenantId).ilike('email', emailLike).maybeSingle();
     let lead: any = null;
     if (existing) {
       const nextScore = Math.max(Number(existing.score || 0), score);
@@ -614,6 +728,22 @@ export class MarketingAdvancedService {
     }
 
     await this.log({ tenantId, lead_id: lead.id, action: 'lead_capture', result: 'captured', payload: { source, score: lead.score } });
+
+    // Vague 3 — automations EVENT-DRIVEN : un lead NEUF (jamais sur une ré-capture, anti-spam)
+    // déclenche les flows `lead_created` du tenant. Fire-and-forget : un échec d'automation ne
+    // casse JAMAIS la capture ; le résultat est tracé dans les logs (Railway).
+    if (!existing) {
+      void this.runAutomation(tenantId, { trigger: 'lead_created', leadId: lead.id })
+        .then((r) => {
+          if (r?.executedCount) {
+            this.logger.log(
+              `[mkt:${tenantId}] lead_created → ${r.executedCount} action(s): ` +
+                JSON.stringify((r.executed || []).map((e: any) => e.result)),
+            );
+          }
+        })
+        .catch((e) => this.logger.warn(`[mkt:${tenantId}] lead_created automations failed: ${e?.message || e}`));
+    }
     return { lead, automationTrigger: 'lead_created' };
   }
 }
