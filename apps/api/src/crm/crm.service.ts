@@ -169,6 +169,10 @@ export class CrmService {
     const { data: contact, error } = await this.db().from('crm_contacts').insert(row).select().single();
     if (error) throw new BadRequestException(error.message);
     await this.db().from('leads').update({ status: 'customer' }).eq('tenant_id', tenantId).eq('id', leadId);
+    await this.recordActivity(tenantId, {
+      entityType: 'contact', entityId: contact.id, type: 'lead_converted',
+      title: `Lead converti en contact${contact.email ? ` : ${contact.email}` : ''}`, meta: { lead_id: leadId },
+    });
     return contact;
   }
 
@@ -306,6 +310,10 @@ export class CrmService {
     };
     const { data, error } = await this.db().from('crm_deals').insert(row).select().single();
     if (error) throw new BadRequestException(error.message);
+    await this.recordActivity(tenantId, {
+      entityType: 'deal', entityId: data.id, type: 'deal_created',
+      title: `Deal créé : ${data.title}`, meta: { amount: data.amount, currency: data.currency },
+    });
     return data;
   }
 
@@ -321,6 +329,20 @@ export class CrmService {
       .eq('tenant_id', tenantId).eq('id', id).select().maybeSingle();
     if (error) throw new BadRequestException(error.message);
     if (!data) throw new NotFoundException('deal introuvable');
+    const actType =
+      patch.status === 'won' ? 'deal_won'
+      : patch.status === 'lost' ? 'deal_lost'
+      : patch.stage_id !== undefined ? 'deal_stage_moved'
+      : 'deal_updated';
+    const actTitle =
+      actType === 'deal_won' ? `Deal gagné : ${data.title}`
+      : actType === 'deal_lost' ? `Deal perdu : ${data.title}`
+      : actType === 'deal_stage_moved' ? `Deal déplacé : ${data.title}`
+      : `Deal modifié : ${data.title}`;
+    await this.recordActivity(tenantId, {
+      entityType: 'deal', entityId: data.id, type: actType, title: actTitle,
+      meta: { stage_id: data.stage_id, status: data.status },
+    });
     return data;
   }
 
@@ -329,6 +351,7 @@ export class CrmService {
     const { error } = await this.db()
       .from('crm_deals').delete().eq('tenant_id', tenantId).eq('id', id);
     if (error) throw new BadRequestException(error.message);
+    await this.recordActivity(tenantId, { entityType: 'deal', entityId: id, type: 'deal_deleted', title: 'Deal supprimé' });
     return { ok: true };
   }
 
@@ -362,6 +385,9 @@ export class CrmService {
     };
     const { data, error } = await this.db().from('crm_notes').insert(row).select().single();
     if (error) throw new BadRequestException(error.message);
+    await this.recordActivity(tenantId, {
+      entityType, entityId, type: 'note_added', title: 'Note ajoutée', meta: { note_id: data.id },
+    });
     return data;
   }
 
@@ -487,5 +513,47 @@ export class CrmService {
       pipelineValue[cur] = (pipelineValue[cur] || 0) + Number(r.amount || 0);
     }
     return { companies, contacts, openDeals, wonDeals, pipelineValue };
+  }
+
+  // ─── Timeline d'activités (Vague 4) ──────────────────────────────────────────
+  /**
+   * Journalise un événement CRM (best-effort : ne casse JAMAIS l'opération métier —
+   * l'insert supabase-js renvoie {error} sans throw, et un éventuel throw est avalé).
+   */
+  private async recordActivity(
+    tenantId: string,
+    a: { entityType?: string | null; entityId?: string | null; type: string; title?: string; meta?: any; actorId?: string | null },
+  ): Promise<void> {
+    try {
+      await this.db().from('crm_activities').insert({
+        tenant_id: tenantId,
+        entity_type: a.entityType ?? null,
+        entity_id: a.entityId ?? null,
+        type: a.type,
+        title: a.title ?? '',
+        meta: a.meta ?? {},
+        actor_id: a.actorId ?? null,
+      });
+    } catch {
+      /* timeline best-effort : ignorer toute erreur d'audit */
+    }
+  }
+
+  /** Timeline : flux récent global, ou filtré par entité (entity_type + entity_id). */
+  async listActivities(
+    tenantId: string,
+    opts: { entityType?: string; entityId?: string; limit?: number } = {},
+  ) {
+    let q = this.db()
+      .from('crm_activities')
+      .select('*')
+      .eq('tenant_id', tenantId)
+      .order('created_at', { ascending: false })
+      .limit(Math.min(Math.max(Number(opts.limit) || 50, 1), 200));
+    if (opts.entityType) q = q.eq('entity_type', opts.entityType);
+    if (opts.entityId) q = q.eq('entity_id', opts.entityId);
+    const { data, error } = await q;
+    if (error) throw new BadRequestException(error.message);
+    return { activities: data ?? [] };
   }
 }

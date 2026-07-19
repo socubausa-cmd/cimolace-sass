@@ -33,6 +33,17 @@ export class CrmController {
     return this.svc.summary(t.id);
   }
 
+  // Timeline d'activités : flux récent global, ou filtré par entité (entity_type + entity_id).
+  @Get('activities')
+  listActivities(
+    @CurrentTenant() t: TenantContext,
+    @Query('entity_type') entityType?: string,
+    @Query('entity_id') entityId?: string,
+    @Query('limit') limit?: string,
+  ) {
+    return this.svc.listActivities(t.id, { entityType, entityId, limit: Number(limit) || 50 });
+  }
+
   // ─── Companies ─────────────────────────────────────────────────────────────
   @Get('companies')
   listCompanies(
