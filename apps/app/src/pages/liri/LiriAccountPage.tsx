@@ -117,7 +117,12 @@ export default function LiriAccountPage() {
       .then((d) => { let t: any = d; while (t && typeof t === 'object' && 'data' in t) t = t.data; if (t?.name || t?.slug) setOrg({ name: t.name ?? slugLabel, slug: t.slug ?? slug, role: t.userRole ?? t.role ?? null, plan: t.plan ?? null }); })
       .catch(() => {});
     fetch(`${base}/tenants/mine`, { headers: h }).then((r) => (r.ok ? r.json() : null))
-      .then((d) => { let a: any = d; while (a && typeof a === 'object' && !Array.isArray(a) && 'data' in a) a = a.data; if (Array.isArray(a)) setOrgs(a.map((m: any) => ({ name: m.name ?? m.tenants?.name ?? m.slug, slug: m.slug ?? m.tenants?.slug, role: m.role ?? null })).filter((o: OrgRef) => o.slug)); })
+      .then((d) => { let a: any = d; while (a && typeof a === 'object' && !Array.isArray(a) && 'data' in a) a = a.data;
+        if (Array.isArray(a)) setOrgs(a.map((m: any) => ({ name: m.name ?? m.tenants?.name ?? m.slug, slug: m.slug ?? m.tenants?.slug, role: m.role ?? null }))
+          // On EXCLUT le tenant plateforme « cimolace » : c'est le PROPRIÉTAIRE du SaaS (comme
+          // Stripe en invisible), pas une organisation cliente qu'on opère dans le portail LIRI.
+          // Il a son propre back-office /cimolace/admin ; le portail LIRI = espaces CLIENTS.
+          .filter((o: OrgRef) => o.slug && o.slug !== 'cimolace')); })
       .catch(() => {});
     fetch(`${base}/growth/stats`, { headers: h }).then((r) => (r.ok ? r.json() : null))
       .then((d) => { const s = d?.data ?? d; if (s && typeof s.totalLives === 'number' && typeof s.totalMembers === 'number') setStats(s as Stats); })
