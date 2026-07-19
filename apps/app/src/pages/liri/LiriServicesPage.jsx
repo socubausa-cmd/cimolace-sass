@@ -48,7 +48,13 @@ export default function LiriServicesPage() {
 
   const load = useCallback(async () => {
     setLoading(true); setErr('');
-    try { setItems(await billingCatalogApi.list() || []); }
+    try {
+      // Défense-en-profondeur : `items` DOIT rester un tableau, sinon le useMemo
+      // `items.filter` (activeCount) fait tomber tout le shell. `billingCatalogApi.list()`
+      // coerce déjà, mais on reblinde ici au cas où l'endpoint changerait de forme.
+      const r = await billingCatalogApi.list();
+      setItems(Array.isArray(r) ? r : (r?.services ?? []));
+    }
     catch (e) { setErr(e?.message || 'Impossible de charger les services.'); }
     finally { setLoading(false); }
   }, []);
