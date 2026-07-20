@@ -18,6 +18,11 @@ import {
   extractMeasureBiomarkers,
   type ScoredField,
 } from './form-scoring';
+import {
+  computeWheelScores,
+  WHEEL_DOMAINS,
+  type WheelMapping,
+} from './twin/wheel-mapping';
 import type { TenantContext } from '../tenant/tenant.types';
 import type { CreatePatientDto } from './dto/create-patient.dto';
 import type { UpdatePatientDto } from './dto/update-patient.dto';
@@ -863,6 +868,14 @@ export class MedosService {
     } catch (e: any) {
       this.logger.warn(`form→twin projection skipped (form ${formId}): ${e?.message ?? e}`);
     }
+    // G1 — Auto-remplir la Roue Détox si le template a un wheel_mapping.
+    // Best-effort : jamais bloquant pour la soumission.
+    await this.applyWheelMappingIfAny(
+      tenant.id,
+      formId,
+      dto.patient_id,
+      dto.responses,
+    );
 
     return data as unknown as Record<string, unknown>;
   }
@@ -1193,14 +1206,20 @@ export class MedosService {
   private async findPatientByUser(
     tenantId: string,
     userId: string,
-  ): Promise<{ id: string } | null> {
+  ): Promise<{ id: string; first_name: string | null; last_name: string | null } | null> {
     const { data } = await this.supabase.client
       .from('med_patients')
-      .select('id')
+      .select('id, first_name, last_name')
       .eq('tenant_id', tenantId)
       .eq('patient_user_id', userId)
       .single();
-    return (data as { id: string } | null) ?? null;
+    return (
+      (data as {
+        id: string;
+        first_name: string | null;
+        last_name: string | null;
+      } | null) ?? null
+    );
   }
 
   async listMyHealthEntries(tenant: TenantContext, userId: string) {
@@ -1292,8 +1311,9 @@ export class MedosService {
     // Best-effort: if a targeted assignment of this form to this patient is
     // pending, mark it completed. Never let this affect the submission result
     // (table may not be migrated yet, or no assignment may exist).
+    let notifiedAssigner: string | null = null;
     try {
-      const { error: assignErr } = await this.faTable()
+      const { data: assignmentRows, error: assignErr } = await this.faTable()
         .update({
           status: 'completed',
           completed_at: new Date().toISOString(),
@@ -1303,11 +1323,17 @@ export class MedosService {
         .eq('tenant_id', tenant.id)
         .eq('form_id', formId)
         .eq('patient_id', patient.id)
-        .eq('status', 'pending');
+        .eq('status', 'pending')
+        .select('assigned_by');
       if (assignErr && !this.isRelationMissing(assignErr)) {
         this.logger.warn(
           `Assignment completion skipped: ${assignErr.message}`,
         );
+      } else {
+        // Capture the practitioner user_id who assigned this form so we can
+        // notify them (G3 — form response arrived).
+        const first = ((assignmentRows ?? []) as Array<{ assigned_by: string | null }>)[0];
+        notifiedAssigner = first?.assigned_by ?? null;
       }
     } catch (e) {
       // Assignment missing or table not migrated — ignore silently.
@@ -1320,6 +1346,41 @@ export class MedosService {
       await this.projectFormResponseToTwin(tenant, userId, patient.id, formId, responses);
     } catch (e: any) {
       this.logger.warn(`form→twin projection skipped (form ${formId}): ${e?.message ?? e}`);
+    }
+
+    // G1 — Auto-remplir la Roue Détox si le template a un wheel_mapping.
+    // Best-effort : jamais bloquant pour la soumission.
+    await this.applyWheelMappingIfAny(
+      tenant.id,
+      formId,
+      patient.id,
+      responses,
+    );
+
+    // G3 — Notif praticien assignant. Best-effort : jamais bloquant. On lui
+    // renvoie le lien direct vers le dossier patient pour qu'il puisse ouvrir
+    // les réponses en 1 clic (deep-link handled côté med-app).
+    if (notifiedAssigner) {
+      try {
+        const patientLabel =
+          patient.first_name?.trim() || patient.last_name?.trim() || 'Un patient';
+        const { data: formRow } = await this.supabase.client
+          .from('med_medical_forms')
+          .select('title')
+          .eq('id', formId)
+          .maybeSingle();
+        const formTitle =
+          (formRow as { title?: string } | null)?.title ?? 'un formulaire';
+        await this.notifications.send(tenant.id, notifiedAssigner, {
+          title: 'Formulaire complété',
+          body: `${patientLabel} a rempli « ${formTitle} ». Ouvrez le dossier pour consulter les réponses.`,
+          type: 'form_response_submitted',
+          email: true,
+          actionUrl: `https://med.cimolace.space/patients/${patient.id}`,
+        });
+      } catch (e) {
+        this.logger.warn(`notif form_response_submitted: ${(e as Error).message}`);
+      }
     }
 
     return data as unknown as Record<string, unknown>;
@@ -1556,5 +1617,65 @@ export class MedosService {
       throw new InternalServerErrorException('Erreur interne');
     }
     return (data ?? []) as unknown as Record<string, unknown>[];
+  }
+
+  /**
+   * G1 — Charge le template du formulaire soumis, et s'il a un `wheel_mapping`
+   * déclaré, calcule les 12 scores Roue Détox à partir des réponses et upsert
+   * dans `med_transformation_wheel` avec source='form_response'.
+   *
+   * Idempotent : chaque nouvelle soumission REMPLACE les 12 lignes précédentes
+   * `source='form_response'` pour ce patient (garde les lignes 'questionnaire'
+   * saisies par le praticien lui-même intactes).
+   *
+   * Best-effort : erreurs loguées, jamais renvoyées (ne casse pas la
+   * soumission du formulaire).
+   */
+  private async applyWheelMappingIfAny(
+    tenantId: string,
+    formId: string,
+    patientId: string,
+    responses: Record<string, unknown>,
+  ): Promise<void> {
+    try {
+      const { data: form } = await this.supabase.client
+        .from('med_medical_forms')
+        .select('wheel_mapping')
+        .eq('id', formId)
+        .maybeSingle();
+      const mapping = (form as { wheel_mapping?: unknown } | null)
+        ?.wheel_mapping;
+      if (!mapping || typeof mapping !== 'object') {
+        return; // Template sans mapping — comportement legacy.
+      }
+
+      const scores = computeWheelScores(mapping as WheelMapping, responses);
+
+      // Delete idempotent des anciennes lignes source='form_response' pour
+      // ce patient (préserve source='questionnaire' saisi par praticien +
+      // source='vitalis_intake' importé par pont zahir-app).
+      await (this.supabase.client as any)
+        .from('med_transformation_wheel')
+        .delete()
+        .eq('tenant_id', tenantId)
+        .eq('patient_id', patientId)
+        .eq('source', 'form_response');
+
+      const rows = WHEEL_DOMAINS.map((domain) => ({
+        tenant_id: tenantId,
+        patient_id: patientId,
+        domain,
+        score: scores[domain],
+        source: 'form_response',
+      }));
+      const { error } = await (this.supabase.client as any)
+        .from('med_transformation_wheel')
+        .insert(rows);
+      if (error) {
+        this.logger.warn(`applyWheelMapping insert: ${error.message}`);
+      }
+    } catch (e) {
+      this.logger.warn(`applyWheelMapping: ${(e as Error).message}`);
+    }
   }
 }

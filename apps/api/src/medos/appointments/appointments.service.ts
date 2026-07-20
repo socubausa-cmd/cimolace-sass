@@ -53,6 +53,7 @@ export type AppointmentRow = {
   completed_at: string | null;
   consultation_note_id: string | null;
   teleconsult_session_id: string | null;
+  form_response_id: string | null;
   created_at: string;
   updated_at: string;
 };
@@ -302,6 +303,12 @@ export class AppointmentsService {
         reason: dto.reason ?? null,
         status: initialStatus,
         confirmed_at: confirmedAt,
+        // G4 — RDV « à partir d'une réponse de formulaire » (contexte bilan
+        // pré-chargé côté praticien). Le staff seul peut renseigner ce champ
+        // à la création (validé par ApiKeyGuard + DTO), le patient ne peut
+        // pas usurper un contexte d'analyse d'un autre patient.
+        form_response_id:
+          actorRole === 'patient' ? null : dto.form_response_id ?? null,
         // Reprend le tarif du service marketplace rattaché (colonnes existantes).
         ...(servicePrice
           ? { price_cents: servicePrice.price_cents, currency: servicePrice.currency }
