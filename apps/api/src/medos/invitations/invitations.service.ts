@@ -119,6 +119,11 @@ export class InvitationsService {
         status: dto.sent_via ? 'sent' : 'pending',
         created_by: actorId,
         custom_message: dto.custom_message ?? null,
+        // G2 — templates à assigner automatiquement à l'acceptation.
+        form_template_ids:
+          dto.form_template_ids && dto.form_template_ids.length > 0
+            ? dto.form_template_ids
+            : null,
       })
       .select('*')
       .single();
@@ -420,6 +425,41 @@ export class InvitationsService {
       .single();
     if (upErr || !updated) {
       throw new InternalServerErrorException('Acceptation impossible');
+    }
+
+    // G2 — Assigner automatiquement les templates de formulaires embarqués
+    // dans l'invitation. Best-effort : jamais bloquant pour l'acceptation
+    // (le patient est déjà logué même si l'assignation échoue).
+    const formTemplateIds = (row.form_template_ids as string[] | null) ?? [];
+    if (formTemplateIds.length > 0) {
+      const assignments = formTemplateIds.map((formId) => ({
+        tenant_id: row.tenant_id,
+        form_id: formId,
+        patient_id: row.patient_id,
+        status: 'pending',
+        note: 'Formulaire attaché à votre invitation de bienvenue.',
+        assigned_by: row.created_by,
+        assigned_at: new Date().toISOString(),
+        completed_at: null,
+        response_id: null,
+        updated_at: new Date().toISOString(),
+      }));
+      try {
+        const { error: assignErr } = await (this.supabase.client as any)
+          .from('med_form_assignments')
+          .upsert(assignments, {
+            onConflict: 'tenant_id,form_id,patient_id',
+          });
+        if (assignErr) {
+          this.logger.warn(
+            `accept auto-assign forms: ${assignErr.message}`,
+          );
+        }
+      } catch (e) {
+        this.logger.warn(
+          `accept auto-assign forms exception: ${(e as Error).message}`,
+        );
+      }
     }
 
     return {
