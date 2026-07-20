@@ -3,6 +3,7 @@ import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import type { Request } from 'express';
 import { ApiKeyGuard } from '../../auth/api-key.guard';
 import type { TenantContext } from '../../tenant/tenant.types';
+import { ImportVitalisBilanDto } from './dto/import-vitalis-bilan.dto';
 import { ServerTokenDto } from './dto/server-token.dto';
 import { EmbedService } from './embed.service';
 
@@ -88,5 +89,50 @@ export class MedosEmbedController {
       req.tenant,
       dto.practitioner_email,
     );
+  }
+
+  /**
+   * Niveau 2 — IMPORT bilan externe (Vitalis Détox → Roue Détox 12 axes).
+   *
+   * Appelé par le backend d'un tenant (ex : zahirwellness) après qu'une
+   * patiente a soumis son bilan Vitalis Détox. Crée/lie le patient MEDOS
+   * pour ce tenant, remplit la Roue Détox (12 axes canoniques), retourne
+   * le deep-link vers le dossier MEDOS (jumeau + roue) pour que le praticien
+   * y accède d'un clic depuis son back-office tenant.
+   *
+   * Body attendu :
+   *   {
+   *     patient_email: string,
+   *     patient_first_name?: string,
+   *     patient_last_name?: string,
+   *     wheel_scores: {
+   *       digestion: number,  sleep: number, stress: number, energy: number,
+   *       inflammation: number, immunity: number, metabolism: number,
+   *       hormones: number, physical_activity: number, cognition: number,
+   *       environment: number, emotions: number
+   *     },  // 0-100 par axe (100 = optimal)
+   *     source_id?: string,  // ex : wellness_intake_submissions.id
+   *   }
+   *
+   * Auth : `Authorization: Bearer mdk_<tenant>_<secret>`.
+   * Idempotent : re-appelé avec les mêmes params, remplace les 12 scores
+   * `source='vitalis_intake'` (préserve les scores 'questionnaire' du
+   * praticien).
+   */
+  @Post('import-vitalis-bilan')
+  @UseGuards(ApiKeyGuard)
+  @ApiBearerAuth()
+  async importVitalisBilan(
+    @Body() dto: ImportVitalisBilanDto,
+    @Req() req: ApiKeyRequest,
+  ) {
+    return this.embedService.importVitalisBilan({
+      tenant: req.tenant,
+      patient_email: dto.patient_email,
+      patient_first_name: dto.patient_first_name,
+      patient_last_name: dto.patient_last_name,
+      wheel_scores: dto.wheel_scores,
+      source_id: dto.source_id,
+    });
   }
 }

@@ -483,4 +483,128 @@ export class EmbedService {
     }
     return { code, expires_in: ttl };
   }
+
+  /**
+   * Niveau 2 — IMPORT bilan externe (Vitalis Détox).
+   *
+   * Appelé par le backend d'un tenant (ex : zahirwellness) quand une patiente
+   * a soumis un bilan Vitalis Détox sur le site tenant, et que le praticien
+   * veut le retrouver dans son dossier MEDOS avec la Roue Détox pré-remplie.
+   *
+   * Flux :
+   *   1. Find-or-create user Supabase (via patient_email)
+   *   2. Garantir membership 'patient' sur ce tenant
+   *   3. Find-or-create med_patients
+   *   4. Delete anciennes lignes med_transformation_wheel source='vitalis_intake'
+   *      pour ce patient (permet re-push idempotent)
+   *   5. INSERT 12 lignes med_transformation_wheel (une par axe)
+   *   6. Retourne patient_id + deep_link vers `med.cimolace.space/twin/:id`
+   *
+   * Auth : ApiKeyGuard (clé mdk_<tenant>_<secret>).
+   * Aucun consentement patient : le patient a soumis le bilan sur le site
+   * tenant (opt-in explicite), on n'écrit QUE ses réponses au bilan côté
+   * MEDOS — pas de biomarqueur/donnée médicale sensible.
+   */
+  async importVitalisBilan(input: {
+    tenant: TenantContext;
+    patient_email: string;
+    patient_first_name?: string;
+    patient_last_name?: string;
+    wheel_scores: Record<string, number>;
+    source_id?: string;
+  }): Promise<{
+    patient_id: string;
+    patient_user_id: string;
+    created: boolean;
+    wheel_rows_inserted: number;
+    deep_link: string;
+    api_base: string;
+  }> {
+    const WHEEL_DOMAINS = [
+      'digestion', 'sleep', 'stress', 'energy', 'inflammation',
+      'immunity', 'metabolism', 'hormones', 'physical_activity',
+      'cognition', 'environment', 'emotions',
+    ] as const;
+
+    // 1. Sanitize wheel_scores (12 axes canoniques uniquement, 0-100).
+    const scores: Array<{ domain: string; score: number }> = [];
+    for (const domain of WHEEL_DOMAINS) {
+      const raw = input.wheel_scores?.[domain];
+      const num = typeof raw === 'number' && !Number.isNaN(raw) ? raw : 60;
+      const clamped = Math.max(0, Math.min(100, Math.round(num)));
+      scores.push({ domain, score: clamped });
+    }
+
+    // 2. User + patient (réutilise les helpers existants findOrCreate*).
+    const userResult = await this.findOrCreateUser(
+      input.patient_email,
+      input.patient_first_name,
+      input.patient_last_name,
+    );
+    const userId = userResult.userId;
+
+    await (this.supabase.client as any)
+      .from('tenant_memberships')
+      .upsert(
+        {
+          tenant_id: input.tenant.id,
+          user_id: userId,
+          role: 'patient',
+          status: 'active',
+        },
+        { onConflict: 'tenant_id,user_id' },
+      );
+
+    const patientResult = await this.findOrCreatePatient(
+      input.tenant.id,
+      userId,
+      input.patient_first_name ?? '',
+      input.patient_last_name ?? '',
+      input.source_id,
+    );
+    const patientId = patientResult.patientId;
+
+    // 3. Delete anciennes lignes 'vitalis_intake' pour ce patient (re-push
+    // idempotent). On ne touche PAS aux lignes 'questionnaire' saisies par
+    // le praticien lui-même côté MEDOS — filtre source strict.
+    await (this.supabase.client as any)
+      .from('med_transformation_wheel')
+      .delete()
+      .eq('tenant_id', input.tenant.id)
+      .eq('patient_id', patientId)
+      .eq('source', 'vitalis_intake');
+
+    // 4. Insert 12 rows.
+    const rows = scores.map((s) => ({
+      tenant_id: input.tenant.id,
+      patient_id: patientId,
+      domain: s.domain,
+      score: s.score,
+      source: 'vitalis_intake',
+    }));
+
+    const { error: insertError } = await (this.supabase.client as any)
+      .from('med_transformation_wheel')
+      .insert(rows);
+    if (insertError) {
+      this.logger.error(`importVitalisBilan wheel insert: ${insertError.message}`);
+      throw new InternalServerErrorException(
+        `Insertion des scores Roue Détox impossible : ${insertError.message}`,
+      );
+    }
+
+    const apiBase =
+      this.config.get<string>('MEDOS_API_BASE') ?? 'https://api.cimolace.space';
+    const medApp =
+      this.config.get<string>('MEDOS_MED_APP_URL') ?? 'https://med.cimolace.space';
+
+    return {
+      patient_id: patientId,
+      patient_user_id: userId,
+      created: userResult.created || patientResult.created,
+      wheel_rows_inserted: rows.length,
+      deep_link: `${medApp}/twin/${patientId}`,
+      api_base: apiBase,
+    };
+  }
 }
