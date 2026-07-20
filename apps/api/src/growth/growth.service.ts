@@ -105,15 +105,16 @@ export class GrowthService {
       userId = prof?.id ?? null;
     } catch { /* identité non résolue → fan-out par email quand même */ }
 
-    // Dossier patient MEDOS (pont messagerie clinique) : résolu par user OU par email,
-    // pour rattacher les fils `med_message_threads` (silo MEDOS) au hub 360°. Guardé.
+    // Dossier patient MEDOS (pont messagerie clinique) : résolu par `patient_user_id`
+    // (med_patients n'a PAS de colonne email → l'identité passe par le compte). Rattache
+    // les fils `med_message_threads` (silo MEDOS) au hub 360°. Guardé (fail-silent).
     let medPatientId: string | null = null;
-    try {
-      let rp: any = null;
-      if (userId) rp = await client.from('med_patients').select('id').eq('tenant_id', tenantId).eq('patient_user_id', userId).maybeSingle();
-      if (!rp?.data) rp = await client.from('med_patients').select('id').eq('tenant_id', tenantId).ilike('email', email).maybeSingle();
-      medPatientId = rp?.data?.id ?? null;
-    } catch { /* MEDOS non provisionné pour ce tenant → ignore */ }
+    if (userId) {
+      try {
+        const rp = await client.from('med_patients').select('id').eq('tenant_id', tenantId).eq('patient_user_id', userId).maybeSingle();
+        medPatientId = rp?.data?.id ?? null;
+      } catch { /* MEDOS non provisionné pour ce tenant → ignore */ }
+    }
 
     const nil = Promise.resolve({ data: null });
     const nilArr = Promise.resolve({ data: [] });
