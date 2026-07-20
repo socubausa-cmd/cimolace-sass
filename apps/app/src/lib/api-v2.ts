@@ -551,6 +551,9 @@ export const growthApi = {
     apiV2.post<ApiEnvelope<any>>('/growth/leads', body).then(unwrap),
   updateLeadScore: (id: string, score: number) =>
     apiV2.patch<ApiEnvelope<any>>(`/growth/leads/${id}/score`, { score }).then(unwrap),
+  // Vue 360° d'un contact : identité + fan-out TOUS les moteurs (mbolo/RDV/école/messagerie).
+  contact360: (email: string) =>
+    apiV2.get<ApiEnvelope<any>>(`/growth/contact-360`, { params: { email } }).then(unwrap),
 };
 
 // ── CRM (cœur sales — Vague 2) ────────────────────────────────────────────────

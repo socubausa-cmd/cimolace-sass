@@ -3,8 +3,9 @@ import { createPortal } from 'react-dom';
 import {
   X, Plus, Trash2, Check, Mail, Phone, Building2, Tag as TagIcon,
   StickyNote, ListChecks, Activity, Loader2, ChevronDown,
+  Sparkles, ShoppingBag, CalendarClock, GraduationCap, MessageCircle,
 } from 'lucide-react';
-import { crmApi } from '@/lib/api-v2';
+import { crmApi, growthApi } from '@/lib/api-v2';
 import { useToast } from '@/components/ui/use-toast';
 
 /* ── Fiche contact 360° (drawer) — notes · tâches · tags · timeline ──
@@ -56,6 +57,8 @@ export default function CrmContactDetail({ contact, onClose }) {
   const [taskTitle, setTaskTitle] = useState('');
   const [busy, setBusy] = useState(false);
   const [tagOpen, setTagOpen] = useState(false);
+  const [eco, setEco] = useState(null);
+  const [ecoLoading, setEcoLoading] = useState(false);
   const reqRef = useRef(0);
   const id = contact?.id;
   const err = (e) => toast({ title: 'CRM', description: String(e?.message || e), variant: 'destructive' });
@@ -91,6 +94,19 @@ export default function CrmContactDetail({ contact, onClose }) {
     document.addEventListener('keydown', onKey);
     return () => document.removeEventListener('keydown', onKey);
   }, [load, onClose]);
+
+  // Vue 360° écosystème : fan-out du contact sur tous les moteurs (par email).
+  useEffect(() => {
+    const email = contact?.email;
+    if (!email) { setEco(null); return; }
+    let alive = true;
+    setEcoLoading(true);
+    growthApi.contact360(email)
+      .then((d) => { if (alive) setEco(d); })
+      .catch(() => { if (alive) setEco(null); })
+      .finally(() => { if (alive) setEcoLoading(false); });
+    return () => { alive = false; };
+  }, [contact?.email]);
 
   const addNote = async () => {
     const body = noteText.trim();
@@ -172,6 +188,51 @@ export default function CrmContactDetail({ contact, onClose }) {
             </div>
           ) : (
             <div className="space-y-7">
+              {/* Écosystème 360° — l'activité du contact à travers TOUS les moteurs (contact unifié) */}
+              <section>
+                <SectionHead icon={Sparkles} title="Écosystème" count={eco?.connected ?? 0} />
+                {ecoLoading ? (
+                  <div className="h-16 rounded-xl lp-panel animate-pulse" />
+                ) : eco ? (
+                  <div className="space-y-2.5">
+                    <div className="flex flex-wrap gap-1.5">
+                      {(eco.engines_touched ?? []).length === 0 ? (
+                        <span className="text-[12px] lp-faint">Aucune activité inter-moteur pour l'instant.</span>
+                      ) : (
+                        (eco.engines_touched ?? []).map((e) => (
+                          <span key={e} className="inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[11px] font-semibold"
+                            style={{ background: 'rgba(217,119,87,.13)', color: '#e08a63' }}>{e}</span>
+                        ))
+                      )}
+                    </div>
+                    <div className="grid grid-cols-2 gap-2">
+                      {[
+                        { icon: ShoppingBag, label: 'Commandes', value: eco.mbolo?.count ?? 0 },
+                        { icon: CalendarClock, label: 'Rendez-vous', value: eco.rdv?.count ?? 0 },
+                        { icon: GraduationCap, label: 'École / LIRI', value: eco.membership?.role ?? '—' },
+                        { icon: MessageCircle, label: 'Conversations', value: eco.messaging?.conversations ?? 0 },
+                      ].map(({ icon: Ic, label, value }) => (
+                        <div key={label} className="flex items-center gap-2.5 rounded-xl lp-panel border lp-line px-3 py-2.5">
+                          <Ic size={16} style={{ color: '#e08a63' }} />
+                          <div className="min-w-0">
+                            <div className="text-[15px] font-bold leading-none text-white">{value}</div>
+                            <div className="mt-0.5 text-[10.5px] lp-muted">{label}</div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                    {eco.mbolo?.total_cents > 0 && (
+                      <p className="text-[11px] lp-muted">Chiffre d'affaires mbolo : <b className="text-white">{Math.round((eco.mbolo.total_cents || 0) / 100).toLocaleString('fr-FR')} {eco.mbolo?.orders?.[0]?.currency ?? 'XAF'}</b></p>
+                    )}
+                    {eco.identity?.resolved === false && (
+                      <p className="text-[11px] lp-faint">Contact externe (pas encore de compte lié).</p>
+                    )}
+                  </div>
+                ) : (
+                  <p className="text-[12px] lp-faint">Ajoutez un email au contact pour voir son activité écosystème.</p>
+                )}
+              </section>
+
               {/* Étiquettes */}
               <section>
                 <SectionHead icon={TagIcon} title="Étiquettes" count={entityTags.length} />
