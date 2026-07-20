@@ -588,6 +588,8 @@ export const crmApi = {
     apiV2.delete<ApiEnvelope<any>>(`/crm/contacts/${id}`).then(unwrap),
   convertLead: (leadId: string) =>
     apiV2.post<ApiEnvelope<any>>('/crm/contacts/convert-lead', { lead_id: leadId }).then(unwrap),
+  importContacts: (contacts: any[]) =>
+    apiV2.post<ApiEnvelope<any>>('/crm/contacts/import', { contacts }).then(unwrap),
 
   listPipelines: (): Promise<any[]> =>
     apiV2.get<ApiEnvelope<{ pipelines?: any[] }>>('/crm/pipelines').then(unwrap)

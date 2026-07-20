@@ -176,6 +176,65 @@ export class CrmService {
     return contact;
   }
 
+  /**
+   * Import CSV de contacts en lot. Chaque ligne : {first_name,last_name,email,phone,title,company}.
+   * Les sociétés sont résolues par NOM (find-or-create, insensible à la casse, dédupliquées dans le lot).
+   * Tenant-scopé, plafonné, best-effort par ligne (une ligne en erreur n'annule pas les autres).
+   */
+  async importContacts(tenantId: string, rows: any[]) {
+    if (!Array.isArray(rows) || !rows.length) throw new BadRequestException('aucune ligne à importer');
+    if (rows.length > 1000) throw new BadRequestException('max 1000 lignes par import');
+
+    // Précharge les sociétés existantes pour matcher par nom sans une requête par ligne.
+    const { data: existingCos } = await this.db()
+      .from('crm_companies').select('id, name').eq('tenant_id', tenantId);
+    const coByName = new Map<string, string>(
+      (existingCos ?? []).map((c: any) => [String(c.name || '').trim().toLowerCase(), c.id]),
+    );
+
+    let created = 0;
+    let skipped = 0;
+    let companiesCreated = 0;
+    const errors: { line: number; error: string }[] = [];
+
+    for (let i = 0; i < rows.length; i++) {
+      const raw = rows[i] || {};
+      const email = String(raw.email || '').trim().toLowerCase() || null;
+      const first = String(raw.first_name || raw.firstName || '').trim() || null;
+      const last = String(raw.last_name || raw.lastName || '').trim() || null;
+      if (!email && !first && !last) { skipped++; continue; } // ligne vide → ignorée
+
+      let company_id: string | null = null;
+      const coName = String(raw.company || raw.company_name || raw.societe || '').trim();
+      if (coName) {
+        const key = coName.toLowerCase();
+        if (coByName.has(key)) {
+          company_id = coByName.get(key)!;
+        } else {
+          const { data: co } = await this.db()
+            .from('crm_companies').insert({ tenant_id: tenantId, name: coName }).select('id').single();
+          if (co?.id) { company_id = co.id; coByName.set(key, co.id); companiesCreated++; }
+        }
+      }
+
+      const row = {
+        tenant_id: tenantId,
+        first_name: first,
+        last_name: last,
+        email,
+        phone: String(raw.phone || raw.telephone || '').trim() || null,
+        title: String(raw.title || raw.fonction || '').trim() || null,
+        source: 'import',
+        company_id,
+      };
+      const { error } = await this.db().from('crm_contacts').insert(row);
+      if (error) { errors.push({ line: i + 1, error: error.message }); skipped++; }
+      else created++;
+    }
+
+    return { created, skipped, companiesCreated, errors: errors.slice(0, 20) };
+  }
+
   // ─── Pipelines & stages ──────────────────────────────────────────────────────
   // ⚠️ CLÉS HOMOGÈNES OBLIGATOIRES : l'insert en lot PostgREST exige que TOUS les objets
   // aient EXACTEMENT les mêmes clés (sinon 400/échec silencieux → pipeline sans étapes).

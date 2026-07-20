@@ -105,6 +105,12 @@ export class CrmController {
     return this.svc.convertLead(t.id, String(body?.lead_id || ''));
   }
 
+  // Import CSV en lot : { contacts: [{first_name,last_name,email,phone,title,company}] }.
+  @Post('contacts/import')
+  importContacts(@CurrentTenant() t: TenantContext, @Body() body: { contacts?: any[]; rows?: any[] }) {
+    return this.svc.importContacts(t.id, body?.contacts || body?.rows || []);
+  }
+
   // ─── Pipelines & stages ──────────────────────────────────────────────────────
   @Get('pipelines')
   listPipelines(@CurrentTenant() t: TenantContext) {

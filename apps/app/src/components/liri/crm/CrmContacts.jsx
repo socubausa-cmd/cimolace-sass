@@ -1,8 +1,9 @@
 import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
-import { Search, Plus, Pencil, Trash2, X, Users, Building2, UserPlus } from 'lucide-react';
+import { Search, Plus, Pencil, Trash2, X, Users, Building2, UserPlus, Upload } from 'lucide-react';
 import { crmApi } from '@/lib/api-v2';
 import { useToast } from '@/components/ui/use-toast';
 import CrmContactDetail from './CrmContactDetail';
+import CrmImportModal from './CrmImportModal';
 
 /**
  * CRM · Section CONTACTS (portail LIRI). Corps de section seul :
@@ -72,6 +73,7 @@ export default function CrmContacts() {
   const [pendingDelete, setPendingDelete] = useState(null);
   const [deleting, setDeleting] = useState(false);
   const [detail, setDetail] = useState(null); // contact ouvert dans le drawer de détail
+  const [importOpen, setImportOpen] = useState(false);
 
   const fetchContacts = useCallback(
     async (q) => {
@@ -246,14 +248,24 @@ export default function CrmContacts() {
             className={`${inputCls} pl-9`}
           />
         </div>
-        <button
-          type="button"
-          onClick={openCreate}
-          className="inline-flex shrink-0 items-center justify-center gap-2 whitespace-nowrap rounded-xl px-4 py-2.5 text-[13px] font-semibold text-white lp-tr lp-ember disabled:opacity-60 cursor-pointer"
-        >
-          <Plus size={16} />
-          Nouveau contact
-        </button>
+        <div className="flex shrink-0 items-center gap-2">
+          <button
+            type="button"
+            onClick={() => setImportOpen(true)}
+            className="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-xl px-3.5 py-2.5 text-[13px] font-medium lp-muted lp-railbtn lp-tr cursor-pointer"
+          >
+            <Upload size={15} />
+            Importer
+          </button>
+          <button
+            type="button"
+            onClick={openCreate}
+            className="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-xl px-4 py-2.5 text-[13px] font-semibold text-white lp-tr lp-ember disabled:opacity-60 cursor-pointer"
+          >
+            <Plus size={16} />
+            Nouveau contact
+          </button>
+        </div>
       </div>
 
       {/* Corps */}
@@ -613,6 +625,13 @@ export default function CrmContacts() {
           contact={detail}
           onClose={() => setDetail(null)}
           onChanged={() => {}}
+        />
+      )}
+
+      {importOpen && (
+        <CrmImportModal
+          onClose={() => setImportOpen(false)}
+          onImported={() => fetchContacts(search)}
         />
       )}
     </div>
