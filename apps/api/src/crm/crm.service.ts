@@ -941,6 +941,11 @@ export class CrmService {
     if (r?.error) throw new BadRequestException(r.error.message);
   }
 
+  /** Vrai si valeur « vide » (null/undefined/chaîne vide) — pour le remplissage à la fusion. */
+  private static isBlank(v: any): boolean {
+    return v == null || (typeof v === 'string' && v.trim() === '');
+  }
+
   /** SELECT best-effort : renvoie [] sur toute erreur (table absente, drift schéma…). */
   private async safeRows(build: () => any): Promise<any[]> {
     try {
@@ -1490,7 +1495,7 @@ export class CrmService {
     //    valeurs sur le gagnant (sinon violation 23505). Ordre : calculer le fill → delete → fill.
     const fill: Record<string, any> = {};
     for (const f of ['first_name', 'last_name', 'email', 'phone', 'title', 'company_id', 'user_id', 'lead_id']) {
-      if ((keep as any)[f] == null && (lose as any)[f] != null) fill[f] = (lose as any)[f];
+      if (CrmService.isBlank((keep as any)[f]) && !CrmService.isBlank((lose as any)[f])) fill[f] = (lose as any)[f];
     }
     CrmService.chk(await this.db().from('crm_contacts').delete().eq('tenant_id', tenantId).eq('id', loseId));
     if (Object.keys(fill).length) {
@@ -1517,7 +1522,7 @@ export class CrmService {
     await this.db().from('crm_taggables').delete().eq('tenant_id', tenantId).eq('entity_type', 'company').eq('entity_id', loseId);
     const fill: Record<string, any> = {};
     for (const f of ['website', 'industry', 'size', 'phone', 'address', 'city', 'country', 'description']) {
-      if ((keep as any)[f] == null && (lose as any)[f] != null) fill[f] = (lose as any)[f];
+      if (CrmService.isBlank((keep as any)[f]) && !CrmService.isBlank((lose as any)[f])) fill[f] = (lose as any)[f];
     }
     CrmService.chk(await this.db().from('crm_companies').delete().eq('tenant_id', tenantId).eq('id', loseId));
     if (Object.keys(fill).length) {
