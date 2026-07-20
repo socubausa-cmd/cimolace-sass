@@ -7,6 +7,19 @@ import { TenantPaymentConfigService } from '../billing/tenant-payment-config/ten
 const STOREFRONT_BASE = 'https://api.cimolace.space/v1/mbolo/storefront';
 const MBOLO_DOCS_URL = 'https://cimolace.space/mbolo/integration';
 
+// Config comptable par défaut (PCG français) pour une nouvelle boutique — éditable par tenant.
+const DEFAULT_ACCOUNTING = {
+  legalName: '', siren: null, nic: null, addressLine1: null, postalCode: null, city: null,
+  country: 'FR', defaultCurrency: 'EUR',
+  journalSalesCode: 'VE', journalSalesLabel: 'Ventes',
+  journalCashCode: 'BQ', journalCashLabel: 'Banque',
+  accountRevenueHt: '707', accountShippingRevenue: '7085', accountVatCollected: '44571',
+  accountPaymentClearing: '511', accountClients: '411', accountDiscounts: '709',
+  fecIncludeOrders: true, fecIncludeInvoices: true, fecInvoicesSkipLinkedOrder: true,
+  fecTimezone: 'Europe/Paris',
+  journalRefundCode: 'ANN', journalRefundLabel: 'Annulations / remboursements',
+} as const;
+
 @Injectable()
 export class MboloService {
   constructor(
@@ -756,5 +769,27 @@ export class MboloService {
       .delete().eq('id', id).eq('tenant_id', tenantId);
     if (error) throw new BadRequestException(error.message);
     return { ok: true };
+  }
+
+  // ─── Compta : entité légale + config par tenant (UNIQUE par tenant) ──────
+  /** Réglages comptables du tenant ; auto-provisionne une ligne défaut au 1er accès. */
+  async getAccountingSettings(tenantId: string) {
+    const client = this.supabase.client as any;
+    let { data } = await client.from('mbolo_accounting_settings').select('*').eq('tenant_id', tenantId).maybeSingle();
+    if (!data) {
+      const ins = await client.from('mbolo_accounting_settings')
+        .insert({ tenant_id: tenantId, config: {} }).select('*').single();
+      data = ins.data;
+    }
+    return { id: data.id, config: { ...DEFAULT_ACCOUNTING, ...(data.config ?? {}) } };
+  }
+  async updateAccountingSettings(tenantId: string, patch: Record<string, any>) {
+    const cur = await this.getAccountingSettings(tenantId);
+    const merged = { ...cur.config, ...(patch ?? {}) };
+    const { data, error } = await (this.supabase.client as any).from('mbolo_accounting_settings')
+      .update({ config: merged, updated_at: new Date().toISOString() })
+      .eq('tenant_id', tenantId).select('*').single();
+    if (error) throw new BadRequestException(error.message);
+    return { id: data.id, config: { ...DEFAULT_ACCOUNTING, ...(data.config ?? {}) } };
   }
 }

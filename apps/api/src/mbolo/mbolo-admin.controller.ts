@@ -122,4 +122,14 @@ export class MboloAdminController {
   deleteInvoice(@Param('id') id: string, @CurrentTenant() t: TenantContext) {
     return this.svc.deleteInvoice(t.id, id);
   }
+
+  // ─── Compta : entité légale par tenant ───
+  @Get('accounting-settings')
+  getAccountingSettings(@CurrentTenant() t: TenantContext) {
+    return this.svc.getAccountingSettings(t.id);
+  }
+  @Patch('accounting-settings')
+  updateAccountingSettings(@Body() d: any, @CurrentTenant() t: TenantContext) {
+    return this.svc.updateAccountingSettings(t.id, d);
+  }
 }
