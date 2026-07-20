@@ -597,6 +597,21 @@ export const crmApi = {
   // Reliure société — OBJET : { company, contactsTotal, members:[{isMember,userId,role}], counts }.
   getCompanyPlatform: (id: string) =>
     apiV2.get<ApiEnvelope<any>>(`/crm/companies/${id}/platform`).then(unwrap),
+  // Recherche globale (Cmd-K) — OBJET { contacts, companies, deals }.
+  search: (q: string, limit = 8) =>
+    apiV2.get<ApiEnvelope<any>>('/crm/search', { params: { q, limit: String(limit) } }).then(unwrap),
+  // Analytics sales — OBJET { totals, winRate, forecast, pipelineValue, byStage, leaderboard, avgCycleDays }.
+  analytics: () => apiV2.get<ApiEnvelope<any>>('/crm/analytics').then(unwrap),
+  // Envoi réel d'un message au contact (messagerie immersive), au nom de l'opérateur.
+  sendMessageToContact: (id: string, content: string) =>
+    apiV2.post<ApiEnvelope<any>>(`/crm/contacts/${id}/message`, { content }).then(unwrap),
+  // CRUD étapes / pipelines (#10).
+  createStage: (body: Record<string, unknown>) =>
+    apiV2.post<ApiEnvelope<any>>('/crm/stages', body).then(unwrap),
+  updateStage: (id: string, body: Record<string, unknown>) =>
+    apiV2.patch<ApiEnvelope<any>>(`/crm/stages/${id}`, body).then(unwrap),
+  deleteStage: (id: string) =>
+    apiV2.delete<ApiEnvelope<any>>(`/crm/stages/${id}`).then(unwrap),
 
   listPipelines: (): Promise<any[]> =>
     apiV2.get<ApiEnvelope<{ pipelines?: any[] }>>('/crm/pipelines').then(unwrap)

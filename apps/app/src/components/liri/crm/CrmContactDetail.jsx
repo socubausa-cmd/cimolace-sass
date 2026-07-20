@@ -95,6 +95,9 @@ export default function CrmContactDetail({ contact, onClose }) {
   const [noteText, setNoteText] = useState('');
   const [taskTitle, setTaskTitle] = useState('');
   const [busy, setBusy] = useState(false);
+  const [composerOpen, setComposerOpen] = useState(false);
+  const [msgText, setMsgText] = useState('');
+  const [sending, setSending] = useState(false);
   const [tagOpen, setTagOpen] = useState(false);
   const reqRef = useRef(0);
   const id = contact?.id;
@@ -183,6 +186,17 @@ export default function CrmContactDetail({ contact, onClose }) {
     onClose();
     navigate(`/liri/messages?to=${encodeURIComponent(platform.userId)}&name=${encodeURIComponent(platformName)}`);
   };
+  const sendInline = async () => {
+    const text = msgText.trim();
+    if (!text || sending) return;
+    setSending(true);
+    try {
+      await crmApi.sendMessageToContact(id, text);
+      setMsgText(''); setComposerOpen(false);
+      toast({ title: 'Message envoyé', description: `À ${platformName}.` });
+      await load();
+    } catch (e) { err(e); } finally { setSending(false); }
+  };
   const sendEmail = () => {
     if (!contact.email) return;
     window.location.href = `mailto:${contact.email}`;
@@ -242,9 +256,9 @@ export default function CrmContactDetail({ contact, onClose }) {
           <div className="mt-4 flex items-center gap-2">
             {isMember ? (
               <button
-                type="button" onClick={openMessage}
+                type="button" onClick={() => setComposerOpen((v) => !v)} aria-expanded={composerOpen}
                 className="inline-flex flex-1 cursor-pointer items-center justify-center gap-2 rounded-xl px-3 py-2.5 text-[13px] font-semibold text-white lp-ember lp-tr"
-                title="Ouvrir la messagerie immersive avec ce membre"
+                title="Écrire un message à ce membre"
               >
                 <MessageSquare size={15} /> Contacter
               </button>
@@ -271,6 +285,30 @@ export default function CrmContactDetail({ contact, onClose }) {
               </button>
             )}
           </div>
+
+          {/* Composer inline : envoi RÉEL dans la messagerie immersive (POST /crm/contacts/:id/message) */}
+          {isMember && composerOpen && (
+            <div className="mt-2.5 rounded-xl border lp-line" style={{ background: 'rgba(245,244,238,.03)' }}>
+              <textarea
+                rows={3} autoFocus value={msgText}
+                onChange={(e) => setMsgText(e.target.value)}
+                onKeyDown={(e) => { if ((e.metaKey || e.ctrlKey) && e.key === 'Enter') sendInline(); }}
+                placeholder={`Message à ${platformName}…`}
+                className="w-full resize-none rounded-t-xl bg-transparent px-3.5 py-3 text-[13.5px] lp-ink outline-none placeholder:text-[var(--faint)]"
+              />
+              <div className="flex items-center justify-between border-t lp-line px-3 py-2">
+                <button type="button" onClick={openMessage} className="text-[11.5px] lp-faint underline-offset-2 hover:underline">
+                  Ouvrir en plein écran
+                </button>
+                <button
+                  type="button" onClick={sendInline} disabled={sending || !msgText.trim()}
+                  className="inline-flex cursor-pointer items-center gap-1.5 rounded-lg px-3 py-1.5 text-[12.5px] font-medium text-white lp-tr lp-ember disabled:opacity-45"
+                >
+                  {sending ? <Loader2 size={13} className="animate-spin" /> : <Send size={13} />} Envoyer
+                </button>
+              </div>
+            </div>
+          )}
         </header>
 
         {/* ── Corps scrollable ── */}

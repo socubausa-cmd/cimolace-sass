@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { LiriPortalShell } from '@/components/liri/LiriPortalShell';
 import { usePortalTabs, usePortalCrumb } from '@/components/liri/portalHeader';
@@ -7,6 +7,8 @@ import CrmPipelineBoard from '@/components/liri/crm/CrmPipelineBoard';
 import CrmContacts from '@/components/liri/crm/CrmContacts';
 import CrmCompanies from '@/components/liri/crm/CrmCompanies';
 import CrmActivity from '@/components/liri/crm/CrmActivity';
+import CrmAnalytics from '@/components/liri/crm/CrmAnalytics';
+import CrmSearchPalette from '@/components/liri/crm/CrmSearchPalette';
 
 /**
  * CRM DANS le portail LIRI (rail « CRM », créateur owner/admin).
@@ -26,6 +28,7 @@ import CrmActivity from '@/components/liri/crm/CrmActivity';
 
 const CRM_VIEWS = [
   { value: 'pipeline', label: 'Pipeline' },
+  { value: 'dashboard', label: 'Tableau de bord' },
   { value: 'contacts', label: 'Contacts' },
   { value: 'companies', label: 'Sociétés' },
   { value: 'activity', label: 'Activité' },
@@ -68,14 +71,29 @@ function LiriCrmContent() {
   usePortalTabs(CRM_VIEWS, view, setView);
   usePortalCrumb(['CRM', activeLabel]);
 
+  // Palette de recherche globale (Cmd/Ctrl+K), disponible sur toutes les vues CRM.
+  const [paletteOpen, setPaletteOpen] = useState(false);
+  useEffect(() => {
+    const onKey = (e) => {
+      if ((e.metaKey || e.ctrlKey) && (e.key === 'k' || e.key === 'K')) { e.preventDefault(); setPaletteOpen(true); }
+    };
+    document.addEventListener('keydown', onKey);
+    return () => document.removeEventListener('keydown', onKey);
+  }, []);
+  const palette = (
+    <CrmSearchPalette open={paletteOpen} onClose={() => setPaletteOpen(false)} onPick={(item) => setView(item.view)} />
+  );
+
   // Onglet Croissance : AdminMarketingPage porte SON PROPRE conteneur centré (mx-auto max-w-5xl)
   // → on le rend nu, sans wrapper, pour ne rien casser du Growth Engine.
-  if (view === 'growth') return <AdminMarketingPage />;
+  if (view === 'growth') return <>{palette}<AdminMarketingPage /></>;
 
   // Vues sales-CRM : pleine largeur (le kanban a besoin d'espace), padding portail cohérent.
   return (
     <div className="w-full px-4 py-6 sm:px-6 sm:py-8">
+      {palette}
       {view === 'pipeline' && <CrmPipelineBoard />}
+      {view === 'dashboard' && <CrmAnalytics />}
       {view === 'contacts' && <CrmContacts />}
       {view === 'companies' && <CrmCompanies />}
       {view === 'activity' && <CrmActivity />}
