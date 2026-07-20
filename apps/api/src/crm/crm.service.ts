@@ -4,6 +4,7 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { SupabaseService } from '../supabase/supabase.service';
+import { MarketingAdvancedService } from '../marketing/marketing-advanced.service';
 
 /**
  * CRM — cœur sales (Vague 2). Toutes les opérations sont TENANT-SCOPÉES :
@@ -15,10 +16,38 @@ import { SupabaseService } from '../supabase/supabase.service';
  */
 @Injectable()
 export class CrmService {
-  constructor(private readonly supabase: SupabaseService) {}
+  constructor(
+    private readonly supabase: SupabaseService,
+    private readonly marketing: MarketingAdvancedService,
+  ) {}
 
   private db() {
     return this.supabase.client as any;
+  }
+
+  /**
+   * Émet un événement CRM dans le bus d'automations (best-effort, fire-and-forget) : le tenant
+   * peut configurer des `marketing_automations` (trigger_condition = 'crm_deal_won' | 'crm_deal_lost'
+   * | 'crm_contact_created') pour réagir (email, campagne…). Ne bloque JAMAIS l'opération métier ;
+   * ne matche RIEN tant qu'aucune automation n'est configurée. `tenantId` est réinjecté par
+   * runAutomation ; on transmet `email` (destinataire potentiel) + contexte du deal/contact.
+   */
+  private fireAutomation(tenantId: string, trigger: string, context: Record<string, any>): void {
+    try {
+      void this.marketing.runAutomation(tenantId, { trigger, context }).catch(() => {});
+    } catch {
+      /* le bus ne doit jamais casser une écriture CRM */
+    }
+  }
+
+  /** Email du contact lié à un deal (pour cibler une automation). Best-effort. */
+  private async dealContactEmail(tenantId: string, deal: any): Promise<string | null> {
+    const contactId = deal?.contact_id;
+    if (!contactId) return null;
+    const rows = await this.safeRows(() =>
+      this.db().from('crm_contacts').select('email').eq('tenant_id', tenantId).eq('id', contactId).limit(1),
+    );
+    return rows[0]?.email || null;
   }
 
   private static pick(body: any, fields: string[]): Record<string, any> {
@@ -123,6 +152,11 @@ export class CrmService {
     await this.recordActivity(tenantId, {
       entityType: 'contact', entityId: data.id, type: 'contact_created',
       title: `Contact créé : ${[data.first_name, data.last_name].filter(Boolean).join(' ') || data.email || 'sans nom'}`,
+    });
+    this.fireAutomation(tenantId, 'crm_contact_created', {
+      email: data.email || null,
+      contactId: data.id,
+      name: [data.first_name, data.last_name].filter(Boolean).join(' ') || null,
     });
     return data;
   }
@@ -409,6 +443,17 @@ export class CrmService {
       entityType: 'deal', entityId: data.id, type: actType, title: actTitle,
       meta: { stage_id: data.stage_id, status: data.status },
     });
+    // Automations : un deal gagné/perdu peut déclencher un email/campagne vers le contact lié.
+    if (patch.status === 'won' || patch.status === 'lost') {
+      const email = await this.dealContactEmail(tenantId, data);
+      this.fireAutomation(tenantId, patch.status === 'won' ? 'crm_deal_won' : 'crm_deal_lost', {
+        email,
+        dealId: data.id,
+        dealTitle: data.title,
+        amount: data.amount ?? null,
+        currency: data.currency ?? null,
+      });
+    }
     return data;
   }
 
