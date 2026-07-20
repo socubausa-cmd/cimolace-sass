@@ -5,6 +5,9 @@ import {
 } from '@nestjs/common';
 import { SupabaseService } from '../supabase/supabase.service';
 import { MarketingAdvancedService } from '../marketing/marketing-advanced.service';
+import { WebhookService, type LiriWebhookEvent } from '../liri-public/webhook.service';
+import { MessagingService } from '../messaging/messaging.service';
+import { EmailEngineService } from '../email-engine/email-engine.service';
 
 /**
  * CRM — cœur sales (Vague 2). Toutes les opérations sont TENANT-SCOPÉES :
@@ -19,10 +22,25 @@ export class CrmService {
   constructor(
     private readonly supabase: SupabaseService,
     private readonly marketing: MarketingAdvancedService,
+    private readonly webhooks: WebhookService,
+    private readonly messaging: MessagingService,
+    private readonly email: EmailEngineService,
   ) {}
 
   private db() {
     return this.supabase.client as any;
+  }
+
+  /**
+   * Émet un webhook sortant CRM (crm.*) vers le SI du client (HMAC-signé, retry).
+   * Fire-and-forget best-effort : ne bloque jamais l'opération métier.
+   */
+  private fireWebhook(tenantId: string, event: LiriWebhookEvent, data: Record<string, any>): void {
+    try {
+      void this.webhooks.emit(tenantId, event, data).catch(() => {});
+    } catch {
+      /* le webhook ne doit jamais casser une écriture CRM */
+    }
   }
 
   /**
@@ -158,6 +176,10 @@ export class CrmService {
       contactId: data.id,
       name: [data.first_name, data.last_name].filter(Boolean).join(' ') || null,
     });
+    this.fireWebhook(tenantId, 'crm.contact.created', {
+      contactId: data.id, email: data.email || null,
+      name: [data.first_name, data.last_name].filter(Boolean).join(' ') || null,
+    });
     return data;
   }
 
@@ -179,6 +201,47 @@ export class CrmService {
       .from('crm_contacts').delete().eq('tenant_id', tenantId).eq('id', id);
     if (error) throw new BadRequestException(error.message);
     return { ok: true };
+  }
+
+  /** Résout l'identité plateforme d'un contact : userId SEULEMENT si membre actif du tenant. */
+  private async resolveContactMember(tenantId: string, contactId: string): Promise<{ userId: string | null; name: string; email: string | null }> {
+    const { data: contact } = await this.db()
+      .from('crm_contacts').select('first_name, last_name, email')
+      .eq('tenant_id', tenantId).eq('id', contactId).maybeSingle();
+    if (!contact) throw new NotFoundException('contact introuvable');
+    const name = [contact.first_name, contact.last_name].filter(Boolean).join(' ') || contact.email || 'Contact';
+    const email = String(contact.email || '').trim().toLowerCase();
+    if (!email) return { userId: null, name, email: null };
+    const profs = await this.safeRows(() =>
+      this.db().from('profiles').select('id').ilike('email', CrmService.escapeLike(email)).limit(1),
+    );
+    const uid = profs[0]?.id || null;
+    if (!uid) return { userId: null, name, email };
+    const members = await this.safeRows(() =>
+      this.db().from('tenant_memberships').select('status')
+        .eq('tenant_id', tenantId).eq('user_id', uid).eq('status', 'active').limit(1),
+    );
+    return { userId: members[0] ? uid : null, name, email };
+  }
+
+  /**
+   * Envoie un VRAI message (messagerie immersive) depuis une fiche contact, au nom de
+   * l'opérateur. Refuse si le contact n'est pas un membre actif de l'espace (403 métier).
+   */
+  async sendMessageToContact(tenantId: string, senderId: string, contactId: string, content: string) {
+    const id = CrmService.requireId(contactId, 'contactId');
+    const text = String(content || '').trim();
+    if (!text) throw new BadRequestException('content requis');
+    const { userId, name } = await this.resolveContactMember(tenantId, id);
+    if (!userId) throw new BadRequestException('contact non joignable : pas un membre actif de l’espace');
+    const result = await this.messaging.sendMessage(
+      { id: tenantId } as any, senderId, { recipientId: userId, content: text } as any,
+    );
+    await this.recordActivity(tenantId, {
+      entityType: 'contact', entityId: id, type: 'message_sent',
+      title: `Message envoyé à ${name}`, actorId: senderId,
+    });
+    return { ok: true, result };
   }
 
   /**
@@ -414,6 +477,10 @@ export class CrmService {
       entityType: 'deal', entityId: data.id, type: 'deal_created',
       title: `Deal créé : ${data.title}`, meta: { amount: data.amount, currency: data.currency },
     });
+    this.fireWebhook(tenantId, 'crm.deal.created', {
+      dealId: data.id, title: data.title, amount: data.amount ?? null,
+      currency: data.currency ?? null, contactId: data.contact_id ?? null,
+    });
     return data;
   }
 
@@ -421,6 +488,16 @@ export class CrmService {
     CrmService.requireId(id);
     const patch = CrmService.pick(body, CrmService.DEAL_FIELDS);
     if (Object.keys(patch).length === 0) throw new BadRequestException('aucun champ à mettre à jour');
+    // État PRÉCÉDENT : ne déclencher les automations/webhooks que sur un CHANGEMENT réel
+    // (transition won/lost pour l'email ; changement d'étape effectif pour stage_moved).
+    let prevStatus: string | null = null;
+    let prevStageId: string | null = null;
+    if (patch.status !== undefined || patch.stage_id !== undefined) {
+      const { data: cur } = await this.db()
+        .from('crm_deals').select('status, stage_id').eq('tenant_id', tenantId).eq('id', id).maybeSingle();
+      prevStatus = cur?.status ?? null;
+      prevStageId = cur?.stage_id ?? null;
+    }
     // Cohérence statut/clôture : si won/lost, horodater closed_at ; si ré-ouvert, l'effacer.
     if (patch.status === 'won' || patch.status === 'lost') patch.closed_at = new Date().toISOString();
     else if (patch.status === 'open') patch.closed_at = null;
@@ -443,16 +520,19 @@ export class CrmService {
       entityType: 'deal', entityId: data.id, type: actType, title: actTitle,
       meta: { stage_id: data.stage_id, status: data.status },
     });
-    // Automations : un deal gagné/perdu peut déclencher un email/campagne vers le contact lié.
-    if (patch.status === 'won' || patch.status === 'lost') {
+    // Automations + webhooks : UNIQUEMENT sur transition (open/autre → won/lost) — anti re-émission.
+    const becameWon = patch.status === 'won' && prevStatus !== 'won';
+    const becameLost = patch.status === 'lost' && prevStatus !== 'lost';
+    if (becameWon || becameLost) {
       const email = await this.dealContactEmail(tenantId, data);
-      this.fireAutomation(tenantId, patch.status === 'won' ? 'crm_deal_won' : 'crm_deal_lost', {
-        email,
-        dealId: data.id,
-        dealTitle: data.title,
-        amount: data.amount ?? null,
-        currency: data.currency ?? null,
-      });
+      const evtCtx = {
+        email, contactId: data.contact_id ?? null,
+        dealId: data.id, dealTitle: data.title, amount: data.amount ?? null, currency: data.currency ?? null,
+      };
+      this.fireAutomation(tenantId, becameWon ? 'crm_deal_won' : 'crm_deal_lost', evtCtx);
+      this.fireWebhook(tenantId, becameWon ? 'crm.deal.won' : 'crm.deal.lost', evtCtx);
+    } else if (patch.stage_id !== undefined && (data.stage_id ?? null) !== prevStageId) {
+      this.fireWebhook(tenantId, 'crm.deal.stage_moved', { dealId: data.id, stageId: data.stage_id ?? null, contactId: data.contact_id ?? null });
     }
     return data;
   }
@@ -533,7 +613,45 @@ export class CrmService {
     const row = { ...CrmService.pick(body, CrmService.TASK_FIELDS), title, tenant_id: tenantId };
     const { data, error } = await this.db().from('crm_tasks').insert(row).select().single();
     if (error) throw new BadRequestException(error.message);
+    this.fireWebhook(tenantId, 'crm.task.created', {
+      taskId: data.id, title: data.title, entityType: data.entity_type ?? null,
+      entityId: data.entity_id ?? null, assigneeId: data.assignee_id ?? null, dueDate: data.due_date ?? null,
+    });
+    // Notif email best-effort à l'assignee (clé Resend du tenant ; jamais bloquant).
+    if (data.assignee_id) void this.notifyAssignee(tenantId, data).catch(() => {});
     return data;
+  }
+
+  /** Échappe une chaîne pour insertion sûre dans du HTML (anti-injection dans les emails). */
+  private static escapeHtml(s: string): string {
+    return String(s ?? '')
+      .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+  }
+
+  /**
+   * Notifie par email l'assignee d'une tâche (best-effort, clé Resend tenant).
+   * ⚠️ N'emaile QUE si l'assignee est un membre ACTIF de CE tenant (pas d'email arbitraire
+   * cross-tenant), applique le cap anti-spam marketing, et échappe le titre injecté dans le HTML.
+   */
+  private async notifyAssignee(tenantId: string, task: any): Promise<void> {
+    const members = await this.safeRows(() =>
+      this.db().from('tenant_memberships').select('user_id')
+        .eq('tenant_id', tenantId).eq('user_id', task.assignee_id).eq('status', 'active').limit(1),
+    );
+    if (!members[0]) return; // assignee hors tenant → on n'emaile pas
+    const rows = await this.safeRows(() =>
+      this.db().from('profiles').select('email').eq('id', task.assignee_id).limit(1),
+    );
+    const to = String(rows[0]?.email || '').trim();
+    if (!to) return;
+    if (await this.marketing.guardAutomationEmail(tenantId, to)) return; // cap anti-spam
+    const safeTitle = CrmService.escapeHtml(task.title);
+    const due = task.due_date ? ` (échéance ${String(task.due_date).slice(0, 10)})` : '';
+    await this.email.sendRaw(
+      tenantId, to, `Nouvelle tâche : ${safeTitle}`,
+      `<p>Une tâche vous a été assignée : <strong>${safeTitle}</strong>${due}.</p>`,
+    );
   }
 
   async updateTask(tenantId: string, id: string, body: any) {

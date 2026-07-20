@@ -10,6 +10,7 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
+import { CurrentUser, type AuthUser } from '../auth/current-user.decorator';
 import { Roles } from '../common/decorators/roles.decorator';
 import { RolesGuard } from '../common/guards/roles.guard';
 import { CurrentTenant } from '../tenant/current-tenant.decorator';
@@ -117,6 +118,17 @@ export class CrmController {
   @Get('contacts/:id/platform')
   contactPlatform(@CurrentTenant() t: TenantContext, @Param('id') id: string) {
     return this.svc.getContactPlatformLink(t.id, id);
+  }
+
+  // Envoi RÉEL d'un message (messagerie immersive) depuis la fiche, au nom de l'opérateur.
+  @Post('contacts/:id/message')
+  messageContact(
+    @CurrentTenant() t: TenantContext,
+    @CurrentUser() u: AuthUser,
+    @Param('id') id: string,
+    @Body() body: { content?: string },
+  ) {
+    return this.svc.sendMessageToContact(t.id, u.id, id, String(body?.content || ''));
   }
 
   // Import CSV en lot : { contacts: [{first_name,last_name,email,phone,title,company}] }.

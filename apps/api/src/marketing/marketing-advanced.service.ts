@@ -22,10 +22,15 @@ import { EmailEngineService } from '../email-engine/email-engine.service';
 const VALID_TRIGGERS = new Set([
   'lead_created', 'email_click', 'signup', 'payment',
   'payment_failed', 'abandon', 'inactivity',
+  // Événements CRM (émis par CrmService) : sans eux createAutomation rejetait ces triggers
+  // → l'émission était morte à l'arrivée. Débloque email/campagne sur deal gagné, etc.
+  'crm_deal_won', 'crm_deal_lost', 'crm_contact_created',
 ]);
 const VALID_ACTIONS = new Set([
   'send_email', 'send_notification', 'assign_segment',
   'launch_campaign', 'propose_appointment', 'send_funnel_link',
+  // Actions agissant SUR le CRM (le bus peut désormais créer/modifier des entités CRM).
+  'create_deal', 'create_crm_task', 'add_tag', 'create_contact', 'convert_lead',
 ]);
 const VALID_OBJECTIVES = new Set(['acquisition', 'conversion', 'relance', 'reactivation']);
 const VALID_STEP_TYPES = new Set([
@@ -64,6 +69,10 @@ export class MarketingAdvancedService {
   private static readonly AUTO_EMAIL_RECIP_COOLDOWN_MS = 30 * 60 * 1000;
   private readonly autoEmailTenantHits = new Map<string, { count: number; resetAt: number }>();
   private readonly autoEmailRecipHits = new Map<string, number>();
+  // Plafond des ÉCRITURES CRM par automation (create_deal/task/tag/contact/convert_lead) : borne
+  // l'amplification depuis un déclencheur public (capture de lead), en miroir du cap email.
+  private static readonly AUTO_CRM_TENANT_CAP = 200; // écritures CRM d'automation / heure / tenant
+  private readonly autoCrmTenantHits = new Map<string, { count: number; resetAt: number }>();
 
   constructor(
     private readonly supabase: SupabaseService,
@@ -499,7 +508,21 @@ export class MarketingAdvancedService {
       return { type, result: 'campaign_started' };
     }
     if (type === 'assign_segment') return { type, result: 'segment_unavailable' }; // segments absents du schéma
-    if (type === 'send_notification') return { type, result: 'notification_planned' };
+    if (type === 'send_notification') {
+      // Notification RÉELLE par email (clé Resend par tenant + mêmes garde-fous anti-spam).
+      const tid = String(lead?.tenant_id ?? ctx.context?.tenantId ?? '').trim();
+      let to = String(cfg.to || ctx.context?.email || lead?.email || '').trim();
+      if (!to && cfg.userId) {
+        const { data: p } = await db.from('profiles').select('email').eq('id', String(cfg.userId)).maybeSingle();
+        to = String((p as any)?.email || '').trim();
+      }
+      if (!to || !tid) return { type, result: 'skipped_no_recipient' };
+      const blocked = await this.guardAutomationEmail(tid, to);
+      if (blocked) return { type, result: blocked, to };
+      const subject = String(cfg.subject || 'Notification').slice(0, 200);
+      const res = await this.email.sendRaw(tid, to, subject, this.marketingEmailHtml(cfg, subject));
+      return { type, result: res.status === 'sent' ? 'notification_sent' : `notification_${res.status}`, to };
+    }
     if (type === 'propose_appointment') return { type, result: 'appointment_link_prepared' };
     if (type === 'send_funnel_link') return { type, result: 'funnel_link_prepared' };
     if (type === 'send_email') {
@@ -525,6 +548,99 @@ export class MarketingAdvancedService {
         ...(res.from ? { from: res.from } : {}),
       };
     }
+
+    // ─── Actions AGISSANT SUR le CRM ────────────────────────────────────────────
+    // Écrivent directement crm_* via this.db() (service_role) : NE PAS importer CrmService
+    // (CrmModule→MarketingModule existe déjà, l'inverse = cycle). Ces écritures sont MUETTES
+    // (n'appellent pas fireAutomation) → aucune boucle crm_contact_created→automation.
+    if (['create_deal', 'create_crm_task', 'add_tag', 'create_contact', 'convert_lead'].includes(type)) {
+      const tid = String(ctx.context?.tenantId ?? lead?.tenant_id ?? '').trim();
+      if (!tid) return { type, result: 'skipped_no_tenant' };
+      // Anti-amplification : un déclencheur PUBLIC (capture de lead, origine spoofable) ne doit
+      // PAS piloter d'écritures CRM ; + plafond horaire par tenant en défense-en-profondeur.
+      if (ctx.context?.publicTrigger) return { type, result: 'crm_skipped_public_trigger' };
+      const crmCapped = this.guardAutomationCrmWrite(tid);
+      if (crmCapped) return { type, result: crmCapped };
+      const escLike = (s: string) => s.replace(/[\\%_]/g, (m) => `\\${m}`);
+      const resolveContactId = async (): Promise<string | null> => {
+        if (ctx.context?.contactId) return String(ctx.context.contactId);
+        const email = String(ctx.context?.email || lead?.email || cfg.email || '').trim().toLowerCase();
+        if (!email) return null;
+        const { data } = await db.from('crm_contacts').select('id').eq('tenant_id', tid).ilike('email', escLike(email)).limit(1);
+        return (data as any)?.[0]?.id || null;
+      };
+      try {
+        if (type === 'create_contact') {
+          const email = String(cfg.email || ctx.context?.email || lead?.email || '').trim().toLowerCase();
+          const first = String(cfg.first_name || lead?.first_name || '').trim() || null;
+          const last = String(cfg.last_name || lead?.last_name || '').trim() || null;
+          if (!email && !first && !last) return { type, result: 'skipped_no_identity' };
+          if (email) {
+            const { data: ex } = await db.from('crm_contacts').select('id').eq('tenant_id', tid).ilike('email', escLike(email)).limit(1);
+            if ((ex as any)?.[0]) return { type, result: 'contact_exists', contactId: (ex as any)[0].id };
+          }
+          const { data } = await db.from('crm_contacts')
+            .insert({ tenant_id: tid, first_name: first, last_name: last, email: email || null, source: 'automation', status: 'active' })
+            .select('id').single();
+          return { type, result: 'contact_created', contactId: (data as any)?.id };
+        }
+        if (type === 'create_deal') {
+          const contactId = await resolveContactId();
+          const { data: pl } = await db.from('crm_pipelines').select('id')
+            .eq('tenant_id', tid).order('is_default', { ascending: false }).order('position', { ascending: true }).limit(1).maybeSingle();
+          let stageId: string | null = null;
+          if ((pl as any)?.id) {
+            const { data: st } = await db.from('crm_stages').select('id')
+              .eq('tenant_id', tid).eq('pipeline_id', (pl as any).id).order('position', { ascending: true }).limit(1).maybeSingle();
+            stageId = (st as any)?.id || null;
+          }
+          const { data } = await db.from('crm_deals')
+            .insert({ tenant_id: tid, title: String(cfg.title || 'Deal (automation)').slice(0, 200), amount: Number(cfg.amount) || 0, currency: String(cfg.currency || 'EUR'), pipeline_id: (pl as any)?.id || null, stage_id: stageId, contact_id: contactId, status: 'open' })
+            .select('id').single();
+          return { type, result: 'deal_created', dealId: (data as any)?.id };
+        }
+        if (type === 'create_crm_task') {
+          const contactId = await resolveContactId();
+          const { data } = await db.from('crm_tasks')
+            .insert({ tenant_id: tid, title: String(cfg.title || 'Tâche (automation)').slice(0, 200), entity_type: contactId ? 'contact' : null, entity_id: contactId, due_date: cfg.due_date || null, status: 'open' })
+            .select('id').single();
+          return { type, result: 'task_created', taskId: (data as any)?.id };
+        }
+        if (type === 'add_tag') {
+          const contactId = await resolveContactId();
+          if (!contactId) return { type, result: 'skipped_no_contact' };
+          const tagName = String(cfg.tag || cfg.name || '').trim();
+          if (!tagName) return { type, result: 'skipped_no_tag' };
+          let tagId: string | undefined;
+          const { data: ex } = await db.from('crm_tags').select('id').eq('tenant_id', tid).ilike('name', escLike(tagName)).limit(1);
+          if ((ex as any)?.[0]) tagId = (ex as any)[0].id;
+          else {
+            const { data: nt } = await db.from('crm_tags').insert({ tenant_id: tid, name: tagName, color: String(cfg.color || '#d97757') }).select('id').single();
+            tagId = (nt as any)?.id;
+          }
+          if (tagId) await db.from('crm_taggables').upsert({ tenant_id: tid, tag_id: tagId, entity_type: 'contact', entity_id: contactId });
+          return { type, result: 'tag_added', tagId };
+        }
+        if (type === 'convert_lead') {
+          const leadId = String(ctx.context?.leadId || lead?.id || cfg.lead_id || '').trim();
+          if (!leadId) return { type, result: 'skipped_no_lead' };
+          const { data: existing } = await db.from('crm_contacts').select('id').eq('tenant_id', tid).eq('lead_id', leadId).limit(1);
+          if ((existing as any)?.[0]) return { type, result: 'lead_already_converted', contactId: (existing as any)[0].id };
+          const { data: ld } = await db.from('leads').select('*').eq('tenant_id', tid).eq('id', leadId).maybeSingle();
+          if (!ld) return { type, result: 'lead_not_found' };
+          const fullName = String((ld as any).name || '').trim();
+          const [f, ...r] = fullName.split(/\s+/);
+          const { data } = await db.from('crm_contacts')
+            .insert({ tenant_id: tid, lead_id: leadId, first_name: f || null, last_name: r.join(' ') || null, email: (ld as any).email || null, source: 'lead', status: 'active' })
+            .select('id').single();
+          await db.from('leads').update({ status: 'customer' }).eq('tenant_id', tid).eq('id', leadId);
+          return { type, result: 'lead_converted', contactId: (data as any)?.id };
+        }
+      } catch (e: any) {
+        return { type, result: 'crm_action_error', message: String(e?.message || e) };
+      }
+    }
+
     return { type, result: 'unsupported_action' };
   }
 
@@ -542,7 +658,21 @@ export class MarketingAdvancedService {
    * Renvoie une RAISON de skip (string) si bloqué, sinon null (autorisé — le slot est réservé).
    * NB : in-memory/par-réplica ; un audit + une idempotence DB restent un durcissement de suivi.
    */
-  private async guardAutomationEmail(tenantId: string, to: string): Promise<string | null> {
+  /** Plafond horaire des écritures CRM par tenant (mémoire/par-réplica). Renvoie une raison si bloqué. */
+  guardAutomationCrmWrite(tenantId: string): string | null {
+    const now = Date.now();
+    let cap = this.autoCrmTenantHits.get(tenantId);
+    if (!cap || now > cap.resetAt) {
+      cap = { count: 0, resetAt: now + MarketingAdvancedService.AUTO_EMAIL_WINDOW_MS };
+      this.autoCrmTenantHits.set(tenantId, cap);
+    }
+    if (cap.count >= MarketingAdvancedService.AUTO_CRM_TENANT_CAP) return 'crm_skipped_tenant_cap';
+    cap.count += 1;
+    return null;
+  }
+
+  // Public (au lieu de private) : réutilisé par CrmService.notifyAssignee pour le même cap anti-spam.
+  async guardAutomationEmail(tenantId: string, to: string): Promise<string | null> {
     // (1) Exiger la clé Resend PROPRE au tenant (ne jamais envoyer via la clé globale Cimolace).
     const { data: ns } = await this.db()
       .from('tenant_notification_settings')
@@ -734,7 +864,7 @@ export class MarketingAdvancedService {
     // déclenche les flows `lead_created` du tenant. Fire-and-forget : un échec d'automation ne
     // casse JAMAIS la capture ; le résultat est tracé dans les logs (Railway).
     if (!existing) {
-      void this.runAutomation(tenantId, { trigger: 'lead_created', leadId: lead.id })
+      void this.runAutomation(tenantId, { trigger: 'lead_created', leadId: lead.id, context: { publicTrigger: true } })
         .then((r) => {
           if (r?.executedCount) {
             this.logger.log(
