@@ -36,6 +36,7 @@ import {
 } from 'lucide-react';
 import { crmApi } from '@/lib/api-v2';
 import { useToast } from '@/components/ui/use-toast';
+import CrmDealDetail from './CrmDealDetail';
 
 /* ── Pipeline commercial — craft premium LIRI (fiche contact = référence).
       Portail chaud : tout coral, jamais vert/rouge. won/lost = tint coral / opacité. ── */
@@ -164,7 +165,7 @@ function CardMenu({ anchorRect, onClose, children }) {
 
 /* ── Carte deal ───────────────────────────────────────────────────────────── */
 
-function DealCard({ deal, stages, onAction }) {
+function DealCard({ deal, stages, onAction, onOpen }) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } =
     useSortable({ id: deal.id });
   const [menuOpen, setMenuOpen] = useState(false);
@@ -214,7 +215,7 @@ function DealCard({ deal, stages, onAction }) {
           <GripVertical size={15} />
         </button>
 
-        <div className="min-w-0 flex-1">
+        <div className="min-w-0 flex-1 cursor-pointer" onClick={() => onOpen?.(deal)}>
           <div className="flex items-start justify-between gap-2">
             <p className="min-w-0 break-words text-[13.5px] font-semibold leading-snug lp-ink">
               {deal.title || 'Sans titre'}
@@ -225,7 +226,7 @@ function DealCard({ deal, stages, onAction }) {
               aria-label="Actions du deal"
               aria-haspopup="menu"
               aria-expanded={menuOpen}
-              onClick={() => (menuOpen ? close() : openMenu())}
+              onClick={(e) => { e.stopPropagation(); menuOpen ? close() : openMenu(); }}
               className={`grid h-7 w-7 shrink-0 cursor-pointer place-items-center rounded-lg lp-muted lp-railbtn lp-tr ${
                 menuOpen ? 'opacity-100' : 'opacity-0 focus:opacity-100 group-hover:opacity-100'
               }`}
@@ -338,7 +339,7 @@ function DealCard({ deal, stages, onAction }) {
 
 /* ── Colonne (stage) ──────────────────────────────────────────────────────── */
 
-function BoardColumn({ column, stages, onAction }) {
+function BoardColumn({ column, stages, onAction, onOpen }) {
   const { setNodeRef, isOver } = useDroppable({ id: column.id });
   const total = columnTotalsLabel(column.deals);
   const dealIds = column.deals.map((d) => d.id);
@@ -380,7 +381,7 @@ function BoardColumn({ column, stages, onAction }) {
       >
         <SortableContext items={dealIds} strategy={verticalListSortingStrategy}>
           {column.deals.map((deal) => (
-            <DealCard key={deal.id} deal={deal} stages={stages} onAction={onAction} />
+            <DealCard key={deal.id} deal={deal} stages={stages} onAction={onAction} onOpen={onOpen} />
           ))}
         </SortableContext>
         {column.deals.length === 0 && (
@@ -758,6 +759,7 @@ export default function CrmPipelineBoard() {
   const [showCreate, setShowCreate] = useState(false);
   const [pendingDelete, setPendingDelete] = useState(null);
   const [deleting, setDeleting] = useState(false);
+  const [detailDeal, setDetailDeal] = useState(null);
   const reqRef = useRef(0);
   const columnsRef = useRef(columns);
   useEffect(() => {
@@ -1040,7 +1042,7 @@ export default function CrmPipelineBoard() {
         <DndContext sensors={sensors} collisionDetection={closestCorners} onDragEnd={onDragEnd}>
           <div className="lp-scroll flex gap-4 overflow-x-auto pb-2">
             {columns.map((col) => (
-              <BoardColumn key={col.id} column={col} stages={stagesForModal} onAction={handleAction} />
+              <BoardColumn key={col.id} column={col} stages={stagesForModal} onAction={handleAction} onOpen={setDetailDeal} />
             ))}
           </div>
         </DndContext>
@@ -1064,6 +1066,15 @@ export default function CrmPipelineBoard() {
           busy={deleting}
           onCancel={() => (deleting ? null : setPendingDelete(null))}
           onConfirm={confirmDelete}
+        />
+      )}
+
+      {detailDeal && (
+        <CrmDealDetail
+          deal={detailDeal}
+          stages={stagesForModal}
+          onClose={() => setDetailDeal(null)}
+          onChanged={refetchBoard}
         />
       )}
     </div>
