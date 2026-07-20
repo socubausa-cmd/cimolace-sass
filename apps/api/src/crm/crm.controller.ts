@@ -7,6 +7,7 @@ import {
   Patch,
   Post,
   Query,
+  Res,
   UseGuards,
 } from '@nestjs/common';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
@@ -62,10 +63,11 @@ export class CrmController {
   listCompanies(
     @CurrentTenant() t: TenantContext,
     @Query('search') search?: string,
+    @Query('owner_id') ownerId?: string,
     @Query('limit') limit?: string,
     @Query('offset') offset?: string,
   ) {
-    return this.svc.listCompanies(t.id, { search, limit: Number(limit) || 50, offset: Number(offset) || 0 });
+    return this.svc.listCompanies(t.id, { search, ownerId, limit: Number(limit) || 50, offset: Number(offset) || 0 });
   }
 
   @Post('companies')
@@ -89,6 +91,22 @@ export class CrmController {
     return this.svc.getCompanyPlatformLink(t.id, id);
   }
 
+  // Fusion de sociétés (#19) : réassigne contacts/deals/historique puis supprime le perdant.
+  @Post('companies/:id/merge')
+  mergeCompanies(@CurrentTenant() t: TenantContext, @Param('id') id: string, @Body() body: { into?: string }) {
+    return this.svc.mergeCompanies(t.id, String(body?.into || ''), id);
+  }
+
+  // Export CSV serveur (#26) : ?entity=contacts|companies|deals.
+  @Get('export')
+  async exportCsv(@CurrentTenant() t: TenantContext, @Query('entity') entity: string, @Res() res: any) {
+    const safe = ['contacts', 'companies', 'deals'].includes(String(entity)) ? String(entity) : 'contacts';
+    const csv = await this.svc.exportCsv(t.id, safe);
+    res.setHeader('Content-Type', 'text/csv; charset=utf-8');
+    res.setHeader('Content-Disposition', `attachment; filename="crm-${safe}.csv"`);
+    res.send(csv);
+  }
+
   // ─── Contacts ──────────────────────────────────────────────────────────────
   @Get('contacts')
   listContacts(
@@ -96,12 +114,29 @@ export class CrmController {
     @Query('search') search?: string,
     @Query('company_id') companyId?: string,
     @Query('status') status?: string,
+    @Query('owner_id') ownerId?: string,
     @Query('limit') limit?: string,
     @Query('offset') offset?: string,
   ) {
     return this.svc.listContacts(t.id, {
-      search, companyId, status, limit: Number(limit) || 50, offset: Number(offset) || 0,
+      search, companyId, status, ownerId, limit: Number(limit) || 50, offset: Number(offset) || 0,
     });
+  }
+
+  // Fusion (#19), RGPD anonymisation + export DSAR (#20).
+  @Post('contacts/:id/merge')
+  mergeContacts(@CurrentTenant() t: TenantContext, @Param('id') id: string, @Body() body: { into?: string }) {
+    return this.svc.mergeContacts(t.id, String(body?.into || ''), id);
+  }
+
+  @Post('contacts/:id/anonymize')
+  anonymizeContact(@CurrentTenant() t: TenantContext, @Param('id') id: string) {
+    return this.svc.anonymizeContact(t.id, id);
+  }
+
+  @Get('contacts/:id/export')
+  exportContact(@CurrentTenant() t: TenantContext, @Param('id') id: string) {
+    return this.svc.exportContact(t.id, id);
   }
 
   @Post('contacts')
@@ -160,15 +195,50 @@ export class CrmController {
     return this.svc.createPipeline(t.id, body);
   }
 
+  @Patch('pipelines/:id')
+  updatePipeline(@CurrentTenant() t: TenantContext, @Param('id') id: string, @Body() body: any) {
+    return this.svc.updatePipeline(t.id, id, body);
+  }
+
+  @Delete('pipelines/:id')
+  deletePipeline(@CurrentTenant() t: TenantContext, @Param('id') id: string) {
+    return this.svc.deletePipeline(t.id, id);
+  }
+
   @Get('pipelines/:id/stages')
   listStages(@CurrentTenant() t: TenantContext, @Param('id') id: string) {
     return this.svc.listStages(t.id, id);
   }
 
+  @Post('pipelines/:id/stages/reorder')
+  reorderStages(@CurrentTenant() t: TenantContext, @Param('id') id: string, @Body() body: { stage_ids?: string[] }) {
+    return this.svc.reorderStages(t.id, id, body?.stage_ids || []);
+  }
+
+  // ─── Étapes (CRUD) ───────────────────────────────────────────────────────────
+  @Post('stages')
+  createStage(@CurrentTenant() t: TenantContext, @Body() body: any) {
+    return this.svc.createStage(t.id, body);
+  }
+
+  @Patch('stages/:id')
+  updateStage(@CurrentTenant() t: TenantContext, @Param('id') id: string, @Body() body: any) {
+    return this.svc.updateStage(t.id, id, body);
+  }
+
+  @Delete('stages/:id')
+  deleteStage(@CurrentTenant() t: TenantContext, @Param('id') id: string) {
+    return this.svc.deleteStage(t.id, id);
+  }
+
   // ─── Deals (kanban) ────────────────────────────────────────────────────────
   @Get('deals/board')
-  dealsBoard(@CurrentTenant() t: TenantContext, @Query('pipeline_id') pipelineId?: string) {
-    return this.svc.dealsBoard(t.id, pipelineId);
+  dealsBoard(
+    @CurrentTenant() t: TenantContext,
+    @Query('pipeline_id') pipelineId?: string,
+    @Query('owner_id') ownerId?: string,
+  ) {
+    return this.svc.dealsBoard(t.id, pipelineId, ownerId);
   }
 
   @Post('deals')
@@ -213,8 +283,10 @@ export class CrmController {
     @Query('status') status?: string,
     @Query('entity_type') entityType?: string,
     @Query('entity_id') entityId?: string,
+    @Query('assignee_id') assigneeId?: string,
+    @Query('due') due?: string,
   ) {
-    return this.svc.listTasks(t.id, { status, entityType, entityId });
+    return this.svc.listTasks(t.id, { status, entityType, entityId, assigneeId, due });
   }
 
   @Post('tasks')

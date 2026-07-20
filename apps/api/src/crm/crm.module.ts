@@ -6,7 +6,9 @@ import { MarketingModule } from '../marketing/marketing.module';
 import { LiriPublicModule } from '../liri-public/liri-public.module';
 import { MessagingModule } from '../messaging/messaging.module';
 import { EmailEngineModule } from '../email-engine/email-engine.module';
+import { ApiKeyGuard } from '../liri-public/api-key.guard';
 import { CrmController } from './crm.controller';
+import { CrmHeadlessController } from './crm-headless.controller';
 import { CrmService } from './crm.service';
 
 // MarketingModule = bus d'automations (événements CRM → automations tenant).
@@ -15,8 +17,8 @@ import { CrmService } from './crm.service';
 // EmailEngineModule = notification email (assignee de tâche) via la clé Resend du tenant.
 @Module({
   imports: [AuthModule, TenantModule, SupabaseModule, MarketingModule, LiriPublicModule, MessagingModule, EmailEngineModule],
-  controllers: [CrmController],
-  providers: [CrmService],
+  controllers: [CrmController, CrmHeadlessController],
+  providers: [CrmService, ApiKeyGuard],
   exports: [CrmService],
 })
 export class CrmModule {}

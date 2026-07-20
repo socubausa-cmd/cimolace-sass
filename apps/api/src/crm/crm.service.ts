@@ -90,7 +90,7 @@ export class CrmService {
 
   async listCompanies(
     tenantId: string,
-    opts: { search?: string; limit?: number; offset?: number } = {},
+    opts: { search?: string; ownerId?: string; limit?: number; offset?: number } = {},
   ) {
     let q = this.db()
       .from('crm_companies')
@@ -99,6 +99,7 @@ export class CrmService {
       .order('created_at', { ascending: false })
       .range(opts.offset ?? 0, (opts.offset ?? 0) + (opts.limit ?? 50) - 1);
     if (opts.search) q = q.ilike('name', `%${opts.search}%`);
+    if (opts.ownerId) q = q.eq('owner_id', opts.ownerId);
     const { data, error } = await q;
     if (error) throw new BadRequestException(error.message);
     return { companies: data ?? [] };
@@ -144,7 +145,7 @@ export class CrmService {
 
   async listContacts(
     tenantId: string,
-    opts: { search?: string; companyId?: string; status?: string; limit?: number; offset?: number } = {},
+    opts: { search?: string; companyId?: string; status?: string; ownerId?: string; limit?: number; offset?: number } = {},
   ) {
     let q = this.db()
       .from('crm_contacts')
@@ -154,6 +155,7 @@ export class CrmService {
       .range(opts.offset ?? 0, (opts.offset ?? 0) + (opts.limit ?? 50) - 1);
     if (opts.companyId) q = q.eq('company_id', opts.companyId);
     if (opts.status) q = q.eq('status', opts.status);
+    if (opts.ownerId) q = q.eq('owner_id', opts.ownerId);
     if (opts.search) q = q.or(`first_name.ilike.%${opts.search}%,last_name.ilike.%${opts.search}%,email.ilike.%${opts.search}%`);
     const { data, error } = await q;
     if (error) throw new BadRequestException(error.message);
@@ -415,6 +417,89 @@ export class CrmService {
     return { stages: data ?? [] };
   }
 
+  // ─── CRUD pipelines & étapes (#10) — le tenant n'est plus figé sur les 6 étapes seedées ──
+  private static PIPELINE_FIELDS = ['name', 'is_default', 'position'];
+  private static STAGE_FIELDS = ['name', 'position', 'win_probability', 'is_won', 'is_lost'];
+
+  async updatePipeline(tenantId: string, id: string, body: any) {
+    CrmService.requireId(id);
+    const patch = CrmService.pick(body, CrmService.PIPELINE_FIELDS);
+    if (Object.keys(patch).length === 0) throw new BadRequestException('aucun champ à mettre à jour');
+    const { data, error } = await this.db().from('crm_pipelines').update(patch)
+      .eq('tenant_id', tenantId).eq('id', id).select().maybeSingle();
+    if (error) throw new BadRequestException(error.message);
+    if (!data) throw new NotFoundException('pipeline introuvable');
+    return data;
+  }
+
+  async deletePipeline(tenantId: string, id: string) {
+    CrmService.requireId(id);
+    // Refuser la suppression du dernier pipeline (garde-fou : dealsBoard exige un pipeline).
+    const { count } = await this.db().from('crm_pipelines')
+      .select('id', { count: 'exact', head: true }).eq('tenant_id', tenantId);
+    if ((count ?? 0) <= 1) throw new BadRequestException('impossible de supprimer le dernier pipeline');
+    // Refuser un pipeline non vide (sinon ses étapes cascadent et ses deals perdent leur étape).
+    const { count: dealCount } = await this.db().from('crm_deals')
+      .select('id', { count: 'exact', head: true }).eq('tenant_id', tenantId).eq('pipeline_id', id);
+    if (dealCount) throw new BadRequestException(`pipeline non vide (${dealCount} deal(s)) — déplacez ses deals avant de le supprimer`);
+    const { error } = await this.db().from('crm_pipelines').delete().eq('tenant_id', tenantId).eq('id', id);
+    if (error) throw new BadRequestException(error.message);
+    return { ok: true };
+  }
+
+  async createStage(tenantId: string, body: any) {
+    const pipelineId = CrmService.requireId(body?.pipeline_id, 'pipeline_id');
+    const name = String(body?.name || '').trim();
+    if (!name) throw new BadRequestException('name requis');
+    // Le pipeline doit appartenir au tenant.
+    const { data: pl } = await this.db().from('crm_pipelines').select('id').eq('tenant_id', tenantId).eq('id', pipelineId).maybeSingle();
+    if (!pl) throw new NotFoundException('pipeline introuvable');
+    let position = Number(body?.position);
+    if (!Number.isFinite(position)) {
+      const { data: last } = await this.db().from('crm_stages').select('position')
+        .eq('tenant_id', tenantId).eq('pipeline_id', pipelineId).order('position', { ascending: false }).limit(1).maybeSingle();
+      position = (Number(last?.position) || 0) + 1;
+    }
+    const row = {
+      ...CrmService.pick(body, CrmService.STAGE_FIELDS),
+      tenant_id: tenantId, pipeline_id: pipelineId, name, position,
+      is_won: !!body?.is_won, is_lost: !!body?.is_lost,
+    };
+    const { data, error } = await this.db().from('crm_stages').insert(row).select().single();
+    if (error) throw new BadRequestException(error.message);
+    return data;
+  }
+
+  async updateStage(tenantId: string, id: string, body: any) {
+    CrmService.requireId(id);
+    const patch = CrmService.pick(body, CrmService.STAGE_FIELDS);
+    if (Object.keys(patch).length === 0) throw new BadRequestException('aucun champ à mettre à jour');
+    const { data, error } = await this.db().from('crm_stages').update(patch)
+      .eq('tenant_id', tenantId).eq('id', id).select().maybeSingle();
+    if (error) throw new BadRequestException(error.message);
+    if (!data) throw new NotFoundException('étape introuvable');
+    return data;
+  }
+
+  async deleteStage(tenantId: string, id: string) {
+    CrmService.requireId(id);
+    // crm_deals.stage_id → ON DELETE SET NULL (deals orphelins gérés par dealsBoard.orphans).
+    const { error } = await this.db().from('crm_stages').delete().eq('tenant_id', tenantId).eq('id', id);
+    if (error) throw new BadRequestException(error.message);
+    return { ok: true };
+  }
+
+  /** Réordonne les étapes d'un pipeline (positions = index dans la liste fournie). Best-effort séquentiel. */
+  async reorderStages(tenantId: string, pipelineId: string, orderedIds: string[]) {
+    CrmService.requireId(pipelineId, 'pipelineId');
+    if (!Array.isArray(orderedIds) || !orderedIds.length) throw new BadRequestException('orderedIds requis');
+    for (let i = 0; i < orderedIds.length; i++) {
+      await this.db().from('crm_stages').update({ position: i })
+        .eq('tenant_id', tenantId).eq('pipeline_id', pipelineId).eq('id', orderedIds[i]);
+    }
+    return this.listStages(tenantId, pipelineId);
+  }
+
   // ─── Deals (kanban) ────────────────────────────────────────────────────────
   private static DEAL_FIELDS = [
     'pipeline_id', 'stage_id', 'company_id', 'contact_id', 'title',
@@ -422,20 +507,22 @@ export class CrmService {
   ];
 
   /** Vue kanban : le pipeline (défaut si non fourni) + ses étapes, chacune avec ses deals. */
-  async dealsBoard(tenantId: string, pipelineId?: string) {
+  async dealsBoard(tenantId: string, pipelineId?: string, ownerId?: string) {
     const pipeline = pipelineId
       ? (await this.db().from('crm_pipelines').select('*').eq('tenant_id', tenantId).eq('id', pipelineId).maybeSingle()).data
       : await this.ensureDefaultPipeline(tenantId);
     if (!pipeline) throw new NotFoundException('pipeline introuvable');
 
+    let dealsQ = this.db().from('crm_deals')
+      .select('*, company:crm_companies(id,name), contact:crm_contacts(id,first_name,last_name)')
+      .eq('tenant_id', tenantId).eq('pipeline_id', pipeline.id)
+      .order('position', { ascending: true });
+    if (ownerId) dealsQ = dealsQ.eq('owner_id', ownerId);
     const [{ data: stages }, { data: deals }] = await Promise.all([
       this.db().from('crm_stages').select('*')
         .eq('tenant_id', tenantId).eq('pipeline_id', pipeline.id)
         .order('position', { ascending: true }),
-      this.db().from('crm_deals')
-        .select('*, company:crm_companies(id,name), contact:crm_contacts(id,first_name,last_name)')
-        .eq('tenant_id', tenantId).eq('pipeline_id', pipeline.id)
-        .order('position', { ascending: true }),
+      dealsQ,
     ]);
 
     const byStage = new Map<string, any[]>();
@@ -455,6 +542,9 @@ export class CrmService {
   async createDeal(tenantId: string, body: any) {
     const title = String(body?.title || '').trim();
     if (!title) throw new BadRequestException('title requis');
+    // #8 : les références fournies doivent appartenir au tenant (anti-rattachement cross-tenant).
+    if (body?.company_id) await this.assertEntityExists(tenantId, 'company', String(body.company_id));
+    if (body?.contact_id) await this.assertEntityExists(tenantId, 'contact', String(body.contact_id));
     let pipelineId = String(body?.pipeline_id || '').trim();
     let stageId = String(body?.stage_id || '').trim();
     if (!pipelineId) {
@@ -488,6 +578,8 @@ export class CrmService {
     CrmService.requireId(id);
     const patch = CrmService.pick(body, CrmService.DEAL_FIELDS);
     if (Object.keys(patch).length === 0) throw new BadRequestException('aucun champ à mettre à jour');
+    if (patch.company_id) await this.assertEntityExists(tenantId, 'company', String(patch.company_id));
+    if (patch.contact_id) await this.assertEntityExists(tenantId, 'contact', String(patch.contact_id));
     // État PRÉCÉDENT : ne déclencher les automations/webhooks que sur un CHANGEMENT réel
     // (transition won/lost pour l'email ; changement d'étape effectif pour stage_moved).
     let prevStatus: string | null = null;
@@ -497,6 +589,12 @@ export class CrmService {
         .from('crm_deals').select('status, stage_id').eq('tenant_id', tenantId).eq('id', id).maybeSingle();
       prevStatus = cur?.status ?? null;
       prevStageId = cur?.stage_id ?? null;
+    }
+    // #10 : déplacer un deal vers une étape is_won/is_lost DÉRIVE le statut (sauf statut explicite).
+    if (patch.stage_id !== undefined && patch.status === undefined) {
+      const { data: st } = await this.db().from('crm_stages').select('is_won, is_lost')
+        .eq('tenant_id', tenantId).eq('id', patch.stage_id).maybeSingle();
+      if (st) patch.status = st.is_won ? 'won' : st.is_lost ? 'lost' : 'open';
     }
     // Cohérence statut/clôture : si won/lost, horodater closed_at ; si ré-ouvert, l'effacer.
     if (patch.status === 'won' || patch.status === 'lost') patch.closed_at = new Date().toISOString();
@@ -568,6 +666,7 @@ export class CrmService {
     const entityType = String(body?.entity_type || '');
     CrmService.assertEntityType(entityType);
     const entityId = CrmService.requireId(body?.entity_id, 'entity_id');
+    await this.assertEntityExists(tenantId, entityType, entityId); // #21 : rattachement valide
     const bodyText = String(body?.body || '').trim();
     if (!bodyText) throw new BadRequestException('body requis');
     const row = {
@@ -594,13 +693,18 @@ export class CrmService {
 
   async listTasks(
     tenantId: string,
-    opts: { status?: string; entityType?: string; entityId?: string } = {},
+    opts: { status?: string; entityType?: string; entityId?: string; assigneeId?: string; due?: string } = {},
   ) {
     let q = this.db().from('crm_tasks').select('*').eq('tenant_id', tenantId)
       .order('due_date', { ascending: true, nullsFirst: false });
     if (opts.status) q = q.eq('status', opts.status);
     if (opts.entityType) q = q.eq('entity_type', opts.entityType);
     if (opts.entityId) q = q.eq('entity_id', opts.entityId);
+    if (opts.assigneeId) q = q.eq('assignee_id', opts.assigneeId);
+    const today = new Date().toISOString().slice(0, 10);
+    if (opts.due === 'overdue') q = q.lt('due_date', today).neq('status', 'done');
+    else if (opts.due === 'today') q = q.eq('due_date', today);
+    else if (opts.due === 'upcoming') q = q.gt('due_date', today);
     const { data, error } = await q;
     if (error) throw new BadRequestException(error.message);
     return { tasks: data ?? [] };
@@ -609,7 +713,12 @@ export class CrmService {
   async createTask(tenantId: string, body: any) {
     const title = String(body?.title || '').trim();
     if (!title) throw new BadRequestException('title requis');
-    if (body?.entity_type) CrmService.assertEntityType(String(body.entity_type));
+    if (body?.entity_type) {
+      CrmService.assertEntityType(String(body.entity_type));
+      if (body?.entity_id) await this.assertEntityExists(tenantId, String(body.entity_type), String(body.entity_id));
+    }
+    // #11 : assignee invalide (non membre actif) → ignoré silencieusement plutôt que rattaché à un fantôme.
+    if (body?.assignee_id && !(await this.isActiveMember(tenantId, String(body.assignee_id)))) body.assignee_id = null;
     const row = { ...CrmService.pick(body, CrmService.TASK_FIELDS), title, tenant_id: tenantId };
     const { data, error } = await this.db().from('crm_tasks').insert(row).select().single();
     if (error) throw new BadRequestException(error.message);
@@ -658,6 +767,9 @@ export class CrmService {
     CrmService.requireId(id);
     const patch = CrmService.pick(body, CrmService.TASK_FIELDS);
     if (Object.keys(patch).length === 0) throw new BadRequestException('aucun champ à mettre à jour');
+    // #11 : un nouvel assignee doit être membre actif ; null autorisé (désassignation).
+    if (patch.assignee_id && !(await this.isActiveMember(tenantId, String(patch.assignee_id)))) patch.assignee_id = null;
+    if (patch.entity_type && patch.entity_id) await this.assertEntityExists(tenantId, String(patch.entity_type), String(patch.entity_id));
     if (patch.status === 'done') patch.completed_at = new Date().toISOString();
     else if (patch.status === 'open') patch.completed_at = null;
     const { data, error } = await this.db()
@@ -711,6 +823,7 @@ export class CrmService {
     const entityType = String(body?.entity_type || '');
     CrmService.assertEntityType(entityType);
     const entityId = CrmService.requireId(body?.entity_id, 'entity_id');
+    await this.assertEntityExists(tenantId, entityType, entityId); // #21 : entité valide dans le tenant
     // Le tag doit appartenir au tenant (garde-fou anti cross-tenant).
     const { data: tag } = await this.db()
       .from('crm_tags').select('id').eq('tenant_id', tenantId).eq('id', tagId).maybeSingle();
@@ -741,11 +854,15 @@ export class CrmService {
       const { count } = await q;
       return count ?? 0;
     };
-    const [companies, contacts, openDeals, wonDeals] = await Promise.all([
+    const today = new Date().toISOString().slice(0, 10);
+    const [companies, contacts, openDeals, wonDeals, tasksOpen, tasksDueToday, tasksOverdue] = await Promise.all([
       countOf('crm_companies'),
       countOf('crm_contacts'),
       countOf('crm_deals', (q) => q.eq('status', 'open')),
       countOf('crm_deals', (q) => q.eq('status', 'won')),
+      countOf('crm_tasks', (q) => q.neq('status', 'done')),
+      countOf('crm_tasks', (q) => q.eq('due_date', today).neq('status', 'done')),
+      countOf('crm_tasks', (q) => q.lt('due_date', today).neq('status', 'done')),
     ]);
     // Valeur du pipeline ouvert (somme amount des deals open).
     const { data: openRows } = await db.from('crm_deals')
@@ -755,7 +872,10 @@ export class CrmService {
       const cur = r.currency || 'EUR';
       pipelineValue[cur] = (pipelineValue[cur] || 0) + Number(r.amount || 0);
     }
-    return { companies, contacts, openDeals, wonDeals, pipelineValue };
+    return {
+      companies, contacts, openDeals, wonDeals, pipelineValue,
+      tasks: { open: tasksOpen, dueToday: tasksDueToday, overdue: tasksOverdue },
+    };
   }
 
   // ─── Timeline d'activités (Vague 4) ──────────────────────────────────────────
@@ -814,6 +934,11 @@ export class CrmService {
   /** Échappe les métacaractères LIKE (%, _, \) pour un match email insensible à la casse et sûr. */
   private static escapeLike(value: string): string {
     return value.replace(/[\\%_]/g, (m) => `\\${m}`);
+  }
+
+  /** Lève si un résultat supabase-js porte une erreur (les writes ne throw pas d'eux-mêmes). */
+  private static chk(r: any): void {
+    if (r?.error) throw new BadRequestException(r.error.message);
   }
 
   /** SELECT best-effort : renvoie [] sur toute erreur (table absente, drift schéma…). */
@@ -1324,5 +1449,140 @@ export class CrmService {
       forecast: Math.round(forecast * 100) / 100,
       pipelineValue, byStage, leaderboard, avgCycleDays,
     };
+  }
+
+  // ─── Intégrité (#21) ──────────────────────────────────────────────────────────
+  /** Vérifie qu'une entité (contact/company/deal) existe DANS le tenant (anti-rattachement fantôme). */
+  private async assertEntityExists(tenantId: string, entityType: string, entityId: string): Promise<void> {
+    const table = entityType === 'contact' ? 'crm_contacts' : entityType === 'company' ? 'crm_companies' : 'crm_deals';
+    const { data } = await this.db().from(table).select('id').eq('tenant_id', tenantId).eq('id', entityId).maybeSingle();
+    if (!data) throw new NotFoundException(`${entityType} introuvable`);
+  }
+
+  /** Vrai si user_id est un membre ACTIF du tenant (pour valider owner_id/assignee_id). */
+  private async isActiveMember(tenantId: string, userId: string): Promise<boolean> {
+    if (!userId) return false;
+    const rows = await this.safeRows(() =>
+      this.db().from('tenant_memberships').select('user_id')
+        .eq('tenant_id', tenantId).eq('user_id', userId).eq('status', 'active').limit(1),
+    );
+    return !!rows[0];
+  }
+
+  // ─── Fusion d'enregistrements (#19) ──────────────────────────────────────────
+  /** Fusionne deux contacts : réassigne deals + notes/tâches/activités, complète les vides, supprime le perdant. */
+  async mergeContacts(tenantId: string, keepId: string, loseId: string) {
+    CrmService.requireId(keepId, 'keepId');
+    CrmService.requireId(loseId, 'loseId');
+    if (keepId === loseId) throw new BadRequestException('identifiants identiques');
+    const { data: keep } = await this.db().from('crm_contacts').select('*').eq('tenant_id', tenantId).eq('id', keepId).maybeSingle();
+    const { data: lose } = await this.db().from('crm_contacts').select('*').eq('tenant_id', tenantId).eq('id', loseId).maybeSingle();
+    if (!keep || !lose) throw new NotFoundException('contact introuvable');
+    // 1) réassigner deals + historique : erreurs VÉRIFIÉES → on ne supprime JAMAIS le perdant sur échec
+    //    (état re-jouable plutôt que deals NULLés / historique orphelin).
+    CrmService.chk(await this.db().from('crm_deals').update({ contact_id: keepId }).eq('tenant_id', tenantId).eq('contact_id', loseId));
+    for (const t of ['crm_notes', 'crm_tasks', 'crm_activities']) {
+      CrmService.chk(await this.db().from(t).update({ entity_id: keepId }).eq('tenant_id', tenantId).eq('entity_type', 'contact').eq('entity_id', loseId));
+    }
+    // Tags du perdant : supprimés (ceux du gagnant priment ; évite les collisions d'unicité).
+    await this.db().from('crm_taggables').delete().eq('tenant_id', tenantId).eq('entity_type', 'contact').eq('entity_id', loseId);
+    // 2) email/user_id sont sous unique partiel → le perdant doit DISPARAÎTRE avant qu'on copie ses
+    //    valeurs sur le gagnant (sinon violation 23505). Ordre : calculer le fill → delete → fill.
+    const fill: Record<string, any> = {};
+    for (const f of ['first_name', 'last_name', 'email', 'phone', 'title', 'company_id', 'user_id', 'lead_id']) {
+      if ((keep as any)[f] == null && (lose as any)[f] != null) fill[f] = (lose as any)[f];
+    }
+    CrmService.chk(await this.db().from('crm_contacts').delete().eq('tenant_id', tenantId).eq('id', loseId));
+    if (Object.keys(fill).length) {
+      CrmService.chk(await this.db().from('crm_contacts').update(fill).eq('tenant_id', tenantId).eq('id', keepId));
+    }
+    await this.recordActivity(tenantId, { entityType: 'contact', entityId: keepId, type: 'contact_merged', title: 'Contacts fusionnés', meta: { merged_from: loseId } });
+    const { data } = await this.db().from('crm_contacts').select('*').eq('tenant_id', tenantId).eq('id', keepId).maybeSingle();
+    return data;
+  }
+
+  /** Fusionne deux sociétés : réassigne contacts + deals + notes/tâches/activités, complète, supprime le perdant. */
+  async mergeCompanies(tenantId: string, keepId: string, loseId: string) {
+    CrmService.requireId(keepId, 'keepId');
+    CrmService.requireId(loseId, 'loseId');
+    if (keepId === loseId) throw new BadRequestException('identifiants identiques');
+    const { data: keep } = await this.db().from('crm_companies').select('*').eq('tenant_id', tenantId).eq('id', keepId).maybeSingle();
+    const { data: lose } = await this.db().from('crm_companies').select('*').eq('tenant_id', tenantId).eq('id', loseId).maybeSingle();
+    if (!keep || !lose) throw new NotFoundException('société introuvable');
+    CrmService.chk(await this.db().from('crm_contacts').update({ company_id: keepId }).eq('tenant_id', tenantId).eq('company_id', loseId));
+    CrmService.chk(await this.db().from('crm_deals').update({ company_id: keepId }).eq('tenant_id', tenantId).eq('company_id', loseId));
+    for (const t of ['crm_notes', 'crm_tasks', 'crm_activities']) {
+      CrmService.chk(await this.db().from(t).update({ entity_id: keepId }).eq('tenant_id', tenantId).eq('entity_type', 'company').eq('entity_id', loseId));
+    }
+    await this.db().from('crm_taggables').delete().eq('tenant_id', tenantId).eq('entity_type', 'company').eq('entity_id', loseId);
+    const fill: Record<string, any> = {};
+    for (const f of ['website', 'industry', 'size', 'phone', 'address', 'city', 'country', 'description']) {
+      if ((keep as any)[f] == null && (lose as any)[f] != null) fill[f] = (lose as any)[f];
+    }
+    CrmService.chk(await this.db().from('crm_companies').delete().eq('tenant_id', tenantId).eq('id', loseId));
+    if (Object.keys(fill).length) {
+      CrmService.chk(await this.db().from('crm_companies').update(fill).eq('tenant_id', tenantId).eq('id', keepId));
+    }
+    await this.recordActivity(tenantId, { entityType: 'company', entityId: keepId, type: 'company_merged', title: 'Sociétés fusionnées', meta: { merged_from: loseId } });
+    const { data } = await this.db().from('crm_companies').select('*').eq('tenant_id', tenantId).eq('id', keepId).maybeSingle();
+    return data;
+  }
+
+  // ─── RGPD (#20) ───────────────────────────────────────────────────────────────
+  /** Anonymise un contact (efface la PII, conserve les agrégats deals). L'email nullé neutralise
+   *  la recréation par les triggers entrants (compatible avec l'unique partiel WHERE email IS NOT NULL). */
+  async anonymizeContact(tenantId: string, id: string) {
+    CrmService.requireId(id);
+    const { data, error } = await this.db().from('crm_contacts')
+      .update({ first_name: null, last_name: '(anonymisé)', email: null, phone: null, user_id: null, source: 'anonymized' })
+      .eq('tenant_id', tenantId).eq('id', id).select().maybeSingle();
+    if (error) throw new BadRequestException(error.message);
+    if (!data) throw new NotFoundException('contact introuvable');
+    // Effacer toutes les données personnelles rattachées (notes/tâches/activités peuvent contenir de la PII).
+    for (const t of ['crm_notes', 'crm_tasks', 'crm_activities']) {
+      await this.db().from(t).delete().eq('tenant_id', tenantId).eq('entity_type', 'contact').eq('entity_id', id);
+    }
+    await this.recordActivity(tenantId, { entityType: 'contact', entityId: id, type: 'contact_anonymized', title: 'Contact anonymisé (RGPD)' });
+    return { ok: true };
+  }
+
+  /** Export DSAR : toutes les données CRM d'un contact (JSON). */
+  async exportContact(tenantId: string, id: string) {
+    CrmService.requireId(id);
+    const { data: contact } = await this.db().from('crm_contacts').select('*').eq('tenant_id', tenantId).eq('id', id).maybeSingle();
+    if (!contact) throw new NotFoundException('contact introuvable');
+    const [notes, tasks, activities, deals] = await Promise.all([
+      this.safeRows(() => this.db().from('crm_notes').select('*').eq('tenant_id', tenantId).eq('entity_type', 'contact').eq('entity_id', id)),
+      this.safeRows(() => this.db().from('crm_tasks').select('*').eq('tenant_id', tenantId).eq('entity_type', 'contact').eq('entity_id', id)),
+      this.safeRows(() => this.db().from('crm_activities').select('*').eq('tenant_id', tenantId).eq('entity_type', 'contact').eq('entity_id', id)),
+      this.safeRows(() => this.db().from('crm_deals').select('*').eq('tenant_id', tenantId).eq('contact_id', id)),
+    ]);
+    return { contact, notes, tasks, activities, deals, exportedAt: null };
+  }
+
+  // ─── Export CSV serveur (#26) ────────────────────────────────────────────────
+  /** Exporte contacts|companies|deals en CSV (tenant-scopé, plafonné). */
+  async exportCsv(tenantId: string, entity: string): Promise<string> {
+    const esc = (v: any) => {
+      let s = v == null ? '' : String(v);
+      // Anti-injection de formule (Excel/Sheets) : préfixer les déclencheurs par une apostrophe.
+      if (/^[=+\-@\t\r]/.test(s)) s = `'${s}`;
+      return /[",\n\r;]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
+    };
+    let cols: string[] = [];
+    let rows: any[] = [];
+    if (entity === 'companies') {
+      cols = ['name', 'website', 'industry', 'size', 'phone', 'city', 'country', 'created_at'];
+      rows = await this.safeRows(() => this.db().from('crm_companies').select(cols.join(',')).eq('tenant_id', tenantId).limit(10000));
+    } else if (entity === 'deals') {
+      cols = ['title', 'amount', 'currency', 'status', 'expected_close_date', 'created_at'];
+      rows = await this.safeRows(() => this.db().from('crm_deals').select(cols.join(',')).eq('tenant_id', tenantId).limit(10000));
+    } else {
+      cols = ['first_name', 'last_name', 'email', 'phone', 'title', 'status', 'source', 'created_at'];
+      rows = await this.safeRows(() => this.db().from('crm_contacts').select(cols.join(',')).eq('tenant_id', tenantId).limit(10000));
+    }
+    const head = cols.join(',');
+    const body = rows.map((r) => cols.map((c) => esc(r[c])).join(',')).join('\n');
+    return `﻿${head}\n${body}`; // BOM UTF-8 pour Excel
   }
 }
