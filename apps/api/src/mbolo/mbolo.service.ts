@@ -1,8 +1,9 @@
-import { Injectable, NotFoundException, BadRequestException, InternalServerErrorException } from '@nestjs/common';
-import { createHash, randomBytes } from 'crypto';
+import { Injectable, NotFoundException, BadRequestException, InternalServerErrorException, ServiceUnavailableException } from '@nestjs/common';
+import { createHash, randomBytes, randomUUID } from 'crypto';
 import { SupabaseService } from '../supabase/supabase.service';
 import { LiriEntitlementsService } from '../billing/liri-entitlements.service';
 import { TenantPaymentConfigService } from '../billing/tenant-payment-config/tenant-payment-config.service';
+import { PawaPayService } from '../pawapay/pawapay.service';
 
 const STOREFRONT_BASE = 'https://api.cimolace.space/v1/mbolo/storefront';
 const MBOLO_DOCS_URL = 'https://cimolace.space/mbolo/integration';
@@ -26,7 +27,30 @@ export class MboloService {
     private readonly supabase: SupabaseService,
     private readonly entitlements: LiriEntitlementsService,
     private readonly tenantPayments: TenantPaymentConfigService,
+    private readonly pawapay: PawaPayService,
   ) {}
+
+  // ─── Mobile Money (PawaPay) — réutilise l'infra Cimolace existante ───────
+  private pawapayBaseFromMode(mode: string | null | undefined): string | undefined {
+    if (!mode) return undefined;
+    return mode === 'live' || mode === 'production'
+      ? 'https://api.pawapay.io'
+      : 'https://api.sandbox.pawapay.io';
+  }
+  /** Override PawaPay du TENANT (tenant_payment_providers) ; undefined → token plateforme (env). */
+  private async resolvePawapay(tenantId: string): Promise<{ apiToken?: string; baseUrl?: string } | undefined> {
+    try {
+      const tp = await this.tenantPayments.resolveTenantProviderCreds(tenantId, 'pawapay');
+      if (tp?.creds?.api_token) return { apiToken: tp.creds.api_token, baseUrl: this.pawapayBaseFromMode(tp.mode) };
+    } catch {
+      /* fallback env plateforme */
+    }
+    return undefined;
+  }
+  private sanitizeCustomerMessage(s: string | null | undefined): string {
+    const m = String(s ?? '').replace(/[^a-zA-Z0-9 ]/g, '').trim().slice(0, 22);
+    return m.length >= 4 ? m : 'Paiement boutique';
+  }
 
   /**
    * Clé secrète Stripe du TENANT (moyens de paiement configurés dans son
@@ -698,6 +722,105 @@ export class MboloService {
         .eq('id', link.id).eq('tenant_id', tenantId);
     }
     return { paid, status: paid ? 'paid' : link.status };
+  }
+
+  // ─── Mobile Money (PawaPay) : COMMANDES — encaissement sur le compte du tenant ───
+  async createOrderMobileMoneyDeposit(
+    tenantId: string,
+    orderId: string,
+    dto: { phoneNumber: string; provider: string; country?: string },
+  ) {
+    const order = await this.getOrder(tenantId, orderId);
+    if (!order?.id) throw new NotFoundException('Commande introuvable');
+    if (order.payment_status === 'paid') throw new BadRequestException('Commande déjà payée');
+    if (!dto?.phoneNumber || !dto?.provider) throw new BadRequestException('phoneNumber et provider (opérateur) requis');
+    const override = await this.resolvePawapay(tenantId);
+    if (!override?.apiToken && !this.pawapay.isConfigured) {
+      throw new ServiceUnavailableException('Mobile Money indisponible (aucun token PawaPay tenant ni plateforme).');
+    }
+    const currency = (order.currency || 'XAF').toUpperCase();
+    const amount = Math.round((order.total_cents ?? 0) / 100); // CFA : unités entières
+    const depositId = randomUUID();
+    await (this.supabase.client as any).from('mbolo_orders')
+      .update({ payment_provider: 'pawapay', payment_session_id: depositId, updated_at: new Date().toISOString() })
+      .eq('id', order.id).eq('tenant_id', tenantId);
+    const result = await this.pawapay.initiateDeposit({
+      depositId,
+      amount: String(amount),
+      currency,
+      payer: { type: 'MMO', accountDetails: { phoneNumber: String(dto.phoneNumber).replace(/[^0-9]/g, ''), provider: dto.provider } },
+      customerMessage: this.sanitizeCustomerMessage(order.order_number),
+      metadata: ([{ tenantId }, { mboloOrderId: String(order.id) }] as Record<string, string>[])
+        .filter((m) => String(Object.values(m)[0] ?? '').length > 0),
+    }, override);
+    return { depositId, status: (result as any)?.status ?? 'ACCEPTED', amount, currency };
+  }
+  async confirmOrderMobileMoney(tenantId: string, orderId: string) {
+    const order = await this.getOrder(tenantId, orderId);
+    if (!order?.id) throw new NotFoundException('Commande introuvable');
+    if (order.payment_status === 'paid') return { paid: true, status: 'COMPLETED' };
+    if (!order.payment_session_id || order.payment_provider !== 'pawapay') {
+      return { paid: false, status: order.payment_status ?? 'unpaid' };
+    }
+    const override = await this.resolvePawapay(tenantId);
+    const dep = await this.pawapay.getDepositStatus(order.payment_session_id, override);
+    const status = (dep as any)?.status ?? 'UNKNOWN';
+    const paid = status === 'COMPLETED';
+    if (paid) {
+      await (this.supabase.client as any).from('mbolo_orders')
+        .update({ payment_status: 'paid', status: 'confirmed', paid_at: new Date().toISOString() })
+        .eq('id', order.id).eq('tenant_id', tenantId);
+    }
+    return { paid, status };
+  }
+
+  // ─── Mobile Money (PawaPay) : LIENS DE PAIEMENT ───
+  async createPaymentLinkMobileMoneyDeposit(
+    tenantId: string,
+    token: string,
+    dto: { phoneNumber: string; provider: string; country?: string },
+  ) {
+    const link = await this.getPaymentLinkByToken(tenantId, token);
+    if (link.status === 'paid') throw new BadRequestException('Lien déjà payé');
+    if (link.status === 'cancelled') throw new BadRequestException('Lien annulé');
+    if (!dto?.phoneNumber || !dto?.provider) throw new BadRequestException('phoneNumber et provider (opérateur) requis');
+    const override = await this.resolvePawapay(tenantId);
+    if (!override?.apiToken && !this.pawapay.isConfigured) {
+      throw new ServiceUnavailableException('Mobile Money indisponible (aucun token PawaPay tenant ni plateforme).');
+    }
+    const currency = (link.currency || 'XAF').toUpperCase();
+    const amount = Math.round((link.amount_cents ?? 0) / 100);
+    const depositId = randomUUID();
+    await (this.supabase.client as any).from('mbolo_payment_links')
+      .update({ payment_provider: 'pawapay', payment_session_id: depositId, updated_at: new Date().toISOString() })
+      .eq('id', link.id).eq('tenant_id', tenantId);
+    const result = await this.pawapay.initiateDeposit({
+      depositId,
+      amount: String(amount),
+      currency,
+      payer: { type: 'MMO', accountDetails: { phoneNumber: String(dto.phoneNumber).replace(/[^0-9]/g, ''), provider: dto.provider } },
+      customerMessage: this.sanitizeCustomerMessage(link.title),
+      metadata: ([{ tenantId }, { mboloPaymentLinkId: String(link.id) }] as Record<string, string>[])
+        .filter((m) => String(Object.values(m)[0] ?? '').length > 0),
+    }, override);
+    return { depositId, status: (result as any)?.status ?? 'ACCEPTED', amount, currency };
+  }
+  async confirmPaymentLinkMobileMoney(tenantId: string, token: string) {
+    const link = await this.getPaymentLinkByToken(tenantId, token);
+    if (link.status === 'paid') return { paid: true, status: 'COMPLETED' };
+    if (!link.payment_session_id || link.payment_provider !== 'pawapay') {
+      return { paid: false, status: link.status };
+    }
+    const override = await this.resolvePawapay(tenantId);
+    const dep = await this.pawapay.getDepositStatus(link.payment_session_id, override);
+    const status = (dep as any)?.status ?? 'UNKNOWN';
+    const paid = status === 'COMPLETED';
+    if (paid) {
+      await (this.supabase.client as any).from('mbolo_payment_links')
+        .update({ status: 'paid', paid_at: new Date().toISOString(), updated_at: new Date().toISOString() })
+        .eq('id', link.id).eq('tenant_id', tenantId);
+    }
+    return { paid, status };
   }
 
   // ─── Factures (tenant-scopées) ───────────────────────────────────────────

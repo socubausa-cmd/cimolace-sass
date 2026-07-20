@@ -62,4 +62,22 @@ export class MboloStorefrontController {
   payConfirm(@Param('token') token: string, @CurrentTenant() t: TenantContext) {
     return this.svc.confirmPaymentLink(t.id, token);
   }
+
+  // ─── Mobile Money (PawaPay) — encaissement sur le compte du tenant ───
+  @Post('orders/:id/mobile-money')
+  orderMobileMoney(@Param('id') id: string, @Body() b: any, @CurrentTenant() t: TenantContext) {
+    return this.svc.createOrderMobileMoneyDeposit(t.id, id, { phoneNumber: b?.phoneNumber, provider: b?.provider, country: b?.country });
+  }
+  @Post('orders/:id/mobile-money/status')
+  orderMobileMoneyStatus(@Param('id') id: string, @CurrentTenant() t: TenantContext) {
+    return this.svc.confirmOrderMobileMoney(t.id, id);
+  }
+  @Post('pay/:token/mobile-money')
+  payMobileMoney(@Param('token') token: string, @Body() b: any, @CurrentTenant() t: TenantContext) {
+    return this.svc.createPaymentLinkMobileMoneyDeposit(t.id, token, { phoneNumber: b?.phoneNumber, provider: b?.provider, country: b?.country });
+  }
+  @Post('pay/:token/mobile-money/status')
+  payMobileMoneyStatus(@Param('token') token: string, @CurrentTenant() t: TenantContext) {
+    return this.svc.confirmPaymentLinkMobileMoney(t.id, token);
+  }
 }
