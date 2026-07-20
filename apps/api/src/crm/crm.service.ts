@@ -636,4 +636,268 @@ export class CrmService {
     if (error) throw new BadRequestException(error.message);
     return { activities: data ?? [] };
   }
+
+  // ─── Reliure écosystème (Vague 5) ────────────────────────────────────────────
+  // Un contact CRM = une personne (email/nom), PAS forcément une identité plateforme.
+  // Le SEUL pont vers le reste de l'écosystème (messagerie immersive, boutique mbolo,
+  // RDV, services, forum) est l'EMAIL :
+  //   crm_contacts.email (lower) → profiles.email (lower) → profiles.id (= user_id
+  //   = auth.users.id, la clé universelle) → tenant_memberships actif du tenant courant.
+  // ⚠️ profiles/auth.users sont GLOBAUX (cross-tenant) : seule la membership porte la
+  // frontière tenant → on exige TOUJOURS status='active' sur le tenant courant, sinon on
+  // « contacterait/enrichirait » un homonyme d'un autre tenant. Toutes les requêtes de
+  // fan-out restent .eq('tenant_id', tenantId). Lecture seule : aucune écriture côté CRM.
+
+  /** Échappe les métacaractères LIKE (%, _, \) pour un match email insensible à la casse et sûr. */
+  private static escapeLike(value: string): string {
+    return value.replace(/[\\%_]/g, (m) => `\\${m}`);
+  }
+
+  /** SELECT best-effort : renvoie [] sur toute erreur (table absente, drift schéma…). */
+  private async safeRows(build: () => any): Promise<any[]> {
+    try {
+      const { data, error } = await build();
+      if (error) return [];
+      return Array.isArray(data) ? data : [];
+    } catch {
+      return [];
+    }
+  }
+
+  /** COUNT best-effort (head:true) : renvoie 0 sur toute erreur. */
+  private async safeCount(build: () => any): Promise<number> {
+    try {
+      const { count, error } = await build();
+      if (error) return 0;
+      return count ?? 0;
+    } catch {
+      return 0;
+    }
+  }
+
+  /**
+   * Résout l'identité plateforme d'un contact (email → user_id + membership active),
+   * puis enrichit sa fiche en éventail : commandes mbolo, RDV (LIRI + MEDOS), services
+   * achetés, activité forum. Tenant-scopé, read-only, tout best-effort (une brique
+   * absente n'échoue jamais l'ensemble).
+   */
+  async getContactPlatformLink(tenantId: string, contactId: string) {
+    const id = CrmService.requireId(contactId, 'contactId');
+    const { data: contact, error } = await this.db()
+      .from('crm_contacts')
+      .select('id, first_name, last_name, email, phone, company:crm_companies(id,name)')
+      .eq('tenant_id', tenantId)
+      .eq('id', id)
+      .maybeSingle();
+    if (error) throw new BadRequestException(error.message);
+    if (!contact) throw new NotFoundException('contact introuvable');
+
+    const email = String(contact.email || '').trim().toLowerCase();
+    const displayName =
+      [contact.first_name, contact.last_name].filter(Boolean).join(' ') || contact.email || 'Contact';
+
+    const result: any = {
+      contact: {
+        id: contact.id,
+        name: displayName,
+        email: contact.email || null,
+        phone: contact.phone || null,
+        company: contact.company || null,
+      },
+      isPlatformUser: false, // membre actif du tenant → messagerie possible
+      hasAccount: false, // un profil existe (global), même hors tenant
+      userId: null as string | null,
+      fullName: null as string | null,
+      role: null as string | null,
+      orders: [] as any[],
+      appointments: [] as any[],
+      services: [] as any[],
+      forum: { topics: 0, posts: 0, questions: 0, total: 0 },
+      counts: { orders: 0, appointments: 0, services: 0, forum: 0 },
+    };
+
+    if (!email) return result; // contact sans email → non rattachable à une identité
+
+    // 1) email → profiles.id (GLOBAL, case-insensitive ; limit(1) car email non garanti unique).
+    const emailLike = CrmService.escapeLike(email);
+    const profiles = await this.safeRows(() =>
+      this.db().from('profiles').select('id, full_name, email').ilike('email', emailLike).limit(1),
+    );
+    const prof = profiles[0];
+    const userId: string | null = prof?.id || null;
+    result.hasAccount = !!userId;
+    result.userId = userId;
+    result.fullName = prof?.full_name || null;
+
+    // 2) membership active du tenant courant (frontière d'isolation).
+    if (userId) {
+      const memberships = await this.safeRows(() =>
+        this.db()
+          .from('tenant_memberships')
+          .select('role, status')
+          .eq('tenant_id', tenantId)
+          .eq('user_id', userId)
+          .eq('status', 'active')
+          .limit(1),
+      );
+      const active = memberships[0];
+      result.isPlatformUser = !!active;
+      result.role = active?.role || null;
+    }
+
+    // 3) Fan-out enrichissement (tenant-scopé). Commandes : matchables même invité (email).
+    const ordersByEmail = await this.safeRows(() =>
+      this.db()
+        .from('mbolo_orders')
+        .select('*')
+        .eq('tenant_id', tenantId)
+        .ilike('customer_email', emailLike)
+        .order('created_at', { ascending: false })
+        .limit(50),
+    );
+    const ordersByUser = userId
+      ? await this.safeRows(() =>
+          this.db()
+            .from('mbolo_orders')
+            .select('*')
+            .eq('tenant_id', tenantId)
+            .eq('user_id', userId)
+            .order('created_at', { ascending: false })
+            .limit(50),
+        )
+      : [];
+    const orderMap = new Map<string, any>();
+    for (const o of [...ordersByEmail, ...ordersByUser]) orderMap.set(o.id, o);
+    result.orders = [...orderMap.values()]
+      .sort((a, b) => String(b.created_at || '').localeCompare(String(a.created_at || '')))
+      .map((o) => ({
+        id: o.id,
+        order_number: o.order_number || null,
+        status: o.status || null,
+        payment_status: o.payment_status || null,
+        amount:
+          o.total_cents != null
+            ? Number(o.total_cents) / 100
+            : o.total != null
+              ? Number(o.total)
+              : null,
+        currency: o.currency || 'EUR',
+        channel: o.channel || null,
+        created_at: o.created_at || null,
+      }));
+
+    if (userId) {
+      // RDV LIRI/école (clé student_id).
+      const liriRdv = await this.safeRows(() =>
+        this.db()
+          .from('appointments')
+          .select('*')
+          .eq('tenant_id', tenantId)
+          .eq('student_id', userId)
+          .order('created_at', { ascending: false })
+          .limit(50),
+      );
+      // RDV MEDOS/santé (clé indirecte : med_patients.patient_user_id → med_appointments.patient_id).
+      const patients = await this.safeRows(() =>
+        this.db()
+          .from('med_patients')
+          .select('id')
+          .eq('tenant_id', tenantId)
+          .eq('patient_user_id', userId),
+      );
+      const patientIds = patients.map((p: any) => p.id).filter(Boolean);
+      const medRdv = patientIds.length
+        ? await this.safeRows(() =>
+            this.db()
+              .from('med_appointments')
+              .select('*')
+              .eq('tenant_id', tenantId)
+              .in('patient_id', patientIds)
+              .order('scheduled_at', { ascending: false })
+              .limit(50),
+          )
+        : [];
+      result.appointments = [
+        ...liriRdv.map((a: any) => ({
+          id: a.id,
+          kind: 'liri',
+          status: a.status || null,
+          at: a.scheduled_at || a.starts_at || a.created_at || null,
+          created_at: a.created_at || null,
+        })),
+        ...medRdv.map((a: any) => ({
+          id: a.id,
+          kind: 'medos',
+          status: a.status || null,
+          at: a.scheduled_at || a.created_at || null,
+          created_at: a.created_at || null,
+        })),
+      ].sort((a, b) => String(b.at || '').localeCompare(String(a.at || '')));
+
+      // Services achetés (masterclass / consultation) = access_passes resource_type='service'.
+      const passes = await this.safeRows(() =>
+        this.db()
+          .from('access_passes')
+          .select('*')
+          .eq('tenant_id', tenantId)
+          .eq('user_id', userId)
+          .eq('resource_type', 'service')
+          .order('created_at', { ascending: false })
+          .limit(50),
+      );
+      result.services = passes.map((p: any) => ({
+        id: p.id,
+        resource_id: p.resource_id || null,
+        status: p.status || null,
+        created_at: p.created_at || null,
+      }));
+
+      // Forum : 3 systèmes coexistants (legacy + conversations kind='topic' + Q&A cours).
+      const [legacyTopics, connectedTopics, legacyPosts, questions] = await Promise.all([
+        this.safeCount(() =>
+          this.db()
+            .from('forum_topics')
+            .select('id', { count: 'exact', head: true })
+            .eq('tenant_id', tenantId)
+            .eq('author_id', userId),
+        ),
+        this.safeCount(() =>
+          this.db()
+            .from('conversations')
+            .select('id', { count: 'exact', head: true })
+            .eq('tenant_id', tenantId)
+            .eq('kind', 'topic')
+            .eq('created_by', userId),
+        ),
+        this.safeCount(() =>
+          this.db()
+            .from('forum_posts')
+            .select('id', { count: 'exact', head: true })
+            .eq('tenant_id', tenantId)
+            .eq('author_id', userId),
+        ),
+        this.safeCount(() =>
+          this.db()
+            .from('formation_student_questions')
+            .select('id', { count: 'exact', head: true })
+            .eq('tenant_id', tenantId)
+            .eq('student_id', userId),
+        ),
+      ]);
+      result.forum = {
+        topics: legacyTopics + connectedTopics,
+        posts: legacyPosts,
+        questions,
+        total: legacyTopics + connectedTopics + legacyPosts + questions,
+      };
+    }
+
+    result.counts = {
+      orders: result.orders.length,
+      appointments: result.appointments.length,
+      services: result.services.length,
+      forum: result.forum.total,
+    };
+    return result;
+  }
 }

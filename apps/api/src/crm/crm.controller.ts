@@ -105,6 +105,14 @@ export class CrmController {
     return this.svc.convertLead(t.id, String(body?.lead_id || ''));
   }
 
+  // Reliure écosystème : résout l'identité plateforme du contact (email → user_id +
+  // membership active) et renvoie son enrichissement 360° (commandes mbolo, RDV, services,
+  // forum). Sert le bouton « Contacter » (deep-link messagerie) + la fiche 360°.
+  @Get('contacts/:id/platform')
+  contactPlatform(@CurrentTenant() t: TenantContext, @Param('id') id: string) {
+    return this.svc.getContactPlatformLink(t.id, id);
+  }
+
   // Import CSV en lot : { contacts: [{first_name,last_name,email,phone,title,company}] }.
   @Post('contacts/import')
   importContacts(@CurrentTenant() t: TenantContext, @Body() body: { contacts?: any[]; rows?: any[] }) {

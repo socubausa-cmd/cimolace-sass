@@ -590,6 +590,10 @@ export const crmApi = {
     apiV2.post<ApiEnvelope<any>>('/crm/contacts/convert-lead', { lead_id: leadId }).then(unwrap),
   importContacts: (contacts: any[]) =>
     apiV2.post<ApiEnvelope<any>>('/crm/contacts/import', { contacts }).then(unwrap),
+  // Reliure écosystème — OBJET par design : { contact, isPlatformUser, userId, orders,
+  // appointments, services, forum, counts } → identité plateforme + enrichissement 360°.
+  getContactPlatform: (id: string) =>
+    apiV2.get<ApiEnvelope<any>>(`/crm/contacts/${id}/platform`).then(unwrap),
 
   listPipelines: (): Promise<any[]> =>
     apiV2.get<ApiEnvelope<{ pipelines?: any[] }>>('/crm/pipelines').then(unwrap)
