@@ -71,8 +71,8 @@ export class CrmController {
   }
 
   @Post('companies')
-  createCompany(@CurrentTenant() t: TenantContext, @Body() body: any) {
-    return this.svc.createCompany(t.id, body);
+  createCompany(@CurrentTenant() t: TenantContext, @CurrentUser() u: AuthUser, @Body() body: any) {
+    return this.svc.createCompany(t.id, body, u.id);
   }
 
   @Patch('companies/:id')
@@ -140,8 +140,8 @@ export class CrmController {
   }
 
   @Post('contacts')
-  createContact(@CurrentTenant() t: TenantContext, @Body() body: any) {
-    return this.svc.createContact(t.id, body);
+  createContact(@CurrentTenant() t: TenantContext, @CurrentUser() u: AuthUser, @Body() body: any) {
+    return this.svc.createContact(t.id, body, u.id);
   }
 
   @Patch('contacts/:id')
@@ -155,8 +155,8 @@ export class CrmController {
   }
 
   @Post('contacts/convert-lead')
-  convertLead(@CurrentTenant() t: TenantContext, @Body() body: { lead_id?: string }) {
-    return this.svc.convertLead(t.id, String(body?.lead_id || ''));
+  convertLead(@CurrentTenant() t: TenantContext, @CurrentUser() u: AuthUser, @Body() body: { lead_id?: string }) {
+    return this.svc.convertLead(t.id, String(body?.lead_id || ''), u.id);
   }
 
   // Reliure écosystème : résout l'identité plateforme du contact (email → user_id +
@@ -242,18 +242,18 @@ export class CrmController {
   }
 
   @Post('deals')
-  createDeal(@CurrentTenant() t: TenantContext, @Body() body: any) {
-    return this.svc.createDeal(t.id, body);
+  createDeal(@CurrentTenant() t: TenantContext, @CurrentUser() u: AuthUser, @Body() body: any) {
+    return this.svc.createDeal(t.id, body, u.id);
   }
 
   @Patch('deals/:id')
-  updateDeal(@CurrentTenant() t: TenantContext, @Param('id') id: string, @Body() body: any) {
-    return this.svc.updateDeal(t.id, id, body);
+  updateDeal(@CurrentTenant() t: TenantContext, @CurrentUser() u: AuthUser, @Param('id') id: string, @Body() body: any) {
+    return this.svc.updateDeal(t.id, id, body, u.id);
   }
 
   @Delete('deals/:id')
-  deleteDeal(@CurrentTenant() t: TenantContext, @Param('id') id: string) {
-    return this.svc.deleteDeal(t.id, id);
+  deleteDeal(@CurrentTenant() t: TenantContext, @CurrentUser() u: AuthUser, @Param('id') id: string) {
+    return this.svc.deleteDeal(t.id, id, u.id);
   }
 
   // ─── Notes ─────────────────────────────────────────────────────────────────
@@ -267,8 +267,8 @@ export class CrmController {
   }
 
   @Post('notes')
-  createNote(@CurrentTenant() t: TenantContext, @Body() body: any) {
-    return this.svc.createNote(t.id, body);
+  createNote(@CurrentTenant() t: TenantContext, @CurrentUser() u: AuthUser, @Body() body: any) {
+    return this.svc.createNote(t.id, body, u.id);
   }
 
   @Delete('notes/:id')

@@ -105,14 +105,15 @@ export class CrmService {
     return { companies: data ?? [] };
   }
 
-  async createCompany(tenantId: string, body: any) {
+  async createCompany(tenantId: string, body: any, actorId: string | null = null) {
     const name = String(body?.name || '').trim();
     if (!name) throw new BadRequestException('name requis');
-    const row = { ...CrmService.pick(body, CrmService.COMPANY_FIELDS), name, tenant_id: tenantId };
+    const row: Record<string, any> = { ...CrmService.pick(body, CrmService.COMPANY_FIELDS), name, tenant_id: tenantId };
+    if (row.owner_id && !(await this.isActiveMember(tenantId, String(row.owner_id)))) delete row.owner_id;
     const { data, error } = await this.db().from('crm_companies').insert(row).select().single();
     if (error) throw new BadRequestException(error.message);
     await this.recordActivity(tenantId, {
-      entityType: 'company', entityId: data.id, type: 'company_created', title: `Société créée : ${data.name}`,
+      entityType: 'company', entityId: data.id, type: 'company_created', actorId, title: `Société créée : ${data.name}`,
     });
     return data;
   }
@@ -162,15 +163,16 @@ export class CrmService {
     return { contacts: data ?? [] };
   }
 
-  async createContact(tenantId: string, body: any) {
+  async createContact(tenantId: string, body: any, actorId: string | null = null) {
     const row: Record<string, any> = { ...CrmService.pick(body, CrmService.CONTACT_FIELDS), tenant_id: tenantId };
     if (!row.first_name && !row.last_name && !row.email) {
       throw new BadRequestException('au moins un nom ou un email est requis');
     }
+    if (row.owner_id && !(await this.isActiveMember(tenantId, String(row.owner_id)))) delete row.owner_id;
     const { data, error } = await this.db().from('crm_contacts').insert(row).select().single();
     if (error) throw new BadRequestException(error.message);
     await this.recordActivity(tenantId, {
-      entityType: 'contact', entityId: data.id, type: 'contact_created',
+      entityType: 'contact', entityId: data.id, type: 'contact_created', actorId,
       title: `Contact créé : ${[data.first_name, data.last_name].filter(Boolean).join(' ') || data.email || 'sans nom'}`,
     });
     this.fireAutomation(tenantId, 'crm_contact_created', {
@@ -250,7 +252,7 @@ export class CrmService {
    * Convertit un lead du Growth Engine en contact CRM (lien lead_id conservé).
    * Marque le lead comme 'customer'. Idempotent-ish : refuse si déjà converti.
    */
-  async convertLead(tenantId: string, leadId: string) {
+  async convertLead(tenantId: string, leadId: string, actorId: string | null = null) {
     CrmService.requireId(leadId, 'leadId');
     const { data: lead, error: le } = await this.db()
       .from('leads').select('*').eq('tenant_id', tenantId).eq('id', leadId).maybeSingle();
@@ -276,7 +278,7 @@ export class CrmService {
     if (error) throw new BadRequestException(error.message);
     await this.db().from('leads').update({ status: 'customer' }).eq('tenant_id', tenantId).eq('id', leadId);
     await this.recordActivity(tenantId, {
-      entityType: 'contact', entityId: contact.id, type: 'lead_converted',
+      entityType: 'contact', entityId: contact.id, type: 'lead_converted', actorId,
       title: `Lead converti en contact${contact.email ? ` : ${contact.email}` : ''}`, meta: { lead_id: leadId },
     });
     return contact;
@@ -539,7 +541,7 @@ export class CrmService {
     };
   }
 
-  async createDeal(tenantId: string, body: any) {
+  async createDeal(tenantId: string, body: any, actorId: string | null = null) {
     const title = String(body?.title || '').trim();
     if (!title) throw new BadRequestException('title requis');
     // #8 : les références fournies doivent appartenir au tenant (anti-rattachement cross-tenant).
@@ -564,7 +566,7 @@ export class CrmService {
     const { data, error } = await this.db().from('crm_deals').insert(row).select().single();
     if (error) throw new BadRequestException(error.message);
     await this.recordActivity(tenantId, {
-      entityType: 'deal', entityId: data.id, type: 'deal_created',
+      entityType: 'deal', entityId: data.id, type: 'deal_created', actorId,
       title: `Deal créé : ${data.title}`, meta: { amount: data.amount, currency: data.currency },
     });
     this.fireWebhook(tenantId, 'crm.deal.created', {
@@ -574,7 +576,7 @@ export class CrmService {
     return data;
   }
 
-  async updateDeal(tenantId: string, id: string, body: any) {
+  async updateDeal(tenantId: string, id: string, body: any, actorId: string | null = null) {
     CrmService.requireId(id);
     const patch = CrmService.pick(body, CrmService.DEAL_FIELDS);
     if (Object.keys(patch).length === 0) throw new BadRequestException('aucun champ à mettre à jour');
@@ -615,7 +617,7 @@ export class CrmService {
       : actType === 'deal_stage_moved' ? `Deal déplacé : ${data.title}`
       : `Deal modifié : ${data.title}`;
     await this.recordActivity(tenantId, {
-      entityType: 'deal', entityId: data.id, type: actType, title: actTitle,
+      entityType: 'deal', entityId: data.id, type: actType, title: actTitle, actorId,
       meta: { stage_id: data.stage_id, status: data.status },
     });
     // Automations + webhooks : UNIQUEMENT sur transition (open/autre → won/lost) — anti re-émission.
@@ -635,12 +637,12 @@ export class CrmService {
     return data;
   }
 
-  async deleteDeal(tenantId: string, id: string) {
+  async deleteDeal(tenantId: string, id: string, actorId: string | null = null) {
     CrmService.requireId(id);
     const { error } = await this.db()
       .from('crm_deals').delete().eq('tenant_id', tenantId).eq('id', id);
     if (error) throw new BadRequestException(error.message);
-    await this.recordActivity(tenantId, { entityType: 'deal', entityId: id, type: 'deal_deleted', title: 'Deal supprimé' });
+    await this.recordActivity(tenantId, { entityType: 'deal', entityId: id, type: 'deal_deleted', title: 'Deal supprimé', actorId });
     return { ok: true };
   }
 
@@ -662,7 +664,7 @@ export class CrmService {
     return { notes: data ?? [] };
   }
 
-  async createNote(tenantId: string, body: any) {
+  async createNote(tenantId: string, body: any, actorId: string | null = null) {
     const entityType = String(body?.entity_type || '');
     CrmService.assertEntityType(entityType);
     const entityId = CrmService.requireId(body?.entity_id, 'entity_id');
@@ -671,12 +673,12 @@ export class CrmService {
     if (!bodyText) throw new BadRequestException('body requis');
     const row = {
       tenant_id: tenantId, entity_type: entityType, entity_id: entityId,
-      body: bodyText, author_id: body?.author_id ?? null,
+      body: bodyText, author_id: body?.author_id ?? actorId ?? null,
     };
     const { data, error } = await this.db().from('crm_notes').insert(row).select().single();
     if (error) throw new BadRequestException(error.message);
     await this.recordActivity(tenantId, {
-      entityType, entityId, type: 'note_added', title: 'Note ajoutée', meta: { note_id: data.id },
+      entityType, entityId, type: 'note_added', title: 'Note ajoutée', actorId, meta: { note_id: data.id },
     });
     return data;
   }
@@ -917,7 +919,15 @@ export class CrmService {
     if (opts.entityId) q = q.eq('entity_id', opts.entityId);
     const { data, error } = await q;
     if (error) throw new BadRequestException(error.message);
-    return { activities: data ?? [] };
+    const acts = data ?? [];
+    // Résoudre le NOM de l'auteur (actor_id → profiles) pour l'affichage « qui a agi ».
+    const actorIds = [...new Set(acts.map((a: any) => a.actor_id).filter(Boolean))];
+    if (actorIds.length) {
+      const profs = await this.safeRows(() => this.db().from('profiles').select('id, name, full_name').in('id', actorIds));
+      const nameById = new Map<string, string>(profs.map((p: any) => [p.id, p.full_name || p.name || '']));
+      for (const a of acts) a.actor_name = a.actor_id ? nameById.get(a.actor_id) || null : null;
+    }
+    return { activities: acts };
   }
 
   // ─── Reliure écosystème (Vague 5) ────────────────────────────────────────────

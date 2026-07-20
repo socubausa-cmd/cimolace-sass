@@ -99,6 +99,31 @@ export class WebhookService {
   }
 
   /**
+   * Valide qu'une URL de webhook est sûre (https + cible non privée) — lève sinon.
+   * PUBLIC + statique : réutilisable par les AUTRES chemins de création (tenant-portal) pour
+   * qu'ils appliquent la même règle anti-SSRF que WebhookService.createWebhook (0 drift : même
+   * classification isPrivateIp). Ne remplace PAS le contrôle de livraison (lookup épinglé).
+   */
+  static async assertUrlSafe(rawUrl: string): Promise<void> {
+    let u: URL;
+    try { u = new URL(rawUrl); } catch { throw new Error('URL de webhook invalide'); }
+    if (u.protocol !== 'https:') throw new Error('Le webhook doit utiliser https://');
+    const host = WebhookService.bareHost(u.hostname);
+    let priv: boolean;
+    if (isIP(host)) {
+      priv = WebhookService.isPrivateIp(host);
+    } else {
+      try {
+        const addrs = await lookup(host, { all: true });
+        priv = addrs.length === 0 || addrs.some((a) => WebhookService.isPrivateIp(a.address));
+      } catch {
+        priv = true;
+      }
+    }
+    if (priv) throw new Error('URL de webhook interdite : adresse privée/interne/non résoluble');
+  }
+
+  /**
    * POST via http/https.request avec DNS ÉPINGLÉ et SANS suivi de redirection.
    * - `lookup` custom = la SEULE résolution DNS, celle qui sert à la connexion → l'IP validée EST
    *   l'IP contactée : ferme le DNS-rebinding (plus de fenêtre resolve→connect).

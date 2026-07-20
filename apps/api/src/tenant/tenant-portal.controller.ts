@@ -7,6 +7,7 @@ import { RolesGuard } from '../common/guards/roles.guard';
 import { Roles } from '../common/decorators/roles.decorator';
 import { SupabaseService } from '../supabase/supabase.service';
 import { LiriEntitlementsService } from '../billing/liri-entitlements.service';
+import { WebhookService } from '../liri-public/webhook.service';
 
 /**
  * Back-office TENANT (self-service) — endpoints scoped au tenant courant via
@@ -495,7 +496,8 @@ export class TenantPortalController {
   async createWebhook(@Req() req: any, @Body() body: { label?: string; url?: string; events?: string[] }) {
     if (!['owner', 'admin'].includes(req.tenant?.userRole)) throw new BadRequestException('Rôle owner/admin requis.');
     const url = String(body?.url || '').trim();
-    if (!/^https:\/\//i.test(url)) throw new BadRequestException('URL HTTPS requise.');
+    // Anti-SSRF : même règle que WebhookService.createWebhook (https + refus des cibles privées/internes).
+    await WebhookService.assertUrlSafe(url).catch((e) => { throw new BadRequestException(String(e?.message || e)); });
     const secret = `whsec_${randomBytes(24).toString('hex')}`;
     const { data, error } = await this.db
       .from('tenant_webhooks')
