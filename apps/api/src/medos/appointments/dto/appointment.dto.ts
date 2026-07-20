@@ -142,6 +142,16 @@ export class CreateAppointmentDto {
   @IsString()
   @MaxLength(160)
   service_key?: string;
+
+  /**
+   * G4 — RDV programmé « à partir de » cette réponse de formulaire (bilan
+   * intake, questionnaire de suivi…). Permet au praticien d'ouvrir la
+   * consultation avec le bilan pré-chargé (contexte d'analyse). Optionnel.
+   */
+  @ApiPropertyOptional({ description: 'ID réponse formulaire liée (contexte)' })
+  @IsOptional()
+  @IsUUID()
+  form_response_id?: string;
 }
 
 export class UpdateAppointmentDto {

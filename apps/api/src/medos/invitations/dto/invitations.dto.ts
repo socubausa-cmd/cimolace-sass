@@ -1,5 +1,7 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import {
+  ArrayMaxSize,
+  IsArray,
   IsEmail,
   IsEnum,
   IsInt,
@@ -50,6 +52,26 @@ export class CreateInvitationDto {
   @IsString()
   @MaxLength(2000)
   custom_message?: string;
+
+  /**
+   * G2 — Formulaires à assigner automatiquement au patient dès qu'il accepte
+   * l'invitation. Chaque UUID doit référencer un `med_medical_forms.id`
+   * (template tenant OU template global). Les assignations sont créées avec
+   * `assigned_by = created_by` (le praticien qui a créé l'invitation) et
+   * le patient reçoit une notif+email pour chaque template.
+   *
+   * Limite à 10 templates pour éviter le spam ; en pratique 1-3 suffisent
+   * (bilan initial, consentement, hygiène de vie).
+   */
+  @ApiPropertyOptional({
+    type: [String],
+    description: 'IDs de templates de formulaires à assigner à l\'acceptation.',
+  })
+  @IsOptional()
+  @IsArray()
+  @ArrayMaxSize(10)
+  @IsUUID('4', { each: true })
+  form_template_ids?: string[];
 }
 
 export class AcceptInvitationDto {
