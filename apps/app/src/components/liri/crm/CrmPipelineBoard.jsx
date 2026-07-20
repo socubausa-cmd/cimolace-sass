@@ -33,10 +33,12 @@ import {
   RefreshCw,
   Inbox,
   Loader2,
+  SlidersHorizontal,
 } from 'lucide-react';
 import { crmApi } from '@/lib/api-v2';
 import { useToast } from '@/components/ui/use-toast';
 import CrmDealDetail from './CrmDealDetail';
+import CrmStageEditor from './CrmStageEditor';
 
 /* ── Pipeline commercial — craft premium LIRI (fiche contact = référence).
       Portail chaud : tout coral, jamais vert/rouge. won/lost = tint coral / opacité. ── */
@@ -757,6 +759,7 @@ export default function CrmPipelineBoard() {
   const [board, setBoard] = useState(null);
   const [columns, setColumns] = useState([]);
   const [showCreate, setShowCreate] = useState(false);
+  const [showStages, setShowStages] = useState(false);
   const [pendingDelete, setPendingDelete] = useState(null);
   const [deleting, setDeleting] = useState(false);
   const [detailDeal, setDetailDeal] = useState(null);
@@ -981,6 +984,14 @@ export default function CrmPipelineBoard() {
           </button>
           <button
             type="button"
+            onClick={() => setShowStages(true)}
+            title="Gérer les étapes du pipeline"
+            className="inline-flex cursor-pointer items-center gap-2 rounded-xl border lp-line px-3 py-2 text-[13.5px] font-medium lp-ink lp-railbtn lp-tr"
+          >
+            <SlidersHorizontal size={15} /> <span className="hidden sm:inline">Étapes</span>
+          </button>
+          <button
+            type="button"
             onClick={() => setShowCreate(true)}
             className="inline-flex cursor-pointer items-center gap-2 rounded-xl px-4 py-2 text-[13.5px] font-medium text-white lp-tr lp-ember disabled:opacity-60"
           >
@@ -1056,6 +1067,14 @@ export default function CrmPipelineBoard() {
             setShowCreate(false);
             await load();
           }}
+        />
+      )}
+
+      {showStages && board?.pipeline?.id && (
+        <CrmStageEditor
+          pipelineId={board.pipeline.id}
+          onClose={() => setShowStages(false)}
+          onChanged={load}
         />
       )}
 
