@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
-import { Search, Plus, Pencil, Trash2, X, Users, Building2, UserPlus, Upload } from 'lucide-react';
+import { Search, Plus, Pencil, Trash2, X, Users, Building2, UserPlus, Upload, Download } from 'lucide-react';
 import { crmApi } from '@/lib/api-v2';
 import { useToast } from '@/components/ui/use-toast';
 import CrmContactDetail from './CrmContactDetail';
@@ -222,6 +222,47 @@ export default function CrmContacts() {
     }
   }
 
+  const [exporting, setExporting] = useState(false);
+  const exportCsv = useCallback(async () => {
+    if (exporting) return;
+    setExporting(true);
+    try {
+      const rows = await crmApi.listContacts({ limit: '1000' });
+      const list = Array.isArray(rows) ? rows : [];
+      if (!list.length) {
+        toast({ title: 'Export', description: 'Aucun contact à exporter.' });
+        return;
+      }
+      const cell = (v) => {
+        const s = String(v ?? '');
+        return /[",\n;]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
+      };
+      const header = ['first_name', 'last_name', 'email', 'phone', 'title', 'company', 'status'];
+      const lines = [header.join(',')];
+      for (const c of list) {
+        lines.push(
+          [c.first_name, c.last_name, c.email, c.phone, c.title, companyName(c) || '', c.status]
+            .map(cell)
+            .join(','),
+        );
+      }
+      const blob = new Blob(['﻿' + lines.join('\n')], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `contacts-${new Date().toISOString().slice(0, 10)}.csv`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
+      toast({ title: 'Export', description: `${list.length} contact(s) exporté(s).` });
+    } catch (e) {
+      toast({ title: 'Export', description: String(e?.message || e), variant: 'destructive' });
+    } finally {
+      setExporting(false);
+    }
+  }, [exporting, toast, companyName]);
+
   const isSearching = search.trim().length > 0;
   const emptyTitle = errored
     ? 'Chargement impossible'
@@ -249,6 +290,16 @@ export default function CrmContacts() {
           />
         </div>
         <div className="flex shrink-0 items-center gap-2">
+          <button
+            type="button"
+            onClick={exportCsv}
+            disabled={exporting}
+            aria-label="Exporter les contacts en CSV"
+            className="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-xl px-3.5 py-2.5 text-[13px] font-medium lp-muted lp-railbtn lp-tr cursor-pointer disabled:opacity-60"
+          >
+            <Download size={15} />
+            Exporter
+          </button>
           <button
             type="button"
             onClick={() => setImportOpen(true)}

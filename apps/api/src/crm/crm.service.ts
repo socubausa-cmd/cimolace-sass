@@ -63,6 +63,9 @@ export class CrmService {
     const row = { ...CrmService.pick(body, CrmService.COMPANY_FIELDS), name, tenant_id: tenantId };
     const { data, error } = await this.db().from('crm_companies').insert(row).select().single();
     if (error) throw new BadRequestException(error.message);
+    await this.recordActivity(tenantId, {
+      entityType: 'company', entityId: data.id, type: 'company_created', title: `Société créée : ${data.name}`,
+    });
     return data;
   }
 
@@ -117,6 +120,10 @@ export class CrmService {
     }
     const { data, error } = await this.db().from('crm_contacts').insert(row).select().single();
     if (error) throw new BadRequestException(error.message);
+    await this.recordActivity(tenantId, {
+      entityType: 'contact', entityId: data.id, type: 'contact_created',
+      title: `Contact créé : ${[data.first_name, data.last_name].filter(Boolean).join(' ') || data.email || 'sans nom'}`,
+    });
     return data;
   }
 
