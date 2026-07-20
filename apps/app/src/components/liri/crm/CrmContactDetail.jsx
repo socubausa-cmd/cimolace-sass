@@ -3,7 +3,7 @@ import { createPortal } from 'react-dom';
 import {
   X, Plus, Trash2, Check, Mail, Phone, Building2, Tag as TagIcon,
   StickyNote, ListChecks, Activity, Loader2, ChevronDown,
-  Sparkles, ShoppingBag, CalendarClock, GraduationCap, MessageCircle,
+  Sparkles, ShoppingBag, CalendarClock, GraduationCap, MessageCircle, Stethoscope,
 } from 'lucide-react';
 import { crmApi, growthApi } from '@/lib/api-v2';
 import { useToast } from '@/components/ui/use-toast';
@@ -211,6 +211,7 @@ export default function CrmContactDetail({ contact, onClose }) {
                         { icon: CalendarClock, label: 'Rendez-vous', value: eco.rdv?.count ?? 0 },
                         { icon: GraduationCap, label: 'École / LIRI', value: eco.membership?.role ?? '—' },
                         { icon: MessageCircle, label: 'Conversations', value: eco.messaging?.conversations ?? 0 },
+                        { icon: Stethoscope, label: 'Messagerie MEDOS', value: eco.medos_messaging?.count ?? 0 },
                       ].map(({ icon: Ic, label, value }) => (
                         <div key={label} className="flex items-center gap-2.5 rounded-xl lp-panel border lp-line px-3 py-2.5">
                           <Ic size={16} style={{ color: '#e08a63' }} />
