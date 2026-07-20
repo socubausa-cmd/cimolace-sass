@@ -704,8 +704,8 @@ export class CrmService {
         phone: contact.phone || null,
         company: contact.company || null,
       },
-      isPlatformUser: false, // membre actif du tenant → messagerie possible
-      hasAccount: false, // un profil existe (global), même hors tenant
+      isPlatformUser: false, // membre actif du tenant courant (seule condition d'exposition d'identité)
+      hasAccount: false, // == isPlatformUser (membre actif) : jamais un compte d'un AUTRE tenant
       userId: null as string | null,
       fullName: null as string | null,
       role: null as string | null,
@@ -713,37 +713,45 @@ export class CrmService {
       appointments: [] as any[],
       services: [] as any[],
       forum: { topics: 0, posts: 0, questions: 0, total: 0 },
-      counts: { orders: 0, appointments: 0, services: 0, forum: 0 },
+      messaging: { conversations: 0, lastMessageAt: null as string | null },
+      counts: { orders: 0, appointments: 0, services: 0, forum: 0, messaging: 0 },
     };
 
     if (!email) return result; // contact sans email → non rattachable à une identité
 
-    // 1) email → profiles.id (GLOBAL, case-insensitive ; limit(1) car email non garanti unique).
+    // 1) email → profil GLOBAL (case-insensitive). ⚠️ profiles/auth sont GLOBAUX (cross-tenant) :
+    //    on ne dévoile RIEN (UUID, nom, existence de compte) tant que l'appartenance au tenant
+    //    courant n'est pas prouvée — sinon un owner du tenant A sonderait l'identité/l'existence
+    //    de compte d'un homonyme appartenant uniquement à un autre tenant (fuite PII + oracle).
     const emailLike = CrmService.escapeLike(email);
     const profiles = await this.safeRows(() =>
-      this.db().from('profiles').select('id, full_name, email').ilike('email', emailLike).limit(1),
+      this.db().from('profiles').select('id, name, full_name, email').ilike('email', emailLike).limit(1),
     );
     const prof = profiles[0];
-    const userId: string | null = prof?.id || null;
-    result.hasAccount = !!userId;
-    result.userId = userId;
-    result.fullName = prof?.full_name || null;
+    const resolvedUserId: string | null = prof?.id || null;
 
-    // 2) membership active du tenant courant (frontière d'isolation).
-    if (userId) {
+    // 2) membership ACTIVE du tenant courant — résolue AVANT toute exposition d'identité.
+    let active: any = null;
+    if (resolvedUserId) {
       const memberships = await this.safeRows(() =>
         this.db()
           .from('tenant_memberships')
           .select('role, status')
           .eq('tenant_id', tenantId)
-          .eq('user_id', userId)
+          .eq('user_id', resolvedUserId)
           .eq('status', 'active')
           .limit(1),
       );
-      const active = memberships[0];
-      result.isPlatformUser = !!active;
-      result.role = active?.role || null;
+      active = memberships[0] || null;
     }
+    // Identité plateforme (UUID, nom, compte) exposée UNIQUEMENT pour un membre actif de CE tenant.
+    // Le fan-out par user (RDV/services/forum/messagerie) devient inerte si userId=null.
+    const userId: string | null = active ? resolvedUserId : null;
+    result.isPlatformUser = !!active;
+    result.hasAccount = !!active;
+    result.role = active?.role || null;
+    result.userId = userId;
+    result.fullName = active ? prof?.full_name || prof?.name || null : null;
 
     // 3) Fan-out enrichissement (tenant-scopé). Commandes : matchables même invité (email).
     const ordersByEmail = await this.safeRows(() =>
@@ -817,12 +825,20 @@ export class CrmService {
               .limit(50),
           )
         : [];
+      // Dates réelles des RDV LIRI via booking_slots.start_at (appointments n'a pas de colonne date).
+      const slotIds = liriRdv.map((a: any) => a.slot_id).filter(Boolean);
+      const slots = slotIds.length
+        ? await this.safeRows(() =>
+            this.db().from('booking_slots').select('id, start_at').eq('tenant_id', tenantId).in('id', slotIds),
+          )
+        : [];
+      const slotStart = new Map<string, string>(slots.map((s: any) => [s.id, s.start_at]));
       result.appointments = [
         ...liriRdv.map((a: any) => ({
           id: a.id,
           kind: 'liri',
           status: a.status || null,
-          at: a.scheduled_at || a.starts_at || a.created_at || null,
+          at: slotStart.get(a.slot_id) || a.created_at || null,
           created_at: a.created_at || null,
         })),
         ...medRdv.map((a: any) => ({
@@ -890,6 +906,9 @@ export class CrmService {
         questions,
         total: legacyTopics + connectedTopics + legacyPosts + questions,
       };
+
+      // Messagerie immersive : conversations DM du contact (aperçu).
+      result.messaging = await this.loadMessagingSummary(tenantId, userId);
     }
 
     result.counts = {
@@ -897,7 +916,186 @@ export class CrmService {
       appointments: result.appointments.length,
       services: result.services.length,
       forum: result.forum.total,
+      messaging: result.messaging.conversations,
     };
     return result;
+  }
+
+  /**
+   * Résumé messagerie DM d'un utilisateur : SIGNAL D'ACTIVITÉ uniquement (nombre de
+   * conversations directes + date de dernière activité). Best-effort, tenant-scopé.
+   * ⚠️ CONFIDENTIALITÉ : n'expose NI le contenu des messages NI l'identité des correspondants.
+   * La lecture d'un DM privé est réservée à ses participants ; un owner/admin non-partie ne
+   * doit voir qu'un compteur, pas le fil. (Appelé uniquement pour un membre actif → userId gaté.)
+   * NB : les conversations kind='topic'/'group' relèvent du forum → filtrées (type='direct').
+   */
+  private async loadMessagingSummary(tenantId: string, userId: string) {
+    const empty = { conversations: 0, lastMessageAt: null as string | null };
+    const parts = await this.safeRows(() =>
+      this.db()
+        .from('conversation_participants')
+        .select('conversation_id')
+        .eq('tenant_id', tenantId)
+        .eq('user_id', userId),
+    );
+    const convIds = [...new Set(parts.map((p: any) => p.conversation_id).filter(Boolean))];
+    if (!convIds.length) return empty;
+
+    // DM uniquement (type='direct'). limit haute = compteur non plafonné en pratique.
+    const directConvs = await this.safeRows(() =>
+      this.db()
+        .from('conversations')
+        .select('id')
+        .eq('tenant_id', tenantId)
+        .in('id', convIds)
+        .eq('type', 'direct')
+        .limit(500),
+    );
+    const dmIds = directConvs.map((c: any) => c.id);
+    if (!dmIds.length) return empty;
+
+    // Date d'activité la plus récente (une seule ligne, aucun contenu).
+    const lastMsg = await this.safeRows(() =>
+      this.db()
+        .from('messages')
+        .select('created_at')
+        .eq('tenant_id', tenantId)
+        .in('conversation_id', dmIds)
+        .order('created_at', { ascending: false })
+        .limit(1),
+    );
+    return { conversations: dmIds.length, lastMessageAt: lastMsg[0]?.created_at || null };
+  }
+
+  /**
+   * Reliure plateforme d'une SOCIÉTÉ : agrège ses contacts membres + leur activité.
+   * Résolution en LOT (peu de requêtes quel que soit le nb de contacts). Read-only, tenant-scopé.
+   * profiles/auth étant globaux, l'appartenance est toujours filtrée par tenant_memberships actif.
+   */
+  async getCompanyPlatformLink(tenantId: string, companyId: string) {
+    const id = CrmService.requireId(companyId, 'companyId');
+    const { data: company, error } = await this.db()
+      .from('crm_companies')
+      .select('id, name')
+      .eq('tenant_id', tenantId)
+      .eq('id', id)
+      .maybeSingle();
+    if (error) throw new BadRequestException(error.message);
+    if (!company) throw new NotFoundException('société introuvable');
+
+    const contacts = await this.safeRows(() =>
+      this.db()
+        .from('crm_contacts')
+        .select('id, first_name, last_name, email')
+        .eq('tenant_id', tenantId)
+        .eq('company_id', id)
+        .limit(500),
+    );
+    const base: any = {
+      company: { id: company.id, name: company.name },
+      contactsTotal: contacts.length,
+      members: [] as any[],
+      counts: { contacts: contacts.length, members: 0, orders: 0, appointments: 0, services: 0 },
+    };
+
+    const emails = [
+      ...new Set(contacts.map((c: any) => String(c.email || '').trim().toLowerCase()).filter(Boolean)),
+    ];
+    if (!emails.length) {
+      base.members = contacts.map((c: any) => ({
+        contactId: c.id,
+        name: [c.first_name, c.last_name].filter(Boolean).join(' ') || 'Contact',
+        email: null,
+        userId: null,
+        isMember: false,
+        role: null,
+      }));
+      return base;
+    }
+
+    // Profils par lot. auth.users (GoTrue) minuscule les emails → .in sur emails minuscules matche.
+    const profs = await this.safeRows(() =>
+      this.db().from('profiles').select('id, email, name, full_name').in('email', emails).limit(1000),
+    );
+    const profByEmail = new Map<string, any>();
+    for (const p of profs) {
+      const k = String(p.email || '').toLowerCase();
+      if (k && !profByEmail.has(k)) profByEmail.set(k, p);
+    }
+    const userIds = [...new Set(profs.map((p: any) => p.id).filter(Boolean))];
+
+    const memberships = userIds.length
+      ? await this.safeRows(() =>
+          this.db()
+            .from('tenant_memberships')
+            .select('user_id, role')
+            .eq('tenant_id', tenantId)
+            .in('user_id', userIds)
+            .eq('status', 'active'),
+        )
+      : [];
+    const roleByUser = new Map<string, string>(memberships.map((m: any) => [m.user_id, m.role]));
+    const memberUserIds = new Set([...roleByUser.keys()]);
+
+    base.members = contacts.map((c: any) => {
+      const k = String(c.email || '').toLowerCase();
+      const prof = k ? profByEmail.get(k) : null;
+      const uid = prof?.id || null;
+      const member = uid ? memberUserIds.has(uid) : false;
+      // UUID exposé UNIQUEMENT pour un membre actif du tenant (pas d'oracle d'existence inter-tenant).
+      return {
+        contactId: c.id,
+        name: [c.first_name, c.last_name].filter(Boolean).join(' ') || c.email || 'Contact',
+        email: c.email || null,
+        userId: member ? uid : null,
+        isMember: member,
+        role: member ? roleByUser.get(uid) || null : null,
+      };
+    });
+
+    // Agrégats d'activité en lot (par user_id membre + email pour commandes invité).
+    const memberIds = [...memberUserIds];
+    // Commandes invité : customer_email n'est PAS normalisé à l'écriture (saisie checkout) →
+    // match insensible à la casse comme le chemin contact. Emails filtrés sûrs pour PostgREST
+    // .or() (aucun , ( ) % _ \ ni espace → ni injection de filtre ni wildcard LIKE), plafonnés.
+    const safeEmails = emails.filter((e) => /^[^\s,()%_\\]+@[^\s,()%_\\]+$/.test(e)).slice(0, 60);
+    const custOr = safeEmails.map((e) => `customer_email.ilike.${e}`).join(',');
+    const [ordersUser, ordersEmail, appts, services] = await Promise.all([
+      memberIds.length
+        ? this.safeRows(() =>
+            this.db().from('mbolo_orders').select('id').eq('tenant_id', tenantId).in('user_id', memberIds).limit(500),
+          )
+        : Promise.resolve([]),
+      safeEmails.length
+        ? this.safeRows(() =>
+            this.db().from('mbolo_orders').select('id').eq('tenant_id', tenantId).or(custOr).limit(500),
+          )
+        : Promise.resolve([]),
+      memberIds.length
+        ? this.safeRows(() =>
+            this.db().from('appointments').select('id').eq('tenant_id', tenantId).in('student_id', memberIds).limit(500),
+          )
+        : Promise.resolve([]),
+      memberIds.length
+        ? this.safeRows(() =>
+            this.db()
+              .from('access_passes')
+              .select('id')
+              .eq('tenant_id', tenantId)
+              .in('user_id', memberIds)
+              .eq('resource_type', 'service')
+              .limit(500),
+          )
+        : Promise.resolve([]),
+    ]);
+    const orderIds = new Set([...ordersUser.map((o: any) => o.id), ...ordersEmail.map((o: any) => o.id)]);
+    base.counts = {
+      contacts: contacts.length,
+      members: memberUserIds.size,
+      orders: orderIds.size,
+      appointments: appts.length,
+      services: services.length,
+    };
+    return base;
   }
 }

@@ -70,6 +70,12 @@ export class CrmController {
     return this.svc.deleteCompany(t.id, id);
   }
 
+  // Reliure écosystème (société) : contacts membres + agrégats d'activité de la société.
+  @Get('companies/:id/platform')
+  companyPlatform(@CurrentTenant() t: TenantContext, @Param('id') id: string) {
+    return this.svc.getCompanyPlatformLink(t.id, id);
+  }
+
   // ─── Contacts ──────────────────────────────────────────────────────────────
   @Get('contacts')
   listContacts(

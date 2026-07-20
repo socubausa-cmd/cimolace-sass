@@ -174,8 +174,9 @@ export default function CrmContactDetail({ contact, onClose }) {
   const appointments = platform?.appointments ?? [];
   const services = platform?.services ?? [];
   const forum = platform?.forum ?? { topics: 0, posts: 0, questions: 0, total: 0 };
-  const eco = platform?.counts ?? { orders: 0, appointments: 0, services: 0, forum: 0 };
-  const hasEcoActivity = orders.length || appointments.length || services.length || forum.total;
+  const messaging = platform?.messaging ?? { conversations: 0 };
+  const eco = platform?.counts ?? { orders: 0, appointments: 0, services: 0, forum: 0, messaging: 0 };
+  const hasEcoActivity = orders.length || appointments.length || services.length || forum.total || messaging.conversations;
 
   const openMessage = () => {
     if (!platform?.userId) return;
@@ -282,7 +283,7 @@ export default function CrmContactDetail({ contact, onClose }) {
             <div className="space-y-7">
               {/* Écosystème 360° — commandes · RDV · services · forum, reliés par l'identité */}
               <section>
-                <SectionHead icon={Sparkles} title="Écosystème" count={eco.orders + eco.appointments + eco.services + forum.total} />
+                <SectionHead icon={Sparkles} title="Écosystème" count={eco.orders + eco.appointments + eco.services + eco.forum + eco.messaging} />
                 {!hasEcoActivity ? (
                   <div className="rounded-xl border border-dashed lp-line px-4 py-4 text-center">
                     <p className="text-[12.5px] lp-muted">{hasAccount ? 'Aucune activité liée pour l’instant.' : 'Contact hors plateforme.'}</p>
@@ -296,11 +297,12 @@ export default function CrmContactDetail({ contact, onClose }) {
                   </div>
                 ) : (
                   <div className="space-y-3">
-                    <div className="grid grid-cols-4 gap-2">
+                    <div className="grid grid-cols-5 gap-1.5">
                       <StatCell icon={ShoppingBag} label="Cmd" value={eco.orders} />
                       <StatCell icon={CalendarCheck} label="RDV" value={eco.appointments} />
                       <StatCell icon={Ticket} label="Serv." value={eco.services} />
-                      <StatCell icon={MessagesSquare} label="Forum" value={forum.total} />
+                      <StatCell icon={MessageSquare} label="Msg" value={eco.messaging} />
+                      <StatCell icon={MessagesSquare} label="Forum" value={eco.forum} />
                     </div>
 
                     {orders.length > 0 && (
@@ -346,6 +348,7 @@ export default function CrmContactDetail({ contact, onClose }) {
                         ))}
                       </div>
                     )}
+
                   </div>
                 )}
               </section>

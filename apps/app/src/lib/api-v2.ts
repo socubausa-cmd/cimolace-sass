@@ -591,9 +591,12 @@ export const crmApi = {
   importContacts: (contacts: any[]) =>
     apiV2.post<ApiEnvelope<any>>('/crm/contacts/import', { contacts }).then(unwrap),
   // Reliure écosystème — OBJET par design : { contact, isPlatformUser, userId, orders,
-  // appointments, services, forum, counts } → identité plateforme + enrichissement 360°.
+  // appointments, services, forum, messaging, counts } → identité plateforme + 360°.
   getContactPlatform: (id: string) =>
     apiV2.get<ApiEnvelope<any>>(`/crm/contacts/${id}/platform`).then(unwrap),
+  // Reliure société — OBJET : { company, contactsTotal, members:[{isMember,userId,role}], counts }.
+  getCompanyPlatform: (id: string) =>
+    apiV2.get<ApiEnvelope<any>>(`/crm/companies/${id}/platform`).then(unwrap),
 
   listPipelines: (): Promise<any[]> =>
     apiV2.get<ApiEnvelope<{ pipelines?: any[] }>>('/crm/pipelines').then(unwrap)

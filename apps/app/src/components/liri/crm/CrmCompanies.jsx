@@ -13,6 +13,7 @@ import {
 } from 'lucide-react';
 import { crmApi } from '@/lib/api-v2';
 import { useToast } from '@/components/ui/use-toast';
+import CrmCompanyDetail from './CrmCompanyDetail';
 
 /* ── Liste sociétés (grille) — comptes & organisations du CRM ──
    Design : en-tête d'écran, cartes à pastille coral, actions révélées au survol. */
@@ -87,6 +88,7 @@ export default function CrmCompanies() {
 
   const [deleteTarget, setDeleteTarget] = useState(null);
   const [deleting, setDeleting] = useState(false);
+  const [detail, setDetail] = useState(null); // société ouverte en fiche 360°
   const reqRef = useRef(0);
 
   const load = useCallback(
@@ -320,13 +322,25 @@ export default function CrmCompanies() {
             return (
               <div
                 key={c.id}
-                className="group relative flex flex-col rounded-2xl border lp-line lp-panel70 p-4 lp-tr lp-lift"
+                role="button"
+                tabIndex={0}
+                aria-label={`Ouvrir ${c?.name || 'la société'}`}
+                onClick={() => setDetail(c)}
+                onKeyDown={(e) => {
+                  // Ne réagir qu'au focus de la carte elle-même : une touche pressée sur un
+                  // enfant interactif (éditer/supprimer/lien) ne doit pas ouvrir aussi le drawer.
+                  if ((e.key === 'Enter' || e.key === ' ') && e.target === e.currentTarget) {
+                    e.preventDefault();
+                    setDetail(c);
+                  }
+                }}
+                className="group relative flex cursor-pointer flex-col rounded-2xl border lp-line lp-panel70 p-4 lp-tr lp-lift"
               >
                 {/* Actions révélées au survol */}
                 <div className="absolute right-3 top-3 flex items-center gap-1 opacity-0 lp-tr group-hover:opacity-100 focus-within:opacity-100">
                   <button
                     type="button"
-                    onClick={() => openEdit(c)}
+                    onClick={(e) => { e.stopPropagation(); openEdit(c); }}
                     aria-label={`Éditer ${c?.name || 'la société'}`}
                     className="grid h-7 w-7 cursor-pointer place-items-center rounded-lg lp-muted lp-railbtn lp-tr"
                   >
@@ -334,7 +348,7 @@ export default function CrmCompanies() {
                   </button>
                   <button
                     type="button"
-                    onClick={() => setDeleteTarget(c)}
+                    onClick={(e) => { e.stopPropagation(); setDeleteTarget(c); }}
                     aria-label={`Supprimer ${c?.name || 'la société'}`}
                     className="grid h-7 w-7 cursor-pointer place-items-center rounded-lg lp-railbtn lp-tr"
                     style={{ color: '#e0a48f' }}
@@ -371,6 +385,7 @@ export default function CrmCompanies() {
                         href={href}
                         target="_blank"
                         rel="noopener noreferrer"
+                        onClick={(e) => e.stopPropagation()}
                         className="inline-flex w-fit max-w-full cursor-pointer items-center gap-1.5 truncate text-[12.5px] lp-tr"
                         style={{ color: 'var(--coral)' }}
                       >
@@ -407,6 +422,9 @@ export default function CrmCompanies() {
           })}
         </div>
       )}
+
+      {/* Fiche société 360° (reliure écosystème) */}
+      {detail && <CrmCompanyDetail company={detail} onClose={() => setDetail(null)} />}
 
       {/* Modale création / édition */}
       {modalOpen && (

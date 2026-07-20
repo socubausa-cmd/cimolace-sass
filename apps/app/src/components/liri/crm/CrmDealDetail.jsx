@@ -1,8 +1,10 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
+import { useNavigate } from 'react-router-dom';
 import {
   X, Plus, Trash2, Check, Building2, Users, CalendarDays, Layers,
   StickyNote, ListChecks, Activity, Award, Ban, Loader2,
+  MessageSquare, Send, ShoppingBag, CalendarCheck, MessagesSquare,
 } from 'lucide-react';
 import { crmApi } from '@/lib/api-v2';
 import { useToast } from '@/components/ui/use-toast';
@@ -49,9 +51,11 @@ function SectionHead({ icon: Icon, title, count }) {
 
 export default function CrmDealDetail({ deal, stages = [], onClose, onChanged }) {
   const { toast } = useToast();
+  const navigate = useNavigate();
   const [notes, setNotes] = useState([]);
   const [tasks, setTasks] = useState([]);
   const [acts, setActs] = useState([]);
+  const [platform, setPlatform] = useState(null); // reliure du contact lié
   const [loading, setLoading] = useState(true);
   const [noteText, setNoteText] = useState('');
   const [taskTitle, setTaskTitle] = useState('');
@@ -66,15 +70,18 @@ export default function CrmDealDetail({ deal, stages = [], onClose, onChanged })
     const rid = ++reqRef.current;
     setLoading(true);
     try {
-      const [n, t, ac] = await Promise.all([
+      const contactId = deal?.contact?.id;
+      const [n, t, ac, pf] = await Promise.all([
         crmApi.listNotes('deal', id),
         crmApi.listTasks({ entity_type: 'deal', entity_id: id }),
         crmApi.listActivities({ entity_type: 'deal', entity_id: id }).catch(() => []),
+        contactId ? crmApi.getContactPlatform(contactId).catch(() => null) : Promise.resolve(null),
       ]);
       if (rid !== reqRef.current) return;
       setNotes(Array.isArray(n) ? n : n?.notes ?? []);
       setTasks(Array.isArray(t) ? t : t?.tasks ?? []);
       setActs(Array.isArray(ac) ? ac : ac?.activities ?? []);
+      setPlatform(pf || null);
     } catch (e) {
       if (rid === reqRef.current) err(e);
     } finally {
@@ -131,6 +138,21 @@ export default function CrmDealDetail({ deal, stages = [], onClose, onChanged })
   const stageName = stages.find((s) => s.id === cur.stage_id)?.name;
   const isWon = cur.status === 'won';
   const isLost = cur.status === 'lost';
+
+  // ── Reliure : contact lié ──
+  const cName = (cur.contact ? contactName(cur.contact) : '') || platform?.contact?.name || 'Contact';
+  const cEmail = platform?.contact?.email || null;
+  const cCounts = platform?.counts || {};
+  const cBadge = !platform ? null
+    : platform.isPlatformUser ? { text: platform.role ? `Membre · ${platform.role}` : 'Membre', bg: 'rgba(217,119,87,.15)', fg: '#e08a63' }
+    : platform.hasAccount ? { text: 'Compte détecté', bg: 'rgba(220,180,120,.12)', fg: '#cba36b' }
+    : { text: cEmail ? 'Prospect' : 'Sans compte', bg: 'rgba(245,244,238,.06)', fg: 'var(--muted)' };
+  const openMessage = () => {
+    if (!platform?.userId || !platform?.isPlatformUser) return;
+    onClose();
+    navigate(`/liri/messages?to=${encodeURIComponent(platform.userId)}&name=${encodeURIComponent(platform.contact?.name || cName)}`);
+  };
+  const sendEmail = () => { if (cEmail) window.location.href = `mailto:${cEmail}`; };
 
   return createPortal(
     <div className="fixed inset-0 z-[60] flex justify-end" onClick={onClose}>
@@ -210,6 +232,46 @@ export default function CrmDealDetail({ deal, stages = [], onClose, onChanged })
             <div className="space-y-3">{[0, 1, 2].map((i) => <div key={i} className="h-14 rounded-xl lp-panel animate-pulse" />)}</div>
           ) : (
             <div className="space-y-7">
+              {/* Contact lié — statut plateforme + Contacter (reliure écosystème) */}
+              {cur.contact && (
+                <section>
+                  <SectionHead icon={Users} title="Contact lié" />
+                  <div className="rounded-xl border lp-line lp-panel70 p-3.5">
+                    <div className="flex items-center gap-2">
+                      <span className="min-w-0 flex-1 truncate text-[14px] font-medium lp-ink">{cName}</span>
+                      {cBadge && (
+                        <span className="shrink-0 rounded-full px-2 py-0.5 text-[10.5px] font-medium" style={{ background: cBadge.bg, color: cBadge.fg }}>
+                          {cBadge.text}
+                        </span>
+                      )}
+                    </div>
+                    {cEmail && (
+                      <div className="mt-1.5 truncate text-[12.5px] lp-muted">{cEmail}</div>
+                    )}
+                    {(cCounts.orders || cCounts.appointments || cCounts.messaging) ? (
+                      <div className="mt-2.5 flex flex-wrap items-center gap-3 text-[12px] lp-faint">
+                        {cCounts.orders > 0 && <span className="inline-flex items-center gap-1"><ShoppingBag size={12.5} className="lp-coral" />{cCounts.orders} cmd</span>}
+                        {cCounts.appointments > 0 && <span className="inline-flex items-center gap-1"><CalendarCheck size={12.5} className="lp-coral" />{cCounts.appointments} RDV</span>}
+                        {cCounts.messaging > 0 && <span className="inline-flex items-center gap-1"><MessagesSquare size={12.5} className="lp-coral" />{cCounts.messaging} fil{cCounts.messaging > 1 ? 's' : ''}</span>}
+                      </div>
+                    ) : null}
+                    <div className="mt-3 flex items-center gap-2">
+                      {platform?.isPlatformUser ? (
+                        <button type="button" onClick={openMessage} className="inline-flex flex-1 cursor-pointer items-center justify-center gap-2 rounded-xl px-3 py-2 text-[12.5px] font-semibold text-white lp-ember lp-tr">
+                          <MessageSquare size={14} /> Contacter
+                        </button>
+                      ) : cEmail ? (
+                        <button type="button" onClick={sendEmail} className="inline-flex flex-1 cursor-pointer items-center justify-center gap-2 rounded-xl border lp-line px-3 py-2 text-[12.5px] font-medium lp-ink lp-railbtn lp-tr">
+                          <Send size={14} /> Envoyer un email
+                        </button>
+                      ) : (
+                        <span className="text-[12px] lp-faint">Contact non joignable (sans compte ni email).</span>
+                      )}
+                    </div>
+                  </div>
+                </section>
+              )}
+
               {/* Notes */}
               <section>
                 <SectionHead icon={StickyNote} title="Notes" count={notes.length} />
