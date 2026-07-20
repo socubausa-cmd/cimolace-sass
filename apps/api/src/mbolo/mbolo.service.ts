@@ -396,6 +396,60 @@ export class MboloService {
    * Les prix sont TOUJOURS recalculés depuis la base — jamais ceux du client.
    * dto = { customer: {email,name?,phone?,address?}, items: [{productId?|slug?, variantId?, quantity}] }
    */
+  /**
+   * PONT COMMERCE → CRM + NOTIFICATIONS (ferme le silo mbolo↔CRM).
+   * Sur une commande : upsert un `lead` + un `crm_contacts` pour le client (même
+   * tenant, résolu par email → le CRM du portail voit désormais l'acheteur), et
+   * NOTIFIE le(s) owner(s)/admin(s). Idempotent, fire-and-forget : n'échoue JAMAIS
+   * la commande si le CRM/notif casse.
+   */
+  private async linkCommerceToCrm(
+    tenantId: string,
+    order: any,
+    cust: { email?: string | null; name?: string | null; phone?: string | null; userId?: string | null },
+  ): Promise<void> {
+    const email = String(cust?.email ?? '').trim().toLowerCase();
+    if (!email) return;
+    const client = this.supabase.client as any;
+    const parts = String(cust?.name ?? '').trim().split(/\s+/).filter(Boolean);
+    const firstName = parts[0] ?? null;
+    const lastName = parts.length > 1 ? parts.slice(1).join(' ') : null;
+    try {
+      // 1) Lead (select-then-insert : robuste, évite le bug upsert supabase-js)
+      const { data: existLead } = await client.from('leads')
+        .select('id').eq('tenant_id', tenantId).eq('email', email).maybeSingle();
+      if (!existLead) {
+        await client.from('leads').insert({ tenant_id: tenantId, email, name: cust?.name ?? '', source: 'mbolo', status: 'new' });
+      }
+      // 2) Contact CRM (pas d'unique tenant_id,email → select-then-insert)
+      const { data: existing } = await client.from('crm_contacts')
+        .select('id').eq('tenant_id', tenantId).eq('email', email).maybeSingle();
+      if (!existing) {
+        await client.from('crm_contacts').insert({
+          tenant_id: tenantId, email, first_name: firstName, last_name: lastName,
+          phone: cust?.phone ?? null, source: 'mbolo_order', status: 'active', user_id: cust?.userId ?? null,
+        });
+      } else if (cust?.userId) {
+        await client.from('crm_contacts').update({ user_id: cust.userId, updated_at: new Date().toISOString() }).eq('id', existing.id);
+      }
+      // 3) Notifier le(s) owner(s)/admin(s) — table notifications (user_id NOT NULL)
+      const { data: owners } = await client.from('tenant_memberships')
+        .select('user_id').eq('tenant_id', tenantId).eq('status', 'active').in('role', ['owner', 'admin']);
+      const total = Math.round((order?.total_cents ?? 0) / 100);
+      for (const o of owners ?? []) {
+        if (!o?.user_id) continue;
+        await client.from('notifications').insert({
+          tenant_id: tenantId, user_id: o.user_id, type: 'success', is_read: false,
+          title: 'Nouvelle commande boutique',
+          body: `Commande ${order?.order_number ?? ''} — ${total} ${order?.currency ?? 'XAF'} (${email})`,
+          action_url: '/liri/mbolo/commandes',
+        });
+      }
+    } catch {
+      /* jamais bloquant pour la commande */
+    }
+  }
+
   async createStorefrontOrder(tenantId: string, dto: any) {
     const email = dto?.customer?.email?.trim();
     if (!email) throw new BadRequestException('customer.email requis');
@@ -452,6 +506,8 @@ export class MboloService {
         quantity: r.quantity, price_cents: r.price_cents, product_name: r.product_name,
       });
     }
+    // Ferme le silo commerce↔CRM : l'acheteur devient lead + contact CRM, owners notifiés.
+    await this.linkCommerceToCrm(tenantId, order, { email, name: dto?.customer?.name, phone: dto?.customer?.phone, userId: null });
     return { order, items: resolved, total_cents: totalCents, currency };
   }
 
@@ -571,6 +627,15 @@ export class MboloService {
       await (this.supabase.client as any).from('mbolo_order_items').insert({ order_id: order.id, product_id: item.product_id, quantity: item.quantity, price_cents: item.product?.price_cents ?? 0 });
     }
     await (this.supabase.client as any).from('mbolo_cart_items').delete().eq('tenant_id', tenantId).eq('user_id', userId);
+    // Ferme le silo commerce↔CRM (commande membre) : email/nom résolus depuis profiles.
+    try {
+      const { data: prof } = await (this.supabase.client as any).from('profiles').select('*').eq('id', userId).maybeSingle();
+      await this.linkCommerceToCrm(tenantId, order, {
+        email: prof?.email ?? prof?.contact_email ?? null,
+        name: prof?.name ?? prof?.full_name ?? null,
+        userId,
+      });
+    } catch { /* non bloquant */ }
     return { order, total_cents: total };
   }
 
