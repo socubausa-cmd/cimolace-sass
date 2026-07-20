@@ -2,6 +2,7 @@ import { Injectable, NotFoundException, BadRequestException, InternalServerError
 import { createHash, randomBytes } from 'crypto';
 import { SupabaseService } from '../supabase/supabase.service';
 import { LiriEntitlementsService } from '../billing/liri-entitlements.service';
+import { TenantPaymentConfigService } from '../billing/tenant-payment-config/tenant-payment-config.service';
 
 const STOREFRONT_BASE = 'https://api.cimolace.space/v1/mbolo/storefront';
 const MBOLO_DOCS_URL = 'https://cimolace.space/mbolo/integration';
@@ -11,7 +12,24 @@ export class MboloService {
   constructor(
     private readonly supabase: SupabaseService,
     private readonly entitlements: LiriEntitlementsService,
+    private readonly tenantPayments: TenantPaymentConfigService,
   ) {}
+
+  /**
+   * Clé secrète Stripe du TENANT (moyens de paiement configurés dans son
+   * back-office → table tenant_payment_providers) avec repli sur la clé
+   * plateforme (STRIPE_SECRET_KEY). Ainsi CHAQUE boutique encaisse sur SON
+   * compte Stripe ; la plateforme n'est qu'un filet. Ne lève jamais.
+   */
+  private async resolveStripeSecret(tenantId: string): Promise<string | null> {
+    try {
+      const tp = await this.tenantPayments.resolveTenantProviderCreds(tenantId, 'stripe');
+      if (tp?.creds?.secret_key) return tp.creds.secret_key;
+    } catch {
+      /* fallback env */
+    }
+    return process.env.STRIPE_SECRET_KEY || null;
+  }
 
   /**
    * « Installer Mbolo » — provisionne tout ce qu'il faut pour connecter un site
@@ -420,8 +438,8 @@ export class MboloService {
     orderId: string,
     opts: { successUrl?: string; cancelUrl?: string } = {},
   ) {
-    const secret = process.env.STRIPE_SECRET_KEY;
-    if (!secret) throw new BadRequestException('Paiement indisponible (STRIPE_SECRET_KEY non configurée)');
+    const secret = await this.resolveStripeSecret(tenantId);
+    if (!secret) throw new BadRequestException('Paiement indisponible (aucune clé Stripe tenant ni plateforme)');
 
     const order = await this.getOrder(tenantId, orderId);
     if (!order?.id) throw new NotFoundException('Commande introuvable');
@@ -479,7 +497,7 @@ export class MboloService {
     if (order.payment_status === 'paid') return { paid: true, status: order.status, payment_status: 'paid' };
     if (!order.payment_session_id) return { paid: false, status: order.status, payment_status: order.payment_status ?? 'unpaid' };
 
-    const secret = process.env.STRIPE_SECRET_KEY;
+    const secret = await this.resolveStripeSecret(tenantId);
     if (!secret) throw new BadRequestException('Paiement indisponible');
     const res = await fetch(`https://api.stripe.com/v1/checkout/sessions/${order.payment_session_id}`, {
       headers: { Authorization: `Basic ${Buffer.from(secret + ':').toString('base64')}` },
@@ -530,5 +548,213 @@ export class MboloService {
     const { data: order } = await (this.supabase.client as any).from('mbolo_orders').select('*').eq('id', orderId).eq('tenant_id', tenantId).single();
     const { data: items } = await (this.supabase.client as any).from('mbolo_order_items').select('*, product:mbolo_products(*)').eq('order_id', orderId);
     return { ...order, items: items ?? [] };
+  }
+
+  /**
+   * Mise à jour de statut d'une commande (back-office admin, tenant-scopée).
+   * Valeurs validées par la contrainte CHECK de mbolo_orders (source de vérité) ;
+   * on dérive paid_at quand le paiement bascule en payé.
+   */
+  async updateOrderStatus(
+    tenantId: string,
+    orderId: string,
+    dto: { status?: string; paymentStatus?: string },
+  ) {
+    const patch: Record<string, any> = { updated_at: new Date().toISOString() };
+    if (dto.status != null && String(dto.status).trim()) patch.status = String(dto.status).trim();
+    if (dto.paymentStatus != null && String(dto.paymentStatus).trim()) {
+      patch.payment_status = String(dto.paymentStatus).trim();
+      if (patch.payment_status === 'paid') patch.paid_at = new Date().toISOString();
+    }
+    if (Object.keys(patch).length === 1) return this.getOrder(tenantId, orderId); // rien à changer
+    const { data, error } = await (this.supabase.client as any)
+      .from('mbolo_orders').update(patch).eq('id', orderId).eq('tenant_id', tenantId).select('id').single();
+    if (error) throw new BadRequestException(error.message);
+    if (!data) throw new NotFoundException('Commande introuvable');
+    return this.getOrder(tenantId, orderId);
+  }
+
+  // ─── Liens de paiement / facturation (tenant-scopés) ─────────────────────
+  /** Crée un lien de paiement ; `token` public unique. metadata = champs riches storefront. */
+  async createPaymentLink(tenantId: string, dto: any, createdBy: string | null = null) {
+    if (!dto?.title || dto?.amountCents == null) throw new BadRequestException('title et amountCents requis');
+    const token = `pl_${randomBytes(18).toString('hex')}`;
+    const { data, error } = await (this.supabase.client as any).from('mbolo_payment_links').insert({
+      tenant_id: tenantId,
+      token,
+      title: dto.title,
+      description: dto.description ?? null,
+      amount_cents: Math.round(dto.amountCents),
+      currency: dto.currency ?? 'XAF',
+      status: 'active',
+      customer_email: dto.customerEmail ?? null,
+      customer_name: dto.customerName ?? null,
+      expires_at: dto.expiresAt ?? null,
+      metadata: dto.metadata ?? {},
+      created_by: createdBy,
+    }).select('*').single();
+    if (error) throw new BadRequestException(error.message);
+    return { ...data, pay_path: `/pay/${token}` };
+  }
+  async listPaymentLinks(tenantId: string) {
+    const { data } = await (this.supabase.client as any).from('mbolo_payment_links')
+      .select('*').eq('tenant_id', tenantId).order('created_at', { ascending: false });
+    return data ?? [];
+  }
+  async getPaymentLink(tenantId: string, id: string) {
+    const { data } = await (this.supabase.client as any).from('mbolo_payment_links')
+      .select('*').eq('id', id).eq('tenant_id', tenantId).maybeSingle();
+    if (!data) throw new NotFoundException('Lien introuvable');
+    return data;
+  }
+  async getPaymentLinkByToken(tenantId: string, token: string) {
+    const { data } = await (this.supabase.client as any).from('mbolo_payment_links')
+      .select('*').eq('token', token).eq('tenant_id', tenantId).maybeSingle();
+    if (!data) throw new NotFoundException('Lien introuvable');
+    return data;
+  }
+  async updatePaymentLink(tenantId: string, id: string, dto: any) {
+    const map: Record<string, string> = {
+      title: 'title', description: 'description', amountCents: 'amount_cents', currency: 'currency',
+      status: 'status', customerEmail: 'customer_email', customerName: 'customer_name',
+      expiresAt: 'expires_at', metadata: 'metadata',
+    };
+    const patch: Record<string, any> = { updated_at: new Date().toISOString() };
+    for (const [k, col] of Object.entries(map)) if (dto?.[k] !== undefined) patch[col] = dto[k];
+    const { data, error } = await (this.supabase.client as any).from('mbolo_payment_links')
+      .update(patch).eq('id', id).eq('tenant_id', tenantId).select('*').single();
+    if (error) throw new BadRequestException(error.message);
+    if (!data) throw new NotFoundException('Lien introuvable');
+    return data;
+  }
+  async deletePaymentLink(tenantId: string, id: string) {
+    const { error } = await (this.supabase.client as any).from('mbolo_payment_links')
+      .delete().eq('id', id).eq('tenant_id', tenantId);
+    if (error) throw new BadRequestException(error.message);
+    return { ok: true };
+  }
+  /** Session Stripe Checkout pour un lien (encaissement sur le compte Stripe DU TENANT). */
+  async createPaymentLinkCheckoutSession(tenantId: string, token: string, opts: { successUrl?: string; cancelUrl?: string } = {}) {
+    const link = await this.getPaymentLinkByToken(tenantId, token);
+    if (link.status === 'paid') throw new BadRequestException('Lien déjà payé');
+    if (link.status === 'cancelled') throw new BadRequestException('Lien annulé');
+    const secret = await this.resolveStripeSecret(tenantId);
+    if (!secret) throw new BadRequestException('Paiement indisponible (aucune clé Stripe)');
+    const currency = (link.currency || 'XAF').toLowerCase();
+    const frontend = process.env.FRONTEND_URL || 'https://cimolace.space';
+    const params = new URLSearchParams();
+    params.append('mode', 'payment');
+    params.append('success_url', opts.successUrl || `${frontend}/pay/${token}?paid=1&session_id={CHECKOUT_SESSION_ID}`);
+    params.append('cancel_url', opts.cancelUrl || `${frontend}/pay/${token}`);
+    params.append('client_reference_id', link.id);
+    params.append('metadata[mbolo_payment_link_id]', link.id);
+    params.append('metadata[tenant_id]', tenantId);
+    if (link.customer_email) params.append('customer_email', link.customer_email);
+    params.append('line_items[0][price_data][currency]', currency);
+    params.append('line_items[0][price_data][product_data][name]', link.title || 'Paiement');
+    params.append('line_items[0][price_data][unit_amount]', String(this.stripeAmount(link.amount_cents ?? 0, currency)));
+    params.append('line_items[0][quantity]', '1');
+    const res = await fetch('https://api.stripe.com/v1/checkout/sessions', {
+      method: 'POST',
+      headers: { Authorization: `Basic ${Buffer.from(secret + ':').toString('base64')}`, 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: params.toString(),
+    });
+    if (!res.ok) throw new BadRequestException(`Stripe Checkout error ${res.status}: ${(await res.text().catch(() => '')).slice(0, 300)}`);
+    const session = (await res.json()) as { id: string; url: string };
+    await (this.supabase.client as any).from('mbolo_payment_links')
+      .update({ payment_provider: 'stripe', payment_session_id: session.id, updated_at: new Date().toISOString() })
+      .eq('id', link.id).eq('tenant_id', tenantId);
+    return { url: session.url, session_id: session.id };
+  }
+  /** Confirmation au retour : interroge Stripe ; marque le lien payé si payé. Idempotent. */
+  async confirmPaymentLink(tenantId: string, token: string) {
+    const link = await this.getPaymentLinkByToken(tenantId, token);
+    if (link.status === 'paid') return { paid: true, status: 'paid' };
+    if (!link.payment_session_id) return { paid: false, status: link.status };
+    const secret = await this.resolveStripeSecret(tenantId);
+    if (!secret) throw new BadRequestException('Paiement indisponible');
+    const res = await fetch(`https://api.stripe.com/v1/checkout/sessions/${link.payment_session_id}`, {
+      headers: { Authorization: `Basic ${Buffer.from(secret + ':').toString('base64')}` },
+    });
+    if (!res.ok) throw new BadRequestException(`Stripe session lookup ${res.status}`);
+    const session = (await res.json()) as { payment_status?: string };
+    const paid = session.payment_status === 'paid';
+    if (paid) {
+      await (this.supabase.client as any).from('mbolo_payment_links')
+        .update({ status: 'paid', paid_at: new Date().toISOString(), updated_at: new Date().toISOString() })
+        .eq('id', link.id).eq('tenant_id', tenantId);
+    }
+    return { paid, status: paid ? 'paid' : link.status };
+  }
+
+  // ─── Factures (tenant-scopées) ───────────────────────────────────────────
+  /** Numéro de facture séquentiel PAR TENANT : INV-YYYY-NNNN. */
+  private async nextInvoiceNumber(tenantId: string): Promise<string> {
+    const year = new Date().getUTCFullYear();
+    const { count } = await (this.supabase.client as any).from('mbolo_invoices')
+      .select('id', { count: 'exact', head: true }).eq('tenant_id', tenantId);
+    return `INV-${year}-${String((count ?? 0) + 1).padStart(4, '0')}`;
+  }
+  async createInvoice(tenantId: string, dto: any, createdBy: string | null = null) {
+    const lines: any[] = Array.isArray(dto?.lines) ? dto.lines : [];
+    const subtotal = dto?.subtotalCents ?? lines.reduce((s, l) => s + (l.totalCents ?? (l.unitCents ?? 0) * (l.quantity ?? 1)), 0);
+    const tax = dto?.taxCents ?? 0;
+    const total = dto?.totalCents ?? subtotal + tax;
+    const number = dto?.invoiceNumber || (await this.nextInvoiceNumber(tenantId));
+    const { data, error } = await (this.supabase.client as any).from('mbolo_invoices').insert({
+      tenant_id: tenantId,
+      invoice_number: number,
+      status: dto?.status ?? 'draft',
+      customer_name: dto?.customerName ?? null,
+      customer_email: dto?.customerEmail ?? null,
+      customer_address: dto?.customerAddress ?? {},
+      currency: dto?.currency ?? 'XAF',
+      subtotal_cents: Math.round(subtotal),
+      tax_cents: Math.round(tax),
+      total_cents: Math.round(total),
+      lines,
+      notes: dto?.notes ?? null,
+      order_id: dto?.orderId ?? null,
+      issued_at: dto?.issuedAt ?? null,
+      due_at: dto?.dueAt ?? null,
+      metadata: dto?.metadata ?? {},
+      created_by: createdBy,
+    }).select('*').single();
+    if (error) throw new BadRequestException(error.message);
+    return data;
+  }
+  async listInvoices(tenantId: string) {
+    const { data } = await (this.supabase.client as any).from('mbolo_invoices')
+      .select('*').eq('tenant_id', tenantId).order('created_at', { ascending: false });
+    return data ?? [];
+  }
+  async getInvoice(tenantId: string, id: string) {
+    const { data } = await (this.supabase.client as any).from('mbolo_invoices')
+      .select('*').eq('id', id).eq('tenant_id', tenantId).maybeSingle();
+    if (!data) throw new NotFoundException('Facture introuvable');
+    return data;
+  }
+  async updateInvoice(tenantId: string, id: string, dto: any) {
+    const map: Record<string, string> = {
+      invoiceNumber: 'invoice_number', status: 'status', customerName: 'customer_name',
+      customerEmail: 'customer_email', customerAddress: 'customer_address', currency: 'currency',
+      subtotalCents: 'subtotal_cents', taxCents: 'tax_cents', totalCents: 'total_cents',
+      lines: 'lines', notes: 'notes', orderId: 'order_id', issuedAt: 'issued_at',
+      dueAt: 'due_at', metadata: 'metadata',
+    };
+    const patch: Record<string, any> = { updated_at: new Date().toISOString() };
+    for (const [k, col] of Object.entries(map)) if (dto?.[k] !== undefined) patch[col] = dto[k];
+    if (patch.status === 'paid' && dto?.paidAt === undefined) patch.paid_at = new Date().toISOString();
+    const { data, error } = await (this.supabase.client as any).from('mbolo_invoices')
+      .update(patch).eq('id', id).eq('tenant_id', tenantId).select('*').single();
+    if (error) throw new BadRequestException(error.message);
+    if (!data) throw new NotFoundException('Facture introuvable');
+    return data;
+  }
+  async deleteInvoice(tenantId: string, id: string) {
+    const { error } = await (this.supabase.client as any).from('mbolo_invoices')
+      .delete().eq('id', id).eq('tenant_id', tenantId);
+    if (error) throw new BadRequestException(error.message);
+    return { ok: true };
   }
 }

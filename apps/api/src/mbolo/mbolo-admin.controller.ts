@@ -64,4 +64,62 @@ export class MboloAdminController {
   addVariant(@Param('id') id: string, @Body() d: any, @CurrentTenant() t: TenantContext) {
     return this.svc.addProductVariant(t.id, id, d);
   }
+
+  // ─── Commandes (back-office tenant-scopé — toutes les commandes de la boutique) ───
+  @Get('orders')
+  listOrders(@CurrentTenant() t: TenantContext) {
+    return this.svc.listOrders(t.id); // sans userId → toutes les commandes du tenant
+  }
+  @Get('orders/:id')
+  getOrder(@Param('id') id: string, @CurrentTenant() t: TenantContext) {
+    return this.svc.getOrder(t.id, id);
+  }
+  @Patch('orders/:id')
+  updateOrder(@Param('id') id: string, @Body() d: any, @CurrentTenant() t: TenantContext) {
+    return this.svc.updateOrderStatus(t.id, id, { status: d?.status, paymentStatus: d?.paymentStatus ?? d?.payment_status });
+  }
+
+  // ─── Liens de paiement / facturation (tenant-scopés) ───
+  @Get('payment-links')
+  listPaymentLinks(@CurrentTenant() t: TenantContext) {
+    return this.svc.listPaymentLinks(t.id);
+  }
+  @Get('payment-links/:id')
+  getPaymentLink(@Param('id') id: string, @CurrentTenant() t: TenantContext) {
+    return this.svc.getPaymentLink(t.id, id);
+  }
+  @Post('payment-links')
+  createPaymentLink(@Body() d: any, @CurrentTenant() t: TenantContext) {
+    return this.svc.createPaymentLink(t.id, d);
+  }
+  @Patch('payment-links/:id')
+  updatePaymentLink(@Param('id') id: string, @Body() d: any, @CurrentTenant() t: TenantContext) {
+    return this.svc.updatePaymentLink(t.id, id, d);
+  }
+  @Delete('payment-links/:id')
+  deletePaymentLink(@Param('id') id: string, @CurrentTenant() t: TenantContext) {
+    return this.svc.deletePaymentLink(t.id, id);
+  }
+
+  // ─── Factures (tenant-scopées) ───
+  @Get('invoices')
+  listInvoices(@CurrentTenant() t: TenantContext) {
+    return this.svc.listInvoices(t.id);
+  }
+  @Get('invoices/:id')
+  getInvoice(@Param('id') id: string, @CurrentTenant() t: TenantContext) {
+    return this.svc.getInvoice(t.id, id);
+  }
+  @Post('invoices')
+  createInvoice(@Body() d: any, @CurrentTenant() t: TenantContext) {
+    return this.svc.createInvoice(t.id, d);
+  }
+  @Patch('invoices/:id')
+  updateInvoice(@Param('id') id: string, @Body() d: any, @CurrentTenant() t: TenantContext) {
+    return this.svc.updateInvoice(t.id, id, d);
+  }
+  @Delete('invoices/:id')
+  deleteInvoice(@Param('id') id: string, @CurrentTenant() t: TenantContext) {
+    return this.svc.deleteInvoice(t.id, id);
+  }
 }

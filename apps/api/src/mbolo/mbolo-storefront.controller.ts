@@ -48,4 +48,18 @@ export class MboloStorefrontController {
   confirm(@Param('id') id: string, @CurrentTenant() t: TenantContext) {
     return this.svc.confirmOrderPayment(t.id, id);
   }
+
+  // ─── Lien de paiement public (page /pay/:token — le storefront lit avec sa clé mbk_) ───
+  @Get('pay/:token')
+  payLink(@Param('token') token: string, @CurrentTenant() t: TenantContext) {
+    return this.svc.getPaymentLinkByToken(t.id, token);
+  }
+  @Post('pay/:token/checkout-session')
+  payCheckout(@Param('token') token: string, @Body() body: any, @CurrentTenant() t: TenantContext) {
+    return this.svc.createPaymentLinkCheckoutSession(t.id, token, { successUrl: body?.successUrl, cancelUrl: body?.cancelUrl });
+  }
+  @Post('pay/:token/confirm')
+  payConfirm(@Param('token') token: string, @CurrentTenant() t: TenantContext) {
+    return this.svc.confirmPaymentLink(t.id, token);
+  }
 }
