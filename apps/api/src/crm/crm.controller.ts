@@ -34,6 +34,18 @@ export class CrmController {
     return this.svc.summary(t.id);
   }
 
+  // Recherche globale (Cmd-K) : contacts + sociétés + deals.
+  @Get('search')
+  search(@CurrentTenant() t: TenantContext, @Query('q') q?: string, @Query('limit') limit?: string) {
+    return this.svc.search(t.id, String(q || ''), Number(limit) || 8);
+  }
+
+  // Reporting sales : win-rate, forecast pondéré, conversion par étape, vélocité, leaderboard.
+  @Get('analytics')
+  analytics(@CurrentTenant() t: TenantContext) {
+    return this.svc.analytics(t.id);
+  }
+
   // Timeline d'activités : flux récent global, ou filtré par entité (entity_type + entity_id).
   @Get('activities')
   listActivities(

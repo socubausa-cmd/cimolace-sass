@@ -864,6 +864,23 @@ export class MarketingAdvancedService {
     // déclenche les flows `lead_created` du tenant. Fire-and-forget : un échec d'automation ne
     // casse JAMAIS la capture ; le résultat est tracé dans les logs (Railway).
     if (!existing) {
+      // #7 : un lead NEUF devient aussi un contact CRM (find-or-create par email, conserve lead_id).
+      // Best-effort, tenant-scopé : ne casse jamais la capture, ne crée pas de doublon.
+      try {
+        const emailLc = String(lead.email || '').trim().toLowerCase();
+        if (emailLc) {
+          const esc = emailLc.replace(/[\\%_]/g, (m) => `\\${m}`);
+          const { data: existC } = await db.from('crm_contacts').select('id').eq('tenant_id', tenantId).ilike('email', esc).limit(1);
+          if (!(existC as any)?.[0]) {
+            const parts = String(lead.name || '').trim().split(/\s+/).filter(Boolean);
+            await db.from('crm_contacts').insert({
+              tenant_id: tenantId, lead_id: lead.id,
+              first_name: parts[0] || null, last_name: parts.slice(1).join(' ') || null,
+              email: emailLc, source: 'lead', status: 'active',
+            });
+          }
+        }
+      } catch { /* best-effort */ }
       void this.runAutomation(tenantId, { trigger: 'lead_created', leadId: lead.id, context: { publicTrigger: true } })
         .then((r) => {
           if (r?.executedCount) {

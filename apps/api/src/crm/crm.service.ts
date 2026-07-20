@@ -1261,4 +1261,68 @@ export class CrmService {
     };
     return base;
   }
+
+  // ─── Recherche globale (#9) ───────────────────────────────────────────────────
+  /** Recherche unifiée contacts + sociétés + deals (Cmd-K), tenant-scopée, plafonnée. */
+  async search(tenantId: string, q: string, limit = 8) {
+    const raw = String(q || '').trim();
+    if (raw.length < 2) return { contacts: [], companies: [], deals: [] };
+    // Retirer les métacaractères PostgREST .or() puis échapper les wildcards LIKE.
+    const safe = CrmService.escapeLike(raw.replace(/[,()]/g, ' ').trim());
+    const like = `%${safe}%`;
+    const cap = Math.min(Math.max(limit, 1), 25);
+    const [contacts, companies, deals] = await Promise.all([
+      this.safeRows(() => this.db().from('crm_contacts')
+        .select('id, first_name, last_name, email, company:crm_companies(id,name)')
+        .eq('tenant_id', tenantId)
+        .or(`first_name.ilike.${like},last_name.ilike.${like},email.ilike.${like},phone.ilike.${like}`)
+        .limit(cap)),
+      this.safeRows(() => this.db().from('crm_companies')
+        .select('id, name, website').eq('tenant_id', tenantId)
+        .or(`name.ilike.${like},website.ilike.${like}`).limit(cap)),
+      this.safeRows(() => this.db().from('crm_deals')
+        .select('id, title, amount, currency, status').eq('tenant_id', tenantId)
+        .ilike('title', like).limit(cap)),
+    ]);
+    return { contacts, companies, deals };
+  }
+
+  // ─── Reporting sales (#17) ────────────────────────────────────────────────────
+  /** Métriques pipeline : win-rate, forecast pondéré, conversion par étape, vélocité, leaderboard. */
+  async analytics(tenantId: string) {
+    const [deals, stages] = await Promise.all([
+      this.safeRows(() => this.db().from('crm_deals')
+        .select('id, amount, currency, status, stage_id, owner_id, created_at, closed_at')
+        .eq('tenant_id', tenantId).limit(5000)),
+      this.safeRows(() => this.db().from('crm_stages')
+        .select('id, name, win_probability, is_won, is_lost, position').eq('tenant_id', tenantId)),
+    ]);
+    const won = deals.filter((d: any) => d.status === 'won');
+    const lost = deals.filter((d: any) => d.status === 'lost');
+    const open = deals.filter((d: any) => d.status === 'open');
+    const num = (v: any) => Number(v || 0);
+    const winRate = won.length + lost.length ? won.length / (won.length + lost.length) : 0;
+    const avgWonAmount = won.length ? won.reduce((s: number, d: any) => s + num(d.amount), 0) / won.length : 0;
+    const probByStage = new Map<string, number>(stages.map((s: any) => [s.id, num(s.win_probability) / 100]));
+    const forecast = open.reduce((s: number, d: any) => s + num(d.amount) * (probByStage.get(d.stage_id) ?? 0), 0);
+    const pipelineValue: Record<string, number> = {};
+    for (const d of open) { const c = d.currency || 'EUR'; pipelineValue[c] = (pipelineValue[c] || 0) + num(d.amount); }
+    const byStage = [...stages].sort((a: any, b: any) => num(a.position) - num(b.position)).map((s: any) => {
+      const inStage = open.filter((d: any) => d.stage_id === s.id);
+      return { id: s.id, name: s.name, count: inStage.length, value: inStage.reduce((x: number, d: any) => x + num(d.amount), 0) };
+    });
+    const leaderboard: Record<string, { won: number; amount: number }> = {};
+    for (const d of won) { const o = d.owner_id || 'non attribué'; leaderboard[o] = leaderboard[o] || { won: 0, amount: 0 }; leaderboard[o].won++; leaderboard[o].amount += num(d.amount); }
+    const cycles = won.filter((d: any) => d.closed_at && d.created_at)
+      .map((d: any) => (new Date(d.closed_at).getTime() - new Date(d.created_at).getTime()) / 86400000)
+      .filter((n: number) => n >= 0);
+    const avgCycleDays = cycles.length ? Math.round(cycles.reduce((a: number, b: number) => a + b, 0) / cycles.length) : null;
+    return {
+      totals: { open: open.length, won: won.length, lost: lost.length },
+      winRate: Math.round(winRate * 100) / 100,
+      avgWonAmount: Math.round(avgWonAmount * 100) / 100,
+      forecast: Math.round(forecast * 100) / 100,
+      pipelineValue, byStage, leaderboard, avgCycleDays,
+    };
+  }
 }
