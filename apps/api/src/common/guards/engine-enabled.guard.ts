@@ -2,6 +2,8 @@ import {
   CanActivate,
   ExecutionContext,
   ForbiddenException,
+  HttpException,
+  HttpStatus,
   Injectable,
   Logger,
 } from '@nestjs/common';
@@ -96,8 +98,40 @@ export class EngineEnabledGuard implements CanActivate {
         );
         return true;
       }
-      const runtimeGating =
-        (t as any)?.metadata?.gating?.runtime === true;
+      const meta = (t as any)?.metadata ?? {};
+
+      // 1bis) Gating ABONNEMENT (opt-in INDÉPENDANT : `metadata.billing.api_gating`).
+      // Coupe l'accès in-app au moteur quand l'abonnement Cimolace lapse — MÊME contrat
+      // que la garde clé API (`api-key.guard`), MÊME fenêtre de grâce (7 j). Aucun tenant
+      // sans le flag n'est affecté ; erreur DB → fail-open (jamais couper sur une panne).
+      if (meta?.billing?.api_gating === true) {
+        const { data: subs, error: subErr } = await this.supabase.client
+          .from('billing_subscriptions')
+          .select('status, current_period_end')
+          .eq('tenant_id', tenant.id)
+          .order('created_at', { ascending: false })
+          .limit(5);
+        if (subErr) {
+          this.logger.warn(
+            `gating ${engine}: lecture billing KO (${subErr.message}) → fail-open`,
+          );
+        } else if (
+          !(subs ?? []).some((s) => this.isSubscriptionUsable(s as any))
+        ) {
+          throw new HttpException(
+            {
+              statusCode: HttpStatus.PAYMENT_REQUIRED,
+              error: 'Payment Required',
+              code: 'subscription_inactive',
+              message: `Abonnement Cimolace inactif ou expiré — accès au moteur « ${engine} » suspendu.`,
+            },
+            HttpStatus.PAYMENT_REQUIRED,
+          );
+        }
+      }
+
+      // 1ter) Gating ACTIVATION moteur (opt-in : `metadata.gating.runtime`).
+      const runtimeGating = meta?.gating?.runtime === true;
       if (!runtimeGating) return true;
 
       // 2) Le moteur est-il activé ?
@@ -129,12 +163,36 @@ export class EngineEnabledGuard implements CanActivate {
       }
       return true;
     } catch (e) {
-      if (e instanceof ForbiddenException) throw e;
+      // Décisions VOLONTAIRES (403 activation, 402 abonnement) : on les propage.
+      if (e instanceof HttpException) throw e;
       // Toute autre erreur inattendue : fail-open (ne jamais bloquer sur panne).
       this.logger.warn(
         `gating ${engine}: erreur inattendue (${(e as Error).message}) → fail-open`,
       );
       return true;
     }
+  }
+
+  /**
+   * Abonnement exploitable — logique ALIGNÉE sur `api-key.guard` (source de vérité) :
+   *  - `active` tant que la période courante n'est pas dépassée (ou illimitée) ;
+   *  - `past_due` toléré 7 jours après `current_period_end` (relance de paiement) ;
+   *  - tout le reste (`pending`/`canceled`/`expired`/`paused`) → non exploitable.
+   */
+  private isSubscriptionUsable(s: {
+    status?: string | null;
+    current_period_end?: string | null;
+  }): boolean {
+    if (!s?.status) return false;
+    const periodEnd = s.current_period_end
+      ? new Date(s.current_period_end).getTime()
+      : null;
+    const now = Date.now();
+    if (s.status === 'active') return periodEnd === null || periodEnd >= now;
+    if (s.status === 'past_due') {
+      const graceMs = 7 * 24 * 60 * 60 * 1000;
+      return periodEnd === null || periodEnd + graceMs >= now;
+    }
+    return false;
   }
 }

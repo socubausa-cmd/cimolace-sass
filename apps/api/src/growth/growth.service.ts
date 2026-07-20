@@ -26,16 +26,54 @@ export class GrowthService {
     return data ?? [];
   }
 
+  /**
+   * CONTACT UNIFIÉ : garantit qu'un email a un `crm_contacts` (le CRM = UNE notion de
+   * contact, pas 3 surfaces). Select-then-insert idempotent ; lie le lead_id. Fire-and-forget.
+   */
+  private async ensureCrmContact(
+    tenantId: string,
+    opts: { email?: string | null; name?: string | null; leadId?: string | null; source?: string | null; userId?: string | null },
+  ): Promise<void> {
+    const client = this.supabase.client as any;
+    const email = String(opts?.email ?? '').trim().toLowerCase();
+    if (!email) return;
+    try {
+      const { data: existing } = await client.from('crm_contacts').select('id, lead_id, user_id').eq('tenant_id', tenantId).eq('email', email).maybeSingle();
+      if (existing) {
+        const patch: Record<string, any> = {};
+        if (opts.leadId && !existing.lead_id) patch.lead_id = opts.leadId;
+        if (opts.userId && !existing.user_id) patch.user_id = opts.userId;
+        if (Object.keys(patch).length) {
+          patch.updated_at = new Date().toISOString();
+          await client.from('crm_contacts').update(patch).eq('id', existing.id);
+        }
+        return;
+      }
+      const parts = String(opts.name ?? '').trim().split(/\s+/).filter(Boolean);
+      await client.from('crm_contacts').insert({
+        tenant_id: tenantId, email,
+        first_name: parts[0] ?? null, last_name: parts.length > 1 ? parts.slice(1).join(' ') : null,
+        source: opts.source ?? 'lead', status: 'active', lead_id: opts.leadId ?? null, user_id: opts.userId ?? null,
+      });
+    } catch { /* jamais bloquant */ }
+  }
+
   async createLead(tenantId: string, email: string, source: string, name?: string) {
     // select-then-insert : l'upsert supabase-js onConflict échouait silencieusement (leads=0 en prod).
     const client = this.supabase.client as any;
     const em = String(email ?? '').trim().toLowerCase();
+    let lead: any;
     const { data: existing } = await client.from('leads').select('*').eq('tenant_id', tenantId).eq('email', em).maybeSingle();
-    if (existing) return existing;
-    const { data } = await client.from('leads')
-      .insert({ tenant_id: tenantId, email: em, source, name: name ?? '', status: 'new' })
-      .select('*').single();
-    return data;
+    if (existing) lead = existing;
+    else {
+      const { data } = await client.from('leads')
+        .insert({ tenant_id: tenantId, email: em, source, name: name ?? '', status: 'new' })
+        .select('*').single();
+      lead = data;
+    }
+    // Contact unifié : tout lead a désormais un crm_contact (une seule notion de contact).
+    await this.ensureCrmContact(tenantId, { email: em, name, leadId: lead?.id, source: source ?? 'lead' });
+    return lead;
   }
 
   async listLeads(tenantId: string) {
@@ -67,9 +105,19 @@ export class GrowthService {
       userId = prof?.id ?? null;
     } catch { /* identité non résolue → fan-out par email quand même */ }
 
+    // Dossier patient MEDOS (pont messagerie clinique) : résolu par user OU par email,
+    // pour rattacher les fils `med_message_threads` (silo MEDOS) au hub 360°. Guardé.
+    let medPatientId: string | null = null;
+    try {
+      let rp: any = null;
+      if (userId) rp = await client.from('med_patients').select('id').eq('tenant_id', tenantId).eq('patient_user_id', userId).maybeSingle();
+      if (!rp?.data) rp = await client.from('med_patients').select('id').eq('tenant_id', tenantId).ilike('email', email).maybeSingle();
+      medPatientId = rp?.data?.id ?? null;
+    } catch { /* MEDOS non provisionné pour ce tenant → ignore */ }
+
     const nil = Promise.resolve({ data: null });
     const nilArr = Promise.resolve({ data: [] });
-    const [ordersByEmail, ordersByUser, contact, lead, membership, convs, appts] = await Promise.all([
+    const [ordersByEmail, ordersByUser, contact, lead, membership, convs, appts, medThreads] = await Promise.all([
       client.from('mbolo_orders').select('id, order_number, total_cents, currency, status, payment_status, created_at').eq('tenant_id', tenantId).eq('customer_email', email).order('created_at', { ascending: false }),
       userId ? client.from('mbolo_orders').select('id, order_number, total_cents, currency, status, payment_status, created_at').eq('tenant_id', tenantId).eq('user_id', userId) : nilArr,
       client.from('crm_contacts').select('*').eq('tenant_id', tenantId).eq('email', email).maybeSingle(),
@@ -77,6 +125,7 @@ export class GrowthService {
       userId ? client.from('tenant_memberships').select('role, status, created_at').eq('tenant_id', tenantId).eq('user_id', userId).maybeSingle() : nil,
       userId ? client.from('conversation_participants').select('conversation_id').eq('tenant_id', tenantId).eq('user_id', userId) : nilArr,
       userId ? client.from('appointments').select('id, status, source, created_at').eq('tenant_id', tenantId).eq('student_id', userId).order('created_at', { ascending: false }) : nilArr,
+      medPatientId ? client.from('med_message_threads').select('id, subject, status, last_message_at').eq('tenant_id', tenantId).eq('patient_id', medPatientId).order('last_message_at', { ascending: false }) : nilArr,
     ]);
 
     const orderMap = new Map<string, any>();
@@ -84,12 +133,14 @@ export class GrowthService {
     const orders = [...orderMap.values()];
     const convCount = (convs?.data ?? []).length;
     const apptList = appts?.data ?? [];
+    const medThreadList = medThreads?.data ?? [];
 
     const enginesTouched = [
       membership?.data ? 'ecole/liri' : null,
       orders.length ? 'mbolo (boutique)' : null,
       apptList.length ? 'rdv/medos' : null,
       convCount ? 'messagerie/forum' : null,
+      medThreadList.length ? 'medos (messagerie)' : null,
       (contact?.data || lead?.data) ? 'crm' : null,
     ].filter(Boolean) as string[];
 
@@ -101,6 +152,7 @@ export class GrowthService {
       mbolo: { orders, count: orders.length, total_cents: orders.reduce((s: number, o: any) => s + (o.total_cents ?? 0), 0) },
       rdv: { appointments: apptList, count: apptList.length },
       messaging: { conversations: convCount },
+      medos_messaging: { threads: medThreadList, count: medThreadList.length },
       engines_touched: enginesTouched,
       connected: enginesTouched.length,
     };
