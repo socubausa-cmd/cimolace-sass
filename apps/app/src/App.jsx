@@ -694,6 +694,12 @@ const MedosPatientDetail = lazy(() => import('@/pages/MedosPatientDetail').then(
 const MedosPatientPortal = lazy(() => import('@/pages/MedosPatientPortal').then((m) => ({ default: m.MedosPatientPortal })));
 const MboloCatalog = lazy(() => import('@/pages/MboloCatalog').then((m) => ({ default: m.MboloCatalog })));
 const MboloOrders = lazy(() => import('@/pages/MboloOrders').then((m) => ({ default: m.MboloOrders })));
+// Back-office mbolo embarqué dans le portail LIRI (moteur mbolo → produits/commandes/paiements/factures/compta)
+const MboloProduitsPage = lazy(() => import('@/pages/liri/mbolo/MboloProduitsPage'));
+const MboloCommandesPage = lazy(() => import('@/pages/liri/mbolo/MboloCommandesPage'));
+const MboloPaiementsPage = lazy(() => import('@/pages/liri/mbolo/MboloPaiementsPage'));
+const MboloFacturesPage = lazy(() => import('@/pages/liri/mbolo/MboloFacturesPage'));
+const MboloComptaPage = lazy(() => import('@/pages/liri/mbolo/MboloComptaPage'));
 const TenantBillingPage = lazy(() => import('@/pages/TenantBillingPage').then((m) => ({ default: m.TenantBillingPage })));
 const TenantPayoutsPage = lazy(() => import('@/pages/TenantPayoutsPage').then((m) => ({ default: m.TenantPayoutsPage })));
 const AboutProrascience = lazy(() => import('@/pages/AboutProrascience'));
@@ -1979,6 +1985,32 @@ isLiriHostDevPreviewRoute;
           <Route path="/liri/boutique" element={
             <ProtectedLiriRoute allowedRoles={['owner', 'admin', 'teacher', 'secretariat', 'student', 'practitioner', 'clinic_admin']} allowTenantRole>
               <LiriBoutiquePage />
+            </ProtectedLiriRoute>
+          } />
+          {/* Back-office mbolo dans le portail LIRI (moteur mbolo, owner/admin) : produits · commandes · liens de paiement · factures · compta */}
+          <Route path="/liri/mbolo/produits" element={
+            <ProtectedLiriRoute allowedRoles={['owner', 'admin']} allowTenantRole>
+              <MboloProduitsPage />
+            </ProtectedLiriRoute>
+          } />
+          <Route path="/liri/mbolo/commandes" element={
+            <ProtectedLiriRoute allowedRoles={['owner', 'admin']} allowTenantRole>
+              <MboloCommandesPage />
+            </ProtectedLiriRoute>
+          } />
+          <Route path="/liri/mbolo/paiements" element={
+            <ProtectedLiriRoute allowedRoles={['owner', 'admin']} allowTenantRole>
+              <MboloPaiementsPage />
+            </ProtectedLiriRoute>
+          } />
+          <Route path="/liri/mbolo/factures" element={
+            <ProtectedLiriRoute allowedRoles={['owner', 'admin']} allowTenantRole>
+              <MboloFacturesPage />
+            </ProtectedLiriRoute>
+          } />
+          <Route path="/liri/mbolo/compta" element={
+            <ProtectedLiriRoute allowedRoles={['owner', 'admin']} allowTenantRole>
+              <MboloComptaPage />
             </ProtectedLiriRoute>
           } />
           {/* Contenu du site — éditeur du KNOWLEDGE PACK OS (identité/fondateur/vision/offres/FAQ)

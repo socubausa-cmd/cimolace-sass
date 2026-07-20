@@ -1278,11 +1278,44 @@ export const mboloApi = {
     api.post<ApiEnvelope<MboloProductImage>>(`/mbolo/products/${productId}/images`, body).then(unwrap),
   addVariant: (productId: string, body: { label: string; skuSuffix?: string; priceDeltaCents?: number; stock?: number; sortOrder?: number }) =>
     api.post<ApiEnvelope<MboloVariant>>(`/mbolo/products/${productId}/variants`, body).then(unwrap),
+  updateProduct: (id: string, body: Record<string, unknown>) =>
+    api.patch<ApiEnvelope<MboloProduct>>(`/mbolo/products/${id}`, body).then(unwrap),
+  deleteProduct: (id: string) =>
+    api.delete<ApiEnvelope<{ ok: boolean }>>(`/mbolo/products/${id}`).then(unwrap),
   // Commandes
   listOrders: () =>
     api.get<ApiEnvelope<MboloOrder[]>>("/mbolo/orders").then(unwrap),
   getOrder: (id: string) =>
     api.get<ApiEnvelope<MboloOrder>>(`/mbolo/orders/${id}`).then(unwrap),
+  updateOrder: (id: string, body: Record<string, unknown>) =>
+    api.patch<ApiEnvelope<MboloOrder>>(`/mbolo/orders/${id}`, body).then(unwrap),
+  // Liens de paiement / facturation
+  listPaymentLinks: () =>
+    api.get<ApiEnvelope<any[]>>("/mbolo/payment-links").then(unwrap),
+  getPaymentLink: (id: string) =>
+    api.get<ApiEnvelope<any>>(`/mbolo/payment-links/${id}`).then(unwrap),
+  createPaymentLink: (body: Record<string, unknown>) =>
+    api.post<ApiEnvelope<any>>("/mbolo/payment-links", body).then(unwrap),
+  updatePaymentLink: (id: string, body: Record<string, unknown>) =>
+    api.patch<ApiEnvelope<any>>(`/mbolo/payment-links/${id}`, body).then(unwrap),
+  deletePaymentLink: (id: string) =>
+    api.delete<ApiEnvelope<{ ok: boolean }>>(`/mbolo/payment-links/${id}`).then(unwrap),
+  // Factures
+  listInvoices: () =>
+    api.get<ApiEnvelope<any[]>>("/mbolo/invoices").then(unwrap),
+  getInvoice: (id: string) =>
+    api.get<ApiEnvelope<any>>(`/mbolo/invoices/${id}`).then(unwrap),
+  createInvoice: (body: Record<string, unknown>) =>
+    api.post<ApiEnvelope<any>>("/mbolo/invoices", body).then(unwrap),
+  updateInvoice: (id: string, body: Record<string, unknown>) =>
+    api.patch<ApiEnvelope<any>>(`/mbolo/invoices/${id}`, body).then(unwrap),
+  deleteInvoice: (id: string) =>
+    api.delete<ApiEnvelope<{ ok: boolean }>>(`/mbolo/invoices/${id}`).then(unwrap),
+  // Compta : entité légale du tenant
+  getAccountingSettings: () =>
+    api.get<ApiEnvelope<any>>("/mbolo/accounting-settings").then(unwrap),
+  updateAccountingSettings: (body: Record<string, unknown>) =>
+    api.patch<ApiEnvelope<any>>("/mbolo/accounting-settings", body).then(unwrap),
 };
 
 // ─── Billing plateforme (abonnement tenant → Cimolace, collecte PawaPay) ──────

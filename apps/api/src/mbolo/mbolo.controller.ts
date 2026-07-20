@@ -51,4 +51,22 @@ export class MboloController {
   // Paiement de la commande (membre connecté) : crée la session Stripe + confirme au retour.
   @Post('orders/:id/checkout-session') checkoutSession(@Param('id') id: string, @Body() d: any, @CurrentTenant() t: TenantContext) { return this.svc.createOrderCheckoutSession(t.id, id, { successUrl: d?.successUrl, cancelUrl: d?.cancelUrl }); }
   @Post('orders/:id/confirm') confirmOrder(@Param('id') id: string, @CurrentTenant() t: TenantContext) { return this.svc.confirmOrderPayment(t.id, id); }
+  @Patch('orders/:id') @UseGuards(RolesGuard) @Roles('owner','admin') @RequireEngine('mbolo') updateOrder(@Param('id') id: string, @Body() d: any, @CurrentTenant() t: TenantContext) { return this.svc.updateOrderStatus(t.id, id, { status: d?.status, paymentStatus: d?.paymentStatus ?? d?.payment_status }); }
+
+  // ─── Back-office commerce (session owner du portail LIRI) ────────────────
+  // Liens de paiement / facturation
+  @Get('payment-links') @UseGuards(RolesGuard) @Roles('owner','admin') listPaymentLinks(@CurrentTenant() t: TenantContext) { return this.svc.listPaymentLinks(t.id); }
+  @Get('payment-links/:id') @UseGuards(RolesGuard) @Roles('owner','admin') getPaymentLink(@Param('id') id: string, @CurrentTenant() t: TenantContext) { return this.svc.getPaymentLink(t.id, id); }
+  @Post('payment-links') @UseGuards(RolesGuard) @Roles('owner','admin') @RequireEngine('mbolo') createPaymentLink(@Body() d: any, @CurrentTenant() t: TenantContext) { return this.svc.createPaymentLink(t.id, d); }
+  @Patch('payment-links/:id') @UseGuards(RolesGuard) @Roles('owner','admin') @RequireEngine('mbolo') updatePaymentLink(@Param('id') id: string, @Body() d: any, @CurrentTenant() t: TenantContext) { return this.svc.updatePaymentLink(t.id, id, d); }
+  @Delete('payment-links/:id') @UseGuards(RolesGuard) @Roles('owner','admin') @RequireEngine('mbolo') deletePaymentLink(@Param('id') id: string, @CurrentTenant() t: TenantContext) { return this.svc.deletePaymentLink(t.id, id); }
+  // Factures
+  @Get('invoices') @UseGuards(RolesGuard) @Roles('owner','admin') listInvoices(@CurrentTenant() t: TenantContext) { return this.svc.listInvoices(t.id); }
+  @Get('invoices/:id') @UseGuards(RolesGuard) @Roles('owner','admin') getInvoice(@Param('id') id: string, @CurrentTenant() t: TenantContext) { return this.svc.getInvoice(t.id, id); }
+  @Post('invoices') @UseGuards(RolesGuard) @Roles('owner','admin') @RequireEngine('mbolo') createInvoice(@Body() d: any, @CurrentTenant() t: TenantContext) { return this.svc.createInvoice(t.id, d); }
+  @Patch('invoices/:id') @UseGuards(RolesGuard) @Roles('owner','admin') @RequireEngine('mbolo') updateInvoice(@Param('id') id: string, @Body() d: any, @CurrentTenant() t: TenantContext) { return this.svc.updateInvoice(t.id, id, d); }
+  @Delete('invoices/:id') @UseGuards(RolesGuard) @Roles('owner','admin') @RequireEngine('mbolo') deleteInvoice(@Param('id') id: string, @CurrentTenant() t: TenantContext) { return this.svc.deleteInvoice(t.id, id); }
+  // Compta : entité légale par tenant
+  @Get('accounting-settings') @UseGuards(RolesGuard) @Roles('owner','admin') getAccountingSettings(@CurrentTenant() t: TenantContext) { return this.svc.getAccountingSettings(t.id); }
+  @Patch('accounting-settings') @UseGuards(RolesGuard) @Roles('owner','admin') @RequireEngine('mbolo') updateAccountingSettings(@Body() d: any, @CurrentTenant() t: TenantContext) { return this.svc.updateAccountingSettings(t.id, d); }
 }
