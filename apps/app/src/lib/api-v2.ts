@@ -106,8 +106,14 @@ export const socialApi = {
 // ── Lives ───────────────────────────────────────────────────────────────────
 
 export const livesApi = {
-  list: (limit = 20, offset = 0) =>
-    apiV2.get<ApiEnvelope<any[]>>(`/lives?limit=${limit}&offset=${offset}`).then(unwrap),
+  // ⚠️ GET /lives est DOUBLE-enveloppé : le controller renvoie { data: [...] } ET
+  // l'interceptor global re-wrappe → unwrap (=r.data.data) rend { data: [...] } (objet),
+  // pas un tableau. On extrait toujours le TABLEAU, sinon TenantAdminLivesPage (garde
+  // Array.isArray→[]) affiche silencieusement 0 live.
+  list: (limit = 20, offset = 0): Promise<any[]> =>
+    apiV2.get<ApiEnvelope<{ data?: any[] } | any[]>>(`/lives?limit=${limit}&offset=${offset}`)
+      .then(unwrap)
+      .then((r: any) => (Array.isArray(r) ? r : (r?.data ?? []))),
   get: (id: string) => apiV2.get<ApiEnvelope<any>>(`/lives/${id}`).then(unwrap),
   create: (body: Record<string, unknown>) =>
     apiV2.post<ApiEnvelope<any>>('/lives', body).then(unwrap),
@@ -547,6 +553,123 @@ export const growthApi = {
     apiV2.patch<ApiEnvelope<any>>(`/growth/leads/${id}/score`, { score }).then(unwrap),
 };
 
+// ── CRM (cœur sales — Vague 2) ────────────────────────────────────────────────
+// Le backend enveloppe déjà dans { data }, et unwrap = response.data.data → il reste
+// la valeur BRUTE du controller. Or les listes CRM renvoient des OBJETS à clé nommée
+// ({ companies:[] }, { contacts:[] }, …), PAS des tableaux : chaque list* extrait donc
+// son tableau nommé (piège « enveloppe {data:{clé:[]}} → non-tableau »). board/summary
+// = objets voulus (kanban) → NE PAS extraire.
+export const crmApi = {
+  summary: () => apiV2.get<ApiEnvelope<any>>('/crm/summary').then(unwrap),
+
+  // Timeline d'activités — GET renvoie { activities: [...] } (flux récent ou filtré par entité).
+  listActivities: (params?: Record<string, string>): Promise<any[]> =>
+    apiV2.get<ApiEnvelope<{ activities?: any[] }>>('/crm/activities', { params }).then(unwrap)
+      .then((r: any) => (Array.isArray(r) ? r : (r?.activities ?? []))),
+
+  listCompanies: (params?: { search?: string; limit?: number; offset?: number }): Promise<any[]> =>
+    apiV2.get<ApiEnvelope<{ companies?: any[] }>>('/crm/companies', { params }).then(unwrap)
+      .then((r: any) => (Array.isArray(r) ? r : (r?.companies ?? []))),
+  createCompany: (body: Record<string, unknown>) =>
+    apiV2.post<ApiEnvelope<any>>('/crm/companies', body).then(unwrap),
+  updateCompany: (id: string, body: Record<string, unknown>) =>
+    apiV2.patch<ApiEnvelope<any>>(`/crm/companies/${id}`, body).then(unwrap),
+  deleteCompany: (id: string) =>
+    apiV2.delete<ApiEnvelope<any>>(`/crm/companies/${id}`).then(unwrap),
+
+  listContacts: (params?: Record<string, string>): Promise<any[]> =>
+    apiV2.get<ApiEnvelope<{ contacts?: any[] }>>('/crm/contacts', { params }).then(unwrap)
+      .then((r: any) => (Array.isArray(r) ? r : (r?.contacts ?? []))),
+  createContact: (body: Record<string, unknown>) =>
+    apiV2.post<ApiEnvelope<any>>('/crm/contacts', body).then(unwrap),
+  updateContact: (id: string, body: Record<string, unknown>) =>
+    apiV2.patch<ApiEnvelope<any>>(`/crm/contacts/${id}`, body).then(unwrap),
+  deleteContact: (id: string) =>
+    apiV2.delete<ApiEnvelope<any>>(`/crm/contacts/${id}`).then(unwrap),
+  convertLead: (leadId: string) =>
+    apiV2.post<ApiEnvelope<any>>('/crm/contacts/convert-lead', { lead_id: leadId }).then(unwrap),
+  importContacts: (contacts: any[]) =>
+    apiV2.post<ApiEnvelope<any>>('/crm/contacts/import', { contacts }).then(unwrap),
+  // Reliure écosystème — OBJET par design : { contact, isPlatformUser, userId, orders,
+  // appointments, services, forum, messaging, counts } → identité plateforme + 360°.
+  getContactPlatform: (id: string) =>
+    apiV2.get<ApiEnvelope<any>>(`/crm/contacts/${id}/platform`).then(unwrap),
+  // Reliure société — OBJET : { company, contactsTotal, members:[{isMember,userId,role}], counts }.
+  getCompanyPlatform: (id: string) =>
+    apiV2.get<ApiEnvelope<any>>(`/crm/companies/${id}/platform`).then(unwrap),
+  // Recherche globale (Cmd-K) — OBJET { contacts, companies, deals }.
+  search: (q: string, limit = 8) =>
+    apiV2.get<ApiEnvelope<any>>('/crm/search', { params: { q, limit: String(limit) } }).then(unwrap),
+  // Analytics sales — OBJET { totals, winRate, forecast, pipelineValue, byStage, leaderboard, avgCycleDays }.
+  analytics: () => apiV2.get<ApiEnvelope<any>>('/crm/analytics').then(unwrap),
+  // Envoi réel d'un message au contact (messagerie immersive), au nom de l'opérateur.
+  sendMessageToContact: (id: string, content: string) =>
+    apiV2.post<ApiEnvelope<any>>(`/crm/contacts/${id}/message`, { content }).then(unwrap),
+  // CRUD étapes / pipelines (#10).
+  createStage: (body: Record<string, unknown>) =>
+    apiV2.post<ApiEnvelope<any>>('/crm/stages', body).then(unwrap),
+  updateStage: (id: string, body: Record<string, unknown>) =>
+    apiV2.patch<ApiEnvelope<any>>(`/crm/stages/${id}`, body).then(unwrap),
+  deleteStage: (id: string) =>
+    apiV2.delete<ApiEnvelope<any>>(`/crm/stages/${id}`).then(unwrap),
+
+  listPipelines: (): Promise<any[]> =>
+    apiV2.get<ApiEnvelope<{ pipelines?: any[] }>>('/crm/pipelines').then(unwrap)
+      .then((r: any) => (Array.isArray(r) ? r : (r?.pipelines ?? []))),
+  createPipeline: (body: Record<string, unknown>) =>
+    apiV2.post<ApiEnvelope<any>>('/crm/pipelines', body).then(unwrap),
+  listStages: (pipelineId: string): Promise<any[]> =>
+    apiV2.get<ApiEnvelope<{ stages?: any[] }>>(`/crm/pipelines/${pipelineId}/stages`).then(unwrap)
+      .then((r: any) => (Array.isArray(r) ? r : (r?.stages ?? []))),
+
+  // Kanban — OBJET par design : { pipeline, stages:[{...,deals:[]}], orphans } → NE PAS extraire.
+  dealsBoard: (pipelineId?: string) =>
+    apiV2
+      .get<ApiEnvelope<any>>('/crm/deals/board', { params: pipelineId ? { pipeline_id: pipelineId } : {} })
+      .then(unwrap),
+  createDeal: (body: Record<string, unknown>) =>
+    apiV2.post<ApiEnvelope<any>>('/crm/deals', body).then(unwrap),
+  updateDeal: (id: string, body: Record<string, unknown>) =>
+    apiV2.patch<ApiEnvelope<any>>(`/crm/deals/${id}`, body).then(unwrap),
+  deleteDeal: (id: string) =>
+    apiV2.delete<ApiEnvelope<any>>(`/crm/deals/${id}`).then(unwrap),
+
+  listNotes: (entityType: string, entityId: string): Promise<any[]> =>
+    apiV2
+      .get<ApiEnvelope<{ notes?: any[] }>>('/crm/notes', { params: { entity_type: entityType, entity_id: entityId } })
+      .then(unwrap)
+      .then((r: any) => (Array.isArray(r) ? r : (r?.notes ?? []))),
+  createNote: (body: Record<string, unknown>) =>
+    apiV2.post<ApiEnvelope<any>>('/crm/notes', body).then(unwrap),
+  deleteNote: (id: string) =>
+    apiV2.delete<ApiEnvelope<any>>(`/crm/notes/${id}`).then(unwrap),
+
+  listTasks: (params?: Record<string, string>): Promise<any[]> =>
+    apiV2.get<ApiEnvelope<{ tasks?: any[] }>>('/crm/tasks', { params }).then(unwrap)
+      .then((r: any) => (Array.isArray(r) ? r : (r?.tasks ?? []))),
+  createTask: (body: Record<string, unknown>) =>
+    apiV2.post<ApiEnvelope<any>>('/crm/tasks', body).then(unwrap),
+  updateTask: (id: string, body: Record<string, unknown>) =>
+    apiV2.patch<ApiEnvelope<any>>(`/crm/tasks/${id}`, body).then(unwrap),
+  deleteTask: (id: string) =>
+    apiV2.delete<ApiEnvelope<any>>(`/crm/tasks/${id}`).then(unwrap),
+
+  listTags: (): Promise<any[]> =>
+    apiV2.get<ApiEnvelope<{ tags?: any[] }>>('/crm/tags').then(unwrap)
+      .then((r: any) => (Array.isArray(r) ? r : (r?.tags ?? []))),
+  listEntityTags: (entityType: string, entityId: string): Promise<any[]> =>
+    apiV2
+      .get<ApiEnvelope<{ tags?: any[] }>>('/crm/entity-tags', { params: { entity_type: entityType, entity_id: entityId } })
+      .then(unwrap)
+      .then((r: any) => (Array.isArray(r) ? r : (r?.tags ?? []))),
+  createTag: (body: Record<string, unknown>) =>
+    apiV2.post<ApiEnvelope<any>>('/crm/tags', body).then(unwrap),
+  attachTag: (body: Record<string, unknown>) =>
+    apiV2.post<ApiEnvelope<any>>('/crm/tags/attach', body).then(unwrap),
+  detachTag: (body: Record<string, unknown>) =>
+    apiV2.post<ApiEnvelope<any>>('/crm/tags/detach', body).then(unwrap),
+};
+
 // ── IRI ─────────────────────────────────────────────────────────────────────
 
 export const iriApi = {
@@ -760,6 +883,9 @@ export const cimolaceBackofficeApi = {
     apiV2.post<ApiEnvelope<any>>(`/cimolace-backoffice/clients/${clientId}/credentials/${credentialId}/rotate`, body).then(unwrap),
   createTenantTicket: (clientId: string, body: Record<string, unknown>) =>
     apiV2.post<ApiEnvelope<any>>(`/cimolace-backoffice/clients/${clientId}/tickets`, body).then(unwrap),
+  // Impersonation encadrée (§15) — démarre une session (motif obligatoire) et renvoie le token + contexte.
+  startImpersonation: (clientId: string, body: { reason: string; durationMinutes?: number; role?: string }) =>
+    apiV2.post<ApiEnvelope<any>>(`/cimolace-backoffice/clients/${clientId}/impersonate`, body).then(unwrap),
   createTenantInvoice: (clientId: string, body: Record<string, unknown>) =>
     apiV2.post<ApiEnvelope<any>>(`/cimolace-backoffice/clients/${clientId}/invoices`, body).then(unwrap),
   listSites: () => apiV2.get<ApiEnvelope<any[]>>('/cimolace-backoffice/sites').then(unwrap),
@@ -917,9 +1043,15 @@ export type CreateCatalogServiceBody = Partial<CatalogService> &
   Pick<CatalogService, 'category' | 'label'>;
 
 export const billingCatalogApi = {
-  /** Liste des services du tenant (tous statuts confondus). */
-  list: () =>
-    apiV2.get<ApiEnvelope<CatalogService[]>>('/billing/catalog').then(unwrap),
+  /** Liste des services du tenant (tous statuts confondus).
+   *  ⚠️ `/billing/catalog` renvoie `{ data: { services: [...] } }` (enveloppe objet)
+   *  et non `{ data: [...] }` → on extrait toujours un TABLEAU (robuste aux 2 formes),
+   *  sinon l'appelant (LiriServicesPage `items.filter`) crashe. */
+  list: (): Promise<CatalogService[]> =>
+    apiV2
+      .get<ApiEnvelope<{ services?: CatalogService[] } | CatalogService[]>>('/billing/catalog')
+      .then(unwrap)
+      .then((r: any) => (Array.isArray(r) ? r : (r?.services ?? []))),
   /** Crée un service. */
   create: (body: CreateCatalogServiceBody) =>
     apiV2.post<ApiEnvelope<CatalogService>>('/billing/catalog', body).then(unwrap),

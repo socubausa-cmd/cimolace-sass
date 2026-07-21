@@ -12,6 +12,10 @@ export interface MedosTokenPayload {
   tenant_id: string;
   tenant_slug: string;
   iss: 'medos';
+  // ─── Impersonation encadrée (§15) — présents UNIQUEMENT sur un token opérateur ───
+  imp?: true;              // marque « ce token est une impersonation »
+  impersonator?: string;   // email/id de l'opérateur Cimolace RÉEL
+  imp_reason?: string;     // motif obligatoire (traçabilité)
 }
 
 /** Identité Cimolace enrichie renvoyée par GET /auth/me. */
@@ -25,6 +29,41 @@ export interface CimolaceIdentity {
 
 /** Rôles considérés « staff » dans cimolace_staff_members (cf. CimolaceStaffGuard). */
 const CIMOLACE_STAFF_ROLES = new Set(['owner', 'admin', 'support']);
+
+/** Rang de privilège unifié (membership + MedOS). Rôle inconnu = plancher (0). */
+export function roleRank(role: string | null | undefined): number {
+  const RANK: Record<string, number> = {
+    patient: 0, member: 0, viewer: 0, student: 0, visitor: 0,
+    receptionist: 1, secretariat: 1,
+    practitioner: 2, teacher: 2,
+    admin: 3, clinic_admin: 3,
+    owner: 4,
+  };
+  return RANK[String(role || '').toLowerCase()] ?? 0;
+}
+
+/** Projette un rôle de membership sur le vocabulaire MedOS accepté par le pont. */
+export function membershipToMedosRole(role: string | null): string {
+  switch (String(role || '').toLowerCase()) {
+    case 'owner': return 'owner';
+    case 'admin': case 'clinic_admin': return 'admin';
+    case 'practitioner': case 'teacher': return 'practitioner';
+    case 'receptionist': case 'secretariat': return 'receptionist';
+    default: return 'patient';
+  }
+}
+
+/**
+ * DÉCISION PURE (testable) du plafond de rôle du pont /auth/tenant-token.
+ * Le rôle demandé par le porteur de la clé ne peut JAMAIS dépasser le rôle réel de
+ * l'utilisateur dans le tenant. Demande ≤ réel → rôle exact conservé ; sinon → rétrograde
+ * au rôle réel. Pas de membership prouvé → plancher ('patient'). Anti-forge d'un token owner.
+ */
+export function capMedosRole(membershipRole: string | null, requestedRole: string): string {
+  const membershipRank = membershipRole ? roleRank(membershipRole) : 0;
+  if (roleRank(requestedRole) <= membershipRank) return requestedRole;
+  return membershipToMedosRole(membershipRole);
+}
 
 @Injectable()
 export class AuthService {
@@ -157,6 +196,59 @@ export class AuthService {
     if (!this.jwtSecret) throw new Error('MEDOS_JWT_SECRET manquant');
     return jwt.sign({ ...payload, iss: 'medos' }, this.jwtSecret, {
       expiresIn: '15m',
+      algorithm: 'HS256',
+    });
+  }
+
+  /**
+   * SÉCURITÉ (pont /auth/tenant-token) : le rôle demandé par le porteur de la clé tenant
+   * ne doit JAMAIS dépasser le rôle réel de l'utilisateur dans le tenant. Sans ce plafond,
+   * un détenteur de clé mdk_ pouvait forger un token « owner » pour n'importe quel user de
+   * son tenant (escalade de privilège). On borne au rôle réel (tenant_memberships active) ;
+   * si l'utilisateur n'a pas de membership, on retombe sur le rôle le moins privilégié.
+   */
+  async resolveCappedMedosRole(tenantId: string, userId: string, requestedRole: string): Promise<string> {
+    let membershipRole: string | null = null;
+    try {
+      const { data } = await this.supabase
+        .from('tenant_memberships')
+        .select('role')
+        .eq('tenant_id', tenantId)
+        .eq('user_id', userId)
+        .eq('status', 'active')
+        .maybeSingle();
+      membershipRole = (data as { role?: string } | null)?.role ?? null;
+    } catch {
+      membershipRole = null; // fail-closed : pas de membership prouvé → rôle plancher
+    }
+    return capMedosRole(membershipRole, requestedRole);
+  }
+
+  /**
+   * IMPERSONATION ENCADRÉE (§15) : token opérateur court-terme pour « agir en tant que
+   * tenant ». Émis en iss=medos (donc accepté par le JwtAuthGuard commun sur la surface
+   * tenant), mais porte `imp:true` + l'identité RÉELLE de l'opérateur + le motif, pour que
+   * chaque garde/audit/bannière sache que c'est une impersonation tracée. `sub` = opérateur
+   * (les actions restent imputables à l'opérateur) ; `tenant_id` = tenant cible.
+   */
+  generateImpersonationToken(
+    payload: { operatorId: string; operatorEmail: string; tenantId: string; tenantSlug: string; role: string; reason: string },
+    expiresInMinutes: number,
+  ): string {
+    if (!this.jwtSecret) throw new Error('MEDOS_JWT_SECRET manquant');
+    const body: MedosTokenPayload = {
+      sub: payload.operatorId,
+      email: payload.operatorEmail,
+      role: payload.role,
+      tenant_id: payload.tenantId,
+      tenant_slug: payload.tenantSlug,
+      iss: 'medos',
+      imp: true,
+      impersonator: payload.operatorEmail || payload.operatorId,
+      imp_reason: payload.reason,
+    };
+    return jwt.sign(body, this.jwtSecret, {
+      expiresIn: `${Math.max(1, Math.round(expiresInMinutes))}m`,
       algorithm: 'HS256',
     });
   }

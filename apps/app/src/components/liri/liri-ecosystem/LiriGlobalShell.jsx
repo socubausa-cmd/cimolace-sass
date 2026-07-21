@@ -58,7 +58,7 @@ export default function LiriGlobalShell({ children, activeStudio = 'hub', breadc
     <div className="flex h-[100dvh] min-h-0 flex-col overflow-hidden" style={{ background: '#0F1117' }}>
       {/* TOP BAR */}
       <header className="flex h-12 flex-shrink-0 items-center gap-3 border-b border-white/[0.07] px-4" style={{ background: 'rgba(18,17,26,0.96)', backdropFilter: 'blur(16px)' }}>
-        <Link to="/studio/liri" className="mr-1 flex select-none items-center" aria-label="LIRI">
+        <Link to="/liri" className="mr-1 flex select-none items-center" aria-label="Retour à l'accueil LIRI (sortir du Studio)">
           <LiriWordmark size="compact" className="text-white/80" />
         </Link>
         <span className="h-4 w-px bg-white/10" />
@@ -85,7 +85,7 @@ export default function LiriGlobalShell({ children, activeStudio = 'hub', breadc
         <button className="flex h-7 w-7 items-center justify-center rounded-lg border border-white/10 text-white/40 transition-all hover:border-white/20 hover:text-white/70">
           <Bell className="h-3.5 w-3.5" />
         </button>
-        <Link to="/studio" className="flex h-7 w-7 items-center justify-center rounded-lg border border-white/10 text-white/40 transition-all hover:border-white/20 hover:text-white/70" title="Studio principal">
+        <Link to="/liri" className="flex h-7 w-7 items-center justify-center rounded-lg border border-white/10 text-white/40 transition-all hover:border-white/20 hover:text-white/70" title="Sortir du Studio — retour à l'accueil LIRI">
           <LogOut className="h-3.5 w-3.5" />
         </Link>
       </header>

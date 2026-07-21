@@ -5,6 +5,7 @@ import { Observable } from 'rxjs';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { CurrentTenant } from '../tenant/current-tenant.decorator';
 import { TenantGuard } from '../tenant/tenant.guard';
+import { AllowNonMember } from '../common/decorators/allow-non-member.decorator';
 import type { TenantContext } from '../tenant/tenant.types';
 import { LongiaService } from './longia.service';
 
@@ -28,10 +29,13 @@ function sseFromGen(
   });
 }
 
+// @AllowNonMember : assistant IA de live (dont /guest/live) — n'utilise aucune
+// donnée tenant scopée (pur passthrough IA) ; on préserve l'accès invité.
 @ApiTags('Longia')
 @ApiBearerAuth()
 @Controller('longia')
 @UseGuards(JwtAuthGuard, TenantGuard)
+@AllowNonMember()
 export class LongiaController {
   constructor(private readonly svc: LongiaService) {}
 

@@ -28,6 +28,8 @@ import {
 import type { Request } from 'express';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { TenantGuard } from '../tenant/tenant.guard';
+import { RolesGuard } from '../common/guards/roles.guard';
+import { Roles } from '../common/decorators/roles.decorator';
 import { CurrentTenant } from '../tenant/current-tenant.decorator';
 import type { TenantContext } from '../tenant/tenant.types';
 import { SupabaseService } from '../supabase/supabase.service';
@@ -62,7 +64,8 @@ export class SmartResponseController {
   // ── KB management (auth requise) ─────────────────────────────────────
 
   @Get('knowledge')
-  @UseGuards(JwtAuthGuard, TenantGuard)
+  @UseGuards(JwtAuthGuard, TenantGuard, RolesGuard)
+  @Roles('owner', 'admin', 'secretariat')
   async listKB(
     @CurrentTenant() t: TenantContext,
     @Query('active') active?: string,
@@ -75,7 +78,8 @@ export class SmartResponseController {
   }
 
   @Post('knowledge')
-  @UseGuards(JwtAuthGuard, TenantGuard)
+  @UseGuards(JwtAuthGuard, TenantGuard, RolesGuard)
+  @Roles('owner', 'admin', 'secretariat')
   async upsertKB(
     @CurrentTenant() t: TenantContext,
     @Req() req: Request,
@@ -85,13 +89,15 @@ export class SmartResponseController {
   }
 
   @Delete('knowledge/:id')
-  @UseGuards(JwtAuthGuard, TenantGuard)
+  @UseGuards(JwtAuthGuard, TenantGuard, RolesGuard)
+  @Roles('owner', 'admin', 'secretariat')
   async deleteKB(@CurrentTenant() t: TenantContext, @Param('id') id: string) {
     return this.svc.deleteKnowledge(t.id, id);
   }
 
   @Post('knowledge/ingest')
-  @UseGuards(JwtAuthGuard, TenantGuard)
+  @UseGuards(JwtAuthGuard, TenantGuard, RolesGuard)
+  @Roles('owner', 'admin', 'secretariat')
   async ingestKB(
     @CurrentTenant() t: TenantContext,
     @Req() req: Request,
@@ -103,7 +109,8 @@ export class SmartResponseController {
   // ── Threads secrétariat (auth requise) ───────────────────────────────
 
   @Get('threads')
-  @UseGuards(JwtAuthGuard, TenantGuard)
+  @UseGuards(JwtAuthGuard, TenantGuard, RolesGuard)
+  @Roles('owner', 'admin', 'secretariat')
   async listThreads(
     @CurrentTenant() t: TenantContext,
     @Query('status') status?: string,
@@ -118,7 +125,8 @@ export class SmartResponseController {
   }
 
   @Get('threads/:id/messages')
-  @UseGuards(JwtAuthGuard, TenantGuard)
+  @UseGuards(JwtAuthGuard, TenantGuard, RolesGuard)
+  @Roles('owner', 'admin', 'secretariat')
   async threadMessages(
     @CurrentTenant() t: TenantContext,
     @Param('id') id: string,
@@ -127,7 +135,8 @@ export class SmartResponseController {
   }
 
   @Post('secretariat/reply')
-  @UseGuards(JwtAuthGuard, TenantGuard)
+  @UseGuards(JwtAuthGuard, TenantGuard, RolesGuard)
+  @Roles('owner', 'admin', 'secretariat')
   async secretariatReply(
     @CurrentTenant() t: TenantContext,
     @Req() req: Request,
@@ -137,7 +146,8 @@ export class SmartResponseController {
   }
 
   @Post('followup')
-  @UseGuards(JwtAuthGuard, TenantGuard)
+  @UseGuards(JwtAuthGuard, TenantGuard, RolesGuard)
+  @Roles('owner', 'admin', 'secretariat')
   async createFollowup(
     @CurrentTenant() t: TenantContext,
     @Body() body: { threadId: string; scheduledAt: string; reason?: string; template?: string; payload?: any },

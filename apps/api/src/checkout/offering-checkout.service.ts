@@ -22,6 +22,8 @@ import {
 } from './paypal-rest.util';
 import { SubscriptionRenewalService } from './subscription-renewal.service';
 import { TenantPaymentConfigService } from '../billing/tenant-payment-config/tenant-payment-config.service';
+import { EmailEngineService } from '../email-engine/email-engine.service';
+import { LiriEntitlementsService } from '../billing/liri-entitlements.service';
 
 /**
  * Montants des paliers mentorat Ngowazulu, en centimes EUR.
@@ -46,6 +48,8 @@ export class OfferingCheckoutService {
     private readonly pawapay: PawaPayService,
     private readonly renewals: SubscriptionRenewalService,
     private readonly tenantPayments: TenantPaymentConfigService,
+    private readonly email: EmailEngineService,
+    private readonly entitlements: LiriEntitlementsService,
   ) {}
 
   /**
@@ -630,6 +634,18 @@ export class OfferingCheckoutService {
       userId = createRes.ok ? ((await createRes.json()) as { id: string }).id : await findId();
       if (!userId) throw new InternalServerErrorException('Provisionnement du compte invité impossible.');
     }
+    // PLAFOND D'OFFRE (monétisation) : un NOUVEL élève invité consomme un slot 'students'
+    // (upsert ignoreDuplicates → un membre existant est no-op, donc on ne vérifie que les nouveaux).
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { data: existingMem } = await (this.supabase as any)
+      .from('tenant_memberships').select('id').eq('tenant_id', tenantId).eq('user_id', userId).maybeSingle();
+    if (!existingMem?.id) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const { count } = await (this.supabase as any)
+        .from('tenant_memberships').select('id', { count: 'exact', head: true })
+        .eq('tenant_id', tenantId).eq('status', 'active').eq('role', 'student');
+      await this.entitlements.assertWithinCap(tenantId, 'students', count ?? 0);
+    }
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     await (this.supabase as any).from('tenant_memberships').upsert(
       { tenant_id: tenantId, user_id: userId, role: 'student', status: 'active' },
@@ -644,6 +660,111 @@ export class OfferingCheckoutService {
       .from('tenants').select('id').eq('slug', slug).eq('status', 'active').maybeSingle();
     if (!data?.id) throw new NotFoundException(`Tenant « ${slug} » introuvable.`);
     return data.id as string;
+  }
+
+  /**
+   * Déblocage d'accès SERVICE après un paiement encaissé PAR LE TENANT sur SON
+   * propre Stripe (paiement natif hors tunnel Cimolace — ex : zahirwellness règle
+   * une masterclass sur son site avec son processeur). Authentifié par clé tenant
+   * (ApiKeyGuard) → le `tenantId` vient de la clé, JAMAIS du corps (isolation).
+   * Le tenant DOIT avoir vérifié le paiement (webhook Stripe signé) AVANT d'appeler.
+   * Idempotent (upsert). Symétrique de ce que pose le webhook Cimolace guest-card.
+   */
+  async tenantGrantServiceAccess(
+    tenantId: string,
+    dto: { planSlug?: string; email?: string; first_name?: string; last_name?: string; payment_ref?: string },
+  ): Promise<{ ok: true; user_id: string; granted: boolean }> {
+    const planSlug = String(dto.planSlug || '').trim();
+    const email = String(dto.email || '').trim();
+    if (!planSlug) throw new BadRequestException('planSlug requis.');
+    if (!email.includes('@')) throw new BadRequestException('Email valide requis.');
+
+    // Le plan doit exister pour CE tenant (isolation) et être réservable/événement.
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { data: plan } = await (this.supabase as any)
+      .from('billing_plans')
+      .select('key, metadata')
+      .eq('tenant_id', tenantId)
+      .eq('key', planSlug)
+      .maybeSingle();
+    if (!plan) throw new NotFoundException('Service introuvable pour ce tenant.');
+
+    // Provisionne (ou retrouve) l'acheteur par email + rattache au tenant (student).
+    const userId = await this.provisionGuestUser(tenantId, email, dto.first_name, dto.last_name);
+
+    // Pass réutilisable uniquement pour un service RÉSERVABLE ou un ÉVÉNEMENT/masterclass.
+    let granted = false;
+    if (plan?.metadata?.event || plan?.metadata?.bookable) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      await (this.supabase as any).from('access_passes').upsert(
+        {
+          tenant_id: tenantId,
+          user_id: userId,
+          resource_type: 'service',
+          resource_id: planSlug,
+          payment_id: dto.payment_ref ?? null,
+          status: 'active',
+        },
+        { onConflict: 'tenant_id,user_id,resource_type,resource_id' },
+      );
+      granted = true;
+    }
+    this.logger.log(
+      `tenant-grant: accès service accordé tenant=${tenantId} user=${userId} service=${planSlug} granted=${granted}`,
+    );
+    // Notifie le praticien de la nouvelle réservation (best-effort, ne bloque jamais).
+    if (granted) {
+      void this.notifyPractitionerReservation(tenantId, (plan as any)?.label || planSlug, {
+        email,
+        first_name: dto.first_name,
+        last_name: dto.last_name,
+      }).catch(() => undefined);
+    }
+    return { ok: true, user_id: userId, granted };
+  }
+
+  /** Notifie le(s) propriétaire(s) du tenant d'une nouvelle réservation (Resend per-tenant). */
+  private async notifyPractitionerReservation(
+    tenantId: string,
+    serviceLabel: string,
+    buyer: { email?: string; first_name?: string; last_name?: string },
+  ): Promise<void> {
+    try {
+      const db = this.supabase as any;
+      const { data: mems } = await db
+        .from('tenant_memberships')
+        .select('user_id')
+        .eq('tenant_id', tenantId)
+        .eq('role', 'owner')
+        .eq('status', 'active')
+        .limit(5);
+      const ownerIds = [
+        ...new Set((mems || []).map((m: any) => m.user_id).filter(Boolean)),
+      ] as string[];
+      if (!ownerIds.length) return;
+      const buyerName =
+        [buyer.first_name, buyer.last_name].filter(Boolean).join(' ').trim() || buyer.email || 'un client';
+      const html = this.email.brandedHtml({
+        title: 'Nouvelle réservation',
+        body: `${buyerName} vient de réserver « ${serviceLabel} »${buyer.email ? ` (${buyer.email})` : ''}. Retrouvez tous les inscrits dans votre espace MEDOS → Services.`,
+      });
+      const subject = `✅ Nouvelle réservation — ${serviceLabel}`;
+      const url = process.env.SUPABASE_URL;
+      const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
+      const headers = { apikey: key || '', Authorization: `Bearer ${key || ''}` };
+      for (const uid of ownerIds) {
+        try {
+          const r = await fetch(`${url}/auth/v1/admin/users/${uid}`, { headers });
+          const u = (await r.json()) as { email?: string };
+          const to = String(u?.email || '').trim();
+          if (to) await this.email.sendRaw(tenantId, to, subject, html);
+        } catch {
+          /* propriétaire ignoré */
+        }
+      }
+    } catch (e) {
+      this.logger.warn(`notifyPractitionerReservation: ${(e as Error).message}`);
+    }
   }
 
   /** Paiement carte INVITÉ : provisionne le compte par email puis crée le checkout Stripe. */

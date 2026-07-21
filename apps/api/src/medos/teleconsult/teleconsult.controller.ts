@@ -212,6 +212,44 @@ export class TeleconsultController {
     return this.service.end(tenant, tenant.userRole, id, dto);
   }
 
+  // ─── Enregistrement vidéo (replay praticien + patient) ─────────────────────
+
+  /** HÔTE : démarre l'enregistrement vidéo de la séance (egress → MP4 R2). */
+  @Post(':id/recording/start')
+  @Roles('owner', 'practitioner', 'clinic_admin')
+  startRecording(
+    @Param('id') id: string,
+    @CurrentTenant() tenant: TenantContext,
+    @Req() req: AuthRequest,
+  ) {
+    return this.service.startRecording(tenant, req.user.id, id);
+  }
+
+  /** HÔTE : arrête l'enregistrement en cours (finalise le MP4). */
+  @Post(':id/recording/stop')
+  @Roles('owner', 'practitioner', 'clinic_admin')
+  stopRecording(
+    @Param('id') id: string,
+    @CurrentTenant() tenant: TenantContext,
+  ) {
+    return this.service.stopRecording(tenant, id);
+  }
+
+  /**
+   * HÔTE ou PATIENT-PROPRIÉTAIRE : état d'enregistrement + URL de replay
+   * présignée si prête. Sert l'indicateur REC pendant la séance ET le replay
+   * après (dossier RDV praticien + portail patient).
+   */
+  @Get(':id/recording')
+  @Roles('owner', 'practitioner', 'clinic_admin', 'patient')
+  getRecording(
+    @Param('id') id: string,
+    @CurrentTenant() tenant: TenantContext,
+    @Req() req: AuthRequest,
+  ) {
+    return this.service.getRecording(tenant, req.user.id, tenant.userRole, id);
+  }
+
   /**
    * Balaye les téléconsults ABANDONNÉES du tenant (hôte absent de la room
    * depuis > 5 min → fin d'office + room fermée). Le même balayage tourne

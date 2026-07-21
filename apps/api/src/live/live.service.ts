@@ -2,6 +2,7 @@ import { BadRequestException, ForbiddenException, Injectable, NotFoundException,
 import { AuthService } from "../auth/auth.service";
 import { LiveKitService } from "../livekit/livekit.service";
 import { LiriEntitlementsService } from "../billing/liri-entitlements.service";
+import { Cycle, cycleFromPlanId, cycleCan, rankOfCycle } from "../billing/member-tier";
 
 @Injectable()
 export class LiveService {
@@ -121,7 +122,6 @@ export class LiveService {
    * pas configuré (clés manquantes), renvoie egressId null sans casser le live.
    */
   async startRecording(tenantId: string, sessionId: string) {
-    const session: any = await this.findOne(tenantId, sessionId);
     // ── Enforcement palier : enregistrement/replay = feature PAYANTE ──
     // Point d'étranglement unique : couvre l'appel explicite (POST /recording/start)
     // ET l'auto-enregistrement (maybeStartRecording, best-effort → l'exception est
@@ -132,6 +132,30 @@ export class LiveService {
         "Forfait gratuit : l'enregistrement et le replay ne sont pas inclus. Passez à un forfait LIRI pour enregistrer et rediffuser vos lives.",
       );
     }
+    return this._startEgressForSession(tenantId, sessionId);
+  }
+
+  /**
+   * Enregistrement d'une TÉLÉCONSULTATION MEDOS. Réutilise l'egress du moteur
+   * live — même room `scopedRoomName(slug, id)` grâce au miroir live_sessions
+   * (kind='teleconsult', id == id téléconsult) — mais SANS le paywall LIRI
+   * `canReplay` : MEDOS est un produit médical payant à part entière et
+   * l'enregistrement du dossier est une fonction clinique, pas un palier de
+   * replay LIRI. L'accès en LECTURE est gardé côté médical (praticien du tenant
+   * OU patient-propriétaire) par TeleconsultService — jamais exposé aux élèves.
+   */
+  async startRecordingForTeleconsult(tenantId: string, sessionId: string) {
+    return this._startEgressForSession(tenantId, sessionId);
+  }
+
+  /**
+   * Cœur egress PARTAGÉ (LIRI live + téléconsult MEDOS) : démarre l'egress
+   * LiveKit → MP4 R2, enregistre la ligne live_recordings et active le replay.
+   * Si l'egress n'est pas configuré (clés R2 manquantes), renvoie egressId null
+   * sans casser l'appel.
+   */
+  private async _startEgressForSession(tenantId: string, sessionId: string) {
+    const session: any = await this.findOne(tenantId, sessionId);
     // Le slug DOIT être identique à celui de generateToken/ensureRoom — sinon l'egress
     // vise une room inexistante (`_<id>` au lieu de `isna_<id>`) → échec. Or
     // live_sessions.tenant_slug est souvent NULL → on lit le slug du TENANT.
@@ -245,6 +269,20 @@ export class LiveService {
     sessionId: string,
     opts?: { force?: "published" | "pending_review"; actorId?: string },
   ) {
+    // Les TÉLÉCONSULTATIONS MEDOS ne passent JAMAIS par le replay LIRI (état
+    // recall élève + Sujet du forum de cours) : leur replay est servi par
+    // l'endpoint médical GET /med/teleconsult/:id/recording, gardé
+    // praticien/patient. On coupe ici (le webhook egress_ended appelle
+    // publishReplay pour TOUT egress) pour ne jamais exposer une vidéo médicale
+    // dans une surface pédagogique.
+    const { data: kindRow } = await this.supabase
+      .from("live_sessions")
+      .select("kind")
+      .eq("id", sessionId)
+      .maybeSingle();
+    if ((kindRow as any)?.kind === "teleconsult") {
+      return { published: false, reason: "teleconsult" as const };
+    }
     if (
       opts?.actorId &&
       !(await this.isSessionEditor(tenantId, sessionId, opts.actorId))
@@ -373,6 +411,65 @@ export class LiveService {
     const url = await this.liveKit.presignReplayGet(filepath, 3600);
     if (!url) throw new ServiceUnavailableException("Stockage replay indisponible");
     return url;
+  }
+
+  /**
+   * État d'enregistrement d'une TÉLÉCONSULTATION (pour l'UI médicale) : un egress
+   * est-il en cours ('recording') et/ou un enregistrement complété est-il
+   * disponible (replay) ? Lit live_recordings keyé par live_session_id (== id
+   * téléconsult grâce au miroir). Aucun contrôle d'accès ici — l'appelant
+   * (TeleconsultService) garde côté médical.
+   */
+  async getTeleconsultRecordingState(sessionId: string): Promise<{
+    recording: boolean;
+    hasReplay: boolean;
+    startedAt: string | null;
+    completedAt: string | null;
+    durationSeconds: number | null;
+  }> {
+    const { data: rows } = await this.supabase
+      .from("live_recordings")
+      .select(
+        "status, started_at, completed_at, duration_seconds, storage_filepath",
+      )
+      .eq("live_session_id", sessionId)
+      .order("created_at", { ascending: false })
+      .limit(10);
+    const list = ((rows as any[]) || []).filter(Boolean);
+    const active = list.find((r) => r.status === "recording");
+    const done = list.find(
+      (r) => r.status === "completed" && r.storage_filepath,
+    );
+    return {
+      recording: Boolean(active),
+      hasReplay: Boolean(done),
+      startedAt: active?.started_at ?? done?.started_at ?? null,
+      completedAt: done?.completed_at ?? null,
+      durationSeconds: done?.duration_seconds ?? null,
+    };
+  }
+
+  /**
+   * URL de LECTURE du replay d'une TÉLÉCONSULTATION (endpoint médical
+   * GET /med/teleconsult/:id/recording). Comme resolveReplayPlaybackUrl mais
+   * SANS canViewReplay : l'accès médical (praticien du tenant OU
+   * patient-propriétaire) est vérifié EN AMONT par TeleconsultService. Renvoie
+   * null si aucun enregistrement complété n'est encore disponible (egress en
+   * cours de finalisation) → le front affiche « bientôt disponible ».
+   */
+  async resolveTeleconsultReplayUrl(sessionId: string): Promise<string | null> {
+    const { data: rec } = await this.supabase
+      .from("live_recordings")
+      .select("storage_filepath")
+      .eq("live_session_id", sessionId)
+      .eq("status", "completed")
+      .not("storage_filepath", "is", null)
+      .order("completed_at", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+    const filepath = (rec as any)?.storage_filepath as string | undefined;
+    if (!filepath) return null;
+    return this.liveKit.presignReplayGet(filepath, 3600);
   }
 
   /** Dépublie le replay (revue hôte) : repasse en 'pending_review' (invisible élève). */
@@ -525,6 +622,32 @@ export class LiveService {
    * Le nom de room est scopé par tenant : {tenantSlug}_{sessionId} pour
    * garantir l'isolation multi-tenant au niveau LiveKit.
    */
+  /**
+   * Résout le CYCLE de forfait PERSONNEL d'un membre (axe B) depuis billing_subscriptions :
+   * abo cycle-scoped { user_id, tenant_id, plan_id:'academique-monthly', status:'active' }.
+   * Retourne le cycle du PLUS HAUT rang parmi ses abos actifs MAPPABLES ; ignore les plans
+   * non-cycle (liri-trial, forfait tenant…). User-scoped → ne matche jamais l'abo tenant-level.
+   * null = aucun forfait cycle actif.
+   */
+  private async resolveMemberCycle(tenantId: string, userId: string): Promise<Cycle | null> {
+    if (!tenantId || !userId) return null;
+    const { data: subs } = await this.supabase
+      .from("billing_subscriptions")
+      .select("plan_id, status, current_period_end")
+      .eq("tenant_id", tenantId)
+      .eq("user_id", userId)
+      .eq("status", "active");
+    let best: Cycle | null = null;
+    for (const s of subs ?? []) {
+      const endStr = (s as any).current_period_end;
+      const end = endStr ? new Date(endStr).getTime() : null;
+      if (end !== null && end < Date.now()) continue; // défense : période expirée
+      const c = cycleFromPlanId((s as any).plan_id);
+      if (c && rankOfCycle(c) > rankOfCycle(best)) best = c;
+    }
+    return best;
+  }
+
   async generateToken(
     sessionId: string,
     userId: string,
@@ -535,7 +658,7 @@ export class LiveService {
     // pour l'enforcement de la durée (palier gratuit). 1 requête.
     const { data: session } = await this.supabase
       .from("live_sessions")
-      .select("host_user_id, tenant_id, status, started_at, price_cents, tenants(slug)")
+      .select("host_user_id, tenant_id, status, started_at, price_cents, formation_id, tenants(slug)")
       .eq("id", sessionId)
       .single();
     if (!session) throw new NotFoundException("Session introuvable");
@@ -579,6 +702,24 @@ export class LiveService {
       if (!pass?.id) {
         throw new ForbiddenException(
           "Ce live est payant : complétez votre paiement pour y accéder.",
+        );
+      }
+    }
+
+    // ── Gate PALIER MEMBRE (Couche C) : un live de CURSUS (rattaché à une formation) exige le
+    //    forfait Académique+ (feature liveCursus, rang 2). Barrière SERVEUR non contournable —
+    //    la garde front (useMemberEntitlements/UpsellLock) est contournable via l'URL directe.
+    //    • host/staff : bypass (role==='host' déjà tranché serveur plus haut).
+    //    • live Temple/gratuit (formation_id NULL) : NON gaté (rang 1, ouvert à tout membre).
+    //    • placé APRÈS le gate payant : un live cursus payant exige pass ET palier.
+    if (role !== "host" && (session as any).formation_id) {
+      const cycle = await this.resolveMemberCycle(
+        (session as any).tenant_id,
+        userId,
+      );
+      if (!cycleCan(cycle, "liveCursus")) {
+        throw new ForbiddenException(
+          "Ce live fait partie d'un cursus : un forfait Académique ou supérieur est requis pour y accéder.",
         );
       }
     }
@@ -638,6 +779,79 @@ export class LiveService {
         : await this.liveKit.generateParticipantToken(roomName, userId, undefined, cappedTtlSeconds ?? "1h");
 
     return { token, room: roomName, role, userId, requestedRole: requestedRole ?? null };
+  }
+
+  /**
+   * PUBLIC (sans login) — token invité pour un live PAYANT, gardé par un access_pass
+   * `live_session` dont l'id sert de jeton d'URL (créé après paiement sur le SITE du
+   * tenant, cf appointments.service guestLiveAccess). ADDITIF : ne touche pas
+   * generateToken. L'invité est un simple participant (canSubscribe only). La barrière
+   * SERVEUR = l'existence d'un pass ACTIF pour CETTE session (le pass = preuve d'achat).
+   */
+  async generateGuestLiveToken(sessionId: string, inviteId: string, tenantSlug?: string) {
+    const { data: pass } = await (this.supabase as any)
+      .from("access_passes")
+      .select("id, user_id, tenant_id, resource_type, resource_id, status")
+      .eq("id", inviteId)
+      .maybeSingle();
+    if (
+      !pass ||
+      (pass as any).resource_type !== "live_session" ||
+      (pass as any).resource_id !== sessionId ||
+      (pass as any).status !== "active"
+    ) {
+      throw new ForbiddenException("Lien d'accès invalide ou expiré.");
+    }
+    const { data: session } = await this.supabase
+      .from("live_sessions")
+      .select("tenant_id, status, started_at, tenants(slug)")
+      .eq("id", sessionId)
+      .single();
+    if (!session) throw new NotFoundException("Session introuvable");
+    if ((session as any).tenant_id !== (pass as any).tenant_id) {
+      throw new ForbiddenException("Accès refusé.");
+    }
+    const slug = tenantSlug ?? (session as any)?.tenants?.slug ?? sessionId;
+    const roomName = LiveKitService.scopedRoomName(slug, sessionId);
+    const identity = `guest_${inviteId}`;
+
+    // Caps forfait gratuit — mêmes règles que les participants non-host.
+    const { limits } = await this.entitlements.resolveLimits((session as any).tenant_id);
+    let cappedTtlSeconds: number | undefined;
+    if (limits.maxLiveMinutes !== null) {
+      const startedAt = (session as any).started_at
+        ? new Date((session as any).started_at).getTime()
+        : null;
+      const isLive = (session as any).status === "live" && startedAt !== null;
+      if (isLive) {
+        const remainingMs = startedAt! + limits.maxLiveMinutes * 60_000 - Date.now();
+        if (remainingMs <= 0) {
+          throw new ForbiddenException(
+            `Forfait gratuit : ce live a atteint sa limite de ${limits.maxLiveMinutes} minutes.`,
+          );
+        }
+        cappedTtlSeconds = Math.max(30, Math.floor(remainingMs / 1000));
+      } else {
+        cappedTtlSeconds = limits.maxLiveMinutes * 60;
+      }
+    }
+    if (limits.maxParticipants !== null) {
+      const present = await this.liveKit.listParticipantIdentities(roomName);
+      if (!present.includes(identity) && present.length >= limits.maxParticipants) {
+        throw new ForbiddenException(
+          `Forfait gratuit : ${limits.maxParticipants} participants maximum dans un live.`,
+        );
+      }
+    }
+
+    await this.liveKit.ensureRoom(roomName, sessionId, (pass as any).user_id);
+    const token = await this.liveKit.generateParticipantToken(
+      roomName,
+      identity,
+      undefined,
+      cappedTtlSeconds ?? "1h",
+    );
+    return { token, room: roomName, role: "guest" as const, identity };
   }
 
   /**

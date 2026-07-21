@@ -309,6 +309,32 @@ export default function CimolaceAdminClientDetail() {
     );
   }
 
+  /**
+   * Impersonation encadrée (§15) : « agir en tant que tenant » TRACÉ. Motif obligatoire,
+   * session serveur bornée + journalisée, ouverture de l'espace tenant dans un NOUVEL onglet
+   * (la session staff n'est pas touchée). L'onglet est ouvert DANS le geste (anti-popup-block).
+   */
+  async function startImpersonation() {
+    if (!appTenant?.id) { window.alert("Ce client n'a pas de tenant applicatif à impersonater."); return; }
+    const reason = window.prompt('Motif de l’impersonation (obligatoire, tracé, ≥ 5 caractères) :', '');
+    if (reason == null) return; // annulé
+    if (reason.trim().length < 5) { window.alert('Motif trop court (≥ 5 caractères).'); return; }
+    const win = window.open('about:blank', '_blank');
+    try {
+      const res = await cimolaceBackofficeApi.startImpersonation(id, { reason: reason.trim(), durationMinutes: 30 });
+      const ctx = {
+        token: res.token, tenantSlug: res.tenantSlug, tenantName: res.tenantName ?? null,
+        reason: res.reason, clientId: id, expiresAt: res.expiresAt, to: '/liri',
+      };
+      const hash = btoa(encodeURIComponent(JSON.stringify(ctx)));
+      const url = `/impersonate#imp=${hash}`;
+      if (win) win.location.href = url; else window.location.href = url; // popup bloqué → même onglet
+    } catch (e) {
+      if (win) win.close();
+      window.alert(e?.response?.data?.error?.message || e?.message || 'Impersonation impossible.');
+    }
+  }
+
   function addCredentialReference(kind) {
     const presets = {
       supabase: {
@@ -528,6 +554,7 @@ export default function CimolaceAdminClientDetail() {
               <ActionButton busy={actionBusy === 'client-active'} onClick={() => setClientStatus('active')}>Réactiver</ActionButton>
               <ActionButton busy={actionBusy === 'owner-membership'} onClick={ensureOwnerMembership}>Préparer owner</ActionButton>
               <ActionButton busy={actionBusy === 'ticket'} onClick={createOpsTicket}>Ticket audit</ActionButton>
+              <ActionButton onClick={startImpersonation}>Impersonater (tracé)</ActionButton>
             </div>
           </div>
         </section>

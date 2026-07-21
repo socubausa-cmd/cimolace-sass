@@ -379,8 +379,14 @@ export class CourseBuilderService {
         return { url, durationSeconds: dur };
       })
       .filter((s) => s.url);
-    const [w, h] = String(dto.exportResolution || '1280x720').split('x').map((n) => parseInt(n, 10));
-    const payload = { sourceVideoUrl, slides, width: w || 1280, height: h || 720, renderMode: dto.renderMode ?? 'pedagogical' };
+    // Le front envoie des LIBELLÉS ('720p'|'1080p'|'1440p'|'4k') OU un 'LxH'. Mapper les deux :
+    // l'ancien `.split('x')` donnait '1080p'→1080×720 et '4k'→4×720 (hauteur toujours 720).
+    const RES_MAP: Record<string, [number, number]> = {
+      '720p': [1280, 720], '1080p': [1920, 1080], '1440p': [2560, 1440], '2160p': [3840, 2160], '4k': [3840, 2160],
+    };
+    const resStr = String(dto.exportResolution || '1080p').toLowerCase().trim();
+    const [w, h] = RES_MAP[resStr] || resStr.split('x').map((n) => parseInt(n, 10));
+    const payload = { sourceVideoUrl, slides, width: w || 1920, height: h || 1080, renderMode: dto.renderMode ?? 'pedagogical' };
 
     const { data: job } = await (this.supabase.client as any)
       .from('course_render_jobs')

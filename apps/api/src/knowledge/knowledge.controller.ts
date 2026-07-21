@@ -1,6 +1,8 @@
 import { Body, Controller, Delete, Get, Param, Post, UseGuards } from '@nestjs/common';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { TenantGuard } from '../tenant/tenant.guard';
+import { RolesGuard } from '../common/guards/roles.guard';
+import { Roles } from '../common/decorators/roles.decorator';
 import { CurrentTenant } from '../tenant/current-tenant.decorator';
 import type { TenantContext } from '../tenant/tenant.types';
 import { KnowledgeService } from './knowledge.service';
@@ -18,7 +20,11 @@ import { KnowledgeService } from './knowledge.service';
 export class KnowledgeController {
   constructor(private readonly svc: KnowledgeService) {}
 
+  // Écritures de la base de connaissances (ingérer / supprimer) = staff
+  // (owner/admin) : un student membre ne doit pas modifier le RAG du tenant.
   @Post()
+  @UseGuards(RolesGuard)
+  @Roles('owner', 'admin')
   ingest(
     @CurrentTenant() t: TenantContext,
     @Body() body: { title?: string; topic?: string; content?: string; source?: string; id?: string },
@@ -32,6 +38,8 @@ export class KnowledgeController {
   }
 
   @Delete(':id')
+  @UseGuards(RolesGuard)
+  @Roles('owner', 'admin')
   remove(@Param('id') id: string, @CurrentTenant() t: TenantContext) {
     return this.svc.remove(t.id, id);
   }

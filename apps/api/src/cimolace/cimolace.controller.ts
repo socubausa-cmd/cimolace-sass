@@ -21,7 +21,8 @@ export class CimolaceController {
   async getTemplates() { return { data: this.catalog.getTemplates() }; }
 
   @Get("services")
-  @UseGuards(JwtAuthGuard, TenantGuard)
+  @UseGuards(JwtAuthGuard, TenantGuard, RolesGuard)
+  @Roles("owner", "admin")
   async getTenantServices(@Req() req: any) { return { data: await this.catalog.getTenantServices(req.tenant.id) }; }
 
   @Post("services/:key/toggle")

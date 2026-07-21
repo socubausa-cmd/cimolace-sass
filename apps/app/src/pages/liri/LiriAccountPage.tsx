@@ -1,16 +1,19 @@
 import { useEffect, useMemo, useState, type ReactNode } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
-  ChevronLeft, UserRound, Building2, Users, CreditCard, Wallet, LogOut, Trash2,
+  UserRound, Building2, Users, CreditCard, Wallet, LogOut, Trash2,
   X, Loader2, Sparkles, Check, ArrowUpRight, SlidersHorizontal, Settings2,
-  Eye, EyeOff, Copy, ShieldCheck, UserPlus, FileText, Globe,
+  Eye, EyeOff, Copy, ShieldCheck, UserPlus, FileText, Globe, Palette, KeyRound, Image as ImageIcon,
 } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import { authStore } from '@/lib/auth-store';
 import { getApiBaseUrl } from '@/lib/apiBase';
 import { useAuth } from '@/hooks/useAuth';
+import { supabase } from '@/lib/supabase';
 import LiriDomainSettings from '@/components/liri/LiriDomainSettings';
 import LiriMobileMoneySettings from '@/components/liri/LiriMobileMoneySettings';
+import { LiriPortalShell } from '@/components/liri/LiriPortalShell';
+import PremiumSegmentedSelector from '@/components/ui/premium-segmented-selector';
 import '../LiriPortal.css';
 
 interface Org { name: string; slug: string; role?: string | null; plan?: string | null; }
@@ -23,7 +26,7 @@ const DAY = 86_400_000;
 
 export default function LiriAccountPage() {
   const nav = useNavigate();
-  const { user, logout } = useAuth();
+  const { user, logout, tenantRole, refreshProfile } = useAuth() as any;
   const base = getApiBaseUrl();
   const token = authStore.getToken();
   const slug = authStore.getTenantSlug();
@@ -70,11 +73,41 @@ export default function LiriAccountPage() {
   const [nameDraft, setNameDraft] = useState('');
   const [nameSaving, setNameSaving] = useState(false);
 
+  // Marque & identité (logo, couleurs, slogan) — PATCH /tenants/current/branding, INLINE.
+  const [brandLoaded, setBrandLoaded] = useState(false);
+  const [logoUrl, setLogoUrl] = useState('');
+  const [brandName, setBrandName] = useState('');
+  const [accent, setAccent] = useState('#d97757');
+  const [primary, setPrimary] = useState('');
+  const [slogan, setSlogan] = useState('');
+  const [brandSaving, setBrandSaving] = useState(false);
+  const [brandMsg, setBrandMsg] = useState<{ ok: boolean; text: string } | null>(null);
+
+  // Sécurité — changement de mot de passe (Supabase auth, l'utilisateur saisit le sien).
+  const [pw1, setPw1] = useState('');
+  const [pw2, setPw2] = useState('');
+  const [showPw, setShowPw] = useState(false);
+  const [pwSaving, setPwSaving] = useState(false);
+  const [pwMsg, setPwMsg] = useState<{ ok: boolean; text: string } | null>(null);
+
+  // Profil perso INLINE (nom via table profiles, email via Supabase auth) — jamais /profil/* (vieux shell).
+  const [pnEditing, setPnEditing] = useState(false);
+  const [pnDraft, setPnDraft] = useState('');
+  const [pnSaving, setPnSaving] = useState(false);
+  const [emEditing, setEmEditing] = useState(false);
+  const [emDraft, setEmDraft] = useState('');
+  const [emSaving, setEmSaving] = useState(false);
+  const [emMsg, setEmMsg] = useState<{ ok: boolean; text: string } | null>(null);
+
   const orgName = org?.name || slugLabel;
   const orgSlug = org?.slug || slug;
   const role = (org?.role ?? '') as string;
   const isOwner = role === 'owner';
-  const canManageOrg = ['owner', 'admin', 'secretariat'].includes(role);
+  // Rôle FIABLE : celui de /tenants/current OU celui du JWT (tenantRole) — évite que la
+  // console d'org disparaisse quand /tenants/current fail-close (ex. résolution tenant en
+  // cours) alors que l'utilisateur EST owner (cf. socuba owner d'isna côté DB).
+  const manageRole = ['owner', 'admin', 'secretariat'];
+  const canManageOrg = manageRole.includes(role) || manageRole.includes(String(tenantRole || '').toLowerCase());
   const email = user?.email || '';
 
   useEffect(() => {
@@ -84,7 +117,12 @@ export default function LiriAccountPage() {
       .then((d) => { let t: any = d; while (t && typeof t === 'object' && 'data' in t) t = t.data; if (t?.name || t?.slug) setOrg({ name: t.name ?? slugLabel, slug: t.slug ?? slug, role: t.userRole ?? t.role ?? null, plan: t.plan ?? null }); })
       .catch(() => {});
     fetch(`${base}/tenants/mine`, { headers: h }).then((r) => (r.ok ? r.json() : null))
-      .then((d) => { const a = d?.data ?? d; if (Array.isArray(a)) setOrgs(a.map((m: any) => ({ name: m.name ?? m.tenants?.name ?? m.slug, slug: m.slug ?? m.tenants?.slug, role: m.role ?? null })).filter((o: OrgRef) => o.slug)); })
+      .then((d) => { let a: any = d; while (a && typeof a === 'object' && !Array.isArray(a) && 'data' in a) a = a.data;
+        if (Array.isArray(a)) setOrgs(a.map((m: any) => ({ name: m.name ?? m.tenants?.name ?? m.slug, slug: m.slug ?? m.tenants?.slug, role: m.role ?? null }))
+          // On EXCLUT le tenant plateforme « cimolace » : c'est le PROPRIÉTAIRE du SaaS (comme
+          // Stripe en invisible), pas une organisation cliente qu'on opère dans le portail LIRI.
+          // Il a son propre back-office /cimolace/admin ; le portail LIRI = espaces CLIENTS.
+          .filter((o: OrgRef) => o.slug && o.slug !== 'cimolace')); })
       .catch(() => {});
     fetch(`${base}/growth/stats`, { headers: h }).then((r) => (r.ok ? r.json() : null))
       .then((d) => { const s = d?.data ?? d; if (s && typeof s.totalLives === 'number' && typeof s.totalMembers === 'number') setStats(s as Stats); })
@@ -206,8 +244,10 @@ export default function LiriAccountPage() {
   type NavItem = { key: string; label: string; icon: LucideIcon; group: 'compte' | 'org' };
   const NAV: NavItem[] = [
     { key: 'profil', label: 'Profil', icon: UserRound, group: 'compte' },
+    { key: 'securite', label: 'Sécurité', icon: KeyRound, group: 'compte' },
     { key: 'prefs', label: 'Préférences', icon: Settings2, group: 'compte' },
     { key: 'general', label: 'Général', icon: SlidersHorizontal, group: 'org' },
+    { key: 'marque', label: 'Marque', icon: Palette, group: 'org' },
     { key: 'membres', label: 'Membres', icon: Users, group: 'org' },
     { key: 'facturation', label: 'Facturation', icon: CreditCard, group: 'org' },
     { key: 'encaissements', label: 'Encaissements', icon: Wallet, group: 'org' },
@@ -246,6 +286,94 @@ export default function LiriAccountPage() {
       .catch(() => setMemLoaded(true));
   }, [active, base, token, slug, memLoaded]); // eslint-disable-line react-hooks/exhaustive-deps
 
+  // Charge (lazy) l'identité de marque quand la section Marque s'ouvre.
+  useEffect(() => {
+    if (active !== 'marque' || !token || brandLoaded) return;
+    const h = { Authorization: `Bearer ${token}`, 'X-Tenant-Slug': slug } as Record<string, string>;
+    fetch(`${base}/tenants/current`, { headers: h }).then((r) => (r.ok ? r.json() : null))
+      .then((d) => {
+        let t: any = d; while (t && typeof t === 'object' && 'data' in t) t = t.data;
+        if (t) {
+          setBrandName(t.name ?? '');
+          setLogoUrl(t.logo_url ?? '');
+          const c = (t.brand_colors && typeof t.brand_colors === 'object') ? t.brand_colors : {};
+          setAccent(c.accent || '#d97757');
+          setPrimary(c.primary || '');
+          const site = (t.metadata?.site && typeof t.metadata.site === 'object') ? t.metadata.site : {};
+          setSlogan(site.slogan || '');
+        }
+        setBrandLoaded(true);
+      })
+      .catch(() => setBrandLoaded(true));
+  }, [active, base, token, slug, brandLoaded]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Enregistre l'identité de marque (logo, couleurs, nom, slogan) — merge non destructif côté API.
+  const saveBranding = async () => {
+    if (brandSaving) return;
+    setBrandSaving(true); setBrandMsg(null);
+    try {
+      const h = { 'Content-Type': 'application/json', Authorization: `Bearer ${token}`, 'X-Tenant-Slug': slug } as Record<string, string>;
+      const body: Record<string, unknown> = {
+        logo_url: logoUrl.trim(),
+        brand_colors: { accent, ...(primary.trim() ? { primary: primary.trim() } : {}) },
+        site: { slogan: slogan.trim() },
+      };
+      if (brandName.trim()) body.name = brandName.trim();
+      const res = await fetch(`${base}/tenants/current/branding`, { method: 'PATCH', headers: h, body: JSON.stringify(body) });
+      if (!res.ok) { const e = await res.json().catch(() => ({})); throw new Error(e?.error?.message || e?.message || 'Échec de l’enregistrement.'); }
+      if (brandName.trim()) setOrg((o) => (o ? { ...o, name: brandName.trim() } : o));
+      setBrandMsg({ ok: true, text: 'Identité enregistrée — elle s’applique à votre espace et votre vitrine.' });
+    } catch (err: any) {
+      setBrandMsg({ ok: false, text: err?.message || 'Échec de l’enregistrement.' });
+    } finally { setBrandSaving(false); }
+  };
+
+  // Changement de mot de passe (l'utilisateur saisit le sien ; Supabase auth).
+  const changePassword = async () => {
+    if (pwSaving) return;
+    if (pw1.length < 8) { setPwMsg({ ok: false, text: 'Mot de passe : 8 caractères minimum.' }); return; }
+    if (pw1 !== pw2) { setPwMsg({ ok: false, text: 'Les deux mots de passe ne correspondent pas.' }); return; }
+    setPwSaving(true); setPwMsg(null);
+    try {
+      const { error } = await supabase.auth.updateUser({ password: pw1 });
+      if (error) throw new Error(error.message || 'Échec.');
+      setPw1(''); setPw2('');
+      setPwMsg({ ok: true, text: 'Mot de passe mis à jour.' });
+    } catch (err: any) {
+      setPwMsg({ ok: false, text: err?.message || 'Échec de la mise à jour.' });
+    } finally { setPwSaving(false); }
+  };
+
+  // Nom personnel → table profiles (même mécanisme qu'EditProfilePage), INLINE.
+  const saveProfileName = async () => {
+    const nm = pnDraft.trim();
+    if (pnSaving || !nm) { setPnEditing(false); return; }
+    setPnSaving(true);
+    try {
+      const uid = user?.id;
+      const { error } = await (supabase as any).from('profiles').update({ name: nm, updated_at: new Date().toISOString() }).eq('id', uid);
+      if (error) throw error;
+      if (typeof refreshProfile === 'function') await refreshProfile();
+      setPnEditing(false);
+    } catch { if (typeof window !== 'undefined') window.alert('Le renommage a échoué.'); }
+    finally { setPnSaving(false); }
+  };
+
+  // Email de connexion → Supabase auth (un email de confirmation est envoyé), INLINE.
+  const saveEmail = async () => {
+    const em = emDraft.trim().toLowerCase();
+    if (emSaving || !em || em === email) { setEmEditing(false); return; }
+    setEmSaving(true); setEmMsg(null);
+    try {
+      const { error } = await supabase.auth.updateUser({ email: em });
+      if (error) throw new Error(error.message);
+      setEmEditing(false);
+      setEmMsg({ ok: true, text: `Email de confirmation envoyé à ${em}. Le changement s’applique après validation.` });
+    } catch (err: any) {
+      setEmMsg({ ok: false, text: err?.message || 'Échec du changement d’email.' });
+    } finally { setEmSaving(false); }
+  };
+
   const initials = orgName.slice(0, 2).toUpperCase();
 
   const NavBtn = ({ it, horizontal }: { it: NavItem; horizontal?: boolean }) => {
@@ -263,10 +391,10 @@ export default function LiriAccountPage() {
 
   // ── Lignes & blocs réutilisables ──
   const Row = ({ label, value, action }: { label: string; value?: ReactNode; action?: ReactNode }) => (
-    <div className="flex items-center justify-between gap-4 border-b lp-line py-4">
+    <div className="flex items-center justify-between gap-4 rounded-2xl border lp-line lp-panel70 px-5 py-4">
       <div className="min-w-0">
-        <p className="text-[13px] lp-faint">{label}</p>
-        {value !== undefined && <div className="mt-0.5 text-[14px] lp-ink">{value}</div>}
+        <p className="text-[11px] font-semibold uppercase tracking-[0.08em] lp-faint">{label}</p>
+        {value !== undefined && <div className="mt-1.5 text-[15px] lp-ink">{value}</div>}
       </div>
       {action}
     </div>
@@ -307,14 +435,118 @@ export default function LiriAccountPage() {
                 <p className="truncate text-[13px] lp-faint">{email}</p>
               </div>
             </div>
-            <div className="mt-6"><GhostBtn onClick={() => nav('/profil/modifier')}>Modifier mon profil</GhostBtn></div>
+            <div className="mt-6 flex flex-col gap-2.5">
+              {pnEditing ? (
+                <div className="flex items-center gap-2 rounded-2xl border lp-line lp-panel70 px-5 py-4">
+                  <input autoFocus value={pnDraft} onChange={(e) => setPnDraft(e.target.value)} onKeyDown={(e) => { if (e.key === 'Enter') saveProfileName(); if (e.key === 'Escape') setPnEditing(false); }} className="min-w-0 flex-1 rounded-lg border lp-line bg-[rgba(255,255,255,.04)] px-3 py-2 text-[14px] text-white focus:border-[rgba(217,119,87,.5)] focus:outline-none" />
+                  <button onClick={saveProfileName} disabled={pnSaving} className="flex shrink-0 items-center gap-1.5 rounded-lg px-3.5 py-2 text-[12.5px] font-semibold text-white lp-tr disabled:opacity-50" style={{ background: 'linear-gradient(90deg,#e2855f,#c2683f)' }}>{pnSaving ? <Loader2 size={14} className="animate-spin" /> : 'Enregistrer'}</button>
+                  <button onClick={() => setPnEditing(false)} className="shrink-0 rounded-lg border px-3 py-2 text-[12.5px] font-medium lp-muted lp-tr" style={{ borderColor: 'rgba(245,244,238,.14)' }}>Annuler</button>
+                </div>
+              ) : (
+                <Row label="Nom affiché" value={user?.name || '—'} action={<GhostBtn onClick={() => { setPnDraft(user?.name || ''); setPnEditing(true); }}>Modifier</GhostBtn>} />
+              )}
+              <Row label="Email" value={email || '—'} action={<GhostBtn onClick={() => setSection('securite')}>Gérer</GhostBtn>} />
+            </div>
           </div>
         );
       case 'prefs':
         return (
           <div>
             <Header title="Préférences" subtitle="Notifications, langue et options personnelles" />
-            <div className="mt-5"><Linkish label="Préférences du compte" sub="Gérez vos notifications et vos options d’affichage." btn="Ouvrir les préférences" onClick={() => nav('/profil/parametres')} /></div>
+            <div className="mt-6 rounded-2xl border lp-line lp-panel70 p-5">
+              <p className="text-[14px] font-medium lp-ink">Notifications par email</p>
+              <p className="mt-1 text-[13px] lp-faint">Nouveaux messages, lives programmés, inscriptions — bientôt configurables ici même.</p>
+              <span className="mt-3 inline-flex items-center gap-2 rounded-lg px-3 py-1.5 text-[12px] font-medium lp-faint" style={{ background: 'rgba(255,255,255,.04)' }}>À venir</span>
+            </div>
+          </div>
+        );
+      case 'securite':
+        return (
+          <div>
+            <Header title="Sécurité" subtitle="Votre email de connexion et votre mot de passe" />
+            <div className="mt-6 flex flex-col gap-2.5">
+              {emEditing ? (
+                <div className="flex items-center gap-2 rounded-2xl border lp-line lp-panel70 px-5 py-4">
+                  <input autoFocus type="email" value={emDraft} onChange={(e) => setEmDraft(e.target.value)} onKeyDown={(e) => { if (e.key === 'Enter') saveEmail(); if (e.key === 'Escape') setEmEditing(false); }} className="min-w-0 flex-1 rounded-lg border lp-line bg-[rgba(255,255,255,.04)] px-3 py-2 text-[14px] text-white focus:border-[rgba(217,119,87,.5)] focus:outline-none" />
+                  <button onClick={saveEmail} disabled={emSaving} className="flex shrink-0 items-center gap-1.5 rounded-lg px-3.5 py-2 text-[12.5px] font-semibold text-white lp-tr disabled:opacity-50" style={{ background: 'linear-gradient(90deg,#e2855f,#c2683f)' }}>{emSaving ? <Loader2 size={14} className="animate-spin" /> : 'Enregistrer'}</button>
+                  <button onClick={() => setEmEditing(false)} className="shrink-0 rounded-lg border px-3 py-2 text-[12.5px] font-medium lp-muted lp-tr" style={{ borderColor: 'rgba(245,244,238,.14)' }}>Annuler</button>
+                </div>
+              ) : (
+                <Row label="Email de connexion" value={email || '—'} action={<GhostBtn onClick={() => { setEmDraft(email); setEmEditing(true); setEmMsg(null); }}>Modifier</GhostBtn>} />
+              )}
+              {emMsg && <p className="text-[12.5px]" style={{ color: emMsg.ok ? '#7bbf6a' : '#ef6a52' }}>{emMsg.text}</p>}
+            </div>
+            <div className="mt-6 rounded-2xl border lp-line lp-panel70 p-5">
+              <p className="text-[14px] font-medium lp-ink">Changer le mot de passe</p>
+              <p className="mt-0.5 text-[12px] lp-faint">8 caractères minimum. Vous resterez connecté.</p>
+              <label className="mt-4 block text-[12px] font-medium lp-faint">Nouveau mot de passe</label>
+              <div className="relative mt-1.5">
+                <input type={showPw ? 'text' : 'password'} value={pw1} onChange={(e) => setPw1(e.target.value)} autoComplete="new-password" placeholder="••••••••" className="w-full rounded-xl border lp-line bg-[rgba(255,255,255,.04)] px-3 py-2.5 pr-10 text-[13px] text-white placeholder:text-white/25 focus:border-[rgba(217,119,87,.5)] focus:outline-none" />
+                <button type="button" onClick={() => setShowPw((v) => !v)} className="absolute right-2 top-1/2 grid h-7 w-7 -translate-y-1/2 place-items-center rounded-lg lp-faint lp-tr hover:bg-[rgba(255,255,255,.06)]" aria-label="Afficher / masquer">{showPw ? <EyeOff size={15} /> : <Eye size={15} />}</button>
+              </div>
+              <label className="mt-4 block text-[12px] font-medium lp-faint">Confirmer</label>
+              <input type={showPw ? 'text' : 'password'} value={pw2} onChange={(e) => setPw2(e.target.value)} onKeyDown={(e) => { if (e.key === 'Enter') changePassword(); }} autoComplete="new-password" placeholder="••••••••" className="mt-1.5 w-full rounded-xl border lp-line bg-[rgba(255,255,255,.04)] px-3 py-2.5 text-[13px] text-white placeholder:text-white/25 focus:border-[rgba(217,119,87,.5)] focus:outline-none" />
+              {pwMsg && <p className="mt-3 text-[12.5px]" style={{ color: pwMsg.ok ? '#7bbf6a' : '#ef6a52' }}>{pwMsg.text}</p>}
+              <div className="mt-5">
+                <button onClick={changePassword} disabled={pwSaving || !pw1 || !pw2} className="flex items-center gap-2 rounded-xl px-4 py-2.5 text-[13px] font-semibold text-white lp-tr disabled:opacity-50" style={{ background: 'linear-gradient(90deg,#e2855f,#c2683f)' }}>{pwSaving ? <><Loader2 size={15} className="animate-spin" /> Mise à jour…</> : <><KeyRound size={15} /> Mettre à jour</>}</button>
+              </div>
+            </div>
+          </div>
+        );
+      case 'marque':
+        return (
+          <div>
+            <Header title="Marque & identité" subtitle="Votre logo, vos couleurs et votre nom — appliqués à votre espace, votre vitrine et vos emails." />
+            {!brandLoaded ? (
+              <div className="mt-6 flex items-center gap-2 text-[13px] lp-faint"><Loader2 size={15} className="animate-spin" /> Chargement…</div>
+            ) : (
+              <div className="mt-5 space-y-5">
+                {/* Logo */}
+                <div className="rounded-2xl border lp-line lp-panel70 p-5">
+                  <p className="text-[13px] font-medium lp-ink">Logo</p>
+                  <p className="mt-0.5 text-[12px] lp-faint">Collez l’URL de votre logo (PNG/SVG carré recommandé).</p>
+                  <div className="mt-3 flex items-center gap-4">
+                    <span className="grid h-14 w-14 shrink-0 place-items-center overflow-hidden rounded-2xl border lp-line" style={{ background: 'rgba(255,255,255,.04)' }}>
+                      {logoUrl.trim() ? <img src={logoUrl.trim()} alt="logo" className="h-full w-full object-contain" /> : <ImageIcon size={20} className="lp-faint" />}
+                    </span>
+                    <input type="url" value={logoUrl} onChange={(e) => setLogoUrl(e.target.value)} placeholder="https://…/logo.png" autoComplete="off" spellCheck={false} className="min-w-0 flex-1 rounded-xl border lp-line bg-[rgba(255,255,255,.04)] px-3 py-2.5 text-[13px] text-white placeholder:text-white/25 focus:border-[rgba(217,119,87,.5)] focus:outline-none" />
+                  </div>
+                </div>
+
+                {/* Nom + slogan */}
+                <div className="rounded-2xl border lp-line lp-panel70 p-5">
+                  <label className="block text-[12px] font-medium lp-faint">Nom de la marque</label>
+                  <input value={brandName} onChange={(e) => setBrandName(e.target.value)} placeholder={orgName} className="mt-1.5 w-full rounded-xl border lp-line bg-[rgba(255,255,255,.04)] px-3 py-2.5 text-[13px] text-white placeholder:text-white/25 focus:border-[rgba(217,119,87,.5)] focus:outline-none" />
+                  <label className="mt-4 block text-[12px] font-medium lp-faint">Slogan <span className="lp-faint">(vitrine)</span></label>
+                  <input value={slogan} onChange={(e) => setSlogan(e.target.value)} placeholder="Ex : L’école de la Prorascience" className="mt-1.5 w-full rounded-xl border lp-line bg-[rgba(255,255,255,.04)] px-3 py-2.5 text-[13px] text-white placeholder:text-white/25 focus:border-[rgba(217,119,87,.5)] focus:outline-none" />
+                </div>
+
+                {/* Couleurs */}
+                <div className="rounded-2xl border lp-line lp-panel70 p-5">
+                  <p className="text-[13px] font-medium lp-ink">Couleurs</p>
+                  <p className="mt-0.5 text-[12px] lp-faint">L’accent pilote les boutons et éléments actifs de votre espace.</p>
+                  <div className="mt-3 flex flex-wrap gap-5">
+                    <div>
+                      <label className="block text-[12px] font-medium lp-faint">Accent</label>
+                      <div className="mt-1.5 flex items-center gap-2">
+                        <input type="color" value={/^#[0-9a-fA-F]{6}$/.test(accent) ? accent : '#d97757'} onChange={(e) => setAccent(e.target.value)} className="h-9 w-12 cursor-pointer rounded-lg border lp-line bg-transparent p-0.5" aria-label="Couleur d’accent" />
+                        <input value={accent} onChange={(e) => setAccent(e.target.value)} className="w-28 rounded-lg border lp-line bg-[rgba(255,255,255,.04)] px-2.5 py-2 font-mono text-[12px] text-white focus:border-[rgba(217,119,87,.5)] focus:outline-none" />
+                      </div>
+                    </div>
+                    <div>
+                      <label className="block text-[12px] font-medium lp-faint">Primaire <span className="lp-faint">(optionnel)</span></label>
+                      <div className="mt-1.5 flex items-center gap-2">
+                        <input type="color" value={/^#[0-9a-fA-F]{6}$/.test(primary) ? primary : '#262624'} onChange={(e) => setPrimary(e.target.value)} className="h-9 w-12 cursor-pointer rounded-lg border lp-line bg-transparent p-0.5" aria-label="Couleur primaire" />
+                        <input value={primary} onChange={(e) => setPrimary(e.target.value)} placeholder="—" className="w-28 rounded-lg border lp-line bg-[rgba(255,255,255,.04)] px-2.5 py-2 font-mono text-[12px] text-white placeholder:text-white/25 focus:border-[rgba(217,119,87,.5)] focus:outline-none" />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {brandMsg && <p className="text-[12.5px]" style={{ color: brandMsg.ok ? '#7bbf6a' : '#ef6a52' }}>{brandMsg.text}</p>}
+                <button onClick={saveBranding} disabled={brandSaving} className="flex items-center gap-2 rounded-xl px-4 py-2.5 text-[13px] font-semibold text-white lp-tr disabled:opacity-50" style={{ background: 'linear-gradient(90deg,#e2855f,#c2683f)' }}>{brandSaving ? <><Loader2 size={15} className="animate-spin" /> Enregistrement…</> : <><Palette size={15} /> Enregistrer l’identité</>}</button>
+              </div>
+            )}
           </div>
         );
       case 'membres':
@@ -362,7 +594,7 @@ export default function LiriAccountPage() {
         return (
           <div>
             <Header title="Facturation & abonnement" subtitle="Votre forfait LIRI, vos renouvellements et vos factures — sans quitter le portail." />
-            <div className="mt-5 border-t lp-line">
+            <div className="mt-6 flex flex-col gap-2.5">
               <Row label="Plan actuel" value={billing.label} />
               {billing.endLabel && <Row label={billing.isPaid ? 'Prochain renouvellement' : "Fin de l’essai"} value={billing.endLabel} />}
             </div>
@@ -468,9 +700,9 @@ export default function LiriAccountPage() {
         return (
           <div>
             <Header title="Général" subtitle="Informations de votre organisation" />
-            <div className="mt-5 border-t lp-line">
+            <div className="mt-6 flex flex-col gap-2.5">
               {nameEditing ? (
-                <div className="flex items-center gap-2 border-b lp-line py-3.5">
+                <div className="flex items-center gap-2 rounded-2xl border lp-line lp-panel70 px-5 py-4">
                   <input autoFocus value={nameDraft} onChange={(e) => setNameDraft(e.target.value)} onKeyDown={(e) => { if (e.key === 'Enter') saveName(); if (e.key === 'Escape') setNameEditing(false); }} className="min-w-0 flex-1 rounded-lg border lp-line bg-[rgba(255,255,255,.04)] px-3 py-2 text-[14px] text-white focus:border-[rgba(217,119,87,.5)] focus:outline-none" />
                   <button onClick={saveName} disabled={nameSaving} className="flex shrink-0 items-center gap-1.5 rounded-lg px-3.5 py-2 text-[12.5px] font-semibold text-white lp-tr disabled:opacity-50" style={{ background: 'linear-gradient(90deg,#e2855f,#c2683f)' }}>{nameSaving ? <Loader2 size={14} className="animate-spin" /> : 'Enregistrer'}</button>
                   <button onClick={() => setNameEditing(false)} className="shrink-0 rounded-lg border px-3 py-2 text-[12.5px] font-medium lp-muted lp-tr" style={{ borderColor: 'rgba(245,244,238,.14)' }}>Annuler</button>
@@ -503,7 +735,7 @@ export default function LiriAccountPage() {
             )}
 
             {isOwner && (
-              <div className="mt-8 flex items-center justify-between gap-4 border-t pt-5" style={{ borderColor: 'rgba(226,85,63,.18)' }}>
+              <div className="mt-6 flex items-center justify-between gap-4 rounded-2xl border px-5 py-4" style={{ borderColor: 'rgba(226,85,63,.22)', background: 'rgba(226,85,63,.04)' }}>
                 <div className="min-w-0"><p className="text-[14px] font-medium" style={{ color: '#ef6a52' }}>Supprimer l’organisation</p><p className="mt-0.5 text-[12.5px] lp-faint">Ouvre une demande de fermeture, réversible avant traitement.</p></div>
                 <GhostBtn danger onClick={() => setDelOpen(true)}>Supprimer</GhostBtn>
               </div>
@@ -514,42 +746,32 @@ export default function LiriAccountPage() {
   };
 
   return (
-    <div className="lp-root relative min-h-[100dvh] w-full overflow-y-auto">
+    <LiriPortalShell active="reglages">
+      <div className="lp-root relative flex h-full w-full flex-col items-center overflow-y-auto">
       <div className="lp-glow"><span style={{ width: 480, height: 380, left: '24%', top: -150, background: 'rgba(217,119,87,.08)' }} /></div>
 
-      <div className="relative z-10 mx-auto w-full max-w-4xl px-4 py-6 sm:px-6">
-        {/* topbar */}
-        <div className="mb-5 flex items-center gap-3">
-          <button onClick={() => nav('/liri')} className="grid h-9 w-9 place-items-center rounded-xl lp-muted lp-railbtn lp-tr" aria-label="Retour au portail"><ChevronLeft size={18} /></button>
-          <h1 className="lp-serif text-[22px] font-medium">Mon compte</h1>
+      <div className="relative z-10 w-full max-w-4xl px-4 py-6 sm:px-6">
+        {/* en-tête de section (le chrome LIRI — sélecteur de moteur, marque — est fourni par LiriPortalShell) */}
+        <div className="mb-5">
+          <h1 className="lp-serif text-[22px] font-medium leading-tight">Réglages &amp; personnalisation</h1>
+          <p className="text-[12.5px] lp-faint">Profil, sécurité, marque, paiements, domaine — tout votre espace au même endroit.</p>
         </div>
 
-        <div className="overflow-hidden" style={{ background: 'rgba(34,31,27,.55)' }}>
-          <div className="md:grid md:grid-cols-[212px_1fr]">
-            {/* ── SIDEBAR (desktop) ── */}
-            <aside className="hidden md:flex md:flex-col gap-1 border-r lp-line p-3.5" style={{ background: 'rgba(22,19,16,.6)' }}>
-              <div className="flex items-center gap-2.5 px-1.5 pb-3 pt-1">
-                <span className="grid h-9 w-9 shrink-0 place-items-center rounded-xl text-[12px] font-semibold text-white lp-ember">{initials}</span>
-                <div className="min-w-0"><p className="truncate text-[12.5px] font-medium lp-ink">{orgName}</p><p className="truncate text-[10.5px] lp-faint">{billing.label}</p></div>
-              </div>
-              <p className="px-2 pb-1 pt-1 text-[10px] font-semibold uppercase tracking-[0.13em] lp-faint">Compte</p>
-              {visibleNav.filter((n) => n.group === 'compte').map((it) => <NavBtn key={it.key} it={it} />)}
-              {canManageOrg && <>
-                <p className="px-2 pb-1 pt-3 text-[10px] font-semibold uppercase tracking-[0.13em] lp-faint">Organisation</p>
-                {visibleNav.filter((n) => n.group === 'org').map((it) => <NavBtn key={it.key} it={it} />)}
-              </>}
-              <button onClick={() => logout()} className="mt-3 flex items-center gap-2.5 rounded-lg border-t lp-line px-2.5 py-2 pt-3 text-[13px] lp-muted lp-tr hover:bg-[rgba(255,255,255,.04)]"><LogOut size={16} className="lp-faint" /> Déconnexion</button>
-            </aside>
-
-            {/* ── TABS (mobile) ── */}
-            <div className="flex items-center gap-1.5 overflow-x-auto border-b lp-line p-2.5 md:hidden">
-              {visibleNav.map((it) => <NavBtn key={it.key} it={it} horizontal />)}
-              <button onClick={() => logout()} className="flex shrink-0 items-center gap-2 rounded-lg px-3 py-2 text-[13px] lp-muted lp-tr"><LogOut size={15} /></button>
-            </div>
-
-            {/* ── CONTENU ── */}
-            <section className="p-5 sm:p-7">{renderPane()}</section>
-          </div>
+        {/* Sections en ONGLETS (même logique de nav que les autres pages du portail — CRM…),
+            plus de sidebar 212px distincte : on reste dans la MÊME expérience que les moteurs. */}
+        <div className="overflow-x-auto no-scrollbar">
+          <PremiumSegmentedSelector
+            value={active}
+            onChange={setSection}
+            options={visibleNav.map((n) => ({ value: n.key, label: n.label, icon: n.icon }))}
+            layoutId="reglages-sections"
+            compact
+            className="min-w-max"
+          />
+        </div>
+        <section className="mt-6">{renderPane()}</section>
+        <div className="mt-8 border-t lp-line pt-4">
+          <button onClick={() => logout()} className="flex items-center gap-2 rounded-lg px-3 py-2 text-[13px] lp-muted lp-tr hover:bg-[rgba(255,255,255,.04)]"><LogOut size={16} className="lp-faint" /> Déconnexion</button>
         </div>
       </div>
 
@@ -583,6 +805,7 @@ export default function LiriAccountPage() {
           </div>
         </div>
       )}
-    </div>
+      </div>
+    </LiriPortalShell>
   );
 }

@@ -33,14 +33,26 @@ export async function getProcheToken(
     method: 'POST',
   });
   if (!r.ok) {
-    let msg = "En attente de l'autorisation du patient";
+    // L'API Nest enveloppe les erreurs dans { error: { message } } — lire À CET ENDROIT
+    // (sinon on tombait toujours sur le fallback trompeur « autorisation du patient »).
+    let serverMsg = '';
     try {
       const j = await r.json();
-      msg = j?.message || msg;
+      serverMsg = j?.error?.message || j?.message || j?.data?.message || '';
     } catch {
       /* ignore */
     }
-    throw new Error(msg);
+    // 403 alors que le patient a déjà consenti = la consultation n'a pas encore
+    // DÉMARRÉ (le praticien n'est pas dans la salle) → état d'ATTENTE, pas une erreur
+    // finale : la salle patiente et réessaie. Seule exception non-retryable : lien
+    // déjà utilisé par un autre participant (mono-siège).
+    const e = new Error(serverMsg || 'Impossible de rejoindre la consultation.') as Error & {
+      notStarted?: boolean;
+    };
+    if (r.status === 403 && !/déjà utilisé|already/i.test(serverMsg)) {
+      e.notStarted = true;
+    }
+    throw e;
   }
   return peel(await r.json());
 }

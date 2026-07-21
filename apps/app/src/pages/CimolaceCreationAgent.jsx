@@ -253,6 +253,16 @@ const CYCLE_META = {
   privilegie: { name: 'Privilégié', for: 'Pour ceux qui veulent pratiquer — mentorat souverain.' },
 };
 
+// Logo Google (SVG inline — lucide n'expose pas les marques) pour « Continuer avec Google ».
+const GoogleGlyph = () => (
+  <svg width="16" height="16" viewBox="0 0 48 48" aria-hidden="true" style={{ flexShrink: 0 }}>
+    <path fill="#FFC107" d="M43.6 20.5h-1.9V20H24v8h11.3C33.7 32.9 29.3 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.9 1.2 8 3.1l5.7-5.7C34.6 6.1 29.6 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20 20-8.9 20-20c0-1.3-.1-2.3-.4-3.5z"/>
+    <path fill="#FF3D00" d="M6.3 14.7l6.6 4.8C14.7 16 19 12 24 12c3.1 0 5.9 1.2 8 3.1l5.7-5.7C34.6 6.1 29.6 4 24 4 16.3 4 9.7 8.3 6.3 14.7z"/>
+    <path fill="#4CAF50" d="M24 44c5.2 0 10-2 13.6-5.2l-6.3-5.3C29.2 35.1 26.7 36 24 36c-5.3 0-9.7-3.1-11.3-7.9l-6.5 5C9.6 39.6 16.2 44 24 44z"/>
+    <path fill="#1976D2" d="M43.6 20.5H24v8h11.3c-.8 2.3-2.3 4.2-4.3 5.5l6.3 5.3C40.9 36.3 44 30.7 44 24c0-1.3-.1-2.3-.4-3.5z"/>
+  </svg>
+);
+
 const SUGG = [
   { kind: 'school', label: 'École / cours en ligne', Icon: GraduationCap },
   { kind: 'medos', label: 'Clinique / santé', Icon: Stethoscope },
@@ -547,6 +557,8 @@ function normalizeScene(raw) {
             tiers: Array.isArray(c.ref.tiers) ? c.ref.tiers.slice(0, 6).map((t) => (t && t.label) ? {
               label: cut(t.label, 30), price: cut(t.price, 20) || undefined,
               link: (typeof t.link === 'string' && /^https:\/\/[^\s"'<>]+$/.test(t.link)) ? t.link : undefined,
+              // planKey = souscription via le chaînon d'acquisition (org + Stripe + provisioning).
+              planKey: (typeof t.planKey === 'string' && /^[a-z0-9-]{3,60}$/.test(t.planKey)) ? t.planKey : undefined,
             } : null).filter(Boolean) : undefined,
             actions: (Array.isArray(c.ref.actions) ? c.ref.actions : []).filter((a) => typeof a === 'string').slice(0, 4),
             related: (Array.isArray(c.ref.related) ? c.ref.related : []).slice(0, 3)
@@ -1214,6 +1226,34 @@ function MiniNav({ turns, curTurn, onGo }) {
 }
 
 function FocusDrawer({ item, brand, onClose, onAction, onNode }) {
+  // Acquisition (offre Cimolace) : « S'abonner » d'un palier porteur d'un planKey ouvre un
+  // champ « nom de l'organisation » inline → POST /billing/acquisition/checkout → Stripe.
+  // Le tenant est provisionné au paiement (chaînon). Reste dans l'OS (pas de page à part).
+  const [acqPlan, setAcqPlan] = useState(null); // { planKey, label } en cours
+  const [acqOrg, setAcqOrg] = useState('');
+  const [acqEmail, setAcqEmail] = useState('');
+  const [acqBusy, setAcqBusy] = useState(false);
+  const [acqErr, setAcqErr] = useState('');
+  const acqReady = acqOrg.trim().length >= 2 && /.+@.+\..+/.test(acqEmail.trim());
+  async function startAcquisition() {
+    if (!acqPlan || !acqReady || acqBusy) return;
+    setAcqBusy(true); setAcqErr('');
+    try {
+      const res = await fetch(`${getApiBaseUrl()}/billing/acquisition/checkout`, {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ planKey: acqPlan.planKey, orgName: acqOrg.trim(), email: acqEmail.trim().toLowerCase(), intent: 'new_tenant' }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        // Le back renvoie {error:{message}} OU {message}. On déballe proprement (sinon « [object Object] »).
+        const msg = data?.error?.message || data?.message || data?.error || `Erreur ${res.status}`;
+        throw new Error(typeof msg === 'string' ? msg : `Erreur ${res.status}`);
+      }
+      const url = data?.data?.url ?? data?.url;
+      if (!url) throw new Error('Paiement indisponible pour le moment.');
+      window.location.href = url;
+    } catch (e) { setAcqErr(e?.message || 'Souscription impossible.'); setAcqBusy(false); }
+  }
   if (!item) return null;
   return (
     <div className="cca-focus-back" onClick={onClose}>
@@ -1226,7 +1266,12 @@ function FocusDrawer({ item, brand, onClose, onAction, onNode }) {
         {item.tiers && item.tiers.length > 0 && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginTop: 6 }}>
             {item.tiers.map((t) => (
-              t.link ? (
+              t.planKey ? (
+                <button key={t.label} type="button" className="cca-focus-act" onClick={() => { setAcqPlan({ planKey: t.planKey, label: t.label }); setAcqOrg(''); setAcqEmail(''); setAcqErr(''); }} style={{ justifyContent: 'space-between' }}>
+                  <span style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}>{t.label}{t.price ? ` · ${t.price}` : ''}</span>
+                  <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontWeight: 600 }}>S'abonner <ArrowRight size={15} /></span>
+                </button>
+              ) : t.link ? (
                 <a key={t.label} className="cca-focus-act" href={t.link} target="_blank" rel="noopener noreferrer" onClick={onClose} style={{ justifyContent: 'space-between' }}>
                   <span style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}>{t.label}{t.price ? ` · ${t.price}` : ''}</span>
                   <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontWeight: 600 }}>S'abonner <ArrowRight size={15} /></span>
@@ -1238,6 +1283,30 @@ function FocusDrawer({ item, brand, onClose, onAction, onNode }) {
                 </div>
               )
             ))}
+          </div>
+        )}
+        {acqPlan && (
+          <div style={{ marginTop: 12, padding: 14, borderRadius: 12, border: '1px solid rgba(230,204,146,.35)', background: 'rgba(230,204,146,.06)', display: 'flex', flexDirection: 'column', gap: 10 }}>
+            <div style={{ fontSize: 13.5, color: 'rgba(244,239,230,.85)' }}>Souscrire <b>{acqPlan.label}</b> — crée ton espace :</div>
+            <input
+              autoFocus value={acqOrg} onChange={(e) => setAcqOrg(e.target.value)}
+              onKeyDown={(e) => { if (e.key === 'Enter') startAcquisition(); }}
+              placeholder="Nom de ton organisation — ex. Cabinet Lumière"
+              style={{ width: '100%', boxSizing: 'border-box', borderRadius: 10, background: 'rgba(0,0,0,.28)', border: '1px solid rgba(244,239,230,.18)', padding: '10px 13px', color: '#f4efe6', fontSize: 14, outline: 'none' }}
+            />
+            <input
+              type="email" inputMode="email" autoComplete="email" value={acqEmail} onChange={(e) => setAcqEmail(e.target.value)}
+              onKeyDown={(e) => { if (e.key === 'Enter') startAcquisition(); }}
+              placeholder="Ton email — pour créer ton accès"
+              style={{ width: '100%', boxSizing: 'border-box', borderRadius: 10, background: 'rgba(0,0,0,.28)', border: '1px solid rgba(244,239,230,.18)', padding: '10px 13px', color: '#f4efe6', fontSize: 14, outline: 'none' }}
+            />
+            {acqErr && <div style={{ fontSize: 12.5, color: '#e6a2a2' }}>{acqErr}</div>}
+            <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+              <button type="button" className="cca-focus-act" onClick={startAcquisition} disabled={acqBusy || !acqReady} style={{ flex: 1, justifyContent: 'center', opacity: (acqBusy || !acqReady) ? 0.5 : 1 }}>
+                <span style={{ display: 'inline-flex', alignItems: 'center', gap: 8, fontWeight: 600 }}>{acqBusy ? 'Redirection…' : 'Continuer vers le paiement'}{!acqBusy && <ArrowRight size={16} />}</span>
+              </button>
+              <button type="button" onClick={() => setAcqPlan(null)} style={{ background: 'none', border: 'none', color: 'rgba(244,239,230,.55)', fontSize: 13, cursor: 'pointer', padding: '0 6px' }}>Annuler</button>
+            </div>
           </div>
         )}
         {item.actions && item.actions.length > 0 && (
@@ -1413,7 +1482,7 @@ function TutorialFlow({ scene, onCta, hooks, onHook }) {
 
 export default function CimolaceCreationAgent({ tenantSlug: tenantSlugProp = null, embedded = false } = {}) {
   const navigate = useNavigate();
-  const { login, signup, ensureStudentMembership, user } = useAuth();
+  const { login, signup, ensureStudentMembership, user, loginWithOAuth } = useAuth();
 
   // L8-P1 — realm : si un tenant est ciblé, l'OS REND ce tenant (même moteur, autre identité) au lieu
   // du tunnel de création Cimolace. isTenantRealm gate tout le flux « créer une org Cimolace ».
@@ -1850,6 +1919,18 @@ export default function CimolaceCreationAgent({ tenantSlug: tenantSlugProp = nul
     setEngaged(true);
     setSignupForm({ name: '', email: '', password: '', sending: false, sent: false, error: '' });
   }, [osTenant, speak, closeInput]);
+
+  // B — INTENTION D'AUTH depuis l'URL (?auth=login|signup). /login (repli) renvoie l'utilisateur
+  // déconnecté ICI → l'OS ouvre AUTOMATIQUEMENT son formulaire inline (une seule fois). Realm tenant only.
+  const authIntentRef = useRef(false);
+  useEffect(() => {
+    if (authIntentRef.current || !isTenantRealm) return;
+    let intent = null;
+    try { intent = new URLSearchParams(window.location.search).get('auth'); } catch { /* ignore */ }
+    if (intent !== 'login' && intent !== 'signup') return;
+    authIntentRef.current = true;
+    if (intent === 'signup') goToSignup(); else goToSpace();
+  }, [isTenantRealm, goToSpace, goToSignup]);
 
   // CHOISIR UN FORFAIT — les 4 cycles du tenant rendus DANS l'OS (jamais de saut dur vers /forfaits, qui
   // détruisait l'expérience). Prix lus depuis billing_plans (source de vérité). Chaque « S'abonner » ouvre
@@ -2356,6 +2437,20 @@ export default function CimolaceCreationAgent({ tenantSlug: tenantSlugProp = nul
     }
   }, [authForm, login, osTenant, speak, navigate]);
 
+  // Connexion GOOGLE inline — beaucoup de comptes prorascience sont des comptes Google (indispensable).
+  // Redirige vers Google puis revient à /liri (ou ?redirect). L'OS possède l'identité, jamais /login.
+  const handleGoogleAuth = useCallback(async () => {
+    let redirect = '/liri';
+    try { redirect = new URLSearchParams(window.location.search).get('redirect') || '/liri'; } catch { /* ignore */ }
+    try { logEvent('google_login_inline', {}, osTenant); } catch { /* non bloquant */ }
+    try {
+      await loginWithOAuth('google', redirect); // redirige la page vers Google
+    } catch (e) {
+      setAuthForm((c) => (c ? { ...c, error: 'Connexion Google indisponible — réessayez.' } : c));
+      setSignupForm((c) => (c ? { ...c, error: 'Connexion Google indisponible — réessayez.' } : c));
+    }
+  }, [loginWithOAuth, osTenant]);
+
   const submitInput = useCallback(() => {
     const v = value.trim();
     closeInput();
@@ -2491,7 +2586,7 @@ export default function CimolaceCreationAgent({ tenantSlug: tenantSlugProp = nul
 
       {/* L6 — Scène « réalisée » par l'IA : composition de toute la surface (fond, sous la voix).
          Realm tenant (prorascience) : rendre dès qu'une scène existe (le step Cimolace n'y vit pas). */}
-      {scene && (isTenantRealm || step === 'brain' || step === 'product') && (
+      {scene && !showSplitAction && (isTenantRealm || step === 'brain' || step === 'product') && (
         <SceneStage scene={scene} visible={sceneVisible} readerIdx={readerIdx} setReaderIdx={setReaderIdx}
           onSuggest={isTenantRealm ? vnpChat : brain} onCta={isTenantRealm ? vnpChat : chooseProduct}
           hooks={isTenantRealm ? [] : brainHooks} onHook={isTenantRealm ? vnpChat : brain} onFocus={openFocus}
@@ -2925,6 +3020,15 @@ export default function CimolaceCreationAgent({ tenantSlug: tenantSlugProp = nul
                   <button onClick={(e) => { e.stopPropagation(); setSignupForm(null); }}
                     style={{ ...VNP_NAV_CHIP, justifyContent: 'center', width: 108 }}>Annuler</button>
                 </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8, margin: '4px 0 2px' }}>
+                  <div style={{ flex: 1, height: 1, background: 'rgba(244,239,230,.12)' }} />
+                  <span style={{ fontSize: 10.5, color: 'rgba(244,239,230,.4)', textTransform: 'uppercase', letterSpacing: '.1em' }}>ou</span>
+                  <div style={{ flex: 1, height: 1, background: 'rgba(244,239,230,.12)' }} />
+                </div>
+                <button onClick={(e) => { e.stopPropagation(); handleGoogleAuth(); }} disabled={signupForm.sending}
+                  style={{ ...VNP_CHIP_BASE, width: '100%', justifyContent: 'center', gap: 10, fontWeight: 600, color: INK, background: 'rgba(244,239,230,.05)', border: '1px solid rgba(244,239,230,.18)' }}>
+                  <GoogleGlyph /> Continuer avec Google
+                </button>
                 <button onClick={(e) => { e.stopPropagation(); setSignupForm(null); setAuthForm({ email: signupForm.email || '', password: '', sending: false, error: '' }); }}
                   style={{ background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'inherit', fontSize: 12.5, color: 'rgba(244,239,230,.55)', textAlign: 'left', padding: 0, marginTop: 2 }}>
                   Déjà un compte ? <span style={{ color: GOLD }}>Se connecter →</span>
@@ -2951,6 +3055,15 @@ export default function CimolaceCreationAgent({ tenantSlug: tenantSlugProp = nul
                   <button onClick={(e) => { e.stopPropagation(); setAuthForm(null); }}
                     style={{ ...VNP_NAV_CHIP, justifyContent: 'center', width: 108 }}>Annuler</button>
                 </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8, margin: '4px 0 2px' }}>
+                  <div style={{ flex: 1, height: 1, background: 'rgba(244,239,230,.12)' }} />
+                  <span style={{ fontSize: 10.5, color: 'rgba(244,239,230,.4)', textTransform: 'uppercase', letterSpacing: '.1em' }}>ou</span>
+                  <div style={{ flex: 1, height: 1, background: 'rgba(244,239,230,.12)' }} />
+                </div>
+                <button onClick={(e) => { e.stopPropagation(); handleGoogleAuth(); }} disabled={authForm.sending}
+                  style={{ ...VNP_CHIP_BASE, width: '100%', justifyContent: 'center', gap: 10, fontWeight: 600, color: INK, background: 'rgba(244,239,230,.05)', border: '1px solid rgba(244,239,230,.18)' }}>
+                  <GoogleGlyph /> Continuer avec Google
+                </button>
                 <button onClick={(e) => { e.stopPropagation(); setAuthForm(null); setSignupForm({ name: '', email: authForm.email || '', password: '', sending: false, sent: false, error: '' }); }}
                   style={{ background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'inherit', fontSize: 12.5, color: 'rgba(244,239,230,.55)', textAlign: 'left', padding: 0, marginTop: 2 }}>
                   Pas encore de compte ? <span style={{ color: GOLD }}>Créer mon espace →</span>

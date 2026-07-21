@@ -3,6 +3,7 @@
  * Banque de polices filtrable, icônes / graphiques, calques, undo/redo, formes, images.
  */
 import React, { useState, useCallback, useRef, useEffect, useMemo } from 'react';
+import SmartboardCanvasImage from '@/components/media/SmartboardCanvasImage';
 import { Layers, Undo2, Redo2, Trash2, Copy, ChevronUp, ChevronDown, Loader2 } from 'lucide-react';
 import { uploadSmartboardCanvasImage } from '@/lib/uploadSmartboardCanvasImage';
 import { SB_ICON_LIBRARY } from '@/config/smartboardEditorTools';
@@ -152,7 +153,7 @@ function RenderObject({ obj, scale, selected, onMouseDown }) {
         }}
         onMouseDown={onMouseDown}
       >
-        <img src={obj.src} alt="" className="h-full w-full object-contain pointer-events-none" draggable={false} />
+        <SmartboardCanvasImage src={obj.src} alt="" className="h-full w-full object-contain pointer-events-none" draggable={false} />
       </div>
     );
   }

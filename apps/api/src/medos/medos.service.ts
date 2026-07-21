@@ -10,8 +10,14 @@ import {
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { SupabaseService } from '../supabase/supabase.service';
+import { LiriEntitlementsService } from '../billing/liri-entitlements.service';
 import { NotificationsService } from '../notifications/notifications.service';
 import { TwinService } from './twin/twin.service';
+import {
+  scoreFormResponsesToWheel,
+  extractMeasureBiomarkers,
+  type ScoredField,
+} from './form-scoring';
 import {
   computeWheelScores,
   WHEEL_DOMAINS,
@@ -91,6 +97,7 @@ export class MedosService {
     private readonly config: ConfigService,
     private readonly notifications: NotificationsService,
     private readonly twin: TwinService,
+    private readonly entitlements: LiriEntitlementsService,
   ) {}
 
   /**
@@ -246,6 +253,15 @@ export class MedosService {
         dto.last_name,
       );
     }
+
+    // PLAFOND D'OFFRE (monétisation) : cap `patients` du plan (ex. cimolace-medos-solo-local = 200).
+    // Exclut les dossiers archived/deceased (sinon sur-blocage d'un client payant sur des dossiers clos).
+    const { count: patientCount } = await this.supabase.client
+      .from('med_patients')
+      .select('id', { count: 'exact', head: true })
+      .eq('tenant_id', tenant.id)
+      .not('status', 'in', '("archived","deceased")');
+    await this.entitlements.assertWithinCap(tenant.id, 'patients', patientCount ?? 0);
 
     const { data, error } = await this.supabase.client
       .from('med_patients')
@@ -845,6 +861,13 @@ export class MedosService {
 
     await this.writeAudit(tenant.id, actorId, 'med_form_response', (data as any).id, 'submit');
 
+    // Fermeture de boucle formulaire → jumeau (roue + biomarqueurs). Best-effort :
+    // ne casse jamais la soumission (table twin absente, form sans scoring…).
+    try {
+      await this.projectFormResponseToTwin(tenant, actorId, dto.patient_id, formId, dto.responses);
+    } catch (e: any) {
+      this.logger.warn(`form→twin projection skipped (form ${formId}): ${e?.message ?? e}`);
+    }
     // G1 — Auto-remplir la Roue Détox si le template a un wheel_mapping.
     // Best-effort : jamais bloquant pour la soumission.
     await this.applyWheelMappingIfAny(
@@ -870,6 +893,94 @@ export class MedosService {
       throw new InternalServerErrorException('Erreur interne');
     }
     return (data ?? []) as unknown as Record<string, unknown>[];
+  }
+
+  /**
+   * Configure le SCORING d'un formulaire (grille roue + champs 'measure') SANS
+   * recréer le formulaire : fusionne la config par `field.id` dans le JSONB
+   * `fields`. Les forms n'ayant pas de PATCH générique, cette route dédiée permet
+   * d'activer le pont roue/jumeau sur un formulaire EXISTANT (ex. « Bilan de
+   * transformation »). Réservé aux formulaires DU tenant (jamais les templates
+   * globaux). `config` = { [fieldId]: { scoring?, biomarker_code?, unit? } }.
+   */
+  async setFormScoring(
+    tenant: TenantContext,
+    formId: string,
+    config: Record<string, { scoring?: unknown[]; biomarker_code?: string; unit?: string }>,
+  ): Promise<{ updated: boolean; fields: unknown[] }> {
+    const { data: form, error } = await this.supabase.client
+      .from('med_medical_forms')
+      .select('fields')
+      .eq('tenant_id', tenant.id)
+      .eq('id', formId)
+      .single();
+    if (error || !form) throw new NotFoundException('Formulaire introuvable');
+
+    const fields = (((form as any).fields ?? []) as Array<Record<string, any>>).map((f) => {
+      const c = config?.[f.id];
+      if (!c) return f;
+      const next: Record<string, any> = { ...f };
+      if (Array.isArray(c.scoring)) next.scoring = c.scoring;
+      if (typeof c.biomarker_code === 'string' && c.biomarker_code) {
+        next.biomarker_code = c.biomarker_code;
+        next.type = 'measure'; // un champ mesuré est forcément de type 'measure'
+      }
+      if (typeof c.unit === 'string') next.unit = c.unit;
+      return next;
+    });
+
+    const { error: upErr } = await this.supabase.client
+      .from('med_medical_forms')
+      .update({ fields: fields as any })
+      .eq('tenant_id', tenant.id)
+      .eq('id', formId);
+    if (upErr) {
+      this.logger.error('setFormScoring', upErr.message);
+      throw new InternalServerErrorException('Erreur interne');
+    }
+    return { updated: true, fields };
+  }
+
+  /**
+   * Fermeture de boucle FORMULAIRE → JUMEAU (best-effort — ne jette JAMAIS, ne
+   * bloque pas la soumission). Réutilise le moteur pur `form-scoring` + les APIs
+   * existantes du twin :
+   *   (A) grille de scoring du formulaire (fields[].scoring) → axes de roue →
+   *       saveWheel (med_transformation_wheel, source 'questionnaire') ;
+   *   (B) champs `type:'measure'` (biomarker_code objectif whitelisté) →
+   *       addBiomarkers → recalcul des scores d'organes (computeScores inclus).
+   * Générique (tout formulaire configuré), automatique (à la soumission), et
+   * fonctionne quel que soit l'auteur (patient depuis son portail OU praticien).
+   */
+  private async projectFormResponseToTwin(
+    tenant: TenantContext,
+    actorId: string,
+    patientId: string,
+    formId: string,
+    responses: Record<string, unknown>,
+  ): Promise<void> {
+    // Charge la définition du formulaire (form du tenant OU template global).
+    const { data: form } = await this.supabase.client
+      .from('med_medical_forms')
+      .select('fields')
+      .eq('id', formId)
+      .maybeSingle();
+    const fields = ((form as any)?.fields ?? []) as ScoredField[];
+    if (!Array.isArray(fields) || fields.length === 0) return;
+
+    // (A) Roue de transformation.
+    const wheel = scoreFormResponsesToWheel(fields, responses);
+    if (wheel.length > 0) {
+      await this.twin.saveWheel(tenant, patientId, wheel);
+    }
+
+    // (B) Constantes objectives → biomarqueurs → organes du jumeau.
+    const biomarkers = extractMeasureBiomarkers(fields, responses);
+    if (biomarkers.length > 0) {
+      await this.twin.addBiomarkers(tenant, actorId, patientId, {
+        biomarkers,
+      } as any);
+    }
   }
 
   // -----------------------------------------------------------------------
@@ -1227,6 +1338,14 @@ export class MedosService {
     } catch (e) {
       // Assignment missing or table not migrated — ignore silently.
       this.logger.debug?.(`Assignment completion hook ignored: ${String(e)}`);
+    }
+
+    // Fermeture de boucle formulaire → jumeau (roue + biomarqueurs), déclenchée
+    // par la soumission PATIENT depuis son portail. Best-effort.
+    try {
+      await this.projectFormResponseToTwin(tenant, userId, patient.id, formId, responses);
+    } catch (e: any) {
+      this.logger.warn(`form→twin projection skipped (form ${formId}): ${e?.message ?? e}`);
     }
 
     // G1 — Auto-remplir la Roue Détox si le template a un wheel_mapping.

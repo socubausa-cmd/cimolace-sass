@@ -1,5 +1,6 @@
-import { Injectable } from "@nestjs/common";
+import { Injectable, ForbiddenException } from "@nestjs/common";
 import { AuthService } from "../auth/auth.service";
+import { LiriEntitlementsService } from "../billing/liri-entitlements.service";
 import { canonicalTenantSlug } from "./tenant-slug-aliases";
 
 /**
@@ -15,7 +16,9 @@ import { canonicalTenantSlug } from "./tenant-slug-aliases";
 export function isEmbeddedTenant(tenant: any): boolean {
   const mode = tenant?.metadata?.hosting_mode;
   if (mode === "embedded") return true;
-  if (mode === "hosted") return false;
+  // 'customized' = offre 2 (marque/domaine du tenant mais UI Cimolace hébergée) :
+  // reste JOIGNABLE (pas embarqué), sinon son domaine propre le ferait présumer embarqué.
+  if (mode === "hosted" || mode === "customized") return false;
   return !!tenant?.primary_domain;
 }
 
@@ -28,7 +31,10 @@ export function isPlatformOrigin(originOrReferer: string | undefined): boolean {
 
 @Injectable()
 export class TenantService {
-  constructor(private authService: AuthService) {}
+  constructor(
+    private authService: AuthService,
+    private entitlements: LiriEntitlementsService,
+  ) {}
 
   async resolveTenant(userId: string, tenantSlug?: string) {
     const supabase = this.authService.getClient();
@@ -49,6 +55,14 @@ export class TenantService {
         .eq("status", "active")
         .single();
       const role = (membership?.role ?? null) as string | null;
+      // FAIL-CLOSED : un utilisateur authentifié SANS membership active ne reçoit
+      // AUCUN contexte tenant (comme la 2e branche ci-dessous, ligne ~72). Sinon un
+      // non-membre obtenait `{...tenant, userRole:null}` (truthy) et passait
+      // TenantGuard → BOLA cross-tenant sur tout endpoint sans @Roles effectif
+      // (masterclass GET, billing, forum…). Les rares surfaces qui doivent servir un
+      // non-membre (viewer live public, assistant IA invité) passent par
+      // `resolveTenantAllowNonMember` via le décorateur @AllowNonMember.
+      if (!role) return null;
       // Both `role` (legacy callers) and `userRole` (TenantContext required by
       // RolesGuard) are returned so we don't break either side.
       // `data_region` (additive) defaults to 'global' if the column is absent
@@ -79,6 +93,40 @@ export class TenantService {
 
   async resolveForUser(slug: string, userId: string) {
     return this.resolveTenant(userId, slug);
+  }
+
+  /**
+   * Variante OPT-IN (décorateur @AllowNonMember) de resolveTenant : résout le tenant
+   * par slug SANS exiger de membership active — `userRole` peut être null. Réservé
+   * aux endpoints qui doivent servir un utilisateur authentifié non-membre (viewer
+   * live public mbolo, token viewer immersive-live, assistant IA invité longia) et
+   * qui n'exposent PAS de données tenant sensibles. Renvoie null si le slug n'existe
+   * pas (le tenant doit exister).
+   */
+  async resolveTenantAllowNonMember(userId: string, tenantSlug?: string) {
+    if (!tenantSlug) return null;
+    const supabase = this.authService.getClient();
+    const resolvedSlug = canonicalTenantSlug(tenantSlug);
+    const { data: tenant } = await supabase
+      .from("tenants")
+      .select("*")
+      .eq("slug", resolvedSlug)
+      .single();
+    if (!tenant) return null;
+    const { data: membership } = await supabase
+      .from("tenant_memberships")
+      .select("role")
+      .eq("tenant_id", tenant.id)
+      .eq("user_id", userId)
+      .eq("status", "active")
+      .single();
+    const role = (membership?.role ?? null) as string | null;
+    return {
+      ...tenant,
+      role,
+      userRole: role,
+      data_region: (tenant as any).data_region ?? "global",
+    };
   }
 
   /**
@@ -117,6 +165,16 @@ export class TenantService {
       }
       return { ok: true, joined: false, role: (existing as any).role };
     }
+    // PLAFOND D'OFFRE (monétisation) : bloque le énième étudiant au-delà du cap du plan
+    // (ex. cimolace-ecole-petite-local = 80). Cap absent (plan premium) = illimité. 403 si atteint.
+    const { count: studentCount } = await supabase
+      .from("tenant_memberships")
+      .select("id", { count: "exact", head: true })
+      .eq("tenant_id", tenantId)
+      .eq("role", "student")
+      .eq("status", "active");
+    await this.entitlements.assertWithinCap(tenantId, "students", studentCount ?? 0);
+
     const { error } = await supabase
       .from("tenant_memberships")
       .insert({ tenant_id: tenantId, user_id: userId, role: "student", status: "active" });
@@ -223,6 +281,31 @@ export class TenantService {
   }
 
   /**
+   * Résout un tenant_id à partir d'un HÔTE D'ORIGINE de requête (Origin/Referer),
+   * pour les endpoints PUBLICS où le tenant NE PEUT PAS venir du body (spoofable).
+   * Matche un domaine tenant ENREGISTRÉ dans `tenant_domains` — funnel hébergé
+   * (usage='custom_host') OU embarqué (usage='embed_origin') — et actif. Un même
+   * domaine pouvant exister sous les deux usages, on ordonne (custom_host = preuve
+   * de propriété, prioritaire) puis on limite à 1 pour éviter le multi-row.
+   * Renvoie null si l'hôte n'est pas un domaine tenant reconnu → l'appelant rejette.
+   */
+  async resolveTenantIdByOrigin(host: string): Promise<string | null> {
+    const supabase = this.authService.getClient();
+    const normalized = (host ?? "").trim().toLowerCase();
+    if (!normalized) return null;
+    const { data } = await supabase
+      .from("tenant_domains")
+      .select("tenant_id, usage")
+      .eq("domain", normalized)
+      .in("usage", ["custom_host", "embed_origin"])
+      .eq("status", "active")
+      .order("usage", { ascending: true })
+      .limit(1);
+    const row = Array.isArray(data) ? data[0] : (data as any);
+    return (row?.tenant_id as string | undefined) ?? null;
+  }
+
+  /**
    * Returns all tenants the given user is a member of, with their role.
    * Used by the frontend TenantProtectedRoute to verify membership.
    * Response shape mirrors the legacy Netlify tenant-context lambda so
@@ -275,6 +358,7 @@ export class TenantService {
     tenantId: string,
     serviceKey: string,
     active: boolean,
+    actor?: string,
   ) {
     const supabase = this.authService.getClient();
     const { data, error } = await supabase
@@ -294,6 +378,18 @@ export class TenantService {
         `Mise à jour service ${serviceKey} impossible pour tenant ${tenantId}: ${error.message}`,
       );
     }
+    // SÉCURITÉ §15 : trace attribuable (QUI a basculé quel moteur sur quel tenant).
+    try {
+      await supabase.from("cimolace_change_history").insert({
+        action: `service:${active ? "active" : "suspended"}`,
+        entity_type: "tenant",
+        entity_id: tenantId,
+        description: `Moteur ${serviceKey} → ${active ? "actif" : "suspendu"}`,
+        changed_by: (actor && actor.trim()) || "Cimolace Ops (non attribué)",
+      });
+    } catch {
+      /* audit best-effort : ne bloque jamais l'opération */
+    }
     return data;
   }
 
@@ -308,6 +404,22 @@ export class TenantService {
     },
   ) {
     const supabase = this.authService.getClient();
+
+    // P5 — GATE BRANDING PAR OFFRE : un tenant HÉBERGÉ (offre 1) ne personnalise pas
+    // logo/couleurs/domaine (marque Cimolace verrouillée). name + site restent permis.
+    // Ne verrouille QUE hosting_mode='hosted' explicite → rétro-compatible (les tenants
+    // existants sans hosting_mode ou en customized/embedded ne sont pas affectés).
+    const wantsVisualBranding =
+      dto.logo_url !== undefined || dto.primary_domain !== undefined || dto.brand_colors !== undefined;
+    if (wantsVisualBranding) {
+      const t = (await this.getTenantById(tenantId)) as { metadata?: { hosting_mode?: string } | null } | null;
+      if (t?.metadata?.hosting_mode === "hosted") {
+        throw new ForbiddenException(
+          "Personnalisation (logo, couleurs, domaine) réservée aux offres Customisé et Intégration.",
+        );
+      }
+    }
+
     const patch: Record<string, unknown> = {};
     if (dto.name !== undefined) patch.name = dto.name;
     if (dto.logo_url !== undefined) patch.logo_url = dto.logo_url;

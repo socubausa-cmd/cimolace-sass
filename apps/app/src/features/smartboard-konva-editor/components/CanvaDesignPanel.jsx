@@ -3,6 +3,7 @@
  * Tabs : Modeles · Elements · Texte · Fonds · Icones · Blocs · Theme · Fichier
  */
 import React, { useState, useRef, useMemo, useCallback, useEffect } from 'react';
+import SmartboardCanvasImage from '@/components/media/SmartboardCanvasImage';
 import {
   Type, Square, Circle as CircleIcon, Triangle, Star, Minus, Diamond,
   Image as ImageIcon, Upload, Download, Save, FolderOpen, Loader2, Code,
@@ -388,6 +389,8 @@ export default function CanvaDesignPanel({
   onExportScript,
   onExportStudentSheet,
   onExportFlashcards,
+  onPublishClassroom,
+  publishingClassroom,
   applyTone,
   cloudSection,
   className,
@@ -768,7 +771,7 @@ export default function CanvaDesignPanel({
                         onClick={() => addObject(mkImageObject(h.url, { width: 480, height: 275 }))}
                         className="shrink-0 overflow-hidden rounded border border-white/10 hover:border-violet-400/40"
                       >
-                        <img src={h.url} alt="" className="h-11 w-16 object-cover" loading="lazy" />
+                        <SmartboardCanvasImage src={h.url} alt="" className="h-11 w-16 object-cover" loading="lazy" />
                       </button>
                     ))}
                   </div>
@@ -1239,6 +1242,17 @@ export default function CanvaDesignPanel({
                   Export (Module 10)
                 </p>
                 <div className="space-y-1">
+                  {onPublishClassroom && (
+                    <button
+                      type="button"
+                      disabled={publishingClassroom}
+                      onClick={onPublishClassroom}
+                      className="flex w-full items-center gap-2 rounded-xl border border-[color-mix(in_srgb,var(--school-accent)_45%,transparent)] bg-[color-mix(in_srgb,var(--school-accent)_16%,transparent)] px-3 py-2 text-[12px] font-semibold text-[#f5dd8a] hover:bg-[color-mix(in_srgb,var(--school-accent)_24%,transparent)] disabled:opacity-50"
+                    >
+                      {publishingClassroom ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <BookOpen className="h-3.5 w-3.5 text-[var(--school-accent)]" />}
+                      Publier en classe (Mes formations)
+                    </button>
+                  )}
                   {onExportPdf && showFileAction(['pdf', 'export', 'slides', 'exporter']) && (
                     <button
                       type="button"

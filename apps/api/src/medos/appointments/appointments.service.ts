@@ -9,6 +9,7 @@ import {
 } from '@nestjs/common';
 import { SupabaseService } from '../../supabase/supabase.service';
 import { EmailEngineService } from '../../email-engine/email-engine.service';
+import { TeleconsultService } from '../teleconsult/teleconsult.service';
 import type { TenantContext } from '../../tenant/tenant.types';
 import {
   CancelAppointmentDto,
@@ -64,6 +65,7 @@ export class AppointmentsService {
   constructor(
     private readonly supabase: SupabaseService,
     private readonly email: EmailEngineService,
+    private readonly teleconsult: TeleconsultService,
   ) {}
 
   private async writeAudit(
@@ -914,6 +916,80 @@ export class AppointmentsService {
   }
 
   /**
+   * RÉSERVATIONS (staff) : liste les inscrits de chaque service payant du tenant
+   * (masterclass/consultation), depuis les `access_passes` service actifs, avec
+   * détails acheteur (nom, email, date). Groupé par service, trié récent d'abord.
+   * Réservé au staff (le contrôleur applique RolesGuard) : contient des emails.
+   */
+  async listReservations(tenant: TenantContext) {
+    const db = this.supabase.client as any;
+    const { data: passes } = await db
+      .from('access_passes')
+      .select('user_id, resource_id, granted_at, payment_id, created_at, status')
+      .eq('tenant_id', tenant.id)
+      .eq('resource_type', 'service')
+      .eq('status', 'active')
+      .order('created_at', { ascending: false });
+    const rows = (passes || []) as any[];
+    if (!rows.length) return { services: [], total: 0 };
+
+    // Libellés/prix des services (billing_plans).
+    const keys = [...new Set(rows.map((r) => r.resource_id).filter(Boolean))];
+    const { data: plans } = await db
+      .from('billing_plans')
+      .select('key, label, price_cents, currency, category, metadata')
+      .eq('tenant_id', tenant.id)
+      .in('key', keys);
+    const planMap = new Map((plans || []).map((p: any) => [p.key, p]));
+
+    // Détails acheteurs (email + nom) via admin, dédupliqués.
+    const userIds = [...new Set(rows.map((r) => r.user_id).filter(Boolean))] as string[];
+    const userMap = new Map<string, { email: string; name: string }>();
+    for (const uid of userIds) {
+      try {
+        const { data: u } = await db.auth.admin.getUserById(uid);
+        const m = (u?.user?.user_metadata ?? {}) as Record<string, string>;
+        const name = [m.first_name || m.given_name, m.last_name || m.family_name]
+          .filter(Boolean)
+          .join(' ')
+          .trim();
+        const email = String(u?.user?.email || '');
+        userMap.set(uid, { email, name: name || email.split('@')[0] || 'Invité' });
+      } catch {
+        /* acheteur ignoré */
+      }
+    }
+
+    // Groupement par service.
+    const grouped = new Map<string, any>();
+    for (const r of rows) {
+      const plan = planMap.get(r.resource_id) as any;
+      if (!grouped.has(r.resource_id)) {
+        grouped.set(r.resource_id, {
+          service_key: r.resource_id,
+          service_label: plan?.label || r.resource_id,
+          category: plan?.category || null,
+          is_event: !!plan?.metadata?.event,
+          price_cents: plan?.price_cents ?? null,
+          currency: plan?.currency || 'EUR',
+          scheduled_at: plan?.metadata?.scheduled_at || null,
+          buyers: [] as any[],
+        });
+      }
+      const u = userMap.get(r.user_id) || { email: '', name: 'Invité' };
+      grouped.get(r.resource_id).buyers.push({
+        user_id: r.user_id,
+        name: u.name,
+        email: u.email,
+        reserved_at: r.granted_at || r.created_at,
+        payment_ref: r.payment_id || null,
+      });
+    }
+    const services = [...grouped.values()].map((s) => ({ ...s, count: s.buyers.length }));
+    return { services, total: rows.length };
+  }
+
+  /**
    * ACHETEUR : rejoint le direct. Le pass `service` (preuve d'achat) est vérifié,
    * puis on octroie le pass `live_session` (idempotent) pour que le gate serveur de
    * `POST /lives/:id/token` accepte l'acheteur. `session_id:null` si l'hôte n'a pas lancé.
@@ -985,6 +1061,304 @@ export class AppointmentsService {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       service_key: serviceKey,
     } as any);
+  }
+
+  // ── RÉSERVATION INVITÉE (embarquée sur le site du tenant, ex www.zahirwellness.com) ──
+  // Le visiteur voit les créneaux et réserve un RDV GRATUIT sans compte/login Cimolace.
+  // Auth = clé tenant (le contrôleur applique ApiKeyGuard). Provisionne l'invité par email
+  // puis réserve via le flux normal (service gratuit → has_access=true, aucun paiement).
+
+  /** Provisionne (ou retrouve) un compte invité par email + membership tenant (student). */
+  private async provisionGuest(
+    tenantId: string,
+    email: string,
+    firstName?: string,
+    lastName?: string,
+  ): Promise<string> {
+    const url = process.env.SUPABASE_URL;
+    const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
+    if (!url || !key) throw new InternalServerErrorException('Supabase non configuré (guest).');
+    const em = email.trim().toLowerCase();
+    const headers = { apikey: key, Authorization: `Bearer ${key}`, 'Content-Type': 'application/json' };
+    // ⚠️ GoTrue IGNORE le filtre `?email=` et renvoie la liste paginée. Sans pagination,
+    // tout utilisateur au-delà de la 1re page (ex. un client déjà enregistré) est vu comme
+    // « inexistant » → tentative de création en doublon (422) → 500 « Provisionnement invité
+    // impossible » → le RDV retombe silencieusement sur Zoom. On PAGINE donc (per_page=200,
+    // honoré par GoTrue) jusqu'à trouver l'email ou épuiser les pages.
+    const findId = async (): Promise<string | undefined> => {
+      for (let page = 1; page <= 200; page++) {
+        const r = await fetch(
+          `${url}/auth/v1/admin/users?page=${page}&per_page=200`,
+          { headers },
+        );
+        if (!r.ok) return undefined;
+        const d = (await r.json()) as { users?: { id: string; email?: string }[] };
+        const users = d?.users || [];
+        if (users.length === 0) return undefined; // dernière page dépassée
+        const hit = users.find((u) => u.email?.toLowerCase() === em)?.id;
+        if (hit) return hit;
+      }
+      return undefined;
+    };
+    let userId = await findId();
+    if (!userId) {
+      const cr = await fetch(`${url}/auth/v1/admin/users`, {
+        method: 'POST',
+        headers,
+        body: JSON.stringify({
+          email: em,
+          email_confirm: true,
+          user_metadata: {
+            first_name: firstName ?? null,
+            last_name: lastName ?? null,
+            created_via: 'guest-booking',
+          },
+        }),
+      });
+      userId = cr.ok ? ((await cr.json()) as { id: string }).id : await findId();
+      if (!userId) throw new InternalServerErrorException('Provisionnement invité impossible.');
+    }
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    await (this.supabase.client as any).from('tenant_memberships').upsert(
+      { tenant_id: tenantId, user_id: userId, role: 'student', status: 'active' },
+      { onConflict: 'tenant_id,user_id', ignoreDuplicates: true },
+    );
+    return userId;
+  }
+
+  /** Créneaux libres d'un service (invité) — résout le praticien rattaché au service. */
+  async guestSlots(tenant: TenantContext, serviceKey: string, fromIso: string, toIso: string) {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { data: service } = await (this.supabase.client as any)
+      .from('billing_plans')
+      .select('key, label, metadata')
+      .eq('tenant_id', tenant.id)
+      .eq('key', serviceKey)
+      .maybeSingle();
+    if (!service) throw new NotFoundException('Service introuvable.');
+    const practitionerId = await this.resolveServicePractitioner(tenant, service);
+    if (!practitionerId) return { slots: [], practitioner: false };
+    return { slots: await this.findSlots(tenant, practitionerId, fromIso, toIso), practitioner: true };
+  }
+
+  /** Réservation invitée d'un créneau (service GRATUIT réservable téléconsult). */
+  async guestBook(
+    tenant: TenantContext,
+    dto: {
+      service_key?: string;
+      scheduled_at?: string;
+      email?: string;
+      first_name?: string;
+      last_name?: string;
+    },
+  ) {
+    const serviceKey = String(dto.service_key || '').trim();
+    const scheduledAt = String(dto.scheduled_at || '').trim();
+    const email = String(dto.email || '').trim();
+    if (!serviceKey || !scheduledAt) {
+      throw new BadRequestException('service_key et scheduled_at requis.');
+    }
+    if (!email.includes('@')) throw new BadRequestException('Email valide requis.');
+    const userId = await this.provisionGuest(tenant.id, email, dto.first_name, dto.last_name);
+    const info = { email, first_name: dto.first_name, last_name: dto.last_name };
+    const appointment = await this.bookFromService(tenant, userId, info, serviceKey, scheduledAt);
+    return { ok: true, appointment };
+  }
+
+  /**
+   * Réservation invitée AVEC salle téléconsult LIRI prête IMMÉDIATEMENT (auto-confirmée).
+   * Embarqué sur le site du tenant (ex www.zahirwellness.com) via clé `cml_`. Réutilise 100%
+   * du flux `guestBook` (provision invité + RDV gratuit), puis crée la session téléconsult
+   * (LiveKit routé par Liri) et un siège invité AUTO-CONSENTI (`kind:'member'` → pas de barrière
+   * RGPD, aucun email Cimolace : le site tenant notifie lui-même). Renvoie les 2 URLs à stocker :
+   *  - `guest_url` : page publique token-gatée, le VISITEUR rejoint sans compte.
+   *  - `host_url`  : page authentifiée, le PRATICIEN anime (équivalent du `start_url` Zoom).
+   */
+  async guestBookRoom(
+    tenant: TenantContext,
+    dto: {
+      service_key?: string;
+      scheduled_at?: string;
+      email?: string;
+      first_name?: string;
+      last_name?: string;
+    },
+  ): Promise<{
+    ok: true;
+    session_id: string;
+    guest_url: string;
+    host_url: string;
+    appointment: AppointmentRow;
+  }> {
+    // 1) Réserver (provision invité + RDV) — service gratuit → has_access=true, aucun paiement.
+    const { appointment } = await this.guestBook(tenant, dto);
+    const practitionerId = appointment.practitioner_id;
+
+    // 2) Créer la salle téléconsult MAINTENANT (lie med_appointments.teleconsult_session_id).
+    const session = await this.teleconsult.create(tenant, practitionerId, {
+      patient_id: appointment.patient_id,
+      appointment_id: appointment.id,
+      recording_consented: false,
+    });
+    const sessionId = (session as { id: string }).id;
+
+    // 3) Siège invité auto-consenti (kind:'member' → status 'consented' ; email omis → 'skipped').
+    const displayName =
+      `${dto.first_name ?? ''} ${dto.last_name ?? ''}`.trim() || 'Patient';
+    const invite = await this.teleconsult.createInvite(
+      tenant,
+      practitionerId,
+      sessionId,
+      { display_name: displayName, kind: 'member' },
+    );
+    const inviteId = (invite as { id: string }).id;
+
+    // 4) Composer les URLs (mêmes bases que la prod).
+    const base = process.env.APP_URL || 'https://app.cimolace.space';
+    const q = `?tenant=${encodeURIComponent(tenant.slug)}`;
+    return {
+      ok: true,
+      session_id: sessionId,
+      guest_url: `${base}/teleconsult/${sessionId}/proche/${inviteId}${q}`,
+      host_url: `${base}/teleconsult/${sessionId}${q}`,
+      appointment,
+    };
+  }
+
+  // ── LIVES PAYANTS embarqués sur le site du tenant (ex www.zahirwellness.com) ──
+  // Vente sur le Stripe DU TENANT ; ici on liste les lives vendables + on octroie
+  // l'accès après paiement. Option A (magic-link) : réutilise le flux masterclass
+  // prouvé (pass `service` → converti en `live_session` au join par masterclassJoin).
+
+  /** Liste les lives/masterclass payants vendables du tenant (site tenant, clé cml_). */
+  async guestLives(tenant: TenantContext) {
+    const { data } = await (this.supabase.client as any)
+      .from('billing_plans')
+      .select('key, label, price_cents, currency, metadata')
+      .eq('tenant_id', tenant.id)
+      .eq('category', 'masterclass');
+    const lives = ((data as any[]) || [])
+      .filter((p) => p.metadata?.event)
+      .map((p) => ({
+        key: p.key,
+        label: p.label,
+        price_cents: p.price_cents,
+        currency: p.currency,
+        scheduled_at: p.metadata?.scheduled_at ?? null,
+        description: p.metadata?.description ?? null,
+        cover_url: p.metadata?.cover_url ?? null,
+      }));
+    return { lives };
+  }
+
+  /**
+   * Accès invité à un live payant — OPTION A (magic-link). Après paiement sur le SITE
+   * du tenant, on provisionne l'acheteur, on octroie le pass `service` (preuve d'achat,
+   * idempotent) et on renvoie un MAGIC LINK Supabase (généré serveur, sans SMTP) → le
+   * site tenant l'envoie par email. L'acheteur clique → connecté sur app.cimolace.space
+   * → rejoint le direct (masterclassJoin convertit service → live_session au join).
+   */
+  async guestLiveAccess(
+    tenant: TenantContext,
+    dto: { service_key?: string; email?: string; first_name?: string; last_name?: string },
+  ): Promise<{
+    ok: true;
+    magic_link: string | null;
+    guest_join_url: string | null;
+    session_id: string | null;
+    service_key: string;
+  }> {
+    const serviceKey = String(dto.service_key || '').trim();
+    const email = String(dto.email || '').trim();
+    if (!serviceKey) throw new BadRequestException('service_key requis.');
+    if (!email.includes('@')) throw new BadRequestException('Email valide requis.');
+    const { data: svc } = await (this.supabase.client as any)
+      .from('billing_plans')
+      .select('key, category, metadata')
+      .eq('tenant_id', tenant.id)
+      .eq('key', serviceKey)
+      .maybeSingle();
+    if (!svc) throw new NotFoundException('Live introuvable.');
+    const userId = await this.provisionGuest(tenant.id, email, dto.first_name, dto.last_name);
+    await (this.supabase.client as any).from('access_passes').upsert(
+      {
+        tenant_id: tenant.id,
+        user_id: userId,
+        resource_type: 'service',
+        resource_id: serviceKey,
+        status: 'active',
+      },
+      { onConflict: 'tenant_id,user_id,resource_type,resource_id', ignoreDuplicates: false },
+    );
+    const magic_link = await this.generateMagicLink(email, serviceKey, tenant.slug);
+
+    // OPTION B (join invité NATIF, sans login) : si la masterclass est reliée à une
+    // live_session, octroyer un pass `live_session` (idempotent) dont l'id sert de
+    // jeton d'URL invité → lien de join sans compte. Best-effort (A reste dispo).
+    let guest_join_url: string | null = null;
+    let session_id: string | null = null;
+    try {
+      const liveSessionId = (svc as any)?.metadata?.live_session_id as string | undefined;
+      if (liveSessionId) {
+        session_id = liveSessionId;
+        const { data: pass } = await (this.supabase.client as any)
+          .from('access_passes')
+          .upsert(
+            {
+              tenant_id: tenant.id,
+              user_id: userId,
+              resource_type: 'live_session',
+              resource_id: liveSessionId,
+              status: 'active',
+            },
+            { onConflict: 'tenant_id,user_id,resource_type,resource_id' },
+          )
+          .select('id')
+          .maybeSingle();
+        const passId = (pass as any)?.id;
+        if (passId) {
+          const base = process.env.APP_URL || 'https://app.cimolace.space';
+          guest_join_url = `${base}/live/${liveSessionId}/invite/${passId}?tenant=${encodeURIComponent(tenant.slug)}`;
+        }
+      }
+    } catch {
+      /* best-effort : l'option A (magic-link) reste disponible même si B échoue */
+    }
+
+    return { ok: true, magic_link, guest_join_url, session_id, service_key: serviceKey };
+  }
+
+  /** Magic link Supabase (admin generate_link — NE dépend PAS du SMTP ; le lien est renvoyé). */
+  private async generateMagicLink(
+    email: string,
+    serviceKey: string,
+    slug: string,
+  ): Promise<string | null> {
+    const url = process.env.SUPABASE_URL;
+    const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
+    if (!url || !key) return null;
+    const base = process.env.APP_URL || 'https://app.cimolace.space';
+    const redirect = `${base}/t/${encodeURIComponent(slug)}/reserver?service=${encodeURIComponent(serviceKey)}`;
+    try {
+      const r = await fetch(`${url}/auth/v1/admin/generate_link`, {
+        method: 'POST',
+        headers: {
+          apikey: key,
+          Authorization: `Bearer ${key}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          type: 'magiclink',
+          email: email.trim().toLowerCase(),
+          options: { redirect_to: redirect },
+        }),
+      });
+      if (!r.ok) return null;
+      const d = (await r.json()) as any;
+      return d?.action_link || d?.properties?.action_link || null;
+    } catch {
+      return null;
+    }
   }
 }
 

@@ -3,7 +3,9 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { useDataSync } from '@/contexts/DataSyncContext';
 import { useAuth } from '@/contexts/SupabaseAuthContext';
 import { useBilling } from '@/contexts/BillingContext';
+import useMemberEntitlements from '@/hooks/useMemberEntitlements';
 import { supabase } from '@/lib/customSupabaseClient';
+import { api } from '@/lib/api';
 import { useFormationStructure, normalizeFormationVideoPayload } from '@/hooks/useFormationStructure';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
@@ -271,6 +273,12 @@ const SupabaseCoursePlayerContent = ({ formationId, onExit }) => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const { status: billingStatus, inGrace } = useBilling();
+  // Palier MEMBRE (axe forfait) — MÊME source que le gate serveur POST /courses/:id/video-url.
+  // On gate l'accès aux cours `subscription` sur le forfait de l'élève (coursReplay = tout forfait
+  // actif), pas sur le statut d'abo tenant. Staff → can()===true (bypass).
+  const memberEnt = useMemberEntitlements();
+  const memberCanReplay = memberEnt.can('coursReplay');
+  const memberBillingLoading = memberEnt.loading;
   const { fetchStructure } = useFormationStructure();
 
   const effectiveFormationId = formationId || id;
@@ -467,6 +475,18 @@ const SupabaseCoursePlayerContent = ({ formationId, onExit }) => {
     if (keyed?.url === normalizedUrl) return keyed;
     return { ...keyed, url: normalizedUrl };
   }, [activeItem?.kind, activeItem?.payload]);
+
+  // Objet vidéo RÉELLEMENT passé au lecteur. Pour une vidéo HÉBERGÉE (storagePath), on n'expose
+  // QUE l'URL signée par l'API gatée (`clipPlayableUrl`) et on retire `storagePath` pour que
+  // VideoPlayer ne re-signe PAS lui-même (sinon il rouvrirait le trou via la RLS storage). Le
+  // montage post-prod (renderedUrl) et les vidéos externes restent inchangés.
+  const playerVideo = useMemo(() => {
+    const v = currentVideoMemo;
+    if (!v) return null;
+    if (v.renderedUrl || !v.storagePath) return v; // montage ou vidéo externe → tel quel
+    if (!clipPlayableUrl) return { ...v, storagePath: undefined, url: '' };
+    return { ...v, storagePath: undefined, url: clipPlayableUrl, renderedUrl: clipPlayableUrl };
+  }, [currentVideoMemo, clipPlayableUrl]);
 
   // « Salle de classe » immersive (plein écran, non destructif) — disponible
   // uniquement si le cours a déjà son contenu généré (mindmap post-prod).
@@ -775,24 +795,32 @@ const SupabaseCoursePlayerContent = ({ formationId, onExit }) => {
       const v = activeItem?.payload;
       const storagePath = v?.storagePath;
       const url = v?.url || '';
+      const contentId = v?.id;
 
-      // Only build a preview URL when we can reliably use <video>.
+      // Vidéo EXTERNE (youtube/vimeo/url brute, pas de fichier hébergé) → lecture directe.
       if (!storagePath) {
         setClipPlayableUrl(url);
         return;
       }
 
+      // Vidéo HÉBERGÉE (bucket privé `videos`) → l'URL signée est délivrée par l'API GATÉE
+      // (POST /courses/:id/video-url) qui vérifie palier + inscription CÔTÉ SERVEUR. On ne
+      // signe JAMAIS directement côté client : sinon un lien partagé / un mauvais palier
+      // contournerait le gate (la RLS storage laisse passer tout authentifié).
+      if (!effectiveFormationId || !contentId) {
+        setClipPlayableUrl('');
+        return;
+      }
       try {
-        const { data, error: err } = await supabase.storage.from('videos').createSignedUrl(storagePath, 60 * 60);
+        const { data: resp } = await api.post(`/courses/${effectiveFormationId}/video-url`, { contentId });
         if (!alive) return;
-        if (err) {
-          setClipPlayableUrl(url);
-          return;
-        }
-        setClipPlayableUrl(data?.signedUrl || url);
+        const signed = resp?.data?.url || resp?.url || '';
+        setClipPlayableUrl(signed); // vide si refus serveur → le lecteur ne montre rien
       } catch {
         if (!alive) return;
-        setClipPlayableUrl(url);
+        // Refus (403) ou erreur : PAS de repli vers l'URL brute pour une vidéo hébergée
+        // (cela ré-ouvrirait le trou). La vidéo n'est simplement pas lue.
+        setClipPlayableUrl('');
       }
     };
 
@@ -800,7 +828,7 @@ const SupabaseCoursePlayerContent = ({ formationId, onExit }) => {
     return () => {
       alive = false;
     };
-  }, [activeItem?.kind, activeItem?.payload]);
+  }, [activeItem?.kind, activeItem?.payload, effectiveFormationId]);
 
   useEffect(() => {
     let alive = true;
@@ -842,12 +870,15 @@ const SupabaseCoursePlayerContent = ({ formationId, onExit }) => {
           const accessMode = meta.access_mode || meta?.access?.mode || 'free';
 
           if (accessMode === 'subscription') {
-            const hasSubscription = billingStatus === 'active' || (billingStatus === 'past_due' && inGrace);
-            if (!hasSubscription) {
+            // Accès aux cours enregistrés = FORFAIT du membre (coursReplay = tout forfait actif),
+            // même axe que le gate serveur. On attend la fin du chargement du billing avant de
+            // bloquer (sinon on rejetterait un abonné pendant le chargement). Le serveur reste
+            // l'autorité : la vidéo ne se signe pas sans forfait de toute façon.
+            if (!memberBillingLoading && !memberCanReplay) {
               if (!alive) return;
               setFormation(formationRow || null);
               setModules([]);
-              setError("Cette formation nécessite un abonnement actif. Va sur l'onglet Tarifs pour t'abonner.");
+              setError("Ce cours est réservé aux membres avec un forfait actif. Choisis un forfait pour y accéder.");
               return;
             }
           }
@@ -906,7 +937,7 @@ const SupabaseCoursePlayerContent = ({ formationId, onExit }) => {
       alive = false;
     };
     // NOTE: keep deps minimal to avoid reloading loop due to identity changes in contexts.
-  }, [effectiveFormationId, fetchStructure, user?.id, user?.role, billingStatus, inGrace]);
+  }, [effectiveFormationId, fetchStructure, user?.id, user?.role, billingStatus, inGrace, memberCanReplay, memberBillingLoading]);
 
   const m = modules[path.mIdx] || null;
   const w = m?.weeks?.[path.wIdx] || null;
@@ -1427,7 +1458,7 @@ const SupabaseCoursePlayerContent = ({ formationId, onExit }) => {
                             <div className="relative overflow-hidden" style={{ background: '#262624', boxShadow: 'inset 0 0 160px 70px #08080b' }}>
                           <VideoPlayer
                             ref={videoPlayerRef}
-                            video={currentVideoMemo}
+                            video={playerVideo}
                             onEnded={handleVideoEnded}
                             onTimeUpdate={(t) => {
                               setVideoCurrentTime(t);

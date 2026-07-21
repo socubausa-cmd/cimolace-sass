@@ -35,6 +35,29 @@ import { jsPDF } from 'jspdf';
 import { useGuestNotes } from '@/hooks/useGuestNotes';
 import { useToast } from '@/components/ui/use-toast';
 import { proColors, proRadii, proSize, proType } from '@/components/liri/live-room/liveGuestProTokens';
+import { useSmartboardCanvasSrc } from '@/lib/smartboardCanvasUrl';
+
+/** Vignette de capture Smartboard (bucket privé) : fond + lien re-signés au rendu. */
+function GuestNoteAttachment({ attachment }) {
+  const bg = useSmartboardCanvasSrc(attachment?.thumb_url || attachment?.url);
+  const href = useSmartboardCanvasSrc(attachment?.url);
+  return (
+    <a
+      href={href || undefined}
+      target="_blank"
+      rel="noreferrer"
+      style={{
+        display: 'block',
+        width: 80,
+        height: 48,
+        background: bg ? `url(${bg}) center/cover no-repeat` : proColors.surface3,
+        borderRadius: proRadii.sm,
+        border: `1px solid ${proColors.border}`,
+      }}
+      title="Ouvrir la capture"
+    />
+  );
+}
 
 const TOOLBAR_BTN = {
   height: 26, minWidth: 26, padding: '0 6px',
@@ -488,20 +511,7 @@ function NoteEntry({ entry, canJump, onJump, onDelete }) {
       {hasAttachments && (
         <div style={{ display: 'flex', gap: 6, marginTop: 8, flexWrap: 'wrap' }}>
           {entry.attachments.map((a, i) => (
-            <a
-              key={i}
-              href={a.url}
-              target="_blank"
-              rel="noreferrer"
-              style={{
-                display: 'block',
-                width: 80, height: 48,
-                background: `url(${a.thumb_url || a.url}) center/cover no-repeat`,
-                borderRadius: proRadii.sm,
-                border: `1px solid ${proColors.border}`,
-              }}
-              title="Ouvrir la capture"
-            />
+            <GuestNoteAttachment key={i} attachment={a} />
           ))}
         </div>
       )}

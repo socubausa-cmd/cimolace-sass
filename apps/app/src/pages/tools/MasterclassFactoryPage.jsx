@@ -49,6 +49,8 @@ import { LiriPortalShell } from '@/components/liri/LiriPortalShell';
 import { extractTextFromFile } from '@/lib/extractDocumentText';
 import { savePendingMasterclassForLiveStudio } from '@/lib/liriAgentExportToLiveStudio';
 import { masterclassProjectToPrecepteurCourse } from '@/lib/precepteur/fromMasterclass';
+import { precepteurCourseToClassroomDraft } from '@/lib/precepteur/toClassroomDraft';
+import { usePublishToClassroom } from '@/hooks/usePublishToClassroom';
 import { conformCourse } from '@/lib/precepteur/conformCourse';
 import { supabase } from '@/lib/supabaseCompat';
 import { masterclassApi } from '@/lib/api-v2';
@@ -1862,6 +1864,7 @@ function Step7Script({ scripts, chapters, onContinue, onPrev, onDownloadScript }
 function Step8Export({ stats, project, onPrev, onReset, onDownloadJson, onDownloadMarkdown, onDownloadExport, precepteurLoading }) {
   const downloadable = project.exports?.downloadable || {};
   const exportDocs = [
+    { label: 'Publier en classe (formation)', kind: 'classroom', enabled: true },
     { label: 'Studio Live + SmartBoard', kind: 'smartboard-live', enabled: true },
     { label: 'Cours numérique (Précepteur)', kind: 'precepteur', enabled: true },
     { label: 'PDF Professeur', kind: 'pdf-professor', enabled: Boolean(downloadable.pdf_professor) },
@@ -1926,8 +1929,8 @@ function Step8Export({ stats, project, onPrev, onReset, onDownloadJson, onDownlo
         {/* Actions d'export */}
         <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-3">
           {exportDocs.map((doc) => {
-            const isPrecepteur = doc.kind === 'precepteur';
-            const loading = isPrecepteur && precepteurLoading;
+            const usesBackend = doc.kind === 'precepteur' || doc.kind === 'classroom';
+            const loading = usesBackend && precepteurLoading;
             const disabled = !doc.enabled || loading;
             return (
               <button
@@ -1952,8 +1955,11 @@ function Step8Export({ stats, project, onPrev, onReset, onDownloadJson, onDownlo
                 <p className="text-[12.5px] font-semibold leading-snug">{doc.label}</p>
                 <p className="mt-1 text-[10.5px] text-white/40">
                   {loading
-                    ? 'Génération des croquis…'
-                    : (doc.enabled ? 'Téléchargement immédiat' : 'Bientôt disponible')}
+                    ? (doc.kind === 'classroom' ? 'Publication en classe…' : 'Génération des croquis…')
+                    : (!doc.enabled ? 'Bientôt disponible'
+                      : doc.kind === 'classroom' ? 'Apparaît dans « Mes formations »'
+                      : doc.kind === 'precepteur' ? 'Ouvre Le Précepteur'
+                      : 'Téléchargement immédiat')}
                 </p>
               </button>
             );
@@ -1998,6 +2004,7 @@ function MasterclassFactoryPage() {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const m = useMasterclassProject();
+  const { publish: publishToClassroom } = usePublishToClassroom();
   const [precepteurLoading, setPrecepteurLoading] = useState(false);
   const factoryStats = useMemo(() => deriveFactoryStats(m.project), [m.project]);
   const pipelineStage = useMemo(() => derivePipelineStage(m.status, m.step), [m.status, m.step]);
@@ -2074,6 +2081,33 @@ function MasterclassFactoryPage() {
   };
 
   const handleDownloadExport = async (kind) => {
+    if (kind === 'classroom') {
+      // PUBLIER EN CLASSE : le MasterclassProject devient une VRAIE formation (courses +
+      // structure relationnelle) → visible dans l'OS /liri/formations ET les lecteurs élève.
+      const course = masterclassProjectToPrecepteurCourse(m.project);
+      const playable = course && Array.isArray(course.concepts)
+        && course.concepts.some((c) => Array.isArray(c.scenes) && c.scenes.length > 0);
+      if (!playable) {
+        window.alert('Ce projet n’a pas encore de contenu jouable (leçons, atelier, analogies). Génère la Masterclass complète avant de publier en classe.');
+        return;
+      }
+      setPrecepteurLoading(true);
+      try {
+        const draft = precepteurCourseToClassroomDraft(course, {
+          description: m.project?.analysis?.global_subject || '',
+          level: m.project?.analysis?.level || null,
+        });
+        const { id, error } = await publishToClassroom(draft);
+        if (error) { window.alert('Publication impossible : ' + (error.message || error)); return; }
+        window.alert('Cours publié en classe ✅ — retrouve-le dans « Mes formations » (portail LIRI).');
+        navigate(id ? `/liri/formations?course=${id}` : '/liri/formations');
+      } catch (e) {
+        window.alert('Publication impossible : ' + (e?.message || e));
+      } finally {
+        setPrecepteurLoading(false);
+      }
+      return;
+    }
     if (kind === 'precepteur') {
       // Cours numérique « Le Précepteur ». On transforme le MasterclassProject en
       // PrecepteurCourse, on l'ENRICHIT avec de vraies scènes croquis vectorielles

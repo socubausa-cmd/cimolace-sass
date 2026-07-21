@@ -162,7 +162,7 @@ export default function StudioDesignerLikeShell({
       >
         {/* Identité = LIRI Studio (studio de production embarqué dans LIRI) : vrai logo LIRI
             + « Studio », aligné sur la topbar du portail. Plus de badge tenant violet. */}
-        <Link to="/studio/liri" className="flex shrink-0 select-none items-center gap-2" aria-label="LIRI Studio">
+        <Link to="/liri" className="flex shrink-0 select-none items-center gap-2" aria-label="Retour à l'accueil LIRI (sortir du Studio)">
           <img src="/lirilogo.png" alt="LIRI" className="h-7 w-7 object-contain" />
           <span className="text-[15px] font-semibold tracking-tight text-white/90">LIRI</span>
           <span className="hidden text-[13px] font-medium text-white/45 sm:inline">Studio</span>
@@ -249,8 +249,8 @@ export default function StudioDesignerLikeShell({
             <Bell className="h-4 w-4 shrink-0 cursor-pointer text-white/25 transition-colors hover:text-white/50" />
 
             <Link
-              to="/studio"
-              title="Studio"
+              to="/liri"
+              title="Sortir du Studio — retour à l'accueil LIRI"
               className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md text-white/35 transition-all hover:bg-white/8 hover:text-white/60"
             >
               <LogOut className="h-3.5 w-3.5" />

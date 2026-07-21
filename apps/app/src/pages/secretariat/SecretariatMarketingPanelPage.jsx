@@ -297,7 +297,7 @@ export default function SecretariatMarketingPanelPage() {
             </Link>
           </Button>
           <Button asChild variant="outline" size="sm" className="border-[color-mix(in_srgb,var(--school-accent)_40%,transparent)] text-[var(--lt-gold-ink)] hover:bg-[color-mix(in_srgb,var(--school-accent)_12%,transparent)]">
-            <Link to="/admin/marketing?tab=automation">
+            <Link to="/liri/crm?tab=automation">
               <Workflow className="w-4 h-4 mr-1" />
               Automation
             </Link>

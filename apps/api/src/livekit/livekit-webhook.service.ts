@@ -4,6 +4,7 @@ import { WebhookReceiver } from 'livekit-server-sdk';
 import { SupabaseService } from '../supabase/supabase.service';
 import type { Json } from '../supabase/supabase.service';
 import { LiveService } from '../live/live.service';
+import { EmailEngineService } from '../email-engine/email-engine.service';
 
 type WebhookEvent = {
   event: string;
@@ -27,6 +28,7 @@ export class LiveKitWebhookService {
     config: ConfigService,
     private readonly supabase: SupabaseService,
     private readonly liri: LiveService,
+    private readonly email: EmailEngineService,
   ) {
     const apiKey = config.get<string>('LIVEKIT_API_KEY') ?? '';
     const apiSecret = config.get<string>('LIVEKIT_API_SECRET') ?? '';
@@ -231,19 +233,110 @@ export class LiveKitWebhookService {
     if (outputUrl && liveSessionId) {
       const { data: sess } = await this.supabase.client
         .from('live_sessions')
-        .select('tenant_id')
+        .select('tenant_id, kind')
         .eq('id', liveSessionId)
         .maybeSingle();
       const tenantId = (sess as { tenant_id?: string } | null)?.tenant_id;
+      const kind = (sess as { kind?: string } | null)?.kind;
       if (tenantId) {
-        try {
-          await this.liri.publishReplay(tenantId, liveSessionId);
-        } catch (err) {
-          this.logger.warn(
-            'publishReplay (pont webhook) échec: ' + (err as Error).message,
-          );
+        if (kind === 'teleconsult') {
+          // Téléconsultation : PAS de publishReplay LIRI (recall élève + forum) —
+          // on prévient le patient ET le praticien que le replay est prêt.
+          try {
+            await this.sendTeleconsultReplayEmail(liveSessionId, tenantId);
+          } catch (err) {
+            this.logger.warn(
+              'email replay téléconsult (webhook) échec: ' + (err as Error).message,
+            );
+          }
+        } else {
+          try {
+            await this.liri.publishReplay(tenantId, liveSessionId);
+          } catch (err) {
+            this.logger.warn(
+              'publishReplay (pont webhook) échec: ' + (err as Error).message,
+            );
+          }
         }
       }
+    }
+  }
+
+  /**
+   * Email « replay prêt » d'une TÉLÉCONSULTATION → patient (propriétaire) +
+   * praticien. Lien vers la page replay durable (auth + garde patient-propriétaire
+   * côté backend). Best-effort : ne jette jamais (l'egress est déjà finalisé).
+   */
+  private async sendTeleconsultReplayEmail(
+    sessionId: string,
+    tenantId: string,
+  ): Promise<void> {
+    const { data: mts } = await this.supabase.client
+      .from('med_teleconsult_sessions')
+      .select('id, patient_id, practitioner_id')
+      .eq('id', sessionId)
+      .maybeSingle();
+    if (!mts) return; // pas une téléconsult → rien à envoyer
+    const { data: t } = await this.supabase.client
+      .from('tenants')
+      .select('slug, name')
+      .eq('id', tenantId)
+      .maybeSingle();
+    const slug = (t as any)?.slug || '';
+    const clinic = (t as any)?.name || 'votre praticien';
+    const base = process.env.APP_URL || 'https://app.cimolace.space';
+    const link = `${base}/teleconsult/${sessionId}/replay${slug ? `?tenant=${encodeURIComponent(slug)}` : ''}`;
+
+    // Destinataires : patient (email med_patients, repli compte auth) + praticien.
+    const recipients: Array<{ to: string; isPatient: boolean; name: string }> = [];
+    const { data: pat } = await this.supabase.client
+      .from('med_patients')
+      .select('email, first_name, patient_user_id')
+      .eq('id', (mts as any).patient_id)
+      .maybeSingle();
+    let patientEmail = String((pat as any)?.email || '').trim();
+    if (!patientEmail && (pat as any)?.patient_user_id) {
+      try {
+        const { data: u } = await (this.supabase.client as any).auth.admin.getUserById(
+          (pat as any).patient_user_id,
+        );
+        patientEmail = String(u?.user?.email || '').trim();
+      } catch { /* best-effort */ }
+    }
+    if (patientEmail) {
+      recipients.push({
+        to: patientEmail,
+        isPatient: true,
+        name: String((pat as any)?.first_name || '').trim(),
+      });
+    }
+    if ((mts as any).practitioner_id) {
+      try {
+        const { data: u } = await (this.supabase.client as any).auth.admin.getUserById(
+          (mts as any).practitioner_id,
+        );
+        const e = String(u?.user?.email || '').trim();
+        if (e && e.toLowerCase() !== patientEmail.toLowerCase()) {
+          recipients.push({ to: e, isPatient: false, name: '' });
+        }
+      } catch { /* best-effort */ }
+    }
+
+    for (const r of recipients) {
+      const html = this.email.brandedHtml({
+        title: 'Votre téléconsultation est disponible en replay',
+        body: r.isPatient
+          ? `Bonjour${r.name ? ' ' + r.name : ''}, l'enregistrement de votre téléconsultation avec ${clinic} est prêt. Vous pouvez le revoir à tout moment via le bouton ci-dessous — accès confidentiel, réservé à vous et à votre praticien.`
+          : `L'enregistrement de la téléconsultation est finalisé et disponible en replay. Accès réservé au praticien et au patient concerné.`,
+        ctaLabel: "Revoir l'enregistrement",
+        ctaUrl: link,
+      });
+      const subject = r.isPatient
+        ? `Replay de votre téléconsultation — ${clinic}`
+        : `Replay de téléconsultation disponible — ${clinic}`;
+      try {
+        await this.email.sendRaw(tenantId, r.to, subject, html);
+      } catch { /* best-effort : un destinataire en échec ne bloque pas l'autre */ }
     }
   }
 

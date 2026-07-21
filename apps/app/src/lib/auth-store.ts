@@ -59,9 +59,59 @@ function queryTenantSlug() {
   }
 }
 
+// ─── IMPERSONATION ENCADRÉE (§15) ───────────────────────────────────────────
+// Contexte PER-ONGLET (sessionStorage) : l'opérateur ouvre l'espace tenant dans un
+// NOUVEL onglet — sa session staff (localStorage) des autres onglets n'est jamais
+// touchée. Quand une impersonation active existe, le token + le slug tenant sont
+// surchargés pour CET onglet uniquement. Expiration = sortie automatique.
+const IMP_KEY = 'cimolace-impersonation';
+
+export interface ImpersonationContext {
+  token: string;
+  tenantSlug: string;
+  tenantName?: string | null;
+  reason: string;
+  operator?: string | null;
+  clientId?: string | null;
+  expiresAt: string; // ISO
+}
+
+function readImpersonation(): ImpersonationContext | null {
+  if (typeof window === 'undefined') return null;
+  try {
+    const raw = sessionStorage.getItem(IMP_KEY);
+    if (!raw) return null;
+    const ctx = JSON.parse(raw) as ImpersonationContext;
+    if (!ctx?.token || !ctx?.expiresAt) return null;
+    if (Date.parse(ctx.expiresAt) <= Date.now()) {
+      // Expiré → sortie automatique (nettoyage silencieux).
+      sessionStorage.removeItem(IMP_KEY);
+      return null;
+    }
+    return ctx;
+  } catch {
+    return null;
+  }
+}
+
+export const impersonationStore = {
+  get: readImpersonation,
+  set: (ctx: ImpersonationContext) => {
+    try { sessionStorage.setItem(IMP_KEY, JSON.stringify(ctx)); } catch { /* noop */ }
+  },
+  clear: () => {
+    try { sessionStorage.removeItem(IMP_KEY); } catch { /* noop */ }
+  },
+  isActive: () => readImpersonation() !== null,
+};
+
 export const authStore = {
-  // Lecture : nouvelle clé puis ancienne (compat) — pas de déconnexion à la bascule.
-  getToken: () => localStorage.getItem(TOKEN_KEY) ?? localStorage.getItem(LEGACY_TOKEN_KEY) ?? '',
+  // Lecture : impersonation active (per-onglet) PRIORITAIRE, sinon nouvelle clé puis ancienne.
+  getToken: () => {
+    const imp = readImpersonation();
+    if (imp) return imp.token;
+    return localStorage.getItem(TOKEN_KEY) ?? localStorage.getItem(LEGACY_TOKEN_KEY) ?? '';
+  },
   setToken: (v: string) => {
     if (v.trim()) {
       localStorage.setItem(TOKEN_KEY, v.trim());
@@ -72,7 +122,10 @@ export const authStore = {
     }
   },
   getTenantSlug: () => {
-    // 0. `?tenant=` explicite = deep-link inter-tenant : priorité absolue, écrase un
+    // 0a. Impersonation active (per-onglet) : le tenant cible prime sur tout.
+    const imp = readImpersonation();
+    if (imp?.tenantSlug) return imp.tenantSlug;
+    // 0b. `?tenant=` explicite = deep-link inter-tenant : priorité absolue, écrase un
     //    localStorage périmé (sinon le studio retombe sur le tenant précédent / isna).
     //    C'est le cas de la salle de téléconsultation MEDOS ouverte depuis Zahir.
     const fromQuery = queryTenantSlug();

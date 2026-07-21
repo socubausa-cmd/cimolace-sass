@@ -57,6 +57,27 @@ export class EmailEngineService {
   }
 
   /**
+   * Clé Resend PAR TENANT : chaque tenant est autonome avec son propre compte Resend
+   * (`tenant_notification_settings.resend_api_key`). Repli sur la clé globale (env RESEND_API_KEY)
+   * si le tenant n'en a pas. Permet à isna/prorascience d'envoyer depuis SON compte (domaine
+   * vérifié) sans toucher zahirwellness qui garde le sien.
+   */
+  async resolveKey(tenantId: string): Promise<string> {
+    try {
+      const { data } = await (this.supabase.client as any)
+        .from('tenant_notification_settings')
+        .select('resend_api_key')
+        .eq('tenant_id', tenantId)
+        .maybeSingle();
+      const k = data?.resend_api_key;
+      if (typeof k === 'string' && k.trim() && k.trim() !== 'replace_me') return k.trim();
+    } catch {
+      /* repli clé globale */
+    }
+    return this.resendKey;
+  }
+
+  /**
    * Envoi transactionnel direct (HTML inline, sans template en base) depuis le
    * domaine du tenant. Best-effort : renvoie un statut, ne jette jamais.
    * `{ status: 'disabled' }` si aucune clé Resend → l'appelant ne casse pas.
@@ -67,16 +88,32 @@ export class EmailEngineService {
     subject: string,
     html: string,
   ): Promise<{ status: string; from?: string; code?: number; message?: string }> {
-    if (!this.enabled) return { status: 'disabled' };
     if (!to) return { status: 'skipped', message: 'no recipient' };
+    const key = await this.resolveKey(tenantId);
+    if (!key || key === 'replace_me') return { status: 'disabled' };
     const from = await this.resolveFrom(tenantId);
-    try {
-      const resp = await fetch('https://api.resend.com/emails', {
+    const post = (fromAddr: string) =>
+      fetch('https://api.resend.com/emails', {
         method: 'POST',
-        headers: { Authorization: `Bearer ${this.resendKey}`, 'Content-Type': 'application/json' },
-        body: JSON.stringify({ from, to: [to], subject, html }),
+        headers: { Authorization: `Bearer ${key}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ from: fromAddr, to: [to], subject, html }),
       });
-      return resp.ok ? { status: 'sent', from } : { status: 'failed', code: resp.status };
+    try {
+      let resp = await post(from);
+      if (resp.ok) return { status: 'sent', from };
+      // Domaine tenant NON VÉRIFIÉ dans Resend (403) → repli sur l'expéditeur Resend universel
+      // (garanti délivrable), en gardant le nom d'affichage du tenant, pour que l'email PARTE.
+      // ⚠️ À remplacer par le domaine tenant dès qu'il est vérifié (resend.com/domains).
+      const body = await resp.text().catch(() => '');
+      if (resp.status === 403 && /not verified/i.test(body)) {
+        const name = from.includes('<') ? from.split('<')[0].trim() : '';
+        const fallbackFrom = `${name || 'Notification'} <onboarding@resend.dev>`;
+        resp = await post(fallbackFrom);
+        return resp.ok
+          ? { status: 'sent', from: fallbackFrom, message: 'fallback-unverified-domain' }
+          : { status: 'failed', code: resp.status };
+      }
+      return { status: 'failed', code: resp.status };
     } catch (e) {
       return { status: 'error', message: String(e) };
     }
@@ -110,14 +147,16 @@ export class EmailEngineService {
   }
 
   async sendEmail(tenantId: string, dto: SendEmailDto) {
-    if (!this.resendKey || this.resendKey === 'replace_me') return { status: 'disabled' };
+    const key = await this.resolveKey(tenantId);
+    if (!key || key === 'replace_me') return { status: 'disabled' };
     const { data: tpl } = await (this.supabase.client as any).from('email_templates').select('*').eq('template_key', dto.templateKey).eq('tenant_id', tenantId).single();
     let html = tpl?.html_content ?? '';
     if (dto.data) for (const [k, v] of Object.entries(dto.data)) html = html.replace(new RegExp(`{{${k}}}`, 'g'), String(v));
+    const from = await this.resolveFrom(tenantId);
     try {
       const resp = await fetch('https://api.resend.com/emails', {
-        method: 'POST', headers: { 'Authorization': `Bearer ${this.resendKey}`, 'Content-Type': 'application/json' },
-        body: JSON.stringify({ from: this.from, to: [dto.to], subject: tpl?.subject ?? '', html }),
+        method: 'POST', headers: { 'Authorization': `Bearer ${key}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ from, to: [dto.to], subject: tpl?.subject ?? '', html }),
       });
       return resp.ok ? { status: 'sent' } : { status: 'failed', code: resp.status };
     } catch (e) { return { status: 'error', message: String(e) }; }

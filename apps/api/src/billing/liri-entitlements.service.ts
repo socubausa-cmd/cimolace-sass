@@ -1,4 +1,4 @@
-import { Injectable } from "@nestjs/common";
+import { Injectable, ForbiddenException } from "@nestjs/common";
 import { AuthService } from "../auth/auth.service";
 
 /**
@@ -119,4 +119,67 @@ export class LiriEntitlementsService {
     const tier = await this.resolveTier(tenantId);
     return { tier, limits: this.limitsFor(tier) };
   }
+
+  // ─── P6 — PLAFONDS PAR OFFRE (billing_plans.features) ───────────────────────
+  // Les plans (surtout LOCAUX) portent des caps durs dans features : patients,
+  // students, clients, teleconsults_month, live_hours_month, vod_gb, catalog_size,
+  // seats… Ces méthodes lisent le cap du plan ACTIF et le font respecter aux points
+  // de création. Branchement type (ex. MEDOS createPatient) :
+  //   const n = await countPatients(tenantId);
+  //   await entitlements.assertWithinCap(tenantId, 'patients', n);   // 403 si atteint
+
+  /** Caps du plan ACTIF d'un tenant (billing_plans.features). {} si aucun/illimité. */
+  async resolvePlanFeatures(tenantId: string): Promise<Record<string, unknown>> {
+    try {
+      const { data } = await this.supabase
+        .from("billing_subscriptions")
+        .select("status, current_period_end, plan_id")
+        .eq("tenant_id", tenantId)
+        .order("created_at", { ascending: false })
+        .limit(10);
+      const now = Date.now();
+      const active = (Array.isArray(data) ? data : []).find(
+        (s: { status?: string; current_period_end?: string | null }) =>
+          s.status === "active" &&
+          (!s.current_period_end || new Date(s.current_period_end).getTime() > now),
+      ) as { plan_id?: string | null } | undefined;
+      if (!active?.plan_id) return {};
+      const { data: plan } = await this.supabase
+        .from("billing_plans").select("features").eq("key", active.plan_id).maybeSingle();
+      return ((plan as { features?: Record<string, unknown> } | null)?.features ?? {}) as Record<string, unknown>;
+    } catch {
+      return {}; // fail-open : pas de blocage sur glitch de lecture
+    }
+  }
+
+  /**
+   * Barrière de plafond : lève 403 si l'usage courant ATTEINT le cap du plan.
+   * Cap absent/non numérique = illimité (autorisé — les plans premium n'ont pas de cap).
+   * Lecture en échec = autorisé (fail-open : ne jamais bloquer un payant sur un glitch ;
+   * la fuite marginale est préférable au churn d'un client légitime).
+   */
+  async assertWithinCap(tenantId: string, capKey: string, currentCount: number): Promise<void> {
+    const features = await this.resolvePlanFeatures(tenantId);
+    const cap = capBreached(features, capKey, currentCount);
+    if (cap !== null) {
+      throw new ForbiddenException(
+        `Limite de votre offre atteinte (${capKey} : ${cap}). Passez à l'offre supérieure pour augmenter ce plafond.`,
+      );
+    }
+  }
+}
+
+/**
+ * DÉCISION PURE (testable) du plafond : renvoie le cap dépassé (nombre) si `currentCount`
+ * l'ATTEINT, sinon null (autorisé). Cap absent/non numérique = illimité (null). Le `>=`
+ * bloque la Nᵉ création quand le cap = N-1 déjà atteint (ex. cap 80, 80 existants → le 81ᵉ bloqué).
+ */
+export function capBreached(
+  features: Record<string, unknown> | null | undefined,
+  capKey: string,
+  currentCount: number,
+): number | null {
+  const cap = features?.[capKey];
+  if (typeof cap === "number" && Number.isFinite(cap) && currentCount >= cap) return cap;
+  return null;
 }

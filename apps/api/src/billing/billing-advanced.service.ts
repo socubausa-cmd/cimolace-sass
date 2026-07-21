@@ -20,6 +20,7 @@ import {
   UnauthorizedException,
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import { PDFDocument, StandardFonts, rgb } from 'pdf-lib';
 import { SupabaseService } from '../supabase/supabase.service';
 import type { TenantContext } from '../tenant/tenant.types';
 
@@ -116,6 +117,105 @@ export class BillingAdvancedService {
     });
     const filename = `facture-${String(payment.order_id || payment.id).slice(0, 12)}.html`;
     return { html, filename };
+  }
+
+  /**
+   * FACTURE PDF (§11) — vraie facture téléchargeable (pdf-lib, pur JS). Même source de
+   * données que le HTML (billing_payments confirmé + profil). Remplace le download HTML.
+   */
+  async renderInvoicePdf(
+    userId: string | undefined,
+    paymentId: string,
+  ): Promise<{ pdf: Uint8Array; filename: string }> {
+    if (!userId) throw new UnauthorizedException('Authentication required');
+    if (!paymentId) throw new BadRequestException('paymentId is required');
+
+    const { data: payment } = await this.sb
+      .from('billing_payments')
+      .select('*, billing_plans(name,interval_type)')
+      .eq('id', paymentId)
+      .eq('user_id', userId)
+      .maybeSingle();
+    if (!payment) throw new NotFoundException('Facture introuvable ou accès refusé');
+    if (String(payment.payment_status ?? '').toLowerCase() !== 'confirmed') {
+      throw new BadRequestException('Cette facture ne correspond pas à un paiement confirmé');
+    }
+    const { data: profile } = await this.sb
+      .from('profiles').select('name, email').eq('id', userId).maybeSingle();
+
+    const invoiceNumber = this.buildInvoiceNumber(payment.id || payment.order_id, payment.paid_at);
+    const amount = payment.price_amount ?? payment.amount ?? 0;
+    const currency = payment.price_currency || payment.currency || 'XAF';
+    const customerName = profile?.name || profile?.email || 'Client';
+    const paidAt = payment.paid_at || payment.updated_at || new Date().toISOString();
+
+    const pdf = await this.buildInvoicePdf({
+      invoiceNumber,
+      customerName,
+      customerEmail: profile?.email || '',
+      planName: payment.billing_plans?.name || payment.plan_id || 'Abonnement',
+      amount: Number(amount),
+      currency,
+      paymentMethod: payment.payment_method || '—',
+      paidAt,
+      orderId: String(payment.order_id || payment.id || ''),
+    });
+    const filename = `facture-${String(payment.order_id || payment.id).slice(0, 12)}.pdf`;
+    return { pdf, filename };
+  }
+
+  /** Compose le PDF de facture (mise en page simple, marque Cimolace or/slate). */
+  private async buildInvoicePdf(a: {
+    invoiceNumber: string; customerName: string; customerEmail: string; planName: string;
+    amount: number; currency: string; paymentMethod: string; paidAt: string; orderId: string;
+  }): Promise<Uint8Array> {
+    const doc = await PDFDocument.create();
+    const page = doc.addPage([595.28, 841.89]); // A4
+    const font = await doc.embedFont(StandardFonts.Helvetica);
+    const bold = await doc.embedFont(StandardFonts.HelveticaBold);
+    const gold = rgb(0.584, 0.416, 0.11);
+    const ink = rgb(0.09, 0.11, 0.12);
+    const muted = rgb(0.42, 0.46, 0.5);
+    const W = 595.28;
+    const M = 56;
+    let y = 780;
+    const zero = new Set(['XAF', 'XOF', 'XPF', 'BIF', 'CLP', 'DJF', 'GNF', 'JPY', 'KMF', 'KRW', 'MGA', 'PYG', 'RWF', 'UGX', 'VND', 'VUV']);
+    const cur = String(a.currency).toUpperCase();
+    // `a.amount` est en UNITÉS MAJEURES (billing_payments.amount ; cohérent avec renderInvoiceHtml
+    // qui l'affiche tel quel) — NE PAS diviser par 100, sinon 150 EUR s'imprimerait « 1,50 EUR ».
+    const amountStr = `${a.amount.toLocaleString('fr-FR', { minimumFractionDigits: zero.has(cur) ? 0 : 2, maximumFractionDigits: 2 })} ${cur}`;
+    // Sanitize : les polices standard PDF (WinAnsi) n'encodent pas les espaces insécables
+    // fines (U+202F/U+2009) ni l'insécable (U+00A0) que toLocaleString('fr-FR') insère entre
+    // les milliers → drawText crasherait sinon. On les remplace par une espace normale.
+    const clean = (s: unknown) => String(s ?? '').replace(/[   ]/g, ' ');
+    const text = (s: string, x: number, yy: number, size = 11, f = font, color = ink) =>
+      page.drawText(clean(s), { x, y: yy, size, font: f, color });
+    const dateFr = (() => { try { return new Date(a.paidAt).toLocaleDateString('fr-FR', { day: '2-digit', month: 'long', year: 'numeric' }); } catch { return a.paidAt; } })();
+
+    text('CIMOLACE', M, y, 22, bold, gold);
+    text('Reçu / Facture', W - M - 120, y + 4, 12, bold, muted);
+    y -= 14; text("L'infrastructure SaaS intelligente pour l'Afrique", M, y, 9, font, muted);
+    y -= 30; page.drawLine({ start: { x: M, y }, end: { x: W - M, y }, thickness: 1, color: rgb(0.85, 0.87, 0.89) });
+
+    y -= 34; text('FACTURE', M, y, 15, bold, ink);
+    text(`N° ${a.invoiceNumber}`, W - M - 200, y, 11, font, muted);
+    y -= 28; text('Facturé à', M, y, 9, bold, muted); text('Date de paiement', W - M - 200, y, 9, bold, muted);
+    y -= 16; text(a.customerName, M, y, 12, bold, ink); text(dateFr, W - M - 200, y, 11, font, ink);
+    if (a.customerEmail) { y -= 15; text(a.customerEmail, M, y, 10, font, muted); }
+
+    y -= 40; page.drawRectangle({ x: M, y: y - 6, width: W - 2 * M, height: 26, color: rgb(0.96, 0.94, 0.9) });
+    text('DÉSIGNATION', M + 10, y, 9, bold, gold); text('MONTANT', W - M - 130, y, 9, bold, gold);
+    y -= 34; text(a.planName, M + 10, y, 12, font, ink); text(amountStr, W - M - 130, y, 12, bold, ink);
+    y -= 10; page.drawLine({ start: { x: M, y }, end: { x: W - M, y }, thickness: 0.5, color: rgb(0.85, 0.87, 0.89) });
+    y -= 26; text('Total payé', W - M - 240, y, 12, bold, ink); text(amountStr, W - M - 130, y, 14, bold, gold);
+
+    y -= 46; text('Moyen de paiement', M, y, 9, bold, muted); text(a.paymentMethod, M + 130, y, 10, font, ink);
+    y -= 16; text('Référence', M, y, 9, bold, muted); text(a.orderId, M + 130, y, 10, font, ink);
+    y -= 16; text('Statut', M, y, 9, bold, muted); text('Payé', M + 130, y, 10, bold, rgb(0.18, 0.48, 0.3));
+
+    text('Merci de votre confiance. Ce document tient lieu de reçu.', M, 70, 9, font, muted);
+    text('Cimolace — cimolace.space', M, 56, 9, font, muted);
+    return doc.save();
   }
 
   async resendInvoice(userId: string | undefined, paymentId: string) {

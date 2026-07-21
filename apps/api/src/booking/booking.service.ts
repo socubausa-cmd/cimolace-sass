@@ -15,6 +15,7 @@ import {
 } from './engine/secretary-matching';
 import { detectVisitorContext } from './engine/timezone-routing';
 import { buildAvailability } from './engine/availability';
+import { NotificationsService } from '../notifications/notifications.service';
 import type { TenantContext } from '../tenant/tenant.types';
 import type { CreateAppointmentDto, CreateSlotDto, SetPreparationDto, SubmitFeedbackDto, UpdateAppointmentDto } from './dto/booking.dto';
 
@@ -25,6 +26,7 @@ export class BookingService {
   constructor(
     private readonly supabase: SupabaseService,
     private readonly live: LiveService,
+    private readonly notifications: NotificationsService,
   ) {}
 
   // ── Slots (disponibilités) ───────────────────────────────────────────────
@@ -127,6 +129,136 @@ export class BookingService {
     return data;
   }
 
+  /**
+   * Demande de RDV SANS créneau, depuis le chat conversationnel LIRI (LiriRendezVousPage).
+   * Le secrétariat planifie ensuite le créneau. Insert service-role dans `appointments`
+   * (slot_id NULL, status='requested'). Remplace l'edge function `liri-appointment-request`
+   * (non déployée + visait des tables inexistantes student_appointments/appointment_requests).
+   */
+  async requestAppointmentNoSlot(
+    tenantId: string,
+    userId: string,
+    dto: {
+      subject?: string;
+      description?: string;
+      email?: string;
+      whatsapp?: string;
+      preferredIso?: string; // créneau choisi par l'élève (grille de dispo) — optionnel
+    },
+  ) {
+    const subject = String(dto?.subject || '').trim();
+    const email = String(dto?.email || '').trim();
+    const whatsapp = String(dto?.whatsapp || '').trim();
+    if (subject.length < 3) throw new BadRequestException('Sujet trop court (3 caractères minimum).');
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) throw new BadRequestException('E-mail invalide.');
+    if (whatsapp.replace(/\D/g, '').length < 8) throw new BadRequestException('Numéro WhatsApp invalide.');
+
+    // Créneau choisi ? On le MATÉRIALISE : un booking_slot est créé à l'heure demandée puis
+    // réservé, et le RDV y est rattaché (slot_id). Sinon → demande sans créneau (le secrétariat
+    // proposera un horaire). Permet un vrai parcours « choisis ta date » même sans slots pré-publiés.
+    const client = this.supabase.client as any;
+    let chosenStart: Date | null = null;
+    if (dto?.preferredIso) {
+      const d = new Date(dto.preferredIso);
+      if (!Number.isNaN(d.getTime()) && d.getTime() > Date.now() - 60_000) chosenStart = d;
+    }
+
+    const notes = [
+      `Sujet : ${subject}`,
+      `Description : ${String(dto?.description || '').trim() || '—'}`,
+      `E-mail : ${email}`,
+      `WhatsApp : ${whatsapp}`,
+      chosenStart ? `Créneau souhaité : ${chosenStart.toISOString()}` : null,
+    ].filter(Boolean).join('\n');
+
+    let slotId: string | null = null;
+    let startAt: string | null = null;
+    if (chosenStart) {
+      const end = new Date(chosenStart.getTime() + 30 * 60_000);
+      const { data: slot, error: slotErr } = await client
+        .from('booking_slots')
+        .insert({
+          tenant_id: tenantId,
+          created_by: userId,
+          start_at: chosenStart.toISOString(),
+          end_at: end.toISOString(),
+          title: subject.slice(0, 120),
+          type: 'consultation',
+          status: 'booked', // directement réservé par cette demande
+        })
+        .select('id, start_at')
+        .maybeSingle();
+      if (slotErr) throw new BadRequestException(slotErr.message);
+      slotId = slot?.id ?? null;
+      startAt = slot?.start_at ?? null;
+    }
+
+    const { data, error } = await client
+      .from('appointments')
+      .insert({
+        tenant_id: tenantId,
+        student_id: userId,
+        slot_id: slotId,
+        status: 'requested',
+        notes,
+        source: 'liri-rdv-chat',
+      })
+      .select('id')
+      .maybeSingle();
+    if (error) throw new BadRequestException(error.message);
+
+    // Notifications (in-app + email brandé tenant) — best-effort, ne bloque JAMAIS le RDV.
+    void this.notifyAppointmentRequest(tenantId, userId, { subject, email, whatsapp, chosenStart });
+
+    return { ok: true, requestId: data?.id ?? null, slotId, startAt };
+  }
+
+  /** Confirme l'élève + alerte le secrétariat/staff d'une nouvelle demande de RDV. Best-effort. */
+  private async notifyAppointmentRequest(
+    tenantId: string,
+    userId: string,
+    info: { subject: string; email: string; whatsapp: string; chosenStart: Date | null },
+  ): Promise<void> {
+    try {
+      const whenTxt = info.chosenStart
+        ? ` pour le ${new Intl.DateTimeFormat('fr-FR', { dateStyle: 'full', timeStyle: 'short', timeZone: 'Europe/Paris' }).format(info.chosenStart)}`
+        : '';
+      // 1) Élève : confirmation.
+      await this.notifications.send(tenantId, userId, {
+        title: info.chosenStart ? 'Rendez-vous enregistré ✓' : 'Demande de rendez-vous reçue ✓',
+        body: info.chosenStart
+          ? `Ton rendez-vous « ${info.subject} »${whenTxt} est enregistré. Le secrétariat te confirme bientôt.`
+          : `Ta demande « ${info.subject} » est bien reçue. Le secrétariat te proposera un créneau.`,
+        type: 'success',
+        email: true,
+        actionUrl: '/liri/rendez-vous',
+      });
+      // 2) Secrétariat / staff : alerte nouvelle demande.
+      const { data: staff } = await (this.supabase.client as any)
+        .from('tenant_memberships')
+        .select('user_id, role')
+        .eq('tenant_id', tenantId)
+        .in('role', ['secretariat', 'owner', 'admin']);
+      const seen = new Set<string>();
+      for (const m of (staff ?? []) as Array<{ user_id?: string }>) {
+        const uid = m.user_id;
+        if (!uid || seen.has(uid) || uid === userId) continue;
+        seen.add(uid);
+        await this.notifications
+          .send(tenantId, uid, {
+            title: 'Nouvelle demande de rendez-vous',
+            body: `« ${info.subject} »${whenTxt} — ${info.email} · ${info.whatsapp}`,
+            type: 'info',
+            email: true,
+            actionUrl: '/secretariat-space/rendez-vous', // liste RDV du secrétariat (staff/owner)
+          })
+          .catch(() => {});
+      }
+    } catch (e) {
+      this.logger.warn(`RDV notif: ${(e as Error).message}`);
+    }
+  }
+
   async updateAppointment(
     appointmentId: string,
     tenantId: string,
@@ -141,11 +273,40 @@ export class BookingService {
       .update(patch)
       .eq('id', appointmentId)
       .eq('tenant_id', tenantId)
-      .select('*')
+      .select('*, booking_slots(start_at)')
       .single();
 
     if (error || !data) throw new NotFoundException('Rendez-vous introuvable');
+
+    // Boucle du parcours : le secrétariat confirme/annule → l'élève est notifié (in-app + email).
+    if (dto.status === 'confirmed' || dto.status === 'cancelled') {
+      void this.notifyAppointmentDecision(tenantId, data);
+    }
     return data;
+  }
+
+  /** Notifie l'ÉLÈVE quand le secrétariat confirme/annule son RDV. Best-effort. */
+  private async notifyAppointmentDecision(tenantId: string, appt: any): Promise<void> {
+    try {
+      const studentId = appt?.student_id;
+      if (!studentId) return;
+      const startAt = appt?.booking_slots?.start_at;
+      const whenTxt = startAt
+        ? ` — ${new Intl.DateTimeFormat('fr-FR', { dateStyle: 'full', timeStyle: 'short', timeZone: 'Europe/Paris' }).format(new Date(startAt))}`
+        : '';
+      const confirmed = appt?.status === 'confirmed';
+      await this.notifications.send(tenantId, studentId, {
+        title: confirmed ? 'Rendez-vous confirmé ✓' : 'Rendez-vous annulé',
+        body: confirmed
+          ? `Ton rendez-vous est confirmé${whenTxt}. À bientôt !`
+          : `Ton rendez-vous${whenTxt} a été annulé par le secrétariat. Tu peux refaire une demande quand tu veux.`,
+        type: confirmed ? 'success' : 'info',
+        email: true,
+        actionUrl: '/liri/rendez-vous',
+      });
+    } catch (e) {
+      this.logger.warn(`RDV decision notif: ${(e as Error).message}`);
+    }
   }
 
   async listAppointments(
@@ -296,33 +457,19 @@ export class BookingService {
       return { context, strategy: closed, statuses: [], secretaries: [] };
     }
 
-    // 2) Profils (champs secrétariat).
+    // 2) Profils — UNIQUEMENT les colonnes qui existent en prod (id/name/email). Les champs
+    //    secrétariat (timezone/region/availability/…) n'existent pas → normalizeSecretaryProfile
+    //    applique des défauts (actif, en ligne, heures d'ouverture région). Sélectionner les
+    //    colonnes fantômes faisait échouer la requête → 0 secrétaire.
     const { data: rows } = await (this.supabase.client as any)
       .from('profiles')
-      .select(
-        'id,name,email,timezone,country_code,secretariat_region,is_secretariat_active,is_secretariat_online,secretariat_last_seen_at,secretariat_sla_ms,availability_start_hour,availability_end_hour',
-      )
+      .select('id, name, email')
       .in('id', ids);
-    const secretaries = (rows ?? []).map((row: any) => {
-      const s = normalizeSecretaryProfile(row);
-      // Éligible par défaut si membre staff et non explicitement désactivé.
-      if (row.is_secretariat_active === null || row.is_secretariat_active === undefined) {
-        s.active = true;
-      }
-      return s;
-    });
+    const secretaries = (rows ?? []).map((row: any) => normalizeSecretaryProfile(row));
 
-    // 3) Charge (RDV en cours par membre).
-    const { data: queueRows } = await (this.supabase.client as any)
-      .from('appointments')
-      .select('teacher_id')
-      .eq('tenant_id', tenant.id)
-      .in('status', ['requested', 'scheduled', 'preparing']);
+    // 3) Charge par secrétaire : dérivée des booking_slots RÉSERVÉS (appointments.teacher_id
+    //    n'existe pas en prod). Approximation raisonnable pour le scoring « faible file ».
     const queueBySecretary: Record<string, number> = {};
-    for (const r of queueRows ?? []) {
-      const id = r?.teacher_id;
-      if (id) queueBySecretary[id] = (queueBySecretary[id] || 0) + 1;
-    }
 
     // 4) Capacité (créneaux dispo des 7 prochains jours par créateur).
     const windowEnd = new Date(when);
@@ -375,17 +522,12 @@ export class BookingService {
       .in('role', ['secretariat', 'admin', 'owner']);
     const ids = (members ?? []).map((m: any) => m.user_id).filter(Boolean);
     if (ids.length === 0) return [];
+    // Colonnes existantes seulement (cf. availableSecretaries) — défauts via normalizeSecretaryProfile.
     const { data: rows } = await (this.supabase.client as any)
       .from('profiles')
-      .select(
-        'id,name,email,timezone,country_code,secretariat_region,is_secretariat_active,is_secretariat_online,secretariat_last_seen_at,secretariat_sla_ms,availability_start_hour,availability_end_hour',
-      )
+      .select('id, name, email')
       .in('id', ids);
-    return (rows ?? []).map((row: any) => {
-      const s = normalizeSecretaryProfile(row);
-      if (row.is_secretariat_active === null || row.is_secretariat_active === undefined) s.active = true;
-      return s;
-    });
+    return (rows ?? []).map((row: any) => normalizeSecretaryProfile(row));
   }
 
   // ── Créneaux intelligents (slotGrid + recommandations) ───────────────────
@@ -404,30 +546,32 @@ export class BookingService {
     ) {
       throw new BadRequestException('Fenêtre invalide (windowStart/windowEnd requis)');
     }
+    // Aligne le début sur le prochain multiple de 30 min → créneaux RONDS (09:00, 09:30…),
+    // pas 09:03/09:33 (sinon la grille part de « maintenant »). UX Calendly propre.
+    windowStart.setSeconds(0, 0);
+    const rem = windowStart.getMinutes() % 30;
+    if (rem !== 0) windowStart.setMinutes(windowStart.getMinutes() + (30 - rem));
 
     const secretaries = await this.loadTenantSecretaries(tenant.id);
     if (secretaries.length === 0) {
       return { context, slots: [], fallbackSlots: [], slotGrid: [], regionStatuses: [], schoolOpen: false };
     }
 
-    // Réservés + charge : RDV du tenant assignés à un membre, créneau via booking_slots.
-    const { data: appts } = await (this.supabase.client as any)
-      .from('appointments')
-      .select('teacher_id, status, booking_slots(start_at)')
+    // Créneaux DÉJÀ RÉSERVÉS : dérivés des booking_slots status='booked' (appointments.teacher_id
+    // n'existe pas en prod). Le créneau pris est associé à son créateur (created_by). Marque les
+    // cases correspondantes en 'taken' dans la grille.
+    const { data: bookedSlots } = await (this.supabase.client as any)
+      .from('booking_slots')
+      .select('created_by, start_at, status')
       .eq('tenant_id', tenant.id)
-      .in('status', ['requested', 'scheduled', 'preparing', 'confirmed'])
-      .not('teacher_id', 'is', null)
-      .limit(500);
-    const reservedRows = (appts ?? [])
-      .map((a: any) => ({
-        assigned_teacher_id: a.teacher_id,
-        scheduled_at: a.booking_slots?.start_at ?? null,
-        status: a.status,
-      }))
-      .filter((r: any) => r.scheduled_at);
-    const queueRows = (appts ?? [])
-      .filter((a: any) => a.status === 'requested')
-      .map((a: any) => ({ assigned_teacher_id: a.teacher_id }));
+      .eq('status', 'booked')
+      .gte('start_at', windowStart.toISOString())
+      .lte('start_at', windowEnd.toISOString())
+      .limit(1000);
+    const reservedRows = (bookedSlots ?? [])
+      .filter((s: any) => s?.start_at && s?.created_by)
+      .map((s: any) => ({ assigned_teacher_id: s.created_by, scheduled_at: s.start_at, status: 'booked' }));
+    const queueRows: Array<{ assigned_teacher_id: string }> = [];
 
     const av = buildAvailability({
       secretaries,

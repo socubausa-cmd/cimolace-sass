@@ -1,4 +1,4 @@
-import { Injectable, BadRequestException, NotFoundException, Logger, OnApplicationBootstrap } from "@nestjs/common";
+import { Injectable, BadRequestException, NotFoundException, InternalServerErrorException, Logger, OnApplicationBootstrap } from "@nestjs/common";
 import { randomUUID, createHmac, timingSafeEqual } from "crypto";
 import { AuthService } from "../auth/auth.service";
 import { PawaPayService } from "../pawapay/pawapay.service";
@@ -77,7 +77,8 @@ export class BillingService implements OnApplicationBootstrap {
    * `current_period_end = null` = actif sans échéance (bootstrap) jusqu'à ce que
    * le paiement Stripe prenne le relais et pose les vraies dates de période.
    */
-  async activateTenantSubscription(tenantId: string, planKey = "zahir-forfait") {
+  async activateTenantSubscription(tenantId: string, planKey: string, actor?: string) {
+    if (!planKey) throw new BadRequestException("planKey requis (aucun forfait par défaut — neutralité §1).");
     const sb = this.supabase;
     const { data: plan } = await sb
       .from("billing_plans")
@@ -125,6 +126,19 @@ export class BillingService implements OnApplicationBootstrap {
 
     // Provisioning produit : activer les moteurs du plan (parité avec le paiement).
     await this.provisionPlanServices(tenantId, (plan as any).key);
+
+    // SÉCURITÉ §15 : trace attribuable (QUI a activé le forfait + armé le gating).
+    try {
+      await sb.from("cimolace_change_history").insert({
+        action: "billing:activate",
+        entity_type: "tenant",
+        entity_id: tenantId,
+        description: `Forfait ${(plan as any).key} activé + gating armé`,
+        changed_by: (actor && actor.trim()) || "Cimolace Ops (non attribué)",
+      });
+    } catch {
+      /* audit best-effort : ne bloque jamais l'opération */
+    }
 
     return { subscription, gating_enabled: true, plan: (plan as any).key };
   }
@@ -332,15 +346,19 @@ export class BillingService implements OnApplicationBootstrap {
     if (!inv) return { received: true, matched: false };
 
     if (cb.status === "COMPLETED") {
+      // Idempotence : un 2e callback COMPLETED ne doit PAS ré-étendre la période d'un
+      // cycle entier. Si la facture est déjà payée, rien à refaire.
+      if (inv.status === "paid") return { received: true, matched: true, status: "already_paid" };
       await sb.from("billing_invoices").update({ status: "paid", paid_at: new Date().toISOString(), updated_at: new Date().toISOString() }).eq("id", inv.id);
       if (inv.subscription_id) {
         const start = new Date();
-        const end = new Date(); end.setMonth(end.getMonth() + 1);
         // Moyen de paiement : le numéro/opérateur utilisé (stocké sur la facture au moment du collect).
         const payMethod = (inv.metadata as any)?.payer_phone
           ? { type: "mobile_money", provider: (inv.metadata as any).payer_provider ?? null, phone: (inv.metadata as any).payer_phone }
           : null;
-        const { data: subRow } = await sb.from("billing_subscriptions").select("metadata, user_id, tenant_id").eq("id", inv.subscription_id).maybeSingle();
+        const { data: subRow } = await sb.from("billing_subscriptions").select("metadata, user_id, tenant_id, plan_id").eq("id", inv.subscription_id).maybeSingle();
+        // Échéance selon le CYCLE du plan (fix : un abonnement yearly ne recevait que 30 jours).
+        const end = BillingService.addCycle(start, await this.planBillingCycle((subRow as any)?.plan_id));
         await sb.from("billing_subscriptions").update({
           status: "active",
           current_period_start: start.toISOString(),
@@ -348,6 +366,13 @@ export class BillingService implements OnApplicationBootstrap {
           metadata: { ...((subRow as any)?.metadata ?? {}), ...(payMethod ? { payment_method: payMethod } : {}) },
           updated_at: new Date().toISOString(),
         }).eq("id", inv.subscription_id);
+        // PROVISIONING (fix : le mobile money n'activait AUCUN moteur) + remplacement de
+        // l'essai, en parité avec le flux carte (confirmCardPayment).
+        const tid = (subRow as any)?.tenant_id;
+        if (tid) {
+          await this.supersedeOtherActiveSubscriptions(tid, inv.subscription_id);
+          await this.provisionPlanServices(tid, (subRow as any)?.plan_id);
+        }
         // Reçu email de confirmation (best-effort ; no-op silencieux si Resend non configuré).
         void this.sendPaymentReceiptEmail(inv, subRow, payMethod, end);
       }
@@ -605,6 +630,11 @@ export class BillingService implements OnApplicationBootstrap {
     let initiated = 0;
     let skipped = 0;
     for (const sub of rows) {
+      // RÉSILIATION programmée (§11) : ne PAS re-solliciter le PIN — l'abo doit expirer.
+      if ((sub as any)?.metadata?.cancel_at_period_end) {
+        skipped++;
+        continue;
+      }
       const pm = (sub as any)?.metadata?.payment_method;
       if (!pm?.phone || !pm?.provider) {
         skipped++;
@@ -743,8 +773,11 @@ export class BillingService implements OnApplicationBootstrap {
     const s = (await res.json()) as { payment_status?: string; status?: string; subscription?: string; customer?: string };
     const paid = s.payment_status === "paid" || s.status === "complete";
     if (paid) {
-      const end = new Date(); end.setMonth(end.getMonth() + 1);
-      await sb.from("billing_subscriptions").update({ status: "active", provider_subscription_id: s.subscription ?? null, provider_customer_id: s.customer ?? null, current_period_end: end.toISOString(), updated_at: new Date().toISOString() }).eq("id", subscriptionId);
+      // Échéance selon le CYCLE (fix : yearly ne donnait que 30 jours). Bootstrap ;
+      // pour un abonnement récurrent Stripe, le webhook resynchronise ensuite la période réelle.
+      const start = new Date();
+      const end = BillingService.addCycle(start, await this.planBillingCycle((sub as any).plan_id));
+      await sb.from("billing_subscriptions").update({ status: "active", provider_subscription_id: s.subscription ?? null, provider_customer_id: s.customer ?? null, current_period_start: start.toISOString(), current_period_end: end.toISOString(), updated_at: new Date().toISOString() }).eq("id", subscriptionId);
       await sb.from("billing_invoices").update({ status: "paid", provider: "stripe", paid_at: new Date().toISOString(), updated_at: new Date().toISOString() }).eq("subscription_id", subscriptionId).in("status", ["pending", "processing", "failed"]);
       // Le forfait payé remplace les autres abonnements actifs (ex: l'essai medos_standard).
       await this.supersedeOtherActiveSubscriptions(tenantId, subscriptionId);
@@ -765,6 +798,41 @@ export class BillingService implements OnApplicationBootstrap {
       .eq("tenant_id", tenantId)
       .eq("status", "active")
       .neq("id", keepSubscriptionId);
+  }
+
+  /**
+   * Fin de période selon le CYCLE du plan (yearly/quarterly/weekly/monthly).
+   * Remplace le `setMonth(+1)` codé en dur qui sous-livrait les abonnements
+   * annuels (un plan local yearly ne donnait que 30 jours d'accès).
+   */
+  private static addCycle(from: Date, cycle: string | null | undefined): Date {
+    const c = String(cycle ?? "monthly").toLowerCase();
+    const d = new Date(from);
+    if (c === "yearly") d.setFullYear(d.getFullYear() + 1);
+    else if (c === "quarterly") d.setMonth(d.getMonth() + 3);
+    else if (c === "weekly") d.setDate(d.getDate() + 7);
+    else if (c === "one_time" || c === "lifetime") d.setFullYear(d.getFullYear() + 100); // achat unique → sans expiration pratique
+    else d.setMonth(d.getMonth() + 1);
+    return d;
+  }
+
+  /** Cycle plan → intervalle Stripe (interval + interval_count) pour un prix INLINE
+   *  (fix : un 'quarterly' inline était facturé chaque MOIS au prix trimestriel). */
+  private static cycleToStripeInterval(cycle: string | null | undefined): { interval: string; count: number } {
+    switch (String(cycle ?? "monthly").toLowerCase()) {
+      case "yearly": return { interval: "year", count: 1 };
+      case "quarterly": return { interval: "month", count: 3 };
+      case "weekly": return { interval: "week", count: 1 };
+      default: return { interval: "month", count: 1 };
+    }
+  }
+
+  /** Cycle de facturation d'un plan (pour calculer l'échéance). Défaut mensuel. */
+  private async planBillingCycle(planKey: string | null | undefined): Promise<string> {
+    if (!planKey) return "monthly";
+    const { data } = await this.supabase
+      .from("billing_plans").select("billing_cycle").eq("key", planKey).maybeSingle();
+    return String((data as any)?.billing_cycle ?? "monthly").toLowerCase();
   }
 
   /**
@@ -795,6 +863,340 @@ export class BillingService implements OnApplicationBootstrap {
     } catch (e) {
       console.warn(`[billing provisioning] échec (tenant=${tenantId}, plan=${planKey}): ${(e as Error).message}`);
     }
+  }
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // ACQUISITION — orchestrateur « createTenantFromPurchase » (LE chaînon manquant).
+  // Aucun webhook ne créait de tenant depuis un paiement : tout supposait un tenant
+  // préexistant → un prospect qui payait tombait dans un drop silencieux. Ce service
+  // matérialise le tenant au paiement abouti. Idempotent (claim sur providerRef).
+  // ⚠️ Untestable hors runtime — à valider APRÈS déploiement Railway, avant tout
+  // paiement réel. Appelé par les handlers de webhook (COMPLETED), pas exposé en HTTP.
+  // ═══════════════════════════════════════════════════════════════════════════
+
+  /** Catégorie de plan → kind tenant (CHECK infrastructure_type). Défaut 'liri'. */
+  private static categoryToKind(category: string | null | undefined): string {
+    const c = String(category || "").toLowerCase();
+    if (c.includes("medos")) return "medos";
+    if (c.includes("ecole") || c.includes("school")) return "school";
+    if (c.includes("bienetre") || c.includes("wellness")) return "wellness";
+    if (c.includes("createur") || c.includes("creator")) return "creator";
+    if (c.includes("mbolo") || c.includes("commerce")) return "mbolo";
+    return "liri";
+  }
+
+  /** Offre → hosting_mode. customized = valeur dédiée (tier hébergé + marque tenant). */
+  private static hostingModeForOffer(offerTier: string | null | undefined): string {
+    const o = String(offerTier || "hosted").toLowerCase();
+    if (o === "integration") return "embedded";
+    if (o === "customized") return "customized";
+    return "hosted";
+  }
+
+  private static RESERVED_SLUGS = new Set([
+    "admin", "api", "app", "www", "cimolace", "liri", "login", "logout", "static",
+    "assets", "public", "dashboard", "billing", "webhook", "medos", "mbolo", "isna",
+    "support", "help", "new", "creer-organisation", "t", "auth", "signup",
+  ]);
+
+  /** Slug URL-safe (accents retirés, [a-z0-9-], 2..38 car.), hors mots réservés. */
+  private static slugify(s: string): string {
+    let base = String(s || "")
+      .normalize("NFD").replace(/[̀-ͯ]/g, "")
+      .toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "")
+      .slice(0, 38) || "tenant";
+    if (base.length < 2) base = `${base}-t`;
+    if (BillingService.RESERVED_SLUGS.has(base)) base = `${base}-org`;
+    return base;
+  }
+
+  /** Crée/retrouve un user par email (sans password) via Supabase admin. Rôle owner. */
+  private async provisionUserByEmail(email: string, firstName?: string, lastName?: string): Promise<{ id: string; isNew: boolean }> {
+    const url = process.env.SUPABASE_URL;
+    const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
+    if (!url || !key) throw new BadRequestException("Supabase non configuré (acquisition).");
+    const em = email.trim().toLowerCase();
+    const headers = { apikey: key, Authorization: `Bearer ${key}`, "Content-Type": "application/json" };
+    const findId = async (): Promise<string | undefined> => {
+      const r = await fetch(`${url}/auth/v1/admin/users?email=${encodeURIComponent(em)}`, { headers });
+      if (!r.ok) return undefined;
+      const d = (await r.json()) as { users?: { id: string; email?: string }[] };
+      return (d?.users || []).find((u) => u.email?.toLowerCase() === em)?.id;
+    };
+    const existing = await findId();
+    if (existing) return { id: existing, isNew: false };
+    const createRes = await fetch(`${url}/auth/v1/admin/users`, {
+      method: "POST", headers,
+      body: JSON.stringify({ email: em, email_confirm: true, user_metadata: { first_name: firstName ?? null, last_name: lastName ?? null, role: "owner", created_via: "acquisition" } }),
+    });
+    if (createRes.ok) return { id: ((await createRes.json()) as { id: string }).id, isNew: true };
+    // Course (2 webhooks en //) : l'user a pu être créé entre-temps → on le retrouve.
+    const raced = await findId();
+    if (!raced) throw new BadRequestException("Provisionnement du compte impossible.");
+    return { id: raced, isNew: false };
+  }
+
+  /** Lien d'action Supabase (magiclink = connexion 1-clic, recovery = définir mot de passe).
+   *  NE dépend PAS du SMTP Supabase : le lien est renvoyé, on l'envoie via notre email (Resend). */
+  private async generateAuthLink(email: string, type: "magiclink" | "recovery", redirectTo: string): Promise<string | null> {
+    const url = process.env.SUPABASE_URL;
+    const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
+    if (!url || !key) return null;
+    try {
+      const r = await fetch(`${url}/auth/v1/admin/generate_link`, {
+        method: "POST",
+        headers: { apikey: key, Authorization: `Bearer ${key}`, "Content-Type": "application/json" },
+        body: JSON.stringify({ type, email: email.trim().toLowerCase(), options: { redirect_to: redirectTo } }),
+      });
+      if (!r.ok) return null;
+      const d = (await r.json()) as any;
+      return d?.action_link || d?.properties?.action_link || null;
+    } catch { return null; }
+  }
+
+  /** Email de BIENVENUE + ACCÈS après un achat abouti : le client entre en 1 clic (magic-link)
+   *  et, s'il est nouveau, peut définir son mot de passe (recovery). Fail-safe : n'échoue JAMAIS
+   *  le provisioning (le paiement est déjà encaissé). */
+  private async sendAcquisitionWelcome(tenantId: string, email: string, orgName: string, userIsNew: boolean): Promise<void> {
+    try {
+      const frontend = (process.env.FRONTEND_URL || "https://app.cimolace.space").replace(/\/$/, "");
+      const dest = `${frontend}/cimolace/billing`;
+      const magic = await this.generateAuthLink(email, "magiclink", dest);
+      const recover = userIsNew ? await this.generateAuthLink(email, "recovery", dest) : null;
+      const accessUrl = magic || `${frontend}/cimolace/login`;
+      const org = orgName || "votre organisation";
+      const secondary = recover
+        ? `<p style="font-size:14px;line-height:1.6;margin:14px 0 0">Vous préférez un mot de passe ? <a href="${recover}" style="color:#b6893c;font-weight:600">Définissez-le ici</a> (lien valable un moment).</p>`
+        : `<p style="font-size:13px;line-height:1.6;margin:14px 0 0;color:#8a978f">Astuce : une fois connecté, vous pouvez définir un mot de passe dans les réglages de votre espace.</p>`;
+      const html = this.email.brandedHtml({
+        title: `Bienvenue sur Cimolace — ${org}`,
+        body: `Votre paiement est confirmé et votre espace <b>${org}</b> est prêt : votre abonnement est actif et vos outils sont activés. Cliquez ci-dessous pour accéder à votre espace tout de suite.`,
+        ctaLabel: "Accéder à mon espace",
+        ctaUrl: accessUrl,
+        brand: "#b6893c",
+      }) + secondary;
+      const res = await this.email.sendRaw(tenantId, email, `Votre espace ${org} est prêt — accédez-y`, html);
+      this.logger.log(`[acquisition] email d'accès → ${email} (${(res as any)?.status ?? "?"}, magic=${!!magic}, recover=${!!recover})`);
+    } catch (e) {
+      this.logger.warn(`[acquisition] email d'accès non envoyé à ${email}: ${(e as Error).message}`);
+    }
+  }
+
+  /** INSERT tenant avec gestion de collision de slug (23505 → suffixe -2, -3…). */
+  private async insertTenantForPurchase(p: { name: string; baseSlug: string; ownerUserId: string; kind: string; hostingMode: string; locale: string; timezone: string }): Promise<string> {
+    const sb = this.supabase;
+    for (let attempt = 0; attempt < 5; attempt++) {
+      const slug = attempt === 0 ? p.baseSlug : `${p.baseSlug}-${attempt + 1}`;
+      const { data, error } = await sb.from("tenants").insert({
+        name: p.name, slug, owner_user_id: p.ownerUserId, infrastructure_type: p.kind,
+        status: "active", plan: "free", billing_status: "free", locale: p.locale, timezone: p.timezone,
+        metadata: { hosting_mode: p.hostingMode, created_via: "acquisition" },
+      }).select("id").single();
+      if (!error && data) return (data as any).id as string;
+      const code = (error as { code?: string } | null)?.code;
+      const msg = String((error as { message?: string } | null)?.message || "").toLowerCase();
+      if (code === "23505" || /duplicate|unique|already exists/.test(msg)) continue; // slug pris → suffixe
+      throw new BadRequestException(`Création du tenant échouée: ${(error as { message?: string } | null)?.message ?? "inconnue"}`);
+    }
+    throw new BadRequestException("Impossible de générer un slug unique (5 tentatives).");
+  }
+
+  /**
+   * LE CHAÎNON : crée/active un tenant à partir d'un ACHAT abouti.
+   * intent='new_tenant' → crée user+tenant+membership+moteurs+abo actif.
+   * intent='existing'   → rattache l'achat à un tenant dont l'user est owner (anti-hijack).
+   * Idempotent : si providerRef a déjà produit un abo, ressort tel quel sans rien recréer.
+   * ⚠️ Idempotence forte (dédup event.id atomique) = responsabilité de l'appelant webhook (P4).
+   */
+  async createTenantFromPurchase(p: {
+    email: string;
+    orgName?: string;
+    slug?: string;
+    planKey: string;
+    offerTier?: string;
+    intent?: "new_tenant" | "existing";
+    existingTenantId?: string;
+    providerRef?: string;
+    stripeSubscriptionId?: string;
+    stripeCustomerId?: string;
+    firstName?: string;
+    lastName?: string;
+    locale?: string;
+    timezone?: string;
+  }): Promise<{ tenantId: string; userId: string; subscriptionId: string | null; created: boolean }> {
+    const sb = this.supabase;
+    const email = String(p.email || "").trim().toLowerCase();
+    if (!email) throw new BadRequestException("email requis pour provisionner l'achat");
+    if (!p.planKey) throw new BadRequestException("planKey requis");
+
+    // 0) IDEMPOTENCE (best-effort) : ce paiement a-t-il déjà provisionné un abo ?
+    if (p.providerRef) {
+      const { data: seen } = await sb.from("billing_subscriptions")
+        .select("id, tenant_id, user_id").eq("provider_checkout_id", p.providerRef).maybeSingle();
+      if ((seen as any)?.tenant_id) {
+        return { tenantId: (seen as any).tenant_id, userId: (seen as any).user_id, subscriptionId: (seen as any).id, created: false };
+      }
+    }
+
+    // 1) Plan (cycle + catégorie→kind + offre + prix pour l'abo)
+    const { data: plan } = await sb.from("billing_plans")
+      .select("key, billing_cycle, category, offer_tier, price_cents, currency").eq("key", p.planKey).maybeSingle();
+    if (!plan) throw new NotFoundException(`Plan « ${p.planKey} » introuvable`);
+    // offer_tier = STRICTEMENT le plan (jamais l'appelant → branding lié au payé).
+    const offerTier = String((plan as any).offer_tier ?? "hosted").toLowerCase();
+    const kind = BillingService.categoryToKind((plan as any).category);
+    const hostingMode = BillingService.hostingModeForOffer(offerTier);
+
+    // 2) USER par email (sans password) — isNew pilote l'email « définir mot de passe ».
+    const { id: userId, isNew: userIsNew } = await this.provisionUserByEmail(email, p.firstName, p.lastName);
+
+    // 3) TENANT — rattacher (existing, owner requis) ou créer (new)
+    let tenantId: string;
+    let created = false;
+    if (p.intent === "existing" && p.existingTenantId) {
+      const { data: t } = await sb.from("tenants").select("id, owner_user_id").eq("id", p.existingTenantId).maybeSingle();
+      if (!t) throw new NotFoundException("Tenant cible introuvable");
+      const { data: mem } = await sb.from("tenant_memberships")
+        .select("role").eq("tenant_id", p.existingTenantId).eq("user_id", userId).maybeSingle();
+      const owner = (t as any).owner_user_id === userId || ["owner", "admin"].includes(String((mem as any)?.role || ""));
+      if (!owner) throw new BadRequestException("Rattachement refusé : vous n'êtes pas propriétaire de ce tenant");
+      tenantId = (t as any).id as string;
+    } else {
+      const baseSlug = BillingService.slugify(p.slug || p.orgName || email.split("@")[0]);
+      tenantId = await this.insertTenantForPurchase({
+        name: p.orgName || baseSlug, baseSlug, ownerUserId: userId, kind, hostingMode,
+        locale: p.locale ?? "fr", timezone: p.timezone ?? "Europe/Paris",
+      });
+      created = true;
+    }
+
+    // 4) Membership owner (idempotent)
+    await sb.from("tenant_memberships").upsert(
+      { tenant_id: tenantId, user_id: userId, role: "owner", status: "active" },
+      { onConflict: "tenant_id,user_id" },
+    );
+
+    // 5) PROVISIONING des moteurs (fail-safe : n'échoue jamais l'activation)
+    await this.provisionPlanServices(tenantId, p.planKey);
+
+    // 6) Abonnement actif, durée = cycle, LIÉ au subscription Stripe (sinon les
+    //    renouvellements/annulations Stripe n'atteignent jamais cet abo → accès figé).
+    const start = new Date();
+    const end = BillingService.addCycle(start, String((plan as any).billing_cycle));
+    const { data: sub, error: subErr } = await sb.from("billing_subscriptions").insert({
+      tenant_id: tenantId, user_id: userId, plan_id: p.planKey, status: "active",
+      provider: "stripe",
+      provider_checkout_id: p.providerRef ?? null,
+      provider_subscription_id: p.stripeSubscriptionId ?? null,
+      provider_customer_id: p.stripeCustomerId ?? null,
+      amount_cents: Number((plan as any).price_cents ?? 0),
+      currency: String((plan as any).currency ?? "EUR"),
+      current_period_start: start.toISOString(), current_period_end: end.toISOString(),
+      metadata: { offer_tier: offerTier, acquisition: true },
+    }).select("id").maybeSingle();
+    // FATAL : sans abo, le tenant est provisionné mais vu comme NON payé (gating) et
+    // l'idempotence (providerRef) est annulée → double tenant au rejeu. On lève, et si
+    // le tenant venait d'être CRÉÉ on nettoie l'orphelin (best-effort) pour qu'un retry
+    // Stripe reparte propre (sinon collision de slug → tenant en double).
+    if (subErr) {
+      if (created) {
+        await sb.from("tenant_services").delete().eq("tenant_id", tenantId);
+        await sb.from("tenant_memberships").delete().eq("tenant_id", tenantId);
+        await sb.from("tenants").delete().eq("id", tenantId);
+      }
+      throw new InternalServerErrorException(`Abonnement d'acquisition non enregistré: ${subErr.message}`);
+    }
+    // L'abo payé remplace tout autre abo actif (essai) — parité avec les autres flux.
+    await this.supersedeOtherActiveSubscriptions(tenantId, (sub as any)?.id);
+
+    // 7) EMAIL D'ACCÈS — tient la promesse de la page de succès (« vous recevez un email »).
+    //    Uniquement sur création d'un espace (acquisition) ; fail-safe (n'échoue pas l'achat).
+    if (created && p.intent !== "existing") {
+      await this.sendAcquisitionWelcome(tenantId, email, p.orgName || "", userIsNew);
+    }
+
+    this.logger.log(`[acquisition] tenant ${created ? "créé" : "rattaché"} ${tenantId} (plan=${p.planKey}, offre=${offerTier}, kind=${kind}) pour ${email}`);
+    return { tenantId, userId, subscriptionId: (sub as any)?.id ?? null, created };
+  }
+
+  /**
+   * P2 — ENTRÉE ACQUISITION (carte) : un PROSPECT sans tenant démarre un achat.
+   * Crée une Stripe Checkout Session PORTANT l'intention (offre + org) en metadata,
+   * que le webhook (onCheckoutCompleted) lira pour appeler createTenantFromPurchase.
+   * Prix depuis billing_plans (jamais du client). Route publique (pas de tenant requis).
+   */
+  async createAcquisitionCheckout(dto: {
+    email?: string;
+    planKey?: string;
+    offerTier?: string;
+    intent?: "new_tenant" | "existing";
+    orgName?: string;
+    slug?: string;
+    existingTenantId?: string;
+  }): Promise<{ url: string }> {
+    const auth = this.stripeAuth();
+    const sb = this.supabase;
+    const email = String(dto?.email || "").trim().toLowerCase();
+    if (!email || !/.+@.+\..+/.test(email)) throw new BadRequestException("Email valide requis");
+    if (!dto?.planKey) throw new BadRequestException("planKey requis");
+    const intent = dto.intent === "existing" ? "existing" : "new_tenant";
+    if (intent === "new_tenant" && !dto.orgName) throw new BadRequestException("Le nom de l'organisation est requis");
+    if (intent === "existing" && !dto.existingTenantId) throw new BadRequestException("existingTenantId requis pour rattacher");
+
+    const { data: plan } = await sb.from("billing_plans")
+      .select("key, stripe_price_id, label, price_cents, currency, billing_cycle, offer_tier, is_active, features")
+      .eq("key", dto.planKey).maybeSingle();
+    if (!plan || (plan as any).is_active === false) throw new NotFoundException("Offre inconnue ou inactive");
+    const priceId = (plan as any).stripe_price_id;
+    const amountCents = Number((plan as any).price_cents ?? 0);
+    if (!priceId && amountCents <= 0) throw new BadRequestException("Aucun prix carte configuré pour ce plan");
+    // Ne jamais encaisser un plan qui ne débloque AUCUN moteur (paiement sans produit).
+    if (!resolvePlanServices(dto.planKey, (plan as any).features).length) {
+      throw new BadRequestException("Ce plan n'active aucun produit — souscription bloquée");
+    }
+    // offer_tier = STRICTEMENT le plan (jamais dto.offerTier → sinon branding découplé du payé).
+    const offerTier = String((plan as any).offer_tier ?? "hosted").toLowerCase();
+
+    const frontend = process.env.FRONTEND_URL || "https://app.cimolace.space";
+    const params = new URLSearchParams();
+    params.append("mode", "subscription");
+    if (priceId) {
+      params.append("line_items[0][price]", priceId);
+    } else {
+      const currency = String((plan as any).currency ?? "EUR").toLowerCase();
+      const { interval, count } = BillingService.cycleToStripeInterval((plan as any).billing_cycle);
+      params.append("line_items[0][price_data][currency]", currency);
+      params.append("line_items[0][price_data][unit_amount]", String(amountCents));
+      params.append("line_items[0][price_data][recurring][interval]", interval);
+      params.append("line_items[0][price_data][recurring][interval_count]", String(count));
+      params.append("line_items[0][price_data][product_data][name]", String((plan as any).label ?? dto.planKey));
+    }
+    params.append("line_items[0][quantity]", "1");
+    params.append("success_url", `${frontend}/creer-organisation/succes?session_id={CHECKOUT_SESSION_ID}`);
+    params.append("cancel_url", `${frontend}/creer-organisation?annule=1`);
+    params.append("customer_email", email);
+    // Intention d'ACQUISITION — lue par le webhook (createTenantFromPurchase).
+    params.append("metadata[intent]", intent);
+    params.append("metadata[plan_key]", dto.planKey);
+    params.append("metadata[offer_tier]", offerTier);
+    params.append("metadata[org_email]", email);
+    if (dto.orgName) params.append("metadata[org_name]", dto.orgName);
+    if (dto.slug) params.append("metadata[org_slug]", dto.slug);
+    if (dto.existingTenantId) params.append("metadata[existing_tenant_id]", dto.existingTenantId);
+    // Miroir sur l'abonnement Stripe (metadata persistée pour les renouvellements).
+    params.append("subscription_data[metadata][intent]", intent);
+    params.append("subscription_data[metadata][plan_key]", dto.planKey);
+    params.append("subscription_data[metadata][offer_tier]", offerTier);
+
+    const res = await fetch("https://api.stripe.com/v1/checkout/sessions", {
+      method: "POST",
+      headers: { Authorization: auth, "Content-Type": "application/x-www-form-urlencoded" },
+      body: params.toString(),
+    });
+    if (!res.ok) throw new BadRequestException(`Stripe checkout ${res.status}: ${await res.text()}`);
+    const s = (await res.json()) as { url?: string };
+    if (!s.url) throw new BadRequestException("Session Stripe créée sans URL");
+    return { url: s.url };
   }
 
   // ─── Retraits / versements mobile money (payouts PawaPay) ─────────────────
@@ -959,7 +1361,7 @@ export class BillingService implements OnApplicationBootstrap {
     try {
       switch (type) {
         case "checkout.session.completed":
-          await this.onCheckoutCompleted(obj);
+          await this.onCheckoutCompleted(obj, event.id);
           break;
         case "invoice.paid":
         case "invoice.payment_succeeded":
@@ -978,9 +1380,11 @@ export class BillingService implements OnApplicationBootstrap {
           return { received: true, ignored: type };
       }
     } catch (e) {
-      // Erreur applicative : on loggue et on ACK pour ne pas boucler ; à monitorer.
+      // On loggue ET on RE-LÈVE : Stripe doit RÉESSAYER un échec transitoire (sinon un
+      // paiement encaissé peut être perdu sans provisioning — cf. revue chaînon). Stripe
+      // abandonne après ~3 j (pas de boucle infinie) ; l'événement reste visible côté Stripe.
       console.error(`[billing webhook] échec traitement ${type}:`, (e as Error).message);
-      return { received: true, type, error: (e as Error).message };
+      throw e;
     }
     return { received: true, type };
   }
@@ -1038,6 +1442,11 @@ export class BillingService implements OnApplicationBootstrap {
     return res.json();
   }
 
+  // RÉSILIATION §11 : politique unique (fin de période) = tenant-portal
+  // (POST /tenant-portal/subscriptions/:id/cancel + /reactivate). Le flag local
+  // metadata.cancel_at_period_end est respecté par renewDueSubscriptions (le cron saute
+  // les résiliés → l'abo expire à l'échéance). (Ancien doublon /billing/subscription/cancel retiré.)
+
   private unixToIso(unix?: number | null): string | null {
     return unix ? new Date(unix * 1000).toISOString() : null;
   }
@@ -1062,10 +1471,73 @@ export class BillingService implements OnApplicationBootstrap {
     }
   }
 
+  /**
+   * Dédup d'événements webhook (anti double-traitement au retry Stripe).
+   * INSERT dans billing_webhook_events (event_id PK) : true au 1er passage, false si
+   * déjà vu (23505). Fail-open sur erreur DB — l'idempotence best-effort de
+   * createTenantFromPurchase (providerRef) reste un 2e filet contre le double-tenant.
+   */
+  private async claimWebhookEvent(eventId: string): Promise<boolean> {
+    const { error } = await this.supabase.from("billing_webhook_events").insert({ event_id: eventId });
+    if (!error) return true;
+    if ((error as { code?: string }).code === "23505") return false;
+    this.logger.warn(`[webhook dedup] claim échec (${eventId}): ${error.message}`);
+    return true; // fail-open : mieux vaut retraiter (idempotent) que perdre l'événement
+  }
+
+  /** Relâche un claim d'événement (échec de traitement → permettre le retry Stripe). */
+  private async releaseWebhookEvent(eventId: string): Promise<void> {
+    try { await this.supabase.from("billing_webhook_events").delete().eq("event_id", eventId); }
+    catch (e) { this.logger.warn(`[webhook dedup] release échec (${eventId}): ${(e as Error).message}`); }
+  }
+
   /** checkout.session.completed (mode subscription) → lie l'abo au sub Stripe + active. */
-  private async onCheckoutCompleted(session: any) {
+  private async onCheckoutCompleted(session: any, eventId?: string) {
     if (session?.mode && session.mode !== "subscription") return; // ignore le setup one-off
     const sb = this.supabase;
+
+    // ── P4 — ACQUISITION : un checkout portant une INTENTION org CRÉE le tenant.
+    // Sans ça, un prospect sans sub préexistante tombait dans un UPDATE 0-ligne
+    // SILENCIEUX (payé, rien provisionné). Dédup event.id = anti double-tenant au retry.
+    const meta = session?.metadata ?? {};
+    if (meta.intent === "new_tenant" || meta.intent === "existing") {
+      // Dédup atomique (event_id) AVANT le travail : empêche 2 livraisons concurrentes
+      // de créer 2 tenants. Sur échec, on RELÂCHE le claim + on RE-LÈVE (retry Stripe).
+      if (eventId && !(await this.claimWebhookEvent(eventId))) {
+        this.logger.log(`[acquisition] event ${eventId} déjà traité — ignoré`);
+        return;
+      }
+      // Ne provisionner QUE si le paiement est réellement abouti (async/impayé → non).
+      const paid = session.payment_status === "paid" || session.status === "complete";
+      if (!paid) {
+        this.logger.warn(`[acquisition] session ${session.id} non payée (payment_status=${session.payment_status}) — ignorée`);
+        if (eventId) await this.releaseWebhookEvent(eventId); // un futur 'completed' pourra retenter
+        return;
+      }
+      // Email AUTORITAIRE = celui vérifié par Stripe au paiement (pas la metadata client).
+      const email = session.customer_details?.email || session.customer_email || meta.org_email;
+      try {
+        await this.createTenantFromPurchase({
+          email,
+          orgName: meta.org_name,
+          slug: meta.org_slug,
+          planKey: meta.plan_key,
+          offerTier: meta.offer_tier,
+          intent: meta.intent,
+          existingTenantId: meta.existing_tenant_id || undefined,
+          providerRef: session.id,
+          stripeSubscriptionId: session.subscription || undefined,
+          stripeCustomerId: session.customer || undefined,
+        });
+      } catch (e) {
+        // Échec : libérer le claim + RE-LEVER → non-2xx → Stripe rejoue (l'orchestrateur
+        // est idempotent sur providerRef). Sinon paiement encaissé, perdu sans rejeu.
+        if (eventId) await this.releaseWebhookEvent(eventId);
+        throw e;
+      }
+      return;
+    }
+
     const rowId = session.client_reference_id || session?.metadata?.subscription_id || null;
     const stripeSubId = session.subscription || null;
     const sub = stripeSubId ? await this.fetchStripeSubscription(stripeSubId) : null;
@@ -1083,7 +1555,18 @@ export class BillingService implements OnApplicationBootstrap {
 
     const matchCol = rowId ? "id" : "provider_checkout_id";
     const matchVal = rowId || session.id;
-    await sb.from("billing_subscriptions").update(patch).eq(matchCol, matchVal);
+    const { data: updatedRows, error: updErr } = await sb.from("billing_subscriptions").update(patch).eq(matchCol, matchVal).select("id");
+    if (updErr) {
+      // Erreur DB réelle (≠ 0 ligne légitime) : re-lever → retry Stripe.
+      this.logger.error(`[billing webhook] échec UPDATE abo (session=${session.id}): ${updErr.message}`);
+      throw new InternalServerErrorException(updErr.message);
+    }
+    if (!updatedRows || updatedRows.length === 0) {
+      // Fix du DROP SILENCIEUX : un UPDATE PostgREST sans ligne correspondante ne lève
+      // rien. On loggue au lieu de laisser un paiement encaissé sans provisioning ni trace.
+      this.logger.warn(`[billing webhook] checkout.session.completed sans abonnement correspondant (session=${session.id}, ref=${rowId ?? "∅"}) — aucun provisioning`);
+      return;
+    }
     if (rowId) {
       await sb
         .from("billing_invoices")

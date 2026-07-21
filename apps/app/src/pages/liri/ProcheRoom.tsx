@@ -61,6 +61,10 @@ export default function ProcheRoom() {
   const [err, setErr] = useState<string | null>(null);
   const [conn, setConn] = useState<{ url: string; token: string } | null>(null);
   const [joining, setJoining] = useState(false);
+  // « waiting » = le patient a consenti mais le praticien n'a pas encore DÉMARRÉ la
+  // consultation (RDV à venir / hôte pas encore dans la salle) → salle d'attente
+  // qui se (re)connecte automatiquement, au lieu d'une erreur bloquante.
+  const [waiting, setWaiting] = useState(false);
   // Green room : l'invité choisit caméra/micro AVANT de rejoindre.
   const [joinWithCam, setJoinWithCam] = useState(true);
   const [joinWithMic, setJoinWithMic] = useState(true);
@@ -153,8 +157,15 @@ export default function ProcheRoom() {
     try {
       const r = await getProcheToken(inviteId);
       setConn({ url: r.url, token: r.token });
+      setWaiting(false);
     } catch (e: any) {
-      setErr(e?.message || 'Impossible de rejoindre');
+      if (e?.notStarted) {
+        // Le praticien n'a pas encore démarré la consultation → on patiente et on
+        // réessaie automatiquement (voir l'effet de retry). PAS d'erreur bloquante.
+        setWaiting(true);
+      } else {
+        setErr(e?.message || 'Impossible de rejoindre');
+      }
     } finally {
       setJoining(false);
     }
@@ -165,14 +176,30 @@ export default function ProcheRoom() {
   // connecte mais reste seul dans un autre panneau ». Le clic « Demander à
   // rejoindre » de l'écran précédent (même document SPA) fournit l'activation
   // utilisateur nécessaire à l'autoplay audio. Le bouton reste dispo en repli.
-  const autoJoinedRef = useRef(false);
+  // Auto-rejoint dès l'accès accordé, PUIS réessaie toutes les 5 s tant que le
+  // praticien n'a pas démarré la consultation → l'invité reste sur l'écran d'attente
+  // et se connecte tout seul au démarrage (plus de dead-end « Accès indisponible »).
+  const inFlightRef = useRef(false);
   useEffect(() => {
-    if (ready && !conn && !joining && !err && !autoJoinedRef.current) {
-      autoJoinedRef.current = true;
-      void join({ auto: true });
-    }
+    if (!ready || conn || err) return undefined;
+    let alive = true;
+    const attempt = async () => {
+      if (!alive || conn || inFlightRef.current) return;
+      inFlightRef.current = true;
+      try {
+        await join({ auto: true });
+      } finally {
+        inFlightRef.current = false;
+      }
+    };
+    void attempt();
+    const t = setInterval(() => void attempt(), 5000);
+    return () => {
+      alive = false;
+      clearInterval(t);
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [ready, conn, joining, err]);
+  }, [ready, conn, err]);
 
   if (conn && sessionId) {
     return <ProcheLiveRoom url={conn.url} token={conn.token} sessionId={sessionId} inviteId={inviteId} clinic={status?.clinic_name} initialCam={joinWithCam} initialMic={joinWithMic} />;
@@ -207,6 +234,8 @@ export default function ProcheRoom() {
             <Gate tone="error" title="Accès refusé" text="Le patient n'a pas autorisé votre participation à la consultation." />
           ) : status.status === 'revoked' ? (
             <Gate tone="error" title="Invitation révoquée" text="Cette invitation n'est plus valable." />
+          ) : waiting ? (
+            <Gate spinner title="La consultation va bientôt commencer" text={`${guestName ? `${guestName}, le` : 'Le'} praticien n'a pas encore démarré la consultation. Cette page vous connectera automatiquement dès qu'elle démarre — vous pouvez laisser cet onglet ouvert.`} />
           ) : ready ? (
             <div>
               <p style={{ margin: '0 0 3px', fontSize: 13, color: GOLD, fontWeight: 600 }}>

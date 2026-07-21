@@ -1,5 +1,5 @@
 /*!
- * Cimolace SDK universel — v0.1.0
+ * Cimolace SDK universel — v0.2.0
  * Embarque N'IMPORTE QUEL moteur Cimolace (LIRI live, MEDOS, mbolo…) dans
  * N'IMPORTE QUEL site, via une seule API : `Cimolace.mount({ engine, ... })`.
  *
@@ -11,6 +11,11 @@
  * Framework-agnostique (UMD/ESM). Aucune dépendance. Fonctionne par :
  *   1. Script tag + data-attributs  (auto-mount)
  *   2. Appel programmatique          Cimolace.mount({...})
+ *
+ * Certains moteurs sont ASYNC : ils mintent d'abord un jeton court côté serveur
+ * avant de connaître l'URL finale de l'iframe (ex. LIRI live → POST
+ * /lives/embed/token qui renvoie une iframe_url signée `…?et=…`). `mount()`
+ * gère les deux cas (sync/async) de façon transparente.
  *
  * ⚠️ Sécurité : une clé API (`cml_…`) ne doit JAMAIS être exposée dans un site
  * public. Pour les modes identifiés (patient précis, panier serveur…), passez
@@ -29,21 +34,38 @@
   var MED_BASE = 'https://med.cimolace.space';
 
   /**
-   * Registre des moteurs : chaque entrée sait construire l'URL de l'iframe et,
-   * pour les modes anonymes, quel endpoint émet le token court. `originOf`
-   * renvoie l'origine attendue de l'iframe → base du contrôle postMessage.
+   * Registre des moteurs. Un moteur expose SOIT :
+   *   - `iframeUrl(o, bases)` → string  : URL directe, connue côté client (sync) ;
+   *   - `resolveSrc(o, bases)` → Promise<string> : URL obtenue après un appel
+   *     serveur (mint d'un jeton court). `mount()` affiche l'iframe une fois
+   *     résolue, et vérifie le postMessage contre l'origine RÉELLE de cette URL.
    */
   var ENGINES = {
     liri: {
       label: 'LIRI Live',
       status: 'ready', // routes /embed/live/:id et /embed/studio déployées
-      // /embed/live/:id sur l'app (le hôte fournit liveId).
-      iframeUrl: function (o, bases) {
-        var id = required(o, 'liveId');
-        var q = query({ tenant: o.tenant, mode: o.mode, theme: o.theme });
-        return join(bases.appBase, '/embed/live/' + encodeURIComponent(id)) + q;
+      // LIRI live exige un embed-token court (JWT 30 min) minté par
+      // POST /lives/embed/token (Origin vérifié contre tenant_domains). On
+      // récupère l'iframe_url PRÊTE (`…/embed/live/:id?et=…&tenant=…`) telle
+      // que renvoyée par l'API — jamais reconstruite à la main, sinon la page
+      // /embed/live reste bloquée sur le spinner (paramètre `et=` manquant).
+      resolveSrc: function (o, bases) {
+        var tenant = required(o, 'tenant');
+        var session = required(o, 'liveId');
+        // Le flux public (Origin) n'autorise que viewer|co_host (jamais host :
+        // pour héberger, passer par le flux clé API côté serveur).
+        var role = (o.role === 'co_host' || o.mode === 'co_host') ? 'co_host' : 'viewer';
+        return postJson(join(bases.apiBase, '/lives/embed/token'), {
+          tenant: tenant,
+          session: session,
+          role: role,
+        }).then(function (res) {
+          var data = res && res.data ? res.data : res;
+          var url = data && data.iframe_url;
+          if (!url) throw new Error('iframe_url manquant dans la réponse embed-token');
+          return url;
+        });
       },
-      originOf: function (bases) { return origin(bases.appBase); },
     },
     medos: {
       label: 'MEDOS',
@@ -56,7 +78,6 @@
         var code = required(o, 'token');
         return join(bases.medBase, '/handoff') + query({ code: code, next: o.next || undefined });
       },
-      originOf: function (bases) { return origin(bases.medBase); },
     },
     mbolo: {
       label: 'mbolo storefront',
@@ -67,7 +88,6 @@
         var q = query({ tenant: required(o, 'tenant'), category: o.category || undefined, theme: o.theme });
         return join(bases.appBase, '/embed/boutique') + q;
       },
-      originOf: function (bases) { return origin(bases.appBase); },
     },
   };
 
@@ -86,6 +106,20 @@
       }
     }
     return parts.length ? '?' + parts.join('&') : '';
+  }
+  // POST JSON minimal (aucune clé exposée : le endpoint embed vérifie l'Origin).
+  function postJson(url, body) {
+    return fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body || {}),
+      credentials: 'omit',
+    }).then(function (res) {
+      return res.json().catch(function () { return {}; }).then(function (data) {
+        if (!res.ok) throw new Error((data && (data.message || data.error)) || ('Erreur ' + res.status));
+        return data;
+      });
+    });
   }
   function resolveContainer(c) {
     if (!c) throw new Error('[Cimolace SDK] container requis');
@@ -128,11 +162,12 @@
       return { iframe: null, post: function () {}, unmount: function () { if (ph.parentNode) ph.parentNode.removeChild(ph); } };
     }
 
-    var src = engine.iframeUrl(opts, bases);
-    var expectedOrigin = engine.originOf(bases);
+    // Origine attendue du postMessage : verrouillée sur l'URL RÉELLE de l'iframe
+    // une fois celle-ci connue (sync ou après résolution async). Tant qu'elle est
+    // nulle, aucun message n'est accepté (l'iframe n'a de toute façon pas de src).
+    var expectedOrigin = null;
 
     var iframe = document.createElement('iframe');
-    iframe.src = src;
     iframe.title = engine.label;
     iframe.setAttribute('allow', 'camera; microphone; autoplay; clipboard-write; fullscreen; picture-in-picture');
     iframe.style.width = '100%';
@@ -141,12 +176,46 @@
     iframe.style.height = (opts.height ? opts.height : 640) + 'px';
     container.appendChild(iframe);
 
+    function applySrc(src) {
+      expectedOrigin = origin(src);
+      iframe.src = src;
+    }
+
+    if (typeof engine.resolveSrc === 'function') {
+      // Moteur ASYNC : mint côté serveur (ex. LIRI embed-token) puis iframe.
+      iframe.setAttribute('data-cimolace-loading', engineKey);
+      Promise.resolve()
+        .then(function () { return engine.resolveSrc(opts, bases); })
+        .then(function (src) {
+          iframe.removeAttribute('data-cimolace-loading');
+          applySrc(src);
+        })
+        .catch(function (err) {
+          var msg = err && err.message ? err.message : String(err);
+          if (typeof console !== 'undefined' && console.error) {
+            console.error('[Cimolace SDK] moteur « ' + engineKey + ' » : ' + msg);
+          }
+          // Remplace l'iframe par un message d'erreur lisible (pas d'iframe cassée).
+          var errBox = document.createElement('div');
+          errBox.setAttribute('data-cimolace-error', engineKey);
+          errBox.style.cssText = 'padding:24px;border:1px solid rgba(220,80,80,.35);border-radius:12px;font:14px/1.5 system-ui,sans-serif;color:#c0392b;text-align:center';
+          errBox.textContent = engine.label + ' — ' + msg;
+          if (iframe.parentNode) iframe.parentNode.replaceChild(errBox, iframe);
+          if (typeof opts.onEvent === 'function') {
+            try { opts.onEvent({ source: 'cimolace', type: 'error', message: msg }); } catch (e) { /* no-op */ }
+          }
+        });
+    } else {
+      // Moteur SYNC (MEDOS handoff, mbolo boutique) : URL construite directement.
+      applySrc(engine.iframeUrl(opts, bases));
+    }
+
     // postMessage SÉCURISÉ : on N'accepte QUE les messages provenant de
     // l'origine attendue de l'iframe (fin du '*' non filtré). Protocole minimal :
     // { source:'cimolace', type:'resize'|'ready'|'event', height?, payload? }.
     function onMessage(ev) {
-      if (ev.origin !== expectedOrigin) return;         // origine non fiable → ignore
-      if (ev.source !== iframe.contentWindow) return;    // pas notre iframe → ignore
+      if (!expectedOrigin || ev.origin !== expectedOrigin) return; // origine non fiable → ignore
+      if (ev.source !== iframe.contentWindow) return;              // pas notre iframe → ignore
       var d = ev.data;
       if (!d || d.source !== 'cimolace') return;
       if (d.type === 'resize' && typeof d.height === 'number' && d.height > 0) {
@@ -160,7 +229,7 @@
 
     // API vers l'iframe : toujours ciblée sur l'origine attendue (jamais '*').
     function post(type, payload) {
-      if (iframe.contentWindow) {
+      if (iframe.contentWindow && expectedOrigin) {
         iframe.contentWindow.postMessage({ source: 'cimolace-host', type: type, payload: payload }, expectedOrigin);
       }
     }
@@ -188,11 +257,15 @@
           tenant: el.getAttribute('data-tenant') || undefined,
           liveId: el.getAttribute('data-live-id') || undefined,
           mode: el.getAttribute('data-mode') || undefined,
+          role: el.getAttribute('data-role') || undefined,
           token: el.getAttribute('data-token') || undefined,
           theme: el.getAttribute('data-theme') || undefined,
+          category: el.getAttribute('data-category') || undefined,
+          next: el.getAttribute('data-next') || undefined,
           height: el.getAttribute('data-height') ? Number(el.getAttribute('data-height')) : undefined,
           apiBase: el.getAttribute('data-api-base') || undefined,
           appBase: el.getAttribute('data-app-base') || undefined,
+          medBase: el.getAttribute('data-med-base') || undefined,
         });
         el.setAttribute('data-cimolace-mounted', '1');
       } catch (e) {
@@ -210,11 +283,11 @@
   }
 
   return {
-    version: '0.1.0',
+    version: '0.2.0',
     engines: Object.keys(ENGINES),
     mount: mount,
     autoMount: autoMount,
     // exposé pour tests/extension
-    _internals: { ENGINES: ENGINES, query: query, origin: origin, join: join },
+    _internals: { ENGINES: ENGINES, query: query, origin: origin, join: join, postJson: postJson },
   };
 });

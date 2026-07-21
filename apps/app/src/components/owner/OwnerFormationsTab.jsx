@@ -94,9 +94,12 @@ const OwnerFormationsTab = () => {
         params.delete('editFormationId');
         params.set('tab', 'formations');
         const next = params.toString();
-        navigate(`/owner-dashboard${next ? `?${next}` : ''}`, { replace: true });
+        // Reste sur la route COURANTE (ex. /liri/ecole), pas le chemin pré-migration
+        // '/owner-dashboard' codé en dur : sinon la redirection legacy démonte/remonte
+        // toute la coque LIRI (flash) et jette l'éditeur qu'on vient d'ouvrir.
+        navigate(`${location.pathname}${next ? `?${next}` : ''}`, { replace: true });
       } catch {
-        navigate('/owner-dashboard?tab=formations', { replace: true });
+        navigate(`${location.pathname}?tab=formations`, { replace: true });
       }
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps

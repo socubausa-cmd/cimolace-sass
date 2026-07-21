@@ -1168,6 +1168,12 @@ export class TeleconsultService implements OnModuleInit {
       .update({ status: 'ended', ended_at: now })
       .eq('id', sessionId);
 
+    // ENREGISTREMENT : si un egress tournait encore, on l'ARRÊTE avant de fermer
+    // la room (LiveKit finalise le MP4 → R2 tant que la room existe). Best-effort :
+    // ne bloque jamais la fin de séance. Le webhook egress_ended marquera la
+    // ligne live_recordings 'completed' + output_url → replay disponible.
+    await this.liri.stopRecording(tenant.id, sessionId).catch(() => {});
+
     // FERMETURE de la room LiveKit : sinon les tokens patient/proche restent
     // valides ~2 h et la room ne s'éteint qu'à `emptyTimeout`. On la ferme ici
     // (comme le sweep) → expulsion serveur immédiate. Best-effort.
@@ -1200,6 +1206,79 @@ export class TeleconsultService implements OnModuleInit {
     }
 
     return data;
+  }
+
+  // ─── Enregistrement vidéo de la séance (replay praticien + patient) ─────────
+
+  /**
+   * HÔTE : démarre l'enregistrement vidéo de la téléconsultation. Réutilise
+   * l'egress du moteur live sur la MÊME room (le miroir live_sessions
+   * kind='teleconsult' partage l'id → scopedRoomName(slug, id)). RGPD : le
+   * patient voit la pastille « ● Enregistrement » (diffusée par l'hôte sur le
+   * canal cockpit). Renvoie recording_active=false si l'egress R2 n'est pas
+   * configuré (dégradation silencieuse, ne casse pas la séance).
+   */
+  async startRecording(
+    tenant: TenantContext,
+    hostId: string,
+    sessionId: string,
+  ) {
+    const session = await this.loadSession(tenant.id, sessionId);
+    // Garantit la ligne miroir live_sessions : l'egress vise
+    // scopedRoomName(slug, id) et LiveService.findOne exige cette ligne. Créée
+    // normalement à la prise de token hôte ; on la (ré)assure ici (idempotent).
+    await this.ensureImmersiveLiveSession(
+      tenant,
+      {
+        id: session.id,
+        patient_id: session.patient_id,
+        livekit_room_name: this.liri.roomNameFor(tenant.slug, sessionId),
+      },
+      hostId,
+    );
+    const res = await this.liri.startRecordingForTeleconsult(
+      tenant.id,
+      sessionId,
+    );
+    return { recording: res.recording_active, recording_active: res.recording_active };
+  }
+
+  /** HÔTE : arrête l'enregistrement en cours (finalise le MP4 → R2). */
+  async stopRecording(tenant: TenantContext, sessionId: string) {
+    await this.loadSession(tenant.id, sessionId);
+    const res = await this.liri.stopRecording(tenant.id, sessionId);
+    return { recording: false, recording_active: false, stopped: res.stopped };
+  }
+
+  /**
+   * HÔTE (praticien/owner/clinic_admin) OU PATIENT-PROPRIÉTAIRE : état de
+   * l'enregistrement +, si un replay est prêt, une URL de lecture présignée
+   * fraîche (R2, TTL court). Sert (1) à l'indicateur REC pendant la séance et
+   * (2) au replay après la séance — dossier RDV (praticien) et portail (patient).
+   */
+  async getRecording(
+    tenant: TenantContext,
+    actorId: string,
+    actorRole: TenantContext['userRole'],
+    sessionId: string,
+  ) {
+    const session = await this.loadSession(tenant.id, sessionId);
+    if (actorRole === 'patient') {
+      await this.assertPatientOwnsSession(session, actorId);
+    }
+    const state = await this.liri.getTeleconsultRecordingState(sessionId);
+    let playback_url: string | null = null;
+    if (state.hasReplay) {
+      playback_url = await this.liri.resolveTeleconsultReplayUrl(sessionId);
+    }
+    return {
+      recording: state.recording,
+      has_replay: state.hasReplay,
+      playback_url,
+      started_at: state.startedAt,
+      completed_at: state.completedAt,
+      duration_seconds: state.durationSeconds,
+    };
   }
 
   async list(tenant: TenantContext, filters: { patient_id?: string } = {}) {

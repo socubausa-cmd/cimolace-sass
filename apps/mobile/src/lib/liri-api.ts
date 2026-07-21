@@ -545,11 +545,84 @@ export interface CurriculumResult {
   lessons: number;
 }
 
+const relUuid = (): string =>
+  'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => {
+    const r = (Math.random() * 16) | 0;
+    return (c === 'x' ? r : (r & 0x3) | 0x8).toString(16);
+  });
+
+const inferVideoType = (url?: string): string => {
+  const u = String(url ?? '').trim();
+  if (!u) return 'custom_url';
+  if (/youtu\.be|youtube\.com/i.test(u)) return 'youtube';
+  if (/vimeo\.com/i.test(u)) return 'vimeo';
+  return 'custom_url';
+};
+
+const relToHtml = (s?: string): string => {
+  const t = String(s ?? '').trim();
+  if (!t) return '';
+  return t.split(/\n{2,}/).map((p) => `<p>${p.replace(/\n/g, '<br/>')}</p>`).join('');
+};
+
 /**
- * Publie une formation COMPLÈTE : crée le cours, puis chaque chapitre, puis
- * chaque leçon (séquentiel pour respecter l'ordre). Les leçons de type 'quiz'
- * encodent leurs questions dans `content` (préfixe [QUIZ]). Renvoie le compte
- * créé, ou null si la création du cours échoue.
+ * Écrit la structure d'un cours dans les VRAIES tables relationnelles
+ * (modules → formation_weeks → formation_days → formation_day_contents), la MÊME cible que le web
+ * (`saveStructure`/`usePublishToClassroom`). Un DraftModule → un module (+ 1 semaine) ; une DraftLesson
+ * → un jour + un content (vidéo | support). Ainsi un cours créé sur mobile est visible dans l'OS web
+ * `/liri/formations` ET dans le lecteur natif — contrairement à l'ancien chemin course_modules/course_lessons.
+ */
+async function saveFormationStructureNative(
+  courseId: string,
+  modules: DraftModule[],
+): Promise<{ modules: number; lessons: number }> {
+  const modulesInsert: Record<string, unknown>[] = [];
+  const weeksInsert: Record<string, unknown>[] = [];
+  const daysInsert: Record<string, unknown>[] = [];
+  const contentsInsert: Record<string, unknown>[] = [];
+  let modCount = 0;
+  let lessonCount = 0;
+
+  modules.forEach((m, mi) => {
+    if (!m.title.trim()) return;
+    const moduleId = relUuid();
+    modulesInsert.push({ id: moduleId, formation_id: courseId, title: m.title.trim(), description: null, sort_order: mi, status: 'locked' });
+    modCount++;
+    const weekId = relUuid();
+    weeksInsert.push({ id: weekId, module_id: moduleId, title: 'Semaine 1', sort_order: 0 });
+    m.lessons.forEach((l, li) => {
+      if (!l.title.trim()) return;
+      const dayId = relUuid();
+      daysInsert.push({ id: dayId, week_id: weekId, title: l.title.trim(), sort_order: li });
+      if (l.kind === 'video') {
+        contentsInsert.push({
+          id: relUuid(), day_id: dayId, type: 'video', sort_order: 0,
+          data: { url: String(l.videoUrl ?? '').trim(), type: inferVideoType(l.videoUrl), title: l.title.trim() },
+        });
+      } else {
+        // text & quiz → support (slide) : le contenu reste lisible dans l'OS web comme dans le natif.
+        const slideTitle = l.kind === 'quiz' ? `Quiz — ${l.title.trim()}` : l.title.trim();
+        contentsInsert.push({
+          id: relUuid(), day_id: dayId, type: 'powerpoint', sort_order: 0,
+          data: { type: 'slides', title: slideTitle, slides: [{ title: slideTitle, content: relToHtml(l.content) }] },
+        });
+      }
+      lessonCount++;
+    });
+  });
+
+  if (modulesInsert.length) { const { error } = await supabase.from('modules').insert(modulesInsert); if (error) throw new Error(error.message); }
+  if (weeksInsert.length) { const { error } = await supabase.from('formation_weeks').insert(weeksInsert); if (error) throw new Error(error.message); }
+  if (daysInsert.length) { const { error } = await supabase.from('formation_days').insert(daysInsert); if (error) throw new Error(error.message); }
+  if (contentsInsert.length) { const { error } = await supabase.from('formation_day_contents').insert(contentsInsert); if (error) throw new Error(error.message); }
+
+  return { modules: modCount, lessons: lessonCount };
+}
+
+/**
+ * Publie une formation COMPLÈTE : crée le cours (ligne `courses`), puis persiste la structure dans
+ * les VRAIES tables relationnelles via {@link saveFormationStructureNative} — visible dans l'OS web
+ * ET le lecteur natif. Renvoie le compte créé, ou null si la création du cours échoue.
  */
 export async function publishCurriculum(input: {
   title: string;
@@ -568,29 +641,9 @@ export async function publishCurriculum(input: {
   });
   if (!course?.id) return null;
 
-  let modCount = 0;
-  let lessonCount = 0;
-  for (let mi = 0; mi < input.modules.length; mi++) {
-    const m = input.modules[mi];
-    if (!m.title.trim()) continue;
-    input.onProgress?.(`Chapitre ${mi + 1}/${input.modules.length}…`);
-    const mod = await createModule(course.id, { title: m.title.trim(), orderIndex: mi });
-    if (!mod?.id) continue;
-    modCount++;
-    for (let li = 0; li < m.lessons.length; li++) {
-      const l = m.lessons[li];
-      if (!l.title.trim()) continue;
-      const content = l.kind === 'quiz' ? `[QUIZ] ${l.content ?? ''}` : l.content ?? '';
-      const created = await createLesson(mod.id, {
-        title: l.title.trim(),
-        content,
-        videoUrl: l.kind === 'video' ? l.videoUrl : undefined,
-        orderIndex: li,
-      });
-      if (created?.id) lessonCount++;
-    }
-  }
-  return { course, modules: modCount, lessons: lessonCount };
+  input.onProgress?.('Publication du programme…');
+  const { modules, lessons } = await saveFormationStructureNative(course.id, input.modules);
+  return { course, modules, lessons };
 }
 
 // ── Masterclass Factory (génération IA) ─────────────────────────────────────

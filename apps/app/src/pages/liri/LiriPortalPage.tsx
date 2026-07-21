@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   Menu, Sparkles, Bell, Settings, House, Video, MessagesSquare, MessageCircle, WandSparkles,
-  Library, Blocks, Settings2, Mic, ArrowUp, LogIn, CalendarPlus, PenTool,
+  Library, Settings2, Mic, ArrowUp, LogIn, CalendarPlus, PenTool,
   ShoppingBag, Clock, ChevronRight, Film, ChevronLeft, UserRound,
   Radio, GraduationCap, LogOut, ArrowUpRight, AlertTriangle, CalendarDays, Megaphone,
   BookOpen, CheckCircle2, CalendarClock,
@@ -15,7 +15,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { isCreatorRole } from '@/lib/liri/creatorRole';
 import { useSchoolActive } from '@/hooks/useSchoolActive';
 import { useUpcomingSchoolFeed } from '@/hooks/useUpcomingSchoolFeed';
-import { LiriRailGroups, getRailItems } from '@/components/liri/liriRail';
+import { LiriRailGroups, getRailItems, LiriEngineSwitcher } from '@/components/liri/liriRail';
 import activeTenantConfig from '@/lib/tenant/activeTenantConfig';
 import LiriUpgradeWall from '@/components/liri/LiriUpgradeWall';
 import '../LiriPortal.css';
@@ -274,7 +274,7 @@ export function LiriPortalPage() {
   const schoolActive = useSchoolActive() === true;
 
   // Items du rail (filtrés rôle + mode école) pour la barre de nav basse mobile (< md).
-  const mobileNavItems = getRailItems({ isCreator, schoolActive });
+  const mobileNavItems = getRailItems({ isCreator, schoolActive, engine: 'liri' });
 
   return (
     <div className="lp-root relative h-[100dvh] w-full overflow-hidden grid grid-rows-[56px_1fr_auto]">
@@ -294,6 +294,10 @@ export function LiriPortalPage() {
               : <img src="/lirilogo.png" alt="LIRI" className="h-9 w-9 object-contain" />}
             <span className="text-[17px] font-semibold tracking-tight">{PORTAL_BRAND}</span>
           </span>
+        </div>
+        {/* SÉLECTEUR DE MOTEUR — recharge le rail. Centré, comme sur les sous-pages (LiriPortalShell). */}
+        <div className="flex min-w-0 flex-1 items-center justify-center px-2">
+          <LiriEngineSwitcher activeEngine="liri" isCreator={isCreator} schoolActive={schoolActive} onNav={nav} />
         </div>
         <div className="flex items-center gap-1.5">
           <button className="relative grid h-8 w-8 place-items-center rounded-xl lp-muted lp-railbtn lp-tr" aria-label="Notifications"><Bell size={17} /><span className="absolute right-2 top-1.5 h-1.5 w-1.5 rounded-full" style={{ background: 'var(--coral)' }} /></button>
@@ -354,11 +358,10 @@ export function LiriPortalPage() {
 
         {/* RAIL — desktop uniquement (≥ md) */}
         <aside className="hidden min-h-0 flex-col items-center gap-0.5 overflow-y-auto lp-rail-bg border-r lp-line py-3 lp-rail-scroll md:flex">
-          <LiriRailGroups active="accueil" isCreator={isCreator} schoolActive={schoolActive} live={liveNow.length > 0} onNav={nav} />
+          <LiriRailGroups engine="liri" active="accueil" isCreator={isCreator} schoolActive={schoolActive} live={liveNow.length > 0} onNav={nav} />
           {isCreator && (
             <>
               <div className="my-1 h-px w-9" style={{ background: 'rgba(245,244,238,.08)' }} />
-              <button onClick={() => nav('/liri')} className="lp-nav flex w-[74px] flex-col items-center gap-0.5 rounded-2xl py-2 lp-tr"><span className="lp-ni grid h-6 w-6 place-items-center"><Blocks size={19} /></span><span className="lp-nl text-[9px] font-medium">Intégr.</span></button>
               <button onClick={() => nav('/liri/compte')} className="lp-nav flex w-[74px] flex-col items-center gap-0.5 rounded-2xl py-2 lp-tr"><span className="lp-ni grid h-6 w-6 place-items-center"><Settings2 size={19} /></span><span className="lp-nl text-[9px] font-medium">Réglages</span></button>
             </>
           )}

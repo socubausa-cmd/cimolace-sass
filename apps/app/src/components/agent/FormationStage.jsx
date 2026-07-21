@@ -7,6 +7,7 @@ import SketchRenderer from '@/components/school/course-builder/SketchRenderer';
 import { resolveAtelierVerdict } from '@/lib/precepteur/judgeAtelier';
 import { conformCourseSync } from '@/lib/precepteur/conformCourse';
 import { supabase } from '@/lib/supabaseCompat';
+import { useAuth } from '@/hooks/useAuth';
 
 /**
  * FormationStage — le SECTEUR « formation » du cerveau immersif Cimolace : Cimolace JOUE un cours
@@ -32,6 +33,13 @@ function sceneSpeech(sc) {
     case 'image_analogie': return String(sc.analogie || sc.narration || '');
     default: return String(sc.narration || sc.board_text || '');
   }
+}
+
+// Prénom d'affichage pour l'atelier NOMINATIF (jamais un email ; '' si inconnu → non nominatif).
+function firstNameOf(raw) {
+  const s = String(raw || '').trim();
+  if (!s || s.includes('@')) return '';
+  return s.split(/\s+/)[0];
 }
 
 // Mot-clé FORT d'une scène (style Sherpas) : terme surligné explicite, sinon terme entre «…».
@@ -89,7 +97,8 @@ function SherpasVoice({ text, keyword, live, typo }) {
   );
 }
 
-export default function FormationStage({ course }) {
+export default function FormationStage({ course, studentName }) {
+  const { user } = useAuth();
   const conformed = useMemo(() => (course ? conformCourseSync(course).course : null), [course]);
   const concepts = conformed?.concepts || [];
   const scenes = useMemo(() => (
@@ -105,7 +114,14 @@ export default function FormationStage({ course }) {
 
   const { presence, setPresence, message, speak, think, muted, setMuted, sPop, sChime } = useImmersiveVoice();
 
-  const [name, setName] = useState('');
+  // Prénom réel de l'élève → atelier NOMINATIF (cahier §4). Prop studentName si fournie, sinon
+  // session (user.name). '' si inconnu → l'atelier reste non nominatif (jamais cassé).
+  const [name, setName] = useState(() => (studentName ? String(studentName).trim() : ''));
+  useEffect(() => {
+    if (name) return;
+    const n = studentName ? String(studentName).trim() : firstNameOf(user?.name);
+    if (n) setName(n);
+  }, [studentName, user, name]);
   const [started, setStarted] = useState(false);
   const [done, setDone] = useState(false);
   const [idx, setIdx] = useState(0);

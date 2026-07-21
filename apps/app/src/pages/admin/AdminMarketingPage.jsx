@@ -25,6 +25,35 @@ import {
 } from 'lucide-react';
 import { resolveNetlifyApiUrl } from '@/lib/resolveNetlifyApiUrl';
 import { fetchTenantContext } from '@/lib/tenant/fetchTenantContext';
+import { getApiBaseUrl } from '@/lib/apiBase';
+import { authStore } from '@/lib/auth-store';
+import { crmApi } from '@/lib/api-v2';
+
+// ── Migration Netlify(mort sur Vercel) → API NestJS `/marketing/*` (2026-07-18) ──
+// Mappe chaque chemin legacy `/api/marketing/*` vers sa route NestJS réelle.
+// `method` (optionnel) surcharge le verbe (ex : update automation = PATCH côté Nest).
+const MARKETING_ROUTE_MAP = {
+  '/api/marketing/analytics':          { path: '/marketing/analytics' },
+  '/api/marketing/leads':              { path: '/marketing/leads' },
+  '/api/marketing/funnels':            { path: '/marketing/funnels' },
+  '/api/marketing/campaigns':          { path: '/marketing/campaigns' },
+  '/api/marketing/logs':               { path: '/marketing/logs' },
+  '/api/marketing/orchestrate':        { path: '/marketing/orchestrate' },
+  '/api/marketing/publish':            { path: '/marketing/publish' },
+  '/api/marketing/score/refresh':      { path: '/marketing/score-refresh' },
+  '/api/marketing/payment/recovery':   { path: '/marketing/payment-recovery' },
+  '/api/marketing/ai/suggest-message': { path: '/marketing/ai-suggest-message' },
+  '/api/marketing/campaign/create':    { path: '/marketing/campaigns', method: 'POST' },
+  '/api/marketing/campaign/start':     { path: '/marketing/campaigns/action', method: 'POST' },
+  '/api/marketing/funnel/create':      { path: '/marketing/funnels', method: 'POST' },
+  '/api/marketing/lead/capture':       { path: '/marketing/leads/capture', method: 'POST' },
+  '/api/marketing/automation/list':    { path: '/marketing/automations' },
+  '/api/marketing/automation/audit':   { path: '/marketing/automations/audit' },
+  '/api/marketing/automation/create':  { path: '/marketing/automations', method: 'POST' },
+  '/api/marketing/automation/update':  { path: '/marketing/automations', method: 'PATCH' },
+  '/api/marketing/automation/delete':  { path: '/marketing/automations/delete', method: 'POST' },
+  '/api/marketing/automation/run':     { path: '/marketing/automations/run', method: 'POST' },
+};
 
 const objectiveOptions = [
   { value: 'acquisition', label: 'Acquisition' },
@@ -117,6 +146,10 @@ export default function AdminMarketingPage() {
     []
   );
 
+  // Sync URL → onglet : UNIQUEMENT quand l'URL change (deep-link, bouton retour).
+  // ⚠️ NE PAS mettre `tab` dans les deps : sinon un clic (setTab) redéclenche cet
+  // effet, qui lit l'URL encore périmée et REVERT l'onglet → les onglets ne se
+  // cliquaient plus. L'autre sens (onglet → URL) est géré par l'effet suivant.
   useEffect(() => {
     const params = new URLSearchParams(location.search || '');
     const queryTab = String(params.get('tab') || '').toLowerCase();
@@ -124,7 +157,8 @@ export default function AdminMarketingPage() {
       skipNextTabNavigateRef.current = true;
       setTab(queryTab);
     }
-  }, [location.search, tab, validTabs]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [location.search, validTabs]);
 
   useEffect(() => {
     if (skipNextTabNavigateRef.current) {
@@ -134,13 +168,45 @@ export default function AdminMarketingPage() {
     const params = new URLSearchParams(location.search || '');
     if (params.get('tab') === tab) return;
     params.set('tab', tab);
-    navigate(`/admin/marketing?${params.toString()}`, { replace: true });
-  }, [location.search, navigate, tab]);
+    // Synchronise l'onglet sur la route COURANTE (ex. /liri/crm), pas sur un chemin
+    // codé en dur : `/admin/marketing` redirige vers /liri/crm en perdant le ?tab=,
+    // ce qui créait une boucle de redirection infinie (spinner permanent).
+    navigate(`${location.pathname}?${params.toString()}`, { replace: true });
+  }, [location.pathname, location.search, navigate, tab]);
 
   const authFetch = useCallback(async (url, options = {}) => {
     const { data: sessData } = await supabase.auth.getSession();
     const token = sessData?.session?.access_token;
     if (!token) throw new Error('Session invalide');
+
+    // Route les chemins marketing vers l'API NestJS (le backend Netlify est mort).
+    const [rawPath, rawQs = ''] = String(url).split('?');
+    const mapping = MARKETING_ROUTE_MAP[rawPath];
+    if (mapping) {
+      const slug = authStore.getTenantSlug();
+      // Le tenant passe par l'en-tête X-Tenant-Slug (TenantGuard), pas par ?tenant_slug=.
+      const qs = new URLSearchParams(rawQs);
+      qs.delete('tenant_slug');
+      const suffix = qs.toString() ? `?${qs.toString()}` : '';
+      const res = await fetch(`${getApiBaseUrl()}${mapping.path}${suffix}`, {
+        ...options,
+        method: mapping.method || options.method || 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+          ...(slug ? { 'X-Tenant-Slug': slug } : {}),
+          ...(options.headers || {}),
+        },
+      });
+      const payload = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        throw new Error(payload?.error?.message || payload?.message || payload?.error || 'Erreur API');
+      }
+      // L'API NestJS enveloppe la réponse dans { data: ... } → on dépile.
+      return payload && typeof payload === 'object' && 'data' in payload ? payload.data : payload;
+    }
+
+    // Repli (chemin non mappé) : ancien comportement Netlify.
     const resolved = resolveNetlifyApiUrl(url);
     const res = await fetch(resolved, {
       ...options,
@@ -181,6 +247,23 @@ export default function AdminMarketingPage() {
       setLoading(false);
     }
   }, [authFetch, toast]);
+
+  // Conversion d'un lead (Growth Engine) en contact sales-CRM (POST /crm/contacts/convert-lead).
+  // crmApi passe par api-v2 (token + X-Tenant-Slug auto) ; le backend passe le lead à status='customer'.
+  const [convertingLeadId, setConvertingLeadId] = useState(null);
+  const convertLeadToContact = useCallback(async (lead) => {
+    if (!lead?.id) return;
+    setConvertingLeadId(lead.id);
+    try {
+      await crmApi.convertLead(lead.id);
+      toast({ title: 'Lead converti', description: 'Un contact CRM a été créé (onglet Contacts).' });
+      await loadData();
+    } catch (e) {
+      toast({ title: 'Conversion', description: String(e?.message || e), variant: 'destructive' });
+    } finally {
+      setConvertingLeadId(null);
+    }
+  }, [loadData, toast]);
 
   /** Flows + audit — chargé à la demande (onglet Automation) pour éviter de tout charger d'un coup */
   const loadAutomationData = useCallback(async () => {
@@ -1011,14 +1094,16 @@ export default function AdminMarketingPage() {
   }, [authFetch, loadKnowledgeBase, toast]);
 
   return (
-    <div className="space-y-6 overflow-x-hidden min-w-0 max-w-full">
-      <div className="premium-panel p-6 flex flex-wrap items-center justify-between gap-3">
+    // Conteneur CENTRÉ + contraint (comme LiriServicesPage) — sinon le contenu s'étale sur toute
+    // la largeur de l'écran (« trop large, pas centré »). Padding aéré, pas de scroll horizontal.
+    <div className="mx-auto w-full max-w-5xl space-y-5 overflow-x-hidden min-w-0 px-4 py-6 sm:px-6 sm:py-8">
+      <div className="premium-panel p-5 flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-bold text-white flex items-center gap-2">
-            <Megaphone className="w-6 h-6 text-[var(--school-accent)]" />
+          <h1 className="text-xl font-bold text-white flex items-center gap-2">
+            <Megaphone className="w-5 h-5 text-[var(--school-accent)]" />
             PRORASCIENCE Growth Engine
           </h1>
-          <p className="text-sm text-gray-400 mt-1">Campaigns, funnels, leads, automation et analytics connectes au booking/paiement.</p>
+          <p className="text-[13px] text-gray-400 mt-1">Campaigns, funnels, leads, automation et analytics connectés au booking/paiement.</p>
         </div>
         <Button
           variant="outline"
@@ -1039,11 +1124,10 @@ export default function AdminMarketingPage() {
       </div>
 
       {import.meta.env.DEV ? (
-        <div className="rounded-xl border border-amber-500/35 bg-amber-500/10 px-4 py-3 text-sm text-amber-100">
-          <strong className="text-amber-50">Développement local :</strong> les routes{' '}
-          <code className="rounded bg-black/30 px-1 text-xs">/api/marketing/*</code> sont servies par Netlify Functions. Lancez{' '}
-          <code className="rounded bg-black/30 px-1 text-xs">netlify dev</code> (port 8888) en parallèle de{' '}
-          <code className="rounded bg-black/30 px-1 text-xs">npm run dev</code> — le proxy Vite redirige déjà vers les fonctions.
+        <div className="rounded-xl border border-emerald-500/35 bg-emerald-500/10 px-4 py-3 text-sm text-emerald-100">
+          <strong className="text-emerald-50">Moteur CRM :</strong> les routes marketing sont désormais servies par l’API NestJS{' '}
+          <code className="rounded bg-black/30 px-1 text-xs">api.cimolace.space/marketing/*</code> (tenant-scopé via{' '}
+          <code className="rounded bg-black/30 px-1 text-xs">X-Tenant-Slug</code>). Le backend Netlify est retiré.
         </div>
       ) : null}
 
@@ -1153,12 +1237,35 @@ export default function AdminMarketingPage() {
             <Badge className="bg-emerald-500/20 text-emerald-200 border-emerald-500/30">🔥 Chauds : {heatBreakdown.hot}</Badge>
           </div>
           <div className="space-y-2">
-            {leads.slice(0, 30).map((lead) => (
-              <div key={lead.id} className="rounded-lg border border-white/10 p-3 bg-[#0F1419]/70">
-                <p className="text-sm text-white">{lead.name || lead.email || lead.phone || 'Lead'}</p>
-                <p className="text-xs text-gray-400 mt-1">
-                  {lead.email || '-'} | score {lead.score} | status {lead.status}
-                </p>
+            {[...leads]
+              .sort((a, b) => (a.status === 'customer' ? 1 : 0) - (b.status === 'customer' ? 1 : 0))
+              .slice(0, 50)
+              .map((lead) => (
+              <div
+                key={lead.id}
+                className="rounded-lg border border-white/10 p-3 bg-[#0F1419]/70 flex items-center justify-between gap-3"
+              >
+                <div className="min-w-0">
+                  <p className="text-sm text-white truncate">{lead.name || lead.email || lead.phone || 'Lead'}</p>
+                  <p className="text-xs text-gray-400 mt-1">
+                    {lead.email || '-'} | score {lead.score} | status {lead.status}
+                  </p>
+                </div>
+                {lead.status === 'customer' ? (
+                  <span className="shrink-0 rounded-md px-2 py-0.5 text-[11px] text-white/70 border border-white/15">
+                    Contact CRM
+                  </span>
+                ) : (
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="shrink-0"
+                    disabled={convertingLeadId === lead.id}
+                    onClick={() => void convertLeadToContact(lead)}
+                  >
+                    {convertingLeadId === lead.id ? 'Conversion…' : 'Convertir en contact'}
+                  </Button>
+                )}
               </div>
             ))}
           </div>

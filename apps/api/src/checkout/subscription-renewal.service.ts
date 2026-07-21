@@ -9,6 +9,7 @@ import { randomUUID } from 'crypto';
 import { AuthService } from '../auth/auth.service';
 import { PawaPayService } from '../pawapay/pawapay.service';
 import { TenantPaymentConfigService } from '../billing/tenant-payment-config/tenant-payment-config.service';
+import { MarketingAdvancedService } from '../marketing/marketing-advanced.service';
 import {
   verifyStripeSignature,
   stripeFetchSubscription,
@@ -38,6 +39,7 @@ export class SubscriptionRenewalService implements OnApplicationBootstrap, OnMod
     private readonly auth: AuthService,
     private readonly pawapay: PawaPayService,
     private readonly tenantPayments: TenantPaymentConfigService,
+    private readonly marketing: MarketingAdvancedService,
   ) {}
 
   /**
@@ -443,6 +445,33 @@ export class SubscriptionRenewalService implements OnApplicationBootstrap, OnMod
       const { data: u } = await (this.supabase as any).auth.admin.getUserById(userId);
       const to = u?.user?.email;
       if (!to) return;
+
+      // Vague 3 — trigger 'payment' : automations marketing du tenant (ex. onboarding/upsell),
+      // DISTINCT de l'email de reçu ci-dessous. Fire-and-forget : n'affecte JAMAIS le paiement.
+      void this.marketing
+        .runAutomation(tenantId, { trigger: 'payment', context: { email: to, plan: plan?.key, amount } })
+        .then((r) => {
+          if (r?.executedCount)
+            this.logger.log(`[mkt:${tenantId}] payment → ${r.executedCount} action(s)`);
+        })
+        .catch((e) => this.logger.warn(`[mkt:${tenantId}] payment automations failed: ${(e as Error)?.message || e}`));
+
+      // ACCÈS 1-CLIC : un acheteur INVITÉ (checkout guest-*) a un compte SANS mot de passe et
+      // sans session → « payé mais ne peut pas entrer ». On injecte ici, dans le SEUL email
+      // post-paiement (carte + mobile money y passent), un magic-link (connexion 1-clic) + un
+      // lien recovery (définir un mot de passe) — même mécanisme que billing.service.ts.
+      const frontend = (process.env.FRONTEND_URL || 'https://app.cimolace.space').replace(/\/$/, '');
+      const dest = `${frontend}/liri`;
+      const isPasswordless = u?.user?.user_metadata?.created_via === 'guest-checkout';
+      const magic = await this.generateAuthLink(to, 'magiclink', dest);
+      const recover = isPasswordless ? await this.generateAuthLink(to, 'recovery', dest) : null;
+      const accessBtn = magic
+        ? `<p style="margin:18px 0"><a href="${magic}" style="background:#b6893c;color:#fff;padding:12px 22px;border-radius:8px;text-decoration:none;font-weight:600">Accéder à mon espace</a></p>`
+        : `<p>Connectez-vous à votre espace pour accéder à vos contenus.</p>`;
+      const setPwd = recover
+        ? `<p style="font-size:14px;color:#555">Vous préférez un mot de passe ? <a href="${recover}">Définissez-le ici</a>.</p>`
+        : '';
+
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const { data: ns } = await (this.supabase as any)
         .from('tenant_notification_settings')
@@ -459,11 +488,44 @@ export class SubscriptionRenewalService implements OnApplicationBootstrap, OnMod
         html_body:
           `<h2>Merci pour votre paiement</h2>` +
           `<p>Votre paiement${amount ? ` de <strong>${amount}</strong>` : ''} pour « ${planLabel} » est confirmé.</p>` +
-          `<p>Votre accès est désormais <strong>actif</strong> — connectez-vous pour accéder à vos contenus.</p>`,
+          `<p>Votre accès est désormais <strong>actif</strong>.</p>` +
+          accessBtn + setPwd,
         status: 'pending',
       });
     } catch (e) {
       this.logger.warn(`email reçu paiement (user=${userId}): ${(e as Error).message}`);
+    }
+  }
+
+  /**
+   * Génère un lien d'auth admin (indépendant du SMTP Supabase — on l'envoie via notre Resend).
+   * `magiclink` = connexion 1-clic ; `recovery` = définir un mot de passe. Renvoie l'action_link
+   * ou null (best-effort — ne casse jamais le fulfillment). Miroir de billing.service.ts.
+   */
+  private async generateAuthLink(
+    email: string,
+    type: 'magiclink' | 'recovery',
+    redirectTo: string,
+  ): Promise<string | null> {
+    const url = process.env.SUPABASE_URL;
+    const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
+    if (!url || !key) return null;
+    try {
+      const r = await fetch(`${url}/auth/v1/admin/generate_link`, {
+        method: 'POST',
+        headers: { apikey: key, Authorization: `Bearer ${key}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          type,
+          email: email.trim().toLowerCase(),
+          options: { redirect_to: redirectTo },
+        }),
+      });
+      if (!r.ok) return null;
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const d = (await r.json()) as any;
+      return d?.action_link || d?.properties?.action_link || null;
+    } catch {
+      return null;
     }
   }
 

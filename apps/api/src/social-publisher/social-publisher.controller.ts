@@ -6,11 +6,17 @@ import { ApiTags, ApiBearerAuth, ApiOperation } from '@nestjs/swagger';
 import { SocialPublisherService } from './social-publisher.service';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { TenantGuard } from '../tenant/tenant.guard';
+import { RolesGuard } from '../common/guards/roles.guard';
+import { Roles } from '../common/decorators/roles.decorator';
 import { PublishShortDto, SaveSocialTokenDto } from './dto/social-publisher.dto';
 
+// Publication sociale + tokens OAuth = actions STAFF/créateur uniquement. RolesGuard au niveau
+// classe (avec TenantGuard qui peut poser userRole=null pour un non-membre → sinon un non-membre
+// aurait pu enregistrer/hijacker un token social du tenant).
 @ApiTags('Social Publisher')
 @ApiBearerAuth()
-@UseGuards(JwtAuthGuard, TenantGuard)
+@UseGuards(JwtAuthGuard, TenantGuard, RolesGuard)
+@Roles('owner', 'admin', 'teacher')
 @Controller('social-publisher')
 export class SocialPublisherController {
   constructor(

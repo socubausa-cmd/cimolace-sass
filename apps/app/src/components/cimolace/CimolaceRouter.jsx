@@ -51,6 +51,7 @@ import CreateSchoolPage from '@/pages/cimolace/create-school/index';
 import CimolaceAdminDashboard from '@/pages/cimolace/admin/index';
 import CimolaceAdminClients from '@/pages/cimolace/admin/clients/index';
 import CimolaceAdminClientDetail from '@/pages/cimolace/admin/clients/[id]';
+import CimolaceAdminCrm from '@/pages/cimolace/admin/crm/index';
 import CimolaceAdminSchoolProvisioning from '@/pages/cimolace/admin/school-provisioning/index';
 import CimolaceAdminSites from '@/pages/cimolace/admin/sites/index';
 import CimolaceAdminFinances from '@/pages/cimolace/admin/finances/index';
@@ -128,6 +129,7 @@ export default function CimolaceRouter() {
           <Route path="admin" element={<CimolaceProtectedOwnerRoute><CimolaceAdminDashboard /></CimolaceProtectedOwnerRoute>} />
           <Route path="admin/clients" element={<CimolaceProtectedOwnerRoute><CimolaceAdminClients /></CimolaceProtectedOwnerRoute>} />
           <Route path="admin/clients/:id" element={<CimolaceProtectedOwnerRoute><CimolaceAdminClientDetail /></CimolaceProtectedOwnerRoute>} />
+          <Route path="admin/crm" element={<CimolaceProtectedOwnerRoute><CimolaceAdminCrm /></CimolaceProtectedOwnerRoute>} />
           <Route path="admin/school-provisioning" element={<CimolaceProtectedOwnerRoute><CimolaceAdminSchoolProvisioning /></CimolaceProtectedOwnerRoute>} />
           <Route path="admin/sites" element={<CimolaceProtectedOwnerRoute><CimolaceAdminSites /></CimolaceProtectedOwnerRoute>} />
           {/* La page « billing » legacy lisait cimolace_invoices (tables vides) → l'opérateur

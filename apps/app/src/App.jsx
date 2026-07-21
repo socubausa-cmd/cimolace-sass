@@ -520,6 +520,9 @@ const LoginPage = lazy(() => import('@/pages/LoginPage'));
 const SignupPage = lazy(() => import('@/pages/SignupPage'));
 const OnboardingOrgPage = lazy(() => import('@/pages/OnboardingOrgPage'));
 const CimolaceCreationAgent = lazy(() => import('@/pages/CimolaceCreationAgent'));
+const CimolaceSubscribeSuccessPage = lazy(() => import('@/pages/cimolace/CimolaceSubscribeSuccessPage'));
+const ImpersonateBootstrap = lazy(() => import('@/pages/cimolace/ImpersonateBootstrap'));
+const ImpersonationBanner = lazy(() => import('@/components/cimolace/ImpersonationBanner'));
 const LiriLandingPage = lazy(() => import('@/pages/LiriLandingPage'));
 const JoinOrgPage = lazy(() => import('@/pages/JoinOrgPage'));
 const ForgotPasswordPage = lazy(() => import('@/pages/ForgotPasswordPage'));
@@ -729,6 +732,7 @@ const AdminIriBuilderPage = lazy(() => import('@/pages/admin/IriBuilderPage'));
 const IriPublicPage = lazy(() => import('@/pages/public/IriPublicPage'));
 const AdminCommunitiesPage = lazy(() => import('@/pages/admin/AdminCommunitiesPage'));
 const AdminMarketingPage = lazy(() => import('@/pages/admin/AdminMarketingPage'));
+const LiriCrmPage = lazy(() => import('@/pages/liri/LiriCrmPage'));
 const AdminTenantEmbedPage = lazy(() => import('@/pages/admin/AdminTenantEmbedPage'));
 const AdminTenantBrandingPage = lazy(() => import('@/pages/admin/AdminTenantBrandingPage'));
 const MarketingToolsSuitePage = lazy(() => import('@/pages/admin/MarketingToolsSuitePage'));
@@ -779,7 +783,9 @@ const StudioLiriRouter = lazy(() => import('@/pages/studio-creator/studio/Studio
 const LiveHostPageNativeGate = lazy(() => import('@/components/eleve-mobile/LiveHostPageNativeGate'));
 const LiveGuestPage = lazy(() => import('@/pages/liri/LiveGuestPage'));
 const ProcheRoom = lazy(() => import('@/pages/liri/ProcheRoom'));
+const LiveInvitePage = lazy(() => import('@/pages/liri/LiveInvitePage'));
 const TeleconsultJoinPage = lazy(() => import('@/pages/liri/TeleconsultJoinPage'));
+const TeleconsultReplayPage = lazy(() => import('@/pages/liri/TeleconsultReplayPage'));
 const DevLiriHostEntry = lazy(() => import('@/pages/dev/DevLiriHostEntry'));
 const TableauVivantDemoPage = lazy(() => import('@/pages/dev/TableauVivantDemoPage'));
 const CourseDemoPage = lazy(() => import('@/pages/dev/CourseDemoPage'));
@@ -1319,6 +1325,10 @@ const AppContent = () => {
     '/signup',
     '/forfaits',        // Forfaits retirés de la vitrine « PORTAIL » : membre → /liri/forfaits (coque LIRI),
                         // visiteur → page offres focalisée SANS l'ancien header Academy (agent immersif = découverte).
+    '/paiement',        // Checkout focalisé : la page a son propre header minimal (« ← Retour »). Le bandeau
+                        // « PORTAIL » (nav Formations/Boutique + sélecteur de rôle) juste avant de payer =
+                        // chrome incohérent + fuite de confiance. Couvre /paiement et /paiements (custom domain
+                        // strippe /t/:slug/paiement → /paiement). Le checkout INVITÉ reste intact.
     '/creer-organisation',
     '/precepteur',      // Le Précepteur = secteur FORMATION de Cimolace — immersif plein écran, aucun header
     '/rejoindre',
@@ -1499,6 +1509,10 @@ isLiriHostDevPreviewRoute;
 
   return (
     <div className={appShellClassName}>
+      {/* Impersonation encadrée (§15) — bannière globale, se masque hors impersonation. */}
+      <LazyShell>
+        <ImpersonationBanner />
+      </LazyShell>
       {!isLiveArenaRoute && !isTeleconsultRoute && !isEleveMobileRoute && !isCimolaceRoute && !isAdminRoute && (
         <LazyShell>
           <GraceBanner />
@@ -1577,6 +1591,8 @@ isLiriHostDevPreviewRoute;
 
           {/* CIMOLACE - SaaS complètement isolé - Router séparé, en dehors du main */}
           <Route path="/cimolace/*" element={<CimolaceRouter />} />
+          {/* Impersonation encadrée (§15) — amorçage en nouvel onglet (hash #imp=) */}
+          <Route path="/impersonate" element={<ImpersonateBootstrap />} />
           {/* IRI — page dynamique par slug (tenant résolu par Host côté API) */}
           <Route path="/p/:slug" element={<IriPublicPage />} />
 
@@ -1603,6 +1619,15 @@ isLiriHostDevPreviewRoute;
             <Route path="/dev/tableau-vivant" element={
               <React.Suspense fallback={<div className="flex h-screen items-center justify-center bg-[#080a0f] text-white">Chargement...</div>}>
                 <TableauVivantDemoPage />
+              </React.Suspense>
+            } />
+          )}
+          {/* DEV — aperçu de « Mes formations » rendu par l'OS, SANS auth (preuve du branchement
+              fetchStructure → contenu réel des cours studio). Retiré du build prod. */}
+          {import.meta.env.DEV && (
+            <Route path="/dev/os-formations" element={
+              <React.Suspense fallback={<div className="flex h-screen items-center justify-center bg-[#262624] text-white/60">Chargement…</div>}>
+                <StudentFormationsOsPage />
               </React.Suspense>
             } />
           )}
@@ -1924,6 +1949,13 @@ isLiriHostDevPreviewRoute;
               <LiriServicesPage />
             </ProtectedLiriRoute>
           } />
+          {/* CRM / Growth Engine (leads, campagnes, funnels, automation, analytics) DANS le
+              portail LIRI (rail « CRM », créateur owner/admin). Remplace /admin/marketing. */}
+          <Route path="/liri/crm" element={
+            <ProtectedLiriRoute allowedRoles={['owner', 'admin']} allowTenantRole>
+              <LiriCrmPage />
+            </ProtectedLiriRoute>
+          } />
           {/* Forfaits — cycles/offres du tenant DANS le portail LIRI (membres) : remplace l'ancienne
               vitrine standalone « Prorascience PORTAIL » (/forfaits). Visiteurs → agent immersif. */}
           <Route path="/liri/forfaits" element={
@@ -2042,6 +2074,9 @@ isLiriHostDevPreviewRoute;
           } />
           {/* Onboarding self-service LIRI — créer son organisation (POST /signup/tenant) */}
           <Route path="/creer-organisation" element={<OnboardingOrgPage />} />
+          {/* Succès paiement d'acquisition (success_url du Checkout Stripe) — l'acquisition
+              elle-même vit dans l'OS (FocusDrawer des offres), pas dans une page à part. */}
+          <Route path="/creer-organisation/succes" element={<CimolaceSubscribeSuccessPage />} />
           {/* Assistant conversationnel immersif (preview L1) — présence 5 états + parler-à-la-présence */}
           <Route path="/creer-organisation/agent" element={<CimolaceCreationAgent />} />
           {/* Rejoindre une organisation par slug (self-join) — accessible connecté OU non */}
@@ -2216,7 +2251,9 @@ isLiriHostDevPreviewRoute;
               <AdminIriBuilderPage />
             </ProtectedRoleRoute>
           } />
-          <Route path="/admin/marketing" element={
+          {/* Ancienne coque /admin/marketing (header vitrine) RETIRÉE → CRM dans le portail LIRI. */}
+          <Route path="/admin/marketing" element={<Navigate to="/liri/crm" replace />} />
+          <Route path="/admin/marketing-legacy" element={
             <ProtectedRoleRoute allowedRoles={['admin', 'owner']} allowTenantRole>
               <AdminMarketingPage />
             </ProtectedRoleRoute>
@@ -2491,6 +2528,19 @@ isLiriHostDevPreviewRoute;
             </ProtectedRoute>
           } />
 
+          {/* Replay durable de la séance — PRATICIEN + PATIENT (auth). Le backend
+              garde l'accès (patient-propriétaire) ; le proche invité (sans compte
+              tenant) reçoit 403 → secret médical préservé. */}
+          <Route path="/teleconsult/:sessionId/replay" element={
+            <ProtectedRoute>
+              <ErrorBoundary>
+                <Suspense fallback={<ImmersiveBootLoader message="Chargement du replay…" />}>
+                  <TeleconsultReplayPage />
+                </Suspense>
+              </ErrorBoundary>
+            </ProtectedRoute>
+          } />
+
           {/* Salle du PROCHE invité — PUBLIQUE (pas de compte tenant). L'accès est
               gardé par le token d'invitation + le consentement RGPD du patient. */}
           <Route path="/teleconsult/:id/proche/:inviteId" element={
@@ -2518,6 +2568,14 @@ isLiriHostDevPreviewRoute;
                 <LiveGuestPage />
               </ErrorBoundary>
             </ProtectedRoute>
+          } />
+
+          {/* Live PAYANT — invité SANS login (lien token-gaté après achat sur le site tenant).
+              Route PUBLIQUE (pas de ProtectedRoute) ; la barrière réelle est le token invité serveur. */}
+          <Route path="/live/:sessionId/invite/:inviteId" element={
+            <ErrorBoundary>
+              <LiveInvitePage />
+            </ErrorBoundary>
           } />
 
           {/* Lien d'invitation live — accessible à tout membre connecté */}
@@ -2646,9 +2704,12 @@ isLiriHostDevPreviewRoute;
               → onglet dans AcademyToLiriRedirect. */}
           <Route path="/t/:tenantSlug/admin/*" element={<AcademyToLiriRedirect />} />
 
+          {/* Le constructeur complet (header + structure + save) vit dans StudioFormationPage
+              (/studio/formation). On redirige pour réutiliser CE câblage : monter
+              <OwnerFormationBuilder/> nu (sans onSave) crashait au moment du save. */}
           <Route path="/owner/formations/create" element={
             <ProtectedOwnerRoute>
-               <OwnerFormationBuilder />
+               <Navigate to="/studio/formation" replace />
             </ProtectedOwnerRoute>
           } />
 
@@ -2690,12 +2751,14 @@ isLiriHostDevPreviewRoute;
           <Route path="/ecoles" element={<EcolesProrasciencePage />} />
           <Route path="/doctrine-pedagogique" element={<DoctrinePedagogiquePage />} />
           <Route path="/origine-appel" element={<OrigineAppelPage />} />
-          <Route path="/fond-de-tout" element={<FondDeToutPage />} />
-          <Route path="/dialogue-physique" element={<DialoguePhysiquePage />} />
-          <Route path="/ontodynamique" element={<OntodynamiquePage />} />
-          <Route path="/bibliotheque" element={<BibliothequePage />} />
-          <Route path="/grande-bibliotheque" element={<LibraryPage />} />
-          <Route path="/manuel-initiatique-bris-de-sort" element={<ManuelInitiatiqueBrisDeSortPage />} />
+          {/* Livres & bibliothèque : PLUS de page standalone à l'ancien chrome « PORTAIL » (Academy).
+              TOUT passe par le portail LIRI qui embarque tout (LiriSchoolShell chaud + gate forfait). */}
+          <Route path="/fond-de-tout" element={<Navigate to="/liri/bibliotheque/fond-de-tout" replace />} />
+          <Route path="/dialogue-physique" element={<Navigate to="/liri/bibliotheque/dialogue-physique" replace />} />
+          <Route path="/ontodynamique" element={<Navigate to="/liri/bibliotheque/ontodynamique" replace />} />
+          <Route path="/bibliotheque" element={<Navigate to="/liri/bibliotheque" replace />} />
+          <Route path="/grande-bibliotheque" element={<Navigate to="/liri/bibliotheque-ressources" replace />} />
+          <Route path="/manuel-initiatique-bris-de-sort" element={<Navigate to="/liri/bibliotheque/manuel-initiatique-bris-de-sort" replace />} />
           <Route path="/communaute" element={<CommunautePage />} />
           <Route path="/curriculum/first-year" element={<CurriculumPage />} />
           <Route path="/curriculum/module/:id" element={<ModuleDetailPage />} />

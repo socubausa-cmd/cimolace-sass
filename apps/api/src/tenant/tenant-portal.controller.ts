@@ -3,17 +3,30 @@ import { randomBytes } from 'crypto';
 import { resolve4, resolveCname } from 'dns/promises';
 import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
 import { TenantGuard } from '../common/guards/tenant.guard';
+import { RolesGuard } from '../common/guards/roles.guard';
+import { Roles } from '../common/decorators/roles.decorator';
 import { SupabaseService } from '../supabase/supabase.service';
+import { LiriEntitlementsService } from '../billing/liri-entitlements.service';
+import { WebhookService } from '../liri-public/webhook.service';
 
 /**
  * Back-office TENANT (self-service) — endpoints scoped au tenant courant via
  * TenantGuard (req.tenant.{id,slug,userRole}, appartenance déjà validée).
  * Sert les onglets API & clés, Marketplace et Support du dashboard tenant.
+ *
+ * RolesGuard au niveau classe : les handlers SANS @Roles restent lisibles par
+ * tout membre (profile, support/tickets = données propres) ; les reads sensibles
+ * (members/webhooks/domains/usage/marketplace) et les actions billing (subscribe,
+ * cancel, billing-portal) portent @Roles('owner','admin'). Les writes équipe/
+ * webhook/domaine gardent leur check manuel (déjà fail-closed).
  */
 @Controller('tenant-portal')
-@UseGuards(JwtAuthGuard, TenantGuard)
+@UseGuards(JwtAuthGuard, TenantGuard, RolesGuard)
 export class TenantPortalController {
-  constructor(private readonly supabase: SupabaseService) {}
+  constructor(
+    private readonly supabase: SupabaseService,
+    private readonly entitlements: LiriEntitlementsService,
+  ) {}
 
   private get db(): any {
     return this.supabase.client as any;
@@ -24,6 +37,7 @@ export class TenantPortalController {
 
   /** Catalogue Cimolace souscriptible + ce que le tenant a déjà. */
   @Get('marketplace')
+  @Roles('owner', 'admin')
   async marketplace(@Req() req: any) {
     const [plansRes, subsRes] = await Promise.all([
       this.db.from('billing_plans').select('key, label, description, price_cents, currency, billing_cycle, features').eq('is_active', true),
@@ -51,6 +65,7 @@ export class TenantPortalController {
 
   /** Souscrit (pending) un plan — le tenant paie ensuite par carte (card-checkout). */
   @Post('marketplace/subscribe')
+  @Roles('owner', 'admin')
   async subscribe(@Req() req: any, @Body() body: { plan?: string }) {
     const planKey = body?.plan;
     if (!planKey) throw new BadRequestException('Plan requis');
@@ -121,6 +136,7 @@ export class TenantPortalController {
 
   /** Synthèse d'usage du tenant (onglet Monitoring). */
   @Get('usage')
+  @Roles('owner', 'admin')
   async usage(@Req() req: any) {
     const tid = req.tenant.id;
     const [svc, keys, members, subs, invoices] = await Promise.all([
@@ -165,19 +181,69 @@ export class TenantPortalController {
   }
 
   /** Annule un abonnement du tenant (après vérification d'appartenance). */
+  // RÉSILIATION SELF-SERVE (§11) — politique unique = FIN DE PÉRIODE : l'accès est conservé
+  // jusqu'à current_period_end (aucun remboursement), puis l'abo expire (le cron de
+  // renouvellement mobile-money saute les résiliés). Réversible tant que la période court.
+  /**
+   * Propage la (dé)programmation de fin de période à un VRAI abonnement récurrent Stripe
+   * (id `sub_…`). Sinon (plans inline / mobile money : pas de sub_id) le flag local + le saut
+   * du cron suffisent. Best-effort : n'échoue jamais la résiliation locale.
+   */
+  private async setStripeCancelAtPeriodEnd(provider?: string, subId?: string, cancel = true): Promise<void> {
+    if (provider !== 'stripe' || !subId || !subId.startsWith('sub_') || !process.env.STRIPE_SECRET_KEY) return;
+    try {
+      const auth = `Bearer ${process.env.STRIPE_SECRET_KEY}`;
+      const res = await fetch(`https://api.stripe.com/v1/subscriptions/${subId}`, {
+        method: 'POST',
+        headers: { Authorization: auth, 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: `cancel_at_period_end=${cancel ? 'true' : 'false'}`,
+      });
+      if (!res.ok) console.error(`[tenant-portal cancel] Stripe ${subId} → ${res.status}`);
+    } catch (e) {
+      console.error(`[tenant-portal cancel] Stripe ${subId} exception: ${(e as Error).message}`);
+    }
+  }
+
   @Post('subscriptions/:id/cancel')
-  async cancelSub(@Req() req: any, @Param('id') id: string) {
-    const { data: sub } = await this.db.from('billing_subscriptions').select('id, tenant_id').eq('id', id).maybeSingle();
+  @Roles('owner', 'admin')
+  async cancelSub(@Req() req: any, @Param('id') id: string, @Body() body: { reason?: string }) {
+    const { data: sub } = await this.db
+      .from('billing_subscriptions')
+      .select('id, tenant_id, provider, provider_subscription_id, current_period_end, metadata')
+      .eq('id', id).maybeSingle();
     if (!sub || sub.tenant_id !== req.tenant.id) throw new NotFoundException('Abonnement introuvable pour ce tenant');
-    const now = new Date().toISOString();
+    // Propage à Stripe pour un vrai abo récurrent (sinon prélèvements continus + accès jamais coupé).
+    await this.setStripeCancelAtPeriodEnd(sub.provider, sub.provider_subscription_id, true);
+    const meta = { ...(sub.metadata || {}), cancel_at_period_end: true, cancel_requested_at: new Date().toISOString() };
+    if (body?.reason) meta.cancel_reason = String(body.reason).slice(0, 500);
+    if (req.user?.email || req.user?.id) meta.canceled_by = req.user?.email ?? req.user?.id;
     const { data, error } = await this.db
       .from('billing_subscriptions')
-      .update({ status: 'canceled', canceled_at: now, updated_at: now })
-      .eq('id', id)
-      .select('*')
-      .single();
+      .update({ metadata: meta, updated_at: new Date().toISOString() })
+      .eq('id', id).select('*').single();
     if (error) throw new BadRequestException(error.message);
-    return { data };
+    return { data: { ...data, cancel_at_period_end: true, effective_until: sub.current_period_end ?? null } };
+  }
+
+  /** Annule la résiliation programmée tant que la période court. */
+  @Post('subscriptions/:id/reactivate')
+  @Roles('owner', 'admin')
+  async reactivateSub(@Req() req: any, @Param('id') id: string) {
+    const { data: sub } = await this.db
+      .from('billing_subscriptions')
+      .select('id, tenant_id, provider, provider_subscription_id, metadata')
+      .eq('id', id).maybeSingle();
+    if (!sub || sub.tenant_id !== req.tenant.id) throw new NotFoundException('Abonnement introuvable pour ce tenant');
+    await this.setStripeCancelAtPeriodEnd(sub.provider, sub.provider_subscription_id, false);
+    const meta = { ...(sub.metadata || {}) };
+    delete meta.cancel_at_period_end; delete meta.cancel_requested_at; delete meta.cancel_reason;
+    meta.reactivated_at = new Date().toISOString();
+    const { data, error } = await this.db
+      .from('billing_subscriptions')
+      .update({ metadata: meta, updated_at: new Date().toISOString() })
+      .eq('id', id).select('*').single();
+    if (error) throw new BadRequestException(error.message);
+    return { data: { ...data, cancel_at_period_end: false } };
   }
 
   /**
@@ -214,6 +280,7 @@ export class TenantPortalController {
 
   /** Liste les membres du tenant (email + rôle + statut). */
   @Get('members')
+  @Roles('owner', 'admin')
   async members(@Req() req: any) {
     const { data: memberships } = await this.db
       .from('tenant_memberships')
@@ -239,6 +306,77 @@ export class TenantPortalController {
     };
   }
 
+  /**
+   * Annuaire messagerie — LISIBLE PAR TOUT MEMBRE actif (pas de @Roles ; reste
+   * borné par JwtAuthGuard + TenantGuard = membership active + scope tenant).
+   * Distinct de `members` (owner/admin, gestion d'équipe : annuaire complet + emails).
+   *
+   * Rôle-aware & fail-fermé côté vie privée :
+   *  - Le STAFF (owner/admin/teacher/secretariat) voit TOUS les membres (il enseigne /
+   *    encadre) et reçoit les emails (comme `members`).
+   *  - Un NON-staff (student/member/viewer…) ne voit QUE le staff joignable — jamais
+   *    l'annuaire des pairs. On ne fuit donc AUCUN email d'élève à un autre élève.
+   *
+   * Sert le sélecteur de destinataire de la messagerie (MessagingContext) : un élève
+   * doit pouvoir écrire à son/ses formateur(s) SANS recevoir 403 sur `members`
+   * (même classe de bug que le menu école, cf. tenant-services gardé owner/admin).
+   */
+  @Get('directory')
+  async directory(@Req() req: any) {
+    // Rôles STAFF = joignables par tous + voient tout le monde. Volontairement LARGE
+    // (couvre école ET clinique MEDOS) mais N'INCLUT JAMAIS les rôles « end-user »
+    // pairs (student, patient, member, viewer) — eux ne voient QUE le staff.
+    const STAFF = new Set([
+      'owner', 'admin', 'teacher', 'practitioner', 'clinic_admin', 'receptionist', 'secretariat',
+    ]);
+    const viewerIsStaff = STAFF.has(req.tenant?.userRole);
+    const { data: memberships } = await this.db
+      .from('tenant_memberships')
+      .select('user_id, role, status, created_at')
+      .eq('tenant_id', req.tenant.id)
+      .eq('status', 'active')
+      .order('created_at', { ascending: true });
+    let rows = memberships ?? [];
+    // Non-staff : ne voit que le staff joignable (pas les pairs).
+    if (!viewerIsStaff) rows = rows.filter((m: any) => STAFF.has(m.role));
+    const ids = rows.map((m: any) => m.user_id).filter(Boolean);
+    let profiles: any[] = [];
+    if (ids.length) {
+      const { data } = await this.db.from('profiles').select('id, email, full_name').in('id', ids);
+      profiles = data ?? [];
+    }
+    const byId: Record<string, any> = Object.fromEntries(profiles.map((p: any) => [p.id, p]));
+    return {
+      data: rows.map((m: any) => {
+        // Email exposé au staff (annuaire complet) OU quand le membre listé est du
+        // staff (contact officiel joignable par l'élève). Jamais l'email d'un pair élève.
+        const exposeEmail = viewerIsStaff || STAFF.has(m.role);
+        return {
+          user_id: m.user_id,
+          role: m.role,
+          status: m.status,
+          email: exposeEmail ? (byId[m.user_id]?.email ?? null) : null,
+          full_name: byId[m.user_id]?.full_name ?? null,
+        };
+      }),
+    };
+  }
+
+  // PLAFOND D'OFFRE (monétisation) : « seat » = membre d'équipe (tout SAUF élève/patient/visiteur).
+  private static isSeatRole(role?: string) {
+    return !!role && !['student', 'patient', 'visitor'].includes(String(role).toLowerCase());
+  }
+  /** Lève 403 si le tenant a déjà atteint son plafond de sièges. À appeler AVANT d'ajouter un siège. */
+  private async assertSeatCap(tenantId: string) {
+    const { count } = await this.db
+      .from('tenant_memberships')
+      .select('id', { count: 'exact', head: true })
+      .eq('tenant_id', tenantId)
+      .eq('status', 'active')
+      .not('role', 'in', '("student","patient","visitor")');
+    await this.entitlements.assertWithinCap(tenantId, 'seats', count ?? 0);
+  }
+
   /** Ajoute un membre par email (l'utilisateur doit déjà avoir un compte). Owner/admin. */
   @Post('members')
   async inviteMember(@Req() req: any, @Body() body: { email?: string; role?: string }) {
@@ -254,10 +392,16 @@ export class TenantPortalController {
     }
     const { data: existing } = await this.db
       .from('tenant_memberships')
-      .select('id')
+      .select('id, role, status')
       .eq('tenant_id', req.tenant.id)
       .eq('user_id', prof.id)
       .maybeSingle();
+    // Cap sièges : bloque quand on AJOUTE un siège — nouveau membre, OU réactivation/promotion
+    // d'un membership existant qui n'était pas déjà un siège actif (sinon contournement du cap).
+    const wasActiveSeat = existing?.status === 'active' && TenantPortalController.isSeatRole(existing?.role);
+    if (TenantPortalController.isSeatRole(role) && !wasActiveSeat) {
+      await this.assertSeatCap(req.tenant.id);
+    }
     if (existing?.id) {
       await this.db.from('tenant_memberships').update({ role, status: 'active' }).eq('id', existing.id);
     } else {
@@ -283,6 +427,14 @@ export class TenantPortalController {
     if (req.tenant?.userRole !== 'owner') throw new BadRequestException('Rôle owner requis.');
     const role = body?.role;
     if (!role) throw new BadRequestException('Rôle requis');
+    // Cap sièges : une PROMOTION d'un rôle non-siège vers un rôle siège consomme un siège.
+    const { data: cur } = await this.db
+      .from('tenant_memberships').select('role, status')
+      .eq('tenant_id', req.tenant.id).eq('user_id', userId).maybeSingle();
+    const wasActiveSeat = cur?.status === 'active' && TenantPortalController.isSeatRole(cur?.role);
+    if (TenantPortalController.isSeatRole(role) && !wasActiveSeat) {
+      await this.assertSeatCap(req.tenant.id);
+    }
     await this.db.from('tenant_memberships').update({ role }).eq('tenant_id', req.tenant.id).eq('user_id', userId);
     return { data: { ok: true, role } };
   }
@@ -292,6 +444,7 @@ export class TenantPortalController {
    * pour le client Stripe du tenant. Renvoie l'URL de la session.
    */
   @Post('billing-portal')
+  @Roles('owner', 'admin')
   async billingPortal(@Req() req: any) {
     const { data: sub } = await this.db
       .from('billing_subscriptions')
@@ -328,6 +481,7 @@ export class TenantPortalController {
 
   /** Liste les webhooks du tenant (sans le secret). */
   @Get('webhooks')
+  @Roles('owner', 'admin')
   async webhooks(@Req() req: any) {
     const { data } = await this.db
       .from('tenant_webhooks')
@@ -342,7 +496,8 @@ export class TenantPortalController {
   async createWebhook(@Req() req: any, @Body() body: { label?: string; url?: string; events?: string[] }) {
     if (!['owner', 'admin'].includes(req.tenant?.userRole)) throw new BadRequestException('Rôle owner/admin requis.');
     const url = String(body?.url || '').trim();
-    if (!/^https:\/\//i.test(url)) throw new BadRequestException('URL HTTPS requise.');
+    // Anti-SSRF : même règle que WebhookService.createWebhook (https + refus des cibles privées/internes).
+    await WebhookService.assertUrlSafe(url).catch((e) => { throw new BadRequestException(String(e?.message || e)); });
     const secret = `whsec_${randomBytes(24).toString('hex')}`;
     const { data, error } = await this.db
       .from('tenant_webhooks')
@@ -474,6 +629,7 @@ export class TenantPortalController {
 
   /** Domaines du tenant + instructions DNS (pour l'onglet « Domaine »). */
   @Get('domains')
+  @Roles('owner', 'admin')
   async listDomains(@Req() req: any) {
     const { data } = await this.db
       .from('tenant_domains')
@@ -488,6 +644,11 @@ export class TenantPortalController {
   @Post('domains')
   async addDomain(@Req() req: any, @Body() body: { domain?: string }) {
     if (!['owner', 'admin'].includes(req.tenant?.userRole)) throw new BadRequestException('Rôle owner/admin requis.');
+    // P5 — offre HÉBERGÉE : pas de domaine personnalisé (réservé Customisé/Intégration).
+    const { data: tRow } = await this.db.from('tenants').select('metadata').eq('id', req.tenant.id).maybeSingle();
+    if ((tRow as any)?.metadata?.hosting_mode === 'hosted') {
+      throw new BadRequestException('Domaine personnalisé réservé aux offres Customisé et Intégration.');
+    }
     const domain = this.normalizeDomain(body?.domain);
     // Déjà revendiqué par un AUTRE tenant → erreur claire (UNIQUE(domain,usage) en filet).
     const { data: existing } = await this.db

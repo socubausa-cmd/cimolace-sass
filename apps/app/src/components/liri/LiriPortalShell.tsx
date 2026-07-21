@@ -2,7 +2,7 @@ import { useNavigate } from 'react-router-dom';
 import { useEffect, useRef, useState } from 'react';
 import {
   Menu, Sparkles, Bell, Settings, House, Video, MessagesSquare, MessageCircle,
-  WandSparkles, Library, Blocks, Settings2, GraduationCap, ChevronRight, ChevronDown, MoreHorizontal,
+  WandSparkles, Library, Settings2, GraduationCap, ChevronRight, ChevronDown, MoreHorizontal,
   CalendarDays, BookOpen, School, Calendar, FileText, Award, AlertTriangle, FolderOpen,
 } from 'lucide-react';
 import type { ReactNode } from 'react';
@@ -10,7 +10,7 @@ import { authStore } from '@/lib/auth-store';
 import { useAuth } from '@/hooks/useAuth';
 import { isCreatorRole } from '@/lib/liri/creatorRole';
 import { useSchoolActive } from '@/hooks/useSchoolActive';
-import { LiriRailGroups, getRailItems } from './liriRail';
+import { LiriRailGroups, getRailItems, LiriEngineSwitcher, getActiveEngine } from './liriRail';
 import type { RailKey } from './liriRail';
 import { getApiBaseUrl } from '@/lib/apiBase';
 import activeTenantConfig from '@/lib/tenant/activeTenantConfig';
@@ -100,6 +100,9 @@ export function LiriPortalShell(props: {
   live?: boolean;
   /** Affiche le rail latéral du portail. `false` pour l'arène live (cadre épuré, topbar seule). */
   rail?: boolean;
+  /** Masque le rail-moteur DESKTOP de 92px quand la page fournit déjà son propre panneau de
+   *  nav (ex. École → OwnerDashboardBody). Le sélecteur d'en-tête + la nav mobile restent. */
+  hideDesktopRail?: boolean;
   children: ReactNode;
 }) {
   return (
@@ -113,11 +116,13 @@ function LiriPortalShellInner({
   active = 'lives',
   live = false,
   rail = true,
+  hideDesktopRail = false,
   children,
 }: {
   active?: RailKey;
   live?: boolean;
   rail?: boolean;
+  hideDesktopRail?: boolean;
   children: ReactNode;
 }) {
   const nav = useNavigate();
@@ -167,8 +172,12 @@ function LiriPortalShellInner({
   // Suffixe affiché seulement s'il apporte une info ET qu'aucun fil d'Ariane ne prend le relais.
   const _schoolSuffix = !crumb && sessionSchool && sessionSchool !== _shellBrand ? sessionSchool : '';
 
-  // Items du rail (filtrés rôle + mode école) pour la barre de nav basse mobile (< md).
-  const mobileNavItems = getRailItems({ isCreator, schoolActive });
+  // Moteur actif déduit de la section courante → rail + sélecteur d'en-tête cohérents.
+  const activeEngine = getActiveEngine(active);
+  // Rail-moteur DESKTOP (92px) : masqué si la page a son propre panneau (École) → 1 seul rail.
+  const showDesktopRail = rail && !hideDesktopRail;
+  // Items du rail DU MOTEUR ACTIF (filtrés rôle + mode école) pour la barre de nav basse mobile (< md).
+  const mobileNavItems = getRailItems({ isCreator, schoolActive, engine: activeEngine });
 
   return (
     <div className="lp-root relative grid h-[100dvh] w-full grid-rows-[56px_1fr_auto] overflow-hidden">
@@ -208,9 +217,12 @@ function LiriPortalShellInner({
           )}
         </div>
 
-        {/* zone centrale : sous-vues de la section active (à gauche en mobile pour scroller, à droite ≥ md) */}
-        <div className="flex min-w-0 flex-1 justify-start md:justify-end">
-          <HeaderTabs />
+        {/* zone centrale : SÉLECTEUR DE MOTEUR (gauche) + sous-vues de la section active (droite) */}
+        <div className="flex min-w-0 flex-1 items-center gap-2 md:gap-4">
+          <LiriEngineSwitcher activeEngine={activeEngine} isCreator={isCreator} schoolActive={schoolActive} onNav={nav} />
+          <div className="flex min-w-0 flex-1 justify-start md:justify-end">
+            <HeaderTabs />
+          </div>
         </div>
 
         <div className="flex shrink-0 items-center gap-1.5">
@@ -228,14 +240,13 @@ function LiriPortalShellInner({
 
       {/* middle : rail | main  (immersif : aucun gap/padding externe → le contenu remplit l'écran).
           Mobile (< md) : le rail latéral disparaît (→ barre de nav basse), le contenu prend 100%. */}
-      <div className={`z-10 grid min-h-0 ${rail ? 'grid-cols-[1fr] md:grid-cols-[92px_1fr]' : 'grid-cols-[1fr]'}`}>
-        {rail && (
+      <div className={`z-10 grid min-h-0 ${showDesktopRail ? 'grid-cols-[1fr] md:grid-cols-[92px_1fr]' : 'grid-cols-[1fr]'}`}>
+        {showDesktopRail && (
         <aside className="hidden min-h-0 flex-col items-center gap-0.5 overflow-y-auto lp-rail-bg border-r lp-line py-3 lp-rail-scroll md:flex">
-          <LiriRailGroups active={active} isCreator={isCreator} schoolActive={schoolActive} live={live} onNav={nav} />
+          <LiriRailGroups engine={activeEngine} active={active} isCreator={isCreator} schoolActive={schoolActive} live={live} onNav={nav} />
           {isCreator && (
             <>
               <div className="my-1 h-px w-9" style={{ background: 'rgba(245,244,238,.08)' }} />
-              <button onClick={() => nav('/liri')} className="lp-nav flex w-[74px] flex-col items-center gap-0.5 rounded-2xl py-2 lp-tr"><span className="lp-ni grid h-6 w-6 place-items-center"><Blocks size={19} /></span><span className="lp-nl text-[9px] font-medium">Intégr.</span></button>
               <button onClick={() => nav('/liri/compte')} className="lp-nav flex w-[74px] flex-col items-center gap-0.5 rounded-2xl py-2 lp-tr"><span className="lp-ni grid h-6 w-6 place-items-center"><Settings2 size={19} /></span><span className="lp-nl text-[9px] font-medium">Réglages</span></button>
             </>
           )}
@@ -274,7 +285,7 @@ function LiriPortalShellInner({
         <footer className={`items-center justify-between border-t lp-line lp-rail-bg px-5 py-1.5 text-[11px] lp-muted ${rail ? 'hidden md:flex' : 'flex'}`}>
           <span className="flex items-center gap-2">
             {live ? <span className="h-1.5 w-1.5 rounded-full" style={{ background: '#e2553f' }} /> : <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" />}
-            {live ? 'En direct' : 'Connecté'} · <span className="capitalize">{tenant}</span>
+            {live ? 'En direct' : 'Connecté'} · <span className="capitalize">{sessionSchool || tenant}</span>
           </span>
           <span className="lp-faint flex items-center gap-1.5">{_shellBrand} v2.0</span>
         </footer>

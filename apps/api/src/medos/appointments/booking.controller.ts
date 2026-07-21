@@ -14,6 +14,8 @@ import { CurrentTenant } from '../../tenant/current-tenant.decorator';
 import { TenantGuard } from '../../tenant/tenant.guard';
 import type { TenantContext } from '../../tenant/tenant.types';
 import { MedosEnabledGuard } from '../medos-enabled.guard';
+import { Roles } from '../../common/decorators/roles.decorator';
+import { RolesGuard } from '../../common/guards/roles.guard';
 import { AppointmentsService } from './appointments.service';
 
 type AuthRequest = Request & {
@@ -114,5 +116,16 @@ export class MedosBookingController {
     @Body() dto: { service_key: string },
   ) {
     return this.appts.masterclassJoin(tenant, req.user.id, actorInfo(req), dto.service_key);
+  }
+
+  /**
+   * RÉSERVATIONS (STAFF only) : liste des inscrits par service payant du tenant.
+   * Contient des emails → RolesGuard staff (jamais les élèves/acheteurs).
+   */
+  @Get('reservations')
+  @UseGuards(RolesGuard)
+  @Roles('owner', 'practitioner', 'clinic_admin', 'receptionist')
+  reservations(@CurrentTenant() tenant: TenantContext) {
+    return this.appts.listReservations(tenant);
   }
 }

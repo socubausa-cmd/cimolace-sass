@@ -1,19 +1,19 @@
 import { LiriPortalShell } from '@/components/liri/LiriPortalShell';
-import ForfaitsPage from '@/pages/ForfaitsPage';
+import TierAccessPanel from '@/components/liri/TierAccessPanel';
 
 /**
- * LiriForfaitsPage — les FORFAITS/cycles du tenant DANS le portail LIRI (`/liri/forfaits`).
+ * LiriForfaitsPage — « Votre forfait & vos accès » pour un MEMBRE connecté (`/liri/forfaits`).
  *
- * Remplace l'ancienne vitrine standalone « Prorascience PORTAIL » (/forfaits + header séparé)
- * pour les MEMBRES connectés : mêmes offres + même moteur de paiement (ForfaitsPage embarqué,
- * `embedded` → sans coque plein écran), mais dans le shell du portail LIRI (rail + thème chaud).
- * Les VISITEURS voient les forfaits dans l'agent immersif (prorascience.org) ; /forfaits redirige.
+ * Vue COMPACTE orientée membre : le forfait actuel + la matrice d'accès + les cycles pour faire
+ * évoluer (TierAccessPanel). PLUS la page marketing publique ForfaitsPage embarquée (hero géant +
+ * onglets + comparateur) — c'était fait pour des PROSPECTS, redondant/mal rangé pour un abonné.
+ * Les VISITEURS voient les forfaits dans l'agent immersif (prorascience.org).
  */
 export default function LiriForfaitsPage() {
   return (
     <LiriPortalShell active="forfaits" rail>
       <div className="lp-scroll relative min-h-0 overflow-y-auto" style={{ background: 'var(--base)', color: 'var(--ink)' }}>
-        <ForfaitsPage embedded />
+        <TierAccessPanel />
       </div>
     </LiriPortalShell>
   );

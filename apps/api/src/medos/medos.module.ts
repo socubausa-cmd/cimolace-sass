@@ -39,6 +39,7 @@ import {
 } from './appointments/appointments.controller';
 import { AppointmentsService } from './appointments/appointments.service';
 import { MedosBookingController } from './appointments/booking.controller';
+import { MedosGuestBookingController } from './appointments/guest-booking.controller';
 import { MessagingController } from './messaging/messaging.controller';
 import { MessagingService } from './messaging/messaging.service';
 import {
@@ -92,6 +93,7 @@ import { FhirService } from './fhir/fhir.service';
 import { LiveModule } from '../live/live.module';
 import { NotificationsModule } from '../notifications/notifications.module';
 import { EmailEngineModule } from '../email-engine/email-engine.module';
+import { LiriEntitlementsModule } from '../billing/liri-entitlements.module';
 
 @Module({
   imports: [
@@ -99,6 +101,7 @@ import { EmailEngineModule } from '../email-engine/email-engine.module';
     LiveModule, // Liri — single authority for all video sessions
     NotificationsModule, // in-app notifications (form assign / message / note share)
     EmailEngineModule, // emails transactionnels par tenant (invitation, etc.)
+    LiriEntitlementsModule, // plafonds d'offre (assertWithinCap patients)
     // JwtModule pour signer/vérifier les embed-tokens (15 min lifetime).
     JwtModule.registerAsync({
       imports: [ConfigModule],
@@ -176,6 +179,7 @@ import { EmailEngineModule } from '../email-engine/email-engine.module';
     AvailabilityController,
     AppointmentsController,
     MedosBookingController,
+    MedosGuestBookingController,
     // Messaging
     MessagingController,
     // Programs

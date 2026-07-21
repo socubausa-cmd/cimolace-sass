@@ -33,4 +33,10 @@ export class CoursesController {
 
   @Patch('progress/:lessonId') updateProgress(@Param('lessonId') lid: string, @Body() d: UpdateProgressDto, @CurrentTenant() t: TenantContext, @Req() r: Request) { return this.svc.updateProgress(t.id, (r as any).user.id, lid, d); }
   @Get(':courseId/progress') getProgress(@Param('courseId') cid: string, @CurrentTenant() t: TenantContext, @Req() r: Request) { return this.svc.getProgress(t.id, (r as any).user.id, cid); }
+
+  // Signature CÔTÉ SERVEUR d'une vidéo de cours hébergée, gatée par palier/inscription (anti-lien-partagé).
+  @Post(':courseId/video-url')
+  signVideoUrl(@Param('courseId') cid: string, @Body() d: { contentId: string }, @CurrentTenant() t: TenantContext, @Req() r: Request) {
+    return this.svc.signCourseVideoUrl(t, (r as any).user.id, cid, d?.contentId);
+  }
 }

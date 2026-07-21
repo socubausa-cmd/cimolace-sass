@@ -3,6 +3,7 @@ import { randomUUID } from 'crypto';
 import { SupabaseService } from '../supabase/supabase.service';
 import { PawaPayService } from '../pawapay/pawapay.service';
 import { AirtelMoneyService } from '../airtel/airtel.service';
+import { AuthService } from '../auth/auth.service';
 import { CreateClientDto, UpdateClientDto } from './dto/backoffice.dto';
 import { ProvisionSchoolDto } from './dto/provision-school.dto';
 import type { InitiateSchoolCheckoutDto } from './school-onboarding.controller';
@@ -22,7 +23,89 @@ export class CimolaceBackofficeService {
     private readonly supabase: SupabaseService,
     private readonly pawapay: PawaPayService,
     private readonly airtel: AirtelMoneyService,
+    private readonly auth: AuthService,
   ) {}
+
+  // ─── IMPERSONATION ENCADRÉE (§15) ─────────────────────────────────────────
+  // « Agir en tant que tenant » JAMAIS silencieux : motif obligatoire, durée bornée,
+  // token court-terme, log dédié au début ET à la fin, expiration automatique.
+  private static readonly IMP_MAX_MINUTES = 120;
+  private static readonly IMP_DEFAULT_MINUTES = 30;
+
+  async startImpersonation(
+    operator: { id?: string; email?: string } | null,
+    clientId: string,
+    dto: { reason?: string; durationMinutes?: number; role?: string },
+  ) {
+    const operatorEmail = String(operator?.email || '').trim();
+    const operatorId = String(operator?.id || '').trim();
+    if (!operatorEmail && !operatorId) throw new BadRequestException('Opérateur non identifié.');
+    const reason = String(dto?.reason || '').trim();
+    if (reason.length < 5) throw new BadRequestException('Motif d’impersonation obligatoire (≥ 5 caractères).');
+
+    const client = await this.getClientOrThrow(clientId);
+    const tenantId: string | null = client.tenant_id ?? null;
+    if (!tenantId) throw new BadRequestException('Ce client n’a pas de tenant applicatif à impersonater.');
+    const { data: tenant } = await (this.supabase.client as any)
+      .from('tenants').select('id, slug, name').eq('id', tenantId).maybeSingle();
+    if (!tenant) throw new NotFoundException('Tenant introuvable.');
+
+    // Rôle d'impersonation borné (défaut admin : voir/dépanner sans être owner). owner sur demande.
+    const role = dto?.role === 'owner' ? 'owner' : 'admin';
+    const minutes = Math.min(
+      CimolaceBackofficeService.IMP_MAX_MINUTES,
+      Math.max(5, Number(dto?.durationMinutes) || CimolaceBackofficeService.IMP_DEFAULT_MINUTES),
+    );
+    const token = this.auth.generateImpersonationToken(
+      { operatorId: operatorId || operatorEmail, operatorEmail: operatorEmail || operatorId, tenantId, tenantSlug: tenant.slug, role, reason },
+      minutes,
+    );
+    const expiresAt = new Date(Date.now() + minutes * 60 * 1000).toISOString();
+
+    // LOG DÉDIÉ (attribuable, entity=tenant) — début d'impersonation.
+    await this.logChange(
+      clientId,
+      'impersonation:start',
+      `Impersonation de « ${tenant.name || tenant.slug} » (rôle ${role}, ${minutes} min) — motif : ${reason}`,
+      operatorEmail || operatorId,
+    );
+
+    return { token, tenantId, tenantSlug: tenant.slug, tenantName: tenant.name ?? null, role, reason, expiresAt };
+  }
+
+  async endImpersonation(
+    operator: { id?: string; email?: string } | null,
+    clientId: string,
+    dto: { reason?: string },
+  ) {
+    const operatorLabel = String(operator?.email || operator?.id || '').trim();
+    const client = await this.getClientOrThrow(clientId);
+    await this.logChange(
+      clientId,
+      'impersonation:end',
+      `Fin d’impersonation${dto?.reason ? ` — ${String(dto.reason).trim()}` : ''}`,
+      operatorLabel || undefined,
+    );
+    return { ok: true, clientId, tenantId: client.tenant_id ?? null };
+  }
+
+  /** Oversight : impersonations démarrées récemment sans fin correspondante (best-effort). */
+  async listActiveImpersonations() {
+    const since = new Date(Date.now() - CimolaceBackofficeService.IMP_MAX_MINUTES * 60 * 1000).toISOString();
+    const { data } = await (this.supabase.client as any)
+      .from('cimolace_change_history')
+      .select('entity_id, action, description, changed_by, created_at')
+      .in('action', ['impersonation:start', 'impersonation:end'])
+      .gte('created_at', since)
+      .order('created_at', { ascending: false });
+    const rows = (data as any[]) || [];
+    // entity_id = clientId (cimolace_clients.id), PAS tenants.id — l'audit logChange keye par client.
+    const endedClients = new Set(rows.filter((r) => r.action === 'impersonation:end').map((r) => r.entity_id));
+    const active = rows
+      .filter((r) => r.action === 'impersonation:start' && !endedClients.has(r.entity_id))
+      .map((r) => ({ clientId: r.entity_id, operator: r.changed_by, description: r.description, startedAt: r.created_at }));
+    return { active, windowMinutes: CimolaceBackofficeService.IMP_MAX_MINUTES };
+  }
 
   // ─── Finances PLATEFORME (console SaaS Cimolace) ──────────────────────────
   private static ZERO_DECIMAL = new Set(['XAF', 'XOF', 'XPF', 'BIF', 'CLP', 'DJF', 'GNF', 'JPY', 'KMF', 'KRW', 'MGA', 'PYG', 'RWF', 'UGX', 'VND', 'VUV']);
@@ -180,14 +263,14 @@ export class CimolaceBackofficeService {
     return data;
   }
 
-  async updateClient(clientId: string, dto: UpdateClientDto) {
+  async updateClient(clientId: string, dto: UpdateClientDto, actor?: string) {
     const patch: any = {};
     if (dto.name) patch.name = dto.name;
     if (dto.email !== undefined) patch.email = dto.email;
     if (dto.status) patch.status = dto.status;
     const { data, error } = await (this.supabase.client as any).from('cimolace_clients').update(patch).eq('id', clientId).select('*').single();
     if (error || !data) throw new NotFoundException('Client introuvable');
-    await this.logChange(clientId, 'client:update', `Fiche client mise à jour (${Object.keys(patch).join(', ') || '—'})`);
+    await this.logChange(clientId, 'client:update', `Fiche client mise à jour (${Object.keys(patch).join(', ') || '—'})`, actor);
     return data;
   }
 
@@ -210,14 +293,17 @@ export class CimolaceBackofficeService {
   }
 
   /** Journalise une action opérateur dans cimolace_change_history (best-effort). */
-  private async logChange(clientId: string, action: string, description: string, changedBy = 'Cimolace Ops') {
+  // SÉCURITÉ §15 : audit ATTRIBUABLE — `actor` = email/id de l'opérateur (req.user),
+  // pour savoir QUI a suspendu/facturé/basculé un tenant. À défaut → 'Cimolace Ops (non attribué)'
+  // (rend visible toute écriture non tracée au lieu de la masquer sous un libellé générique).
+  private async logChange(clientId: string, action: string, description: string, actor?: string) {
     try {
       await (this.supabase.client as any).from('cimolace_change_history').insert({
         action,
         entity_type: 'cimolace_client',
         entity_id: clientId,
         description,
-        changed_by: changedBy,
+        changed_by: (actor && actor.trim()) || 'Cimolace Ops (non attribué)',
       });
     } catch {
       /* journalisation best-effort : ne bloque jamais l'opération */
@@ -583,7 +669,7 @@ export class CimolaceBackofficeService {
    * Crée une facture manuelle billing_invoices pour le tenant applicatif du
    * client. Accepte `amount` (unités) ou `amount_cents`.
    */
-  async createTenantInvoice(clientId: string, dto: any) {
+  async createTenantInvoice(clientId: string, dto: any, actor?: string) {
     const client = await this.getClientOrThrow(clientId);
     if (!client.tenant_id) {
       throw new BadRequestException('Tenant applicatif requis pour créer une facture.');
@@ -609,7 +695,7 @@ export class CimolaceBackofficeService {
       .select('*')
       .single();
     if (error) throw new BadRequestException(error.message);
-    await this.logChange(clientId, 'invoice:create', `Facture ${data.invoice_number ?? data.id} créée`);
+    await this.logChange(clientId, 'invoice:create', `Facture ${data.invoice_number ?? data.id} créée`, actor);
     return data;
   }
 
@@ -619,7 +705,7 @@ export class CimolaceBackofficeService {
    * `{ active: boolean }`. Renvoie la ligne mappée (status/config) comme
    * dans le control plane.
    */
-  async updateTenantService(clientId: string, serviceId: string, dto: any) {
+  async updateTenantService(clientId: string, serviceId: string, dto: any, actor?: string) {
     const client = await this.getClientOrThrow(clientId);
     if (!client.tenant_id) {
       throw new BadRequestException('Tenant applicatif requis pour gérer les moteurs.');
@@ -642,7 +728,7 @@ export class CimolaceBackofficeService {
       .maybeSingle();
     if (error) throw new BadRequestException(error.message);
     if (!data) throw new NotFoundException('Moteur introuvable pour ce tenant');
-    await this.logChange(clientId, `service:${data.active ? 'active' : 'suspended'}`, `Moteur ${data.service_key} → ${data.active ? 'actif' : 'suspendu'}`);
+    await this.logChange(clientId, `service:${data.active ? 'active' : 'suspended'}`, `Moteur ${data.service_key} → ${data.active ? 'actif' : 'suspendu'}`, actor);
     return {
       ...data,
       status: data.active ? 'active' : 'suspended',
@@ -659,7 +745,7 @@ export class CimolaceBackofficeService {
    * `record_readiness_check` (journal dans tenants.metadata.readiness).
    * Ne renvoie PAS `controlPlane` → le frontend recharge l'état après coup.
    */
-  async runTenantOperation(clientId: string, dto: any) {
+  async runTenantOperation(clientId: string, dto: any, actor?: string) {
     const client = await this.getClientOrThrow(clientId);
     const tenantId: string | null = client.tenant_id ?? null;
     const db = this.supabase.client as any;
@@ -726,7 +812,7 @@ export class CimolaceBackofficeService {
     }
 
     if (done.length) {
-      await this.logChange(clientId, `operation:${done[0]}`, `Opération(s): ${done.join(', ')}${dto?.reason ? ` — ${dto.reason}` : ''}`);
+      await this.logChange(clientId, `operation:${done[0]}`, `Opération(s): ${done.join(', ')}${dto?.reason ? ` — ${dto.reason}` : ''}`, actor);
     }
     return { ok: true, operations: done, reason: dto?.reason ?? null, at: now };
   }
@@ -735,7 +821,7 @@ export class CimolaceBackofficeService {
    * Crée un ticket support (cimolace_tickets) rattaché au client via
    * `contact_email` (le control plane relit les tickets par cet email).
    */
-  async createTenantTicket(clientId: string, dto: any) {
+  async createTenantTicket(clientId: string, dto: any, actor?: string) {
     const client = await this.getClientOrThrow(clientId);
     const db = this.supabase.client as any;
     const { data: sites } = await db.from('cimolace_sites').select('id').eq('client_id', clientId).limit(1);
@@ -758,7 +844,7 @@ export class CimolaceBackofficeService {
       .select('*')
       .single();
     if (error) throw new BadRequestException(error.message);
-    await this.logChange(clientId, 'ticket:create', `Ticket ${data.ticket_number ?? data.id} créé : ${data.subject ?? ''}`);
+    await this.logChange(clientId, 'ticket:create', `Ticket ${data.ticket_number ?? data.id} créé : ${data.subject ?? ''}`, actor);
     return data;
   }
 

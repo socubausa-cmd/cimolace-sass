@@ -361,6 +361,7 @@ export class AdminTenantServicesController {
   @Post(":tenantId/services/:serviceKey/toggle")
   @UseGuards(JwtAuthGuard, CimolaceStaffGuard)
   async toggleService(
+    @Req() req: any,
     @Param("tenantId") tenantId: string,
     @Param("serviceKey") serviceKey: string,
     @Body() body: { active?: boolean },
@@ -373,6 +374,7 @@ export class AdminTenantServicesController {
         tenantId,
         serviceKey,
         body.active,
+        req.user?.email ?? req.user?.id ?? undefined,
       ),
     };
   }

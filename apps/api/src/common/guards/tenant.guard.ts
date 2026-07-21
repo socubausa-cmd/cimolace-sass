@@ -1,9 +1,14 @@
 import { Injectable, CanActivate, ExecutionContext, ForbiddenException } from '@nestjs/common';
+import { Reflector } from '@nestjs/core';
+import { ALLOW_NON_MEMBER_KEY } from '../decorators/allow-non-member.decorator';
 import { TenantService } from '../../tenant/tenant.service';
 
 @Injectable()
 export class TenantGuard implements CanActivate {
-  constructor(private readonly tenantService: TenantService) {}
+  constructor(
+    private readonly tenantService: TenantService,
+    private readonly reflector: Reflector,
+  ) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
     const request = context.switchToHttp().getRequest();
@@ -23,7 +28,18 @@ export class TenantGuard implements CanActivate {
 
     // Tokens Supabase (utilisateurs internes) : résolution normale via DB.
     const slug = (request.headers['x-tenant-slug'] as string) ?? undefined;
-    const tenant = await this.tenantService.resolveTenant(userId, slug);
+
+    // Opt-out explicite (@AllowNonMember) : résout par slug sans exiger de
+    // membership (viewer live public mbolo…). Le tenant doit tout de même
+    // exister (403 sinon).
+    const allowNonMember =
+      this.reflector.getAllAndOverride<boolean>(ALLOW_NON_MEMBER_KEY, [
+        context.getHandler(),
+        context.getClass(),
+      ]) === true;
+    const tenant = allowNonMember
+      ? await this.tenantService.resolveTenantAllowNonMember(userId, slug)
+      : await this.tenantService.resolveTenant(userId, slug);
     if (!tenant) throw new ForbiddenException('Accès tenant refusé');
     request.tenant = tenant;
     return true;

@@ -8,6 +8,9 @@ const signedUrlCache = new Map();
 
 const VideoPlayer = forwardRef(({ video, onEnded, onTimeUpdate, overlay = null }, ref) => {
   const inferredType = useMemo(() => {
+    // Le MONTAGE post-prod (renderedUrl = MP4 rendu en R2 par le worker) PRIME sur la source
+    // brute : c'est la version éditée que la classe doit voir. URL directe → lecture custom_url.
+    if (video?.renderedUrl) return 'custom_url';
     if (video?.type) return video.type;
     if (video?.storagePath) return 'upload';
     const url = String(video?.url || '');
@@ -15,13 +18,13 @@ const VideoPlayer = forwardRef(({ video, onEnded, onTimeUpdate, overlay = null }
     if (/vimeo\.com/i.test(url)) return 'vimeo';
     if (url) return 'custom_url';
     return '';
-  }, [video?.storagePath, video?.type, video?.url]);
+  }, [video?.renderedUrl, video?.storagePath, video?.type, video?.url]);
 
   const videoRef = useRef(null);
   const lastResolvedKeyRef = useRef('');
   const [duration, setDuration] = useState(0);
   const [currentTime, setCurrentTime] = useState(0);
-  const [playableUrl, setPlayableUrl] = useState(video?.url || '');
+  const [playableUrl, setPlayableUrl] = useState(video?.renderedUrl || video?.url || '');
   const [videoCanPlay, setVideoCanPlay] = useState(false);
   const draggingRef = useRef(false);
 
@@ -71,8 +74,9 @@ const VideoPlayer = forwardRef(({ video, onEnded, onTimeUpdate, overlay = null }
         setPlayableUrl('');
         return;
       }
-      const storagePath = video?.storagePath;
-      const rawUrl = video?.url || '';
+      // renderedUrl (montage) en priorité, puis storagePath (upload signé), puis url brute.
+      const storagePath = video?.renderedUrl ? null : video?.storagePath;
+      const rawUrl = video?.renderedUrl || video?.url || '';
       const cacheKey = storagePath ? `${inferredType}:${storagePath}` : `${inferredType}::${rawUrl || ''}`;
 
       // Avoid resetting src when nothing meaningful changed.
@@ -125,7 +129,7 @@ const VideoPlayer = forwardRef(({ video, onEnded, onTimeUpdate, overlay = null }
     return () => {
       alive = false;
     };
-  }, [inferredType, video?.storagePath, video?.url]);
+  }, [inferredType, video?.renderedUrl, video?.storagePath, video?.url]);
 
   // Render based on type
   if (!video) {

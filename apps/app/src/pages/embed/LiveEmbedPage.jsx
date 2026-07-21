@@ -120,6 +120,9 @@ export default function LiveEmbedPage() {
   const [sessionInfo, setSessionInfo] = useState(null);
   const [resolvedRole, setResolvedRole] = useState(urlRole); // role finalement émis par l'API
   const [errorMsg, setErrorMsg] = useState('');
+  // White-label (offre 3 / tenant EMBARQUÉ) : masque « Powered by LIRI » — 0 marque
+  // LIRI dans l'embed du client. Défaut = affiché (attribution) tant que non résolu.
+  const [whitelabel, setWhitelabel] = useState(false);
   const joinedRef = useRef(false);
 
   // Récupérer les infos publiques + rejoindre la session
@@ -202,7 +205,27 @@ export default function LiveEmbedPage() {
     init();
   }, [sessionId, embedToken, tenantSlug]);
 
+  // Résout le niveau de marque du tenant (endpoint branding public, read-only) :
+  // un tenant EMBARQUÉ (offre 3) ne doit afficher AUCUNE marque LIRI dans l'embed.
+  useEffect(() => {
+    if (!tenantSlug) return undefined;
+    const apiBase = import.meta.env.VITE_API_BASE ?? '/api';
+    let cancelled = false;
+    fetch(`${apiBase}/tenants/by-slug/${encodeURIComponent(tenantSlug)}/branding`)
+      .then((r) => (r.ok ? r.json() : null))
+      .then((res) => {
+        if (cancelled || !res) return;
+        const data = res?.data ?? res;
+        if (data?.embedded) setWhitelabel(true);
+      })
+      .catch(() => { /* défaut sûr : garder l'attribution */ });
+    return () => { cancelled = true; };
+  }, [tenantSlug]);
+
   // ── Render phases ────────────────────────────────────────────────────────────
+
+  // Marque « Powered by LIRI » — masquée pour un tenant EMBARQUÉ (offre 3, 0 marque).
+  const poweredBy = whitelabel ? null : <div style={S.poweredBy}>Powered by LIRI</div>;
 
   if (phase === 'loading' || phase === 'joining') {
     return (
@@ -217,7 +240,7 @@ export default function LiveEmbedPage() {
             {phase === 'loading' ? 'Connexion au live…' : 'Authentification en cours…'}
           </p>
         </div>
-        <div style={S.poweredBy}>Powered by LIRI</div>
+        {poweredBy}
       </div>
     );
   }
@@ -243,7 +266,7 @@ export default function LiveEmbedPage() {
             <p style={S.sub}>Ce live commencera le {scheduledAt}</p>
           )}
         </div>
-        <div style={S.poweredBy}>Powered by LIRI</div>
+        {poweredBy}
       </div>
     );
   }
@@ -256,7 +279,7 @@ export default function LiveEmbedPage() {
           <h2 style={S.title}>Session terminée</h2>
           <p style={S.sub}>Ce live est terminé. Le replay sera disponible prochainement.</p>
         </div>
-        <div style={S.poweredBy}>Powered by LIRI</div>
+        {poweredBy}
       </div>
     );
   }
@@ -269,7 +292,7 @@ export default function LiveEmbedPage() {
           <h2 style={S.title}>Impossible de rejoindre</h2>
           <p style={S.sub}>{errorMsg}</p>
         </div>
-        <div style={S.poweredBy}>Powered by LIRI</div>
+        {poweredBy}
       </div>
     );
   }
@@ -341,7 +364,7 @@ export default function LiveEmbedPage() {
             )}
           </LiveKitRoom>
         </div>
-        <div style={S.poweredBy}>Powered by LIRI</div>
+        {poweredBy}
       </div>
     );
   }

@@ -20,21 +20,29 @@ import {
 import type { Request } from 'express';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { TenantGuard } from '../tenant/tenant.guard';
+import { RolesGuard } from '../common/guards/roles.guard';
+import { Roles } from '../common/decorators/roles.decorator';
 import { CurrentTenant } from '../tenant/current-tenant.decorator';
 import type { TenantContext } from '../tenant/tenant.types';
 import { AiBillingService } from './ai-billing.service';
 
+// RolesGuard au niveau classe : les handlers SANS @Roles (pricing, topup-packages,
+// plans = catalogue global) restent lisibles par tout membre ; les handlers avec
+// @Roles('owner','admin') (solde/usage/plan/refill/topup = données & actions
+// financières du tenant) sont réservés au staff (ferme la priv-esc intra-tenant).
 @Controller('ai-billing')
-@UseGuards(JwtAuthGuard, TenantGuard)
+@UseGuards(JwtAuthGuard, TenantGuard, RolesGuard)
 export class AiBillingController {
   constructor(private readonly svc: AiBillingService) {}
 
   @Get('balance')
+  @Roles('owner', 'admin')
   async balance(@CurrentTenant() t: TenantContext) {
     return this.svc.getBalance(t.id);
   }
 
   @Get('transactions')
+  @Roles('owner', 'admin')
   async transactions(
     @CurrentTenant() t: TenantContext,
     @Query('limit') limit?: string,
@@ -43,6 +51,7 @@ export class AiBillingController {
   }
 
   @Get('usage')
+  @Roles('owner', 'admin')
   async usage(
     @CurrentTenant() t: TenantContext,
     @Query('limit') limit?: string,
@@ -57,6 +66,7 @@ export class AiBillingController {
   }
 
   @Get('usage/stats')
+  @Roles('owner', 'admin')
   async stats(
     @CurrentTenant() t: TenantContext,
     @Query('days') days?: string,
@@ -82,6 +92,7 @@ export class AiBillingController {
   // ─── Mutations administratives ────────────────────────────────────────────
 
   @Post('plan')
+  @Roles('owner', 'admin')
   async setPlan(
     @CurrentTenant() t: TenantContext,
     @Body() body: { plan_tier: string },
@@ -90,6 +101,7 @@ export class AiBillingController {
   }
 
   @Post('refill')
+  @Roles('owner', 'admin')
   async refill(@CurrentTenant() t: TenantContext) {
     return this.svc.monthlyRefill(t.id);
   }
@@ -102,6 +114,7 @@ export class AiBillingController {
    *   Le webhook checkout.session.completed crédite alors le solde côté serveur.
    */
   @Post('topup/checkout')
+  @Roles('owner', 'admin')
   async createTopupCheckout(
     @CurrentTenant() t: TenantContext,
     @Body() body: { pack_key: string; success_url?: string; cancel_url?: string },
@@ -190,6 +203,7 @@ export class AiBillingController {
 
   /** Récap rapide pour le widget header (solde + pourcentage utilisé) */
   @Get('summary')
+  @Roles('owner', 'admin')
   async summary(@CurrentTenant() t: TenantContext) {
     const balance = await this.svc.getBalance(t.id);
     const monthlyQuota = parseFloat(balance.monthly_quota || '0');

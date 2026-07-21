@@ -62,7 +62,7 @@ export function buildOwnerMenuGroups(payoutTenantSlug, basePath = '/owner-dashbo
       section: 'Croissance',
       items: [
         { id: 'studio-creator', icon: Sparkles, label: 'Studio Créateur', href: '/studio' },
-        { id: 'marketing-automation', icon: Megaphone, label: 'Marketing Automation', href: '/admin/marketing?tab=automation' },
+        { id: 'marketing-automation', icon: Megaphone, label: 'Marketing Automation', href: '/liri/crm?tab=automation' },
         { id: 'ngowazulu-operations', icon: Flame, label: 'Ngowazulu Opérations' },
         { id: 'knowledge-base', icon: Database, label: 'Base de connaissances', href: `${basePath}/knowledge-base` },
       ],

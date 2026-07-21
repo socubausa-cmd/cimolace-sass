@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Param, Req, UseGuards, Headers, UnauthorizedException } from "@nestjs/common";
+import { Controller, Get, Post, Body, Param, Req, UseGuards, Headers, UnauthorizedException, BadRequestException } from "@nestjs/common";
 import { JwtAuthGuard } from "../common/guards/jwt-auth.guard";
 import { CimolaceStaffGuard } from "../cimolace-backoffice/cimolace-staff.guard";
 import { TenantGuard } from "../common/guards/tenant.guard";
@@ -10,14 +10,17 @@ import { BillingService } from "./billing.service";
 @UseGuards(JwtAuthGuard, TenantGuard, RolesGuard)
 export class BillingController {
   constructor(private svc: BillingService) {}
-  @Get("subscription") async getSubscription(@Req() req: any) { return { data: await this.svc.getSubscription(req.tenant.id) }; }
-  @Post("subscription") async create(@Req() req: any, @Body() b: any) { return { data: await this.svc.createSubscription(req.tenant.id, b.plan, b.provider) }; }
-  @Get("invoices") async getInvoices(@Req() req: any) { return { data: await this.svc.getInvoices(req.tenant.id) }; }
+  // Données financières du tenant + écritures d'abonnement : owner/admin seulement
+  // (défense en profondeur — un student membre ne doit pas lire le billing/solde
+  // ni créer d'abo au nom du tenant). Ferme la priv-esc intra-tenant.
+  @Get("subscription") @Roles("owner", "admin") async getSubscription(@Req() req: any) { return { data: await this.svc.getSubscription(req.tenant.id) }; }
+  @Post("subscription") @Roles("owner", "admin") async create(@Req() req: any, @Body() b: any) { return { data: await this.svc.createSubscription(req.tenant.id, b.plan, b.provider) }; }
+  @Get("invoices") @Roles("owner", "admin") async getInvoices(@Req() req: any) { return { data: await this.svc.getInvoices(req.tenant.id) }; }
 
   // Abonnement plateforme (billing_*) + collecte mobile money PawaPay
   // Valeur brute renvoyée : le ResponseInterceptor global emballe en { data: ... }
   // (renvoyer { data } ici produirait un double-emballage).
-  @Get("plan") async plan(@Req() req: any) { return this.svc.getTenantSubscription(req.tenant.id); }
+  @Get("plan") @Roles("owner", "admin") async plan(@Req() req: any) { return this.svc.getTenantSubscription(req.tenant.id); }
   // SELF-SERVE : choisir un forfait Cimolace (grille LIRI) → crée l'abo 'pending' à
   // payer ensuite via card-checkout (Stripe) ou collect (PawaPay). Body { planKey, provider? }.
   // Écritures qui engagent de l'argent (créer un abo, déclencher une collecte/
@@ -26,13 +29,15 @@ export class BillingController {
   @Post("subscribe") @Roles("owner", "admin") async subscribe(@Req() req: any, @Body() b: { planKey?: string; provider?: string }) {
     return this.svc.subscribeToPlan(req.tenant.id, b?.planKey ?? "", b?.provider);
   }
+  // RÉSILIATION §11 : politique unique (fin de période) portée par tenant-portal
+  // (POST /tenant-portal/subscriptions/:id/cancel + /reactivate), que le front utilise déjà.
   // Mobile money (PawaPay — Afrique)
   @Post("subscriptions/:id/collect") @Roles("owner", "admin") async collect(@Req() req: any, @Param("id") id: string, @Body() b: any) {
     return this.svc.collectSubscriptionViaPawaPay(req.tenant.id, id, b);
   }
   // Mobile money : polling du statut (compte PawaPay partagé → pas de webhook cimolace).
   // Le front appelle ceci après « Demande envoyée » jusqu'à activation de l'abo.
-  @Post("mobile-money/sync") async syncMobileMoney(@Req() req: any) {
+  @Post("mobile-money/sync") @Roles("owner", "admin") async syncMobileMoney(@Req() req: any) {
     return this.svc.syncPendingPawaPayDeposits(req.tenant.id);
   }
   // Remboursement à l'annulation (owner/admin — ⚠️ déplace de l'argent réel vers le payeur)
@@ -41,7 +46,7 @@ export class BillingController {
     return this.svc.refundSubscriptionPayment(req.tenant.id, id);
   }
   // Polling du statut de remboursement (le front l'appelle jusqu'à 'refunded')
-  @Post("refunds/sync") async syncRefunds(@Req() req: any) {
+  @Post("refunds/sync") @Roles("owner", "admin") async syncRefunds(@Req() req: any) {
     return this.svc.syncPendingRefunds(req.tenant.id);
   }
   // Carte bancaire (Stripe — Europe / international) — owner/admin (engage un paiement)
@@ -53,9 +58,9 @@ export class BillingController {
   }
 
   // Retraits / versements mobile money (PawaPay payouts) — owner/admin
-  @Get("payouts") async listPayouts(@Req() req: any) { return this.svc.listPayouts(req.tenant.id); }
+  @Get("payouts") @Roles("owner", "admin") async listPayouts(@Req() req: any) { return this.svc.listPayouts(req.tenant.id); }
   // Solde estimé (encaissé mobile money − retiré) pour l'écran « Mes finances ».
-  @Get("balance") async balance(@Req() req: any) { return this.svc.getBalance(req.tenant.id); }
+  @Get("balance") @Roles("owner", "admin") async balance(@Req() req: any) { return this.svc.getBalance(req.tenant.id); }
   @Post("payouts") @UseGuards(RolesGuard) @Roles("owner", "admin") async createPayout(@Req() req: any, @Body() b: any) {
     return this.svc.createPayout(req.tenant.id, req.user?.id ?? null, b);
   }
@@ -72,12 +77,17 @@ export class AdminBillingController {
 
   /**
    * Active le forfait d'un tenant (crée billing_subscriptions actif + arme le
-   * gating). Body optionnel : { plan?: string } (défaut "zahir-forfait").
+   * gating). Body REQUIS : { plan: string } — clé d'un plan billing_plans.
+   * NEUTRALITÉ (§1) : plus de défaut « zahir-forfait » codé en dur ; l'appelant DOIT
+   * nommer le plan (le back-office le passe déjà explicitement). Un tenant quelconque
+   * n'active donc plus silencieusement le bundle d'un autre tenant.
    */
   @Post("tenants/:tenantId/activate")
   @UseGuards(JwtAuthGuard, CimolaceStaffGuard)
-  async activate(@Param("tenantId") tenantId: string, @Body() body: { plan?: string }) {
-    return { data: await this.svc.activateTenantSubscription(tenantId, body?.plan || "zahir-forfait") };
+  async activate(@Req() req: any, @Param("tenantId") tenantId: string, @Body() body: { plan?: string }) {
+    const plan = String(body?.plan ?? "").trim();
+    if (!plan) throw new BadRequestException("plan requis (clé billing_plans) — aucun forfait par défaut.");
+    return { data: await this.svc.activateTenantSubscription(tenantId, plan, req.user?.email ?? req.user?.id ?? undefined) };
   }
 }
 

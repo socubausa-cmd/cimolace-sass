@@ -415,7 +415,8 @@ const ForfaitsPage = ({ embedded = false }) => {
                   return {
                     value: cycle.key,
                     label: CYCLE_SELECTOR_LABELS[cycle.key] || stripParens(cycle.label) || c.headline,
-                    badge: `Niv. ${c.tier}`,
+                    // Académique = le palier RECOMMANDÉ (décoy : premier saut de valeur = le cours en direct).
+                    badge: cycle.key === 'academique' ? '★ Recommandé' : `Niv. ${c.tier}`,
                     icon: Icon,
                   };
                 })}

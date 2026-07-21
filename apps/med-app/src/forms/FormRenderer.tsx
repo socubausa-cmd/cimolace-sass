@@ -1,7 +1,7 @@
 import { useRef, useState, useEffect } from 'react';
 import { Asterisk, Check, Send, Upload } from 'lucide-react';
 
-export type FieldType = 'text' | 'textarea' | 'number' | 'date' | 'select' | 'checkbox' | 'multi' | 'file';
+export type FieldType = 'text' | 'textarea' | 'number' | 'date' | 'select' | 'checkbox' | 'multi' | 'file' | 'measure';
 
 export type FormField = {
   id: string;
@@ -10,6 +10,11 @@ export type FormField = {
   required?: boolean;
   options?: string[];
   placeholder?: string;
+  // Champ 'measure' : constante objective → biomarqueur du jumeau.
+  biomarker_code?: string;
+  unit?: string;
+  // Grille de scoring roue (config libre, interprétée par le backend).
+  scoring?: Array<Record<string, unknown>>;
   _uid?: number; // clé interne stable (builder) — ignorée à la sauvegarde
 };
 
@@ -146,6 +151,27 @@ function FieldControl({
         </div>
       );
     }
+    case 'measure':
+      // Constante objective (poids, tension, glycémie…) : saisie numérique +
+      // unité affichée. Alimente le jumeau via son biomarker_code.
+      return (
+        <div style={{ position: 'relative' }}>
+          <input
+            {...common}
+            type="number"
+            inputMode="decimal"
+            placeholder={field.placeholder || '—'}
+            value={value ?? ''}
+            onChange={(e) => onChange(e.target.value)}
+            style={{ paddingRight: field.unit ? 54 : undefined }}
+          />
+          {field.unit && (
+            <span style={{ position: 'absolute', right: 13, top: '50%', transform: 'translateY(-50%)', color: 'var(--zw-text-muted)', fontSize: 13, fontWeight: 600, pointerEvents: 'none' }}>
+              {field.unit}
+            </span>
+          )}
+        </div>
+      );
     case 'file':
       return <FilePicker value={value} onChange={onChange} disabled={disabled} />;
     default:

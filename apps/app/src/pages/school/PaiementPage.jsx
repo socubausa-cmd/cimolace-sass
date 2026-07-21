@@ -5,6 +5,7 @@ import { Link, useParams, useSearchParams } from 'react-router-dom';
 import { Helmet } from 'react-helmet';
 import { offeringCheckoutApi } from '@/lib/api-v2';
 import { supabase } from '@/lib/customSupabaseClient';
+import { useBilling } from '@/contexts/BillingContext';
 import { getNgowazuluMentoratOffer } from '@/config/ngowazuluMentoratOffers';
 import { NGOWAZULU_CONSULTATION_PLAN_SLUG } from '@/config/ngowazuluConsultation';
 
@@ -91,6 +92,13 @@ export default function PaiementPage() {
   // 'idle' | 'capturing' | 'done' | 'error' — capture de l'ordre PayPal au retour.
   const [paypalCapture, setPaypalCapture] = useState('idle');
 
+  // Statut d'abonnement (même signal que le gate LiriAccessGate) — pour ATTENDRE que l'abo soit
+  // ACTIF avant de rediriger vers /liri (le fulfillment est posé EN ASYNCHRONE par le webhook
+  // Stripe/PawaPay ; rediriger trop tôt renverrait l'utilisateur au mur d'upgrade). refresh n'est
+  // pas mémoïsé → on ne le met PAS dans les deps des effets (référence capturée suffit).
+  const { status: billingStatus, inGrace: billingInGrace, refresh: refreshBilling } = useBilling();
+  const [waitingSub, setWaitingSub] = useState(false);
+
   // Au retour de PayPal (paypal=success + token), on CAPTURE l'ordre côté serveur
   // (le fulfillment — abonnement + accès — se fait à la capture, jamais avant).
   useEffect(() => {
@@ -120,16 +128,53 @@ export default function PaiementPage() {
     return () => clearTimeout(t);
   }, [cardReturn, paypalCapture, next, planSlug, payTenant, isLoggedIn]);
 
-  // Paiement confirmé (carte/PayPal) SANS enchaînement « réserver » → on ramène l'élève
-  // CONNECTÉ dans SON espace (portail LIRI) au lieu de le laisser bloqué sur /paiement.
-  // (Invité : pas de session → bannière de confirmation + lien de connexion à la place.)
+  // (Redirection post-paiement carte/PayPal → Effet A + Effet B, DÉCLARÉS plus bas, APRÈS la
+  //  définition de `offer` : leurs deps lisent offer.kind, évalué au rendu → éviter le TDZ.)
+
+  // Mobile Money (PawaPay) : après le dépôt, POLLER le statut jusqu'à COMPLETED puis rediriger
+  // (mêmes suites que la carte). L'endpoint de statut est JWT-only → l'INVITÉ ne peut pas poller
+  // (il s'appuie sur le poller serveur 60 s + l'e-mail). Timeout ~3 min ≠ échec (le serveur finalise).
   useEffect(() => {
-    const paid = cardReturn === 'success' || paypalCapture === 'done';
-    if (!paid || next === 'reserver') return undefined; // 'reserver' est déjà géré ci-dessus
+    if (method !== 'mobile_money' || status.state !== 'success' || !status.depositId) return undefined;
     if (isLoggedIn !== true) return undefined;
-    const t = setTimeout(() => { window.location.assign('/liri'); }, 2200);
+    let alive = true;
+    let tries = 0;
+    const id = setInterval(async () => {
+      if (!alive) return;
+      tries += 1;
+      try {
+        const s = await offeringCheckoutApi.getStatus(status.depositId);
+        const st = String(s?.status || '').toUpperCase();
+        if (s?.isCompleted || st === 'COMPLETED') {
+          clearInterval(id);
+          setStatus((c) => ({ ...c, state: 'completed', message: 'Paiement confirmé — accès à votre espace…' }));
+          return; // la redirection est pilotée par l'effet dédié ci-dessous (status.state==='completed')
+        }
+        if (['FAILED', 'REJECTED', 'CANCELLED', 'DENIED'].includes(st)) {
+          clearInterval(id);
+          setStatus((c) => ({ ...c, state: 'error', message: 'Paiement Mobile Money refusé ou annulé sur votre téléphone. Vous pouvez réessayer.' }));
+          return;
+        }
+      } catch { /* réseau : on retente au prochain tick */ }
+      if (tries >= 45) { // ~3 min : PAS un échec — le poller serveur finalisera, l'e-mail confirmera.
+        clearInterval(id);
+        setStatus((c) => ({ ...c, state: 'pending_email', message: 'Toujours en attente de votre validation. Vous recevrez un e-mail dès la confirmation du paiement.' }));
+      }
+    }, 4000);
+    return () => { alive = false; clearInterval(id); };
+  }, [method, status.state, status.depositId, isLoggedIn]);
+
+  // Redirection Mobile Money — effet DÉDIÉ déclenché quand le dépôt est 'completed'. Séparé du poll
+  // pour que sa navigation NE soit PAS gardée par un flag `alive` que le passage success→completed
+  // (une dep du poll) invaliderait avant le timer. Honore next=reserver.
+  useEffect(() => {
+    if (status.state !== 'completed' || isLoggedIn !== true) return undefined;
+    const dest = (next === 'reserver' && planSlug)
+      ? `/t/${payTenant}/reserver?service=${encodeURIComponent(planSlug)}`
+      : '/liri';
+    const t = setTimeout(() => { window.location.assign(dest); }, 1100);
     return () => clearTimeout(t);
-  }, [cardReturn, paypalCapture, next, isLoggedIn]);
+  }, [status.state, isLoggedIn, next, planSlug, payTenant]);
 
   // Modèle d'accès du service (lu depuis billing_plans) : free/community → débloqué SANS paiement.
   const [accessModel, setAccessModel] = useState(null);
@@ -155,7 +200,7 @@ export default function PaiementPage() {
   const fmtEur = (cents, cur) => {
     const c = Number(cents || 0) / 100;
     const u = String(cur || 'EUR').toUpperCase();
-    if (u === 'XAF' || u === 'XOF') return `${Math.round(c * 100 / 100).toLocaleString('fr')} FCFA`;
+    if (u === 'XAF' || u === 'XOF') return `${Math.round(Number(cents || 0)).toLocaleString('fr')} FCFA`; // zéro-décimale : montant déjà en unité entière
     return `${c.toLocaleString('fr', { minimumFractionDigits: 0 })} ${u === 'EUR' ? '€' : u === 'USD' ? '$' : u}`;
   };
   const SERVICE_CATS = ['consultation', 'mentorat', 'masterclass', 'custom'];
@@ -176,6 +221,40 @@ export default function PaiementPage() {
     : isCatalogService
       ? { ...baseOffer, title: planInfo.label || baseOffer.title }
       : baseOffer;
+
+  // ── Redirection post-paiement carte/PayPal (déclarée ICI, après `offer`, pour lire offer.kind
+  //    sans TDZ). Le fulfillment est posé EN ASYNCHRONE par le webhook Stripe → on attend l'abo ACTIF.
+  // Effet A — ARMER l'attente. Offrande/consultation (non gatée) → redirection simple. Abonnement →
+  // on POLLE /billing/subscriptions/status (via refresh) jusqu'à ce que le gate laisse passer, avec
+  // un fail-safe de 25 s (le webhook peut tarder ; /liri se ré-arme via son poll 30 s + realtime).
+  useEffect(() => {
+    const paid = cardReturn === 'success' || paypalCapture === 'done';
+    if (!paid || next === 'reserver' || isLoggedIn !== true) return undefined;
+    if (offer.kind !== 'subscription') {
+      const t = setTimeout(() => { window.location.assign('/liri'); }, 2200);
+      return () => clearTimeout(t);
+    }
+    setWaitingSub(true);
+    let alive = true;
+    const deadline = Date.now() + 25000;
+    const poll = async () => {
+      if (!alive) return;
+      try { await refreshBilling(); } catch { /* réseau : retente */ }
+      if (alive && Date.now() > deadline) { window.location.assign('/liri'); } // fail-safe : ne jamais bloquer
+    };
+    poll();
+    const id = setInterval(poll, 2000);
+    return () => { alive = false; clearInterval(id); };
+    // refreshBilling volontairement hors deps (non mémoïsé → re-armerait le poll à chaque render)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [cardReturn, paypalCapture, next, isLoggedIn, offer.kind]);
+
+  // Effet B — REDIRIGER dès que l'abonnement est ACTIF (billingStatus dans les deps → lecture fraîche).
+  useEffect(() => {
+    if (!waitingSub) return;
+    const subOk = billingStatus === 'active' || (billingStatus === 'past_due' && billingInGrace);
+    if (subOk) window.location.assign('/liri');
+  }, [waitingSub, billingStatus, billingInGrace]);
 
   const handleClaimFree = async () => {
     if (isGuest && !guest.email.trim().includes('@')) {
@@ -255,6 +334,9 @@ export default function PaiementPage() {
 
   async function handleSubmit(e) {
     e.preventDefault();
+    // Garde anti double-dépôt Mobile Money : un dépôt déjà en vol/attente ne doit PAS en relancer un
+    // second (2ᵉ invite PIN → double débit). Le bouton est déjà désactivé dans ces états ; ceinture + bretelles.
+    if (method === 'mobile_money' && status.depositId && ['success', 'completed', 'pending_email'].includes(status.state)) return;
     if (isGuest && !guest.email.trim().includes('@')) {
       setStatus({ state: 'error', message: 'Indiquez votre email pour recevoir votre accès.', depositId: null });
       return;
@@ -381,7 +463,7 @@ export default function PaiementPage() {
     const isEvent = !!planInfo?.metadata?.event;
     const email = guest.email || 'votre email';
     return (
-      <div className="min-h-screen bg-[#070b14] text-white">
+      <div className="min-h-screen bg-[#262624] text-white">
         <Helmet>
           <title>{`Confirmation | ${BRAND}`}</title>
         </Helmet>
@@ -419,7 +501,7 @@ export default function PaiementPage() {
   // Service gratuit / communauté → pas de paiement : on propose de débloquer l'accès directement.
   if (isFreeAccess) {
     return (
-      <div className="min-h-screen bg-[#070b14] text-white">
+      <div className="min-h-screen bg-[#262624] text-white">
         <Helmet>
           <title>{`${offer.title} | ${BRAND}`}</title>
         </Helmet>
@@ -463,7 +545,7 @@ export default function PaiementPage() {
   }
 
   return (
-    <div className="min-h-screen bg-[#070b14] text-white">
+    <div className="min-h-screen bg-[#262624] text-white">
       <Helmet>
         <title>{`Paiement | ${BRAND}`}</title>
       </Helmet>
@@ -551,10 +633,14 @@ export default function PaiementPage() {
         )}
 
         {/* Choix du moyen de paiement */}
-        <div className="mt-8 grid grid-cols-3 gap-3" role="tablist" aria-label="Moyen de paiement">
+        <div className={`mt-8 grid gap-3 ${isGuest ? 'grid-cols-2' : 'grid-cols-3'}`} role="tablist" aria-label="Moyen de paiement">
           {[
             { id: 'card', label: 'Carte bancaire', sub: 'Visa · Mastercard' },
-            { id: 'paypal', label: 'PayPal', sub: 'Compte PayPal' },
+            // PayPal MASQUÉ pour les INVITÉS : la capture au retour (paypal/capture) est JWT-only
+            // et il n'existe pas de guest-paypal/capture → un invité serait débité SANS fulfillment.
+            // Carte + Mobile Money couvrent l'invité (fulfillment par webhook). À réactiver le jour
+            // où un endpoint guest-paypal/capture existera.
+            ...(isGuest ? [] : [{ id: 'paypal', label: 'PayPal', sub: 'Compte PayPal' }]),
             { id: 'mobile_money', label: 'Mobile Money', sub: 'MTN · Orange' },
           ].map((m) => {
             const active = method === m.id;
@@ -613,7 +699,7 @@ export default function PaiementPage() {
                     <label className="mb-1.5 block text-sm font-medium text-gray-200">Pays</label>
                     <select value={mmCountry} onChange={(e) => onCountryChange(e.target.value)} className={inputCls}>
                       {mmCountries.map((c) => (
-                        <option key={c.country} value={c.country} className="bg-[#0b1115]">
+                        <option key={c.country} value={c.country} className="bg-[#312d29]">
                           {c.displayName?.fr || c.displayName?.en || c.country}
                         </option>
                       ))}
@@ -624,7 +710,7 @@ export default function PaiementPage() {
                     <label className="mb-1.5 block text-sm font-medium text-gray-200">Opérateur Mobile Money</label>
                     <select value={mmOperator} onChange={(e) => setMmOperator(e.target.value)} className={inputCls}>
                       {mmOperators.map((p) => (
-                        <option key={p.provider} value={p.provider} className="bg-[#0b1115]">
+                        <option key={p.provider} value={p.provider} className="bg-[#312d29]">
                           {p.displayName || p.provider}
                         </option>
                       ))}
@@ -650,8 +736,8 @@ export default function PaiementPage() {
 
           <button
             type="submit"
-            disabled={status.state === 'submitting' || (method === 'mobile_money' && mmOperators.length === 0)}
-            className="w-full cursor-pointer rounded-lg bg-[var(--school-accent)] px-5 py-3 font-semibold text-black hover:bg-[#e5c04a] disabled:opacity-60"
+            disabled={status.state === 'submitting' || (method === 'mobile_money' && (['success', 'completed', 'pending_email'].includes(status.state) || mmOperators.length === 0))}
+            className="w-full cursor-pointer rounded-lg bg-[var(--school-accent)] px-5 py-3 font-semibold text-black hover:bg-[#c9673f] disabled:opacity-60"
           >
             {status.state === 'submitting'
               ? method === 'mobile_money'
@@ -672,7 +758,29 @@ export default function PaiementPage() {
         {status.state === 'success' && (
           <div className="mt-6 rounded-xl border border-emerald-500/30 bg-emerald-500/10 p-4 text-sm text-emerald-200">
             {status.message}
+            {method === 'mobile_money' && isLoggedIn === true && (
+              <p className="mt-2 flex items-center gap-2 text-xs text-emerald-300/80">
+                <span className="inline-block h-3 w-3 animate-spin rounded-full border-2 border-emerald-300/40 border-t-emerald-200" />
+                Vérification du paiement en cours…
+              </p>
+            )}
             {status.depositId && <p className="mt-2 text-xs text-emerald-300/70">Référence : {status.depositId}</p>}
+          </div>
+        )}
+        {status.state === 'completed' && (
+          <div className="mt-6 rounded-xl border border-emerald-500/30 bg-emerald-500/10 p-4 text-sm text-emerald-200">
+            {status.message}{' '}
+            <a href={(next === 'reserver' && planSlug) ? `/t/${payTenant}/reserver?service=${encodeURIComponent(planSlug)}` : '/liri'} className="font-semibold text-emerald-100 underline underline-offset-2">Accéder maintenant →</a>
+          </div>
+        )}
+        {status.state === 'pending_email' && (
+          <div className="mt-6 rounded-xl border border-amber-500/30 bg-amber-500/10 p-4 text-sm text-amber-200">
+            {status.message}
+            {isLoggedIn === true && (
+              <p className="mt-2">
+                <a href="/liri" className="font-semibold text-amber-100 underline underline-offset-2">Accéder à mon espace →</a>
+              </p>
+            )}
           </div>
         )}
         {status.state === 'error' && (

@@ -16,12 +16,17 @@ import { Body, Controller, Get, Headers, Post, Req, UseGuards } from '@nestjs/co
 import type { Request } from 'express';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { TenantGuard } from '../tenant/tenant.guard';
+import { AllowNonMember } from '../common/decorators/allow-non-member.decorator';
 import { CurrentTenant } from '../tenant/current-tenant.decorator';
 import type { TenantContext } from '../tenant/tenant.types';
 import { SupabaseService } from '../supabase/supabase.service';
 import { ImmersiveLiveService } from './immersive-live.service';
 
+// @AllowNonMember : moteur LiveKit — un viewer d'un live peut ne pas être membre
+// du tenant. Ces endpoints ne renvoient que des tokens/liens scopés à une
+// session (pas de données tenant en masse) ; on préserve l'accès viewer.
 @Controller('immersive-live')
+@AllowNonMember()
 export class ImmersiveLiveController {
   constructor(
     private readonly svc: ImmersiveLiveService,

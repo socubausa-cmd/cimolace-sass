@@ -1,8 +1,11 @@
 import React, { useMemo, useState } from 'react';
 import { BookOpen, CheckCircle2, Loader2, Sparkles, Wand2 } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/lib/customSupabaseClient';
 import { invokeSupabaseFunction } from '@/lib/supabaseEdgeInvoke';
 import StudioDesignerLikeShell from '@/components/liri/liri-ecosystem/StudioDesignerLikeShell';
+import { usePublishToClassroom } from '@/hooks/usePublishToClassroom';
+import { agentCourseToClassroomDraft } from '@/lib/precepteur/toClassroomDraft';
 
 const PEDAGOGICAL_PROFILES = [
   { id: 'auto', label: 'Auto' },
@@ -34,6 +37,9 @@ export default function StudioFormationLlmBuilderPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [result, setResult] = useState(null);
+  const [publishing, setPublishing] = useState(false);
+  const navigate = useNavigate();
+  const { publish } = usePublishToClassroom();
 
   const steps = useMemo(() => (Array.isArray(result?.etapes) ? result.etapes : []), [result]);
   const canGenerate = title.trim().length > 3 || prompt.trim().length > 10;
@@ -62,6 +68,24 @@ export default function StudioFormationLlmBuilderPage() {
       setResult(null);
     } finally {
       setLoading(false);
+    }
+  };
+
+  // PUBLIER EN CLASSE : le cours généré (etapes) → formation réelle (courses + structure)
+  // via le point de convergence usePublishToClassroom → visible dans l'OS /liri/formations.
+  const handlePublish = async () => {
+    if (!result || publishing) return;
+    setPublishing(true);
+    setError('');
+    try {
+      const draft = agentCourseToClassroomDraft(result);
+      const { id, error: pErr } = await publish(draft);
+      if (pErr) { setError('Publication impossible : ' + (pErr.message || pErr)); return; }
+      navigate(id ? `/liri/formations?course=${id}` : '/liri/formations');
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Publication impossible.');
+    } finally {
+      setPublishing(false);
     }
   };
 
@@ -177,6 +201,15 @@ export default function StudioFormationLlmBuilderPage() {
                   <p className="mt-1 text-[16px] font-semibold text-[#f5f1e9]">{result.titre || 'Sans titre'}</p>
                   <p className="mt-1 text-[12px] text-white/55">{result.objectif || result.sous_titre || '-'}</p>
                 </div>
+                <button
+                  type="button"
+                  onClick={handlePublish}
+                  disabled={publishing}
+                  className="inline-flex w-full items-center justify-center gap-2 rounded-lg bg-[#d97757] px-3 py-2.5 text-[12px] font-semibold text-white transition-all hover:bg-[#c9673f] disabled:opacity-40 shadow-[0_0_14px_rgba(217,119,87,0.32)]"
+                >
+                  {publishing ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <CheckCircle2 className="h-3.5 w-3.5" />}
+                  Publier en classe (Mes formations)
+                </button>
                 <div className="space-y-2">
                   {steps.map((step, idx) => (
                     <div key={idx} className="rounded-xl border border-white/[0.08] bg-white/[0.02] p-3">

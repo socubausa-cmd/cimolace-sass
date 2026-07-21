@@ -51,15 +51,18 @@ const LoginPage = () => {
   // NGOWAZULU). TOUT AUTRE tenant = SON branding DB (nom/logo/couleurs) — jamais
   // l'habillage d'ISNA (cloison : chaque org a son identité, réf audit multi-tenant).
   const isFounderTenant = !isPlatformLiri && String(tenantCtx.slug || '') === FOUNDER_SLUG;
+  // Login CHAUD (directive artistique : bannir navy/or, fond #262624) pour LIRI ET le fondateur
+  // (prorascience) — l'ancien habillage or/navy « Academy » est déprécié. Tenant tiers = inchangé.
+  const warmLogin = isPlatformLiri || isFounderTenant;
   const schoolBrand = isPlatformLiri ? 'LIRI' : (branding.name || 'École');
-  const schoolAcademyTitle = isPlatformLiri ? 'LIRI — Intelligence Live Augmentée' : `${schoolBrand} Academy`;
+  const schoolAcademyTitle = isPlatformLiri ? 'LIRI — Intelligence Live Augmentée' : schoolBrand;
   // LIRI = terracotta du PORTAIL (--coral #d97757), pas un violet inventé. Cohérent avec
   // LiriPortalShell / le logo lirilogo.png. ISNA (tenant fondateur) = or #D4AF37.
   // Tenant tiers = SON accent (brand_colors), repli terracotta produit.
   const accentColor = isPlatformLiri
     ? '#d97757'
     : isFounderTenant
-      ? '#D4AF37'
+      ? '#d97757'
       : (branding.accentColor || branding.primaryColor || '#d97757');
   const brandTagline = isPlatformLiri
     ? 'Intelligence Live Augmentée'
@@ -96,6 +99,19 @@ const LoginPage = () => {
   const isLiriMobileAuth = location.pathname.startsWith('/m/eleve/login');
   const spLogin = new URLSearchParams(location?.search || '');
   const redirectParam = spLogin.get('redirect') || spLogin.get('next');
+
+  // B — LA CONNEXION PASSE PAR L'OS IMMERSIF (l'OS possède l'identité — décision fondateur). Sur
+  // prorascience.org, /login n'est qu'un REPLI : on renvoie vers la home OS avec l'intention
+  // « login » → l'OS ouvre son formulaire inline. Échappatoire debug : ?legacy=1. Autres hosts inchangés.
+  useLayoutEffect(() => {
+    if (typeof window === 'undefined' || isLiriMobileAuth) return;
+    const h = window.location.hostname.toLowerCase();
+    if (h !== 'prorascience.org' && h !== 'www.prorascience.org') return;
+    if (spLogin.get('legacy') === '1') return;
+    const back = redirectParam || location.state?.from?.pathname || '';
+    navigate(`/?auth=login${back ? `&redirect=${encodeURIComponent(back)}` : ''}`, { replace: true });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
   // Défaut post-login : sur l'hôte PLATEFORME LIRI (localhost / liri.cimolace.space, sans
   // tenant résolu) → le PORTAIL LIRI (/liri), surtout PAS /dashboard qui retombe sur la
   // chrome ISNA Academy. Sur un domaine de tenant → son /dashboard (son académie).
@@ -343,7 +359,7 @@ const LoginPage = () => {
               className={
                 isLiriMobileAuth
                   ? 'h-12 border pl-10 text-white placeholder:text-white/35 focus:border-[#d97757]/60 focus:ring-[#d97757]/25'
-                  : 'pl-10 h-11 bg-[#192734] border-white/10 text-white focus:border-[var(--school-accent)] focus:ring-1 focus:ring-[color-mix(in_srgb,var(--school-accent)_30%,transparent)]'
+                  : 'pl-10 h-11 bg-[#2f2b28] border-white/10 text-white focus:border-[var(--school-accent)] focus:ring-1 focus:ring-[color-mix(in_srgb,var(--school-accent)_30%,transparent)]'
               }
               style={isLiriMobileAuth ? { background: EV_CARD, borderColor: EV_LINE } : undefined}
             />
@@ -378,7 +394,7 @@ const LoginPage = () => {
               className={
                 isLiriMobileAuth
                   ? 'h-12 border pl-10 text-white placeholder:text-white/35 focus:border-[#d97757]/60 focus:ring-[#d97757]/25'
-                  : 'pl-10 h-11 bg-[#192734] border-white/10 text-white focus:border-[var(--school-accent)] focus:ring-1 focus:ring-[color-mix(in_srgb,var(--school-accent)_30%,transparent)]'
+                  : 'pl-10 h-11 bg-[#2f2b28] border-white/10 text-white focus:border-[var(--school-accent)] focus:ring-1 focus:ring-[color-mix(in_srgb,var(--school-accent)_30%,transparent)]'
               }
               style={isLiriMobileAuth ? { background: EV_CARD, borderColor: EV_LINE } : undefined}
             />
@@ -456,7 +472,7 @@ const LoginPage = () => {
                 className="text-[10px] font-bold uppercase tracking-[0.35em] text-[#e8b6a3]/95"
                 style={{ color: EV_ACCENT }}
               >
-                Academy
+                {brandTagline}
               </span>
             </Link>
           </div>
@@ -489,10 +505,10 @@ const LoginPage = () => {
 
   return (
     <div
-      className={isPlatformLiri ? 'liri-neutral-login flex min-h-screen bg-[#262624]' : 'flex min-h-screen bg-[#070b14]'}
-      style={isPlatformLiri ? { '--school-accent': accentColor } : undefined}
+      className={warmLogin ? 'liri-neutral-login flex min-h-screen bg-[#262624]' : 'flex min-h-screen bg-[#070b14]'}
+      style={warmLogin ? { '--school-accent': accentColor } : undefined}
     >
-      {isPlatformLiri && <style>{`.liri-neutral-login{--school-accent:#d97757 !important}`}</style>}
+      {warmLogin && <style>{`.liri-neutral-login{--school-accent:${accentColor} !important}`}</style>}
       <Helmet>
         <title>{`Connexion | ${schoolAcademyTitle}`}</title>
       </Helmet>
@@ -500,11 +516,11 @@ const LoginPage = () => {
       {/* ── PANNEAU GAUCHE – branding ── */}
       <div className="relative hidden w-1/2 flex-col justify-between overflow-hidden p-12 lg:flex">
         <div
-          className={isPlatformLiri ? 'absolute inset-0' : 'absolute inset-0 bg-gradient-to-br from-[#070b14] via-[#192734] to-[#070b14]'}
-          style={isPlatformLiri ? { background: 'linear-gradient(to bottom right, #2b2926, #262624 45%, #1f1e1c)' } : undefined}
+          className={warmLogin ? 'absolute inset-0' : 'absolute inset-0 bg-gradient-to-br from-[#070b14] via-[#192734] to-[#070b14]'}
+          style={warmLogin ? { background: 'linear-gradient(to bottom right, #2b2926, #262624 45%, #1f1e1c)' } : undefined}
         />
         <div className="absolute left-1/4 top-1/4 h-[500px] w-[500px] rounded-full blur-[150px]" style={{ backgroundColor: `${accentColor}0d` }} />
-        <div className="absolute bottom-1/4 right-1/4 h-[300px] w-[300px] rounded-full blur-[120px]" style={{ backgroundColor: isPlatformLiri ? 'rgba(226,85,63,0.08)' : 'rgba(212,175,55,0.07)' }} />
+        <div className="absolute bottom-1/4 right-1/4 h-[300px] w-[300px] rounded-full blur-[120px]" style={{ backgroundColor: warmLogin ? 'rgba(217,119,87,0.08)' : 'rgba(212,175,55,0.07)' }} />
         <div
           className="absolute inset-0 opacity-40"
           style={{

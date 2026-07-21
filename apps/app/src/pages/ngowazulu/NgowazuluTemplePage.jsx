@@ -10,6 +10,7 @@ import { supabase } from '@/lib/customSupabaseClient';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/components/ui/use-toast';
 import { cn } from '@/lib/utils';
+import TempleConsultationRoue from '@/components/temple/TempleConsultationRoue';
 
 // ─── Timeline événements d'un dossier de cas ─────────────────────────────────
 const EVENT_ICONS = {
@@ -380,7 +381,9 @@ export default function NgowazuluTemplePage({ embedded = false, basePath = '/ngo
                 </div>
               ) : null}
               {selected.id === 'consultations' ? (
-                <div className="space-y-3">
+                <div className="space-y-4">
+                  {/* Roue de Transformation + questionnaire d'intake spirituel (Phase 1). */}
+                  <TempleConsultationRoue />
                   <div className="flex flex-wrap gap-2">
                     <Link to="/services-spirituels#ngowazulu">
                       <Button className="bg-[var(--school-accent)] text-black hover:bg-amber-500 font-bold">

@@ -36,10 +36,18 @@ export class AuthController {
       throw new UnauthorizedException('Clé API invalide ou révoquée');
     }
 
+    // SÉCURITÉ : le rôle est plafonné au rôle RÉEL de l'utilisateur dans le tenant
+    // (jamais celui — potentiellement forgé — envoyé dans le body). Cf resolveCappedMedosRole.
+    const effectiveRole = await this.authService.resolveCappedMedosRole(
+      keyData.tenantId,
+      dto.userId,
+      dto.role,
+    );
+
     const token = this.authService.generateMedosToken({
       sub: dto.userId,
       email: dto.email,
-      role: dto.role,
+      role: effectiveRole,
       tenant_id: keyData.tenantId,
       tenant_slug: keyData.tenantSlug,
     });
@@ -50,6 +58,7 @@ export class AuthController {
       token,
       expiresAt,
       tenantSlug: keyData.tenantSlug,
+      role: effectiveRole,
     };
   }
 }

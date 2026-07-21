@@ -15,7 +15,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { LiriFonts as F, softShadow, type LiriPalette } from '@/constants/liri-theme';
-import { generateMasterclass, type MasterclassResult } from '@/lib/liri-api';
+import { generateMasterclass, publishCurriculum, type DraftModule, type MasterclassResult } from '@/lib/liri-api';
 import { useTheme } from '@/lib/theme';
 
 const PHASES = [
@@ -48,6 +48,7 @@ export default function CreerMasterclassScreen() {
   }, [busy]);
   const [result, setResult] = useState<MasterclassResult | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [publishing, setPublishing] = useState(false);
 
   const canSubmit = title.trim().length >= 3 && source.trim().length >= 40 && !busy;
 
@@ -62,6 +63,30 @@ export default function CreerMasterclassScreen() {
       setResult(res);
     } else {
       setError("Génération impossible. Vérifie ta connexion et que le texte source est assez riche.");
+    }
+  };
+
+  // PUBLIER EN CLASSE : la masterclass générée devient une VRAIE formation (courses + structure
+  // relationnelle via publishCurriculum) → visible dans « Mes formations » (natif ET OS web).
+  const publish = async () => {
+    if (!result || publishing) return;
+    setPublishing(true);
+    setError(null);
+    try {
+      const modules: DraftModule[] = (result.modules ?? []).map((m) => ({
+        title: m.title || 'Module',
+        lessons: (m.lessons ?? []).map((l) => ({ title: l.title || 'Leçon', kind: 'text' as const, content: '' })),
+      }));
+      const res = await publishCurriculum({ title: result.title || title.trim(), description: result.description, modules });
+      if (res?.course?.id) {
+        router.push(`/formation/${res.course.id}` as never);
+      } else {
+        setError('Publication impossible pour le moment.');
+      }
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Publication impossible.');
+    } finally {
+      setPublishing(false);
     }
   };
 
@@ -151,8 +176,16 @@ export default function CreerMasterclassScreen() {
                     ))}
                   </View>
                 ))}
+                <Pressable
+                  onPress={publish}
+                  disabled={publishing}
+                  style={({ pressed }) => [styles.publishBtn, publishing && styles.publishOff, pressed && { opacity: 0.85 }]}
+                >
+                  {publishing ? <ActivityIndicator color="#fff" size="small" /> : <Feather name="upload-cloud" size={15} color="#fff" />}
+                  <Text style={styles.publishTxt}>Publier en classe</Text>
+                </Pressable>
                 <Text style={styles.resultMeta}>
-                  {(result.modules ?? []).length} module(s) générés · enregistré dans la bibliothèque
+                  {(result.modules ?? []).length} module(s) · apparaîtra dans « Mes formations »
                 </Text>
               </View>
             ) : null}
@@ -203,5 +236,8 @@ const makeStyles = (C: LiriPalette) => StyleSheet.create({
   moduleTitle: { color: C.coral, fontSize: 13.5, fontWeight: '700', fontFamily: F.sans },
   lesson: { flexDirection: 'row', alignItems: 'center', gap: 8, paddingVertical: 5, paddingLeft: 6 },
   lessonTxt: { color: C.muted, fontSize: 13, fontFamily: F.sans, flex: 1 },
-  resultMeta: { color: C.faint, fontSize: 11.5, marginTop: 14, fontFamily: F.sans },
+  resultMeta: { color: C.faint, fontSize: 11.5, marginTop: 10, fontFamily: F.sans },
+  publishBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, marginTop: 16, paddingVertical: 13, borderRadius: 13, backgroundColor: C.coral },
+  publishOff: { opacity: 0.6 },
+  publishTxt: { color: '#fff', fontSize: 14, fontWeight: '700', fontFamily: F.sans },
 });

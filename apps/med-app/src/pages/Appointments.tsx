@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useAuth, useSupabase } from '../lib/auth';
 import { useIsMobile } from '../lib/useIsMobile';
-import { Calendar, Plus, X, Clock, Trash2, CheckCircle, XCircle, AlertCircle, Video, Clapperboard } from 'lucide-react';
+import { Calendar, Plus, X, Clock, Trash2, CheckCircle, XCircle, AlertCircle, Video, Clapperboard, PlayCircle } from 'lucide-react';
 
 const API = import.meta.env.VITE_API_URL || 'http://localhost:4002';
 
@@ -28,6 +28,7 @@ type Appointment = {
   appointment_type: string;
   status: string;
   reason?: string | null;
+  teleconsult_session_id?: string | null;
 };
 
 const WEEKDAYS = ['Dimanche', 'Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi', 'Samedi'];
@@ -75,6 +76,9 @@ export function Appointments() {
   const [patients, setPatients] = useState<Record<string, Patient>>({});
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
+  // Sessions téléconsult qui ONT un enregistrement prêt → bouton « Revoir »
+  // (on ne l'affiche pas si aucun replay, pas de bouton mort).
+  const [replayIds, setReplayIds] = useState<Set<string>>(new Set());
 
   const [availOpen, setAvailOpen] = useState(false);
   const [availForm, setAvailForm] = useState({
@@ -141,6 +145,47 @@ export function Appointments() {
     fetchAppointments();
     fetchPatients();
   }, [fetchAvailabilities, fetchAppointments, fetchPatients]);
+
+  // Détecte les enregistrements disponibles : pour chaque téléconsult PASSÉE avec
+  // une session, on lit GET /med/teleconsult/:id/recording (en parallèle, N borné)
+  // → set des sessions avec un replay prêt. Sert à n'afficher « Revoir » que si
+  // une vidéo existe réellement.
+  useEffect(() => {
+    const nowMs = Date.now();
+    const candidates = appointments.filter(
+      (a) =>
+        a.appointment_type === 'teleconsult' &&
+        a.teleconsult_session_id &&
+        (new Date(a.scheduled_at).getTime() < nowMs ||
+          ['completed', 'ended', 'cancelled', 'no_show'].includes(a.status)),
+    );
+    if (candidates.length === 0) {
+      setReplayIds(new Set());
+      return;
+    }
+    let alive = true;
+    (async () => {
+      const found = await Promise.all(
+        candidates.map(async (a) => {
+          const sid = a.teleconsult_session_id as string;
+          try {
+            const r = await fetch(API + '/med/teleconsult/' + sid + '/recording', {
+              headers: authHeaders(),
+            });
+            if (!r.ok) return null;
+            const d = await r.json();
+            return (d?.data || d)?.has_replay ? sid : null;
+          } catch {
+            return null;
+          }
+        }),
+      );
+      if (alive) setReplayIds(new Set(found.filter(Boolean) as string[]));
+    })();
+    return () => {
+      alive = false;
+    };
+  }, [appointments]);
 
   // -- Availability actions ---------------------------------------------
   async function handleCreateAvailability(e: React.FormEvent) {
@@ -477,6 +522,15 @@ export function Appointments() {
                             <Video size={14} /> Démarrer
                           </button>
                         </>
+                      )}
+                      {appt.appointment_type === 'teleconsult' && appt.teleconsult_session_id && replayIds.has(appt.teleconsult_session_id) && (
+                        <button
+                          onClick={() => openStudio(`/teleconsult/${appt.teleconsult_session_id}/replay?tenant=${encodeURIComponent(localStorage.getItem('tenant_slug') || '')}`)}
+                          title="Revoir l'enregistrement vidéo de cette téléconsultation"
+                          style={{ display: 'flex', alignItems: 'center', gap: 4, padding: '6px 10px', background: '#fff', color: 'var(--zw-indigo)', border: '1px solid var(--zw-indigo)', borderRadius: 6, fontSize: 12, fontWeight: 500, cursor: 'pointer' }}
+                        >
+                          <PlayCircle size={14} /> Revoir
+                        </button>
                       )}
                       <ApptActions status={appt.status} onAction={(a) => appointmentAction(appt.id, a)} />
                     </div>

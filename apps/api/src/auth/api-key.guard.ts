@@ -17,6 +17,7 @@ type ApiKeyRequest = Request & {
   tenant?: TenantContext;
   apiKeyId?: string;
   authViaApiKey?: boolean;
+  apiKeyIsAdmin?: boolean;
 };
 
 /**
@@ -25,17 +26,20 @@ type ApiKeyRequest = Request & {
  *
  * - `cml_` : clé Cimolace générique (tous engines)
  * - `mdk_` : clé spécifique MEDOS (medical key)
- * - `mbk_` : clé spécifique Mbolo (storefront e-commerce)
+ * - `mbk_` : clé spécifique Mbolo (storefront e-commerce, LECTURE catalogue + commandes invité)
+ * - `mba_` : clé Mbolo ADMIN (ÉCRITURE catalogue tenant-scopée : produits/catégories).
+ *            Même moteur que `mbk_` mais capacité d'administration → gardée en plus
+ *            par MboloAdminKeyGuard (least-privilege : une `mbk_` publique n'écrit pas).
  */
-const VALID_PREFIXES = ['cml_', 'mdk_', 'mbk_'];
+const VALID_PREFIXES = ['cml_', 'mdk_', 'mbk_', 'mba_'];
 
 /**
- * Moteur porté par le PRÉFIXE d'une clé : `mdk_`=medos, `mbk_`=mbolo,
+ * Moteur porté par le PRÉFIXE d'une clé : `mdk_`=medos, `mbk_`/`mba_`=mbolo,
  * `cml_`=générique (wildcard, tous moteurs). null = wildcard.
  */
 function keyEngineFromPrefix(raw: string): 'medos' | 'mbolo' | null {
   if (raw.startsWith('mdk_')) return 'medos';
-  if (raw.startsWith('mbk_')) return 'mbolo';
+  if (raw.startsWith('mbk_') || raw.startsWith('mba_')) return 'mbolo';
   return null; // cml_ = générique
 }
 
@@ -182,20 +186,28 @@ export class ApiKeyGuard implements CanActivate {
     }
 
     // ─── Least-privilege : scope moteur par préfixe de clé ────────────────────
-    // Une clé `mbk_`/`mdk_` ne doit pas ouvrir un autre moteur (cml_ = wildcard).
-    // Déployé en OBSERVE (warn) par défaut → 0 régression ; passe en 403 dur via
-    // API_KEY_SCOPE_ENFORCE=1 une fois les logs confirmés propres.
-    const reqPath = req.originalUrl || req.path || (req as any).url || '';
+    // Une clé `mbk_`/`mdk_` ne doit pas ouvrir un autre moteur (cml_ = wildcard) —
+    // sinon une clé mbolo fuitée atteint les endpoints MEDOS/PHI. ENFORCE PAR DÉFAUT
+    // (fail-closed) ; échappatoire instantanée sans redeploy : API_KEY_SCOPE_ENFORCE=0
+    // (repasse en OBSERVE si une intégration légitime venait à casser).
+    // SÉCURITÉ : classifier le moteur sur le PATH SEUL. originalUrl inclut la query string,
+    // et endpointEngineFromPath fait un simple .includes('/medos') → `?x=/medos` ferait résoudre
+    // un endpoint mbolo à 'medos' et contournerait l'enforce de scope. On retire la query.
+    const reqPath = (req.originalUrl || req.path || (req as any).url || '').split('?')[0];
     const violation = apiKeyScopeViolation(raw, reqPath);
     if (violation) {
-      if (process.env.API_KEY_SCOPE_ENFORCE === '1') {
+      if (process.env.API_KEY_SCOPE_ENFORCE !== '0') {
+        this.logger.warn(
+          `[api-key scope] BLOQUÉ clé ${violation.keyEngine} sur endpoint ${violation.endpointEngine} ` +
+            `(tenant=${key.tenant_id}, key=${key.id})`,
+        );
         throw new ForbiddenException(
           `Clé « ${violation.keyEngine} » non autorisée sur un endpoint « ${violation.endpointEngine} ». Utilisez une clé cml_ (générique) ou ${violation.endpointEngine}.`,
         );
       }
       this.logger.warn(
         `[api-key scope] clé ${violation.keyEngine} sur endpoint ${violation.endpointEngine} ` +
-          `(tenant=${key.tenant_id}, key=${key.id}) — OBSERVÉ (flip API_KEY_SCOPE_ENFORCE=1 pour bloquer)`,
+          `(tenant=${key.tenant_id}, key=${key.id}) — OBSERVÉ (API_KEY_SCOPE_ENFORCE=0)`,
       );
     }
 
@@ -205,6 +217,9 @@ export class ApiKeyGuard implements CanActivate {
     };
     req.apiKeyId = key.id;
     req.authViaApiKey = true;
+    // Clé ADMIN mbolo (mba_) : autorise l'écriture catalogue. Une `mbk_` (storefront
+    // public) reste en lecture seule côté endpoints /v1/mbolo/admin (MboloAdminKeyGuard).
+    req.apiKeyIsAdmin = raw.startsWith('mba_');
 
     // Mise à jour last_used_at — fire and forget, ne doit pas bloquer
     void (this.supabase.client as any)

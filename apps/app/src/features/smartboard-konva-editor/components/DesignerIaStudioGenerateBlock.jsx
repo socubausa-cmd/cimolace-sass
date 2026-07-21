@@ -3,6 +3,7 @@
  * Même pipeline que l'onglet Import du designer (CanvaDesignPanel).
  */
 import React, { useCallback, useEffect, useState } from 'react';
+import SmartboardCanvasImage from '@/components/media/SmartboardCanvasImage';
 import { Loader2, Sparkles } from 'lucide-react';
 import { useToast } from '@/components/ui/use-toast';
 import { supabase } from '@/lib/customSupabaseClient';
@@ -158,7 +159,7 @@ export default function DesignerIaStudioGenerateBlock({ addObject, className }) 
                   onClick={() => addObject(mkImageObject(h.url, { width: 480, height: 275, x: 140, y: 120 }))}
                   className="shrink-0 overflow-hidden rounded border border-white/10 hover:border-violet-400/45"
                 >
-                  <img src={h.url} alt="" className="h-11 w-16 object-cover" loading="lazy" />
+                  <SmartboardCanvasImage src={h.url} alt="" className="h-11 w-16 object-cover" loading="lazy" />
                 </button>
               ))}
             </div>
