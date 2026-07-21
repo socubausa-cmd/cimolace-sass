@@ -551,6 +551,9 @@ export const growthApi = {
     apiV2.post<ApiEnvelope<any>>('/growth/leads', body).then(unwrap),
   updateLeadScore: (id: string, score: number) =>
     apiV2.patch<ApiEnvelope<any>>(`/growth/leads/${id}/score`, { score }).then(unwrap),
+  // Vue 360° d'un contact : identité + fan-out TOUS les moteurs (mbolo/RDV/école/messagerie).
+  contact360: (email: string) =>
+    apiV2.get<ApiEnvelope<any>>(`/growth/contact-360`, { params: { email } }).then(unwrap),
 };
 
 // ── CRM (cœur sales — Vague 2) ────────────────────────────────────────────────
@@ -728,6 +731,30 @@ export const mboloApi = {
     apiV2.post<ApiEnvelope<any>>(`/mbolo/orders/${orderId}/checkout-session`, body).then(unwrap),
   confirmOrder: (orderId: string) =>
     apiV2.post<ApiEnvelope<any>>(`/mbolo/orders/${orderId}/confirm`).then(unwrap),
+  updateOrder: (id: string, body: Record<string, unknown>) =>
+    apiV2.patch<ApiEnvelope<any>>(`/mbolo/orders/${id}`, body).then(unwrap),
+  // ── Liens de paiement / facturation ──
+  listPaymentLinks: () => apiV2.get<ApiEnvelope<any[]>>('/mbolo/payment-links').then(unwrap),
+  getPaymentLink: (id: string) => apiV2.get<ApiEnvelope<any>>(`/mbolo/payment-links/${id}`).then(unwrap),
+  createPaymentLink: (body: Record<string, unknown>) =>
+    apiV2.post<ApiEnvelope<any>>('/mbolo/payment-links', body).then(unwrap),
+  updatePaymentLink: (id: string, body: Record<string, unknown>) =>
+    apiV2.patch<ApiEnvelope<any>>(`/mbolo/payment-links/${id}`, body).then(unwrap),
+  deletePaymentLink: (id: string) =>
+    apiV2.delete<ApiEnvelope<any>>(`/mbolo/payment-links/${id}`).then(unwrap),
+  // ── Factures ──
+  listInvoices: () => apiV2.get<ApiEnvelope<any[]>>('/mbolo/invoices').then(unwrap),
+  getInvoice: (id: string) => apiV2.get<ApiEnvelope<any>>(`/mbolo/invoices/${id}`).then(unwrap),
+  createInvoice: (body: Record<string, unknown>) =>
+    apiV2.post<ApiEnvelope<any>>('/mbolo/invoices', body).then(unwrap),
+  updateInvoice: (id: string, body: Record<string, unknown>) =>
+    apiV2.patch<ApiEnvelope<any>>(`/mbolo/invoices/${id}`, body).then(unwrap),
+  deleteInvoice: (id: string) =>
+    apiV2.delete<ApiEnvelope<any>>(`/mbolo/invoices/${id}`).then(unwrap),
+  // ── Compta : entité légale du tenant ──
+  getAccountingSettings: () => apiV2.get<ApiEnvelope<any>>('/mbolo/accounting-settings').then(unwrap),
+  updateAccountingSettings: (body: Record<string, unknown>) =>
+    apiV2.patch<ApiEnvelope<any>>('/mbolo/accounting-settings', body).then(unwrap),
 };
 
 // ── Neuro Recall ────────────────────────────────────────────────────────────
