@@ -155,7 +155,7 @@ function CardMenu({ anchorRect, onClose, children }) {
       <div
         role="menu"
         className="fixed z-[61] w-56 overflow-hidden rounded-xl border lp-line py-1 shadow-xl"
-        style={{ top, left, background: '#221f1b' }}
+        style={{ top, left, background: 'var(--crm-sunken, #221f1b)' }}
         onClick={(e) => e.stopPropagation()}
       >
         {children}
@@ -288,7 +288,7 @@ function DealCard({ deal, stages, onAction, onOpen }) {
                     role="menuitem"
                     onClick={() => act('delete')}
                     className={itemCls}
-                    style={{ color: '#e0a48f' }}
+                    style={{ color: 'var(--crm-accent-2, #e0a48f)' }}
                   >
                     <Trash2 size={14} /> Supprimer
                   </button>
@@ -366,7 +366,7 @@ function BoardColumn({ column, stages, onAction, onOpen }) {
           </div>
           <span
             className="shrink-0 rounded-full px-2 py-0.5 text-[11px] font-semibold tabular-nums"
-            style={{ background: 'rgba(217,119,87,.13)', color: '#e08a63' }}
+            style={{ background: 'color-mix(in srgb, var(--crm-accent) 13%, transparent)', color: 'var(--crm-accent-soft, #e08a63)' }}
           >
             {column.deals.length}
           </span>
@@ -489,14 +489,14 @@ function NewDealModal({ stages, onClose, onCreated }) {
         aria-modal="true"
         aria-label="Nouveau deal"
         className="max-h-[92vh] w-full max-w-lg overflow-y-auto rounded-t-3xl border lp-line p-5 shadow-2xl sm:rounded-3xl"
-        style={{ background: '#221f1b' }}
+        style={{ background: 'var(--crm-sunken, #221f1b)' }}
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
             <span
               className="grid h-10 w-10 shrink-0 place-items-center rounded-2xl text-white"
-              style={{ background: 'linear-gradient(140deg,#d97757,#c2683f)' }}
+              style={{ background: 'linear-gradient(140deg,var(--crm-accent, #d97757),var(--crm-accent-strong, #c2683f))' }}
             >
               <Handshake size={18} />
             </span>
@@ -549,7 +549,7 @@ function NewDealModal({ stages, onClose, onCreated }) {
                 onChange={set('currency')}
               >
                 {CURRENCIES.map((c) => (
-                  <option key={c} value={c} style={{ background: '#221f1b' }}>
+                  <option key={c} value={c} style={{ background: 'var(--crm-sunken, #221f1b)' }}>
                     {c}
                   </option>
                 ))}
@@ -566,12 +566,12 @@ function NewDealModal({ stages, onClose, onCreated }) {
               required
             >
               {stages.length === 0 && (
-                <option value="" style={{ background: '#221f1b' }}>
+                <option value="" style={{ background: 'var(--crm-sunken, #221f1b)' }}>
                   Aucune étape disponible
                 </option>
               )}
               {stages.map((s) => (
-                <option key={s.id} value={s.id} style={{ background: '#221f1b' }}>
+                <option key={s.id} value={s.id} style={{ background: 'var(--crm-sunken, #221f1b)' }}>
                   {s.name}
                 </option>
               ))}
@@ -586,11 +586,11 @@ function NewDealModal({ stages, onClose, onCreated }) {
                 value={form.company_id}
                 onChange={set('company_id')}
               >
-                <option value="" style={{ background: '#221f1b' }}>
+                <option value="" style={{ background: 'var(--crm-sunken, #221f1b)' }}>
                   — Aucune —
                 </option>
                 {companies.map((c) => (
-                  <option key={c.id} value={c.id} style={{ background: '#221f1b' }}>
+                  <option key={c.id} value={c.id} style={{ background: 'var(--crm-sunken, #221f1b)' }}>
                     {c.name}
                   </option>
                 ))}
@@ -603,11 +603,11 @@ function NewDealModal({ stages, onClose, onCreated }) {
                 value={form.contact_id}
                 onChange={set('contact_id')}
               >
-                <option value="" style={{ background: '#221f1b' }}>
+                <option value="" style={{ background: 'var(--crm-sunken, #221f1b)' }}>
                   — Aucun —
                 </option>
                 {contacts.map((c) => (
-                  <option key={c.id} value={c.id} style={{ background: '#221f1b' }}>
+                  <option key={c.id} value={c.id} style={{ background: 'var(--crm-sunken, #221f1b)' }}>
                     {contactName(c)}
                   </option>
                 ))}
@@ -670,7 +670,7 @@ function ConfirmDeleteModal({ title, message, busy, onCancel, onConfirm }) {
         aria-modal="true"
         aria-label={title}
         className="w-full max-w-sm rounded-t-3xl border lp-line p-5 shadow-2xl sm:rounded-3xl"
-        style={{ background: '#221f1b' }}
+        style={{ background: 'var(--crm-sunken, #221f1b)' }}
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-start gap-3">
@@ -696,7 +696,7 @@ function ConfirmDeleteModal({ title, message, busy, onCancel, onConfirm }) {
             onClick={onConfirm}
             disabled={busy}
             className="inline-flex cursor-pointer items-center gap-2 rounded-xl px-4 py-2 text-[13.5px] font-medium text-white lp-tr disabled:opacity-60"
-            style={{ background: '#c2683f' }}
+            style={{ background: 'var(--crm-accent-strong, #c2683f)' }}
           >
             {busy && <Loader2 size={15} className="animate-spin" />} Supprimer
           </button>
@@ -960,7 +960,7 @@ export default function CrmPipelineBoard() {
         <div className="flex items-center gap-3">
           <div
             className="grid h-11 w-11 shrink-0 place-items-center rounded-2xl text-white"
-            style={{ background: 'linear-gradient(140deg,#d97757,#c2683f)' }}
+            style={{ background: 'linear-gradient(140deg,var(--crm-accent, #d97757),var(--crm-accent-strong, #c2683f))' }}
           >
             <Handshake size={19} />
           </div>

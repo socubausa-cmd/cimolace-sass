@@ -351,7 +351,7 @@ export default function CrmCompanies() {
                     onClick={(e) => { e.stopPropagation(); setDeleteTarget(c); }}
                     aria-label={`Supprimer ${c?.name || 'la société'}`}
                     className="grid h-7 w-7 cursor-pointer place-items-center rounded-lg lp-railbtn lp-tr"
-                    style={{ color: '#e0a48f' }}
+                    style={{ color: 'var(--crm-accent-2, #e0a48f)' }}
                   >
                     <Trash2 size={13} />
                   </button>
@@ -361,7 +361,7 @@ export default function CrmCompanies() {
                 <div className="flex items-start gap-3 pr-14">
                   <div
                     className="grid h-11 w-11 shrink-0 place-items-center rounded-2xl text-[14px] font-semibold text-white"
-                    style={{ background: 'linear-gradient(140deg,#d97757,#c2683f)' }}
+                    style={{ background: 'linear-gradient(140deg,var(--crm-accent, #d97757),var(--crm-accent-strong, #c2683f))' }}
                     aria-hidden="true"
                   >
                     {companyInitials(c?.name)}
@@ -403,7 +403,7 @@ export default function CrmCompanies() {
                   <div className="mt-3 flex flex-wrap items-center gap-1.5">
                     <span
                       className="inline-flex items-center gap-1.5 rounded-full py-1 pl-2 pr-2.5 text-[11px] font-medium"
-                      style={{ background: 'rgba(217,119,87,.13)', color: '#e08a63' }}
+                      style={{ background: 'color-mix(in srgb, var(--crm-accent) 13%, transparent)', color: 'var(--crm-accent-soft, #e08a63)' }}
                     >
                       <Users size={11} className="shrink-0" aria-hidden="true" />
                       {c.size}
@@ -435,7 +435,7 @@ export default function CrmCompanies() {
         >
           <div
             className="max-h-[92vh] w-full max-w-lg overflow-y-auto rounded-t-3xl border lp-line p-5 shadow-2xl sm:rounded-3xl"
-            style={{ background: '#221f1b' }}
+            style={{ background: 'var(--crm-sunken, #221f1b)' }}
             onClick={(e) => e.stopPropagation()}
             role="dialog"
             aria-modal="true"
@@ -444,7 +444,7 @@ export default function CrmCompanies() {
             <div className="flex items-start gap-3">
               <div
                 className="grid h-10 w-10 shrink-0 place-items-center rounded-2xl text-white"
-                style={{ background: 'linear-gradient(140deg,#d97757,#c2683f)' }}
+                style={{ background: 'linear-gradient(140deg,var(--crm-accent, #d97757),var(--crm-accent-strong, #c2683f))' }}
                 aria-hidden="true"
               >
                 <Building2 size={18} />
@@ -506,11 +506,11 @@ export default function CrmCompanies() {
                     value={form.size}
                     onChange={(e) => setField('size', e.target.value)}
                   >
-                    <option value="" style={{ background: '#221f1b' }}>
+                    <option value="" style={{ background: 'var(--crm-sunken, #221f1b)' }}>
                       —
                     </option>
                     {SIZE_OPTIONS.map((s) => (
-                      <option key={s} value={s} style={{ background: '#221f1b' }}>
+                      <option key={s} value={s} style={{ background: 'var(--crm-sunken, #221f1b)' }}>
                         {s}
                       </option>
                     ))}
@@ -588,7 +588,7 @@ export default function CrmCompanies() {
         >
           <div
             className="w-full max-w-sm rounded-t-3xl border lp-line p-5 shadow-2xl sm:rounded-3xl"
-            style={{ background: '#221f1b' }}
+            style={{ background: 'var(--crm-sunken, #221f1b)' }}
             onClick={(e) => e.stopPropagation()}
             role="dialog"
             aria-modal="true"
@@ -636,7 +636,7 @@ export default function CrmCompanies() {
                 onClick={confirmDelete}
                 disabled={deleting}
                 className="inline-flex cursor-pointer items-center gap-2 rounded-xl px-4 py-2 text-[13.5px] font-medium text-white lp-tr disabled:opacity-60"
-                style={{ background: '#c2683f' }}
+                style={{ background: 'var(--crm-accent-strong, #c2683f)' }}
               >
                 {deleting && <Loader2 size={15} className="animate-spin" />}
                 Supprimer

@@ -87,7 +87,7 @@ export default function CrmCompanyDetail({ company, onClose }) {
       <aside
         role="dialog" aria-modal="true" aria-label={`Société ${company.name || ''}`}
         className="relative flex h-[100dvh] w-full max-w-[420px] flex-col border-l lp-line shadow-2xl"
-        style={{ background: '#211f1b', animation: 'crmSlideIn .22s cubic-bezier(.2,.8,.2,1)' }}
+        style={{ background: 'var(--crm-sunken, #211f1b)', animation: 'crmSlideIn .22s cubic-bezier(.2,.8,.2,1)' }}
         onClick={(e) => e.stopPropagation()}
       >
         <style>{`@keyframes crmSlideIn{from{transform:translateX(18px);opacity:.4}to{transform:none;opacity:1}}`}</style>
@@ -95,7 +95,7 @@ export default function CrmCompanyDetail({ company, onClose }) {
         {/* En-tête */}
         <header className="shrink-0 border-b lp-line px-5 pb-4 pt-5">
           <div className="flex items-start gap-3.5">
-            <div className="grid h-12 w-12 shrink-0 place-items-center rounded-2xl text-[15px] font-semibold text-white" style={{ background: 'linear-gradient(140deg,#d97757,#c2683f)' }}>
+            <div className="grid h-12 w-12 shrink-0 place-items-center rounded-2xl text-[15px] font-semibold text-white" style={{ background: 'linear-gradient(140deg,var(--crm-accent, #d97757),var(--crm-accent-strong, #c2683f))' }}>
               {companyInitials(company.name)}
             </div>
             <div className="min-w-0 flex-1 pt-0.5">
@@ -141,14 +141,14 @@ export default function CrmCompanyDetail({ company, onClose }) {
                   <div className="space-y-1.5">
                     {members.map((m) => (
                       <div key={m.contactId} className="flex items-center gap-2.5 rounded-xl border lp-line lp-panel70 px-3 py-2.5">
-                        <span className="grid h-8 w-8 shrink-0 place-items-center rounded-full text-[11px] font-semibold text-white" style={{ background: m.isMember ? 'linear-gradient(140deg,#d97757,#c2683f)' : 'rgba(245,244,238,.1)' }}>
+                        <span className="grid h-8 w-8 shrink-0 place-items-center rounded-full text-[11px] font-semibold text-white" style={{ background: m.isMember ? 'linear-gradient(140deg,var(--crm-accent, #d97757),var(--crm-accent-strong, #c2683f))' : 'rgba(245,244,238,.1)' }}>
                           {(m.name || '?').slice(0, 1).toUpperCase()}
                         </span>
                         <div className="min-w-0 flex-1">
                           <div className="flex items-center gap-1.5">
                             <span className="truncate text-[13px] font-medium lp-ink">{m.name}</span>
                             {m.isMember ? (
-                              <span className="shrink-0 rounded-full px-1.5 py-0.5 text-[10px] font-medium" style={{ background: 'rgba(217,119,87,.15)', color: '#e08a63' }}>
+                              <span className="shrink-0 rounded-full px-1.5 py-0.5 text-[10px] font-medium" style={{ background: 'color-mix(in srgb, var(--crm-accent) 15%, transparent)', color: 'var(--crm-accent-soft, #e08a63)' }}>
                                 {m.role || 'Membre'}
                               </span>
                             ) : (

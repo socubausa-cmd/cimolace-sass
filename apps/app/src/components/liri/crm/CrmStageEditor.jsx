@@ -78,7 +78,7 @@ export default function CrmStageEditor({ pipelineId, onClose, onChanged }) {
       <div
         role="dialog" aria-modal="true" aria-label="Gérer les étapes"
         className="relative w-full max-w-[560px] overflow-hidden rounded-2xl border lp-line shadow-2xl"
-        style={{ background: '#211f1b' }}
+        style={{ background: 'var(--crm-sunken, #211f1b)' }}
         onClick={(e) => e.stopPropagation()}
       >
         <header className="flex items-center justify-between border-b lp-line px-5 py-4">
@@ -119,12 +119,12 @@ export default function CrmStageEditor({ pipelineId, onClose, onChanged }) {
                   </div>
                   <button type="button" aria-label="Étape gagnée" onClick={() => setWon(s)} title="Marque les deals comme gagnés"
                     className="grid h-7 w-7 shrink-0 cursor-pointer place-items-center rounded-lg lp-tr"
-                    style={s.is_won ? { background: 'rgba(217,119,87,.16)', color: '#e08a63' } : { color: 'var(--faint)' }}><Trophy size={13} /></button>
+                    style={s.is_won ? { background: 'color-mix(in srgb, var(--crm-accent) 16%, transparent)', color: 'var(--crm-accent-soft, #e08a63)' } : { color: 'var(--faint)' }}><Trophy size={13} /></button>
                   <button type="button" aria-label="Étape perdue" onClick={() => setLost(s)} title="Marque les deals comme perdus"
                     className="grid h-7 w-7 shrink-0 cursor-pointer place-items-center rounded-lg lp-tr"
-                    style={s.is_lost ? { background: 'rgba(220,180,120,.14)', color: '#cba36b' } : { color: 'var(--faint)' }}><Ban size={13} /></button>
+                    style={s.is_lost ? { background: 'rgba(220,180,120,.14)', color: 'var(--crm-gold, #cba36b)' } : { color: 'var(--faint)' }}><Ban size={13} /></button>
                   <button type="button" aria-label="Supprimer l'étape" disabled={stages.length <= 1} onClick={() => del(s.id)}
-                    className="grid h-7 w-7 shrink-0 cursor-pointer place-items-center rounded-lg lp-tr disabled:opacity-25" style={{ color: '#e0a48f' }}><Trash2 size={13} /></button>
+                    className="grid h-7 w-7 shrink-0 cursor-pointer place-items-center rounded-lg lp-tr disabled:opacity-25" style={{ color: 'var(--crm-accent-2, #e0a48f)' }}><Trash2 size={13} /></button>
                 </div>
               ))}
               {stages.length === 0 && <p className="px-1 py-4 text-center text-[12.5px] lp-faint">Aucune étape.</p>}

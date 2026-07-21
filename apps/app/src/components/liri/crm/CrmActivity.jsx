@@ -129,7 +129,7 @@ export default function CrmActivity() {
         <div className="flex min-w-0 items-center gap-3.5">
           <div
             className="grid h-11 w-11 shrink-0 place-items-center rounded-2xl text-white"
-            style={{ background: 'linear-gradient(140deg,#d97757,#c2683f)' }}
+            style={{ background: 'linear-gradient(140deg,var(--crm-accent, #d97757),var(--crm-accent-strong, #c2683f))' }}
           >
             <Activity size={19} />
           </div>

@@ -68,7 +68,7 @@ export default function CrmSearchPalette({ open, onClose, onPick }) {
             key={it.id} type="button"
             onMouseEnter={() => setActive(idx)} onClick={() => pick(it)}
             className="flex w-full items-center gap-3 px-3 py-2 text-left lp-tr"
-            style={active === idx ? { background: 'rgba(217,119,87,.13)' } : {}}
+            style={active === idx ? { background: 'color-mix(in srgb, var(--crm-accent) 13%, transparent)' } : {}}
           >
             <Icon size={15} className="shrink-0 lp-coral" />
             <span className="min-w-0 flex-1">
@@ -88,7 +88,7 @@ export default function CrmSearchPalette({ open, onClose, onPick }) {
       <div
         role="dialog" aria-modal="true" aria-label="Recherche CRM"
         className="relative w-full max-w-[560px] overflow-hidden rounded-2xl border lp-line shadow-2xl"
-        style={{ background: '#211f1b', animation: 'crmPalIn .16s cubic-bezier(.2,.8,.2,1)' }}
+        style={{ background: 'var(--crm-sunken, #211f1b)', animation: 'crmPalIn .16s cubic-bezier(.2,.8,.2,1)' }}
         onClick={(e) => e.stopPropagation()}
         onKeyDown={onKey}
       >

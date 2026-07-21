@@ -98,7 +98,7 @@ export default function CrmImportModal({ onClose, onImported }) {
         aria-modal="true"
         aria-label="Importer des contacts"
         className="max-h-[92vh] w-full max-w-lg overflow-y-auto rounded-t-3xl border lp-line p-5 shadow-2xl backdrop-blur-[2px] sm:rounded-3xl"
-        style={{ background: '#221f1b' }}
+        style={{ background: 'var(--crm-sunken, #221f1b)' }}
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-start justify-between gap-3">
@@ -133,7 +133,7 @@ export default function CrmImportModal({ onClose, onImported }) {
               </p>
             </div>
             {result.errors?.length > 0 && (
-              <div className="rounded-xl border lp-line px-3.5 py-3 text-[12.5px] lp-muted" style={{ background: 'rgba(217,119,87,.08)' }}>
+              <div className="rounded-xl border lp-line px-3.5 py-3 text-[12.5px] lp-muted" style={{ background: 'color-mix(in srgb, var(--crm-accent) 8%, transparent)' }}>
                 <div className="mb-1 flex items-center gap-1.5 lp-coral"><AlertCircle size={13} /> {result.errors.length} ligne(s) en erreur</div>
                 {result.errors.slice(0, 5).map((er, i) => (
                   <div key={i}>Ligne {er.line} : {er.error}</div>

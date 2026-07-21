@@ -18,7 +18,7 @@ import CrmImportModal from './CrmImportModal';
 const inputCls =
   'w-full rounded-xl border lp-line bg-[rgba(245,244,238,.03)] px-3 py-2.5 text-[14px] lp-ink outline-none lp-tr placeholder:text-[var(--faint)] focus:border-[var(--coral)]';
 
-const AVATAR_GRADIENT = 'linear-gradient(140deg,#d97757,#c2683f)';
+const AVATAR_GRADIENT = 'linear-gradient(140deg,var(--crm-accent, #d97757),var(--crm-accent-strong, #c2683f))';
 
 function Field({ label, htmlFor, children }) {
   return (
@@ -413,7 +413,7 @@ export default function CrmContacts() {
                           {coName && (
                             <span
                               className="inline-flex max-w-[180px] items-center gap-1.5 rounded-full py-0.5 pl-2 pr-2.5 text-[11px] font-medium"
-                              style={{ background: 'rgba(217,119,87,.13)', color: '#e08a63' }}
+                              style={{ background: 'color-mix(in srgb, var(--crm-accent) 13%, transparent)', color: 'var(--crm-accent-soft, #e08a63)' }}
                             >
                               <Building2 size={11} className="shrink-0" aria-hidden="true" />
                               <span className="truncate">{coName}</span>
@@ -422,11 +422,11 @@ export default function CrmContacts() {
                           {isLead && (
                             <span
                               className="inline-flex items-center gap-1.5 rounded-full py-0.5 pl-2 pr-2.5 text-[11px] font-medium"
-                              style={{ background: 'rgba(217,119,87,.13)', color: '#e08a63' }}
+                              style={{ background: 'color-mix(in srgb, var(--crm-accent) 13%, transparent)', color: 'var(--crm-accent-soft, #e08a63)' }}
                             >
                               <span
                                 className="h-1.5 w-1.5 rounded-full"
-                                style={{ background: '#d97757' }}
+                                style={{ background: 'var(--crm-accent, #d97757)' }}
                               />
                               Issu d’un lead
                             </span>
@@ -474,7 +474,7 @@ export default function CrmContacts() {
         >
           <div
             className="max-h-[92vh] w-full max-w-lg overflow-y-auto rounded-t-3xl border lp-line p-5 shadow-2xl sm:rounded-3xl"
-            style={{ background: '#221f1b' }}
+            style={{ background: 'var(--crm-sunken, #221f1b)' }}
             onClick={(e) => e.stopPropagation()}
             role="dialog"
             aria-modal="true"
@@ -565,11 +565,11 @@ export default function CrmContacts() {
                     value={form.company_id}
                     onChange={setField('company_id')}
                   >
-                    <option value="" style={{ background: '#221f1b' }}>
+                    <option value="" style={{ background: 'var(--crm-sunken, #221f1b)' }}>
                       —
                     </option>
                     {companies.map((co) => (
-                      <option key={co.id} value={co.id} style={{ background: '#221f1b' }}>
+                      <option key={co.id} value={co.id} style={{ background: 'var(--crm-sunken, #221f1b)' }}>
                         {co.name}
                       </option>
                     ))}
@@ -583,7 +583,7 @@ export default function CrmContacts() {
                     onChange={setField('status')}
                   >
                     {statusOptions.map((s) => (
-                      <option key={s} value={s} style={{ background: '#221f1b' }}>
+                      <option key={s} value={s} style={{ background: 'var(--crm-sunken, #221f1b)' }}>
                         {STATUS_LABELS[s] || s}
                       </option>
                     ))}
@@ -621,7 +621,7 @@ export default function CrmContacts() {
         >
           <div
             className="max-h-[92vh] w-full max-w-md overflow-y-auto rounded-t-3xl border lp-line p-5 shadow-2xl sm:rounded-3xl"
-            style={{ background: '#221f1b' }}
+            style={{ background: 'var(--crm-sunken, #221f1b)' }}
             onClick={(e) => e.stopPropagation()}
             role="alertdialog"
             aria-modal="true"
@@ -661,7 +661,7 @@ export default function CrmContacts() {
                 onClick={confirmDelete}
                 disabled={deleting}
                 className="inline-flex items-center gap-2 rounded-xl px-4 py-2 text-[13px] font-semibold text-white lp-tr disabled:opacity-60 cursor-pointer"
-                style={{ background: '#c2683f' }}
+                style={{ background: 'var(--crm-accent-strong, #c2683f)' }}
               >
                 <Trash2 size={14} />
                 {deleting ? 'Suppression…' : 'Supprimer'}

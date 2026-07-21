@@ -95,7 +95,7 @@ export default function CrmAnalytics() {
                 <div key={s.id} className="flex items-center gap-3">
                   <span className="w-28 shrink-0 truncate text-[12.5px] lp-muted">{s.name}</span>
                   <div className="relative h-6 flex-1 overflow-hidden rounded-lg" style={{ background: 'rgba(245,244,238,.05)' }}>
-                    <div className="absolute inset-y-0 left-0 rounded-lg" style={{ width: `${Math.max(4, ((s.count || 0) / maxStage) * 100)}%`, background: 'linear-gradient(90deg,#d97757,#c2683f)' }} />
+                    <div className="absolute inset-y-0 left-0 rounded-lg" style={{ width: `${Math.max(4, ((s.count || 0) / maxStage) * 100)}%`, background: 'linear-gradient(90deg,var(--crm-accent, #d97757),var(--crm-accent-strong, #c2683f))' }} />
                     <span className="absolute inset-y-0 left-2.5 flex items-center text-[11.5px] font-medium text-white">{s.count}</span>
                   </div>
                   <span className="w-24 shrink-0 text-right text-[12px] lp-faint" style={{ fontVariantNumeric: 'tabular-nums' }}>{money(s.value, cur)}</span>
@@ -124,7 +124,7 @@ export default function CrmAnalytics() {
               <div className="space-y-1.5">
                 {leaders.map(([owner, stat], i) => (
                   <div key={owner} className="flex items-center gap-3 rounded-xl px-2 py-2 lp-tr hover:bg-[rgba(245,244,238,.04)]">
-                    <span className="grid h-7 w-7 shrink-0 place-items-center rounded-full text-[11px] font-semibold" style={{ background: i === 0 ? 'rgba(217,119,87,.18)' : 'rgba(245,244,238,.06)', color: i === 0 ? '#e08a63' : 'var(--muted)' }}>{i + 1}</span>
+                    <span className="grid h-7 w-7 shrink-0 place-items-center rounded-full text-[11px] font-semibold" style={{ background: i === 0 ? 'color-mix(in srgb, var(--crm-accent) 18%, transparent)' : 'rgba(245,244,238,.06)', color: i === 0 ? 'var(--crm-accent-soft, #e08a63)' : 'var(--muted)' }}>{i + 1}</span>
                     <span className="min-w-0 flex-1 truncate text-[12.5px] lp-ink">{owner === 'non attribué' ? 'Non attribué' : owner.slice(0, 8)}</span>
                     <span className="shrink-0 text-[12px] font-medium lp-ink">{stat.won}</span>
                     <span className="shrink-0 text-[11.5px] lp-faint">{money(stat.amount, cur)}</span>

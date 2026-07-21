@@ -338,3 +338,45 @@
     #262624 !important;
 }
 .lp-shell-main .forum-bg > * { display:none !important; }
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   CONTRAT DE TOKENS CRM — thème-neutre & embarquable.
+   Le CRM ne code plus ses couleurs en dur : ses composants lisent var(--crm-*)
+   (avec la valeur d'origine en *fallback*, donc rendu identique par défaut).
+   • Par défaut (.crm-surface sans surcharge, ou hors scope) → palette LIRI chaude.
+   • Un hôte (back-office Cimolace, site tenant) surcharge les tokens sur
+     .crm-surface (ou via [data-crm-theme]) → le CRM adopte SON identité, sans
+     toucher au code. C'est ce qui rend le CRM « intégrable partout ».
+   .crm-surface répercute aussi les tokens sur les vars LIRI (--panel/--ink/--coral…)
+   que consomment les classes lp-*, pour re-thémer AUSSI ces utilitaires. */
+.crm-surface {
+  --crm-bg:#262624; --crm-rail:#1f1e1c; --crm-surface:#30302e; --crm-surface-2:#3a3a37;
+  --crm-sunken:#211f1b; --crm-inset:#2a2723; --crm-rightbg:#2b2926;
+  --crm-ink:#f5f4ee; --crm-muted:#b0ada3; --crm-faint:#82807a; --crm-line:rgba(245,244,238,.09);
+  --crm-accent:#d97757; --crm-accent-strong:#c2683f; --crm-accent-soft:#e08a63; --crm-accent-2:#e0a48f;
+  --crm-live:#e2553f; --crm-gold:#cba36b; --crm-green:#9fbf8f; --crm-on-accent:#ffffff;
+  /* répercussion → les classes lp-* et var(--coral)/var(--panel)… suivent les tokens */
+  --base:var(--crm-bg); --rail:var(--crm-rail); --panel:var(--crm-surface); --panel2:var(--crm-surface-2);
+  --ink:var(--crm-ink); --muted:var(--crm-muted); --faint:var(--crm-faint); --line:var(--crm-line);
+  --coral:var(--crm-accent); --clay:var(--crm-accent-strong); --live:var(--crm-live);
+  background:var(--crm-bg); color:var(--crm-ink);
+  font-family:'Inter',system-ui,sans-serif; -webkit-font-smoothing:antialiased;
+}
+/* Utilitaires lp-* à valeurs chaudes codées en dur → re-thémés via tokens sous .crm-surface. */
+.crm-surface .lp-ember { background:linear-gradient(135deg,var(--crm-accent),var(--crm-accent-strong)); }
+.crm-surface .lp-coral-tint { background:color-mix(in srgb, var(--crm-accent) 13%, transparent); }
+.crm-surface .lp-nav-active { background:color-mix(in srgb, var(--crm-accent) 13%, transparent); }
+.crm-surface .lp-nav-active .lp-ni, .crm-surface .lp-nav-active .lp-nl { color:var(--crm-accent); }
+.crm-surface .lp-rightbg { background:var(--crm-rightbg); }
+.crm-surface .lp-panel70 { background:color-mix(in srgb, var(--crm-surface) 70%, transparent); }
+.crm-surface .lp-coral { color:var(--crm-accent); }
+.crm-surface :focus-visible { outline:2px solid var(--crm-accent); outline-offset:2px; border-radius:12px; }
+
+/* Thème « back-office Cimolace » (bleu-navy slate) — appliqué sur la page admin CRM
+   pour supprimer le contraste chaud/froid et uniformiser avec le shell propriétaire. */
+.crm-surface[data-crm-theme="cimolace-admin"] {
+  --crm-bg:#0f172a; --crm-rail:#0b1220; --crm-surface:#1e293b; --crm-surface-2:#334155;
+  --crm-sunken:#0b1220; --crm-inset:#172033; --crm-rightbg:#111c30;
+  --crm-ink:#f1f5f9; --crm-muted:#94a3b8; --crm-faint:#64748b; --crm-line:rgba(148,163,184,.18);
+  /* l'accent reste le corail de marque (action) — il ressort proprement sur le navy */
+}

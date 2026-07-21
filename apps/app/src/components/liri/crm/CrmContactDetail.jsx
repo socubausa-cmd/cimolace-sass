@@ -40,8 +40,8 @@ const dayOf = (v) => { try { return DAY.format(new Date(v)); } catch { return ''
 // Ton chaud/neutre uniquement (charte LIRI) : payé/actif = coral, en attente = ambre doux, sinon faint.
 function statusTone(s) {
   const v = String(s || '').toLowerCase();
-  if (/(paid|payé|completed|confirmé|confirmed|active|actif|done|honoré)/.test(v)) return { bg: 'rgba(217,119,87,.14)', fg: '#e08a63' };
-  if (/(pending|attente|scheduled|programmé|open|processing)/.test(v)) return { bg: 'rgba(220,180,120,.12)', fg: '#cba36b' };
+  if (/(paid|payé|completed|confirmé|confirmed|active|actif|done|honoré)/.test(v)) return { bg: 'color-mix(in srgb, var(--crm-accent) 14%, transparent)', fg: 'var(--crm-accent-soft, #e08a63)' };
+  if (/(pending|attente|scheduled|programmé|open|processing)/.test(v)) return { bg: 'rgba(220,180,120,.12)', fg: 'var(--crm-gold, #cba36b)' };
   return { bg: 'rgba(245,244,238,.06)', fg: 'var(--muted)' };
 }
 function StatusPill({ children }) {
@@ -202,8 +202,8 @@ export default function CrmContactDetail({ contact, onClose }) {
     window.location.href = `mailto:${contact.email}`;
   };
   const badge = !platform ? null
-    : isMember ? { text: platform.role ? `Membre · ${platform.role}` : 'Membre', bg: 'rgba(217,119,87,.15)', fg: '#e08a63' }
-    : hasAccount ? { text: 'Compte détecté', bg: 'rgba(220,180,120,.12)', fg: '#cba36b' }
+    : isMember ? { text: platform.role ? `Membre · ${platform.role}` : 'Membre', bg: 'color-mix(in srgb, var(--crm-accent) 15%, transparent)', fg: 'var(--crm-accent-soft, #e08a63)' }
+    : hasAccount ? { text: 'Compte détecté', bg: 'rgba(220,180,120,.12)', fg: 'var(--crm-gold, #cba36b)' }
     : { text: contact.email ? 'Prospect' : 'Sans compte', bg: 'rgba(245,244,238,.06)', fg: 'var(--muted)' };
 
   return createPortal(
@@ -214,7 +214,7 @@ export default function CrmContactDetail({ contact, onClose }) {
         aria-modal="true"
         aria-label={`Fiche ${fullName(contact)}`}
         className="relative flex h-[100dvh] w-full max-w-[420px] flex-col border-l lp-line shadow-2xl"
-        style={{ background: '#211f1b', animation: 'crmSlideIn .22s cubic-bezier(.2,.8,.2,1)' }}
+        style={{ background: 'var(--crm-sunken, #211f1b)', animation: 'crmSlideIn .22s cubic-bezier(.2,.8,.2,1)' }}
         onClick={(e) => e.stopPropagation()}
       >
         <style>{`@keyframes crmSlideIn{from{transform:translateX(18px);opacity:.4}to{transform:none;opacity:1}}`}</style>
@@ -224,7 +224,7 @@ export default function CrmContactDetail({ contact, onClose }) {
           <div className="flex items-start gap-3.5">
             <div
               className="grid h-12 w-12 shrink-0 place-items-center rounded-2xl text-[15px] font-semibold text-white"
-              style={{ background: 'linear-gradient(140deg,#d97757,#c2683f)' }}
+              style={{ background: 'linear-gradient(140deg,var(--crm-accent, #d97757),var(--crm-accent-strong, #c2683f))' }}
             >
               {initials(contact)}
             </div>
@@ -399,9 +399,9 @@ export default function CrmContactDetail({ contact, onClose }) {
                     <button
                       key={t.id} type="button" onClick={() => toggleTag(t)} title="Retirer"
                       className="group inline-flex cursor-pointer items-center gap-1.5 rounded-full py-1 pl-2.5 pr-2 text-[12px] font-medium lp-tr"
-                      style={{ background: 'rgba(217,119,87,.13)', color: '#e08a63' }}
+                      style={{ background: 'color-mix(in srgb, var(--crm-accent) 13%, transparent)', color: 'var(--crm-accent-soft, #e08a63)' }}
                     >
-                      <span className="h-1.5 w-1.5 rounded-full" style={{ background: t.color || '#d97757' }} />
+                      <span className="h-1.5 w-1.5 rounded-full" style={{ background: t.color || 'var(--crm-accent, #d97757)' }} />
                       {t.name}
                       <X size={11} className="opacity-40 lp-tr group-hover:opacity-90" />
                     </button>
@@ -416,7 +416,7 @@ export default function CrmContactDetail({ contact, onClose }) {
                     {tagOpen && (
                       <>
                         <div className="fixed inset-0 z-40" onClick={() => setTagOpen(false)} />
-                        <div className="absolute left-0 z-50 mt-1.5 max-h-56 w-56 overflow-y-auto rounded-xl border lp-line py-1 shadow-xl" style={{ background: '#2a2723' }}>
+                        <div className="absolute left-0 z-50 mt-1.5 max-h-56 w-56 overflow-y-auto rounded-xl border lp-line py-1 shadow-xl" style={{ background: 'var(--crm-inset, #2a2723)' }}>
                           {allTags.length === 0 ? (
                             <p className="px-3 py-2.5 text-[12px] lp-faint">Aucune étiquette encore.</p>
                           ) : allTags.map((t) => (
@@ -424,10 +424,10 @@ export default function CrmContactDetail({ contact, onClose }) {
                               key={t.id} type="button" onClick={() => toggleTag(t)}
                               className="flex w-full cursor-pointer items-center gap-2.5 px-3 py-2 text-left text-[13px] lp-ink lp-railbtn lp-tr"
                             >
-                              <span className={`grid h-4 w-4 place-items-center rounded-[5px] border ${attachedIds.has(t.id) ? 'lp-line' : 'lp-line'}`} style={attachedIds.has(t.id) ? { background: '#d97757', borderColor: '#d97757' } : {}}>
+                              <span className={`grid h-4 w-4 place-items-center rounded-[5px] border ${attachedIds.has(t.id) ? 'lp-line' : 'lp-line'}`} style={attachedIds.has(t.id) ? { background: 'var(--crm-accent, #d97757)', borderColor: 'var(--crm-accent, #d97757)' } : {}}>
                                 {attachedIds.has(t.id) && <Check size={11} className="text-white" />}
                               </span>
-                              <span className="h-2 w-2 rounded-full" style={{ background: t.color || '#d97757' }} />
+                              <span className="h-2 w-2 rounded-full" style={{ background: t.color || 'var(--crm-accent, #d97757)' }} />
                               <span className="truncate">{t.name}</span>
                             </button>
                           ))}
@@ -466,7 +466,7 @@ export default function CrmContactDetail({ contact, onClose }) {
                       <p className="whitespace-pre-wrap break-words text-[13px] leading-relaxed lp-ink">{n.body}</p>
                       <div className="mt-1.5 flex items-center justify-between">
                         <span className="text-[11px] lp-faint">{TIME.format(new Date(n.created_at))}</span>
-                        <button type="button" aria-label="Supprimer la note" onClick={() => delNote(n.id)} className="cursor-pointer opacity-0 lp-tr group-hover:opacity-100" style={{ color: '#e0a48f' }}>
+                        <button type="button" aria-label="Supprimer la note" onClick={() => delNote(n.id)} className="cursor-pointer opacity-0 lp-tr group-hover:opacity-100" style={{ color: 'var(--crm-accent-2, #e0a48f)' }}>
                           <Trash2 size={13} />
                         </button>
                       </div>
@@ -502,12 +502,12 @@ export default function CrmContactDetail({ contact, onClose }) {
                         <button
                           type="button" aria-label={done ? 'Rouvrir' : 'Terminer'} onClick={() => toggleTask(t)}
                           className="grid h-[18px] w-[18px] shrink-0 cursor-pointer place-items-center rounded-md border lp-tr"
-                          style={done ? { background: '#d97757', borderColor: '#d97757' } : { borderColor: 'var(--line)' }}
+                          style={done ? { background: 'var(--crm-accent, #d97757)', borderColor: 'var(--crm-accent, #d97757)' } : { borderColor: 'var(--line)' }}
                         >
                           {done && <Check size={12} className="text-white" />}
                         </button>
                         <span className={`min-w-0 flex-1 truncate text-[13.5px] ${done ? 'lp-faint line-through' : 'lp-ink'}`}>{t.title}</span>
-                        <button type="button" aria-label="Supprimer la tâche" onClick={() => delTask(t.id)} className="shrink-0 cursor-pointer opacity-0 lp-tr group-hover:opacity-100" style={{ color: '#e0a48f' }}>
+                        <button type="button" aria-label="Supprimer la tâche" onClick={() => delTask(t.id)} className="shrink-0 cursor-pointer opacity-0 lp-tr group-hover:opacity-100" style={{ color: 'var(--crm-accent-2, #e0a48f)' }}>
                           <Trash2 size={13} />
                         </button>
                       </div>
@@ -528,8 +528,8 @@ export default function CrmContactDetail({ contact, onClose }) {
                     <div className="space-y-4">
                       {acts.map((a) => (
                         <div key={a.id} className="relative flex items-start gap-3">
-                          <span className="relative z-10 mt-0.5 grid h-[21px] w-[21px] shrink-0 place-items-center rounded-full" style={{ background: 'rgba(217,119,87,.16)' }}>
-                            <span className="h-1.5 w-1.5 rounded-full" style={{ background: '#d97757' }} />
+                          <span className="relative z-10 mt-0.5 grid h-[21px] w-[21px] shrink-0 place-items-center rounded-full" style={{ background: 'color-mix(in srgb, var(--crm-accent) 16%, transparent)' }}>
+                            <span className="h-1.5 w-1.5 rounded-full" style={{ background: 'var(--crm-accent, #d97757)' }} />
                           </span>
                           <div className="min-w-0 pb-0.5">
                             <p className="text-[13px] lp-ink">{a.title || ACT_LABEL[a.type] || a.type}</p>

@@ -144,8 +144,8 @@ export default function CrmDealDetail({ deal, stages = [], onClose, onChanged })
   const cEmail = platform?.contact?.email || null;
   const cCounts = platform?.counts || {};
   const cBadge = !platform ? null
-    : platform.isPlatformUser ? { text: platform.role ? `Membre · ${platform.role}` : 'Membre', bg: 'rgba(217,119,87,.15)', fg: '#e08a63' }
-    : platform.hasAccount ? { text: 'Compte détecté', bg: 'rgba(220,180,120,.12)', fg: '#cba36b' }
+    : platform.isPlatformUser ? { text: platform.role ? `Membre · ${platform.role}` : 'Membre', bg: 'color-mix(in srgb, var(--crm-accent) 15%, transparent)', fg: 'var(--crm-accent-soft, #e08a63)' }
+    : platform.hasAccount ? { text: 'Compte détecté', bg: 'rgba(220,180,120,.12)', fg: 'var(--crm-gold, #cba36b)' }
     : { text: cEmail ? 'Prospect' : 'Sans compte', bg: 'rgba(245,244,238,.06)', fg: 'var(--muted)' };
   const openMessage = () => {
     if (!platform?.userId || !platform?.isPlatformUser) return;
@@ -160,7 +160,7 @@ export default function CrmDealDetail({ deal, stages = [], onClose, onChanged })
       <aside
         role="dialog" aria-modal="true" aria-label={`Deal ${cur.title || ''}`}
         className="relative flex h-[100dvh] w-full max-w-[420px] flex-col border-l lp-line shadow-2xl"
-        style={{ background: '#211f1b', animation: 'crmSlideIn .22s cubic-bezier(.2,.8,.2,1)' }}
+        style={{ background: 'var(--crm-sunken, #211f1b)', animation: 'crmSlideIn .22s cubic-bezier(.2,.8,.2,1)' }}
         onClick={(e) => e.stopPropagation()}
       >
         <style>{`@keyframes crmSlideIn{from{transform:translateX(18px);opacity:.4}to{transform:none;opacity:1}}`}</style>
@@ -219,7 +219,7 @@ export default function CrmDealDetail({ deal, stages = [], onClose, onChanged })
                 className="w-full cursor-pointer rounded-xl border lp-line bg-[rgba(245,244,238,.03)] px-3 py-2 text-[13px] lp-ink outline-none lp-tr focus:border-[var(--coral)]"
               >
                 {stages.map((s) => (
-                  <option key={s.id} value={s.id} style={{ background: '#221f1b' }}>Étape : {s.name}</option>
+                  <option key={s.id} value={s.id} style={{ background: 'var(--crm-sunken, #221f1b)' }}>Étape : {s.name}</option>
                 ))}
               </select>
             </div>
@@ -297,7 +297,7 @@ export default function CrmDealDetail({ deal, stages = [], onClose, onChanged })
                       <p className="whitespace-pre-wrap break-words text-[13px] leading-relaxed lp-ink">{n.body}</p>
                       <div className="mt-1.5 flex items-center justify-between">
                         <span className="text-[11px] lp-faint">{TIME.format(new Date(n.created_at))}</span>
-                        <button type="button" aria-label="Supprimer" onClick={() => delNote(n.id)} className="cursor-pointer opacity-0 lp-tr group-hover:opacity-100" style={{ color: '#e0a48f' }}>
+                        <button type="button" aria-label="Supprimer" onClick={() => delNote(n.id)} className="cursor-pointer opacity-0 lp-tr group-hover:opacity-100" style={{ color: 'var(--crm-accent-2, #e0a48f)' }}>
                           <Trash2 size={13} />
                         </button>
                       </div>
@@ -328,11 +328,11 @@ export default function CrmDealDetail({ deal, stages = [], onClose, onChanged })
                     const done = t.status === 'done';
                     return (
                       <div key={t.id} className="group flex items-center gap-3 rounded-lg px-2 py-2 lp-tr hover:bg-[rgba(245,244,238,.04)]">
-                        <button type="button" aria-label={done ? 'Rouvrir' : 'Terminer'} onClick={() => toggleTask(t)} className="grid h-[18px] w-[18px] shrink-0 cursor-pointer place-items-center rounded-md border lp-tr" style={done ? { background: '#d97757', borderColor: '#d97757' } : { borderColor: 'var(--line)' }}>
+                        <button type="button" aria-label={done ? 'Rouvrir' : 'Terminer'} onClick={() => toggleTask(t)} className="grid h-[18px] w-[18px] shrink-0 cursor-pointer place-items-center rounded-md border lp-tr" style={done ? { background: 'var(--crm-accent, #d97757)', borderColor: 'var(--crm-accent, #d97757)' } : { borderColor: 'var(--line)' }}>
                           {done && <Check size={12} className="text-white" />}
                         </button>
                         <span className={`min-w-0 flex-1 truncate text-[13.5px] ${done ? 'lp-faint line-through' : 'lp-ink'}`}>{t.title}</span>
-                        <button type="button" aria-label="Supprimer" onClick={() => delTask(t.id)} className="shrink-0 cursor-pointer opacity-0 lp-tr group-hover:opacity-100" style={{ color: '#e0a48f' }}>
+                        <button type="button" aria-label="Supprimer" onClick={() => delTask(t.id)} className="shrink-0 cursor-pointer opacity-0 lp-tr group-hover:opacity-100" style={{ color: 'var(--crm-accent-2, #e0a48f)' }}>
                           <Trash2 size={13} />
                         </button>
                       </div>
@@ -353,8 +353,8 @@ export default function CrmDealDetail({ deal, stages = [], onClose, onChanged })
                     <div className="space-y-4">
                       {acts.map((a) => (
                         <div key={a.id} className="relative flex items-start gap-3">
-                          <span className="relative z-10 mt-0.5 grid h-[21px] w-[21px] shrink-0 place-items-center rounded-full" style={{ background: 'rgba(217,119,87,.16)' }}>
-                            <span className="h-1.5 w-1.5 rounded-full" style={{ background: '#d97757' }} />
+                          <span className="relative z-10 mt-0.5 grid h-[21px] w-[21px] shrink-0 place-items-center rounded-full" style={{ background: 'color-mix(in srgb, var(--crm-accent) 16%, transparent)' }}>
+                            <span className="h-1.5 w-1.5 rounded-full" style={{ background: 'var(--crm-accent, #d97757)' }} />
                           </span>
                           <div className="min-w-0 pb-0.5">
                             <p className="text-[13px] lp-ink">{a.title || ACT_LABEL[a.type] || a.type}</p>

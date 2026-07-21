@@ -43,7 +43,7 @@ export default function CimolaceAdminCrmPage() {
       <CimolaceHeader />
       <div style={{ display: 'flex', flex: 1, minHeight: 0 }}>
         <CimolaceSidebar />
-        <div className="lp-root" style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column' }}>
+        <div className="crm-surface" data-crm-theme="cimolace-admin" style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column' }}>
           <div style={{ padding: '18px 20px 0' }}>
             <div style={{ display: 'flex', alignItems: 'baseline', gap: 12, flexWrap: 'wrap' }}>
               <h1 className="lp-ink" style={{ fontSize: 20, fontWeight: 600, margin: 0 }}>CRM — Gestion des clients</h1>
