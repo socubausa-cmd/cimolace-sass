@@ -770,6 +770,7 @@ const LiriServicesPage = lazy(() => import('@/pages/liri/LiriServicesPage'));
 const LiriForfaitsPage = lazy(() => import('@/pages/liri/LiriForfaitsPage'));
 const LiriTemplePage = lazy(() => import('@/pages/liri/LiriTemplePage'));
 const LiriBoutiquePage = lazy(() => import('@/pages/liri/LiriBoutiquePage'));
+const LiriMboloMarketPage = lazy(() => import('@/pages/liri/LiriMboloMarketPage'));
 const LiriContenuPage = lazy(() => import('@/pages/liri/LiriContenuPage'));
 const LiriPagesPage = lazy(() => import('@/pages/liri/LiriPagesPage'));
 const LiriFinancesPage = lazy(() => import('@/pages/liri/LiriFinancesPage'));
@@ -1990,6 +1991,12 @@ isLiriHostDevPreviewRoute;
           <Route path="/liri/boutique" element={
             <ProtectedLiriRoute allowedRoles={['owner', 'admin', 'teacher', 'secretariat', 'student', 'practitioner', 'clinic_admin']} allowTenantRole>
               <LiriBoutiquePage />
+            </ProtectedLiriRoute>
+          } />
+          {/* Marché mbolo (VRAIE vitrine catalogue + panier + Stripe) DANS le portail LIRI. */}
+          <Route path="/liri/marche" element={
+            <ProtectedLiriRoute allowedRoles={['owner', 'admin', 'teacher', 'secretariat', 'student', 'practitioner', 'clinic_admin']} allowTenantRole>
+              <LiriMboloMarketPage />
             </ProtectedLiriRoute>
           } />
           {/* Back-office mbolo dans le portail LIRI (moteur mbolo, owner/admin) : produits · commandes · liens de paiement · factures · compta */}

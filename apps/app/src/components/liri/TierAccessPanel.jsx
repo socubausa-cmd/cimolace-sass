@@ -95,7 +95,7 @@ const MODULE_EXAMPLES = [
 ];
 
 const RDV_URL = '/liri/rendez-vous';
-const BOUTIQUE_URL = '/liri/boutique';
+const BOUTIQUE_URL = '/liri/marche';
 
 export default function TierAccessPanel() {
   const { label, cycle, isStaff, hasForfait } = useMemberEntitlements();

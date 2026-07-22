@@ -17,7 +17,7 @@ const asArray = (r) => (Array.isArray(r) ? r : Array.isArray(r?.data) ? r.data :
 const fmtPrice = (cents, currency) =>
   `${(Number(cents || 0) / 100).toLocaleString('fr-FR')} ${currency || 'EUR'}`;
 
-export default function MboloStorefrontPage() {
+export default function MboloStorefrontPage({ embedded = false }) {
   const { user } = useAuth();
   const [searchParams, setSearchParams] = useSearchParams();
   const [products, setProducts] = useState([]);
@@ -127,8 +127,8 @@ export default function MboloStorefrontPage() {
   }
 
   return (
-    <div className="min-h-screen bg-[#0b0f14] text-white">
-      <Helmet><title>Boutique</title></Helmet>
+    <div className={embedded ? 'text-white' : 'min-h-screen bg-[#0b0f14] text-white'}>
+      {!embedded && <Helmet><title>Boutique</title></Helmet>}
       <div className="mx-auto max-w-6xl px-4 py-8">
         <header className="mb-6 flex items-center justify-between gap-3">
           <div className="flex items-center gap-2">

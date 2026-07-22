@@ -10,6 +10,7 @@ import {
 import type { LucideIcon } from 'lucide-react';
 import { authStore } from '@/lib/auth-store';
 import { getCachedHostTenant } from '@/lib/tenantResolver';
+import { resolveTenantSlug } from '@/lib/tenant/activeBranding';
 import { getApiBaseUrl } from '@/lib/apiBase';
 import { useAuth } from '@/hooks/useAuth';
 import { isCreatorRole } from '@/lib/liri/creatorRole';
@@ -52,7 +53,11 @@ export function LiriPortalPage() {
   // d'une session antérieure dans le même navigateur → fuite). Domaine prioritaire, getTenantSlug
   // en repli (utilisé pour le header X-Tenant-Slug des appels API au boot, avant que l'org charge).
   const domainSlug = typeof window !== 'undefined' ? getCachedHostTenant(window.location.hostname) : '';
-  const slug = domainSlug || authStore.getTenantSlug();
+  // Repli FIABLE : sur l'hôte fondateur (prorascience.org) le cache host→slug peut ne pas
+  // être encore hydraté au boot → resolveTenantSlug() résout le tenant actif de façon SYNCHRONE
+  // ('isna'). Sans ça, X-Tenant-Slug part vide → TenantGuard 400 sur /growth/stats → les tuiles
+  // (sessions/membres/min/revenus) retombent à 0 alors que les membres existent (bug '0 membres').
+  const slug = domainSlug || authStore.getTenantSlug() || resolveTenantSlug();
 
   const [now, setNow] = useState(() => new Date());
   const [stats, setStats] = useState<Stats | null>(null);
@@ -552,7 +557,7 @@ export function LiriPortalPage() {
           {/* ce mois — métriques CRÉATEUR (sessions/membres/revenus) : masquées pour l'élève */}
           {isCreator && (
             <>
-              <h3 className="mb-2 mt-6 text-[11px] font-semibold uppercase tracking-[0.16em] lp-faint">Ce mois</h3>
+              <h3 className="mb-2 mt-6 text-[11px] font-semibold uppercase tracking-[0.16em] lp-faint">Vue d'ensemble</h3>
               <div className="grid grid-cols-2 gap-2">
                 {[
                   { v: stats?.totalLives ?? 0, l: 'sessions' },
