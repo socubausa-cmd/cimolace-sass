@@ -1340,6 +1340,10 @@ const AppContent = () => {
     '/rejoindre',
     '/choose-account-type', // sélecteur multi-rôles = page plein écran autonome (LiriWordmark) —
                             // JAMAIS le header vitrine « PORTAIL Formations… » (chrome Academy déprécié)
+    '/activer',         // Activation de compte élève (OTP) = page PRÉ-CONNEXION autonome, comme
+                        // /login /signup. JAMAIS le header portail (nav Formations… + session d'un
+                        // AUTRE utilisateur déjà connecté). Couvre /activer ; le /t/:slug/activer non
+                        // strippé est géré par le endsWith('/activer') dans shouldShowHeader.
     '/auth/callback',
     '/creator-dashboard',
     '/teacher-dashboard',
@@ -1438,6 +1442,7 @@ isLiriHostDevPreviewRoute;
     !isEleveMobileRoute &&
     !isStudentSpaceShell &&
     !hideHeaderRoutes.some(route => location.pathname.startsWith(route)) &&
+    !location.pathname.endsWith('/activer') && // couvre /t/:slug/activer non strippé (domaine tenant)
     !mobileReelsShellActive &&
     !isCimolaceRoute &&
     !isCimolaceAssistantRoot(location.pathname) &&

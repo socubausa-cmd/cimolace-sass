@@ -3,6 +3,7 @@ import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { Helmet } from 'react-helmet';
 import { DEFAULT_TENANT_SLUG } from '@/config/platform';
 import { studentInviteApi } from '@/lib/api-v2';
+import { useTenantBranding } from '@/hooks/useTenantBranding';
 
 /**
  * Activation d'accès élève par CODE OTP (L5). L'élève arrive ici via le lien de
@@ -15,6 +16,8 @@ export default function ActivateAccountPage() {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const slug = tenantSlug || DEFAULT_TENANT_SLUG;
+  // Page PRÉ-CONNEXION autonome (sans header portail) → elle porte sa PROPRE identité tenant.
+  const { branding } = useTenantBranding();
 
   const [email, setEmail] = useState(searchParams.get('email') || '');
   const [code, setCode] = useState((searchParams.get('code') || '').toUpperCase());
@@ -57,6 +60,12 @@ export default function ActivateAccountPage() {
     <div className="min-h-[100dvh] bg-[#262624] text-white" style={{ '--school-accent': '#d97757' }}>
       <Helmet><title>Activer mon accès</title></Helmet>
       <main className="mx-auto w-full max-w-md px-5 py-10">
+        <div className="mb-8 flex items-center gap-2.5">
+          {branding?.logo ? (
+            <img src={branding.logo} alt="" className="h-9 w-9 rounded-lg object-contain" />
+          ) : null}
+          <span className="text-lg font-bold tracking-tight text-[#f5f4ee]">{branding?.name || 'Prorascience'}</span>
+        </div>
         <div className="mb-6">
           <h1 className="text-[22px] font-bold text-[#f5f4ee]">Activer mon accès</h1>
           <p className="mt-1 text-[13px] text-[#b0ada3]">
