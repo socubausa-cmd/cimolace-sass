@@ -25,20 +25,20 @@ const LawBox = ({ title, children }) => (
 );
 
 const AxiomBox = ({ id, title, children }) => (
-  <div className="bg-indigo-500/[0.06] border border-indigo-500/20 rounded-xl p-5 my-3">
+  <div className="bg-amber-500/[0.06] border border-amber-500/25 rounded-xl p-5 my-3">
     <div className="flex items-center gap-2 mb-2">
-      <Shield className="w-4 h-4 text-indigo-400" />
-      <span className="text-xs font-bold text-indigo-400 uppercase tracking-wider">Axiome {id} — {title}</span>
+      <Shield className="w-4 h-4 text-amber-400" />
+      <span className="text-xs font-bold text-amber-400 uppercase tracking-wider">Axiome {id} — {title}</span>
     </div>
     <p className="text-gray-300 leading-relaxed">{children}</p>
   </div>
 );
 
 const TE = ({ number, title, children }) => (
-  <div className="bg-[#192734] border border-white/5 rounded-xl p-6 my-5 hover:border-cyan-500/20 transition-all">
+  <div className="bg-[#2a2724] border border-white/5 rounded-xl p-6 my-5 hover:border-[color-mix(in_srgb,var(--school-accent)_25%,transparent)] transition-all">
     <div className="flex items-center gap-2 mb-3">
-      <Sparkles className="w-4 h-4 text-cyan-400" />
-      <span className="text-sm font-bold text-cyan-400">Expérience de pensée {number}</span>
+      <Sparkles className="w-4 h-4 text-[var(--school-accent)]" />
+      <span className="text-sm font-bold text-[var(--school-accent)]">Expérience de pensée {number}</span>
     </div>
     <h4 className="text-lg font-serif font-bold text-white mb-3">{title}</h4>
     <div className="text-gray-300 text-base leading-relaxed space-y-3">{children}</div>
@@ -71,7 +71,7 @@ const FondDeToutPage = () => {
   const go = (id) => { setAc(id); document.getElementById(id)?.scrollIntoView({ behavior: 'smooth', block: 'start' }); };
 
   return (
-    <div className="min-h-screen bg-[#0F1419] text-white">
+    <div className="min-h-screen bg-[#262624] text-white">
       <Helmet>
         <title>{`Le Fond de Tout — Livre I | ${SITE_NAME}`}</title>
         <meta name="description" content="Le Fond de Tout — Livre I de la Prorascience par le 5ᵉ Manikongo. Ontologie fondamentale, Potentia Prima, champ de permission Φ, 9 axiomes de la Singularité et les 10 équations fondamentales." />
@@ -96,7 +96,7 @@ const FondDeToutPage = () => {
 
       {/* HERO */}
       <section className="relative py-28 md:py-40 px-6 overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-b from-[#0F1419] via-[#192734]/60 to-[#0F1419]" />
+        <div className="absolute inset-0 bg-gradient-to-b from-[#262624] via-[#2a2724]/60 to-[#262624]" />
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-[color-mix(in_srgb,var(--school-accent)_5%,transparent)] rounded-full blur-[300px]" />
         <div className="relative max-w-4xl mx-auto text-center space-y-6">
           <span className="inline-flex items-center gap-2 px-5 py-2 rounded-full bg-[color-mix(in_srgb,var(--school-accent)_10%,transparent)] text-[var(--school-accent)] text-xs font-bold uppercase tracking-widest border border-[color-mix(in_srgb,var(--school-accent)_20%,transparent)]">
@@ -106,7 +106,7 @@ const FondDeToutPage = () => {
             Le Fond de<br /><span className="text-transparent bg-clip-text bg-gradient-to-r from-[var(--school-accent)] via-yellow-400 to-[var(--school-accent)]">Tout</span>
           </h1>
           <p className="text-gray-400 text-lg md:text-xl max-w-2xl mx-auto">Par le <span className="text-[var(--school-accent)] font-semibold">5ᵉ Manikongo</span> — Fondateur du Système Prorascience</p>
-          <div className="bg-[#192734]/80 border border-white/5 rounded-xl p-5 max-w-lg mx-auto">
+          <div className="bg-[#2a2724]/80 border border-white/5 rounded-xl p-5 max-w-lg mx-auto">
             <p className="text-lg font-serif italic text-gray-300">« Rien ne peut partir de rien, car le rien n'est pas un état. »</p>
           </div>
           <p className="text-xs text-gray-600 uppercase tracking-widest">© PRORASCIENCE — NGOWAZULU · ISNA — Première édition</p>
@@ -114,11 +114,18 @@ const FondDeToutPage = () => {
         </div>
       </section>
 
-      {/* NAV */}
-      <div className="sticky top-20 z-30 bg-[#0F1419]/95 backdrop-blur-xl border-b border-white/5 py-3 mb-8">
-        <div className="max-w-4xl mx-auto px-4 flex gap-2 overflow-x-auto">
+      {/* NAV — RAIL LATÉRAL vertical à DROITE (desktop) + barre horizontale (mobile).
+          Déplacé du haut (barre horizontale) vers un rail sur le côté droit (demande fondateur). */}
+      <nav aria-label="Chapitres" className="fixed right-3 top-1/2 z-40 hidden max-h-[82vh] w-[104px] -translate-y-1/2 flex-col gap-1.5 overflow-y-auto rounded-2xl border border-white/10 bg-[#2a2724]/95 p-2 shadow-[0_24px_70px_-24px_rgba(0,0,0,0.65)] backdrop-blur-xl lg:flex">
+        <span className="px-2 pb-1 pt-0.5 text-[9px] font-bold uppercase tracking-[0.2em] text-white/35">Chapitres</span>
+        {navItems.map(n => (
+          <button key={n.id} onClick={() => go(n.id)} className={`shrink-0 rounded-lg px-3 py-2 text-left text-xs font-bold transition-all ${ac === n.id ? 'border border-[color-mix(in_srgb,var(--school-accent)_35%,transparent)] bg-[color-mix(in_srgb,var(--school-accent)_22%,transparent)] text-[var(--school-accent)]' : 'border border-transparent text-gray-400 hover:bg-white/5 hover:text-white'}`}>{n.s}</button>
+        ))}
+      </nav>
+      <div className="sticky top-20 z-30 mb-8 border-b border-white/5 bg-[#262624]/95 py-3 backdrop-blur-xl lg:hidden">
+        <div className="mx-auto flex max-w-4xl gap-2 overflow-x-auto px-4">
           {navItems.map(n => (
-            <button key={n.id} onClick={() => go(n.id)} className={`shrink-0 px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${ac === n.id ? 'bg-[color-mix(in_srgb,var(--school-accent)_20%,transparent)] text-[var(--school-accent)] border border-[color-mix(in_srgb,var(--school-accent)_30%,transparent)]' : 'bg-white/5 text-gray-400 border border-white/5 hover:text-white'}`}>{n.s}</button>
+            <button key={n.id} onClick={() => go(n.id)} className={`shrink-0 rounded-lg px-3 py-1.5 text-xs font-bold transition-all ${ac === n.id ? 'border border-[color-mix(in_srgb,var(--school-accent)_30%,transparent)] bg-[color-mix(in_srgb,var(--school-accent)_20%,transparent)] text-[var(--school-accent)]' : 'border border-white/5 bg-white/5 text-gray-400 hover:text-white'}`}>{n.s}</button>
           ))}
         </div>
       </div>
@@ -128,8 +135,8 @@ const FondDeToutPage = () => {
         {/* PROLOGUE */}
         <section id="prologue" className="space-y-5 scroll-mt-28">
           <div className="flex items-center gap-3">
-            <div className="w-11 h-11 rounded-xl bg-violet-500/10 border border-violet-500/30 flex items-center justify-center"><Quote className="w-5 h-5 text-violet-400" /></div>
-            <div><span className="text-xs text-violet-400 font-bold uppercase tracking-wider">Prologue</span><h2 className="text-2xl md:text-3xl font-serif font-bold text-white">La question que personne ne pose correctement</h2></div>
+            <div className="w-11 h-11 rounded-xl bg-[color-mix(in_srgb,var(--school-accent)_10%,transparent)] border border-[color-mix(in_srgb,var(--school-accent)_30%,transparent)] flex items-center justify-center"><Quote className="w-5 h-5 text-[var(--school-accent)]" /></div>
+            <div><span className="text-xs text-[var(--school-accent)] font-bold uppercase tracking-wider">Prologue</span><h2 className="text-2xl md:text-3xl font-serif font-bold text-white">La question que personne ne pose correctement</h2></div>
           </div>
           <p className="text-gray-300 leading-relaxed">Tout le monde a posé cette question au moins une fois. Pas à voix haute. Dans ce moment silencieux, la nuit, quand le mental s'arrête une seconde :</p>
           <BQ>Pourquoi est-ce qu'il y a quelque chose plutôt que rien ?</BQ>
@@ -141,13 +148,13 @@ const FondDeToutPage = () => {
         {/* CH1 */}
         <section id="ch1" className="space-y-5 scroll-mt-28">
           <div className="flex items-center gap-3">
-            <div className="w-11 h-11 rounded-xl bg-blue-500/10 border border-blue-500/30 flex items-center justify-center"><Layers className="w-5 h-5 text-blue-400" /></div>
-            <div><span className="text-xs text-blue-400 font-bold uppercase tracking-wider">Chapitre 1</span><h2 className="text-2xl md:text-3xl font-serif font-bold text-white">Le Plancher</h2></div>
+            <div className="w-11 h-11 rounded-xl bg-orange-500/10 border border-[color-mix(in_srgb,var(--school-accent)_30%,transparent)] flex items-center justify-center"><Layers className="w-5 h-5 text-[var(--school-accent)]" /></div>
+            <div><span className="text-xs text-[var(--school-accent)] font-bold uppercase tracking-wider">Chapitre 1</span><h2 className="text-2xl md:text-3xl font-serif font-bold text-white">Le Plancher</h2></div>
           </div>
           <TE number="1" title="La Chambre qu'on ne peut pas vider">
             <p>Imagine une grande chambre remplie. Tu commences à tout enlever. La chambre est vide. Mais est-elle vraiment vide ? Non. Il reste l'air. Tu pompes l\'air — il reste la chaleur. Tu refroidis jusqu\'au zéro absolu — il reste le rayonnement.</p>
             <p>Tu blindes tout — il reste les neutrinos. Tu élimines tout ça — la physique quantique te dit : <span className="text-white font-semibold">il reste encore quelque chose</span>. Le vide quantique fluctue. Il y a une énergie de point zéro qu'on ne peut pas enlever.</p>
-            <p className="text-cyan-300 font-semibold">Tu ne peux pas vider la chambre complètement. Il y a un plancher.</p>
+            <p className="text-amber-300 font-semibold">Tu ne peux pas vider la chambre complètement. Il y a un plancher.</p>
           </TE>
           <LawBox title="Potentia Prima">Le Potentia Prima est ce plancher ontologique irréductible. Il est ce qu'on obtient quand on réduit tout jusqu\'à ce qu\'on ne puisse plus rien enlever sans tout perdre.</LawBox>
           <TE number="2" title="La Bibliothèque Irréductible">
@@ -166,8 +173,8 @@ const FondDeToutPage = () => {
         {/* CH2 */}
         <section id="ch2" className="space-y-5 scroll-mt-28">
           <div className="flex items-center gap-3">
-            <div className="w-11 h-11 rounded-xl bg-violet-500/10 border border-violet-500/30 flex items-center justify-center"><Eye className="w-5 h-5 text-violet-400" /></div>
-            <div><span className="text-xs text-violet-400 font-bold uppercase tracking-wider">Chapitre 2</span><h2 className="text-2xl md:text-3xl font-serif font-bold text-white">L'État Primordial</h2></div>
+            <div className="w-11 h-11 rounded-xl bg-[color-mix(in_srgb,var(--school-accent)_10%,transparent)] border border-[color-mix(in_srgb,var(--school-accent)_30%,transparent)] flex items-center justify-center"><Eye className="w-5 h-5 text-[var(--school-accent)]" /></div>
+            <div><span className="text-xs text-[var(--school-accent)] font-bold uppercase tracking-wider">Chapitre 2</span><h2 className="text-2xl md:text-3xl font-serif font-bold text-white">L'État Primordial</h2></div>
           </div>
           <TE number="3" title="Le Miroir sans Visage">
             <p>Imagine un miroir ontologique parfait. Il n'a pas de visage propre. Présente-lui une pomme — il montre une pomme. Présente-lui le chiffre 4 dans un système {'{1,2,3}'} — il oscille entre 1, 2, 3 sans pouvoir se fixer.</p>
@@ -204,19 +211,19 @@ const FondDeToutPage = () => {
         {/* CH4 */}
         <section id="ch4" className="space-y-5 scroll-mt-28">
           <div className="flex items-center gap-3">
-            <div className="w-11 h-11 rounded-xl bg-cyan-500/10 border border-cyan-500/30 flex items-center justify-center"><Cloud className="w-5 h-5 text-cyan-400" /></div>
-            <div><span className="text-xs text-cyan-400 font-bold uppercase tracking-wider">Chapitre 4</span><h2 className="text-2xl md:text-3xl font-serif font-bold text-white">Le Nuage</h2></div>
+            <div className="w-11 h-11 rounded-xl bg-amber-500/10 border border-amber-500/30 flex items-center justify-center"><Cloud className="w-5 h-5 text-[var(--school-accent)]" /></div>
+            <div><span className="text-xs text-[var(--school-accent)] font-bold uppercase tracking-wider">Chapitre 4</span><h2 className="text-2xl md:text-3xl font-serif font-bold text-white">Le Nuage</h2></div>
           </div>
           <TE number="7" title="La Météo Ontologique">
             <p>Les nuages sont chargés. L'eau est réelle mais pas encore tombée. Toutes les pluies possibles coexistent en suspension. La topographie détermine déjà où l\'eau ira.</p>
-            <p className="text-cyan-300 font-semibold">Le nuage, c'est ψ — l\'onde ontologique. La pluie, c\'est l\'effondrement. La topographie, c\'est le champ de permission Φ.</p>
+            <p className="text-amber-300 font-semibold">Le nuage, c'est ψ — l\'onde ontologique. La pluie, c\'est l\'effondrement. La topographie, c\'est le champ de permission Φ.</p>
           </TE>
           <TE number="8" title="L'Orchestre Silencieux">
             <p>Un orchestre est prêt, baguette en l'air. La musique n\'a pas encore commencé. Mais dans cette seconde de silence — <span className="text-white font-semibold">toute la musique est déjà là</span>.</p>
             <p>Le premier coup de baguette — c'est ε, le seuil. Le temps τ naît avec la première note, pas avant.</p>
           </TE>
           <BQ>Avant le premier coup de baguette, le temps n'existe pas encore pour cette musique.</BQ>
-          <div className="bg-[#192734] border border-white/10 rounded-xl p-5 text-center my-4">
+          <div className="bg-[#2a2724] border border-white/10 rounded-xl p-5 text-center my-4">
             <p className="text-xl font-mono text-[var(--school-accent)] font-bold">Ω(α) = Σ α! / (α - n)!</p>
           </div>
           <DT headers={["Entropie α", "Portée Ω", "Signification"]} rows={[["3", "12 qualia", "Simple"], ["4", "60 qualia", "Modéré"], ["10", "9 864 100", "Élevé"], ["Notre cosmos", "Ω immense", "Quasi-infini"]]} />
@@ -277,7 +284,7 @@ const FondDeToutPage = () => {
               { id:"E9", n:"Temps physique", eq:"Q(2)_{C,D} ⟹ τ₂ = f(D)", d:"Le temps mesurable est porté par la tendance D" },
               { id:"E10", n:"Relation des temps", eq:"τ₂ ⊂ τ₀ ⊄ τ₂", d:"τ₂ instance de τ₀, mais τ₀ plus universel" },
             ].map(e => (
-              <div key={e.id} className="bg-[#192734] border border-white/5 rounded-xl p-5 hover:border-[color-mix(in_srgb,var(--school-accent)_20%,transparent)] transition-all group">
+              <div key={e.id} className="bg-[#2a2724] border border-white/5 rounded-xl p-5 hover:border-[color-mix(in_srgb,var(--school-accent)_20%,transparent)] transition-all group">
                 <div className="flex items-start gap-4">
                   <div className="w-10 h-10 rounded-lg bg-[color-mix(in_srgb,var(--school-accent)_10%,transparent)] border border-[color-mix(in_srgb,var(--school-accent)_20%,transparent)] flex items-center justify-center shrink-0"><span className="text-xs font-bold text-[var(--school-accent)]">{e.id}</span></div>
                   <div><h4 className="text-base font-bold text-white">{e.n}</h4><p className="font-mono text-sm text-[var(--school-accent)]">{e.eq}</p><p className="text-sm text-gray-400">{e.d}</p></div>
@@ -312,14 +319,14 @@ const FondDeToutPage = () => {
           </div>
 
           <h3 className="text-xl font-serif font-bold text-white">I — Les Lois par Niveau</h3>
-          <h4 className="text-sm text-blue-400 uppercase tracking-wider font-bold">Niveau 0 — Potentia Prima</h4>
+          <h4 className="text-sm text-[var(--school-accent)] uppercase tracking-wider font-bold">Niveau 0 — Potentia Prima</h4>
           <LawBox title="NZ">Tout réel possède une information minimale non nulle.</LawBox>
           <LawBox title="Du Mur">Le Potentia Prima est ce qu'on ne peut pas supprimer sans détruire toute permission.</LawBox>
           <h4 className="text-sm text-emerald-400 uppercase tracking-wider font-bold mt-4">Niveau 1 — Champ de Permission</h4>
           <LawBox title="Permission">Rien n'existe hors de sa permission ontologique.</LawBox>
           <LawBox title="Antériorité">La loi précède la réalité — elle est la géométrie dont la réalité est la trace.</LawBox>
           <LawBox title="Règle d'Or">Toute combinaison valide exige une différenciation minimum.</LawBox>
-          <h4 className="text-sm text-cyan-400 uppercase tracking-wider font-bold mt-4">Niveau 2 — Onde Ontologique</h4>
+          <h4 className="text-sm text-[var(--school-accent)] uppercase tracking-wider font-bold mt-4">Niveau 2 — Onde Ontologique</h4>
           <LawBox title="Encapsulation">Tout couple causal circulaire implique un Potentiel P qui les contient.</LawBox>
           <LawBox title="Portée">La portée ontologique est bornée par l'entropie de base α.</LawBox>
           <h4 className="text-sm text-orange-400 uppercase tracking-wider font-bold mt-4">Niveau 3 — Effondrement</h4>
