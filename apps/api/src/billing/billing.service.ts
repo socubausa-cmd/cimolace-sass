@@ -150,7 +150,7 @@ export class BillingService implements OnApplicationBootstrap {
    * pending pour `planKey`. Renvoie l'URL Stripe hébergée — l'owner l'envoie au client.
    * ⚠️ Ne débite RIEN : la carte n'est débitée que si le client paie via le lien.
    */
-  async createPaymentLinkForTenant(tenantId: string, planKey?: string, actor?: string) {
+  async createPaymentLinkForTenant(tenantId: string, planKey?: string, actor?: string, cycle?: string) {
     const sb = this.supabase;
     let subscriptionId: string | undefined;
     let planUsed = planKey;
@@ -174,7 +174,7 @@ export class BillingService implements OnApplicationBootstrap {
       planUsed = primary.plan_id;
     }
 
-    const checkout = await this.createCardCheckout(tenantId, subscriptionId!);
+    const checkout = await this.createCardCheckout(tenantId, subscriptionId!, cycle);
 
     // SÉCURITÉ §15 : trace attribuable (QUI a généré un lien de paiement pour QUI).
     try {
@@ -182,7 +182,7 @@ export class BillingService implements OnApplicationBootstrap {
         action: "billing:payment-link",
         entity_type: "tenant",
         entity_id: tenantId,
-        description: `Lien de paiement Stripe généré (plan ${planUsed ?? "?"})`,
+        description: `Lien de paiement Stripe généré (plan ${planUsed ?? "?"}${cycle ? `, cycle ${cycle}` : ""})`,
         changed_by: (actor && actor.trim()) || "Cimolace Ops (non attribué)",
       });
     } catch {
@@ -757,19 +757,40 @@ export class BillingService implements OnApplicationBootstrap {
    * abonnement plateforme. Renvoie l'URL hébergée. Le prix vient du plan
    * (billing_plans.stripe_price_id), jamais du client.
    */
-  async createCardCheckout(tenantId: string, subscriptionId: string) {
+  async createCardCheckout(tenantId: string, subscriptionId: string, cycleOverride?: string) {
     const auth = this.stripeAuth();
     const sb = this.supabase;
     const { data: sub } = await sb.from("billing_subscriptions").select("*").eq("id", subscriptionId).eq("tenant_id", tenantId).maybeSingle();
     if (!sub) throw new NotFoundException("Abonnement introuvable");
     const { data: plan } = await sb
       .from("billing_plans")
-      .select("stripe_price_id, label, price_cents, currency, billing_cycle")
+      .select("stripe_price_id, label, price_cents, currency, billing_cycle, metadata")
       .eq("key", (sub as any).plan_id)
       .maybeSingle();
-    const priceId = (plan as any)?.stripe_price_id;
+    // CYCLE : le client peut choisir mensuel/trimestriel/annuel sur un plan mensuel.
+    // Remises standard (alignées sur la grille cycles existante) : trimestriel −10 %,
+    // annuel −20 % — surchargables par plan via billing_plans.metadata.cycle_discounts.
+    const planCycle = String((plan as any)?.billing_cycle ?? "monthly").toLowerCase();
+    const cycle = BillingService.normalizeCycle(cycleOverride) ?? planCycle;
+    const cycled = cycle !== planCycle && ["quarterly", "yearly"].includes(cycle);
+    let priceId = (plan as any)?.stripe_price_id;
     // Montant = prix du plan (DB) sinon montant de l'abo ; JAMAIS fourni par le client.
-    const amountCents = Number((plan as any)?.price_cents ?? (sub as any)?.amount_cents ?? 0);
+    let amountCents = Number((plan as any)?.price_cents ?? (sub as any)?.amount_cents ?? 0);
+    let appliedDisc = 0;
+    if (cycled && planCycle === "monthly" && amountCents > 0) {
+      const disc = BillingService.cycleDiscount((plan as any)?.metadata, cycle);
+      appliedDisc = disc;
+      const months = cycle === "yearly" ? 12 : 3;
+      amountCents = Math.round(amountCents * months * (1 - disc));
+      priceId = null; // le prix Stripe pré-créé est mensuel → prix INLINE au bon intervalle
+      // Mémoriser le cycle choisi : confirmCardPayment prolonge la période selon lui,
+      // et le trigger CRM normalise le MRR (÷3 ou ÷12) grâce à metadata.cycle_override.
+      await sb.from("billing_subscriptions").update({
+        amount_cents: amountCents,
+        metadata: { ...(((sub as any).metadata as Record<string, unknown>) ?? {}), cycle_override: cycle },
+        updated_at: new Date().toISOString(),
+      }).eq("id", subscriptionId);
+    }
     if (!priceId && amountCents <= 0) {
       throw new BadRequestException("Aucun prix configuré pour ce plan (carte indisponible)");
     }
@@ -783,12 +804,17 @@ export class BillingService implements OnApplicationBootstrap {
     } else {
       // Pas de prix Stripe pré-créé → prix INLINE depuis le catalogue (billing_plans).
       // Rend tout plan/add-on payable sans devoir créer un prix Stripe à la main.
+      // L'intervalle suit le CYCLE effectif (choix client inclus) via cycleToStripeInterval
+      // (quarterly = month×3 — un simple yearly?year:month facturait le trimestre chaque mois).
       const currency = String((plan as any)?.currency ?? (sub as any)?.currency ?? "EUR").toLowerCase();
-      const interval = String((plan as any)?.billing_cycle ?? "monthly").toLowerCase() === "yearly" ? "year" : "month";
+      const iv = BillingService.cycleToStripeInterval(cycle);
       params.append("line_items[0][price_data][currency]", currency);
       params.append("line_items[0][price_data][unit_amount]", String(amountCents));
-      params.append("line_items[0][price_data][recurring][interval]", interval);
-      params.append("line_items[0][price_data][product_data][name]", String((plan as any)?.label ?? (sub as any)?.plan_id ?? "Abonnement Cimolace"));
+      params.append("line_items[0][price_data][recurring][interval]", iv.interval);
+      if (iv.count > 1) params.append("line_items[0][price_data][recurring][interval_count]", String(iv.count));
+      const discPct = appliedDisc > 0 ? ` (−${Math.round(appliedDisc * 100)} %)` : "";
+      const cycleLabel = cycle === "yearly" ? ` — Annuel${discPct}` : cycle === "quarterly" ? ` — Trimestriel${discPct}` : "";
+      params.append("line_items[0][price_data][product_data][name]", String((plan as any)?.label ?? (sub as any)?.plan_id ?? "Abonnement Cimolace") + cycleLabel);
     }
     params.append("line_items[0][quantity]", "1");
     params.append("success_url", `${frontend}/cimolace/billing?card=success&session_id={CHECKOUT_SESSION_ID}&sub=${subscriptionId}`);
@@ -831,8 +857,13 @@ export class BillingService implements OnApplicationBootstrap {
     if (paid) {
       // Échéance selon le CYCLE (fix : yearly ne donnait que 30 jours). Bootstrap ;
       // pour un abonnement récurrent Stripe, le webhook resynchronise ensuite la période réelle.
+      // Le cycle CHOISI au checkout (metadata.cycle_override) prime sur celui du plan —
+      // sinon un paiement annuel ne créditerait qu'un mois.
       const start = new Date();
-      const end = BillingService.addCycle(start, await this.planBillingCycle((sub as any).plan_id));
+      const chosenCycle =
+        BillingService.normalizeCycle((sub as any)?.metadata?.cycle_override) ??
+        (await this.planBillingCycle((sub as any).plan_id));
+      const end = BillingService.addCycle(start, chosenCycle);
       await sb.from("billing_subscriptions").update({ status: "active", provider_subscription_id: s.subscription ?? null, provider_customer_id: s.customer ?? null, current_period_start: start.toISOString(), current_period_end: end.toISOString(), updated_at: new Date().toISOString() }).eq("id", subscriptionId);
       await sb.from("billing_invoices").update({ status: "paid", provider: "stripe", paid_at: new Date().toISOString(), updated_at: new Date().toISOString() }).eq("subscription_id", subscriptionId).in("status", ["pending", "processing", "failed"]);
       // Le forfait payé remplace les autres abonnements actifs (ex: l'essai medos_standard).
@@ -870,6 +901,22 @@ export class BillingService implements OnApplicationBootstrap {
     else if (c === "one_time" || c === "lifetime") d.setFullYear(d.getFullYear() + 100); // achat unique → sans expiration pratique
     else d.setMonth(d.getMonth() + 1);
     return d;
+  }
+
+  /** Cycle client normalisé ('monthly'|'quarterly'|'yearly') ou undefined si invalide/absent. */
+  private static normalizeCycle(c: string | null | undefined): string | undefined {
+    const v = String(c ?? "").trim().toLowerCase();
+    return ["monthly", "quarterly", "yearly"].includes(v) ? v : undefined;
+  }
+
+  /** Remise du cycle : billing_plans.metadata.cycle_discounts.{quarterly,yearly} (0..0.5),
+   *  sinon défauts alignés sur la grille cycles existante : trimestriel −10 %, annuel −20 %. */
+  private static cycleDiscount(planMeta: unknown, cycle: string): number {
+    const defaults: Record<string, number> = { quarterly: 0.10, yearly: 0.20 };
+    const raw = (planMeta as any)?.cycle_discounts?.[cycle];
+    const n = Number(raw);
+    if (Number.isFinite(n) && n >= 0 && n <= 0.5) return n;
+    return defaults[cycle] ?? 0;
   }
 
   /** Cycle plan → intervalle Stripe (interval + interval_count) pour un prix INLINE

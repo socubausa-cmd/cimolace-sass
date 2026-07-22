@@ -91,15 +91,21 @@ export class AdminBillingController {
   }
 
   // Back-office : génère un LIEN DE PAIEMENT Stripe pour un tenant (relance/encaissement).
-  // Owner Cimolace uniquement. Body { planKey? } — sinon réutilise l'abo existant du tenant.
+  // Owner Cimolace uniquement. Body { planKey?, cycle? } — cycle ∈ monthly|quarterly|yearly
+  // (trimestriel −10 %, annuel −20 % par défaut) ; sans planKey, réutilise l'abo existant.
   @Post("tenants/:tenantId/payment-link")
   @UseGuards(JwtAuthGuard, CimolaceStaffGuard)
-  async paymentLink(@Req() req: any, @Param("tenantId") tenantId: string, @Body() body: { planKey?: string }) {
+  async paymentLink(
+    @Req() req: any,
+    @Param("tenantId") tenantId: string,
+    @Body() body: { planKey?: string; cycle?: string },
+  ) {
     return {
       data: await this.svc.createPaymentLinkForTenant(
         tenantId,
         body?.planKey,
         req.user?.email ?? req.user?.id ?? undefined,
+        body?.cycle,
       ),
     };
   }

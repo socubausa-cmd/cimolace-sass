@@ -43,6 +43,7 @@ export default function CrmCompanyDetail({ company, onClose }) {
   const [loading, setLoading] = useState(true);
   const [pay, setPay] = useState({ loading: false, url: null, copied: false });
   const [showQr, setShowQr] = useState(false);
+  const [cycle, setCycle] = useState('monthly'); // mensuel | trimestriel −10 % | annuel −20 %
   const reqRef = useRef(0);
   const id = company?.id;
 
@@ -93,11 +94,28 @@ export default function CrmCompanyDetail({ company, onClose }) {
     const val = zero ? cents : cents / 100;
     return `${val.toLocaleString('fr-FR')} ${cur || 'EUR'}`;
   };
+  // Cycles proposés (mêmes remises que la grille cycles : trimestriel −10 %, annuel −20 %).
+  const CYCLES = [
+    { v: 'monthly', label: 'Mensuel', months: 1, disc: 0 },
+    { v: 'quarterly', label: 'Trimestriel', months: 3, disc: 0.10 },
+    { v: 'yearly', label: 'Annuel', months: 12, disc: 0.20 },
+  ];
+  const cycleTotal = (c) => {
+    if (billing?.amountCents == null) return null;
+    const def = CYCLES.find((x) => x.v === c) || CYCLES[0];
+    return Math.round(billing.amountCents * def.months * (1 - def.disc));
+  };
+  const pickCycle = (v) => {
+    setCycle(v);
+    // le lien généré est lié au cycle → on le réinitialise si l'owner change d'option
+    setPay({ loading: false, url: null, copied: false });
+    setShowQr(false);
+  };
   const genPaymentLink = async () => {
     if (!extTenantId || pay.loading) return;
     setPay({ loading: true, url: null, copied: false });
     try {
-      const res = await crmApi.createTenantPaymentLink(extTenantId);
+      const res = await crmApi.createTenantPaymentLink(extTenantId, undefined, cycle);
       if (!res?.url) throw new Error('Lien indisponible');
       setPay({ loading: false, url: res.url, copied: false });
     } catch (e) {
@@ -109,9 +127,11 @@ export default function CrmCompanyDetail({ company, onClose }) {
     if (!pay.url) return;
     try { await navigator.clipboard.writeText(pay.url); setPay((p) => ({ ...p, copied: true })); } catch { /* clipboard bloqué */ }
   };
-  // Message commun à tous les canaux d'envoi.
+  // Message commun à tous les canaux d'envoi — reflète le cycle choisi.
   const payMsg = () => {
-    const amt = billing?.amountCents != null ? ` (${fmtMoney(billing.amountCents, billing.currency)}/mois)` : '';
+    const per = cycle === 'yearly' ? 'an' : cycle === 'quarterly' ? 'trimestre' : 'mois';
+    const total = cycleTotal(cycle);
+    const amt = total != null ? ` (${fmtMoney(total, billing?.currency)}/${per})` : '';
     return `Bonjour,\n\nVoici le lien pour régler votre abonnement Cimolace${amt} :\n${pay.url}\n\nMerci,\nL'équipe Cimolace`;
   };
   const shareWhatsApp = () => { if (pay.url) window.open(`https://wa.me/?text=${encodeURIComponent(payMsg())}`, '_blank', 'noopener'); };
@@ -186,6 +206,34 @@ export default function CrmCompanyDetail({ company, onClose }) {
                         </span>
                       )}
                     </div>
+
+                    {/* Choix du cycle de facturation (le lien Stripe suit ce choix). */}
+                    {billing?.amountCents != null && (
+                      <div className="mt-3 grid grid-cols-3 gap-1.5">
+                        {CYCLES.map((c) => {
+                          const active = cycle === c.v;
+                          const total = cycleTotal(c.v);
+                          const per = c.v === 'yearly' ? '/an' : c.v === 'quarterly' ? '/trim.' : '/mois';
+                          return (
+                            <button
+                              key={c.v} type="button" onClick={() => pickCycle(c.v)}
+                              className="lp-tr flex cursor-pointer flex-col items-center gap-0.5 rounded-lg border px-2 py-2"
+                              style={active
+                                ? { borderColor: 'var(--crm-accent, #d97757)', background: 'color-mix(in srgb, var(--crm-accent, #d97757) 12%, transparent)' }
+                                : { borderColor: 'var(--crm-line, rgba(245,244,238,.09))' }}
+                            >
+                              <span className={`text-[11.5px] font-semibold ${active ? '' : 'lp-muted'}`} style={active ? { color: 'var(--crm-accent, #d97757)' } : undefined}>{c.label}</span>
+                              <span className={`text-[11px] ${active ? 'lp-ink' : 'lp-faint'}`}>{total != null ? `${fmtMoney(total, billing?.currency)}${per}` : '—'}</span>
+                              {c.disc > 0 && (
+                                <span className="rounded-full px-1.5 text-[9.5px] font-semibold" style={{ background: 'color-mix(in srgb, var(--crm-green, #9fbf8f) 18%, transparent)', color: 'var(--crm-green, #9fbf8f)' }}>
+                                  −{Math.round(c.disc * 100)} %
+                                </span>
+                              )}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    )}
 
                     {!pay.url ? (
                       <button
