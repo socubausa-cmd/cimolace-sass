@@ -1352,12 +1352,20 @@ export interface BillingCollectResult {
   currency: string;
 }
 
-// ── Consommation (minutes live + crédits IA) + packs de crédits ──────────────
+// ── Consommation LIVE (minutes) + packs de minutes (système usage) ───────────
 export const usageApi = {
   get: () => api.get<ApiEnvelope<any>>("/usage").then(unwrap),
   packs: () => api.get<ApiEnvelope<any[]>>("/usage/packs").then(unwrap),
   buyPack: (key: string) =>
     api.post<ApiEnvelope<{ url: string }>>(`/usage/packs/${encodeURIComponent(key)}/checkout`, {}).then(unwrap),
+};
+
+// ── Crédits IA (système ai-billing dédié : ancrage frontière, packs ≥ 15 €) ───
+export const aiBillingApi = {
+  summary: () => api.get<ApiEnvelope<any>>("/ai-billing/summary").then(unwrap),
+  topupPackages: () => api.get<ApiEnvelope<any[]>>("/ai-billing/topup-packages").then(unwrap),
+  buyTopup: (key: string) =>
+    api.post<ApiEnvelope<{ url?: string; checkout_url?: string }>>("/ai-billing/topup/checkout", { pack_key: key }).then(unwrap),
 };
 
 export const billingApi = {
