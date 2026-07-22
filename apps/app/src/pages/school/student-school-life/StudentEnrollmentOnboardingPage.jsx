@@ -32,7 +32,7 @@ const StudentEnrollmentOnboardingPage = () => {
   if (!user) return <Navigate to="/login" replace />;
   // Flux KYC réservé aux tenants qui l'exigent (école/certificats). Sur le portail
   // LIRI neutre (requiresStudentDossier absent) → pas de dossier, retour au tableau de bord.
-  if (!resolveRequiresStudentDossier()) return <Navigate to="/dashboard" replace />;
+  if (!resolveRequiresStudentDossier()) return <Navigate to="/liri" replace />;
   if (billingLoading) {
     return (
       <div className="flex h-screen items-center justify-center bg-[#262624] text-white">
@@ -41,7 +41,7 @@ const StudentEnrollmentOnboardingPage = () => {
     );
   }
   if (!isPremiumActive) return <Navigate to="/forfaits" replace />;
-  if (user?.student_profile_completed) return <Navigate to="/student-school-life/dashboard" replace />;
+  if (user?.student_profile_completed) return <Navigate to="/liri" replace />;
 
   const uploadDocument = async (file, label) => {
     const ext = String(file?.name || '').split('.').pop() || 'bin';
@@ -94,9 +94,9 @@ const StudentEnrollmentOnboardingPage = () => {
 
       toast({
         title: 'Dossier enregistré',
-        description: 'Votre profil élève est activé. Redirection vers votre tableau de bord.',
+        description: 'Votre profil élève est activé. Retour à votre portail.',
       });
-      navigate('/dashboard', { replace: true });
+      navigate('/liri', { replace: true });
     } catch (err) {
       toast({
         title: 'Erreur',
@@ -174,9 +174,9 @@ const StudentEnrollmentOnboardingPage = () => {
                   {submitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <FileText className="mr-2 h-4 w-4" />}
                   Valider mon dossier
                 </Button>
-                <Link to="/forfaits" className="inline-flex">
+                <Link to="/liri" className="inline-flex">
                   <Button type="button" variant="outline" className="border-white/15 text-gray-200 hover:bg-white/5">
-                    Retour forfaits
+                    Plus tard — aller au portail
                   </Button>
                 </Link>
               </div>

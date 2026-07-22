@@ -1019,7 +1019,7 @@ const DashboardRedirect = () => {
     if (['owner', 'admin', 'practitioner', 'clinic_admin'].includes(tenantRole)) {
       return <Navigate to="/liri" replace />;
     }
-    if (resolveRequiresStudentDossier() && isPremiumActive && !user?.student_profile_completed) return <Navigate to="/onboarding/eleve" replace />;
+    if (resolveRequiresStudentDossier() && isPremiumActive && !user?.student_profile_completed) return <Navigate to="/liri" replace />;
     // Espace élève UNIFIÉ = le portail LIRI (/liri) : vue adaptative par rôle (Mes cours, Ma
     // semaine, Vie scolaire, Notes, Évals… via le rail `school:true`), plus riche que l'ancien
     // /student-school-life (legacy). La garde /liri (LiriAccessGate) laisse passer l'élève d'un
@@ -1028,7 +1028,7 @@ const DashboardRedirect = () => {
   }
 
   if (resolveRequiresStudentDossier() && role === 'student' && isPremiumActive && !user?.student_profile_completed) {
-    return <Navigate to="/onboarding/eleve" replace />;
+    return <Navigate to="/liri" replace />;
   }
   if (role === 'student' && isPremiumActive && user?.student_profile_completed) {
     return <Navigate to="/liri" replace />;
@@ -1079,7 +1079,7 @@ const ProtectedStudentJourneyRoute = ({ children }) => {
   const isPremiumActive = status === 'active' || (status === 'past_due' && inGrace);
   if (!isPremiumActive) return <Navigate to="/forfaits" replace />;
   if (resolveRequiresStudentDossier() && role === 'visitor' && !user?.student_profile_completed) {
-    return <Navigate to="/onboarding/eleve" replace />;
+    return <Navigate to="/liri" replace />;
   }
   return children;
 };
@@ -1329,6 +1329,9 @@ const AppContent = () => {
 
   const hideHeaderRoutes = [
     '/login',
+    '/onboarding/eleve', // Dossier KYC élève = page autonome chaude (StudentEnrollmentOnboardingPage),
+                         // JAMAIS l'ancienne navbar Academy (Header.jsx). Non-bloquant : l'élève y accède
+                         // via la bannière du portail LIRI, pas par une garde qui bloque l'accès.
     '/signup',
     '/forfaits',        // Forfaits retirés de la vitrine « PORTAIL » : membre → /liri/forfaits (coque LIRI),
                         // visiteur → page offres focalisée SANS l'ancien header Academy (agent immersif = découverte).

@@ -5,12 +5,13 @@ import {
   Library, Settings2, Mic, ArrowUp, LogIn, CalendarPlus, PenTool,
   ShoppingBag, Clock, ChevronRight, Film, ChevronLeft, UserRound,
   Radio, GraduationCap, LogOut, ArrowUpRight, AlertTriangle, CalendarDays, Megaphone,
-  BookOpen, CheckCircle2, CalendarClock,
+  BookOpen, CheckCircle2, CalendarClock, ShieldCheck,
 } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import { authStore } from '@/lib/auth-store';
 import { getCachedHostTenant } from '@/lib/tenantResolver';
 import { resolveTenantSlug } from '@/lib/tenant/activeBranding';
+import { resolveRequiresStudentDossier } from '@/lib/tenant/activeTenantConfig';
 import { getApiBaseUrl } from '@/lib/apiBase';
 import { useAuth } from '@/hooks/useAuth';
 import { isCreatorRole } from '@/lib/liri/creatorRole';
@@ -379,6 +380,23 @@ export function LiriPortalPage() {
             <p className="text-[13px] font-medium uppercase tracking-[0.18em] lp-faint lp-rise">{dateLong} · {timeStr}</p>
             <h1 className="mt-3 text-center lp-serif text-[34px] font-medium leading-tight tracking-tight lp-rise">{greet}<span className="lp-coral"> sur {PORTAL_BRAND}</span></h1>
             <p className="mt-2 text-center text-[14px] lp-muted lp-rise">Que voulez-vous lancer aujourd'hui&nbsp;?</p>
+
+            {/* Dossier élève KYC (certificats) — NON-BLOQUANT : l'élève est déjà dans le portail,
+                on l'invite juste à compléter son dossier. Disparaît une fois `student_profile_completed`. */}
+            {!isCreator && resolveRequiresStudentDossier() && !user?.student_profile_completed && (
+              <button
+                onClick={() => nav('/onboarding/eleve')}
+                className="lp-tr lp-soft group mt-6 flex w-full max-w-xl items-center gap-3 rounded-2xl border px-4 py-3 text-left hover:border-[rgba(217,119,87,.6)]"
+                style={{ borderColor: 'rgba(217,119,87,.35)', background: 'rgba(217,119,87,0.08)' }}
+              >
+                <span className="grid h-9 w-9 shrink-0 place-items-center rounded-xl lp-coral lp-coral-tint"><ShieldCheck size={18} /></span>
+                <span className="min-w-0 flex-1">
+                  <span className="block text-[14px] font-semibold text-white">Complétez votre dossier élève</span>
+                  <span className="block text-[12px] lp-muted">Pièce d’identité + signature — nécessaire pour éditer vos certificats. Optionnel pour l’instant.</span>
+                </span>
+                <ChevronRight size={18} className="lp-coral shrink-0" />
+              </button>
+            )}
 
             {/* command bar → Brain (créateur uniquement ; l'élève ne pilote pas d'actions) */}
             {isCreator && (
