@@ -19,10 +19,11 @@ import { useAuth } from '@/contexts/SupabaseAuthContext';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/components/ui/use-toast';
-import {
-  ProrasciencePublicPageShell,
-  ProrasciencePublicCard,
-} from '@/components/prorascience/ProrasciencePublicPageShell';
+import { ProrasciencePublicCard } from '@/components/prorascience/ProrasciencePublicPageShell';
+// Salle d'attente = ÉCRAN DU PORTAIL, pas une page publique : on garde la coque LIRI
+// (header moteurs + rail) pour ne jamais éjecter l'élève du portail. L'arène live, elle,
+// reste immersive plein écran (LiveHostPage). Route sous ProtectedRoute → toujours authentifié.
+import { LiriPortalShell } from '@/components/liri/LiriPortalShell';
 import { useTenantBranding } from '@/hooks/useTenantBranding';
 import LiveHostMessagingPanel from '@/components/liri/live-room/LiveHostMessagingPanel';
 import LiveHostFooterMessaging from '@/components/liri/live-room/LiveHostFooterMessaging';
@@ -868,28 +869,28 @@ export default function LiveWaitingRoomPage() {
   // ─────────────────────────────────────────────────────────────────────────
   if (loading) {
     return (
-      <ProrasciencePublicPageShell simpleNav navTitle="Salle d&apos;attente" backLabel="Retour">
+      <LiriPortalShell active="lives">
         <div className="flex min-h-[calc(100vh-3.5rem)] items-center justify-center px-4">
           <Loader2 className="h-8 w-8 animate-spin text-[var(--school-accent)]" />
         </div>
-      </ProrasciencePublicPageShell>
+      </LiriPortalShell>
     );
   }
 
   if (error) {
     return (
-      <ProrasciencePublicPageShell simpleNav navTitle="Salle d&apos;attente" backLabel="Retour">
+      <LiriPortalShell active="lives">
         <div className="flex min-h-[calc(100vh-3.5rem)] flex-col items-center justify-center gap-4 px-4">
           <AlertTriangle className="h-10 w-10 text-red-400" />
           <p className="max-w-md text-center text-sm text-white/65">{error}</p>
         </div>
-      </ProrasciencePublicPageShell>
+      </LiriPortalShell>
     );
   }
 
   if (liveSession && ['ended', 'cancelled'].includes(String(liveSession.status || '').toLowerCase())) {
     return (
-      <ProrasciencePublicPageShell simpleNav navTitle="Live terminé" backLabel="Retour">
+      <LiriPortalShell active="lives">
         <div className="flex min-h-[calc(100vh-3.5rem)] flex-col items-center justify-center gap-4 px-4 text-center">
           <XCircle className="h-12 w-12 text-white/45" />
           <h1 className="text-2xl font-semibold text-white">Cette session est terminée</h1>
@@ -900,12 +901,12 @@ export default function LiveWaitingRoomPage() {
             Retour à LIRI
           </Button>
         </div>
-      </ProrasciencePublicPageShell>
+      </LiriPortalShell>
     );
   }
 
   return (
-    <ProrasciencePublicPageShell simpleNav navTitle="Salle d&apos;attente" backLabel="Retour">
+    <LiriPortalShell active="lives">
       <div className="relative flex min-h-[calc(100vh-3.5rem)] flex-col text-white">
 
       {/* ── Fond ambiant (au-dessus du shell) ── */}
@@ -1305,6 +1306,6 @@ export default function LiveWaitingRoomPage() {
         hostMemberSearch={null}
       />
     </div>
-    </ProrasciencePublicPageShell>
+    </LiriPortalShell>
   );
 }
