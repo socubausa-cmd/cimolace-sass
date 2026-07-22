@@ -38,8 +38,12 @@ export const MessagingProvider = ({ children }) => {
       // Annuaire TENANT-SCOPÉ (isolation multi-tenant) : les membres du tenant COURANT,
       // via l'API NestJS (TenantGuard + X-Tenant-Slug injecté par apiV2). On n'utilise PLUS
       // `profiles` global — qui fuitait les membres des AUTRES tenants dans le sélecteur de
-      // destinataire (ex. un praticien Zahir voyait les comptes ISNA). Cf. /tenant-portal/members.
-      const res = await apiV2.get('/tenant-portal/members');
+      // destinataire (ex. un praticien Zahir voyait les comptes ISNA).
+      // ⚠️ ENDPOINT ROLE-AWARE = /tenant-portal/directory (PAS /members). `/members` est gardé
+      // @Roles('owner','admin') → un ÉLÈVE recevait 403 → annuaire VIDE → « 0 membre » → aucune
+      // conversation possible. `/directory` (borné TenantGuard = membership active + scope tenant)
+      // est lisible par TOUT membre : staff voit tous les membres, élève voit le staff joignable.
+      const res = await apiV2.get('/tenant-portal/directory');
       // Dépile l'enveloppe ({data:{data:[...]}} via l'intercepteur global) jusqu'au tableau.
       let d = res?.data;
       while (d && !Array.isArray(d) && typeof d === 'object' && 'data' in d) d = d.data;
