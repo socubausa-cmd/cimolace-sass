@@ -1300,6 +1300,8 @@ export class CrmService {
       members: [] as any[],
       counts: { contacts: contacts.length, members: 0, orders: 0, appointments: 0, services: 0 },
     };
+    // Facturation tenant : TOUJOURS avant les returns (y compris « aucun contact »).
+    await this.attachTenantBilling(base, company, contacts);
 
     const emails = [
       ...new Set(contacts.map((c: any) => String(c.email || '').trim().toLowerCase()).filter(Boolean)),
@@ -1399,45 +1401,44 @@ export class CrmService {
       appointments: appts.length,
       services: services.length,
     };
+    return base;
+  }
 
-    // FACTURATION TENANT : si cette société est un tenant-client géré depuis le CRM
-    // Cimolace (external_tenant_id renseigné par la reliure), on joint un résumé de
-    // son abonnement — ça débloque l'action « lien de paiement » côté back-office.
-    base.externalTenantId = (company as any).external_tenant_id ?? null;
+  /**
+   * FACTURATION TENANT (reliure billing) : si la société est un tenant-client géré
+   * depuis le CRM Cimolace (external_tenant_id), attache { externalTenantId, billing }
+   * à l'objet 360°. Placé AVANT les returns de getCompanyPlatformLink (y compris le
+   * return anticipé « aucun contact ») pour être TOUJOURS présent — un tenant sans
+   * contact (ex. Zahir) doit quand même exposer son abonnement + l'action lien de paiement.
+   */
+  private async attachTenantBilling(base: any, company: any, contacts: any[]): Promise<void> {
+    base.externalTenantId = company?.external_tenant_id ?? null;
     base.billing = null;
-    if ((company as any).external_tenant_id) {
-      const extTid = (company as any).external_tenant_id as string;
-      const subs = await this.safeRows(() =>
-        this.db()
-          .from('billing_subscriptions')
-          .select('status, amount_cents, currency, plan_id, current_period_end, created_at')
-          .eq('tenant_id', extTid)
-          .order('created_at', { ascending: false })
-          .limit(10),
-      );
-      const rank = (s: string) =>
-        ['active', 'trialing', 'past_due', 'unpaid'].includes(String(s)) ? 1 : 0;
-      const primary = [...subs].sort(
-        (a: any, b: any) => rank(b.status) - rank(a.status) || (b.amount_cents || 0) - (a.amount_cents || 0),
-      )[0];
-      // email de l'owner du tenant (pour préremplir l'envoi du lien). Best-effort.
-      let ownerEmail: string | null = null;
-      const ownerContact = contacts.find((c: any) => c.email);
-      ownerEmail = ownerContact?.email ?? null;
-      if (primary) {
-        base.billing = {
+    if (!company?.external_tenant_id) return;
+    const extTid = company.external_tenant_id as string;
+    const subs = await this.safeRows(() =>
+      this.db()
+        .from('billing_subscriptions')
+        .select('status, amount_cents, currency, plan_id, current_period_end, created_at')
+        .eq('tenant_id', extTid)
+        .order('created_at', { ascending: false })
+        .limit(10),
+    );
+    const rank = (s: string) => (['active', 'trialing', 'past_due', 'unpaid'].includes(String(s)) ? 1 : 0);
+    const primary = [...subs].sort(
+      (a: any, b: any) => rank(b.status) - rank(a.status) || (b.amount_cents || 0) - (a.amount_cents || 0),
+    )[0];
+    const ownerEmail = (contacts.find((c: any) => c.email) as any)?.email ?? null;
+    base.billing = primary
+      ? {
           status: primary.status,
           planId: primary.plan_id,
           amountCents: primary.amount_cents,
           currency: primary.currency,
           periodEnd: primary.current_period_end,
           ownerEmail,
-        };
-      } else {
-        base.billing = { status: null, planId: null, amountCents: null, currency: null, periodEnd: null, ownerEmail };
-      }
-    }
-    return base;
+        }
+      : { status: null, planId: null, amountCents: null, currency: null, periodEnd: null, ownerEmail };
   }
 
   // ─── Recherche globale (#9) ───────────────────────────────────────────────────
