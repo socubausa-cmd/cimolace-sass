@@ -374,11 +374,16 @@
 
 /* Thème « back-office Cimolace » (bleu-navy slate) — appliqué sur la page admin CRM
    pour supprimer le contraste chaud/froid et uniformiser avec le shell propriétaire. */
-.crm-surface[data-crm-theme="cimolace-admin"] {
+.crm-surface[data-crm-theme="cimolace-admin"],
+body[data-crm-theme="cimolace-admin"] {
   --crm-bg:#0f172a; --crm-rail:#0b1220; --crm-surface:#1e293b; --crm-surface-2:#334155;
   --crm-sunken:#0b1220; --crm-inset:#172033; --crm-rightbg:#111c30;
   --crm-ink:#f1f5f9; --crm-muted:#94a3b8; --crm-faint:#64748b; --crm-line:rgba(148,163,184,.18);
   /* accent aligné sur le bleu du back-office Cimolace (nav active) → une seule identité */
   --crm-accent:#3b82f6; --crm-accent-strong:#2563eb; --crm-accent-soft:#60a5fa; --crm-accent-2:#93c5fd;
   --crm-live:#ef4444; --crm-gold:#eab308; --crm-green:#4ade80;
+  /* répercussion pour les tiroirs portés hors .crm-surface (lp-* + var(--coral/--panel/--ink)) */
+  --base:var(--crm-bg); --rail:var(--crm-rail); --panel:var(--crm-surface); --panel2:var(--crm-surface-2);
+  --ink:var(--crm-ink); --muted:var(--crm-muted); --faint:var(--crm-faint); --line:var(--crm-line);
+  --coral:var(--crm-accent); --clay:var(--crm-accent-strong); --live:var(--crm-live);
 }

@@ -38,6 +38,14 @@ export default function CimolaceAdminCrmPage() {
     }
   }, [scoped]); // eslint-disable-line react-hooks/exhaustive-deps
 
+  // Les tiroirs CRM (fiches contact/société/deal) sont montés via createPortal SUR document.body,
+  // donc hors du scope .crm-surface. On porte le thème sur <body> pendant que la page admin est
+  // montée pour qu'ils héritent AUSSI de l'identité navy (sinon accent corail par fallback).
+  useEffect(() => {
+    document.body.setAttribute('data-crm-theme', 'cimolace-admin');
+    return () => document.body.removeAttribute('data-crm-theme');
+  }, []);
+
   return (
     <div style={{ minHeight: '100vh', backgroundColor: '#f3f4f6', display: 'flex', flexDirection: 'column' }}>
       <CimolaceHeader />
