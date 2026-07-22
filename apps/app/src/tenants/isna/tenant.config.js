@@ -43,7 +43,10 @@ export const isnaTenantConfig = {
   branding: {
     name: 'Prorascience',
     fullName: 'Prorascience — Science Africaine Totale',
-    logo: '/prorascience-logo-2.jpeg',
+    // Logo SANS fond (PNG blanc transparent) — la coque portail (LiriPortalShell) et les
+    // shells sombres l'affichent sans le carré noir du JPEG. Les contextes CLAIRS (listes
+    // admin, join, embed) utilisent le `logo_url` DB séparé (JPEG à fond, visible sur clair).
+    logo: '/prorascience-eye.png',
     primaryColor: '#1a5f7a',
     secondaryColor: '#2c3e50',
     // Accent de marque ALIGNÉ sur le site immersif (prorascience.org, agent OS) : coral
