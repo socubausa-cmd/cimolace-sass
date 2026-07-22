@@ -294,7 +294,7 @@ export function mkHtmlEmbedObject(overrides = {}) {
     sectionId: null,
     style: {},
     content: {
-      html: '<!DOCTYPE html><html><body style="margin:0;display:flex;align-items:center;justify-content:center;height:100vh;background:#0b0f1a;color:#D4AF37;font-family:system-ui"><style>@keyframes spin{to{transform:rotate(360deg)}}</style><div style="width:48px;height:48px;border:3px solid rgba(212,175,55,.25);border-top-color:#D4AF37;border-radius:50%;animation:spin 1s linear infinite"></div></body></html>',
+      html: '<!DOCTYPE html><html><body style="margin:0;display:flex;align-items:center;justify-content:center;height:100vh;background:#262624;color:#D4AF37;font-family:system-ui"><style>@keyframes spin{to{transform:rotate(360deg)}}</style><div style="width:48px;height:48px;border:3px solid rgba(212,175,55,.25);border-top-color:#D4AF37;border-radius:50%;animation:spin 1s linear infinite"></div></body></html>',
     },
     ...overrides,
     id: overrides.id || id,
@@ -345,8 +345,8 @@ export function mkTriangleObject(overrides = {}) {
     masterScriptRef: '',
     sectionId: null,
     style: {
-      fill: 'rgba(168,85,247,0.25)',
-      stroke: '#a855f7',
+      fill: 'rgba(217, 119, 87,0.25)',
+      stroke: '#d97757',
       strokeWidth: 2,
     },
     content: {},

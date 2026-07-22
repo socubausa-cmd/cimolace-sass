@@ -397,7 +397,7 @@ export default function ForumThreadPage() {
   if (loading && !thread) {
     return (
       <div className="forum-dark min-h-[60vh] flex items-center justify-center">
-        <Loader2 className="w-8 h-8 animate-spin text-indigo-500" />
+        <Loader2 className="w-8 h-8 animate-spin text-[#d97757]" />
       </div>
     );
   }
@@ -410,7 +410,7 @@ export default function ForumThreadPage() {
         <p className="text-gray-600 mb-4">Cette question n'existe pas ou a été supprimée.</p>
         <Link
           to={forumBase}
-          className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700"
+          className="px-4 py-2 bg-[#d97757] text-white rounded-lg hover:bg-[#d97757]"
         >
           Retour au forum
         </Link>
@@ -518,7 +518,7 @@ export default function ForumThreadPage() {
         {/* Header */}
         <div className="flex items-start justify-between gap-4 mb-4">
           <div className="flex items-center gap-3">
-            <div className="w-12 h-12 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-white font-semibold">
+            <div className="w-12 h-12 rounded-full bg-gradient-to-br from-[#d97757] to-[#ebca5e] flex items-center justify-center text-white font-semibold">
               {(thread.author_name || 'A').charAt(0).toUpperCase()}
             </div>
             <div>
@@ -583,7 +583,7 @@ export default function ForumThreadPage() {
                 onClick={() => handleVote(thread.id, 1)}
                 className={cn(
                   'p-2 rounded-lg transition-colors',
-                  userVotes[thread.id] === 1 ? 'bg-indigo-100 text-indigo-600' : 'hover:bg-gray-100'
+                  userVotes[thread.id] === 1 ? 'bg-[#d97757] text-[#d97757]' : 'hover:bg-gray-100'
                 )}
               >
                 <ThumbsUp className="w-5 h-5" />
@@ -709,12 +709,12 @@ export default function ForumThreadPage() {
                   <textarea
                     value={editContent}
                     onChange={(e) => setEditContent(e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-indigo-500 min-h-[80px]"
+                    className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-[#d97757] min-h-[80px]"
                   />
                   <div className="flex gap-2">
                     <button
                       onClick={saveEdit}
-                      className="px-3 py-1.5 bg-indigo-600 text-white text-sm rounded-lg hover:bg-indigo-700"
+                      className="px-3 py-1.5 bg-[#d97757] text-white text-sm rounded-lg hover:bg-[#d97757]"
                     >
                       Enregistrer
                     </button>
@@ -750,7 +750,7 @@ export default function ForumThreadPage() {
                   onClick={() => handleVote(reply.id, 1)}
                   className={cn(
                     'flex items-center gap-1 px-2 py-1 rounded text-sm transition-colors',
-                    userVotes[reply.id] === 1 ? 'bg-indigo-100 text-indigo-600' : 'hover:bg-gray-100 text-gray-500'
+                    userVotes[reply.id] === 1 ? 'bg-[#d97757] text-[#d97757]' : 'hover:bg-gray-100 text-gray-500'
                   )}
                 >
                   <ThumbsUp className="w-4 h-4" />
@@ -812,11 +812,11 @@ export default function ForumThreadPage() {
             {replyTo ? 'Répondre à un commentaire' : 'Votre réponse'}
           </h4>
           {replyTo && (
-            <div className="flex items-center justify-between mb-2 px-3 py-2 bg-indigo-50 rounded-lg text-sm">
-              <span className="text-indigo-700">En réponse à un message</span>
+            <div className="flex items-center justify-between mb-2 px-3 py-2 bg-[#d97757] rounded-lg text-sm">
+              <span className="text-[#d97757]">En réponse à un message</span>
               <button
                 onClick={() => setReplyTo(null)}
-                className="text-indigo-500 hover:text-indigo-700"
+                className="text-[#d97757] hover:text-[#d97757]"
               >
                 <X className="w-4 h-4" />
               </button>
@@ -827,7 +827,7 @@ export default function ForumThreadPage() {
             value={replyContent}
             onChange={(e) => setReplyContent(e.target.value)}
             placeholder="Écrivez votre réponse..."
-            className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent min-h-[120px] resize-y bg-white"
+            className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-[#d97757] focus:border-transparent min-h-[120px] resize-y bg-white"
             rows={4}
           />
           <div className="flex items-center justify-between mt-3">
@@ -839,7 +839,7 @@ export default function ForumThreadPage() {
               whileTap={{ scale: 0.98 }}
               onClick={handleReply}
               disabled={!replyContent.trim() || replying}
-              className="flex items-center gap-2 px-6 py-2.5 bg-[#0a0a0f] text-white rounded-lg font-medium hover:bg-[#5b3df5] disabled:opacity-50 transition-colors"
+              className="flex items-center gap-2 px-6 py-2.5 bg-[#0a0a0f] text-white rounded-lg font-medium hover:bg-[#d97757] disabled:opacity-50 transition-colors"
             >
               {replying ? (
                 <>

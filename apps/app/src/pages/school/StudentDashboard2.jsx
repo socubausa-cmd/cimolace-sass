@@ -48,10 +48,10 @@ const StudentDashboard2 = () => {
   const completedCount = progress.filter(p => p.status === 'completed').length;
   const inProgressModule = progress.find(p => p.status === 'in_progress');
 
-  if (loading) return <div className="min-h-screen bg-[#0F1419] flex items-center justify-center"><div className="w-12 h-12 border-4 border-[var(--school-accent)] border-t-transparent rounded-full animate-spin"></div></div>;
+  if (loading) return <div className="min-h-screen bg-[#262624] flex items-center justify-center"><div className="w-12 h-12 border-4 border-[var(--school-accent)] border-t-transparent rounded-full animate-spin"></div></div>;
 
   return (
-    <div className="min-h-screen bg-[#0F1419] text-white pt-24 pb-20 px-6">
+    <div className="min-h-screen bg-[#262624] text-white pt-24 pb-20 px-6">
        <Helmet><title>Tableau de Bord 2ème Année | PRORASCIENCE</title></Helmet>
        <div className="max-w-7xl mx-auto">
           <h1 className="text-3xl font-serif font-bold mb-8">Tableau de Bord - <span className="text-[var(--school-accent)]">Niveau Avancé</span></h1>

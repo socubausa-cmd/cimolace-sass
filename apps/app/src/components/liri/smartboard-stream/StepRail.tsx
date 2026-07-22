@@ -29,10 +29,10 @@ function StepRailImpl({ steps, selectedStep, onSelectStep, getState }: Props) {
               initial={{ opacity: 0.75, y: 4 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.18, delay: idx * 0.01 }}
-              className={`w-full rounded-lg border px-2 py-1.5 text-left ${selectedStep === step.key ? 'border-violet-400/60 bg-violet-500/15' : 'border-white/10 bg-black/20'}`}
+              className={`w-full rounded-lg border px-2 py-1.5 text-left ${selectedStep === step.key ? 'border-[#d97757]/60 bg-[#d97757]/15' : 'border-white/10 bg-black/20'}`}
             >
               <p className="text-[10px] text-white/80">{idx + 1}. {step.label}</p>
-              <p className={`text-[10px] ${state === 'generating' ? 'text-violet-200 animate-pulse' : 'text-cyan-200/70'}`}>{state}</p>
+              <p className={`text-[10px] ${state === 'generating' ? 'text-[#d97757] animate-pulse' : 'text-[#ebca5e]/70'}`}>{state}</p>
             </motion.button>
           );
         })}

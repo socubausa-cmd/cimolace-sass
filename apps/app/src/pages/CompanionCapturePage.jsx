@@ -288,7 +288,7 @@ export default function CompanionCapturePage() {
                   <Wifi className="w-6 h-6 text-black" />
                 </button>
               ) : (
-                <div className={`w-16 h-16 rounded-full flex items-center justify-center ${connStatus === 'connected' ? 'bg-emerald-500' : 'bg-blue-500 animate-pulse'}`}>
+                <div className={`w-16 h-16 rounded-full flex items-center justify-center ${connStatus === 'connected' ? 'bg-emerald-500' : 'bg-[#d97757] animate-pulse'}`}>
                   {connStatus === 'connected' ? <Check className="w-6 h-6" /> : <Loader2 className="w-6 h-6 animate-spin" />}
                 </div>
               )

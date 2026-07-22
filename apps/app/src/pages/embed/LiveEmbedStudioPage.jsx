@@ -40,7 +40,7 @@ const SESSION_TYPES = [
 const S = {
   root: {
     width: '100%', minHeight: '100vh',
-    background: '#090e18', color: '#e1e7ef',
+    background: '#262624', color: '#e1e7ef',
     fontFamily: "'Inter', system-ui, sans-serif",
     padding: '24px', boxSizing: 'border-box',
   },
@@ -49,14 +49,14 @@ const S = {
   label: { display: 'block', fontSize: 12, fontWeight: 600, color: '#8b949e', marginBottom: 6, textTransform: 'uppercase', letterSpacing: '0.06em' },
   input: {
     width: '100%', boxSizing: 'border-box',
-    background: '#0d1117', border: '1px solid #30363d', borderRadius: 8,
+    background: '#262624', border: '1px solid #30363d', borderRadius: 8,
     color: '#f0f6fc', padding: '10px 14px', fontSize: 14,
     outline: 'none', marginBottom: 16,
   },
   grid: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginBottom: 16 },
   typeCard: (selected, theme) => ({
-    background: selected ? '#7c3aed20' : '#0d1117',
-    border: `1px solid ${selected ? '#7c3aed' : '#30363d'}`,
+    background: selected ? '#d9775720' : '#262624',
+    border: `1px solid ${selected ? '#d97757' : '#30363d'}`,
     borderRadius: 8, padding: '10px 12px', cursor: 'pointer',
     display: 'flex', alignItems: 'center', gap: 10,
     transition: 'all 0.15s',
@@ -66,7 +66,7 @@ const S = {
   typeDesc: { fontSize: 11, color: '#8b949e', margin: 0 },
   btn: (loading) => ({
     width: '100%', padding: '12px', borderRadius: 8,
-    background: loading ? '#5b21b6' : '#7c3aed',
+    background: loading ? '#d97757' : '#d97757',
     color: '#fff', fontWeight: 700, fontSize: 15,
     border: 'none', cursor: loading ? 'not-allowed' : 'pointer',
     marginTop: 8,
@@ -84,12 +84,12 @@ const S = {
     color: '#4ade80', display: 'block', wordBreak: 'break-all', margin: '0 0 12px',
   },
   startBtn: {
-    background: '#7c3aed', color: '#fff', border: 'none', borderRadius: 8,
+    background: '#d97757', color: '#fff', border: 'none', borderRadius: 8,
     padding: '10px 20px', fontWeight: 700, fontSize: 14, cursor: 'pointer',
     marginRight: 8,
   },
   newBtn: {
-    background: '#0d1117', color: '#8b949e', border: '1px solid #30363d',
+    background: '#262624', color: '#8b949e', border: '1px solid #30363d',
     borderRadius: 8, padding: '10px 20px', fontWeight: 600, fontSize: 14, cursor: 'pointer',
   },
   err: {

@@ -21,7 +21,7 @@ const BG      = '#07090f';
 const PANEL   = '#0e1320';
 const BORDER  = '#1a2236';
 const GOLD    = '#D4AF37';
-const VIOLET  = '#7B61FF';
+const VIOLET  = '#d97757';
 const GREEN   = '#34d399';
 const CYAN    = '#38bdf8';
 const RED     = '#f43f5e';
@@ -32,7 +32,7 @@ const SESSION_COLORS = {
   live:       { bg: '#f43f5e15', text: RED,    label: 'Live'  },
   atelier:    { bg: '#34d39915', text: GREEN,  label: 'Atelier' },
   evaluation: { bg: '#D4AF3715', text: GOLD,   label: 'Évaluation' },
-  revision:   { bg: '#a78bfa15', text: '#a78bfa', label: 'Révision' },
+  revision:   { bg: '#e2854f15', text: '#e2854f', label: 'Révision' },
   conge:      { bg: '#64748b12', text: '#64748b', label: 'Congé' },
 };
 
@@ -79,7 +79,7 @@ function WeekCard({ week, isCurrent }) {
         <div className="flex items-center gap-2">
           <span className="text-[9px] font-bold px-1.5 py-0.5 rounded"
             style={{ background: `${GOLD}15`, color: GOLD }}>S{week.week_number}</span>
-          <span className="text-[10px] text-slate-500">
+          <span className="text-[10px] text-[#8a7d6f]">
             {week.week_start} — {week.week_end}
           </span>
         </div>
@@ -90,7 +90,7 @@ function WeekCard({ week, isCurrent }) {
       </div>
 
       {week.is_holiday ? (
-        <p className="text-slate-500 text-xs italic">{week.holiday_name ?? 'Congé'}</p>
+        <p className="text-[#8a7d6f] text-xs italic">{week.holiday_name ?? 'Congé'}</p>
       ) : (
         <>
           {week.module_number && (
@@ -102,7 +102,7 @@ function WeekCard({ week, isCurrent }) {
             {week.theme ?? week.module_title ?? '—'}
           </p>
           {week.pedagogical_objective && (
-            <p className="text-slate-500 text-[10px] leading-relaxed line-clamp-2">
+            <p className="text-[#8a7d6f] text-[10px] leading-relaxed line-clamp-2">
               {week.pedagogical_objective}
             </p>
           )}
@@ -173,14 +173,14 @@ function GeneratePanel({ onGenerate, generating, cycle, setCycle, schoolYear, se
         </div>
         <div>
           <h3 className="text-white font-bold">Générer le programme annuel</h3>
-          <p className="text-slate-500 text-xs">L'IA planifie les 21 modules sur 10 mois</p>
+          <p className="text-[#8a7d6f] text-xs">L'IA planifie les 21 modules sur 10 mois</p>
         </div>
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         {/* Année scolaire */}
         <div>
-          <label className="block text-[10px] uppercase tracking-widest text-slate-500 mb-1.5">
+          <label className="block text-[10px] uppercase tracking-widest text-[#8a7d6f] mb-1.5">
             Année scolaire
           </label>
           <select value={schoolYear} onChange={e => setSchoolYear(e.target.value)}
@@ -194,7 +194,7 @@ function GeneratePanel({ onGenerate, generating, cycle, setCycle, schoolYear, se
 
         {/* Cycle */}
         <div>
-          <label className="block text-[10px] uppercase tracking-widest text-slate-500 mb-1.5">
+          <label className="block text-[10px] uppercase tracking-widest text-[#8a7d6f] mb-1.5">
             Cycle
           </label>
           <select value={cycle} onChange={e => setCycle(e.target.value)}
@@ -208,7 +208,7 @@ function GeneratePanel({ onGenerate, generating, cycle, setCycle, schoolYear, se
 
         {/* Séances/semaine */}
         <div>
-          <label className="block text-[10px] uppercase tracking-widest text-slate-500 mb-1.5">
+          <label className="block text-[10px] uppercase tracking-widest text-[#8a7d6f] mb-1.5">
             Séances / semaine
           </label>
           <select value={sessionsPerWeek} onChange={e => setSessionsPerWeek(Number(e.target.value))}
@@ -220,7 +220,7 @@ function GeneratePanel({ onGenerate, generating, cycle, setCycle, schoolYear, se
 
         {/* Pays — modèle de vacances */}
         <div className="sm:col-span-2">
-          <label className="block text-[10px] uppercase tracking-widest text-slate-500 mb-1.5">
+          <label className="block text-[10px] uppercase tracking-widest text-[#8a7d6f] mb-1.5">
             <span className="inline-flex items-center gap-1.5">
               <Globe size={11} className="opacity-60" />
               Pays / calendrier vacances (modèle)
@@ -240,7 +240,7 @@ function GeneratePanel({ onGenerate, generating, cycle, setCycle, schoolYear, se
               Réappliquer le modèle
             </button>
           </div>
-          <p className="text-[10px] text-slate-500 mt-1.5 leading-relaxed">
+          <p className="text-[10px] text-[#8a7d6f] mt-1.5 leading-relaxed">
             {SCHOOL_HOLIDAY_COUNTRY_OPTIONS.find((o) => o.code === holidayCountry)?.hint ?? ''} Ajustez les dates ci-dessous si votre académie ou zone diffère.
           </p>
         </div>
@@ -249,7 +249,7 @@ function GeneratePanel({ onGenerate, generating, cycle, setCycle, schoolYear, se
       {/* Vacances — édition */}
       <div className="rounded-xl p-4 space-y-3" style={{ background: '#080d18', border: `1px solid ${BORDER}` }}>
         <div className="flex items-center justify-between gap-2">
-          <p className="text-[10px] uppercase tracking-widest text-slate-500">Jours de vacances (congés)</p>
+          <p className="text-[10px] uppercase tracking-widest text-[#8a7d6f]">Jours de vacances (congés)</p>
           <button type="button" onClick={addBreak}
             className="text-[10px] font-bold px-2 py-1 rounded-lg"
             style={{ background: `${VIOLET}15`, color: VIOLET }}>
@@ -295,7 +295,7 @@ function GeneratePanel({ onGenerate, generating, cycle, setCycle, schoolYear, se
 
       {/* Notes pédagogiques */}
       <div>
-        <label className="block text-[10px] uppercase tracking-widest text-slate-500 mb-1.5">
+        <label className="block text-[10px] uppercase tracking-widest text-[#8a7d6f] mb-1.5">
           Intentions pédagogiques (optionnel)
         </label>
         <textarea
@@ -317,7 +317,7 @@ function GeneratePanel({ onGenerate, generating, cycle, setCycle, schoolYear, se
         })}
         disabled={generating || normalizedHolidays().length === 0}
         className="w-full flex items-center justify-center gap-3 py-3.5 rounded-xl font-bold text-sm transition-all disabled:opacity-50"
-        style={{ background: generating ? `${VIOLET}20` : `linear-gradient(135deg, ${VIOLET}, #5b46d9)`, color: '#fff' }}>
+        style={{ background: generating ? `${VIOLET}20` : `linear-gradient(135deg, ${VIOLET}, #d97757)`, color: '#fff' }}>
         {generating
           ? <><Loader2 size={16} className="animate-spin" /> Génération en cours…</>
           : <><Sparkles size={16} /> Générer avec l'IA</>}
@@ -352,7 +352,7 @@ function ProgramOverview({ calendar, weeks, progressPct, completedCount, totalAc
               <p className="text-[10px] uppercase tracking-widest mb-0.5"
                 style={{ color: cycleConf.color }}>{cycleConf.label}</p>
               <h2 className="text-white font-bold text-lg leading-tight">{calendar.title}</h2>
-              <p className="text-slate-500 text-xs mt-0.5">{calendar.school_year} · {calendar.start_date} → {calendar.end_date}</p>
+              <p className="text-[#8a7d6f] text-xs mt-0.5">{calendar.school_year} · {calendar.start_date} → {calendar.end_date}</p>
             </div>
           </div>
           <div className="flex items-center gap-2 shrink-0">
@@ -371,7 +371,7 @@ function ProgramOverview({ calendar, weeks, progressPct, completedCount, totalAc
         {/* Barre de progression */}
         <div className="mt-4">
           <div className="flex items-center justify-between text-xs mb-1.5">
-            <span className="text-slate-500">{completedCount} semaines complétées</span>
+            <span className="text-[#8a7d6f]">{completedCount} semaines complétées</span>
             <span className="font-bold" style={{ color: cycleConf.color }}>{progressPct}%</span>
           </div>
           <div className="h-2 rounded-full overflow-hidden" style={{ background: '#1e2a40' }}>
@@ -387,7 +387,7 @@ function ProgramOverview({ calendar, weeks, progressPct, completedCount, totalAc
           <div key={s.label} className="rounded-xl p-4 text-center"
             style={{ background: PANEL, border: `1px solid ${BORDER}` }}>
             <p className="text-2xl font-black mb-0.5" style={{ color: s.color }}>{s.value}</p>
-            <p className="text-[10px] text-slate-500">{s.label}</p>
+            <p className="text-[10px] text-[#8a7d6f]">{s.label}</p>
           </div>
         ))}
       </div>
@@ -535,12 +535,12 @@ function PathSyncSection({ calendar }) {
         </div>
         <div>
           <h3 className="text-white font-bold text-sm">Parcours LIRI (Pédagogie du futur)</h3>
-          <p className="text-slate-500 text-[10px]">Projeter les semaines actives vers un module (titres, grammar_key, lien). Nécessite d'être propriétaire du parcours — même règle que l\'éditeur Pédagogie du futur.</p>
+          <p className="text-[#8a7d6f] text-[10px]">Projeter les semaines actives vers un module (titres, grammar_key, lien). Nécessite d'être propriétaire du parcours — même règle que l\'éditeur Pédagogie du futur.</p>
         </div>
       </div>
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-4">
         <div>
-          <label className="block text-[9px] uppercase tracking-widest text-slate-500 mb-1">Parcours</label>
+          <label className="block text-[9px] uppercase tracking-widest text-[#8a7d6f] mb-1">Parcours</label>
           <select value={pathId} onChange={(e) => setPathId(e.target.value)}
             className="w-full px-3 py-2 rounded-xl text-xs text-white outline-none"
             style={{ background: '#0a1020', border: `1px solid ${BORDER}` }}>
@@ -551,7 +551,7 @@ function PathSyncSection({ calendar }) {
           </select>
         </div>
         <div>
-          <label className="block text-[9px] uppercase tracking-widest text-slate-500 mb-1">Cours</label>
+          <label className="block text-[9px] uppercase tracking-widest text-[#8a7d6f] mb-1">Cours</label>
           <select value={courseId} onChange={(e) => setCourseId(e.target.value)}
             disabled={!pathId}
             className="w-full px-3 py-2 rounded-xl text-xs text-white outline-none disabled:opacity-40"
@@ -562,7 +562,7 @@ function PathSyncSection({ calendar }) {
           </select>
         </div>
         <div>
-          <label className="block text-[9px] uppercase tracking-widest text-slate-500 mb-1">Module récepteur</label>
+          <label className="block text-[9px] uppercase tracking-widest text-[#8a7d6f] mb-1">Module récepteur</label>
           <select value={moduleId} onChange={(e) => setModuleId(e.target.value)}
             disabled={!courseId}
             className="w-full px-3 py-2 rounded-xl text-xs text-white outline-none disabled:opacity-40"
@@ -635,7 +635,7 @@ export default function AnnualProgramPage() {
             </div>
             <div>
               <h1 className="text-white font-bold text-xl">Programme Scolaire Annuel</h1>
-              <p className="text-slate-500 text-xs">Pédagogie du Futur — LIRI {schoolYear}</p>
+              <p className="text-[#8a7d6f] text-xs">Pédagogie du Futur — LIRI {schoolYear}</p>
             </div>
           </div>
           {hasProgram && <StatusBadge status={calendar?.status} />}
@@ -674,7 +674,7 @@ export default function AnnualProgramPage() {
 
         {/* ── Loading ──────────────────────────────────────────────────────── */}
         {loading && (
-          <div className="flex items-center justify-center py-24 gap-3 text-slate-500">
+          <div className="flex items-center justify-center py-24 gap-3 text-[#8a7d6f]">
             <Loader2 size={20} className="animate-spin" />
             Chargement du programme…
           </div>
@@ -711,13 +711,13 @@ export default function AnnualProgramPage() {
                     </div>
                     <div>
                       <h3 className="text-white font-bold text-lg mb-2">Aucun programme pour {schoolYear}</h3>
-                      <p className="text-slate-500 text-sm max-w-sm">
+                      <p className="text-[#8a7d6f] text-sm max-w-sm">
                         Générez le programme annuel avec l'IA — les 21 modules LIRI planifiés semaine par semaine sur 10 mois.
                       </p>
                     </div>
                     <button onClick={() => setActiveTab('generate')}
                       className="flex items-center gap-2 px-6 py-3 rounded-xl font-bold text-sm"
-                      style={{ background: `linear-gradient(135deg, ${VIOLET}, #5b46d9)`, color: '#fff' }}>
+                      style={{ background: `linear-gradient(135deg, ${VIOLET}, #d97757)`, color: '#fff' }}>
                       <Sparkles size={14} /> Générer le programme
                     </button>
                   </div>

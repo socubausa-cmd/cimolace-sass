@@ -78,7 +78,7 @@ const MedAiUsagePage = () => {
                 type="date"
                 value={from}
                 onChange={(e) => setFrom(e.target.value)}
-                className="mt-1 bg-[#0F1419] border border-white/10 rounded px-3 py-2 text-white"
+                className="mt-1 bg-[#262624] border border-white/10 rounded px-3 py-2 text-white"
               />
             </label>
             <label className="text-sm text-gray-400 flex flex-col">
@@ -87,13 +87,13 @@ const MedAiUsagePage = () => {
                 type="date"
                 value={to}
                 onChange={(e) => setTo(e.target.value)}
-                className="mt-1 bg-[#0F1419] border border-white/10 rounded px-3 py-2 text-white"
+                className="mt-1 bg-[#262624] border border-white/10 rounded px-3 py-2 text-white"
               />
             </label>
             <button
               type="button"
               onClick={load}
-              className="bg-[#7B61FF] hover:bg-[#6a51e0] transition-colors text-white font-medium px-4 py-2 rounded"
+              className="bg-[#d97757] hover:bg-[#c0603f] transition-colors text-white font-medium px-4 py-2 rounded"
             >
               Recalculer
             </button>
@@ -119,7 +119,7 @@ const MedAiUsagePage = () => {
             }
           />
           <KpiCard
-            icon={<Zap className="w-5 h-5 text-[#7B61FF]" />}
+            icon={<Zap className="w-5 h-5 text-[#d97757]" />}
             label="Tokens"
             value={loading ? '…' : formatNumber(report?.total_tokens ?? 0)}
             subtitle="Cumulés sur la période"
@@ -137,7 +137,7 @@ const MedAiUsagePage = () => {
           <h2 className="text-lg font-bold mb-4">Tokens par jour</h2>
           {loading ? (
             <div className="h-72 flex items-center justify-center">
-              <Loader2 className="animate-spin text-[#7B61FF] w-8 h-8" />
+              <Loader2 className="animate-spin text-[#d97757] w-8 h-8" />
             </div>
           ) : chartData.length === 0 ? (
             <div className="h-72 flex items-center justify-center text-gray-500">
@@ -152,13 +152,13 @@ const MedAiUsagePage = () => {
                   <YAxis stroke="#94a3b8" fontSize={12} />
                   <Tooltip
                     contentStyle={{
-                      background: '#0F1419',
+                      background: '#262624',
                       border: '1px solid #ffffff20',
                       color: '#fff',
                     }}
                     formatter={(value) => [formatNumber(value), 'tokens']}
                   />
-                  <Bar dataKey="tokens" fill="#7B61FF" radius={[4, 4, 0, 0]} />
+                  <Bar dataKey="tokens" fill="#d97757" radius={[4, 4, 0, 0]} />
                 </BarChart>
               </ResponsiveContainer>
             </div>
@@ -172,7 +172,7 @@ const MedAiUsagePage = () => {
           </div>
           {loading ? (
             <div className="p-12 flex justify-center">
-              <Loader2 className="animate-spin text-[#7B61FF] w-8 h-8" />
+              <Loader2 className="animate-spin text-[#d97757] w-8 h-8" />
             </div>
           ) : (report?.by_agent ?? []).length === 0 ? (
             <div className="p-8 text-center text-gray-500">

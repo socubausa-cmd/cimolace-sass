@@ -43,7 +43,7 @@ export default function SchoolSignupPage() {
   const [googleLoading, setGoogleLoading] = useState(false);
   const [error, setError] = useState('');
 
-  const accent = branding?.accentColor ?? '#7c3aed';
+  const accent = branding?.accentColor ?? '#d97757';
   const schoolName = branding?.name ?? tenantSlug ?? 'Mon École';
   const logo = branding?.logo ?? null;
 
@@ -119,7 +119,7 @@ export default function SchoolSignupPage() {
   if (step === 'success') {
     return (
       <div style={{
-        minHeight: '100vh', background: '#0d1117',
+        minHeight: '100vh', background: '#262624',
         display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '24px',
         fontFamily: "'Inter', system-ui, sans-serif",
       }}>
@@ -140,7 +140,7 @@ export default function SchoolSignupPage() {
 
   const inputStyle = {
     width: '100%', padding: '10px 14px', borderRadius: '8px',
-    border: '1px solid #21262d', background: '#0d1117',
+    border: '1px solid #21262d', background: '#262624',
     color: '#f0f6fc', fontSize: '14px', outline: 'none', boxSizing: 'border-box',
   };
 
@@ -151,7 +151,7 @@ export default function SchoolSignupPage() {
 
   return (
     <div style={{
-      minHeight: '100vh', background: '#0d1117',
+      minHeight: '100vh', background: '#262624',
       display: 'flex', alignItems: 'center', justifyContent: 'center',
       padding: '24px', fontFamily: "'Inter', system-ui, sans-serif",
     }}>
@@ -197,7 +197,7 @@ export default function SchoolSignupPage() {
           }}
         >
           {googleLoading ? (
-            <div style={{ width: '14px', height: '14px', border: '2px solid #c7d2fe', borderTopColor: '#4f46e5', borderRadius: '50%', animation: 'spin 0.7s linear infinite' }} />
+            <div style={{ width: '14px', height: '14px', border: '2px solid #e8cabb', borderTopColor: '#d97757', borderRadius: '50%', animation: 'spin 0.7s linear infinite' }} />
           ) : (
             <svg width="18" height="18" viewBox="0 0 18 18">
               <path d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844c-.209 1.125-.843 2.078-1.796 2.717v2.258h2.908c1.702-1.567 2.684-3.875 2.684-6.615z" fill="#4285F4"/>

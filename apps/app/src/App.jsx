@@ -1238,10 +1238,10 @@ const AppContent = () => {
   ) {
     return (
       <div className="flex min-h-screen flex-col items-center justify-center bg-[#0a0908] px-6 text-center text-white">
-        <p className="font-serif text-xl text-violet-200">Configuration Supabase absente</p>
+        <p className="font-serif text-xl text-[#ebca5e]">Configuration Supabase absente</p>
         <p className="mt-3 max-w-md text-sm text-white/65">
-          Cette page nécessite une appli liée à Supabase. Renseignez <code className="text-violet-200/90">VITE_SUPABASE_URL</code> et{' '}
-          <code className="text-violet-200/90">VITE_SUPABASE_ANON_KEY</code> en local (fichier{' '}
+          Cette page nécessite une appli liée à Supabase. Renseignez <code className="text-[#e2854f]/90">VITE_SUPABASE_URL</code> et{' '}
+          <code className="text-[#e2854f]/90">VITE_SUPABASE_ANON_KEY</code> en local (fichier{' '}
           <code className="text-white/80">.env</code> / <code className="text-white/80">.env.local</code>, clés dans Supabase
           → Settings → API) ou côté <strong>Netlify</strong> (Site → Environment variables) puis <strong>redéployez</strong>.
           Évitez <code className="text-white/50">=REPLACE_ME</code> en fin de fichier. La <strong>vitrine</strong> (
@@ -1250,7 +1250,7 @@ const AppContent = () => {
         </p>
         {isEleveLiriContext ? (
           <p className="mt-3 max-w-md text-sm text-white/60">
-            <span className="text-white/45">LIRI mobile (APK / iOS) :</span> après <code className="text-violet-200/90">.env.local</code>, lancez{' '}
+            <span className="text-white/45">LIRI mobile (APK / iOS) :</span> après <code className="text-[#e2854f]/90">.env.local</code>, lancez{' '}
             <code className="text-white/80">npm run build:eleve</code> puis{' '}
             <code className="text-white/80">npm run cap:sync:eleve:android</code> (ou <code className="text-white/80">:ios</code>
             ) et recompilez dans Android Studio / Xcode. Ne confondez pas avec le build <code className="text-white/50">web</code> seul.
@@ -1264,15 +1264,15 @@ const AppContent = () => {
         )}
         <p className="mt-6 text-xs text-white/40">
           Maquettes UI sans backend (hôte studio) :{' '}
-          <a href="/dev/liri-host-ui" className="text-violet-300/90 underline-offset-2 hover:underline">
+          <a href="/dev/liri-host-ui" className="text-[#e2854f]/90 underline-offset-2 hover:underline">
             /dev/liri-host-ui
           </a>
           {' · '}
-          <a href="/dev/liri-host-shell" className="text-violet-300/90 underline-offset-2 hover:underline">
+          <a href="/dev/liri-host-shell" className="text-[#e2854f]/90 underline-offset-2 hover:underline">
             /dev/liri-host-shell
           </a>
           {' · '}
-          <a href="/dev/owner-shell" className="text-violet-300/90 underline-offset-2 hover:underline">
+          <a href="/dev/owner-shell" className="text-[#e2854f]/90 underline-offset-2 hover:underline">
             /dev/owner-shell
           </a>
         </p>
@@ -1281,7 +1281,7 @@ const AppContent = () => {
             Maquette salle <span className="text-white/55">élève</span> (LIVE + diapos, sans compte) :{' '}
             <a
               href="/m/eleve/live/maquette/host"
-              className="text-violet-300/90 underline-offset-2 hover:underline"
+              className="text-[#e2854f]/90 underline-offset-2 hover:underline"
             >
               /m/eleve/live/maquette/host
             </a>
@@ -1489,7 +1489,7 @@ isLiriHostDevPreviewRoute;
         {!isLiveArenaRoute && <GraceBanner />}
         {!isAdminRoute && !isImmersiveEmbed && !isEmbedRoute && !isLiveArenaRoute && <DiscoveryChat />}
         <main className="flex-grow min-h-[100dvh]">
-          <React.Suspense fallback={<div className="flex min-h-[100dvh] items-center justify-center bg-[#f7f8fb] text-slate-500">Chargement…</div>}>
+          <React.Suspense fallback={<div className="flex min-h-[100dvh] items-center justify-center bg-[#faf6f0] text-[#8a7d6f]">Chargement…</div>}>
             <ProrascienceAppleStoryLandingLazy />
           </React.Suspense>
         </main>
@@ -1504,7 +1504,7 @@ isLiriHostDevPreviewRoute;
         {!isLiveArenaRoute && <GraceBanner />}
         {!isAdminRoute && !isImmersiveEmbed && !isEmbedRoute && !isLiveArenaRoute && <DiscoveryChat />}
         <main className="flex-grow min-h-[100dvh]">
-          <React.Suspense fallback={<div className="flex min-h-[100dvh] items-center justify-center bg-[#06070c] text-white/60">Chargement…</div>}>
+          <React.Suspense fallback={<div className="flex min-h-[100dvh] items-center justify-center bg-[#262624] text-white/60">Chargement…</div>}>
             <ProrascienceAppleStoryV3Lazy />
           </React.Suspense>
         </main>
@@ -1564,8 +1564,8 @@ isLiriHostDevPreviewRoute;
             path="/embed/live/:sessionId"
             element={
               <Suspense fallback={
-                <div style={{ minHeight: '100vh', background: '#0d1117', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                  <div style={{ width: 36, height: 36, border: '3px solid #21262d', borderTop: '3px solid #7c3aed', borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} />
+                <div style={{ minHeight: '100vh', background: '#262624', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <div style={{ width: 36, height: 36, border: '3px solid rgba(217,119,87,0.25)', borderTop: '3px solid #d97757', borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} />
                 </div>
               }>
                 <LiveEmbedPage />
@@ -1577,7 +1577,7 @@ isLiriHostDevPreviewRoute;
             path="/embed/studio"
             element={
               <Suspense fallback={
-                <div style={{ minHeight: '100vh', background: '#090e18' }} />
+                <div style={{ minHeight: '100vh', background: '#262624' }} />
               }>
                 <LiveEmbedStudioPage />
               </Suspense>
@@ -1588,7 +1588,7 @@ isLiriHostDevPreviewRoute;
             path="/embed/boutique"
             element={
               <Suspense fallback={
-                <div style={{ minHeight: '100vh', background: '#0f1419' }} />
+                <div style={{ minHeight: '100vh', background: '#262624' }} />
               }>
                 <MboloStorefrontEmbedPage />
               </Suspense>
@@ -1830,14 +1830,14 @@ isLiriHostDevPreviewRoute;
           <Route path="/vitrine" element={<SchoolVitrinePage />} />
           <Route path="/ecoles/prorascience" element={<ProrascienceCommercialPage />} />
           <Route path="/ecoles/prorascience-apple-story" element={
-            <React.Suspense fallback={<div className="flex min-h-[100dvh] items-center justify-center bg-[#f7f8fb] text-slate-500">Chargement…</div>}>
+            <React.Suspense fallback={<div className="flex min-h-[100dvh] items-center justify-center bg-[#faf6f0] text-[#8a7d6f]">Chargement…</div>}>
               <ProrascienceAppleStoryLandingLazy />
             </React.Suspense>
           } />
           <Route path="/ecoles/prorascience-apple-story/" element={<Navigate to="/ecoles/prorascience-apple-story" replace />} />
           <Route path="/ecoles/apple-story" element={<Navigate to="/ecoles/prorascience-apple-story" replace />} />
           <Route path="/ecoles/prorascience-apple-story-v3" element={
-            <React.Suspense fallback={<div className="flex min-h-[100dvh] items-center justify-center bg-[#06070c] text-white/60">Chargement…</div>}>
+            <React.Suspense fallback={<div className="flex min-h-[100dvh] items-center justify-center bg-[#262624] text-white/60">Chargement…</div>}>
               <ProrascienceAppleStoryV3Lazy />
             </React.Suspense>
           } />
@@ -2415,7 +2415,7 @@ isLiriHostDevPreviewRoute;
               <LazyChunkErrorBoundary>
                 <Suspense
                   fallback={
-                    <div className="flex h-[calc(100dvh-5rem)] w-full items-center justify-center bg-[#090D14]">
+                    <div className="flex h-[calc(100dvh-5rem)] w-full items-center justify-center bg-[#262624]">
                       <div className="h-8 w-8 animate-spin rounded-full border-2 border-[#d97757] border-t-transparent" />
                     </div>
                   }

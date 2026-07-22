@@ -154,7 +154,7 @@ const MedAuditPage = () => {
           ? 'bg-green-500/20 text-green-400'
           : v === 'delete'
           ? 'bg-red-500/20 text-red-400'
-          : 'bg-blue-500/20 text-blue-400';
+          : 'bg-[#d97757]/20 text-[#d97757]';
       return (
         <span className={`px-2 py-1 rounded-full text-xs font-bold uppercase ${cls}`}>
           {String(v)}
@@ -201,7 +201,7 @@ const MedAuditPage = () => {
               onClick={() => handleTabChange(t.id)}
               className={`px-5 py-3 text-sm font-medium border-b-2 transition-colors ${
                 tab === t.id
-                  ? 'border-[#7B61FF] text-white'
+                  ? 'border-[#d97757] text-white'
                   : 'border-transparent text-gray-400 hover:text-white'
               }`}
             >
@@ -218,7 +218,7 @@ const MedAuditPage = () => {
               type="date"
               value={from}
               onChange={(e) => setFrom(e.target.value)}
-              className="bg-[#0F1419] border-white/10"
+              className="bg-[#262624] border-white/10"
             />
           </div>
           <div>
@@ -227,7 +227,7 @@ const MedAuditPage = () => {
               type="date"
               value={to}
               onChange={(e) => setTo(e.target.value)}
-              className="bg-[#0F1419] border-white/10"
+              className="bg-[#262624] border-white/10"
             />
           </div>
           {tab === 'log' ? (
@@ -238,7 +238,7 @@ const MedAuditPage = () => {
                   value={resource}
                   onChange={(e) => setResource(e.target.value)}
                   placeholder="ex: patient"
-                  className="bg-[#0F1419] border-white/10"
+                  className="bg-[#262624] border-white/10"
                 />
               </div>
               <div>
@@ -247,7 +247,7 @@ const MedAuditPage = () => {
                   value={action}
                   onChange={(e) => setAction(e.target.value)}
                   placeholder="ex: create"
-                  className="bg-[#0F1419] border-white/10"
+                  className="bg-[#262624] border-white/10"
                 />
               </div>
             </>
@@ -259,7 +259,7 @@ const MedAuditPage = () => {
                   value={agent}
                   onChange={(e) => setAgent(e.target.value)}
                   placeholder="ex: exams"
-                  className="bg-[#0F1419] border-white/10"
+                  className="bg-[#262624] border-white/10"
                 />
               </div>
               <div>
@@ -268,7 +268,7 @@ const MedAuditPage = () => {
                   value={patientId}
                   onChange={(e) => setPatientId(e.target.value)}
                   placeholder="UUID patient"
-                  className="bg-[#0F1419] border-white/10"
+                  className="bg-[#262624] border-white/10"
                 />
               </div>
             </>
@@ -276,7 +276,7 @@ const MedAuditPage = () => {
           <div className="flex items-end">
             <Button
               onClick={handleApplyFilters}
-              className="w-full bg-[#7B61FF] hover:bg-[#6a52e5]"
+              className="w-full bg-[#d97757] hover:bg-[#c0603f]"
             >
               Appliquer
             </Button>
@@ -290,7 +290,7 @@ const MedAuditPage = () => {
         <div className="premium-panel overflow-hidden">
           {loading ? (
             <div className="p-12 flex justify-center">
-              <Loader2 className="animate-spin text-[#7B61FF] w-8 h-8" />
+              <Loader2 className="animate-spin text-[#d97757] w-8 h-8" />
             </div>
           ) : rows.length === 0 ? (
             <div className="p-12 text-center text-gray-500 text-sm">

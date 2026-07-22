@@ -84,12 +84,12 @@ const LessonPlayerPage: React.FC = () => {
   };
 
   if (loading) {
-    return <div className="min-h-screen bg-[#0F1419] text-white p-10">Chargement…</div>;
+    return <div className="min-h-screen bg-[#262624] text-white p-10">Chargement…</div>;
   }
 
   if (error || !content) {
     return (
-      <div className="min-h-screen bg-[#0F1419] text-white p-10">
+      <div className="min-h-screen bg-[#262624] text-white p-10">
         <div className="max-w-xl space-y-4">
           <div className="text-lg font-semibold">Lecture indisponible</div>
           <div className="text-sm text-gray-300">{error || 'Erreur'}</div>
@@ -102,7 +102,7 @@ const LessonPlayerPage: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-[#0F1419] text-white">
+    <div className="min-h-screen bg-[#262624] text-white">
       <div className="h-16 border-b border-white/10 flex items-center px-6 bg-[#15202B]">
         <Button variant="ghost" onClick={() => navigate(-1)} className="text-gray-300">
           Retour

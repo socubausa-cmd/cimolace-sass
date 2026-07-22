@@ -62,18 +62,18 @@ const CourseDetailPage = () => {
     }
   };
 
-  if (loading) return <div className="min-h-screen bg-[#0F1419] flex items-center justify-center"><div className="animate-spin h-10 w-10 border-2 border-yellow-500 rounded-full"></div></div>;
-  if (!course) return <div className="min-h-screen bg-[#0F1419] flex items-center justify-center text-white">Cours introuvable</div>;
+  if (loading) return <div className="min-h-screen bg-[#262624] flex items-center justify-center"><div className="animate-spin h-10 w-10 border-2 border-yellow-500 rounded-full"></div></div>;
+  if (!course) return <div className="min-h-screen bg-[#262624] flex items-center justify-center text-white">Cours introuvable</div>;
 
   return (
-    <div className="min-h-screen bg-[#0F1419] pb-20">
+    <div className="min-h-screen bg-[#262624] pb-20">
       <Helmet>
         <title>{course.title} - PRORASCIENCE</title>
       </Helmet>
 
       {/* Hero Banner */}
       <div className="relative h-[50vh] w-full overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-t from-[#0F1419] to-transparent z-10"></div>
+        <div className="absolute inset-0 bg-gradient-to-t from-[#262624] to-transparent z-10"></div>
         <img src={course.thumbnail_url || 'https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=1200'} alt={course.title} className="w-full h-full object-cover opacity-60" />
         <div className="absolute bottom-0 left-0 w-full z-20 p-8 max-w-7xl mx-auto">
            <motion.div
@@ -107,7 +107,7 @@ const CourseDetailPage = () => {
             </h2>
             <div className="space-y-4">
               {lessons.map((lesson, index) => (
-                <div key={lesson.id} className="flex items-center justify-between p-4 bg-[#0F1419]/50 rounded-lg border border-white/5 hover:border-white/20 transition-all">
+                <div key={lesson.id} className="flex items-center justify-between p-4 bg-[#262624]/50 rounded-lg border border-white/5 hover:border-white/20 transition-all">
                   <div className="flex items-center space-x-4">
                     <div className="flex-shrink-0 w-8 h-8 rounded-full bg-white/10 flex items-center justify-center text-sm font-bold text-gray-400">
                       {index + 1}

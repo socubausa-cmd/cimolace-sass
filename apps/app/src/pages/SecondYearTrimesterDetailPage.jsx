@@ -30,11 +30,11 @@ const SecondYearTrimesterDetailPage = () => {
     }
   };
 
-  if (loading) return <div className="min-h-screen bg-[#0F1419] flex items-center justify-center"><div className="w-12 h-12 border-4 border-[var(--school-accent)] border-t-transparent rounded-full animate-spin"></div></div>;
+  if (loading) return <div className="min-h-screen bg-[#262624] flex items-center justify-center"><div className="w-12 h-12 border-4 border-[var(--school-accent)] border-t-transparent rounded-full animate-spin"></div></div>;
   if (!trimester) return <div className="text-white text-center p-20">Introuvable</div>;
 
   return (
-    <div className="min-h-screen bg-[#0F1419] text-white pt-24 pb-20">
+    <div className="min-h-screen bg-[#262624] text-white pt-24 pb-20">
       <Helmet><title>{trimester.name} | PRORASCIENCE</title></Helmet>
       
       <div className="max-w-7xl mx-auto px-6">
@@ -71,7 +71,7 @@ const SecondYearTrimesterDetailPage = () => {
              <h2 className="text-2xl font-bold mb-6">Modules du Trimestre</h2>
              {modules.map((module) => (
                 <div key={module.id} className="bg-[#192734] border border-white/5 rounded-xl p-6 flex flex-col sm:flex-row gap-6 hover:border-[color-mix(in_srgb,var(--school-accent)_50%,transparent)] transition-colors">
-                   <div className="w-16 h-16 bg-[#0F1419] rounded-lg flex items-center justify-center border border-white/10 shrink-0 text-[var(--school-accent)] font-bold text-lg">
+                   <div className="w-16 h-16 bg-[#262624] rounded-lg flex items-center justify-center border border-white/10 shrink-0 text-[var(--school-accent)] font-bold text-lg">
                       {module.code}
                    </div>
                    <div className="flex-1">

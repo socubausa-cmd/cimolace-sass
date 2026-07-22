@@ -122,7 +122,7 @@ function MermaidDiagram({ code, title, onExpand }: { code: string; title?: strin
           primaryBorderColor: '#D4AF37',
           secondaryColor: '#2d1b4e',
           secondaryTextColor: '#f3e8ff',
-          secondaryBorderColor: '#a855f7',
+          secondaryBorderColor: '#d97757',
           tertiaryColor: '#0f3320',
           tertiaryTextColor: '#dcfce7',
           tertiaryBorderColor: '#22c55e',
@@ -218,7 +218,7 @@ function ChartDiagram({
             />
             <Bar dataKey="value" radius={[6, 6, 0, 0]}>
               {data.map((_, index) => (
-                <Cell key={index} fill={['#D4AF37','#a855f7','#22c55e','#3b82f6','#f97316','#ec4899'][index % 6]} />
+                <Cell key={index} fill={['#D4AF37','#d97757','#22c55e','#3b82f6','#f97316','#ec4899'][index % 6]} />
               ))}
             </Bar>
           </BarChart>
@@ -409,7 +409,7 @@ function ImageVisual({ prompt, title, onExpand }: { prompt: string; title?: stri
         {!imageUrl && !loading && !error && (
           <motion.div key="idle" variants={fadeScale} initial="hidden" animate="visible" exit="exit">
             <div className="flex flex-col items-center gap-3 py-4">
-              <ImageIcon className="h-8 w-8 text-purple-400/60" />
+              <ImageIcon className="h-8 w-8 text-[#d97757]/60" />
               <p className="text-xs text-gray-400 text-center leading-relaxed max-w-[260px]">
                 {prompt.slice(0, 120)}{prompt.length > 120 ? '…' : ''}
               </p>
@@ -420,7 +420,7 @@ function ImageVisual({ prompt, title, onExpand }: { prompt: string; title?: stri
                 <select
                   value={imageGenSize}
                   onChange={(e) => setImageGenSize(e.target.value)}
-                  className="rounded-lg border border-white/10 bg-gray-900/90 px-2.5 py-2 text-xs text-gray-200 focus:border-purple-500/40 focus:outline-none"
+                  className="rounded-lg border border-white/10 bg-gray-900/90 px-2.5 py-2 text-xs text-gray-200 focus:border-[#d97757]/40 focus:outline-none"
                 >
                   {DESIGNER_IA_IMAGE_SIZES.map((s) => (
                     <option key={s.value} value={s.value}>
@@ -432,7 +432,7 @@ function ImageVisual({ prompt, title, onExpand }: { prompt: string; title?: stri
               <button
                 type="button"
                 onClick={generate}
-                className="flex items-center gap-1.5 bg-purple-600 hover:bg-purple-500 text-white text-xs font-semibold px-4 py-1.5 rounded-lg transition-colors"
+                className="flex items-center gap-1.5 bg-[#d97757] hover:bg-[#d97757] text-white text-xs font-semibold px-4 py-1.5 rounded-lg transition-colors"
               >
                 <ImageIcon className="h-3.5 w-3.5" />
                 Générer l&apos;illustration
@@ -444,7 +444,7 @@ function ImageVisual({ prompt, title, onExpand }: { prompt: string; title?: stri
         {loading && (
           <motion.div key="loading" variants={fadeScale} initial="hidden" animate="visible" exit="exit"
             className="flex flex-col items-center gap-2 py-6">
-            <Loader2 className="h-6 w-6 text-purple-400 animate-spin" />
+            <Loader2 className="h-6 w-6 text-[#d97757] animate-spin" />
             <p className="text-xs text-gray-400">Génération en cours…</p>
           </motion.div>
         )}
@@ -489,7 +489,7 @@ function ImageVisual({ prompt, title, onExpand }: { prompt: string; title?: stri
               <select
                 value={imageGenSize}
                 onChange={(e) => setImageGenSize(e.target.value)}
-                className="mt-1 w-full rounded-lg border border-white/10 bg-gray-900/90 px-2 py-1.5 text-[11px] text-gray-200 focus:border-purple-500/40 focus:outline-none"
+                className="mt-1 w-full rounded-lg border border-white/10 bg-gray-900/90 px-2 py-1.5 text-[11px] text-gray-200 focus:border-[#d97757]/40 focus:outline-none"
               >
                 {DESIGNER_IA_IMAGE_SIZES.map((s) => (
                   <option key={s.value} value={s.value}>

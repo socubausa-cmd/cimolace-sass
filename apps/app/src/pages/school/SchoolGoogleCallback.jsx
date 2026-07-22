@@ -152,7 +152,7 @@ export default function SchoolGoogleCallback() {
   return (
     <div style={{
       minHeight: '100vh',
-      background: '#0d1117',
+      background: '#262624',
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'center',
@@ -176,8 +176,8 @@ export default function SchoolGoogleCallback() {
           <>
             <div style={{
               width: '48px', height: '48px',
-              border: '4px solid rgba(124, 58, 237, 0.3)',
-              borderTopColor: '#7c3aed',
+              border: '4px solid rgba(217, 119, 87, 0.3)',
+              borderTopColor: '#d97757',
               borderRadius: '50%',
               animation: 'spin 0.8s linear infinite',
               margin: '0 auto 16px',
