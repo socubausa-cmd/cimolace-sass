@@ -143,6 +143,62 @@ export class BillingService implements OnApplicationBootstrap {
     return { subscription, gating_enabled: true, plan: (plan as any).key };
   }
 
+  /**
+   * BACK-OFFICE (owner Cimolace) : génère un LIEN DE PAIEMENT Stripe pour un tenant
+   * donné, afin de lui faire régler/reprendre son abonnement. Réutilise l'abo existant
+   * le plus pertinent (actif/past_due/pending, sinon le plus récent), ou en crée un
+   * pending pour `planKey`. Renvoie l'URL Stripe hébergée — l'owner l'envoie au client.
+   * ⚠️ Ne débite RIEN : la carte n'est débitée que si le client paie via le lien.
+   */
+  async createPaymentLinkForTenant(tenantId: string, planKey?: string, actor?: string) {
+    const sb = this.supabase;
+    let subscriptionId: string | undefined;
+    let planUsed = planKey;
+    if (planKey && planKey.trim()) {
+      const r = await this.subscribeToPlan(tenantId, planKey.trim(), "stripe");
+      subscriptionId = r.subscription_id;
+    } else {
+      const { data: subs } = await sb
+        .from("billing_subscriptions")
+        .select("id, plan_id, status, created_at")
+        .eq("tenant_id", tenantId)
+        .order("created_at", { ascending: false })
+        .limit(10);
+      const rows: any[] = Array.isArray(subs) ? subs : [];
+      const rank = (s: string) => (["active", "trialing", "past_due", "unpaid", "pending"].includes(String(s)) ? 1 : 0);
+      const primary = rows.sort((a, b) => rank(b.status) - rank(a.status))[0];
+      if (!primary) {
+        throw new BadRequestException("Aucun abonnement pour ce tenant — précisez un planKey (clé billing_plans).");
+      }
+      subscriptionId = primary.id;
+      planUsed = primary.plan_id;
+    }
+
+    const checkout = await this.createCardCheckout(tenantId, subscriptionId!);
+
+    // SÉCURITÉ §15 : trace attribuable (QUI a généré un lien de paiement pour QUI).
+    try {
+      await sb.from("cimolace_change_history").insert({
+        action: "billing:payment-link",
+        entity_type: "tenant",
+        entity_id: tenantId,
+        description: `Lien de paiement Stripe généré (plan ${planUsed ?? "?"})`,
+        changed_by: (actor && actor.trim()) || "Cimolace Ops (non attribué)",
+      });
+    } catch {
+      /* audit best-effort */
+    }
+
+    return {
+      url: checkout.url,
+      session_id: checkout.session_id,
+      subscription_id: subscriptionId,
+      plan: planUsed ?? null,
+      amount_cents: (checkout as any).amount_cents ?? null,
+      currency: (checkout as any).currency ?? null,
+    };
+  }
+
   /** Providers de paiement autorisés (= CHECK billing_subscriptions/invoices provider). */
   private static readonly PAYMENT_PROVIDERS = new Set([
     "stripe", "chariow", "cinetpay", "pawapay", "nowpayments", "paypal", "free",

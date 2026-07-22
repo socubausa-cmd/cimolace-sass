@@ -89,6 +89,20 @@ export class AdminBillingController {
     if (!plan) throw new BadRequestException("plan requis (clé billing_plans) — aucun forfait par défaut.");
     return { data: await this.svc.activateTenantSubscription(tenantId, plan, req.user?.email ?? req.user?.id ?? undefined) };
   }
+
+  // Back-office : génère un LIEN DE PAIEMENT Stripe pour un tenant (relance/encaissement).
+  // Owner Cimolace uniquement. Body { planKey? } — sinon réutilise l'abo existant du tenant.
+  @Post("tenants/:tenantId/payment-link")
+  @UseGuards(JwtAuthGuard, CimolaceStaffGuard)
+  async paymentLink(@Req() req: any, @Param("tenantId") tenantId: string, @Body() body: { planKey?: string }) {
+    return {
+      data: await this.svc.createPaymentLinkForTenant(
+        tenantId,
+        body?.planKey,
+        req.user?.email ?? req.user?.id ?? undefined,
+      ),
+    };
+  }
 }
 
 /**

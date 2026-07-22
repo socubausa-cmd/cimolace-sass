@@ -594,9 +594,13 @@ export const crmApi = {
   // appointments, services, forum, messaging, counts } → identité plateforme + 360°.
   getContactPlatform: (id: string) =>
     apiV2.get<ApiEnvelope<any>>(`/crm/contacts/${id}/platform`).then(unwrap),
-  // Reliure société — OBJET : { company, contactsTotal, members:[{isMember,userId,role}], counts }.
+  // Reliure société — OBJET : { company, contactsTotal, members, counts, externalTenantId, billing }.
   getCompanyPlatform: (id: string) =>
     apiV2.get<ApiEnvelope<any>>(`/crm/companies/${id}/platform`).then(unwrap),
+  // Back-office : génère un lien de paiement Stripe pour un tenant (relance/encaissement).
+  // Owner Cimolace uniquement (garde CimolaceStaffGuard côté API). Renvoie { url, ... }.
+  createTenantPaymentLink: (tenantId: string, planKey?: string) =>
+    apiV2.post<ApiEnvelope<any>>(`/billing/tenants/${tenantId}/payment-link`, planKey ? { planKey } : {}).then(unwrap),
   // Recherche globale (Cmd-K) — OBJET { contacts, companies, deals }.
   search: (q: string, limit = 8) =>
     apiV2.get<ApiEnvelope<any>>('/crm/search', { params: { q, limit: String(limit) } }).then(unwrap),

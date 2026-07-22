@@ -3,7 +3,7 @@ import { createPortal } from 'react-dom';
 import { useNavigate } from 'react-router-dom';
 import {
   X, Building2, Users, ShoppingBag, CalendarCheck, Ticket, UserCheck,
-  MessageSquare, Send, Sparkles,
+  MessageSquare, Send, Sparkles, CreditCard, Copy, Check, Mail, Link2,
 } from 'lucide-react';
 import { crmApi } from '@/lib/api-v2';
 import { useToast } from '@/components/ui/use-toast';
@@ -39,6 +39,7 @@ export default function CrmCompanyDetail({ company, onClose }) {
   const navigate = useNavigate();
   const [platform, setPlatform] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [pay, setPay] = useState({ loading: false, url: null, copied: false });
   const reqRef = useRef(0);
   const id = company?.id;
 
@@ -81,6 +82,47 @@ export default function CrmCompanyDetail({ company, onClose }) {
   };
   const emailMember = (m) => { if (m?.email) window.location.href = `mailto:${m.email}`; };
 
+  const billing = platform?.billing || null;
+  const extTenantId = platform?.externalTenantId || null;
+  const fmtMoney = (cents, cur) => {
+    if (cents == null) return '—';
+    const zero = ['XAF', 'XOF', 'XPF', 'JPY', 'KRW'].includes(String(cur).toUpperCase());
+    const val = zero ? cents : cents / 100;
+    return `${val.toLocaleString('fr-FR')} ${cur || 'EUR'}`;
+  };
+  const genPaymentLink = async () => {
+    if (!extTenantId || pay.loading) return;
+    setPay({ loading: true, url: null, copied: false });
+    try {
+      const res = await crmApi.createTenantPaymentLink(extTenantId);
+      if (!res?.url) throw new Error('Lien indisponible');
+      setPay({ loading: false, url: res.url, copied: false });
+    } catch (e) {
+      setPay({ loading: false, url: null, copied: false });
+      toast({ title: 'Lien de paiement', description: String(e?.message || e), variant: 'destructive' });
+    }
+  };
+  const copyLink = async () => {
+    if (!pay.url) return;
+    try { await navigator.clipboard.writeText(pay.url); setPay((p) => ({ ...p, copied: true })); } catch { /* clipboard bloqué */ }
+  };
+  const mailtoLink = () => {
+    const to = billing?.ownerEmail || '';
+    const subject = encodeURIComponent(`Votre abonnement Cimolace — ${company.name || ''}`);
+    const body = encodeURIComponent(
+      `Bonjour,\n\nVoici le lien pour régler votre abonnement mensuel :\n${pay.url}\n\nMerci,\nL'équipe Cimolace`,
+    );
+    window.location.href = `mailto:${to}?subject=${subject}&body=${body}`;
+  };
+  const STATUS_LABEL = {
+    active: { t: 'Actif', c: 'var(--crm-green, #9fbf8f)' },
+    trialing: { t: 'Essai', c: 'var(--crm-green, #9fbf8f)' },
+    past_due: { t: '⚠️ Paiement en retard', c: 'var(--crm-gold, #cba36b)' },
+    unpaid: { t: '⚠️ Impayé', c: 'var(--crm-gold, #cba36b)' },
+    pending: { t: 'En attente', c: 'var(--crm-muted, #b0ada3)' },
+    canceled: { t: 'Résilié', c: 'var(--crm-faint, #82807a)' },
+  };
+
   return createPortal(
     <div className="fixed inset-0 z-[60] flex justify-end" onClick={onClose}>
       <div className="absolute inset-0 backdrop-blur-[2px]" style={{ background: 'rgba(15,12,10,.55)' }} />
@@ -120,6 +162,54 @@ export default function CrmCompanyDetail({ company, onClose }) {
             <div className="space-y-3">{[0, 1, 2].map((i) => <div key={i} className="h-14 rounded-xl lp-panel animate-pulse" />)}</div>
           ) : (
             <div className="space-y-7">
+              {/* Facturation tenant — visible uniquement pour un tenant-client géré (external_tenant_id). */}
+              {extTenantId && (
+                <section>
+                  <SectionHead icon={CreditCard} title="Facturation" />
+                  <div className="rounded-xl border lp-line p-3.5" style={{ background: 'rgba(245,244,238,.03)' }}>
+                    <div className="flex items-center justify-between gap-3">
+                      <div className="min-w-0">
+                        <div className="text-[17px] font-semibold lp-ink">{fmtMoney(billing?.amountCents, billing?.currency)}<span className="text-[12px] font-normal lp-faint"> /mois</span></div>
+                        <div className="truncate text-[12px] lp-muted">{billing?.planId || 'Aucun abonnement'}</div>
+                      </div>
+                      {billing?.status && (
+                        <span className="shrink-0 rounded-full px-2.5 py-1 text-[11px] font-semibold" style={{ background: 'rgba(245,244,238,.06)', color: (STATUS_LABEL[billing.status]?.c || 'var(--crm-muted, #b0ada3)') }}>
+                          {STATUS_LABEL[billing.status]?.t || billing.status}
+                        </span>
+                      )}
+                    </div>
+
+                    {!pay.url ? (
+                      <button
+                        type="button" onClick={genPaymentLink} disabled={pay.loading}
+                        className="lp-tr mt-3 flex w-full cursor-pointer items-center justify-center gap-2 rounded-lg px-3 py-2.5 text-[13px] font-semibold text-white disabled:opacity-60"
+                        style={{ background: 'var(--crm-accent, #d97757)' }}
+                      >
+                        <Link2 size={15} />
+                        {pay.loading ? 'Génération…' : 'Générer un lien de paiement'}
+                      </button>
+                    ) : (
+                      <div className="mt-3 space-y-2">
+                        <div className="flex items-center gap-2 rounded-lg border lp-line px-2.5 py-2" style={{ background: 'var(--crm-sunken, #211f1b)' }}>
+                          <Link2 size={13} className="shrink-0 lp-faint" />
+                          <span className="truncate text-[12px] lp-muted">{pay.url}</span>
+                        </div>
+                        <div className="flex gap-2">
+                          <button type="button" onClick={copyLink} className="lp-tr flex flex-1 cursor-pointer items-center justify-center gap-1.5 rounded-lg border lp-line px-3 py-2 text-[12.5px] font-medium lp-ink lp-railbtn">
+                            {pay.copied ? <Check size={14} className="lp-coral" /> : <Copy size={14} />}
+                            {pay.copied ? 'Copié' : 'Copier'}
+                          </button>
+                          <button type="button" onClick={mailtoLink} className="lp-tr flex flex-1 cursor-pointer items-center justify-center gap-1.5 rounded-lg px-3 py-2 text-[12.5px] font-semibold text-white" style={{ background: 'var(--crm-accent, #d97757)' }}>
+                            <Mail size={14} /> Envoyer par email
+                          </button>
+                        </div>
+                        <p className="px-0.5 text-[11px] lp-faint">Lien Stripe hébergé — le client règle son abonnement en ligne. Rien n'est débité tant qu'il ne paie pas.</p>
+                      </div>
+                    )}
+                  </div>
+                </section>
+              )}
+
               {/* Écosystème agrégé */}
               <section>
                 <SectionHead icon={Sparkles} title="Écosystème" count={counts.members} />
