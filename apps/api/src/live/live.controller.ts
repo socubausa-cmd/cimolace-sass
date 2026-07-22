@@ -14,7 +14,8 @@ import { LiveService } from "./live.service";
 @UseGuards(JwtAuthGuard, TenantGuard, RolesGuard)
 export class LiveController {
   constructor(private svc: LiveService) {}
-  @Post() @Roles("owner", "admin", "teacher") async create(@Req() req: any, @Body() b: any) { return { data: await this.svc.createSession(req.tenant.id, b) }; }
+  // host_user_id NOT NULL : défaut = l'appelant (le studio l'envoie, un client API nu non).
+  @Post() @Roles("owner", "admin", "teacher") async create(@Req() req: any, @Body() b: any) { return { data: await this.svc.createSession(req.tenant.id, { ...b, host_user_id: b?.host_user_id ?? b?.teacher_id ?? req.user?.id }) }; }
   @Get() async findAll(@Req() req: any) { return { data: await this.svc.findAll(req.tenant.id) }; }
   @Get(":id") async findOne(@Req() req: any, @Param("id") id: string) { return { data: await this.svc.findOne(req.tenant.id, id) }; }
   // ⚠️ b.role n'est qu'un indice (hint) côté client ; le rôle EFFECTIF (host vs
