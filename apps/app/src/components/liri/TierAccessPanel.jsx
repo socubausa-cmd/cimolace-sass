@@ -14,7 +14,7 @@ import { motion, useReducedMotion } from 'framer-motion';
 import {
   Check, Sparkles, ArrowRight, CalendarClock, PhoneCall, BookOpenText, Video,
   CalendarDays, Users2, HeartHandshake, Crown, GraduationCap, Compass, MinusCircle,
-  Flame, Moon, Ticket, ShoppingBag, Star, ShieldCheck, Target,
+  Flame, Moon, Ticket, ShoppingBag, Star, ShieldCheck, Target, Settings2,
 } from 'lucide-react';
 import { supabase } from '@/lib/customSupabaseClient';
 import { resolveTenantSlug } from '@/lib/tenant/activeBranding';
@@ -146,11 +146,14 @@ export default function TierAccessPanel() {
       {/* En-tête : forfait courant */}
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
-          <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-[#e58a5f]">Vos forfaits</p>
-          <h1 className="mt-1 text-2xl font-black tracking-tight text-white">Choisissez votre voie</h1>
+          <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-[#e58a5f]">{isStaff ? 'Gestion des forfaits' : 'Vos forfaits'}</p>
+          <h1 className="mt-1 text-2xl font-black tracking-tight text-white">{isStaff ? 'Les forfaits de votre école' : 'Choisissez votre voie'}</h1>
+          {isStaff && <p className="mt-1.5 text-[13px] leading-snug text-white/55">Aperçu de l'offre présentée à vos membres — vous avez déjà l'accès complet.</p>}
         </div>
         <div className="rounded-full border border-white/12 bg-[#2a2724] px-3.5 py-1.5 text-[12px] text-white/70">
-          Forfait actuel · <span className="font-semibold text-white">{isStaff ? 'Accès équipe' : (label || 'Membre')}</span>
+          {isStaff
+            ? <>Vous · <span className="font-semibold text-white">accès équipe</span></>
+            : <>Forfait actuel · <span className="font-semibold text-white">{label || 'Membre'}</span></>}
         </div>
       </div>
 
@@ -288,36 +291,49 @@ export default function TierAccessPanel() {
             </div>
           </div>
 
-          {/* CTA : Payer (principal) + Prendre rendez-vous (secondaire) */}
-          <div className="mt-7 flex flex-col gap-3 sm:flex-row sm:items-center">
-            {isStaff ? (
-              <span className="inline-flex items-center justify-center gap-2 rounded-xl border border-[#d97757]/40 px-5 py-3 text-sm font-semibold text-[#e58a5f]">
-                <ShieldCheck className="h-4 w-4" /> Accès équipe — tout débloqué
+          {/* CTA : un MEMBRE achète (Payer + RDV). Un PROPRIÉTAIRE/STAFF n'achète pas ses propres
+              forfaits → vue gestion (accès déjà complet + gérer les tarifs). Pas de contradiction. */}
+          {isStaff ? (
+            <div className="mt-7 flex flex-col gap-3 sm:flex-row sm:items-center">
+              <span className="inline-flex items-center justify-center gap-2 rounded-xl border border-[#d97757]/40 bg-[#d97757]/[0.06] px-5 py-3 text-sm font-semibold text-[#e58a5f]">
+                <ShieldCheck className="h-4 w-4" /> Vous avez déjà l'accès complet
               </span>
-            ) : isCurrentSel ? (
-              <span className="inline-flex items-center justify-center gap-2 rounded-xl border border-[#d97757]/45 bg-[#d97757]/[0.08] px-5 py-3 text-sm font-bold text-[#e58a5f]">
-                <Check className="h-4 w-4" /> C'est votre forfait actuel
-              </span>
-            ) : selPrice != null ? (
               <a
-                href={checkout(selKey)}
-                className="group inline-flex flex-1 items-center justify-center gap-2 rounded-xl bg-[#d97757] px-5 py-3 text-sm font-bold text-white shadow-lg shadow-[#d97757]/25 transition-colors hover:bg-[#c9673f] sm:flex-none sm:min-w-[240px]"
+                href="/liri/services"
+                className="inline-flex items-center justify-center gap-2 rounded-xl border border-white/20 px-5 py-3 text-sm font-semibold text-white/85 transition-colors hover:bg-white/[0.06]"
               >
-                <Sparkles className="h-4 w-4" /> Payer — passer à {CYCLE_LABEL[sel]} · {selPrice} €/mois
-                <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
+                <Settings2 className="h-4 w-4 text-[#d97757]" /> Gérer les tarifs
               </a>
-            ) : null}
+            </div>
+          ) : (
+            <>
+              <div className="mt-7 flex flex-col gap-3 sm:flex-row sm:items-center">
+                {isCurrentSel ? (
+                  <span className="inline-flex items-center justify-center gap-2 rounded-xl border border-[#d97757]/45 bg-[#d97757]/[0.08] px-5 py-3 text-sm font-bold text-[#e58a5f]">
+                    <Check className="h-4 w-4" /> C'est votre forfait actuel
+                  </span>
+                ) : selPrice != null ? (
+                  <a
+                    href={checkout(selKey)}
+                    className="group inline-flex flex-1 items-center justify-center gap-2 rounded-xl bg-[#d97757] px-5 py-3 text-sm font-bold text-white shadow-lg shadow-[#d97757]/25 transition-colors hover:bg-[#c9673f] sm:flex-none sm:min-w-[240px]"
+                  >
+                    <Sparkles className="h-4 w-4" /> Payer — passer à {CYCLE_LABEL[sel]} · {selPrice} €/mois
+                    <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
+                  </a>
+                ) : null}
 
-            <a
-              href={RDV_URL}
-              className="inline-flex items-center justify-center gap-2 rounded-xl border border-white/20 px-5 py-3 text-sm font-semibold text-white/85 transition-colors hover:bg-white/[0.06]"
-            >
-              <PhoneCall className="h-4 w-4 text-[#d97757]" /> Prendre rendez-vous
-            </a>
-          </div>
-          <p className="mt-3 flex items-center gap-1.5 text-[11px] text-white/40">
-            <ShieldCheck className="h-3.5 w-3.5" /> Paiement sécurisé — carte (Stripe) ou Mobile Money · trimestre & année proposés au paiement.
-          </p>
+                <a
+                  href={RDV_URL}
+                  className="inline-flex items-center justify-center gap-2 rounded-xl border border-white/20 px-5 py-3 text-sm font-semibold text-white/85 transition-colors hover:bg-white/[0.06]"
+                >
+                  <PhoneCall className="h-4 w-4 text-[#d97757]" /> Prendre rendez-vous
+                </a>
+              </div>
+              <p className="mt-3 flex items-center gap-1.5 text-[11px] text-white/40">
+                <ShieldCheck className="h-3.5 w-3.5" /> Paiement sécurisé — carte (Stripe) ou Mobile Money · trimestre & année proposés au paiement.
+              </p>
+            </>
+          )}
         </div>
       </motion.div>
 
@@ -350,7 +366,7 @@ export default function TierAccessPanel() {
 
         {/* Grille de réductions par forfait */}
         <div className="mt-5">
-          <p className="mb-2.5 text-[11px] font-bold uppercase tracking-wider text-white/45">Votre réduction automatique</p>
+          <p className="mb-2.5 text-[11px] font-bold uppercase tracking-wider text-white/45">{isStaff ? 'Réductions accordées à vos membres' : 'Votre réduction automatique'}</p>
           <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-4">
             {ORDER.map((key) => {
               const active = key === sel;
@@ -374,10 +390,10 @@ export default function TierAccessPanel() {
         </div>
 
         <a
-          href={BOUTIQUE_URL}
+          href={isStaff ? '/liri/mbolo/produits' : BOUTIQUE_URL}
           className="mt-5 inline-flex items-center gap-2 rounded-xl border border-white/20 px-4 py-2.5 text-sm font-semibold text-white/85 transition-colors hover:bg-white/[0.06]"
         >
-          <ShoppingBag className="h-4 w-4 text-[#d97757]" /> Explorer les modules dans la boutique
+          <ShoppingBag className="h-4 w-4 text-[#d97757]" /> {isStaff ? 'Gérer les produits & modules' : 'Explorer les modules dans la boutique'}
           <ArrowRight className="h-4 w-4" />
         </a>
       </div>
