@@ -178,11 +178,11 @@ export default function QuestionPanel({ videoTitle, transcript, mindmap, videoUr
   const canDownload = messages.length > 0;
 
   return (
-    <div className="flex flex-col h-full bg-gradient-to-b from-[#0d1b2a] to-[#0F1419]">
+    <div className="flex flex-col h-full bg-gradient-to-b from-[#0d1b2a] to-[#262624]">
       {/* Header */}
       <div className="flex-shrink-0 px-4 py-2.5 border-b border-white/10 flex items-center justify-between gap-3">
         <div className="flex items-center gap-2 min-w-0">
-          <MessageCircle className="w-4 h-4 text-blue-400 flex-shrink-0" />
+          <MessageCircle className="w-4 h-4 text-[#d97757] flex-shrink-0" />
           <div className="min-w-0">
             <span className="text-sm font-semibold text-[var(--school-accent)]">ProraScience</span>
             <p className="text-[10px] text-gray-400 leading-tight">
@@ -207,7 +207,7 @@ export default function QuestionPanel({ videoTitle, transcript, mindmap, videoUr
       <div className="flex-1 overflow-y-auto px-4 py-3 space-y-4 min-h-0">
         {messages.length === 0 && !loading && (
           <div className="flex flex-col items-center justify-center h-full gap-3 py-8">
-            <Bot className="w-10 h-10 text-blue-400/30" />
+            <Bot className="w-10 h-10 text-[#d97757]/30" />
             <p className="text-sm text-center text-gray-400 max-w-[280px] leading-relaxed">
               Posez une question sur le contenu de cette vidéo. L&apos;IA ProraScience répond
               exclusivement d&apos;après la transcription et le plan de ce cours.
@@ -228,8 +228,8 @@ export default function QuestionPanel({ videoTitle, transcript, mindmap, videoUr
               className={`flex gap-2 ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
             >
               {msg.role === 'assistant' && (
-                <div className="flex-shrink-0 w-6 h-6 rounded-full bg-blue-600/20 border border-blue-500/30 flex items-center justify-center mt-1">
-                  <Bot className="w-3.5 h-3.5 text-blue-400" />
+                <div className="flex-shrink-0 w-6 h-6 rounded-full bg-[#d97757]/20 border border-[#d97757]/30 flex items-center justify-center mt-1">
+                  <Bot className="w-3.5 h-3.5 text-[#d97757]" />
                 </div>
               )}
 
@@ -240,14 +240,14 @@ export default function QuestionPanel({ videoTitle, transcript, mindmap, videoUr
                     msg.role === 'user'
                       ? 'bg-[color-mix(in_srgb,var(--school-accent)_15%,transparent)] border border-[color-mix(in_srgb,var(--school-accent)_25%,transparent)] text-gray-100 rounded-tr-sm'
                       : msg.msgType === 'other_level'
-                      ? 'bg-purple-900/30 border border-purple-500/30 text-purple-200 rounded-tl-sm'
+                      ? 'bg-[#d97757]/30 border border-[#d97757]/30 text-[#d97757] rounded-tl-sm'
                       : msg.msgType === 'offtopic'
                       ? 'bg-orange-500/10 border border-orange-500/25 text-orange-200 rounded-tl-sm'
-                      : 'bg-blue-600/10 border border-blue-500/20 text-gray-100 rounded-tl-sm'
+                      : 'bg-[#d97757]/10 border border-[#d97757]/20 text-gray-100 rounded-tl-sm'
                   }`}
                 >
                   {msg.msgType === 'other_level' && (
-                    <div className="flex items-center gap-1.5 mb-2 text-purple-400 text-[11px] font-semibold">
+                    <div className="flex items-center gap-1.5 mb-2 text-[#d97757] text-[11px] font-semibold">
                       <Lock className="w-3 h-3" />
                       Accès restreint — Âge ontologique
                     </div>
@@ -270,7 +270,7 @@ export default function QuestionPanel({ videoTitle, transcript, mindmap, videoUr
                         type="button"
                         title={s.text}
                         onClick={() => handleTimestampClick(s)}
-                        className="flex items-center gap-1 text-[10px] bg-blue-900/30 hover:bg-blue-700/40 border border-blue-500/25 text-blue-300 rounded-lg px-2 py-0.5 transition-colors cursor-pointer"
+                        className="flex items-center gap-1 text-[10px] bg-[#d97757]/30 hover:bg-[#d97757]/40 border border-[#d97757]/25 text-[#d97757] rounded-lg px-2 py-0.5 transition-colors cursor-pointer"
                       >
                         <Clock className="w-2.5 h-2.5" />
                         {s.time}
@@ -314,11 +314,11 @@ export default function QuestionPanel({ videoTitle, transcript, mindmap, videoUr
             animate={{ opacity: 1, y: 0 }}
             className="flex gap-2 justify-start"
           >
-            <div className="flex-shrink-0 w-6 h-6 rounded-full bg-blue-600/20 border border-blue-500/30 flex items-center justify-center mt-1">
-              <Bot className="w-3.5 h-3.5 text-blue-400" />
+            <div className="flex-shrink-0 w-6 h-6 rounded-full bg-[#d97757]/20 border border-[#d97757]/30 flex items-center justify-center mt-1">
+              <Bot className="w-3.5 h-3.5 text-[#d97757]" />
             </div>
-            <div className="bg-blue-600/10 border border-blue-500/20 rounded-2xl rounded-tl-sm px-4 py-3">
-              <Loader2 className="w-4 h-4 text-blue-400 animate-spin" />
+            <div className="bg-[#d97757]/10 border border-[#d97757]/20 rounded-2xl rounded-tl-sm px-4 py-3">
+              <Loader2 className="w-4 h-4 text-[#d97757] animate-spin" />
             </div>
           </motion.div>
         )}
@@ -339,7 +339,7 @@ export default function QuestionPanel({ videoTitle, transcript, mindmap, videoUr
         return (
           <div className="flex-shrink-0 border-t border-white/10 bg-black">
             <div className="flex items-center justify-between px-3 py-1.5">
-              <span className="text-[11px] text-blue-300 flex items-center gap-1">
+              <span className="text-[11px] text-[#d97757] flex items-center gap-1">
                 <Clock className="w-3 h-3" />
                 Source — {String(Math.floor(miniPlayer.timeSeconds / 60))}:{String(Math.floor(miniPlayer.timeSeconds % 60)).padStart(2, '0')}
               </span>
@@ -380,13 +380,13 @@ export default function QuestionPanel({ videoTitle, transcript, mindmap, videoUr
             rows={1}
             placeholder="Votre question sur cette vidéo…"
             disabled={loading}
-            className="flex-1 resize-none bg-white/5 border border-white/10 rounded-xl px-3 py-2 text-sm text-white placeholder-gray-500 focus:outline-none focus:border-blue-500/50 transition-colors disabled:opacity-50 min-h-[38px] max-h-[120px]"
+            className="flex-1 resize-none bg-white/5 border border-white/10 rounded-xl px-3 py-2 text-sm text-white placeholder-gray-500 focus:outline-none focus:border-[#d97757]/50 transition-colors disabled:opacity-50 min-h-[38px] max-h-[120px]"
             style={{ overflowY: 'auto' }}
           />
           <button
             type="submit"
             disabled={!input.trim() || loading}
-            className="flex-shrink-0 w-9 h-9 rounded-xl bg-blue-600 hover:bg-blue-500 disabled:bg-blue-600/30 disabled:cursor-not-allowed text-white flex items-center justify-center transition-colors"
+            className="flex-shrink-0 w-9 h-9 rounded-xl bg-[#d97757] hover:bg-[#d97757] disabled:bg-[#d97757]/30 disabled:cursor-not-allowed text-white flex items-center justify-center transition-colors"
           >
             {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
           </button>

@@ -38,7 +38,7 @@ const S = {
   root: {
     width: '100%',
     height: '100vh',
-    background: '#0d1117',
+    background: '#262624',
     display: 'flex',
     flexDirection: 'column',
     alignItems: 'center',
@@ -64,7 +64,7 @@ const S = {
     width: '36px',
     height: '36px',
     border: '3px solid #21262d',
-    borderTop: '3px solid #7c3aed',
+    borderTop: '3px solid #d97757',
     borderRadius: '50%',
     animation: 'liri-spin 0.8s linear infinite',
   },
@@ -314,7 +314,7 @@ export default function LiveEmbedPage() {
         {isHost && (
           <div style={{
             position: 'fixed', top: 10, left: 12, zIndex: 200,
-            background: '#7c3aed', color: '#fff', borderRadius: 6,
+            background: '#d97757', color: '#fff', borderRadius: 6,
             padding: '3px 10px', fontSize: 11, fontWeight: 700,
             fontFamily: 'system-ui', letterSpacing: '0.05em',
           }}>HÔTE</div>
@@ -322,7 +322,7 @@ export default function LiveEmbedPage() {
         {isCoHost && (
           <div style={{
             position: 'fixed', top: 10, left: 12, zIndex: 200,
-            background: '#0369a1', color: '#fff', borderRadius: 6,
+            background: '#c0603f', color: '#fff', borderRadius: 6,
             padding: '3px 10px', fontSize: 11, fontWeight: 700,
             fontFamily: 'system-ui', letterSpacing: '0.05em',
           }}>CO-HÔTE</div>

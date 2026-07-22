@@ -295,7 +295,7 @@ export default function StudioDebateBuilderPage() {
         className="min-h-screen text-white flex items-center justify-center px-4"
         data-school-shell="debate-builder"
         data-tenant-brand={branding.slug}
-        style={{ ...cssVars, background: 'var(--school-background, #090D14)', fontFamily: 'var(--school-font-family, Inter, sans-serif)' }}
+        style={{ ...cssVars, background: 'var(--school-background, #262624)', fontFamily: 'var(--school-font-family, Inter, sans-serif)' }}
       >
         <p className="text-sm text-white/50">Connectez-vous pour accéder au Debate Builder.</p>
       </div>
@@ -307,7 +307,7 @@ export default function StudioDebateBuilderPage() {
       className="min-h-screen text-white"
       data-school-shell="debate-builder"
       data-tenant-brand={branding.slug}
-      style={{ ...cssVars, background: 'var(--school-background, #090D14)', fontFamily: 'var(--school-font-family, Inter, sans-serif)' }}
+      style={{ ...cssVars, background: 'var(--school-background, #262624)', fontFamily: 'var(--school-font-family, Inter, sans-serif)' }}
     >
       <div className="max-w-3xl mx-auto px-4 py-10 md:py-14">
         <Link
@@ -342,13 +342,13 @@ export default function StudioDebateBuilderPage() {
           </button>
         </div>
 
-        <div id="debater-invites" className="rounded-2xl border border-sky-500/20 bg-sky-500/[0.06] overflow-hidden mb-8 scroll-mt-24">
-          <div className="px-4 py-3 border-b border-white/10 flex items-center gap-2 text-sky-200/90 text-xs font-medium">
+        <div id="debater-invites" className="rounded-2xl border border-[#ebca5e]/20 bg-[#ebca5e]/[0.06] overflow-hidden mb-8 scroll-mt-24">
+          <div className="px-4 py-3 border-b border-white/10 flex items-center gap-2 text-[#ebca5e]/90 text-xs font-medium">
             En tant que débatteur
           </div>
           {loadingList ? (
             <div className="p-8 flex justify-center">
-              <Loader2 className="w-6 h-6 text-sky-400/50 animate-spin" />
+              <Loader2 className="w-6 h-6 text-[#ebca5e]/50 animate-spin" />
             </div>
           ) : debaterRows.length === 0 ? (
             <p className="p-6 text-center text-sm text-white/38">

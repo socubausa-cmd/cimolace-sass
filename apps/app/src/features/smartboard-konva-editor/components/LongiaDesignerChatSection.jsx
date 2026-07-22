@@ -66,7 +66,7 @@ function inferFallbackCanvasActionsFromPrompt(prompt) {
     ];
   }
   if (/(cercle|circle|rond)/i.test(q)) {
-    return [{ type: 'add_circle', x: 360, y: 220, radius: 100, fill: '#60a5fa', stroke: '#3b82f6', strokeWidth: 3 }];
+    return [{ type: 'add_circle', x: 360, y: 220, radius: 100, fill: '#60a5fa', stroke: '#d97757', strokeWidth: 3 }];
   }
   if (/(rectangle|rect|carr[ée])/i.test(q)) {
     return [{ type: 'add_rect', x: 260, y: 160, width: 220, height: 150, fill: 'rgba(212,175,55,0.2)', stroke: '#D4AF37', strokeWidth: 3, cornerRadius: 12 }];
@@ -360,10 +360,10 @@ export default function LongiaDesignerChatSection({
   );
 
   return (
-    <div className={cn('flex min-h-0 flex-col rounded-xl border border-cyan-500/20 bg-[#0a0f16]/90 p-2.5', className)}>
+    <div className={cn('flex min-h-0 flex-col rounded-xl border border-[#ebca5e]/20 bg-[#0a0f16]/90 p-2.5', className)}>
       <div className="mb-2 flex items-center gap-2">
-        <MessageSquare className="h-3.5 w-3.5 text-cyan-300/80" />
-        <p className="text-[11px] font-semibold text-cyan-100/90">LONGIA — Dialogue (COACH SLIDE)</p>
+        <MessageSquare className="h-3.5 w-3.5 text-[#ebca5e]/80" />
+        <p className="text-[11px] font-semibold text-[#ebca5e]/90">LONGIA — Dialogue (COACH SLIDE)</p>
       </div>
       <label className="mb-2 flex cursor-pointer items-center gap-2 text-[10px] text-white/55">
         <input
@@ -392,13 +392,13 @@ export default function LongiaDesignerChatSection({
             key={m.id}
             className={cn(
               'rounded-lg px-2 py-1.5 text-[11px] leading-snug',
-              m.role === 'user' ? 'ml-4 bg-violet-950/40 text-violet-100/90' : 'mr-4 bg-white/[0.04] text-white/80',
+              m.role === 'user' ? 'ml-4 bg-[#d97757]/40 text-[#d97757]/90' : 'mr-4 bg-white/[0.04] text-white/80',
             )}
           >
             {m.streaming ? (
               <span className="text-white/50">
                 {streamingPreview || (lang === 'en' ? '…' : '…')}
-                <Loader2 className="ml-1 inline h-3 w-3 animate-spin text-cyan-400/70" />
+                <Loader2 className="ml-1 inline h-3 w-3 animate-spin text-[#ebca5e]/70" />
               </span>
             ) : (
               <p className="whitespace-pre-wrap">{m.text}</p>
@@ -455,13 +455,13 @@ export default function LongiaDesignerChatSection({
           }}
           disabled={streaming}
           placeholder={lang === 'en' ? 'Message to LONGIA…' : 'Message à LONGIA…'}
-          className="min-w-0 flex-1 rounded-lg border border-white/10 bg-black/40 px-2 py-1.5 text-[11px] text-white placeholder:text-white/25 focus:border-cyan-500/35 focus:outline-none disabled:opacity-50"
+          className="min-w-0 flex-1 rounded-lg border border-white/10 bg-black/40 px-2 py-1.5 text-[11px] text-white placeholder:text-white/25 focus:border-[#ebca5e]/35 focus:outline-none disabled:opacity-50"
         />
         <button
           type="button"
           disabled={streaming || !input.trim()}
           onClick={() => void send()}
-          className="flex shrink-0 items-center justify-center rounded-lg border border-cyan-500/35 bg-cyan-950/40 px-2.5 py-1.5 text-cyan-100 hover:bg-cyan-900/50 disabled:opacity-40"
+          className="flex shrink-0 items-center justify-center rounded-lg border border-[#ebca5e]/35 bg-[#ebca5e]/40 px-2.5 py-1.5 text-[#ebca5e] hover:bg-[#ebca5e]/50 disabled:opacity-40"
           title={lang === 'en' ? 'Send' : 'Envoyer'}
         >
           {streaming ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}

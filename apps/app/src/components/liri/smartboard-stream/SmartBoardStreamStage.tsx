@@ -15,7 +15,7 @@ export function SmartBoardStreamStage({ slide }: Props) {
   const generating = slide?.state === 'generating';
   const validated = slide?.state === 'validated';
   return (
-    <div className="relative rounded-3xl border border-violet-400/30 bg-[radial-gradient(80%_80%_at_20%_0%,rgba(124,58,237,0.25),transparent_60%),#090f1f] p-4">
+    <div className="relative rounded-3xl border border-[#d97757]/30 bg-[radial-gradient(80%_80%_at_20%_0%,rgba(217, 119, 87,0.25),transparent_60%),#090f1f] p-4">
       <div className="mx-auto aspect-video w-full max-w-[980px] rounded-2xl border border-white/15 bg-black/30 p-6">
         {generating ? (
           <motion.div
@@ -26,7 +26,7 @@ export function SmartBoardStreamStage({ slide }: Props) {
           />
         ) : (
           <motion.div className="h-full" initial={{ opacity: 0.65 }} animate={{ opacity: 1 }} transition={{ duration: 0.25 }}>
-            <p className="text-xs uppercase tracking-widest text-cyan-200/70">SmartBoard Live</p>
+            <p className="text-xs uppercase tracking-widest text-[#ebca5e]/70">SmartBoard Live</p>
             <motion.h2
               className="mt-3 text-3xl font-bold text-white"
               initial={{ y: 10, opacity: 0 }}
@@ -51,7 +51,7 @@ export function SmartBoardStreamStage({ slide }: Props) {
         )}
       </div>
       <div className="absolute right-4 top-4 flex gap-2">
-        {generating ? <span className="rounded-full border border-violet-300/40 bg-violet-500/25 px-3 py-1 text-[10px] text-violet-100 animate-pulse">LIRI genere...</span> : null}
+        {generating ? <span className="rounded-full border border-[#d97757]/40 bg-[#d97757]/25 px-3 py-1 text-[10px] text-[#d97757] animate-pulse">LIRI genere...</span> : null}
         {validated ? <span className="rounded-full border border-emerald-300/40 bg-emerald-500/25 px-3 py-1 text-[10px] text-emerald-100">Valide par Quality Agent</span> : null}
       </div>
     </div>

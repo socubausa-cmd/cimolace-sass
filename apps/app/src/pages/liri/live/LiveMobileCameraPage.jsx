@@ -113,8 +113,8 @@ export default function LiveMobileCameraPage() {
     <div className="min-h-screen bg-[#070a12] text-white flex flex-col items-center px-4 py-8">
       <div className="w-full max-w-sm">
         <div className="flex items-center gap-3 mb-6">
-          <div className="w-10 h-10 rounded-xl bg-cyan-500/20 flex items-center justify-center">
-            <Smartphone className="w-5 h-5 text-cyan-300" />
+          <div className="w-10 h-10 rounded-xl bg-[#ebca5e]/20 flex items-center justify-center">
+            <Smartphone className="w-5 h-5 text-[#ebca5e]" />
           </div>
           <div>
             <h1 className="text-base font-bold">Caméra mobile LIRI</h1>
@@ -126,7 +126,7 @@ export default function LiveMobileCameraPage() {
 
         {phase === 'connecting' || phase === 'init' ? (
           <div className="flex flex-col items-center gap-4 py-12">
-            <Loader2 className="w-10 h-10 text-cyan-400 animate-spin" />
+            <Loader2 className="w-10 h-10 text-[#ebca5e] animate-spin" />
             <p className="text-sm text-white/50">Connexion à la salle…</p>
           </div>
         ) : null}
@@ -140,7 +140,7 @@ export default function LiveMobileCameraPage() {
               <button
                 type="button"
                 onClick={() => void connect()}
-                className="mt-3 text-xs text-cyan-300 underline"
+                className="mt-3 text-xs text-[#ebca5e] underline"
               >
                 Réessayer
               </button>
@@ -151,13 +151,13 @@ export default function LiveMobileCameraPage() {
         {phase === 'ready' ? (
           <div className="space-y-3">
             <p className="text-xs text-white/50 text-center mb-4">
-              Sur le PC, ouvrez la scène <strong className="text-cyan-300">Cam 2</strong> puis choisissez{' '}
+              Sur le PC, ouvrez la scène <strong className="text-[#ebca5e]">Cam 2</strong> puis choisissez{' '}
               <strong>Caméra mobile LIRI</strong> dans la liste des flux.
             </p>
             <button
               type="button"
               onClick={() => void startCamera('user')}
-              className="w-full h-11 rounded-xl bg-cyan-500/15 border border-cyan-400/35 text-sm text-cyan-100 flex items-center justify-center gap-2"
+              className="w-full h-11 rounded-xl bg-[#ebca5e]/15 border border-[#ebca5e]/35 text-sm text-[#ebca5e] flex items-center justify-center gap-2"
             >
               <Camera className="w-4 h-4" />
               Caméra avant (selfie)
@@ -165,7 +165,7 @@ export default function LiveMobileCameraPage() {
             <button
               type="button"
               onClick={() => void startCamera('environment')}
-              className="w-full h-11 rounded-xl bg-cyan-500/10 border border-cyan-400/25 text-sm text-cyan-50/90 flex items-center justify-center gap-2"
+              className="w-full h-11 rounded-xl bg-[#ebca5e]/10 border border-[#ebca5e]/25 text-sm text-[#ebca5e]/90 flex items-center justify-center gap-2"
             >
               <Camera className="w-4 h-4" />
               Caméra arrière

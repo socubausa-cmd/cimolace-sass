@@ -19,10 +19,11 @@ import { useAuth } from '@/contexts/SupabaseAuthContext';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/components/ui/use-toast';
-import {
-  ProrasciencePublicPageShell,
-  ProrasciencePublicCard,
-} from '@/components/prorascience/ProrasciencePublicPageShell';
+import { ProrasciencePublicCard } from '@/components/prorascience/ProrasciencePublicPageShell';
+// Salle d'attente = ÉCRAN DU PORTAIL, pas une page publique : on garde la coque LIRI
+// (header moteurs + rail) pour ne jamais éjecter l'élève du portail. L'arène live, elle,
+// reste immersive plein écran (LiveHostPage). Route sous ProtectedRoute → toujours authentifié.
+import { LiriPortalShell } from '@/components/liri/LiriPortalShell';
 import { useTenantBranding } from '@/hooks/useTenantBranding';
 import LiveHostMessagingPanel from '@/components/liri/live-room/LiveHostMessagingPanel';
 import LiveHostFooterMessaging from '@/components/liri/live-room/LiveHostFooterMessaging';
@@ -204,7 +205,7 @@ export function Countdown({ scheduledAt }) {
 // ─── Statut badge ──────────────────────────────────────────────────────────────
 export function StatusBadge({ status }) {
   const map = {
-    scheduled: { label: 'Planifié', color: 'text-blue-300 bg-blue-500/15 border-blue-500/30' },
+    scheduled: { label: 'Planifié', color: 'text-[#ebca5e] bg-[#ebca5e]/12 border-[#ebca5e]/30' },
     live:      { label: 'En cours', color: 'text-emerald-300 bg-emerald-500/15 border-emerald-500/30', pulse: true },
     ended:     { label: 'Terminé',  color: 'text-white/30 bg-white/5 border-white/10' },
     waiting:   { label: 'En attente', color: 'text-amber-300 bg-amber-500/15 border-amber-500/30', pulse: true },
@@ -257,7 +258,7 @@ function AudioPreview({ sessionId, enabled }) {
   if (!enabled) return null;
 
   return (
-    <div className="rounded-2xl border border-white/10 bg-[#101729]/95 p-4 shadow-[0_16px_45px_rgba(0,0,0,0.3)] flex items-start gap-3 backdrop-blur-sm">
+    <div className="rounded-2xl border border-white/10 bg-[#2e2d2a]/95 p-4 shadow-[0_16px_45px_rgba(0,0,0,0.3)] flex items-start gap-3 backdrop-blur-sm">
       <div className="w-9 h-9 rounded-full bg-[color-mix(in_srgb,var(--school-accent)_20%,transparent)] flex items-center justify-center flex-shrink-0 ring-1 ring-[color-mix(in_srgb,var(--school-accent)_25%,transparent)]">
         <Volume2 className="w-4 h-4 text-[#ebca5e]" />
       </div>
@@ -868,28 +869,28 @@ export default function LiveWaitingRoomPage() {
   // ─────────────────────────────────────────────────────────────────────────
   if (loading) {
     return (
-      <ProrasciencePublicPageShell simpleNav navTitle="Salle d&apos;attente" backLabel="Retour">
+      <LiriPortalShell active="lives">
         <div className="flex min-h-[calc(100vh-3.5rem)] items-center justify-center px-4">
           <Loader2 className="h-8 w-8 animate-spin text-[var(--school-accent)]" />
         </div>
-      </ProrasciencePublicPageShell>
+      </LiriPortalShell>
     );
   }
 
   if (error) {
     return (
-      <ProrasciencePublicPageShell simpleNav navTitle="Salle d&apos;attente" backLabel="Retour">
+      <LiriPortalShell active="lives">
         <div className="flex min-h-[calc(100vh-3.5rem)] flex-col items-center justify-center gap-4 px-4">
           <AlertTriangle className="h-10 w-10 text-red-400" />
           <p className="max-w-md text-center text-sm text-white/65">{error}</p>
         </div>
-      </ProrasciencePublicPageShell>
+      </LiriPortalShell>
     );
   }
 
   if (liveSession && ['ended', 'cancelled'].includes(String(liveSession.status || '').toLowerCase())) {
     return (
-      <ProrasciencePublicPageShell simpleNav navTitle="Live terminé" backLabel="Retour">
+      <LiriPortalShell active="lives">
         <div className="flex min-h-[calc(100vh-3.5rem)] flex-col items-center justify-center gap-4 px-4 text-center">
           <XCircle className="h-12 w-12 text-white/45" />
           <h1 className="text-2xl font-semibold text-white">Cette session est terminée</h1>
@@ -900,12 +901,12 @@ export default function LiveWaitingRoomPage() {
             Retour à LIRI
           </Button>
         </div>
-      </ProrasciencePublicPageShell>
+      </LiriPortalShell>
     );
   }
 
   return (
-    <ProrasciencePublicPageShell simpleNav navTitle="Salle d&apos;attente" backLabel="Retour">
+    <LiriPortalShell active="lives">
       <div className="relative flex min-h-[calc(100vh-3.5rem)] flex-col text-white">
 
       {/* ── Fond ambiant (au-dessus du shell) ── */}
@@ -915,7 +916,7 @@ export default function LiveWaitingRoomPage() {
           style={{ backgroundImage: `url(${liveSession.cover_image_url})` }}
         />
       )}
-      <div className="pointer-events-none fixed inset-0 z-[1] bg-gradient-to-b from-[#070b12]/50 via-[#070b12]/82 to-[#070b12]" />
+      <div className="pointer-events-none fixed inset-0 z-[1] bg-gradient-to-b from-[#262624]/50 via-[#262624]/82 to-[#262624]" />
 
       <div className="pointer-events-none fixed inset-0 z-[36]">
         <AmbientAudioLayer
@@ -968,7 +969,7 @@ export default function LiveWaitingRoomPage() {
                 {liveSession.profiles.avatar_url ? (
                   <img src={liveSession.profiles.avatar_url} alt="" className="h-8 w-8 rounded-full border border-white/12 object-cover" />
                 ) : (
-                  <div className="flex h-8 w-8 items-center justify-center rounded-full border border-[color-mix(in_srgb,var(--school-accent)_35%,transparent)] bg-gradient-to-br from-[color-mix(in_srgb,var(--school-accent)_25%,transparent)] to-[#6f4cff]/10 text-xs font-bold text-[#ebca5e]">
+                  <div className="flex h-8 w-8 items-center justify-center rounded-full border border-[color-mix(in_srgb,var(--school-accent)_35%,transparent)] bg-gradient-to-br from-[color-mix(in_srgb,var(--school-accent)_25%,transparent)] to-[#ebca5e]/12 text-xs font-bold text-[#ebca5e]">
                     {displayNameInitials(liveSession.profiles.name)}
                   </div>
                 )}
@@ -1189,7 +1190,7 @@ export default function LiveWaitingRoomPage() {
                   />
                 </div>
               ) : (
-                <div className="flex aspect-video w-full items-center justify-center bg-gradient-to-br from-[#1a1528] to-[#0d0f18] text-white/25">
+                <div className="flex aspect-video w-full items-center justify-center bg-gradient-to-br from-[#2e2d2a] to-[#1a1917] text-white/25">
                   <Radio className="h-10 w-10" />
                 </div>
               )}
@@ -1246,7 +1247,7 @@ export default function LiveWaitingRoomPage() {
                   {liveSession?.formation_id ? (
                     <Link
                       to={`/formation/${liveSession.formation_id}/forum`}
-                      className="inline-flex items-center gap-2 rounded-lg border border-violet-500/30 bg-violet-500/10 px-3 py-2 text-xs font-semibold text-violet-200/95 transition-colors hover:border-violet-400/45 hover:bg-violet-500/15"
+                      className="inline-flex items-center gap-2 rounded-lg border border-[color-mix(in_srgb,var(--school-accent)_35%,transparent)] bg-[color-mix(in_srgb,var(--school-accent)_12%,transparent)] px-3 py-2 text-xs font-semibold text-[#ebca5e] transition-colors hover:border-[color-mix(in_srgb,var(--school-accent)_50%,transparent)] hover:bg-[color-mix(in_srgb,var(--school-accent)_20%,transparent)]"
                     >
                       <MessageSquare className="h-3.5 w-3.5 shrink-0" />
                       Forum de la formation
@@ -1305,6 +1306,6 @@ export default function LiveWaitingRoomPage() {
         hostMemberSearch={null}
       />
     </div>
-    </ProrasciencePublicPageShell>
+    </LiriPortalShell>
   );
 }

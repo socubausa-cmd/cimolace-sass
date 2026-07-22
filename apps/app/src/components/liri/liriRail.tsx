@@ -2,7 +2,7 @@ import React from 'react';
 import {
   House, Video, MessagesSquare, MessageCircle, WandSparkles, Library, GraduationCap, Sparkles,
   CalendarDays, BookOpen, School, Calendar, FileText, Award, AlertTriangle, FolderOpen, Tag, Files,
-  SquarePen, CreditCard, Flame, ShoppingBag, Megaphone,
+  SquarePen, CreditCard, Flame, ShoppingBag, Megaphone, Package, ReceiptText, Link2, Landmark,
 } from 'lucide-react';
 
 /**
@@ -27,7 +27,7 @@ export type RailKey =
   | 'vie-scolaire' | 'agenda' | 'notes' | 'evaluations' | 'absences'
   | 'lives' | 'forum' | 'messages'
   | 'biblio-eleve' | 'documents'
-  | 'temple' | 'boutique'
+  | 'temple' | 'boutique' | 'produits' | 'commandes' | 'paiements' | 'factures' | 'compta'
   | 'studio' | 'ecole' | 'services' | 'crm' | 'pages' | 'contenu' | 'biblio' | 'brain' | 'integrations' | 'reglages';
 
 export type RailItem = { key: RailKey; label: string; icon: typeof House; to: string; creator?: boolean; school?: boolean };
@@ -77,11 +77,18 @@ export const ENGINES: EngineDef[] = [
   {
     key: 'mbolo', label: 'mbolo', sub: 'Boutique', icon: ShoppingBag,
     groups: [
-      { section: 'Vente', items: [
+      { section: 'Boutique', items: [
         { key: 'boutique', label: 'Boutique', icon: ShoppingBag, to: '/liri/boutique' },
-        { key: 'services', label: 'Services', icon: Tag, to: '/liri/services', creator: true },
+        { key: 'produits', label: 'Produits', icon: Package, to: '/liri/mbolo/produits', creator: true },
+        { key: 'commandes', label: 'Commandes', icon: ReceiptText, to: '/liri/mbolo/commandes', creator: true },
+      ] },
+      { section: 'Encaissement', items: [
+        { key: 'paiements', label: 'Liens de paiement', icon: Link2, to: '/liri/mbolo/paiements', creator: true },
+        { key: 'factures', label: 'Factures', icon: FileText, to: '/liri/mbolo/factures', creator: true },
+        { key: 'compta', label: 'Compta', icon: Landmark, to: '/liri/mbolo/compta', creator: true },
       ] },
       { section: 'Croissance', items: [
+        { key: 'services', label: 'Services', icon: Tag, to: '/liri/services', creator: true },
         { key: 'crm', label: 'CRM', icon: Megaphone, to: '/liri/crm', creator: true },
       ] },
     ],

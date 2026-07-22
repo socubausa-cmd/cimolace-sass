@@ -48,7 +48,7 @@ const SimpleBarChart = ({ data }) => {
         <div key={index} className="flex flex-col items-center gap-2 flex-1 group">
           <div className="relative w-full flex justify-center items-end h-full">
             <div 
-              className="w-full max-w-[30px] bg-blue-600 rounded-t-sm opacity-70 group-hover:opacity-100 transition-all duration-300 relative group-hover:bg-blue-500"
+              className="w-full max-w-[30px] bg-[#d97757] rounded-t-sm opacity-70 group-hover:opacity-100 transition-all duration-300 relative group-hover:bg-[#d97757]"
               style={{ height: `${(item.value / maxVal) * 100}%` }}
             >
                <div className="absolute -top-8 left-1/2 -translate-x-1/2 bg-gray-900 text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-10">
@@ -204,7 +204,7 @@ const OwnerAdminDashboard = () => {
       onClick={() => { setActiveTab(id); setSidebarOpen(false); }}
       className={`w-full flex items-center space-x-3 px-4 py-3 rounded-lg transition-all duration-200 ${
         activeTab === id 
-          ? 'bg-blue-600 text-white shadow-md' 
+          ? 'bg-[#d97757] text-white shadow-md' 
           : 'text-gray-400 hover:bg-white/5 hover:text-white'
       }`}
     >
@@ -217,7 +217,7 @@ const OwnerAdminDashboard = () => {
     <Card className="bg-[#192734] border-white/10 shadow-lg">
       <CardContent className="p-6">
         <div className="flex items-center justify-between mb-4">
-          <div className="p-2 bg-blue-900/20 rounded-lg text-blue-400">
+          <div className="p-2 bg-[#d97757]/20 rounded-lg text-[#d97757]">
             <Icon className="w-6 h-6" />
           </div>
           {trend && (
@@ -235,7 +235,7 @@ const OwnerAdminDashboard = () => {
   );
 
   return (
-    <div className="min-h-screen bg-[#0F1419] flex">
+    <div className="min-h-screen bg-[#262624] flex">
       {/* Mobile Sidebar Overlay */}
       {sidebarOpen && (
         <div 
@@ -253,10 +253,10 @@ const OwnerAdminDashboard = () => {
       >
         <div className="p-6 border-b border-white/10 flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-purple-600 rounded-lg flex items-center justify-center">
+            <div className="w-8 h-8 bg-gradient-to-br from-[#d97757] to-[#ebca5e] rounded-lg flex items-center justify-center">
               <span className="text-white font-bold text-lg">A</span>
             </div>
-            <span className="text-white font-bold text-lg tracking-tight">Admin<span className="text-blue-500">Panel</span></span>
+            <span className="text-white font-bold text-lg tracking-tight">Admin<span className="text-[#d97757]">Panel</span></span>
           </div>
           <button onClick={() => setSidebarOpen(false)} className="md:hidden text-gray-400">
             <X className="w-6 h-6" />
@@ -305,7 +305,7 @@ const OwnerAdminDashboard = () => {
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
               <Input 
                 placeholder="Rechercher..." 
-                className="pl-9 w-64 bg-[#0F1419] border-white/10 text-white focus:ring-blue-500"
+                className="pl-9 w-64 bg-[#262624] border-white/10 text-white focus:ring-[#d97757]"
               />
             </div>
             
@@ -319,7 +319,7 @@ const OwnerAdminDashboard = () => {
                 <button className="flex items-center gap-3 hover:bg-white/5 p-1 rounded-full transition-colors">
                   <Avatar className="w-8 h-8 border border-white/10">
                     <AvatarImage src={profile?.avatar_url} />
-                    <AvatarFallback className="bg-blue-600 text-white">
+                    <AvatarFallback className="bg-[#d97757] text-white">
                       {profile?.full_name?.charAt(0) || 'A'}
                     </AvatarFallback>
                   </Avatar>
@@ -347,7 +347,7 @@ const OwnerAdminDashboard = () => {
         <main className="flex-1 overflow-y-auto p-4 md:p-8 space-y-8 scrollbar-thin scrollbar-thumb-white/10 scrollbar-track-transparent">
           {loading ? (
             <div className="h-full flex flex-col items-center justify-center text-gray-400">
-              <Loader2 className="w-12 h-12 animate-spin mb-4 text-blue-500" />
+              <Loader2 className="w-12 h-12 animate-spin mb-4 text-[#d97757]" />
               <p>Chargement des données...</p>
             </div>
           ) : (
@@ -414,7 +414,7 @@ const OwnerAdminDashboard = () => {
                           <div key={i} className="flex items-center justify-between p-3 bg-white/5 rounded-lg">
                             <div className="flex items-center gap-3">
                               <Avatar className="h-9 w-9 border border-white/10">
-                                <AvatarFallback className="bg-purple-600 text-xs">
+                                <AvatarFallback className="bg-[#d97757] text-xs">
                                   {customer.name.charAt(0)}
                                 </AvatarFallback>
                               </Avatar>
@@ -516,11 +516,11 @@ const OwnerAdminDashboard = () => {
                     <CardContent>
                       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                         {products.map(product => (
-                           <Card key={product.id} className="bg-[#0F1419] border-white/5 hover:border-blue-500/50 transition-colors">
+                           <Card key={product.id} className="bg-[#262624] border-white/5 hover:border-[#d97757]/50 transition-colors">
                               <CardHeader className="pb-2">
                                 <div className="flex justify-between items-start">
                                   <Badge variant="outline" className="border-white/10 text-gray-400">{product.code}</Badge>
-                                  <Badge className="bg-blue-600">{product.price} €</Badge>
+                                  <Badge className="bg-[#d97757]">{product.price} €</Badge>
                                 </div>
                                 <CardTitle className="text-base text-white mt-2 line-clamp-1">{product.title}</CardTitle>
                               </CardHeader>
@@ -548,7 +548,7 @@ const OwnerAdminDashboard = () => {
                   <p className="text-gray-500 max-w-md">
                     Cette fonctionnalité sera bientôt disponible. En attendant, utilisez le tableau de bord principal pour voir les données agrégées.
                   </p>
-                  <Button className="mt-6 bg-blue-600 hover:bg-blue-700" onClick={() => setActiveTab('dashboard')}>
+                  <Button className="mt-6 bg-[#d97757] hover:bg-[#d97757]" onClick={() => setActiveTab('dashboard')}>
                     Retour au Tableau de Bord
                   </Button>
                 </div>

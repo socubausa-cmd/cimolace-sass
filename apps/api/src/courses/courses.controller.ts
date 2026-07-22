@@ -16,7 +16,7 @@ export class CoursesController {
 
   @Post() @UseGuards(RolesGuard) @Roles('owner','admin','teacher')
   createCourse(@Body() d: CreateCourseDto, @CurrentTenant() t: TenantContext, @Req() r: Request) { return this.svc.createCourse(t, (r as any).user.id, d); }
-  @Get() listCourses(@CurrentTenant() t: TenantContext) { return this.svc.listCourses(t.id); }
+  @Get() listCourses(@CurrentTenant() t: TenantContext) { return this.svc.listCourses(t.id, t.userRole); }
   @Get(':id') getCourse(@Param('id') id: string, @CurrentTenant() t: TenantContext) { return this.svc.getCourse(t.id, id); }
   @Patch(':id') @UseGuards(RolesGuard) @Roles('owner','admin','teacher')
   updateCourse(@Param('id') id: string, @Body() d: Record<string, unknown>, @CurrentTenant() t: TenantContext) { return this.svc.updateCourse(t.id, id, d); }

@@ -108,7 +108,7 @@ const AdminDashboard = () => {
               <div className="bg-white/5 backdrop-blur-sm rounded-xl p-6 border border-white/10 h-full hover:bg-white/10 transition-colors">
                 <div className="flex items-center justify-between">
                   <span className="text-gray-300">{stat.label}</span>
-                  <Icon className="h-6 w-6 text-purple-400" />
+                  <Icon className="h-6 w-6 text-[#d97757]" />
                 </div>
                 <p className="text-3xl font-bold text-white mt-2">{stat.value}</p>
               </div>
@@ -176,7 +176,7 @@ const AdminDashboard = () => {
           <>
             <h2 className="text-2xl font-bold text-white">{modalData.label}</h2>
             <p className="text-gray-300 mt-4">{modalData.details}</p>
-            <p className="text-center mt-6 text-purple-400 animate-pulse">Chargement des données détaillées...</p>
+            <p className="text-center mt-6 text-[#d97757] animate-pulse">Chargement des données détaillées...</p>
           </>
         );
         break;
@@ -185,9 +185,9 @@ const AdminDashboard = () => {
           <>
             <h2 className="text-2xl font-bold text-white">Statistiques de {selectedProfessor.name}</h2>
             <div className="mt-6 grid grid-cols-1 md:grid-cols-3 gap-4 text-center">
-                <div className="bg-white/10 p-4 rounded-lg"><div className="text-3xl font-bold text-purple-400">{selectedProfessor.courses}</div><div className="text-sm text-gray-400">Cours Actifs</div></div>
-                <div className="bg-white/10 p-4 rounded-lg"><div className="text-3xl font-bold text-purple-400">{selectedProfessor.avgStudentProgress}</div><div className="text-sm text-gray-400">Progression Moy.</div></div>
-                <div className="bg-white/10 p-4 rounded-lg"><div className="text-3xl font-bold text-purple-400">{selectedProfessor.studentQuestions}</div><div className="text-sm text-gray-400">Questions Reçues</div></div>
+                <div className="bg-white/10 p-4 rounded-lg"><div className="text-3xl font-bold text-[#d97757]">{selectedProfessor.courses}</div><div className="text-sm text-gray-400">Cours Actifs</div></div>
+                <div className="bg-white/10 p-4 rounded-lg"><div className="text-3xl font-bold text-[#d97757]">{selectedProfessor.avgStudentProgress}</div><div className="text-sm text-gray-400">Progression Moy.</div></div>
+                <div className="bg-white/10 p-4 rounded-lg"><div className="text-3xl font-bold text-[#d97757]">{selectedProfessor.studentQuestions}</div><div className="text-sm text-gray-400">Questions Reçues</div></div>
             </div>
           </>
         );
@@ -198,9 +198,9 @@ const AdminDashboard = () => {
             <h2 className="text-2xl font-bold text-white">Profil de {selectedStudent.name}</h2>
             <div className="border-b border-white/10 my-4">
               <nav className="-mb-px flex space-x-4">
-                <button onClick={() => setActiveStudentDetailTab('performance')} className={`whitespace-nowrap py-2 px-1 border-b-2 font-medium text-sm ${activeStudentDetailTab === 'performance' ? 'border-purple-400 text-purple-300' : 'border-transparent text-gray-400 hover:text-gray-200'}`}>Performance</button>
-                <button onClick={() => setActiveStudentDetailTab('about')} className={`whitespace-nowrap py-2 px-1 border-b-2 font-medium text-sm ${activeStudentDetailTab === 'about' ? 'border-purple-400 text-purple-300' : 'border-transparent text-gray-400 hover:text-gray-200'}`}>À Propos</button>
-                <button onClick={() => setActiveStudentDetailTab('finance')} className={`whitespace-nowrap py-2 px-1 border-b-2 font-medium text-sm ${activeStudentDetailTab === 'finance' ? 'border-purple-400 text-purple-300' : 'border-transparent text-gray-400 hover:text-gray-200'}`}>Finances</button>
+                <button onClick={() => setActiveStudentDetailTab('performance')} className={`whitespace-nowrap py-2 px-1 border-b-2 font-medium text-sm ${activeStudentDetailTab === 'performance' ? 'border-[#d97757] text-[#d97757]' : 'border-transparent text-gray-400 hover:text-gray-200'}`}>Performance</button>
+                <button onClick={() => setActiveStudentDetailTab('about')} className={`whitespace-nowrap py-2 px-1 border-b-2 font-medium text-sm ${activeStudentDetailTab === 'about' ? 'border-[#d97757] text-[#d97757]' : 'border-transparent text-gray-400 hover:text-gray-200'}`}>À Propos</button>
+                <button onClick={() => setActiveStudentDetailTab('finance')} className={`whitespace-nowrap py-2 px-1 border-b-2 font-medium text-sm ${activeStudentDetailTab === 'finance' ? 'border-[#d97757] text-[#d97757]' : 'border-transparent text-gray-400 hover:text-gray-200'}`}>Finances</button>
               </nav>
             </div>
             {activeStudentDetailTab === 'performance' && <div><p>Note moyenne: {selectedStudent.grade}</p><p>Progression: {selectedStudent.progress}%</p></div>}
@@ -208,9 +208,9 @@ const AdminDashboard = () => {
             {activeStudentDetailTab === 'finance' && (
                 <div className="space-y-3">
                     <div className={`p-3 rounded-lg ${selectedStudent.finance.status === 'En retard' ? 'bg-red-500/20' : 'bg-green-500/20'}`}><strong className="text-white">Statut:</strong> <span className={selectedStudent.finance.status === 'En retard' ? 'text-red-300' : 'text-green-300'}>{selectedStudent.finance.status}</span></div>
-                    <div className="bg-white/10 p-3 rounded-lg"><strong className="text-purple-300">Total Payé:</strong> {selectedStudent.finance.totalPaid}</div>
-                    <div className="bg-white/10 p-3 rounded-lg"><strong className="text-purple-300">Dette:</strong> {selectedStudent.finance.debt}</div>
-                    <div className="bg-white/10 p-3 rounded-lg"><strong className="text-purple-300">Prochain Paiement:</strong> {selectedStudent.finance.nextPayment}</div>
+                    <div className="bg-white/10 p-3 rounded-lg"><strong className="text-[#d97757]">Total Payé:</strong> {selectedStudent.finance.totalPaid}</div>
+                    <div className="bg-white/10 p-3 rounded-lg"><strong className="text-[#d97757]">Dette:</strong> {selectedStudent.finance.debt}</div>
+                    <div className="bg-white/10 p-3 rounded-lg"><strong className="text-[#d97757]">Prochain Paiement:</strong> {selectedStudent.finance.nextPayment}</div>
                 </div>
             )}
           </>
@@ -242,7 +242,7 @@ const AdminDashboard = () => {
 
       <div className="max-w-7xl mx-auto">
         <motion.div initial={{ opacity: 0, y: 50 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.8 }} className="mb-8">
-          <div className="bg-gradient-to-r from-purple-600/20 to-pink-600/20 rounded-xl p-6 border border-white/10">
+          <div className="bg-gradient-to-r from-[#d97757]/20 to-pink-600/20 rounded-xl p-6 border border-white/10">
             <div className="flex justify-between items-center">
                 <div>
                     <h1 className="text-3xl font-bold text-white mb-2">Tableau de bord - {title}</h1>
@@ -250,9 +250,9 @@ const AdminDashboard = () => {
                 </div>
                 {(profile?.sub_role === 'directeur' || profile?.sub_role === 'secretaire') && (
                     <div className="flex gap-2">
-                        <Button onClick={() => setActiveTab('dashboard')} variant={activeTab === 'dashboard' ? 'default' : 'ghost'} className={activeTab === 'dashboard' ? 'bg-purple-600' : 'text-white'}>Dashboard</Button>
-                        <Button onClick={() => setActiveTab('professors')} variant={activeTab === 'professors' ? 'default' : 'ghost'} className={activeTab === 'professors' ? 'bg-purple-600' : 'text-white'}>Professeurs</Button>
-                        <Button onClick={() => setActiveTab('students')} variant={activeTab === 'students' ? 'default' : 'ghost'} className={activeTab === 'students' ? 'bg-purple-600' : 'text-white'}>Étudiants</Button>
+                        <Button onClick={() => setActiveTab('dashboard')} variant={activeTab === 'dashboard' ? 'default' : 'ghost'} className={activeTab === 'dashboard' ? 'bg-[#d97757]' : 'text-white'}>Dashboard</Button>
+                        <Button onClick={() => setActiveTab('professors')} variant={activeTab === 'professors' ? 'default' : 'ghost'} className={activeTab === 'professors' ? 'bg-[#d97757]' : 'text-white'}>Professeurs</Button>
+                        <Button onClick={() => setActiveTab('students')} variant={activeTab === 'students' ? 'default' : 'ghost'} className={activeTab === 'students' ? 'bg-[#d97757]' : 'text-white'}>Étudiants</Button>
                     </div>
                 )}
             </div>

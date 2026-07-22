@@ -28,7 +28,7 @@ export default function DesignerCopilotPresenceBar({
   const label = MODE_LABEL[mode] || MODE_LABEL.idle;
 
   return (
-    <div className="relative w-full overflow-hidden border-t border-cyan-500/15 bg-gradient-to-r from-[#050a12] via-[#0a1520] to-[#050a12]">
+    <div className="relative w-full overflow-hidden border-t border-[#ebca5e]/15 bg-gradient-to-r from-[#050a12] via-[#0a1520] to-[#050a12]">
       {/* scan lines */}
       <div
         className={cn(
@@ -42,7 +42,7 @@ export default function DesignerCopilotPresenceBar({
       />
       <div
         className={cn(
-          'pointer-events-none absolute inset-y-0 left-0 w-1/3 bg-gradient-to-r from-cyan-400/0 via-cyan-400/12 to-cyan-400/0',
+          'pointer-events-none absolute inset-y-0 left-0 w-1/3 bg-gradient-to-r from-[#ebca5e]/0 via-[#ebca5e]/12 to-[#ebca5e]/0',
           active && 'designer-presence-scan',
         )}
       />
@@ -51,28 +51,28 @@ export default function DesignerCopilotPresenceBar({
         <div className="relative flex h-11 w-11 shrink-0 items-center justify-center">
           <span
             className={cn(
-              'absolute inset-0 rounded-full border border-cyan-400/35',
+              'absolute inset-0 rounded-full border border-[#ebca5e]/35',
               active && 'designer-presence-orbit',
             )}
           />
           <span
             className={cn(
-              'absolute inset-1 rounded-full border border-violet-400/25',
+              'absolute inset-1 rounded-full border border-[#d97757]/25',
               active && 'designer-presence-orbit-rev',
             )}
           />
           <span
             className={cn(
-              'flex h-8 w-8 items-center justify-center rounded-full bg-gradient-to-br from-cyan-500/25 to-violet-600/30 shadow-[0_0_24px_rgba(34,211,238,0.35)]',
+              'flex h-8 w-8 items-center justify-center rounded-full bg-gradient-to-br from-[#ebca5e]/25 to-[#ebca5e]/30 shadow-[0_0_24px_rgba(34,211,238,0.35)]',
               active && 'shadow-[0_0_32px_rgba(167,139,250,0.45)]',
             )}
           >
             {mode === 'voice' ? (
-              <Radio className="h-4 w-4 text-cyan-200" aria-hidden />
+              <Radio className="h-4 w-4 text-[#ebca5e]" aria-hidden />
             ) : mode === 'canvas_exam' || mode === 'vision' || mode === 'vision_analyze' ? (
-              <Cpu className="h-4 w-4 text-cyan-200" aria-hidden />
+              <Cpu className="h-4 w-4 text-[#ebca5e]" aria-hidden />
             ) : (
-              <Activity className={cn('h-4 w-4 text-cyan-200', designerChatStreaming && 'animate-pulse')} aria-hidden />
+              <Activity className={cn('h-4 w-4 text-[#ebca5e]', designerChatStreaming && 'animate-pulse')} aria-hidden />
             )}
           </span>
         </div>
@@ -83,7 +83,7 @@ export default function DesignerCopilotPresenceBar({
               className={cn(
                 'rounded-full border px-2 py-0.5 text-[9px] font-bold uppercase tracking-[0.2em]',
                 active
-                  ? 'border-cyan-400/40 bg-cyan-500/10 text-cyan-200'
+                  ? 'border-[#ebca5e]/40 bg-[#ebca5e]/10 text-[#ebca5e]'
                   : 'border-white/10 text-white/35',
               )}
             >

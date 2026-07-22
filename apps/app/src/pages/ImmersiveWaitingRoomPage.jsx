@@ -58,12 +58,12 @@ const STATUS_CONFIG = {
   confirmed:   { label: 'Confirmé',                 color: 'bg-emerald-500/20 text-emerald-300 border-emerald-500/30', dot: 'bg-emerald-400' },
   scheduled:   { label: 'Planifié',                 color: 'bg-emerald-500/20 text-emerald-300 border-emerald-500/30', dot: 'bg-emerald-400' },
   preparing:   { label: 'En cours de préparation',  color: 'bg-[color-mix(in_srgb,var(--school-accent)_15%,transparent)] text-[var(--school-accent)] border-[color-mix(in_srgb,var(--school-accent)_35%,transparent)]',      dot: 'bg-[var(--school-accent)]' },
-  ready:       { label: 'Prêt à démarrer',          color: 'bg-violet-500/20 text-violet-300 border-violet-500/30', dot: 'bg-violet-400', pulse: true },
+  ready:       { label: 'Prêt à démarrer',          color: 'bg-[#d97757]/20 text-[#d97757] border-[#d97757]/30', dot: 'bg-[#d97757]', pulse: true },
   in_progress: { label: 'Séance en cours',          color: 'bg-emerald-500/20 text-emerald-300 border-emerald-500/30', dot: 'bg-emerald-400', pulse: true },
   chat_started: { label: 'Chat en cours',           color: 'bg-emerald-500/20 text-emerald-300 border-emerald-500/30', dot: 'bg-emerald-400', pulse: true },
-  live_started: { label: 'Live en cours',           color: 'bg-violet-500/20 text-violet-300 border-violet-500/30', dot: 'bg-violet-400', pulse: true },
+  live_started: { label: 'Live en cours',           color: 'bg-[#d97757]/20 text-[#d97757] border-[#d97757]/30', dot: 'bg-[#d97757]', pulse: true },
   cancelled:   { label: 'Annulé',                   color: 'bg-red-500/20 text-red-300 border-red-500/30',         dot: 'bg-red-400' },
-  rescheduled: { label: 'Reprogrammé',              color: 'bg-violet-500/20 text-violet-300 border-violet-500/30', dot: 'bg-violet-400' },
+  rescheduled: { label: 'Reprogrammé',              color: 'bg-[#d97757]/20 text-[#d97757] border-[#d97757]/30', dot: 'bg-[#d97757]' },
   completed:   { label: 'Terminé',                  color: 'bg-white/10 text-gray-400 border-white/15',            dot: 'bg-gray-500' },
 };
 
@@ -623,11 +623,11 @@ const ImmersiveWaitingRoomPage = () => {
 
   /* ─── Shared wrapper (loading / error / main) ─── */
   const PageShell = ({ children }) => (
-    <div className="relative min-h-screen overflow-x-hidden bg-[#070b12] text-white">
+    <div className="relative min-h-screen overflow-x-hidden bg-[#262624] text-white">
       {/* Ambient orbs */}
       <div className="pointer-events-none fixed inset-0 z-0 overflow-hidden">
         <div className="absolute -top-32 left-1/4 h-[36rem] w-[36rem] rounded-full bg-[var(--school-accent)]/[0.07] blur-[120px]" />
-        <div className="absolute bottom-0 right-1/4 h-[28rem] w-[28rem] rounded-full bg-violet-600/[0.06] blur-[100px]" />
+        <div className="absolute bottom-0 right-1/4 h-[28rem] w-[28rem] rounded-full bg-[#d97757]/[0.06] blur-[100px]" />
       </div>
       {/* Subtle grid overlay */}
       <div className="pointer-events-none fixed inset-0 z-0 opacity-[0.03] [background-image:linear-gradient(rgba(255,255,255,0.12)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.12)_1px,transparent_1px)] [background-size:48px_48px]" />
@@ -660,7 +660,7 @@ const ImmersiveWaitingRoomPage = () => {
     return (
       <PageShell>
         <div className="flex min-h-screen flex-col">
-          <header className="sticky top-0 z-20 flex items-center justify-between border-b border-white/8 bg-[#070b12]/80 px-6 py-4 backdrop-blur-xl">
+          <header className="sticky top-0 z-20 flex items-center justify-between border-b border-white/8 bg-[#262624]/80 px-6 py-4 backdrop-blur-xl">
             <Link to="/" className="flex items-center gap-2 text-sm font-semibold tracking-wide text-white/90">
               <span className="inline-flex h-8 w-8 items-center justify-center rounded-lg bg-[var(--school-accent)] text-black font-bold shadow-[0_0_18px_rgba(212,175,55,0.3)]">I</span>
               ISNA · PRORASCIENCE
@@ -699,7 +699,7 @@ const ImmersiveWaitingRoomPage = () => {
 
         {/* ══ Header ══ */}
         <header
-          className="sticky top-0 z-20 flex items-center justify-between border-b border-white/8 bg-[#070b12]/80 px-4 py-3.5 backdrop-blur-xl sm:px-6"
+          className="sticky top-0 z-20 flex items-center justify-between border-b border-white/8 bg-[#262624]/80 px-4 py-3.5 backdrop-blur-xl sm:px-6"
           style={{ paddingTop: 'max(0.875rem, env(safe-area-inset-top, 0px))' }}
         >
           {/* Logo */}

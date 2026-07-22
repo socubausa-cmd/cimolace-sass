@@ -86,8 +86,8 @@ export function SecretariatRescheduleQueue({ onProcessed }) {
 
   if (loading) {
     return (
-      <div className="rounded-[14px] border border-violet-200 bg-violet-50 p-6 flex items-center justify-center gap-2 text-[var(--lt-sub)]">
-        <Loader2 className="w-5 h-5 animate-spin text-violet-500" />
+      <div className="rounded-[14px] border border-[#d97757] bg-[#d97757] p-6 flex items-center justify-center gap-2 text-[var(--lt-sub)]">
+        <Loader2 className="w-5 h-5 animate-spin text-[#d97757]" />
         <span className="text-sm">Chargement des demandes de report…</span>
       </div>
     );
@@ -98,9 +98,9 @@ export function SecretariatRescheduleQueue({ onProcessed }) {
   }
 
   return (
-    <div className="rounded-[14px] border border-violet-200 bg-violet-50 p-4 space-y-3">
+    <div className="rounded-[14px] border border-[#d97757] bg-[#d97757] p-4 space-y-3">
       <div className="flex items-center justify-between gap-2 flex-wrap">
-        <h3 className="font-bold text-violet-700 flex items-center gap-2">
+        <h3 className="font-bold text-[#d97757] flex items-center gap-2">
           <CalendarClock className="w-5 h-5" />
           Demandes de report ({items.length})
         </h3>
@@ -116,7 +116,7 @@ export function SecretariatRescheduleQueue({ onProcessed }) {
           Actualiser
         </Button>
       </div>
-      <p className="text-xs text-violet-700/80">
+      <p className="text-xs text-[#d97757]/80">
         Validez ou refusez le nouveau créneau proposé. Le participant reçoit une notification.
       </p>
       <div className="space-y-4">

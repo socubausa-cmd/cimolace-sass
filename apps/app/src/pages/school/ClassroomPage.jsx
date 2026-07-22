@@ -28,13 +28,13 @@ const ClassroomPageContent = () => {
   } = useClassroomProgress();
 
   if (loading || !currentWeek) {
-     return <div className="min-h-screen bg-[#0F1419] flex items-center justify-center text-white">Chargement du contenu...</div>;
+     return <div className="min-h-screen bg-[#262624] flex items-center justify-center text-white">Chargement du contenu...</div>;
   }
 
   return (
-    <div className="min-h-screen bg-[#0F1419] pb-20">
+    <div className="min-h-screen bg-[#262624] pb-20">
        {/* Hero / Header */}
-       <div className="bg-gradient-to-b from-[#192734] to-[#0F1419] pt-28 pb-16 px-4 border-b border-white/5 relative overflow-hidden">
+       <div className="bg-gradient-to-b from-[#192734] to-[#262624] pt-28 pb-16 px-4 border-b border-white/5 relative overflow-hidden">
           <div className="absolute top-0 right-0 w-96 h-96 bg-[color-mix(in_srgb,var(--school-accent)_5%,transparent)] rounded-full blur-3xl -mr-20 -mt-20 pointer-events-none"></div>
           
           <div className="max-w-7xl mx-auto relative z-10">
@@ -47,7 +47,7 @@ const ClassroomPageContent = () => {
              <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6">
                 <div>
                    <div className="flex items-center gap-3 mb-2">
-                      <span className="bg-blue-500/10 text-blue-400 border border-blue-500/20 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider">
+                      <span className="bg-[#d97757]/10 text-[#d97757] border border-[#d97757]/20 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider">
                          Module 1 • Année 1
                       </span>
                       <span className="text-gray-400 text-sm flex items-center gap-1">

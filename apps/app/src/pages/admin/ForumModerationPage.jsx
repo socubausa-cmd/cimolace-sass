@@ -316,7 +316,7 @@ export default function ForumModerationPage() {
                   className={cn(
                     'flex items-center gap-2 px-4 py-3 font-medium transition-colors relative',
                     activeTab === tab.id
-                      ? 'text-[#5b3df5]'
+                      ? 'text-[#d97757]'
                       : 'text-[#6e6e73] hover:text-[#0a0a0f]'
                   )}
                 >
@@ -330,7 +330,7 @@ export default function ForumModerationPage() {
                   {activeTab === tab.id && (
                     <motion.div
                       layoutId="activeTab"
-                      className="absolute bottom-0 left-0 right-0 h-0.5 bg-[#5b3df5]"
+                      className="absolute bottom-0 left-0 right-0 h-0.5 bg-[#d97757]"
                     />
                   )}
                 </button>
@@ -347,7 +347,7 @@ export default function ForumModerationPage() {
                 exit={{ opacity: 0 }}
                 className="flex items-center justify-center py-20"
               >
-                <RefreshCw className="w-8 h-8 animate-spin text-[#5b3df5]" />
+                <RefreshCw className="w-8 h-8 animate-spin text-[#d97757]" />
               </motion.div>
             ) : (
               <motion.div
@@ -440,7 +440,7 @@ export default function ForumModerationPage() {
                                   <Link
                                     to={`/student-school-life/forum/thread/${report.post_id}`}
                                     target="_blank"
-                                    className="flex items-center gap-1 px-3 py-1.5 text-sm text-[#5b3df5] hover:bg-[#5b3df5]/10 rounded-lg transition-colors"
+                                    className="flex items-center gap-1 px-3 py-1.5 text-sm text-[#d97757] hover:bg-[#d97757]/10 rounded-lg transition-colors"
                                   >
                                     <Eye className="w-4 h-4" />
                                     Voir
@@ -488,7 +488,7 @@ export default function ForumModerationPage() {
                           value={userSearch}
                           onChange={(e) => setUserSearch(e.target.value)}
                           placeholder="Rechercher un utilisateur..."
-                          className="w-full pl-10 pr-4 py-2.5 bg-white border border-[#e5e5ea] rounded-xl focus:outline-none focus:ring-2 focus:ring-[#5b3df5]/20"
+                          className="w-full pl-10 pr-4 py-2.5 bg-white border border-[#e5e5ea] rounded-xl focus:outline-none focus:ring-2 focus:ring-[#d97757]/20"
                         />
                       </div>
                       <select
@@ -520,7 +520,7 @@ export default function ForumModerationPage() {
                             <tr key={user.user_id} className="hover:bg-[#f5f5f7]/50">
                               <td className="px-4 py-3">
                                 <div className="flex items-center gap-3">
-                                  <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[#5b3df5] to-[#8b6dff] flex items-center justify-center text-white font-semibold">
+                                  <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[#d97757] to-[#e2854f] flex items-center justify-center text-white font-semibold">
                                     {user.display_name?.charAt(0)?.toUpperCase() || '?'}
                                   </div>
                                   <div>
@@ -532,8 +532,8 @@ export default function ForumModerationPage() {
                               <td className="px-4 py-3">
                                 <span className={cn(
                                   'px-2 py-1 rounded text-xs font-medium capitalize',
-                                  user.level === 'veteran' ? 'bg-purple-100 text-purple-700' :
-                                  user.level === 'expert' ? 'bg-blue-100 text-blue-700' :
+                                  user.level === 'veteran' ? 'bg-[#d97757] text-[#d97757]' :
+                                  user.level === 'expert' ? 'bg-[#d97757] text-[#d97757]' :
                                   user.level === 'contributor' ? 'bg-green-100 text-green-700' :
                                   'bg-gray-100 text-gray-600'
                                 )}>
@@ -591,7 +591,7 @@ export default function ForumModerationPage() {
                   <div className="space-y-6">
                     {/* Overview Cards */}
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                      <div className="bg-gradient-to-br from-[#5b3df5] to-[#8b6dff] rounded-xl p-6 text-white">
+                      <div className="bg-gradient-to-br from-[#d97757] to-[#e2854f] rounded-xl p-6 text-white">
                         <p className="text-white/70 text-sm mb-1">Total Questions</p>
                         <p className="text-4xl font-bold">{stats.totalQuestions}</p>
                         <p className="text-white/60 text-sm mt-2">+{stats.todayQuestions} aujourd'hui</p>
@@ -627,7 +627,7 @@ export default function ForumModerationPage() {
                         {users.slice(0, 5).map((user, idx) => (
                           <div key={user.user_id} className="flex items-center gap-4">
                             <span className="w-8 text-center font-bold text-[#6e6e73]">#{idx + 1}</span>
-                            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[#5b3df5] to-[#8b6dff] flex items-center justify-center text-white font-semibold">
+                            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[#d97757] to-[#e2854f] flex items-center justify-center text-white font-semibold">
                               {user.display_name?.charAt(0)?.toUpperCase() || '?'}
                             </div>
                             <div className="flex-1">
@@ -637,7 +637,7 @@ export default function ForumModerationPage() {
                               </p>
                             </div>
                             <div className="text-right">
-                              <p className="font-bold text-[#5b3df5]">{user.points} pts</p>
+                              <p className="font-bold text-[#d97757]">{user.points} pts</p>
                               <p className="text-xs text-[#6e6e73]">{user.accepted_answers_count} ✓</p>
                             </div>
                           </div>

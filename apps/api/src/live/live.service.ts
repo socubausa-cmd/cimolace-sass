@@ -1,4 +1,4 @@
-import { BadRequestException, ForbiddenException, Injectable, NotFoundException, ServiceUnavailableException } from "@nestjs/common";
+import { BadRequestException, ForbiddenException, Injectable, Logger, NotFoundException, ServiceUnavailableException } from "@nestjs/common";
 import { AuthService } from "../auth/auth.service";
 import { LiveKitService } from "../livekit/livekit.service";
 import { LiriEntitlementsService } from "../billing/liri-entitlements.service";
@@ -7,6 +7,7 @@ import { Cycle, cycleFromPlanId, cycleCan, rankOfCycle } from "../billing/member
 
 @Injectable()
 export class LiveService {
+  private readonly logger = new Logger(LiveService.name);
   constructor(
     private auth: AuthService,
     private liveKit: LiveKitService,
@@ -30,11 +31,64 @@ export class LiveService {
         );
       }
     }
-    const { data: session } = await this.supabase
+    // WHITELIST des colonnes réelles de live_sessions : le wizard/shim front envoie
+    // aussi des champs d'orchestration (invited_user_ids, notify_*, waiting_room…)
+    // qui NE SONT PAS des colonnes → PostgREST rejetait TOUT l'insert. Et l'erreur
+    // était avalée (pas de check) → 201 { data: null } : le studio croyait avoir
+    // programmé le live alors que RIEN n'était créé. On filtre + on vérifie.
+    const COLS = [
+      "host_user_id", "title", "description", "scheduled_at", "price_cents", "currency",
+      "capacity", "replay_enabled", "teacher_id", "cover_image_url", "session_type",
+      "formation_id", "config", "debate_id", "duration_minutes", "ambient_tracks_json",
+      "join_code", "production_live_type", "production_category", "room_mode",
+      "timezone", "access_mode", "kind",
+    ];
+    const row: Record<string, any> = { tenant_id: tenantId, status: "scheduled" };
+    for (const k of COLS) if (data?.[k] !== undefined) row[k] = data[k];
+    // Vocabulaire : CHECK session_type accepte 'class', pas 'classe' (legacy front).
+    if (row.session_type === "classe") row.session_type = "class";
+    // access_mode hors vocabulaire DB (public/invite_only/password/subscription) → on
+    // n'insère pas la valeur brute (CHECK) ; le détail (waiting_room…) vit dans config.
+    const ACCESS = ["public", "invite_only", "password", "subscription"];
+    if (row.access_mode && !ACCESS.includes(String(row.access_mode))) delete row.access_mode;
+    if (!row.host_user_id && data?.teacher_id) row.host_user_id = data.teacher_id;
+
+    const { data: session, error } = await this.supabase
       .from("live_sessions")
-      .insert({ tenant_id: tenantId, ...data, status: "scheduled" })
+      .insert(row)
       .select()
       .single();
+    if (error || !session) {
+      throw new BadRequestException(
+        `Création du live impossible : ${error?.message ?? "insert vide"}`,
+      );
+    }
+    // Invités (live_session_participants) : le front les upsert séparément via le
+    // shim, mais on honore aussi invited_user_ids si fournis ici (idempotent).
+    const invited = Array.isArray(data?.invited_user_ids) ? data.invited_user_ids.filter(Boolean) : [];
+    if (invited.length) {
+      const participants = invited.map((uid: string) => ({
+        live_session_id: (session as any).id, user_id: uid, role: "student",
+      }));
+      const { error: pErr } = await this.supabase
+        .from("live_session_participants")
+        .upsert(participants, { onConflict: "live_session_id,user_id" });
+      if (pErr) this.logger.warn(`participants: ${pErr.message}`);
+    }
+    // Règles de diffusion (le worker live-invitations lit live_visibility_rules).
+    if (data?.notify_dashboard !== undefined || data?.notify_email !== undefined || data?.notify_whatsapp !== undefined || data?.is_public !== undefined) {
+      const { error: vErr } = await this.supabase
+        .from("live_visibility_rules")
+        .upsert({
+          live_session_id: (session as any).id,
+          tenant_id: tenantId,
+          is_public: data?.is_public === true,
+          notify_dashboard: data?.notify_dashboard !== false,
+          notify_email: data?.notify_email === true,
+          notify_whatsapp: data?.notify_whatsapp === true,
+        }, { onConflict: "live_session_id" });
+      if (vErr) this.logger.warn(`visibility_rules: ${vErr.message}`);
+    }
     return session;
   }
 

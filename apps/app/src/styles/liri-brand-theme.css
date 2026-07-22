@@ -47,27 +47,27 @@
   --liri-charte-logo-dot-glow: 0 0 12px 2px rgba(124, 58, 237, 0.45);
 
   /* Cœur “mobile maquette” */
-  --liri-bg: #0b0b0f;
-  --liri-bg-elevated: #0f1419;
-  --liri-surface: #16161e;
-  --liri-surface-2: #12121e;
-  --liri-surface-glass: rgba(22, 24, 32, 0.72);
-  --liri-primary: #7b61ff;
-  --liri-secondary: #6366f1;
-  --liri-accent: #7b61ff;
+  --liri-bg: #262624;
+  --liri-bg-elevated: #2e2d2a;
+  --liri-surface: #33322e;
+  --liri-surface-2: #2a2926;
+  --liri-surface-glass: rgba(38, 37, 34, 0.72);
+  --liri-primary: #d97757;
+  --liri-secondary: #e2854f;
+  --liri-accent: #d97757;
   --liri-gold: var(--liri-charte-gold);
-  --liri-glow: 0 8px 28px -6px rgba(123, 97, 255, 0.35);
-  --liri-glow-hero: 0 24px 50px -20px rgba(40, 20, 80, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  --liri-glow: 0 8px 28px -6px rgba(217, 119, 87, 0.35);
+  --liri-glow-hero: 0 24px 50px -20px rgba(60, 40, 25, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.1);
   --liri-border: rgba(255, 255, 255, 0.08);
   --liri-border-gold: rgba(212, 175, 55, 0.35);
   --liri-text: #f5f5f7;
   --liri-muted: #8e8e93;
   /* Halos (empilés) — proches de `evHaloAtmosphere` */
-  --liri-ambient-hero: radial-gradient(ellipse 120% 70% at 50% -15%, rgba(99, 102, 241, 0.22) 0%, rgba(99, 102, 241, 0.06) 38%, transparent 58%);
-  --liri-ambient-side-l: radial-gradient(ellipse 90% 55% at -5% 18%, rgba(59, 130, 246, 0.16) 0%, transparent 52%);
-  --liri-ambient-side-r: radial-gradient(ellipse 85% 50% at 102% 22%, rgba(168, 85, 247, 0.14) 0%, transparent 52%);
-  --liri-ambient-bottom: radial-gradient(ellipse 100% 55% at 50% 108%, rgba(15, 15, 35, 0.55) 0%, rgba(0, 0, 0, 0.35) 40%, transparent 65%);
-  --liri-ambient-top-bar: radial-gradient(50% 32% at 50% 0%, rgba(123, 97, 255, 0.12), transparent 70%);
+  --liri-ambient-hero: radial-gradient(ellipse 120% 70% at 50% -15%, rgba(217, 119, 87, 0.16) 0%, rgba(217, 119, 87, 0.05) 38%, transparent 58%);
+  --liri-ambient-side-l: radial-gradient(ellipse 90% 55% at -5% 18%, rgba(235, 202, 94, 0.10) 0%, transparent 52%);
+  --liri-ambient-side-r: radial-gradient(ellipse 85% 50% at 102% 22%, rgba(217, 119, 87, 0.12) 0%, transparent 52%);
+  --liri-ambient-bottom: radial-gradient(ellipse 100% 55% at 50% 108%, rgba(20, 19, 17, 0.55) 0%, rgba(0, 0, 0, 0.35) 40%, transparent 65%);
+  --liri-ambient-top-bar: radial-gradient(50% 32% at 50% 0%, rgba(217, 119, 87, 0.10), transparent 70%);
 
   /* Raccords avec l’existant `index.css` / Tailwind arbitraires */
   --primary-gold: var(--liri-gold);
@@ -75,7 +75,7 @@
   --text-white: var(--liri-text);
   --accent-violet: var(--liri-primary);
   --accent-blue: var(--liri-charte-blue);
-  --premium-surface: #121a25;
+  --premium-surface: #2a2926;
   --premium-surface-2: #30302e;
   /* Typo charte : Inter en premier (weights 300–800 chargées dans index.html) */
   --app-font-main: 'Inter', -apple-system, blinkmacsystemfont, 'SF Pro Text', 'Segoe UI', system-ui, sans-serif;
@@ -96,7 +96,7 @@ body {
   -moz-osx-font-smoothing: grayscale;
   background-color: var(--liri-bg-elevated);
   background-image: var(--liri-ambient-hero), var(--liri-ambient-side-l), var(--liri-ambient-side-r), var(--liri-ambient-bottom), var(--liri-ambient-top-bar),
-    linear-gradient(180deg, #101018 0%, var(--liri-bg) 18%, var(--liri-bg) 82%, #040408 100%);
+    linear-gradient(180deg, #262624 0%, var(--liri-bg) 18%, var(--liri-bg) 82%, #1a1917 100%);
   background-attachment: fixed;
   color: var(--liri-text);
   overflow-x: hidden;
@@ -120,7 +120,7 @@ body {
 .marketing-public-shell {
   background-color: var(--liri-bg) !important;
   background-image: var(--liri-ambient-hero), var(--liri-ambient-side-l), var(--liri-ambient-side-r), var(--liri-ambient-bottom), var(--liri-ambient-top-bar),
-    linear-gradient(180deg, #0a0a12 0%, var(--liri-bg) 14%, var(--liri-bg) 86%, #050508 100%) !important;
+    linear-gradient(180deg, #262624 0%, var(--liri-bg) 14%, var(--liri-bg) 86%, #1a1917 100%) !important;
   background-attachment: fixed !important;
   color: var(--liri-text) !important;
 }
@@ -134,7 +134,7 @@ body {
   backdrop-filter: blur(20px) saturate(1.15);
   -webkit-backdrop-filter: blur(20px) saturate(1.15);
   /* repli solide si `color-mix` indisponible (évite sidebar « blanche ») */
-  background-color: rgba(22, 22, 30, 0.94) !important;
+  background-color: rgba(38, 37, 34, 0.94) !important;
   background: color-mix(in srgb, var(--liri-surface) 92%, transparent) !important;
   color: var(--liri-text) !important;
 }
@@ -147,7 +147,7 @@ body {
   border-color: var(--liri-border) !important;
   backdrop-filter: blur(20px) saturate(1.15);
   -webkit-backdrop-filter: blur(20px) saturate(1.15);
-  background-color: rgba(22, 22, 30, 0.82) !important;
+  background-color: rgba(38, 37, 34, 0.82) !important;
   background: color-mix(in srgb, var(--liri-surface) 80%, transparent) !important;
   color: var(--liri-text) !important;
 }
@@ -179,7 +179,7 @@ body {
 
 #root .premium-app-shell > header nav a:hover {
   color: var(--liri-gold) !important;
-  background: rgba(123, 97, 255, 0.1) !important;
+  background: rgba(217, 119, 87, 0.1) !important;
 }
 
 #root .premium-app-shell > header [class*='border'][class*='school-accent'] {
@@ -233,10 +233,10 @@ body {
   --lt-sub: #a1a1aa;
   --lt-muted: #8e8e93;
   --lt-border: rgba(255, 255, 255, 0.08);
-  --lt-card-bg: #16161e;
+  --lt-card-bg: #33322e;
   --lt-card-border: rgba(255, 255, 255, 0.07);
   --lt-card-shadow: 0 8px 24px -12px rgba(0, 0, 0, 0.5);
-  --lt-inner-bg: #12121e;
+  --lt-inner-bg: #2a2926;
   --lt-gold: #d4af37;
   --lt-gold-ink: #d4af37; /* or lumineux = lisible sur sombre */
 }

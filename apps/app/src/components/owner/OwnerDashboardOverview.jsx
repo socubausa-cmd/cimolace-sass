@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import { supabase } from '@/lib/customSupabaseClient';
 import { Link } from 'react-router-dom';
 import { useAdminDashboard } from '@/hooks/useAdmin';
 import { useShellTint } from '@/lib/useShellTint';
@@ -101,11 +100,6 @@ const OwnerDashboardOverview = () => {
   const { stats: dashboardStats, activities, loading, error, refresh } = useAdminDashboard();
   const [tint] = useShellTint();
   const chartDark = tint === 'dark'; // recharts : les attributs SVG stroke ne résolvent pas var() → bascule JS
-  const [details, setDetails] = useState({
-    totalModules: 0,
-    totalVideos: 0,
-    totalQuizzes: 0,
-  });
   const [dismissedAlerts, setDismissedAlerts] = useState([]);
   const [currentDate, setCurrentDate] = useState(new Date());
 
@@ -114,27 +108,14 @@ const OwnerDashboardOverview = () => {
     return () => clearInterval(timer);
   }, []);
 
-  useEffect(() => {
-    let alive = true;
-    const loadDetails = async () => {
-      const [modulesRes, videosRes, quizzesRes] = await Promise.all([
-        supabase.from('modules').select('id', { count: 'exact', head: true }),
-        supabase.from('formation_day_contents').select('id', { count: 'exact', head: true }).eq('type', 'video'),
-        supabase.from('formation_day_contents').select('id', { count: 'exact', head: true }).eq('type', 'quiz'),
-      ]);
-
-      if (!alive) return;
-      setDetails({
-        totalModules: modulesRes.error ? 0 : Number(modulesRes.count || 0),
-        totalVideos: videosRes.error ? 0 : Number(videosRes.count || 0),
-        totalQuizzes: quizzesRes.error ? 0 : Number(quizzesRes.count || 0),
-      });
-    };
-    loadDetails();
-    return () => {
-      alive = false;
-    };
-  }, [dashboardStats.activityCount24h]);
+  // Modules / leçons / vidéos viennent désormais du hook (API /growth/stats,
+  // tables vivantes tenant-scopées) — les requêtes directes lisaient les tables
+  // jumelles mortes (modules/formation_day_contents) sans scope tenant → 0 partout.
+  const details = {
+    totalModules: dashboardStats.totalModules || 0,
+    totalVideos: dashboardStats.totalVideos || 0,
+    totalQuizzes: dashboardStats.totalLessons || 0,
+  };
 
   const handleRefresh = async () => {
     await refresh();
@@ -255,7 +236,7 @@ const OwnerDashboardOverview = () => {
     { title: 'Webhooks en attente', value: stats.pendingWebhooks || 0, icon: Clock3, tone: 'amber' },
     { title: 'Modules', value: stats.totalModules || 0, icon: GraduationCap, tone: 'sky' },
     { title: 'Vidéos', value: stats.totalVideos || 0, icon: Video, tone: 'rose' },
-    { title: 'Quizzes', value: stats.totalQuizzes || 0, icon: FileText, tone: 'blue' },
+    { title: 'Leçons', value: stats.totalQuizzes || 0, icon: FileText, tone: 'blue' },
   ];
 
   const recentActivities = (activities || []).slice(0, 10).map((a) => ({

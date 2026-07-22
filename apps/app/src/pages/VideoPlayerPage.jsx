@@ -61,10 +61,10 @@ const VideoPlayerContent = () => {
     }
   };
 
-  if (!currentVideo) return <div className="min-h-screen bg-[#0F1419] flex items-center justify-center text-white">Chargement...</div>;
+  if (!currentVideo) return <div className="min-h-screen bg-[#262624] flex items-center justify-center text-white">Chargement...</div>;
 
   return (
-    <div className="h-screen bg-[#0F1419] text-white flex flex-col overflow-hidden">
+    <div className="h-screen bg-[#262624] text-white flex flex-col overflow-hidden">
        {/* Header */}
        <header className="h-16 bg-[#192734] border-b border-white/10 flex items-center justify-between px-4 md:px-6 shrink-0 z-20 shadow-md">
           <div className="flex items-center gap-4">
@@ -114,7 +114,7 @@ const VideoPlayerContent = () => {
 
        <div className="flex-1 flex overflow-hidden relative">
           {/* Main Video Area (70%) */}
-          <div className="flex-1 flex flex-col overflow-y-auto custom-scrollbar bg-[#0F1419]">
+          <div className="flex-1 flex flex-col overflow-y-auto custom-scrollbar bg-[#262624]">
              <div className="p-4 md:p-8 max-w-6xl mx-auto w-full">
                 <VideoPlayer 
                    video={currentVideo} 

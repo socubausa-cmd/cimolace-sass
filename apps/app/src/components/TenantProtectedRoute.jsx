@@ -81,13 +81,13 @@ export default function TenantProtectedRoute({ children }) {
   if (authLoading || status === 'checking') {
     return (
       <div style={{
-        minHeight: '100vh', background: '#0d1117',
+        minHeight: '100vh', background: '#262624',
         display: 'flex', alignItems: 'center', justifyContent: 'center',
       }}>
         <div style={{
           width: '32px', height: '32px',
-          border: '3px solid rgba(124,58,237,0.2)',
-          borderTopColor: '#7c3aed',
+          border: '3px solid rgba(217, 119, 87,0.2)',
+          borderTopColor: '#d97757',
           borderRadius: '50%',
           animation: 'spin 0.7s linear infinite',
         }} />

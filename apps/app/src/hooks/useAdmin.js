@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useAuth } from '@/contexts/SupabaseAuthContext';
 import { resolveVitrineContactEmailSync } from '@/lib/vitrineContactEmail';
 import { getActiveTenantBranding } from '@/lib/tenant/activeBranding';
+import { growthApi } from '@/lib/api-v2';
 
 let auditLogsTableAvailable = true;
 
@@ -272,7 +273,12 @@ export const useAdminDashboard = () => {
           )
         : Promise.resolve({ data: [], error: { code: 'PGRST205' } });
 
-      const [usersCountRes, formationsCountRes, paymentsRes, webhooksRes, auditLogsRes] = await Promise.all([
+      const [tenantStats, usersCountRes, formationsCountRes, paymentsRes, webhooksRes, auditLogsRes] = await Promise.all([
+        // Source de VÉRITÉ tenant-scopée (API /growth/stats, famille de tables vivante) :
+        // les counts Supabase directs ci-dessous ne sont pas scopés tenant → la RLS
+        // les renvoyait à 0 (étudiants/formations/paiements). L'API prime ; le direct
+        // ne sert plus que de filet si l'appel API échoue.
+        growthApi.getStats().catch(() => null),
         safeCount(supabase.from('profiles').select('id', { count: 'exact', head: true })),
         safeCount(
           supabase.from('courses').select('id', { count: 'exact', head: true }).eq('status', 'published')
@@ -316,13 +322,16 @@ export const useAdminDashboard = () => {
             : 'Actif';
 
       setStats({
-        usersCount: usersCountRes.count,
-        publishedFormations: formationsCountRes.count,
+        usersCount: tenantStats?.totalStudents ?? usersCountRes.count,
+        publishedFormations: tenantStats?.publishedCourses ?? formationsCountRes.count,
         activityCount24h,
         systemStatus,
         pendingWebhooks,
-        confirmedPayments: confirmedPayments.length,
-        revenueConfirmed,
+        confirmedPayments: tenantStats?.paidInvoices ?? confirmedPayments.length,
+        revenueConfirmed: tenantStats ? (tenantStats.totalRevenueCents ?? 0) / 100 : revenueConfirmed,
+        totalModules: tenantStats?.totalModules ?? 0,
+        totalLessons: tenantStats?.totalLessons ?? 0,
+        totalVideos: tenantStats?.totalVideos ?? 0,
       });
 
       const normalizedActivities = isMissingRelationError(auditLogsRes.error)
