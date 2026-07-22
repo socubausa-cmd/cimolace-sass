@@ -18,8 +18,14 @@ export class CoursesService {
     return data;
   }
 
-  async listCourses(tenantId: string) {
-    const { data } = await (this.supabase.client as any).from('courses').select('*').eq('tenant_id', tenantId).order('created_at', { ascending: false });
+  async listCourses(tenantId: string, userRole?: string | null) {
+    // Un élève ne voit QUE le publié : les brouillons restent réservés au staff
+    // (fuite de contenu non publié sinon — le front badge « Bientôt » mais l'API est la barrière).
+    const STAFF = ['owner', 'admin', 'teacher', 'creator', 'secretariat'];
+    const isStaff = STAFF.includes(String(userRole ?? '').toLowerCase());
+    let q = (this.supabase.client as any).from('courses').select('*').eq('tenant_id', tenantId).order('created_at', { ascending: false });
+    if (!isStaff) q = q.eq('status', 'published');
+    const { data } = await q;
     return data ?? [];
   }
 
@@ -79,8 +85,18 @@ export class CoursesService {
   }
 
   async updateProgress(tenantId: string, userId: string, lessonId: string, dto: UpdateProgressDto) {
-    const { data, error } = await (this.supabase.client as any).from('student_progress').upsert({
-      tenant_id: tenantId, user_id: userId, lesson_id: lessonId,
+    // student_progress.course_id est NOT NULL → on le résout depuis la leçon
+    // (leçon → module → cours), tenant-scopé. Sans ça, l'upsert 400 systématiquement.
+    const client = this.supabase.client as any;
+    const { data: lesson } = await client.from('course_lessons')
+      .select('module_id').eq('id', lessonId).eq('tenant_id', tenantId).maybeSingle();
+    if (!lesson?.module_id) throw new NotFoundException('Leçon introuvable');
+    const { data: mod } = await client.from('course_modules')
+      .select('course_id').eq('id', lesson.module_id).eq('tenant_id', tenantId).maybeSingle();
+    if (!mod?.course_id) throw new NotFoundException('Module introuvable pour cette leçon');
+
+    const { data, error } = await client.from('student_progress').upsert({
+      tenant_id: tenantId, user_id: userId, lesson_id: lessonId, course_id: mod.course_id,
       status: dto.status, time_spent_seconds: dto.timeSpentSeconds ?? 0,
       completed_at: dto.status === 'completed' ? new Date().toISOString() : null,
     }, { onConflict: 'user_id,lesson_id' }).select('*').single();

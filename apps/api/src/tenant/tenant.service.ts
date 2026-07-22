@@ -142,7 +142,7 @@ export class TenantService {
     const resolvedSlug = canonicalTenantSlug(slug);
     const { data: tenant } = await supabase
       .from("tenants")
-      .select("id, status, primary_domain, metadata")
+      .select("id, name, slug, status, primary_domain, metadata")
       .eq("slug", resolvedSlug)
       .single();
     if (!tenant || (tenant as any).status !== "active") return null;
@@ -180,7 +180,59 @@ export class TenantService {
       .insert({ tenant_id: tenantId, user_id: userId, role: "student", status: "active" });
     // Course condition (double POST simultané) → traiter comme idempotent.
     if (error) return { ok: true, joined: false };
+    // Onboarding : notif in-app + email de bienvenue (fire-and-forget, jamais bloquant —
+    // avant ça, une inscription ne déclenchait RIEN). Inline (pas NotificationsService :
+    // NotificationsModule importe TenantModule → l'inverse créerait un cycle DI).
+    void this.sendWelcome(tenantId, userId, tenant as any).catch(() => undefined);
     return { ok: true, joined: true, role: "student" };
+  }
+
+  /**
+   * Bienvenue post-join : 1 notification in-app (type 'success', CHECK-safe) +
+   * 1 email via email_queue (expéditeur PAR TENANT depuis tenant_notification_settings,
+   * consommé par le worker isna-worker). Best-effort : toute erreur est avalée.
+   */
+  private async sendWelcome(
+    tenantId: string,
+    userId: string,
+    tenant: { name?: string | null; slug?: string | null; primary_domain?: string | null },
+  ): Promise<void> {
+    const supabase = this.authService.getClient();
+    const schoolName = tenant?.name || tenant?.slug || "votre école";
+    const portalUrl = tenant?.primary_domain ? `https://${tenant.primary_domain}/liri` : "/liri";
+    try {
+      await supabase.from("notifications").insert({
+        tenant_id: tenantId,
+        user_id: userId,
+        type: "success",
+        is_read: false,
+        title: `Bienvenue chez ${schoolName} !`,
+        body: "Votre espace est prêt : découvrez les cours, le forum et les lives depuis votre portail.",
+        action_url: "/liri",
+      });
+    } catch { /* best-effort */ }
+    try {
+      const { data: u } = await supabase.auth.admin.getUserById(userId);
+      const email = (u as any)?.user?.email;
+      if (!email) return;
+      const { data: ns } = await supabase
+        .from("tenant_notification_settings")
+        .select("email_from, email_from_name")
+        .eq("tenant_id", tenantId)
+        .maybeSingle();
+      await supabase.from("email_queue").insert({
+        tenant_id: tenantId,
+        to: email,
+        from: (ns as any)?.email_from ?? null,
+        from_name: (ns as any)?.email_from_name ?? null,
+        subject: `Bienvenue chez ${schoolName} !`,
+        html_body:
+          `<h2>Bienvenue chez ${schoolName} !</h2>` +
+          `<p>Votre compte est actif : vos cours, le forum, la messagerie et les lives vous attendent.</p>` +
+          `<p><a href="${portalUrl}" style="display:inline-block;padding:10px 22px;background:#d97757;color:#fff;border-radius:8px;text-decoration:none;font-weight:600;">Ouvrir mon espace</a></p>` +
+          `<p style="color:#777;font-size:13px;">Si le bouton ne fonctionne pas, connectez-vous depuis le site de ${schoolName}.</p>`,
+      });
+    } catch { /* best-effort */ }
   }
 
   async getTenantBySlug(slug: string) {
@@ -243,7 +295,9 @@ export class TenantService {
       .eq("is_active", true)
       .order("sort_order", { ascending: true })
       .order("price_cents", { ascending: true })
-      .limit(12);
+      // Cap de sûreté seulement : .limit(12) tronquait les 8 plans les plus chers
+      // du catalogue public (isna a 20 plans actifs).
+      .limit(100);
     return Array.isArray(data) ? data : [];
   }
 

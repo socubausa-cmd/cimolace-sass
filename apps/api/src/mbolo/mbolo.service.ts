@@ -622,19 +622,31 @@ export class MboloService {
     const cart = await this.getCart(tenantId, userId);
     if (!cart.length) throw new NotFoundException('Panier vide');
     const total = cart.reduce((s: number, i: any) => s + (i.product?.price_cents ?? 0) * i.quantity, 0);
-    const { data: order } = await (this.supabase.client as any).from('mbolo_orders').insert({ tenant_id: tenantId, user_id: userId, total_cents: total, status: 'pending' }).select('*').single();
+    // Devise RÉELLE du panier (1er produit qui en porte une) — sans ça la commande
+    // membre restait sans currency et le back-office affichait « XAF » par défaut.
+    const currency = (cart as any[]).map((i: any) => i.product?.currency).find(Boolean) ?? 'XAF';
+    // Identité acheteur SUR la commande (nom/email) : la page Commandes affichait
+    // « Client invité » pour un membre car customer_* restaient NULL.
+    let buyerEmail: string | null = null;
+    let buyerName: string | null = null;
+    try {
+      const { data: prof } = await (this.supabase.client as any).from('profiles').select('*').eq('id', userId).maybeSingle();
+      buyerEmail = prof?.email ?? prof?.contact_email ?? null;
+      buyerName = prof?.name ?? prof?.full_name ?? null;
+    } catch { /* profil absent → commande anonyme, pont CRM muet */ }
+    const orderNumber = `MB-${tenantId.slice(0, 4).toUpperCase()}-${Date.now().toString(36).toUpperCase()}`;
+    const { data: order } = await (this.supabase.client as any).from('mbolo_orders').insert({
+      tenant_id: tenantId, user_id: userId, total_cents: total, status: 'pending',
+      currency, order_number: orderNumber, channel: 'member',
+      customer_email: buyerEmail, customer_name: buyerName,
+    }).select('*').single();
     for (const item of cart as any[]) {
       await (this.supabase.client as any).from('mbolo_order_items').insert({ order_id: order.id, product_id: item.product_id, quantity: item.quantity, price_cents: item.product?.price_cents ?? 0 });
     }
     await (this.supabase.client as any).from('mbolo_cart_items').delete().eq('tenant_id', tenantId).eq('user_id', userId);
-    // Ferme le silo commerce↔CRM (commande membre) : email/nom résolus depuis profiles.
+    // Ferme le silo commerce↔CRM (commande membre) : identité déjà résolue ci-dessus.
     try {
-      const { data: prof } = await (this.supabase.client as any).from('profiles').select('*').eq('id', userId).maybeSingle();
-      await this.linkCommerceToCrm(tenantId, order, {
-        email: prof?.email ?? prof?.contact_email ?? null,
-        name: prof?.name ?? prof?.full_name ?? null,
-        userId,
-      });
+      await this.linkCommerceToCrm(tenantId, order, { email: buyerEmail, name: buyerName, userId });
     } catch { /* non bloquant */ }
     return { order, total_cents: total };
   }

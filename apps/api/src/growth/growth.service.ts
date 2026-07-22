@@ -6,17 +6,33 @@ export class GrowthService {
   constructor(private readonly supabase: SupabaseService) {}
 
   async getTenantStats(tenantId: string) {
-    const [members, lives, courses, revenue] = await Promise.all([
-      (this.supabase.client as any).from('tenant_memberships').select('*', { count: 'exact' }).eq('tenant_id', tenantId),
-      (this.supabase.client as any).from('live_sessions').select('*', { count: 'exact' }).eq('tenant_id', tenantId),
-      (this.supabase.client as any).from('courses').select('*', { count: 'exact' }).eq('tenant_id', tenantId),
-      (this.supabase.client as any).from('invoices').select('amount_paid_cents').eq('tenant_id', tenantId).eq('status', 'paid'),
+    const client = this.supabase.client as any;
+    const cnt = (q: any) => q.then((r: any) => r.count ?? 0);
+    const [members, lives, courses, revenue, students, published, modules, lessons, videos] = await Promise.all([
+      client.from('tenant_memberships').select('*', { count: 'exact' }).eq('tenant_id', tenantId),
+      client.from('live_sessions').select('*', { count: 'exact' }).eq('tenant_id', tenantId),
+      client.from('courses').select('*', { count: 'exact' }).eq('tenant_id', tenantId),
+      client.from('invoices').select('amount_paid_cents').eq('tenant_id', tenantId).eq('status', 'paid'),
+      // Compteurs TABLEAU DE BORD (famille de tables VIVANTE, tenant-scopée) — le front
+      // les lisait en direct Supabase sans scope → RLS renvoyait 0 partout.
+      cnt(client.from('tenant_memberships').select('id', { count: 'exact', head: true }).eq('tenant_id', tenantId).eq('role', 'student').eq('status', 'active')),
+      cnt(client.from('courses').select('id', { count: 'exact', head: true }).eq('tenant_id', tenantId).eq('status', 'published')),
+      cnt(client.from('course_modules').select('id', { count: 'exact', head: true }).eq('tenant_id', tenantId)),
+      cnt(client.from('course_lessons').select('id', { count: 'exact', head: true }).eq('tenant_id', tenantId)),
+      cnt(client.from('course_lessons').select('id', { count: 'exact', head: true }).eq('tenant_id', tenantId).not('video_url', 'is', null).neq('video_url', '')),
     ]);
+    const paidRows = revenue.data ?? [];
     return {
       totalMembers: members.count ?? 0,
       totalLives: lives.count ?? 0,
       totalCourses: courses.count ?? 0,
-      totalRevenueCents: (revenue.data ?? []).reduce((s: number, r: any) => s + (r.amount_paid_cents ?? 0), 0),
+      totalRevenueCents: paidRows.reduce((s: number, r: any) => s + (r.amount_paid_cents ?? 0), 0),
+      totalStudents: students,
+      publishedCourses: published,
+      totalModules: modules,
+      totalLessons: lessons,
+      totalVideos: videos,
+      paidInvoices: paidRows.length,
     };
   }
 
