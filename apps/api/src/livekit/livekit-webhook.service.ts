@@ -5,6 +5,7 @@ import { SupabaseService } from '../supabase/supabase.service';
 import type { Json } from '../supabase/supabase.service';
 import { LiveService } from '../live/live.service';
 import { EmailEngineService } from '../email-engine/email-engine.service';
+import { UsageService } from '../usage/usage.service';
 
 type WebhookEvent = {
   event: string;
@@ -29,6 +30,7 @@ export class LiveKitWebhookService {
     private readonly supabase: SupabaseService,
     private readonly liri: LiveService,
     private readonly email: EmailEngineService,
+    private readonly usage: UsageService,
   ) {
     const apiKey = config.get<string>('LIVEKIT_API_KEY') ?? '';
     const apiSecret = config.get<string>('LIVEKIT_API_SECRET') ?? '';
@@ -116,6 +118,14 @@ export class LiveKitWebhookService {
       try {
         const result = await this.liri.endLiriSessionByRoomName(roomName);
         if (result) {
+          // ── MÉTROLOGIE sessions Liri (téléconsult MEDOS, live shopping mbolo) :
+          // ~2 participants × durée. duration_seconds=0 = déjà clôturée (déjà comptée).
+          if (result.tenant_id && result.duration_seconds > 0) {
+            const minutes = Math.max(1, Math.round((result.duration_seconds / 60) * 2));
+            await this.usage.consume(result.tenant_id, 'live_minutes', minutes, 'livekit:liri_session', {
+              liri_session_id: result.session_id,
+            });
+          }
           this.logger.log(
             `Liri session ${result.session_id} auto-ended via webhook (${result.duration_seconds}s)`,
           );
@@ -172,11 +182,45 @@ export class LiveKitWebhookService {
     const metadata = this.parseMetadata(event.participant?.metadata);
     const userId = metadata.userId ?? event.participant?.identity;
     if (!userId || !liveSessionId) return;
+    // joined_at AVANT l'update (il sert au calcul des minutes-participant)
+    const { data: part } = await this.supabase.client
+      .from('live_session_participants')
+      .select('joined_at, left_at')
+      .eq('live_session_id', liveSessionId)
+      .eq('user_id', userId)
+      .maybeSingle();
     await this.supabase.client
       .from('live_session_participants')
       .update({ left_at: now })
       .eq('live_session_id', liveSessionId)
       .eq('user_id', userId);
+
+    // ── MÉTROLOGIE : minutes-participant consommées par ce passage. Best-effort,
+    // ne casse jamais le webhook. left_at déjà posé = passage déjà compté (retry).
+    try {
+      const joinedAt = (part as any)?.joined_at;
+      const alreadyCounted = Boolean((part as any)?.left_at);
+      if (joinedAt && !alreadyCounted) {
+        const minutes = Math.max(
+          1,
+          Math.round((new Date(now).getTime() - new Date(joinedAt).getTime()) / 60000),
+        );
+        const { data: sess } = await this.supabase.client
+          .from('live_sessions')
+          .select('tenant_id')
+          .eq('id', liveSessionId)
+          .maybeSingle();
+        const tenantId = (sess as any)?.tenant_id;
+        if (tenantId) {
+          await this.usage.consume(tenantId, 'live_minutes', minutes, 'livekit:participant_left', {
+            live_session_id: liveSessionId,
+            user_id: userId,
+          });
+        }
+      }
+    } catch (err) {
+      this.logger.warn('métrologie participant_left: ' + (err as Error).message);
+    }
   }
 
   private async handleEgressUpdated(event: WebhookEvent): Promise<void> {

@@ -2,6 +2,7 @@ import { BadRequestException, ForbiddenException, Injectable, NotFoundException,
 import { AuthService } from "../auth/auth.service";
 import { LiveKitService } from "../livekit/livekit.service";
 import { LiriEntitlementsService } from "../billing/liri-entitlements.service";
+import { UsageService } from "../usage/usage.service";
 import { Cycle, cycleFromPlanId, cycleCan, rankOfCycle } from "../billing/member-tier";
 
 @Injectable()
@@ -10,6 +11,7 @@ export class LiveService {
     private auth: AuthService,
     private liveKit: LiveKitService,
     private entitlements: LiriEntitlementsService,
+    private usage: UsageService,
   ) {}
 
   private get supabase() { return this.auth.getClient(); }
@@ -85,6 +87,10 @@ export class LiveService {
         );
       }
     }
+    // ── Quota MINUTES LIVE du mois (anti-ruine) : bloque uniquement le DÉMARRAGE ──
+    // Rejoindre une room existante passe par generateToken (jamais gaté ici) et un
+    // live en cours n'est jamais coupé. Fail-open si le compteur est indisponible.
+    await this.usage.assertCanStartLive(tenantId);
     const { data } = await this.supabase
       .from("live_sessions")
       .update({ status: "live", started_at: new Date().toISOString() })
@@ -1142,7 +1148,7 @@ export class LiveService {
    */
   async endLiriSessionByRoomName(
     roomName: string,
-  ): Promise<{ session_id: string; duration_seconds: number } | null> {
+  ): Promise<{ session_id: string; duration_seconds: number; tenant_id: string | null } | null> {
     const supabase = this.supabase;
     const { data } = await supabase
       .from('liri_sessions')
@@ -1152,7 +1158,7 @@ export class LiveService {
     if (!data) return null;
     const row = data as any;
     if (row.ended_at) {
-      return { session_id: row.id, duration_seconds: 0 };
+      return { session_id: row.id, duration_seconds: 0, tenant_id: row.tenant_id ?? null };
     }
     const endedAt = new Date();
     const durationSec = Math.max(
@@ -1168,7 +1174,7 @@ export class LiveService {
         duration_seconds: durationSec,
       })
       .eq('id', row.id);
-    return { session_id: row.id, duration_seconds: durationSec };
+    return { session_id: row.id, duration_seconds: durationSec, tenant_id: row.tenant_id ?? null };
   }
 
   /**

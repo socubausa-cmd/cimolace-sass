@@ -8,8 +8,9 @@ import {
   KeyRound, ShoppingBag, LifeBuoy, Settings, Plus, Trash2, Copy, Check, Send,
   Package, Users, Activity, UserCircle, ShieldAlert, Mail, XCircle,
   Webhook, ShieldCheck, LogOut, Image as ImageIcon, Printer, Globe, Lock, Sparkles, Smartphone, X,
+  Video,
 } from 'lucide-react';
-import { billingApi, tenantMembersApi, catalogApi, tenantApiKeysApi, tenantPortalApi, tenantsApi, mboloApi, teamInvitesApi } from '@/lib/api';
+import { billingApi, usageApi, tenantMembersApi, catalogApi, tenantApiKeysApi, tenantPortalApi, tenantsApi, mboloApi, teamInvitesApi } from '@/lib/api';
 import { authStore } from '@/lib/auth-store';
 import { supabase } from '@/lib/supabase';
 
@@ -289,6 +290,81 @@ function MobileMoneyModal({ plan, onClose, onPaid, onViewInvoices }) {
           </div>
         )}
       </div>
+    </div>
+  );
+}
+
+
+/* ── Consommation du mois (minutes live + crédits IA) + achat de packs ─────────
+   Quotas inclus selon le palier ; packs one-time (Stripe) valables le mois en
+   cours — le non-consommé expire. Jauge ambre dès 80 %. */
+function UsageMeter({ label, icon: Icon, data, unit }) {
+  const total = (data?.included ?? 0) + (data?.extra ?? 0);
+  const used = data?.used ?? 0;
+  const pct = total > 0 ? Math.min(100, Math.round((used / total) * 100)) : 0;
+  const warn = pct >= 80;
+  return (
+    <div className="rounded-xl border border-white/[0.08] bg-white/[0.02] p-4">
+      <div className="flex items-center justify-between mb-2">
+        <span className="flex items-center gap-2 text-sm font-semibold"><Icon className="w-4 h-4 text-[#d97757]" /> {label}</span>
+        <span className={`text-xs font-medium ${warn ? 'text-amber-400' : 'text-white/50'}`}>{used.toLocaleString('fr-FR')} / {total.toLocaleString('fr-FR')} {unit}</span>
+      </div>
+      <div className="h-2 rounded-full bg-white/[0.06] overflow-hidden">
+        <div className={`h-full rounded-full ${warn ? 'bg-amber-400' : 'bg-[#d97757]'}`} style={{ width: `${pct}%` }} />
+      </div>
+      {(data?.extra ?? 0) > 0 && (
+        <div className="mt-1.5 text-[11px] text-white/40">dont {Number(data.extra).toLocaleString('fr-FR')} {unit} de packs (valables ce mois)</div>
+      )}
+    </div>
+  );
+}
+
+function UsageAndPacks() {
+  const [usage, setUsage] = useState(null);
+  const [packs, setPacks] = useState([]);
+  const [buying, setBuying] = useState(null);
+  useEffect(() => {
+    usageApi.get().then(setUsage).catch(() => {});
+    usageApi.packs().then((p) => setPacks(Array.isArray(p) ? p : [])).catch(() => {});
+  }, []);
+  const buy = async (key) => {
+    setBuying(key);
+    try {
+      const r = await usageApi.buyPack(key);
+      if (r?.url) window.location.href = r.url;
+    } catch (e) {
+      alert(String(e?.message || e));
+    } finally {
+      setBuying(null);
+    }
+  };
+  if (!usage) return null;
+  return (
+    <div className="rounded-2xl border border-white/[0.08] bg-white/[0.03] p-6 mb-4">
+      <div className="flex items-center justify-between mb-4 flex-wrap gap-2">
+        <h3 className="text-lg font-black">Consommation du mois</h3>
+        <span className="text-xs text-white/40">Quotas réinitialisés chaque mois · packs valables le mois en cours</span>
+      </div>
+      <div className="grid sm:grid-cols-2 gap-3 mb-5">
+        <UsageMeter label="Minutes de live" icon={Video} data={usage.live_minutes} unit="min" />
+        <UsageMeter label="Crédits IA" icon={Sparkles} data={usage.ai_credits} unit="crédits" />
+      </div>
+      {packs.length > 0 && (
+        <>
+          <div className="text-sm font-semibold mb-2 text-white/80">Besoin de plus ? Packs à la carte</div>
+          <div className="grid sm:grid-cols-3 lg:grid-cols-5 gap-2">
+            {packs.map((p) => (
+              <button
+                key={p.key} type="button" onClick={() => buy(p.key)} disabled={buying === p.key}
+                className="rounded-xl border border-white/[0.08] bg-white/[0.02] p-3 text-left hover:border-[#d97757]/50 transition disabled:opacity-60 cursor-pointer"
+              >
+                <div className="text-[13px] font-bold leading-tight">{p.label}</div>
+                <div className="text-xs text-white/50 mt-1">{(p.price_cents / 100).toLocaleString('fr-FR')} €{buying === p.key ? ' · redirection…' : ''}</div>
+              </button>
+            ))}
+          </div>
+        </>
+      )}
     </div>
   );
 }
@@ -787,6 +863,7 @@ export default function CimolaceBillingDashboardPage() {
                 )}
 
                 {/* ABONNEMENT */}
+                {tab === 'abonnement' && <UsageAndPacks />}
                 {tab === 'abonnement' && (
                   subs.length === 0 ? <Empty>Aucun abonnement pour cet espace.</Empty> : (
                     <div className="space-y-4">

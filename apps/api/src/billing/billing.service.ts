@@ -4,6 +4,7 @@ import { AuthService } from "../auth/auth.service";
 import { PawaPayService } from "../pawapay/pawapay.service";
 import { WebhookService } from "../liri-public/webhook.service";
 import { EmailEngineService } from "../email-engine/email-engine.service";
+import { UsageService } from "../usage/usage.service";
 import { resolvePlanServices } from "./plan-services";
 
 @Injectable()
@@ -14,6 +15,7 @@ export class BillingService implements OnApplicationBootstrap {
     private pawapay: PawaPayService,
     private tenantWebhooks: WebhookService,
     private email: EmailEngineService,
+    private usage: UsageService,
   ) {}
   private get supabase() { return this.auth.getClient(); }
 
@@ -1596,6 +1598,27 @@ export class BillingService implements OnApplicationBootstrap {
 
   /** checkout.session.completed (mode subscription) → lie l'abo au sub Stripe + active. */
   private async onCheckoutCompleted(session: any, eventId?: string) {
+    // ── PACKS DE CRÉDITS (mode=payment, metadata.credit_pack) : créditer le compteur
+    // d'usage du tenant. Idempotence par event.id (claim atomique) ; paiement vérifié.
+    if (session?.mode === "payment" && session?.metadata?.credit_pack) {
+      if (eventId && !(await this.claimWebhookEvent(eventId))) {
+        this.logger.log(`[packs] event ${eventId} déjà traité — ignoré`);
+        return;
+      }
+      const paid = session.payment_status === "paid" || session.status === "complete";
+      if (!paid) {
+        this.logger.warn(`[packs] session ${session.id} non payée (${session.payment_status}) — ignorée`);
+        if (eventId) await this.releaseWebhookEvent(eventId);
+        return;
+      }
+      try {
+        await this.usage.applyPackFromCheckout(session.metadata, session.id);
+      } catch (e) {
+        if (eventId) await this.releaseWebhookEvent(eventId); // non-2xx → Stripe rejoue
+        throw e;
+      }
+      return;
+    }
     if (session?.mode && session.mode !== "subscription") return; // ignore le setup one-off
     const sb = this.supabase;
 

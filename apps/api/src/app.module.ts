@@ -66,6 +66,7 @@ import { ZoomEngineModule } from './zoom-engine/zoom-engine.module';
 import { SocialPublisherModule } from './social-publisher/social-publisher.module';
 // ── School Paths (parcours, cours, modules, semaines, jours, blocs) ───────────
 import { SchoolPathsModule } from './school-paths/school-paths.module';
+import { UsageModule } from './usage/usage.module';
 
 @Module({
   controllers: [HealthController],
@@ -140,6 +141,8 @@ import { SchoolPathsModule } from './school-paths/school-paths.module';
     SocialPublisherModule,
     // ── School Paths (parcours pédagogiques + grammaire semaine) ─────────────
     SchoolPathsModule,
+    // ── Compteur d'usage (minutes live + crédits IA) + packs ────────────────
+    UsageModule,
   ],
 })
 export class AppModule {}

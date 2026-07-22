@@ -1319,6 +1319,14 @@ export interface BillingCollectResult {
   currency: string;
 }
 
+// ── Consommation (minutes live + crédits IA) + packs de crédits ──────────────
+export const usageApi = {
+  get: () => api.get<ApiEnvelope<any>>("/usage").then(unwrap),
+  packs: () => api.get<ApiEnvelope<any[]>>("/usage/packs").then(unwrap),
+  buyPack: (key: string) =>
+    api.post<ApiEnvelope<{ url: string }>>(`/usage/packs/${encodeURIComponent(key)}/checkout`, {}).then(unwrap),
+};
+
 export const billingApi = {
   getPlan: () =>
     api.get<ApiEnvelope<{ subscriptions: BillingSubscription[]; invoices: BillingInvoice[] }>>("/billing/plan").then(unwrap),
