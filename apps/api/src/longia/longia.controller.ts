@@ -8,7 +8,6 @@ import { TenantGuard } from '../tenant/tenant.guard';
 import { AllowNonMember } from '../common/decorators/allow-non-member.decorator';
 import type { TenantContext } from '../tenant/tenant.types';
 import { LongiaService } from './longia.service';
-import { UsageService } from '../usage/usage.service';
 
 function sseFromGen(
   gen: AsyncGenerator<{ content: string; done: boolean }>,
@@ -38,22 +37,12 @@ function sseFromGen(
 @UseGuards(JwtAuthGuard, TenantGuard)
 @AllowNonMember()
 export class LongiaController {
-  constructor(
-    private readonly svc: LongiaService,
-    private readonly usage: UsageService,
-  ) {}
-
-  /** Garde crédits IA : 1 requête = 1 crédit ; tenant résolu par TenantGuard. */
-  private gate(req: any, source: string) {
-    const tid = req?.tenant?.id;
-    return tid ? this.usage.assertAiCredit(tid, source) : Promise.resolve();
-  }
+  constructor(private readonly svc: LongiaService) {}
 
   @Sse('chat')
-  async chat(
+  chat(
     @Req() req: Request & { query: Record<string, string> },
-  ): Promise<Observable<MessageEvent>> {
-    await this.gate(req, 'ai:longia:chat');
+  ): Observable<MessageEvent> {
     const msg = req.query.message ?? '';
     if (!msg)
       return new Observable<MessageEvent>((sub) => {
@@ -66,8 +55,7 @@ export class LongiaController {
   }
 
   @Post('chat')
-  async chatSync(@Body() d: any, @Req() req: Request) {
-    await this.gate(req, 'ai:longia:chat');
+  async chatSync(@Body() d: any) {
     return {
       reply: await this.svc.chatCompletion(
         d.messages || [{ role: 'user', content: d.message }],
@@ -77,18 +65,16 @@ export class LongiaController {
   }
 
   @Post('admin/document')
-  async analyzeDocument(@Body() d: any, @Req() req: Request) {
-    await this.gate(req, 'ai:longia:document');
+  async analyzeDocument(@Body() d: any) {
     return this.svc.analyzeDocument(d.content, d.instruction);
   }
 
   @Post('guest/live')
   async guestLive(
     @Body() d: any,
-    @CurrentTenant() t: TenantContext,
+    @CurrentTenant() _t: TenantContext,
     @Req() _r: Request,
   ) {
-    await this.usage.assertAiCredit(t.id, 'ai:longia:guest-live');
     return {
       reply: await this.svc.chatCompletion(
         [{ role: 'user', content: d.message || 'Bonjour' }],
@@ -98,8 +84,7 @@ export class LongiaController {
   }
 
   @Post('live/realtime')
-  async liveRealtime(@Body() d: any, @CurrentTenant() t: TenantContext) {
-    await this.usage.assertAiCredit(t.id, 'ai:longia:realtime');
+  async liveRealtime(@Body() d: any, @CurrentTenant() _t: TenantContext) {
     return {
       reply: await this.svc.chatCompletion(
         [{ role: 'user', content: d.transcript || d.message || '' }],

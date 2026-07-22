@@ -10,7 +10,7 @@ import {
   Webhook, ShieldCheck, LogOut, Image as ImageIcon, Printer, Globe, Lock, Sparkles, Smartphone, X,
   Video,
 } from 'lucide-react';
-import { billingApi, usageApi, tenantMembersApi, catalogApi, tenantApiKeysApi, tenantPortalApi, tenantsApi, mboloApi, teamInvitesApi } from '@/lib/api';
+import { billingApi, usageApi, aiBillingApi, tenantMembersApi, catalogApi, tenantApiKeysApi, tenantPortalApi, tenantsApi, mboloApi, teamInvitesApi } from '@/lib/api';
 import { authStore } from '@/lib/auth-store';
 import { supabase } from '@/lib/supabase';
 
@@ -319,51 +319,73 @@ function UsageMeter({ label, icon: Icon, data, unit }) {
   );
 }
 
+function PackButton({ label, priceLabel, loading, onClick }) {
+  return (
+    <button type="button" onClick={onClick} disabled={loading}
+      className="rounded-xl border border-white/[0.08] bg-white/[0.02] p-3 text-left hover:border-[#d97757]/50 transition disabled:opacity-60 cursor-pointer">
+      <div className="text-[13px] font-bold leading-tight">{label}</div>
+      <div className="text-xs text-white/50 mt-1">{priceLabel}{loading ? ' · redirection…' : ''}</div>
+    </button>
+  );
+}
+
 function UsageAndPacks() {
-  const [usage, setUsage] = useState(null);
-  const [packs, setPacks] = useState([]);
+  // Minutes live = système "usage" ; crédits IA = système "ai-billing" (dédié, ancrage frontière).
+  const [usage, setUsage] = useState(null);        // { live_minutes }
+  const [livePacks, setLivePacks] = useState([]);
+  const [ai, setAi] = useState(null);              // { balance, monthly_quota, consumed_this_month, ... }
+  const [aiPacks, setAiPacks] = useState([]);
   const [buying, setBuying] = useState(null);
   useEffect(() => {
     usageApi.get().then(setUsage).catch(() => {});
-    usageApi.packs().then((p) => setPacks(Array.isArray(p) ? p : [])).catch(() => {});
+    usageApi.packs().then((p) => setLivePacks(Array.isArray(p) ? p : [])).catch(() => {});
+    aiBillingApi.summary().then(setAi).catch(() => {});
+    aiBillingApi.topupPackages().then((p) => setAiPacks(Array.isArray(p) ? p : [])).catch(() => {});
   }, []);
-  const buy = async (key) => {
+  const go = async (key, fn) => {
     setBuying(key);
     try {
-      const r = await usageApi.buyPack(key);
-      if (r?.url) window.location.href = r.url;
-    } catch (e) {
-      alert(String(e?.message || e));
-    } finally {
-      setBuying(null);
-    }
+      const r = await fn(key);
+      const url = r?.url || r?.checkout_url;
+      if (url) window.location.href = url; else alert('Paiement indisponible (Stripe non configuré pour ce pack).');
+    } catch (e) { alert(String(e?.message || e)); }
+    finally { setBuying(null); }
   };
-  if (!usage) return null;
+  if (!usage && !ai) return null;
+  const aiData = ai ? { included: ai.monthly_quota || 0, extra: Math.max(0, (ai.balance || 0) - Math.max(0, (ai.monthly_quota || 0) - (ai.consumed_this_month || 0))), used: ai.consumed_this_month || 0 } : null;
   return (
     <div className="rounded-2xl border border-white/[0.08] bg-white/[0.03] p-6 mb-4">
       <div className="flex items-center justify-between mb-4 flex-wrap gap-2">
         <h3 className="text-lg font-black">Consommation du mois</h3>
-        <span className="text-xs text-white/40">Quotas réinitialisés chaque mois · packs valables le mois en cours</span>
+        <span className="text-xs text-white/40">Réinitialisé chaque mois · recharges valables le mois en cours</span>
       </div>
       <div className="grid sm:grid-cols-2 gap-3 mb-5">
-        <UsageMeter label="Minutes de live" icon={Video} data={usage.live_minutes} unit="min" />
-        <UsageMeter label="Crédits IA" icon={Sparkles} data={usage.ai_credits} unit="crédits" />
+        {usage?.live_minutes && <UsageMeter label="Minutes de live" icon={Video} data={usage.live_minutes} unit="min" />}
+        {aiData && <UsageMeter label={`Crédits IA · solde ${Math.round(ai.balance).toLocaleString('fr-FR')}`} icon={Sparkles} data={aiData} unit="cr." />}
       </div>
-      {packs.length > 0 && (
-        <>
-          <div className="text-sm font-semibold mb-2 text-white/80">Besoin de plus ? Packs à la carte</div>
+
+      {livePacks.length > 0 && (
+        <div className="mb-4">
+          <div className="text-sm font-semibold mb-2 text-white/80 flex items-center gap-1.5"><Video className="w-3.5 h-3.5 text-[#d97757]" /> Recharge minutes de live</div>
           <div className="grid sm:grid-cols-3 lg:grid-cols-5 gap-2">
-            {packs.map((p) => (
-              <button
-                key={p.key} type="button" onClick={() => buy(p.key)} disabled={buying === p.key}
-                className="rounded-xl border border-white/[0.08] bg-white/[0.02] p-3 text-left hover:border-[#d97757]/50 transition disabled:opacity-60 cursor-pointer"
-              >
-                <div className="text-[13px] font-bold leading-tight">{p.label}</div>
-                <div className="text-xs text-white/50 mt-1">{(p.price_cents / 100).toLocaleString('fr-FR')} €{buying === p.key ? ' · redirection…' : ''}</div>
-              </button>
+            {livePacks.map((p) => (
+              <PackButton key={p.key} label={p.label} loading={buying === p.key}
+                priceLabel={`${(p.price_cents / 100).toLocaleString('fr-FR')} €`} onClick={() => go(p.key, usageApi.buyPack)} />
             ))}
           </div>
-        </>
+        </div>
+      )}
+
+      {aiPacks.length > 0 && (
+        <div>
+          <div className="text-sm font-semibold mb-2 text-white/80 flex items-center gap-1.5"><Sparkles className="w-3.5 h-3.5 text-[#d97757]" /> Recharge crédits IA</div>
+          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-2">
+            {aiPacks.map((p) => (
+              <PackButton key={p.key} label={p.label} loading={buying === p.key}
+                priceLabel={`${(p.price_cents / 100).toLocaleString('fr-FR')} €${p.bonus_label ? ` · ${p.bonus_label}` : ''}`} onClick={() => go(p.key, aiBillingApi.buyTopup)} />
+            ))}
+          </div>
+        </div>
       )}
     </div>
   );
