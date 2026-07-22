@@ -4,7 +4,9 @@ import { useNavigate } from 'react-router-dom';
 import {
   X, Building2, Users, ShoppingBag, CalendarCheck, Ticket, UserCheck,
   MessageSquare, Send, Sparkles, CreditCard, Copy, Check, Mail, Link2,
+  MessageCircle, Smartphone, QrCode,
 } from 'lucide-react';
+import { QRCodeSVG } from 'qrcode.react';
 import { crmApi } from '@/lib/api-v2';
 import { useToast } from '@/components/ui/use-toast';
 
@@ -40,6 +42,7 @@ export default function CrmCompanyDetail({ company, onClose }) {
   const [platform, setPlatform] = useState(null);
   const [loading, setLoading] = useState(true);
   const [pay, setPay] = useState({ loading: false, url: null, copied: false });
+  const [showQr, setShowQr] = useState(false);
   const reqRef = useRef(0);
   const id = company?.id;
 
@@ -106,13 +109,18 @@ export default function CrmCompanyDetail({ company, onClose }) {
     if (!pay.url) return;
     try { await navigator.clipboard.writeText(pay.url); setPay((p) => ({ ...p, copied: true })); } catch { /* clipboard bloqué */ }
   };
+  // Message commun à tous les canaux d'envoi.
+  const payMsg = () => {
+    const amt = billing?.amountCents != null ? ` (${fmtMoney(billing.amountCents, billing.currency)}/mois)` : '';
+    return `Bonjour,\n\nVoici le lien pour régler votre abonnement Cimolace${amt} :\n${pay.url}\n\nMerci,\nL'équipe Cimolace`;
+  };
+  const shareWhatsApp = () => { if (pay.url) window.open(`https://wa.me/?text=${encodeURIComponent(payMsg())}`, '_blank', 'noopener'); };
+  const shareSms = () => { if (pay.url) window.location.href = `sms:?&body=${encodeURIComponent(payMsg())}`; };
   const mailtoLink = () => {
+    if (!pay.url) return;
     const to = billing?.ownerEmail || '';
     const subject = encodeURIComponent(`Votre abonnement Cimolace — ${company.name || ''}`);
-    const body = encodeURIComponent(
-      `Bonjour,\n\nVoici le lien pour régler votre abonnement mensuel :\n${pay.url}\n\nMerci,\nL'équipe Cimolace`,
-    );
-    window.location.href = `mailto:${to}?subject=${subject}&body=${body}`;
+    window.location.href = `mailto:${to}?subject=${subject}&body=${encodeURIComponent(payMsg())}`;
   };
   const STATUS_LABEL = {
     active: { t: 'Actif', c: 'var(--crm-green, #9fbf8f)' },
@@ -189,21 +197,40 @@ export default function CrmCompanyDetail({ company, onClose }) {
                         {pay.loading ? 'Génération…' : 'Générer un lien de paiement'}
                       </button>
                     ) : (
-                      <div className="mt-3 space-y-2">
+                      <div className="mt-3 space-y-2.5">
+                        {/* Lien + copie rapide */}
                         <div className="flex items-center gap-2 rounded-lg border lp-line px-2.5 py-2" style={{ background: 'var(--crm-sunken, #211f1b)' }}>
                           <Link2 size={13} className="shrink-0 lp-faint" />
-                          <span className="truncate text-[12px] lp-muted">{pay.url}</span>
-                        </div>
-                        <div className="flex gap-2">
-                          <button type="button" onClick={copyLink} className="lp-tr flex flex-1 cursor-pointer items-center justify-center gap-1.5 rounded-lg border lp-line px-3 py-2 text-[12.5px] font-medium lp-ink lp-railbtn">
+                          <span className="min-w-0 flex-1 truncate text-[12px] lp-muted">{pay.url}</span>
+                          <button type="button" onClick={copyLink} aria-label="Copier le lien" className="lp-tr shrink-0 cursor-pointer rounded-md p-1 lp-muted lp-railbtn">
                             {pay.copied ? <Check size={14} className="lp-coral" /> : <Copy size={14} />}
-                            {pay.copied ? 'Copié' : 'Copier'}
-                          </button>
-                          <button type="button" onClick={mailtoLink} className="lp-tr flex flex-1 cursor-pointer items-center justify-center gap-1.5 rounded-lg px-3 py-2 text-[12.5px] font-semibold text-white" style={{ background: 'var(--crm-accent, #d97757)' }}>
-                            <Mail size={14} /> Envoyer par email
                           </button>
                         </div>
-                        <p className="px-0.5 text-[11px] lp-faint">Lien Stripe hébergé — le client règle son abonnement en ligne. Rien n'est débité tant qu'il ne paie pas.</p>
+                        {/* Canaux d'envoi */}
+                        <div className="grid grid-cols-2 gap-2">
+                          <button type="button" onClick={shareWhatsApp} className="lp-tr flex cursor-pointer items-center justify-center gap-1.5 rounded-lg px-3 py-2.5 text-[12.5px] font-semibold text-white" style={{ background: '#25D366' }}>
+                            <MessageCircle size={15} /> WhatsApp
+                          </button>
+                          <button type="button" onClick={shareSms} className="lp-tr flex cursor-pointer items-center justify-center gap-1.5 rounded-lg border lp-line px-3 py-2.5 text-[12.5px] font-medium lp-ink lp-railbtn">
+                            <Smartphone size={15} /> SMS
+                          </button>
+                          <button type="button" onClick={mailtoLink} className="lp-tr flex cursor-pointer items-center justify-center gap-1.5 rounded-lg border lp-line px-3 py-2.5 text-[12.5px] font-medium lp-ink lp-railbtn">
+                            <Mail size={15} /> Email
+                          </button>
+                          <button type="button" onClick={() => setShowQr((v) => !v)} className="lp-tr flex cursor-pointer items-center justify-center gap-1.5 rounded-lg border px-3 py-2.5 text-[12.5px] font-medium lp-railbtn" style={showQr ? { borderColor: 'var(--crm-accent, #d97757)', color: 'var(--crm-accent, #d97757)' } : { borderColor: 'var(--crm-line, rgba(245,244,238,.09))', color: 'var(--crm-ink, #f5f4ee)' }}>
+                            <QrCode size={15} /> QR code
+                          </button>
+                        </div>
+                        {/* Panneau QR (in-person / mobile) */}
+                        {showQr && (
+                          <div className="flex flex-col items-center gap-2 rounded-lg border lp-line py-3.5" style={{ background: 'var(--crm-sunken, #211f1b)' }}>
+                            <div className="rounded-lg bg-white p-2.5">
+                              <QRCodeSVG value={pay.url} size={132} bgColor="#ffffff" fgColor="#0f172a" level="M" />
+                            </div>
+                            <p className="text-[11px] lp-faint">Le client scanne pour payer.</p>
+                          </div>
+                        )}
+                        <p className="px-0.5 text-[11px] lp-faint">Lien Stripe hébergé — rien n'est débité tant que le client ne paie pas.</p>
                       </div>
                     )}
                   </div>
