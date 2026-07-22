@@ -600,7 +600,7 @@ export const crmApi = {
   // Back-office : génère un lien de paiement Stripe pour un tenant (relance/encaissement).
   // Owner Cimolace uniquement (garde CimolaceStaffGuard côté API). Renvoie { url, ... }.
   createTenantPaymentLink: (tenantId: string, planKey?: string) =>
-    apiV2.post<ApiEnvelope<any>>(`/billing/tenants/${tenantId}/payment-link`, planKey ? { planKey } : {}).then(unwrap),
+    apiV2.post<ApiEnvelope<any>>(`/admin/billing/tenants/${tenantId}/payment-link`, planKey ? { planKey } : {}).then(unwrap),
   // Recherche globale (Cmd-K) — OBJET { contacts, companies, deals }.
   search: (q: string, limit = 8) =>
     apiV2.get<ApiEnvelope<any>>('/crm/search', { params: { q, limit: String(limit) } }).then(unwrap),
