@@ -19,7 +19,7 @@ import { MasterclassFactoryService } from './masterclass-factory.service';
 export class MasterclassFactoryController {
   constructor(private svc: MasterclassFactoryService) {}
   @Post('generate') @Roles('owner','admin','teacher') generate(@Body() d: any, @CurrentTenant() t: TenantContext, @Req() r: Request) { return this.svc.generateFromText(t.id, (r as any).user.id, d.title, d.sourceText); }
-  @Post('precepteur') @Roles('owner','admin','teacher') savePrecepteur(@Body() d: any, @CurrentTenant() t: TenantContext, @Req() r: Request) { return this.svc.savePrecepteurCourse(t.id, (r as any).user.id, d.title, d.precepteurCourse, d.sourceText); }
+  @Post('precepteur') @Roles('owner','admin','teacher') savePrecepteur(@Body() d: any, @CurrentTenant() t: TenantContext, @Req() r: Request) { return this.svc.savePrecepteurCourse(t.id, (r as any).user.id, d.title, d.precepteurCourse, d.sourceText, d.sourceVideoId); }
   @Get() list(@CurrentTenant() t: TenantContext) { return this.svc.listMasterclasses(t.id); }
   @Get(':id') get(@Param('id') id: string, @CurrentTenant() t: TenantContext) { return this.svc.getMasterclass(t.id, id); }
   @Post('analyze') @Roles('owner','admin','teacher') analyzeDoc(@Body() d: any, @CurrentTenant() t: TenantContext) { return this.svc.analyzeDocument(t.id, d.url); }

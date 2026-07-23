@@ -54,7 +54,7 @@ function deriveChapters(cues, duration) {
   return out;
 }
 
-function ImmersiveVideoPlayer({ src, poster, title, description, crumb, cues, transcript, chapters, onExit, embedded = false }, ref) {
+function ImmersiveVideoPlayer({ src, poster, title, description, crumb, cues, transcript, chapters, onExit, embedded = false, headerAction = null }, ref) {
   const vref = useRef(null);
   const railRef = useRef(null);
   const [playing, setPlaying] = useState(false);
@@ -176,6 +176,7 @@ function ImmersiveVideoPlayer({ src, poster, title, description, crumb, cues, tr
             {title || 'Session enregistrée'}
           </h1>
         </div>
+        {headerAction}
         {narrow && hasRail && (
           <button type="button" onClick={() => setRailOpen(true)} className="ivp-ctl" style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '7px 11px', borderRadius: 10, border: `1px solid ${T.line}`, background: 'rgba(244,239,230,0.05)', color: T.ink, cursor: 'pointer', fontFamily: T.grotesque, fontSize: 12, fontWeight: 700 }}>
             <AlignLeft size={14} /> Transcription

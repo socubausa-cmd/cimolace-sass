@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { Play, Search, Film } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { Play, Search, Film, GraduationCap } from 'lucide-react';
 import { apiV2 } from '@/lib/api-v2';
 import ImmersiveVideoPlayer from '@/components/school/formations/ImmersiveVideoPlayer';
 
@@ -24,6 +25,7 @@ const fmtDur = (sec) => {
  * Clic → lecteur (playback_url) + description + (transcription quand disponible).
  */
 export default function VideothequePage() {
+  const navigate = useNavigate();
   const [videos, setVideos] = useState(null); // null = chargement
   const [error, setError] = useState('');
   const [q, setQ] = useState('');
@@ -56,6 +58,12 @@ export default function VideothequePage() {
           cues={Array.isArray(active.transcript_cues) ? active.transcript_cues : undefined}
           transcript={active.transcript_text || active.transcript}
           onExit={() => setActive(null)}
+          headerAction={active.precepteur_id ? (
+            <button type="button" onClick={() => navigate(`/liri/precepteur/cours/${active.precepteur_id}`)}
+              style={{ display: 'inline-flex', alignItems: 'center', gap: 7, padding: '8px 14px', borderRadius: 999, border: `1px solid ${C.coral}`, background: C.coralTint, color: '#f0c3ac', cursor: 'pointer', fontSize: 12.5, fontWeight: 700, whiteSpace: 'nowrap' }}>
+              <GraduationCap size={14} /> Suivre le cours
+            </button>
+          ) : null}
         />
       )}
 
@@ -93,6 +101,7 @@ export default function VideothequePage() {
                     </span>
                   </span>
                   {v.duration_sec ? <span style={{ position: 'absolute', right: 8, bottom: 8, fontSize: 11, fontWeight: 600, padding: '2px 7px', borderRadius: 6, background: 'rgba(0,0,0,.6)', color: '#fff' }}>{fmtDur(v.duration_sec)}</span> : null}
+                  {v.precepteur_id ? <span style={{ position: 'absolute', left: 8, top: 8, display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: 10.5, fontWeight: 700, padding: '3px 8px', borderRadius: 999, background: 'rgba(217,119,87,.92)', color: '#fff' }}><GraduationCap size={11} /> Cours</span> : null}
                 </div>
                 <div style={{ padding: '11px 13px 14px' }}>
                   <div style={{ fontSize: 14, fontWeight: 600, lineHeight: 1.3, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>{v.title || 'Cours enregistré'}</div>

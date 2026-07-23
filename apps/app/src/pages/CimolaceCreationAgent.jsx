@@ -670,6 +670,13 @@ const SCENE_SUGGEST_CSS = `
 /* Champ « écrire » ouvert : la scène AMÉNAGE l'espace (recule) pour ne pas être recouverte par la barre de saisie. */
 .cca-input-open .cca-scene:has(.cca-ss) .cca-cards,.cca-input-open .cca-scene:has(.cca-ss) .cca-tl,.cca-input-open .cca-scene:has(.cca-ss) .cca-st,.cca-input-open .cca-scene:has(.cca-ss) .cca-cmp,.cca-input-open .cca-scene:has(.cca-ss) .cca-tuto{padding-bottom:184px}
 @media (max-width:640px){.cca-ss{padding:32px 4vw 15px;gap:7px}}
+/* MOBILE : la barre de suite s'enroule sur 3-4 rangées (~210px) vs ~120px desktop → le dégagement
+   fixe de 120px laissait la dernière carte passer SOUS la barre. On réserve la hauteur réelle du
+   pire cas (barre + marge) pour que le contenu scrollable dégage toujours la barre. */
+@media (max-width:640px){
+  .cca-scene:has(.cca-ss) .cca-cards,.cca-scene:has(.cca-ss) .cca-tl,.cca-scene:has(.cca-ss) .cca-st,.cca-scene:has(.cca-ss) .cca-cmp,.cca-scene:has(.cca-ss) .cca-tuto{padding-bottom:236px}
+  .cca-input-open .cca-scene:has(.cca-ss) .cca-cards,.cca-input-open .cca-scene:has(.cca-ss) .cca-tl,.cca-input-open .cca-scene:has(.cca-ss) .cca-st,.cca-input-open .cca-scene:has(.cca-ss) .cca-cmp,.cca-input-open .cca-scene:has(.cca-ss) .cca-tuto{padding-bottom:300px}
+}
 `;
 // Actions de CONVERSION (mises en avant dans la suite) ; les intentions « molles » (comprendre,
 // découvrir, comparer, visiter) sont couvertes par les chips de sujets, pas par un CTA terra.
@@ -2657,9 +2664,13 @@ export default function CimolaceCreationAgent({ tenantSlug: tenantSlugProp = nul
           .cca-connecte { display: none !important; }
           .cca-monespace-label { display: none !important; }
           .cca-monespace { padding: 6px 8px !important; }
+          /* Engagé (scène ouverte) : le bouton « Retour » occupe le coin haut-gauche → le badge
+             marque décoratif s'efface en mobile pour ne pas se chevaucher (l'identité reste portée
+             par « Retour » + le contenu de la scène). Desktop = inchangé (place pour les deux). */
+          .cca-topbrand-eng { opacity: 0 !important; pointer-events: none !important; }
         }
       `}</style>
-      <div className="cca-topbrand" style={{ position: 'absolute', top: 18, left: '50%', transform: 'translateX(-50%)', display: 'flex', alignItems: 'center', gap: 14, pointerEvents: 'none', zIndex: 6 }}>
+      <div className={`cca-topbrand${engaged ? ' cca-topbrand-eng' : ''}`} style={{ position: 'absolute', top: 18, left: '50%', transform: 'translateX(-50%)', display: 'flex', alignItems: 'center', gap: 14, pointerEvents: 'none', zIndex: 6 }}>
         {isTenantRealm ? (
           <>
             <span style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '6px 15px', border: '1px solid rgba(230,204,146,.26)', borderRadius: 999, background: 'rgba(230,204,146,.045)' }}>
