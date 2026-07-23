@@ -19,7 +19,10 @@ import { broadcastRealtime } from '@/lib/realtimeBroadcast';
  */
 
 const ACTIVE_POLL_MS = 5000; // fil ouvert (1 conversation)
-const LIST_POLL_MS = 20000; // liste complète + badges non-lus
+// Liste complète + badges non-lus : le fan-out N+1 (listConversations puis getConversation par
+// conversation) coûte ~2s. Le badge reste frais via le fetch au montage + le broadcast realtime,
+// donc on ralentit ce poll de fond 20s→45s (moins de fan-out lourds répétés hors messagerie).
+const LIST_POLL_MS = 45000;
 const HIDDEN_POLL_MS = 60000; // onglet caché : refresh complet ralenti
 const FETCH_ERROR_LOG_MS = 15000; // throttle des logs d'erreur
 const NETWORK_BACKOFF_MS = 120000; // pause après échecs réseau répétés
