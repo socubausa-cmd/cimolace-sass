@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { messagingApi } from '@/lib/api-v2';
 import { supabase } from '@/lib/customSupabaseClient';
+import { authStore } from '@/lib/auth-store';
 import { broadcastRealtime } from '@/lib/realtimeBroadcast';
 
 /**
@@ -261,27 +262,24 @@ export function useRealtimeMessaging(userId, profilesMap = {}) {
     peerConvMapRef.current = map;
   }, [userId]);
 
-  /** Récupère TOUS les messages (liste des conversations + messages de chacune). */
+  /** Récupère TOUS les messages des conversations du user — en UN SEUL hop Supabase (RPC
+   *  `messaging_all_messages`, SECURITY DEFINER) au lieu de `listConversations()` + N×
+   *  `getConversation()` (1+N appels API Railway = double-hop + N+1 ~2s mesuré). Le filtre de
+   *  participation (auth.uid()) est authoritatif dans la fonction (la table `messages` a RLS
+   *  sans policy → seul un SECURITY DEFINER peut la lire côté client, sans ouvrir de RLS). Le
+   *  front dérive ensuite conversations/non-lus/dernier message DEPUIS ces messages → inchangé. */
   const fetchAllMessages = useCallback(async () => {
     if (!userId) return null;
     try {
-      const convs = await messagingApi.listConversations();
-      const list = Array.isArray(convs) ? convs : [];
-      if (list.length === 0) return [];
-
-      const perConv = await Promise.all(
-        list.map((c) =>
-          messagingApi
-            .getConversation(c.id)
-            .then((r) => (Array.isArray(r) ? r : []))
-            .catch(() => null)
-        )
-      );
-      // Toutes les sous-requêtes ont échoué → échec réseau (ne pas écraser l'état).
-      if (perConv.every((r) => r === null)) return null;
+      const slug = authStore.getTenantSlug?.();
+      if (!slug) return [];
+      const { data, error } = await supabase.rpc('messaging_all_messages', { p_tenant_slug: slug });
+      if (error) { logFetchError(error); return null; }
+      const rows = Array.isArray(data) ? data : [];
+      if (rows.length === 0) return [];
 
       const dedup = new Map();
-      for (const m of prepareRows(perConv.filter(Boolean).flat())) {
+      for (const m of prepareRows(rows)) {
         dedup.set(m.id, m);
       }
       const merged = Array.from(dedup.values());
