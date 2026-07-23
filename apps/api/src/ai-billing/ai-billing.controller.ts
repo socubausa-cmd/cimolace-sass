@@ -24,6 +24,7 @@ import { RolesGuard } from '../common/guards/roles.guard';
 import { Roles } from '../common/decorators/roles.decorator';
 import { CurrentTenant } from '../tenant/current-tenant.decorator';
 import type { TenantContext } from '../tenant/tenant.types';
+import { CimolaceStaffGuard } from '../cimolace-backoffice/cimolace-staff.guard';
 import { AiBillingService } from './ai-billing.service';
 
 // RolesGuard au niveau classe : les handlers SANS @Roles (pricing, topup-packages,
@@ -104,6 +105,25 @@ export class AiBillingController {
   @Roles('owner', 'admin')
   async refill(@CurrentTenant() t: TenantContext) {
     return this.svc.monthlyRefill(t.id);
+  }
+
+  // ─── Dépassement à l'usage (overage) ──────────────────────────────────────
+
+  /** GET /ai-billing/overage → statut opt-in + accumulé + plafond + prix */
+  @Get('overage')
+  @Roles('owner', 'admin')
+  async overageStatus(@CurrentTenant() t: TenantContext) {
+    return this.svc.getOverageStatus(t.id);
+  }
+
+  /** POST /ai-billing/overage { enabled?, cap_eur? } → activer/plafonner le dépassement */
+  @Post('overage')
+  @Roles('owner', 'admin')
+  async setOverage(
+    @CurrentTenant() t: TenantContext,
+    @Body() body: { enabled?: boolean; cap_eur?: number },
+  ) {
+    return this.svc.setOverage(t.id, body);
   }
 
   /**
@@ -201,7 +221,7 @@ export class AiBillingController {
     };
   }
 
-  /** Récap rapide pour le widget header (solde + pourcentage utilisé) */
+  /** Récap rapide pour le widget header (solde + pourcentage utilisé + dépassement) */
   @Get('summary')
   @Roles('owner', 'admin')
   async summary(@CurrentTenant() t: TenantContext) {
@@ -210,6 +230,7 @@ export class AiBillingController {
     const currentBalance = parseFloat(balance.balance_credits || '0');
     const consumedThisMonth = Math.max(0, monthlyQuota - currentBalance);
     const percentUsed = monthlyQuota > 0 ? (consumedThisMonth / monthlyQuota) * 100 : 0;
+    const overage = await this.svc.getOverageStatus(t.id);
 
     return {
       balance: currentBalance,
@@ -222,6 +243,31 @@ export class AiBillingController {
       total_purchased_lifetime: parseFloat(balance.total_purchased || '0'),
       is_blocked: balance.is_blocked,
       low_balance_warning: currentBalance < monthlyQuota * 0.1,
+      overage,
     };
+  }
+}
+
+// ═════════════════════════════════════════════════════════════════════════════
+// AiBillingAdminController — endpoints FONDATEUR (Cimolace staff) pour le
+// dépassement à l'usage : visualiser les factures pending et déclencher le
+// règlement manuellement (le pg_cron le fait aussi le 1er de chaque mois).
+// ═════════════════════════════════════════════════════════════════════════════
+@Controller('admin/ai-billing')
+export class AiBillingAdminController {
+  constructor(private readonly svc: AiBillingService) {}
+
+  /** GET /admin/ai-billing/overage/pending → factures de dépassement à régler */
+  @Get('overage/pending')
+  @UseGuards(JwtAuthGuard, CimolaceStaffGuard)
+  async pending() {
+    return this.svc.listPendingOverage();
+  }
+
+  /** POST /admin/ai-billing/overage/settle → règlement de fin de mois (crée les factures) */
+  @Post('overage/settle')
+  @UseGuards(JwtAuthGuard, CimolaceStaffGuard)
+  async settle() {
+    return this.svc.settleOverage();
   }
 }

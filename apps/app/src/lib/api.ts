@@ -1366,6 +1366,10 @@ export const aiBillingApi = {
   topupPackages: () => api.get<ApiEnvelope<any[]>>("/ai-billing/topup-packages").then(unwrap),
   buyTopup: (key: string) =>
     api.post<ApiEnvelope<{ url?: string; checkout_url?: string }>>("/ai-billing/topup/checkout", { pack_key: key }).then(unwrap),
+  // Dépassement à l'usage (overage postpaid) : statut + activation/plafond
+  overage: () => api.get<ApiEnvelope<any>>("/ai-billing/overage").then(unwrap),
+  setOverage: (body: { enabled?: boolean; cap_eur?: number }) =>
+    api.post<ApiEnvelope<any>>("/ai-billing/overage", body).then(unwrap),
 };
 
 export const billingApi = {

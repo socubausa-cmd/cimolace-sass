@@ -335,4 +335,78 @@ export class AiBillingService {
       metadata: { capped_rollover: cappedRollover },
     });
   }
+
+  // ─── DÉPASSEMENT À L'USAGE (overage postpaid) ─────────────────────────────
+
+  /** Statut du dépassement pour un tenant (opt-in, accumulé, plafond, prix). */
+  async getOverageStatus(tenantId: string) {
+    const { data } = await (this.supabase.client as any)
+      .from('ai_credit_balances')
+      .select('overage_enabled, overage_credits, overage_cap_eur, plan_tier, balance_credits')
+      .eq('tenant_id', tenantId)
+      .maybeSingle();
+
+    if (!data) {
+      return {
+        enabled: false, overage_credits: 0, cap_eur: 50,
+        price_eur_per_credit: 0.02, accrued_eur: 0, plan_tier: 'free', eligible: false,
+      };
+    }
+
+    const { data: q } = await (this.supabase.client as any)
+      .from('ai_plan_quotas')
+      .select('overage_price_eur, allow_overage')
+      .eq('plan_tier', data.plan_tier)
+      .maybeSingle();
+
+    const price = parseFloat(q?.overage_price_eur ?? '') || 0.02;
+    const oc = parseFloat(data.overage_credits ?? '0');
+    const cap = parseFloat(data.overage_cap_eur ?? '50');
+    return {
+      enabled: !!data.overage_enabled,
+      overage_credits: oc,
+      cap_eur: cap,
+      price_eur_per_credit: price,
+      accrued_eur: Math.round(oc * price * 100) / 100,
+      remaining_eur: Math.max(0, Math.round((cap - oc * price) * 100) / 100),
+      plan_tier: data.plan_tier,
+      // éligible à l'opt-in : plan payant (pro/business). Le fondateur peut élargir.
+      eligible: ['pro', 'business'].includes(data.plan_tier) || !!q?.allow_overage,
+    };
+  }
+
+  /** Active/désactive le dépassement + plafond anti-surprise (owner/admin tenant). */
+  async setOverage(tenantId: string, input: { enabled?: boolean; cap_eur?: number }) {
+    const patch: Record<string, unknown> = {};
+    if (typeof input.enabled === 'boolean') patch.overage_enabled = input.enabled;
+    if (typeof input.cap_eur === 'number' && isFinite(input.cap_eur) && input.cap_eur >= 0) {
+      patch.overage_cap_eur = Math.min(input.cap_eur, 5000); // garde-fou dur : 5000 € max
+    }
+    if (Object.keys(patch).length === 0) {
+      throw new BadRequestException('Rien à modifier (enabled et/ou cap_eur requis).');
+    }
+    // Assure l'existence du solde avant l'update
+    await this.getBalance(tenantId);
+    const { error } = await (this.supabase.client as any)
+      .from('ai_credit_balances')
+      .update(patch)
+      .eq('tenant_id', tenantId);
+    if (error) throw new BadRequestException(error.message);
+    return this.getOverageStatus(tenantId);
+  }
+
+  /** [FONDATEUR] Liste les factures de dépassement à régler (status=pending). */
+  async listPendingOverage() {
+    const { data } = await (this.supabase.client as any)
+      .from('ai_overage_pending')
+      .select('*');
+    return data ?? [];
+  }
+
+  /** [FONDATEUR] Déclenche le règlement de fin de mois (crée les factures pending). */
+  async settleOverage() {
+    const { data, error } = await (this.supabase.client as any).rpc('settle_ai_overage', {});
+    if (error) throw new BadRequestException(error.message);
+    return { settled: data ?? [] };
+  }
 }

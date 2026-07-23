@@ -17,7 +17,7 @@ import { motion } from 'framer-motion';
 import {
   Coins, TrendingDown, ShoppingCart, Calendar, Zap, AlertTriangle,
   ArrowUpRight, ArrowDownRight, Loader2, Check, Sparkles, BarChart3,
-  RefreshCw, ChevronRight,
+  RefreshCw, ChevronRight, Gauge, ShieldCheck,
 } from 'lucide-react';
 import { supabase } from '@/lib/customSupabaseClient';
 import { useAuth } from '@/contexts/SupabaseAuthContext';
@@ -95,6 +95,119 @@ function StatCard({ icon: Icon, label, value, sub, color = 'gold' }) {
       </div>
       <p className="text-3xl font-bold" style={{ color: T.t1 }}>{value}</p>
       {sub && <p className="text-xs mt-1" style={{ color: T.t3 }}>{sub}</p>}
+    </div>
+  );
+}
+
+// ── Dépassement à l'usage (overage postpaid) ────────────────────────────────
+function OverageManager({ overage, onToggle, onSaveCap, busy }) {
+  const o = overage || {};
+  const [cap, setCap] = useState(o.cap_eur ?? 50);
+  useEffect(() => { setCap(o.cap_eur ?? 50); }, [o.cap_eur]);
+
+  const price = o.price_eur_per_credit ?? 0.02;
+  const accrued = o.accrued_eur ?? 0;
+  const capEur = o.cap_eur ?? 50;
+  const pct = capEur > 0 ? Math.min(100, (accrued / capEur) * 100) : 0;
+  const eligible = o.eligible !== false;
+
+  return (
+    <div className="rounded-xl p-5" style={{ background: T.surfaceCard, border: `1px solid ${T.border}` }}>
+      <div className="flex items-start justify-between gap-4 flex-wrap">
+        <div>
+          <h3 className="font-semibold mb-1 flex items-center gap-2" style={{ color: T.t1 }}>
+            <Gauge className="w-4 h-4" style={{ color: T.gold }} />
+            Dépassement à l'usage
+          </h3>
+          <p className="text-sm max-w-lg" style={{ color: T.t2 }}>
+            Quand votre quota mensuel est épuisé, continuez à utiliser l'IA sans coupure.
+            Le dépassement est facturé en fin de mois à <span className="font-semibold" style={{ color: T.gold }}>{price.toFixed(2).replace('.', ',')} €/crédit</span>,
+            dans la limite du plafond que vous fixez.
+          </p>
+        </div>
+        {/* Interrupteur opt-in */}
+        <button
+          type="button"
+          disabled={busy || !eligible}
+          onClick={() => onToggle(!o.enabled)}
+          className="relative inline-flex items-center rounded-full transition"
+          style={{
+            width: 52, height: 30,
+            background: o.enabled ? T.success : T.surface2,
+            border: `1px solid ${o.enabled ? T.success : T.border}`,
+            opacity: (busy || !eligible) ? 0.5 : 1,
+            cursor: (busy || !eligible) ? 'not-allowed' : 'pointer',
+          }}
+          title={eligible ? (o.enabled ? 'Désactiver' : 'Activer') : 'Réservé aux plans payants'}
+        >
+          <span style={{
+            position: 'absolute', top: 3, left: o.enabled ? 25 : 3,
+            width: 22, height: 22, borderRadius: '50%', background: '#fff',
+            transition: 'left 160ms cubic-bezier(0.22,1,0.36,1)',
+          }} />
+        </button>
+      </div>
+
+      {!eligible && (
+        <p className="text-xs mt-3" style={{ color: T.t3 }}>
+          Le dépassement à l'usage est disponible sur les plans <strong>Pro</strong> et <strong>Business</strong>.
+        </p>
+      )}
+
+      {o.enabled && (
+        <div className="mt-5 space-y-4">
+          {/* Jauge du dépassement en cours */}
+          <div>
+            <div className="flex items-center justify-between text-xs mb-1" style={{ color: T.t2 }}>
+              <span>Dépassement en cours ce mois</span>
+              <span className="font-semibold" style={{ color: pct >= 80 ? T.warning : T.t1 }}>
+                {accrued.toFixed(2).replace('.', ',')} € / {capEur.toFixed(0)} €
+              </span>
+            </div>
+            <div className="w-full rounded-full overflow-hidden" style={{ height: 8, background: T.surface2 }}>
+              <div style={{
+                width: `${pct}%`, height: '100%',
+                background: pct >= 80 ? T.warning : T.gold, transition: 'width 300ms ease',
+              }} />
+            </div>
+            <p className="text-xs mt-1" style={{ color: T.t3 }}>
+              {(o.overage_credits ?? 0).toLocaleString('fr-FR')} crédits en dépassement — facturés le 1er du mois prochain.
+            </p>
+          </div>
+
+          {/* Plafond anti-surprise */}
+          <div className="flex items-end gap-3 flex-wrap">
+            <div>
+              <label className="text-xs uppercase tracking-wider font-semibold flex items-center gap-1.5 mb-1.5" style={{ color: T.t2 }}>
+                <ShieldCheck className="w-3.5 h-3.5" style={{ color: T.success }} />
+                Plafond mensuel (anti-surprise)
+              </label>
+              <div className="flex items-center gap-2">
+                <input
+                  type="number" min="0" step="10" value={cap}
+                  onChange={(e) => setCap(parseFloat(e.target.value))}
+                  className="rounded-lg px-3 py-2 text-sm w-28"
+                  style={{ background: T.surface2, border: `1px solid ${T.border}`, color: T.t1 }}
+                />
+                <span className="text-sm" style={{ color: T.t2 }}>€</span>
+              </div>
+            </div>
+            <button
+              type="button"
+              disabled={busy || cap === capEur}
+              onClick={() => onSaveCap(cap)}
+              className="rounded-lg px-4 py-2 text-sm font-semibold transition"
+              style={{
+                background: (busy || cap === capEur) ? T.surface2 : T.gold,
+                color: (busy || cap === capEur) ? T.t3 : '#0b0b0f',
+                cursor: (busy || cap === capEur) ? 'default' : 'pointer',
+              }}
+            >
+              {busy ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Enregistrer le plafond'}
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -184,6 +297,8 @@ export default function TenantAdminAiBillingPage() {
   const [stats, setStats] = useState(null);
   const [packages, setPackages] = useState([]);
   const [plans, setPlans] = useState([]);
+  const [overage, setOverage] = useState(null);
+  const [overageBusy, setOverageBusy] = useState(false);
   const [loading, setLoading] = useState(true);
   const [topupLoading, setTopupLoading] = useState(null);
   const [tab, setTab] = useState('overview'); // overview | usage | history | packs | plans
@@ -191,24 +306,39 @@ export default function TenantAdminAiBillingPage() {
   const load = useCallback(async () => {
     setLoading(true);
     try {
-      const [s, tx, st, pks, pls] = await Promise.all([
+      const [s, tx, st, pks, pls, ov] = await Promise.all([
         api('/ai-billing/summary'),
         api('/ai-billing/transactions?limit=30'),
         api('/ai-billing/usage/stats?days=30'),
         api('/ai-billing/topup-packages'),
         api('/ai-billing/plans'),
+        api('/ai-billing/overage').catch(() => null),
       ]);
       setSummary(s);
       setTransactions(tx);
       setStats(st);
       setPackages(pks);
       setPlans(pls);
+      setOverage(ov);
     } catch (err) {
       toast({ title: 'Erreur chargement', description: err.message, variant: 'destructive' });
     } finally {
       setLoading(false);
     }
   }, [toast]);
+
+  const handleOverage = async (body, successMsg) => {
+    setOverageBusy(true);
+    try {
+      const next = await api('/ai-billing/overage', { method: 'POST', body: JSON.stringify(body) });
+      setOverage(next);
+      toast({ title: successMsg });
+    } catch (err) {
+      toast({ title: 'Erreur dépassement', description: err.message, variant: 'destructive' });
+    } finally {
+      setOverageBusy(false);
+    }
+  };
 
   useEffect(() => { load(); }, [load]);
 
@@ -375,6 +505,16 @@ export default function TenantAdminAiBillingPage() {
             <StatCard icon={BarChart3} label="Appels IA" value={stats.events_count} sub="opérations comptabilisées" color="green" />
             <StatCard icon={TrendingDown} label="Coût moyen" value={stats.events_count ? (stats.total_credits_used / stats.events_count).toFixed(2) : '0'} sub="crédits par appel" color="orange" />
           </div>
+
+          {/* Dépassement à l'usage (overage) */}
+          {overage && (
+            <OverageManager
+              overage={overage}
+              busy={overageBusy}
+              onToggle={(enabled) => handleOverage({ enabled }, enabled ? 'Dépassement activé' : 'Dépassement désactivé')}
+              onSaveCap={(cap_eur) => handleOverage({ cap_eur }, 'Plafond enregistré')}
+            />
+          )}
 
           {/* Mini chart consommation par jour (sans dépendance, SVG inline) */}
           {stats.by_day?.length > 0 && (
