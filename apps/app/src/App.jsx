@@ -1148,7 +1148,10 @@ const ProtectedImmersiveMessagingRoute = ({ children }) => {
   const isLiriMember = ['owner', 'admin', 'practitioner', 'clinic_admin', 'teacher', 'secretariat', 'student'].includes(tenantRole);
   if (isStaffRole || isPremiumActive || isLiriMember || (role === 'visitor' && visitorCanChat)) return children;
 
-  return <Navigate to="/appointment/request?source=immersive-chat" replace />;
+  // Repli quand l'accès au chat est refusé : rester DANS la coque LIRI (page RDV embarquée),
+  // JAMAIS l'ancienne page ISNA standalone /appointment/request (ancienne navbar Academy). Au pire
+  // LiriAccessGate renverra vers /liri/forfaits — toujours dans la coque LIRI. Cf. /liri/rendez-vous.
+  return <Navigate to="/liri/rendez-vous" replace />;
 };
 
 const LegacyCycleRedirect = () => {
