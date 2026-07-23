@@ -7,6 +7,8 @@
 
 import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import { S3Client, GetObjectCommand } from '@aws-sdk/client-s3';
+import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 import { SupabaseService } from '../supabase/supabase.service';
 import { ZoomOAuthService } from './zoom-oauth.service';
 
@@ -276,7 +278,41 @@ export class ZoomEngineService {
       .eq('tenant_id', tenantId)
       .eq('is_public', true)
       .order('published_at', { ascending: false });
-    return data || [];
+    const rows: any[] = data || [];
+    // Les vidéos hébergées sur R2 stockent une `storage_key` : on présigne à la lecture
+    // (URL éphémère, régénérée à chaque appel) — même modèle que les replays live.
+    await Promise.all(
+      rows.map(async (row) => {
+        if (row.storage_key) {
+          const signed = await this.presignR2(row.storage_key);
+          if (signed) row.playback_url = signed;
+        }
+      }),
+    );
+    return rows;
+  }
+
+  // ── Présignature R2 (lecture) ─────────────────────────────────────────────
+  private async presignR2(key: string, ttlSeconds = 604800): Promise<string | null> {
+    const accountId = process.env.CF_R2_ACCOUNT_ID;
+    const accessKeyId = process.env.CF_R2_ACCESS_KEY_ID;
+    const secretAccessKey = process.env.CF_R2_SECRET_ACCESS_KEY;
+    const bucket = process.env.CF_R2_BUCKET;
+    if (!accountId || !accessKeyId || !secretAccessKey || !bucket || !key) return null;
+    try {
+      const client = new S3Client({
+        region: 'auto',
+        endpoint: `https://${accountId}.r2.cloudflarestorage.com`,
+        credentials: { accessKeyId, secretAccessKey },
+        forcePathStyle: true,
+      });
+      return await getSignedUrl(client, new GetObjectCommand({ Bucket: bucket, Key: key }), {
+        expiresIn: ttlSeconds,
+      });
+    } catch (err) {
+      this.logger.error(`presignR2 failed: ${(err as Error).message}`);
+      return null;
+    }
   }
 
   async unpublishVideo(videoId: string) {
