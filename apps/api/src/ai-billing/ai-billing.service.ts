@@ -385,6 +385,16 @@ export class AiBillingService {
     if (Object.keys(patch).length === 0) {
       throw new BadRequestException('Rien à modifier (enabled et/ou cap_eur requis).');
     }
+    // Fail-closed : n'autoriser l'activation que sur un plan éligible (pro/business
+    // ou allow_overage). Cohérent avec l'UI et anti-dette pour le marché Afrique.
+    if (input.enabled === true) {
+      const status = await this.getOverageStatus(tenantId);
+      if (!status.eligible) {
+        throw new BadRequestException(
+          'Le dépassement à l\'usage est réservé aux plans Pro et Business.',
+        );
+      }
+    }
     // Assure l'existence du solde avant l'update
     await this.getBalance(tenantId);
     const { error } = await (this.supabase.client as any)
