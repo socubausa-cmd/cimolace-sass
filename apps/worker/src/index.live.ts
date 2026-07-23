@@ -25,6 +25,7 @@ import { pollDraftSocialPosts } from './jobs/social-poster.js';
 import { pollImapSync }         from './jobs/imap-sync.js';
 import { pollGdprExports }      from './jobs/gdpr-export.js';
 import { pollCourseRenderJobs } from './jobs/courseRender.js';
+import { pollZoomTransfer } from './jobs/zoom-transfer.js';
 
 const sleep = (ms: number) => new Promise<void>((r) => setTimeout(r, ms));
 
@@ -144,4 +145,17 @@ startPingJob();
   }
 })();
 
-console.log('[worker:live] Pollers actifs ✅ (email 15s · rappels 60s · invitations 120s · imap 90s · shorts 5min · posts 90s · rgpd 60s · replay post-prod 60s · rendu cours 60s)');
+// ── Transfert Zoom → R2 (import replays Vidéothèque, 1 à la fois, 20s) ────────
+//    Poll zoom_recordings pending : download reprenable + faststart + cues + R2.
+//    Idempotent, isolé, faible charge (ffmpeg -c copy) — n'impacte pas les notifs.
+(async () => {
+  while (true) {
+    try {
+      const n = await (pollZoomTransfer as () => Promise<number>)();
+      if (n > 0) console.log(`[worker:live] Zoom transfer: ${n} replay(s) importé(s)`);
+    } catch (e: unknown) { console.error('[worker:live] Zoom transfer error:', (e as Error)?.message || e); }
+    await sleep(20_000);
+  }
+})();
+
+console.log('[worker:live] Pollers actifs ✅ (email 15s · rappels 60s · invitations 120s · imap 90s · shorts 5min · posts 90s · rgpd 60s · replay post-prod 60s · rendu cours 60s · zoom-transfer 20s)');
