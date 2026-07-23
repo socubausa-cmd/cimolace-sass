@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { ArrowLeft, Play, Search, Film } from 'lucide-react';
+import { Play, Search, Film } from 'lucide-react';
 import { apiV2 } from '@/lib/api-v2';
-import VideoPlayer from '@/components/school/formations/VideoPlayer';
+import ImmersiveVideoPlayer from '@/components/school/formations/ImmersiveVideoPlayer';
 
 // Palette LIRI (alignée sur /liri).
 const C = {
@@ -44,36 +44,19 @@ export default function VideothequePage() {
     return list.filter((v) => String(v.title || '').toLowerCase().includes(term) || String(v.description || '').toLowerCase().includes(term));
   }, [videos, q]);
 
-  const transcript = active?.transcript || active?.transcript_text || '';
-
   return (
     <div style={{ minHeight: 'calc(100vh - 120px)', background: C.base, color: C.ink, fontFamily: "'Inter', system-ui, sans-serif", padding: '18px 20px 48px' }}>
-      {/* Lecteur plein-écran */}
+      {/* Lecteur immersif plein-écran */}
       {active && (
-        <div style={{ position: 'fixed', inset: 0, zIndex: 60, background: 'rgba(15,15,14,.94)', display: 'flex', flexDirection: 'column' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 14, padding: '16px 20px', borderBottom: `1px solid ${C.line}` }}>
-            <button type="button" onClick={() => setActive(null)} style={{ display: 'inline-flex', alignItems: 'center', gap: 6, background: 'none', border: 'none', color: C.ink, cursor: 'pointer', fontSize: 14, fontWeight: 600 }}>
-              <ArrowLeft size={18} /> Vidéothèque
-            </button>
-            <div style={{ fontFamily: SERIF, fontSize: 18, fontWeight: 600, minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{active.title || 'Cours enregistré'}</div>
-          </div>
-          <div style={{ flex: 1, minHeight: 0, display: 'flex', flexWrap: 'wrap', gap: 20, padding: 20, overflow: 'auto' }}>
-            <div style={{ flex: '2 1 560px', minWidth: 0 }}>
-              <div style={{ borderRadius: 16, overflow: 'hidden', background: '#000', border: `1px solid ${C.line}` }}>
-                <VideoPlayer video={{ url: active.playback_url, type: 'custom_url', title: active.title }} />
-              </div>
-              {active.description ? <p style={{ color: C.muted, fontSize: 14.5, lineHeight: 1.6, marginTop: 14 }}>{active.description}</p> : null}
-            </div>
-            <div style={{ flex: '1 1 300px', minWidth: 0 }}>
-              <div style={{ fontFamily: SERIF, fontSize: 16, fontWeight: 600, marginBottom: 8 }}>Transcription</div>
-              {transcript ? (
-                <div style={{ color: C.muted, fontSize: 13.5, lineHeight: 1.7, whiteSpace: 'pre-wrap', maxHeight: '62vh', overflow: 'auto', padding: 14, borderRadius: 12, background: C.panel, border: `1px solid ${C.line}` }}>{transcript}</div>
-              ) : (
-                <div style={{ color: C.faint, fontSize: 13, padding: 14, borderRadius: 12, background: C.panel, border: `1px solid ${C.line}` }}>Transcription bientôt disponible pour cet enregistrement.</div>
-              )}
-            </div>
-          </div>
-        </div>
+        <ImmersiveVideoPlayer
+          src={active.playback_url}
+          title={active.title}
+          description={active.description}
+          crumb={{ module: active.category }}
+          cues={Array.isArray(active.transcript_cues) ? active.transcript_cues : undefined}
+          transcript={active.transcript_text || active.transcript}
+          onExit={() => setActive(null)}
+        />
       )}
 
       <div style={{ maxWidth: 1120, margin: '0 auto' }}>

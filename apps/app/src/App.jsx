@@ -304,6 +304,7 @@ const StudentFormationsPage = lazy(() => import('@/pages/school/student-school-l
 // « Mes formations » rendu par le moteur OS Cimolace (immersif, branché sur les données de cours).
 const StudentFormationsOsPage = lazy(() => import('@/pages/school/student-school-life/StudentFormationsOsPage'));
 const VideothequePage = lazy(() => import('@/pages/school/student-school-life/VideothequePage'));
+const DevImmersiveVideoPage = lazy(() => import('@/pages/dev/DevImmersiveVideoPage'));
 const StudentAgendaPage = lazy(() => import('@/pages/school/student-school-life/StudentAgendaPage'));
 const StudentNotesPage = lazy(() => import('@/pages/school/student-school-life/StudentNotesPage'));
 // Hub « Mes notes » (prise de notes multi-source) — remplace le bulletin sur /liri/notes ;
@@ -1651,6 +1652,13 @@ isLiriHostDevPreviewRoute;
             <Route path="/dev/videotheque" element={
               <React.Suspense fallback={<div className="flex h-screen items-center justify-center bg-[#262624] text-white/60">Chargement…</div>}>
                 <VideothequePage />
+              </React.Suspense>
+            } />
+          )}
+          {import.meta.env.DEV && (
+            <Route path="/dev/immersive-video" element={
+              <React.Suspense fallback={<div className="flex h-screen items-center justify-center bg-[#262624] text-white/60">Chargement…</div>}>
+                <DevImmersiveVideoPage />
               </React.Suspense>
             } />
           )}

@@ -1,6 +1,7 @@
 import React, { useMemo, useState, useRef, useLayoutEffect, useCallback } from 'react';
 import { ArrowLeft, Play, FileText, HelpCircle, Network, Check, X } from 'lucide-react';
 import VideoPlayer from '@/components/school/formations/VideoPlayer';
+import ImmersiveVideoPlayer from '@/components/school/formations/ImmersiveVideoPlayer';
 import { INK, TERRA, SERIF } from '@/lib/agent/immersiveTheme';
 
 const htmlToText = (html) => String(html || '').replace(/<br\s*\/?>(?=)/gi, '\n').replace(/<\/(p|div|li|h[1-6])>/gi, '\n\n').replace(/<[^>]+>/g, ' ').replace(/&nbsp;/g, ' ').replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/[ \t]+/g, ' ').replace(/\n{3,}/g, '\n\n').trim();
@@ -94,9 +95,15 @@ export default function FormationOsDayView({ day, onBack, backLabel = 'Programme
           <div style={{ position: 'absolute', inset: 0, display: step === 'video' ? 'flex' : 'none', alignItems: 'center', justifyContent: 'center', padding: '8px clamp(16px,6vw,90px) 150px' }}>
             <div style={{ position: 'relative', width: '100%', maxWidth: 1180 }}>
               <div style={{ position: 'absolute', inset: '-8%', pointerEvents: 'none', background: 'radial-gradient(ellipse at 50% 45%, rgba(217,119,87,0.13), rgba(8,8,11,0) 66%)', filter: 'blur(46px)' }} />
-              <div style={{ position: 'relative', borderRadius: 8, overflow: 'hidden', boxShadow: 'inset 0 0 140px 60px #08080b' }}>
-                <VideoPlayer ref={videoRef} video={currentVideo} />
-              </div>
+              {/^https?:\/\//.test(currentVideo.url || '') ? (
+                // Vraie vidéo (Zoom / rendu post-prod) → coque immersive unifiée (mode intégré)
+                <ImmersiveVideoPlayer ref={videoRef} embedded src={currentVideo.url} title={currentVideo.title} />
+              ) : (
+                // Repli : vidéo Supabase signée / iframe → lecteur historique
+                <div style={{ position: 'relative', borderRadius: 8, overflow: 'hidden', boxShadow: 'inset 0 0 140px 60px #08080b' }}>
+                  <VideoPlayer ref={videoRef} video={currentVideo} />
+                </div>
+              )}
             </div>
           </div>
         )}
