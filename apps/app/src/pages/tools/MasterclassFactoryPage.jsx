@@ -39,6 +39,8 @@ import {
   UserCircle2,
   Users,
   Zap,
+  Film,
+  X,
 } from 'lucide-react';
 import {
   MASTERCLASS_STEPS,
@@ -53,7 +55,7 @@ import { precepteurCourseToClassroomDraft } from '@/lib/precepteur/toClassroomDr
 import { usePublishToClassroom } from '@/hooks/usePublishToClassroom';
 import { conformCourse } from '@/lib/precepteur/conformCourse';
 import { supabase } from '@/lib/supabaseCompat';
-import { masterclassApi } from '@/lib/api-v2';
+import { masterclassApi, apiV2 } from '@/lib/api-v2';
 
 const EXAMPLE_TYPES = [
   'Cours théologique',
@@ -549,6 +551,51 @@ function MiniList({ title, items, color }) {
 
 /* ──────────────────────────── Step 1 — Texte brut (maquette) ──────────────────────────── */
 
+// Sélecteur de replay Zoom (Vidéothèque) → sa transcription alimente la source du cours.
+function ReplayPicker({ onPick, onClose }) {
+  const [items, setItems] = useState(null);
+  const [err, setErr] = useState('');
+  useEffect(() => {
+    let alive = true;
+    apiV2.get('/zoom-engine/published')
+      .then((r) => { if (alive) setItems(Array.isArray(r?.data?.data) ? r.data.data : (Array.isArray(r?.data) ? r.data : [])); })
+      .catch((e) => { if (alive) { setItems([]); setErr(e?.message || 'Chargement impossible.'); } });
+    return () => { alive = false; };
+  }, []);
+  const fmtDur = (sec) => { const m = Math.round((sec || 0) / 60); return m >= 60 ? `${Math.floor(m / 60)}h${String(m % 60).padStart(2, '0')}` : `${m} min`; };
+  return (
+    <div className="fixed inset-0 z-[120] flex items-center justify-center p-4" style={{ background: 'rgba(15,15,14,.78)' }} onClick={onClose}>
+      <div className="w-full max-w-xl overflow-hidden rounded-2xl border border-[#d97757]/25 bg-[#1f1e1c]" onClick={(e) => e.stopPropagation()}>
+        <div className="flex items-center justify-between border-b border-white/[0.06] px-5 py-4">
+          <div className="flex items-center gap-2"><Film className="h-4 w-4 text-[#d97757]" /><h3 className="text-[15px] font-bold text-white">Importer depuis un replay</h3></div>
+          <button type="button" onClick={onClose} className="text-white/45 transition hover:text-white"><X size={18} /></button>
+        </div>
+        <p className="px-5 pt-3 text-[12px] leading-relaxed text-white/50">La transcription du replay devient la source du cours — LIRI la réorganise ensuite en cours Précepteur.</p>
+        <div className="max-h-[58vh] space-y-2 overflow-auto p-3">
+          {items === null ? <p className="py-8 text-center text-[13px] text-white/40">Chargement des replays…</p>
+            : items.length === 0 ? <p className="py-8 text-center text-[13px] text-white/40">Aucun replay publié.{err ? ` (${err})` : ''}</p>
+            : items.map((v) => {
+              const hasTx = Boolean(v.transcript_text || (Array.isArray(v.transcript_cues) && v.transcript_cues.length));
+              return (
+                <button key={v.id} type="button" disabled={!hasTx} onClick={() => onPick(v)}
+                  className="flex w-full items-center gap-3 rounded-xl border border-white/10 bg-white/[0.03] px-3 py-2.5 text-left transition hover:border-[#d97757]/40 hover:bg-white/[0.05] disabled:cursor-not-allowed disabled:opacity-40">
+                  <div className="flex h-9 w-16 flex-shrink-0 items-center justify-center overflow-hidden rounded-md bg-black/40">
+                    {v.thumbnail_url ? <img src={v.thumbnail_url} alt="" className="h-full w-full object-cover" /> : <Film className="h-3.5 w-3.5 text-white/30" />}
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <div className="truncate text-[13.5px] font-medium text-white">{v.title || 'Session enregistrée'}</div>
+                    <div className="text-[11px] text-white/40">{v.duration_sec ? fmtDur(v.duration_sec) + ' · ' : ''}{hasTx ? 'transcription ✓' : 'pas de transcription'}</div>
+                  </div>
+                  <ArrowRight className="h-4 w-4 flex-shrink-0 text-white/35" />
+                </button>
+              );
+            })}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function Step1Raw({ rawText, setRawText, onLaunch, status, onLoadDemo, MAX_RAW_CHARS,
   documentAnalyzeOptions, onDocumentAnalyzeOptionsChange }) {
   const [exampleTag, setExampleTag] = useState(EXAMPLE_TYPES[0]);
@@ -556,7 +603,15 @@ function Step1Raw({ rawText, setRawText, onLaunch, status, onLoadDemo, MAX_RAW_C
   const [importing, setImporting] = useState(false);
   const [importError, setImportError] = useState('');
   const fileInputRef = useRef(null);
+  const [showReplays, setShowReplays] = useState(false);
   const canLaunch = Boolean(rawText.trim()) && status !== 'running';
+
+  // Importer la transcription d'un replay Zoom comme source du cours.
+  const handlePickReplay = (v) => {
+    const tx = v.transcript_text || (Array.isArray(v.transcript_cues) ? v.transcript_cues.map((c) => c.text).join('\n') : '');
+    if (tx) setRawText(tx.slice(0, MAX_RAW_CHARS));
+    setShowReplays(false);
+  };
 
   // Import RÉEL d'un document : PDF (extraction pdfjs) ou fichier texte (.txt/.md).
   // Le texte extrait pré-remplit la zone — l'IA travaille dessus comme un collage.
@@ -597,6 +652,7 @@ function Step1Raw({ rawText, setRawText, onLaunch, status, onLoadDemo, MAX_RAW_C
           <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-2xl bg-[#d97757]/14 ring-1 ring-[#d97757]/30">
             <FileText className="h-6 w-6 text-[#d97757]" strokeWidth={1.7} />
           </div>
+          {showReplays && <ReplayPicker onPick={handlePickReplay} onClose={() => setShowReplays(false)} />}
           <div className="text-[10px] font-bold uppercase tracking-[0.16em] text-[#d97757]">Masterclass · Étape 1 sur 8</div>
           <h2 className="mt-1.5 text-[25px] font-extrabold leading-tight tracking-tight text-white" style={{ textWrap: 'balance' }}>
             Colle ton contenu
@@ -626,6 +682,13 @@ function Step1Raw({ rawText, setRawText, onLaunch, status, onLoadDemo, MAX_RAW_C
               >
                 {importing ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Upload className="h-3.5 w-3.5" />}
                 {importing ? 'Extraction…' : 'Importer (PDF, Word, texte)'}
+              </button>
+              <button
+                type="button"
+                onClick={() => setShowReplays(true)}
+                className="inline-flex items-center gap-1.5 rounded-lg border border-[#d97757]/35 bg-[#d97757]/12 px-2.5 py-1 text-[11.5px] font-medium text-[#d97757] transition hover:bg-[#d97757]/20"
+              >
+                <Film className="h-3.5 w-3.5" /> Importer depuis un replay
               </button>
               {rawText ? (
                 <button
