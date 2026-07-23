@@ -50,6 +50,15 @@ export function minCycleForFeature(feature: string): Cycle | null {
   return (CYCLE_KEYS.find((c) => CYCLE_RANK[c] >= min) as Cycle) || null;
 }
 
+// ─── ESSAI DE LANCEMENT (miroir de apps/app/src/lib/liri/memberTier.js) ────────
+// Offre fondateur : accès COMPLET GRATUIT à tout jusqu'au 5 août 2026 inclus, puis gating par tier
+// payé. Verrou GLOBAL daté (aucune trace par-utilisateur). ⚠️ LAUNCH_TRIAL_ENDS_AT doit rester
+// IDENTIQUE au front.
+export const LAUNCH_TRIAL_ENDS_AT = Date.parse('2026-08-05T23:59:59+02:00');
+export function isLaunchTrialActive(now: number = Date.now()): boolean {
+  return Number.isFinite(LAUNCH_TRIAL_ENDS_AT) && now <= LAUNCH_TRIAL_ENDS_AT;
+}
+
 /**
  * Un abonnement (status + plan_id) donne-t-il accès à `feature` ?
  * Enforcement serveur : à appeler dans les guards/services avant d'ouvrir une ressource gatée.
@@ -59,6 +68,7 @@ export function subscriptionCan(
   feature: string,
   { inGrace = false }: { inGrace?: boolean } = {},
 ): boolean {
+  if (isLaunchTrialActive()) return true; // essai de lancement : tout ouvert pour tous les membres
   if (!sub) return false;
   const active = sub.status === 'active' || (sub.status === 'past_due' && inGrace);
   if (!active) return false;

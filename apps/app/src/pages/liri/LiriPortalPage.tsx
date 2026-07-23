@@ -20,6 +20,8 @@ import { useUpcomingSchoolFeed } from '@/hooks/useUpcomingSchoolFeed';
 import { LiriRailGroups, getRailItems, LiriEngineSwitcher } from '@/components/liri/liriRail';
 import activeTenantConfig from '@/lib/tenant/activeTenantConfig';
 import LiriUpgradeWall from '@/components/liri/LiriUpgradeWall';
+import ForfaitReminder from '@/components/liri/ForfaitReminder';
+import { isLaunchTrialActive, launchTrialDaysLeft } from '@/lib/liri/memberTier';
 import '../LiriPortal.css';
 
 // Marque blanche par tenant : sur le domaine d'un tenant (ex. prorascience.org), le
@@ -87,8 +89,15 @@ export function LiriPortalPage() {
     const future = end ? end.getTime() - Date.now() : 0;
     const daysLeft = end ? Math.max(0, Math.ceil(future / 86_400_000)) : null;
     const isPaid = !!active && !!active.provider && active.provider !== 'free' && active.status === 'active' && (!end || future > 0);
-    const isTrial = !!active && !isPaid && (String(active.plan_id || '').includes('trial') || active.provider === 'free');
-    const label = isPaid ? (active?.plan_id || 'Forfait') : isTrial ? `Essai${daysLeft != null ? ` · ${daysLeft} j` : ''}` : 'Gratuit';
+    // Essai de LANCEMENT (accès complet gratuit jusqu'au 5 août 2026) : prime sur le libellé tant
+    // que le membre n'a pas payé — cf. memberTier.isLaunchTrialActive.
+    const inLaunchTrial = isLaunchTrialActive() && !isPaid;
+    const launchDays = launchTrialDaysLeft();
+    const isTrial = inLaunchTrial || (!!active && !isPaid && (String(active.plan_id || '').includes('trial') || active.provider === 'free'));
+    const label = isPaid ? (active?.plan_id || 'Forfait')
+      : inLaunchTrial ? `Essai · ${launchDays} j`
+      : isTrial ? `Essai${daysLeft != null ? ` · ${daysLeft} j` : ''}`
+      : 'Gratuit';
     return { isPaid, label };
   }, [subs]);
 
@@ -380,6 +389,12 @@ export function LiriPortalPage() {
             <p className="text-[13px] font-medium uppercase tracking-[0.18em] lp-faint lp-rise">{dateLong} · {timeStr}</p>
             <h1 className="mt-3 text-center lp-serif text-[34px] font-medium leading-tight tracking-tight lp-rise">{greet}<span className="lp-coral"> sur {PORTAL_BRAND}</span></h1>
             <p className="mt-2 text-center text-[14px] lp-muted lp-rise">Que voulez-vous lancer aujourd'hui&nbsp;?</p>
+
+            {/* Compteur / rappel de forfait : forfait payé (Autonome/Académique) OU essai de
+                lancement en cours (accès complet jusqu'au 5 août + jours restants). Masqué pour le staff. */}
+            <div className="mt-6 w-full max-w-2xl lp-rise">
+              <ForfaitReminder />
+            </div>
 
             {/* Dossier élève KYC (certificats) — NON-BLOQUANT : l'élève est déjà dans le portail,
                 on l'invite juste à compléter son dossier. Disparaît une fois `student_profile_completed`. */}

@@ -3,6 +3,7 @@ import { useLocation } from 'react-router-dom';
 import { Loader2 } from 'lucide-react';
 import ProtectedRoleRoute from '@/components/ProtectedRoleRoute';
 import { useBilling } from '@/contexts/BillingContext';
+import { isLaunchTrialActive } from '@/lib/liri/memberTier';
 import { useAuth } from '@/hooks/useAuth';
 import { catalogApi } from '@/lib/api-v2';
 import { authStore } from '@/lib/auth-store';
@@ -106,7 +107,10 @@ function LiriAccessGate({ children }) {
   const path = String(location?.pathname || '');
   const isBillingPath = path.startsWith('/liri/forfaits') || path.startsWith('/liri/compte');
   const subOk = status === 'active' || (status === 'past_due' && inGrace);
-  const memberOk = isStaff || isBillingPath || subOk;
+  // Essai de lancement : jusqu'au 5 août 2026 inclus, tout membre entre dans le portail SANS forfait
+  // payé (accès complet « version d'essai »). Après cette date, seul l'abo actif (subOk) ou le staff
+  // passe → mur d'upgrade pour les autres. Cf. memberTier.isLaunchTrialActive (verrou global daté).
+  const memberOk = isStaff || isBillingPath || subOk || isLaunchTrialActive();
 
   if (tenantHasLiri && memberOk) return children;
   // Pas d'accès → mur d'upgrade rendu EN PLACE, DANS le realm LIRI (audit cloison 3-realms,

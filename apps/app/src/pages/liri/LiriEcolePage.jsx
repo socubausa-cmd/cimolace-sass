@@ -21,6 +21,7 @@ import { buildOwnerMenuGroups } from '@/components/owner/ownerMenuGroups';
 import { useResolvedTenantSlug } from '@/hooks/useResolvedTenantSlug';
 import { SslThemeProvider } from '@/pages/school/student-school-life/sslTheme';
 import ErrorBoundary from '@/components/ErrorBoundary';
+import InviteLinkCard from '@/components/liri/InviteLinkCard';
 import { catalogApi, tenantsApi } from '@/lib/api-v2';
 
 const ECOLE_BASE = '/liri/ecole';
@@ -288,6 +289,9 @@ function EcoleBody() {
         <ErrorBoundary key={activeTab} logTag={`LIRI École · ${activeTab}`}>
           <SslThemeProvider mode="dark">
             <div className="p-4">
+              {/* Générateur de LIEN D'INVITATION — le propriétaire copie ici le lien de jonction que
+                  les nouveaux membres utilisent pour rejoindre (accès essai complet jusqu'au 5 août). */}
+              <div className="mb-5 max-w-2xl"><InviteLinkCard /></div>
               <OwnerDashboardBody activeTab={activeTab} basePath={ECOLE_BASE} />
             </div>
           </SslThemeProvider>

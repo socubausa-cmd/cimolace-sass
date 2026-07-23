@@ -80,15 +80,32 @@ export function entitlementsForCycle(cycle) {
  * @returns {{ hasForfait: boolean, cycle: string|null, rank: number, label: string|null,
  *            can: (feature:string)=>boolean, entitlements: object }}
  */
+// ─── ESSAI DE LANCEMENT (offre fondateur) ─────────────────────────────────────
+// Quiconque rejoint Prorascience via le lien a un ACCÈS COMPLET GRATUIT à TOUT (Temple + Academy)
+// jusqu'au 5 août 2026 inclus — « version d'essai ». Après cette date FIXE, le gating par tier PAYÉ
+// reprend (Autonome=Temple/biblio/forum, Académique=+cours live, etc., sinon mur d'upgrade). Verrou
+// GLOBAL : aucune trace d'essai par-utilisateur — l'appartenance (join via le lien) suffit, la date
+// fait le reste. ⚠️ Doit rester IDENTIQUE au miroir serveur apps/api/src/billing/member-tier.ts.
+export const LAUNCH_TRIAL_ENDS_AT = Date.parse('2026-08-05T23:59:59+02:00');
+export function isLaunchTrialActive(now = Date.now()) {
+  return Number.isFinite(LAUNCH_TRIAL_ENDS_AT) && now <= LAUNCH_TRIAL_ENDS_AT;
+}
+export function launchTrialDaysLeft(now = Date.now()) {
+  return isLaunchTrialActive(now) ? Math.max(0, Math.ceil((LAUNCH_TRIAL_ENDS_AT - now) / 86400000)) : 0;
+}
+
 export function resolveMemberTier({ status, inGrace = false, planId = null } = {}) {
   const active = status === 'active' || (status === 'past_due' && inGrace);
-  const cycle = active ? cycleFromPlanId(planId) : null;
+  const cycle = active ? cycleFromPlanId(planId) : null; // le VRAI cycle PAYÉ (null si aucun)
+  const trial = isLaunchTrialActive();                    // essai de lancement encore ouvert ?
   return {
-    hasForfait: active,
-    cycle,
-    rank: rankOfCycle(cycle),
-    label: cycle ? CYCLE_LABEL[cycle] : null,
-    can: (feature) => cycleCan(cycle, feature),
+    hasForfait: active || trial,       // pendant l'essai, accès ouvert même sans forfait payé
+    cycle,                             // forfait réellement payé — pour le BADGE (Autonome/Académique)
+    trial,                             // en période d'essai gratuit ?
+    trialEndsAt: LAUNCH_TRIAL_ENDS_AT,
+    rank: trial ? Math.max(rankOfCycle(cycle), 4) : rankOfCycle(cycle), // essai = accès complet (rang max)
+    label: cycle ? CYCLE_LABEL[cycle] : (trial ? 'Essai' : null),
+    can: (feature) => trial || cycleCan(cycle, feature), // l'essai débloque TOUT
     entitlements: entitlementsForCycle(cycle),
   };
 }
