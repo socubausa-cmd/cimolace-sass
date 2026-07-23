@@ -1,6 +1,8 @@
 import React, { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
 import { useAuth } from '@/contexts/SupabaseAuthContext';
 import { apiV2 } from '@/lib/api-v2';
+import { supabase } from '@/lib/customSupabaseClient';
+import { authStore } from '@/lib/auth-store';
 import { useRealtimeMessaging } from '@/hooks/useRealtimeMessaging';
 
 const MessagingContext = createContext();
@@ -43,11 +45,17 @@ export const MessagingProvider = ({ children }) => {
       // @Roles('owner','admin') → un ÉLÈVE recevait 403 → annuaire VIDE → « 0 membre » → aucune
       // conversation possible. `/directory` (borné TenantGuard = membership active + scope tenant)
       // est lisible par TOUT membre : staff voit tous les membres, élève voit le staff joignable.
-      const res = await apiV2.get('/tenant-portal/directory');
-      // Dépile l'enveloppe ({data:{data:[...]}} via l'intercepteur global) jusqu'au tableau.
-      let d = res?.data;
-      while (d && !Array.isArray(d) && typeof d === 'object' && 'data' in d) d = d.data;
-      const list = Array.isArray(d) ? d : [];
+      // Lecture DIRECTE Supabase (RPC SECURITY DEFINER `tenant_directory`) au lieu de proxifier
+      // par l'API Railway US : supprime le double-hop (front→Railway→Supabase×2→retour, ~3s
+      // mesuré en prod) au profit d'UN seul hop Supabase (~600ms). La logique role-aware +
+      // masquage des emails pairs reste 100% côté serveur dans la fonction (SECURITY DEFINER)
+      // → aucun risque de manipulation client. Réplique exacte de /tenant-portal/directory,
+      // + coalesce(full_name,name) qui corrige les pairs affichés « Membre ».
+      const slug = authStore.getTenantSlug?.();
+      if (!slug) { setProfilesLoading(false); return false; }
+      const { data, error } = await supabase.rpc('tenant_directory', { p_tenant_slug: slug });
+      if (error) { logProfilesIssue('exception', error); setProfilesLoading(false); return false; }
+      const list = Array.isArray(data) ? data : [];
 
       if (list.length === 0) {
         console.warn('[MessagingContext] tenant members returned 0 rows');
