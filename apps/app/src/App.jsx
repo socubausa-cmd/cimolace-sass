@@ -1196,6 +1196,11 @@ const OLD_ACADEMY_REDIRECTS = [
   // ou ont leur propre coque.
   [/^\/classes(\/|$)/, '/liri/ecole'],
   [/^\/cours\/[^/]+\/deblocage/, '/liri/ecole'],
+  // Admin PLATEFORME ancien-ISNA (/admin/users, /admin/payments, /admin/tenants, /admin/billing,
+  // /admin/marketing, /admin/logs…) — legacy, remplacé par /cimolace/* (SaaS) + /liri/ecole
+  // (tenant). Fondateur : « j'en ai plus besoin » → rebond /liri. ⚠️ NE matche PAS /cimolace/admin
+  // (route /cimolace/*, back-office SaaS actuel, intact).
+  [/^\/admin(\/|$)/, '/liri'],
 ];
 function resolveOldAcademyRedirect(pathname) {
   const p = pathname || '/';
