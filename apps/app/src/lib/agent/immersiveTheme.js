@@ -214,7 +214,9 @@ button.cca-chip-visit:hover{background:#e18b6b!important;border-color:transparen
   .cca-scene-on .cca-split-line{clip-path:inset(0 0 0 0)}
   .cca-split-col{padding:0 8vw}
   .cca-split-headline{top:max(58px,3vh);font-size:15px}
-  .cca-reader{grid-template-columns:1fr;grid-template-rows:auto 1fr auto;padding:7vh 6vw 3vh;gap:14px 0;justify-content:stretch}
+  /* Réserve la place de la barre de suite flottante (.cca-ss, ~180px enroulée) : sinon la nav
+     interne du reader (« Sa vision / Son mandat ») passait SOUS la barre en mobile. */
+  .cca-reader{grid-template-columns:1fr;grid-template-rows:auto 1fr auto;padding:7vh 6vw 196px;gap:14px 0;justify-content:stretch}
   .cca-reader-profile{grid-column:1;grid-row:1;flex-direction:row;align-items:center;justify-content:flex-start;gap:14px;padding:14px 16px;border-radius:16px}
   .cca-reader-avatar{transform:scale(.7);margin:-8px 0}
   .cca-reader-name{margin-top:0;font-size:17px;text-align:left}
@@ -227,7 +229,9 @@ button.cca-chip-visit:hover{background:#e18b6b!important;border-color:transparen
   .cca-reader-nav::before{display:none}
   .cca-reader-nav button{display:inline-flex;align-items:center;gap:7px;padding:5px 0}
   .cca-reader-nav .dot{position:static;left:auto;top:auto;box-shadow:none}
-  .cca-reader-suggests{grid-row:4}
+  /* Suggestions internes du reader masquées en mobile : redondantes avec la barre de suite
+     flottante (.cca-ss) qui porte déjà navigation liée + CTA. Évite le double rang qui collait. */
+  .cca-reader-suggests{display:none}
 }
 
 /* ═══ Voix « Punch » (Sherpas) — PARTAGÉE : l'Assistant vend et Le Précepteur enseigne
