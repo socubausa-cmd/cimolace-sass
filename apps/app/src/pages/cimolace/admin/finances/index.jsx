@@ -13,9 +13,17 @@ const MNOS = [
 ];
 const money = (cents, cur = 'XAF') => `${(ZERO_DECIMAL.has((cur || '').toUpperCase()) ? cents : cents / 100).toLocaleString('fr-FR')} ${cur}`;
 const unwrap = (r) => { let d = r?.data; while (d && typeof d === 'object' && 'data' in d) d = d.data; return d; };
+const eur = (n) => `${(Number(n) || 0).toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} €`;
+const num = (n) => Math.round(Number(n) || 0).toLocaleString('fr-FR');
+const th = { padding: '10px 14px', fontWeight: 600, fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.04em', whiteSpace: 'nowrap' };
+const td = { padding: '10px 14px', verticalAlign: 'middle', whiteSpace: 'nowrap' };
+function Badge({ c, children }) {
+  return <span style={{ display: 'inline-block', padding: '2px 8px', borderRadius: 999, fontSize: 11, fontWeight: 600, color: c, background: `${c}22` }}>{children}</span>;
+}
 
 export default function CimolaceAdminFinances() {
   const [fin, setFin] = useState(null);
+  const [cost, setCost] = useState(null);
   const [payouts, setPayouts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [amount, setAmount] = useState('');
@@ -38,6 +46,8 @@ export default function CimolaceAdminFinances() {
   const load = () => {
     apiV2.get('/cimolace-backoffice/finances').then((r) => setFin(unwrap(r))).catch(() => {});
     apiV2.get('/cimolace-backoffice/finances/payouts').then((r) => { const d = unwrap(r); setPayouts(Array.isArray(d) ? d : []); setLoading(false); }).catch(() => setLoading(false));
+    // Cockpit de coût : ce que chaque tenant CONSOMME (IA + live + dépassement)
+    apiV2.get('/admin/ai-billing/cost-overview').then((r) => setCost(unwrap(r))).catch(() => {});
   };
   useEffect(load, []);
 
@@ -81,6 +91,67 @@ export default function CimolaceAdminFinances() {
         <main style={{ flex: 1, padding: '28px 32px', maxWidth: 920 }}>
           <h1 style={{ fontSize: 26, fontWeight: 700, margin: '0 0 4px' }}>Finances</h1>
           <p style={{ color: C.muted, margin: '0 0 24px', fontSize: 14 }}>Vos revenus (ce que chaque tenant vous paie pour vos services) — soldes réels + retrait vers mobile money, sans passer par pawaPay.</p>
+
+          {/* ─── Cockpit de coût : ce que chaque tenant vous COÛTE en infra ─── */}
+          <div style={{ marginBottom: 8, fontSize: 12, textTransform: 'uppercase', letterSpacing: 1, color: C.muted }}>Coût & consommation par tenant</div>
+          {cost && (
+            <div style={{ display: 'flex', gap: 20, marginBottom: 12, fontSize: 13, color: C.muted, flexWrap: 'wrap' }}>
+              <span>Tenants suivis : <b style={{ color: C.text }}>{cost.totals?.tenants ?? 0}</b></span>
+              <span>Dépassement en cours : <b style={{ color: (cost.totals?.overage_accruing_eur || 0) > 0 ? C.orange : C.text }}>{eur(cost.totals?.overage_accruing_eur)}</b></span>
+              <span>À facturer : <b style={{ color: (cost.totals?.overage_pending_eur || 0) > 0 ? C.green : C.text }}>{eur(cost.totals?.overage_pending_eur)}</b></span>
+              <span>À risque (IA ≥80 %) : <b style={{ color: (cost.totals?.ai_at_risk || 0) > 0 ? C.orange : C.text }}>{cost.totals?.ai_at_risk ?? 0}</b></span>
+            </div>
+          )}
+          <div style={{ ...card, marginBottom: 24, padding: 0, overflow: 'hidden' }}>
+            {!cost ? (
+              <div style={{ padding: 16, color: C.muted, fontSize: 14 }}>Chargement…</div>
+            ) : (cost.tenants || []).length === 0 ? (
+              <div style={{ padding: 16, color: C.muted, fontSize: 14 }}>Aucun tenant suivi.</div>
+            ) : (
+              <div style={{ overflowX: 'auto' }}>
+                <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
+                  <thead>
+                    <tr style={{ background: C.panel2, color: C.muted }}>
+                      <th style={{ ...th, textAlign: 'left' }}>Tenant</th>
+                      <th style={{ ...th, textAlign: 'left' }}>Plan</th>
+                      <th style={{ ...th, textAlign: 'left' }}>IA (mois)</th>
+                      <th style={{ ...th, textAlign: 'left' }}>Dépassement</th>
+                      <th style={{ ...th, textAlign: 'left' }}>Live (min)</th>
+                      <th style={{ ...th, textAlign: 'left' }}>État</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {(cost.tenants || []).map((t) => {
+                      const aiPct = Number(t.ai_pct_used) || 0;
+                      const acc = Number(t.overage_accruing_eur) || 0;
+                      const pend = Number(t.overage_pending_eur) || 0;
+                      return (
+                        <tr key={t.tenant_id} style={{ borderTop: `1px solid ${C.border}` }}>
+                          <td style={td}><b style={{ color: C.text }}>{t.tenant_slug}</b></td>
+                          <td style={{ ...td, color: C.muted }}>{t.plan_name || t.plan_key || t.ai_plan_tier || '—'}</td>
+                          <td style={td}>
+                            {num(t.ai_consumed)} / {num(t.ai_included)}
+                            <span style={{ color: aiPct >= 80 ? C.orange : C.muted, marginLeft: 6 }}>({aiPct} %)</span>
+                          </td>
+                          <td style={td}>
+                            {acc > 0 ? <span style={{ color: C.orange }}>{eur(acc)} en cours</span> : <span style={{ color: C.muted }}>—</span>}
+                            {pend > 0 && <span style={{ color: C.green, marginLeft: 6 }}>· {eur(pend)} à facturer</span>}
+                          </td>
+                          <td style={{ ...td, color: C.muted }}>{num(t.live_used)} / {num(t.live_included)}</td>
+                          <td style={td}>
+                            {t.ai_blocked ? <Badge c={C.red}>Bloqué</Badge>
+                              : t.overage_active ? <Badge c={C.orange}>Dépassement</Badge>
+                              : t.ai_at_risk ? <Badge c={C.orange}>IA ≥80 %</Badge>
+                              : <Badge c={C.green}>OK</Badge>}
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </div>
 
           {/* Porte-monnaie par produit (couche logique) */}
           <div style={{ marginBottom: 8, fontSize: 12, textTransform: 'uppercase', letterSpacing: 1, color: C.muted }}>Porte-monnaie (par produit)</div>
