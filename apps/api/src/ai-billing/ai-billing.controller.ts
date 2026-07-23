@@ -270,4 +270,11 @@ export class AiBillingAdminController {
   async settle() {
     return this.svc.settleOverage();
   }
+
+  /** GET /admin/ai-billing/cost-overview → cockpit de coût par tenant (conso IA + live + overage + risque) */
+  @Get('cost-overview')
+  @UseGuards(JwtAuthGuard, CimolaceStaffGuard)
+  async costOverview() {
+    return this.svc.getTenantCostOverview();
+  }
 }

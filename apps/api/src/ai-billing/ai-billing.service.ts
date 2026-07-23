@@ -419,4 +419,31 @@ export class AiBillingService {
     if (error) throw new BadRequestException(error.message);
     return { settled: data ?? [] };
   }
+
+  /**
+   * [FONDATEUR] Cockpit de coût : conso IA + minutes live + dépassement + risque,
+   * par tenant. Alimente la surveillance « ne pas me ruiner ».
+   */
+  async getTenantCostOverview() {
+    const { data, error } = await (this.supabase.client as any)
+      .from('founder_tenant_cost_overview')
+      .select('*');
+    if (error) throw new BadRequestException(error.message);
+    const rows = data ?? [];
+    // Totaux consolidés pour l'en-tête du cockpit
+    const totals = rows.reduce(
+      (acc: any, r: any) => {
+        acc.tenants += 1;
+        acc.overage_accruing_eur += parseFloat(r.overage_accruing_eur ?? 0);
+        acc.overage_pending_eur += parseFloat(r.overage_pending_eur ?? 0);
+        if (r.ai_at_risk) acc.ai_at_risk += 1;
+        if (r.overage_active) acc.overage_active += 1;
+        return acc;
+      },
+      { tenants: 0, overage_accruing_eur: 0, overage_pending_eur: 0, ai_at_risk: 0, overage_active: 0 },
+    );
+    totals.overage_accruing_eur = Math.round(totals.overage_accruing_eur * 100) / 100;
+    totals.overage_pending_eur = Math.round(totals.overage_pending_eur * 100) / 100;
+    return { totals, tenants: rows };
+  }
 }
