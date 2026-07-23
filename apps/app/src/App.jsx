@@ -1160,6 +1160,43 @@ const LegacyCycleRedirect = () => {
   return <Navigate to={`/secretariat-space/cycles/${id || 'disciple'}`} replace />;
 };
 
+// ─── GARDE ANCIEN-ACADEMY → LIRI ──────────────────────────────────────────────
+// « Supprime tout l'ancien projet Academy » : un membre CONNECTÉ ne doit JAMAIS voir une vieille
+// page Academy (ancienne navbar Header.jsx : Formations / Tableau de bord / Prendre RDV / L'école /
+// Mon espace). Chaque ancienne route rebondit vers son équivalent LIRI. Casse aussi la BOUCLE des
+// liens de l'ancien Header (Ressources / Support / … → cibles rattrapées ici). Les prospects NON
+// connectés gardent les vitrines publiques (le garde ne s'applique que si `user` existe). Toutes
+// les cibles sont en /liri/* (ou /lives) → jamais dans cette table → aucune boucle possible.
+// Liste issue de l'audit multi-agent (routes qui rendaient encore l'ancien Header pour un élève).
+const OLD_ACADEMY_REDIRECTS = [
+  [/^\/notebook(\/|$)/, '/liri/notes'],
+  [/^\/student\/practice-journal(\/|$)/, '/liri/notes'],
+  [/^\/vie-scolaire(\/|$)/, '/liri/vie-scolaire'],
+  [/^\/classroom(\/|$)/, '/liri/vie-scolaire'],
+  [/^\/profil(\/|$)/, '/liri/profil'],
+  [/^\/my-certificates(\/|$)/, '/liri/profil'],
+  [/^\/(resources|ressources)(\/|$)/, '/liri/bibliotheque'],
+  [/^\/support(\/|$)/, '/liri'],
+  [/^\/settings\/notifications(\/|$)/, '/liri'],
+  [/^\/notifications(\/|$)/, '/liri'],
+  [/^\/community(\/|$)/, '/liri/forum'],
+  [/^\/formation\/[^/]+\/forum(\/|$)/, '/liri/forum'],
+  [/^\/(coaching-sessions|workshops)(\/|$)/, '/liri/rendez-vous'],
+  [/^\/mes-factures(\/|$)/, '/liri/compte'],
+  [/^\/(lesson|course-player)\//, '/liri/formations'],
+  [/^\/formations\/mes-formations(\/|$)/, '/liri/formations'],
+  [/^\/formations\/(list|catalogue|inscription)(\/|$)/, '/liri/formations'],
+  [/^\/(masterclasses|masterclass\/)/, '/lives'],
+  [/^\/curriculum(\/|$)/, '/liri/formations'],
+  [/^\/onboarding$/, '/liri'],
+  [/^\/ngowazulu\/dossier(\/|$)/, '/liri'],
+];
+function resolveOldAcademyRedirect(pathname) {
+  const p = pathname || '/';
+  const hit = OLD_ACADEMY_REDIRECTS.find(([re]) => re.test(p));
+  return hit ? hit[1] : null;
+}
+
 const AppContent = () => {
   const location = useLocation();
   const [searchParams] = useSearchParams();
@@ -1526,6 +1563,11 @@ isLiriHostDevPreviewRoute;
       </div>
     );
   }
+
+  // GARDE ANCIEN-ACADEMY : un membre CONNECTÉ sur une vieille route Academy → rebond dans la coque
+  // LIRI (jamais l'ancienne navbar). Prospects non-connectés = vitrines publiques préservées.
+  const _oldAcademyTo = user ? resolveOldAcademyRedirect(location.pathname) : null;
+  if (_oldAcademyTo && _oldAcademyTo !== location.pathname) return <Navigate to={_oldAcademyTo} replace />;
 
   return (
     <div className={appShellClassName}>
