@@ -596,7 +596,7 @@ function ReplayPicker({ onPick, onClose }) {
   );
 }
 
-function Step1Raw({ rawText, setRawText, onLaunch, status, onLoadDemo, MAX_RAW_CHARS,
+function Step1Raw({ rawText, setRawText, onReplaySource, onLaunch, status, onLoadDemo, MAX_RAW_CHARS,
   documentAnalyzeOptions, onDocumentAnalyzeOptionsChange }) {
   const [exampleTag, setExampleTag] = useState(EXAMPLE_TYPES[0]);
   const [showOptions, setShowOptions] = useState(false);
@@ -610,6 +610,7 @@ function Step1Raw({ rawText, setRawText, onLaunch, status, onLoadDemo, MAX_RAW_C
   const handlePickReplay = (v) => {
     const tx = v.transcript_text || (Array.isArray(v.transcript_cues) ? v.transcript_cues.map((c) => c.text).join('\n') : '');
     if (tx) setRawText(tx.slice(0, MAX_RAW_CHARS));
+    onReplaySource?.(v.id || null); // rattacher le futur Précepteur à ce replay
     setShowReplays(false);
   };
 
@@ -2069,6 +2070,7 @@ function MasterclassFactoryPage() {
   const m = useMasterclassProject();
   const { publish: publishToClassroom } = usePublishToClassroom();
   const [precepteurLoading, setPrecepteurLoading] = useState(false);
+  const [sourceReplayId, setSourceReplayId] = useState(null); // replay Zoom source (→ Précepteur rattaché à la vidéo)
   const factoryStats = useMemo(() => deriveFactoryStats(m.project), [m.project]);
   const pipelineStage = useMemo(() => derivePipelineStage(m.status, m.step), [m.status, m.step]);
 
@@ -2232,6 +2234,7 @@ function MasterclassFactoryPage() {
           title: enriched?.title || m.project?.analysis?.global_subject || 'Cours du Précepteur',
           precepteurCourse: enriched,
           sourceText: m.project?.rawText || '',
+          sourceVideoId: sourceReplayId || null,
         });
         if (saved?.id) {
           navigate(`/precepteur/cours/${saved.id}`);
@@ -2288,6 +2291,7 @@ function MasterclassFactoryPage() {
           <Step1Raw
             rawText={m.project.rawText}
             setRawText={m.setRawText}
+            onReplaySource={setSourceReplayId}
             onLaunch={handleLaunch}
             status={m.status}
             onLoadDemo={m.loadDemo}

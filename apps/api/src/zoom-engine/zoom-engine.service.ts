@@ -289,6 +289,21 @@ export class ZoomEngineService {
         }
       }),
     );
+    // Rattacher le cours Précepteur construit à partir de ce replay (source_video_id) → bouton « Suivre le cours ».
+    const ids = rows.map((r) => r.id).filter(Boolean);
+    if (ids.length) {
+      const { data: precs } = await (this.supabase.client as any)
+        .from('masterclasses')
+        .select('id, title, source_video_id')
+        .eq('tenant_id', tenantId)
+        .in('source_video_id', ids);
+      const byVideo = new Map<string, any>();
+      for (const p of precs || []) if (p.source_video_id) byVideo.set(p.source_video_id, p);
+      for (const row of rows) {
+        const p = byVideo.get(row.id);
+        if (p) { row.precepteur_id = p.id; row.precepteur_title = p.title; }
+      }
+    }
     return rows;
   }
 

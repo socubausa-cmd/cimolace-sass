@@ -324,6 +324,7 @@ Règles :
     title: string,
     precepteurCourse: unknown,
     sourceText = '',
+    sourceVideoId?: string,
   ) {
     if (!precepteurCourse || typeof precepteurCourse !== 'object') {
       throw new BadRequestException('precepteurCourse (objet) requis');
@@ -348,6 +349,7 @@ Règles :
         source_text: String(sourceText || '').slice(0, 50000),
         module_count: 0,
         precepteur_course: precepteurCourse,
+        source_video_id: sourceVideoId || null,
       })
       .select('*')
       .single();
