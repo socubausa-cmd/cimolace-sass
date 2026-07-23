@@ -11,8 +11,9 @@ import {
   ArrowLeft, Play, Loader2, CheckCircle2, AlertCircle,
   Copy, ExternalLink, Activity, Upload, Clipboard,
   HelpCircle, X, Wand2, ChevronDown, Zap, Settings2,
-  MessageSquare, RefreshCw, ArrowRight, RotateCcw, Search,
+  MessageSquare, RefreshCw, ArrowRight, RotateCcw, Search, Film,
 } from 'lucide-react';
+import { apiV2 } from '@/lib/api-v2';
 import {
   useMasterclassProject,
   PEDAGOGICAL_MODELS,
@@ -273,6 +274,52 @@ function PedagogicalModelSwitcher({ value, onChange }) {
 }
 
 // ─── Étape 0 — Source ──────────────────────────────────────────────────────
+// Sélecteur de replay Zoom → sa transcription alimente la source du cours.
+function ReplayPicker({ onPick, onClose }) {
+  const [items, setItems] = useState(null);
+  const [err, setErr] = useState('');
+  useEffect(() => {
+    let alive = true;
+    apiV2.get('/zoom-engine/published')
+      .then((r) => { if (alive) setItems(Array.isArray(r?.data?.data) ? r.data.data : (Array.isArray(r?.data) ? r.data : [])); })
+      .catch((e) => { if (alive) { setItems([]); setErr(e?.message || 'Chargement impossible.'); } });
+    return () => { alive = false; };
+  }, []);
+  const fmtDur = (sec) => { const m = Math.round((sec || 0) / 60); return m >= 60 ? `${Math.floor(m / 60)}h${String(m % 60).padStart(2, '0')}` : `${m} min`; };
+  return (
+    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4" style={{ background: 'rgba(8,8,14,.72)' }} onClick={onClose}>
+      <div className="w-full max-w-2xl rounded-2xl overflow-hidden" style={{ background: '#12121a', border: `1px solid ${BORDER}` }} onClick={(e) => e.stopPropagation()}>
+        <div className="flex items-center justify-between px-5 py-4" style={{ borderBottom: `1px solid ${BORDER}` }}>
+          <div className="flex items-center gap-2"><Film size={16} color={VIOLET} /><h3 className="text-white font-semibold">Importer depuis un replay</h3></div>
+          <button onClick={onClose} className="text-slate-400 hover:text-white"><X size={18} /></button>
+        </div>
+        <p className="px-5 pt-3 text-xs text-slate-400">La transcription du replay devient la source du cours — la factory la réorganise ensuite en cours Précepteur.</p>
+        <div className="max-h-[60vh] overflow-auto p-3 space-y-2">
+          {items === null ? <p className="text-slate-500 text-sm text-center py-8">Chargement des replays…</p>
+            : items.length === 0 ? <p className="text-slate-500 text-sm text-center py-8">Aucun replay publié.{err ? ` (${err})` : ''}</p>
+            : items.map((v) => {
+              const hasTx = Boolean(v.transcript_text || (Array.isArray(v.transcript_cues) && v.transcript_cues.length));
+              return (
+                <button key={v.id} disabled={!hasTx} onClick={() => onPick(v)}
+                  className="w-full flex items-center gap-3 text-left px-3 py-2.5 rounded-xl transition-all hover:bg-white/5 disabled:opacity-40 disabled:cursor-not-allowed"
+                  style={{ background: PANEL, border: `1px solid ${BORDER}` }}>
+                  <div className="w-16 h-9 rounded-md overflow-hidden flex-shrink-0 flex items-center justify-center" style={{ background: '#0c0c12' }}>
+                    {v.thumbnail_url ? <img src={v.thumbnail_url} alt="" className="w-full h-full object-cover" /> : <Film size={14} className="text-slate-600" />}
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <div className="text-sm text-white font-medium truncate">{v.title || 'Session enregistrée'}</div>
+                    <div className="text-[11px] text-slate-500">{v.duration_sec ? fmtDur(v.duration_sec) + ' · ' : ''}{hasTx ? 'transcription ✓' : 'pas de transcription'}</div>
+                  </div>
+                  <ArrowRight size={15} className="text-slate-500 flex-shrink-0" />
+                </button>
+              );
+            })}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function StepSource({ rawText, onSetRaw, onLaunch, loading, onLoadDemo, onImportProject,
   courseType, onCourseType, aiProvider, onAiProvider,
   pedagogicalModel, onPedagogicalModel,
@@ -290,6 +337,14 @@ function StepSource({ rawText, onSetRaw, onLaunch, loading, onLoadDemo, onImport
   const [showTypes,     setShowTypes]     = useState(false);
   const [showProviders, setShowProviders] = useState(false);
   const [importError,   setImportError]   = useState('');
+  const [showReplays,   setShowReplays]   = useState(false);
+
+  // Importer la transcription d'un replay comme source du cours.
+  const handlePickReplay = useCallback((v) => {
+    const tx = v.transcript_text || (Array.isArray(v.transcript_cues) ? v.transcript_cues.map((c) => c.text).join('\n') : '');
+    if (tx) onSetRaw?.(tx);
+    setShowReplays(false);
+  }, [onSetRaw]);
 
   const charCount = (rawText ?? '').length;
   const ready     = charCount >= 100;
@@ -499,6 +554,11 @@ function StepSource({ rawText, onSetRaw, onLaunch, loading, onLoadDemo, onImport
           style={{ background: PANEL, color: '#94a3b8', border: `1px solid ${BORDER}` }}>
           <Clipboard size={12} /> Coller presse-papier
         </button>
+        <button onClick={() => setShowReplays(true)}
+          className="flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-medium transition-all"
+          style={{ background: `${VIOLET}14`, color: VIOLET, border: `1px solid ${VIOLET}40` }}>
+          <Film size={12} /> Importer depuis un replay
+        </button>
         <button onClick={() => setShowCoach(v => !v)}
           className="flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-medium transition-all"
           style={{ background: showCoach ? `${VIOLET}15` : PANEL, color: showCoach ? VIOLET : '#94a3b8',
@@ -511,6 +571,8 @@ function StepSource({ rawText, onSetRaw, onLaunch, loading, onLoadDemo, onImport
           <RefreshCw size={11} /> Texte démo
         </button>
       </div>
+
+      {showReplays && <ReplayPicker onPick={handlePickReplay} onClose={() => setShowReplays(false)} />}
 
       <AnimatePresence>
         {showCoach && (
