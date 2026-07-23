@@ -2,6 +2,7 @@ import {
   BadRequestException,
   Body,
   Controller,
+  Delete,
   Get,
   HttpException,
   HttpStatus,
@@ -62,7 +63,7 @@ export class TenantController {
    */
   @Post(":slug/join")
   @UseGuards(JwtAuthGuard)
-  async join(@Req() req: any, @Param("slug") slug: string) {
+  async join(@Req() req: any, @Param("slug") slug: string, @Body() body: any) {
     // Depuis le host neutre LIRI, on refuse de rejoindre un tenant EMBARQUÉ
     // (il a son propre site). Depuis le domaine du tenant, le self-join reste OK.
     const fromPlatformHost = isPlatformOrigin(
@@ -74,7 +75,41 @@ export class TenantController {
       fromPlatformHost,
     );
     if (!result) throw new NotFoundException("École introuvable ou inactive.");
+    // Tracking du LIEN D'INVITATION (?invite=CODE) — best-effort, jamais bloquant : le join
+    // reste permissif même si le code est inconnu/expiré (le lien sert au suivi, pas au gating).
+    const invite = String(body?.invite || "").trim();
+    if (invite) await this.tenantService.trackInviteUse(slug, invite).catch(() => undefined);
     return { data: result };
+  }
+
+  /* ─── Liens d'invitation multiples (Studio monétisation — owner) ────────── */
+
+  @Get("current/invite-links")
+  @UseGuards(JwtAuthGuard, TenantGuard, RolesGuard)
+  @Roles("owner", "admin")
+  async listInviteLinks(@Req() req: any) {
+    return { data: await this.tenantService.listInviteLinks(req.tenant.id) };
+  }
+
+  @Post("current/invite-links")
+  @UseGuards(JwtAuthGuard, TenantGuard, RolesGuard)
+  @Roles("owner", "admin")
+  async createInviteLink(@Req() req: any, @Body() body: any) {
+    return { data: await this.tenantService.createInviteLink(req.tenant.id, body ?? {}) };
+  }
+
+  @Patch("current/invite-links/:id")
+  @UseGuards(JwtAuthGuard, TenantGuard, RolesGuard)
+  @Roles("owner", "admin")
+  async updateInviteLink(@Req() req: any, @Param("id") id: string, @Body() body: any) {
+    return { data: await this.tenantService.updateInviteLink(req.tenant.id, id, body ?? {}) };
+  }
+
+  @Delete("current/invite-links/:id")
+  @UseGuards(JwtAuthGuard, TenantGuard, RolesGuard)
+  @Roles("owner", "admin")
+  async deleteInviteLink(@Req() req: any, @Param("id") id: string) {
+    return { data: await this.tenantService.deleteInviteLink(req.tenant.id, id) };
   }
 
   /**

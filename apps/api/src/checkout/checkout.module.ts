@@ -11,10 +11,12 @@ import { CheckoutController } from "./checkout.controller";
 import { OfferingCheckoutService } from "./offering-checkout.service";
 import { OfferingCheckoutController } from "./offering-checkout.controller";
 import { SubscriptionRenewalService } from "./subscription-renewal.service";
+import { PromoCodesService } from "./promo-codes.service";
+import { PromoCodesController } from "./promo-codes.controller";
 
 @Module({
   imports: [AuthModule, TenantModule, PawaPayModule, TenantPaymentConfigModule, EmailEngineModule, LiriEntitlementsModule, MarketingModule],
-  controllers: [CheckoutController, OfferingCheckoutController],
-  providers: [CheckoutService, OfferingCheckoutService, SubscriptionRenewalService],
+  controllers: [CheckoutController, OfferingCheckoutController, PromoCodesController],
+  providers: [CheckoutService, OfferingCheckoutService, SubscriptionRenewalService, PromoCodesService],
 })
 export class CheckoutModule {}

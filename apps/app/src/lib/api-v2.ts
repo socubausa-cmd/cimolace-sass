@@ -58,7 +58,7 @@ export const tenantsApi = {
   updateBranding: (body: Record<string, unknown>) =>
     apiV2.patch<ApiEnvelope<any>>('/tenants/current/branding', body).then(unwrap),
   // Réglages tenant no-code (owner/admin) — ex: requiresStudentDossier (gating KYC).
-  updateSettings: (body: { requiresStudentDossier?: boolean }) =>
+  updateSettings: (body: { requiresStudentDossier?: boolean; memberDiscounts?: Record<string, number> }) =>
     apiV2.patch<ApiEnvelope<any>>('/tenants/current/settings', body).then(unwrap),
   // Activation self-serve du moteur École (owner/admin) — 402 si aucun abonnement
   // Cimolace actif (essai inclus).
@@ -1104,8 +1104,32 @@ export const billingCatalogApi = {
 
 // ── Join / résolution d'organisation (self-join par slug) ──
 export const joinApi = {
-  joinTenant: (slug: string) =>
-    apiV2.post<ApiEnvelope<{ ok: boolean; joined: boolean; role: string }>>(`/tenants/${encodeURIComponent(slug)}/join`).then(unwrap),
+  /** `invite` = code d'un lien d'invitation (?invite=CODE) — tracking best-effort côté serveur. */
+  joinTenant: (slug: string, invite?: string) =>
+    apiV2.post<ApiEnvelope<{ ok: boolean; joined: boolean; role: string }>>(`/tenants/${encodeURIComponent(slug)}/join`, invite ? { invite } : {}).then(unwrap),
   resolveOrg: (slug: string) =>
     apiV2.get<ApiEnvelope<{ slug: string; name: string; logo_url: string | null; embedded?: boolean; primary_domain?: string | null } | null>>(`/tenants/by-slug/${encodeURIComponent(slug)}/branding`).then(unwrap),
+};
+
+// ── Studio monétisation propriétaire ─────────────────────────────────────────
+/** Codes promo (billing_promo_codes) — CRUD owner + validation membre avant paiement. */
+export const promoCodesApi = {
+  list: () => apiV2.get<ApiEnvelope<any[]>>('/promo-codes').then(unwrap),
+  create: (body: { code: string; percentOff?: number; amountOffCents?: number; appliesTo?: string[]; expiresAt?: string; maxRedemptions?: number }) =>
+    apiV2.post<ApiEnvelope<any>>('/promo-codes', body).then(unwrap),
+  update: (id: string, body: { isActive?: boolean; expiresAt?: string | null; maxRedemptions?: number | null }) =>
+    apiV2.patch<ApiEnvelope<any>>(`/promo-codes/${id}`, body).then(unwrap),
+  remove: (id: string) => apiV2.delete<ApiEnvelope<any>>(`/promo-codes/${id}`).then(unwrap),
+  validate: (body: { tenantSlug?: string; code: string; planSlug?: string; amountCents?: number }) =>
+    apiV2.post<ApiEnvelope<any>>('/promo-codes/validate', body).then(unwrap),
+};
+
+/** Liens d'invitation multiples (tenant_invite_links) — owner ; lien = /rejoindre?org=slug&invite=CODE. */
+export const inviteLinksApi = {
+  list: () => apiV2.get<ApiEnvelope<any[]>>('/tenants/current/invite-links').then(unwrap),
+  create: (body: { label?: string; expiresAt?: string; maxUses?: number }) =>
+    apiV2.post<ApiEnvelope<any>>('/tenants/current/invite-links', body).then(unwrap),
+  update: (id: string, body: { isActive?: boolean; label?: string }) =>
+    apiV2.patch<ApiEnvelope<any>>(`/tenants/current/invite-links/${id}`, body).then(unwrap),
+  remove: (id: string) => apiV2.delete<ApiEnvelope<any>>(`/tenants/current/invite-links/${id}`).then(unwrap),
 };

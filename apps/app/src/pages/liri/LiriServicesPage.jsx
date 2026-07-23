@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Plus, Pencil, Trash2, X, Loader2, Check, Tag, PackageOpen, Euro } from 'lucide-react';
 import { LiriPortalShell } from '@/components/liri/LiriPortalShell';
 import { billingCatalogApi } from '@/lib/api-v2';
+import MonetizationStudio from '@/components/liri/MonetizationStudio';
 
 /**
  * LiriServicesPage — catalogue de SERVICES du tenant, DANS le portail LIRI (remplace le
@@ -111,6 +112,9 @@ export default function LiriServicesPage() {
               <Plus size={16} /> Nouveau service
             </button>
           </div>
+
+          {/* Studio monétisation : réductions par forfait + codes promo (self-serve owner) */}
+          <div className="mt-5"><MonetizationStudio /></div>
 
           {items.length > 0 && (
             <p className="mt-3 text-[12px] lp-faint">{items.length} service{items.length > 1 ? 's' : ''} · {activeCount} actif{activeCount > 1 ? 's' : ''}</p>

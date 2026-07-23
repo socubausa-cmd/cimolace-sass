@@ -517,7 +517,7 @@ export class TenantService {
    */
   async updateTenantSettings(
     tenantId: string,
-    dto: { requiresStudentDossier?: boolean },
+    dto: { requiresStudentDossier?: boolean; memberDiscounts?: Record<string, number> },
   ) {
     const supabase = this.authService.getClient();
     const tenant = (await this.getTenantById(tenantId)) as
@@ -528,6 +528,15 @@ export class TenantService {
     if (dto.requiresStudentDossier !== undefined) {
       settings.requiresStudentDossier = dto.requiresStudentDossier;
     }
+    if (dto.memberDiscounts !== undefined) {
+      // Réductions boutique par palier (Studio monétisation) : clés connues, entiers 0-90.
+      const clean: Record<string, number> = {};
+      for (const k of ['autonome', 'academique', 'prive', 'privilegie']) {
+        const v = Number((dto.memberDiscounts as any)?.[k]);
+        if (Number.isFinite(v)) clean[k] = Math.min(90, Math.max(0, Math.round(v)));
+      }
+      settings.memberDiscounts = clean;
+    }
     metadata.settings = settings;
     const { data } = await supabase
       .from("tenants")
@@ -536,6 +545,95 @@ export class TenantService {
       .select("*")
       .single();
     return data;
+  }
+
+  /* ─── Liens d'invitation multiples (Studio monétisation) ──────────────────
+   * Table `tenant_invite_links` (RLS sans policy = service_role via l'API).
+   * Le lien public = /rejoindre?org=<slug>&invite=<code> ; `uses` = jonctions
+   * passées par ce lien (tracking best-effort, jamais bloquant au join). */
+
+  async listInviteLinks(tenantId: string) {
+    const sb: any = this.authService.getClient();
+    const { data } = await sb
+      .from("tenant_invite_links")
+      .select("*")
+      .eq("tenant_id", tenantId)
+      .order("created_at", { ascending: false });
+    return data ?? [];
+  }
+
+  async createInviteLink(
+    tenantId: string,
+    body: { label?: string; expiresAt?: string; maxUses?: number },
+  ) {
+    const sb: any = this.authService.getClient();
+    // Code court lisible (8 alphanum majuscules, sans ambiguïté O/0/I/1).
+    const alphabet = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+    let code = "";
+    for (let i = 0; i < 8; i++) code += alphabet[Math.floor(Math.random() * alphabet.length)];
+    const row = {
+      tenant_id: tenantId,
+      code,
+      label: String(body?.label || "").trim() || null,
+      expires_at: body?.expiresAt || null,
+      max_uses: body?.maxUses != null ? Math.max(1, Math.round(Number(body.maxUses))) : null,
+    };
+    const { data, error } = await sb
+      .from("tenant_invite_links")
+      .insert(row)
+      .select("*")
+      .single();
+    if (error) throw new Error(error.message);
+    return data;
+  }
+
+  async updateInviteLink(
+    tenantId: string,
+    id: string,
+    patch: { isActive?: boolean; label?: string },
+  ) {
+    const sb: any = this.authService.getClient();
+    const upd: Record<string, unknown> = {};
+    if (patch.isActive !== undefined) upd.is_active = !!patch.isActive;
+    if (patch.label !== undefined) upd.label = String(patch.label || "").trim() || null;
+    const { data, error } = await sb
+      .from("tenant_invite_links")
+      .update(upd)
+      .eq("id", id)
+      .eq("tenant_id", tenantId)
+      .select("*")
+      .single();
+    if (error) throw new Error(error.message);
+    return data;
+  }
+
+  async deleteInviteLink(tenantId: string, id: string) {
+    const sb: any = this.authService.getClient();
+    const { error } = await sb
+      .from("tenant_invite_links")
+      .delete()
+      .eq("id", id)
+      .eq("tenant_id", tenantId);
+    if (error) throw new Error(error.message);
+    return { ok: true };
+  }
+
+  /** Incrémente `uses` du lien (slug tenant + code) — best-effort, appelé au join. */
+  async trackInviteUse(slug: string, code: string) {
+    const sb: any = this.authService.getClient();
+    const tenantId = await this.getActiveTenantIdBySlug(slug);
+    if (!tenantId) return;
+    const { data: row } = await sb
+      .from("tenant_invite_links")
+      .select("id, uses")
+      .eq("tenant_id", tenantId)
+      .ilike("code", String(code).trim())
+      .maybeSingle();
+    if (!row) return;
+    await sb
+      .from("tenant_invite_links")
+      .update({ uses: (row.uses || 0) + 1 })
+      .eq("id", row.id);
   }
 
   /**

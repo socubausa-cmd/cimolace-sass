@@ -3,7 +3,7 @@ import { DEFAULT_TENANT_SLUG } from '@/config/platform';
 import { getApiBaseUrl } from '@/lib/apiBase';
 import { Link, useParams, useSearchParams } from 'react-router-dom';
 import { Helmet } from 'react-helmet';
-import { offeringCheckoutApi } from '@/lib/api-v2';
+import { offeringCheckoutApi, promoCodesApi } from '@/lib/api-v2';
 import { supabase } from '@/lib/customSupabaseClient';
 import { useBilling } from '@/contexts/BillingContext';
 import { getNgowazuluMentoratOffer } from '@/config/ngowazuluMentoratOffers';
@@ -83,6 +83,22 @@ export default function PaiementPage() {
   }, [planSlug, typeParam, searchParams]);
 
   const [method, setMethod] = useState('card'); // 'card' (Stripe) | 'mobile_money' (PawaPay)
+
+  // ── Code promo (Studio monétisation) : validé côté serveur au checkout ; ici une simple
+  //    pré-validation UX (affiche le prix remisé avant de payer). Abonnements/forfaits seulement.
+  const [promo, setPromo] = useState('');
+  const [promoInfo, setPromoInfo] = useState(null); // { valid, reason?, discountedCents?, baseCents? }
+  const checkPromo = async () => {
+    const code = promo.trim();
+    if (!code) { setPromoInfo(null); return; }
+    try {
+      const r = await promoCodesApi.validate({ tenantSlug: payTenant, code, planSlug: planSlug || undefined });
+      setPromoInfo(r || null);
+    } catch (e) {
+      setPromoInfo({ valid: false, reason: e?.message || 'Code invalide.' });
+    }
+  };
+  const promoBody = () => (promo.trim() ? { promoCode: promo.trim() } : {});
   const [amountEur, setAmountEur] = useState('');
   const [phone, setPhone] = useState('');
   const [status, setStatus] = useState({ state: 'idle', message: '', depositId: null });
@@ -357,7 +373,7 @@ export default function PaiementPage() {
       if (method === 'card') {
         const base = `${window.location.origin}/t/${payTenant}/paiement${planSlug ? `?plan=${encodeURIComponent(planSlug)}` : ''}`;
         const sep = base.includes('?') ? '&' : '?';
-        const body = { kind: offer.kind, tenantSlug: payTenant };
+        const body = { kind: offer.kind, tenantSlug: payTenant, ...promoBody() };
         if (offer.kind === 'subscription') body.planSlug = planSlug;
         else { body.amountCents = amountCents; if (planSlug) body.planSlug = planSlug; }
         body.successUrl = `${base}${sep}card=success&session_id={CHECKOUT_SESSION_ID}`;
@@ -377,7 +393,7 @@ export default function PaiementPage() {
       if (method === 'paypal') {
         const base = `${window.location.origin}/t/${payTenant}/paiement${planSlug ? `?plan=${encodeURIComponent(planSlug)}` : ''}`;
         const sep = base.includes('?') ? '&' : '?';
-        const body = { kind: offer.kind, tenantSlug: payTenant };
+        const body = { kind: offer.kind, tenantSlug: payTenant, ...promoBody() };
         if (offer.kind === 'subscription') body.planSlug = planSlug;
         else { body.amountCents = amountCents; if (planSlug) body.planSlug = planSlug; }
         body.successUrl = `${base}${sep}paypal=success`;
@@ -398,7 +414,7 @@ export default function PaiementPage() {
         setStatus({ state: 'error', message: 'Sélectionnez un pays et un opérateur Mobile Money.', depositId: null });
         return;
       }
-      const body = { kind: offer.kind, phoneNumber: phone.trim(), provider: mmOperator, country: mmCountry, tenantSlug: payTenant };
+      const body = { kind: offer.kind, phoneNumber: phone.trim(), provider: mmOperator, country: mmCountry, tenantSlug: payTenant, ...promoBody() };
       if (offer.kind === 'subscription') body.planSlug = planSlug;
       else { body.amountCents = amountCents; if (planSlug) body.planSlug = planSlug; }
       const res = isGuest
@@ -732,6 +748,36 @@ export default function PaiementPage() {
                 </>
               )}
             </>
+          )}
+
+          {/* Code promo (abonnements/forfaits) — validé côté serveur ; pré-check UX ici. */}
+          {offer.kind === 'subscription' && (
+            <div className="mb-4">
+              <label className="mb-1 block text-sm text-gray-300">Code promo (optionnel)</label>
+              <div className="flex gap-2">
+                <input
+                  value={promo}
+                  onChange={(e) => { setPromo(e.target.value.toUpperCase()); setPromoInfo(null); }}
+                  onBlur={checkPromo}
+                  placeholder="EX : BIENVENUE10"
+                  className="w-full rounded-lg border border-white/15 bg-black/25 px-4 py-2.5 font-mono text-sm text-white placeholder:text-gray-500"
+                />
+                <button type="button" onClick={checkPromo}
+                  className="shrink-0 rounded-lg border border-white/15 px-4 py-2.5 text-sm text-gray-200 hover:bg-white/5">
+                  Vérifier
+                </button>
+              </div>
+              {promoInfo && (
+                promoInfo.valid ? (
+                  <p className="mt-1.5 text-xs text-emerald-300">
+                    Code {promoInfo.code} appliqué : {promoInfo.percentOff != null ? `−${promoInfo.percentOff} %` : `−${(promoInfo.amountOffCents / 100).toFixed(2)} €`}
+                    {promoInfo.discountedCents != null ? ` → ${(promoInfo.discountedCents / 100).toFixed(2)} €` : ''}
+                  </p>
+                ) : (
+                  <p className="mt-1.5 text-xs text-orange-300">{promoInfo.reason || 'Code invalide.'}</p>
+                )
+              )}
+            </div>
           )}
 
           <button

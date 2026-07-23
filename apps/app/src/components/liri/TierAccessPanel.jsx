@@ -29,7 +29,25 @@ const CYCLE_KICKER = {
   privilegie: 'La voie du praticien',
 };
 // Réduction automatique sur les cours-modules (boutique) + événements, selon le forfait.
-const DISCOUNTS = { autonome: 25, academique: 40, prive: 50, privilegie: 60 };
+const DEFAULT_DISCOUNTS = { autonome: 25, academique: 40, prive: 50, privilegie: 60 };
+
+/** Réductions boutique/événements par palier : CONFIGURABLES par le propriétaire (Studio
+ *  monétisation, /liri/services) via tenants.metadata.settings.memberDiscounts ; repli = défauts. */
+function useMemberDiscounts() {
+  const [d, setD] = useState(DEFAULT_DISCOUNTS);
+  useEffect(() => {
+    let alive = true;
+    import('@/lib/api-v2').then(({ apiV2 }) =>
+      apiV2.get('/tenants/current').then((res) => {
+        let x = res?.data; while (x && typeof x === 'object' && 'data' in x) x = x.data;
+        const conf = x?.metadata?.settings?.memberDiscounts;
+        if (alive && conf && typeof conf === 'object') setD({ ...DEFAULT_DISCOUNTS, ...conf });
+      }),
+    ).catch(() => {});
+    return () => { alive = false; };
+  }, []);
+  return d;
+}
 const RECOMMENDED = 'academique';
 const ORDER = ['autonome', 'academique', 'prive', 'privilegie'];
 
@@ -98,6 +116,7 @@ const RDV_URL = '/liri/rendez-vous';
 const BOUTIQUE_URL = '/liri/marche';
 
 export default function TierAccessPanel() {
+  const DISCOUNTS = useMemberDiscounts();
   const { label, cycle, isStaff, hasForfait } = useMemberEntitlements();
   const [plans, setPlans] = useState([]);
   const [selected, setSelected] = useState(null);

@@ -49,6 +49,10 @@ export default function JoinOrgPage() {
     return '';
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
+  // Code du LIEN D'INVITATION (?invite=CODE) — tracking best-effort au join. Persisté avec le
+  // slug pour survivre au détour /login (redirect conserve la query complète).
+  const inviteCode = useMemo(() => String(searchParams.get('invite') || '').trim(), []); // eslint-disable-line react-hooks/exhaustive-deps
+
   const [slugInput, setSlugInput] = useState(initialSlug);
   const [org, setOrg] = useState(null); // { slug, name, logo_url } | null
   const [resolving, setResolving] = useState(false);
@@ -97,17 +101,18 @@ export default function JoinOrgPage() {
     }
     setError('');
 
-    // Non connecté → mémoriser le slug et router vers /login avec retour.
+    // Non connecté → mémoriser le slug et router vers /login avec retour (invite conservé).
     if (!user) {
       try { sessionStorage.setItem(PENDING_JOIN_KEY, slug); } catch (_) {}
-      navigate(`/login?redirect=${encodeURIComponent('/rejoindre?org=' + slug)}`);
+      const back = '/rejoindre?org=' + slug + (inviteCode ? `&invite=${encodeURIComponent(inviteCode)}` : '');
+      navigate(`/login?redirect=${encodeURIComponent(back)}`);
       return;
     }
 
-    // Connecté → self-join idempotent.
+    // Connecté → self-join idempotent (+ tracking du lien d'invitation, best-effort).
     setJoining(true);
     try {
-      await joinApi.joinTenant(slug); // { ok, joined, role } — joined=false = déjà membre, on route quand même
+      await joinApi.joinTenant(slug, inviteCode || undefined); // { ok, joined, role } — joined=false = déjà membre, on route quand même
       authStore.setTenantSlug(slug);
       navigate('/dashboard', { replace: true });
     } catch (err) {

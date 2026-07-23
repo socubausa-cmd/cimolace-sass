@@ -59,4 +59,10 @@ export class CreateOfferingDepositDto {
   })
   @Length(2, 64)
   tenantSlug?: string;
+
+  /** Code promo (Studio monétisation) — validé/appliqué CÔTÉ SERVEUR dans resolveAmount. */
+  @IsOptional()
+  @IsString()
+  @Length(2, 40)
+  promoCode?: string;
 }

@@ -12,6 +12,7 @@ import { PawaPayService } from '../pawapay/pawapay.service';
 import { CreateOfferingDepositDto } from './create-offering-deposit.dto';
 import { CreateOfferingCardDto } from './create-offering-card.dto';
 import { isStripeConfigured, stripeCreateCheckoutSession } from '../billing/stripe-rest.util';
+import { PromoCodesService } from './promo-codes.service';
 import {
   resolvePaypalCreds,
   normalizePaypalMode,
@@ -50,6 +51,7 @@ export class OfferingCheckoutService {
     private readonly tenantPayments: TenantPaymentConfigService,
     private readonly email: EmailEngineService,
     private readonly entitlements: LiriEntitlementsService,
+    private readonly promos: PromoCodesService,
   ) {}
 
   /**
@@ -245,13 +247,21 @@ export class OfferingCheckoutService {
     kind: 'subscription' | 'consultation' | 'donation';
     planSlug?: string;
     amountCents?: number;
+    promoCode?: string;
+    tenantSlug?: string;
   }): Promise<{ amountCents: number; planSlug: string | null; currency: string; billingCycle: string }> {
+    // CODE PROMO (Studio monétisation) : appliqué CÔTÉ SERVEUR au montant résolu — jamais un prix
+    // client. Sur les abonnements/forfaits uniquement (pas consultation/offrande).
+    const withPromo = async (amountCents: number, planSlug: string | null) => {
+      if (dto.kind !== 'subscription' || !dto.promoCode) return amountCents;
+      return this.promos.apply(dto.tenantSlug ?? ISNA_TENANT_SLUG, dto.promoCode, planSlug, amountCents);
+    };
     if (dto.kind === 'subscription') {
       const planSlug = dto.planSlug ?? null;
       if (!planSlug) throw new BadRequestException('planSlug requis pour un abonnement');
       // 1) Paliers mentorat Ngowazulu en dur (source serveur historique, EUR).
       const hard = NGOWAZULU_PLAN_AMOUNTS_EUR_CENTS[planSlug];
-      if (hard) return { amountCents: hard, planSlug, currency: 'EUR', billingCycle: 'monthly' };
+      if (hard) return { amountCents: await withPromo(hard, planSlug), planSlug, currency: 'EUR', billingCycle: 'monthly' };
       // 2) Sinon, TOUT plan de billing_plans (cycles d'initiation / forfaits) : prix lu serveur
       //    depuis la DB (jamais fourni par le client) → permet de brancher /forfaits sur ce moteur.
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -264,7 +274,7 @@ export class OfferingCheckoutService {
         throw new BadRequestException(`Offre inconnue ou inactive (planSlug=${planSlug})`);
       }
       return {
-        amountCents: plan.price_cents,
+        amountCents: await withPromo(plan.price_cents, planSlug),
         planSlug,
         currency: String(plan.currency || 'EUR').toUpperCase(),
         billingCycle: String(plan.billing_cycle || 'monthly').toLowerCase(),
