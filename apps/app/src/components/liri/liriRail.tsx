@@ -4,6 +4,7 @@ import {
   CalendarDays, BookOpen, Film, School, Calendar, FileText, Award, AlertTriangle, FolderOpen, Tag, Files,
   SquarePen, CreditCard, Flame, ShoppingBag, Megaphone, Package, ReceiptText, Link2, Landmark,
 } from 'lucide-react';
+import { prefetchLiriPath } from '@/lib/prefetchLiriRoutes';
 
 /**
  * RAIL du portail LIRI, organisé par MOTEUR (infrastructure) — SOURCE UNIQUE partagée par
@@ -237,7 +238,7 @@ export function LiriRailGroups({
             const Icon = it.icon;
             const isActive = it.key === active;
             return (
-              <button key={it.key} onClick={() => onNav(it.to)} className={`lp-nav flex w-[74px] flex-col items-center gap-0.5 rounded-2xl py-2 lp-tr ${isActive ? 'lp-nav-active' : ''}`}>
+              <button key={it.key} onClick={() => onNav(it.to)} onMouseEnter={() => prefetchLiriPath(it.to)} onFocus={() => prefetchLiriPath(it.to)} className={`lp-nav flex w-[74px] flex-col items-center gap-0.5 rounded-2xl py-2 lp-tr ${isActive ? 'lp-nav-active' : ''}`}>
                 <span className="lp-ni relative grid h-6 w-6 place-items-center">
                   <Icon size={19} />
                   {it.key === 'lives' && live && (

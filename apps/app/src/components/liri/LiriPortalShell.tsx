@@ -13,6 +13,7 @@ import { useSchoolActive } from '@/hooks/useSchoolActive';
 import { LiriRailGroups, getRailItems, LiriEngineSwitcher, getActiveEngine } from './liriRail';
 import type { RailKey } from './liriRail';
 import { getApiBaseUrl } from '@/lib/apiBase';
+import { prefetchLiriRoutes } from '@/lib/prefetchLiriRoutes';
 import activeTenantConfig from '@/lib/tenant/activeTenantConfig';
 import { PortalHeaderProvider, usePortalHeaderValues } from './portalHeader';
 import '../../pages/LiriPortal.css';
@@ -169,6 +170,11 @@ function LiriPortalShellInner({
       .catch(() => {});
     return () => { alive = false; };
   }, [slug]);
+
+  // Navigation « à chaud » : dès qu'on est dans le portail, précharger en idle les chunks des
+  // onglets → au clic, le chunk est déjà là (plus de flash « CHARGEMENT… »), la coque ne bouge pas.
+  useEffect(() => { prefetchLiriRoutes(); }, []);
+
   // Suffixe affiché seulement s'il apporte une info ET qu'aucun fil d'Ariane ne prend le relais.
   const _schoolSuffix = !crumb && sessionSchool && sessionSchool !== _shellBrand ? sessionSchool : '';
 
