@@ -5,11 +5,13 @@ import {
   Library, Settings2, Mic, ArrowUp, LogIn, CalendarPlus, PenTool,
   ShoppingBag, Clock, ChevronRight, Film, ChevronLeft, UserRound,
   Radio, GraduationCap, LogOut, ArrowUpRight, AlertTriangle, CalendarDays, Megaphone,
-  BookOpen, CheckCircle2, CalendarClock,
+  BookOpen, CheckCircle2, CalendarClock, ShieldCheck,
 } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import { authStore } from '@/lib/auth-store';
 import { getCachedHostTenant } from '@/lib/tenantResolver';
+import { resolveTenantSlug } from '@/lib/tenant/activeBranding';
+import { resolveRequiresStudentDossier } from '@/lib/tenant/activeTenantConfig';
 import { getApiBaseUrl } from '@/lib/apiBase';
 import { useAuth } from '@/hooks/useAuth';
 import { isCreatorRole } from '@/lib/liri/creatorRole';
@@ -52,7 +54,11 @@ export function LiriPortalPage() {
   // d'une session antérieure dans le même navigateur → fuite). Domaine prioritaire, getTenantSlug
   // en repli (utilisé pour le header X-Tenant-Slug des appels API au boot, avant que l'org charge).
   const domainSlug = typeof window !== 'undefined' ? getCachedHostTenant(window.location.hostname) : '';
-  const slug = domainSlug || authStore.getTenantSlug();
+  // Repli FIABLE : sur l'hôte fondateur (prorascience.org) le cache host→slug peut ne pas
+  // être encore hydraté au boot → resolveTenantSlug() résout le tenant actif de façon SYNCHRONE
+  // ('isna'). Sans ça, X-Tenant-Slug part vide → TenantGuard 400 sur /growth/stats → les tuiles
+  // (sessions/membres/min/revenus) retombent à 0 alors que les membres existent (bug '0 membres').
+  const slug = domainSlug || authStore.getTenantSlug() || resolveTenantSlug();
 
   const [now, setNow] = useState(() => new Date());
   const [stats, setStats] = useState<Stats | null>(null);
@@ -375,6 +381,23 @@ export function LiriPortalPage() {
             <h1 className="mt-3 text-center lp-serif text-[34px] font-medium leading-tight tracking-tight lp-rise">{greet}<span className="lp-coral"> sur {PORTAL_BRAND}</span></h1>
             <p className="mt-2 text-center text-[14px] lp-muted lp-rise">Que voulez-vous lancer aujourd'hui&nbsp;?</p>
 
+            {/* Dossier élève KYC (certificats) — NON-BLOQUANT : l'élève est déjà dans le portail,
+                on l'invite juste à compléter son dossier. Disparaît une fois `student_profile_completed`. */}
+            {!isCreator && resolveRequiresStudentDossier() && !user?.student_profile_completed && (
+              <button
+                onClick={() => nav('/onboarding/eleve')}
+                className="lp-tr lp-soft group mt-6 flex w-full max-w-xl items-center gap-3 rounded-2xl border px-4 py-3 text-left hover:border-[rgba(217,119,87,.6)]"
+                style={{ borderColor: 'rgba(217,119,87,.35)', background: 'rgba(217,119,87,0.08)' }}
+              >
+                <span className="grid h-9 w-9 shrink-0 place-items-center rounded-xl lp-coral lp-coral-tint"><ShieldCheck size={18} /></span>
+                <span className="min-w-0 flex-1">
+                  <span className="block text-[14px] font-semibold text-white">Complétez votre dossier élève</span>
+                  <span className="block text-[12px] lp-muted">Pièce d’identité + signature — nécessaire pour éditer vos certificats. Optionnel pour l’instant.</span>
+                </span>
+                <ChevronRight size={18} className="lp-coral shrink-0" />
+              </button>
+            )}
+
             {/* command bar → Brain (créateur uniquement ; l'élève ne pilote pas d'actions) */}
             {isCreator && (
               <button onClick={() => nav('/dashboard/liri')} className="lp-tr lp-soft group mt-7 flex h-14 w-full max-w-xl items-center gap-3 rounded-2xl lp-line border lp-panel px-4 text-left hover:border-[rgba(217,119,87,.4)]">
@@ -552,7 +575,7 @@ export function LiriPortalPage() {
           {/* ce mois — métriques CRÉATEUR (sessions/membres/revenus) : masquées pour l'élève */}
           {isCreator && (
             <>
-              <h3 className="mb-2 mt-6 text-[11px] font-semibold uppercase tracking-[0.16em] lp-faint">Ce mois</h3>
+              <h3 className="mb-2 mt-6 text-[11px] font-semibold uppercase tracking-[0.16em] lp-faint">Vue d'ensemble</h3>
               <div className="grid grid-cols-2 gap-2">
                 {[
                   { v: stats?.totalLives ?? 0, l: 'sessions' },

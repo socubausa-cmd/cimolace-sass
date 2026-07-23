@@ -27,7 +27,7 @@ export type RailKey =
   | 'vie-scolaire' | 'agenda' | 'notes' | 'evaluations' | 'absences'
   | 'lives' | 'forum' | 'messages'
   | 'biblio-eleve' | 'documents'
-  | 'temple' | 'boutique' | 'produits' | 'commandes' | 'paiements' | 'factures' | 'compta'
+  | 'temple' | 'boutique' | 'marche' | 'produits' | 'commandes' | 'paiements' | 'factures' | 'compta'
   | 'studio' | 'ecole' | 'services' | 'crm' | 'pages' | 'contenu' | 'biblio' | 'brain' | 'integrations' | 'reglages';
 
 export type RailItem = { key: RailKey; label: string; icon: typeof House; to: string; creator?: boolean; school?: boolean };
@@ -78,7 +78,8 @@ export const ENGINES: EngineDef[] = [
     key: 'mbolo', label: 'mbolo', sub: 'Boutique', icon: ShoppingBag,
     groups: [
       { section: 'Boutique', items: [
-        { key: 'boutique', label: 'Boutique', icon: ShoppingBag, to: '/liri/boutique' },
+        { key: 'marche', label: 'Marché', icon: ShoppingBag, to: '/liri/marche' },
+        { key: 'boutique', label: 'Boutique Sacrée', icon: Flame, to: '/liri/boutique' },
         { key: 'produits', label: 'Produits', icon: Package, to: '/liri/mbolo/produits', creator: true },
         { key: 'commandes', label: 'Commandes', icon: ReceiptText, to: '/liri/mbolo/commandes', creator: true },
       ] },

@@ -70,9 +70,13 @@ const LoginPage = () => {
       ? 'Institut Nocturne'
       : 'Espace membre';
   const footerOrg = isPlatformLiri ? 'Cimolace' : isFounderTenant ? 'NGOWAZULU' : schoolBrand;
-  // Logo : Œil d'Horus pour le FONDATEUR uniquement ; tenant tiers = SON logo DB
-  // (repli : aucun logo → on garde le rond neutre côté rendu). Sur LIRI : <LiriBrandIcon/>.
-  const logo = isFounderTenant ? '/prorascience-logo-2.jpeg' : (branding.logo || '');
+  // Logo : Œil d'Horus SANS FOND (PNG transparent) pour le FONDATEUR — cohérent avec la page
+  // d'activation, le portail (LiriPortalShell) et la vitrine immersive, qui affichent tous l'œil
+  // transparent. Tenant tiers = SON logo DB (repli : aucun logo → rond neutre). Sur LIRI : lirilogo.
+  const logo = isFounderTenant ? '/prorascience-eye.png' : (branding.logo || '');
+  // Le logo fondateur (et LIRI) est un PNG transparent → on le fait FLOTTER (halo coral), sans le
+  // disque noir (`bg-black rounded-full`) réservé aux logos DB de tenants tiers à fond opaque.
+  const logoTransparent = isFounderTenant;
   const STATS = isPlatformLiri || !isFounderTenant
     ? [
         { icon: Radio, value: 'HD', label: 'Live' },
@@ -457,7 +461,7 @@ const LoginPage = () => {
                 <img
                   src={logo}
                   alt={schoolBrand}
-                  className="h-12 w-auto max-w-[min(260px,88vw)] object-contain px-1 py-2 drop-shadow-[0_0_28px_rgba(123,97,255,0.25)]"
+                  className="h-12 w-auto max-w-[min(260px,88vw)] object-contain px-1 py-2 drop-shadow-[0_0_28px_rgba(217,119,87,0.28)]"
                 />
               ) : (
                 <span
@@ -542,8 +546,8 @@ const LoginPage = () => {
           <div className="relative grid h-72 w-72 place-items-center">
             <Ripple mainCircleSize={118} numCircles={7} />
             <div className="absolute h-40 w-40 scale-110 rounded-full blur-2xl" style={{ backgroundColor: `${accentColor}33` }} />
-            {isPlatformLiri ? (
-              <img src="/lirilogo.png" alt="LIRI" className="relative z-10 h-48 w-48 object-contain" style={{ filter: 'drop-shadow(0 0 42px rgba(217,119,87,0.5))' }} />
+            {(isPlatformLiri || logoTransparent) ? (
+              <img src={isPlatformLiri ? '/lirilogo.png' : logo} alt={schoolBrand} className="relative z-10 h-48 w-48 object-contain" style={{ filter: `drop-shadow(0 0 42px ${accentColor}73)` }} />
             ) : logo ? (
               <img
                 src={logo}
@@ -603,8 +607,8 @@ const LoginPage = () => {
           {/* Logo mobile uniquement */}
           <div className="mb-8 flex flex-col items-center text-center lg:hidden">
             <Link to="/" className="inline-flex flex-col items-center gap-2">
-              {isPlatformLiri ? (
-                <img src="/lirilogo.png" alt="LIRI" className="h-24 w-24 object-contain" style={{ filter: 'drop-shadow(0 0 24px rgba(217,119,87,0.5))' }} />
+              {(isPlatformLiri || logoTransparent) ? (
+                <img src={isPlatformLiri ? '/lirilogo.png' : logo} alt={schoolBrand} className="h-24 w-24 object-contain" style={{ filter: `drop-shadow(0 0 24px ${accentColor}80)` }} />
               ) : logo ? (
                 <img src={logo} alt={schoolBrand} className="h-20 w-20 rounded-full border-2 bg-black object-contain" style={{ borderColor: `${accentColor}80` }} />
               ) : (

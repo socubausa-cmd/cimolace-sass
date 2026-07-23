@@ -17,7 +17,7 @@ const asArray = (r) => (Array.isArray(r) ? r : Array.isArray(r?.data) ? r.data :
 const fmtPrice = (cents, currency) =>
   `${(Number(cents || 0) / 100).toLocaleString('fr-FR')} ${currency || 'EUR'}`;
 
-export default function MboloStorefrontPage() {
+export default function MboloStorefrontPage({ embedded = false, staffPreview = false }) {
   const { user } = useAuth();
   const [searchParams, setSearchParams] = useSearchParams();
   const [products, setProducts] = useState([]);
@@ -127,18 +127,20 @@ export default function MboloStorefrontPage() {
   }
 
   return (
-    <div className="min-h-screen bg-[#0b0f14] text-white">
-      <Helmet><title>Boutique</title></Helmet>
+    <div className={embedded ? 'text-white' : 'min-h-screen bg-[#0b0f14] text-white'}>
+      {!embedded && <Helmet><title>Boutique</title></Helmet>}
       <div className="mx-auto max-w-6xl px-4 py-8">
         <header className="mb-6 flex items-center justify-between gap-3">
           <div className="flex items-center gap-2">
             <Store className="h-6 w-6 text-[var(--school-accent,#D4AF37)]" />
             <h1 className="text-2xl font-bold">Boutique</h1>
           </div>
-          <div className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-3 py-1.5 text-sm">
-            <ShoppingBag className="h-4 w-4 text-[var(--school-accent,#D4AF37)]" />
-            {cartCount} article{cartCount > 1 ? 's' : ''}
-          </div>
+          {!staffPreview && (
+            <div className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-3 py-1.5 text-sm">
+              <ShoppingBag className="h-4 w-4 text-[var(--school-accent,#D4AF37)]" />
+              {cartCount} article{cartCount > 1 ? 's' : ''}
+            </div>
+          )}
         </header>
 
         {flash && <div className="mb-4 flex items-center gap-2 rounded-lg border border-emerald-500/30 bg-emerald-500/10 px-3 py-2 text-sm text-emerald-300"><Check className="h-4 w-4 shrink-0" /> {flash}</div>}
@@ -149,7 +151,7 @@ export default function MboloStorefrontPage() {
         ) : products.length === 0 ? (
           <div className="rounded-xl border border-white/10 bg-white/[0.02] py-16 text-center text-gray-500">La boutique ne contient pas encore de produit.</div>
         ) : (
-          <div className="grid gap-6 lg:grid-cols-[1fr_320px]">
+          <div className={staffPreview ? 'grid gap-6' : 'grid gap-6 lg:grid-cols-[1fr_320px]'}>
             {/* Catalogue */}
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
               {products.map((p) => (
@@ -162,18 +164,25 @@ export default function MboloStorefrontPage() {
                     {p.description && <p className="mt-1 line-clamp-2 text-xs text-gray-400">{p.description}</p>}
                     <div className="mt-3 flex items-center justify-between">
                       <span className="font-bold text-[var(--school-accent,#D4AF37)]">{fmtPrice(p.price_cents, p.currency)}</span>
-                      <button type="button" onClick={() => addToCart(p)} disabled={busy === p.id || (p.stock != null && p.stock <= 0)}
-                        className="inline-flex items-center gap-1 rounded-lg bg-[var(--school-accent,#D4AF37)] px-3 py-1.5 text-xs font-bold text-black hover:brightness-110 disabled:opacity-50">
-                        {busy === p.id ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Plus className="h-3.5 w-3.5" />}
-                        {p.stock != null && p.stock <= 0 ? 'Épuisé' : 'Ajouter'}
-                      </button>
+                      {staffPreview ? (
+                        <span className="rounded-md border border-white/10 px-2 py-1 text-[11px] text-gray-400">
+                          {p.stock != null && p.stock <= 0 ? 'Épuisé' : 'En vente'}
+                        </span>
+                      ) : (
+                        <button type="button" onClick={() => addToCart(p)} disabled={busy === p.id || (p.stock != null && p.stock <= 0)}
+                          className="inline-flex items-center gap-1 rounded-lg bg-[var(--school-accent,#D4AF37)] px-3 py-1.5 text-xs font-bold text-black hover:brightness-110 disabled:opacity-50">
+                          {busy === p.id ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Plus className="h-3.5 w-3.5" />}
+                          {p.stock != null && p.stock <= 0 ? 'Épuisé' : 'Ajouter'}
+                        </button>
+                      )}
                     </div>
                   </div>
                 </div>
               ))}
             </div>
 
-            {/* Panier */}
+            {/* Panier — masqué en aperçu propriétaire (l'owner vend, il n'achète pas) */}
+            {!staffPreview && (
             <aside className="h-fit rounded-xl border border-white/10 bg-white/[0.03] p-4 lg:sticky lg:top-4">
               <p className="mb-3 flex items-center gap-2 text-sm font-semibold"><ShoppingBag className="h-4 w-4" /> Votre panier</p>
               {cart.length === 0 ? (
@@ -209,6 +218,7 @@ export default function MboloStorefrontPage() {
                 </>
               )}
             </aside>
+            )}
           </div>
         )}
       </div>

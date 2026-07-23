@@ -42,6 +42,19 @@ export default defineConfig({
           if (inMod('livekit-client/') || inMod('@livekit/')) return 'vendor-livekit';
           if (inMod('react-dom/') || inMod('scheduler/') || inMod('react/')) return 'vendor-react';
 
+          // Icônes : lucide-react émet un module JS par icône (file-warning, clipboard-check…).
+          // Sans regroupement, chaque icône partagée entre 2+ routes lazy devient un micro-chunk
+          // réseau (mesuré : ~500-900ms de latence chacun). On les fusionne en UN chunk.
+          if (inMod('lucide-react/') || inMod('react-icons/') || inMod('@radix-ui/react-icons/')) return 'vendor-icons';
+          // date-fns v4 = un module par fonction (format, isSameDay, isValid, parseISO…) → 1 chunk.
+          if (inMod('date-fns/') || inMod('date-fns-tz/')) return 'vendor-datefns';
+          // Petits utilitaires transverses importés partout : évite une poussière de micro-chunks.
+          if (
+            inMod('clsx/') || inMod('tailwind-merge/') || inMod('class-variance-authority/') ||
+            inMod('zod/') || inMod('axios/') || inMod('@tanstack/react-query/') ||
+            inMod('react-router/') || inMod('react-router-dom/') || inMod('@supabase/')
+          ) return 'vendor-utils';
+
           return undefined;
         },
       },

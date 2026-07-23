@@ -54,6 +54,121 @@ async function enrichMergedArenaSessions(merged) {
   });
 }
 
+// ── Coalescence CROSS-INSTANCE (perf) ─────────────────────────────────────────
+// Plusieurs composants montent ce hook avec le MÊME uid (bannière live globale + carte accueil
+// + panel dashboard…). Sans partage, chacun refaisait les 4 requêtes live → mesuré ×3 par
+// navigation. On coalesce par clé (uid ou 'public') : une requête EN VOL partagée + un cache très
+// court (8s). Le realtime reste la source de fraîcheur immédiate (force → bypass du cache).
+const _liveInflight = new Map();
+const _liveCache = new Map();
+const LIVE_CACHE_TTL = 8000;
+
+function _coalescedLive(key, runner, force) {
+  const cached = _liveCache.get(key);
+  if (!force && cached && Date.now() - cached.at < LIVE_CACHE_TTL) return Promise.resolve(cached.result);
+  const inflight = _liveInflight.get(key);
+  if (inflight) return inflight;
+  const p = Promise.resolve().then(runner)
+    .then((res) => { _liveCache.set(key, { result: res, at: Date.now() }); return res; })
+    .finally(() => { if (_liveInflight.get(key) === p) _liveInflight.delete(key); });
+  _liveInflight.set(key, p);
+  return p;
+}
+
+async function _runPublicLive() {
+  await ensureFreshSession(supabase, 120);
+  const { data: visRows, error: visErr } = await supabase
+    .from('live_visibility_rules')
+    .select(`
+      live_sessions!inner(id, title, description, cover_image_url, status, scheduled_at, started_at, ended_at, teacher_id)
+    `)
+    .eq('is_public', true)
+    .eq('live_sessions.status', 'live')
+    .limit(8);
+  if (visErr) throw visErr;
+  const publicLive = (visRows || []).map((r) => r.live_sessions).filter(Boolean);
+  const merged = publicLive.map((ls) => ({ ...ls, source: 'public' }));
+  return enrichMergedArenaSessions(merged);
+}
+
+async function _runUserLive(uid) {
+  await ensureFreshSession(supabase, 120);
+  const { data: invitations } = await supabase
+    .from('live_invitations')
+    .select(`
+      id, status, invitation_type,
+      live_sessions!inner(id, title, description, cover_image_url, status, scheduled_at, started_at, ended_at, teacher_id)
+    `)
+    .eq('user_id', uid)
+    .in('status', ['pending', 'sent', 'seen', 'accepted'])
+    .in('live_sessions.status', ['scheduled', 'live'])
+    .order('created_at', { ascending: false })
+    .limit(5);
+
+  let publicLive = [];
+  const { data: visRows, error: visErr } = await supabase
+    .from('live_visibility_rules')
+    .select(`
+      live_sessions!inner(id, title, description, cover_image_url, status, scheduled_at, started_at, ended_at, teacher_id)
+    `)
+    .eq('is_public', true)
+    .eq('live_sessions.status', 'live')
+    .limit(6);
+  if (!visErr && Array.isArray(visRows)) {
+    publicLive = visRows.map((r) => r.live_sessions).filter(Boolean);
+  }
+
+  const { data: waitingEntries } = await supabase
+    .from('live_waiting_room_entries')
+    .select(`
+      id, status,
+      live_sessions!inner(id, title, description, cover_image_url, status, scheduled_at, started_at, ended_at, teacher_id)
+    `)
+    .eq('user_id', uid)
+    .eq('status', 'waiting')
+    .limit(3);
+
+  const { data: immersiveRows } = await supabase
+    .from('immersive_live_sessions')
+    .select('id, title, status, host_user_id, guest_user_id, created_at, started_at, ended_at, updated_at')
+    .or(`host_user_id.eq.${uid},guest_user_id.eq.${uid}`)
+    .in('status', ['active', 'pending'])
+    .is('ended_at', null)
+    .order('created_at', { ascending: false })
+    .limit(5);
+
+  const fromInvites = (invitations || []).map((inv) => ({
+    ...inv.live_sessions, invite_status: inv.status, invitation_type: inv.invitation_type, source: 'invited',
+  }));
+  const fromPublic = (publicLive || [])
+    .filter((ls) => !fromInvites.find((i) => i.id === ls.id))
+    .map((ls) => ({ ...ls, source: 'public' }));
+  const fromWaiting = (waitingEntries || []).map((e) => ({ ...e.live_sessions, source: 'waiting_approval' }));
+  const fromImmersive = (immersiveRows || []).map((r) => ({
+    id: r.id,
+    title: (r.title && String(r.title).trim()) || 'Live vidéo (messagerie)',
+    status: r.status === 'active' ? 'live' : 'scheduled',
+    scheduled_at: r.created_at,
+    started_at: r.started_at || r.updated_at || r.created_at,
+    ended_at: r.ended_at,
+    immersive_created_at: r.created_at,
+    immersive_updated_at: r.updated_at,
+    teacher_id: r.host_user_id,
+    source: 'immersive',
+    immersive_status: r.status,
+    immersive_session_id: r.id,
+  }));
+
+  const all = [...fromInvites, ...fromPublic, ...fromWaiting, ...fromImmersive];
+  const seen = new Set();
+  const merged = all.filter((s) => {
+    if (!s?.id || seen.has(s.id)) return false;
+    seen.add(s.id);
+    return true;
+  });
+  return enrichMergedArenaSessions(merged);
+}
+
 /**
  * Sessions live « actionnables » pour l'utilisateur : arena (live_sessions),
  * invitations, visibilité publique, salle d'attente, et live immersif messagerie.
@@ -66,21 +181,9 @@ export function useLiveAlertsForUser(userId) {
   const [sessions, setSessions] = useState([]);
   const uid = userId || null;
 
-  const loadPublicLives = useCallback(async () => {
+  const loadPublicLives = useCallback(async (force = false) => {
     try {
-      await ensureFreshSession(supabase, 120);
-      const { data: visRows, error: visErr } = await supabase
-        .from('live_visibility_rules')
-        .select(`
-          live_sessions!inner(id, title, description, cover_image_url, status, scheduled_at, started_at, ended_at, teacher_id)
-        `)
-        .eq('is_public', true)
-        .eq('live_sessions.status', 'live')
-        .limit(8);
-      if (visErr) throw visErr;
-      const publicLive = (visRows || []).map((r) => r.live_sessions).filter(Boolean);
-      const merged = publicLive.map((ls) => ({ ...ls, source: 'public' }));
-      const enriched = await enrichMergedArenaSessions(merged);
+      const enriched = await _coalescedLive('public', _runPublicLive, force);
       setSessions(enriched);
     } catch (err) {
       console.warn('[useLiveAlertsForUser] public lives', err?.message || err);
@@ -88,94 +191,10 @@ export function useLiveAlertsForUser(userId) {
     }
   }, []);
 
-  const load = useCallback(async () => {
+  const load = useCallback(async (force = false) => {
     if (!uid) return;
     try {
-      await ensureFreshSession(supabase, 120);
-      const { data: invitations } = await supabase
-        .from('live_invitations')
-        .select(`
-          id, status, invitation_type,
-          live_sessions!inner(id, title, description, cover_image_url, status, scheduled_at, started_at, ended_at, teacher_id)
-        `)
-        .eq('user_id', uid)
-        .in('status', ['pending', 'sent', 'seen', 'accepted'])
-        .in('live_sessions.status', ['scheduled', 'live'])
-        .order('created_at', { ascending: false })
-        .limit(5);
-
-      let publicLive = [];
-      const { data: visRows, error: visErr } = await supabase
-        .from('live_visibility_rules')
-        .select(`
-          live_sessions!inner(id, title, description, cover_image_url, status, scheduled_at, started_at, ended_at, teacher_id)
-        `)
-        .eq('is_public', true)
-        .eq('live_sessions.status', 'live')
-        .limit(6);
-      if (!visErr && Array.isArray(visRows)) {
-        publicLive = visRows.map((r) => r.live_sessions).filter(Boolean);
-      }
-
-      const { data: waitingEntries } = await supabase
-        .from('live_waiting_room_entries')
-        .select(`
-          id, status,
-          live_sessions!inner(id, title, description, cover_image_url, status, scheduled_at, started_at, ended_at, teacher_id)
-        `)
-        .eq('user_id', uid)
-        .eq('status', 'waiting')
-        .limit(3);
-
-      const { data: immersiveRows } = await supabase
-        .from('immersive_live_sessions')
-        .select('id, title, status, host_user_id, guest_user_id, created_at, started_at, ended_at, updated_at')
-        .or(`host_user_id.eq.${uid},guest_user_id.eq.${uid}`)
-        .in('status', ['active', 'pending'])
-        .is('ended_at', null)
-        .order('created_at', { ascending: false })
-        .limit(5);
-
-      const fromInvites = (invitations || []).map((inv) => ({
-        ...inv.live_sessions,
-        invite_status: inv.status,
-        invitation_type: inv.invitation_type,
-        source: 'invited',
-      }));
-
-      const fromPublic = (publicLive || [])
-        .filter((ls) => !fromInvites.find((i) => i.id === ls.id))
-        .map((ls) => ({ ...ls, source: 'public' }));
-
-      const fromWaiting = (waitingEntries || []).map((e) => ({
-        ...e.live_sessions,
-        source: 'waiting_approval',
-      }));
-
-      const fromImmersive = (immersiveRows || []).map((r) => ({
-        id: r.id,
-        title: (r.title && String(r.title).trim()) || 'Live vidéo (messagerie)',
-        status: r.status === 'active' ? 'live' : 'scheduled',
-        scheduled_at: r.created_at,
-        started_at: r.started_at || r.updated_at || r.created_at,
-        ended_at: r.ended_at,
-        immersive_created_at: r.created_at,
-        immersive_updated_at: r.updated_at,
-        teacher_id: r.host_user_id,
-        source: 'immersive',
-        immersive_status: r.status,
-        immersive_session_id: r.id,
-      }));
-
-      const all = [...fromInvites, ...fromPublic, ...fromWaiting, ...fromImmersive];
-      const seen = new Set();
-      const merged = all.filter((s) => {
-        if (!s?.id || seen.has(s.id)) return false;
-        seen.add(s.id);
-        return true;
-      });
-
-      const enriched = await enrichMergedArenaSessions(merged);
+      const enriched = await _coalescedLive(uid, () => _runUserLive(uid), force);
       setSessions(enriched);
     } catch (err) {
       console.warn('[useLiveAlertsForUser]', err?.message || err);
@@ -186,7 +205,7 @@ export function useLiveAlertsForUser(userId) {
   const scheduleLoad = useCallback(() => {
     clearTimeout(loadDebouncedRef.current);
     loadDebouncedRef.current = setTimeout(() => {
-      load();
+      load(true); // realtime = fraîcheur immédiate → bypass du cache 8s
     }, 350);
   }, [load]);
 
@@ -194,18 +213,18 @@ export function useLiveAlertsForUser(userId) {
   const schedulePublicLoad = useCallback(() => {
     clearTimeout(publicDebouncedRef.current);
     publicDebouncedRef.current = setTimeout(() => {
-      loadPublicLives();
+      loadPublicLives(true);
     }, 350);
   }, [loadPublicLives]);
 
   useEffect(() => {
     if (uid) {
       load();
-      const interval = setInterval(load, 12_000);
+      const interval = setInterval(load, 30_000); // 12s→30s : le realtime assure la réactivité
       return () => clearInterval(interval);
     }
     loadPublicLives();
-    const interval = setInterval(loadPublicLives, 12_000);
+    const interval = setInterval(loadPublicLives, 30_000);
     return () => clearInterval(interval);
   }, [uid, load, loadPublicLives]);
 

@@ -330,6 +330,12 @@ export class TenantPortalController {
       'owner', 'admin', 'teacher', 'practitioner', 'clinic_admin', 'receptionist', 'secretariat',
     ]);
     const viewerIsStaff = STAFF.has(req.tenant?.userRole);
+    // Rôles « communauté » = pairs qui se voient ENTRE EUX (communauté école). Un ÉLÈVE voit le
+    // staff ET les autres élèves (annuaire de communauté → chat immersif). Les autres non-staff
+    // (patient/viewer/member) ne voient QUE le staff : confidentialité clinique MEDOS (un patient
+    // ne doit JAMAIS voir les autres patients). Les emails des pairs restent masqués (exposeEmail).
+    const COMMUNITY = new Set(['student']);
+    const viewerIsCommunity = COMMUNITY.has(req.tenant?.userRole);
     const { data: memberships } = await this.db
       .from('tenant_memberships')
       .select('user_id, role, status, created_at')
@@ -337,8 +343,13 @@ export class TenantPortalController {
       .eq('status', 'active')
       .order('created_at', { ascending: true });
     let rows = memberships ?? [];
-    // Non-staff : ne voit que le staff joignable (pas les pairs).
-    if (!viewerIsStaff) rows = rows.filter((m: any) => STAFF.has(m.role));
+    // Non-staff : le staff est toujours joignable ; un membre communauté (élève) voit EN PLUS les
+    // autres membres communauté ; patient/viewer ne voient que le staff.
+    if (!viewerIsStaff) {
+      rows = viewerIsCommunity
+        ? rows.filter((m: any) => STAFF.has(m.role) || COMMUNITY.has(m.role))
+        : rows.filter((m: any) => STAFF.has(m.role));
+    }
     const ids = rows.map((m: any) => m.user_id).filter(Boolean);
     let profiles: any[] = [];
     if (ids.length) {

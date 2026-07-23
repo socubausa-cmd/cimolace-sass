@@ -33,14 +33,14 @@ const BQ = ({ children }) => (
 );
 
 const VoixAvant = ({ children }) => (
-  <div className="bg-violet-500/[0.06] border-l-4 border-violet-500/40 rounded-r-xl px-5 py-4 my-4">
-    <p className="text-violet-300 italic leading-relaxed">{children}</p>
+  <div className="bg-[color-mix(in_srgb,var(--school-accent)_8%,transparent)] border-l-4 border-orange-500/40 rounded-r-xl px-5 py-4 my-4">
+    <p className="text-orange-300 italic leading-relaxed">{children}</p>
   </div>
 );
 
 const VoixPhysicien = ({ children }) => (
-  <div className="bg-blue-500/[0.06] border-l-4 border-blue-500/40 rounded-r-xl px-5 py-4 my-4">
-    <p className="text-blue-300 italic leading-relaxed">{children}</p>
+  <div className="bg-orange-500/[0.06] border-l-4 border-orange-500/40 rounded-r-xl px-5 py-4 my-4">
+    <p className="text-orange-300 italic leading-relaxed">{children}</p>
   </div>
 );
 
@@ -52,9 +52,9 @@ const Accord = ({ children }) => (
 );
 
 const Extension = ({ children }) => (
-  <div className="bg-blue-500/[0.06] border border-blue-500/20 rounded-xl p-4 my-3 flex items-start gap-3">
-    <ArrowUpRight className="w-5 h-5 text-blue-400 shrink-0 mt-0.5" />
-    <p className="text-blue-300 text-sm leading-relaxed"><span className="font-bold">EXTENSION</span> — {children}</p>
+  <div className="bg-orange-500/[0.06] border border-orange-500/20 rounded-xl p-4 my-3 flex items-start gap-3">
+    <ArrowUpRight className="w-5 h-5 text-[var(--school-accent)] shrink-0 mt-0.5" />
+    <p className="text-orange-300 text-sm leading-relaxed"><span className="font-bold">EXTENSION</span> — {children}</p>
   </div>
 );
 
@@ -96,7 +96,7 @@ const DialoguePhysiquePage = () => {
   const go = (id) => { setAc(id); document.getElementById(id)?.scrollIntoView({ behavior: 'smooth', block: 'start' }); };
 
   return (
-    <div className="min-h-screen bg-[#0F1419] text-white">
+    <div className="min-h-screen bg-[#262624] text-white">
       <Helmet>
         <title>{`Le Dialogue avec la Physique — Livre II | ${SITE_NAME}`}</title>
         <meta name="description" content="Livre II de la Prorascience — Le Dialogue avec la Physique. Big Bang, vide quantique, énergie sombre, conscience, principe de Pauli et les 5 prédictions testables par le 5ᵉ Manikongo." />
@@ -121,54 +121,61 @@ const DialoguePhysiquePage = () => {
 
       {/* HERO */}
       <section className="relative py-28 md:py-40 px-6 overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-b from-[#0F1419] via-[#192734]/60 to-[#0F1419]" />
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-blue-500/5 rounded-full blur-[300px]" />
+        <div className="absolute inset-0 bg-gradient-to-b from-[#262624] via-[#2a2724]/60 to-[#262624]" />
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-orange-500/5 rounded-full blur-[300px]" />
         <div className="absolute top-10 right-10 w-[400px] h-[400px] bg-[color-mix(in_srgb,var(--school-accent)_5%,transparent)] rounded-full blur-[200px]" />
         <div className="relative max-w-4xl mx-auto text-center space-y-6">
-          <span className="inline-flex items-center gap-2 px-5 py-2 rounded-full bg-blue-500/10 text-blue-400 text-xs font-bold uppercase tracking-widest border border-blue-500/20">
+          <span className="inline-flex items-center gap-2 px-5 py-2 rounded-full bg-orange-500/10 text-[var(--school-accent)] text-xs font-bold uppercase tracking-widest border border-orange-500/20">
             <BookOpen className="w-4 h-4" /> Prorascience · Livre II
           </span>
           <h1 className="text-4xl md:text-6xl lg:text-7xl font-serif font-bold text-white leading-tight">
-            Le Dialogue avec<br /><span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 via-cyan-400 to-blue-400">la Physique</span>
+            Le Dialogue avec<br /><span className="text-transparent bg-clip-text bg-gradient-to-r from-orange-400 via-amber-400 to-orange-400">la Physique</span>
           </h1>
           <p className="text-gray-400 text-base">Version Dialectique — Suite du <Link to="/fond-de-tout" className="text-[var(--school-accent)] underline hover:text-yellow-400">Livre I</Link></p>
           <p className="text-gray-400 text-lg md:text-xl max-w-2xl mx-auto">Par le <span className="text-[var(--school-accent)] font-semibold">5ᵉ Manikongo</span> — Fondateur du Système Prorascience</p>
-          <div className="bg-[#192734]/80 border border-white/5 rounded-xl p-5 max-w-lg mx-auto">
+          <div className="bg-[#2a2724]/80 border border-white/5 rounded-xl p-5 max-w-lg mx-auto">
             <p className="text-lg font-serif italic text-gray-300">« La physique cartographie les lois. Prorascience demande pourquoi ces lois et pas d'autres. »</p>
           </div>
           <p className="text-xs text-gray-600 uppercase tracking-widest">© PRORASCIENCE — NGOWAZULU · ISNA — Première édition</p>
-          <ChevronDown className="w-6 h-6 text-blue-400/50 mx-auto animate-bounce" />
+          <ChevronDown className="w-6 h-6 text-[var(--school-accent)]/50 mx-auto animate-bounce" />
         </div>
       </section>
 
       {/* NOTE AU LECTEUR */}
       <div className="max-w-3xl mx-auto px-4 md:px-6 mb-8">
-        <div className="bg-[#192734] border border-white/10 rounded-2xl p-6 space-y-3">
+        <div className="bg-[#2a2724] border border-white/10 rounded-2xl p-6 space-y-3">
           <h3 className="text-sm font-bold text-gray-400 uppercase tracking-wider">Note au lecteur</h3>
           <p className="text-gray-300 text-sm leading-relaxed">Ce second livre introduit une <span className="text-white font-semibold">troisième voix</span>.</p>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <div className="bg-violet-500/[0.06] border border-violet-500/20 rounded-lg p-3">
-              <p className="text-violet-300 text-xs font-bold mb-1">La voix d'avant (violet)</p>
+            <div className="bg-[color-mix(in_srgb,var(--school-accent)_8%,transparent)] border border-[color-mix(in_srgb,var(--school-accent)_20%,transparent)] rounded-lg p-3">
+              <p className="text-orange-300 text-xs font-bold mb-1">La voix d'avant (violet)</p>
               <p className="text-gray-400 text-xs">Résiste encore, armée d'objections physiques précises.</p>
             </div>
-            <div className="bg-blue-500/[0.06] border border-blue-500/20 rounded-lg p-3">
-              <p className="text-blue-300 text-xs font-bold mb-1">Le physicien (bleu)</p>
+            <div className="bg-orange-500/[0.06] border border-orange-500/20 rounded-lg p-3">
+              <p className="text-orange-300 text-xs font-bold mb-1">Le physicien (bleu)</p>
               <p className="text-gray-400 text-xs">Interlocuteur rigoureux qui force la précision.</p>
             </div>
           </div>
           <div className="flex flex-wrap gap-2 text-xs">
             <span className="px-2 py-1 rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">Vert = accords</span>
-            <span className="px-2 py-1 rounded bg-blue-500/10 text-blue-400 border border-blue-500/20">Bleu = extensions</span>
+            <span className="px-2 py-1 rounded bg-orange-500/10 text-[var(--school-accent)] border border-orange-500/20">Bleu = extensions</span>
             <span className="px-2 py-1 rounded bg-emerald-900/30 text-emerald-300 border border-emerald-500/20">Vert foncé = prédictions testables</span>
           </div>
         </div>
       </div>
 
       {/* NAV */}
-      <div className="sticky top-20 z-30 bg-[#0F1419]/95 backdrop-blur-xl border-b border-white/5 py-3 mb-8">
-        <div className="max-w-4xl mx-auto px-4 flex gap-2 overflow-x-auto">
+      {/* NAV — RAIL LATÉRAL vertical à DROITE (desktop) + barre horizontale (mobile). */}
+      <nav aria-label="Chapitres" className="fixed right-3 top-1/2 z-40 hidden max-h-[82vh] w-[104px] -translate-y-1/2 flex-col gap-1.5 overflow-y-auto rounded-2xl border border-white/10 bg-[#2a2724]/95 p-2 shadow-[0_24px_70px_-24px_rgba(0,0,0,0.65)] backdrop-blur-xl lg:flex">
+        <span className="px-2 pb-1 pt-0.5 text-[9px] font-bold uppercase tracking-[0.2em] text-white/35">Chapitres</span>
+        {navItems.map(n => (
+          <button key={n.id} onClick={() => go(n.id)} className={`shrink-0 rounded-lg px-3 py-2 text-left text-xs font-bold transition-all ${ac === n.id ? 'border border-[color-mix(in_srgb,var(--school-accent)_35%,transparent)] bg-[color-mix(in_srgb,var(--school-accent)_22%,transparent)] text-[var(--school-accent)]' : 'border border-transparent text-gray-400 hover:bg-white/5 hover:text-white'}`}>{n.s}</button>
+        ))}
+      </nav>
+      <div className="sticky top-20 z-30 mb-8 border-b border-white/5 bg-[#262624]/95 py-3 backdrop-blur-xl lg:hidden">
+        <div className="mx-auto flex max-w-4xl gap-2 overflow-x-auto px-4">
           {navItems.map(n => (
-            <button key={n.id} onClick={() => go(n.id)} className={`shrink-0 px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${ac === n.id ? 'bg-blue-500/20 text-blue-400 border border-blue-500/30' : 'bg-white/5 text-gray-400 border border-white/5 hover:text-white'}`}>{n.s}</button>
+            <button key={n.id} onClick={() => go(n.id)} className={`shrink-0 rounded-lg px-3 py-1.5 text-xs font-bold transition-all ${ac === n.id ? 'border border-[color-mix(in_srgb,var(--school-accent)_30%,transparent)] bg-[color-mix(in_srgb,var(--school-accent)_20%,transparent)] text-[var(--school-accent)]' : 'border border-white/5 bg-white/5 text-gray-400 hover:text-white'}`}>{n.s}</button>
           ))}
         </div>
       </div>
@@ -178,15 +185,15 @@ const DialoguePhysiquePage = () => {
         {/* ═══ PROLOGUE ═══ */}
         <section id="prologue" className="space-y-4 scroll-mt-28">
           <div className="flex items-center gap-3">
-            <div className="w-11 h-11 rounded-xl bg-violet-500/10 border border-violet-500/30 flex items-center justify-center"><Quote className="w-5 h-5 text-violet-400" /></div>
-            <div><span className="text-xs text-violet-400 font-bold uppercase tracking-wider">Prologue</span><h2 className="text-2xl md:text-3xl font-serif font-bold text-white">Deux langues pour une seule réalité</h2></div>
+            <div className="w-11 h-11 rounded-xl bg-[color-mix(in_srgb,var(--school-accent)_10%,transparent)] border border-[color-mix(in_srgb,var(--school-accent)_30%,transparent)] flex items-center justify-center"><Quote className="w-5 h-5 text-[var(--school-accent)]" /></div>
+            <div><span className="text-xs text-[var(--school-accent)] font-bold uppercase tracking-wider">Prologue</span><h2 className="text-2xl md:text-3xl font-serif font-bold text-white">Deux langues pour une seule réalité</h2></div>
           </div>
           <Narrator>Quand ma voix d'avant a dit "d\'accord" à la fin du Livre I, j\'ai cru que le travail était terminé. C\'était une erreur.</Narrator>
           <VoixAvant>Tu as construit un système cohérent. Mais la cohérence interne ne suffit pas. Il faut maintenant affronter la physique réelle. Les équations. Les mesures. Les modèles qui fonctionnent depuis des siècles.</VoixAvant>
           <Narrator>C'est exactement ce que j\'allais faire.</Narrator>
           <VoixAvant>Et si la physique te contredit ?</VoixAvant>
           <Narrator>Elle ne me contredira pas. Pas parce que je suis certain d'avoir raison. Parce que Prorascience et la physique standard ne jouent pas sur le même terrain. L\'une décrit <span className="text-white font-semibold">comment</span> les choses fonctionnent. L\'autre demande <span className="text-white font-semibold">pourquoi</span> elles peuvent fonctionner de cette façon et pas d\'une autre.</Narrator>
-          <Narrator>Un physicien et un Prorascientifique regardent une pomme tomber. Le physicien voit <span className="font-mono text-blue-300">F = mg</span>. Il mesure l'accélération. Il prédit la trajectoire. Il a raison. Le Prorascientifique pose une autre question : <span className="text-white font-semibold">pourquoi existe-t-il une contrainte ontologique liant masse, espace et mouvement de cette façon précise et pas d\'une autre ?</span></Narrator>
+          <Narrator>Un physicien et un Prorascientifique regardent une pomme tomber. Le physicien voit <span className="font-mono text-orange-300">F = mg</span>. Il mesure l'accélération. Il prédit la trajectoire. Il a raison. Le Prorascientifique pose une autre question : <span className="text-white font-semibold">pourquoi existe-t-il une contrainte ontologique liant masse, espace et mouvement de cette façon précise et pas d\'une autre ?</span></Narrator>
           <BQ>Ce livre ne cherche pas à remplacer la physique. Il cherche à montrer ce qu'elle ne peut pas encore voir.</BQ>
         </section>
 
@@ -408,14 +415,14 @@ const DialoguePhysiquePage = () => {
           <Narrator>Ce chercheur — moi — fait partie du système qu'il décrit. Je suis un qualia d\'ordre élevé, lisant le champ de permission qui m\'a produit, formulant des lois qui préexistaient à ma formulation.</Narrator>
           <BQ>La physique est le cosmos se lisant lui-même. Prorascience est la question de pourquoi il peut se lire.</BQ>
 
-          <div className="bg-gradient-to-br from-blue-500/[0.08] via-[var(--school-accent)]/[0.05] to-transparent border border-[color-mix(in_srgb,var(--school-accent)_20%,transparent)] rounded-2xl p-8 text-center mt-8">
+          <div className="bg-gradient-to-br from-orange-500/[0.08] via-[var(--school-accent)]/[0.05] to-transparent border border-[color-mix(in_srgb,var(--school-accent)_20%,transparent)] rounded-2xl p-8 text-center mt-8">
             <p className="text-lg md:text-xl font-serif italic text-gray-200 leading-relaxed max-w-2xl mx-auto">
               « Le cosmos n'est pas gouverné par des lois. Il est rendu possible par la possibilité, structuré par l\'information, lisible par des lois. Et toi qui lis — <span className="text-[var(--school-accent)] font-bold">tu es la preuve que sa géométrie était suffisamment riche pour produire quelqu\'un capable de la lire.</span> »
             </p>
             <p className="text-sm text-gray-500 mt-4">— Manikongo, MK5</p>
           </div>
 
-          <div className="bg-[#192734] border border-white/10 rounded-xl p-5 text-center mt-6">
+          <div className="bg-[#2a2724] border border-white/10 rounded-xl p-5 text-center mt-6">
             <p className="text-sm text-gray-400">FIN DU LIVRE II</p>
             <p className="text-xs text-gray-600 mt-1">Livre III — L'Homme dans le Système · À paraître</p>
           </div>
@@ -423,10 +430,10 @@ const DialoguePhysiquePage = () => {
 
         {/* CTA */}
         <section className="text-center space-y-6">
-          <div className="w-24 h-0.5 bg-gradient-to-r from-transparent via-blue-400 to-transparent mx-auto" />
+          <div className="w-24 h-0.5 bg-gradient-to-r from-transparent via-orange-400 to-transparent mx-auto" />
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Link to="/fond-de-tout"><Button variant="outline" className="border-[color-mix(in_srgb,var(--school-accent)_30%,transparent)] hover:bg-[color-mix(in_srgb,var(--school-accent)_10%,transparent)] text-[var(--school-accent)] h-12 px-8 text-base"><BookOpen className="w-5 h-5 mr-2" /> Relire le Livre I</Button></Link>
-            <Link to="/formations/catalogue"><Button className="bg-blue-500 text-white hover:bg-blue-600 gap-2 h-12 px-8 text-base font-bold"><GraduationCap className="w-5 h-5" /> Voir les formations</Button></Link>
+            <Link to="/formations/catalogue"><Button className="bg-orange-500 text-white hover:bg-orange-600 gap-2 h-12 px-8 text-base font-bold"><GraduationCap className="w-5 h-5" /> Voir les formations</Button></Link>
           </div>
         </section>
 

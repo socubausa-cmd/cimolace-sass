@@ -50,8 +50,15 @@ export const BillingProvider = ({ children, graceDays = GRACE_DAYS_DEFAULT }) =>
   const last401WarnAtRef = useRef(0);
   const last5xxWarnAtRef = useRef(0);
   const refreshInFlightRef = useRef(null);
+  // Throttle des refresh SILENCIEUX (focus/visibility/interval) : ces refetch d'arrière-plan se
+  // succédaient EN SÉRIE (chaque appel ~2s de latence Railway → jamais concurrents → le garde
+  // refreshInFlightRef ne les collapse pas) → 3 appels /billing/subscriptions/status par navigation.
+  // On coalesce les refresh silencieux non forcés dans une fenêtre de 15s. Les refresh EXPLICITES
+  // (montage, post-paiement) et les events realtime billing (force:true) ignorent ce throttle.
+  const lastSilentAtRef = useRef(0);
+  const SILENT_TTL_MS = 15000;
 
-  const refresh = async ({ silent = false } = {}) => {
+  const refresh = async ({ silent = false, force = false } = {}) => {
     if (!user?.id) {
       setSubscription(null);
       setSubscriptionComputed(null);
@@ -63,6 +70,10 @@ export const BillingProvider = ({ children, graceDays = GRACE_DAYS_DEFAULT }) =>
     }
     if (silent && refreshInFlightRef.current) {
       return refreshInFlightRef.current;
+    }
+    // Coalescence temporelle des refresh silencieux d'arrière-plan (sauf force / event billing).
+    if (silent && !force && Date.now() - lastSilentAtRef.current < SILENT_TTL_MS) {
+      return refreshInFlightRef.current || undefined;
     }
     if (silent && authRefreshIsBlocked()) {
       return;
@@ -240,6 +251,7 @@ export const BillingProvider = ({ children, graceDays = GRACE_DAYS_DEFAULT }) =>
     })();
 
     if (silent) {
+      lastSilentAtRef.current = Date.now(); // ouvre la fenêtre de coalescence des refresh silencieux
       refreshInFlightRef.current = promise;
       promise.finally(() => {
         if (refreshInFlightRef.current === promise) refreshInFlightRef.current = null;
@@ -264,14 +276,13 @@ export const BillingProvider = ({ children, graceDays = GRACE_DAYS_DEFAULT }) =>
 
   useEffect(() => {
     if (!user?.id) return undefined;
-    const onFocus = () => refresh({ silent: true });
+    // Un seul déclencheur au retour d'onglet : `visibilitychange` couvre le refocus. Le listener
+    // `focus` (retiré) faisait DOUBLON → 2 refresh silencieux pour un seul retour d'onglet.
     const onVisibility = () => {
       if (document.visibilityState === 'visible') refresh({ silent: true });
     };
-    window.addEventListener('focus', onFocus);
     document.addEventListener('visibilitychange', onVisibility);
     return () => {
-      window.removeEventListener('focus', onFocus);
       document.removeEventListener('visibilitychange', onVisibility);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -281,21 +292,19 @@ export const BillingProvider = ({ children, graceDays = GRACE_DAYS_DEFAULT }) =>
     if (!user?.id) return undefined;
     const channel = supabase
       .channel(`billing-realtime-${user.id}`)
+      // Events billing = fraîcheur post-paiement immédiate → force:true (ignore le throttle 15s).
       .on(
         'postgres_changes',
         { event: '*', schema: 'public', table: 'billing_subscriptions', filter: `user_id=eq.${user.id}` },
-        () => refresh({ silent: true })
+        () => refresh({ silent: true, force: true })
       )
       .on(
         'postgres_changes',
         { event: '*', schema: 'public', table: 'billing_payments', filter: `user_id=eq.${user.id}` },
-        () => refresh({ silent: true })
+        () => refresh({ silent: true, force: true })
       )
-      .on(
-        'postgres_changes',
-        { event: '*', schema: 'public', table: 'notifications', filter: `user_id=eq.${user.id}` },
-        () => refresh({ silent: true })
-      )
+      // (Table `notifications` RETIRÉE du canal : la facturation ne dérive pas des notifications,
+      //  or chaque insert de notif — fréquent à la navigation — refetchait /billing inutilement.)
       .subscribe();
 
     return () => {
