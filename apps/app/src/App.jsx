@@ -2231,7 +2231,7 @@ isLiriHostDevPreviewRoute;
           <Route path="/handoff" element={<HandoffPage />} />
           <Route path="/update-password" element={<UpdatePasswordPage />} />
           <Route path="/cart" element={<PlaceholderPage title="Panier" />} />
-          <Route path="/consultations" element={<Navigate to="/appointment/request?flow=ngowazulu-consultation" replace />} />
+          <Route path="/consultations" element={<Navigate to="/liri/rendez-vous" replace />} />
           <Route path="/projects" element={<PlaceholderPage title="Projets" />} />
 
           <Route path="/eleve" element={<Navigate to="/dashboard" replace />} />
@@ -2358,11 +2358,12 @@ isLiriHostDevPreviewRoute;
             </ProtectedRoute>
           } />
 
-          <Route path="/appointment/request" element={
-            <ProtectedRoute>
-              <RequestAppointmentPage />
-            </ProtectedRoute>
-          } />
+          {/* ANCIENNE page RDV ISNA standalone (ancienne navbar Academy : Formations / Tableau de
+              bord / Prendre RDV / L'école / Mon espace) SUPPRIMÉE de l'expérience. Toute arrivée sur
+              /appointment/request — quelle que soit la source (chat, marketing, marque-page, ancien
+              lien) — rebondit dans la COQUE LIRI (page RDV embarquée /liri/rendez-vous). Plus AUCUNE
+              redirection vers l'ancien système : il ne reste QUE le portail LIRI. */}
+          <Route path="/appointment/request" element={<Navigate to="/liri/rendez-vous" replace />} />
 
           {/* Immersive Waiting Room — accessible publiquement via référence */}
           <Route path="/rendez-vous/:reference" element={<ImmersiveWaitingRoomPage />} />
