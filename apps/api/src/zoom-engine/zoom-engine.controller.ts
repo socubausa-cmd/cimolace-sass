@@ -5,6 +5,7 @@ import { ApiTags, ApiBearerAuth, ApiOperation } from '@nestjs/swagger';
 import { ZoomEngineService } from './zoom-engine.service';
 import { ZoomOAuthService } from './zoom-oauth.service';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
+import { TenantGuard } from '../tenant/tenant.guard';
 import { SyncRecordingsDto, UpdateRecordingDto, PublishVideoDto } from './dto/zoom-recordings.dto';
 
 @ApiTags('Zoom Engine')
@@ -133,9 +134,14 @@ export class ZoomEngineController {
   }
 
   @Get('published')
+  @UseGuards(TenantGuard)
   @ApiOperation({ summary: 'Lister les vidéos publiées' })
   async listPublished(@Req() req: any) {
-    const tenantId = req.tenantId || req.user?.tenantId;
+    // La Vidéothèque est lue par les ÉLÈVES : le tenant vient du header X-Tenant-Slug résolu par
+    // TenantGuard (req.tenant.id), PAS de req.tenantId (jamais posé sur ce controller sans
+    // TenantGuard) ni req.user.tenantId (absent pour un élève). Sans ça, listPublishedVideos
+    // recevait `undefined` → `where tenant_id = undefined` → 0 vidéo malgré les replays publiés.
+    const tenantId = req.tenant?.id || req.tenantId || req.user?.tenantId;
     return this.service.listPublishedVideos(tenantId);
   }
 
