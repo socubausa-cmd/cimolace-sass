@@ -1190,6 +1190,12 @@ const OLD_ACADEMY_REDIRECTS = [
   [/^\/curriculum(\/|$)/, '/liri/formations'],
   [/^\/onboarding$/, '/liri'],
   [/^\/ngowazulu\/dossier(\/|$)/, '/liri'],
+  // Back-office PROPRIÉTAIRE ancien-Academy (gestion cours/classes, ancienne navbar) → dashboard
+  // École LIRI. Le fondateur : « supprime aussi l'ancien back-office propriétaire, j'en ai plus
+  // besoin ». Les autres surfaces owner (/admin/*, /secretariat-space) sont déjà gatées vers /liri
+  // ou ont leur propre coque.
+  [/^\/classes(\/|$)/, '/liri/ecole'],
+  [/^\/cours\/[^/]+\/deblocage/, '/liri/ecole'],
 ];
 function resolveOldAcademyRedirect(pathname) {
   const p = pathname || '/';
