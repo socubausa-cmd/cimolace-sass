@@ -303,6 +303,7 @@ const LiriSchoolShell = lazy(() => import('@/pages/liri/LiriSchoolShell'));
 const StudentFormationsPage = lazy(() => import('@/pages/school/student-school-life/StudentFormationsPage'));
 // « Mes formations » rendu par le moteur OS Cimolace (immersif, branché sur les données de cours).
 const StudentFormationsOsPage = lazy(() => import('@/pages/school/student-school-life/StudentFormationsOsPage'));
+const VideothequePage = lazy(() => import('@/pages/school/student-school-life/VideothequePage'));
 const StudentAgendaPage = lazy(() => import('@/pages/school/student-school-life/StudentAgendaPage'));
 const StudentNotesPage = lazy(() => import('@/pages/school/student-school-life/StudentNotesPage'));
 // Hub « Mes notes » (prise de notes multi-source) — remplace le bulletin sur /liri/notes ;
@@ -1646,6 +1647,13 @@ isLiriHostDevPreviewRoute;
               </React.Suspense>
             } />
           )}
+          {import.meta.env.DEV && (
+            <Route path="/dev/videotheque" element={
+              <React.Suspense fallback={<div className="flex h-screen items-center justify-center bg-[#262624] text-white/60">Chargement…</div>}>
+                <VideothequePage />
+              </React.Suspense>
+            } />
+          )}
           {/* Cours-démo PUBLIC (watchable, sans auth) — le « prof virtuel » qui se joue seul */}
           <Route path="/cours-demo" element={
             <React.Suspense fallback={<div className="flex h-screen items-center justify-center bg-[#262624] text-white/60">Chargement du cours…</div>}>
@@ -2068,6 +2076,7 @@ isLiriHostDevPreviewRoute;
               sans jamais quitter LIRI. ═══ */}
           <Route path="/liri/semaine" element={<ProtectedLiriRoute allowedRoles={['owner', 'admin', 'teacher', 'secretariat', 'student', 'practitioner', 'clinic_admin']} allowTenantRole><LiriSchoolShell active="semaine"><StudentWeeklySchedulePage /></LiriSchoolShell></ProtectedLiriRoute>} />
           <Route path="/liri/formations" element={<ProtectedLiriRoute allowedRoles={['owner', 'admin', 'teacher', 'secretariat', 'student', 'practitioner', 'clinic_admin']} allowTenantRole><LiriSchoolShell active="formations"><StudentFormationsOsPage /></LiriSchoolShell></ProtectedLiriRoute>} />
+          <Route path="/liri/videotheque" element={<ProtectedLiriRoute allowedRoles={['owner', 'admin', 'teacher', 'secretariat', 'student', 'practitioner', 'clinic_admin']} allowTenantRole><LiriSchoolShell active="videotheque"><VideothequePage /></LiriSchoolShell></ProtectedLiriRoute>} />
           <Route path="/liri/vie-scolaire" element={<ProtectedLiriRoute allowedRoles={['owner', 'admin', 'teacher', 'secretariat', 'student', 'practitioner', 'clinic_admin']} allowTenantRole><LiriSchoolShell active="vie-scolaire"><SchoolLifePage embedded /></LiriSchoolShell></ProtectedLiriRoute>} />
           <Route path="/liri/agenda" element={<ProtectedLiriRoute allowedRoles={['owner', 'admin', 'teacher', 'secretariat', 'student', 'practitioner', 'clinic_admin']} allowTenantRole><LiriSchoolShell active="agenda"><StudentAgendaPage /></LiriSchoolShell></ProtectedLiriRoute>} />
           {/* Prise de rendez-vous EMBARQUÉE dans LIRI (anti-fuite : la version standalone /appointment/request est une page ISNA pleine). */}

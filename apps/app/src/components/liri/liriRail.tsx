@@ -1,7 +1,7 @@
 import React from 'react';
 import {
   House, Video, MessagesSquare, MessageCircle, WandSparkles, Library, GraduationCap, Sparkles,
-  CalendarDays, BookOpen, School, Calendar, FileText, Award, AlertTriangle, FolderOpen, Tag, Files,
+  CalendarDays, BookOpen, Film, School, Calendar, FileText, Award, AlertTriangle, FolderOpen, Tag, Files,
   SquarePen, CreditCard, Flame, ShoppingBag, Megaphone, Package, ReceiptText, Link2, Landmark,
 } from 'lucide-react';
 
@@ -59,6 +59,7 @@ export const ENGINES: EngineDef[] = [
       { section: 'Pilotage', items: [
         { key: 'ecole', label: 'École', icon: GraduationCap, to: '/liri/ecole', creator: true },
         { key: 'formations', label: 'Mes cours', icon: BookOpen, to: '/liri/formations', school: true },
+        { key: 'videotheque', label: 'Vidéothèque', icon: Film, to: '/liri/videotheque', school: true },
         { key: 'semaine', label: 'Ma semaine', icon: CalendarDays, to: '/liri/semaine', school: true },
       ] },
       { section: 'Scolarité', items: [
