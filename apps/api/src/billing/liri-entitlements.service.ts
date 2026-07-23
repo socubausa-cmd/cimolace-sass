@@ -161,10 +161,31 @@ export class LiriEntitlementsService {
   async assertWithinCap(tenantId: string, capKey: string, currentCount: number): Promise<void> {
     const features = await this.resolvePlanFeatures(tenantId);
     const cap = capBreached(features, capKey, currentCount);
-    if (cap !== null) {
-      throw new ForbiddenException(
-        `Limite de votre offre atteinte (${capKey} : ${cap}). Passez à l'offre supérieure pour augmenter ce plafond.`,
-      );
+    if (cap === null) return;
+    // GRANDFATHERING : le plafond n'est appliqué QUE si le tenant a opté (enforce_caps).
+    // Défaut OFF → aucun client existant n'est jamais bloqué, quels que soient les caps
+    // définis sur les plans. Les nouveaux tenants achetés reçoivent enforce_caps=true
+    // (createTenantFromPurchase → insertTenantForPurchase).
+    if (!(await this.capsEnforced(tenantId))) return;
+    throw new ForbiddenException(
+      `Limite de votre offre atteinte (${capKey} : ${cap}). Passez à l'offre supérieure pour augmenter ce plafond.`,
+    );
+  }
+
+  /**
+   * Opt-in d'application des plafonds : `tenants.metadata.billing.enforce_caps === true`.
+   * Défaut false = grandfather (jamais de blocage). Lecture en échec = false (fail-open).
+   */
+  private async capsEnforced(tenantId: string): Promise<boolean> {
+    try {
+      const { data } = await this.supabase
+        .from("tenants").select("metadata").eq("id", tenantId).maybeSingle();
+      const m = (data as { metadata?: Record<string, unknown> } | null)?.metadata as
+        | { billing?: { enforce_caps?: boolean } }
+        | undefined;
+      return m?.billing?.enforce_caps === true;
+    } catch {
+      return false;
     }
   }
 }

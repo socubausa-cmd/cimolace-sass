@@ -1095,7 +1095,7 @@ export class BillingService implements OnApplicationBootstrap {
       const { data, error } = await sb.from("tenants").insert({
         name: p.name, slug, owner_user_id: p.ownerUserId, infrastructure_type: p.kind,
         status: "active", plan: "free", billing_status: "free", locale: p.locale, timezone: p.timezone,
-        metadata: { hosting_mode: p.hostingMode, created_via: "acquisition" },
+        metadata: { hosting_mode: p.hostingMode, created_via: "acquisition", billing: { enforce_caps: true } },
       }).select("id").single();
       if (!error && data) return (data as any).id as string;
       const code = (error as { code?: string } | null)?.code;
