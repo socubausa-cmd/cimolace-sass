@@ -3,13 +3,15 @@ import { AuthService } from "../auth/auth.service";
 import { PawaPayService } from "../pawapay/pawapay.service";
 import { WebhookService } from "../liri-public/webhook.service";
 import { EmailEngineService } from "../email-engine/email-engine.service";
+import { UsageService } from "../usage/usage.service";
 export declare class BillingService implements OnApplicationBootstrap {
     private auth;
     private pawapay;
     private tenantWebhooks;
     private email;
+    private usage;
     private readonly logger;
-    constructor(auth: AuthService, pawapay: PawaPayService, tenantWebhooks: WebhookService, email: EmailEngineService);
+    constructor(auth: AuthService, pawapay: PawaPayService, tenantWebhooks: WebhookService, email: EmailEngineService, usage: UsageService);
     private get supabase();
     onApplicationBootstrap(): void;
     private notifyTenant;
@@ -20,7 +22,7 @@ export declare class BillingService implements OnApplicationBootstrap {
         subscriptions: any[];
         invoices: any[];
     }>;
-    activateTenantSubscription(tenantId: string, planKey?: string): Promise<{
+    activateTenantSubscription(tenantId: string, planKey: string, actor?: string): Promise<{
         subscription: {
             id: any;
             status: any;
@@ -28,6 +30,14 @@ export declare class BillingService implements OnApplicationBootstrap {
         } | null;
         gating_enabled: boolean;
         plan: any;
+    }>;
+    createPaymentLinkForTenant(tenantId: string, planKey?: string, actor?: string, cycle?: string): Promise<{
+        url: string;
+        session_id: string;
+        subscription_id: string | undefined;
+        plan: string | null;
+        amount_cents: any;
+        currency: any;
     }>;
     private static readonly PAYMENT_PROVIDERS;
     subscribeToPlan(tenantId: string, planKey: string, provider?: string): Promise<{
@@ -98,7 +108,7 @@ export declare class BillingService implements OnApplicationBootstrap {
         skipped: number;
     }>;
     private stripeAuth;
-    createCardCheckout(tenantId: string, subscriptionId: string): Promise<{
+    createCardCheckout(tenantId: string, subscriptionId: string, cycleOverride?: string): Promise<{
         url: string;
         session_id: string;
         amount_cents: any;
@@ -109,7 +119,52 @@ export declare class BillingService implements OnApplicationBootstrap {
         status: any;
     }>;
     private supersedeOtherActiveSubscriptions;
+    private static addCycle;
+    private static normalizeCycle;
+    private static cycleDiscount;
+    private static cycleToStripeInterval;
+    private planBillingCycle;
     private provisionPlanServices;
+    private static categoryToKind;
+    private static hostingModeForOffer;
+    private static RESERVED_SLUGS;
+    private static slugify;
+    private provisionUserByEmail;
+    private generateAuthLink;
+    private sendAcquisitionWelcome;
+    private insertTenantForPurchase;
+    createTenantFromPurchase(p: {
+        email: string;
+        orgName?: string;
+        slug?: string;
+        planKey: string;
+        offerTier?: string;
+        intent?: "new_tenant" | "existing";
+        existingTenantId?: string;
+        providerRef?: string;
+        stripeSubscriptionId?: string;
+        stripeCustomerId?: string;
+        firstName?: string;
+        lastName?: string;
+        locale?: string;
+        timezone?: string;
+    }): Promise<{
+        tenantId: string;
+        userId: string;
+        subscriptionId: string | null;
+        created: boolean;
+    }>;
+    createAcquisitionCheckout(dto: {
+        email?: string;
+        planKey?: string;
+        offerTier?: string;
+        intent?: "new_tenant" | "existing";
+        orgName?: string;
+        slug?: string;
+        existingTenantId?: string;
+    }): Promise<{
+        url: string;
+    }>;
     private static ZERO_DECIMAL;
     createPayout(tenantId: string, createdBy: string | null, dto: {
         amountCents?: number;
@@ -174,22 +229,17 @@ export declare class BillingService implements OnApplicationBootstrap {
         received: boolean;
         ignored: string;
         type?: undefined;
-        error?: undefined;
-    } | {
-        received: boolean;
-        type: string;
-        error: string;
-        ignored?: undefined;
     } | {
         received: boolean;
         type: "checkout.session.completed" | "invoice.paid" | "invoice.payment_succeeded" | "invoice.payment_failed" | "customer.subscription.updated" | "customer.subscription.deleted";
         ignored?: undefined;
-        error?: undefined;
     }>;
     private verifyStripeSignature;
     private fetchStripeSubscription;
     private unixToIso;
     private mapStripeStatus;
+    private claimWebhookEvent;
+    private releaseWebhookEvent;
     private onCheckoutCompleted;
     private onInvoicePaid;
     private onInvoiceFailed;

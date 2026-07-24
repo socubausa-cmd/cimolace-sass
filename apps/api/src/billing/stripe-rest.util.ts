@@ -47,11 +47,114 @@ export async function stripeCreateCheckoutSession(
   return (await res.json()) as { id: string; url: string };
 }
 
+export async function stripeCreateCustomer(
+  params: URLSearchParams,
+  secretKey?: string,
+): Promise<{ id: string; email?: string }> {
+  const res = await fetch(`${STRIPE_API}/customers`, {
+    method: 'POST',
+    headers: {
+      Authorization: stripeAuth(secretKey),
+      'Content-Type': 'application/x-www-form-urlencoded',
+    },
+    body: params.toString(),
+  });
+  if (!res.ok) {
+    const t = await res.text().catch(() => '');
+    throw new Error(`Stripe Customer error ${res.status}: ${t.slice(0, 300)}`);
+  }
+  return (await res.json()) as { id: string; email?: string };
+}
+
+export async function stripeCreatePaymentIntent(
+  params: URLSearchParams,
+  secretKey?: string,
+): Promise<{ id: string; client_secret: string; status?: string }> {
+  const res = await fetch(`${STRIPE_API}/payment_intents`, {
+    method: 'POST',
+    headers: {
+      Authorization: stripeAuth(secretKey),
+      'Content-Type': 'application/x-www-form-urlencoded',
+    },
+    body: params.toString(),
+  });
+  if (!res.ok) {
+    const t = await res.text().catch(() => '');
+    throw new Error(`Stripe PaymentIntent error ${res.status}: ${t.slice(0, 300)}`);
+  }
+  return (await res.json()) as { id: string; client_secret: string; status?: string };
+}
+
+export async function stripeCreateProduct(
+  params: URLSearchParams,
+  secretKey?: string,
+): Promise<{ id: string; name?: string }> {
+  const res = await fetch(`${STRIPE_API}/products`, {
+    method: 'POST',
+    headers: {
+      Authorization: stripeAuth(secretKey),
+      'Content-Type': 'application/x-www-form-urlencoded',
+    },
+    body: params.toString(),
+  });
+  if (!res.ok) {
+    const t = await res.text().catch(() => '');
+    throw new Error(`Stripe Product error ${res.status}: ${t.slice(0, 300)}`);
+  }
+  return (await res.json()) as { id: string; name?: string };
+}
+
+export async function stripeCreatePrice(
+  params: URLSearchParams,
+  secretKey?: string,
+): Promise<{ id: string }> {
+  const res = await fetch(`${STRIPE_API}/prices`, {
+    method: 'POST',
+    headers: {
+      Authorization: stripeAuth(secretKey),
+      'Content-Type': 'application/x-www-form-urlencoded',
+    },
+    body: params.toString(),
+  });
+  if (!res.ok) {
+    const t = await res.text().catch(() => '');
+    throw new Error(`Stripe Price error ${res.status}: ${t.slice(0, 300)}`);
+  }
+  return (await res.json()) as { id: string };
+}
+
+export async function stripeCreateIncompleteSubscription(
+  params: URLSearchParams,
+  secretKey?: string,
+): Promise<{
+  id: string;
+  status?: string;
+  latest_invoice?: {
+    id?: string;
+    payment_intent?: { id: string; client_secret: string; status?: string } | string | null;
+    confirmation_secret?: { client_secret?: string; type?: string } | string | null;
+  } | string | null;
+}> {
+  const res = await fetch(`${STRIPE_API}/subscriptions`, {
+    method: 'POST',
+    headers: {
+      Authorization: stripeAuth(secretKey),
+      'Content-Type': 'application/x-www-form-urlencoded',
+    },
+    body: params.toString(),
+  });
+  if (!res.ok) {
+    const t = await res.text().catch(() => '');
+    throw new Error(`Stripe Subscription error ${res.status}: ${t.slice(0, 300)}`);
+  }
+  return (await res.json()) as any;
+}
+
 /** GET /v1/subscriptions/{id} → période + statut faisant foi. null si erreur. */
-export async function stripeFetchSubscription(subId: string): Promise<any | null> {
+export async function stripeFetchSubscription(subId: string, secretKey?: string): Promise<any | null> {
   if (!subId) return null;
   const res = await fetch(`${STRIPE_API}/subscriptions/${subId}`, {
-    headers: { Authorization: stripeAuth() },
+    headers: { Authorization: stripeAuth(secretKey) },
   });
   if (!res.ok) return null;
   return res.json();

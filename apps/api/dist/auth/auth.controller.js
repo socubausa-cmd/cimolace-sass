@@ -31,10 +31,11 @@ let AuthController = class AuthController {
         if (!keyData) {
             throw new common_1.UnauthorizedException('Clé API invalide ou révoquée');
         }
+        const effectiveRole = await this.authService.resolveCappedMedosRole(keyData.tenantId, dto.userId, dto.role);
         const token = this.authService.generateMedosToken({
             sub: dto.userId,
             email: dto.email,
-            role: dto.role,
+            role: effectiveRole,
             tenant_id: keyData.tenantId,
             tenant_slug: keyData.tenantSlug,
         });
@@ -43,6 +44,7 @@ let AuthController = class AuthController {
             token,
             expiresAt,
             tenantSlug: keyData.tenantSlug,
+            role: effectiveRole,
         };
     }
 };

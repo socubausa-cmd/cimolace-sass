@@ -25,7 +25,7 @@ export type EngineKey = 'liri' | 'ecole' | 'mbolo' | 'medos' | 'studio' | 'crea'
 
 export type RailKey =
   | 'accueil' | 'forfaits' | 'semaine' | 'formations'
-  | 'vie-scolaire' | 'agenda' | 'notes' | 'evaluations' | 'absences'
+  | 'vie-scolaire' | 'agenda' | 'notes' | 'evaluations' | 'absences' | 'videotheque'
   | 'lives' | 'forum' | 'messages'
   | 'biblio-eleve' | 'documents'
   | 'temple' | 'boutique' | 'marche' | 'produits' | 'commandes' | 'paiements' | 'factures' | 'compta'

@@ -31,6 +31,18 @@ export const PRORASCIENCE_KNOWLEDGE = {
     bio: "Fondateur et Recteur de l’ISNA, il porte le mandat de restaurer la dignité intellectuelle et spirituelle de l’Homme africain par la connaissance — unir la rigueur d’une école et la profondeur d’un temple.",
   },
 
+  visuals: {
+    hero: '/image-pro/hero-vitrine-prorascience-accueil.png',
+    rupture: '/image-pro/prorascience-rupture-tradition-numerique.png',
+    ritesPanels: '/image-pro/prorascience-histoire-rites-panels.png',
+    histoire: '/image-pro/prorascience-histoire-custom.png',
+    appleRites: '/image-pro/prorascience-apple-hero-rites.png',
+    voyageur: '/image-pro/isna-pro-voyageur-cinematic.png',
+    distance: '/image-pro/aprendre-a-distance.png',
+    mondeAvant: '/image-pro/isna-pro-monde-avant-rituel.png',
+    rituelCompris: '/image-pro/isna-pro-rituel-compris-cinematic.png',
+  },
+
   vision: {
     whatIs: "La PRORASCIENCE est l’étude systématique, rationnelle et vérifiable des réalités visibles ET invisibles. C’est la science qui unifie la physique (le monde matériel) et la métaphysique (le monde spirituel) en une seule structure cohérente de connaissance.",
     problem: "On vous a appris quoi faire, mais jamais pourquoi le faire. Les pratiques sont reproduites, les traditions répétées — mais la compréhension manque.",
@@ -178,95 +190,227 @@ export function prorascienceKnowledgeText(k = PRORASCIENCE_KNOWLEDGE) {
 // { reply (voix), keyword (surligné), scene? (split/aside/tutorial/reader), final? }. Les scènes
 // respectent normalizeScene (aside: label+value requis ; split: 2 paliers ≥2 points ; reader: profile+body).
 export function buildTenantTour(k = PRORASCIENCE_KNOWLEDGE, brandName) {
-  const name = brandName || k.identity.name;
-  const pillars = k.vision.pillars || [];
+  const id = k.identity || {};
+  const vision = k.vision || {};
+  const name = brandName || id.name || 'ce site';
+  const pillars = vision.pillars || [];
+  const method = k.method || [];
+  const offers = k.offers || [];
+  const visuals = k.visuals || {};
   const beats = [];
 
-  // Pack data-driven (champ `scenes`, ex. Cimolace) → tour GÉNÉRIQUE ; sinon tour prorascience hardcodé
-  // (inchangé). Chaque bout spécifique prorascience est gâté `generic ? … : <hardcode>`.
+  // Pack data-driven (champ `scenes`, ex. Cimolace) → tour GÉNÉRIQUE ; sinon tour prorascience hardcodé.
   const generic = !!k.scenes;
 
-  // 1 — La vision : le constat vs la promesse (split).
+  // 1 — Mode visitation : l’agent ouvre par une carte claire du territoire, façon réponse IA.
   beats.push({
     reply: generic
-      ? `Bienvenue sur ${name}. Laissez-moi vous montrer l'essentiel.`
-      : `Bienvenue sur ${name}. Tout part d'un constat simple : on vous a appris quoi faire, jamais pourquoi.`,
-    keyword: generic ? "l'essentiel" : 'jamais pourquoi',
-    scene: (k.scenes && k.scenes.vision) || {
-      type: 'split', headline: name,
-      left: { title: 'Le constat', subtitle: 'Le problème', points: ['On reproduit les gestes', 'On répète les traditions', 'La compréhension manque'] },
-      right: { title: 'La promesse', subtitle: name, points: ['Comprendre en profondeur', 'Maîtriser vraiment', 'Puis évoluer'] },
-      tone: { left: 'terra', right: 'gold' },
+      ? `Je vous fais visiter ${name}. On commence par la carte générale, puis je vous guide vers les zones importantes.`
+      : `Je vous fais visiter ${name}. On commence par la carte générale : ce que c'est, comment on apprend, et comment choisir son parcours.`,
+    keyword: 'carte générale:',
+    scene: {
+      type: 'answer',
+      question: 'Fais-moi visiter',
+      title: `Visite guidée de ${name}`,
+      summary: generic
+        ? `Voici la logique du portail ${name} : comprendre le projet, explorer les contenus, choisir le bon chemin, puis rejoindre l’espace adapté.`
+        : `${name} est présenté comme un moteur de découverte : l’agent ne vous laisse pas devant une vitrine statique, il vous oriente vers la vision, la méthode, les forfaits et les contenus utiles selon votre intention.`,
+      sections: [
+        {
+          h: 'Ce que vous allez voir',
+          bullets: generic
+            ? ['L’identité du projet et sa promesse.', 'Les contenus et espaces disponibles.', 'Les actions utiles pour continuer.']
+            : ['La vision : pourquoi la Prorascience existe.', 'La méthode : comprendre, pratiquer, exercer, évoluer.', 'Les forfaits : choisir le niveau d’accompagnement juste.', 'Le fondateur : comprendre la source du projet.'],
+        },
+        {
+          h: 'Comment naviguer ici',
+          p: 'Vous pouvez laisser l’agent guider la visite automatiquement, cliquer sur une carte “À explorer”, ou poser directement votre question dans le champ d’écriture.',
+        },
+      ],
+      sources: [
+        { label: 'Vision', note: 'Comprendre le sens du projet.', nodeId: 'vision' },
+        { label: 'Méthode', note: 'Voir la progression pédagogique.', nodeId: 'services' },
+        { label: 'Forfaits', note: 'Choisir un parcours adapté.', nodeId: 'produits' },
+      ],
     },
   });
 
-  // 2 — Les trois piliers (aside).
+  // 2 — Récit illustré : l'histoire, la problématique et le basculement (ancienne academy → moteur actuel).
+  if (!generic) {
+    beats.push({
+      reply: `Avant, pour comprendre ces savoirs, il fallait souvent voyager, chercher un initié, attendre longtemps. La Prorascience change cela : elle transforme le voyage en parcours intelligible.`,
+      keyword: 'voyager',
+      scene: {
+        type: 'story',
+        eyebrow: 'Le récit',
+        title: 'Avant il fallait voyager. Maintenant, il faut comprendre.',
+        summary: `La Prorascience ne remplace pas la tradition : elle lui redonne une carte. Elle montre le problème, la solution, puis la différence entre pratiquer par répétition et apprendre avec méthode.`,
+        heroImage: visuals.rupture || visuals.hero,
+        heroAlt: 'Rupture entre transmission ancienne et apprentissage numérique',
+        chapters: [
+          {
+            kicker: 'Le monde avant',
+            title: 'Des gestes transmis, mais peu expliqués.',
+            body: 'Libations, prières, rituels, protections : beaucoup de pratiques étaient reçues comme des actes à répéter, sans toujours voir les lois qui les organisent.',
+            image: visuals.ritesPanels || visuals.mondeAvant,
+            accent: 'terra',
+          },
+          {
+            kicker: 'La fracture',
+            title: 'Apprendre signifiait quitter, chercher, attendre.',
+            body: 'Il fallait voyager, retourner au village, trouver le bon transmetteur, et accepter une connaissance souvent fragmentée.',
+            image: visuals.voyageur,
+          },
+          {
+            kicker: 'La solution',
+            title: 'Le temple devient une école navigable.',
+            body: 'Avec LIRI, l’étudiant peut découvrir, questionner, voir, écouter, reprendre un point et entrer dans un parcours structuré depuis son téléphone ou son ordinateur.',
+            image: visuals.distance || visuals.appleRites,
+            accent: 'gold',
+          },
+        ],
+        contrasts: [
+          { before: 'Pratique répétée', after: 'Compréhension consciente' },
+          { before: 'Voyage obligatoire', after: 'Accès guidé en ligne' },
+          { before: 'Savoir fragmenté', after: 'Parcours structuré' },
+          { before: 'Vitrine statique', after: 'Moteur intelligent' },
+        ],
+      },
+    });
+  }
+
+  // 3 — La vision : le constat vs la promesse (réponse structurée, plus lisible qu’un simple split).
+  beats.push({
+    reply: generic
+      ? `Première étape : la vision. C'est la promesse centrale de ${name}.`
+      : `Première étape : la vision. Le problème n'est pas seulement l'accès aux pratiques, c'est le manque de compréhension.`,
+    keyword: 'la vision',
+    scene: (k.scenes && k.scenes.vision) || {
+      type: 'answer',
+      question: `Quelle est la vision de ${name} ?`,
+      title: 'La vision en une lecture',
+      summary: vision.promise || vision.whatIs || `${name} clarifie sa promesse centrale et guide le visiteur vers le bon chemin.`,
+      sections: [
+        { h: 'Le constat', p: vision.problem || 'Le visiteur arrive souvent avec un besoin, mais sans carte claire du chemin.' },
+        { h: 'La promesse', p: vision.closing || 'Comprendre, choisir, puis avancer avec un parcours adapté.' },
+      ],
+      sources: [
+        { label: 'Qu’est-ce que Prorascience ?', note: 'La définition centrale du projet.', nodeId: 'identity' },
+        { label: 'Forfaits', note: 'Transformer la vision en parcours concret.', nodeId: 'produits' },
+      ],
+    },
+  });
+
+  // 4 — Les piliers (cards au lieu d'aside : plus visuel et plus navigable).
   if (pillars.length >= 2) {
     beats.push({
       reply: generic
         ? `${name} tient sur ${pillars.length} piliers.`
-        : `Tout repose sur trois piliers : la Raison, la Science, et les Savoirs Africains.`,
-      keyword: generic ? 'piliers' : 'trois piliers',
+        : `Ensuite, les piliers : la Raison, la Science, et les Savoirs Africains.`,
+      keyword: generic ? 'piliers' : 'les piliers',
       scene: {
-        type: 'aside', side: 'right', title: generic ? 'Les piliers' : 'Les trois piliers',
-        items: pillars.slice(0, 4).map((p) => ({ label: p.title, value: (p.points && p.points[0]) || '—', note: (p.points || []).slice(1, 3).join(' · ') || undefined })),
+        type: 'cards', title: generic ? 'Les piliers' : 'Les trois piliers',
+        cards: pillars.slice(0, 4).map((p, i) => ({
+          title: p.title,
+          value: `${i + 1}`,
+          note: (p.points || []).slice(0, 3).join(' · '),
+          accent: i % 2 ? 'terra' : 'gold',
+        })),
       },
     });
   }
 
-  // 3 — La méthode, un chemin en 4 temps (tutorial, sans CTA Cimolace).
-  if ((k.method || []).length) {
+  // 5 — La méthode, en frise de parcours.
+  if (method.length) {
     beats.push({
       reply: generic
-        ? `La méthode, un chemin : ${k.method.map((m) => m.step.toLowerCase()).join(', ')}.`
+        ? `La méthode suit un chemin : ${method.map((m) => m.step.toLowerCase()).join(', ')}.`
         : `La méthode est un chemin : comprendre, pratiquer, exercer, puis évoluer.`,
       keyword: 'un chemin',
       scene: {
-        type: 'tutorial', title: 'La méthode, 4 temps',
-        steps: k.method.slice(0, 5).map((m) => ({ title: m.step, detail: `${m.kind ? m.kind + ' — ' : ''}${(m.items || []).join(', ')}` })),
+        type: 'timeline', title: 'La méthode de progression',
+        steps: method.slice(0, 5).map((m, i) => ({
+          marker: String(i + 1),
+          kicker: m.kind || 'Étape',
+          title: m.step,
+          detail: (m.items || []).join(', '),
+          foot: m.foot,
+          accent: i % 2 ? 'terra' : 'gold',
+        })),
       },
     });
   }
 
-  // 4 — Les forfaits (aside) — labels courts + prix, palier phare surligné.
-  if ((k.offers || []).length) {
-    const shortLabel = (nm) => nm.replace('Consultation privée', 'Consultation').replace('Mentorat Souverain / Privilégié', 'Mentorat').slice(0, 24);
-    const items = k.offers.slice(0, 5)
-      .filter((o) => !/autonome/i.test(o.name)) // 4 items max côté aside ; on garde les paliers phares
-      .slice(0, 4)
-      .map((o) => ({ label: shortLabel(o.name), value: `${o.price}${o.suffix || ''}`, note: o.desc && o.desc.slice(0, 80) }));
-    const popular = k.offers.find((o) => o.popular);
+  // 6 — Les parcours : tableau comparatif narratif (pas une simple grille de cartes).
+  if (k.comparison && Array.isArray(k.comparison.plans) && Array.isArray(k.comparison.rows)) {
+    const cmp = k.comparison;
+    beats.push({
+      reply: `Maintenant, le choix du parcours. L'axe est simple : plus vous avez besoin d'accompagnement, plus le cycle monte en intensité.`,
+      keyword: 'choix du parcours',
+      scene: {
+        type: 'comparateur',
+        title: 'Choisir son parcours',
+        intro: cmp.intro || 'Du plus autonome au plus accompagné.',
+        plans: cmp.plans.map((p) => ({
+          name: p.name,
+          value: `${p.price}${p.suffix || ''}`,
+          popular: !!p.popular,
+          ref: {
+            kind: 'plan',
+            title: p.full || p.name,
+            value: `${p.price}${p.suffix || ''}`,
+            note: p.desc,
+            related: [{ nodeId: 'produits', label: 'Tous les forfaits' }],
+          },
+        })),
+        rows: cmp.rows,
+      },
+    });
+  } else if (offers.length) {
     beats.push({
       reply: `Côté parcours, il y a un forfait pour chaque intention — de la consultation au mentorat.`,
       keyword: 'chaque intention',
-      scene: { type: 'aside', side: 'right', title: 'Les forfaits', items, highlight: popular ? shortLabel(popular.name) : undefined },
+      scene: {
+        type: 'cards', title: 'Choisir son parcours',
+        cards: offers.slice(0, 5).map((o) => ({
+          title: o.name,
+          value: `${o.price}${o.suffix || ''}`,
+          note: o.desc,
+          badge: o.popular ? 'Recommandé' : undefined,
+          accent: o.popular ? 'gold' : undefined,
+          ref: { kind: 'plan', title: o.name, value: `${o.price}${o.suffix || ''}`, note: o.desc, related: [{ nodeId: 'produits', label: 'Tous les forfaits' }] },
+        })),
+      },
     });
   }
 
-  // 5 — Le fondateur (reader).
+  // 7 — Le fondateur (reader).
   if (k.founder && k.founder.name) {
     beats.push({
-      reply: `Et tout cela porte une signature : celle du fondateur, ${k.founder.name}.`,
+      reply: `Enfin, la visite passe par la source du projet : ${k.founder.name}.`,
       keyword: k.founder.name,
       scene: {
-        type: 'reader', title: 'Le fondateur',
-        profile: {
-          name: k.founder.name, role: k.founder.title, avatarSeed: k.founder.name,
-          facts: k.founder.facts || [{ k: 'Rôle', v: 'Recteur de l’ISNA' }, { k: 'Mandat', v: 'Restaurer la dignité par la connaissance' }],
-        },
+        type: 'founder',
+        title: 'Le 5ᵉ Manikongo',
+        name: k.founder.name,
+        role: k.founder.title,
+        image: '/founder.jpg',
+        alt: 'Badika Jel David, 5ᵉ Manikongo et fondateur de Prorascience',
+        quote: 'Une école n’est pas seulement un lieu où l’on reçoit des contenus : c’est un lieu où la connaissance reprend corps.',
+        facts: k.founder.facts || [{ k: 'Rôle', v: 'Recteur de l’ISNA' }, { k: 'Mandat', v: 'Restaurer la dignité par la connaissance' }],
         body: [
-          { h: 'Sa vision', p: k.founder.bio },
-          { h: 'Son mandat', p: k.vision.closing },
+          { h: 'La présence', p: k.founder.bio },
+          { h: 'Le mandat', p: vision.closing },
         ],
         suggestions: ['Vos forfaits ?', 'La méthode ?'],
       },
     });
   }
 
-  // 6 — Final : retour à la présence-guide (pas de CTA Cimolace).
+  // 8 — Final : retour à la présence-guide.
   beats.push({
-    reply: `Voilà ${name} en un souffle. Dites-moi ce que vous voulez approfondir — je connais tout ce site.`,
-    keyword: 'je connais tout',
+    reply: `Voilà ${name} en mode visite. Vous pouvez maintenant me demander un point précis, choisir un forfait, ou créer votre compte.`,
+    keyword: 'mode visite',
     final: true,
   });
 
@@ -287,6 +431,7 @@ export function buildNodeScene(nodeId, k = PRORASCIENCE_KNOWLEDGE) {
   const stats = id.stats || [];
   const faqs = k.faq || [];
   const values = vision.values || [];
+  const visuals = k.visuals || {};
   const name = id.name || 'ce site';
   const founderFacts = founder.facts || [
     { k: 'Rôle', v: founder.title || 'Fondateur' },
@@ -300,10 +445,33 @@ export function buildNodeScene(nodeId, k = PRORASCIENCE_KNOWLEDGE) {
   switch (nodeId) {
     case 'identity':
       return {
-        type: 'split', headline: `${name}${id.fullName ? ` — ${id.fullName}` : ''}`,
-        left: { title: "Ce que c'est", subtitle: 'La discipline', points: ["L'étude du visible ET de l'invisible", 'Unir physique et métaphysique', 'Une école ET un temple'] },
-        right: { title: 'Ce que ça change', subtitle: 'Pour vous', points: ['Comprendre, pas subir', 'Le pourquoi derrière le geste', 'Une transformation réelle'] },
-        tone: { left: 'gold', right: 'terra' },
+        type: 'answer',
+        question: 'Qu’est-ce que la Prorascience ?',
+        title: 'La Prorascience, en clair',
+        summary: vision.whatIs || "La Prorascience est une discipline qui cherche à comprendre les réalités visibles et invisibles avec méthode, rigueur et responsabilité.",
+        sections: [
+          {
+            h: 'L’idée centrale',
+            p: 'La Prorascience ne demande pas seulement de reproduire des gestes ou des traditions. Elle cherche à expliquer pourquoi une pratique existe, comment elle agit, et dans quelle structure de connaissance elle s’inscrit.',
+          },
+          {
+            h: 'Ce que cela change pour l’étudiant',
+            bullets: [
+              'Comprendre au lieu de subir ou répéter mécaniquement.',
+              'Relier la physique, la métaphysique et les savoirs africains dans une lecture cohérente.',
+              'Avancer vers une transformation réelle : comprendre, maîtriser, puis évoluer.',
+            ],
+          },
+          {
+            h: 'Comment on l’apprend',
+            p: `Le parcours suit une progression simple : ${method.map((m) => m.step).filter(Boolean).join(' → ') || 'comprendre → pratiquer → exercer → évoluer'}. Chaque niveau sert à passer de la théorie à une pratique plus consciente.`,
+          },
+        ],
+        sources: [
+          { label: 'Vision de Prorascience', note: vision.promise || 'La promesse pédagogique et spirituelle du projet.', nodeId: 'vision' },
+          { label: 'Méthode du parcours', note: 'Comprendre, pratiquer, exercer, évoluer.', nodeId: 'services' },
+          { label: 'Forfaits & accès', note: 'Trouver le niveau d’accompagnement adapté.', nodeId: 'produits' },
+        ],
       };
     case 'vision':
       return {
@@ -401,18 +569,52 @@ export function buildNodeScene(nodeId, k = PRORASCIENCE_KNOWLEDGE) {
       return nav.length ? { type: 'cards', title: 'Ressources', cards: nav.slice(0, 6).map((n) => ({ title: n })) } : null;
     }
     case 'histoire':
-      return founder.name ? {
-        type: 'reader', title: 'Notre histoire',
-        profile: { name: founder.name, role: founder.title, avatarSeed: founder.name,
-          facts: [...(founder.facts ? founder.facts.slice(0, 1) : [{ k: 'Mandat', v: 'Restaurer la dignité' }]), ...stats.slice(0, 2).map((s) => ({ k: s.label, v: s.value }))] },
-        body: [{ h: "L'origine", p: founder.bio }, { h: 'Le mandat', p: vision.closing || vision.promise }],
-        suggestions: ['Le fondateur ?', 'Vos forfaits ?'],
-      } : null;
+      return {
+        type: 'story',
+        eyebrow: 'Histoire',
+        title: 'De la tradition fragmentée au parcours intelligent',
+        summary: 'L’histoire de Prorascience est celle d’un passage : quitter une transmission difficile d’accès pour construire une école capable d’expliquer, de guider et de rendre les savoirs africains navigables.',
+        heroImage: visuals.histoire || visuals.ritesPanels || visuals.hero,
+        heroAlt: 'Histoire visuelle de la Prorascience',
+        chapters: [
+          {
+            kicker: 'Avant',
+            title: 'On recevait les gestes.',
+            body: 'Les pratiques existaient, mais leur logique profonde restait souvent cachée ou dispersée.',
+            image: visuals.ritesPanels || visuals.mondeAvant,
+            accent: 'terra',
+          },
+          {
+            kicker: 'Le problème',
+            title: 'La connaissance demandait un déplacement.',
+            body: 'Voyager, trouver un transmetteur, attendre le bon moment : l’accès au savoir dépendait du lieu, du hasard et de la disponibilité.',
+            image: visuals.voyageur,
+          },
+          {
+            kicker: 'La réponse',
+            title: 'Une école qui rend l’invisible intelligible.',
+            body: 'La Prorascience structure la découverte : définition, méthode, cycles, exercices, accompagnement et reprise par l’agent.',
+            image: visuals.rituelCompris || visuals.distance,
+            accent: 'gold',
+          },
+        ],
+        contrasts: [
+          { before: 'Faire sans carte', after: 'Comprendre le chemin' },
+          { before: 'Transmission rare', after: 'Parcours accessible' },
+          { before: 'Informations dispersées', after: 'Navigation intelligente' },
+        ],
+      };
     case 'fondateur':
       return founder.name ? {
-        type: 'reader', title: 'Le fondateur',
-        profile: { name: founder.name, role: founder.title, avatarSeed: founder.name, facts: founderFacts },
-        body: [{ h: 'Sa vision', p: founder.bio }, { h: 'Son mandat', p: vision.closing }],
+        type: 'founder',
+        title: 'Le 5ᵉ Manikongo',
+        name: founder.name,
+        role: founder.title,
+        image: '/founder.jpg',
+        alt: 'Badika Jel David, 5ᵉ Manikongo et fondateur de Prorascience',
+        quote: 'Une école n’est pas seulement un lieu où l’on reçoit des contenus : c’est un lieu où la connaissance reprend corps.',
+        facts: founderFacts,
+        body: [{ h: 'La présence', p: founder.bio }, { h: 'Le mandat', p: vision.closing }],
         suggestions: ['Vos forfaits ?', 'La méthode ?'],
       } : null;
     case 'equipe':

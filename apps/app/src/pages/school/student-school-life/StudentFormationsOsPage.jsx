@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { ArrowLeft, ArrowUp, MessageSquare, X, RotateCcw } from 'lucide-react';
+import { ArrowLeft, ArrowUp, MessageSquare, X, RotateCcw, BookOpen, Clock3, Compass, Sparkles } from 'lucide-react';
 import { coursesApi } from '@/lib/api-v2';
 import { supabase } from '@/lib/customSupabaseClient';
 import { BG, INK, STYLE, TERRA, SERIF } from '@/lib/agent/immersiveTheme';
@@ -46,6 +46,23 @@ export default function StudentFormationsOsPage() {
   const [asking, setAsking] = useState(false);
   const [typed, setTyped] = useState(''); // voix de l'OS qui s'écrit (typewriter)
   const { fetchStructure } = useFormationStructure(); // lit la structure relationnelle réelle des cours studio
+
+  const cockpitStats = useMemo(() => {
+    const selectedModules = focusCourse?.modules || [];
+    const modulesCount = focusCourse ? selectedModules.length : courses.length;
+    const daysCount = selectedModules.reduce(
+      (sum, m) => sum + (m.weeks || []).reduce((a, w) => a + (w.days || []).length, 0),
+      0,
+    );
+    const videoCount = selectedModules.reduce(
+      (sum, m) => sum + (m.weeks || []).reduce(
+        (a, w) => a + (w.days || []).reduce((dSum, d) => dSum + (Array.isArray(d.videos) ? d.videos.length : (d.video ? 1 : 0)), 0),
+        0,
+      ),
+      0,
+    );
+    return { modulesCount, daysCount, videoCount };
+  }, [courses.length, focusCourse]);
 
   // Effet machine à écrire sur la réponse courante (sauf l'état « … » de réflexion).
   useEffect(() => {
@@ -297,6 +314,57 @@ export default function StudentFormationsOsPage() {
       <span className="cca-amb" style={{ width: 5, height: 5, top: '30%', left: '28%', opacity: 0.16, animation: 'ccaDriftA 11s ease-in-out infinite' }} />
       <span className="cca-amb" style={{ width: 4, height: 4, top: '62%', left: '68%', opacity: 0.13, background: '#e6cc92', animation: 'ccaDriftB 14s ease-in-out infinite' }} />
       <span className="cca-amb" style={{ width: 3, height: 3, top: '46%', left: '72%', opacity: 0.12, animation: 'ccaDriftC 9s ease-in-out infinite' }} />
+
+      {!loading && !openDay && (
+        <div style={{ position: 'absolute', inset: 0, zIndex: 6, pointerEvents: 'none' }}>
+          <div style={{ position: 'absolute', top: 22, left: 'clamp(18px,4vw,64px)', right: 'clamp(18px,4vw,64px)', display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 18 }}>
+            <div style={{ maxWidth: 560 }}>
+              <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '7px 12px', borderRadius: 999, border: '1px solid rgba(217,119,87,.22)', background: 'rgba(217,119,87,.08)', color: '#f0c3ac', fontSize: 11, fontWeight: 800, letterSpacing: '.14em', textTransform: 'uppercase' }}>
+                <Sparkles size={13} /> Liri Learning OS
+              </div>
+              <h1 style={{ margin: '14px 0 0', fontFamily: SERIF, fontSize: 'clamp(32px,5vw,68px)', lineHeight: .94, letterSpacing: '-.045em', color: '#f5f4ee' }}>
+                {focusModule?.module?.title || focusCourse?.course?.title || 'Mes cours'}
+              </h1>
+              <p style={{ margin: '12px 0 0', maxWidth: 520, fontSize: 14.5, lineHeight: 1.65, color: 'rgba(245,244,238,.62)' }}>
+                {focusModule
+                  ? "Choisis une séance : vidéo, support, quiz et carte mentale restent reliés comme un parcours vivant."
+                  : focusCourse
+                    ? "Ton programme est organisé en modules. L’agent peut ouvrir, résumer ou retrouver une séance pour toi."
+                    : "Un espace calme pour reprendre tes formations : tu peux cliquer, ou simplement demander à l’agent où continuer."}
+              </p>
+            </div>
+
+            <div style={{ pointerEvents: 'auto', display: 'grid', gridTemplateColumns: 'repeat(3,minmax(74px,1fr))', gap: 8, width: 'min(360px,40vw)' }}>
+              {[
+                { icon: BookOpen, label: focusCourse ? 'Modules' : 'Cours', value: cockpitStats.modulesCount },
+                { icon: Compass, label: 'Séances', value: cockpitStats.daysCount || '—' },
+                { icon: Clock3, label: 'Vidéos', value: cockpitStats.videoCount || '—' },
+              ].map(({ icon: Icon, label, value }) => (
+                <div key={label} style={{ minHeight: 82, borderRadius: 22, border: '1px solid rgba(245,244,238,.09)', background: 'linear-gradient(145deg,rgba(245,244,238,.075),rgba(245,244,238,.025))', boxShadow: '0 18px 50px rgba(0,0,0,.25)', backdropFilter: 'blur(16px)', padding: '13px 14px' }}>
+                  <Icon size={15} color="#d97757" />
+                  <div style={{ marginTop: 8, fontFamily: SERIF, fontSize: 24, color: '#f5f4ee', lineHeight: 1 }}>{value}</div>
+                  <div style={{ marginTop: 4, fontSize: 10.5, color: 'rgba(245,244,238,.48)', textTransform: 'uppercase', letterSpacing: '.12em' }}>{label}</div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {!focusCourse && courses.length > 0 && (
+            <div style={{ position: 'absolute', left: 'clamp(18px,4vw,64px)', bottom: 120, display: 'flex', gap: 8, flexWrap: 'wrap', pointerEvents: 'auto', maxWidth: 620 }}>
+              {courses.slice(0, 4).map((c, i) => (
+                <button
+                  key={c.id || i}
+                  type="button"
+                  onClick={() => openCourse(c)}
+                  style={{ border: '1px solid rgba(245,244,238,.10)', background: 'rgba(31,30,28,.62)', color: 'rgba(245,244,238,.78)', borderRadius: 999, padding: '8px 13px', fontSize: 12.5, fontWeight: 700, cursor: 'pointer', backdropFilter: 'blur(12px)', maxWidth: 230, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}
+                >
+                  Continuer · {c.title || `Cours ${i + 1}`}
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
 
       {(focusCourse || focusModule) && (
         <button

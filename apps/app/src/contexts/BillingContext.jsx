@@ -16,24 +16,94 @@ const GRACE_DAYS_DEFAULT = 3;
 
 
 function computeStatus(sub, graceDays) {
-  if (!sub) return { status: 'none', inGrace: false };
+  if (!sub) {
+    return {
+      status: 'none',
+      visualState: 'none',
+      inGrace: false,
+      daysRemaining: 0,
+      expiresAt: null,
+      graceEndsAt: null,
+    };
+  }
   const rawStatus = String(sub.status || '').toLowerCase();
   const expiresAt = sub.current_period_end ? new Date(sub.current_period_end).getTime() : null;
   const now = Date.now();
 
-  if (rawStatus === 'canceled') return { status: 'expired', inGrace: false };
+  if (rawStatus === 'canceled') {
+    return {
+      status: 'expired',
+      visualState: 'expired',
+      inGrace: false,
+      daysRemaining: 0,
+      expiresAt: sub.current_period_end || null,
+      graceEndsAt: null,
+    };
+  }
   if (!expiresAt) {
     // If missing current_period_end, fallback to status field.
-    if (rawStatus === 'active') return { status: 'active', inGrace: false };
-    if (rawStatus === 'past_due') return { status: 'past_due', inGrace: true };
-    return { status: rawStatus || 'none', inGrace: false };
+    if (rawStatus === 'active') {
+      return {
+        status: 'active',
+        visualState: 'active',
+        inGrace: false,
+        daysRemaining: null,
+        expiresAt: null,
+        graceEndsAt: null,
+      };
+    }
+    if (rawStatus === 'past_due') {
+      return {
+        status: 'past_due',
+        visualState: 'grace_period',
+        inGrace: true,
+        daysRemaining: null,
+        expiresAt: null,
+        graceEndsAt: null,
+      };
+    }
+    return {
+      status: rawStatus || 'none',
+      visualState: rawStatus || 'none',
+      inGrace: false,
+      daysRemaining: 0,
+      expiresAt: null,
+      graceEndsAt: null,
+    };
   }
 
-  if (expiresAt > now) return { status: 'active', inGrace: false };
+  if (expiresAt > now) {
+    const days = Math.max(0, Math.ceil((expiresAt - now) / (24 * 60 * 60 * 1000)));
+    return {
+      status: 'active',
+      visualState: days <= 7 ? 'expiring_soon' : 'active',
+      inGrace: false,
+      daysRemaining: days,
+      expiresAt: sub.current_period_end,
+      graceEndsAt: null,
+    };
+  }
 
   const graceMs = Math.max(0, Number(graceDays || 0)) * 24 * 60 * 60 * 1000;
-  if (now <= expiresAt + graceMs) return { status: 'past_due', inGrace: true };
-  return { status: 'expired', inGrace: false };
+  if (now <= expiresAt + graceMs) {
+    const graceEndsAt = expiresAt + graceMs;
+    return {
+      status: 'past_due',
+      visualState: 'grace_period',
+      inGrace: true,
+      daysRemaining: Math.max(0, Math.ceil((graceEndsAt - now) / (24 * 60 * 60 * 1000))),
+      expiresAt: sub.current_period_end,
+      graceEndsAt: new Date(graceEndsAt).toISOString(),
+    };
+  }
+  return {
+    status: 'expired',
+    visualState: 'expired',
+    inGrace: false,
+    daysRemaining: 0,
+    expiresAt: sub.current_period_end,
+    graceEndsAt: new Date(expiresAt + graceMs).toISOString(),
+  };
 }
 
 export const BillingProvider = ({ children, graceDays = GRACE_DAYS_DEFAULT }) => {
@@ -321,7 +391,11 @@ export const BillingProvider = ({ children, graceDays = GRACE_DAYS_DEFAULT }) =>
       loading,
       error,
       status: computed.status, // none | active | past_due | expired
+      visualState: computed.visualState,
       inGrace: computed.inGrace,
+      daysRemaining: computed.daysRemaining,
+      expiresAt: computed.expiresAt,
+      graceEndsAt: computed.graceEndsAt,
       graceDays,
       computed: subscriptionComputed,
       activeRenewalLink,
@@ -334,7 +408,11 @@ export const BillingProvider = ({ children, graceDays = GRACE_DAYS_DEFAULT }) =>
       loading,
       error,
       computed.status,
+      computed.visualState,
       computed.inGrace,
+      computed.daysRemaining,
+      computed.expiresAt,
+      computed.graceEndsAt,
       graceDays,
       subscriptionComputed,
       activeRenewalLink,
@@ -345,4 +423,3 @@ export const BillingProvider = ({ children, graceDays = GRACE_DAYS_DEFAULT }) =>
 
   return <BillingContext.Provider value={value}>{children}</BillingContext.Provider>;
 };
-

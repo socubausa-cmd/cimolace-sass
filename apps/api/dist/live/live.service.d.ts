@@ -1,11 +1,14 @@
 import { AuthService } from "../auth/auth.service";
 import { LiveKitService } from "../livekit/livekit.service";
 import { LiriEntitlementsService } from "../billing/liri-entitlements.service";
+import { UsageService } from "../usage/usage.service";
 export declare class LiveService {
     private auth;
     private liveKit;
     private entitlements;
-    constructor(auth: AuthService, liveKit: LiveKitService, entitlements: LiriEntitlementsService);
+    private usage;
+    private readonly logger;
+    constructor(auth: AuthService, liveKit: LiveKitService, entitlements: LiriEntitlementsService, usage: UsageService);
     private get supabase();
     createSession(tenantId: string, data: any): Promise<any>;
     findAll(tenantId: string): Promise<any[]>;
@@ -17,6 +20,12 @@ export declare class LiveService {
         egressId: string | null;
         recording_active: boolean;
     }>;
+    startRecordingForTeleconsult(tenantId: string, sessionId: string): Promise<{
+        recording: any;
+        egressId: string | null;
+        recording_active: boolean;
+    }>;
+    private _startEgressForSession;
     stopRecording(tenantId: string, sessionId: string): Promise<{
         stopped: boolean;
         recordingId: any;
@@ -28,6 +37,12 @@ export declare class LiveService {
         force?: "published" | "pending_review";
         actorId?: string;
     }): Promise<{
+        published: boolean;
+        reason: "teleconsult";
+        workflow_status?: undefined;
+        forumPosted?: undefined;
+        state?: undefined;
+    } | {
         published: boolean;
         reason: "no_recording";
         workflow_status?: undefined;
@@ -42,6 +57,14 @@ export declare class LiveService {
     }>;
     private canViewReplay;
     resolveReplayPlaybackUrl(sessionId: string, userId: string): Promise<string>;
+    getTeleconsultRecordingState(sessionId: string): Promise<{
+        recording: boolean;
+        hasReplay: boolean;
+        startedAt: string | null;
+        completedAt: string | null;
+        durationSeconds: number | null;
+    }>;
+    resolveTeleconsultReplayUrl(sessionId: string): Promise<string | null>;
     unpublishReplay(tenantId: string, sessionId: string, actorId?: string): Promise<{
         unpublished: boolean;
         state: any;
@@ -50,6 +73,7 @@ export declare class LiveService {
     private postReplayToForum;
     private removeReplayFromForum;
     private resolveLiveTopicId;
+    private resolveMemberCycle;
     generateToken(sessionId: string, userId: string, requestedRole?: "host" | "student", tenant?: {
         id?: string;
         slug?: string;
@@ -61,8 +85,18 @@ export declare class LiveService {
         userId: string;
         requestedRole: "student" | "host" | null;
     }>;
+    generateGuestLiveToken(sessionId: string, inviteId: string, tenantSlug?: string): Promise<{
+        token: string;
+        room: string;
+        role: "guest";
+        identity: string;
+    }>;
     maybeStartRecording(tenantId: string, sessionId: string): Promise<void>;
     roomNameFor(tenantSlug: string, externalRef: string): string;
+    listRoomParticipants(tenantSlug: string, externalRef: string): Promise<string[]>;
+    closeRoom(tenantSlug: string, externalRef: string): Promise<void>;
+    muteParticipant(tenantSlug: string, externalRef: string, identity: string): Promise<number>;
+    removeParticipant(tenantSlug: string, externalRef: string, identity: string): Promise<void>;
     issueTokenForSession(input: {
         tenantId: string;
         tenantSlug: string;
@@ -89,6 +123,7 @@ export declare class LiveService {
     endLiriSessionByRoomName(roomName: string): Promise<{
         session_id: string;
         duration_seconds: number;
+        tenant_id: string | null;
     } | null>;
     getLiriConsumption(tenantId: string, from: string, to: string): Promise<Array<{
         purpose: string;

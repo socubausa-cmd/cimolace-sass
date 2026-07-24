@@ -52,6 +52,11 @@ export function LiriPortalPage() {
   const { logout, user, tenantRole } = useAuth();
   const base = getApiBaseUrl();
   const token = authStore.getToken();
+  const previewParams = typeof window !== 'undefined' && import.meta.env.DEV
+    ? new URLSearchParams(window.location.search)
+    : null;
+  const isPreview = previewParams?.get('preview') === '1';
+  const previewRole = String(previewParams?.get('role') || '').toLowerCase();
   // Le portail PRODUIT suit le DOMAINE, PAS le localStorage (qui peut être resté sur 'isna'
   // d'une session antérieure dans le même navigateur → fuite). Domaine prioritaire, getTenantSlug
   // en repli (utilisé pour le header X-Tenant-Slug des appels API au boot, avant que l'org charge).
@@ -194,7 +199,7 @@ export function LiriPortalPage() {
   const agendaLabel = dayOffset === 0 ? "Aujourd'hui" : selectedDay.toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'short' });
 
   // Rôle (créateur vs élève) — déclaré ICI car resumeItems/activityItems en dépendent.
-  const isCreator = isCreatorRole(tenantRole, org?.role);
+  const isCreator = (isPreview && previewRole !== 'student') || isCreatorRole(tenantRole, org?.role);
 
   const liveMinutes = (stats?.totalLives ?? 0) * 70;
 
@@ -286,13 +291,14 @@ export function LiriPortalPage() {
   // redirection vers l'ancienne « Vie scolaire » — un seul monde : LIRI.
   // LIRI 2 modes : ÉCOLE (service `school` actif) ajoute la Vie scolaire au rail ;
   // SIMPLE (Zoom) = Accueil/Lives/Forum/Messages seulement. Fail-closed.
-  const schoolActive = useSchoolActive() === true;
+  const resolvedSchoolActive = useSchoolActive() === true;
+  const schoolActive = isPreview || resolvedSchoolActive;
 
   // Items du rail (filtrés rôle + mode école) pour la barre de nav basse mobile (< md).
   const mobileNavItems = getRailItems({ isCreator, schoolActive, engine: 'liri' });
 
   return (
-    <div className="lp-root relative h-[100dvh] w-full overflow-hidden grid grid-rows-[56px_1fr_auto]">
+    <div className="lp-root relative grid h-[100dvh] w-full grid-rows-[auto_1fr_auto] overflow-hidden">
       {/* glow chaleureux */}
       <div className="lp-glow">
         <span style={{ width: 520, height: 420, left: '34%', top: -120, background: 'rgba(217,119,87,.10)' }} />
@@ -300,23 +306,23 @@ export function LiriPortalPage() {
       </div>
 
       {/* ───── TOPBAR ───── */}
-      <header className="z-30 flex items-center justify-between lp-rail-bg border-b lp-line px-4">
-        <div className="flex items-center gap-2.5">
+      <header className="z-30 flex min-h-14 items-center justify-between gap-2 lp-rail-bg border-b lp-line px-2.5 py-2 sm:gap-3 sm:px-4">
+        <div className="flex min-w-0 shrink-0 items-center gap-2 sm:gap-2.5">
           <button className="grid h-8 w-8 place-items-center rounded-xl lp-muted lp-railbtn lp-tr" aria-label="Menu"><Menu size={17} /></button>
-          <span className="flex items-center gap-2">
+          <span className="flex min-w-0 items-center gap-2">
             {PORTAL_IS_TENANT
               ? (PORTAL_LOGO ? <img src={PORTAL_LOGO} alt={PORTAL_BRAND} className="h-9 w-9 rounded-lg object-contain" /> : null)
               : <img src="/lirilogo.png" alt="LIRI" className="h-9 w-9 object-contain" />}
-            <span className="text-[17px] font-semibold tracking-tight">{PORTAL_BRAND}</span>
+            <span className="max-w-[6.8rem] truncate text-[16px] font-semibold tracking-tight sm:max-w-[12rem] sm:text-[17px] lg:max-w-none">{PORTAL_BRAND}</span>
           </span>
         </div>
         {/* SÉLECTEUR DE MOTEUR — recharge le rail. Centré, comme sur les sous-pages (LiriPortalShell). */}
-        <div className="flex min-w-0 flex-1 items-center justify-center px-2">
+        <div className="flex min-w-0 flex-1 items-center justify-center overflow-hidden px-1 sm:px-2">
           <LiriEngineSwitcher activeEngine="liri" isCreator={isCreator} schoolActive={schoolActive} onNav={nav} />
         </div>
-        <div className="flex items-center gap-1.5">
-          <button className="relative grid h-8 w-8 place-items-center rounded-xl lp-muted lp-railbtn lp-tr" aria-label="Notifications"><Bell size={17} /><span className="absolute right-2 top-1.5 h-1.5 w-1.5 rounded-full" style={{ background: 'var(--coral)' }} /></button>
-          {isCreator && <button onClick={() => nav('/liri/compte')} className="grid h-8 w-8 place-items-center rounded-xl lp-muted lp-railbtn lp-tr" aria-label="Réglages de l’organisation"><Settings size={17} /></button>}
+        <div className="flex shrink-0 items-center gap-1 sm:gap-1.5">
+          <button className="relative hidden h-8 w-8 place-items-center rounded-xl lp-muted lp-railbtn lp-tr sm:grid" aria-label="Notifications"><Bell size={17} /><span className="absolute right-2 top-1.5 h-1.5 w-1.5 rounded-full" style={{ background: 'var(--coral)' }} /></button>
+          {isCreator && <button onClick={() => nav('/liri/compte')} className="hidden h-8 w-8 place-items-center rounded-xl lp-muted lp-railbtn lp-tr sm:grid" aria-label="Réglages de l’organisation"><Settings size={17} /></button>}
 
           {/* ── Avatar → menu compte / organisation ── */}
           <div className="relative" ref={menuRef}>
@@ -326,7 +332,7 @@ export function LiriPortalPage() {
             </button>
 
             {menuOpen && (
-              <div role="menu" className="absolute right-0 top-[calc(100%+8px)] z-50 w-[280px] overflow-hidden rounded-2xl border lp-line lp-soft"
+              <div role="menu" className="absolute right-0 top-[calc(100%+8px)] z-50 w-[min(280px,calc(100vw-1rem))] overflow-hidden rounded-2xl border lp-line lp-soft"
                 style={{ background: '#221f1b', boxShadow: '0 24px 60px -16px rgba(0,0,0,.7)' }}>
                 {/* En-tête : nom réel + email + badge essai/plan */}
                 <div className="flex items-center gap-3 border-b lp-line px-4 py-3.5">
@@ -385,9 +391,9 @@ export function LiriPortalPage() {
 
         {/* MAIN — Accueil */}
         <main className="lp-scroll relative min-h-0 overflow-y-auto">
-          <div className="mx-auto flex min-h-full max-w-4xl flex-col items-center px-6 pt-12 pb-10">
+          <div className="mx-auto flex min-h-full max-w-4xl flex-col items-center px-4 pb-8 pt-8 sm:px-6 sm:pb-10 sm:pt-12">
             <p className="text-[13px] font-medium uppercase tracking-[0.18em] lp-faint lp-rise">{dateLong} · {timeStr}</p>
-            <h1 className="mt-3 text-center lp-serif text-[34px] font-medium leading-tight tracking-tight lp-rise">{greet}<span className="lp-coral"> sur {PORTAL_BRAND}</span></h1>
+            <h1 className="mt-3 text-center lp-serif text-[28px] font-medium leading-tight tracking-tight lp-rise sm:text-[34px]">{greet}<span className="lp-coral"> sur {PORTAL_BRAND}</span></h1>
             <p className="mt-2 text-center text-[14px] lp-muted lp-rise">Que voulez-vous lancer aujourd'hui&nbsp;?</p>
 
             {/* Compteur / rappel de forfait : forfait payé (Autonome/Académique) OU essai de
@@ -424,12 +430,12 @@ export function LiriPortalPage() {
             )}
 
             {/* quick actions */}
-            <div className="mt-10 flex flex-wrap items-start justify-center gap-x-6 gap-y-7">
+            <div className="mt-8 flex flex-wrap items-start justify-center gap-x-3 gap-y-6 sm:mt-10 sm:gap-x-6 sm:gap-y-7">
               {QUICK.filter((q) => (q.creator ? isCreator : q.student ? !isCreator : true)).map((q) => {
                 const Icon = q.icon;
                 return (
-                  <button key={q.label} onClick={() => (q.hero ? startInstantMeeting() : nav(q.to))} disabled={q.hero && starting} className="group relative flex w-24 flex-col items-center gap-2.5 disabled:cursor-wait disabled:opacity-70">
-                    <span className={`lp-tr grid h-24 w-24 place-items-center rounded-[26px] lp-soft lp-lift ${q.hero ? 'text-white lp-ember' : 'lp-line border lp-panel lp-coral lp-hovbtn'}`}><Icon size={q.hero ? 32 : 30} /></span>
+                  <button key={q.label} onClick={() => (q.hero ? startInstantMeeting() : nav(q.to))} disabled={q.hero && starting} className="group relative flex w-20 flex-col items-center gap-2.5 disabled:cursor-wait disabled:opacity-70 sm:w-24">
+                    <span className={`lp-tr grid h-20 w-20 place-items-center rounded-[22px] lp-soft lp-lift sm:h-24 sm:w-24 sm:rounded-[26px] ${q.hero ? 'text-white lp-ember' : 'lp-line border lp-panel lp-coral lp-hovbtn'}`}><Icon size={q.hero ? 32 : 30} /></span>
                     <span className={`text-[13px] font-medium ${q.hero ? 'lp-ink' : 'lp-muted'}`}>{q.hero && starting ? 'Création…' : q.label}</span>
                   </button>
                 );
@@ -611,7 +617,7 @@ export function LiriPortalPage() {
 
       {/* ───── RANGÉE BASSE : barre de nav (mobile, < md) OU footer (desktop, ≥ md) ───── */}
       <div className="z-30 min-w-0">
-        <nav className="flex items-stretch gap-1 overflow-x-auto no-scrollbar border-t lp-line lp-rail-bg px-2 py-1.5 md:hidden" aria-label="Navigation principale">
+        <nav className="lp-mobile-nav flex items-stretch gap-1 overflow-x-auto no-scrollbar border-t lp-line lp-rail-bg px-2 py-1.5 md:hidden" aria-label="Navigation principale">
           {mobileNavItems.map((it) => {
             const Icon = it.icon;
             const isActive = it.key === 'accueil';

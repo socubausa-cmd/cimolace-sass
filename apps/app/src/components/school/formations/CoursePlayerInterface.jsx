@@ -12,7 +12,7 @@ import { Card } from '@/components/ui/card';
 import { Textarea } from '@/components/ui/textarea';
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
-import { Lock, Unlock, CheckCircle, ArrowRight, Play, BookOpen, PenTool, ChevronRight, Menu, Heart, Video, Presentation, FileText, Sparkles, Layers } from 'lucide-react';
+import { Lock, Unlock, CheckCircle, ArrowRight, Play, BookOpen, PenTool, ChevronRight, Menu, Heart, Video, Presentation, FileText, Sparkles, Layers, MessageSquare } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { VideoProgressProvider } from '@/components/school/classroom/VideoProgressTracker';
 import { SafeHtml } from '@/components/common/SafeHtml';
@@ -1298,6 +1298,17 @@ const SupabaseCoursePlayerContent = ({ formationId, onExit }) => {
               return '';
             };
 
+            const hasMindmap = !!currentVideoMemo?.mindmap;
+            const hasTranscript = Array.isArray(currentVideoMemo?.transcript) && currentVideoMemo.transcript.length > 0;
+            const hasChapters = Array.isArray(currentVideoMemo?.chapters) && currentVideoMemo.chapters.length > 0;
+            const postProductionReady = hasMindmap || hasTranscript || hasChapters;
+            const learningSteps = [
+              { label: 'Regarder', detail: 'La vidéo source', done: videoDone, icon: Play },
+              { label: 'Comprendre', detail: postProductionReady ? 'Chapitres · transcript · SmartBoard' : 'Résumé du cours', done: videoDone && postProductionReady, icon: Layers },
+              { label: 'Réviser', detail: hasMindmap ? 'Mindmap + quiz' : 'En attente de mindmap', done: videoDone && hasMindmap, icon: BookOpen },
+              { label: 'Questionner', detail: questionsUnlocked ? 'Forum & agent ouverts' : getQuestionsLockedReason(), done: questionsUnlocked, icon: MessageSquare },
+            ];
+
             const handleVideoEnded = () => {
               setVideoDone(true);
               if (canShowPresentation) setActivePanel('presentation');
@@ -1413,6 +1424,46 @@ const SupabaseCoursePlayerContent = ({ formationId, onExit }) => {
                     </div>
                   </div>
                 </header>
+
+                <section className="relative z-[18] px-4 md:px-6 pb-3">
+                  <div className="rounded-[26px] border border-[rgba(245,244,238,0.09)] bg-[#1f1e1c]/72 p-3 shadow-[0_18px_70px_rgba(0,0,0,.32)] backdrop-blur-xl">
+                    <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+                      <div className="min-w-0">
+                        <div className="inline-flex items-center gap-2 rounded-full border border-[var(--school-accent,#d97757)]/25 bg-[var(--school-accent,#d97757)]/10 px-3 py-1 text-[10px] font-black uppercase tracking-[0.22em] text-[var(--school-accent,#d97757)]">
+                          <Sparkles className="h-3 w-3" /> Player augmenté par la post-production
+                        </div>
+                        <p className="mt-2 max-w-2xl text-xs leading-5 text-[#c8c2b6] md:text-sm">
+                          Ici la vidéo n’est pas seule : Liri transforme le replay en chapitres, résumé, transcript, SmartBoard, salle de révision et questions liées au cours.
+                        </p>
+                      </div>
+                      <div className="grid min-w-0 grid-cols-2 gap-2 md:grid-cols-4 lg:w-[620px]">
+                        {learningSteps.map(({ label, detail, done, icon: Icon }, idx) => (
+                          <button
+                            key={label}
+                            type="button"
+                            onClick={() => {
+                              if (label === 'Comprendre') setSmartboardOn(true);
+                              if (label === 'Réviser' && videoDone && hasMindmap) { setMindmapTab('mindmap'); setMindmapOpen(true); }
+                              if (label === 'Questionner' && questionsUnlocked) setActivePanel('questions');
+                            }}
+                            className={`group min-h-[78px] rounded-2xl border p-3 text-left transition ${
+                              done
+                                ? 'border-[var(--school-accent,#d97757)]/35 bg-[var(--school-accent,#d97757)]/12'
+                                : 'border-white/[0.08] bg-white/[0.035] hover:bg-white/[0.055]'
+                            }`}
+                          >
+                            <div className="flex items-center justify-between gap-2">
+                              <span className="text-[10px] font-black uppercase tracking-[0.18em] text-white/38">0{idx + 1}</span>
+                              {done ? <CheckCircle className="h-3.5 w-3.5 text-green-300" /> : <Icon className="h-3.5 w-3.5 text-white/45 group-hover:text-[var(--school-accent,#d97757)]" />}
+                            </div>
+                            <div className="mt-2 text-[13px] font-black text-white">{label}</div>
+                            <div className="mt-1 line-clamp-2 text-[10.5px] leading-4 text-white/45">{detail}</div>
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                </section>
 
                 <div className="flex-1 flex overflow-hidden relative" style={{ zIndex: 1 }}>
                   <div className="flex-1 flex flex-col overflow-y-auto">

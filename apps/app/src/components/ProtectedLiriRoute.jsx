@@ -59,6 +59,7 @@ function LiriAccessGate({ children }) {
   const { loading: billingLoading, status, inGrace } = useBilling();
   const { user, tenantRole } = useAuth();
   const location = useLocation();
+  const isPreview = import.meta.env.DEV && new URLSearchParams(location.search).get('preview') === '1';
   const slug = authStore.getTenantSlug?.() || '';
   const cached = _svcCache.get(slug);
   const [svc, setSvc] = useState(cached ? { loading: false, ...cached } : { loading: true, hasLiri: false, errored: false });
@@ -85,6 +86,8 @@ function LiriAccessGate({ children }) {
       alive = false;
     };
   }, [slug]);
+
+  if (isPreview) return children;
 
   if (billingLoading || svc.loading) return <Loader />;
 

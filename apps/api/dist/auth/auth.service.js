@@ -10,11 +10,42 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.AuthService = void 0;
+exports.roleRank = roleRank;
+exports.membershipToMedosRole = membershipToMedosRole;
+exports.capMedosRole = capMedosRole;
 const common_1 = require("@nestjs/common");
 const supabase_js_1 = require("@supabase/supabase-js");
 const crypto_1 = require("crypto");
 const jwt = require('jsonwebtoken');
 const CIMOLACE_STAFF_ROLES = new Set(['owner', 'admin', 'support']);
+function roleRank(role) {
+    const RANK = {
+        patient: 0, member: 0, viewer: 0, student: 0, visitor: 0,
+        receptionist: 1, secretariat: 1,
+        practitioner: 2, teacher: 2,
+        admin: 3, clinic_admin: 3,
+        owner: 4,
+    };
+    return RANK[String(role || '').toLowerCase()] ?? 0;
+}
+function membershipToMedosRole(role) {
+    switch (String(role || '').toLowerCase()) {
+        case 'owner': return 'owner';
+        case 'admin':
+        case 'clinic_admin': return 'admin';
+        case 'practitioner':
+        case 'teacher': return 'practitioner';
+        case 'receptionist':
+        case 'secretariat': return 'receptionist';
+        default: return 'patient';
+    }
+}
+function capMedosRole(membershipRole, requestedRole) {
+    const membershipRank = membershipRole ? roleRank(membershipRole) : 0;
+    if (roleRank(requestedRole) <= membershipRank)
+        return requestedRole;
+    return membershipToMedosRole(membershipRole);
+}
 let AuthService = class AuthService {
     constructor() {
         this.supabase = (0, supabase_js_1.createClient)(process.env.SUPABASE_URL ?? '', process.env.SUPABASE_SERVICE_ROLE_KEY ?? '', { auth: { persistSession: false } });
@@ -95,6 +126,42 @@ let AuthService = class AuthService {
             throw new Error('MEDOS_JWT_SECRET manquant');
         return jwt.sign({ ...payload, iss: 'medos' }, this.jwtSecret, {
             expiresIn: '15m',
+            algorithm: 'HS256',
+        });
+    }
+    async resolveCappedMedosRole(tenantId, userId, requestedRole) {
+        let membershipRole = null;
+        try {
+            const { data } = await this.supabase
+                .from('tenant_memberships')
+                .select('role')
+                .eq('tenant_id', tenantId)
+                .eq('user_id', userId)
+                .eq('status', 'active')
+                .maybeSingle();
+            membershipRole = data?.role ?? null;
+        }
+        catch {
+            membershipRole = null;
+        }
+        return capMedosRole(membershipRole, requestedRole);
+    }
+    generateImpersonationToken(payload, expiresInMinutes) {
+        if (!this.jwtSecret)
+            throw new Error('MEDOS_JWT_SECRET manquant');
+        const body = {
+            sub: payload.operatorId,
+            email: payload.operatorEmail,
+            role: payload.role,
+            tenant_id: payload.tenantId,
+            tenant_slug: payload.tenantSlug,
+            iss: 'medos',
+            imp: true,
+            impersonator: payload.operatorEmail || payload.operatorId,
+            imp_reason: payload.reason,
+        };
+        return jwt.sign(body, this.jwtSecret, {
+            expiresIn: `${Math.max(1, Math.round(expiresInMinutes))}m`,
             algorithm: 'HS256',
         });
     }

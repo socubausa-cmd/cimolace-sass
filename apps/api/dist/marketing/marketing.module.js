@@ -11,6 +11,7 @@ const common_1 = require("@nestjs/common");
 const auth_module_1 = require("../auth/auth.module");
 const supabase_module_1 = require("../supabase/supabase.module");
 const tenant_module_1 = require("../tenant/tenant.module");
+const email_engine_module_1 = require("../email-engine/email-engine.module");
 const marketing_service_1 = require("./marketing.service");
 const marketing_controller_1 = require("./marketing.controller");
 const marketing_advanced_controller_1 = require("./marketing-advanced.controller");
@@ -20,7 +21,7 @@ let MarketingModule = class MarketingModule {
 exports.MarketingModule = MarketingModule;
 exports.MarketingModule = MarketingModule = __decorate([
     (0, common_1.Module)({
-        imports: [auth_module_1.AuthModule, tenant_module_1.TenantModule, supabase_module_1.SupabaseModule],
+        imports: [auth_module_1.AuthModule, tenant_module_1.TenantModule, supabase_module_1.SupabaseModule, email_engine_module_1.EmailEngineModule],
         controllers: [marketing_controller_1.MarketingController, marketing_advanced_controller_1.MarketingAdvancedController],
         providers: [marketing_service_1.MarketingService, marketing_advanced_service_1.MarketingAdvancedService],
         exports: [marketing_service_1.MarketingService, marketing_advanced_service_1.MarketingAdvancedService],

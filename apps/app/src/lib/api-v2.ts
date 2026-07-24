@@ -182,6 +182,12 @@ export const offeringCheckoutApi = {
   /** Paiement CARTE (Stripe Checkout) → renvoie { checkoutUrl } à ouvrir (redirect). */
   createCard: (body: Record<string, unknown>) =>
     apiV2.post<ApiEnvelope<any>>('/offering-checkout/card', body).then(unwrap),
+  /** Paiement CARTE intégré (Stripe Payment Element) → renvoie { clientSecret, publishableKey }. */
+  createCardIntent: (body: Record<string, unknown>) =>
+    apiV2.post<ApiEnvelope<any>>('/offering-checkout/card-intent', body).then(unwrap),
+  /** Finalise côté backend un paiement carte intégré confirmé par Stripe.js. */
+  finalizeEmbedded: (body: Record<string, unknown>) =>
+    apiV2.post<ApiEnvelope<any>>('/offering-checkout/embedded-finalize', body).then(unwrap),
   /** Paiement PAYPAL → crée un ordre, renvoie { orderId, approveUrl } (redirect vers approveUrl). */
   createPaypal: (body: Record<string, unknown>) =>
     apiV2.post<ApiEnvelope<any>>('/offering-checkout/paypal/create-order', body).then(unwrap),
@@ -200,6 +206,9 @@ export const offeringCheckoutApi = {
   /** INVITÉ — carte : { ...body, tenantSlug, email, first_name?, last_name? } → { checkoutUrl }. */
   guestCard: (body: Record<string, unknown>) =>
     apiV2.post<ApiEnvelope<any>>('/offering-checkout/guest-card', body).then(unwrap),
+  /** INVITÉ — carte intégrée : { ...body, tenantSlug, email, ... } → Payment Element. */
+  guestCardIntent: (body: Record<string, unknown>) =>
+    apiV2.post<ApiEnvelope<any>>('/offering-checkout/guest-card-intent', body).then(unwrap),
   /** INVITÉ — Mobile Money : { ...body, tenantSlug, email, ... } → dépôt PawaPay. */
   guestMobileMoney: (body: Record<string, unknown>) =>
     apiV2.post<ApiEnvelope<any>>('/offering-checkout/guest-mobile-money', body).then(unwrap),
@@ -1112,18 +1121,6 @@ export const joinApi = {
 };
 
 // ── Studio monétisation propriétaire ─────────────────────────────────────────
-/** Codes promo (billing_promo_codes) — CRUD owner + validation membre avant paiement. */
-export const promoCodesApi = {
-  list: () => apiV2.get<ApiEnvelope<any[]>>('/promo-codes').then(unwrap),
-  create: (body: { code: string; percentOff?: number; amountOffCents?: number; appliesTo?: string[]; expiresAt?: string; maxRedemptions?: number }) =>
-    apiV2.post<ApiEnvelope<any>>('/promo-codes', body).then(unwrap),
-  update: (id: string, body: { isActive?: boolean; expiresAt?: string | null; maxRedemptions?: number | null }) =>
-    apiV2.patch<ApiEnvelope<any>>(`/promo-codes/${id}`, body).then(unwrap),
-  remove: (id: string) => apiV2.delete<ApiEnvelope<any>>(`/promo-codes/${id}`).then(unwrap),
-  validate: (body: { tenantSlug?: string; code: string; planSlug?: string; amountCents?: number }) =>
-    apiV2.post<ApiEnvelope<any>>('/promo-codes/validate', body).then(unwrap),
-};
-
 /** Liens d'invitation multiples (tenant_invite_links) — owner ; lien = /rejoindre?org=slug&invite=CODE. */
 export const inviteLinksApi = {
   list: () => apiV2.get<ApiEnvelope<any[]>>('/tenants/current/invite-links').then(unwrap),

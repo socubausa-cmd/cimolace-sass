@@ -52,6 +52,9 @@ export default function GuestPermissionBar({
   );
   const { user } = useAuth();
   const { dataSaver, toggleDataSaver } = useLiveDataSaver();
+  const micPermissionAllowed = permCtx ? permCtx.isAllowed('canUseMic') : true;
+  const cameraPermissionAllowed = permCtx ? permCtx.isAllowed('canUseCamera') : true;
+  const signalsPermissionAllowed = permCtx ? permCtx.isAllowed('canUseSignals') : true;
 
   const withGuestServerPermission = useCallback(
     async (action, fn) => {
@@ -76,7 +79,7 @@ export default function GuestPermissionBar({
             type="button"
             onClick={() => {
               if (guestMicLocked) return;
-              void withGuestServerPermission('canUseMic', toggleMic);
+              toggleMic();
             }}
             title={guestMicLocked ? 'Micro désactivé par le formateur' : undefined}
             style={{
@@ -99,7 +102,7 @@ export default function GuestPermissionBar({
             type="button"
             onClick={() => {
               if (guestCamLocked) return;
-              void withGuestServerPermission('canUseCamera', toggleCamera);
+              toggleCamera();
             }}
             title={guestCamLocked ? 'Caméra désactivée par le formateur' : (cameraOn ? 'Couper caméra' : 'Activer caméra')}
             style={{
@@ -122,10 +125,8 @@ export default function GuestPermissionBar({
             type="button"
             onClick={() => {
               if (guestHandRaiseLocked) return;
-              void withGuestServerPermission('canUseSignals', () => {
-                if (myHandRaised) void lowerHand();
-                else void raiseHand();
-              });
+              if (myHandRaised) void lowerHand();
+              else void raiseHand();
             }}
             title={guestHandRaiseLocked ? 'Mains levées désactivées par le formateur' : (myHandRaised ? 'Baisser la main' : 'Lever la main')}
             style={{
@@ -180,17 +181,23 @@ export default function GuestPermissionBar({
         >
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden><path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.48 19 2c1 2 2 4.18 2 8 0 5.5-4.78 10-10 10z" /><path d="M2 21c0-3 1.85-5.36 5.08-6" /></svg>
         </button>
-        {permCtx ? (
+        {permCtx && (!micPermissionAllowed || !cameraPermissionAllowed || !signalsPermissionAllowed) ? (
           <div style={{ display: 'flex', alignItems: 'center', gap: '4px', flexShrink: 0 }}>
-            <RequestAccessButton action="canUseMic" size="sm" variant="outline" className="h-8 px-2 text-[9px] font-semibold whitespace-nowrap border-white/15 bg-white/5 text-white/85 hover:bg-white/10">
-              Accès micro
-            </RequestAccessButton>
-            <RequestAccessButton action="canUseCamera" size="sm" variant="outline" className="h-8 px-2 text-[9px] font-semibold whitespace-nowrap border-white/15 bg-white/5 text-white/85 hover:bg-white/10">
-              Accès caméra
-            </RequestAccessButton>
-            <RequestAccessButton action="canUseSignals" size="sm" variant="outline" className="h-8 px-2 text-[9px] font-semibold whitespace-nowrap border-white/15 bg-white/5 text-white/85 hover:bg-white/10">
-              Signaux
-            </RequestAccessButton>
+            {!micPermissionAllowed ? (
+              <RequestAccessButton action="canUseMic" size="sm" variant="outline" className="h-8 px-2 text-[9px] font-semibold whitespace-nowrap border-white/15 bg-white/5 text-white/85 hover:bg-white/10">
+                Accès micro
+              </RequestAccessButton>
+            ) : null}
+            {!cameraPermissionAllowed ? (
+              <RequestAccessButton action="canUseCamera" size="sm" variant="outline" className="h-8 px-2 text-[9px] font-semibold whitespace-nowrap border-white/15 bg-white/5 text-white/85 hover:bg-white/10">
+                Accès caméra
+              </RequestAccessButton>
+            ) : null}
+            {!signalsPermissionAllowed ? (
+              <RequestAccessButton action="canUseSignals" size="sm" variant="outline" className="h-8 px-2 text-[9px] font-semibold whitespace-nowrap border-white/15 bg-white/5 text-white/85 hover:bg-white/10">
+                Signaux
+              </RequestAccessButton>
+            ) : null}
           </div>
         ) : null}
       </>

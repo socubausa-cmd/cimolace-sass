@@ -130,9 +130,15 @@ function LiriPortalShellInner({
   // Vue ADAPTÉE par rôle : l'élève reste dans le portail mais sans l'outillage créateur.
   // Même coupe que LiriPortalPage (helper partagé, fail-closed sur le rôle JWT).
   const { tenantRole } = useAuth();
-  const isCreator = isCreatorRole(tenantRole);
+  const previewParams = typeof window !== 'undefined' && import.meta.env.DEV
+    ? new URLSearchParams(window.location.search)
+    : null;
+  const isPreview = previewParams?.get('preview') === '1';
+  const previewRole = String(previewParams?.get('role') || '').toLowerCase();
+  const isCreator = (isPreview && previewRole !== 'student') || isCreatorRole(tenantRole);
   // Mode ÉCOLE activé pour ce tenant ? Sinon = LIRI SIMPLE (Zoom) → sections Vie scolaire masquées.
-  const schoolActive = useSchoolActive() === true;
+  const resolvedSchoolActive = useSchoolActive() === true;
+  const schoolActive = isPreview || resolvedSchoolActive;
   const slug = authStore.getTenantSlug?.() || 'École';
   const tenant = String(slug).replace(/-/g, ' ');
   // Initiales de marque : celles du NOM du tenant (Academy Ngowazulu → « AN »), pas du slug.
@@ -186,7 +192,7 @@ function LiriPortalShellInner({
   const mobileNavItems = getRailItems({ isCreator, schoolActive, engine: activeEngine });
 
   return (
-    <div className="lp-root relative grid h-[100dvh] w-full grid-rows-[56px_1fr_auto] overflow-hidden">
+    <div className="lp-root relative grid h-[100dvh] w-full grid-rows-[auto_1fr_auto] overflow-hidden">
       {/* Glow chaleureux — discret, confiné à la topbar/aux marges. */}
       <div className="lp-glow">
         <span style={{ width: 460, height: 300, left: '36%', top: -160, background: 'rgba(217,119,87,.05)' }} />
@@ -194,20 +200,20 @@ function LiriPortalShellInner({
       </div>
 
       {/* topbar : [menu · logo · fil d'Ariane]  —  [sous-vues]  —  [icônes] */}
-      <header className="z-30 flex items-center gap-3 lp-rail-bg border-b lp-line px-4">
-        <div className="flex shrink-0 items-center gap-2.5">
+      <header className="z-30 flex min-h-14 items-center gap-2 lp-rail-bg border-b lp-line px-2.5 py-2 sm:gap-3 sm:px-4">
+        <div className="flex min-w-0 shrink-0 items-center gap-2 sm:gap-2.5">
           <button onClick={() => nav('/liri')} className="grid h-8 w-8 place-items-center rounded-xl lp-muted lp-railbtn lp-tr" aria-label="Retour au portail"><Menu size={17} /></button>
-          <button onClick={() => nav('/liri')} className="flex items-center gap-2 lp-tr" aria-label="Portail LIRI">
+          <button onClick={() => nav('/liri')} className="flex min-w-0 items-center gap-2 lp-tr" aria-label="Portail LIRI">
             {_shellIsTenant
               ? (_tenantLogo
                   ? <img src={_tenantLogo} alt={_shellBrand} className="h-9 w-9 rounded-lg object-contain" />
                   : <span className="grid h-9 w-9 place-items-center rounded-lg text-[13px] font-black text-white lp-ember">{initials}</span>)
               : <img src="/lirilogo.png" alt="LIRI" className="h-9 w-9 object-contain" />}
-            <span className="text-[17px] font-semibold tracking-tight lp-ink">{_shellBrand}</span>
+            <span className="max-w-[6.8rem] truncate text-[16px] font-semibold tracking-tight lp-ink sm:max-w-[12rem] sm:text-[17px] lg:max-w-none">{_shellBrand}</span>
             {_schoolSuffix && (
               <span className="hidden items-center gap-2 text-[14px] lp-muted sm:flex">
                 <span className="lp-faint">·</span>
-                <span className="capitalize">{_schoolSuffix}</span>
+                <span className="max-w-[11rem] truncate capitalize lg:max-w-none">{_schoolSuffix}</span>
               </span>
             )}
           </button>
@@ -224,22 +230,22 @@ function LiriPortalShellInner({
         </div>
 
         {/* zone centrale : SÉLECTEUR DE MOTEUR (gauche) + sous-vues de la section active (droite) */}
-        <div className="flex min-w-0 flex-1 items-center gap-2 md:gap-4">
+        <div className="flex min-w-0 flex-1 items-center gap-1.5 overflow-hidden md:gap-4">
           <LiriEngineSwitcher activeEngine={activeEngine} isCreator={isCreator} schoolActive={schoolActive} onNav={nav} />
           <div className="flex min-w-0 flex-1 justify-start md:justify-end">
             <HeaderTabs />
           </div>
         </div>
 
-        <div className="flex shrink-0 items-center gap-1.5">
+        <div className="flex shrink-0 items-center gap-1 sm:gap-1.5">
           {live && (
-            <span className="mr-1 flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[11px] font-semibold" style={{ background: 'rgba(226,85,63,.10)', border: '1px solid rgba(226,85,63,.30)', color: '#ef6a52' }}>
+            <span className="mr-1 hidden items-center gap-1.5 rounded-full px-2.5 py-1 text-[11px] font-semibold sm:flex" style={{ background: 'rgba(226,85,63,.10)', border: '1px solid rgba(226,85,63,.30)', color: '#ef6a52' }}>
               <span className="h-1.5 w-1.5 rounded-full" style={{ background: '#e2553f' }} /> EN DIRECT
             </span>
           )}
-          <button className="relative grid h-8 w-8 place-items-center rounded-xl lp-muted lp-railbtn lp-tr" aria-label="Notifications"><Bell size={17} /><span className="absolute right-2 top-1.5 h-1.5 w-1.5 rounded-full" style={{ background: 'var(--coral)' }} /></button>
+          <button className="relative hidden h-8 w-8 place-items-center rounded-xl lp-muted lp-railbtn lp-tr sm:grid" aria-label="Notifications"><Bell size={17} /><span className="absolute right-2 top-1.5 h-1.5 w-1.5 rounded-full" style={{ background: 'var(--coral)' }} /></button>
           {/* Réglages du compte tenant (facturation, membres…) = créateur only. */}
-          {isCreator && <button onClick={() => nav('/liri/compte')} className="grid h-8 w-8 place-items-center rounded-xl lp-muted lp-railbtn lp-tr" aria-label="Paramètres"><Settings size={17} /></button>}
+          {isCreator && <button onClick={() => nav('/liri/compte')} className="hidden h-8 w-8 place-items-center rounded-xl lp-muted lp-railbtn lp-tr sm:grid" aria-label="Paramètres"><Settings size={17} /></button>}
           <span className="ml-1 grid h-8 w-8 place-items-center rounded-full text-[12px] font-semibold text-white lp-ember">{initials}</span>
         </div>
       </header>
@@ -268,7 +274,7 @@ function LiriPortalShellInner({
       {/* rangée basse : barre de nav (mobile, < md) OU footer (desktop, ≥ md) — même slot de grille. */}
       <div className="z-30 min-w-0">
         {rail && (
-          <nav className="flex items-stretch gap-1 overflow-x-auto no-scrollbar border-t lp-line lp-rail-bg px-2 py-1.5 md:hidden" aria-label="Navigation principale">
+          <nav className="lp-mobile-nav flex items-stretch gap-1 overflow-x-auto no-scrollbar border-t lp-line lp-rail-bg px-2 py-1.5 md:hidden" aria-label="Navigation principale">
             {mobileNavItems.map((it) => {
               const Icon = it.icon;
               const isActive = it.key === active;

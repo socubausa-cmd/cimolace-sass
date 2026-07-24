@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { BadgePercent, Ticket, Plus, Trash2, Power, Check } from 'lucide-react';
-import { apiV2, tenantsApi, promoCodesApi } from '@/lib/api-v2';
+import { apiV2, tenantsApi, marketingApi } from '@/lib/api-v2';
 
 /**
  * STUDIO MONÉTISATION (back-office propriétaire, rendu dans /liri/services) :
@@ -93,7 +93,7 @@ function PromoCodesCard() {
   const [err, setErr] = useState('');
   const [busy, setBusy] = useState(false);
 
-  const load = () => promoCodesApi.list().then((r) => setRows(Array.isArray(r) ? r : [])).catch(() => {});
+  const load = () => marketingApi.listPromos().then((r) => setRows(Array.isArray(r) ? r : [])).catch(() => {});
   useEffect(() => { load(); }, []);
 
   const create = async () => {
@@ -102,11 +102,13 @@ function PromoCodesCard() {
     if (!form.code.trim() || !Number.isFinite(v) || v <= 0) { setErr('Code et valeur obligatoires.'); return; }
     setBusy(true);
     try {
-      await promoCodesApi.create({
+      await marketingApi.createPromo({
         code: form.code.trim().toUpperCase(),
-        ...(form.kind === 'percent' ? { percentOff: Math.round(v) } : { amountOffCents: Math.round(v * 100) }),
-        ...(form.maxRedemptions ? { maxRedemptions: Math.round(Number(form.maxRedemptions)) } : {}),
-        ...(form.expiresAt ? { expiresAt: new Date(form.expiresAt + 'T23:59:59').toISOString() } : {}),
+        discount_type: form.kind === 'percent' ? 'percent' : 'fixed',
+        discount_value: form.kind === 'percent' ? Math.round(v) : Math.round(v * 100),
+        ...(form.maxRedemptions ? { max_uses: Math.round(Number(form.maxRedemptions)) } : {}),
+        ...(form.expiresAt ? { expires_at: new Date(form.expiresAt + 'T23:59:59').toISOString() } : {}),
+        is_active: true,
       });
       setForm({ code: '', kind: 'percent', value: '', maxRedemptions: '', expiresAt: '' });
       setShowForm(false);
@@ -115,7 +117,7 @@ function PromoCodesCard() {
     setBusy(false);
   };
 
-  const fmtOff = (r) => (r.percent_off != null ? `−${r.percent_off} %` : `−${(r.amount_off_cents / 100).toFixed(2)} €`);
+  const fmtOff = (r) => (r.discount_type === 'percent' ? `−${r.discount_value} %` : `−${(Number(r.discount_value || 0) / 100).toFixed(2)} €`);
 
   return (
     <div style={card}>
@@ -163,19 +165,19 @@ function PromoCodesCard() {
               <span style={{ fontFamily: "'JetBrains Mono',monospace", fontWeight: 700, fontSize: 13 }}>{r.code}</span>
               <span style={{ fontSize: 12.5, color: '#e6cc92' }}>{fmtOff(r)}</span>
               <span style={{ fontSize: 11.5, opacity: 0.6 }}>
-                {r.redeemed_count || 0} utilisation{(r.redeemed_count || 0) > 1 ? 's' : ''}
-                {r.max_redemptions != null ? ` / ${r.max_redemptions}` : ''}
+                {r.uses_count || 0} utilisation{(r.uses_count || 0) > 1 ? 's' : ''}
+                {r.max_uses != null ? ` / ${r.max_uses}` : ''}
                 {r.expires_at ? ` · expire ${new Date(r.expires_at).toLocaleDateString('fr-FR')}` : ''}
                 {!r.is_active ? ' · désactivé' : ''}
               </span>
               <span style={{ flex: 1 }} />
               <button type="button" title={r.is_active ? 'Désactiver' : 'Réactiver'}
-                onClick={() => promoCodesApi.update(r.id, { isActive: !r.is_active }).then(load).catch(() => {})}
+                onClick={() => marketingApi.updatePromo(r.id, { is_active: !r.is_active }).then(load).catch(() => {})}
                 style={{ ...btnS(r.is_active ? 'rgba(245,244,238,.14)' : 'rgba(91,122,82,.75)'), padding: '6px 9px' }}>
                 <Power size={14} />
               </button>
               <button type="button" title="Supprimer"
-                onClick={() => promoCodesApi.remove(r.id).then(load).catch(() => {})}
+                onClick={() => marketingApi.deletePromo(r.id).then(load).catch(() => {})}
                 style={{ ...btnS('rgba(180,60,40,.6)'), padding: '6px 9px' }}>
                 <Trash2 size={14} />
               </button>

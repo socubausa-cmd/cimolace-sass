@@ -149,7 +149,7 @@ button.cca-chip-visit:hover{background:#e18b6b!important;border-color:transparen
 .cca-scene-on .cca-split-hooks{opacity:1}
 
 /* reader — profil (gauche) · texte scrollable (centre, masque bas = « il reste du texte ») · nav (droite) · suggestions (bas) */
-.cca-reader{position:absolute;inset:0;display:grid;grid-template-columns:200px minmax(0,640px) 190px;grid-template-rows:1fr auto;justify-content:center;gap:0 clamp(28px,3vw,60px);padding:8.5vh 4vw 3vh}
+.cca-reader{position:absolute;inset:0;display:grid;grid-template-columns:minmax(180px,210px) minmax(0,640px) minmax(150px,190px);grid-template-rows:1fr auto;justify-content:center;gap:0 clamp(48px,4.5vw,86px);padding:8.5vh clamp(24px,4vw,72px) 3vh;box-sizing:border-box}
 .cca-reader-profile{grid-column:1;grid-row:1;display:flex;flex-direction:column;align-items:center;gap:5px;align-self:center;padding:26px 20px 20px;border:1px solid rgba(230,204,146,.16);border-radius:20px;background:linear-gradient(180deg,rgba(244,239,230,.05),rgba(244,239,230,.012));box-shadow:0 24px 60px -34px rgba(0,0,0,.65);opacity:0;transform:translateX(-24px);transition:opacity .5s ease,transform .5s cubic-bezier(.16,1,.3,1)}
 .cca-scene-on .cca-reader-profile{opacity:1;transform:none}
 .cca-reader-avatar{margin-bottom:2px}
@@ -162,7 +162,7 @@ button.cca-chip-visit:hover{background:#e18b6b!important;border-color:transparen
 .cca-reader-fbody{display:flex;flex-direction:column;gap:3px;padding-top:1px}
 .cca-reader-fbody span{color:rgba(244,239,230,.44);text-transform:uppercase;letter-spacing:.08em;font-size:10px;font-weight:600}
 .cca-reader-fbody b{color:rgba(244,239,230,.8);font-weight:400;font-size:12px;line-height:1.5}
-.cca-reader-body{grid-column:2;grid-row:1;overflow-y:auto;max-width:640px;justify-self:center;width:100%;display:flex;flex-direction:column;justify-content:safe center;scrollbar-width:none;-webkit-mask-image:linear-gradient(#000 92%,transparent);mask-image:linear-gradient(#000 92%,transparent);opacity:0;transform:translateY(12px);transition:opacity .5s ease,transform .5s cubic-bezier(.16,1,.3,1)}
+.cca-reader-body{grid-column:2;grid-row:1;overflow-y:auto;max-width:640px;min-width:0;justify-self:center;width:100%;display:flex;flex-direction:column;justify-content:safe center;scrollbar-width:none;-webkit-mask-image:linear-gradient(#000 92%,transparent);mask-image:linear-gradient(#000 92%,transparent);opacity:0;transform:translateY(12px);transition:opacity .5s ease,transform .5s cubic-bezier(.16,1,.3,1)}
 .cca-scene-on .cca-reader-body{opacity:1;transform:none}
 .cca-reader-body::-webkit-scrollbar{width:0;height:0}
 .cca-reader-title{font-family:${SERIF};font-size:30px;color:${INK};line-height:1.15;margin:0 0 8px;text-wrap:balance}
@@ -174,10 +174,10 @@ button.cca-chip-visit:hover{background:#e18b6b!important;border-color:transparen
 .cca-reader-sic{flex-shrink:0;width:44px;height:44px;border-radius:50%;display:flex;align-items:center;justify-content:center;color:${GOLD};border:1px solid rgba(230,204,146,.3);background:rgba(230,204,146,.05)}
 .cca-reader-h{font-family:${SERIF};font-size:18px;color:${GOLD};margin:0;letter-spacing:.01em;line-height:1.2}
 .cca-reader-p{font-family:${SERIF};font-size:16px;line-height:1.62;color:rgba(244,239,230,.86);margin:0 0 9px;max-width:62ch}
-.cca-reader-nav{grid-column:3;grid-row:1;position:relative;display:flex;flex-direction:column;gap:4px;align-self:center;padding-left:20px;opacity:0;transform:translateX(24px);transition:opacity .5s ease,transform .5s cubic-bezier(.16,1,.3,1)}
+.cca-reader-nav{grid-column:3;grid-row:1;position:relative;z-index:2;display:flex;flex-direction:column;gap:4px;align-self:center;justify-self:start;width:100%;min-width:0;padding-left:20px;opacity:0;transform:translateX(24px);transition:opacity .5s ease,transform .5s cubic-bezier(.16,1,.3,1)}
 .cca-scene-on .cca-reader-nav{opacity:1;transform:none}
 .cca-reader-nav::before{content:'';position:absolute;left:5px;top:16px;bottom:16px;width:1px;background:linear-gradient(180deg,rgba(230,204,146,.34),rgba(230,204,146,.07))}
-.cca-reader-nav button{position:relative;display:block;background:none;border:none;cursor:pointer;color:rgba(244,239,230,.38);font:inherit;font-size:12.5px;line-height:1.35;padding:9px 0;text-align:left;transition:color .2s ease}
+.cca-reader-nav button{position:relative;display:block;max-width:100%;background:none;border:none;cursor:pointer;color:rgba(244,239,230,.38);font:inherit;font-size:12.5px;line-height:1.35;padding:9px 0;text-align:left;transition:color .2s ease;overflow:hidden;text-overflow:ellipsis}
 .cca-reader-nav button.on{color:${GOLD}}
 .cca-reader-nav .dot{position:absolute;left:-19px;top:14px;width:9px;height:9px;border-radius:50%;background:rgba(244,239,230,.24);box-shadow:0 0 0 3px #262624;transition:background .2s ease,box-shadow .2s ease}
 .cca-reader-nav button.on .dot{background:${GOLD};box-shadow:0 0 0 3px #262624,0 0 10px rgba(230,204,146,.55)}

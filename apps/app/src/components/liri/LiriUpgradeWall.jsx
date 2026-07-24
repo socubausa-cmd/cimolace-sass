@@ -10,9 +10,8 @@
  *     shell → couleurs EXPLICITES (text-white sur #262624), pas de dépendance aux classes lp-*.
  *
  * SOURCE = les CYCLES du tenant lus depuis `billing_plans` (`*-monthly`, prix = source de vérité),
- * EXACTEMENT comme ForfaitsPage et le panneau forfaits de l'OS. Chaque carte mène au checkout
- * ÉPROUVÉ `/t/:slug/paiement` (Stripe + Mobile Money + checkout invité) — jamais le flux SaaS
- * niveau-tenant. Slug résolu dynamiquement (resolveTenantSlug), jamais « isna » en dur.
+ * EXACTEMENT comme ForfaitsPage et le panneau forfaits de l'OS. Chaque carte mène au tunnel
+ * intégré de `/liri/forfaits` — jamais de sortie vers l'ancienne page standalone `/t/:slug/paiement`.
  */
 import { useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
@@ -20,7 +19,6 @@ import { useNavigate } from 'react-router-dom';
 import { Loader2, Sparkles, ShieldCheck, AlertCircle, X, ArrowRight } from 'lucide-react';
 import { LiriPortalShell } from '@/components/liri/LiriPortalShell';
 import { supabase } from '@/lib/customSupabaseClient';
-import { resolveTenantSlug } from '@/lib/tenant/activeBranding';
 
 // Devises sans centime (montant déjà en unité entière — pas de /100).
 const ZERO_DECIMAL_CUR = new Set(['XAF', 'XOF', 'XPF', 'JPY', 'KRW', 'VND', 'CLP', 'RWF', 'BIF', 'GNF', 'DJF', 'KMF', 'UGX']);
@@ -61,13 +59,11 @@ export default function LiriUpgradeWall({ asModal = false, onClose } = {}) {
     return () => { alive = false; };
   }, []);
 
-  // Choisir un cycle → checkout membre ÉPROUVÉ /t/:slug/paiement (carte + Mobile Money + invité).
+  // Choisir un cycle → checkout intégré officiel dans Liri Portail.
   const chooseCycle = (planKey) => {
     setError(null);
-    const slug = resolveTenantSlug();
-    if (!slug) { setError('Espace introuvable — réessaie dans un instant.'); return; }
     if (asModal && onClose) onClose();
-    navigate(`/t/${slug}/paiement?plan=${encodeURIComponent(planKey)}&type=subscription`);
+    navigate(`/liri/forfaits?plan=${encodeURIComponent(planKey)}&checkout=1`);
   };
 
   // Contenu commun aux deux modes (couleurs EXPLICITES → valides in-shell ET en modal).

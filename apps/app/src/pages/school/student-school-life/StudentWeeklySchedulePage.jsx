@@ -201,7 +201,8 @@ function Skeleton({ width = '100%', height = 16, radius = 6 }) {
   return (
     <div style={{
       width, height, borderRadius: radius,
-      background: `linear-gradient(90deg, ${T.surface} 0%, rgba(0,0,0,0.05) ${50 + pct}%, ${T.surface} 100%)`,
+      backgroundColor: T.surface,
+      backgroundImage: `linear-gradient(90deg, ${T.surface} 0%, rgba(0,0,0,0.05) ${50 + pct}%, ${T.surface} 100%)`,
       backgroundSize: '200% 100%',
       flexShrink: 0,
     }} />

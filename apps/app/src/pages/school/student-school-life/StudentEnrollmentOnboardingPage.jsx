@@ -84,6 +84,7 @@ const StudentEnrollmentOnboardingPage = () => {
           residence_proof_url: residenceUrl,
           headshot_url: headshotUrl,
           consent_signature: signature.trim(),
+          consent_signed_at: new Date().toISOString(),
           student_profile_completed: true,
           student_profile_completed_at: new Date().toISOString(),
           role: 'student',

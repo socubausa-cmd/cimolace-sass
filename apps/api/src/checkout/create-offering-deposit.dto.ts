@@ -25,6 +25,12 @@ export class CreateOfferingDepositDto {
   @Length(3, 80)
   planSlug?: string;
 
+  /** Code promo optionnel — validé côté serveur sur promo_codes du tenant. */
+  @IsOptional()
+  @IsString()
+  @Length(2, 64)
+  promoCode?: string;
+
   /** Montant en centimes — requis pour consultation/donation (jamais utilisé pour un abonnement). */
   @IsOptional()
   @IsInt()
@@ -60,9 +66,4 @@ export class CreateOfferingDepositDto {
   @Length(2, 64)
   tenantSlug?: string;
 
-  /** Code promo (Studio monétisation) — validé/appliqué CÔTÉ SERVEUR dans resolveAmount. */
-  @IsOptional()
-  @IsString()
-  @Length(2, 40)
-  promoCode?: string;
 }

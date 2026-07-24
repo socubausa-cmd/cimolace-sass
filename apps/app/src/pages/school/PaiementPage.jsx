@@ -1,9 +1,10 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
+import { loadStripe } from '@stripe/stripe-js';
 import { DEFAULT_TENANT_SLUG } from '@/config/platform';
 import { getApiBaseUrl } from '@/lib/apiBase';
 import { Link, useParams, useSearchParams } from 'react-router-dom';
 import { Helmet } from 'react-helmet';
-import { offeringCheckoutApi, promoCodesApi } from '@/lib/api-v2';
+import { offeringCheckoutApi } from '@/lib/api-v2';
 import { supabase } from '@/lib/customSupabaseClient';
 import { useBilling } from '@/contexts/BillingContext';
 import { getNgowazuluMentoratOffer } from '@/config/ngowazuluMentoratOffers';
@@ -83,25 +84,23 @@ export default function PaiementPage() {
   }, [planSlug, typeParam, searchParams]);
 
   const [method, setMethod] = useState('card'); // 'card' (Stripe) | 'mobile_money' (PawaPay)
-
-  // ── Code promo (Studio monétisation) : validé côté serveur au checkout ; ici une simple
-  //    pré-validation UX (affiche le prix remisé avant de payer). Abonnements/forfaits seulement.
-  const [promo, setPromo] = useState('');
-  const [promoInfo, setPromoInfo] = useState(null); // { valid, reason?, discountedCents?, baseCents? }
-  const checkPromo = async () => {
-    const code = promo.trim();
-    if (!code) { setPromoInfo(null); return; }
-    try {
-      const r = await promoCodesApi.validate({ tenantSlug: payTenant, code, planSlug: planSlug || undefined });
-      setPromoInfo(r || null);
-    } catch (e) {
-      setPromoInfo({ valid: false, reason: e?.message || 'Code invalide.' });
-    }
-  };
-  const promoBody = () => (promo.trim() ? { promoCode: promo.trim() } : {});
   const [amountEur, setAmountEur] = useState('');
+  const [promoCode, setPromoCode] = useState(searchParams.get('promo') || '');
   const [phone, setPhone] = useState('');
   const [status, setStatus] = useState({ state: 'idle', message: '', depositId: null });
+  const stripeMountRef = useRef(null);
+  const stripePaymentElementRef = useRef(null);
+  const [stripeInline, setStripeInline] = useState({
+    stripe: null,
+    elements: null,
+    clientSecret: '',
+    paymentIntentId: null,
+    subscriptionId: null,
+    ready: false,
+    amountCents: null,
+    currency: 'EUR',
+    fallbackReason: '',
+  });
   const cardReturn = searchParams.get('card'); // 'success' | 'cancel' au retour de Stripe
   const paypalReturn = searchParams.get('paypal'); // 'success' | 'cancel' au retour de PayPal
   const paypalOrderId = searchParams.get('token'); // PayPal renvoie ?token=<orderId>
@@ -303,6 +302,122 @@ export default function PaiementPage() {
     }
   };
 
+  useEffect(() => {
+    if (method !== 'card' && stripePaymentElementRef.current) {
+      try { stripePaymentElementRef.current.unmount(); } catch { /* noop */ }
+      stripePaymentElementRef.current = null;
+      setStripeInline({ stripe: null, elements: null, clientSecret: '', paymentIntentId: null, subscriptionId: null, ready: false, amountCents: null, currency: 'EUR', fallbackReason: '' });
+    }
+  }, [method]);
+
+  const buildCardBody = (amountCents) => {
+    const body = { kind: offer.kind, tenantSlug: payTenant };
+    if (promoCode.trim()) body.promoCode = promoCode.trim();
+    if (offer.kind === 'subscription') body.planSlug = planSlug;
+    else {
+      body.amountCents = amountCents;
+      if (planSlug) body.planSlug = planSlug;
+    }
+    return body;
+  };
+
+  const redirectToStripeCheckout = async (amountCents) => {
+    const base = `${window.location.origin}/t/${payTenant}/paiement${planSlug ? `?plan=${encodeURIComponent(planSlug)}` : ''}`;
+    const sep = base.includes('?') ? '&' : '?';
+    const body = buildCardBody(amountCents);
+    body.successUrl = `${base}${sep}card=success&session_id={CHECKOUT_SESSION_ID}`;
+    body.cancelUrl = `${base}${sep}card=cancel`;
+    const res = isGuest
+      ? await offeringCheckoutApi.guestCard(withGuest(body))
+      : await offeringCheckoutApi.createCard(body);
+    if (res?.checkoutUrl) {
+      window.location.href = res.checkoutUrl;
+      return true;
+    }
+    return false;
+  };
+
+  const startEmbeddedCard = async (amountCents) => {
+    const body = buildCardBody(amountCents);
+    const res = isGuest
+      ? await offeringCheckoutApi.guestCardIntent(withGuest(body))
+      : await offeringCheckoutApi.createCardIntent(body);
+    const pk = res?.publishableKey || import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY;
+    if (!pk || !/^pk_(test|live)_/.test(pk)) {
+      throw new Error('Clé publique Stripe invalide pour le paiement intégré.');
+    }
+    const stripe = await loadStripe(pk);
+    if (!stripe) throw new Error('Stripe.js indisponible.');
+    const elements = stripe.elements({
+      clientSecret: res.clientSecret,
+      appearance: {
+        theme: 'night',
+        variables: {
+          colorPrimary: '#d97757',
+          colorBackground: '#211f1d',
+          colorText: '#ffffff',
+          colorDanger: '#ef4444',
+          borderRadius: '12px',
+        },
+      },
+    });
+    if (stripePaymentElementRef.current) {
+      try { stripePaymentElementRef.current.unmount(); } catch { /* noop */ }
+    }
+    const paymentElement = elements.create('payment', { layout: 'tabs' });
+    stripePaymentElementRef.current = paymentElement;
+    paymentElement.mount(stripeMountRef.current);
+    setStripeInline({
+      stripe,
+      elements,
+      clientSecret: res.clientSecret,
+      paymentIntentId: res.paymentIntentId || null,
+      subscriptionId: res.subscriptionId || null,
+      ready: true,
+      amountCents: res.amountCents,
+      currency: res.currency || 'EUR',
+      fallbackReason: '',
+    });
+    setStatus({
+      state: 'card_ready',
+      message: 'Paiement carte intégré prêt. Saisissez votre carte puis confirmez sans quitter la page.',
+      depositId: null,
+    });
+  };
+
+  const confirmEmbeddedCard = async () => {
+    if (!stripeInline.stripe || !stripeInline.elements) return false;
+    const base = `${window.location.origin}/t/${payTenant}/paiement${planSlug ? `?plan=${encodeURIComponent(planSlug)}` : ''}`;
+    const sep = base.includes('?') ? '&' : '?';
+    const returnUrl = `${base}${sep}card=success&embedded=1`;
+    const { error, paymentIntent } = await stripeInline.stripe.confirmPayment({
+      elements: stripeInline.elements,
+      confirmParams: { return_url: returnUrl },
+      redirect: 'if_required',
+    });
+    if (error) throw new Error(error.message || 'Paiement carte refusé.');
+    const st = String(paymentIntent?.status || '').toLowerCase();
+    if (['succeeded', 'processing', 'requires_capture'].includes(st)) {
+      if (stripeInline.subscriptionId) {
+        await offeringCheckoutApi.finalizeEmbedded({
+          tenantSlug: payTenant,
+          subscriptionId: stripeInline.subscriptionId,
+          paymentIntentId: paymentIntent?.id || stripeInline.paymentIntentId || null,
+        });
+      }
+      if (isGuest) {
+        setGuestDone(true);
+      } else if (offer.kind === 'subscription') {
+        setWaitingSub(true);
+      } else {
+        setStatus({ state: 'completed', message: 'Paiement confirmé — accès à votre espace…', depositId: null });
+      }
+      return true;
+    }
+    setStatus({ state: 'pending_email', message: 'Paiement en cours de confirmation. Vous serez notifié dès validation.', depositId: null });
+    return true;
+  };
+
   // Opérateurs Mobile Money en direct (config PawaPay réelle) : pays → opérateurs.
   const [mmConfig, setMmConfig] = useState(null); // { countries: [...] } | null
   const [mmLoading, setMmLoading] = useState(false);
@@ -369,23 +484,24 @@ export default function PaiementPage() {
         }
       }
 
-      // ── Carte bancaire (Stripe Checkout) → redirection ──
+      // ── Carte bancaire intégrée (Stripe Payment Element) ; Checkout en secours ──
       if (method === 'card') {
-        const base = `${window.location.origin}/t/${payTenant}/paiement${planSlug ? `?plan=${encodeURIComponent(planSlug)}` : ''}`;
-        const sep = base.includes('?') ? '&' : '?';
-        const body = { kind: offer.kind, tenantSlug: payTenant, ...promoBody() };
-        if (offer.kind === 'subscription') body.planSlug = planSlug;
-        else { body.amountCents = amountCents; if (planSlug) body.planSlug = planSlug; }
-        body.successUrl = `${base}${sep}card=success&session_id={CHECKOUT_SESSION_ID}`;
-        body.cancelUrl = `${base}${sep}card=cancel`;
-        const res = isGuest
-          ? await offeringCheckoutApi.guestCard(withGuest(body))
-          : await offeringCheckoutApi.createCard(body);
-        if (res?.checkoutUrl) {
-          window.location.href = res.checkoutUrl;
+        if (stripeInline.ready) {
+          await confirmEmbeddedCard();
           return;
         }
-        setStatus({ state: 'error', message: 'Réponse de paiement carte invalide.', depositId: null });
+        try {
+          await startEmbeddedCard(amountCents);
+        } catch (embeddedErr) {
+          const ok = await redirectToStripeCheckout(amountCents);
+          if (!ok) {
+            setStatus({
+              state: 'error',
+              message: embeddedErr?.message || 'Réponse de paiement carte invalide.',
+              depositId: null,
+            });
+          }
+        }
         return;
       }
 
@@ -393,7 +509,8 @@ export default function PaiementPage() {
       if (method === 'paypal') {
         const base = `${window.location.origin}/t/${payTenant}/paiement${planSlug ? `?plan=${encodeURIComponent(planSlug)}` : ''}`;
         const sep = base.includes('?') ? '&' : '?';
-        const body = { kind: offer.kind, tenantSlug: payTenant, ...promoBody() };
+        const body = { kind: offer.kind, tenantSlug: payTenant };
+        if (promoCode.trim()) body.promoCode = promoCode.trim();
         if (offer.kind === 'subscription') body.planSlug = planSlug;
         else { body.amountCents = amountCents; if (planSlug) body.planSlug = planSlug; }
         body.successUrl = `${base}${sep}paypal=success`;
@@ -414,7 +531,8 @@ export default function PaiementPage() {
         setStatus({ state: 'error', message: 'Sélectionnez un pays et un opérateur Mobile Money.', depositId: null });
         return;
       }
-      const body = { kind: offer.kind, phoneNumber: phone.trim(), provider: mmOperator, country: mmCountry, tenantSlug: payTenant, ...promoBody() };
+      const body = { kind: offer.kind, phoneNumber: phone.trim(), provider: mmOperator, country: mmCountry, tenantSlug: payTenant };
+      if (promoCode.trim()) body.promoCode = promoCode.trim();
       if (offer.kind === 'subscription') body.planSlug = planSlug;
       else { body.amountCents = amountCents; if (planSlug) body.planSlug = planSlug; }
       const res = isGuest
@@ -701,6 +819,20 @@ export default function PaiementPage() {
             </div>
           )}
 
+          <div>
+            <label className="mb-1.5 block text-sm font-medium text-gray-200">Code promo ou réduction</label>
+            <input
+              type="text"
+              value={promoCode}
+              onChange={(e) => setPromoCode(e.target.value.toUpperCase())}
+              placeholder="Ex: WELCOME10"
+              className={inputCls}
+            />
+            <p className="mt-1 text-xs text-gray-500">
+              Le code est vérifié côté serveur avant paiement ; le montant réduit apparaîtra sur le paiement.
+            </p>
+          </div>
+
           {method === 'mobile_money' && (
             <>
               {mmLoading ? (
@@ -750,32 +882,30 @@ export default function PaiementPage() {
             </>
           )}
 
-          {/* Code promo (abonnements/forfaits) — validé côté serveur ; pré-check UX ici. */}
-          {offer.kind === 'subscription' && (
-            <div className="mb-4">
-              <label className="mb-1 block text-sm text-gray-300">Code promo (optionnel)</label>
-              <div className="flex gap-2">
-                <input
-                  value={promo}
-                  onChange={(e) => { setPromo(e.target.value.toUpperCase()); setPromoInfo(null); }}
-                  onBlur={checkPromo}
-                  placeholder="EX : BIENVENUE10"
-                  className="w-full rounded-lg border border-white/15 bg-black/25 px-4 py-2.5 font-mono text-sm text-white placeholder:text-gray-500"
-                />
-                <button type="button" onClick={checkPromo}
-                  className="shrink-0 rounded-lg border border-white/15 px-4 py-2.5 text-sm text-gray-200 hover:bg-white/5">
-                  Vérifier
-                </button>
-              </div>
-              {promoInfo && (
-                promoInfo.valid ? (
-                  <p className="mt-1.5 text-xs text-emerald-300">
-                    Code {promoInfo.code} appliqué : {promoInfo.percentOff != null ? `−${promoInfo.percentOff} %` : `−${(promoInfo.amountOffCents / 100).toFixed(2)} €`}
-                    {promoInfo.discountedCents != null ? ` → ${(promoInfo.discountedCents / 100).toFixed(2)} €` : ''}
+          {method === 'card' && (
+            <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
+              <div className="mb-3 flex items-center justify-between gap-3">
+                <div>
+                  <p className="text-sm font-semibold text-white">Carte intégrée</p>
+                  <p className="mt-0.5 text-xs text-gray-400">
+                    Le champ carte apparaît ici : pas de redirection pour Visa/Mastercard standard.
                   </p>
-                ) : (
-                  <p className="mt-1.5 text-xs text-orange-300">{promoInfo.reason || 'Code invalide.'}</p>
-                )
+                </div>
+                {stripeInline.ready && (
+                  <span className="rounded-full border border-emerald-500/30 bg-emerald-500/10 px-2.5 py-1 text-[11px] font-semibold text-emerald-200">
+                    Prêt
+                  </span>
+                )}
+              </div>
+              <div
+                ref={stripeMountRef}
+                className={stripeInline.ready ? 'min-h-[108px]' : 'hidden'}
+              />
+              {!stripeInline.ready && (
+                <p className="rounded-xl border border-white/10 bg-black/20 px-3 py-3 text-xs text-gray-400">
+                  Cliquez sur le bouton de paiement pour initialiser Stripe dans cette page.
+                  Si la clé publique n’est pas configurée, le système utilisera Stripe Checkout en secours.
+                </p>
               )}
             </div>
           )}
@@ -788,11 +918,15 @@ export default function PaiementPage() {
             {status.state === 'submitting'
               ? method === 'mobile_money'
                 ? 'Envoi en cours…'
-                : 'Redirection vers le paiement…'
+                : stripeInline.ready
+                  ? 'Confirmation…'
+                  : 'Initialisation du paiement…'
               : method === 'card'
-                ? offer.kind === 'subscription'
-                  ? "S'abonner par carte"
-                  : 'Payer par carte'
+                ? stripeInline.ready
+                  ? 'Confirmer le paiement'
+                  : offer.kind === 'subscription'
+                    ? "S'abonner par carte"
+                    : 'Payer par carte'
                 : method === 'paypal'
                   ? offer.kind === 'subscription'
                     ? "S'abonner avec PayPal"
@@ -811,6 +945,11 @@ export default function PaiementPage() {
               </p>
             )}
             {status.depositId && <p className="mt-2 text-xs text-emerald-300/70">Référence : {status.depositId}</p>}
+          </div>
+        )}
+        {status.state === 'card_ready' && (
+          <div className="mt-6 rounded-xl border border-sky-500/30 bg-sky-500/10 p-4 text-sm text-sky-100">
+            {status.message}
           </div>
         )}
         {status.state === 'completed' && (

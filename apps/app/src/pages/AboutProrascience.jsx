@@ -1,585 +1,229 @@
-import React, { useState } from 'react';
+import React from 'react';
 import SEO from '@/components/SEO';
-import { motion, AnimatePresence } from 'framer-motion';
-import { BookOpen, Target, Eye, Brain, History, GraduationCap, Layers, Quote, Award, Globe, Users, Star, ChevronDown, Shield, Zap, Heart, Lightbulb, Feather, Compass, Anchor, Scale, Flag, Columns, Swords, Microscope as Telescope, XCircle, CheckCircle, Database, Lock, Fingerprint } from 'lucide-react';
+import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
+import { ArrowRight, BookOpen, Brain, CheckCircle, Compass, Eye, Globe, Layers, Scale, Sparkles, Users } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-
-// New Components
-import ProraScienceDefinitionBox from '@/components/about/ProraScienceDefinitionBox';
-import PillarCard from '@/components/about/PillarCard';
-import DomainCard from '@/components/about/DomainCard';
-import ProraComparisonTable from '@/components/about/ProraComparisonTable';
-import ProraScienceFAQ from '@/components/about/ProraScienceFAQ';
-import ProrascienceOntologySection from '@/components/about/ProrascienceOntologySection';
 import { WEB_ABOUT } from '@/data/prorascienceVitrineFromWebContent';
 import { activeTenantConfig as isnaTenantConfig } from '@/lib/tenant/activeTenantConfig';
 
 const PUBLIC = isnaTenantConfig.branding.publicSiteOrigin;
 const SCHOOL = isnaTenantConfig.branding.name;
+const FOUNDER_IMAGE = '/founder.jpg';
 
-// --- INTERNAL HELPERS ---
-const AccordionItem = ({ title, children, isOpen, onClick, icon: Icon }) => (
-  <div className="mb-4 border border-white/10 rounded-xl bg-[#192734] overflow-hidden transition-all duration-300 hover:border-[color-mix(in_srgb,var(--school-accent)_30%,transparent)]">
-    <button
-      onClick={onClick}
-      className="w-full flex items-center justify-between p-6 text-left focus:outline-none bg-[#192734] hover:bg-white/5 transition-colors"
-    >
-      <div className="flex items-center gap-4">
-        {Icon && <div className="p-2 bg-[color-mix(in_srgb,var(--school-accent)_10%,transparent)] rounded-lg"><Icon className="w-5 h-5 text-[var(--school-accent)]" /></div>}
-        <span className="text-lg font-bold text-white">{title}</span>
-      </div>
-      <ChevronDown 
-        className={`w-5 h-5 text-gray-400 transition-transform duration-300 ${isOpen ? 'rotate-180 text-[var(--school-accent)]' : ''}`} 
-      />
-    </button>
-    <AnimatePresence>
-      {isOpen && (
-        <motion.div
-          initial={{ height: 0, opacity: 0 }}
-          animate={{ height: 'auto', opacity: 1 }}
-          exit={{ height: 0, opacity: 0 }}
-          transition={{ duration: 0.3 }}
-        >
-          <div className="px-6 pb-6 pt-0 text-gray-300 border-t border-white/5 bg-[#15202B]/50">
-            <div className="pt-4">{children}</div>
-          </div>
-        </motion.div>
-      )}
-    </AnimatePresence>
-  </div>
-);
+const aboutMotion = {
+  initial: { opacity: 0, y: 18 },
+  whileInView: { opacity: 1, y: 0 },
+  viewport: { once: true, amount: 0.2 },
+  transition: { duration: 0.55, ease: 'easeOut' },
+};
 
-const ValueCard = ({ icon: Icon, title, description }) => (
-  <motion.div 
-    whileHover={{ y: -5 }}
-    className="bg-[#192734] p-6 rounded-xl border border-white/5 shadow-lg hover:shadow-[color-mix(in_srgb,var(--school-accent)_10%,transparent)] hover:border-[color-mix(in_srgb,var(--school-accent)_30%,transparent)] transition-all duration-300 h-full"
-  >
-    <div className="w-12 h-12 bg-gradient-to-br from-[var(--school-accent)] to-yellow-700 rounded-lg flex items-center justify-center mb-4 shadow-lg">
-      <Icon className="w-6 h-6 text-white" />
-    </div>
-    <h3 className="text-xl font-bold text-white mb-3">{title}</h3>
-    <p className="text-gray-400 text-sm leading-relaxed">{description}</p>
-  </motion.div>
-);
+const softMotion = (delay = 0) => ({
+  initial: { opacity: 0, y: 14 },
+  whileInView: { opacity: 1, y: 0 },
+  viewport: { once: true, amount: 0.3 },
+  transition: { duration: 0.45, delay, ease: 'easeOut' },
+});
 
-const AboutProrascience = () => {
-  const [openHistorySection, setOpenHistorySection] = useState(0);
+function SectionTitle({ eyebrow, title, lead, align = 'center' }) {
+  return (
+    <motion.div className={`prs-about-section-title ${align === 'left' ? 'left' : ''}`} {...aboutMotion}>
+      {eyebrow && <p className="prs-about-eyebrow">{eyebrow}</p>}
+      <h2>{title}</h2>
+      {lead && <p>{lead}</p>}
+    </motion.div>
+  );
+}
+
+function GlassCard({ icon: Icon, title, children, delay = 0 }) {
+  return (
+    <motion.article className="prs-about-card" {...softMotion(delay)}>
+      {Icon && <span className="prs-about-card-icon"><Icon size={18} /></span>}
+      <h3>{title}</h3>
+      <div className="prs-about-card-body">{children}</div>
+    </motion.article>
+  );
+}
+
+function AboutProrascience() {
   const a = WEB_ABOUT;
-  const statIconByIndex = [Users, Layers, GraduationCap, Globe, Star];
-  const valueIcons = [Shield, Heart, Scale, Zap];
-  const stats = a.stats.map((s, i) => ({
-    label: s.label,
-    value: s.value,
-    icon: statIconByIndex[i] || Users,
-  }));
-  const revealUp = {
-    initial: { opacity: 0, y: 16 },
-    whileInView: { opacity: 1, y: 0 },
-    viewport: { once: true, amount: 0.2 },
-    transition: { duration: 0.45, ease: 'easeOut' },
-  };
+  const stats = (a.stats || []).slice(0, 5);
+  const pillars = (a.pillars || []).slice(0, 3);
+  const method = (a.methodPath || ['Comprendre', 'Pratiquer', 'Exercer', 'Évoluer']).slice(0, 4);
+  const domains = (a.studyDomains || []).slice(0, 8);
+  const values = (a.mission?.values || []).slice(0, 4);
 
   return (
-    <div className="min-h-screen bg-[#0F1419] font-sans text-gray-300 selection:bg-[color-mix(in_srgb,var(--school-accent)_30%,transparent)] pt-20">
+    <main className="prs-about-page">
       <SEO
-        title="À Propos de la Prorascience"
-        description="Découvrez l'Initiation aux Sciences Nocturnes Africaines (ISNA), sa mission, ses piliers, son fondateur le 5ᵉ Manikongo et le système Prorascience."
+        title="À propos de la Prorascience"
+        description="Découvrez la Prorascience, sa vision, sa méthode, ses piliers, ses domaines d’étude et le mandat porté par le 5ᵉ Manikongo."
         jsonLd={{
           '@context': 'https://schema.org',
           '@type': 'AboutPage',
-          name: `À propos — ${SCHOOL} · LIRI`,
-          description: 'Mission, vision et fondements de la Prorascience.',
+          name: `À propos — ${SCHOOL}`,
+          description: 'Vision, méthode et fondements de la Prorascience.',
           url: `${PUBLIC}/a-propos`,
         }}
       />
 
-      {/* Hero Section */}
-      <section className="relative min-h-[70vh] flex items-center justify-center overflow-hidden py-20">
-        <div className="absolute inset-0 z-0">
-          <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1451187580459-43490279c0fa?q=80&w=2072&auto=format&fit=crop')] bg-cover bg-center opacity-20" />
-          <div className="absolute inset-0 bg-gradient-to-b from-[#0F1419]/90 via-[#0F1419]/80 to-[#0F1419]" />
-          <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-[color-mix(in_srgb,var(--school-accent)_10%,transparent)] via-transparent to-transparent" />
-        </div>
-        
-        <div className="relative z-10 max-w-5xl mx-auto px-6 text-center">
-          <motion.div
-            initial={{ opacity: 0, y: 30 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8 }}
-          >
-            <Badge className="mb-6 bg-[color-mix(in_srgb,var(--school-accent)_10%,transparent)] text-[var(--school-accent)] border-[color-mix(in_srgb,var(--school-accent)_30%,transparent)] px-4 py-1.5 text-sm uppercase tracking-widest backdrop-blur-md">
-              {a.hero.badge}
-            </Badge>
-            <h1 className="text-5xl md:text-6xl lg:text-7xl font-serif font-bold text-white mb-8 leading-tight tracking-tight">
-              {a.hero.titleLine1}{' '}
-              <span className="text-transparent bg-clip-text bg-gradient-to-r from-[var(--school-accent)] to-yellow-200">
-                {a.hero.titleGold}
-              </span>
-            </h1>
-            <p className="text-xl md:text-2xl text-gray-200 font-light mb-4">
-              {a.hero.subtitle}
+      <style>{`
+        .prs-about-page{min-height:100vh;background:#262624;color:#f4efe6;font-family:'Inter',system-ui,sans-serif;overflow:hidden;selection-background:rgba(217,119,87,.35)}
+        .prs-about-page::before{content:'';position:fixed;inset:-20%;pointer-events:none;background:radial-gradient(circle at 22% 24%,rgba(217,119,87,.16),transparent 28%),radial-gradient(circle at 76% 10%,rgba(230,204,146,.10),transparent 28%),radial-gradient(circle at 62% 72%,rgba(230,204,146,.08),transparent 30%);filter:blur(8px);opacity:.9}
+        .prs-about-wrap{position:relative;z-index:1;width:min(1180px,calc(100vw - 40px));margin:0 auto}.prs-about-serif{font-family:'Fraunces','Source Serif 4',Georgia,serif}.prs-about-display{font-family:'Bricolage Grotesque',system-ui,sans-serif}.prs-about-eyebrow{margin:0 0 15px;font:850 11px/1 'Bricolage Grotesque',system-ui,sans-serif;letter-spacing:.24em;text-transform:uppercase;color:#d97757}.prs-about-section-title{text-align:center;max-width:760px;margin:0 auto 44px}.prs-about-section-title.left{text-align:left;margin-left:0}.prs-about-section-title h2{margin:0;font-family:'Fraunces','Source Serif 4',Georgia,serif;font-size:clamp(34px,4.7vw,66px);line-height:1;letter-spacing:-.045em;font-weight:650;color:#f4efe6;text-wrap:balance}.prs-about-section-title p:not(.prs-about-eyebrow){margin:18px auto 0;color:rgba(244,239,230,.62);font-size:clamp(15px,1.6vw,18px);line-height:1.7;text-wrap:balance}.prs-about-section-title.left p:not(.prs-about-eyebrow){margin-left:0}
+        .prs-about-hero{position:relative;min-height:100svh;display:flex;align-items:center;padding:120px 0 72px}.prs-about-hero-grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(340px,430px);gap:70px;align-items:center}.prs-about-badge{display:inline-flex;align-items:center;gap:10px;border:1px solid rgba(230,204,146,.20);background:rgba(244,239,230,.045);border-radius:999px;padding:10px 15px;color:#e6cc92;font:750 12px/1 'Bricolage Grotesque',system-ui,sans-serif;letter-spacing:.08em}.prs-about-hero h1{margin:28px 0 0;font-family:'Fraunces','Source Serif 4',Georgia,serif;font-size:clamp(58px,8.3vw,118px);line-height:.88;letter-spacing:-.065em;font-weight:680;color:#fff;text-wrap:balance}.prs-about-hero h1 span{display:block;color:#e6cc92}.prs-about-hero-lead{max-width:660px;margin:30px 0 0;color:rgba(244,239,230,.72);font-size:clamp(18px,2vw,24px);line-height:1.52;text-wrap:balance}.prs-about-searchline{margin-top:38px;display:flex;flex-wrap:wrap;gap:10px}.prs-about-chip{display:inline-flex;align-items:center;gap:8px;border:1px solid rgba(230,204,146,.18);background:rgba(18,17,15,.28);border-radius:999px;padding:10px 14px;color:rgba(244,239,230,.78);font-size:13px;text-decoration:none}.prs-about-chip svg{color:#d97757}.prs-about-hero-panel{position:relative;border-radius:38px;min-height:560px;overflow:hidden;background:#080706;box-shadow:0 40px 120px rgba(0,0,0,.42);border:1px solid rgba(230,204,146,.12)}.prs-about-hero-panel img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:center 23%;filter:saturate(1.05) contrast(1.05)}.prs-about-hero-panel::after{content:'';position:absolute;inset:0;background:linear-gradient(0deg,rgba(0,0,0,.78),transparent 44%),radial-gradient(circle at 50% 18%,transparent 25%,rgba(0,0,0,.42) 100%)}.prs-about-founder-label{position:absolute;left:26px;right:26px;bottom:24px;z-index:1;border-top:1px solid rgba(244,239,230,.17);padding-top:18px}.prs-about-founder-label small{display:block;color:#d97757;font:850 10px/1 'Bricolage Grotesque',system-ui,sans-serif;letter-spacing:.22em;text-transform:uppercase;margin-bottom:9px}.prs-about-founder-label b{display:block;font-family:'Fraunces','Source Serif 4',Georgia,serif;font-size:24px;color:#fff}.prs-about-founder-label span{display:block;margin-top:4px;font-size:13px;color:rgba(244,239,230,.62)}
+        .prs-about-stats{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:12px;padding:18px;border:1px solid rgba(244,239,230,.08);background:rgba(18,17,15,.26);border-radius:30px;backdrop-filter:blur(16px);box-shadow:0 24px 90px rgba(0,0,0,.20)}.prs-about-stat{padding:18px 14px;text-align:center;border-radius:22px;background:rgba(244,239,230,.035);border:1px solid rgba(244,239,230,.07)}.prs-about-stat b{display:block;color:#fff;font-size:clamp(22px,2.3vw,34px);letter-spacing:-.03em}.prs-about-stat span{display:block;margin-top:5px;color:rgba(244,239,230,.46);font-size:10px;font-weight:800;letter-spacing:.11em;text-transform:uppercase}
+        .prs-about-section{position:relative;padding:110px 0}.prs-about-grid-2{display:grid;grid-template-columns:1fr 1fr;gap:18px}.prs-about-grid-3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:18px}.prs-about-grid-4{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px}.prs-about-card{position:relative;border:1px solid rgba(244,239,230,.09);background:linear-gradient(145deg,rgba(244,239,230,.062),rgba(244,239,230,.022));border-radius:28px;padding:26px;box-shadow:0 24px 84px rgba(0,0,0,.16);min-height:100%}.prs-about-card-icon{width:42px;height:42px;display:flex;align-items:center;justify-content:center;border-radius:16px;background:rgba(230,204,146,.08);border:1px solid rgba(230,204,146,.18);color:#e6cc92;margin-bottom:18px}.prs-about-card h3{margin:0 0 12px;font-family:'Fraunces','Source Serif 4',Georgia,serif;font-size:24px;line-height:1.08;color:#fff}.prs-about-card-body{font-size:14.5px;line-height:1.7;color:rgba(244,239,230,.64)}.prs-about-card-body ul{margin:0;padding:0;list-style:none;display:grid;gap:10px}.prs-about-card-body li{display:flex;gap:10px}.prs-about-card-body li::before{content:'';width:7px;height:7px;border-radius:999px;background:#d97757;box-shadow:0 0 0 5px rgba(217,119,87,.12);margin-top:.65em;flex:0 0 auto}
+        .prs-about-definition{position:relative;border-radius:38px;padding:42px;border:1px solid rgba(230,204,146,.14);background:linear-gradient(145deg,rgba(230,204,146,.075),rgba(244,239,230,.025));box-shadow:0 32px 100px rgba(0,0,0,.22)}.prs-about-definition p{margin:0;font-family:'Fraunces','Source Serif 4',Georgia,serif;font-size:clamp(28px,3.7vw,54px);line-height:1.12;letter-spacing:-.04em;color:#fff;text-wrap:balance}.prs-about-definition p strong{color:#e6cc92;font-weight:700}.prs-about-method{position:relative;display:grid;grid-template-columns:repeat(4,1fr);gap:0;border:1px solid rgba(244,239,230,.10);border-radius:34px;overflow:hidden;background:rgba(18,17,15,.25)}.prs-about-method-step{min-height:220px;padding:26px;border-right:1px solid rgba(244,239,230,.08);display:flex;flex-direction:column;justify-content:space-between}.prs-about-method-step:last-child{border-right:none}.prs-about-method-step small{color:#d97757;font:850 11px/1 'Bricolage Grotesque',system-ui,sans-serif;letter-spacing:.16em;text-transform:uppercase}.prs-about-method-step b{font-family:'Fraunces','Source Serif 4',Georgia,serif;font-size:clamp(28px,3vw,42px);font-weight:650;color:#fff;line-height:1}.prs-about-method-step span{color:rgba(244,239,230,.54);font-size:13px;line-height:1.55}.prs-about-domain{padding:20px;border-radius:22px;border:1px solid rgba(244,239,230,.08);background:rgba(244,239,230,.035)}.prs-about-domain b{display:block;color:#fff;margin-bottom:8px;font-size:15px}.prs-about-domain span{display:block;color:rgba(244,239,230,.52);font-size:12.8px;line-height:1.55}
+        .prs-about-founder{display:grid;grid-template-columns:minmax(360px,480px) 1fr;gap:60px;align-items:center}.prs-about-founder-photo{position:relative;min-height:620px;border-radius:40px;overflow:hidden;background:#070605;box-shadow:0 40px 120px rgba(0,0,0,.42)}.prs-about-founder-photo img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:center 22%}.prs-about-founder-photo::after{content:'';position:absolute;inset:0;background:linear-gradient(0deg,rgba(0,0,0,.7),transparent 45%),radial-gradient(circle at 50% 20%,transparent 25%,rgba(0,0,0,.35) 100%)}.prs-about-founder-copy blockquote{position:relative;margin:28px 0;padding-left:24px;font-family:'Fraunces','Source Serif 4',Georgia,serif;font-size:clamp(26px,3.3vw,48px);line-height:1.12;color:#fff;text-wrap:balance}.prs-about-founder-copy blockquote::before{content:'';position:absolute;left:0;top:.12em;bottom:.16em;width:3px;border-radius:999px;background:linear-gradient(#e6cc92,#d97757)}.prs-about-founder-copy p{color:rgba(244,239,230,.66);line-height:1.75;font-size:16px;max-width:680px}.prs-about-actions{display:flex;flex-wrap:wrap;gap:12px;margin-top:30px}.prs-about-actions a{text-decoration:none}
+        .prs-about-cta{padding:90px 0 110px;text-align:center}.prs-about-cta-box{border-radius:42px;padding:54px 28px;border:1px solid rgba(230,204,146,.15);background:linear-gradient(145deg,rgba(217,119,87,.12),rgba(230,204,146,.06),rgba(244,239,230,.025));box-shadow:0 36px 120px rgba(0,0,0,.25)}.prs-about-cta h2{margin:0;font-family:'Fraunces','Source Serif 4',Georgia,serif;font-size:clamp(36px,5vw,72px);line-height:.98;letter-spacing:-.05em;color:#fff}.prs-about-cta p{max-width:640px;margin:20px auto 0;color:rgba(244,239,230,.66);line-height:1.7}
+        @media(max-width:980px){.prs-about-hero-grid,.prs-about-founder{grid-template-columns:1fr;gap:34px}.prs-about-hero{padding-top:100px}.prs-about-hero-panel{min-height:520px;max-width:520px;margin:0 auto;width:100%}.prs-about-stats{grid-template-columns:repeat(2,1fr)}.prs-about-grid-2,.prs-about-grid-3,.prs-about-grid-4{grid-template-columns:1fr}.prs-about-method{grid-template-columns:1fr}.prs-about-method-step{min-height:150px;border-right:none;border-bottom:1px solid rgba(244,239,230,.08)}.prs-about-method-step:last-child{border-bottom:none}.prs-about-founder-photo{min-height:520px}}
+        @media(max-width:560px){.prs-about-wrap{width:calc(100vw - 32px)}.prs-about-hero h1{font-size:clamp(48px,15vw,72px)}.prs-about-hero-lead{font-size:17px}.prs-about-hero-panel{min-height:430px;border-radius:30px}.prs-about-stats{grid-template-columns:1fr 1fr;border-radius:22px;padding:10px}.prs-about-section{padding:78px 0}.prs-about-definition{padding:28px;border-radius:28px}.prs-about-definition p{font-size:30px}.prs-about-card{border-radius:23px;padding:22px}.prs-about-founder-photo{min-height:430px;border-radius:30px}.prs-about-founder-copy blockquote{font-size:30px}.prs-about-actions .inline-flex{width:100%;justify-content:center}.prs-about-cta-box{border-radius:30px;padding:38px 20px}}
+      `}</style>
+
+      <section className="prs-about-hero">
+        <div className="prs-about-wrap prs-about-hero-grid">
+          <motion.div initial={{ opacity: 0, y: 28 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.75, ease: 'easeOut' }}>
+            <span className="prs-about-badge"><Sparkles size={15} /> À propos de Prorascience</span>
+            <h1>Comprendre avant <span>de pratiquer.</span></h1>
+            <p className="prs-about-hero-lead">
+              La Prorascience n’est pas une vitrine statique. C’est une école de lecture, de méthode et de transformation : elle aide l’étudiant à passer du geste répété à la connaissance maîtrisée.
             </p>
-            <div className="h-1 w-24 bg-[var(--school-accent)] mx-auto my-8 rounded-full" />
-            <p className="text-lg md:text-xl text-gray-400 max-w-3xl mx-auto italic">
-              « {a.hero.quote} »
-            </p>
+            <div className="prs-about-searchline" aria-label="Accès rapides">
+              <Link className="prs-about-chip" to="/"><Compass size={15} /> Demander à l’agent</Link>
+              <Link className="prs-about-chip" to="/formations/catalogue"><BookOpen size={15} /> Voir les parcours</Link>
+              <a className="prs-about-chip" href="#parcours-prorascience"><Users size={15} /> Comprendre le parcours</a>
+            </div>
           </motion.div>
+
+          <motion.figure className="prs-about-hero-panel" initial={{ opacity: 0, scale: .97 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: .85, ease: 'easeOut', delay: .1 }}>
+            <img src={FOUNDER_IMAGE} alt="Badika Jel David, 5e Manikongo, fondateur de la Prorascience" />
+            <figcaption className="prs-about-founder-label">
+              <small>Transmission incarnée</small>
+              <b>Badika Jel David</b>
+              <span>Le 5ᵉ Manikongo — Recteur de l’ISNA</span>
+            </figcaption>
+          </motion.figure>
         </div>
       </section>
 
-      <section className="py-8 px-6 border-b border-white/5 bg-[#15202B]/30">
-        <div className="max-w-7xl mx-auto grid grid-cols-2 md:grid-cols-5 gap-4">
-          {stats.map((s) => {
-            const IconC = s.icon;
-            return (
-              <div key={s.label} className="text-center rounded-xl border border-white/5 bg-[#0F1419]/40 py-4">
-                <IconC className="w-5 h-5 mx-auto text-[var(--school-accent)] mb-2" />
-                <p className="text-xl md:text-2xl font-bold text-white tabular-nums">{s.value}</p>
-                <p className="text-[10px] md:text-xs text-gray-500 font-semibold uppercase tracking-wide">{s.label}</p>
-              </div>
-            );
-          })}
-        </div>
-      </section>
-
-      {/* Section 1: ISNA Presentation */}
-      <section className="py-20 px-6 max-w-7xl mx-auto border-b border-white/5">
-        <motion.div className="text-center mb-16" {...revealUp}>
-          <Badge className="bg-[color-mix(in_srgb,var(--school-accent)_10%,transparent)] text-[var(--school-accent)] border-[color-mix(in_srgb,var(--school-accent)_30%,transparent)] px-4 py-1.5 text-xs uppercase tracking-widest mb-5 animate-pulse">
-            {a.sectionComprendre.kicker}
-          </Badge>
-          <h2 className="text-3xl md:text-5xl font-serif font-bold text-white mb-4">{a.sectionComprendre.title}</h2>
-          <p className="text-gray-400 max-w-3xl mx-auto">
-            {a.sectionComprendre.lead}
-          </p>
+      <div className="prs-about-wrap">
+        <motion.div className="prs-about-stats" {...aboutMotion}>
+          {stats.map((s) => <div key={s.label} className="prs-about-stat"><b>{s.value}</b><span>{s.label}</span></div>)}
         </motion.div>
+      </div>
 
-        <div className="grid lg:grid-cols-2 gap-6 mb-10">
-          <motion.div className="premium-panel p-6" {...revealUp}>
-            <h3 className="text-xl font-bold text-white mb-4 flex items-center gap-2"><Brain className="w-5 h-5 text-[var(--school-accent)]" /> Vous pratiquez... mais comprenez-vous vraiment ?</h3>
-            <div className="space-y-2">
-              {a.practiceItems.map((item, index) => (
-                <motion.div
-                  key={item}
-                  className="flex items-center gap-2 text-sm text-gray-300"
-                  initial={{ opacity: 0, x: -8 }}
-                  whileInView={{ opacity: 1, x: 0 }}
-                  viewport={{ once: true, amount: 0.4 }}
-                  transition={{ delay: index * 0.05, duration: 0.3 }}
-                >
-                  <CheckCircle className="w-4 h-4 text-emerald-400 shrink-0" />
-                  <span>{item}</span>
-                </motion.div>
-              ))}
-            </div>
+      <section className="prs-about-section">
+        <div className="prs-about-wrap">
+          <SectionTitle eyebrow="Définition" title="Ce qu’est la Prorascience" lead={a.whatIs?.lead || 'Une méthode de compréhension des réalités visibles et invisibles, structurée pour apprendre, pratiquer et évoluer.'} />
+          <motion.div className="prs-about-definition" {...aboutMotion}>
+            <p><strong>La Prorascience</strong> unit la rigueur de la pensée, l’étude des lois invisibles et l’héritage des savoirs africains pour rendre la pratique intelligible.</p>
           </motion.div>
-          <motion.div className="premium-panel p-6" {...revealUp}>
-            <h3 className="text-xl font-bold text-white mb-4 flex items-center gap-2"><Target className="w-5 h-5 text-[var(--school-accent)]" /> Mais au fond...</h3>
-            <div className="space-y-2">
-              {a.rootQuestions.map((item, index) => (
-                <motion.div
-                  key={item}
-                  className="flex items-center gap-2 text-sm text-gray-300"
-                  initial={{ opacity: 0, x: 8 }}
-                  whileInView={{ opacity: 1, x: 0 }}
-                  viewport={{ once: true, amount: 0.4 }}
-                  transition={{ delay: index * 0.05, duration: 0.3 }}
-                >
-                  <Lightbulb className="w-4 h-4 text-amber-300 shrink-0" />
-                  <span>{item}</span>
-                </motion.div>
-              ))}
+        </div>
+      </section>
+
+      <section className="prs-about-section">
+        <div className="prs-about-wrap">
+          <SectionTitle eyebrow="Pourquoi" title="Le problème n’est pas seulement l’accès au savoir" lead="Le vrai enjeu est de comprendre ce que l’on fait, pourquoi on le fait, et comment avancer sans dogmatisme." />
+          <div className="prs-about-grid-2">
+            <GlassCard icon={Brain} title="On pratique, mais sans carte" delay={0.02}>
+              <ul>{(a.practiceItems || []).slice(0, 5).map((x) => <li key={x}>{x}</li>)}</ul>
+            </GlassCard>
+            <GlassCard icon={Eye} title="La question devient plus profonde" delay={0.08}>
+              <ul>{(a.rootQuestions || []).slice(0, 5).map((x) => <li key={x}>{x}</li>)}</ul>
+            </GlassCard>
+          </div>
+        </div>
+      </section>
+
+      <section className="prs-about-section">
+        <div className="prs-about-wrap">
+          <SectionTitle eyebrow="Piliers" title="Trois appuis, une seule cohérence" />
+          <div className="prs-about-grid-3">
+            {pillars.map((p, i) => (
+              <GlassCard key={p.title} icon={[Scale, Layers, Globe][i] || Layers} title={p.title} delay={i * .06}>
+                <ul>{(p.points || []).slice(0, 4).map((x) => <li key={x}>{x}</li>)}</ul>
+              </GlassCard>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      <section className="prs-about-section" id="parcours-prorascience">
+        <div className="prs-about-wrap">
+          <SectionTitle eyebrow="Méthode" title="Le chemin d’apprentissage" lead="L’étudiant ne saute pas directement vers la pratique. Il traverse une progression lisible, étape par étape." />
+          <motion.div className="prs-about-method" {...aboutMotion}>
+            {method.map((m, i) => (
+              <div key={m} className="prs-about-method-step">
+                <small>{String(i + 1).padStart(2, '0')}</small>
+                <b>{m}</b>
+                <span>{['Donner du sens avant le geste.', 'Transformer la théorie en expérience.', 'Mettre en situation et affiner.', 'Mesurer, corriger, approfondir.'][i] || 'Avancer avec méthode.'}</span>
+              </div>
+            ))}
+          </motion.div>
+        </div>
+      </section>
+
+      <section className="prs-about-section">
+        <div className="prs-about-wrap prs-about-founder">
+          <motion.figure className="prs-about-founder-photo" {...aboutMotion}>
+            <img src={FOUNDER_IMAGE} alt="Badika Jel David, fondateur de Prorascience" />
+          </motion.figure>
+          <motion.div className="prs-about-founder-copy" {...aboutMotion}>
+            <p className="prs-about-eyebrow">Le fondateur</p>
+            <h2 className="prs-about-serif" style={{ fontSize: 'clamp(42px,5vw,78px)', lineHeight: .95, letterSpacing: '-.055em', margin: 0, color: '#fff' }}>Le 5ᵉ Manikongo</h2>
+            <p style={{ color: '#e6cc92', fontWeight: 700, marginTop: 14 }}>Badika Jel David — Recteur de l’ISNA</p>
+            <blockquote>Une école n’est pas seulement un lieu où l’on reçoit des contenus : c’est un lieu où la connaissance reprend corps.</blockquote>
+            <p>
+              La vision portée ici cherche à restaurer la dignité intellectuelle et spirituelle par la connaissance : unir la rigueur d’une école, la profondeur d’un temple, et la clarté d’un parcours transmissible.
+            </p>
+            <div className="prs-about-actions">
+              <Link to="/a-propos/fondateur"><Button className="bg-[#d97757] text-[#24140f] hover:bg-[#e58a68]">Lire le parcours complet <ArrowRight size={16} /></Button></Link>
+              <Link to="/"><Button variant="outline" className="border-[#e6cc92]/40 text-[#e6cc92] hover:bg-[#e6cc92]/10">Demander à l’agent</Button></Link>
             </div>
           </motion.div>
         </div>
+      </section>
 
-        <div className="grid lg:grid-cols-3 gap-6 mb-10">
-          <motion.div className="premium-panel p-6" {...revealUp}>
-            <h4 className="font-bold text-white mb-3">La realite</h4>
-            <div className="space-y-2">
-              {a.realityItems.map((item) => (
-                <p key={item} className="text-sm text-gray-400">
-                  - {item}
-                </p>
-              ))}
-            </div>
-          </motion.div>
-          <motion.div className="premium-panel p-6" {...revealUp}>
-            <h4 className="font-bold text-white mb-3">Consequence</h4>
-            <p className="text-sm text-gray-400 mb-3">La pratique devient:</p>
-            <div className="flex flex-wrap gap-2">
-              {a.consequences.map((item) => (
-                <Badge key={item} className="bg-red-500/15 text-red-200 border-red-500/30">{item}</Badge>
-              ))}
-            </div>
-          </motion.div>
-          <motion.div className="premium-panel p-6" {...revealUp}>
-            <h4 className="font-bold text-white mb-3">{a.problem.title}</h4>
-            <p className="text-sm text-gray-300">{a.problem.text}</p>
-            <p className="text-sm text-[var(--school-accent)] mt-3">{a.problem.highlight}</p>
-          </motion.div>
-        </div>
-
-        <motion.div className="premium-panel p-6 mb-8" {...revealUp}>
-          <h3 className="text-xl font-bold text-white mb-4">Notre methode</h3>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-            {a.methodPath.map((item, index) => (
-              <motion.div
-                key={item}
-                className="rounded-lg border border-white/10 bg-[#0F1419]/60 p-3 text-center"
-                initial={{ opacity: 0, y: 12 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true, amount: 0.4 }}
-                transition={{ delay: index * 0.06, duration: 0.35 }}
-              >
-                <p className="text-sm font-semibold text-white">{item}</p>
+      <section className="prs-about-section">
+        <div className="prs-about-wrap">
+          <SectionTitle eyebrow="Domaines" title="Ce que la Prorascience étudie" lead="Les domaines ne sont pas des vitrines séparées : ils forment une carte de navigation pour comprendre le réel, l’humain, la communauté et l’invisible." />
+          <div className="prs-about-grid-4">
+            {domains.map((d) => (
+              <motion.div key={d.title} className="prs-about-domain" {...softMotion(0)}>
+                <b>{d.title}</b>
+                <span>{d.definition || d.study || d.application}</span>
               </motion.div>
             ))}
           </div>
-        </motion.div>
-
-        <div className="grid md:grid-cols-2 xl:grid-cols-4 gap-4 mb-8">
-          {a.methodColumns.map((col) => (
-            <div key={col.title} className="premium-panel p-5">
-              <h4 className="text-white font-semibold mb-2">{col.title}</h4>
-              {col.items.map((item) => (
-                <p key={item} className="text-xs text-gray-400">
-                  - {item}
-                </p>
-              ))}
-              <p className="text-xs text-[var(--school-accent)] mt-3">{col.foot}</p>
-            </div>
-          ))}
-        </div>
-
-        <div className="grid lg:grid-cols-2 gap-6">
-          <div className="premium-panel p-6">
-            <h4 className="text-white font-semibold mb-3">Pour qui ?</h4>
-            {a.targetAudience.map((item) => (
-              <div key={item} className="flex items-center gap-2 text-sm text-gray-300 mb-2">
-                <Compass className="w-4 h-4 text-[var(--school-accent)]" />
-                <span>{item}</span>
-              </div>
-            ))}
-          </div>
-          <div className="premium-panel p-6">
-            <h4 className="text-white font-semibold mb-3">Ce que vous gagnez</h4>
-            {a.gains.map((item) => (
-              <div key={item} className="flex items-center gap-2 text-sm text-gray-300 mb-2">
-                <Award className="w-4 h-4 text-emerald-400" />
-                <span>{item}</span>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        <motion.div className="mt-10 text-center" {...revealUp}>
-          <p className="text-gray-300 italic max-w-3xl mx-auto">
-            {a.closing.quote}
-          </p>
-          <h3 className="text-2xl md:text-3xl font-bold text-white mt-6">{a.closing.title}</h3>
-          <div className="flex flex-col sm:flex-row justify-center gap-4 mt-8">
-            <Link to="/formations/catalogue">
-              <Button className="bg-[var(--school-accent)] text-black hover:bg-amber-500">Rejoindre Prorascence Academy</Button>
-            </Link>
-            <Link to="/appointment/request">
-              <Button variant="outline" className="border-[color-mix(in_srgb,var(--school-accent)_40%,transparent)] text-[var(--school-accent)] hover:bg-[color-mix(in_srgb,var(--school-accent)_10%,transparent)]">Parler a un conseiller</Button>
-            </Link>
-          </div>
-        </motion.div>
-      </section>
-
-      {/* Section 1: ISNA Presentation */}
-      <section className="py-20 px-6 max-w-7xl mx-auto border-b border-white/5">
-        <div className="text-center mb-16">
-          <h2 className="text-3xl md:text-4xl font-serif font-bold text-white mb-6">{a.mission.title}</h2>
-          <p className="text-gray-400 max-w-3xl mx-auto">
-            {a.mission.lead}
-          </p>
-        </div>
-
-        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6 mb-16">
-          {a.mission.values.map((v, i) => (
-            <ValueCard
-              key={v.title}
-              icon={valueIcons[i] || Shield}
-              title={v.title}
-              description={v.desc}
-            />
-          ))}
         </div>
       </section>
 
-      {/* SECTION 4: QU'EST-CE QUE LA PRORASCIENCE? */}
-      <section className="py-24 px-6 relative bg-[#0F1419] overflow-hidden" id="what-is">
-        {/* Decorative elements */}
-        <div className="absolute top-0 left-0 w-full h-px bg-gradient-to-r from-transparent via-[color-mix(in_srgb,var(--school-accent)_50%,transparent)] to-transparent" />
-        <div className="absolute top-0 left-1/2 w-[800px] h-[800px] bg-[color-mix(in_srgb,var(--school-accent)_5%,transparent)] rounded-full blur-[100px] -translate-x-1/2 pointer-events-none" />
-
-        <div className="max-w-7xl mx-auto relative z-10">
-          {/* Main Title */}
-          <div className="text-center mb-20">
-            <Badge className="bg-[var(--school-accent)] text-black hover:bg-[#b5952f] mb-4">{a.whatIs.kicker}</Badge>
-            <h2 className="text-4xl md:text-5xl font-serif font-bold text-white mb-6">
-              {a.whatIs.title.includes('PRORASCIENCE') ? (
-                <>
-                  {a.whatIs.title.split('PRORASCIENCE')[0]}
-                  <span className="text-[var(--school-accent)]">PRORASCIENCE</span>
-                  {a.whatIs.title.split('PRORASCIENCE')[1]}
-                </>
-              ) : (
-                a.whatIs.title
-              )}
-            </h2>
-            <p className="text-xl text-gray-400 max-w-3xl mx-auto leading-relaxed">
-              {a.whatIs.lead}
-            </p>
-          </div>
-
-          {/* Subsection 1: Short Definition */}
-          <ProraScienceDefinitionBox icon={Lightbulb} title="Définition Synthétique">
-            La <strong className="text-white">PRORASCIENCE</strong>
-            {a.definitionSynthese.replace(/^La PRORASCIENCE/, '')}
-          </ProraScienceDefinitionBox>
-
-          {/* Subsection 2: Developed Definition (3 Pillars) */}
-          <div className="mb-24">
-            <h3 className="text-2xl font-bold text-white mb-10 text-center flex items-center justify-center gap-3">
-              <Columns className="w-6 h-6 text-[var(--school-accent)]" /> Les 3 Piliers Fondateurs
-            </h3>
-            <div className="grid md:grid-cols-3 gap-8">
-              {[Brain, Database, History].map((IconP, i) => (
-                <PillarCard
-                  key={a.pillars[i].title}
-                  index={i}
-                  icon={IconP}
-                  title={a.pillars[i].title}
-                  points={a.pillars[i].points}
-                />
-              ))}
+      {values.length > 0 && (
+        <section className="prs-about-section">
+          <div className="prs-about-wrap">
+            <SectionTitle eyebrow="Mission" title={a.mission?.title || 'Notre mission'} lead={a.mission?.lead} />
+            <div className="prs-about-grid-4">
+              {values.map((v, i) => <GlassCard key={v.title} icon={[CheckCircle, Users, Scale, Sparkles][i] || CheckCircle} title={v.title} delay={i * .05}>{v.desc}</GlassCard>)}
             </div>
           </div>
+        </section>
+      )}
 
-          {/* Subsection 3: What PRORASCIENCE is NOT */}
-          <div className="mb-24 bg-[#192734] rounded-2xl p-8 md:p-12 border border-red-900/30 relative overflow-hidden">
-            <div className="absolute top-0 right-0 w-64 h-64 bg-red-500/5 rounded-full blur-3xl" />
-            <h3 className="text-2xl font-bold text-white mb-8 flex items-center gap-3">
-              <XCircle className="w-6 h-6 text-red-500" /> Ce que la PRORASCIENCE n'est PAS
-            </h3>
-            <div className="grid sm:grid-cols-2 md:grid-cols-3 gap-6 mb-8">
-              {a.notProrascience.map((item, i) => (
-                <div key={item} className="flex items-center gap-3 bg-black/20 p-4 rounded-lg border border-red-500/10">
-                  <div className="w-6 h-6 rounded-full bg-red-500/20 flex items-center justify-center shrink-0">
-                    <XCircle className="w-4 h-4 text-red-500" />
-                  </div>
-                  <span className="text-gray-300 font-medium">{item}</span>
-                </div>
-              ))}
+      <section className="prs-about-cta">
+        <div className="prs-about-wrap">
+          <motion.div className="prs-about-cta-box" {...aboutMotion}>
+            <h2>Vous n’avez pas besoin de tout parcourir seul.</h2>
+            <p>Posez une question à l’agent, demandez une visite, ou choisissez directement le parcours qui correspond à votre niveau d’accompagnement.</p>
+            <div className="prs-about-actions" style={{ justifyContent: 'center' }}>
+              <Link to="/"><Button className="bg-[#d97757] text-[#24140f] hover:bg-[#e58a68]">Ouvrir le moteur intelligent <ArrowRight size={16} /></Button></Link>
+              <Link to="/formations/catalogue"><Button variant="outline" className="border-[#e6cc92]/40 text-[#e6cc92] hover:bg-[#e6cc92]/10">Voir les formations</Button></Link>
             </div>
-            <div className="bg-gradient-to-r from-red-900/20 to-transparent p-4 rounded-l border-l-4 border-red-500">
-              <p className="text-gray-300 italic">
-                {a.notProrascienceKey}
-              </p>
-            </div>
-          </div>
-
-          {/* Subsection 4: What PRORASCIENCE studies (8 Domains) */}
-          <div className="mb-24">
-             <h3 className="text-2xl font-bold text-white mb-10 text-center flex items-center justify-center gap-3">
-              <Target className="w-6 h-6 text-[var(--school-accent)]" /> Domaines d'Étude Concrets
-            </h3>
-            <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
-              {a.studyDomains.map((d, index) => (
-                <DomainCard
-                  key={d.title}
-                  title={d.title}
-                  definition={d.definition}
-                  study={d.study}
-                  application={d.application}
-                  index={index}
-                />
-              ))}
-            </div>
-          </div>
-
-          {/* Subsection 5: Etymology & Motto */}
-          <div className="mb-24 text-center">
-            <div className="inline-block p-1 rounded-full border border-[color-mix(in_srgb,var(--school-accent)_30%,transparent)] mb-8">
-              <div className="bg-[#192734] px-8 py-3 rounded-full">
-                <span className="font-serif text-[var(--school-accent)] text-xl italic">« {a.motto} »</span>
-              </div>
-            </div>
-            <div className="grid md:grid-cols-3 gap-8 max-w-4xl mx-auto">
-              {a.mottoSteps.map((st, i) => (
-                <div key={st.title} className="text-center">
-                  <div
-                    className={`text-4xl font-bold mb-2 ${i === 2 ? 'text-[var(--school-accent)]' : i === 0 ? 'text-gray-700' : 'text-gray-500'}`}
-                  >
-                    {st.n}
-                  </div>
-                  <h4
-                    className={`font-bold mb-2 ${i === 2 ? 'text-[var(--school-accent)]' : 'text-white'}`}
-                  >
-                    {st.title}
-                  </h4>
-                  <p className="text-sm text-gray-400">{st.desc}</p>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          {/* Subsection 6: Fundamental Principle & Comparison */}
-          <div className="mb-24">
-             <h3 className="text-2xl font-bold text-white mb-10 text-center">Positionnement Unique</h3>
-             <ProraComparisonTable />
-          </div>
-
-          {/* Subsection 7: Method (4 Steps) */}
-          <div className="mb-24 max-w-5xl mx-auto">
-             <h3 className="text-2xl font-bold text-white mb-10 text-center flex items-center justify-center gap-3">
-              <Swords className="w-6 h-6 text-[var(--school-accent)]" /> La Méthode Prorascientifique
-            </h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-              {a.methodPro.map((item, i) => (
-                <div key={item.title} className="bg-[#192734] p-6 rounded-xl border border-white/5 relative group hover:bg-[#15202B] transition-colors">
-                  <div className="text-5xl font-bold text-white/5 absolute top-4 right-4 group-hover:text-[color-mix(in_srgb,var(--school-accent)_10%,transparent)] transition-colors">
-                    {String(i + 1).padStart(2, '0')}
-                  </div>
-                  <h4 className="text-lg font-bold text-white mb-2 relative z-10">{item.title}</h4>
-                  <p className="text-sm text-gray-400 relative z-10">{item.desc}</p>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          {/* Subsection 8: Why a Science? */}
-          <div className="mb-24 grid md:grid-cols-2 gap-12 items-center">
-            <div>
-              <h3 className="text-2xl font-bold text-white mb-6">{a.whyScience.title}</h3>
-              <p className="text-gray-300 mb-6 leading-relaxed">
-                {a.whyScience.lead}
-              </p>
-              <ul className="space-y-4">
-                {a.whyScience.bullets.map((crit) => (
-                  <li key={crit} className="flex items-center gap-3 bg-[#192734] p-3 rounded-lg border border-white/5">
-                    <CheckCircle className="w-5 h-5 text-green-500 shrink-0" />
-                    <span className="text-sm text-gray-300">{crit}</span>
-                  </li>
-                ))}
-              </ul>
-            </div>
-            <div className="bg-[#192734] p-8 rounded-2xl border border-white/10">
-              <ProraScienceFAQ />
-            </div>
-          </div>
-
-          {/* Subsection 9: Africa's Place */}
-          <div className="mb-24 text-center max-w-3xl mx-auto">
-            <Globe className="w-12 h-12 text-[var(--school-accent)] mx-auto mb-6" />
-            <h3 className="text-2xl font-bold text-white mb-6">{a.africa.title}</h3>
-            <p className="text-gray-300 mb-8">
-              {a.africa.lead.includes('Berceau') ? (
-                <>
-                  {a.africa.lead.split('Berceau')[0]}
-                  <strong>Berceau</strong>
-                  {a.africa.lead.split('Berceau')[1]}
-                </>
-              ) : (
-                a.africa.lead
-              )}
-            </p>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              {a.africa.blocks.map((b) => (
-                <div key={b.label} className="p-4 rounded-lg bg-[#192734] border border-[color-mix(in_srgb,var(--school-accent)_20%,transparent)]">
-                  <span className="block text-[var(--school-accent)] font-bold mb-1">{b.label}</span>
-                  <span className="text-sm text-gray-400">{b.text}</span>
-                </div>
-              ))}
-            </div>
-          </div>
+          </motion.div>
         </div>
       </section>
-
-      {/* --- NEW SECTION: PRORASCIENCE ONTOLOGICAL MODEL --- */}
-      <ProrascienceOntologySection />
-
-      {/* Section 2: Founder (Kept brief as focus was on the new section, but included for completeness) */}
-      <section className="py-20 bg-[#15202B] border-y border-white/5">
-        <div className="max-w-7xl mx-auto px-6">
-           <div className="text-center mb-12">
-            <h2 className="text-3xl font-serif font-bold text-white mb-4">Le Fondateur</h2>
-            <p className="text-gray-400 max-w-2xl mx-auto">Le Professeur Kimbembe, initiateur de cette vision.</p>
-           </div>
-           {/* Brief founder summary to maintain page flow without duplicating too much if user scrolls fast */}
-           <div className="bg-[#192734] rounded-xl p-8 border border-white/5 flex flex-col md:flex-row gap-8 items-center">
-             <div className="w-32 h-32 bg-gray-700 rounded-full shrink-0 flex items-center justify-center text-3xl font-serif text-gray-500">PK</div>
-             <div>
-               <h3 className="text-xl font-bold text-white mb-2">Prof. Kimbembe</h3>
-               <p className="text-gray-300 italic mb-4">"La science sans conscience est la ruine de l'âme, mais la conscience sans science est l'impuissance de l'esprit."</p>
-               <Link to="/equipe">
-                 <Button variant="outline" className="text-[var(--school-accent)] border-[var(--school-accent)] hover:bg-[var(--school-accent)] hover:text-black">
-                   Découvrir son parcours complet
-                 </Button>
-               </Link>
-             </div>
-           </div>
-        </div>
-      </section>
-
-      {/* Section 3: History & Mandate Accordion */}
-      <section className="py-20 px-6 max-w-4xl mx-auto">
-        <div className="text-center mb-12">
-          <h2 className="text-3xl md:text-4xl font-serif font-bold text-white mb-4">Histoire & Mandat</h2>
-          <p className="text-gray-400">Les étapes clés de notre institution.</p>
-        </div>
-        
-        <div className="space-y-4">
-          <AccordionItem 
-            title="I. Les Origines (1968-2000)" 
-            icon={Anchor}
-            isOpen={openHistorySection === 0} 
-            onClick={() => setOpenHistorySection(openHistorySection === 0 ? null : 0)}
-          >
-            <p>Racines dans la résurgence des mouvements spirituels africains et la quête d'une science endogène.</p>
-          </AccordionItem>
-          {/* Other accordion items would go here, simplified for this update focus */}
-           <AccordionItem 
-            title="II. Le Lancement & L'Expansion" 
-            icon={Flag}
-            isOpen={openHistorySection === 1} 
-            onClick={() => setOpenHistorySection(openHistorySection === 1 ? null : 1)}
-          >
-            <p>Ouverture en 2015, structuration des cursus et développement international.</p>
-          </AccordionItem>
-        </div>
-      </section>
-
-      {/* Section 6: Future Commitments */}
-      <section className="py-20 bg-[var(--school-accent)] text-black text-center">
-        <div className="max-w-4xl mx-auto px-6">
-          <h2 className="text-3xl md:text-4xl font-serif font-bold mb-8">Rejoignez l'Avant-Garde</h2>
-          <p className="text-xl opacity-90 mb-10 max-w-2xl mx-auto">
-            La Prorascience n'est pas une théorie, c\'est une expérience. Commencez votre transformation aujourd\'hui.
-          </p>
-          
-          <div className="flex flex-col sm:flex-row justify-center gap-6">
-            <Link to="/formations/catalogue">
-              <Button className="bg-black text-white hover:bg-gray-800 text-lg px-8 py-6 rounded-xl shadow-xl w-full sm:w-auto">
-                Consulter le Catalogue
-              </Button>
-            </Link>
-            <a href="/appointment/request">
-               <Button variant="outline" className="bg-transparent border-black text-black hover:bg-black/10 text-lg px-8 py-6 rounded-xl w-full sm:w-auto">
-                Contacter un conseiller
-              </Button>
-            </a>
-          </div>
-        </div>
-      </section>
-    </div>
+    </main>
   );
-};
+}
 
 export default AboutProrascience;

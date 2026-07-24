@@ -238,6 +238,9 @@ export class SubscriptionRenewalService implements OnApplicationBootstrap, OnMod
       providerSubscriptionId?: string | null;
       providerCustomerId?: string | null;
       currentPeriodEnd?: string | null; // ISO (période Stripe faisant foi) ; sinon now+30j
+      amountCents?: number | null;
+      currency?: string | null;
+      promoCode?: string | null;
     } = {},
   ): Promise<void> {
     const provider = opts.provider ?? 'pawapay';
@@ -297,14 +300,18 @@ export class SubscriptionRenewalService implements OnApplicationBootstrap, OnMod
         periodDays,
       );
 
+    let subscriptionId: string | null = existing?.id ?? null;
     if (existing) {
       const patch: Record<string, unknown> = {
         status: 'active',
         current_period_end: computedEnd,
         updated_at: now.toISOString(),
       };
+      if (opts.amountCents != null) patch.amount_cents = opts.amountCents;
+      if (opts.currency) patch.currency = opts.currency;
       if (opts.providerSubscriptionId) patch.provider_subscription_id = opts.providerSubscriptionId;
       if (opts.providerCustomerId) patch.provider_customer_id = opts.providerCustomerId;
+      if (opts.promoCode) patch.metadata = { promo_code: opts.promoCode };
       const { error: updErr } = await this.subs.update(patch).eq('id', existing.id);
       if (updErr) {
         this.logger.error(
@@ -320,22 +327,37 @@ export class SubscriptionRenewalService implements OnApplicationBootstrap, OnMod
         plan_id: plan.key,
         provider,
         status: 'active',
-        amount_cents: plan.price_cents ?? 0,
-        currency: plan.currency ?? 'EUR',
+        amount_cents: opts.amountCents ?? plan.price_cents ?? 0,
+        currency: opts.currency ?? plan.currency ?? 'EUR',
         current_period_start: now.toISOString(),
         current_period_end: computedEnd,
+        metadata: opts.promoCode ? { promo_code: opts.promoCode } : {},
       };
       if (opts.providerSubscriptionId) row.provider_subscription_id = opts.providerSubscriptionId;
       if (opts.providerCustomerId) row.provider_customer_id = opts.providerCustomerId;
-      const { error: insErr } = await this.subs.insert(row);
+      const { data: inserted, error: insErr } = await this.subs.insert(row).select('id').maybeSingle();
       if (insErr) {
         this.logger.error(
           `Abonnement NON créé (insert refusé) — user=${userId} plan=${planSlug} (${provider}): ${insErr.message}`,
         );
         return;
       }
+      subscriptionId = (inserted as any)?.id ?? null;
       this.logger.log(`Abonnement créé — user=${userId} plan=${planSlug} (${provider}) → ${computedEnd}`);
     }
+
+    await this.recordPaidInvoice({
+      tenantId,
+      userId,
+      subscriptionId,
+      provider,
+      planSlug,
+      planLabel: plan.label ?? plan.key,
+      amountCents: opts.amountCents ?? plan.price_cents ?? 0,
+      currency: opts.currency ?? plan.currency ?? 'EUR',
+      providerSubscriptionId: opts.providerSubscriptionId ?? null,
+      promoCode: opts.promoCode ?? null,
+    });
 
     // Vitrine douce : un abonnement actif accorde l'accès — membership tenant (idempotente) +
     // promotion visitor→student (jamais de downgrade). Sans ça, le contenu pédagogique RLS reste vide
@@ -353,6 +375,43 @@ export class SubscriptionRenewalService implements OnApplicationBootstrap, OnMod
 
     // Reçu : notification in-app + email de confirmation à l'élève (best-effort).
     await this.notifyStudentPayment(userId, tenantId, plan);
+  }
+
+  private async recordPaidInvoice(args: {
+    tenantId: string;
+    userId: string;
+    subscriptionId: string | null;
+    provider: string;
+    planSlug: string;
+    planLabel: string;
+    amountCents: number;
+    currency: string;
+    providerSubscriptionId?: string | null;
+    promoCode?: string | null;
+  }): Promise<void> {
+    try {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      await (this.supabase as any).from('billing_invoices').insert({
+        tenant_id: args.tenantId,
+        subscription_id: args.subscriptionId,
+        provider: args.provider,
+        status: 'paid',
+        amount_cents: args.amountCents,
+        currency: args.currency,
+        provider_invoice_id: args.providerSubscriptionId ?? null,
+        invoice_number: `LIRI-${Date.now().toString(36).toUpperCase()}`,
+        description: `Abonnement ${args.planLabel || args.planSlug}`,
+        paid_at: new Date().toISOString(),
+        metadata: {
+          source: 'offering-checkout',
+          user_id: args.userId,
+          plan_slug: args.planSlug,
+          promo_code: args.promoCode ?? null,
+        },
+      });
+    } catch (e) {
+      this.logger.warn(`facture paiement non créée (user=${args.userId}): ${(e as Error).message}`);
+    }
   }
 
   /**
@@ -627,9 +686,33 @@ export class SubscriptionRenewalService implements OnApplicationBootstrap, OnMod
         .eq('id', userId)
         .maybeSingle();
       const role = String(profile?.role || '').toLowerCase();
-      if (!role || role === 'visitor') {
+      if (!profile) {
+        let email: string | null = null;
+        try {
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          const { data: u } = await (this.supabase as any).auth.admin.getUserById(userId);
+          email = u?.user?.email ?? null;
+        } catch {
+          email = null;
+        }
+        const fallbackName = email ? email.split('@')[0] : 'Élève';
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        await (this.supabase as any).from('profiles').update({ role: 'student' }).eq('id', userId);
+        await (this.supabase as any).from('profiles').insert({
+          id: userId,
+          email,
+          name: fallbackName,
+          full_name: fallbackName,
+          role: 'student',
+          status: 'active',
+          student_profile_completed: false,
+          metadata: { source: 'payment-fulfillment', tenant_id: tenantId },
+        });
+      } else if (!role || role === 'visitor') {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        await (this.supabase as any)
+          .from('profiles')
+          .update({ role: 'student', status: 'active', updated_at: new Date().toISOString() })
+          .eq('id', userId);
       }
     } catch (e) {
       this.logger.warn(`grantStudentAccess (user=${userId}): ${(e as Error).message}`);
@@ -717,9 +800,13 @@ export class SubscriptionRenewalService implements OnApplicationBootstrap, OnMod
     }
 
     let event: any = null;
+    let matchedStripeSecret: string | undefined;
     for (const secret of candidates) {
       event = verifyStripeSignature(rawBody, signature, secret);
-      if (event) break;
+      if (event) {
+        matchedStripeSecret = secret;
+        break;
+      }
     }
     if (!event) throw new BadRequestException('Signature Stripe invalide');
 
@@ -750,6 +837,9 @@ export class SubscriptionRenewalService implements OnApplicationBootstrap, OnMod
           providerSubscriptionId: stripeSubId,
           providerCustomerId: session.customer ?? null,
           currentPeriodEnd: unixToIso(stripeSub?.current_period_end),
+          amountCents: session.amount_total ?? null,
+          currency: session.currency ? String(session.currency).toUpperCase() : null,
+          promoCode: meta.promo_code ?? null,
         });
         this.logger.log(`Stripe abo mentorat activé — user=${userId} plan=${planSlug} sub=${stripeSubId}`);
       } else {
@@ -769,10 +859,29 @@ export class SubscriptionRenewalService implements OnApplicationBootstrap, OnMod
       return;
     }
 
+    if (event.type === 'payment_intent.succeeded') {
+      const pi = event.data?.object ?? {};
+      const meta = pi.metadata ?? {};
+      const userId: string | undefined = meta.user_id;
+      const tenantId: string | null = meta.tenant_id ?? null;
+      const kind: string | null = meta.kind ?? null;
+      const planSlug: string | null = meta.plan_slug ?? null;
+      // Les abonnements intégrés sont fulfill par invoice.paid afin d'avoir
+      // provider_subscription_id + période. Ici on couvre les paiements uniques.
+      if (userId && kind !== 'subscription') {
+        await this.notifyOneOffPayment(userId, tenantId, kind, pi.amount_received ?? pi.amount ?? null, pi.currency ?? null);
+        await this.grantServiceAccessIfBookable(
+          userId,
+          tenantId,
+          planSlug,
+          pi.id ?? null,
+        );
+      }
+      return;
+    }
+
     if (event.type === 'invoice.paid' || event.type === 'invoice.payment_succeeded') {
       const invoice = event.data?.object ?? {};
-      // La 1re facture est déjà couverte par checkout.session.completed → pas de double prolongation.
-      if (invoice.billing_reason === 'subscription_create') return;
       // L'objet `invoice` a été restructuré selon la version d'API Stripe : on cherche l'ID
       // d'abonnement aux emplacements connus (legacy + 2024+/clover) pour rester robuste.
       const line0 = invoice.lines?.data?.[0] ?? {};
@@ -790,6 +899,35 @@ export class SubscriptionRenewalService implements OnApplicationBootstrap, OnMod
         .select('id')
         .eq('provider_subscription_id', stripeSubId)
         .maybeSingle();
+      if (sub && invoice.billing_reason === 'subscription_create') {
+        // Checkout Session a déjà provisionné l'abonnement via checkout.session.completed.
+        // Les abonnements intégrés arrivent ici sans ligne locale, donc ils restent traités
+        // dans le bloc suivant.
+        return;
+      }
+      if (!sub && invoice.billing_reason === 'subscription_create') {
+        const stripeSub = await stripeFetchSubscription(stripeSubId, matchedStripeSecret);
+        const meta = stripeSub?.metadata ?? invoice.subscription_details?.metadata ?? line0.metadata ?? {};
+        if (meta?.user_id && meta?.plan_slug) {
+          await this.createOrExtendSubscription(meta.user_id, meta.plan_slug, {
+            tenantId: meta.tenant_id ?? null,
+            provider: 'stripe',
+            providerSubscriptionId: stripeSubId,
+            providerCustomerId: invoice.customer ?? stripeSub?.customer ?? null,
+            currentPeriodEnd:
+              unixToIso(stripeSub?.current_period_end) ??
+              unixToIso(line0.period?.end) ??
+              unixToIso(invoice.period_end),
+            amountCents: invoice.amount_paid ?? invoice.amount_due ?? null,
+            currency: invoice.currency ? String(invoice.currency).toUpperCase() : null,
+            promoCode: meta.promo_code ?? null,
+          });
+          this.logger.log(`Stripe abo intégré activé — user=${meta.user_id} plan=${meta.plan_slug} sub=${stripeSubId}`);
+        } else {
+          this.logger.warn(`invoice.paid initial : metadata abonnement absentes sub=${stripeSubId}`);
+        }
+        return;
+      }
       if (!sub) {
         this.logger.warn(`invoice.paid : abonnement Stripe introuvable sub=${stripeSubId}`);
         return;
@@ -803,6 +941,149 @@ export class SubscriptionRenewalService implements OnApplicationBootstrap, OnMod
         .eq('id', sub.id);
       this.logger.log(`Renouvellement Stripe — sub=${sub.id} → ${periodEnd}`);
       return;
+    }
+
+    if (event.type === 'invoice.payment_failed') {
+      const invoice = event.data?.object ?? {};
+      const line0 = invoice.lines?.data?.[0] ?? {};
+      const stripeSubId =
+        invoice.subscription ??
+        invoice.parent?.subscription_details?.subscription ??
+        line0.parent?.subscription_item_details?.subscription ??
+        line0.subscription ??
+        null;
+      if (!stripeSubId) {
+        this.logger.warn('invoice.payment_failed : aucun subscription id dans la facture');
+        return;
+      }
+      await this.markStripeSubscriptionPastDue(stripeSubId, {
+        invoiceId: invoice.id ?? null,
+        amountCents: invoice.amount_due ?? null,
+        currency: invoice.currency ? String(invoice.currency).toUpperCase() : null,
+      });
+      return;
+    }
+
+    if (event.type === 'customer.subscription.updated') {
+      const sub = event.data?.object ?? {};
+      if (!sub?.id) return;
+      const status = String(sub.status || '').toLowerCase();
+      const mappedStatus =
+        status === 'active' || status === 'trialing'
+          ? 'active'
+          : status === 'past_due' || status === 'unpaid'
+            ? 'past_due'
+            : status === 'canceled'
+              ? 'canceled'
+              : status === 'incomplete_expired'
+                ? 'expired'
+                : 'pending';
+      const patch: Record<string, unknown> = {
+        status: mappedStatus,
+        updated_at: new Date().toISOString(),
+      };
+      if (sub.current_period_start) patch.current_period_start = unixToIso(sub.current_period_start);
+      if (sub.current_period_end) patch.current_period_end = unixToIso(sub.current_period_end);
+      await this.subs.update(patch).eq('provider_subscription_id', sub.id);
+      if (mappedStatus === 'past_due') await this.markStripeSubscriptionPastDue(sub.id, {});
+      return;
+    }
+
+    if (event.type === 'customer.subscription.deleted') {
+      const sub = event.data?.object ?? {};
+      if (!sub?.id) return;
+      await this.subs
+        .update({ status: 'canceled', updated_at: new Date().toISOString() })
+        .eq('provider_subscription_id', sub.id);
+      await this.notifyStripeSubscriptionCanceled(sub.id);
+      return;
+    }
+  }
+
+  private async markStripeSubscriptionPastDue(
+    providerSubscriptionId: string,
+    invoice?: { invoiceId?: string | null; amountCents?: number | null; currency?: string | null },
+  ): Promise<void> {
+    const { data: rows } = await this.subs
+      .select('id, tenant_id, user_id, plan_id')
+      .eq('provider_subscription_id', providerSubscriptionId);
+    const sub = Array.isArray(rows) ? rows[0] : rows;
+    if (!sub?.id) {
+      this.logger.warn(`invoice.payment_failed : abonnement local introuvable sub=${providerSubscriptionId}`);
+      return;
+    }
+    await this.subs
+      .update({ status: 'past_due', updated_at: new Date().toISOString() })
+      .eq('id', sub.id);
+    try {
+      await (this.supabase as any).from('billing_invoices').insert({
+        tenant_id: sub.tenant_id,
+        subscription_id: sub.id,
+        provider: 'stripe',
+        status: 'failed',
+        amount_cents: invoice?.amountCents ?? 0,
+        currency: invoice?.currency ?? 'EUR',
+        provider_invoice_id: invoice?.invoiceId ?? null,
+        invoice_number: `LIRI-FAILED-${Date.now().toString(36).toUpperCase()}`,
+        description: `Échec de prélèvement — ${sub.plan_id}`,
+        metadata: {
+          source: 'stripe-webhook',
+          event: 'invoice.payment_failed',
+          provider_subscription_id: providerSubscriptionId,
+        },
+      });
+    } catch (e) {
+      this.logger.warn(`facture échec paiement non créée (sub=${sub.id}): ${(e as Error).message}`);
+    }
+    if (sub.user_id && sub.tenant_id) {
+      await this.notifyStudentPaymentIssue(
+        sub.user_id,
+        sub.tenant_id,
+        'Paiement non abouti',
+        `Le prélèvement de votre forfait ${sub.plan_id || ''} n’a pas abouti. Votre accès reste ouvert pendant la période de grâce ; mettez à jour votre paiement pour éviter la coupure.`,
+        '/liri/compte?section=facturation',
+      );
+    }
+    this.logger.warn(`Stripe abonnement past_due — user=${sub.user_id} plan=${sub.plan_id} sub=${providerSubscriptionId}`);
+  }
+
+  private async notifyStripeSubscriptionCanceled(providerSubscriptionId: string): Promise<void> {
+    const { data: sub } = await this.subs
+      .select('id, tenant_id, user_id, plan_id')
+      .eq('provider_subscription_id', providerSubscriptionId)
+      .maybeSingle();
+    if (!sub?.user_id || !sub?.tenant_id) return;
+    await this.notifyStudentPaymentIssue(
+      sub.user_id,
+      sub.tenant_id,
+      'Forfait annulé',
+      `Votre forfait ${sub.plan_id || ''} est annulé. Vous pouvez choisir une nouvelle offre depuis Liri Portail.`,
+      '/liri/forfaits',
+    );
+  }
+
+  private async notifyStudentPaymentIssue(
+    userId: string,
+    tenantId: string,
+    title: string,
+    body: string,
+    actionUrl: string,
+  ): Promise<void> {
+    try {
+      await (this.supabase as any).from('notifications').insert({
+        tenant_id: tenantId,
+        user_id: userId,
+        type: 'info',
+        priority: 'normal',
+        title,
+        body,
+        action_url: actionUrl,
+        is_read: false,
+        is_silent: false,
+        sent_email: false,
+      });
+    } catch (e) {
+      this.logger.warn(`notif incident paiement (user=${userId}): ${(e as Error).message}`);
     }
   }
 
@@ -841,6 +1122,8 @@ export class SubscriptionRenewalService implements OnApplicationBootstrap, OnMod
       await this.createOrExtendSubscription(dep.user_id, dep.plan_slug, {
         tenantId: dep.tenant_id ?? null,
         provider: 'pawapay',
+        amountCents: dep.amount_cents ?? null,
+        currency: dep.currency ?? null,
       });
     } else {
       // Don / offrande / consultation : pas d'accès à ouvrir, juste un reçu

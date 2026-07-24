@@ -23,6 +23,7 @@ import { useTenantBranding } from '@/hooks/useTenantBranding';
 import { isPlatformOrDevHost } from '@/lib/tenantResolver';
 import { FOUNDER_SLUG } from '@/lib/tenant/activeTenantConfig';
 import { Ripple, AnimatedForm } from '@/components/ui/animated-sign-in';
+import { authStore } from '@/lib/auth-store';
 
 const LIRI_CTA = {
   // Coral → clay du PORTAIL LIRI (--coral #d97757 / --clay #c2683f). JAMAIS de violet
@@ -31,6 +32,11 @@ const LIRI_CTA = {
   boxShadow: EV_SH.cta,
   borderRadius: EV_R.lg,
 };
+
+function tenantSlugFromPath(path = '') {
+  const m = String(path || '').match(/^\/t\/([^/?#]+)/i);
+  return m?.[1] ? decodeURIComponent(m[1]).trim().toLowerCase() : '';
+}
 
 const LoginPage = () => {
   const [formData, setFormData] = useState({ email: '', password: '' });
@@ -103,6 +109,7 @@ const LoginPage = () => {
   const isLiriMobileAuth = location.pathname.startsWith('/m/eleve/login');
   const spLogin = new URLSearchParams(location?.search || '');
   const redirectParam = spLogin.get('redirect') || spLogin.get('next');
+  const stateFromPath = location.state?.from?.pathname || '';
 
   // B — LA CONNEXION PASSE PAR L'OS IMMERSIF (l'OS possède l'identité — décision fondateur). Sur
   // prorascience.org, /login n'est qu'un REPLI : on renvoie vers la home OS avec l'intention
@@ -119,7 +126,7 @@ const LoginPage = () => {
   // Défaut post-login : sur l'hôte PLATEFORME LIRI (localhost / liri.cimolace.space, sans
   // tenant résolu) → le PORTAIL LIRI (/liri), surtout PAS /dashboard qui retombe sur la
   // chrome ISNA Academy. Sur un domaine de tenant → son /dashboard (son académie).
-  const from = redirectParam || location.state?.from?.pathname
+  const from = redirectParam || stateFromPath
     || (isLiriMobileAuth ? ELEVE_MOBILE.home : (isPlatformLiri ? '/liri' : '/dashboard'));
 
   // Sur petit écran, `/login` (liens, ProtectedRoute, e-mails…) envoie vers le parcours LIRI.
@@ -145,9 +152,14 @@ const LoginPage = () => {
     }
     setIsLoading(true);
     try {
-      const { error } = await login(formData.email, formData.password);
+      const { data, error } = await login(formData.email, formData.password);
       if (error) throw error;
       clearSelectedAccountRole();
+      const tenantFromEntry = tenantSlugFromPath(redirectParam || stateFromPath || from);
+      const tenantFromUser = String(data?.session?.user?.user_metadata?.tenant_slug || '').trim().toLowerCase();
+      if (tenantFromEntry) authStore.setTenantSlug(tenantFromEntry);
+      else if (tenantFromUser) authStore.setTenantSlug(tenantFromUser);
+      else if (tenantCtx.slug && !isPlatformLiri) authStore.setTenantSlug(tenantCtx.slug);
       navigate(from, { replace: true });
     } catch (err) {
       if (err.message?.includes('Invalid login credentials')) {
