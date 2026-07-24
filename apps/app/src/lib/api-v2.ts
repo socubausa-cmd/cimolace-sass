@@ -1121,9 +1121,12 @@ export const joinApi = {
 };
 
 // ── Bibliothèque du Précepteur (cours générés depuis TikTok) ─────────────────
+// ⚠️ PIÈGE double enveloppe {data:{data:[…]}} (contrôleur renvoie {data} + intercepteur global
+// re-emballe) → dépiler EN PROFONDEUR jusqu'à la valeur utile (cf. MessagingContext).
+const deep = (r: any): any => { let d = r; while (d && !Array.isArray(d) && typeof d === 'object' && 'data' in d) d = d.data; return d; };
 export const precepteurLibraryApi = {
-  list: () => apiV2.get<ApiEnvelope<any[]>>('/precepteur-library').then(unwrap),
-  get: (id: string) => apiV2.get<ApiEnvelope<any>>(`/precepteur-library/${id}`).then(unwrap),
+  list: (): Promise<any[]> => apiV2.get<ApiEnvelope<any[]>>('/precepteur-library').then(deep).then((d) => (Array.isArray(d) ? d : [])),
+  get: (id: string): Promise<any> => apiV2.get<ApiEnvelope<any>>(`/precepteur-library/${id}`).then(deep),
 };
 
 // ── Studio monétisation propriétaire ─────────────────────────────────────────
