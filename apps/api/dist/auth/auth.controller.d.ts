@@ -10,5 +10,6 @@ export declare class AuthController {
         token: string;
         expiresAt: string;
         tenantSlug: string;
+        role: string;
     }>;
 }

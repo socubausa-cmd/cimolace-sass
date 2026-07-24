@@ -12,6 +12,9 @@ const auth_module_1 = require("../auth/auth.module");
 const tenant_module_1 = require("../tenant/tenant.module");
 const pawapay_module_1 = require("../pawapay/pawapay.module");
 const tenant_payment_config_module_1 = require("../billing/tenant-payment-config/tenant-payment-config.module");
+const email_engine_module_1 = require("../email-engine/email-engine.module");
+const liri_entitlements_module_1 = require("../billing/liri-entitlements.module");
+const marketing_module_1 = require("../marketing/marketing.module");
 const checkout_service_1 = require("./checkout.service");
 const checkout_controller_1 = require("./checkout.controller");
 const offering_checkout_service_1 = require("./offering-checkout.service");
@@ -22,7 +25,7 @@ let CheckoutModule = class CheckoutModule {
 exports.CheckoutModule = CheckoutModule;
 exports.CheckoutModule = CheckoutModule = __decorate([
     (0, common_1.Module)({
-        imports: [auth_module_1.AuthModule, tenant_module_1.TenantModule, pawapay_module_1.PawaPayModule, tenant_payment_config_module_1.TenantPaymentConfigModule],
+        imports: [auth_module_1.AuthModule, tenant_module_1.TenantModule, pawapay_module_1.PawaPayModule, tenant_payment_config_module_1.TenantPaymentConfigModule, email_engine_module_1.EmailEngineModule, liri_entitlements_module_1.LiriEntitlementsModule, marketing_module_1.MarketingModule],
         controllers: [checkout_controller_1.CheckoutController, offering_checkout_controller_1.OfferingCheckoutController],
         providers: [checkout_service_1.CheckoutService, offering_checkout_service_1.OfferingCheckoutService, subscription_renewal_service_1.SubscriptionRenewalService],
     })

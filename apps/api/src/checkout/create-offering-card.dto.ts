@@ -18,6 +18,12 @@ export class CreateOfferingCardDto {
   @Length(3, 80)
   planSlug?: string;
 
+  /** Code promo optionnel — validé côté serveur sur promo_codes du tenant. */
+  @IsOptional()
+  @IsString()
+  @Length(2, 64)
+  promoCode?: string;
+
   /** Montant en centimes — requis pour consultation/donation (ignoré pour un abonnement). */
   @IsOptional()
   @IsInt()

@@ -23,7 +23,7 @@ let LiveController = class LiveController {
     constructor(svc) {
         this.svc = svc;
     }
-    async create(req, b) { return { data: await this.svc.createSession(req.tenant.id, b) }; }
+    async create(req, b) { return { data: await this.svc.createSession(req.tenant.id, { ...b, host_user_id: b?.host_user_id ?? b?.teacher_id ?? req.user?.id }) }; }
     async findAll(req) { return { data: await this.svc.findAll(req.tenant.id) }; }
     async findOne(req, id) { return { data: await this.svc.findOne(req.tenant.id, id) }; }
     async token(req, id, b) { return { data: await this.svc.generateToken(id, req.user.id, b?.role, req.tenant) }; }

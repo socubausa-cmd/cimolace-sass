@@ -46,6 +46,13 @@ export class OfferingCheckoutController {
     return this.svc.createStripeCheckout(user.id, dto, user.email);
   }
 
+  /** Paiement CARTE intégré (Stripe Payment Element) — sans redirection carte classique. */
+  @Post('card-intent')
+  @UseGuards(JwtAuthGuard)
+  cardIntent(@Body() dto: CreateOfferingCardDto, @CurrentUser() user: AuthUser) {
+    return this.svc.createStripeEmbeddedIntent(user.id, dto, user.email);
+  }
+
   /** Paiement PAYPAL — crée un ordre (Orders v2), renvoie { orderId, approveUrl }. */
   @Post('paypal/create-order')
   @UseGuards(JwtAuthGuard)
@@ -74,6 +81,20 @@ export class OfferingCheckoutController {
     @Body() body: CreateOfferingCardDto & { email: string; first_name?: string; last_name?: string },
   ) {
     return this.svc.guestStripeCheckout(body);
+  }
+
+  /** Paiement CARTE intégré invité → provisionne + Stripe Payment Element. */
+  @Post('guest-card-intent')
+  guestCardIntent(
+    @Body() body: CreateOfferingCardDto & { email: string; first_name?: string; last_name?: string },
+  ) {
+    return this.svc.guestStripeEmbeddedIntent(body);
+  }
+
+  /** Finalisation post-confirmPayment du paiement carte intégré (idempotent). */
+  @Post('embedded-finalize')
+  embeddedFinalize(@Body() body: { tenantSlug?: string; subscriptionId?: string; paymentIntentId?: string }) {
+    return this.svc.finalizeStripeEmbeddedPayment(body);
   }
 
   /**

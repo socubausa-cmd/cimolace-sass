@@ -16,7 +16,6 @@
 import { useEffect, useState } from 'react';
 import { Lock, ArrowRight, Sparkles } from 'lucide-react';
 import { supabase } from '@/lib/customSupabaseClient';
-import { resolveTenantSlug } from '@/lib/tenant/activeBranding';
 import { useMemberEntitlements } from '@/hooks/useMemberEntitlements';
 
 const ZERO_DECIMAL = new Set(['XAF', 'XOF', 'XPF', 'JPY', 'KRW', 'RWF', 'GNF', 'KMF', 'BIF', 'DJF', 'UGX']);
@@ -43,9 +42,8 @@ export default function UpsellLock({ feature, title, benefit, variant = 'card', 
   // Accès accordé (ou staff, ou feature inconnue) → on rend le contenu tel quel, aucun lock.
   if (isStaff || can(feature)) return children;
 
-  const slug = resolveTenantSlug();
-  const href = (u.planKey && slug)
-    ? `/t/${slug}/paiement?plan=${encodeURIComponent(u.planKey)}&type=subscription`
+  const href = u.planKey
+    ? `/liri/forfaits?plan=${encodeURIComponent(u.planKey)}&checkout=1`
     : '/liri/forfaits';
   const tierLabel = u.minCycleLabel || 'un palier supérieur';
 

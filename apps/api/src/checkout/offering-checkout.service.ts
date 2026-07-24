@@ -11,7 +11,16 @@ import { AuthService } from '../auth/auth.service';
 import { PawaPayService } from '../pawapay/pawapay.service';
 import { CreateOfferingDepositDto } from './create-offering-deposit.dto';
 import { CreateOfferingCardDto } from './create-offering-card.dto';
-import { isStripeConfigured, stripeCreateCheckoutSession } from '../billing/stripe-rest.util';
+import {
+  isStripeConfigured,
+  stripeCreateCheckoutSession,
+  stripeCreateCustomer,
+  stripeCreateIncompleteSubscription,
+  stripeCreatePaymentIntent,
+  stripeCreatePrice,
+  stripeCreateProduct,
+  stripeFetchSubscription,
+} from '../billing/stripe-rest.util';
 import {
   resolvePaypalCreds,
   normalizePaypalMode,
@@ -96,15 +105,8 @@ export class OfferingCheckoutService {
    */
   async createMobileMoneyDeposit(userId: string, dto: CreateOfferingDepositDto) {
     // 1) Montant — calculé serveur pour un abonnement, fourni pour consultation/don
-    const { amountCents, planSlug, currency } = await this.resolveAmount(dto);
-
-    // 1.bis) Mobile money africain : l'opérateur règle en monnaie LOCALE (XOF/XAF…), jamais en EUR.
-    //        Zone CFA pegée à l'euro (taux fixe légal) → conversion EXACTE du prix EUR vers le CFA.
-    const { amount: depositAmount, currency: depositCurrency } = this.toMobileMoneyAmount(
-      amountCents,
-      currency,
-      dto.country,
-    );
+    const resolved = await this.resolveAmount(dto);
+    let { amountCents, planSlug, currency } = resolved;
 
     // 2) Tenant qui encaisse (dto.tenantSlug, défaut 'isna' — rétrocompatible)
     const tenantSlug = this.resolveTenantSlug(dto.tenantSlug);
@@ -115,6 +117,17 @@ export class OfferingCheckoutService {
       .eq('status', 'active')
       .maybeSingle();
     if (!tenant) throw new NotFoundException(`Tenant « ${tenantSlug} » introuvable ou inactif`);
+
+    const promo = await this.applyPromoCode(tenant.id, amountCents, dto.promoCode);
+    amountCents = promo.amountCents;
+
+    // 1.bis) Mobile money africain : l'opérateur règle en monnaie LOCALE (XOF/XAF…), jamais en EUR.
+    //        Zone CFA pegée à l'euro (taux fixe légal) → conversion EXACTE du prix EUR vers le CFA.
+    const { amount: depositAmount, currency: depositCurrency } = this.toMobileMoneyAmount(
+      amountCents,
+      currency,
+      dto.country,
+    );
 
     // 2.bis) Credentials PawaPay DU TENANT (si configurés + enabled) — sinon null → env.
     //         Lecture serveur-à-serveur ; resolveTenantProviderCreds ne lève jamais.
@@ -177,6 +190,7 @@ export class OfferingCheckoutService {
           { tenantId: String(tenant.id) },
           { kind: String(dto.kind ?? '') },
           { planSlug: planSlug ?? '' },
+          { promoCode: promo.promoCode ?? '' },
         ] as Record<string, string>[]).filter(
           (m) => String(Object.values(m)[0] ?? '').length > 0,
         ),
@@ -187,8 +201,17 @@ export class OfferingCheckoutService {
     await this.ppDeposits
       .update({ pawapay_status: result.status })
       .eq('deposit_id', depositId);
+    await this.markPromoCodeUsed(tenant.id, promo.promoCode);
 
-    return { depositId, status: result.status, amountCents: depositAmount, currency: depositCurrency };
+    return {
+      depositId,
+      status: result.status,
+      amountCents: depositAmount,
+      currency: depositCurrency,
+      originalAmountCents: promo.originalAmountCents,
+      discountCents: promo.discountCents,
+      promoCode: promo.promoCode,
+    };
   }
 
   // Zone franc CFA : pegée à l'euro à un taux FIXE légal (1 € = 655,957 CFA). XOF = Afrique de
@@ -280,6 +303,129 @@ export class OfferingCheckoutService {
     return { amountCents: dto.amountCents, planSlug: dto.planSlug ?? null, currency: 'EUR', billingCycle: 'monthly' };
   }
 
+  private normalizePromoCode(code?: string | null): string | null {
+    const c = String(code || '').trim().toUpperCase().replace(/\s+/g, '');
+    return c.length >= 2 ? c : null;
+  }
+
+  private guestDisplayName(firstName?: string, lastName?: string, email?: string): string {
+    const name = [firstName, lastName].map((v) => String(v || '').trim()).filter(Boolean).join(' ');
+    if (name) return name;
+    return String(email || '').split('@')[0] || 'Élève';
+  }
+
+  private async applyPromoCode(
+    tenantId: string,
+    amountCents: number,
+    promoCode?: string | null,
+  ): Promise<{
+    amountCents: number;
+    originalAmountCents: number;
+    discountCents: number;
+    promoCode: string | null;
+  }> {
+    const code = this.normalizePromoCode(promoCode);
+    if (!code) {
+      return { amountCents, originalAmountCents: amountCents, discountCents: 0, promoCode: null };
+    }
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { data: promo, error } = await (this.supabase as any)
+      .from('promo_codes')
+      .select('id, code, discount_type, discount_value, max_uses, uses_count, expires_at, is_active')
+      .eq('tenant_id', tenantId)
+      .ilike('code', code)
+      .maybeSingle();
+
+    if (error || !promo || promo.is_active === false) {
+      throw new BadRequestException('Code promo invalide ou inactif.');
+    }
+    if (promo.expires_at && new Date(promo.expires_at).getTime() < Date.now()) {
+      throw new BadRequestException('Code promo expiré.');
+    }
+    if (promo.max_uses != null && Number(promo.uses_count || 0) >= Number(promo.max_uses)) {
+      throw new BadRequestException('Code promo épuisé.');
+    }
+
+    const rawValue = Math.max(0, Number(promo.discount_value || 0));
+    const discount =
+      promo.discount_type === 'percent'
+        ? Math.floor((amountCents * Math.min(rawValue, 100)) / 100)
+        : Math.floor(rawValue);
+    // On reste dans un flux de paiement : une remise 100% doit passer par claim-free.
+    const cappedDiscount = Math.max(0, Math.min(discount, Math.max(0, amountCents - 100)));
+    return {
+      amountCents: amountCents - cappedDiscount,
+      originalAmountCents: amountCents,
+      discountCents: cappedDiscount,
+      promoCode: String(promo.code || code).toUpperCase(),
+    };
+  }
+
+  private async markPromoCodeUsed(tenantId: string, promoCode?: string | null): Promise<void> {
+    const code = this.normalizePromoCode(promoCode);
+    if (!tenantId || !code) return;
+    try {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const { data: promo } = await (this.supabase as any)
+        .from('promo_codes')
+        .select('id, uses_count')
+        .eq('tenant_id', tenantId)
+        .ilike('code', code)
+        .maybeSingle();
+      if (!promo?.id) return;
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      await (this.supabase as any)
+        .from('promo_codes')
+        .update({ uses_count: Number(promo.uses_count || 0) + 1 })
+        .eq('id', promo.id);
+    } catch (e) {
+      this.logger.warn(`promo uses_count non incrémenté (${code}): ${(e as Error).message}`);
+    }
+  }
+
+  private async resolveStripeRuntime(tenantId: string): Promise<{
+    secretKey: string | null;
+    publishableKey: string | null;
+    mode: string | null;
+  }> {
+    const tenantStripe = await this.tenantPayments.resolveTenantProviderCreds(tenantId, 'stripe');
+    const secretKey = tenantStripe?.creds?.secret_key || null;
+    let publishableKey =
+      tenantStripe?.creds?.publishable_key ||
+      tenantStripe?.creds?.public_key ||
+      tenantStripe?.creds?.stripe_publishable_key ||
+      null;
+
+    if (!publishableKey) {
+      try {
+        // Chemin historique edge `tenant-payments` : public_key plat, secret_key plat.
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const { data: row } = await (this.supabase as any)
+          .from('tenant_payment_providers')
+          .select('public_key, mode, is_active')
+          .eq('tenant_id', tenantId)
+          .eq('provider', 'stripe')
+          .maybeSingle();
+        if (row && row.is_active !== false && row.public_key) {
+          publishableKey = String(row.public_key);
+        }
+      } catch {
+        /* repli env */
+      }
+    }
+
+    return {
+      secretKey,
+      publishableKey:
+        publishableKey ||
+        process.env.STRIPE_PUBLISHABLE_KEY ||
+        process.env.VITE_STRIPE_PUBLISHABLE_KEY ||
+        null,
+      mode: tenantStripe?.mode ?? null,
+    };
+  }
+
   /**
    * Crée une session Stripe Checkout (CARTE) pour une offre PRORASCIENCE :
    * - subscription → mode 'subscription' (prix récurrent mensuel inline → débit auto Stripe)
@@ -288,7 +434,8 @@ export class OfferingCheckoutService {
    * (POST /offering-checkout/webhook/stripe), comme pour pawaPay.
    */
   async createStripeCheckout(userId: string, dto: CreateOfferingCardDto, userEmail?: string) {
-    const { amountCents, planSlug, currency, billingCycle } = await this.resolveAmount(dto);
+    const resolved = await this.resolveAmount(dto);
+    let { amountCents, planSlug, currency, billingCycle } = resolved;
 
     // Tenant qui encaisse (dto.tenantSlug, défaut 'isna' — rétrocompatible).
     const tenantSlug = this.resolveTenantSlug(dto.tenantSlug);
@@ -299,6 +446,9 @@ export class OfferingCheckoutService {
       .eq('status', 'active')
       .maybeSingle();
     if (!tenant) throw new NotFoundException(`Tenant « ${tenantSlug} » introuvable ou inactif`);
+
+    const promo = await this.applyPromoCode(tenant.id, amountCents, dto.promoCode);
+    amountCents = promo.amountCents;
 
     // Clé Stripe DU TENANT (si configurée + enabled) — sinon null → env plateforme.
     // resolveTenantProviderCreds ne lève jamais : pas de config → fallback transparent.
@@ -353,12 +503,18 @@ export class OfferingCheckoutService {
     params.append('metadata[user_id]', userId);
     params.append('metadata[tenant_id]', tenant.id);
     params.append('metadata[kind]', dto.kind);
+    params.append('metadata[original_amount_cents]', String(promo.originalAmountCents));
+    params.append('metadata[discount_cents]', String(promo.discountCents));
+    if (promo.promoCode) params.append('metadata[promo_code]', promo.promoCode);
     if (planSlug) params.append('metadata[plan_slug]', planSlug);
     // Propage les metadata sur l'abonnement → exploitables aux renouvellements (invoice.paid).
     if (isSubscription) {
       params.append('subscription_data[metadata][user_id]', userId);
       params.append('subscription_data[metadata][tenant_id]', tenant.id);
       params.append('subscription_data[metadata][kind]', dto.kind);
+      params.append('subscription_data[metadata][original_amount_cents]', String(promo.originalAmountCents));
+      params.append('subscription_data[metadata][discount_cents]', String(promo.discountCents));
+      if (promo.promoCode) params.append('subscription_data[metadata][promo_code]', promo.promoCode);
       if (planSlug) params.append('subscription_data[metadata][plan_slug]', planSlug);
     }
     if (userEmail) params.append('customer_email', userEmail);
@@ -373,6 +529,7 @@ export class OfferingCheckoutService {
         `Impossible de créer la session de paiement carte : ${(e as Error).message}`,
       );
     }
+    await this.markPromoCodeUsed(tenant.id, promo.promoCode);
 
     return {
       checkoutUrl: session.url,
@@ -380,6 +537,169 @@ export class OfferingCheckoutService {
       amountCents,
       currency,
       mode: isSubscription ? 'subscription' : 'payment',
+      originalAmountCents: promo.originalAmountCents,
+      discountCents: promo.discountCents,
+      promoCode: promo.promoCode,
+    };
+  }
+
+  /**
+   * Paiement carte intégré (Stripe Payment Element), sans redirection pour les
+   * cartes classiques. Abonnement → vraie Subscription Stripe incomplete (donc
+   * renouvellement mensuel Stripe natif). Paiement unique → PaymentIntent.
+   */
+  async createStripeEmbeddedIntent(userId: string, dto: CreateOfferingCardDto, userEmail?: string) {
+    const resolved = await this.resolveAmount(dto);
+    let { amountCents, planSlug, currency, billingCycle } = resolved;
+
+    const tenantSlug = this.resolveTenantSlug(dto.tenantSlug);
+    const { data: tenant } = await this.supabase
+      .from('tenants')
+      .select('id')
+      .eq('slug', tenantSlug)
+      .eq('status', 'active')
+      .maybeSingle();
+    if (!tenant) throw new NotFoundException(`Tenant « ${tenantSlug} » introuvable ou inactif`);
+
+    const promo = await this.applyPromoCode(tenant.id, amountCents, dto.promoCode);
+    amountCents = promo.amountCents;
+
+    const stripe = await this.resolveStripeRuntime(tenant.id);
+    if (!stripe.secretKey && !isStripeConfigured()) {
+      throw new ServiceUnavailableException(
+        'Paiement carte indisponible : aucune clé Stripe (ni tenant, ni STRIPE_SECRET_KEY plateforme).',
+      );
+    }
+    if (!stripe.publishableKey || !/^pk_(test|live)_/.test(stripe.publishableKey)) {
+      throw new ServiceUnavailableException(
+        'Paiement intégré indisponible : clé publiable Stripe absente. Utilisez Stripe Checkout ou configurez VITE_STRIPE_PUBLISHABLE_KEY / la clé publiable du tenant.',
+      );
+    }
+
+    const secretKey = stripe.secretKey ?? undefined;
+    const effectiveSecretKey = secretKey ?? process.env.STRIPE_SECRET_KEY ?? '';
+    const secretMode = effectiveSecretKey.startsWith('sk_live_')
+      ? 'live'
+      : effectiveSecretKey.startsWith('sk_test_')
+        ? 'test'
+        : null;
+    const publishableMode = stripe.publishableKey.startsWith('pk_live_')
+      ? 'live'
+      : stripe.publishableKey.startsWith('pk_test_')
+        ? 'test'
+        : null;
+    if (secretMode && publishableMode && secretMode !== publishableMode) {
+      throw new ServiceUnavailableException(
+        `Paiement intégré indisponible : clés Stripe incohérentes (${secretMode} côté serveur, ${publishableMode} côté navigateur). Utilisez une clé publiable pk_${secretMode}_… correspondant à la clé secrète active.`,
+      );
+    }
+
+    const isSubscription = dto.kind === 'subscription';
+    const productName =
+      dto.kind === 'subscription'
+        ? `Mentorat PRORASCIENCE${planSlug ? ` — ${planSlug}` : ''}`
+        : dto.kind === 'donation'
+          ? 'Offrande PRORASCIENCE'
+          : 'Consultation Ngowazulu (90 min)';
+
+    const commonMeta: Record<string, string> = {
+      user_id: userId,
+      tenant_id: tenant.id,
+      kind: dto.kind,
+      original_amount_cents: String(promo.originalAmountCents),
+      discount_cents: String(promo.discountCents),
+      payment_surface: 'embedded',
+    };
+    if (planSlug) commonMeta.plan_slug = planSlug;
+    if (promo.promoCode) commonMeta.promo_code = promo.promoCode;
+
+    let clientSecret: string | null = null;
+    let intentId: string | null = null;
+    let subscriptionId: string | null = null;
+
+    try {
+      if (isSubscription) {
+        const customerParams = new URLSearchParams();
+        if (userEmail) customerParams.append('email', userEmail);
+        customerParams.append('metadata[user_id]', userId);
+        customerParams.append('metadata[tenant_id]', tenant.id);
+        const customer = await stripeCreateCustomer(customerParams, secretKey);
+
+        const productParams = new URLSearchParams();
+        productParams.append('name', productName);
+        productParams.append('metadata[tenant_id]', tenant.id);
+        if (planSlug) productParams.append('metadata[plan_slug]', planSlug);
+        const product = await stripeCreateProduct(productParams, secretKey);
+
+        const priceParams = new URLSearchParams();
+        priceParams.append('currency', currency.toLowerCase());
+        priceParams.append('unit_amount', String(amountCents));
+        priceParams.append('product', product.id);
+        if (billingCycle === 'yearly') {
+          priceParams.append('recurring[interval]', 'year');
+        } else if (billingCycle === 'quarterly') {
+          priceParams.append('recurring[interval]', 'month');
+          priceParams.append('recurring[interval_count]', '3');
+        } else {
+          priceParams.append('recurring[interval]', 'month');
+        }
+        const price = await stripeCreatePrice(priceParams, secretKey);
+
+        const subParams = new URLSearchParams();
+        subParams.append('customer', customer.id);
+        subParams.append('payment_behavior', 'default_incomplete');
+        subParams.append('payment_settings[save_default_payment_method]', 'on_subscription');
+        subParams.append('expand[]', 'latest_invoice.payment_intent');
+        subParams.append('expand[]', 'latest_invoice.confirmation_secret');
+        subParams.append('items[0][price]', price.id);
+        for (const [k, v] of Object.entries(commonMeta)) subParams.append(`metadata[${k}]`, v);
+        const sub = await stripeCreateIncompleteSubscription(subParams, secretKey);
+        subscriptionId = sub.id;
+        const invoice = typeof sub.latest_invoice === 'object' ? sub.latest_invoice : null;
+        const pi = invoice?.payment_intent ?? null;
+        if (pi && typeof pi === 'object') {
+          intentId = pi.id;
+          clientSecret = pi.client_secret;
+        }
+        const confirmationSecret = invoice?.confirmation_secret ?? null;
+        if (!clientSecret && confirmationSecret && typeof confirmationSecret === 'object') {
+          clientSecret = confirmationSecret.client_secret ?? null;
+        }
+      } else {
+        const piParams = new URLSearchParams();
+        piParams.append('amount', String(amountCents));
+        piParams.append('currency', currency.toLowerCase());
+        piParams.append('automatic_payment_methods[enabled]', 'true');
+        if (userEmail) piParams.append('receipt_email', userEmail);
+        piParams.append('description', productName);
+        for (const [k, v] of Object.entries(commonMeta)) piParams.append(`metadata[${k}]`, v);
+        const pi = await stripeCreatePaymentIntent(piParams, secretKey);
+        intentId = pi.id;
+        clientSecret = pi.client_secret;
+      }
+    } catch (e) {
+      this.logger.error('Stripe embedded intent (offering)', (e as Error).message);
+      throw new ServiceUnavailableException(
+        `Impossible d'initialiser le paiement intégré : ${(e as Error).message}`,
+      );
+    }
+
+    if (!clientSecret) {
+      throw new ServiceUnavailableException('Stripe n’a pas renvoyé de client_secret exploitable.');
+    }
+    await this.markPromoCodeUsed(tenant.id, promo.promoCode);
+
+    return {
+      clientSecret,
+      publishableKey: stripe.publishableKey,
+      paymentIntentId: intentId,
+      subscriptionId,
+      amountCents,
+      currency,
+      mode: isSubscription ? 'subscription' : 'payment',
+      originalAmountCents: promo.originalAmountCents,
+      discountCents: promo.discountCents,
+      promoCode: promo.promoCode,
     };
   }
 
@@ -424,7 +744,8 @@ export class OfferingCheckoutService {
    * client). Renvoie { orderId, approveUrl } : le front redirige vers approveUrl.
    */
   async createPaypalOrder(userId: string, dto: CreateOfferingCardDto) {
-    const { amountCents, planSlug, currency } = await this.resolveAmount(dto);
+    const resolved = await this.resolveAmount(dto);
+    let { amountCents, planSlug, currency } = resolved;
 
     const tenantSlug = this.resolveTenantSlug(dto.tenantSlug);
     const { data: tenant } = await this.supabase
@@ -434,6 +755,9 @@ export class OfferingCheckoutService {
       .eq('status', 'active')
       .maybeSingle();
     if (!tenant) throw new NotFoundException(`Tenant « ${tenantSlug} » introuvable ou inactif`);
+
+    const promo = await this.applyPromoCode(tenant.id, amountCents, dto.promoCode);
+    amountCents = promo.amountCents;
 
     const creds = await this.resolveTenantPaypalCreds(tenant.id);
     if (!creds) {
@@ -497,6 +821,7 @@ export class OfferingCheckoutService {
         `Impossible d'enregistrer l'ordre PayPal (migration paypal_orders requise ?) : ${insErr.message}`,
       );
     }
+    await this.markPromoCodeUsed(tenant.id, promo.promoCode);
 
     return {
       orderId: order.id,
@@ -504,6 +829,9 @@ export class OfferingCheckoutService {
       amountCents,
       currency,
       mode: creds.mode,
+      originalAmountCents: promo.originalAmountCents,
+      discountCents: promo.discountCents,
+      promoCode: promo.promoCode,
     };
   }
 
@@ -634,6 +962,54 @@ export class OfferingCheckoutService {
       userId = createRes.ok ? ((await createRes.json()) as { id: string }).id : await findId();
       if (!userId) throw new InternalServerErrorException('Provisionnement du compte invité impossible.');
     }
+
+    const displayName = this.guestDisplayName(firstName, lastName, em);
+    // Le schéma historique possède aussi public.users ; profiles.id y est rattaché
+    // par FK. Sans cette ligne, l'utilisateur Auth existe mais son espace élève
+    // reste invisible dans les écrans applicatifs.
+    const nowIso = new Date().toISOString();
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { error: appUserErr } = await (this.supabase as any).from('users').upsert(
+      {
+        id: userId,
+        email: em,
+        name: displayName,
+        role: 'CLIENT',
+        updatedAt: nowIso,
+      },
+      { onConflict: 'id' },
+    );
+    if (appUserErr) {
+      this.logger.warn(`Utilisateur applicatif invité non créé/mis à jour (${em}): ${appUserErr.message}`);
+    }
+
+    // Un acheteur invité doit avoir un vrai espace applicatif, pas seulement un
+    // compte Auth. Plusieurs écrans élève (dossier, notifications, gardes RLS)
+    // s'appuient sur public.profiles.
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { error: profileErr } = await (this.supabase as any).from('profiles').upsert(
+      {
+        id: userId,
+        email: em,
+        name: displayName,
+        full_name: displayName,
+        role: 'student',
+        status: 'active',
+        student_profile_completed: false,
+        metadata: {
+          source: 'guest-checkout',
+          tenant_id: tenantId,
+          first_name: firstName ?? null,
+          last_name: lastName ?? null,
+        },
+        updated_at: nowIso,
+      },
+      { onConflict: 'id' },
+    );
+    if (profileErr) {
+      this.logger.warn(`Profil invité non créé/mis à jour (${em}): ${profileErr.message}`);
+    }
+
     // PLAFOND D'OFFRE (monétisation) : un NOUVEL élève invité consomme un slot 'students'
     // (upsert ignoreDuplicates → un membre existant est no-op, donc on ne vérifie que les nouveaux).
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -775,6 +1151,70 @@ export class OfferingCheckoutService {
     const tenantId = await this.tenantIdBySlug(this.resolveTenantSlug(dto.tenantSlug));
     const userId = await this.provisionGuestUser(tenantId, dto.email, dto.first_name, dto.last_name);
     return this.createStripeCheckout(userId, dto, dto.email);
+  }
+
+  /** Paiement carte intégré INVITÉ : provisionne le compte puis crée le Payment Element. */
+  async guestStripeEmbeddedIntent(
+    dto: CreateOfferingCardDto & { email: string; first_name?: string; last_name?: string },
+  ) {
+    if (!dto.email) throw new BadRequestException('Email requis pour le paiement invité.');
+    const tenantId = await this.tenantIdBySlug(this.resolveTenantSlug(dto.tenantSlug));
+    const userId = await this.provisionGuestUser(tenantId, dto.email, dto.first_name, dto.last_name);
+    return this.createStripeEmbeddedIntent(userId, dto, dto.email);
+  }
+
+  /**
+   * Finalisation d'un paiement carte intégré après `stripe.confirmPayment`.
+   *
+   * En production, le webhook Stripe reste la source normale. En local/dev ou si
+   * le navigateur confirme sans redirection, cette route idempotente ferme la
+   * boucle immédiatement : abonnement actif, facture, membership, profil élève.
+   */
+  async finalizeStripeEmbeddedPayment(body: {
+    tenantSlug?: string;
+    subscriptionId?: string;
+    paymentIntentId?: string;
+  }) {
+    const subscriptionId = String(body?.subscriptionId || '').trim();
+    if (!subscriptionId.startsWith('sub_')) {
+      throw new BadRequestException('subscriptionId Stripe requis pour finaliser l’abonnement intégré.');
+    }
+
+    const tenantSlug = this.resolveTenantSlug(body?.tenantSlug);
+    const tenantId = await this.tenantIdBySlug(tenantSlug);
+    const stripe = await this.resolveStripeRuntime(tenantId);
+    const sub = await stripeFetchSubscription(subscriptionId, stripe.secretKey ?? undefined);
+    if (!sub?.id) throw new BadRequestException('Abonnement Stripe introuvable.');
+
+    const meta = sub.metadata ?? {};
+    if (meta.tenant_id && String(meta.tenant_id) !== tenantId) {
+      throw new BadRequestException('Abonnement Stripe hors tenant.');
+    }
+    const userId = String(meta.user_id || '').trim();
+    const planSlug = String(meta.plan_slug || '').trim();
+    if (!userId || !planSlug) {
+      throw new BadRequestException('Métadonnées Stripe incomplètes pour finaliser l’accès.');
+    }
+
+    const status = String(sub.status || '').toLowerCase();
+    if (!['active', 'trialing', 'incomplete'].includes(status)) {
+      throw new BadRequestException(`Abonnement Stripe non activable (${status || 'statut inconnu'}).`);
+    }
+
+    await this.renewals.createOrExtendSubscription(userId, planSlug, {
+      tenantId,
+      provider: 'stripe',
+      providerSubscriptionId: sub.id,
+      providerCustomerId: typeof sub.customer === 'string' ? sub.customer : sub.customer?.id ?? null,
+      currentPeriodEnd: sub.current_period_end ? new Date(Number(sub.current_period_end) * 1000).toISOString() : null,
+      amountCents: meta.original_amount_cents
+        ? Math.max(0, Number(meta.original_amount_cents) - Number(meta.discount_cents || 0))
+        : null,
+      currency: sub.currency ? String(sub.currency).toUpperCase() : null,
+      promoCode: meta.promo_code ?? null,
+    });
+
+    return { ok: true, userId, subscriptionId: sub.id, status };
   }
 
   /** Dépôt Mobile Money INVITÉ : provisionne le compte par email puis crée le dépôt PawaPay. */

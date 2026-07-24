@@ -14,10 +14,12 @@ const tenant_module_1 = require("../tenant/tenant.module");
 const livekit_module_1 = require("../livekit/livekit.module");
 const liri_entitlements_module_1 = require("../billing/liri-entitlements.module");
 const supabase_module_1 = require("../supabase/supabase.module");
+const email_engine_module_1 = require("../email-engine/email-engine.module");
 const live_service_1 = require("./live.service");
 const live_controller_1 = require("./live.controller");
 const live_replay_file_controller_1 = require("./live-replay-file.controller");
 const liri_admin_controller_1 = require("./liri-admin.controller");
+const live_guest_public_controller_1 = require("./live-guest-public.controller");
 const live_embed_service_1 = require("./embed/live-embed.service");
 const live_embed_controller_1 = require("./embed/live-embed.controller");
 const live_embed_token_guard_1 = require("./embed/live-embed-token.guard");
@@ -34,6 +36,7 @@ exports.LiveModule = LiveModule = __decorate([
             livekit_module_1.LiveKitModule,
             liri_entitlements_module_1.LiriEntitlementsModule,
             supabase_module_1.SupabaseModule,
+            email_engine_module_1.EmailEngineModule,
             jwt_1.JwtModule.register({}),
         ],
         controllers: [
@@ -41,6 +44,7 @@ exports.LiveModule = LiveModule = __decorate([
             live_replay_file_controller_1.LiveReplayFileController,
             live_controller_1.LiveController,
             liri_admin_controller_1.LiriAdminController,
+            live_guest_public_controller_1.LiveGuestPublicController,
             livekit_webhook_controller_1.LiveKitWebhookController,
         ],
         providers: [

@@ -1091,6 +1091,8 @@ const ProtectedImmersiveMessagingRoute = ({ children }) => {
   const { loading: billingLoading, status, inGrace } = useBilling();
   const [checkingVisitorAccess, setCheckingVisitorAccess] = useState(false);
   const [visitorCanChat, setVisitorCanChat] = useState(false);
+  const location = useLocation();
+  const isPreview = import.meta.env.DEV && new URLSearchParams(location.search).get('preview') === '1';
 
   useEffect(() => {
     let alive = true;
@@ -1127,6 +1129,8 @@ const ProtectedImmersiveMessagingRoute = ({ children }) => {
       alive = false;
     };
   }, [user, authSupabase]);
+
+  if (isPreview) return children;
 
   if (loading || billingLoading || checkingVisitorAccess) {
     return (

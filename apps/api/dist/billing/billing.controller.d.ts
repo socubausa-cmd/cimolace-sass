@@ -89,7 +89,7 @@ export declare class BillingController {
 export declare class AdminBillingController {
     private svc;
     constructor(svc: BillingService);
-    activate(tenantId: string, body: {
+    activate(req: any, tenantId: string, body: {
         plan?: string;
     }): Promise<{
         data: {
@@ -100,6 +100,19 @@ export declare class AdminBillingController {
             } | null;
             gating_enabled: boolean;
             plan: any;
+        };
+    }>;
+    paymentLink(req: any, tenantId: string, body: {
+        planKey?: string;
+        cycle?: string;
+    }): Promise<{
+        data: {
+            url: string;
+            session_id: string;
+            subscription_id: string | undefined;
+            plan: string | null;
+            amount_cents: any;
+            currency: any;
         };
     }>;
 }

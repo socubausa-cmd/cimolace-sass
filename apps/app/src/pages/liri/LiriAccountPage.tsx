@@ -1,14 +1,16 @@
 import { useEffect, useMemo, useState, type ReactNode } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import {
   UserRound, Building2, Users, CreditCard, Wallet, LogOut, Trash2,
   X, Loader2, Sparkles, Check, ArrowUpRight, SlidersHorizontal, Settings2,
   Eye, EyeOff, Copy, ShieldCheck, UserPlus, FileText, Globe, Palette, KeyRound, Image as ImageIcon,
+  CalendarClock,
 } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import { authStore } from '@/lib/auth-store';
 import { getApiBaseUrl } from '@/lib/apiBase';
 import { useAuth } from '@/hooks/useAuth';
+import { useBilling } from '@/contexts/BillingContext';
 import { supabase } from '@/lib/supabase';
 import LiriDomainSettings from '@/components/liri/LiriDomainSettings';
 import LiriMobileMoneySettings from '@/components/liri/LiriMobileMoneySettings';
@@ -24,9 +26,26 @@ interface Sub { status?: string; plan_id?: string; provider?: string; current_pe
 
 const DAY = 86_400_000;
 
+const planDisplayName = (value?: string | null) => {
+  const key = String(value || '').trim();
+  const label = ({
+    'autonome-monthly': 'Autonome',
+    autonome: 'Autonome',
+    'academique-monthly': 'Académique',
+    academique: 'Académique',
+    'prive-monthly': 'Privé',
+    prive: 'Privé',
+    'privilegie-monthly': 'Privilégié',
+    privilegie: 'Privilégié',
+  } as Record<string, string>)[key];
+  return label || key || 'Forfait';
+};
+
 export default function LiriAccountPage() {
   const nav = useNavigate();
+  const location = useLocation();
   const { user, logout, tenantRole, refreshProfile } = useAuth() as any;
+  const memberBilling = useBilling() as any;
   const base = getApiBaseUrl();
   const token = authStore.getToken();
   const slug = authStore.getTenantSlug();
@@ -37,7 +56,14 @@ export default function LiriAccountPage() {
   const [stats, setStats] = useState<Stats | null>(null);
   const [subs, setSubs] = useState<Sub[]>([]);
   const [invoices, setInvoices] = useState<any[]>([]);
-  const [section, setSection] = useState('general');
+  const initialSection = useMemo(() => {
+    try {
+      return new URLSearchParams(location.search).get('section') || 'profil';
+    } catch {
+      return 'profil';
+    }
+  }, [location.search]);
+  const [section, setSection] = useState(initialSection);
   const [delOpen, setDelOpen] = useState(false);
   const [delReason, setDelReason] = useState('');
   const [delLoading, setDelLoading] = useState(false);
@@ -111,6 +137,11 @@ export default function LiriAccountPage() {
   const email = user?.email || '';
 
   useEffect(() => {
+    const next = new URLSearchParams(location.search).get('section');
+    if (next) setSection(next);
+  }, [location.search]);
+
+  useEffect(() => {
     if (!token) return;
     const h = { Authorization: `Bearer ${token}`, 'X-Tenant-Slug': slug } as Record<string, string>;
     fetch(`${base}/tenants/current`, { headers: h }).then((r) => (r.ok ? r.json() : null))
@@ -124,13 +155,18 @@ export default function LiriAccountPage() {
           // Il a son propre back-office /cimolace/admin ; le portail LIRI = espaces CLIENTS.
           .filter((o: OrgRef) => o.slug && o.slug !== 'cimolace')); })
       .catch(() => {});
+  }, [base, token, slug]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  useEffect(() => {
+    if (!token || !canManageOrg) return;
+    const h = { Authorization: `Bearer ${token}`, 'X-Tenant-Slug': slug } as Record<string, string>;
     fetch(`${base}/growth/stats`, { headers: h }).then((r) => (r.ok ? r.json() : null))
       .then((d) => { const s = d?.data ?? d; if (s && typeof s.totalLives === 'number' && typeof s.totalMembers === 'number') setStats(s as Stats); })
       .catch(() => {});
     fetch(`${base}/billing/plan`, { headers: h }).then((r) => (r.ok ? r.json() : null))
       .then((d) => { let t: any = d; while (t && typeof t === 'object' && 'data' in t && !('subscriptions' in t)) t = t.data; const arr = t?.subscriptions ?? []; setSubs(Array.isArray(arr) ? arr : []); const inv = t?.invoices ?? []; setInvoices(Array.isArray(inv) ? inv : []); })
       .catch(() => {});
-  }, [base, token, slug]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [base, canManageOrg, token, slug]);
 
   const billing = useMemo(() => {
     const active = subs.find((s) => s.status === 'active') ?? subs[0];
@@ -143,6 +179,51 @@ export default function LiriAccountPage() {
     const endLabel = end ? end.toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' }) : null;
     return { isPaid, isTrial, daysLeft, label, endLabel };
   }, [subs]);
+
+  const memberRenewal = useMemo(() => {
+    const end = memberBilling?.expiresAt ? new Date(memberBilling.expiresAt) : null;
+    const grace = memberBilling?.graceEndsAt ? new Date(memberBilling.graceEndsAt) : null;
+    const endLabel = end ? end.toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' }) : null;
+    const graceLabel = grace ? grace.toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' }) : null;
+    const days = memberBilling?.daysRemaining;
+    const plan = planDisplayName(memberBilling?.subscription?.plan_id || billing.label || 'Forfait');
+    if (memberBilling?.status === 'past_due') {
+      return {
+        tone: 'danger',
+        title: 'Paiement en retard',
+        text: graceLabel
+          ? `Votre accès reste ouvert jusqu’au ${graceLabel}. Mettez à jour votre paiement avant cette date.`
+          : 'Votre accès est en période de grâce. Mettez à jour votre paiement pour éviter la coupure.',
+        meta: 'Stripe retentera le prélèvement selon les règles de relance configurées.',
+        plan,
+      };
+    }
+    if (memberBilling?.status === 'expired') {
+      return {
+        tone: 'danger',
+        title: 'Forfait expiré',
+        text: 'Votre accès payant est expiré. Choisissez un forfait pour le réactiver.',
+        meta: 'Les contenus protégés restent fermés tant que le paiement n’est pas régularisé.',
+        plan,
+      };
+    }
+    if (memberBilling?.status === 'active') {
+      return {
+        tone: Number(days) <= 7 ? 'soon' : 'ok',
+        title: Number.isFinite(Number(days)) ? `${Number(days)} jour${Number(days) > 1 ? 's' : ''} restant${Number(days) > 1 ? 's' : ''}` : 'Forfait actif',
+        text: endLabel ? `Prochain renouvellement prévu le ${endLabel}.` : 'Forfait actif sans échéance locale.',
+        meta: 'Si la carte échoue, le forfait passe en retard puis en période de grâce avant coupure.',
+        plan,
+      };
+    }
+    return {
+      tone: 'neutral',
+      title: 'Aucun forfait actif',
+      text: 'Choisissez un forfait pour débloquer votre parcours.',
+      meta: '',
+      plan,
+    };
+  }, [billing.label, memberBilling?.daysRemaining, memberBilling?.expiresAt, memberBilling?.graceEndsAt, memberBilling?.status, memberBilling?.subscription?.plan_id]);
 
   const euros = (cents?: number) => ((cents ?? 0) / 100).toLocaleString('fr-FR');
   const roleLabel = (r?: string) => (({ owner: 'Propriétaire', admin: 'Admin', teacher: 'Enseignant', secretariat: 'Secrétariat', student: 'Élève', practitioner: 'Praticien', clinic_admin: 'Admin clinique' } as Record<string, string>)[String(r || '').toLowerCase()] || r || '—');
@@ -253,7 +334,7 @@ export default function LiriAccountPage() {
     { key: 'encaissements', label: 'Encaissements', icon: Wallet, group: 'org' },
     { key: 'domaine', label: 'Domaine', icon: Globe, group: 'org' },
   ];
-  const visibleNav = NAV.filter((n) => n.group === 'compte' || canManageOrg);
+  const visibleNav = NAV.filter((n) => n.group === 'compte' || n.key === 'facturation' || canManageOrg);
   const active = visibleNav.some((n) => n.key === section) ? section : (visibleNav[0]?.key || 'profil');
 
   // Charge (lazy) l'état des moyens de paiement quand la section Encaissements s'ouvre.
@@ -594,8 +675,50 @@ export default function LiriAccountPage() {
         return (
           <div>
             <Header title="Facturation & abonnement" subtitle="Votre forfait LIRI, vos renouvellements et vos factures — sans quitter le portail." />
+            <div
+              className="mt-5 rounded-2xl border p-5"
+              style={{
+                borderColor: memberRenewal.tone === 'danger'
+                  ? 'rgba(239,106,82,.32)'
+                  : memberRenewal.tone === 'soon'
+                    ? 'rgba(217,119,87,.34)'
+                    : 'rgba(245,244,238,.10)',
+                background: memberRenewal.tone === 'danger'
+                  ? 'rgba(239,106,82,.08)'
+                  : memberRenewal.tone === 'soon'
+                    ? 'rgba(217,119,87,.08)'
+                    : 'rgba(255,255,255,.035)',
+              }}
+            >
+              <div className="flex items-start gap-3">
+                <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl" style={{ background: 'rgba(217,119,87,.12)', color: '#e58a5f' }}>
+                  <CalendarClock size={18} />
+                </span>
+                <div className="min-w-0 flex-1">
+                  <p className="text-[12px] font-semibold uppercase tracking-[0.14em] lp-faint">Calendrier de paiement</p>
+                  <h3 className="mt-1 text-[19px] font-semibold lp-ink">{memberRenewal.title}</h3>
+                  <p className="mt-1 text-[13px] leading-relaxed lp-muted">{memberRenewal.text}</p>
+                  {memberRenewal.meta && <p className="mt-2 text-[12px] leading-relaxed lp-faint">{memberRenewal.meta}</p>}
+                </div>
+              </div>
+              <div className="mt-4 grid gap-2 sm:grid-cols-3">
+                <Row label="Forfait" value={memberRenewal.plan} />
+                <Row label="Statut" value={memberBilling?.status || '—'} />
+                <Row label="Grâce" value={memberBilling?.inGrace ? 'Active' : '—'} />
+              </div>
+              {(memberBilling?.status === 'past_due' || memberBilling?.status === 'expired') && (
+                <button
+                  type="button"
+                  onClick={() => nav('/liri/forfaits')}
+                  className="mt-4 rounded-xl px-4 py-2.5 text-[13px] font-semibold text-white lp-tr"
+                  style={{ background: 'linear-gradient(90deg,#e2855f,#c2683f)' }}
+                >
+                  Régulariser maintenant
+                </button>
+              )}
+            </div>
             <div className="mt-6 flex flex-col gap-2.5">
-              <Row label="Plan actuel" value={billing.label} />
+              <Row label="Plan actuel" value={memberRenewal.plan || billing.label} />
               {billing.endLabel && <Row label={billing.isPaid ? 'Prochain renouvellement' : "Fin de l’essai"} value={billing.endLabel} />}
             </div>
 

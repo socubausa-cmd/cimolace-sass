@@ -19,8 +19,11 @@ const cimolace_backoffice_module_1 = require("./cimolace-backoffice/cimolace-bac
 const cimolace_catalog_module_1 = require("./cimolace-catalog/cimolace-catalog.module");
 const billing_module_1 = require("./billing/billing.module");
 const checkout_module_1 = require("./checkout/checkout.module");
+const student_invite_module_1 = require("./student-invite/student-invite.module");
+const live_join_module_1 = require("./live-join/live-join.module");
 const live_module_1 = require("./live/live.module");
 const marketing_module_1 = require("./marketing/marketing.module");
+const crm_module_1 = require("./crm/crm.module");
 const notifications_module_1 = require("./notifications/notifications.module");
 const course_builder_module_1 = require("./course-builder/course-builder.module");
 const courses_module_1 = require("./courses/courses.module");
@@ -60,6 +63,7 @@ const public_reviews_module_1 = require("./public-reviews/public-reviews.module"
 const zoom_engine_module_1 = require("./zoom-engine/zoom-engine.module");
 const social_publisher_module_1 = require("./social-publisher/social-publisher.module");
 const school_paths_module_1 = require("./school-paths/school-paths.module");
+const usage_module_1 = require("./usage/usage.module");
 let AppModule = class AppModule {
 };
 exports.AppModule = AppModule;
@@ -77,8 +81,11 @@ exports.AppModule = AppModule = __decorate([
             cimolace_catalog_module_1.CimolaceCatalogModule,
             billing_module_1.BillingModule,
             checkout_module_1.CheckoutModule,
+            student_invite_module_1.StudentInviteModule,
+            live_join_module_1.LiveJoinModule,
             live_module_1.LiveModule,
             marketing_module_1.MarketingModule,
+            crm_module_1.CrmModule,
             notifications_module_1.NotificationsModule,
             courses_module_1.CoursesModule,
             booking_module_1.BookingModule,
@@ -118,6 +125,7 @@ exports.AppModule = AppModule = __decorate([
             zoom_engine_module_1.ZoomEngineModule,
             social_publisher_module_1.SocialPublisherModule,
             school_paths_module_1.SchoolPathsModule,
+            usage_module_1.UsageModule,
         ],
     })
 ], AppModule);

@@ -17,13 +17,15 @@ const auth_service_1 = require("../auth/auth.service");
 const pawapay_service_1 = require("../pawapay/pawapay.service");
 const webhook_service_1 = require("../liri-public/webhook.service");
 const email_engine_service_1 = require("../email-engine/email-engine.service");
+const usage_service_1 = require("../usage/usage.service");
 const plan_services_1 = require("./plan-services");
 let BillingService = BillingService_1 = class BillingService {
-    constructor(auth, pawapay, tenantWebhooks, email) {
+    constructor(auth, pawapay, tenantWebhooks, email, usage) {
         this.auth = auth;
         this.pawapay = pawapay;
         this.tenantWebhooks = tenantWebhooks;
         this.email = email;
+        this.usage = usage;
         this.logger = new common_1.Logger(BillingService_1.name);
     }
     get supabase() { return this.auth.getClient(); }
@@ -65,7 +67,9 @@ let BillingService = BillingService_1 = class BillingService {
             .eq("tenant_id", tenantId).order("created_at", { ascending: false });
         return { subscriptions: subs ?? [], invoices: invoices ?? [] };
     }
-    async activateTenantSubscription(tenantId, planKey = "zahir-forfait") {
+    async activateTenantSubscription(tenantId, planKey, actor) {
+        if (!planKey)
+            throw new common_1.BadRequestException("planKey requis (aucun forfait par défaut — neutralité §1).");
         const sb = this.supabase;
         const { data: plan } = await sb
             .from("billing_plans")
@@ -109,7 +113,63 @@ let BillingService = BillingService_1 = class BillingService {
             .update({ metadata: merged, updated_at: new Date().toISOString() })
             .eq("id", tenantId);
         await this.provisionPlanServices(tenantId, plan.key);
+        try {
+            await sb.from("cimolace_change_history").insert({
+                action: "billing:activate",
+                entity_type: "tenant",
+                entity_id: tenantId,
+                description: `Forfait ${plan.key} activé + gating armé`,
+                changed_by: (actor && actor.trim()) || "Cimolace Ops (non attribué)",
+            });
+        }
+        catch {
+        }
         return { subscription, gating_enabled: true, plan: plan.key };
+    }
+    async createPaymentLinkForTenant(tenantId, planKey, actor, cycle) {
+        const sb = this.supabase;
+        let subscriptionId;
+        let planUsed = planKey;
+        if (planKey && planKey.trim()) {
+            const r = await this.subscribeToPlan(tenantId, planKey.trim(), "stripe");
+            subscriptionId = r.subscription_id;
+        }
+        else {
+            const { data: subs } = await sb
+                .from("billing_subscriptions")
+                .select("id, plan_id, status, created_at")
+                .eq("tenant_id", tenantId)
+                .order("created_at", { ascending: false })
+                .limit(10);
+            const rows = Array.isArray(subs) ? subs : [];
+            const rank = (s) => (["active", "trialing", "past_due", "unpaid", "pending"].includes(String(s)) ? 1 : 0);
+            const primary = rows.sort((a, b) => rank(b.status) - rank(a.status))[0];
+            if (!primary) {
+                throw new common_1.BadRequestException("Aucun abonnement pour ce tenant — précisez un planKey (clé billing_plans).");
+            }
+            subscriptionId = primary.id;
+            planUsed = primary.plan_id;
+        }
+        const checkout = await this.createCardCheckout(tenantId, subscriptionId, cycle);
+        try {
+            await sb.from("cimolace_change_history").insert({
+                action: "billing:payment-link",
+                entity_type: "tenant",
+                entity_id: tenantId,
+                description: `Lien de paiement Stripe généré (plan ${planUsed ?? "?"}${cycle ? `, cycle ${cycle}` : ""})`,
+                changed_by: (actor && actor.trim()) || "Cimolace Ops (non attribué)",
+            });
+        }
+        catch {
+        }
+        return {
+            url: checkout.url,
+            session_id: checkout.session_id,
+            subscription_id: subscriptionId,
+            plan: planUsed ?? null,
+            amount_cents: checkout.amount_cents ?? null,
+            currency: checkout.currency ?? null,
+        };
     }
     async subscribeToPlan(tenantId, planKey, provider = "stripe") {
         if (!planKey)
@@ -262,15 +322,16 @@ let BillingService = BillingService_1 = class BillingService {
         if (!inv)
             return { received: true, matched: false };
         if (cb.status === "COMPLETED") {
+            if (inv.status === "paid")
+                return { received: true, matched: true, status: "already_paid" };
             await sb.from("billing_invoices").update({ status: "paid", paid_at: new Date().toISOString(), updated_at: new Date().toISOString() }).eq("id", inv.id);
             if (inv.subscription_id) {
                 const start = new Date();
-                const end = new Date();
-                end.setMonth(end.getMonth() + 1);
                 const payMethod = inv.metadata?.payer_phone
                     ? { type: "mobile_money", provider: inv.metadata.payer_provider ?? null, phone: inv.metadata.payer_phone }
                     : null;
-                const { data: subRow } = await sb.from("billing_subscriptions").select("metadata, user_id, tenant_id").eq("id", inv.subscription_id).maybeSingle();
+                const { data: subRow } = await sb.from("billing_subscriptions").select("metadata, user_id, tenant_id, plan_id").eq("id", inv.subscription_id).maybeSingle();
+                const end = BillingService_1.addCycle(start, await this.planBillingCycle(subRow?.plan_id));
                 await sb.from("billing_subscriptions").update({
                     status: "active",
                     current_period_start: start.toISOString(),
@@ -278,6 +339,11 @@ let BillingService = BillingService_1 = class BillingService {
                     metadata: { ...(subRow?.metadata ?? {}), ...(payMethod ? { payment_method: payMethod } : {}) },
                     updated_at: new Date().toISOString(),
                 }).eq("id", inv.subscription_id);
+                const tid = subRow?.tenant_id;
+                if (tid) {
+                    await this.supersedeOtherActiveSubscriptions(tid, inv.subscription_id);
+                    await this.provisionPlanServices(tid, subRow?.plan_id);
+                }
                 void this.sendPaymentReceiptEmail(inv, subRow, payMethod, end);
             }
             return { received: true, matched: true, status: "paid" };
@@ -493,6 +559,10 @@ let BillingService = BillingService_1 = class BillingService {
         let initiated = 0;
         let skipped = 0;
         for (const sub of rows) {
+            if (sub?.metadata?.cancel_at_period_end) {
+                skipped++;
+                continue;
+            }
             const pm = sub?.metadata?.payment_method;
             if (!pm?.phone || !pm?.provider) {
                 skipped++;
@@ -551,7 +621,7 @@ let BillingService = BillingService_1 = class BillingService {
             throw new common_1.BadRequestException("Paiement carte indisponible (STRIPE_SECRET_KEY non configurée)");
         return `Basic ${Buffer.from(secret + ":").toString("base64")}`;
     }
-    async createCardCheckout(tenantId, subscriptionId) {
+    async createCardCheckout(tenantId, subscriptionId, cycleOverride) {
         const auth = this.stripeAuth();
         const sb = this.supabase;
         const { data: sub } = await sb.from("billing_subscriptions").select("*").eq("id", subscriptionId).eq("tenant_id", tenantId).maybeSingle();
@@ -559,11 +629,27 @@ let BillingService = BillingService_1 = class BillingService {
             throw new common_1.NotFoundException("Abonnement introuvable");
         const { data: plan } = await sb
             .from("billing_plans")
-            .select("stripe_price_id, label, price_cents, currency, billing_cycle")
+            .select("stripe_price_id, label, price_cents, currency, billing_cycle, metadata")
             .eq("key", sub.plan_id)
             .maybeSingle();
-        const priceId = plan?.stripe_price_id;
-        const amountCents = Number(plan?.price_cents ?? sub?.amount_cents ?? 0);
+        const planCycle = String(plan?.billing_cycle ?? "monthly").toLowerCase();
+        const cycle = BillingService_1.normalizeCycle(cycleOverride) ?? planCycle;
+        const cycled = cycle !== planCycle && ["quarterly", "yearly"].includes(cycle);
+        let priceId = plan?.stripe_price_id;
+        let amountCents = Number(plan?.price_cents ?? sub?.amount_cents ?? 0);
+        let appliedDisc = 0;
+        if (cycled && planCycle === "monthly" && amountCents > 0) {
+            const disc = BillingService_1.cycleDiscount(plan?.metadata, cycle);
+            appliedDisc = disc;
+            const months = cycle === "yearly" ? 12 : 3;
+            amountCents = Math.round(amountCents * months * (1 - disc));
+            priceId = null;
+            await sb.from("billing_subscriptions").update({
+                amount_cents: amountCents,
+                metadata: { ...(sub.metadata ?? {}), cycle_override: cycle },
+                updated_at: new Date().toISOString(),
+            }).eq("id", subscriptionId);
+        }
         if (!priceId && amountCents <= 0) {
             throw new common_1.BadRequestException("Aucun prix configuré pour ce plan (carte indisponible)");
         }
@@ -575,11 +661,15 @@ let BillingService = BillingService_1 = class BillingService {
         }
         else {
             const currency = String(plan?.currency ?? sub?.currency ?? "EUR").toLowerCase();
-            const interval = String(plan?.billing_cycle ?? "monthly").toLowerCase() === "yearly" ? "year" : "month";
+            const iv = BillingService_1.cycleToStripeInterval(cycle);
             params.append("line_items[0][price_data][currency]", currency);
             params.append("line_items[0][price_data][unit_amount]", String(amountCents));
-            params.append("line_items[0][price_data][recurring][interval]", interval);
-            params.append("line_items[0][price_data][product_data][name]", String(plan?.label ?? sub?.plan_id ?? "Abonnement Cimolace"));
+            params.append("line_items[0][price_data][recurring][interval]", iv.interval);
+            if (iv.count > 1)
+                params.append("line_items[0][price_data][recurring][interval_count]", String(iv.count));
+            const discPct = appliedDisc > 0 ? ` (−${Math.round(appliedDisc * 100)} %)` : "";
+            const cycleLabel = cycle === "yearly" ? ` — Annuel${discPct}` : cycle === "quarterly" ? ` — Trimestriel${discPct}` : "";
+            params.append("line_items[0][price_data][product_data][name]", String(plan?.label ?? sub?.plan_id ?? "Abonnement Cimolace") + cycleLabel);
         }
         params.append("line_items[0][quantity]", "1");
         params.append("success_url", `${frontend}/cimolace/billing?card=success&session_id={CHECKOUT_SESSION_ID}&sub=${subscriptionId}`);
@@ -617,9 +707,11 @@ let BillingService = BillingService_1 = class BillingService {
         const s = (await res.json());
         const paid = s.payment_status === "paid" || s.status === "complete";
         if (paid) {
-            const end = new Date();
-            end.setMonth(end.getMonth() + 1);
-            await sb.from("billing_subscriptions").update({ status: "active", provider_subscription_id: s.subscription ?? null, provider_customer_id: s.customer ?? null, current_period_end: end.toISOString(), updated_at: new Date().toISOString() }).eq("id", subscriptionId);
+            const start = new Date();
+            const chosenCycle = BillingService_1.normalizeCycle(sub?.metadata?.cycle_override) ??
+                (await this.planBillingCycle(sub.plan_id));
+            const end = BillingService_1.addCycle(start, chosenCycle);
+            await sb.from("billing_subscriptions").update({ status: "active", provider_subscription_id: s.subscription ?? null, provider_customer_id: s.customer ?? null, current_period_start: start.toISOString(), current_period_end: end.toISOString(), updated_at: new Date().toISOString() }).eq("id", subscriptionId);
             await sb.from("billing_invoices").update({ status: "paid", provider: "stripe", paid_at: new Date().toISOString(), updated_at: new Date().toISOString() }).eq("subscription_id", subscriptionId).in("status", ["pending", "processing", "failed"]);
             await this.supersedeOtherActiveSubscriptions(tenantId, subscriptionId);
             await this.provisionPlanServices(tenantId, sub.plan_id);
@@ -633,6 +725,48 @@ let BillingService = BillingService_1 = class BillingService {
             .eq("tenant_id", tenantId)
             .eq("status", "active")
             .neq("id", keepSubscriptionId);
+    }
+    static addCycle(from, cycle) {
+        const c = String(cycle ?? "monthly").toLowerCase();
+        const d = new Date(from);
+        if (c === "yearly")
+            d.setFullYear(d.getFullYear() + 1);
+        else if (c === "quarterly")
+            d.setMonth(d.getMonth() + 3);
+        else if (c === "weekly")
+            d.setDate(d.getDate() + 7);
+        else if (c === "one_time" || c === "lifetime")
+            d.setFullYear(d.getFullYear() + 100);
+        else
+            d.setMonth(d.getMonth() + 1);
+        return d;
+    }
+    static normalizeCycle(c) {
+        const v = String(c ?? "").trim().toLowerCase();
+        return ["monthly", "quarterly", "yearly"].includes(v) ? v : undefined;
+    }
+    static cycleDiscount(planMeta, cycle) {
+        const defaults = { quarterly: 0.10, yearly: 0.20 };
+        const raw = planMeta?.cycle_discounts?.[cycle];
+        const n = Number(raw);
+        if (Number.isFinite(n) && n >= 0 && n <= 0.5)
+            return n;
+        return defaults[cycle] ?? 0;
+    }
+    static cycleToStripeInterval(cycle) {
+        switch (String(cycle ?? "monthly").toLowerCase()) {
+            case "yearly": return { interval: "year", count: 1 };
+            case "quarterly": return { interval: "month", count: 3 };
+            case "weekly": return { interval: "week", count: 1 };
+            default: return { interval: "month", count: 1 };
+        }
+    }
+    async planBillingCycle(planKey) {
+        if (!planKey)
+            return "monthly";
+        const { data } = await this.supabase
+            .from("billing_plans").select("billing_cycle").eq("key", planKey).maybeSingle();
+        return String(data?.billing_cycle ?? "monthly").toLowerCase();
     }
     async provisionPlanServices(tenantId, planKey) {
         if (!tenantId || !planKey)
@@ -656,6 +790,274 @@ let BillingService = BillingService_1 = class BillingService {
         catch (e) {
             console.warn(`[billing provisioning] échec (tenant=${tenantId}, plan=${planKey}): ${e.message}`);
         }
+    }
+    static categoryToKind(category) {
+        const c = String(category || "").toLowerCase();
+        if (c.includes("medos"))
+            return "medos";
+        if (c.includes("ecole") || c.includes("school"))
+            return "school";
+        if (c.includes("bienetre") || c.includes("wellness"))
+            return "wellness";
+        if (c.includes("createur") || c.includes("creator"))
+            return "creator";
+        if (c.includes("mbolo") || c.includes("commerce"))
+            return "mbolo";
+        return "liri";
+    }
+    static hostingModeForOffer(offerTier) {
+        const o = String(offerTier || "hosted").toLowerCase();
+        if (o === "integration")
+            return "embedded";
+        if (o === "customized")
+            return "customized";
+        return "hosted";
+    }
+    static slugify(s) {
+        let base = String(s || "")
+            .normalize("NFD").replace(/[̀-ͯ]/g, "")
+            .toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "")
+            .slice(0, 38) || "tenant";
+        if (base.length < 2)
+            base = `${base}-t`;
+        if (BillingService_1.RESERVED_SLUGS.has(base))
+            base = `${base}-org`;
+        return base;
+    }
+    async provisionUserByEmail(email, firstName, lastName) {
+        const url = process.env.SUPABASE_URL;
+        const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
+        if (!url || !key)
+            throw new common_1.BadRequestException("Supabase non configuré (acquisition).");
+        const em = email.trim().toLowerCase();
+        const headers = { apikey: key, Authorization: `Bearer ${key}`, "Content-Type": "application/json" };
+        const findId = async () => {
+            const r = await fetch(`${url}/auth/v1/admin/users?email=${encodeURIComponent(em)}`, { headers });
+            if (!r.ok)
+                return undefined;
+            const d = (await r.json());
+            return (d?.users || []).find((u) => u.email?.toLowerCase() === em)?.id;
+        };
+        const existing = await findId();
+        if (existing)
+            return { id: existing, isNew: false };
+        const createRes = await fetch(`${url}/auth/v1/admin/users`, {
+            method: "POST", headers,
+            body: JSON.stringify({ email: em, email_confirm: true, user_metadata: { first_name: firstName ?? null, last_name: lastName ?? null, role: "owner", created_via: "acquisition" } }),
+        });
+        if (createRes.ok)
+            return { id: (await createRes.json()).id, isNew: true };
+        const raced = await findId();
+        if (!raced)
+            throw new common_1.BadRequestException("Provisionnement du compte impossible.");
+        return { id: raced, isNew: false };
+    }
+    async generateAuthLink(email, type, redirectTo) {
+        const url = process.env.SUPABASE_URL;
+        const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
+        if (!url || !key)
+            return null;
+        try {
+            const r = await fetch(`${url}/auth/v1/admin/generate_link`, {
+                method: "POST",
+                headers: { apikey: key, Authorization: `Bearer ${key}`, "Content-Type": "application/json" },
+                body: JSON.stringify({ type, email: email.trim().toLowerCase(), options: { redirect_to: redirectTo } }),
+            });
+            if (!r.ok)
+                return null;
+            const d = (await r.json());
+            return d?.action_link || d?.properties?.action_link || null;
+        }
+        catch {
+            return null;
+        }
+    }
+    async sendAcquisitionWelcome(tenantId, email, orgName, userIsNew) {
+        try {
+            const frontend = (process.env.FRONTEND_URL || "https://app.cimolace.space").replace(/\/$/, "");
+            const dest = `${frontend}/cimolace/billing`;
+            const magic = await this.generateAuthLink(email, "magiclink", dest);
+            const recover = userIsNew ? await this.generateAuthLink(email, "recovery", dest) : null;
+            const accessUrl = magic || `${frontend}/cimolace/login`;
+            const org = orgName || "votre organisation";
+            const secondary = recover
+                ? `<p style="font-size:14px;line-height:1.6;margin:14px 0 0">Vous préférez un mot de passe ? <a href="${recover}" style="color:#b6893c;font-weight:600">Définissez-le ici</a> (lien valable un moment).</p>`
+                : `<p style="font-size:13px;line-height:1.6;margin:14px 0 0;color:#8a978f">Astuce : une fois connecté, vous pouvez définir un mot de passe dans les réglages de votre espace.</p>`;
+            const html = this.email.brandedHtml({
+                title: `Bienvenue sur Cimolace — ${org}`,
+                body: `Votre paiement est confirmé et votre espace <b>${org}</b> est prêt : votre abonnement est actif et vos outils sont activés. Cliquez ci-dessous pour accéder à votre espace tout de suite.`,
+                ctaLabel: "Accéder à mon espace",
+                ctaUrl: accessUrl,
+                brand: "#b6893c",
+            }) + secondary;
+            const res = await this.email.sendRaw(tenantId, email, `Votre espace ${org} est prêt — accédez-y`, html);
+            this.logger.log(`[acquisition] email d'accès → ${email} (${res?.status ?? "?"}, magic=${!!magic}, recover=${!!recover})`);
+        }
+        catch (e) {
+            this.logger.warn(`[acquisition] email d'accès non envoyé à ${email}: ${e.message}`);
+        }
+    }
+    async insertTenantForPurchase(p) {
+        const sb = this.supabase;
+        for (let attempt = 0; attempt < 5; attempt++) {
+            const slug = attempt === 0 ? p.baseSlug : `${p.baseSlug}-${attempt + 1}`;
+            const { data, error } = await sb.from("tenants").insert({
+                name: p.name, slug, owner_user_id: p.ownerUserId, infrastructure_type: p.kind,
+                status: "active", plan: "free", billing_status: "free", locale: p.locale, timezone: p.timezone,
+                metadata: { hosting_mode: p.hostingMode, created_via: "acquisition", billing: { enforce_caps: true } },
+            }).select("id").single();
+            if (!error && data)
+                return data.id;
+            const code = error?.code;
+            const msg = String(error?.message || "").toLowerCase();
+            if (code === "23505" || /duplicate|unique|already exists/.test(msg))
+                continue;
+            throw new common_1.BadRequestException(`Création du tenant échouée: ${error?.message ?? "inconnue"}`);
+        }
+        throw new common_1.BadRequestException("Impossible de générer un slug unique (5 tentatives).");
+    }
+    async createTenantFromPurchase(p) {
+        const sb = this.supabase;
+        const email = String(p.email || "").trim().toLowerCase();
+        if (!email)
+            throw new common_1.BadRequestException("email requis pour provisionner l'achat");
+        if (!p.planKey)
+            throw new common_1.BadRequestException("planKey requis");
+        if (p.providerRef) {
+            const { data: seen } = await sb.from("billing_subscriptions")
+                .select("id, tenant_id, user_id").eq("provider_checkout_id", p.providerRef).maybeSingle();
+            if (seen?.tenant_id) {
+                return { tenantId: seen.tenant_id, userId: seen.user_id, subscriptionId: seen.id, created: false };
+            }
+        }
+        const { data: plan } = await sb.from("billing_plans")
+            .select("key, billing_cycle, category, offer_tier, price_cents, currency").eq("key", p.planKey).maybeSingle();
+        if (!plan)
+            throw new common_1.NotFoundException(`Plan « ${p.planKey} » introuvable`);
+        const offerTier = String(plan.offer_tier ?? "hosted").toLowerCase();
+        const kind = BillingService_1.categoryToKind(plan.category);
+        const hostingMode = BillingService_1.hostingModeForOffer(offerTier);
+        const { id: userId, isNew: userIsNew } = await this.provisionUserByEmail(email, p.firstName, p.lastName);
+        let tenantId;
+        let created = false;
+        if (p.intent === "existing" && p.existingTenantId) {
+            const { data: t } = await sb.from("tenants").select("id, owner_user_id").eq("id", p.existingTenantId).maybeSingle();
+            if (!t)
+                throw new common_1.NotFoundException("Tenant cible introuvable");
+            const { data: mem } = await sb.from("tenant_memberships")
+                .select("role").eq("tenant_id", p.existingTenantId).eq("user_id", userId).maybeSingle();
+            const owner = t.owner_user_id === userId || ["owner", "admin"].includes(String(mem?.role || ""));
+            if (!owner)
+                throw new common_1.BadRequestException("Rattachement refusé : vous n'êtes pas propriétaire de ce tenant");
+            tenantId = t.id;
+        }
+        else {
+            const baseSlug = BillingService_1.slugify(p.slug || p.orgName || email.split("@")[0]);
+            tenantId = await this.insertTenantForPurchase({
+                name: p.orgName || baseSlug, baseSlug, ownerUserId: userId, kind, hostingMode,
+                locale: p.locale ?? "fr", timezone: p.timezone ?? "Europe/Paris",
+            });
+            created = true;
+        }
+        await sb.from("tenant_memberships").upsert({ tenant_id: tenantId, user_id: userId, role: "owner", status: "active" }, { onConflict: "tenant_id,user_id" });
+        await this.provisionPlanServices(tenantId, p.planKey);
+        const start = new Date();
+        const end = BillingService_1.addCycle(start, String(plan.billing_cycle));
+        const { data: sub, error: subErr } = await sb.from("billing_subscriptions").insert({
+            tenant_id: tenantId, user_id: userId, plan_id: p.planKey, status: "active",
+            provider: "stripe",
+            provider_checkout_id: p.providerRef ?? null,
+            provider_subscription_id: p.stripeSubscriptionId ?? null,
+            provider_customer_id: p.stripeCustomerId ?? null,
+            amount_cents: Number(plan.price_cents ?? 0),
+            currency: String(plan.currency ?? "EUR"),
+            current_period_start: start.toISOString(), current_period_end: end.toISOString(),
+            metadata: { offer_tier: offerTier, acquisition: true },
+        }).select("id").maybeSingle();
+        if (subErr) {
+            if (created) {
+                await sb.from("tenant_services").delete().eq("tenant_id", tenantId);
+                await sb.from("tenant_memberships").delete().eq("tenant_id", tenantId);
+                await sb.from("tenants").delete().eq("id", tenantId);
+            }
+            throw new common_1.InternalServerErrorException(`Abonnement d'acquisition non enregistré: ${subErr.message}`);
+        }
+        await this.supersedeOtherActiveSubscriptions(tenantId, sub?.id);
+        if (created && p.intent !== "existing") {
+            await this.sendAcquisitionWelcome(tenantId, email, p.orgName || "", userIsNew);
+        }
+        this.logger.log(`[acquisition] tenant ${created ? "créé" : "rattaché"} ${tenantId} (plan=${p.planKey}, offre=${offerTier}, kind=${kind}) pour ${email}`);
+        return { tenantId, userId, subscriptionId: sub?.id ?? null, created };
+    }
+    async createAcquisitionCheckout(dto) {
+        const auth = this.stripeAuth();
+        const sb = this.supabase;
+        const email = String(dto?.email || "").trim().toLowerCase();
+        if (!email || !/.+@.+\..+/.test(email))
+            throw new common_1.BadRequestException("Email valide requis");
+        if (!dto?.planKey)
+            throw new common_1.BadRequestException("planKey requis");
+        const intent = dto.intent === "existing" ? "existing" : "new_tenant";
+        if (intent === "new_tenant" && !dto.orgName)
+            throw new common_1.BadRequestException("Le nom de l'organisation est requis");
+        if (intent === "existing" && !dto.existingTenantId)
+            throw new common_1.BadRequestException("existingTenantId requis pour rattacher");
+        const { data: plan } = await sb.from("billing_plans")
+            .select("key, stripe_price_id, label, price_cents, currency, billing_cycle, offer_tier, is_active, features")
+            .eq("key", dto.planKey).maybeSingle();
+        if (!plan || plan.is_active === false)
+            throw new common_1.NotFoundException("Offre inconnue ou inactive");
+        const priceId = plan.stripe_price_id;
+        const amountCents = Number(plan.price_cents ?? 0);
+        if (!priceId && amountCents <= 0)
+            throw new common_1.BadRequestException("Aucun prix carte configuré pour ce plan");
+        if (!(0, plan_services_1.resolvePlanServices)(dto.planKey, plan.features).length) {
+            throw new common_1.BadRequestException("Ce plan n'active aucun produit — souscription bloquée");
+        }
+        const offerTier = String(plan.offer_tier ?? "hosted").toLowerCase();
+        const frontend = process.env.FRONTEND_URL || "https://app.cimolace.space";
+        const params = new URLSearchParams();
+        params.append("mode", "subscription");
+        if (priceId) {
+            params.append("line_items[0][price]", priceId);
+        }
+        else {
+            const currency = String(plan.currency ?? "EUR").toLowerCase();
+            const { interval, count } = BillingService_1.cycleToStripeInterval(plan.billing_cycle);
+            params.append("line_items[0][price_data][currency]", currency);
+            params.append("line_items[0][price_data][unit_amount]", String(amountCents));
+            params.append("line_items[0][price_data][recurring][interval]", interval);
+            params.append("line_items[0][price_data][recurring][interval_count]", String(count));
+            params.append("line_items[0][price_data][product_data][name]", String(plan.label ?? dto.planKey));
+        }
+        params.append("line_items[0][quantity]", "1");
+        params.append("success_url", `${frontend}/creer-organisation/succes?session_id={CHECKOUT_SESSION_ID}`);
+        params.append("cancel_url", `${frontend}/creer-organisation?annule=1`);
+        params.append("customer_email", email);
+        params.append("metadata[intent]", intent);
+        params.append("metadata[plan_key]", dto.planKey);
+        params.append("metadata[offer_tier]", offerTier);
+        params.append("metadata[org_email]", email);
+        if (dto.orgName)
+            params.append("metadata[org_name]", dto.orgName);
+        if (dto.slug)
+            params.append("metadata[org_slug]", dto.slug);
+        if (dto.existingTenantId)
+            params.append("metadata[existing_tenant_id]", dto.existingTenantId);
+        params.append("subscription_data[metadata][intent]", intent);
+        params.append("subscription_data[metadata][plan_key]", dto.planKey);
+        params.append("subscription_data[metadata][offer_tier]", offerTier);
+        const res = await fetch("https://api.stripe.com/v1/checkout/sessions", {
+            method: "POST",
+            headers: { Authorization: auth, "Content-Type": "application/x-www-form-urlencoded" },
+            body: params.toString(),
+        });
+        if (!res.ok)
+            throw new common_1.BadRequestException(`Stripe checkout ${res.status}: ${await res.text()}`);
+        const s = (await res.json());
+        if (!s.url)
+            throw new common_1.BadRequestException("Session Stripe créée sans URL");
+        return { url: s.url };
     }
     async createPayout(tenantId, createdBy, dto) {
         const amountCents = Math.round(Number(dto?.amountCents) || 0);
@@ -772,7 +1174,7 @@ let BillingService = BillingService_1 = class BillingService {
         try {
             switch (type) {
                 case "checkout.session.completed":
-                    await this.onCheckoutCompleted(obj);
+                    await this.onCheckoutCompleted(obj, event.id);
                     break;
                 case "invoice.paid":
                 case "invoice.payment_succeeded":
@@ -793,7 +1195,7 @@ let BillingService = BillingService_1 = class BillingService {
         }
         catch (e) {
             console.error(`[billing webhook] échec traitement ${type}:`, e.message);
-            return { received: true, type, error: e.message };
+            throw e;
         }
         return { received: true, type };
     }
@@ -866,10 +1268,84 @@ let BillingService = BillingService_1 = class BillingService {
                 return "pending";
         }
     }
-    async onCheckoutCompleted(session) {
+    async claimWebhookEvent(eventId) {
+        const { error } = await this.supabase.from("billing_webhook_events").insert({ event_id: eventId });
+        if (!error)
+            return true;
+        if (error.code === "23505")
+            return false;
+        this.logger.warn(`[webhook dedup] claim échec (${eventId}): ${error.message}`);
+        return true;
+    }
+    async releaseWebhookEvent(eventId) {
+        try {
+            await this.supabase.from("billing_webhook_events").delete().eq("event_id", eventId);
+        }
+        catch (e) {
+            this.logger.warn(`[webhook dedup] release échec (${eventId}): ${e.message}`);
+        }
+    }
+    async onCheckoutCompleted(session, eventId) {
+        if (session?.mode === "payment" && session?.metadata?.credit_pack) {
+            if (eventId && !(await this.claimWebhookEvent(eventId))) {
+                this.logger.log(`[packs] event ${eventId} déjà traité — ignoré`);
+                return;
+            }
+            const paid = session.payment_status === "paid" || session.status === "complete";
+            if (!paid) {
+                this.logger.warn(`[packs] session ${session.id} non payée (${session.payment_status}) — ignorée`);
+                if (eventId)
+                    await this.releaseWebhookEvent(eventId);
+                return;
+            }
+            try {
+                await this.usage.applyPackFromCheckout(session.metadata, session.id);
+            }
+            catch (e) {
+                if (eventId)
+                    await this.releaseWebhookEvent(eventId);
+                throw e;
+            }
+            return;
+        }
         if (session?.mode && session.mode !== "subscription")
             return;
         const sb = this.supabase;
+        const meta = session?.metadata ?? {};
+        if (meta.intent === "new_tenant" || meta.intent === "existing") {
+            if (eventId && !(await this.claimWebhookEvent(eventId))) {
+                this.logger.log(`[acquisition] event ${eventId} déjà traité — ignoré`);
+                return;
+            }
+            const paid = session.payment_status === "paid" || session.status === "complete";
+            if (!paid) {
+                this.logger.warn(`[acquisition] session ${session.id} non payée (payment_status=${session.payment_status}) — ignorée`);
+                if (eventId)
+                    await this.releaseWebhookEvent(eventId);
+                return;
+            }
+            const email = session.customer_details?.email || session.customer_email || meta.org_email;
+            try {
+                await this.createTenantFromPurchase({
+                    email,
+                    orgName: meta.org_name,
+                    slug: meta.org_slug,
+                    planKey: meta.plan_key,
+                    offerTier: meta.offer_tier,
+                    intent: meta.intent,
+                    existingTenantId: meta.existing_tenant_id || undefined,
+                    providerRef: session.id,
+                    stripeSubscriptionId: session.subscription || undefined,
+                    stripeCustomerId: session.customer || undefined,
+                });
+            }
+            catch (e) {
+                if (eventId)
+                    await this.releaseWebhookEvent(eventId);
+                throw e;
+            }
+            return;
+        }
         const rowId = session.client_reference_id || session?.metadata?.subscription_id || null;
         const stripeSubId = session.subscription || null;
         const sub = stripeSubId ? await this.fetchStripeSubscription(stripeSubId) : null;
@@ -889,7 +1365,15 @@ let BillingService = BillingService_1 = class BillingService {
             patch.current_period_end = this.unixToIso(sub.current_period_end);
         const matchCol = rowId ? "id" : "provider_checkout_id";
         const matchVal = rowId || session.id;
-        await sb.from("billing_subscriptions").update(patch).eq(matchCol, matchVal);
+        const { data: updatedRows, error: updErr } = await sb.from("billing_subscriptions").update(patch).eq(matchCol, matchVal).select("id");
+        if (updErr) {
+            this.logger.error(`[billing webhook] échec UPDATE abo (session=${session.id}): ${updErr.message}`);
+            throw new common_1.InternalServerErrorException(updErr.message);
+        }
+        if (!updatedRows || updatedRows.length === 0) {
+            this.logger.warn(`[billing webhook] checkout.session.completed sans abonnement correspondant (session=${session.id}, ref=${rowId ?? "∅"}) — aucun provisioning`);
+            return;
+        }
         if (rowId) {
             await sb
                 .from("billing_invoices")
@@ -997,12 +1481,18 @@ exports.BillingService = BillingService;
 BillingService.PAYMENT_PROVIDERS = new Set([
     "stripe", "chariow", "cinetpay", "pawapay", "nowpayments", "paypal", "free",
 ]);
+BillingService.RESERVED_SLUGS = new Set([
+    "admin", "api", "app", "www", "cimolace", "liri", "login", "logout", "static",
+    "assets", "public", "dashboard", "billing", "webhook", "medos", "mbolo", "isna",
+    "support", "help", "new", "creer-organisation", "t", "auth", "signup",
+]);
 BillingService.ZERO_DECIMAL = new Set(["XAF", "XOF", "XPF", "BIF", "CLP", "DJF", "GNF", "JPY", "KMF", "KRW", "MGA", "PYG", "RWF", "UGX", "VND", "VUV"]);
 exports.BillingService = BillingService = BillingService_1 = __decorate([
     (0, common_1.Injectable)(),
     __metadata("design:paramtypes", [auth_service_1.AuthService,
         pawapay_service_1.PawaPayService,
         webhook_service_1.WebhookService,
-        email_engine_service_1.EmailEngineService])
+        email_engine_service_1.EmailEngineService,
+        usage_service_1.UsageService])
 ], BillingService);
 //# sourceMappingURL=billing.service.js.map

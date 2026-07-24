@@ -15,11 +15,15 @@ const common_1 = require("@nestjs/common");
 const auth_service_1 = require("../auth/auth.service");
 const livekit_service_1 = require("../livekit/livekit.service");
 const liri_entitlements_service_1 = require("../billing/liri-entitlements.service");
+const usage_service_1 = require("../usage/usage.service");
+const member_tier_1 = require("../billing/member-tier");
 let LiveService = LiveService_1 = class LiveService {
-    constructor(auth, liveKit, entitlements) {
+    constructor(auth, liveKit, entitlements, usage) {
         this.auth = auth;
         this.liveKit = liveKit;
         this.entitlements = entitlements;
+        this.usage = usage;
+        this.logger = new common_1.Logger(LiveService_1.name);
     }
     get supabase() { return this.auth.getClient(); }
     async createSession(tenantId, data) {
@@ -30,11 +34,57 @@ let LiveService = LiveService_1 = class LiveService {
                 throw new common_1.ForbiddenException("Forfait gratuit : la programmation de lives à l'avance n'est pas incluse. Lancez un live immédiat, ou passez à un forfait LIRI pour planifier vos lives.");
             }
         }
-        const { data: session } = await this.supabase
+        const COLS = [
+            "host_user_id", "title", "description", "scheduled_at", "price_cents", "currency",
+            "capacity", "replay_enabled", "teacher_id", "cover_image_url", "session_type",
+            "formation_id", "config", "debate_id", "duration_minutes", "ambient_tracks_json",
+            "join_code", "production_live_type", "production_category", "room_mode",
+            "timezone", "access_mode", "kind",
+        ];
+        const row = { tenant_id: tenantId, status: "scheduled" };
+        for (const k of COLS)
+            if (data?.[k] !== undefined)
+                row[k] = data[k];
+        if (row.session_type === "classe")
+            row.session_type = "class";
+        const ACCESS = ["public", "invite_only", "password", "subscription"];
+        if (row.access_mode && !ACCESS.includes(String(row.access_mode)))
+            delete row.access_mode;
+        if (!row.host_user_id && data?.teacher_id)
+            row.host_user_id = data.teacher_id;
+        const { data: session, error } = await this.supabase
             .from("live_sessions")
-            .insert({ tenant_id: tenantId, ...data, status: "scheduled" })
+            .insert(row)
             .select()
             .single();
+        if (error || !session) {
+            throw new common_1.BadRequestException(`Création du live impossible : ${error?.message ?? "insert vide"}`);
+        }
+        const invited = Array.isArray(data?.invited_user_ids) ? data.invited_user_ids.filter(Boolean) : [];
+        if (invited.length) {
+            const participants = invited.map((uid) => ({
+                live_session_id: session.id, user_id: uid, role: "student",
+            }));
+            const { error: pErr } = await this.supabase
+                .from("live_session_participants")
+                .upsert(participants, { onConflict: "live_session_id,user_id" });
+            if (pErr)
+                this.logger.warn(`participants: ${pErr.message}`);
+        }
+        if (data?.notify_dashboard !== undefined || data?.notify_email !== undefined || data?.notify_whatsapp !== undefined || data?.is_public !== undefined) {
+            const { error: vErr } = await this.supabase
+                .from("live_visibility_rules")
+                .upsert({
+                live_session_id: session.id,
+                tenant_id: tenantId,
+                is_public: data?.is_public === true,
+                notify_dashboard: data?.notify_dashboard !== false,
+                notify_email: data?.notify_email === true,
+                notify_whatsapp: data?.notify_whatsapp === true,
+            }, { onConflict: "live_session_id" });
+            if (vErr)
+                this.logger.warn(`visibility_rules: ${vErr.message}`);
+        }
         return session;
     }
     async findAll(tenantId) {
@@ -75,6 +125,7 @@ let LiveService = LiveService_1 = class LiveService {
                 throw new common_1.ForbiddenException(`Forfait gratuit : ${limits.maxConcurrentLives} live à la fois. Terminez votre live en cours, ou passez à un forfait LIRI pour des lives simultanés.`);
             }
         }
+        await this.usage.assertCanStartLive(tenantId);
         const { data } = await this.supabase
             .from("live_sessions")
             .update({ status: "live", started_at: new Date().toISOString() })
@@ -102,11 +153,17 @@ let LiveService = LiveService_1 = class LiveService {
         return data;
     }
     async startRecording(tenantId, sessionId) {
-        const session = await this.findOne(tenantId, sessionId);
         const { limits } = await this.entitlements.resolveLimits(tenantId);
         if (!limits.canReplay) {
             throw new common_1.ForbiddenException("Forfait gratuit : l'enregistrement et le replay ne sont pas inclus. Passez à un forfait LIRI pour enregistrer et rediffuser vos lives.");
         }
+        return this._startEgressForSession(tenantId, sessionId);
+    }
+    async startRecordingForTeleconsult(tenantId, sessionId) {
+        return this._startEgressForSession(tenantId, sessionId);
+    }
+    async _startEgressForSession(tenantId, sessionId) {
+        const session = await this.findOne(tenantId, sessionId);
         const { data: tnt } = await this.supabase
             .from("tenants")
             .select("slug")
@@ -184,6 +241,14 @@ let LiveService = LiveService_1 = class LiveService {
         return ["owner", "admin", "teacher"].includes(String(m?.role || ""));
     }
     async publishReplay(tenantId, sessionId, opts) {
+        const { data: kindRow } = await this.supabase
+            .from("live_sessions")
+            .select("kind")
+            .eq("id", sessionId)
+            .maybeSingle();
+        if (kindRow?.kind === "teleconsult") {
+            return { published: false, reason: "teleconsult" };
+        }
         if (opts?.actorId &&
             !(await this.isSessionEditor(tenantId, sessionId, opts.actorId))) {
             throw new common_1.ForbiddenException("Réservé à l'hôte ou à un encadrant");
@@ -284,6 +349,39 @@ let LiveService = LiveService_1 = class LiveService {
         if (!url)
             throw new common_1.ServiceUnavailableException("Stockage replay indisponible");
         return url;
+    }
+    async getTeleconsultRecordingState(sessionId) {
+        const { data: rows } = await this.supabase
+            .from("live_recordings")
+            .select("status, started_at, completed_at, duration_seconds, storage_filepath")
+            .eq("live_session_id", sessionId)
+            .order("created_at", { ascending: false })
+            .limit(10);
+        const list = (rows || []).filter(Boolean);
+        const active = list.find((r) => r.status === "recording");
+        const done = list.find((r) => r.status === "completed" && r.storage_filepath);
+        return {
+            recording: Boolean(active),
+            hasReplay: Boolean(done),
+            startedAt: active?.started_at ?? done?.started_at ?? null,
+            completedAt: done?.completed_at ?? null,
+            durationSeconds: done?.duration_seconds ?? null,
+        };
+    }
+    async resolveTeleconsultReplayUrl(sessionId) {
+        const { data: rec } = await this.supabase
+            .from("live_recordings")
+            .select("storage_filepath")
+            .eq("live_session_id", sessionId)
+            .eq("status", "completed")
+            .not("storage_filepath", "is", null)
+            .order("completed_at", { ascending: false })
+            .limit(1)
+            .maybeSingle();
+        const filepath = rec?.storage_filepath;
+        if (!filepath)
+            return null;
+        return this.liveKit.presignReplayGet(filepath, 3600);
     }
     async unpublishReplay(tenantId, sessionId, actorId) {
         if (actorId && !(await this.isSessionEditor(tenantId, sessionId, actorId))) {
@@ -392,10 +490,31 @@ let LiveService = LiveService_1 = class LiveService {
             .maybeSingle();
         return re.data?.id ?? null;
     }
+    async resolveMemberCycle(tenantId, userId) {
+        if (!tenantId || !userId)
+            return null;
+        const { data: subs } = await this.supabase
+            .from("billing_subscriptions")
+            .select("plan_id, status, current_period_end")
+            .eq("tenant_id", tenantId)
+            .eq("user_id", userId)
+            .eq("status", "active");
+        let best = null;
+        for (const s of subs ?? []) {
+            const endStr = s.current_period_end;
+            const end = endStr ? new Date(endStr).getTime() : null;
+            if (end !== null && end < Date.now())
+                continue;
+            const c = (0, member_tier_1.cycleFromPlanId)(s.plan_id);
+            if (c && (0, member_tier_1.rankOfCycle)(c) > (0, member_tier_1.rankOfCycle)(best))
+                best = c;
+        }
+        return best;
+    }
     async generateToken(sessionId, userId, requestedRole, tenant) {
         const { data: session } = await this.supabase
             .from("live_sessions")
-            .select("host_user_id, tenant_id, status, started_at, price_cents, tenants(slug)")
+            .select("host_user_id, tenant_id, status, started_at, price_cents, formation_id, tenants(slug)")
             .eq("id", sessionId)
             .single();
         if (!session)
@@ -427,6 +546,12 @@ let LiveService = LiveService_1 = class LiveService {
                 .maybeSingle();
             if (!pass?.id) {
                 throw new common_1.ForbiddenException("Ce live est payant : complétez votre paiement pour y accéder.");
+            }
+        }
+        if (role !== "host" && session.formation_id) {
+            const cycle = await this.resolveMemberCycle(session.tenant_id, userId);
+            if (!(0, member_tier_1.cycleCan)(cycle, "liveCursus")) {
+                throw new common_1.ForbiddenException("Ce live fait partie d'un cursus : un forfait Académique ou supérieur est requis pour y accéder.");
             }
         }
         const slug = tenant?.slug ?? session?.tenants?.slug ?? sessionId;
@@ -463,6 +588,59 @@ let LiveService = LiveService_1 = class LiveService {
             : await this.liveKit.generateParticipantToken(roomName, userId, undefined, cappedTtlSeconds ?? "1h");
         return { token, room: roomName, role, userId, requestedRole: requestedRole ?? null };
     }
+    async generateGuestLiveToken(sessionId, inviteId, tenantSlug) {
+        const { data: pass } = await this.supabase
+            .from("access_passes")
+            .select("id, user_id, tenant_id, resource_type, resource_id, status")
+            .eq("id", inviteId)
+            .maybeSingle();
+        if (!pass ||
+            pass.resource_type !== "live_session" ||
+            pass.resource_id !== sessionId ||
+            pass.status !== "active") {
+            throw new common_1.ForbiddenException("Lien d'accès invalide ou expiré.");
+        }
+        const { data: session } = await this.supabase
+            .from("live_sessions")
+            .select("tenant_id, status, started_at, tenants(slug)")
+            .eq("id", sessionId)
+            .single();
+        if (!session)
+            throw new common_1.NotFoundException("Session introuvable");
+        if (session.tenant_id !== pass.tenant_id) {
+            throw new common_1.ForbiddenException("Accès refusé.");
+        }
+        const slug = tenantSlug ?? session?.tenants?.slug ?? sessionId;
+        const roomName = livekit_service_1.LiveKitService.scopedRoomName(slug, sessionId);
+        const identity = `guest_${inviteId}`;
+        const { limits } = await this.entitlements.resolveLimits(session.tenant_id);
+        let cappedTtlSeconds;
+        if (limits.maxLiveMinutes !== null) {
+            const startedAt = session.started_at
+                ? new Date(session.started_at).getTime()
+                : null;
+            const isLive = session.status === "live" && startedAt !== null;
+            if (isLive) {
+                const remainingMs = startedAt + limits.maxLiveMinutes * 60_000 - Date.now();
+                if (remainingMs <= 0) {
+                    throw new common_1.ForbiddenException(`Forfait gratuit : ce live a atteint sa limite de ${limits.maxLiveMinutes} minutes.`);
+                }
+                cappedTtlSeconds = Math.max(30, Math.floor(remainingMs / 1000));
+            }
+            else {
+                cappedTtlSeconds = limits.maxLiveMinutes * 60;
+            }
+        }
+        if (limits.maxParticipants !== null) {
+            const present = await this.liveKit.listParticipantIdentities(roomName);
+            if (!present.includes(identity) && present.length >= limits.maxParticipants) {
+                throw new common_1.ForbiddenException(`Forfait gratuit : ${limits.maxParticipants} participants maximum dans un live.`);
+            }
+        }
+        await this.liveKit.ensureRoom(roomName, sessionId, pass.user_id);
+        const token = await this.liveKit.generateParticipantToken(roomName, identity, undefined, cappedTtlSeconds ?? "1h");
+        return { token, room: roomName, role: "guest", identity };
+    }
     async maybeStartRecording(tenantId, sessionId) {
         if (!process.env.CF_R2_BUCKET)
             return;
@@ -483,6 +661,18 @@ let LiveService = LiveService_1 = class LiveService {
     }
     roomNameFor(tenantSlug, externalRef) {
         return livekit_service_1.LiveKitService.scopedRoomName(tenantSlug, externalRef);
+    }
+    listRoomParticipants(tenantSlug, externalRef) {
+        return this.liveKit.listParticipantIdentities(this.roomNameFor(tenantSlug, externalRef));
+    }
+    async closeRoom(tenantSlug, externalRef) {
+        await this.liveKit.deleteRoom(this.roomNameFor(tenantSlug, externalRef));
+    }
+    muteParticipant(tenantSlug, externalRef, identity) {
+        return this.liveKit.muteParticipantAudio(this.roomNameFor(tenantSlug, externalRef), identity);
+    }
+    removeParticipant(tenantSlug, externalRef, identity) {
+        return this.liveKit.removeParticipant(this.roomNameFor(tenantSlug, externalRef), identity);
     }
     async issueTokenForSession(input) {
         const roomName = livekit_service_1.LiveKitService.scopedRoomName(input.tenantSlug, input.externalRef);
@@ -571,7 +761,7 @@ let LiveService = LiveService_1 = class LiveService {
             return null;
         const row = data;
         if (row.ended_at) {
-            return { session_id: row.id, duration_seconds: 0 };
+            return { session_id: row.id, duration_seconds: 0, tenant_id: row.tenant_id ?? null };
         }
         const endedAt = new Date();
         const durationSec = Math.max(0, Math.floor((endedAt.getTime() - new Date(row.started_at).getTime()) / 1000));
@@ -582,7 +772,7 @@ let LiveService = LiveService_1 = class LiveService {
             duration_seconds: durationSec,
         })
             .eq('id', row.id);
-        return { session_id: row.id, duration_seconds: durationSec };
+        return { session_id: row.id, duration_seconds: durationSec, tenant_id: row.tenant_id ?? null };
     }
     async getLiriConsumption(tenantId, from, to) {
         const supabase = this.supabase;
@@ -616,6 +806,7 @@ exports.LiveService = LiveService = LiveService_1 = __decorate([
     (0, common_1.Injectable)(),
     __metadata("design:paramtypes", [auth_service_1.AuthService,
         livekit_service_1.LiveKitService,
-        liri_entitlements_service_1.LiriEntitlementsService])
+        liri_entitlements_service_1.LiriEntitlementsService,
+        usage_service_1.UsageService])
 ], LiveService);
 //# sourceMappingURL=live.service.js.map

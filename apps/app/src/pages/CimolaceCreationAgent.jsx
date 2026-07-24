@@ -414,7 +414,7 @@ function highlightReply(text, kw) {
   return (
     <>
       {text.slice(0, i)}
-      <span className="sv-key">{text.slice(i, i + kw.length)}</span>
+      <span className="sv-key" style={{ whiteSpace: 'nowrap' }}>{text.slice(i, i + kw.length).replace(/\s+([:;!?])/g, '$1')}</span>
       {text.slice(i + kw.length)}
     </>
   );
@@ -480,7 +480,7 @@ function croquisFor(t) {
 // composition de tout l'écran ; le front la met en scène + l'anime, puis revient
 // au mode de base. `reply` reste TOUJOURS la voix autonome (invariant anti-écran-vide).
 // ═══════════════════════════════════════════════════════════════════════════
-const SCENE_TYPES = ['aside', 'split', 'reader', 'tutorial', 'cards', 'timeline', 'stats', 'comparateur', 'faq'];
+const SCENE_TYPES = ['aside', 'split', 'answer', 'story', 'founder', 'reader', 'tutorial', 'cards', 'timeline', 'stats', 'comparateur', 'faq'];
 const prefersReduced = () =>
   typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
@@ -518,6 +518,54 @@ function normalizeScene(raw) {
       const tn = (v) => (v === 'terra' || v === 'gold') ? v : undefined;
       return { type: 'split', headline: cut(raw.headline, 80) || undefined, left, right,
         tone: { left: tn(raw.tone && raw.tone.left), right: tn(raw.tone && raw.tone.right) } };
+    }
+    if (raw.type === 'answer') {
+      const sections = (Array.isArray(raw.sections) ? raw.sections : []).slice(0, 5)
+        .map((sec) => (sec && sec.h) ? {
+          h: cut(sec.h, 70),
+          p: cut(sec.p, 900) || undefined,
+          bullets: arr(sec.bullets, 5, 150),
+        } : null).filter((sec) => sec && (sec.p || sec.bullets.length));
+      const sources = (Array.isArray(raw.sources) ? raw.sources : []).slice(0, 4)
+        .map((src) => (src && src.label) ? {
+          label: cut(src.label, 44),
+          note: cut(src.note, 140) || undefined,
+          nodeId: cut(src.nodeId, 40) || undefined,
+        } : null).filter(Boolean);
+      const summary = cut(raw.summary, 1000);
+      if (!summary && !sections.length) return null;
+      return { type: 'answer', question: cut(raw.question, 140) || undefined,
+        title: cut(raw.title, 90) || 'Réponse', summary, sections, sources };
+    }
+    if (raw.type === 'story') {
+      const chapters = (Array.isArray(raw.chapters) ? raw.chapters : []).slice(0, 4)
+        .map((c) => (c && c.title) ? {
+          kicker: cut(c.kicker, 34) || undefined,
+          title: cut(c.title, 72),
+          body: cut(c.body, 520) || undefined,
+          image: cut(c.image, 260) || undefined,
+          alt: cut(c.alt, 160) || undefined,
+          accent: (c.accent === 'terra' || c.accent === 'gold') ? c.accent : undefined,
+        } : null).filter(Boolean);
+      const contrasts = (Array.isArray(raw.contrasts) ? raw.contrasts : []).slice(0, 4)
+        .map((x) => (x && x.before && x.after) ? { before: cut(x.before, 52), after: cut(x.after, 52) } : null).filter(Boolean);
+      if (!chapters.length) return null;
+      return { type: 'story', title: cut(raw.title, 90) || 'Récit',
+        eyebrow: cut(raw.eyebrow, 40) || undefined, summary: cut(raw.summary, 760) || undefined,
+        heroImage: cut(raw.heroImage, 260) || chapters[0]?.image, heroAlt: cut(raw.heroAlt, 160) || undefined,
+        chapters, contrasts };
+    }
+    if (raw.type === 'founder') {
+      const facts = (Array.isArray(raw.facts) ? raw.facts : []).slice(0, 3)
+        .map((f) => (f && f.k && f.v) ? { k: cut(f.k, 34), v: cut(f.v, 110) } : null).filter(Boolean);
+      const body = (Array.isArray(raw.body) ? raw.body : []).slice(0, 3)
+        .map((b) => (b && b.h && b.p) ? { h: cut(b.h, 60), p: cut(b.p, 760) } : null).filter(Boolean);
+      const name = cut(raw.name, 80);
+      if (!name && !body.length) return null;
+      return { type: 'founder', title: cut(raw.title, 90) || 'Le fondateur', name,
+        role: cut(raw.role, 140) || undefined, image: cut(raw.image, 260) || '/founder.jpg',
+        alt: cut(raw.alt, 180) || undefined, quote: cut(raw.quote, 280) || undefined,
+        body, facts, suggestions: arr(raw.suggestions, 4, 70) };
     }
     if (raw.type === 'reader') {
       const body = (Array.isArray(raw.body) ? raw.body : []).slice(0, 6)
@@ -666,16 +714,16 @@ const SCENE_SUGGEST_CSS = `
 .cca-ss-chip:hover{background:rgba(230,204,146,.13);border-color:rgba(230,204,146,.48)}
 .cca-ss-chip>svg:first-of-type{color:#e6cc92}
 .cca-ss-arr{color:#e6cc92;opacity:.55;margin-left:1px}
-.cca-scene:has(.cca-ss) .cca-cards,.cca-scene:has(.cca-ss) .cca-tl,.cca-scene:has(.cca-ss) .cca-st,.cca-scene:has(.cca-ss) .cca-cmp,.cca-scene:has(.cca-ss) .cca-tuto{padding-bottom:120px;transition:padding-bottom .28s cubic-bezier(.16,1,.3,1)}
+.cca-scene:has(.cca-ss) .cca-answer,.cca-scene:has(.cca-ss) .cca-story,.cca-scene:has(.cca-ss) .cca-cards,.cca-scene:has(.cca-ss) .cca-tl,.cca-scene:has(.cca-ss) .cca-st,.cca-scene:has(.cca-ss) .cca-cmp,.cca-scene:has(.cca-ss) .cca-tuto{padding-bottom:120px;transition:padding-bottom .28s cubic-bezier(.16,1,.3,1)}
 /* Champ « écrire » ouvert : la scène AMÉNAGE l'espace (recule) pour ne pas être recouverte par la barre de saisie. */
-.cca-input-open .cca-scene:has(.cca-ss) .cca-cards,.cca-input-open .cca-scene:has(.cca-ss) .cca-tl,.cca-input-open .cca-scene:has(.cca-ss) .cca-st,.cca-input-open .cca-scene:has(.cca-ss) .cca-cmp,.cca-input-open .cca-scene:has(.cca-ss) .cca-tuto{padding-bottom:184px}
+.cca-input-open .cca-scene:has(.cca-ss) .cca-answer,.cca-input-open .cca-scene:has(.cca-ss) .cca-story,.cca-input-open .cca-scene:has(.cca-ss) .cca-cards,.cca-input-open .cca-scene:has(.cca-ss) .cca-tl,.cca-input-open .cca-scene:has(.cca-ss) .cca-st,.cca-input-open .cca-scene:has(.cca-ss) .cca-cmp,.cca-input-open .cca-scene:has(.cca-ss) .cca-tuto{padding-bottom:184px}
 @media (max-width:640px){.cca-ss{padding:32px 4vw 15px;gap:7px}}
 /* MOBILE : la barre de suite s'enroule sur 3-4 rangées (~210px) vs ~120px desktop → le dégagement
    fixe de 120px laissait la dernière carte passer SOUS la barre. On réserve la hauteur réelle du
    pire cas (barre + marge) pour que le contenu scrollable dégage toujours la barre. */
 @media (max-width:640px){
-  .cca-scene:has(.cca-ss) .cca-cards,.cca-scene:has(.cca-ss) .cca-tl,.cca-scene:has(.cca-ss) .cca-st,.cca-scene:has(.cca-ss) .cca-cmp,.cca-scene:has(.cca-ss) .cca-tuto{padding-bottom:236px}
-  .cca-input-open .cca-scene:has(.cca-ss) .cca-cards,.cca-input-open .cca-scene:has(.cca-ss) .cca-tl,.cca-input-open .cca-scene:has(.cca-ss) .cca-st,.cca-input-open .cca-scene:has(.cca-ss) .cca-cmp,.cca-input-open .cca-scene:has(.cca-ss) .cca-tuto{padding-bottom:300px}
+  .cca-scene:has(.cca-ss) .cca-answer,.cca-scene:has(.cca-ss) .cca-story,.cca-scene:has(.cca-ss) .cca-cards,.cca-scene:has(.cca-ss) .cca-tl,.cca-scene:has(.cca-ss) .cca-st,.cca-scene:has(.cca-ss) .cca-cmp,.cca-scene:has(.cca-ss) .cca-tuto{padding-bottom:236px}
+  .cca-input-open .cca-scene:has(.cca-ss) .cca-answer,.cca-input-open .cca-scene:has(.cca-ss) .cca-story,.cca-input-open .cca-scene:has(.cca-ss) .cca-cards,.cca-input-open .cca-scene:has(.cca-ss) .cca-tl,.cca-input-open .cca-scene:has(.cca-ss) .cca-st,.cca-input-open .cca-scene:has(.cca-ss) .cca-cmp,.cca-input-open .cca-scene:has(.cca-ss) .cca-tuto{padding-bottom:300px}
 }
 `;
 // Actions de CONVERSION (mises en avant dans la suite) ; les intentions « molles » (comprendre,
@@ -715,15 +763,211 @@ export function SceneStage({ scene, visible, readerIdx, setReaderIdx, onSuggest,
       style={{ position: 'absolute', inset: 0, pointerEvents: 'none', zIndex: 2 }}>
       {scene.type === 'aside' && <AsidePanel scene={scene} />}
       {scene.type === 'split' && <SplitWorlds scene={scene} hooks={hooks} onHook={onHook} />}
+      {scene.type === 'answer' && <AnswerScene scene={scene} onNode={onNode} glossary={glossary} onTerm={onTerm} />}
+      {scene.type === 'story' && <StoryScene scene={scene} glossary={glossary} onTerm={onTerm} />}
+      {scene.type === 'founder' && <FounderScene scene={scene} onSuggest={onSuggest} glossary={glossary} onTerm={onTerm} />}
       {scene.type === 'reader' && <ReaderView scene={scene} idx={readerIdx} setIdx={setReaderIdx} onSuggest={onSuggest} hooks={hooks} glossary={glossary} onTerm={onTerm} />}
       {scene.type === 'tutorial' && <TutorialFlow scene={scene} onCta={onCta} hooks={hooks} onHook={onHook} />}
       {scene.type === 'cards' && <CardsScene scene={scene} onFocus={onFocus} glossary={glossary} onTerm={onTerm} />}
       {scene.type === 'timeline' && <TimelineFlow scene={scene} onFocus={onFocus} glossary={glossary} onTerm={onTerm} />}
       {scene.type === 'stats' && <StatsPanel scene={scene} visible={visible} onFocus={onFocus} />}
-      {scene.type === 'comparateur' && <ComparateurScene scene={scene} onFocus={onFocus} glossary={glossary} onTerm={onTerm} />}
+      {scene.type === 'comparateur' && <ComparateurScene scene={scene} onFocus={onFocus} onAct={onAct} glossary={glossary} onTerm={onTerm} />}
       {scene.type === 'faq' && <FaqScene scene={scene} glossary={glossary} onTerm={onTerm} />}
       {scene.type !== 'aside' && <SceneSuggest acts={(scene.type === 'tutorial' && scene.cta) ? [] : acts} suggest={suggest} onAct={onAct} onNode={onNode} />}
     </div>
+  );
+}
+
+
+const ANSWER_CSS = `
+.cca-answer{position:absolute;inset:0;display:grid;grid-template-columns:minmax(0,690px) minmax(250px,330px);justify-content:center;align-items:flex-start;gap:44px;padding:clamp(78px,10vh,116px) 5vw 9vh;overflow-y:auto;scrollbar-width:none;color:#f4efe6;pointer-events:auto}
+.cca-answer::-webkit-scrollbar{width:0}
+.cca-answer-main{max-width:690px;opacity:0;transform:translateY(18px);transition:opacity .55s ease,transform .55s cubic-bezier(.16,1,.3,1)}
+.cca-scene-on .cca-answer-main{opacity:1;transform:none}
+.cca-answer-q{display:inline-flex;align-items:center;gap:8px;max-width:100%;padding:10px 16px;border-radius:999px;background:rgba(244,239,230,.07);border:1px solid rgba(244,239,230,.1);font-family:'Bricolage Grotesque',system-ui,sans-serif;font-size:13px;color:rgba(244,239,230,.82);box-shadow:0 16px 44px rgba(0,0,0,.14)}
+.cca-answer-title{margin:24px 0 12px;font-family:'Fraunces','Source Serif 4',Georgia,serif;font-size:clamp(28px,4.5vw,48px);line-height:1.04;font-weight:650;letter-spacing:-.035em;color:#f4efe6}
+.cca-answer-summary{position:relative;margin:0 0 27px;padding-left:18px;font-size:clamp(18px,2.1vw,23px);line-height:1.42;color:#f4efe6;font-weight:650;letter-spacing:-.012em}
+.cca-answer-summary::before{content:'';position:absolute;left:0;top:.18em;bottom:.2em;width:3px;border-radius:999px;background:linear-gradient(#e6cc92,#d97757)}
+.cca-answer-section{margin:21px 0 0;padding-top:19px;border-top:1px solid rgba(244,239,230,.1);opacity:0;transform:translateY(12px);transition:opacity .52s ease,transform .52s cubic-bezier(.16,1,.3,1)}
+.cca-scene-on .cca-answer-section{opacity:1;transform:none}
+.cca-answer-h{display:flex;align-items:center;gap:10px;margin:0 0 8px;font-family:'Bricolage Grotesque',system-ui,sans-serif;font-size:15px;font-weight:800;letter-spacing:.01em;color:#e6cc92}
+.cca-answer-h span{width:22px;height:22px;border-radius:999px;display:inline-flex;align-items:center;justify-content:center;background:rgba(230,204,146,.1);border:1px solid rgba(230,204,146,.24);font-size:11px;color:#e6cc92}
+.cca-answer-p{margin:0;font-size:15.5px;line-height:1.72;color:rgba(244,239,230,.76)}
+.cca-answer-ul{display:grid;gap:9px;margin:12px 0 0;padding:0;list-style:none}
+.cca-answer-li{display:flex;align-items:flex-start;gap:12px;font-size:14.5px;line-height:1.5;color:rgba(244,239,230,.76)}
+.cca-answer-li::before{content:'';flex:0 0 auto;width:7px;height:7px;margin-top:.55em;border-radius:999px;background:#d97757;box-shadow:0 0 0 5px rgba(217,119,87,.12)}
+.cca-answer-side{position:sticky;top:0;display:flex;flex-direction:column;gap:12px;opacity:0;transform:translateX(16px);transition:opacity .55s ease .12s,transform .55s cubic-bezier(.16,1,.3,1) .12s}
+.cca-scene-on .cca-answer-side{opacity:1;transform:none}
+.cca-answer-side-title{display:flex;align-items:center;justify-content:space-between;font-family:'Bricolage Grotesque',system-ui,sans-serif;font-size:11px;font-weight:850;letter-spacing:.16em;text-transform:uppercase;color:rgba(244,239,230,.5);margin-bottom:2px}
+.cca-answer-card{appearance:none;text-align:left;width:100%;border:1px solid rgba(244,239,230,.1);background:rgba(244,239,230,.045);border-radius:18px;padding:15px 15px 14px;color:inherit;cursor:pointer;transition:background .18s ease,border-color .18s ease,transform .18s ease}
+.cca-answer-card:hover{background:rgba(230,204,146,.08);border-color:rgba(230,204,146,.32);transform:translateY(-1px)}
+.cca-answer-card b{display:block;font-family:'Bricolage Grotesque',system-ui,sans-serif;font-size:14px;color:#f4efe6;margin-bottom:6px}
+.cca-answer-card span{display:block;font-size:12.5px;line-height:1.45;color:rgba(244,239,230,.56)}
+.cca-answer-card small{display:inline-flex;align-items:center;gap:5px;margin-top:11px;font-family:'Bricolage Grotesque',system-ui,sans-serif;font-size:10.5px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:#e6cc92}
+@media (max-width:860px){.cca-answer{display:block;padding:78px 6vw 10vh}.cca-answer-side{position:relative;margin-top:30px;display:grid;grid-template-columns:1fr 1fr;gap:10px}.cca-answer-side-title{grid-column:1/-1}}
+@media (max-width:640px){.cca-answer{padding:70px 5vw 8vh}.cca-answer-q{font-size:12.5px;padding:9px 13px}.cca-answer-title{margin-top:18px}.cca-answer-summary{font-size:18px}.cca-answer-side{grid-template-columns:1fr}.cca-answer-p{font-size:14.5px}.cca-answer-li{font-size:13.8px}}
+`;
+function AnswerScene({ scene, onNode, glossary, onTerm }) {
+  return (
+    <div className="cca-answer">
+      <style>{ANSWER_CSS}</style>
+      <article className="cca-answer-main">
+        {scene.question && <div className="cca-answer-q"><Sparkles size={15} />{scene.question}</div>}
+        <h2 className="cca-answer-title">{scene.title}</h2>
+        {scene.summary && <p className="cca-answer-summary">{glossify(scene.summary, glossary, onTerm)}</p>}
+        {(scene.sections || []).map((sec, i) => (
+          <section key={i} className="cca-answer-section" style={{ transitionDelay: `${i * 75 + 150}ms` }}>
+            <h3 className="cca-answer-h"><span>{i + 1}</span>{sec.h}</h3>
+            {sec.p && <p className="cca-answer-p">{glossify(sec.p, glossary, onTerm)}</p>}
+            {sec.bullets && sec.bullets.length > 0 && (
+              <ul className="cca-answer-ul">
+                {sec.bullets.map((b, j) => <li key={j} className="cca-answer-li">{glossify(b, glossary, onTerm)}</li>)}
+              </ul>
+            )}
+          </section>
+        ))}
+      </article>
+      {(scene.sources || []).length > 0 && (
+        <aside className="cca-answer-side" aria-label="À explorer ensuite">
+          <div className="cca-answer-side-title"><span>À explorer</span><BookOpen size={14} /></div>
+          {scene.sources.map((src, i) => (
+            <button key={i} type="button" className="cca-answer-card" onClick={() => src.nodeId && onNode(src.nodeId)} disabled={!src.nodeId}>
+              <b>{src.label}</b>
+              {src.note && <span>{src.note}</span>}
+              {src.nodeId && <small>Ouvrir <ArrowRight size={12} /></small>}
+            </button>
+          ))}
+        </aside>
+      )}
+    </div>
+  );
+}
+
+const STORY_CSS = `
+.cca-story{position:absolute;inset:0;overflow-y:auto;scrollbar-width:none;color:#f4efe6;pointer-events:auto;padding:clamp(74px,9vh,108px) 5vw 10vh}
+.cca-story::-webkit-scrollbar{width:0}
+.cca-story-wrap{width:min(1120px,100%);margin:0 auto;display:grid;grid-template-columns:minmax(0,1fr) minmax(330px,450px);gap:44px;align-items:center}
+.cca-story-copy{opacity:0;transform:translateY(20px);transition:opacity .62s ease,transform .7s cubic-bezier(.16,1,.3,1)}
+.cca-scene-on .cca-story-copy{opacity:1;transform:none}
+.cca-story-eyebrow{display:inline-flex;align-items:center;gap:9px;margin:0 0 18px;font:850 11px/1 'Bricolage Grotesque',system-ui,sans-serif;letter-spacing:.2em;text-transform:uppercase;color:#d97757}
+.cca-story-eyebrow::before{content:'';width:8px;height:8px;border-radius:999px;background:#d97757;box-shadow:0 0 0 7px rgba(217,119,87,.12)}
+.cca-story-title{margin:0;font-family:'Fraunces','Source Serif 4',Georgia,serif;font-size:clamp(38px,5.6vw,76px);line-height:.96;letter-spacing:-.055em;font-weight:680;color:#fff;text-wrap:balance}
+.cca-story-summary{position:relative;margin:24px 0 0;max-width:720px;padding-left:18px;font-size:clamp(17px,1.8vw,22px);line-height:1.55;color:rgba(244,239,230,.74);text-wrap:balance}
+.cca-story-summary::before{content:'';position:absolute;left:0;top:.25em;bottom:.25em;width:3px;border-radius:999px;background:linear-gradient(#e6cc92,#d97757)}
+.cca-story-visual{position:relative;min-height:520px;border-radius:36px;overflow:hidden;background:#0b0907;border:1px solid rgba(230,204,146,.12);box-shadow:0 42px 120px rgba(0,0,0,.42);opacity:0;transform:translateX(22px) scale(.985);transition:opacity .7s ease .08s,transform .78s cubic-bezier(.16,1,.3,1) .08s}
+.cca-scene-on .cca-story-visual{opacity:1;transform:none}
+.cca-story-visual img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:center;filter:saturate(1.06) contrast(1.04)}
+.cca-story-visual::after{content:'';position:absolute;inset:0;background:linear-gradient(0deg,rgba(0,0,0,.78),transparent 48%),radial-gradient(circle at 50% 18%,transparent 22%,rgba(0,0,0,.34) 100%)}
+.cca-story-caption{position:absolute;left:24px;right:24px;bottom:22px;z-index:1;border-top:1px solid rgba(244,239,230,.16);padding-top:16px}
+.cca-story-caption small{display:block;color:#e6cc92;font:850 10px/1 'Bricolage Grotesque',system-ui,sans-serif;letter-spacing:.2em;text-transform:uppercase;margin-bottom:8px}.cca-story-caption b{display:block;font-family:'Fraunces','Source Serif 4',Georgia,serif;font-size:24px;color:#fff}
+.cca-story-chapters{grid-column:1/-1;display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:14px;margin-top:14px}
+.cca-story-chapter{position:relative;min-height:230px;overflow:hidden;border-radius:24px;border:1px solid rgba(244,239,230,.09);background:rgba(244,239,230,.045);opacity:0;transform:translateY(20px);transition:opacity .56s ease,transform .62s cubic-bezier(.16,1,.3,1)}
+.cca-scene-on .cca-story-chapter{opacity:1;transform:none}
+.cca-story-chapter img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:.34;filter:saturate(1.06)}
+.cca-story-chapter::after{content:'';position:absolute;inset:0;background:linear-gradient(0deg,rgba(18,17,15,.92),rgba(18,17,15,.55))}
+.cca-story-chapter-body{position:relative;z-index:1;min-height:230px;padding:22px;display:flex;flex-direction:column;justify-content:flex-end}
+.cca-story-kicker{font:850 10px/1 'Bricolage Grotesque',system-ui,sans-serif;letter-spacing:.18em;text-transform:uppercase;color:#d97757;margin-bottom:10px}.cca-story-chapter.gold .cca-story-kicker{color:#e6cc92}
+.cca-story-chapter h3{margin:0;font-family:'Fraunces','Source Serif 4',Georgia,serif;font-size:25px;line-height:1.05;color:#fff}.cca-story-chapter p{margin:10px 0 0;font-size:13.8px;line-height:1.55;color:rgba(244,239,230,.7)}
+.cca-story-contrasts{grid-column:1/-1;margin-top:8px;display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:10px}
+.cca-story-contrast{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:10px;border:1px solid rgba(230,204,146,.13);background:rgba(18,17,15,.28);border-radius:999px;padding:9px 12px;font-size:12.5px;color:rgba(244,239,230,.64);opacity:0;transform:translateY(10px);transition:opacity .5s ease,transform .5s cubic-bezier(.16,1,.3,1)}
+.cca-scene-on .cca-story-contrast{opacity:1;transform:none}.cca-story-contrast b{font-weight:750;color:#f4efe6}.cca-story-arrow{color:#e6cc92}
+@media(max-width:900px){.cca-story{padding:70px 5vw 240px}.cca-story-wrap{grid-template-columns:1fr;gap:24px}.cca-story-visual{min-height:360px;border-radius:28px;order:-1}.cca-story-title{font-size:clamp(36px,10vw,58px)}.cca-story-chapters{grid-template-columns:1fr}.cca-story-contrast{grid-template-columns:1fr;gap:5px;border-radius:18px}.cca-story-arrow{display:none}}
+`;
+function StoryScene({ scene, glossary, onTerm }) {
+  const hero = scene.heroImage || scene.chapters?.[0]?.image;
+  const heroChapter = scene.chapters?.[0] || {};
+  return (
+    <section className="cca-story" aria-label={scene.title || 'Récit'}>
+      <style>{STORY_CSS}</style>
+      <div className="cca-story-wrap">
+        <article className="cca-story-copy">
+          {scene.eyebrow && <p className="cca-story-eyebrow">{scene.eyebrow}</p>}
+          <h2 className="cca-story-title">{scene.title}</h2>
+          {scene.summary && <p className="cca-story-summary">{glossify(scene.summary, glossary, onTerm)}</p>}
+        </article>
+        {hero && (
+          <figure className="cca-story-visual">
+            <img src={hero} alt={scene.heroAlt || heroChapter.alt || scene.title || 'Illustration Prorascience'} />
+            <figcaption className="cca-story-caption">
+              <small>{heroChapter.kicker || scene.eyebrow || 'Prorascience'}</small>
+              <b>{heroChapter.title || scene.title}</b>
+            </figcaption>
+          </figure>
+        )}
+        <div className="cca-story-chapters">
+          {(scene.chapters || []).map((c, i) => (
+            <article key={i} className={`cca-story-chapter${c.accent === 'gold' ? ' gold' : ''}`} style={{ transitionDelay: `${i * 85 + 180}ms` }}>
+              {c.image && <img src={c.image} alt={c.alt || c.title} />}
+              <div className="cca-story-chapter-body">
+                {c.kicker && <div className="cca-story-kicker">{c.kicker}</div>}
+                <h3>{c.title}</h3>
+                {c.body && <p>{glossify(c.body, glossary, onTerm)}</p>}
+              </div>
+            </article>
+          ))}
+        </div>
+        {(scene.contrasts || []).length > 0 && (
+          <div className="cca-story-contrasts">
+            {scene.contrasts.map((x, i) => (
+              <div key={i} className="cca-story-contrast" style={{ transitionDelay: `${i * 70 + 360}ms` }}>
+                <span>{x.before}</span><span className="cca-story-arrow">→</span><b>{x.after}</b>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+    </section>
+  );
+}
+
+
+const FOUNDER_CSS = `
+.cca-scene-on.cca-slot-founder{opacity:0;transform:translateY(12px) scale(.82);pointer-events:none}
+.cca-founder{position:absolute;inset:0;overflow:hidden;color:#f4efe6;pointer-events:auto;display:grid;grid-template-columns:minmax(360px,45vw) minmax(420px,620px);align-items:center;justify-content:center;gap:min(5vw,72px);padding:82px 7vw 152px}
+.cca-founder::before{content:'';position:absolute;inset:-12%;background:radial-gradient(circle at 32% 58%,rgba(217,119,87,.16),transparent 28%),radial-gradient(circle at 64% 43%,rgba(230,204,146,.10),transparent 30%);filter:blur(12px);pointer-events:none}
+.cca-founder-photo{position:relative;z-index:1;min-height:min(670px,68vh);height:min(670px,68vh);border-radius:42px;overflow:hidden;background:#090806;box-shadow:0 44px 130px rgba(0,0,0,.48);opacity:0;transform:translateX(-24px) scale(.985);transition:opacity .7s ease,transform .75s cubic-bezier(.16,1,.3,1)}
+.cca-scene-on .cca-founder-photo{opacity:1;transform:none}
+.cca-founder-photo img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:center 22%;filter:saturate(1.04) contrast(1.04)}
+.cca-founder-photo::after{content:'';position:absolute;inset:0;background:linear-gradient(90deg,rgba(0,0,0,.08),transparent 42%),linear-gradient(0deg,rgba(0,0,0,.64),transparent 38%),radial-gradient(circle at 50% 28%,transparent 20%,rgba(0,0,0,.36) 100%);pointer-events:none}
+.cca-founder-caption{position:absolute;left:28px;right:28px;bottom:24px;z-index:2;display:flex;align-items:flex-end;justify-content:space-between;gap:18px;border-top:1px solid rgba(244,239,230,.18);padding-top:18px}
+.cca-founder-caption small{display:block;font:800 10px/1 'Bricolage Grotesque',system-ui,sans-serif;letter-spacing:.18em;text-transform:uppercase;color:rgba(230,204,146,.72);margin-bottom:8px}.cca-founder-caption b{display:block;font-family:'Fraunces','Source Serif 4',Georgia,serif;font-size:22px;color:#fff}.cca-founder-caption span{font-size:12.5px;color:rgba(244,239,230,.68)}
+.cca-founder-sigil{width:44px;height:44px;border-radius:999px;display:flex;align-items:center;justify-content:center;border:1px solid rgba(230,204,146,.34);background:rgba(18,17,15,.62);color:#e6cc92;font-family:'Fraunces','Source Serif 4',Georgia,serif;font-weight:800;flex:0 0 auto}
+.cca-founder-copy{position:relative;z-index:1;max-width:620px;opacity:0;transform:translateY(22px);transition:opacity .65s ease .12s,transform .7s cubic-bezier(.16,1,.3,1) .12s}
+.cca-scene-on .cca-founder-copy{opacity:1;transform:none}
+.cca-founder-kicker{display:inline-flex;align-items:center;gap:9px;margin-bottom:18px;font:850 11px/1 'Bricolage Grotesque',system-ui,sans-serif;letter-spacing:.2em;text-transform:uppercase;color:#d97757}.cca-founder-kicker::before{content:'';width:7px;height:7px;border-radius:999px;background:#d97757;box-shadow:0 0 0 6px rgba(217,119,87,.12)}
+.cca-founder-title{margin:0;font-family:'Fraunces','Source Serif 4',Georgia,serif;font-size:clamp(46px,6vw,86px);line-height:.93;letter-spacing:-.05em;font-weight:650;color:#f4efe6;text-wrap:balance}
+.cca-founder-role{margin:16px 0 0;font-family:'Bricolage Grotesque',system-ui,sans-serif;font-size:15px;color:#e6cc92}.cca-founder-quote{position:relative;margin:34px 0 28px;padding-left:22px;font-family:'Fraunces','Source Serif 4',Georgia,serif;font-size:clamp(22px,2.2vw,32px);line-height:1.25;color:#fff;text-wrap:balance}.cca-founder-quote::before{content:'';position:absolute;left:0;top:.15em;bottom:.16em;width:3px;border-radius:999px;background:linear-gradient(#e6cc92,#d97757)}
+.cca-founder-section{margin-top:21px;padding-top:20px;border-top:1px solid rgba(244,239,230,.11)}.cca-founder-section h3{margin:0 0 8px;font-family:'Bricolage Grotesque',system-ui,sans-serif;font-size:15px;font-weight:850;color:#e6cc92}.cca-founder-section p{margin:0;font-size:15.5px;line-height:1.78;color:rgba(244,239,230,.72)}
+.cca-founder-facts{display:flex;flex-wrap:wrap;gap:10px;margin-top:28px}.cca-founder-fact{border:1px solid rgba(230,204,146,.16);background:rgba(244,239,230,.04);border-radius:999px;padding:9px 13px;font-size:12.5px;color:rgba(244,239,230,.74)}.cca-founder-fact b{color:#e6cc92;font-weight:800;margin-right:6px}
+.cca-founder-suggests{display:flex;flex-wrap:wrap;gap:8px;margin-top:26px}.cca-founder-suggests button{border:1px solid rgba(230,204,146,.20);background:rgba(230,204,146,.055);color:#e6cc92;border-radius:999px;padding:8px 13px;font:750 12px 'Inter',system-ui,sans-serif;cursor:pointer}
+@media(max-width:900px){.cca-founder{display:block;overflow-y:auto;padding:72px 5vw 250px}.cca-founder-photo{height:39vh;min-height:300px;border-radius:28px}.cca-founder-copy{margin-top:24px}.cca-founder-title{font-size:clamp(36px,10.5vw,54px)}.cca-founder-role{font-size:14px}.cca-founder-quote{font-size:21px;margin:22px 0 20px}.cca-founder-section{display:none}.cca-founder-facts,.cca-founder-suggests{display:none}.cca-founder-caption{left:18px;right:18px;bottom:18px}.cca-founder-caption b{font-size:18px}}
+`;
+function FounderScene({ scene, onSuggest, glossary, onTerm }) {
+  return (
+    <section className="cca-founder" aria-label={scene.title || 'Le fondateur'}>
+      <style>{FOUNDER_CSS}</style>
+      <figure className="cca-founder-photo">
+        <img src={scene.image || '/founder.jpg'} alt={scene.alt || scene.name || 'Fondateur'} />
+        <figcaption className="cca-founder-caption">
+          <span><small>Fondateur</small><b>{scene.name}</b>{scene.role && <span>{scene.role}</span>}</span>
+          <i className="cca-founder-sigil" aria-hidden>BJ</i>
+        </figcaption>
+      </figure>
+      <article className="cca-founder-copy">
+        <div className="cca-founder-kicker">Transmission incarnée</div>
+        <h2 className="cca-founder-title">{scene.title || 'Le fondateur'}</h2>
+        {scene.role && <p className="cca-founder-role">{scene.role}</p>}
+        {scene.quote && <blockquote className="cca-founder-quote">{glossify(scene.quote, glossary, onTerm)}</blockquote>}
+        {(scene.body || []).map((b, i) => (
+          <section key={i} className="cca-founder-section">
+            <h3>{b.h}</h3>
+            <p>{glossify(b.p, glossary, onTerm)}</p>
+          </section>
+        ))}
+        {(scene.facts || []).length > 0 && <div className="cca-founder-facts">{scene.facts.map((f, i) => <span key={i} className="cca-founder-fact"><b>{f.k}</b>{f.v}</span>)}</div>}
+        {(scene.suggestions || []).length > 0 && <div className="cca-founder-suggests">{scene.suggestions.map((x, i) => <button key={i} type="button" onClick={() => onSuggest(x)}>{x}</button>)}</div>}
+      </article>
+    </section>
   );
 }
 
@@ -991,7 +1235,7 @@ const COMPARATEUR_CSS = `
 .cca-cmp-no{color:rgba(244,239,230,.3)}
 @media (max-width:640px){.cca-cmp{padding:7vh 4vw 4vh}.cca-cmp-price{font-size:20px}}
 `;
-function ComparateurScene({ scene, onFocus, glossary, onTerm }) {
+function ComparateurScene({ scene, onFocus, onAct, glossary, onTerm }) {
   const plans = scene.plans;
   return (
     <div className="cca-cmp" style={{ pointerEvents: 'auto' }}>
@@ -1012,7 +1256,19 @@ function ComparateurScene({ scene, onFocus, glossary, onTerm }) {
                     {PIc && <span className="cca-cmp-pic"><PIc size={15} /></span>}
                     <span className="cca-cmp-pname">{p.name}</span>
                     {p.value && <span className="cca-cmp-price">{p.value}</span>}
-                    {clickable && <button type="button" className="cca-cmp-choose" onClick={() => onFocus(p.ref)}>Choisir →</button>}
+                    {clickable && (
+                      <button
+                        type="button"
+                        className="cca-cmp-choose"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          if (p.ref?.kind === 'plan' && onAct) onAct('acheter', p.name || 'Choisir');
+                          else onFocus(p.ref);
+                        }}
+                      >
+                        Choisir →
+                      </button>
+                    )}
                   </th>
                 );
               })}
@@ -1628,6 +1884,8 @@ export default function CimolaceCreationAgent({ tenantSlug: tenantSlugProp = nul
   // L7 — « Fais-moi le tour » : l'IA enchaîne les scènes toute seule
   const [tourActive, setTourActive] = useState(false);
   const [tourIdx, setTourIdx] = useState(0);
+  const [tourPaused, setTourPaused] = useState(false);
+  const [tourRecap, setTourRecap] = useState([]);
   const tourRef = useRef(null);   // { kind, beats, gen }
   const tourTimer = useRef(null);
   const tourGenRef = useRef(0);
@@ -1653,6 +1911,7 @@ export default function CimolaceCreationAgent({ tenantSlug: tenantSlugProp = nul
   const rootRef = useRef(null);
   const genRef = useRef(0);
   const audioCtxRef = useRef(null);
+  const speechRef = useRef(null);
   const audioUnlocked = useRef(false);
   const mutedRef = useRef(false);
   const [muted, setMuted] = useState(false);
@@ -1662,7 +1921,10 @@ export default function CimolaceCreationAgent({ tenantSlug: tenantSlugProp = nul
   // Realm Cimolace : saisie sur le funnel de création. (lessonActive coupe toujours la saisie.)
   const inputAllowed = !lessonActive && (isTenantRealm || step === 'discovery' || step === 'brand_ask' || step === 'brain' || step === 'product');
 
-  useEffect(() => { mutedRef.current = muted; }, [muted]);
+  useEffect(() => {
+    mutedRef.current = muted;
+    if (muted && typeof window !== 'undefined' && window.speechSynthesis) window.speechSynthesis.cancel();
+  }, [muted]);
   useEffect(() => { coveredRef.current = covered; }, [covered]);
   useEffect(() => { sceneRef.current = scene; }, [scene]);
 
@@ -1709,10 +1971,31 @@ export default function CimolaceCreationAgent({ tenantSlug: tenantSlugProp = nul
     return () => { window.removeEventListener('pointerdown', unlock); window.removeEventListener('keydown', unlock); };
   }, [audio, sHello]);
 
+  // Voix réelle navigateur (si son activé) — zéro service externe. Le premier clic déverrouille l'audio.
+  const vocalize = useCallback((text) => {
+    if (mutedRef.current || !audioUnlocked.current || typeof window === 'undefined' || !window.speechSynthesis) return;
+    const clean = String(text || '').replace(/\s+/g, ' ').trim();
+    if (!clean) return;
+    try {
+      window.speechSynthesis.cancel();
+      const u = new SpeechSynthesisUtterance(clean);
+      u.lang = 'fr-FR';
+      u.rate = 0.94;
+      u.pitch = 0.86;
+      u.volume = 0.92;
+      const voices = window.speechSynthesis.getVoices ? window.speechSynthesis.getVoices() : [];
+      u.voice = voices.find((v) => /fr[-_ ]FR/i.test(v.lang) && /Thomas|Amelie|Audrey|Pauline|Daniel|Google/i.test(v.name))
+        || voices.find((v) => /^fr/i.test(v.lang)) || null;
+      speechRef.current = u;
+      window.speechSynthesis.speak(u);
+    } catch { /* voix indisponible : on garde la narration texte */ }
+  }, []);
+
   // Typewriter robuste par « génération » : chaque speak() incrémente un jeton ; toute
   // frappe périmée (nouvelle frappe, ou double-mount StrictMode) s'arrête d'elle-même via
   // le garde genRef. setTimeout récursif = zéro interval orphelin.
   const speak = useCallback((text, done) => {
+    vocalize(text);
     const gen = ++genRef.current;
     clearTimeout(typeTimer.current);
     // Onglet masqué (les timers y sont throttlés → frappe saccadée) ou reduced-motion :
@@ -1739,7 +2022,7 @@ export default function CimolaceCreationAgent({ tenantSlug: tenantSlugProp = nul
       typeTimer.current = setTimeout(tick, 22);
     };
     typeTimer.current = setTimeout(tick, 22);
-  }, [sTick]);
+  }, [sTick, vocalize]);
 
   const think = useCallback((fn, delay = 1000) => {
     setPresence('reflexion');
@@ -1812,6 +2095,7 @@ export default function CimolaceCreationAgent({ tenantSlug: tenantSlugProp = nul
     clearTimeout(tourTimer.current);
     tourRef.current = null;
     setTourActive(false);
+    setTourPaused(false);
   }, []);
 
   const runBeat = useCallback((gen, i) => {
@@ -1829,6 +2113,13 @@ export default function CimolaceCreationAgent({ tenantSlug: tenantSlugProp = nul
     t.idx = i; // l'index vit dans le ref (jamais périmé pour skipBeat)
     const beat = t.beats[i];
     setTourIdx(i);
+    setTourPaused(false);
+    setTourRecap((prev) => {
+      const label = beat.scene?.title || beat.scene?.headline || beat.scene?.question || beat.keyword || `Étape ${i + 1}`;
+      const item = { idx: i, label: String(label).slice(0, 48), keyword: beat.keyword || '' };
+      const kept = prev.filter((x) => x.idx !== i && x.idx < i);
+      return [...kept, item].slice(-7);
+    });
     setBrainHooks([]); setError('');
     setMessage(''); // évite le flash du message précédent avant que le beat parle
     setKeyword(beat.keyword || '');
@@ -1847,6 +2138,7 @@ export default function CimolaceCreationAgent({ tenantSlug: tenantSlugProp = nul
         setTourActive(false);
         return;
       }
+      if (t.tenant) { setTourPaused(true); return; }
       const dwell = Math.min(4600, 1500 + beat.reply.length * 24); // temps de lecture
       tourTimer.current = setTimeout(() => runBeat(gen, i + 1), dwell);
     }));
@@ -1858,7 +2150,7 @@ export default function CimolaceCreationAgent({ tenantSlug: tenantSlugProp = nul
     const gen = ++tourGenRef.current;
     tourRef.current = { kind: k, beats: TOUR[k], gen, idx: 0 };
     setChosen(k); setError('');
-    setTourActive(true); setTourIdx(0);
+    setTourActive(true); setTourIdx(0); setTourPaused(false); setTourRecap([]);
     runBeat(gen, 0);
   }, [stopTour, runBeat]);
 
@@ -1873,7 +2165,7 @@ export default function CimolaceCreationAgent({ tenantSlug: tenantSlugProp = nul
     const gen = ++tourGenRef.current;
     tourRef.current = { kind: 'tenant', beats, gen, idx: 0, tenant: true };
     setError('');
-    setTourActive(true); setTourIdx(0);
+    setTourActive(true); setTourIdx(0); setTourPaused(false); setTourRecap([]);
     runBeat(gen, 0);
   }, [osTenant, osBrand, stopTour, runBeat]);
 
@@ -1881,8 +2173,32 @@ export default function CimolaceCreationAgent({ tenantSlug: tenantSlugProp = nul
     const t = tourRef.current;
     if (!t) return;
     clearTimeout(tourTimer.current);
+    setTourPaused(false);
     genRef.current += 1;             // coupe la frappe en cours
     runBeat(t.gen, t.idx + 1);       // index depuis le ref (jamais périmé)
+  }, [runBeat]);
+
+  const reformulateBeat = useCallback(() => {
+    const t = tourRef.current;
+    if (!t) return;
+    const beat = t.beats[t.idx];
+    if (!beat) return;
+    clearTimeout(tourTimer.current);
+    setTourPaused(false);
+    const title = beat.scene?.title || beat.scene?.headline || beat.scene?.question || 'cette étape';
+    const bullets = Array.isArray(beat.scene?.sections)
+      ? beat.scene.sections.flatMap((sec) => sec.bullets || []).slice(0, 3)
+      : [];
+    const extra = bullets.length ? ` Les points à retenir : ${bullets.join(' ; ')}.` : '';
+    speak(`Je reformule ${title}. ${beat.reply}${extra} Est-ce plus clair ?`, () => setTourPaused(true));
+  }, [speak]);
+
+  const jumpTourBeat = useCallback((idx) => {
+    const t = tourRef.current;
+    if (!t || idx == null || idx < 0 || idx >= t.beats.length) return;
+    clearTimeout(tourTimer.current);
+    setTourPaused(false);
+    runBeat(t.gen, idx);
   }, [runBeat]);
 
   const endTour = useCallback(() => {
@@ -1910,7 +2226,7 @@ export default function CimolaceCreationAgent({ tenantSlug: tenantSlugProp = nul
       setTimeout(() => navigate('/liri'), 650);
       return;
     }
-    setContactForm(null); setBookingForm(null); setSignupForm(null);
+    setContactForm(null); setBookingForm(null); setSignupForm(null); setPlansPanel(null);
     speak('Content de vous revoir. Connectez-vous ici même.');
     setEngaged(true);
     setAuthForm({ email: '', password: '', sending: false, error: '' });
@@ -1921,7 +2237,7 @@ export default function CimolaceCreationAgent({ tenantSlug: tenantSlugProp = nul
   const goToSignup = useCallback(() => {
     try { logEvent('creer_compte', {}, osTenant); } catch { /* non bloquant */ }
     setHistOpen(false); closeInput();
-    setContactForm(null); setBookingForm(null); setAuthForm(null);
+    setContactForm(null); setBookingForm(null); setAuthForm(null); setPlansPanel(null);
     speak("Parfait — créons votre espace. Un e-mail, un mot de passe, et c'est à vous.");
     setEngaged(true);
     setSignupForm({ name: '', email: '', password: '', sending: false, sent: false, error: '' });
@@ -2469,6 +2785,16 @@ export default function CimolaceCreationAgent({ tenantSlug: tenantSlugProp = nul
     brain(v);
   }, [value, step, pendingLesson, isTenantRealm, vnpChat, closeInput, submitName, brain, startLesson, sPop]);
 
+  // Accueil tenant : le champ est visible dès l’arrivée, comme un vrai moteur de navigation.
+  const submitTenantHomeQuery = useCallback((e) => {
+    if (e && typeof e.preventDefault === 'function') e.preventDefault();
+    const v = value.trim();
+    if (!v) return;
+    setValue('');
+    sPop();
+    vnpChat(v);
+  }, [value, vnpChat, sPop]);
+
   const createAccount = useCallback(async () => {
     setError('');
     stopTour(); stopLesson();
@@ -2552,16 +2878,50 @@ export default function CimolaceCreationAgent({ tenantSlug: tenantSlugProp = nul
   // Écran SCINDÉ : dès qu'une action (formulaire/RDV) est ouverte, on passe en 2 zones —
   // le guide parle à GAUCHE, la zone d'action (qui s'étire) à DROITE.
   const showSplitAction = isTenantRealm && !!(contactForm || bookingForm || signupForm || authForm || plansPanel);
+  const tunnelMode = plansPanel ? 'plans' : signupForm ? 'signup' : authForm ? 'login' : bookingForm ? 'booking' : contactForm ? 'contact' : null;
+  const tunnelCopy = {
+    plans: {
+      eyebrow: 'Tunnel de vente',
+      title: 'Choisissez le bon accès, puis ouvrez votre espace.',
+      text: 'Le visiteur ne doit pas se perdre : il compare les cycles, choisit une formule, puis passe au paiement sécurisé ou crée son compte.',
+      steps: ['Comprendre', 'Choisir', 'Payer', 'Accéder'],
+    },
+    signup: {
+      eyebrow: 'Création de compte',
+      title: `Votre espace ${tenantName} se crée ici.`,
+      text: 'L’inscription reste dans le moteur : pas de rupture, pas de page froide, le visiteur garde le sentiment d’être accompagné.',
+      steps: ['Identité', 'E-mail', 'Mot de passe', 'Espace'],
+    },
+    login: {
+      eyebrow: 'Connexion',
+      title: 'Retour rapide vers votre espace.',
+      text: 'Le membre revient, se connecte, puis bascule vers LIRI avec le tenant déjà contextualisé.',
+      steps: ['E-mail', 'Mot de passe', 'Session', 'LIRI'],
+    },
+    booking: {
+      eyebrow: 'Rendez-vous',
+      title: 'Transformer l’intérêt en échange réel.',
+      text: 'Le visiteur choisit un créneau, laisse ses coordonnées, puis l’équipe confirme.',
+      steps: ['Service', 'Créneau', 'Coordonnées', 'Confirmation'],
+    },
+    contact: {
+      eyebrow: 'Contact',
+      title: 'Qualifier la demande sans casser l’immersion.',
+      text: 'Le message part au bon endroit, avec le contexte de la découverte.',
+      steps: ['Sujet', 'Coordonnées', 'Message', 'Relance'],
+    },
+  }[tunnelMode] || null;
   // Scène plein écran (split/reader/tutorial) : la voix centrale + actions en flux s'effacent,
   // la scène porte le message ; `aside` garde la voix au centre.
   const fullscreenScene = !!scene && scene.type !== 'aside';
   const tourTotal = tourActive ? ((tourRef.current && tourRef.current.beats.length) || (TOUR[chosen] || []).length) : 0; // points de progression (tenant ou Cimolace)
+  const currentTourBeat = tourActive && tourRef.current ? tourRef.current.beats[tourIdx] : null;
 
   return (
     <div
       ref={rootRef}
       onClick={onRootClick}
-      className={inputOpen ? 'cca-input-open' : undefined}
+      className={`${inputOpen ? 'cca-input-open cca-writing-mode' : ''}${tourActive ? ' cca-tour-mode' : ''}`.trim() || undefined}
       style={{
         minHeight: embedded ? '100%' : '100vh', height: embedded ? '100%' : undefined,
         background: bg, transition: 'background .8s ease',
@@ -2572,6 +2932,64 @@ export default function CimolaceCreationAgent({ tenantSlug: tenantSlugProp = nul
     >
       <style>{STYLE}</style>
       <style>{GLOSS_CSS}</style>
+      <style>{`
+        @keyframes ccaWriteSweep{0%{opacity:0;clip-path:circle(0% at 8% 92%);filter:blur(10px)}58%{opacity:1;clip-path:circle(145% at 8% 92%);filter:blur(1px)}100%{opacity:1;clip-path:circle(160% at 50% 50%);filter:blur(0)}}
+        @keyframes ccaWriteRise{from{opacity:0;transform:translateY(18px) scale(.985)}to{opacity:1;transform:none}}
+        @keyframes ccaWritePulse{0%,100%{opacity:.55;transform:scale(.96)}50%{opacity:1;transform:scale(1.04)}}
+        .cca-writing-mode .cca-amb,.cca-writing-mode .cca-mini{opacity:0!important;pointer-events:none!important}
+        .cca-write-sheet{position:absolute;inset:0;z-index:52;display:grid;grid-template-rows:auto 1fr auto;background:radial-gradient(circle at 50% 52%,rgba(217,119,87,.11),transparent 21%),radial-gradient(circle at 30% 22%,rgba(230,204,146,.055),transparent 24%),#232321;color:#f4efe6;animation:ccaWriteSweep .62s cubic-bezier(.16,1,.3,1) both;cursor:default}
+        .cca-write-sheet::before{content:'';position:absolute;inset:0;background:linear-gradient(90deg,rgba(244,239,230,.045),transparent 18%,transparent 82%,rgba(244,239,230,.025));opacity:.34;pointer-events:none}
+        .cca-write-top{position:relative;z-index:1;height:58px;display:grid;grid-template-columns:1fr auto 1fr;align-items:center;padding:0 26px;box-sizing:border-box}
+        .cca-write-back,.cca-write-space,.cca-write-muted{display:inline-flex;align-items:center;gap:8px;border:0;background:transparent;color:rgba(244,239,230,.42);font-family:inherit;font-size:14px;font-weight:650;cursor:pointer}
+        .cca-write-back:hover,.cca-write-muted:hover{color:rgba(244,239,230,.82)}
+        .cca-write-brand{display:inline-flex;align-items:center;gap:12px;justify-self:center;border:1px solid rgba(230,204,146,.25);background:rgba(20,19,17,.24);border-radius:999px;padding:8px 20px;color:#e6cc92;font-family:'Fraunces','Source Serif 4',Georgia,serif;font-size:13px;font-weight:750;letter-spacing:.24em;text-transform:uppercase;box-shadow:0 18px 60px rgba(0,0,0,.16)}
+        .cca-write-status{justify-self:start;display:inline-flex;align-items:center;gap:8px;margin-left:14px;color:rgba(244,239,230,.48);font-size:14px;font-weight:650}
+        .cca-write-status i{width:8px;height:8px;border-radius:999px;background:#31c66b;box-shadow:0 0 0 5px rgba(49,198,107,.1)}
+        .cca-write-right{justify-self:end;display:inline-flex;align-items:center;gap:14px}
+        .cca-write-space{border:1px solid rgba(230,204,146,.25);background:rgba(230,204,146,.045);border-radius:999px;padding:9px 16px;color:#e6cc92}
+        .cca-write-main{position:relative;z-index:1;display:flex;align-items:center;justify-content:center;padding:42px 7vw 80px}
+        .cca-write-orb{position:absolute;left:50%;top:45%;width:min(360px,44vw);height:min(360px,44vw);transform:translate(-50%,-50%);border-radius:999px;background:radial-gradient(circle,rgba(217,119,87,.12),rgba(217,119,87,.035) 38%,transparent 70%);filter:blur(2px);pointer-events:none}
+        .cca-write-form{position:relative;width:min(760px,90vw);display:flex;flex-direction:column;align-items:center;gap:22px;animation:ccaWriteRise .46s cubic-bezier(.16,1,.3,1) .22s both}
+        .cca-write-mark{height:34px;display:inline-flex;align-items:center;gap:4px;color:#d97757;filter:drop-shadow(0 0 22px rgba(217,119,87,.35))}
+        .cca-write-mark i{display:block;width:4px;border-radius:999px;background:currentColor;animation:ccaWritePulse 1.15s ease-in-out infinite}.cca-write-mark i:nth-child(1){height:25px}.cca-write-mark i:nth-child(2){height:31px;animation-delay:.08s}.cca-write-mark i:nth-child(3){height:25px;animation-delay:.16s}.cca-write-mark i:nth-child(4){height:17px;animation-delay:.24s}.cca-write-mark i:nth-child(5){height:9px;animation-delay:.32s}
+        .cca-write-fieldwrap{width:100%;display:flex;align-items:center;gap:12px;border-bottom:1px solid rgba(230,204,146,.36);padding:0 0 16px}
+        .cca-write-field{appearance:none;-webkit-appearance:none;flex:1;min-width:0;min-height:clamp(58px,8vw,94px);max-height:26vh;border:0!important;outline:0!important;box-shadow:none!important;background:transparent!important;color:#f4efe6;text-align:center;font-family:'Fraunces','Source Serif 4',Georgia,serif;font-size:clamp(24px,3.2vw,42px);line-height:1.12;letter-spacing:-.025em;caret-color:#e6cc92;resize:none;overflow-y:auto;scrollbar-width:none}
+        .cca-write-field::-webkit-scrollbar{width:0}
+        .cca-write-field:focus{border:0!important;outline:0!important;box-shadow:none!important}
+        .cca-write-field::placeholder{color:rgba(244,239,230,.46)}
+        .cca-write-send{width:46px;height:46px;border-radius:999px;border:1px solid rgba(217,119,87,.35);background:#d97757;color:#24130d;display:inline-flex;align-items:center;justify-content:center;cursor:pointer;box-shadow:0 18px 50px rgba(217,119,87,.18)}
+        .cca-write-send:disabled{opacity:.42;cursor:not-allowed;box-shadow:none}
+        .cca-write-help{margin:0;color:rgba(244,239,230,.38);font-size:13px;text-align:center}
+        .cca-write-bottom{position:relative;z-index:1;display:flex;justify-content:center;padding:0 24px 28px;color:rgba(244,239,230,.34);font-size:12px}
+        @media(max-width:700px){.cca-write-top{height:auto;min-height:58px;grid-template-columns:1fr auto;padding:12px 16px}.cca-write-brand{grid-column:1/-1;grid-row:1;order:-1;margin-bottom:10px}.cca-write-back{grid-column:1}.cca-write-right{grid-column:2}.cca-write-space,.cca-write-status{display:none}.cca-write-fieldwrap{align-items:flex-end}.cca-write-field{text-align:left;font-size:28px}.cca-write-main{padding:34px 6vw 70px}.cca-write-send{width:42px;height:42px}}
+        .cca-tour-mode .cca-stage-cards .cca-cards{justify-content:center;align-items:center;padding:88px 6vw 190px;gap:24px}
+        .cca-tour-mode .cca-stage-cards .cca-cards-title{font-size:clamp(30px,3.4vw,44px);margin-bottom:6px;letter-spacing:-.025em}
+        .cca-tour-mode .cca-stage-cards .cca-cards-grid{max-width:min(1050px,86vw);gap:18px;grid-template-columns:repeat(auto-fit,minmax(270px,1fr))}
+        .cca-tour-mode .cca-stage-cards .cca-card{min-height:132px;padding:24px 24px 22px;border-radius:22px;background:linear-gradient(145deg,rgba(244,239,230,.062),rgba(244,239,230,.025));box-shadow:0 22px 70px rgba(0,0,0,.16)}
+        .cca-tour-mode .cca-stage-cards .cca-card-title{font-size:20px}.cca-tour-mode .cca-stage-cards .cca-card-value{font-size:38px}.cca-tour-mode .cca-stage-cards .cca-card-note{font-size:14px;line-height:1.55}
+        .cca-tour-mode .cca-stage-timeline .cca-tl{justify-content:center;align-items:center;padding:84px 6vw 190px}
+        .cca-tour-mode .cca-stage-timeline .cca-tl-title{font-size:clamp(30px,3.2vw,42px);margin-bottom:34px;letter-spacing:-.025em}
+        .cca-tour-mode .cca-stage-timeline .cca-tl-track{max-width:720px}.cca-tour-mode .cca-stage-timeline .cca-tl-node{grid-template-columns:64px 1fr;gap:22px;padding-bottom:31px}.cca-tour-mode .cca-stage-timeline .cca-tl-num{width:54px;height:54px;font-size:28px}.cca-tour-mode .cca-stage-timeline .cca-tl-h{font-size:24px}.cca-tour-mode .cca-stage-timeline .cca-tl-detail{font-size:15px}.cca-tour-mode .cca-stage-timeline .cca-tl-foot{font-size:12.5px;margin-top:9px}
+        .cca-tour-mode .cca-stage-comparateur .cca-cmp{justify-content:center;padding:84px 6vw 190px}
+        .cca-tour-mode .cca-stage-comparateur .cca-cmp-title{font-size:clamp(30px,3.2vw,44px);letter-spacing:-.025em}.cca-tour-mode .cca-stage-comparateur .cca-cmp-intro{font-size:15px;margin:8px 0 26px;color:rgba(244,239,230,.66)}
+        .cca-tour-mode .cca-stage-comparateur .cca-cmp-scroll{max-width:min(1020px,88vw);border:1px solid rgba(244,239,230,.1);border-radius:24px;background:linear-gradient(145deg,rgba(244,239,230,.052),rgba(244,239,230,.018));box-shadow:0 24px 90px rgba(0,0,0,.2);padding:12px 16px 18px}
+        .cca-tour-mode .cca-stage-comparateur .cca-cmp-table{min-width:760px}.cca-tour-mode .cca-stage-comparateur .cca-cmp-pname{font-size:17px}.cca-tour-mode .cca-stage-comparateur .cca-cmp-price{font-size:30px}.cca-tour-mode .cca-stage-comparateur .cca-cmp-feat{font-size:14px;padding:15px 16px 15px 6px}.cca-tour-mode .cca-stage-comparateur .cca-cmp-cell{font-size:18px;padding:15px 12px}.cca-tour-mode .cca-stage-comparateur .cca-cmp-ph{padding:12px 12px 16px}.cca-tour-mode .cca-stage-comparateur .cca-cmp-choose{padding:6px 13px;margin-top:9px}
+        .cca-tour-mode .cca-stage-reader .cca-reader{padding:88px clamp(28px,4vw,76px) 190px;display:grid;grid-template-columns:minmax(210px,260px) minmax(0,660px) minmax(150px,190px);justify-content:center;align-items:center;gap:clamp(56px,5vw,92px);box-sizing:border-box}
+        .cca-tour-mode .cca-stage-reader .cca-reader-profile{position:relative;left:auto;top:auto;transform:none;width:100%;min-height:360px;align-self:center;background:linear-gradient(145deg,rgba(244,239,230,.075),rgba(244,239,230,.025));box-shadow:0 28px 90px rgba(0,0,0,.22)}
+        .cca-tour-mode .cca-stage-reader .cca-reader-body{width:100%;max-width:660px;min-width:0;max-height:min(560px,58vh);border-radius:28px;background:linear-gradient(145deg,rgba(244,239,230,.06),rgba(244,239,230,.022));box-shadow:0 28px 90px rgba(0,0,0,.2)}
+        .cca-tour-mode .cca-stage-reader .cca-reader-title{font-size:clamp(34px,3.4vw,48px);letter-spacing:-.03em}.cca-tour-mode .cca-stage-reader .cca-reader-h{font-size:22px}.cca-tour-mode .cca-stage-reader .cca-reader-p{font-size:16px;line-height:1.72}.cca-tour-mode .cca-stage-reader .cca-reader-fbody b{font-size:14px}
+        .cca-tour-mode .cca-stage-reader .cca-reader-nav{position:relative;right:auto;top:auto;transform:none;align-self:center;justify-self:start;width:100%;max-width:190px;min-width:0}.cca-tour-mode .cca-stage-reader .cca-reader-nav button{width:100%;text-align:left;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.cca-tour-mode .cca-stage-reader .cca-reader-suggests{bottom:154px}
+        @media(max-width:1220px){.cca-tour-mode .cca-stage-reader .cca-reader{grid-template-columns:minmax(190px,240px) minmax(0,640px);grid-template-rows:1fr auto;gap:28px 56px}.cca-tour-mode .cca-stage-reader .cca-reader-nav{grid-column:2;grid-row:2;display:flex;flex-direction:row;flex-wrap:wrap;gap:8px 12px;align-self:start;justify-self:stretch;max-width:640px;padding-left:0}.cca-tour-mode .cca-stage-reader .cca-reader-nav::before{display:none}.cca-tour-mode .cca-stage-reader .cca-reader-nav button{width:auto;max-width:190px;padding:6px 10px;border:1px solid rgba(230,204,146,.16);border-radius:999px;background:rgba(230,204,146,.04)}.cca-tour-mode .cca-stage-reader .cca-reader-nav .dot{position:static;display:inline-block;margin-right:7px;box-shadow:none}}
+        .cca-tour-mode .cca-stage-story .cca-story{padding:82px 7vw 214px}
+        .cca-tour-mode .cca-stage-story .cca-story-wrap{width:min(1160px,100%);gap:34px}
+        .cca-tour-mode .cca-stage-story .cca-story-visual{min-height:min(500px,54vh)}
+        .cca-tour-mode .cca-stage-story .cca-story-chapters{grid-template-columns:repeat(3,minmax(0,1fr));gap:14px;margin-top:8px}
+        .cca-tour-mode .cca-stage-story .cca-story-chapter{min-height:176px}.cca-tour-mode .cca-stage-story .cca-story-chapter-body{min-height:176px;padding:19px}.cca-tour-mode .cca-stage-story .cca-story-chapter h3{font-size:22px}.cca-tour-mode .cca-stage-story .cca-story-chapter p{font-size:12.8px;line-height:1.45}
+        .cca-tour-mode .cca-stage-story .cca-story-contrasts{display:none}
+        .cca-tour-mode:has(.cca-stage-story) .cca-tour-narration{display:none}
+        .cca-tour-mode .cca-stage-founder .cca-founder{padding-bottom:190px}.cca-tour-mode .cca-stage-answer .cca-answer{padding-bottom:190px}
+        @media(max-width:760px){.cca-tour-narration{display:none}.cca-tour-mode .cca-stage-founder .cca-founder{padding-bottom:232px}.cca-tour-mode .cca-stage-answer .cca-answer{padding-bottom:232px}.cca-tour-mode .cca-stage-story .cca-story{padding:70px 5vw 230px}.cca-tour-mode .cca-stage-story .cca-story-wrap{grid-template-columns:1fr}.cca-tour-mode .cca-stage-story .cca-story-visual{min-height:310px}.cca-tour-mode .cca-stage-story .cca-story-chapters{grid-template-columns:1fr}.cca-tour-mode .cca-stage-reader .cca-reader{padding:70px 5vw 230px;display:flex;flex-direction:column;justify-content:flex-start;gap:18px}.cca-tour-mode .cca-stage-reader .cca-reader-profile{width:min(92vw,360px);min-height:auto}.cca-tour-mode .cca-stage-reader .cca-reader-body{max-height:42vh}.cca-tour-mode .cca-stage-reader .cca-reader-nav{display:none}.cca-tour-mode .cca-stage-reader .cca-reader-suggests{bottom:176px}.cca-tour-mode .cca-stage-cards .cca-cards{padding:72px 5vw 230px}.cca-tour-mode .cca-stage-cards .cca-cards-grid{grid-template-columns:1fr;max-width:92vw}.cca-tour-mode .cca-stage-timeline .cca-tl{padding:72px 6vw 230px}.cca-tour-mode .cca-stage-timeline .cca-tl-track{max-width:92vw}.cca-tour-mode .cca-stage-timeline .cca-tl-node{grid-template-columns:48px 1fr;gap:15px}.cca-tour-mode .cca-stage-timeline .cca-tl-num{width:42px;height:42px;font-size:22px}.cca-tour-mode .cca-stage-comparateur .cca-cmp{padding:72px 4vw 230px}.cca-tour-mode .cca-stage-comparateur .cca-cmp-scroll{max-width:94vw;border-radius:18px;padding:8px}.cca-tour-mode .cca-stage-comparateur .cca-cmp-table{min-width:680px}}
+      `}</style>
 
       {/* SEO du realm fondateur (prorascience.org) — titre/description/OG/JSON-LD propres, sans « LIRI ».
          Ne monte QUE dans le realm tenant : le realm Cimolace (app.cimolace.space) garde son <head> par défaut. */}
@@ -2718,7 +3136,7 @@ export default function CimolaceCreationAgent({ tenantSlug: tenantSlugProp = nul
       )}
 
       {/* MON ESPACE — le membre qui a déjà un compte va à sa connexion tenant (toujours visible) */}
-      {isTenantRealm && (
+      {isTenantRealm && !showTenantHero && (
         <button
           type="button"
           onClick={(e) => { e.stopPropagation(); goToSpace(); }}
@@ -2768,7 +3186,7 @@ export default function CimolaceCreationAgent({ tenantSlug: tenantSlugProp = nul
       {/* Présence (le wrapper se décale selon la scène active) */}
       <div
         className={`cca-presence-holder${scene ? ` cca-slot-${scene.type}` : ''}${scene && sceneVisible ? ' cca-scene-on' : ''}${scene && scene.type === 'aside' && scene.side === 'left' ? ' cca-aside-left' : ''}`}
-        style={{ position: 'relative', zIndex: 4 }}
+        style={{ position: 'relative', zIndex: 4, pointerEvents: fullscreenScene ? 'none' : undefined }}
       >
         <Presence state={presence} />
       </div>
@@ -2780,72 +3198,111 @@ export default function CimolaceCreationAgent({ tenantSlug: tenantSlugProp = nul
         </div>
       )}
 
-      {/* Realm tenant — ACCUEIL ÉDITORIAL ÉPURÉ : DEUX COLONNES (héros à gauche + liste « Explorez »
-          à droite avec descriptions). Empile en une colonne < 860px. Remplace la grille de chips
-          (jugée trop chargée). L'engagé garde la grille d'intentions/actions classique plus bas. */}
+      {/* Realm tenant — ACCUEIL MOTEUR INTELLIGENT : écran respirant, agent central,
+          saisie visible, raccourcis latéraux et accès compte discret. */}
       {showTenantHero && (
-        <div className="cca-in cca-accueil2" style={{ display: 'flex', gap: 'clamp(28px, 5vw, 72px)', alignItems: 'center', width: '100%', maxWidth: 1080, margin: '10px auto 0', padding: '0 28px', boxSizing: 'border-box', position: 'relative', zIndex: 4, textAlign: 'left' }}>
+        <div className="cca-in cca-engine-home" onClick={(e) => e.stopPropagation()} style={{ position: 'absolute', inset: 0, zIndex: 4, pointerEvents: 'none' }}>
           <style>{`
-            @media (max-width: 860px) {
-              .cca-accueil2 { flex-direction: column !important; align-items: stretch !important; gap: 30px !important; }
-              .cca-accueil2 .cca-acc-hero { text-align: center !important; align-items: center !important; }
-              .cca-accueil2 .cca-acc-hero .cca-acc-cta { align-items: center !important; }
-              .cca-accueil2 .cca-acc-rule { margin-left: auto !important; margin-right: auto !important; }
+            .cca-engine-center { position:absolute; left:50%; top:55%; transform:translate(-50%,-50%); width:min(620px, calc(100vw - 48px)); display:flex; flex-direction:column; align-items:center; text-align:center; pointer-events:auto; }
+            .cca-engine-kicker { font-size:11px; letter-spacing:.24em; text-transform:uppercase; color:rgba(217,119,87,.88); font-weight:700; margin-bottom:10px; }
+            .cca-engine-title { font-family:${DISPLAY}; font-size:clamp(25px, 4.2vw, 48px); line-height:1.06; color:${INK}; font-weight:600; margin:0; text-wrap:balance; }
+            .cca-engine-sub { margin:12px auto 0; max-width:46ch; font-size:14px; line-height:1.55; color:rgba(244,239,230,.56); }
+            .cca-engine-form { margin-top:24px; width:100%; display:flex; align-items:center; gap:10px; padding:10px 10px 10px 18px; border-radius:24px; border:1px solid rgba(230,204,146,.18); background:linear-gradient(180deg, rgba(244,239,230,.075), rgba(244,239,230,.035)); box-shadow:0 28px 90px rgba(0,0,0,.26), inset 0 1px 0 rgba(255,255,255,.05); backdrop-filter:blur(16px); -webkit-backdrop-filter:blur(16px); }
+            .cca-engine-input { flex:1; min-width:0; border:0; outline:0; background:transparent; color:${INK}; font:500 15px 'Inter',system-ui,sans-serif; }
+            .cca-engine-input::placeholder { color:rgba(244,239,230,.38); }
+            .cca-engine-send { width:42px; height:42px; border:0; border-radius:16px; display:inline-flex; align-items:center; justify-content:center; color:#231208; background:${TERRA}; cursor:pointer; box-shadow:0 12px 32px rgba(217,119,87,.28); }
+            .cca-engine-prompts { margin-top:12px; display:flex; gap:8px; justify-content:center; flex-wrap:wrap; }
+            .cca-engine-prompt { border:1px solid rgba(230,204,146,.16); background:rgba(244,239,230,.035); color:rgba(244,239,230,.64); border-radius:999px; padding:7px 11px; font:500 12px 'Inter',system-ui,sans-serif; cursor:pointer; }
+            .cca-engine-shortcuts { position:absolute; right:clamp(18px, 4vw, 58px); top:50%; transform:translateY(-50%); width:min(255px, 26vw); display:flex; flex-direction:column; gap:8px; pointer-events:auto; }
+            .cca-engine-shortcuts-title { font-size:10px; letter-spacing:.22em; text-transform:uppercase; color:rgba(217,119,87,.76); font-weight:800; margin:0 0 5px 8px; }
+            .cca-engine-shortcut { display:flex; align-items:center; gap:10px; width:100%; border:1px solid rgba(230,204,146,.13); background:rgba(18,17,15,.32); color:${INK}; border-radius:16px; padding:10px 11px; text-align:left; cursor:pointer; font-family:'Inter',system-ui,sans-serif; backdrop-filter:blur(10px); -webkit-backdrop-filter:blur(10px); }
+            .cca-engine-shortcut:hover { background:rgba(244,239,230,.055); border-color:rgba(217,119,87,.32); }
+            .cca-engine-shortcut-main { display:block; font-size:12.8px; font-weight:700; line-height:1.2; }
+            .cca-engine-shortcut-sub { display:block; margin-top:2px; font-size:11px; color:rgba(244,239,230,.42); line-height:1.25; }
+            .cca-engine-mobile-visit { display:none; }
+            .cca-engine-auth { position:absolute; left:50%; bottom:22px; transform:translateX(-50%); display:flex; align-items:center; gap:10px; pointer-events:auto; color:rgba(244,239,230,.42); font-size:12.5px; }
+            .cca-engine-auth button { border:0; background:transparent; color:rgba(244,239,230,.52); cursor:pointer; font:600 12.5px 'Inter',system-ui,sans-serif; padding:7px 9px; border-radius:999px; }
+            .cca-engine-auth button:hover { color:${GOLD}; background:rgba(230,204,146,.06); }
+            .cca-engine-empty-mark { position:absolute; left:clamp(18px, 4vw, 58px); bottom:clamp(72px, 11vh, 120px); color:rgba(244,239,230,.16); font-family:${DISPLAY}; font-size:clamp(42px, 9vw, 120px); line-height:.8; pointer-events:none; user-select:none; }
+            @media (max-width: 900px) {
+              .cca-engine-center { top:48%; width:min(560px, calc(100vw - 34px)); }
+              .cca-engine-shortcuts { left:16px; right:16px; bottom:76px; top:auto; transform:none; width:auto; display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); }
+              .cca-engine-shortcuts-title { grid-column:1/-1; margin-left:4px; }
+              .cca-engine-shortcut { padding:9px; border-radius:14px; }
+              .cca-engine-shortcut-sub { display:none; }
+              .cca-engine-empty-mark { display:none; }
+              .cca-engine-auth { bottom:18px; width:calc(100vw - 24px); justify-content:center; }
+            }
+            @media (max-width: 560px) {
+              .cca-engine-center { top:42%; width:calc(100vw - 28px); }
+              .cca-engine-sub { font-size:13px; }
+              .cca-engine-form { border-radius:20px; padding:8px 8px 8px 14px; }
+              .cca-engine-input { font-size:14px; }
+              .cca-engine-send { width:38px; height:38px; border-radius:14px; }
+              .cca-engine-prompts { display:none; }
+              .cca-engine-shortcuts { grid-template-columns:1fr 1fr; bottom:70px; }
+              .cca-engine-mobile-visit { display:flex; }
+              .cca-engine-shortcut:nth-of-type(n+6) { display:none; }
             }
           `}</style>
 
-          {/* GAUCHE — le héros éditorial */}
-          <div className="cca-acc-hero" style={{ flex: '1 1 46%', minWidth: 0, display: 'flex', flexDirection: 'column' }}>
-            <div className="cca-display" style={{ fontSize: 13, letterSpacing: '.34em', textTransform: 'uppercase', color: TERRA, fontWeight: 600, marginBottom: 6 }}>Bienvenue sur</div>
-            <h1 className="cca-display" style={{ fontWeight: 600, fontSize: 'clamp(44px, 6vw, 82px)', lineHeight: 1.02, letterSpacing: '-0.005em', color: INK, margin: 0, textWrap: 'balance' }}>{tenantName}</h1>
-            <div className="cca-acc-rule" style={{ display: 'flex', alignItems: 'center', gap: 12, margin: '18px 0 16px', width: 200 }}>
-              <span style={{ height: 1, flex: 1, background: 'linear-gradient(90deg, rgba(217,119,87,.5), transparent)' }} />
-              <span style={{ width: 7, height: 7, transform: 'rotate(45deg)', background: TERRA, borderRadius: 1, opacity: 0.9, flexShrink: 0 }} />
-              <span style={{ height: 1, flex: 1, background: 'linear-gradient(90deg, rgba(217,119,87,.5), transparent)' }} />
-            </div>
-            <p className="cca-display" style={{ fontSize: 'clamp(18px, 2vw, 23px)', lineHeight: 1.42, color: 'rgba(244,239,230,.9)', margin: 0, maxWidth: 460, textWrap: 'balance' }}>
-              Je suis votre guide — je connais tout {tenantName}. Que souhaitez-vous découvrir ?
-            </p>
-            <div className="cca-acc-cta" style={{ marginTop: 26, display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: 14 }}>
-              <button type="button" onClick={(e) => { e.stopPropagation(); goToSignup(); }}
-                style={{ display: 'inline-flex', alignItems: 'center', gap: 9, padding: '13px 28px', borderRadius: 999, border: 'none', cursor: 'pointer', fontFamily: 'inherit', fontSize: 15, fontWeight: 600, color: '#1c1a17', background: TERRA, boxShadow: '0 14px 36px rgba(217,119,87,.34)' }}
-                onMouseEnter={(e) => { e.currentTarget.style.filter = 'brightness(1.06)'; }}
-                onMouseLeave={(e) => { e.currentTarget.style.filter = 'none'; }}>
-                Créer un compte
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><line x1="5" y1="12" x2="19" y2="12" /><polyline points="12 5 19 12 12 19" /></svg>
-              </button>
-              <button type="button" onClick={(e) => { e.stopPropagation(); goToSpace(); }}
-                style={{ background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'inherit', fontSize: 13.5, color: 'rgba(244,239,230,.5)', display: 'inline-flex', alignItems: 'center', gap: 6 }}>
-                Déjà membre ? <span style={{ color: GOLD, fontWeight: 500 }}>Accéder à mon espace →</span>
-              </button>
-              <button type="button" onClick={(e) => { e.stopPropagation(); startTenantTour(); }}
-                style={{ background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'inherit', fontSize: 13.5, color: 'rgba(244,239,230,.55)', display: 'inline-flex', alignItems: 'center', gap: 7, marginTop: 2 }}>
-                <Compass size={15} style={{ color: TERRA, flexShrink: 0 }} /> Ou laissez-vous guider — <span style={{ color: GOLD }}>Fais-moi visiter →</span>
-              </button>
-            </div>
-          </div>
+          <div className="cca-engine-empty-mark" aria-hidden>{tenantName}</div>
 
-          {/* DROITE — « Explorez » : liste épurée (icône + titre + description + flèche) */}
-          <div className="cca-acc-explore" style={{ flex: '1 1 54%', minWidth: 0, display: 'flex', flexDirection: 'column' }}>
-            <div style={{ fontSize: 12, letterSpacing: '.22em', textTransform: 'uppercase', color: TERRA, fontWeight: 600, marginBottom: 4 }}>Explorez {tenantName}</div>
-            <div style={{ display: 'flex', flexDirection: 'column' }}>
-              {(vnpGraph ? vnpGraph.accueil.filter((a) => a.intent !== 'visiter') : []).slice(0, 6).map((a, i, arr) => {
-                const Icon = chipIconFor(a.label);
-                return (
-                  <button key={a.label} onClick={(e) => { e.stopPropagation(); if (a.nodeId) vnpOpenNode(a.nodeId); else vnpChat(a.label); }}
-                    style={{ display: 'flex', alignItems: 'center', gap: 14, padding: '15px 6px', background: 'none', border: 'none', borderBottom: i < arr.length - 1 ? '1px solid rgba(244,239,230,.09)' : 'none', cursor: 'pointer', fontFamily: 'inherit', textAlign: 'left', width: '100%', borderRadius: 8 }}
-                    onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(244,239,230,.035)'; }}
-                    onMouseLeave={(e) => { e.currentTarget.style.background = 'none'; }}>
-                    <Icon size={19} style={{ color: GOLD, flexShrink: 0 }} />
-                    <span style={{ flex: 1, minWidth: 0 }}>
-                      <span style={{ display: 'block', fontSize: 15.5, fontWeight: 600, color: INK }}>{a.label}</span>
-                      <span style={{ display: 'block', fontSize: 12.5, color: 'rgba(244,239,230,.5)', marginTop: 2 }}>{exploreDesc(a)}</span>
-                    </span>
-                    <ArrowRight size={16} style={{ color: TERRA, flexShrink: 0 }} />
-                  </button>
-                );
-              })}
+          <section className="cca-engine-center" aria-label={`Moteur intelligent ${tenantName}`}>
+            <div className="cca-engine-kicker">Moteur intelligent {tenantName}</div>
+            <h1 className="cca-engine-title">Demandez, je vous guide.</h1>
+            <p className="cca-engine-sub">
+              Posez une question, demandez un parcours, ou laissez l’agent ouvrir la bonne information pour vous.
+            </p>
+            <form className="cca-engine-form" onSubmit={submitTenantHomeQuery}>
+              <input
+                className="cca-engine-input"
+                value={value}
+                onChange={(e) => setValue(e.target.value)}
+                placeholder="Ex. Quel forfait me correspond ?"
+                aria-label={`Question à poser à ${tenantName}`}
+              />
+              <button className="cca-engine-send" type="submit" aria-label="Envoyer la question">
+                <ArrowUp size={19} />
+              </button>
+            </form>
+            <div className="cca-engine-prompts" aria-label="Suggestions rapides">
+              <button className="cca-engine-prompt" type="button" onClick={startTenantTour}>Fais-moi visiter</button>
+              <button className="cca-engine-prompt" type="button" onClick={() => vnpOpenNode('solutions')}>Choisir un forfait</button>
+              <button className="cca-engine-prompt" type="button" onClick={() => vnpOpenNode('documentation')}>21 sciences</button>
             </div>
+          </section>
+
+          <aside className="cca-engine-shortcuts" aria-label="Raccourcis explorer">
+            <div className="cca-engine-shortcuts-title">Explorer</div>
+            <button type="button" className="cca-engine-shortcut cca-engine-mobile-visit" onClick={startTenantTour}>
+              <Compass size={16} style={{ color: GOLD, flexShrink: 0 }} />
+              <span style={{ minWidth: 0, flex: 1 }}>
+                <span className="cca-engine-shortcut-main">Fais-moi visiter</span>
+                <span className="cca-engine-shortcut-sub">Tour guidé interactif</span>
+              </span>
+              <ArrowRight size={14} style={{ color: TERRA, flexShrink: 0 }} />
+            </button>
+            {(vnpGraph ? vnpGraph.accueil.filter((a) => a.intent !== 'visiter') : []).slice(0, 5).map((a) => {
+              const Icon = chipIconFor(a.label);
+              return (
+                <button key={a.label} type="button" className="cca-engine-shortcut" onClick={() => { if (a.nodeId) vnpOpenNode(a.nodeId); else vnpChat(a.label); }}>
+                  <Icon size={16} style={{ color: GOLD, flexShrink: 0 }} />
+                  <span style={{ minWidth: 0, flex: 1 }}>
+                    <span className="cca-engine-shortcut-main">{a.label}</span>
+                    <span className="cca-engine-shortcut-sub">{exploreDesc(a)}</span>
+                  </span>
+                  <ArrowRight size={14} style={{ color: TERRA, flexShrink: 0 }} />
+                </button>
+              );
+            })}
+          </aside>
+
+          <div className="cca-engine-auth" aria-label="Accès compte">
+            <span>Déjà prêt ?</span>
+            <button type="button" onClick={goToSpace}>Se connecter</button>
+            <span aria-hidden>·</span>
+            <button type="button" onClick={goToSignup}>Créer un compte</button>
           </div>
         </div>
       )}
@@ -2920,20 +3377,83 @@ export default function CimolaceCreationAgent({ tenantSlug: tenantSlugProp = nul
 
       {/* ACTION ENGINE — ÉCRAN SCINDÉ : le guide parle à GAUCHE, la ZONE D'ACTION (s'étire) à DROITE */}
       {showSplitAction && (
-        <div className="cca-in cca-actionsplit" onClick={(e) => e.stopPropagation()}
-          style={{ display: 'flex', gap: 30, alignItems: 'center', width: '100%', maxWidth: 1000, margin: '8px auto 0', padding: '0 28px', boxSizing: 'border-box', position: 'relative', zIndex: 6 }}>
+        <div className="cca-in cca-actionsplit cca-tunnel" onClick={(e) => e.stopPropagation()}>
+          <style>{`
+            .cca-tunnel{position:relative;z-index:6;width:min(1120px,calc(100vw - 44px));margin:18px auto 0;display:grid;grid-template-columns:minmax(310px,.9fr) minmax(0,1.1fr);gap:28px;align-items:center}
+            .cca-tunnel-guide{position:relative;min-height:520px;border:1px solid rgba(230,204,146,.13);border-radius:30px;padding:30px;overflow:hidden;background:linear-gradient(145deg,rgba(244,239,230,.06),rgba(244,239,230,.018));box-shadow:0 34px 110px rgba(0,0,0,.22);display:flex;flex-direction:column}
+            .cca-tunnel-guide::before{content:'';position:absolute;inset:auto -12% -28% -12%;height:58%;background:radial-gradient(circle at 50% 45%,rgba(217,119,87,.16),transparent 62%);pointer-events:none}
+            .cca-tunnel-eyebrow{display:inline-flex;align-items:center;gap:8px;margin-bottom:16px;font:850 10.5px/1 'Bricolage Grotesque',system-ui,sans-serif;letter-spacing:.18em;text-transform:uppercase;color:#d97757}
+            .cca-tunnel-eyebrow::before{content:'';width:8px;height:8px;border-radius:999px;background:#d97757;box-shadow:0 0 0 7px rgba(217,119,87,.12)}
+            .cca-tunnel-title{margin:0;font-family:'Fraunces','Source Serif 4',Georgia,serif;font-size:clamp(30px,3.4vw,48px);line-height:1.02;letter-spacing:-.045em;color:#f4efe6;text-wrap:balance}
+            .cca-tunnel-text{margin:18px 0 0;max-width:40ch;font-size:15px;line-height:1.65;color:rgba(244,239,230,.64)}
+            .cca-tunnel-steps{position:relative;display:grid;gap:10px;margin-top:28px}
+            .cca-tunnel-step{display:flex;align-items:center;gap:12px;color:rgba(244,239,230,.72);font-size:13.5px}
+            .cca-tunnel-step i{width:28px;height:28px;border-radius:999px;display:grid;place-items:center;border:1px solid rgba(230,204,146,.24);background:rgba(230,204,146,.06);color:#e6cc92;font:800 11px 'Bricolage Grotesque',system-ui,sans-serif}
+            .cca-tunnel-switch{position:relative;margin-top:30px;display:grid;gap:9px}
+            .cca-tunnel-switch button{width:100%;display:flex;align-items:center;justify-content:space-between;gap:12px;border-radius:16px;padding:13px 15px;border:1px solid rgba(244,239,230,.1);background:rgba(244,239,230,.035);color:rgba(244,239,230,.8);font-family:inherit;font-size:13.5px;cursor:pointer;text-align:left}
+            .cca-tunnel-switch button.on{border-color:rgba(230,204,146,.38);background:rgba(230,204,146,.08);color:#e6cc92}
+            .cca-tunnel-proof{position:relative;margin-top:auto;padding-top:22px;display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+            .cca-tunnel-proof span{border:1px solid rgba(230,204,146,.12);border-radius:14px;padding:10px 9px;background:rgba(18,17,15,.28);font-size:11.5px;line-height:1.25;color:rgba(244,239,230,.54)}
+            .cca-tunnel-proof b{display:block;color:#f4efe6;font-size:13px;margin-bottom:3px}
+            .cca-actionzone{min-height:520px;max-height:min(720px,76vh);overflow-y:auto;scrollbar-width:none;background:linear-gradient(145deg,rgba(244,239,230,.07),rgba(244,239,230,.025));border:1px solid rgba(230,204,146,.18);border-radius:30px;padding:26px;display:flex;flex-direction:column;gap:12px;box-shadow:0 34px 110px rgba(0,0,0,.24)}
+            .cca-actionzone::-webkit-scrollbar{width:0}
+            .cca-action-head{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;margin-bottom:6px}
+            .cca-action-kicker{font:850 10px/1 'Bricolage Grotesque',system-ui,sans-serif;letter-spacing:.18em;text-transform:uppercase;color:rgba(230,204,146,.65)}
+            .cca-action-close{border:1px solid rgba(244,239,230,.1);background:rgba(244,239,230,.035);color:rgba(244,239,230,.52);border-radius:999px;padding:8px 11px;cursor:pointer;font-family:inherit;font-size:12px}
+            .cca-action-close:hover{color:#f4efe6;border-color:rgba(244,239,230,.2)}
+            .cca-tunnel-form{display:flex;flex-direction:column;gap:12px}
+            .cca-tunnel-actions{display:flex;gap:8px}
+            .cca-tunnel-error{color:#f0997b;font-size:12.5px}
+            .cca-plan-card{position:relative}
+            .cca-plan-card.primary{border-color:rgba(230,204,146,.42)!important;background:linear-gradient(145deg,rgba(230,204,146,.1),rgba(244,239,230,.035))!important}
+            .cca-plan-badge{position:absolute;right:13px;top:-8px;border-radius:999px;background:#e6cc92;color:#26170d;padding:3px 9px;font:850 9px/1 'Bricolage Grotesque',system-ui,sans-serif;letter-spacing:.06em;text-transform:uppercase}
+            @media(max-width:900px){.cca-tunnel{grid-template-columns:1fr;align-items:start;margin-top:82px}.cca-tunnel-guide{min-height:auto;padding:22px;border-radius:24px}.cca-tunnel-proof{margin-top:22px;padding-top:0}.cca-actionzone{min-height:auto;max-height:none;border-radius:24px;padding:20px}.cca-tunnel-switch{grid-template-columns:1fr}.cca-tunnel-switch button{padding:11px 13px}}
+            @media(max-width:560px){.cca-tunnel{width:min(100vw - 24px,520px);gap:14px}.cca-tunnel-proof{grid-template-columns:1fr}.cca-tunnel-title{font-size:32px}.cca-action-head{align-items:center}.cca-tunnel-guide{padding:18px}.cca-actionzone{padding:16px}}
+          `}</style>
 
           {/* GAUCHE — la voix du guide */}
-          <div className="cca-actionsplit-text" style={{ flex: '1 1 44%', minWidth: 0 }}>
-            {message && (
-              <p className="cca-display" style={{ fontSize: 'clamp(18px, 1.9vw, 23px)', lineHeight: 1.5, color: 'rgba(244,239,230,.92)', margin: 0, textAlign: 'left', maxWidth: '42ch' }}>
-                {message}{(presence === 'ecriture') && <span className="cca-caret" />}
-              </p>
-            )}
+          <div className="cca-tunnel-guide">
+            <div className="cca-tunnel-eyebrow">{tunnelCopy?.eyebrow || 'Action'}</div>
+            <h2 className="cca-tunnel-title">{tunnelCopy?.title || 'Passons à l’étape suivante.'}</h2>
+            <p className="cca-tunnel-text">
+              {tunnelCopy?.text || (message || `Je vous accompagne dans ${tenantName}.`)}
+              {(presence === 'ecriture') && <span className="cca-caret" />}
+            </p>
+            <div className="cca-tunnel-steps" aria-label="Étapes du tunnel">
+              {(tunnelCopy?.steps || ['Choisir', 'Valider', 'Accéder']).map((s, i) => (
+                <div className="cca-tunnel-step" key={s}><i>{i + 1}</i><span>{s}</span></div>
+              ))}
+            </div>
+            <div className="cca-tunnel-switch" aria-label="Changer d'étape">
+              <button type="button" className={tunnelMode === 'plans' ? 'on' : ''} onClick={openForfaits}>
+                <span>Voir les forfaits</span><Tag size={15} />
+              </button>
+              <button type="button" className={tunnelMode === 'signup' ? 'on' : ''} onClick={goToSignup}>
+                <span>Créer un compte</span><UserPlus size={15} />
+              </button>
+              <button type="button" className={tunnelMode === 'login' ? 'on' : ''} onClick={goToSpace}>
+                <span>Se connecter</span><Lock size={15} />
+              </button>
+            </div>
+            <div className="cca-tunnel-proof" aria-label="Garanties">
+              <span><b>Guidé</b>Le visiteur sait quoi faire.</span>
+              <span><b>Sécurisé</b>Carte ou Mobile Money.</span>
+              <span><b>Continu</b>Retour direct vers LIRI.</span>
+            </div>
           </div>
 
           {/* DROITE — zone d'action bordée, hauteur dynamique selon le contenu */}
-          <div className="cca-actionzone" style={{ flex: '1 1 56%', minWidth: 0, background: 'rgba(244,239,230,.03)', border: '1px solid rgba(230,204,146,.16)', borderRadius: 20, padding: 20, display: 'flex', flexDirection: 'column', gap: 11 }}>
+          <div className="cca-actionzone">
+            <div className="cca-action-head">
+              <span className="cca-action-kicker">{tunnelCopy?.eyebrow || 'Action'}</span>
+              <button
+                type="button"
+                className="cca-action-close"
+                onClick={() => { setContactForm(null); setBookingForm(null); setSignupForm(null); setAuthForm(null); setPlansPanel(null); }}
+              >
+                Fermer
+              </button>
+            </div>
 
             {contactForm && (contactForm.sent ? (
               <div style={{ textAlign: 'center', color: GOLD, fontFamily: DISPLAY, fontSize: 20, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 8, padding: '16px 0' }}>
@@ -3012,23 +3532,22 @@ export default function CimolaceCreationAgent({ tenantSlug: tenantSlugProp = nul
                 <Check size={18} /> Bienvenue{signupForm.name ? `, ${signupForm.name.trim()}` : ''} !
               </div>
             ) : (
-              <>
+              <form className="cca-tunnel-form" onSubmit={(e) => { e.preventDefault(); e.stopPropagation(); submitSignup(); }}>
                 <div className="cca-display" style={{ fontSize: 18, color: INK, marginBottom: 2 }}>Créer votre espace {tenantName}</div>
                 <input className="cca-field" placeholder="Votre nom (optionnel)" value={signupForm.name}
                   onChange={(e) => setSignupForm((c) => ({ ...c, name: e.target.value }))} style={VNP_FIELD} />
                 <input className="cca-field" type="email" placeholder="Votre e-mail" value={signupForm.email} autoComplete="email"
                   onChange={(e) => setSignupForm((c) => ({ ...c, email: e.target.value }))} style={VNP_FIELD} />
                 <input className="cca-field" type="password" placeholder="Un mot de passe (6+ caractères)" value={signupForm.password} autoComplete="new-password"
-                  onChange={(e) => setSignupForm((c) => ({ ...c, password: e.target.value }))}
-                  onKeyDown={(e) => { if (e.key === 'Enter') { e.stopPropagation(); submitSignup(); } }} style={VNP_FIELD} />
-                {signupForm.error && <span style={{ color: '#f0997b', fontSize: 12.5 }}>{signupForm.error}</span>}
-                <div style={{ display: 'flex', gap: 8 }}>
-                  <button onClick={(e) => { e.stopPropagation(); submitSignup(); }} disabled={signupForm.sending}
+                  onChange={(e) => setSignupForm((c) => ({ ...c, password: e.target.value }))} style={VNP_FIELD} />
+                {signupForm.error && <span className="cca-tunnel-error" role="alert" aria-live="polite">{signupForm.error}</span>}
+                <div className="cca-tunnel-actions">
+                  <button type="submit" disabled={signupForm.sending}
                     style={{ ...VNP_CHIP_BASE, flex: 1, justifyContent: 'center', fontWeight: 600, color: '#231208', background: TERRA, border: 'none', opacity: signupForm.sending ? 0.7 : 1 }}>
                     {signupForm.sending ? <Loader2 size={15} className="animate-spin" /> : <Check size={15} />}
                     {signupForm.sending ? 'Création…' : 'Créer mon espace'}
                   </button>
-                  <button onClick={(e) => { e.stopPropagation(); setSignupForm(null); }}
+                  <button type="button" onClick={(e) => { e.stopPropagation(); setSignupForm(null); }}
                     style={{ ...VNP_NAV_CHIP, justifyContent: 'center', width: 108 }}>Annuler</button>
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8, margin: '4px 0 2px' }}>
@@ -3036,34 +3555,33 @@ export default function CimolaceCreationAgent({ tenantSlug: tenantSlugProp = nul
                   <span style={{ fontSize: 10.5, color: 'rgba(244,239,230,.4)', textTransform: 'uppercase', letterSpacing: '.1em' }}>ou</span>
                   <div style={{ flex: 1, height: 1, background: 'rgba(244,239,230,.12)' }} />
                 </div>
-                <button onClick={(e) => { e.stopPropagation(); handleGoogleAuth(); }} disabled={signupForm.sending}
+                <button type="button" onClick={(e) => { e.stopPropagation(); handleGoogleAuth(); }} disabled={signupForm.sending}
                   style={{ ...VNP_CHIP_BASE, width: '100%', justifyContent: 'center', gap: 10, fontWeight: 600, color: INK, background: 'rgba(244,239,230,.05)', border: '1px solid rgba(244,239,230,.18)' }}>
                   <GoogleGlyph /> Continuer avec Google
                 </button>
-                <button onClick={(e) => { e.stopPropagation(); setSignupForm(null); setAuthForm({ email: signupForm.email || '', password: '', sending: false, error: '' }); }}
+                <button type="button" onClick={(e) => { e.stopPropagation(); setSignupForm(null); setAuthForm({ email: signupForm.email || '', password: '', sending: false, error: '' }); }}
                   style={{ background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'inherit', fontSize: 12.5, color: 'rgba(244,239,230,.55)', textAlign: 'left', padding: 0, marginTop: 2 }}>
                   Déjà un compte ? <span style={{ color: GOLD }}>Se connecter →</span>
                 </button>
-              </>
+              </form>
             ))}
 
             {/* CONNEXION EN LIGNE */}
             {authForm && (
-              <>
+              <form className="cca-tunnel-form" onSubmit={(e) => { e.preventDefault(); e.stopPropagation(); submitLogin(); }}>
                 <div className="cca-display" style={{ fontSize: 18, color: INK, marginBottom: 2 }}>Connexion à {tenantName}</div>
                 <input className="cca-field" type="email" placeholder="Votre e-mail" value={authForm.email} autoComplete="email"
                   onChange={(e) => setAuthForm((c) => ({ ...c, email: e.target.value }))} style={VNP_FIELD} />
                 <input className="cca-field" type="password" placeholder="Votre mot de passe" value={authForm.password} autoComplete="current-password"
-                  onChange={(e) => setAuthForm((c) => ({ ...c, password: e.target.value }))}
-                  onKeyDown={(e) => { if (e.key === 'Enter') { e.stopPropagation(); submitLogin(); } }} style={VNP_FIELD} />
-                {authForm.error && <span style={{ color: '#f0997b', fontSize: 12.5 }}>{authForm.error}</span>}
-                <div style={{ display: 'flex', gap: 8 }}>
-                  <button onClick={(e) => { e.stopPropagation(); submitLogin(); }} disabled={authForm.sending}
+                  onChange={(e) => setAuthForm((c) => ({ ...c, password: e.target.value }))} style={VNP_FIELD} />
+                {authForm.error && <span className="cca-tunnel-error" role="alert" aria-live="polite">{authForm.error}</span>}
+                <div className="cca-tunnel-actions">
+                  <button type="submit" disabled={authForm.sending}
                     style={{ ...VNP_CHIP_BASE, flex: 1, justifyContent: 'center', fontWeight: 600, color: '#231208', background: TERRA, border: 'none', opacity: authForm.sending ? 0.7 : 1 }}>
                     {authForm.sending ? <Loader2 size={15} className="animate-spin" /> : null}
                     {authForm.sending ? 'Connexion…' : 'Se connecter'}
                   </button>
-                  <button onClick={(e) => { e.stopPropagation(); setAuthForm(null); }}
+                  <button type="button" onClick={(e) => { e.stopPropagation(); setAuthForm(null); }}
                     style={{ ...VNP_NAV_CHIP, justifyContent: 'center', width: 108 }}>Annuler</button>
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8, margin: '4px 0 2px' }}>
@@ -3071,15 +3589,15 @@ export default function CimolaceCreationAgent({ tenantSlug: tenantSlugProp = nul
                   <span style={{ fontSize: 10.5, color: 'rgba(244,239,230,.4)', textTransform: 'uppercase', letterSpacing: '.1em' }}>ou</span>
                   <div style={{ flex: 1, height: 1, background: 'rgba(244,239,230,.12)' }} />
                 </div>
-                <button onClick={(e) => { e.stopPropagation(); handleGoogleAuth(); }} disabled={authForm.sending}
+                <button type="button" onClick={(e) => { e.stopPropagation(); handleGoogleAuth(); }} disabled={authForm.sending}
                   style={{ ...VNP_CHIP_BASE, width: '100%', justifyContent: 'center', gap: 10, fontWeight: 600, color: INK, background: 'rgba(244,239,230,.05)', border: '1px solid rgba(244,239,230,.18)' }}>
                   <GoogleGlyph /> Continuer avec Google
                 </button>
-                <button onClick={(e) => { e.stopPropagation(); setAuthForm(null); setSignupForm({ name: '', email: authForm.email || '', password: '', sending: false, sent: false, error: '' }); }}
+                <button type="button" onClick={(e) => { e.stopPropagation(); setAuthForm(null); setSignupForm({ name: '', email: authForm.email || '', password: '', sending: false, sent: false, error: '' }); }}
                   style={{ background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'inherit', fontSize: 12.5, color: 'rgba(244,239,230,.55)', textAlign: 'left', padding: 0, marginTop: 2 }}>
                   Pas encore de compte ? <span style={{ color: GOLD }}>Créer mon espace →</span>
                 </button>
-              </>
+              </form>
             )}
 
             {/* CHOISIR UN FORFAIT — les 4 cycles rendus DANS l'OS ; « S'abonner » ouvre le checkout en nouvel onglet */}
@@ -3097,11 +3615,12 @@ export default function CimolaceCreationAgent({ tenantSlug: tenantSlugProp = nul
                 {!plansPanel.loading && !plansPanel.error && plansPanel.plans.map((p) => {
                   const meta = CYCLE_META[p.cycle] || {};
                   return (
-                    <button key={p.key} onClick={(e) => { e.stopPropagation();
+                    <button key={p.key} className={`cca-plan-card${p.cycle === 'academique' ? ' primary' : ''}`} onClick={(e) => { e.stopPropagation();
                         try { logEvent('forfait_checkout', { cycle: p.cycle }, osTenant); } catch { /* non bloquant */ }
                         window.open(`/t/${osTenant}/paiement?plan=${encodeURIComponent(p.key)}&type=subscription`, '_blank', 'noopener'); }}
                       style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, textAlign: 'left', cursor: 'pointer',
                         padding: '12px 15px', borderRadius: 13, border: '1px solid rgba(230,204,146,.18)', background: 'rgba(244,239,230,.035)', fontFamily: 'inherit', width: '100%' }}>
+                      {p.cycle === 'academique' && <span className="cca-plan-badge">Recommandé</span>}
                       <span style={{ minWidth: 0 }}>
                         <span style={{ display: 'block', color: INK, fontWeight: 600, fontSize: 14.5 }}>{meta.name || p.label}</span>
                         <span style={{ display: 'block', color: 'rgba(244,239,230,.6)', fontSize: 12, lineHeight: 1.35, marginTop: 2 }}>{meta.for || ''}</span>
@@ -3118,8 +3637,16 @@ export default function CimolaceCreationAgent({ tenantSlug: tenantSlugProp = nul
                     Paiement sécurisé — carte (Stripe) ou Mobile Money (PawaPay), dans un nouvel onglet. Trimestre & année proposés au paiement.
                   </span>
                 )}
-                <button onClick={(e) => { e.stopPropagation(); setPlansPanel(null); }}
-                  style={{ ...VNP_NAV_CHIP, justifyContent: 'center', width: 108, alignSelf: 'flex-start' }}>Fermer</button>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginTop: 4 }}>
+                  <button type="button" onClick={(e) => { e.stopPropagation(); goToSignup(); }}
+                    style={{ ...VNP_CHIP_BASE, justifyContent: 'center', fontWeight: 650, color: '#231208', background: TERRA, border: 'none' }}>
+                    Créer un compte
+                  </button>
+                  <button type="button" onClick={(e) => { e.stopPropagation(); goToSpace(); }}
+                    style={{ ...VNP_NAV_CHIP, justifyContent: 'center' }}>
+                    Déjà membre
+                  </button>
+                </div>
               </>
             )}
           </div>
@@ -3254,28 +3781,59 @@ export default function CimolaceCreationAgent({ tenantSlug: tenantSlugProp = nul
       {/* L7 — Tour guidé : sous-titre narrateur (scènes plein écran) + contrôles */}
       {tourActive && (
         <>
-          {fullscreenScene && message && (
-            <div className="cca-in" style={{ position: 'absolute', left: '50%', bottom: 98, transform: 'translateX(-50%)', width: 'min(620px, 86vw)', textAlign: 'center', zIndex: 6, pointerEvents: 'none' }}>
-              <p style={{ fontFamily: SERIF, fontSize: 17, lineHeight: 1.5, color: INK, margin: 0 }}>
+          {fullscreenScene && scene?.type !== 'founder' && message && (
+            <div className="cca-in cca-tour-narration" style={{ position: 'absolute', left: '50%', bottom: 126, transform: 'translateX(-50%)', width: 'min(600px, 78vw)', textAlign: 'center', zIndex: 6, pointerEvents: 'none' }}>
+              <p style={{ fontFamily: SERIF, fontSize: 15.5, lineHeight: 1.45, color: INK, margin: 0, textWrap: 'balance' }}>
                 {keyword ? highlightReply(message, keyword) : message}
-                {(presence === 'ecriture' || presence === 'attente') && <span className="cca-caret" />}
+                {(presence === 'ecriture') && <span className="cca-caret" />}
               </p>
             </div>
           )}
-          <div style={{ position: 'absolute', left: '50%', bottom: 34, transform: 'translateX(-50%)', display: 'flex', alignItems: 'center', gap: 14, zIndex: 6 }}>
-            <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
-              {Array.from({ length: tourTotal }).map((_, i) => (
-                <span key={i} style={{ width: i === tourIdx ? 18 : 6, height: 6, borderRadius: 999, background: i === tourIdx ? TERRA : i < tourIdx ? GOLD : 'rgba(244,239,230,.25)', transition: 'all .3s cubic-bezier(.16,1,.3,1)' }} />
-              ))}
+          <style>{`
+            .cca-tour-memory{position:absolute;left:24px;bottom:92px;z-index:6;pointer-events:auto;width:min(330px,calc(100vw - 48px));display:flex;align-items:center;gap:8px;padding:8px 10px;border-radius:999px;background:rgba(18,17,15,.58);border:1px solid rgba(244,239,230,.09);box-shadow:0 18px 60px rgba(0,0,0,.24);backdrop-filter:blur(18px)}
+            .cca-tour-memory-title{flex:0 0 auto;font-family:'Bricolage Grotesque',system-ui,sans-serif;font-size:9px;font-weight:850;letter-spacing:.14em;text-transform:uppercase;color:rgba(244,239,230,.38);padding:0 3px 0 2px}
+            .cca-tour-memory-list{display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;min-width:0}.cca-tour-memory-list::-webkit-scrollbar{display:none}
+            .cca-tour-mem{flex:0 0 auto;max-width:138px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;border:1px solid rgba(244,239,230,.11);background:rgba(244,239,230,.035);color:rgba(244,239,230,.7);border-radius:999px;padding:6px 10px;font-family:inherit;font-size:11.5px;line-height:1;cursor:pointer}.cca-tour-mem.on{border-color:rgba(230,204,146,.38);background:rgba(230,204,146,.08);color:#e6cc92}
+            .cca-tour-dock{position:absolute;left:50%;bottom:18px;transform:translateX(-50%);z-index:6;pointer-events:auto;width:min(760px,calc(100vw - 40px));display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:14px;padding:10px 14px;border-radius:24px;background:rgba(18,17,15,.62);border:1px solid rgba(244,239,230,.09);box-shadow:0 22px 80px rgba(0,0,0,.34);backdrop-filter:blur(20px)}
+            .cca-tour-question{justify-self:start;display:flex;align-items:center;gap:9px;min-width:0;color:rgba(244,239,230,.82);font-family:'Bricolage Grotesque',system-ui,sans-serif;font-size:13px}.cca-tour-question svg{color:#e6cc92;flex:0 0 auto}.cca-tour-question span{white-space:nowrap}
+            .cca-tour-actions{justify-self:center;display:flex;align-items:center;gap:8px}.cca-tour-primary,.cca-tour-secondary{border-radius:999px;padding:8px 13px;font-family:inherit;font-size:12.5px;font-weight:750;cursor:pointer}.cca-tour-primary{border:none;background:#d97757;color:#24140f}.cca-tour-secondary{border:1px solid rgba(230,204,146,.25);background:rgba(230,204,146,.06);color:#e6cc92}
+            .cca-tour-nav{justify-self:end;display:flex;align-items:center;gap:12px}.cca-tour-dots{display:flex;gap:6px;align-items:center}.cca-tour-dot{border:none;padding:0;border-radius:999px;transition:all .3s cubic-bezier(.16,1,.3,1);cursor:pointer}.cca-tour-light{display:inline-flex;align-items:center;gap:5px;background:transparent;border:none;color:rgba(244,239,230,.52);border-radius:999px;padding:6px 8px;font-size:12px;font-family:inherit;cursor:pointer}.cca-tour-light:hover{color:rgba(244,239,230,.78)}
+            @media(max-width:760px){.cca-tour-memory{display:none}.cca-tour-dock{grid-template-columns:1fr;justify-items:center;border-radius:22px;gap:9px}.cca-tour-question,.cca-tour-nav{justify-self:center}.cca-tour-question span{white-space:normal;text-align:center}.cca-tour-actions{order:2}.cca-tour-nav{order:3}.cca-tour-light span{display:none}}
+          `}</style>
+          {tourRecap.length > 0 && (
+            <div className="cca-tour-memory" aria-label="Mémoire de visite">
+              <div className="cca-tour-memory-title">Mémoire</div>
+              <div className="cca-tour-memory-list">
+                {tourRecap.map((r) => (
+                  <button key={r.idx} type="button" className={`cca-tour-mem${r.idx === tourIdx ? ' on' : ''}`} onClick={(e) => { e.stopPropagation(); jumpTourBeat(r.idx); }} title={r.label}>
+                    {String(r.idx + 1).padStart(2, '0')} · {r.label}
+                  </button>
+                ))}
+              </div>
             </div>
-            <button className="cca-chip" onClick={(e) => { e.stopPropagation(); skipBeat(); }}
-              style={{ display: 'inline-flex', alignItems: 'center', gap: 5, background: 'rgba(244,239,230,.06)', border: 'none', color: 'rgba(244,239,230,.7)', borderRadius: 999, padding: '7px 13px', fontSize: 12.5, fontFamily: 'inherit', cursor: 'pointer' }}>
-              <SkipForward size={13} />Passer
-            </button>
-            <button className="cca-chip" onClick={(e) => { e.stopPropagation(); endTour(); }}
-              style={{ display: 'inline-flex', alignItems: 'center', gap: 5, background: 'transparent', border: 'none', color: 'rgba(244,239,230,.45)', borderRadius: 999, padding: '7px 10px', fontSize: 12.5, fontFamily: 'inherit', cursor: 'pointer' }}>
-              <X size={13} />Arrêter
-            </button>
+          )}
+          <div className="cca-tour-dock">
+            <div className="cca-tour-question">
+              {tourPaused && currentTourBeat && !currentTourBeat.final ? (<><Sparkles size={14} /><span>C’est clair ?</span></>) : <span />}
+            </div>
+            <div className="cca-tour-actions">
+              {tourPaused && currentTourBeat && !currentTourBeat.final ? (
+                <>
+                  <button type="button" className="cca-tour-primary" onClick={(e) => { e.stopPropagation(); skipBeat(); }}>Oui, continue</button>
+                  <button type="button" className="cca-tour-secondary" onClick={(e) => { e.stopPropagation(); reformulateBeat(); }}>Reformule</button>
+                </>
+              ) : null}
+            </div>
+            <div className="cca-tour-nav">
+              <div className="cca-tour-dots">
+                {Array.from({ length: tourTotal }).map((_, i) => (
+                  <button key={i} className="cca-tour-dot" aria-label={`Étape ${i + 1}`} onClick={(e) => { e.stopPropagation(); jumpTourBeat(i); }}
+                    style={{ width: i === tourIdx ? 18 : 6, height: 6, background: i === tourIdx ? TERRA : i < tourIdx ? GOLD : 'rgba(244,239,230,.25)' }} />
+                ))}
+              </div>
+              <button className="cca-tour-light" onClick={(e) => { e.stopPropagation(); skipBeat(); }}><SkipForward size={13} /><span>Passer</span></button>
+              <button className="cca-tour-light" onClick={(e) => { e.stopPropagation(); endTour(); }}><X size={13} /><span>Arrêter</span></button>
+            </div>
           </div>
         </>
       )}
@@ -3326,16 +3884,52 @@ export default function CimolaceCreationAgent({ tenantSlug: tenantSlugProp = nul
 
       {/* Saisie « parler à la présence » */}
       {inputOpen && (
-        <div className="cca-in" onClick={(e) => e.stopPropagation()}
-          style={{ position: 'absolute', zIndex: 6, left: '50%', bottom: 40, transform: 'translateX(-50%)', width: 'min(440px, 86vw)', display: 'flex', alignItems: 'center', gap: 8, background: 'rgba(244,239,230,.07)', borderRadius: 14, padding: '8px 8px 8px 15px' }}>
-          <input ref={inputRef} className="cca-field" value={value} onChange={(e) => setValue(e.target.value)}
-            onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); submitInput(); } else if (e.key === 'Escape') { closeInput(); } }}
-            placeholder={step === 'brand_ask' ? 'Nom de votre organisation…' : 'Parlez à la présence…'}
-            style={{ flex: 1, background: 'transparent', border: 'none', outline: 'none', color: INK, fontSize: 14, fontFamily: 'inherit' }} />
-          <button onClick={submitInput} aria-label="Envoyer"
-            style={{ width: 32, height: 32, borderRadius: 9, background: TERRA, color: '#2a140c', border: 'none', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, cursor: 'pointer' }}>
-            <ArrowUp size={17} />
-          </button>
+        <div className="cca-write-sheet" onClick={(e) => e.stopPropagation()} role="dialog" aria-modal="true" aria-label="Écrire une question">
+          <div className="cca-write-top">
+            <button type="button" className="cca-write-back" onClick={closeInput} aria-label="Retour">
+              <ArrowLeft size={18} /> Retour
+            </button>
+            <div style={{ display: 'inline-flex', alignItems: 'center' }}>
+              <div className="cca-write-brand">{tenantName || 'Prorascience'}</div>
+              {isTenantRealm && <span className="cca-write-status"><i /> Connecté</span>}
+            </div>
+            <div className="cca-write-right">
+              {isTenantRealm && (
+                <button type="button" className="cca-write-space" onClick={goToSpace}>
+                  <ArrowRight size={16} /> Mon espace
+                </button>
+              )}
+              <button type="button" className="cca-write-muted" onClick={() => setMuted((m) => !m)} aria-label={muted ? 'Activer la voix' : 'Couper la voix'}>
+                {muted ? <VolumeX size={18} /> : <Volume2 size={18} />}
+              </button>
+            </div>
+          </div>
+          <main className="cca-write-main">
+            <div className="cca-write-orb" aria-hidden="true" />
+            <form className="cca-write-form" onSubmit={(e) => { e.preventDefault(); submitInput(); }}>
+              <div className="cca-write-mark" aria-hidden="true"><i /><i /><i /><i /><i /></div>
+              <div className="cca-write-fieldwrap">
+                <textarea
+                  ref={inputRef}
+                  className="cca-write-field"
+                  value={value}
+                  onChange={(e) => setValue(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); submitInput(); }
+                    else if (e.key === 'Escape') { closeInput(); }
+                  }}
+                  placeholder={step === 'brand_ask' ? 'Nom de votre organisation…' : 'Écrivez votre question…'}
+                  autoComplete="off"
+                  rows={2}
+                />
+                <button className="cca-write-send" type="submit" aria-label="Envoyer" disabled={!String(value || '').trim()}>
+                  <ArrowUp size={20} />
+                </button>
+              </div>
+              <p className="cca-write-help">La scène est effacée le temps de formuler. Entrée pour envoyer · Échap pour revenir.</p>
+            </form>
+          </main>
+          <div className="cca-write-bottom">Nouvelle question — espace vide, sans distraction.</div>
         </div>
       )}
     </div>

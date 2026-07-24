@@ -30,6 +30,9 @@ function session() {
  */
 export function logEvent(type, payload = {}, tenantSlug = null) {
   try {
+    const host = typeof window !== 'undefined' ? window.location.hostname : '';
+    const protocol = typeof window !== 'undefined' ? window.location.protocol : '';
+    if (protocol === 'file:' || host === 'localhost' || host === '127.0.0.1') return;
     supabase.functions
       .invoke('vnp-log', { body: { type, payload, tenantSlug: tenantSlug || null, userSession: session(), source: 'vnp' } })
       .catch(() => {});

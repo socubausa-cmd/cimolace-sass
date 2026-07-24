@@ -58,6 +58,7 @@ let BillingController = class BillingController {
 exports.BillingController = BillingController;
 __decorate([
     (0, common_1.Get)("subscription"),
+    (0, roles_decorator_1.Roles)("owner", "admin"),
     __param(0, (0, common_1.Req)()),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [Object]),
@@ -65,6 +66,7 @@ __decorate([
 ], BillingController.prototype, "getSubscription", null);
 __decorate([
     (0, common_1.Post)("subscription"),
+    (0, roles_decorator_1.Roles)("owner", "admin"),
     __param(0, (0, common_1.Req)()),
     __param(1, (0, common_1.Body)()),
     __metadata("design:type", Function),
@@ -73,6 +75,7 @@ __decorate([
 ], BillingController.prototype, "create", null);
 __decorate([
     (0, common_1.Get)("invoices"),
+    (0, roles_decorator_1.Roles)("owner", "admin"),
     __param(0, (0, common_1.Req)()),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [Object]),
@@ -80,6 +83,7 @@ __decorate([
 ], BillingController.prototype, "getInvoices", null);
 __decorate([
     (0, common_1.Get)("plan"),
+    (0, roles_decorator_1.Roles)("owner", "admin"),
     __param(0, (0, common_1.Req)()),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [Object]),
@@ -106,6 +110,7 @@ __decorate([
 ], BillingController.prototype, "collect", null);
 __decorate([
     (0, common_1.Post)("mobile-money/sync"),
+    (0, roles_decorator_1.Roles)("owner", "admin"),
     __param(0, (0, common_1.Req)()),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [Object]),
@@ -123,6 +128,7 @@ __decorate([
 ], BillingController.prototype, "refund", null);
 __decorate([
     (0, common_1.Post)("refunds/sync"),
+    (0, roles_decorator_1.Roles)("owner", "admin"),
     __param(0, (0, common_1.Req)()),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [Object]),
@@ -148,6 +154,7 @@ __decorate([
 ], BillingController.prototype, "cardConfirm", null);
 __decorate([
     (0, common_1.Get)("payouts"),
+    (0, roles_decorator_1.Roles)("owner", "admin"),
     __param(0, (0, common_1.Req)()),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [Object]),
@@ -155,6 +162,7 @@ __decorate([
 ], BillingController.prototype, "listPayouts", null);
 __decorate([
     (0, common_1.Get)("balance"),
+    (0, roles_decorator_1.Roles)("owner", "admin"),
     __param(0, (0, common_1.Req)()),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [Object]),
@@ -179,20 +187,39 @@ let AdminBillingController = class AdminBillingController {
     constructor(svc) {
         this.svc = svc;
     }
-    async activate(tenantId, body) {
-        return { data: await this.svc.activateTenantSubscription(tenantId, body?.plan || "zahir-forfait") };
+    async activate(req, tenantId, body) {
+        const plan = String(body?.plan ?? "").trim();
+        if (!plan)
+            throw new common_1.BadRequestException("plan requis (clé billing_plans) — aucun forfait par défaut.");
+        return { data: await this.svc.activateTenantSubscription(tenantId, plan, req.user?.email ?? req.user?.id ?? undefined) };
+    }
+    async paymentLink(req, tenantId, body) {
+        return {
+            data: await this.svc.createPaymentLinkForTenant(tenantId, body?.planKey, req.user?.email ?? req.user?.id ?? undefined, body?.cycle),
+        };
     }
 };
 exports.AdminBillingController = AdminBillingController;
 __decorate([
     (0, common_1.Post)("tenants/:tenantId/activate"),
     (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard, cimolace_staff_guard_1.CimolaceStaffGuard),
-    __param(0, (0, common_1.Param)("tenantId")),
-    __param(1, (0, common_1.Body)()),
+    __param(0, (0, common_1.Req)()),
+    __param(1, (0, common_1.Param)("tenantId")),
+    __param(2, (0, common_1.Body)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [String, Object]),
+    __metadata("design:paramtypes", [Object, String, Object]),
     __metadata("design:returntype", Promise)
 ], AdminBillingController.prototype, "activate", null);
+__decorate([
+    (0, common_1.Post)("tenants/:tenantId/payment-link"),
+    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard, cimolace_staff_guard_1.CimolaceStaffGuard),
+    __param(0, (0, common_1.Req)()),
+    __param(1, (0, common_1.Param)("tenantId")),
+    __param(2, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, String, Object]),
+    __metadata("design:returntype", Promise)
+], AdminBillingController.prototype, "paymentLink", null);
 exports.AdminBillingController = AdminBillingController = __decorate([
     (0, common_1.Controller)("admin/billing"),
     __metadata("design:paramtypes", [billing_service_1.BillingService])

@@ -43,6 +43,12 @@ export declare class LiveController {
     replayPublish(req: any, id: string): Promise<{
         data: {
             published: boolean;
+            reason: "teleconsult";
+            workflow_status?: undefined;
+            forumPosted?: undefined;
+            state?: undefined;
+        } | {
+            published: boolean;
             reason: "no_recording";
             workflow_status?: undefined;
             forumPosted?: undefined;
