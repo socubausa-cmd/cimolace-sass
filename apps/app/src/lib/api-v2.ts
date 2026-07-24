@@ -1120,6 +1120,12 @@ export const joinApi = {
     apiV2.get<ApiEnvelope<{ slug: string; name: string; logo_url: string | null; embedded?: boolean; primary_domain?: string | null } | null>>(`/tenants/by-slug/${encodeURIComponent(slug)}/branding`).then(unwrap),
 };
 
+// ── Bibliothèque du Précepteur (cours générés depuis TikTok) ─────────────────
+export const precepteurLibraryApi = {
+  list: () => apiV2.get<ApiEnvelope<any[]>>('/precepteur-library').then(unwrap),
+  get: (id: string) => apiV2.get<ApiEnvelope<any>>(`/precepteur-library/${id}`).then(unwrap),
+};
+
 // ── Studio monétisation propriétaire ─────────────────────────────────────────
 /** Liens d'invitation multiples (tenant_invite_links) — owner ; lien = /rejoindre?org=slug&invite=CODE. */
 export const inviteLinksApi = {
