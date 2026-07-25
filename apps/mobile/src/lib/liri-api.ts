@@ -212,6 +212,32 @@ async function getJson<T>(path: string): Promise<T | null> {
 
 export const fetchStats = () => getJson<Stats>('/growth/stats');
 
+/**
+ * Vidéothèque — enregistrements de séances publiés (`published_videos`, Zoom → R2),
+ * distincts des replays de sessions live (cf. fetchReplays plus bas).
+ * ⚠️ `playback_url` est PRÉSIGNÉE par l'API à chaque appel (expire) : la relire à
+ * l'ouverture du lecteur, jamais la mettre en cache durablement.
+ */
+export type VideothequeItem = {
+  id: string;
+  title?: string;
+  description?: string;
+  category?: string;
+  playback_url?: string;
+  thumbnail_url?: string;
+  duration_sec?: number;
+  transcript_text?: string;
+  transcript_cues?: { t: number; text: string }[];
+};
+
+export async function fetchVideotheque(): Promise<VideothequeItem[]> {
+  const data = await getJson<VideothequeItem[] | { data?: VideothequeItem[] }>('/zoom-engine/published');
+  if (Array.isArray(data)) return data;
+  const nested = (data as { data?: VideothequeItem[] })?.data;
+  return Array.isArray(nested) ? nested : [];
+}
+
+
 export async function fetchLives(): Promise<Live[]> {
   // L'API renvoie {data:{data:[...]}} (ResponseInterceptor + pagination du contrôleur).
   // getJson déballe un niveau → il reste {data:[...]} ; on déballe le second.

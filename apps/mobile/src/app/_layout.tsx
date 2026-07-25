@@ -57,6 +57,7 @@ function AppTabs() {
       <Tabs.Screen name="brain" options={{ title: 'Brain', tabBarIcon: tab('zap') }} />
       {/* Secondaires — accessibles via liens, masqués de la barre (comme le web) */}
       <Tabs.Screen name="formations" options={{ href: null }} />
+      <Tabs.Screen name="videotheque" options={{ href: null }} />
       <Tabs.Screen name="formation/[courseId]" options={fullScreen} />
       <Tabs.Screen name="integrations" options={{ href: null }} />
       <Tabs.Screen name="reglages" options={{ href: null }} />

@@ -1,3 +1,4 @@
+import RichSlide from './rich-slide';
 import { Feather } from '@expo/vector-icons';
 import * as Linking from 'expo-linking';
 import { useEffect, useMemo, useState } from 'react';
@@ -105,7 +106,7 @@ export default function LessonPlayer({ lesson, onClose }: { lesson: CurriculumLe
               {slides.map((s, i) => (
                 <View key={i} style={styles.slide}>
                   {s.title ? <Text style={styles.slideTitle}>{s.title}</Text> : null}
-                  <Text selectable style={styles.slideBody}>{htmlToText(s.content) || '—'}</Text>
+                  <RichSlide content={s.content} />
                 </View>
               ))}
             </View>
@@ -132,6 +133,14 @@ export default function LessonPlayer({ lesson, onClose }: { lesson: CurriculumLe
                       </Pressable>
                     );
                   })}
+                  {submitted && (q as { explication?: string; explanation?: string }).explication ? (
+                    <View style={styles.explain}>
+                      <Text style={styles.explainLabel}>Pourquoi : </Text>
+                      <Text style={styles.explainText}>
+                        {(q as { explication?: string }).explication}
+                      </Text>
+                    </View>
+                  ) : null}
                 </View>
               ))}
               {submitted ? (
@@ -204,4 +213,10 @@ const makeStyles = (C: LiriPalette) => StyleSheet.create({
   branchSummary: { color: C.muted, fontSize: 13, lineHeight: 19, fontFamily: F.sans },
   branchKeys: { color: C.faint, fontSize: 12.5, lineHeight: 19, fontFamily: F.sans },
   empty: { color: C.muted, fontSize: 14, textAlign: 'center', paddingVertical: 40, fontFamily: F.sans },
+  explain: {
+    marginTop: 10, padding: 11, borderRadius: 12,
+    backgroundColor: 'rgba(217,119,87,.09)', borderWidth: 1, borderColor: 'rgba(217,119,87,.26)',
+  },
+  explainLabel: { color: '#f0c3ac', fontSize: 13, fontWeight: '700' },
+  explainText: { color: 'rgba(245,244,238,.80)', fontSize: 13.5, lineHeight: 20 },
 });

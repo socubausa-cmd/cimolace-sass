@@ -28,6 +28,7 @@ const MENU: { to: string; title: string; sub: string; icon: IconName; color: str
   { to: '/engines', title: 'Mes statistiques', sub: 'Découvre ton évolution', icon: 'bar-chart-2', color: '#34D399' },
   { to: '/bibliotheque', title: 'Téléchargements', sub: 'Cours, fiches et ressources', icon: 'download', color: '#FBBF24' },
   { to: '/formations', title: 'Mes formations', sub: 'Modules, leçons et progression', icon: 'book-open', color: '#38BDF8' },
+  { to: '/videotheque', title: 'Vidéothèque', sub: 'Séances enregistrées et transcription', icon: 'film', color: '#d97757' },
   { to: '/ma-classe', title: 'Ma classe', sub: 'Promotion et camarades', icon: 'users', color: '#34D399' },
   { to: '/calendrier-annuel', title: 'Calendrier annuel', sub: 'Programme et périodes scolaires', icon: 'calendar', color: '#FBBF24' },
   { to: '/rendez-vous', title: 'Rendez-vous', sub: 'Contacter le secrétariat', icon: 'clock', color: '#FB7185' },
