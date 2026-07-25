@@ -318,8 +318,15 @@ const rows = sql(`select s.id, s.external_id, s.title, s.transcript_text from pr
   });
 log(`${rows.length} transcription(s) → cours${CANON ? ` (few-shot : « ${CANON.title} »)` : ' (SANS few-shot ⚠️)'}.`);
 
+const MIN_TRANSCRIPT = 400; // en dessous : clip/évocation/salutation — inutile de payer un appel LLM
+
 for (const r of rows) {
   try {
+    if ((r.transcript || '').length < MIN_TRANSCRIPT) {
+      sql(`update precepteur_sources set status='skipped', error_message='transcription trop courte (<400 c.)', updated_at=now() where id=${q(r.id)}::uuid;`);
+      log(`⏭️  ${r.ext} — trop court (${(r.transcript || '').length} c.), pas d'appel LLM.`);
+      continue;
+    }
     const user = `${fewShot()}\nTITRE/LÉGENDE TIKTOK : ${r.title || '(sans titre)'}\n\nTRANSCRIPTION DE LA VIDÉO :\n${r.transcript}`;
     const { model, data } = await callLLM(user);
     if (data?.topic_ok === false) {
