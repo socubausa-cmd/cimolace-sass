@@ -12,7 +12,8 @@
       "supportsTablet": true,
       "bundleIdentifier": "org.prorascience.liri",
       "infoPlist": {
-        "ITSAppUsesNonExemptEncryption": false
+        "ITSAppUsesNonExemptEncryption": false,
+        "UIBackgroundModes": ["audio"]
       }
     },
     "android": {
