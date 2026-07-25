@@ -81,6 +81,20 @@ captures d'écran par taille d'appareil, description, mots-clés, catégorie,
 politique de confidentialité en ligne, et pour Apple le questionnaire
 « App Privacy » (l'app collecte e-mail + contenus pédagogiques via Supabase).
 
+## Vérifier un artefact avant de l'envoyer
+
+La configuration résolue n'est pas ce qui est livré — `expo config --type
+introspect` a annoncé un `UIBackgroundModes` que le `.app` produit n'avait pas.
+Inspecter le binaire :
+
+```bash
+tar -xzf build.tar.gz && plutil -p LIRI.app/Info.plist | grep -i backgroundmodes
+```
+
+```bash
+~/Library/Android/sdk/build-tools/*/aapt2 dump permissions build.apk
+```
+
 ## Régénérer les icônes
 
 ```bash
