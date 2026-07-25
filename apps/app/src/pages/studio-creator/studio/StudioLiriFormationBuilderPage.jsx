@@ -8,9 +8,10 @@ import { useNavigate } from 'react-router-dom';
 import {
   GraduationCap, Brain, ChevronRight, ChevronDown, Loader2, Sparkles,
   ArrowRight, AlertCircle, CheckCircle2, BookOpen, Calendar, Clock,
-  Target, Layers, RefreshCw, Save, Trash2, Cloud,
+  Target, Layers, RefreshCw, Save, Trash2, Cloud, Clapperboard,
 } from 'lucide-react';
 import { LiriWordmark } from '@/components/brand/LiriWordmark';
+import { usePublishToClassroom } from '@/hooks/usePublishToClassroom';
 import { cn } from '@/lib/utils';
 import StudioDesignerLikeShell from '@/components/liri/liri-ecosystem/StudioDesignerLikeShell';
 import {
@@ -46,6 +47,36 @@ function formationTreeFromLiriCours(cours, typeProgrammeLabel) {
       tag_pedagogique: e?.tag_pedagogique,
       idee_centrale: e?.idee_centrale,
     })),
+  };
+}
+
+/**
+ * Squelette généré → draft du POSTE PRODUCTION (usePublishToClassroom :
+ * modules → formation_weeks → formation_days). 1 étape = 1 jour de production
+ * (storyboard / image par image / vidéo / support / quiz se font là-bas) ;
+ * le support de chaque jour est semé avec l'idée centrale + l'objectif.
+ */
+function formationTreeToProductionDraft(formation, meta) {
+  const etapes = Array.isArray(formation?.cours) ? formation.cours : [];
+  const days = etapes.map((e, i) => {
+    const titre = e?.titre || `Étape ${i + 1}`;
+    const slides = [
+      e?.idee_centrale ? { title: 'Idée centrale', content: `<p>${e.idee_centrale}</p>` } : null,
+      e?.objectif ? { title: 'Objectif', content: `<p>${e.objectif}</p>` } : null,
+    ].filter(Boolean);
+    if (!slides.length) slides.push({ title: titre, content: `<p>${titre}</p>` });
+    return { title: titre, powerpoint: { type: 'slides', title: titre, slides } };
+  });
+  const weeks = [];
+  for (let i = 0; i < days.length; i += 4) {
+    weeks.push({ title: `Semaine ${weeks.length + 1}`, days: days.slice(i, i + 4) });
+  }
+  return {
+    title: formation?.titre || 'Formation',
+    description: formation?.objectif || '',
+    category: meta?.type_programme_label || undefined,
+    status: 'draft', // pas visible élève avant validation du rendu au poste production
+    modules: [{ title: 'Programme', weeks: weeks.length ? weeks : [{ title: 'Semaine 1', days: [] }] }],
   };
 }
 
@@ -219,6 +250,23 @@ export default function StudioLiriFormationBuilderPage() {
   const [draftCloudId, setDraftCloudId] = useState(null);
   const [draftBusy, setDraftBusy] = useState(false);
   const [draftMsg, setDraftMsg] = useState(null);
+  const { publish } = usePublishToClassroom();
+  const [producing, setProducing] = useState(false);
+  const [prodMsg, setProdMsg] = useState(null);
+
+  // Squelette → vraie formation (tables relationnelles) → ouverture au poste production.
+  const sendToProduction = useCallback(async () => {
+    if (!result?.formation || producing) return;
+    setProducing(true);
+    setProdMsg(null);
+    const res = await publish(formationTreeToProductionDraft(result.formation, result.meta));
+    setProducing(false);
+    if (res?.error || !res?.id) {
+      setProdMsg(res?.error?.message || 'Envoi au poste production impossible.');
+      return;
+    }
+    navigate(`/studio/formation?editFormationId=${res.id}`);
+  }, [result, producing, publish, navigate]);
 
   const refreshDrafts = useCallback(async () => {
     if (!userId || !isSupabaseConfigured) {
@@ -313,17 +361,21 @@ export default function StudioLiriFormationBuilderPage() {
   return (
     <StudioDesignerLikeShell
       railActiveKey="formation"
-      pageLabel="Formation"
+      pageLabel="Création"
       pageAccent="blue"
       TitleIcon={GraduationCap}
-      titleLine="Formation Builder"
+      titleLine="Création de formation"
       topBarActions={formation ? (
         <div className="flex items-center gap-2">
           <button type="button" onClick={() => navigate('/studio/liri/cours')} className="flex items-center gap-1.5 rounded-lg border border-amber-500/25 bg-amber-500/10 px-3 py-1.5 text-[11px] font-medium text-amber-400 transition-all hover:bg-amber-500/20">
             <Brain className="h-3.5 w-3.5" /> Course Builder
           </button>
-          <button type="button" onClick={() => navigate('/studio/smartboard-designer')} className="flex items-center gap-1.5 rounded-lg bg-[#c96544] px-3 py-1.5 text-[11px] font-semibold text-white transition-all hover:bg-[#d97757] shadow-[0_0_12px_rgba(217,119,87,0.35)]">
+          <button type="button" onClick={() => navigate('/studio/smartboard-designer')} className="flex items-center gap-1.5 rounded-lg border border-white/12 bg-white/[0.04] px-3 py-1.5 text-[11px] font-medium text-white/70 transition-all hover:border-white/25 hover:text-white">
             <Layers className="h-3.5 w-3.5" /> Designer
+          </button>
+          <button type="button" onClick={sendToProduction} disabled={producing} className="flex items-center gap-1.5 rounded-lg bg-[#c96544] px-3 py-1.5 text-[11px] font-semibold text-white transition-all hover:bg-[#d97757] shadow-[0_0_12px_rgba(217,119,87,0.35)] disabled:opacity-60">
+            {producing ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Clapperboard className="h-3.5 w-3.5" />}
+            {producing ? 'Envoi…' : 'Poste production'}
           </button>
         </div>
       ) : null}
@@ -384,6 +436,16 @@ export default function StudioLiriFormationBuilderPage() {
                   <div className="text-[10px] text-white/32 truncate">{result?.meta?.type_programme_label}</div>
                 </div>
               </div>
+              <button
+                type="button"
+                onClick={sendToProduction}
+                disabled={producing}
+                className="flex w-full items-center justify-center gap-1.5 rounded-lg bg-[#c96544] py-2 text-[11px] font-bold text-white transition-all hover:bg-[#d97757] shadow-[0_0_14px_rgba(217,119,87,0.35)] disabled:opacity-60"
+              >
+                {producing ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Clapperboard className="h-3.5 w-3.5" />}
+                {producing ? 'Envoi au poste production…' : 'Envoyer au poste production'}
+              </button>
+              {prodMsg ? <p className="text-[10px] text-red-300/80 px-0.5">{prodMsg}</p> : null}
               {userId && isSupabaseConfigured ? (
                 <>
                   <button
@@ -411,7 +473,7 @@ export default function StudioLiriFormationBuilderPage() {
                 <p className="mb-6 text-[13px] text-white/38">
                   <span className="inline-flex items-end gap-1 align-baseline">
                     <LiriWordmark size="kicker" className="text-white/45" subtleGlow />
-                    <span>génère le squelette complet : modules, semaines, cours, chapitres.</span>
+                    <span>génère le squelette (modules, semaines, cours) — puis envoyez-le au poste production pour le rendu image par image.</span>
                   </span>
                 </p>
                 <div className="rounded-2xl border border-white/10 bg-white/[0.02] p-6">
@@ -427,7 +489,11 @@ export default function StudioLiriFormationBuilderPage() {
                     <RefreshCw className="h-3 w-3" /> Nouvelle formation
                   </button>
                   <button onClick={() => navigate('/studio/liri/cours')} className="flex items-center gap-1.5 rounded-lg border border-amber-500/25 bg-amber-500/10 px-3 py-1.5 text-[11px] text-amber-400 transition-all hover:bg-amber-500/20">
-                    <Brain className="h-3.5 w-3.5" /> Générer un cours <ArrowRight className="h-3 w-3" />
+                    <Brain className="h-3.5 w-3.5" /> Générer un cours
+                  </button>
+                  <button onClick={sendToProduction} disabled={producing} className="ml-auto flex items-center gap-1.5 rounded-lg bg-[#c96544] px-3.5 py-1.5 text-[11px] font-semibold text-white transition-all hover:bg-[#d97757] shadow-[0_0_12px_rgba(217,119,87,0.35)] disabled:opacity-60">
+                    {producing ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Clapperboard className="h-3.5 w-3.5" />}
+                    Envoyer au poste production <ArrowRight className="h-3 w-3" />
                   </button>
                 </div>
                 <div className="rounded-2xl border border-white/10 bg-white/[0.02] p-6">
@@ -447,15 +513,15 @@ export default function StudioLiriFormationBuilderPage() {
           <div className="flex-1 overflow-y-auto p-4 flex flex-col gap-3">
             {!formation ? (
               <>
-                <ACard icon={BookOpen} title="Méthode LIRI" accent="violet" text="Votre formation sera structurée selon la progression LIRI : expérience → question → réflexion → démonstration → compréhension → application." />
-                <ACard icon={Calendar} title="Types de programmes" accent="blue" text="Choisissez selon votre contrainte calendaire. LIRI adapte automatiquement la densité et la répartition des modules." />
-                <ACard icon={Target} title="1 cours = 1 SmartBoard" accent="amber" text="Chaque cours correspond à un projet SmartBoard. Passez en Course Builder pour détailler chaque étape." />
+                <ACard icon={BookOpen} title="1 · Création (ici)" accent="violet" text="LIRI génère le squelette de la formation : modules, semaines, cours — selon la progression expérience → question → réflexion → démonstration → application." />
+                <ACard icon={Clapperboard} title="2 · Poste production" accent="amber" text="Le squelette part au poste production : storyboard, image par image, vidéo source, support visuel, quiz — chaque jour se produit là-bas." />
+                <ACard icon={Target} title="3 · Rendu élève" accent="emerald" text="Au poste production, contrôlez le rendu final (checklist qualité) puis publiez : la formation apparaît dans « Mes cours » des élèves." />
               </>
             ) : (
               <>
                 <ACard icon={CheckCircle2} title="Formation prête" accent="emerald" text={`Structure générée avec ${result?.meta?.profil_rendu_label || 'le profil sélectionné'}. Sélectionnez un nœud dans l'arbre pour voir son détail.`} />
-                <ACard icon={Brain} title="Prochaine étape" accent="amber" text="Allez dans Course Builder pour générer le contenu pédagogique complet (10 étapes, MasterScript, checkpoints) pour chaque cours." />
-                <ACard icon={Layers} title="Vers le Designer" accent="cyan" text="Après le Course Builder, convertissez chaque cours en SmartBoard. 1 sous-chapitre = 1 slide." />
+                <ACard icon={Clapperboard} title="Prochaine étape : production" accent="violet" text="Envoyez le squelette au poste production — 1 étape = 1 jour à produire (storyboard, image par image, vidéo, support, quiz). C'est là que la formation prend vie." />
+                <ACard icon={Target} title="Puis : rendu élève" accent="amber" text="Depuis le poste production, la checklist qualité valide la chaîne création → post-production → rendu élève avant publication." />
               </>
             )}
           </div>
