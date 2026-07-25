@@ -122,10 +122,12 @@ export default function PrecepteurScreen() {
           return;
         }
       } catch {
-        /* ni masterclass ni formation → démo */
+        /* ni masterclass ni formation exploitable */
       }
       if (!alive) return;
-      setCourse(DEMO);
+      // Surtout PAS de repli sur la démo ici : l'élève a demandé SON cours, lui
+      // servir un contenu sans rapport est pire que de lui dire qu'il est vide.
+      setCourse(null);
       setLoading(false);
     };
     void load();
@@ -199,6 +201,18 @@ export default function PrecepteurScreen() {
 
   if (loading) return <View style={styles.center}><ActivityIndicator color={C.coral} /></View>;
 
+  if (!scenes.length) {
+    return (
+      <View style={styles.center}>
+        <Feather name="message-circle" size={26} color={C.faint} />
+        <Text style={styles.emptyTitle}>Rien à enseigner pour l’instant</Text>
+        <Text style={styles.emptyCopy}>
+          Ce cours n’a pas encore de contenu que Le Précepteur puisse dérouler.
+        </Text>
+      </View>
+    );
+  }
+
   return (
     <View style={styles.root}>
       <View style={styles.topbar}>
@@ -247,7 +261,9 @@ export default function PrecepteurScreen() {
 
 const makeStyles = (C: LiriPalette) => StyleSheet.create({
   root: { flex: 1, backgroundColor: C.base },
-  center: { flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: C.base },
+  center: { flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: C.base, paddingHorizontal: 36, gap: 10 },
+  emptyTitle: { color: C.ink, fontSize: 16.5, fontWeight: '700', fontFamily: F.sans, textAlign: 'center' },
+  emptyCopy: { color: C.muted, fontSize: 14, lineHeight: 20, fontFamily: F.sans, textAlign: 'center' },
   topbar: { flexDirection: 'row', alignItems: 'center', paddingTop: 54, paddingHorizontal: 18, paddingBottom: 8 },
   mode: { flex: 1, textAlign: 'center', color: C.coral, fontSize: 11, fontWeight: '800', letterSpacing: 1.4, fontFamily: F.sans, marginLeft: 26 },
   muteBtn: { width: 26, alignItems: 'flex-end' },
