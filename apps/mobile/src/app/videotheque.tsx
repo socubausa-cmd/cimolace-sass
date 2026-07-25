@@ -4,6 +4,7 @@ import {
   StyleSheet, Text, TextInput, View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useLocalSearchParams } from 'expo-router';
 import { useVideoPlayer, VideoView } from 'expo-video';
 import { useEvent } from 'expo';
 import { fetchVideotheque, type VideothequeItem } from '../lib/liri-api';
@@ -105,14 +106,24 @@ function Player({ item, onClose }: { item: VideothequeItem; onClose: () => void 
 export default function VideothequeScreen() {
   const { colors: C } = useTheme();
   const styles = useMemo(() => makeStyles(C), [C]);
+  // `?v=<id>` (depuis la Bibliothèque) → on ouvre directement CETTE séance.
+  const { v: wanted } = useLocalSearchParams<{ v?: string }>();
   const [items, setItems] = useState<VideothequeItem[] | null>(null);
   const [q, setQ] = useState('');
   const [active, setActive] = useState<VideothequeItem | null>(null);
+  const opened = useRef(false);
 
   const load = useCallback(async () => {
     setItems(await fetchVideotheque());
   }, []);
   useEffect(() => { load(); }, [load]);
+
+  // Une seule fois : sinon refermer le lecteur le rouvrirait aussitôt.
+  useEffect(() => {
+    if (opened.current || !wanted || !items) return;
+    const hit = items.find((i) => i.id === wanted);
+    if (hit) { opened.current = true; setActive(hit); }
+  }, [wanted, items]);
 
   const filtered = useMemo(() => {
     const list = items ?? [];

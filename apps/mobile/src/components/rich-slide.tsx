@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from 'react';
-import { Text, View, StyleSheet } from 'react-native';
+import { Text, StyleSheet } from 'react-native';
 import { WebView } from 'react-native-webview';
 import { useTheme } from '../lib/theme';
 import type { LiriPalette } from '../constants/liri-theme';

@@ -1,4 +1,4 @@
-import RichSlide from './rich-slide';
+import { RichSlide } from './rich-slide';
 import { Feather } from '@expo/vector-icons';
 import * as Linking from 'expo-linking';
 import { useEffect, useMemo, useState } from 'react';

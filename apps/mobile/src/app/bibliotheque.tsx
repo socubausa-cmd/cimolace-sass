@@ -5,7 +5,10 @@ import { Pressable, RefreshControl, ScrollView, StyleSheet, Text, View } from 'r
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { LiriFonts as F, softShadow, type LiriPalette } from '@/constants/liri-theme';
-import { fetchCourses, fetchReplays, type Course, type Replay } from '@/lib/liri-api';
+import {
+  fetchCourses, fetchReplays, fetchVideotheque,
+  type Course, type Replay, type VideothequeItem,
+} from '@/lib/liri-api';
 import { useTheme } from '@/lib/theme';
 
 type IconName = React.ComponentProps<typeof Feather>['name'];
@@ -14,19 +17,31 @@ type Cat = 'Tout' | 'Cours' | 'Masterclass' | 'Replays' | 'Images' | 'Exports';
 const CATS: Cat[] = ['Tout', 'Cours', 'Masterclass', 'Replays', 'Images', 'Exports'];
 
 interface Asset {
+  id: string;
   icon: IconName;
   title: string;
   meta: string;
   kind: Exclude<Cat, 'Tout'>;
+  /** Route ouverte au tap. Sans elle, la carte n'est pas actionnable. */
+  href?: string;
 }
 
 const MOIS_B = ['janv.', 'févr.', 'mars', 'avr.', 'mai', 'juin', 'juil.', 'août', 'sept.', 'oct.', 'nov.', 'déc.'];
+
+const dureeCourte = (sec?: number) => {
+  const s = Math.max(0, Math.round(Number(sec) || 0));
+  if (!s) return null;
+  const h = Math.floor(s / 3600);
+  const m = Math.floor((s % 3600) / 60);
+  return h ? `${h}h${String(m).padStart(2, '0')}` : `${m} min`;
+};
 
 /** Mappe un replay (live_sessions) → carte d'asset. */
 function replayToAsset(r: Replay): Asset {
   const d = r.scheduled_at ? new Date(r.scheduled_at) : null;
   const when = d ? `${d.getDate()} ${MOIS_B[d.getMonth()]}` : 'Replay';
   return {
+    id: `live:${r.id}`,
     icon: 'film',
     title: r.title || 'Session enregistrée',
     meta: `Replay · ${when}`,
@@ -34,13 +49,31 @@ function replayToAsset(r: Replay): Asset {
   };
 }
 
+/**
+ * Mappe une séance de la Vidéothèque (enregistrements Zoom publiés) → carte.
+ * Le tap ouvre le lecteur sur CETTE séance, pas la liste : `?v=<id>`.
+ */
+function videoToAsset(v: VideothequeItem): Asset {
+  const duree = dureeCourte(v.duration_sec);
+  return {
+    id: `zoom:${v.id}`,
+    icon: 'play-circle',
+    title: v.title || 'Séance enregistrée',
+    meta: ['Vidéothèque', v.category, duree].filter(Boolean).join(' · '),
+    kind: 'Replays',
+    href: `/videotheque?v=${encodeURIComponent(v.id)}`,
+  };
+}
+
 /** Mappe un cours (courses) → carte d'asset. */
 function courseToAsset(c: Course): Asset {
   return {
+    id: `cours:${c.id ?? c.title}`,
     icon: 'book-open',
     title: c.title || 'Cours',
     meta: `Cours${c.category ? ` · ${c.category}` : ''}`,
     kind: 'Cours',
+    href: '/formations',
   };
 }
 
@@ -51,12 +84,14 @@ export default function BibliothequeScreen() {
   const [cat, setCat] = useState<Cat>('Tout');
   const [replays, setReplays] = useState<Replay[] | null>(null);
   const [courses, setCourses] = useState<Course[] | null>(null);
+  const [videos, setVideos] = useState<VideothequeItem[] | null>(null);
   const [refreshing, setRefreshing] = useState(false);
 
   const load = useCallback(async () => {
-    const [r, c] = await Promise.all([fetchReplays(), fetchCourses()]);
+    const [r, c, v] = await Promise.all([fetchReplays(), fetchCourses(), fetchVideotheque()]);
     setReplays(r);
     setCourses(c);
+    setVideos(v);
   }, []);
   useEffect(() => {
     void load();
@@ -67,14 +102,15 @@ export default function BibliothequeScreen() {
     setRefreshing(false);
   };
 
-  // VRAIES données (catalogue cours + replays). Vide tant que non connecté.
-  const loading = replays === null || courses === null;
+  // VRAIES données (catalogue cours + replays + vidéothèque). Vide tant que non connecté.
+  const loading = replays === null || courses === null || videos === null;
   const assets = useMemo<Asset[]>(
     () => [
       ...(courses ? courses.map(courseToAsset) : []),
+      ...(videos ? videos.map(videoToAsset) : []),
       ...(replays ? replays.map(replayToAsset) : []),
     ],
-    [courses, replays],
+    [courses, replays, videos],
   );
 
   const items = useMemo(
@@ -146,8 +182,8 @@ export default function BibliothequeScreen() {
           <View style={styles.grid}>
             {items.map((a) => (
               <Pressable
-                key={a.title}
-                onPress={a.kind === 'Cours' ? () => router.push('/formations' as never) : undefined}
+                key={a.id}
+                onPress={a.href ? () => router.push(a.href as never) : undefined}
                 style={({ pressed }) => [styles.card, pressed && styles.pressed]}
               >
                 <View style={styles.thumb}>
