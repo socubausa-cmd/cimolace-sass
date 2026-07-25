@@ -6,10 +6,9 @@
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
     "scheme": "liri",
-    "userInterfaceStyle": "dark",
+    "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "ios": {
-      "icon": "./assets/expo.icon",
       "supportsTablet": true,
       "bundleIdentifier": "org.prorascience.liri",
       "infoPlist": {
@@ -36,9 +35,11 @@
         "expo-splash-screen",
         {
           "backgroundColor": "#262624",
+          "image": "./assets/images/splash-icon.png",
+          "imageWidth": 180,
           "android": {
             "image": "./assets/images/splash-icon.png",
-            "imageWidth": 76
+            "imageWidth": 180
           }
         }
       ],
@@ -48,6 +49,13 @@
         {
           "cameraPermission": "LIRI utilise la caméra pour diffuser vos lives.",
           "microphonePermission": "LIRI utilise le micro pour diffuser vos lives."
+        }
+      ],
+      [
+        "expo-video",
+        {
+          "supportsPictureInPicture": true,
+          "supportsBackgroundPlayback": false
         }
       ]
     ],

@@ -8,11 +8,17 @@
       "developmentClient": true,
       "distribution": "internal",
       "android": { "buildType": "apk" },
-      "ios": { "simulator": true }
+      "ios": { "simulator": true },
+      "env": {
+        "EXPO_PUBLIC_API_URL": "https://api.cimolace.space",
+        "EXPO_PUBLIC_TENANT_SLUG": "isna",
+        "EXPO_PUBLIC_LIVEKIT_URL": "wss://cimolace-yis8vna7.livekit.cloud"
+      }
     },
     "preview": {
       "distribution": "internal",
       "android": { "buildType": "apk" },
+      "ios": { "simulator": true },
       "env": {
         "EXPO_PUBLIC_API_URL": "https://api.cimolace.space",
         "EXPO_PUBLIC_TENANT_SLUG": "isna",
@@ -21,6 +27,7 @@
     },
     "production": {
       "autoIncrement": true,
+      "android": { "buildType": "app-bundle" },
       "env": {
         "EXPO_PUBLIC_API_URL": "https://api.cimolace.space",
         "EXPO_PUBLIC_TENANT_SLUG": "isna",
@@ -29,6 +36,11 @@
     }
   },
   "submit": {
-    "production": {}
+    "production": {
+      "android": {
+        "track": "internal",
+        "releaseStatus": "draft"
+      }
+    }
   }
 }

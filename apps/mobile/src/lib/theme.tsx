@@ -1,5 +1,6 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import React, { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
+import { Appearance } from 'react-native';
 
 import { PALETTES, type LiriPalette, type ThemeMode } from '@/constants/liri-theme';
 
@@ -51,6 +52,12 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
       return next;
     });
   }, []);
+
+  // La teinte NATIVE (clavier, alertes, feuilles d'action, sélecteurs) ne connaît
+  // pas notre bascule : sans ça, un utilisateur passé en crème garde un clavier
+  // sombre. On la force donc à suivre le choix de l'app — d'où
+  // `userInterfaceStyle: "automatic"` dans app.json, sans quoi cet appel est ignoré.
+  useEffect(() => { Appearance.setColorScheme(mode); }, [mode]);
 
   const value = useMemo<ThemeValue>(
     () => ({ mode, isLight: mode === 'light', colors: PALETTES[mode] ?? PALETTES.dark, toggle, setMode }),
