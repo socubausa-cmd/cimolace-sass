@@ -9,7 +9,7 @@ import { useVideoPlayer, VideoView } from 'expo-video';
 import { useEvent } from 'expo';
 import { fetchVideotheque, type VideothequeItem } from '../lib/liri-api';
 import { useTheme } from '../lib/theme';
-import type { LiriPalette } from '../constants/liri-theme';
+import { LiriFonts as F, type LiriPalette } from '../constants/liri-theme';
 
 /**
  * VIDÉOTHÈQUE — les séances enregistrées, en natif.
@@ -175,8 +175,9 @@ export default function VideothequeScreen() {
 
 const makeStyles = (C: LiriPalette) => StyleSheet.create({
   root: { flex: 1, backgroundColor: C.base, paddingHorizontal: 18 },
-  h1: { color: C.ink, fontSize: 26, fontWeight: '700', marginTop: 8 },
-  sub: { color: C.muted, fontSize: 13.5, marginTop: 4 },
+  // Titres d'écran : serif, comme la Bibliothèque et les autres onglets.
+  h1: { color: C.ink, fontSize: 30, fontWeight: '500', fontFamily: F.serif, marginTop: 8 },
+  sub: { color: C.muted, fontSize: 13.5, marginTop: 4, fontFamily: F.sans },
   search: {
     marginTop: 14, backgroundColor: C.panel, borderRadius: 12, paddingHorizontal: 14,
     paddingVertical: 10, color: C.ink, fontSize: 14, borderWidth: 1, borderColor: C.line,
@@ -196,15 +197,15 @@ const makeStyles = (C: LiriPalette) => StyleSheet.create({
     position: 'absolute', right: 8, bottom: 8, color: C.ink, fontSize: 11.5, fontWeight: '700',
     backgroundColor: 'rgba(0,0,0,.66)', paddingHorizontal: 8, paddingVertical: 3, borderRadius: 8, overflow: 'hidden',
   },
-  cardTitle: { color: C.ink, fontSize: 15.5, fontWeight: '600', paddingHorizontal: 14, paddingTop: 12 },
+  cardTitle: { color: C.ink, fontSize: 15.5, fontWeight: '600', fontFamily: F.sans, paddingHorizontal: 14, paddingTop: 12 },
   cardCat: { color: C.faint, fontSize: 12.5, paddingHorizontal: 14, paddingBottom: 14, paddingTop: 3 },
-  empty: { color: C.faint, fontSize: 13.5, textAlign: 'center', marginTop: 40 },
+  empty: { color: C.faint, fontSize: 13.5, fontFamily: F.sans, textAlign: 'center', marginTop: 40 },
 
   playerRoot: { flex: 1, backgroundColor: C.base },
   playerHeader: { paddingHorizontal: 16, paddingTop: 6 },
   backBtn: { alignSelf: 'flex-start', paddingVertical: 6, paddingRight: 12 },
   backTxt: { color: C.muted, fontSize: 15, fontWeight: '600' },
-  playerTitle: { color: C.ink, fontSize: 18, fontWeight: '700', paddingHorizontal: 16, paddingBottom: 10 },
+  playerTitle: { color: C.ink, fontSize: 18, fontWeight: '700', fontFamily: F.serif, paddingHorizontal: 16, paddingBottom: 10 },
   video: { width: '100%', aspectRatio: 16 / 9, backgroundColor: '#000' },
   transcriptLabel: { color: C.faint, fontSize: 11.5, paddingHorizontal: 16, paddingTop: 14, paddingBottom: 6, textTransform: 'uppercase', letterSpacing: 0.6 },
   transcript: { flex: 1, paddingHorizontal: 10 },
@@ -212,6 +213,6 @@ const makeStyles = (C: LiriPalette) => StyleSheet.create({
   cueActive: { backgroundColor: C.coralTint },
   cueTime: { color: C.faint, fontSize: 11.5, fontVariant: ['tabular-nums'], minWidth: 42, paddingTop: 2 },
   cueTimeActive: { color: C.coral, fontWeight: '700' },
-  cueText: { color: C.muted, fontSize: 14.5, lineHeight: 21, flex: 1 },
+  cueText: { color: C.muted, fontSize: 14.5, lineHeight: 21, fontFamily: F.sans, flex: 1 },
   cueTextActive: { color: C.ink },
 });

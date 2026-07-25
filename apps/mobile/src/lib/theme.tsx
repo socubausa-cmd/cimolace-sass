@@ -57,7 +57,11 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
   // pas notre bascule : sans ça, un utilisateur passé en crème garde un clavier
   // sombre. On la force donc à suivre le choix de l'app — d'où
   // `userInterfaceStyle: "automatic"` dans app.json, sans quoi cet appel est ignoré.
-  useEffect(() => { Appearance.setColorScheme(mode); }, [mode]);
+  // react-native-web n'expose pas setColorScheme → on teste avant d'appeler,
+  // sinon la cible web plante au démarrage.
+  useEffect(() => {
+    if (typeof Appearance.setColorScheme === 'function') Appearance.setColorScheme(mode);
+  }, [mode]);
 
   const value = useMemo<ThemeValue>(
     () => ({ mode, isLight: mode === 'light', colors: PALETTES[mode] ?? PALETTES.dark, toggle, setMode }),
