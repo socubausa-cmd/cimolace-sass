@@ -1,8 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Play, Search, Film, GraduationCap, FileText, Loader2 } from 'lucide-react';
-import { apiV2, masterclassApi } from '@/lib/api-v2';
-import { useAuth } from '@/hooks/useAuth';
+import { apiV2, masterclassApi, tenantsApi } from '@/lib/api-v2';
 import { exportCoursePdf } from '@/lib/exportCoursePdf';
 import ImmersiveVideoPlayer from '@/components/school/formations/ImmersiveVideoPlayer';
 
@@ -36,9 +35,22 @@ export default function VideothequePage() {
   // ── Extraction du cours écrit (transcription → PDF structuré) ────────────
   // Réservé aux créateurs : l'analyse consomme des jetons IA (l'API renvoie 403
   // aux élèves de toute façon — on masque simplement le bouton pour eux).
-  const { user } = useAuth();
-  const role = String(user?.user_metadata?.role || user?.role || '').toLowerCase();
-  const canExtract = ['owner', 'admin', 'teacher', 'creator'].includes(role);
+  //
+  // ⚠️ Le rôle NE VIT PAS dans la session Supabase (`user_metadata.role` est null
+  // même pour l'owner) : il vit dans la MEMBERSHIP TENANT, côté serveur. On le
+  // lit donc via /tenants/current (`userRole`), sinon le bouton restait masqué
+  // pour tout le monde, y compris le propriétaire de l'école.
+  const [canExtract, setCanExtract] = useState(false);
+  useEffect(() => {
+    let alive = true;
+    tenantsApi.current()
+      .then((t) => {
+        const r = String(t?.userRole || t?.role || '').toLowerCase();
+        if (alive) setCanExtract(['owner', 'admin', 'teacher', 'creator'].includes(r));
+      })
+      .catch(() => { /* rôle inconnu → bouton masqué (le serveur reste seul juge) */ });
+    return () => { alive = false; };
+  }, []);
   const [extract, setExtract] = useState({ state: 'idle', message: '' });
 
   async function handleExtractCourse(video) {
