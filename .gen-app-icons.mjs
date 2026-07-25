@@ -69,6 +69,9 @@ await sharp({ create: { width: 1024, height: 1024, channels: 3, background: BASE
 // 4. Splash : marque seule, transparente (le plugin pose le fond).
 await sharp(await mark(512)).png().toFile(`${OUT}/splash-icon.png`);
 
+// 5. Marque affichée DANS l'app (connexion, accueil, Brain) via <LiriMark>.
+await sharp(await mark(512)).png().toFile(`${OUT}/liri-mark.png`);
+
 // 5. Favicon web.
 await (await tile(64, 0.66, BASE)).png().toFile(`${OUT}/favicon.png`);
 

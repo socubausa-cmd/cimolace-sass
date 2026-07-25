@@ -5,6 +5,7 @@ import { ActivityIndicator, Alert, Pressable, ScrollView, StyleSheet, Text, View
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { Ember } from '@/components/ember';
+import { LiriMark } from '@/components/liri-mark';
 import { LiriFonts as F, softShadow, type LiriPalette } from '@/constants/liri-theme';
 import { useTheme } from '@/lib/theme';
 import { fetchLives, fetchStats, quickStartLive, type Live, type Stats } from '@/lib/liri-api';
@@ -124,7 +125,7 @@ export default function HomeScreen() {
         {/* ── HEADER ── */}
         <View style={styles.header}>
           <View style={styles.row}>
-            <Ember style={styles.logoMark}><Feather name="zap" size={15} color="#fff" /></Ember>
+            <LiriMark size={30} />
             <Text style={styles.logoText}>LIRI</Text>
           </View>
           <View style={styles.row}>
@@ -253,7 +254,6 @@ const makeStyles = (C: LiriPalette) => StyleSheet.create({
     paddingHorizontal: 18, paddingVertical: 12,
     borderBottomWidth: 1, borderBottomColor: C.line, backgroundColor: C.rail,
   },
-  logoMark: { width: 30, height: 30, borderRadius: 10, backgroundColor: C.coral, alignItems: 'center', justifyContent: 'center' },
   logoText: { color: C.ink, fontSize: 18, fontWeight: '700', letterSpacing: 0.5, fontFamily: F.sans },
   iconBtn: { width: 34, height: 34, borderRadius: 11, alignItems: 'center', justifyContent: 'center' },
   bellDot: { position: 'absolute', top: 7, right: 8, width: 7, height: 7, borderRadius: 4, backgroundColor: C.coral },

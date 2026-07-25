@@ -12,7 +12,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-import { Ember } from '@/components/ember';
+import { LiriMark } from '@/components/liri-mark';
 import { LiriFonts as F, softShadow, type LiriPalette } from '@/constants/liri-theme';
 import { useAuth } from '@/lib/auth';
 import { useTheme } from '@/lib/theme';
@@ -46,7 +46,7 @@ export function LoginScreen() {
       <SafeAreaView style={styles.safe}>
         <KeyboardAvoidingView style={styles.center} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
           <View style={styles.brand}>
-            <Ember style={styles.mark}><Feather name="zap" size={26} color="#fff" /></Ember>
+            <LiriMark size={52} />
             <Text style={styles.brandName}>LIRI</Text>
           </View>
 
@@ -106,7 +106,6 @@ const makeStyles = (C: LiriPalette) => StyleSheet.create({
   center: { flex: 1, justifyContent: 'center', paddingHorizontal: 28 },
 
   brand: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 12, marginBottom: 28 },
-  mark: { width: 52, height: 52, borderRadius: 17, backgroundColor: C.coral, alignItems: 'center', justifyContent: 'center', ...softShadow },
   brandName: { color: C.ink, fontSize: 30, fontWeight: '700', letterSpacing: 1, fontFamily: F.sans },
 
   title: { color: C.ink, fontSize: 28, fontWeight: '500', textAlign: 'center', fontFamily: F.serif },

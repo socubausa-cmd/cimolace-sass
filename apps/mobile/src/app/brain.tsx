@@ -12,7 +12,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-import { Ember } from '@/components/ember';
+import { LiriMark } from '@/components/liri-mark';
 import { LiriFonts as F, softShadow, type LiriPalette } from '@/constants/liri-theme';
 import { hasToken, streamBrain } from '@/lib/liri-api';
 import { useTheme } from '@/lib/theme';
@@ -114,7 +114,7 @@ export default function BrainScreen() {
         {/* HEADER */}
         <View style={styles.header}>
           <View style={styles.hLeft}>
-            <Ember style={styles.brandMark}><Feather name="zap" size={16} color="#fff" /></Ember>
+            <LiriMark size={34} />
             <View>
               <Text style={styles.hTitle}>LIRI Brain</Text>
               <Text style={styles.hSub}>Assistant · Haiku · Isna</Text>
@@ -215,7 +215,6 @@ const makeStyles = (C: LiriPalette) => StyleSheet.create({
     borderBottomWidth: 1, borderBottomColor: C.line, backgroundColor: C.rail,
   },
   hLeft: { flexDirection: 'row', alignItems: 'center', gap: 11 },
-  brandMark: { width: 34, height: 34, borderRadius: 11, backgroundColor: C.coral, alignItems: 'center', justifyContent: 'center' },
   hTitle: { color: C.ink, fontSize: 15.5, fontWeight: '700', fontFamily: F.sans },
   hSub: { color: C.faint, fontSize: 11.5, marginTop: 1, fontFamily: F.sans },
   newBtn: { width: 36, height: 36, borderRadius: 11, alignItems: 'center', justifyContent: 'center', backgroundColor: C.panel, borderWidth: 1, borderColor: C.line },
