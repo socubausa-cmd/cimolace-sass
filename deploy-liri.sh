@@ -18,6 +18,11 @@ set -euo pipefail
 CANON="/Users/ngowazulu/Downloads/cimolace/apps/app"
 PROJECT_ID="prj_Ytxn7g7wLgvZEmBUXf7phfSxYGJX"   # Vercel cimolace/app
 
+# Auth Vercel : le CLI local peut être loggé sur un AUTRE compte (ex. zahirwellness) → le projet
+# cimolace/app est invisible. Si VERCEL_TOKEN est exporté (token équipe cimolace), on le passe à
+# chaque appel vercel ; sinon comportement inchangé (session `vercel login`).
+VTOK=${VERCEL_TOKEN:+--token=$VERCEL_TOKEN}
+
 cd "$CANON" || { echo "❌ Checkout canonique introuvable : $CANON"; exit 1; }
 
 # --- 0) on déploie bien le projet attendu (pas un fantôme) --------------------
@@ -47,14 +52,14 @@ echo "✅ anti-régression OK : HEAD ⊇ origin/main (rien ne sera perdu)"
 # --- 2) mémoriser le déploiement prod ACTUEL (rollback de secours) -----------
 # `vercel ls` écrit le tableau sur STDERR (→ 2>&1, sinon vide) ; cwd neutre car le
 # lien .vercel racine est neutralisé ; `|| true` : PREV_URL vide ne doit pas tuer le script.
-PREV_URL=$( (cd /tmp 2>/dev/null; vercel ls app --scope cimolace 2>&1 | grep -i 'Production' | grep -oE 'https://app-[a-z0-9]+-cimolace\.vercel\.app' | head -1) || true )
+PREV_URL=$( (cd /tmp 2>/dev/null; vercel ls app --scope cimolace $VTOK 2>&1 | grep -i 'Production' | grep -oE 'https://app-[a-z0-9]+-cimolace\.vercel\.app' | head -1) || true )
 echo "↩️  déploiement prod actuel (rollback de secours) : ${PREV_URL:-inconnu}"
 
 # --- 3) déploiement prod -----------------------------------------------------
 echo "🚀 vercel --prod --yes --archive=tgz …"
 # --archive=tgz : contourne le quota « api-upload-free » (5000 fichiers/24h) que
 # des déploiements // répétés épuisent → sinon `missing_archive / Too many requests`.
-DEPLOY_OUT=$(vercel --prod --yes --archive=tgz 2>&1); echo "$DEPLOY_OUT"
+DEPLOY_OUT=$(vercel --prod --yes --archive=tgz $VTOK 2>&1); echo "$DEPLOY_OUT"
 NEW_URL=$(echo "$DEPLOY_OUT" | grep -oE 'https://app-[a-z0-9]+-cimolace\.vercel\.app' | head -1)
 
 # --- 4) SMOKE TEST RUNTIME — le déploiement MONTE-T-IL vraiment ? -------------
@@ -73,7 +78,7 @@ if [ -n "${NEW_URL:-}" ]; then
     echo "⛔ SMOKE TEST ÉCHOUÉ — le déploiement CRASHE au runtime (page blanche globale) !"
     if [ -n "${PREV_URL:-}" ]; then
       echo "   ↩️  ROLLBACK automatique → $PREV_URL"
-      vercel promote "$PREV_URL" --scope cimolace --yes || echo "   ⚠️ rollback auto échoué — rollback MANUEL requis."
+      vercel promote "$PREV_URL" --scope cimolace --yes $VTOK || echo "   ⚠️ rollback auto échoué — rollback MANUEL requis."
     else
       echo "   ⚠️ URL de rollback inconnue — rollback MANUEL requis (vercel ls app ; vercel promote <url>)."
     fi
