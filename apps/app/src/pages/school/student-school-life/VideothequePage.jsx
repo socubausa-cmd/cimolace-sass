@@ -40,11 +40,15 @@ export default function VideothequePage() {
   // même pour l'owner) : il vit dans la MEMBERSHIP TENANT, côté serveur. On le
   // lit donc via /tenants/current (`userRole`), sinon le bouton restait masqué
   // pour tout le monde, y compris le propriétaire de l'école.
+  //
+  // ⚠️ DOUBLE ENVELOPPE : /tenants/current répond {data:{data:{…}}} alors que
+  // `unwrap` n'en retire qu'une. On déballe donc une couche de plus si besoin.
   const [canExtract, setCanExtract] = useState(false);
   useEffect(() => {
     let alive = true;
     tenantsApi.current()
-      .then((t) => {
+      .then((res) => {
+        const t = res?.userRole || res?.role ? res : (res?.data ?? res);
         const r = String(t?.userRole || t?.role || '').toLowerCase();
         if (alive) setCanExtract(['owner', 'admin', 'teacher', 'creator'].includes(r));
       })
