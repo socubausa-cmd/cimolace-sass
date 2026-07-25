@@ -118,6 +118,65 @@ export default function FormationOsDayView({ day, onBack, backLabel = 'Programme
   );
 }
 
+/**
+ * Corps d'une slide de support — rendu RICHE (le cours a besoin de schémas, tableaux
+ * récapitulatifs, encadrés de définition, listes). Le HTML est assaini par liste blanche :
+ * seules les balises de mise en forme et le SVG des schémas passent ; aucun script, aucun
+ * attribut d'événement, aucune source externe. Repli texte si le contenu n'est pas du HTML.
+ */
+const RICH_TAGS = /^(p|br|strong|b|em|i|u|ul|ol|li|h3|h4|h5|blockquote|table|thead|tbody|tr|th|td|code|pre|hr|span|div|figure|figcaption|svg|g|path|rect|circle|ellipse|polygon|polyline|line|text|tspan|defs|marker)$/i;
+const RICH_ATTRS = /^(class|style|colspan|rowspan|viewbox|xmlns|d|x|y|x1|x2|y1|y2|cx|cy|r|rx|ry|width|height|points|fill|stroke|stroke-width|text-anchor|font-size|font-weight|transform|role|aria-label|marker-end|markerwidth|markerheight|refx|refy|orient|id|opacity)$/i;
+
+function sanitizeRich(html) {
+  if (typeof window === 'undefined') return '';
+  const tpl = document.createElement('template');
+  tpl.innerHTML = String(html || '');
+  const walk = (node) => {
+    [...node.children].forEach((el) => {
+      if (!RICH_TAGS.test(el.tagName)) { el.replaceWith(...el.childNodes); return; }
+      [...el.attributes].forEach((a) => {
+        if (!RICH_ATTRS.test(a.name) || /^on/i.test(a.name) || /javascript:/i.test(a.value)) el.removeAttribute(a.name);
+      });
+      walk(el);
+    });
+  };
+  walk(tpl.content);
+  return tpl.innerHTML;
+}
+
+/** Styles du contenu riche (injectés une fois) : tableaux, encadrés, schémas. */
+const RICH_CSS = `
+.liri-rich p{margin:0 0 12px}
+.liri-rich strong,.liri-rich b{color:#f5f4ee;font-weight:650}
+.liri-rich h3,.liri-rich h4,.liri-rich h5{font-family:${'"Source Serif 4", Georgia, serif'};color:#f0ede4;margin:18px 0 8px;font-size:17px;font-weight:600}
+.liri-rich ul,.liri-rich ol{margin:0 0 14px;padding-left:20px}
+.liri-rich li{margin:0 0 7px}
+.liri-rich ul li::marker{color:#d97757}
+.liri-rich blockquote{margin:14px 0;padding:12px 16px;border-radius:12px;background:rgba(217,119,87,.09);border:1px solid rgba(217,119,87,.28);color:#f0ede4;font-style:italic}
+.liri-rich table{width:100%;border-collapse:separate;border-spacing:0;margin:16px 0;font-size:14px;border:1px solid rgba(245,244,238,.12);border-radius:12px;overflow:hidden}
+.liri-rich th{background:rgba(217,119,87,.14);color:#f0c3ac;font-weight:700;text-align:left;padding:10px 12px;font-size:12.5px;letter-spacing:.02em}
+.liri-rich td{padding:10px 12px;border-top:1px solid rgba(245,244,238,.09);vertical-align:top}
+.liri-rich figure{margin:18px 0;text-align:center}
+.liri-rich svg{max-width:100%;height:auto;display:block;margin:0 auto}
+.liri-rich figcaption{margin-top:8px;font-size:12.5px;color:rgba(245,244,238,.5);font-style:italic}
+.liri-rich code{background:rgba(245,244,238,.07);padding:1px 6px;border-radius:6px;font-size:13.5px}
+`;
+
+function RichSlideBody({ content }) {
+  const raw = String(content || '');
+  const isHtml = /<(p|ul|ol|li|table|svg|h[3-5]|blockquote|strong|em|figure)\b/i.test(raw);
+  const html = useMemo(() => (isHtml ? sanitizeRich(raw) : ''), [raw, isHtml]);
+  if (!isHtml) {
+    return <div style={{ fontSize: 15.5, lineHeight: 1.64, color: 'rgba(245,244,238,.72)', whiteSpace: 'pre-wrap' }}>{htmlToText(raw) || '—'}</div>;
+  }
+  return (
+    <>
+      <style>{RICH_CSS}</style>
+      <div className="liri-rich" style={{ fontSize: 15.5, lineHeight: 1.68, color: 'rgba(245,244,238,.78)' }} dangerouslySetInnerHTML={{ __html: html }} />
+    </>
+  );
+}
+
 // Support NATIF OS — le contenu du support fondu dans la surface (titres serif + paragraphes), sans carte.
 function OsReader({ support, title }) {
   const slides = Array.isArray(support?.slides) ? support.slides : [];
@@ -128,7 +187,7 @@ function OsReader({ support, title }) {
         {slides.length ? slides.map((s, i) => (
           <section key={i} style={{ marginBottom: 30 }}>
             {s.title && <h3 style={{ fontFamily: SERIF, fontSize: 19, fontWeight: 600, color: '#f0ede4', margin: '0 0 8px' }}>{s.title}</h3>}
-            <div style={{ fontSize: 15.5, lineHeight: 1.64, color: 'rgba(245,244,238,.72)', whiteSpace: 'pre-wrap' }}>{htmlToText(s.content) || '—'}</div>
+            <RichSlideBody content={s.content} />
           </section>
         )) : (
           <div style={{ color: 'rgba(245,244,238,.5)', fontSize: 14 }}>Support de présentation externe.</div>
@@ -311,6 +370,13 @@ function OsQuiz({ quiz, onDone }) {
                   );
                 })}
               </div>
+              {/* Feedback expliqué — c'est la correction commentée qui fait apprendre,
+                  pas le score (Rosenshine). Affichée après validation si l'IA l'a produite. */}
+              {submitted && (q.explication || q.explanation) ? (
+                <div style={{ marginTop: 10, padding: '11px 14px', borderRadius: 12, background: 'rgba(217,119,87,.08)', border: '1px solid rgba(217,119,87,.24)', fontSize: 13.5, lineHeight: 1.6, color: 'rgba(245,244,238,.78)' }}>
+                  <span style={{ color: '#f0c3ac', fontWeight: 700 }}>Pourquoi&nbsp;: </span>{q.explication || q.explanation}
+                </div>
+              ) : null}
             </div>
           );
         })}

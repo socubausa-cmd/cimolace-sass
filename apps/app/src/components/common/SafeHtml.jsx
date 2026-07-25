@@ -18,7 +18,11 @@ import DOMPurify from 'dompurify';
  * @param {React.ElementType} [props.as] - Élément/conteneur de rendu (défaut: 'div').
  */
 export function SafeHtml({ html, className, as: Tag = 'div', ...rest }) {
-  const clean = DOMPurify.sanitize(String(html || ''), { USE_PROFILES: { html: true } });
+  // Profil `svg` en plus de `html` : les supports de cours embarquent des SCHÉMAS
+  // pédagogiques en SVG inline (triangles, chaînes, comparaisons). DOMPurify les
+  // assainit comme le reste (scripts, gestionnaires d'événements et `use` externes
+  // sont retirés) — sans ce profil, tous les schémas disparaissaient silencieusement.
+  const clean = DOMPurify.sanitize(String(html || ''), { USE_PROFILES: { html: true, svg: true } });
   return <Tag className={className} {...rest} dangerouslySetInnerHTML={{ __html: clean }} />;
 }
 
