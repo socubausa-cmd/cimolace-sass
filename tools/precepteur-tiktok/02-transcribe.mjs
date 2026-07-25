@@ -29,8 +29,12 @@ function subsToText(raw) {
   return out.join(' ').replace(/\s+/g, ' ').trim();
 }
 
+// --ids 123,456 : cibler des vidéos précises (ex. celles dont le titre annonce un enseignement) ;
+// sinon file d'attente naturelle (les plus anciennes 'new' d'abord).
+const idsArg = (() => { const i = argv.indexOf('--ids'); return i > -1 ? String(argv[i + 1] || '').split(',').map((x) => x.trim()).filter(Boolean) : []; })();
+const whereIds = idsArg.length ? `and external_id in (${idsArg.map((x) => q(x)).join(',')})` : "and status='new'";
 const rows = sql(`select id, external_id, url from precepteur_sources
-                  where tenant_id=${q(TENANT_ID)}::uuid and status='new'
+                  where tenant_id=${q(TENANT_ID)}::uuid ${whereIds}
                   order by created_at asc limit ${limit};`)
   .split('\n').filter(Boolean).map((l) => { const [id, ext, url] = l.split('|'); return { id, ext, url }; });
 log(`${rows.length} source(s) à transcrire (modèle whisper: ${model}).`);
