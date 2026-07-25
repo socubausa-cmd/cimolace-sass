@@ -716,6 +716,15 @@ export const masterclassApi = {
     apiV2.get<ApiEnvelope<any>>(`/masterclass-factory/${id}`).then(unwrap),
   analyzeDoc: (body: Record<string, unknown>) =>
     apiV2.post<ApiEnvelope<any>>('/masterclass-factory/analyze', body).then(unwrap),
+  /**
+   * Extrait un COURS ÉCRIT depuis la transcription d'un replay : le direct est
+   * nettoyé de ses scories orales, reformulé et structuré en modules/leçons.
+   * Long (analyse par segments) → timeout étendu.
+   */
+  fromReplay: (videoId: string) =>
+    apiV2
+      .post<ApiEnvelope<any>>('/masterclass-factory/from-replay', { videoId }, { timeout: 900000 })
+      .then(unwrap),
   savePrecepteur: (body: Record<string, unknown>) =>
     apiV2.post<ApiEnvelope<any>>('/masterclass-factory/precepteur', body).then(unwrap),
 };

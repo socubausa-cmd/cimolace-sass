@@ -75,7 +75,10 @@ export class MasterclassFactoryService {
     const apiUrl = useGroq
       ? 'https://api.groq.com/openai/v1/chat/completions'
       : 'https://api.deepseek.com/chat/completions';
-    const model = useGroq ? 'llama-3.3-70b-versatile' : 'deepseek-chat';
+    // ⚠️ `deepseek-chat` a été RETIRÉ par DeepSeek (HTTP 400 « supported API model
+    // names are deepseek-v4-pro or deepseek-v4-flash ») — vérifié 2026-07-25.
+    // Le fallback DeepSeek était donc silencieusement mort.
+    const model = useGroq ? 'llama-3.3-70b-versatile' : 'deepseek-v4-pro';
     const provider = useGroq ? 'groq' : 'deepseek';
 
     const trimmedSource = sourceText.slice(0, 12000);

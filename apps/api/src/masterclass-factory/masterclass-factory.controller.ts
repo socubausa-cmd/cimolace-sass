@@ -7,6 +7,7 @@ import { CurrentTenant } from '../tenant/current-tenant.decorator';
 import { TenantGuard } from '../tenant/tenant.guard';
 import type { TenantContext } from '../tenant/tenant.types';
 import { MasterclassFactoryService } from './masterclass-factory.service';
+import { TranscriptCourseService } from './transcript-course.service';
 
 // Guards au niveau CLASSE, mais @Roles au niveau MÉTHODE : l'ÉCRITURE
 // (générer/sauver/analyser) reste réservée aux créateurs (owner/admin/teacher),
@@ -17,7 +18,21 @@ import { MasterclassFactoryService } from './masterclass-factory.service';
 @Controller('masterclass-factory')
 @UseGuards(JwtAuthGuard, TenantGuard, RolesGuard)
 export class MasterclassFactoryController {
-  constructor(private svc: MasterclassFactoryService) {}
+  constructor(
+    private svc: MasterclassFactoryService,
+    private transcriptCourse: TranscriptCourseService,
+  ) {}
+
+  /**
+   * Extrait un COURS ÉCRIT depuis la transcription d'un replay (Vidéothèque).
+   * Le direct est nettoyé de ses scories orales, reformulé et structuré en
+   * modules/leçons (le front en fait un PDF). Réservé aux créateurs.
+   */
+  @Post('from-replay')
+  @Roles('owner', 'admin', 'teacher')
+  fromReplay(@Body() d: { videoId?: string }, @CurrentTenant() t: TenantContext) {
+    return this.transcriptCourse.buildFromReplay(t.id, String(d?.videoId ?? ''));
+  }
   @Post('generate') @Roles('owner','admin','teacher') generate(@Body() d: any, @CurrentTenant() t: TenantContext, @Req() r: Request) { return this.svc.generateFromText(t.id, (r as any).user.id, d.title, d.sourceText); }
   @Post('precepteur') @Roles('owner','admin','teacher') savePrecepteur(@Body() d: any, @CurrentTenant() t: TenantContext, @Req() r: Request) { return this.svc.savePrecepteurCourse(t.id, (r as any).user.id, d.title, d.precepteurCourse, d.sourceText, d.sourceVideoId); }
   @Get() list(@CurrentTenant() t: TenantContext) { return this.svc.listMasterclasses(t.id); }

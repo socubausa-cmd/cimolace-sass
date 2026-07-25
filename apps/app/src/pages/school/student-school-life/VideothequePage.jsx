@@ -1,7 +1,9 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Play, Search, Film, GraduationCap } from 'lucide-react';
-import { apiV2 } from '@/lib/api-v2';
+import { Play, Search, Film, GraduationCap, FileText, Loader2 } from 'lucide-react';
+import { apiV2, masterclassApi } from '@/lib/api-v2';
+import { useAuth } from '@/hooks/useAuth';
+import { exportCoursePdf } from '@/lib/exportCoursePdf';
 import ImmersiveVideoPlayer from '@/components/school/formations/ImmersiveVideoPlayer';
 
 // Palette LIRI (alignée sur /liri).
@@ -31,6 +33,39 @@ export default function VideothequePage() {
   const [q, setQ] = useState('');
   const [active, setActive] = useState(null); // vidéo en lecture
 
+  // ── Extraction du cours écrit (transcription → PDF structuré) ────────────
+  // Réservé aux créateurs : l'analyse consomme des jetons IA (l'API renvoie 403
+  // aux élèves de toute façon — on masque simplement le bouton pour eux).
+  const { user } = useAuth();
+  const role = String(user?.user_metadata?.role || user?.role || '').toLowerCase();
+  const canExtract = ['owner', 'admin', 'teacher', 'creator'].includes(role);
+  const [extract, setExtract] = useState({ state: 'idle', message: '' });
+
+  async function handleExtractCourse(video) {
+    if (!video?.id) return;
+    setExtract({ state: 'working', message: 'Analyse de la transcription…' });
+    try {
+      const course = await masterclassApi.fromReplay(video.id);
+      if (!course?.modules?.length) throw new Error('Aucun contenu exploitable extrait.');
+      setExtract({ state: 'working', message: 'Mise en page du document…' });
+      await exportCoursePdf(course, { schoolName: 'Prorascience' });
+      const nbL = course.modules.reduce((a, m) => a + (m.lessons?.length || 0), 0);
+      setExtract({ state: 'done', message: `Cours généré : ${course.modules.length} module(s), ${nbL} leçon(s).` });
+      setTimeout(() => setExtract({ state: 'idle', message: '' }), 6000);
+    } catch (e) {
+      const msg = String(e?.message || '');
+      setExtract({
+        state: 'error',
+        message: /403|forbidden/i.test(msg)
+          ? "Réservé aux enseignants et responsables de l'école."
+          : /transcription/i.test(msg)
+            ? msg
+            : msg || 'Extraction impossible.',
+      });
+      setTimeout(() => setExtract({ state: 'idle', message: '' }), 9000);
+    }
+  }
+
   useEffect(() => {
     let alive = true;
     apiV2.get('/zoom-engine/published')
@@ -58,12 +93,45 @@ export default function VideothequePage() {
           cues={Array.isArray(active.transcript_cues) ? active.transcript_cues : undefined}
           transcript={active.transcript_text || active.transcript}
           onExit={() => setActive(null)}
-          headerAction={active.precepteur_id ? (
-            <button type="button" onClick={() => navigate(`/liri/precepteur/cours/${active.precepteur_id}`)}
-              style={{ display: 'inline-flex', alignItems: 'center', gap: 7, padding: '8px 14px', borderRadius: 999, border: `1px solid ${C.coral}`, background: C.coralTint, color: '#f0c3ac', cursor: 'pointer', fontSize: 12.5, fontWeight: 700, whiteSpace: 'nowrap' }}>
-              <GraduationCap size={14} /> Suivre le cours
-            </button>
-          ) : null}
+          headerAction={(
+            <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8, flexWrap: 'wrap', justifyContent: 'flex-end' }}>
+              {/* Message d'état de l'extraction (analyse longue → on informe) */}
+              {extract.state !== 'idle' && (
+                <span style={{
+                  fontSize: 11.5, fontWeight: 600, whiteSpace: 'nowrap', padding: '6px 10px', borderRadius: 999,
+                  color: extract.state === 'error' ? '#f6b8ab' : extract.state === 'done' ? '#c9dcbf' : C.muted,
+                  background: extract.state === 'error' ? 'rgba(217,119,87,.14)' : extract.state === 'done' ? 'rgba(159,191,143,.14)' : 'rgba(255,255,255,.05)',
+                }}>
+                  {extract.message}
+                </span>
+              )}
+              {canExtract && (
+                <button
+                  type="button"
+                  onClick={() => handleExtractCourse(active)}
+                  disabled={extract.state === 'working'}
+                  title="Transformer la transcription de ce direct en document de cours structuré (PDF)"
+                  style={{
+                    display: 'inline-flex', alignItems: 'center', gap: 7, padding: '8px 14px', borderRadius: 999,
+                    border: `1px solid ${C.line}`, background: 'rgba(255,255,255,.05)', color: C.ink,
+                    cursor: extract.state === 'working' ? 'wait' : 'pointer', fontSize: 12.5, fontWeight: 700,
+                    whiteSpace: 'nowrap', opacity: extract.state === 'working' ? 0.7 : 1,
+                  }}
+                >
+                  {extract.state === 'working'
+                    ? <Loader2 size={14} className="animate-spin" />
+                    : <FileText size={14} />}
+                  {extract.state === 'working' ? 'Extraction…' : 'Extraire le cours (PDF)'}
+                </button>
+              )}
+              {active.precepteur_id ? (
+                <button type="button" onClick={() => navigate(`/liri/precepteur/cours/${active.precepteur_id}`)}
+                  style={{ display: 'inline-flex', alignItems: 'center', gap: 7, padding: '8px 14px', borderRadius: 999, border: `1px solid ${C.coral}`, background: C.coralTint, color: '#f0c3ac', cursor: 'pointer', fontSize: 12.5, fontWeight: 700, whiteSpace: 'nowrap' }}>
+                  <GraduationCap size={14} /> Suivre le cours
+                </button>
+              ) : null}
+            </div>
+          )}
         />
       )}
 
