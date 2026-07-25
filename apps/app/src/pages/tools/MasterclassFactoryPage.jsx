@@ -52,6 +52,7 @@ import { extractTextFromFile } from '@/lib/extractDocumentText';
 import { savePendingMasterclassForLiveStudio } from '@/lib/liriAgentExportToLiveStudio';
 import { masterclassProjectToPrecepteurCourse } from '@/lib/precepteur/fromMasterclass';
 import { precepteurCourseToClassroomDraft } from '@/lib/precepteur/toClassroomDraft';
+import { masterclassProjectToProductionDraft } from '@/lib/masterclass/toProductionDraft';
 import { usePublishToClassroom } from '@/hooks/usePublishToClassroom';
 import { conformCourse } from '@/lib/precepteur/conformCourse';
 import { supabase } from '@/lib/supabaseCompat';
@@ -2149,19 +2150,23 @@ function MasterclassFactoryPage() {
     if (kind === 'classroom') {
       // PUBLIER EN CLASSE : le MasterclassProject devient une VRAIE formation (courses +
       // structure relationnelle) → visible dans l'OS /liri/formations ET les lecteurs élève.
-      const course = masterclassProjectToPrecepteurCourse(m.project);
-      const playable = course && Array.isArray(course.concepts)
-        && course.concepts.some((c) => Array.isArray(c.scenes) && c.scenes.length > 0);
-      if (!playable) {
-        window.alert('Ce projet n’a pas encore de contenu jouable (leçons, atelier, analogies). Génère la Masterclass complète avant de publier en classe.');
+      // COURS MAGISTRAL : on conserve la structure du MasterScript (chapitres × segments
+      // LIRI → jours de production, segments → support, script oral → notes du professeur).
+      // Le format Précepteur (scènes narratives) reste réservé au bouton « Cours numérique ».
+      const magistral = masterclassProjectToProductionDraft(m.project, {
+        description: m.project?.analysis?.global_subject || '',
+        level: m.project?.analysis?.level || null,
+      });
+      const hasContent = magistral.modules?.[0]?.weeks?.some(
+        (w) => w.days?.some((d) => d.powerpoint?.slides?.length),
+      );
+      if (!hasContent) {
+        window.alert('Ce projet n’a pas encore de contenu exploitable (chapitres et segments vides). Génère la Masterclass complète avant de publier en classe.');
         return;
       }
       setPrecepteurLoading(true);
       try {
-        const draft = precepteurCourseToClassroomDraft(course, {
-          description: m.project?.analysis?.global_subject || '',
-          level: m.project?.analysis?.level || null,
-        });
+        const draft = magistral;
         const { id, error } = await publishToClassroom(draft);
         if (error) { window.alert('Publication impossible : ' + (error.message || error)); return; }
         window.alert('Cours publié en classe ✅ — retrouve-le dans « Mes formations » (portail LIRI).');
