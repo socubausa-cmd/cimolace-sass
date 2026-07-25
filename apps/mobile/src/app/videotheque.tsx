@@ -7,6 +7,8 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useVideoPlayer, VideoView } from 'expo-video';
 import { useEvent } from 'expo';
 import { fetchVideotheque, type VideothequeItem } from '../lib/liri-api';
+import { useTheme } from '../lib/theme';
+import type { LiriPalette } from '../constants/liri-theme';
 
 /**
  * VIDÉOTHÈQUE — les séances enregistrées, en natif.
@@ -15,12 +17,6 @@ import { fetchVideotheque, type VideothequeItem } from '../lib/liri-api';
  * surligne et défile, et un appui dessus déplace la vidéo à cet instant — le même
  * usage que sur le web, adapté au tactile.
  */
-
-const C = {
-  base: '#262624', panel: '#30302e', rail: '#1f1e1c', coral: '#d97757',
-  ink: '#f5f4ee', muted: '#b0ada3', faint: '#82807a', line: 'rgba(245,244,238,.10)',
-  coralTint: 'rgba(217,119,87,0.14)',
-};
 
 const fmtDur = (sec?: number) => {
   const s = Math.max(0, Math.round(Number(sec) || 0));
@@ -35,6 +31,8 @@ const fmtTime = (sec: number) => {
 };
 
 function Player({ item, onClose }: { item: VideothequeItem; onClose: () => void }) {
+  const { colors: C } = useTheme();
+  const styles = useMemo(() => makeStyles(C), [C]);
   const player = useVideoPlayer(item.playback_url ?? '', (p) => { p.timeUpdateEventInterval = 0.5; });
   // `useEvent` sans état initial : le payload complet d'expo-video n'est pas
   // reconstructible à la main (champs live/buffer). Avant le 1er événement → 0.
@@ -105,6 +103,8 @@ function Player({ item, onClose }: { item: VideothequeItem; onClose: () => void 
 }
 
 export default function VideothequeScreen() {
+  const { colors: C } = useTheme();
+  const styles = useMemo(() => makeStyles(C), [C]);
   const [items, setItems] = useState<VideothequeItem[] | null>(null);
   const [q, setQ] = useState('');
   const [active, setActive] = useState<VideothequeItem | null>(null);
@@ -162,7 +162,7 @@ export default function VideothequeScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (C: LiriPalette) => StyleSheet.create({
   root: { flex: 1, backgroundColor: C.base, paddingHorizontal: 18 },
   h1: { color: C.ink, fontSize: 26, fontWeight: '700', marginTop: 8 },
   sub: { color: C.muted, fontSize: 13.5, marginTop: 4 },

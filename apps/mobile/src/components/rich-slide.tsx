@@ -1,6 +1,8 @@
 import React, { useMemo, useState } from 'react';
 import { Text, View, StyleSheet } from 'react-native';
 import { WebView } from 'react-native-webview';
+import { useTheme } from '../lib/theme';
+import type { LiriPalette } from '../constants/liri-theme';
 
 /**
  * Corps d'une diapo de cours en NATIF.
@@ -26,29 +28,29 @@ const htmlToText = (html?: string) =>
     .replace(/\n{3,}/g, '\n\n')
     .trim();
 
-const PAGE = (body: string) => `<!doctype html><html><head>
+const PAGE = (body: string, C: LiriPalette) => `<!doctype html><html><head>
 <meta charset="utf-8"/><meta name="viewport" content="width=device-width, initial-scale=1"/>
 <style>
-  :root { color-scheme: dark; }
-  body { margin:0; padding:0; background:transparent; color:rgba(245,244,238,.80);
+  :root { color-scheme: light dark; }
+  body { margin:0; padding:0; background:transparent; color:${C.muted};
          font: 15.5px/1.68 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
   p { margin:0 0 13px; }
-  strong, b { color:#f5f4ee; font-weight:650; }
-  h3,h4,h5 { color:#f0c3ac; font-size:15px; font-weight:700; margin:18px 0 8px; }
+  strong, b { color:${C.ink}; font-weight:650; }
+  h3,h4,h5 { color:${C.coral}; font-size:15px; font-weight:700; margin:18px 0 8px; }
   ul,ol { margin:0 0 14px; padding-left:20px; }
   li { margin:0 0 7px; }
-  ul li::marker { color:#d97757; }
+  ul li::marker { color:${C.coral}; }
   blockquote { margin:14px 0; padding:13px 16px; border-radius:13px;
-               background:rgba(217,119,87,.10); border:1px solid rgba(217,119,87,.30); color:#f0ede4; }
+               background:${C.coralTint}; border:1px solid ${C.coral}55; color:${C.ink}; }
   blockquote p { margin:0; }
   table { width:100%; border-collapse:separate; border-spacing:0; margin:16px 0; font-size:14px;
-          border:1px solid rgba(245,244,238,.14); border-radius:13px; overflow:hidden; }
-  th { background:rgba(217,119,87,.16); color:#f0c3ac; font-weight:700; text-align:left; padding:10px 12px; font-size:12.5px; }
-  td { padding:10px 12px; border-top:1px solid rgba(245,244,238,.10); vertical-align:top; }
+          border:1px solid ${C.line}; border-radius:13px; overflow:hidden; }
+  th { background:${C.coralTint}; color:${C.coral}; font-weight:700; text-align:left; padding:10px 12px; font-size:12.5px; }
+  td { padding:10px 12px; border-top:1px solid ${C.line}; vertical-align:top; }
   figure { margin:18px 0; text-align:center; }
   svg { max-width:100%; height:auto; }
-  figcaption { margin-top:8px; font-size:12.5px; color:rgba(245,244,238,.55); font-style:italic; }
-  code { background:rgba(245,244,238,.07); padding:1px 6px; border-radius:6px; }
+  figcaption { margin-top:8px; font-size:12.5px; color:${C.faint}; font-style:italic; }
+  code { background:${C.panelTint}; padding:1px 6px; border-radius:6px; }
 </style></head>
 <body><div id="c">${body}</div>
 <script>
@@ -61,16 +63,22 @@ const PAGE = (body: string) => `<!doctype html><html><head>
 </script></body></html>`;
 
 export function RichSlide({ content }: { content?: string }) {
+  const { colors: C } = useTheme();
   const isRich = useMemo(() => RICH.test(String(content ?? '')), [content]);
   const [height, setHeight] = useState(120);
+  const html = useMemo(() => PAGE(String(content ?? ''), C), [content, C]);
 
   if (!isRich) {
-    return <Text selectable style={styles.plain}>{htmlToText(content) || '—'}</Text>;
+    return (
+      <Text selectable style={{ color: C.muted, fontSize: 15, lineHeight: 22 }}>
+        {htmlToText(content) || '—'}
+      </Text>
+    );
   }
   return (
     <WebView
       originWhitelist={['about:blank']}
-      source={{ html: PAGE(String(content ?? '')) }}
+      source={{ html }}
       style={[styles.web, { height }]}
       scrollEnabled={false}
       showsVerticalScrollIndicator={false}
@@ -86,7 +94,6 @@ export function RichSlide({ content }: { content?: string }) {
 }
 
 const styles = StyleSheet.create({
-  plain: { color: 'rgba(245,244,238,.78)', fontSize: 15, lineHeight: 22 },
   web: { width: '100%', backgroundColor: 'transparent', opacity: 0.99 },
 });
 
