@@ -132,6 +132,14 @@ export default function FormationStage({ course, studentName }) {
   const [value, setValue] = useState('');
   const inputRef = useRef(null);
   const advancedRef = useRef(false);
+
+  // ── LECTURE GUIDÉE (défaut) ────────────────────────────────────────────────────────────────
+  // Un professeur n'enchaîne pas à l'aveugle : il pose, il attend, il demande « on continue ? ».
+  // À la fin de chaque étape le cours S'ARRÊTE et rend la main à l'élève (Continuer · Reformule ·
+  // Une question). `guided=false` rétablit la lecture continue d'origine (bouton dans l'en-tête).
+  const [guided, setGuided] = useState(true);
+  const [waiting, setWaiting] = useState(false);
+  const hold = useCallback(() => { setWaiting(true); setPresence('attente'); }, [setPresence]);
   const capRef = useRef(null);
   const postRef = useRef(null);
   const askGen = useRef(0);
@@ -146,6 +154,7 @@ export default function FormationStage({ course, studentName }) {
   const closeInput = useCallback(() => { setInputOpen(false); setValue(''); }, []);
 
   const advance = useCallback(() => {
+    setWaiting(false); // on repart : la main revient au professeur
     setIdx((i) => {
       const next = i + 1;
       if (next >= scenes.length) { setDone(true); return i; }
@@ -182,17 +191,24 @@ export default function FormationStage({ course, studentName }) {
 
     if (sc.type === 'croquis') {
       setPresence('reflexion');
-      const cap = sc.sketch?.caption || sc.narration || '';
-      if (cap) speak(cap);
+      // On DIT ce que le prof explique en traçant (narration), la légende reste écrite au tableau.
+      const spoken = sc.narration || sc.sketch?.caption || '';
+      if (spoken) speak(spoken);
       const n = sc.sketch?.elements?.length || 3;
-      postRef.current = setTimeout(go, n * 900 + 2800);
+      // Le tracé se construit trait par trait : on laisse le dessin se terminer AVANT de rendre
+      // la main (en guidé) — sinon l'élève n'a pas le temps de lire les étiquettes.
+      const drawMs = n * 900 + 2800;
+      postRef.current = setTimeout(() => { if (guided) hold(); else go(); }, drawMs);
       return () => { advancedRef.current = true; clearTimeout(postRef.current); };
     }
 
     const text = sceneSpeech(sc);
-    if (text) speak(text, () => { postRef.current = setTimeout(go, 1100); });
+    if (text) speak(text, () => { if (guided) hold(); else postRef.current = setTimeout(go, 1100); });
+    else if (guided) hold();
     else { setPresence('attente'); postRef.current = setTimeout(go, 900); }
-    capRef.current = setTimeout(go, Math.max(text.length * 55, 2000) + 8000);
+    // Le plafond de sécurité (avance forcée) n'existe QU'EN lecture continue : en lecture guidée,
+    // rien ne doit bousculer l'élève — c'est lui qui donne le tempo.
+    if (!guided) capRef.current = setTimeout(go, Math.max(text.length * 55, 2000) + 8000);
     return () => { advancedRef.current = true; clearTimeout(capRef.current); clearTimeout(postRef.current); };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [idx, started, done]);
@@ -230,6 +246,31 @@ export default function FormationStage({ course, studentName }) {
       speak('Je reste sur le cours — je n’ai pas pu répondre à l’instant.');
     }
   }, [knowledge, concepts, activeConcept, speak, setPresence]);
+
+  // « Reformule » — le professeur redit AUTREMENT l'étape en cours (plus simplement, autre angle),
+  // sans avancer : l'élève reste maître du tempo. Repli local si le cerveau ne répond pas.
+  const reformulate = useCallback(async () => {
+    const source = String(sceneSpeech(sc) || '').trim();
+    if (!source) return;
+    const gen = ++askGen.current;
+    setPresence('reflexion');
+    try {
+      const { data, error } = await supabase.functions.invoke('precepteur-brain', {
+        body: {
+          question: `Redis AUTREMENT ce passage du cours, plus simplement et sous un autre angle, sans rien ajouter de nouveau et sans le résumer : « ${source} »`,
+          course: knowledge,
+          concept: concepts[activeConcept]?.title || null,
+        },
+      });
+      if (askGen.current !== gen) return;
+      if (error) throw error;
+      const reply = String(data?.reply || '').trim();
+      speak(reply || source, () => hold());
+    } catch {
+      if (askGen.current !== gen) return;
+      speak('Reprenons autrement : ' + source, () => hold());
+    }
+  }, [sc, knowledge, concepts, activeConcept, speak, setPresence, hold]);
 
   const submit = useCallback(() => {
     const v = value.trim();
@@ -353,6 +394,41 @@ export default function FormationStage({ course, studentName }) {
         style={{ position: 'absolute', top: 16, right: 16, background: 'transparent', border: 'none', color: 'rgba(244,239,230,.4)', cursor: 'pointer', fontSize: 15 }}>
         {muted ? '🔇' : '🔊'}
       </button>
+
+      {/* ── LA MAIN À L'ÉLÈVE (lecture guidée) ──────────────────────────────────────────────
+          À la fin de chaque étape, le cours s'arrête et le professeur demande. Rien n'avance
+          tant que l'élève n'a pas décidé : continuer, se faire redire autrement, ou questionner. */}
+      {guided && waiting && !inputOpen && !awaitingAnswer && !done && (
+        <div className="cca-in" onClick={(e) => e.stopPropagation()}
+          style={{ position: 'fixed', left: '50%', bottom: 40, transform: 'translateX(-50%)', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 10, zIndex: 20 }}>
+          <span style={{ fontFamily: SERIF, fontSize: 14, color: 'rgba(244,239,230,.5)', fontStyle: 'italic' }}>
+            On continue&nbsp;?
+          </span>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, background: 'rgba(38,38,36,.96)', boxShadow: '0 8px 30px rgba(0,0,0,.45)', borderRadius: 16, padding: 8 }}>
+            <button onClick={advance}
+              style={{ display: 'inline-flex', alignItems: 'center', gap: 7, borderRadius: 11, border: 'none', padding: '10px 20px', fontSize: 14, fontWeight: 700, cursor: 'pointer', background: TERRA, color: '#2a140c' }}>
+              Continuer →
+            </button>
+            <button onClick={reformulate}
+              style={{ borderRadius: 11, padding: '10px 16px', fontSize: 13.5, fontWeight: 600, cursor: 'pointer', background: 'rgba(244,239,230,.09)', border: '1px solid rgba(244,239,230,.14)', color: 'rgba(244,239,230,.86)' }}>
+              Redis autrement
+            </button>
+            <button onClick={() => openInput()}
+              style={{ borderRadius: 11, padding: '10px 16px', fontSize: 13.5, fontWeight: 600, cursor: 'pointer', background: 'rgba(244,239,230,.09)', border: '1px solid rgba(244,239,230,.14)', color: 'rgba(244,239,230,.86)' }}>
+              J’ai une question
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Bascule tempo : guidé (le prof attend) ↔ continu (tout s'enchaîne). */}
+      {!done && (
+        <button onClick={(e) => { e.stopPropagation(); setGuided((g) => { const next = !g; if (g) setWaiting(false); return next; }); }}
+          title={guided ? 'Passer en lecture continue' : 'Repasser en lecture guidée'}
+          style={{ position: 'absolute', top: 16, right: 48, background: 'transparent', border: 'none', color: 'rgba(244,239,230,.4)', cursor: 'pointer', fontSize: 11, letterSpacing: '.08em', fontFamily: "'Inter', system-ui, sans-serif" }}>
+          {guided ? 'PAS À PAS' : 'CONTINU'}
+        </button>
+      )}
 
       {/* Parler à la présence */}
       {inputOpen && (

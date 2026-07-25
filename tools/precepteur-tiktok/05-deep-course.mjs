@@ -160,30 +160,52 @@ JSON STRICT :
  }]
 }`;
 
-/* ── PASSE C — rédaction d'un concept ────────────────────────────────────────────────────── */
-const SYS_C = `Tu es LE PRÉCEPTEUR. Tu rédiges UN concept de cours, entièrement, dans la voix du fondateur.
+/* ── PASSE C1 — LE TEXTE LONG (le cours écrit, pas un résumé) ────────────────────────────── */
+const SYS_C1 = `Tu es LE PRÉCEPTEUR. Tu RÉDIGES le texte COMPLET d'une leçon de masterclass — le cours
+tel qu'un professeur l'écrirait avant de le donner. Ce n'est PAS un résumé, PAS une fiche, PAS un
+exercice : c'est un TEXTE SUIVI, long, développé, qui prend le temps d'enseigner.
+
 ${VOIX}
 
-EXIGENCE D'ARGUMENTATION (c'est le cœur) : chaque leçon ne se contente pas d'affirmer — elle POSE
-la prémisse, la JUSTIFIE, en TIRE la conséquence, et LÈVE l'objection. Deux à trois leçons par
-concept, qui s'enchaînent logiquement. On doit sentir une démonstration, pas un résumé.
+STRUCTURE OBLIGATOIRE (le plan se voit dans le texte) :
+  1. ACCROCHE — une question ou un constat qui rend l'élève curieux. Pas une définition sèche.
+  2. CE QU'ON VA FAIRE — annonce le chemin en 2-3 phrases (« on va d'abord voir…, puis…, et tu
+     comprendras pourquoi… »).
+  3. LE DÉVELOPPEMENT en ÉTAPES NUMÉROTÉES (3 à 5 étapes). Chaque étape : on pose l'idée, on
+     l'EXPLIQUE, on la JUSTIFIE, on donne un EXEMPLE concret, on lève l'objection qui vient
+     naturellement. On avance lentement, on répète autrement ce qui est difficile.
+  4. LE POINT DE BASCULE — le moment où tout s'éclaire, amené comme une révélation.
+  5. CE QU'IL FAUT RETENIR — 3 à 5 phrases fortes, mémorisables.
 
-DEUX REGISTRES : "board_text" = ce qui s'ÉCRIT (dense, définitionnel, 1 à 3 phrases fortes) ;
-"narration" = ce qui se DIT (déroulé, respiré, 4 à 8 phrases, avec les marqueurs de voix).
-JAMAIS la même phrase dans les deux.
+LONGUEUR : 700 à 1200 mots. Un texte court est un ÉCHEC — l'élève doit avoir l'impression d'un
+vrai cours, pas d'un aide-mémoire. Développe, illustre, respire.
+FIDÉLITÉ : tout vient de l'enseignement du fondateur. Tu développes SES idées, tu n'en ajoutes pas.
 
-Tu produis les scènes SAUF les croquis (traités à part) : mets simplement les marqueurs
-{"type":"croquis_placeholder"} et, dans l'atelier, "reveal_sketch_placeholder": true si un
-2e croquis est prévu.
+JSON STRICT : {"lesson_md":"le texte complet en markdown (## pour les étapes)"}`;
+
+/* ── PASSE C2 — mise en scène du texte long (aucune réécriture, aucun résumé) ─────────────── */
+const SYS_C2 = `Tu es le METTEUR EN SCÈNE du Précepteur. On te donne le TEXTE COMPLET d'une leçon déjà
+rédigée. Tu ne la réécris PAS, tu ne la résumes SURTOUT PAS : tu la DÉCOUPES en scènes qui seront
+jouées à l'écran, en GARDANT LES PHRASES DU TEXTE.
+
+Règles :
+  • Chaque étape du texte devient UNE scène "lecon" — sa "narration" reprend les phrases du texte
+    (tu peux enlever les titres markdown, garder le fil oral), son "board_text" est l'énoncé
+    écrit au tableau (1 à 3 phrases denses tirées de l'étape).
+  • Une leçon fait 60 à 160 mots de narration : assez pour enseigner, assez court pour être lu.
+    S'il faut, coupe une longue étape en DEUX scènes "lecon" qui se suivent.
+  • Tu ajoutes aux bons endroits : "amorce_croquis" (avant le croquis), le marqueur
+    {"type":"croquis_placeholder"}, un "atelier" (au point de bascule), une "image_analogie",
+    une "transition" finale.
+  • RIEN ne doit être perdu du texte : toutes les étapes doivent se retrouver dans les scènes.
 
 JSON STRICT :
 {"scenes":[
   {"type":"lecon","title":"…","board_text":"…","narration":"…"},
-  {"type":"lecon","title":"…","board_text":"…","narration":"…"},
-  {"type":"amorce_croquis","narration":"la phrase qui invite à passer au tableau"},
+  {"type":"amorce_croquis","narration":"…"},
   {"type":"croquis_placeholder"},
-  {"type":"atelier","question":"question qui fait CHERCHER (pas de récitation)","hint":"coup de pouce qui oriente sans donner","expected_answers":["…","…"],"expected_errors":["…","…"],"reveal_narration":"la révélation développée : la réponse, POURQUOI elle est vraie, et ce qu'elle ouvre","reveal_sketch_placeholder":true},
-  {"type":"image_analogie","analogie":"l'analogie en une phrase","image_prompt":"prompt d'image cinématographique DÉTAILLÉ en français : sujet en action, tension visible, lumière, cadrage, ambiance. Finir par « Sujet clair et lisible, pas de texte. »","narration":"…"},
+  {"type":"atelier","question":"…","hint":"…","expected_answers":["…"],"expected_errors":["…"],"reveal_narration":"…","reveal_sketch_placeholder":true},
+  {"type":"image_analogie","analogie":"…","image_prompt":"prompt cinématographique détaillé, finir par « Sujet clair et lisible, pas de texte. »","narration":"…"},
   {"type":"transition","narration":"…"}
 ]}`;
 
@@ -291,11 +313,19 @@ async function buildCourse(src) {
   const concepts = [];
   for (let i = 0; i < plan.length; i += 1) {
     const p = plan[i];
-    log(`  C${i + 1}. rédaction « ${str(p.titre, 50)} »…`);
-    const red = await llm(SYS_C,
-      `CONTEXTE DOCTRINAL :\n${JSON.stringify({ these: analyse.these, symboles: analyse.symboles, termes: analyse.termes_techniques, citations: analyse.citations_fortes }, null, 1)}\n\n`
-      + `CONCEPT À RÉDIGER :\n${JSON.stringify(p, null, 1)}`,
-      { maxTokens: 14000, temperature: 0.6, label: `C${i + 1}` });
+    log(`  C${i + 1}a. rédaction du TEXTE LONG « ${str(p.titre, 50)} »…`);
+    const longText = await llm(SYS_C1,
+      `CONTEXTE DOCTRINAL :\n${JSON.stringify({ these: analyse.these, symboles: analyse.symboles, termes: analyse.termes_techniques, citations: analyse.citations_fortes, objections: analyse.objections }, null, 1)}\n\n`
+      + `LEÇON À RÉDIGER :\n${JSON.stringify(p, null, 1)}`,
+      { maxTokens: 16000, temperature: 0.6, label: `C${i + 1}a` });
+    const lessonMd = str(longText?.lesson_md, 24000);
+    log(`      texte : ${lessonMd.split(/\s+/).filter(Boolean).length} mots`);
+
+    log(`  C${i + 1}b. mise en scène (sans résumer)…`);
+    const red = await llm(SYS_C2,
+      `TEXTE COMPLET DE LA LEÇON (à découper, PAS à résumer) :\n${lessonMd}\n\n`
+      + `REPÈRES : croquis attendu → ${p.croquis_doit_montrer || '(aucun)'} · analogie → ${p.analogie_du_quotidien || '(libre)'}`,
+      { maxTokens: 16000, temperature: 0.4, label: `C${i + 1}b` });
 
     const rawScenes = Array.isArray(red?.scenes) ? red.scenes : [];
     const scenes = [];
@@ -383,6 +413,7 @@ async function buildCourse(src) {
       ...(ABSTRACTIONS.has(abs) ? { abstraction: abs } : {}),
       scenes: kept,
       ...(p.transition_next ? { transition_next: str(p.transition_next, 400) } : {}),
+      ...(lessonMd ? { lesson_md: lessonMd } : {}), // le cours ÉCRIT complet (source de la mise en scène)
     });
   }
   if (!concepts.length) return { skip: 'aucun concept rédigeable' };
