@@ -26,6 +26,7 @@ import { pollImapSync }         from './jobs/imap-sync.js';
 import { pollGdprExports }      from './jobs/gdpr-export.js';
 import { pollCourseRenderJobs } from './jobs/courseRender.js';
 import { pollZoomTransfer } from './jobs/zoom-transfer.js';
+import { pollCourseFromReplay } from './jobs/course-from-replay.js';
 
 const sleep = (ms: number) => new Promise<void>((r) => setTimeout(r, ms));
 
@@ -158,4 +159,18 @@ startPingJob();
   }
 })();
 
-console.log('[worker:live] Pollers actifs ✅ (email 15s · rappels 60s · invitations 120s · imap 90s · shorts 5min · posts 90s · rgpd 60s · replay post-prod 60s · rendu cours 60s · zoom-transfer 20s)');
+// ── Replay → COURS ENSEIGNABLE (extraction + pédagogie + publication, 30s) ────
+//    Un job = une séance transformée en cours pour débutants (brouillon au poste
+//    production). Long (plusieurs minutes) mais un seul job à la fois : le poller
+//    reste tranquille et n'entrave pas les notifs live.
+(async () => {
+  while (true) {
+    try {
+      const n = await (pollCourseFromReplay as () => Promise<number>)();
+      if (n > 0) console.log(`[worker:live] Cours depuis replay : ${n} construit(s)`);
+    } catch (e: unknown) { console.error('[worker:live] Course-from-replay error:', (e as Error)?.message || e); }
+    await sleep(30_000);
+  }
+})();
+
+console.log('[worker:live] Pollers actifs ✅ (email 15s · rappels 60s · invitations 120s · imap 90s · shorts 5min · posts 90s · rgpd 60s · replay post-prod 60s · rendu cours 60s · zoom-transfer 20s · cours-depuis-replay 30s)');

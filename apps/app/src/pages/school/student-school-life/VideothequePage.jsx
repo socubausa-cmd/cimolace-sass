@@ -1,6 +1,6 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Play, Search, Film, GraduationCap, FileText, Loader2 } from 'lucide-react';
+import { Play, Search, Film, GraduationCap, FileText, Loader2, Sparkles } from 'lucide-react';
 import { apiV2, masterclassApi, tenantsApi } from '@/lib/api-v2';
 import { exportCoursePdf } from '@/lib/exportCoursePdf';
 import ImmersiveVideoPlayer from '@/components/school/formations/ImmersiveVideoPlayer';
@@ -56,6 +56,51 @@ export default function VideothequePage() {
     return () => { alive = false; };
   }, []);
   const [extract, setExtract] = useState({ state: 'idle', message: '' });
+
+  // ── Construction d'un COURS ENSEIGNABLE depuis le replay ──────────────────
+  // Traitement long (extraction → plan → leçons → publication) : l'API enregistre
+  // une demande, le worker travaille, on suit l'avancement ici.
+  const [build, setBuild] = useState({ state: 'idle', message: '', courseId: null });
+  const buildPollRef = useRef(null);
+
+  const followJob = useCallback((jobId) => {
+    clearInterval(buildPollRef.current);
+    buildPollRef.current = setInterval(async () => {
+      try {
+        const j = await masterclassApi.courseJob(jobId);
+        if (j?.status === 'done') {
+          clearInterval(buildPollRef.current);
+          setBuild({ state: 'done', message: 'Cours prêt au poste production.', courseId: j.course_id });
+        } else if (j?.status === 'failed') {
+          clearInterval(buildPollRef.current);
+          setBuild({ state: 'error', message: j.error_message || 'Construction impossible.', courseId: null });
+        } else {
+          setBuild({ state: 'working', message: j?.progress || 'Construction du cours…', courseId: null });
+        }
+      } catch { /* on retentera au prochain tour */ }
+    }, 5000);
+  }, []);
+
+  useEffect(() => () => clearInterval(buildPollRef.current), []);
+
+  async function handleBuildCourse(video) {
+    if (!video?.id) return;
+    setBuild({ state: 'working', message: 'Demande enregistrée…', courseId: null });
+    try {
+      const res = await masterclassApi.requestCourseFromReplay(video.id);
+      const job = res?.job || res;
+      if (!job?.id) throw new Error('Demande non enregistrée.');
+      followJob(job.id);
+    } catch (e) {
+      const msg = String(e?.message || '');
+      setBuild({
+        state: 'error',
+        courseId: null,
+        message: /403|forbidden/i.test(msg) ? "Réservé aux enseignants et responsables de l'école." : (msg || 'Construction impossible.'),
+      });
+      setTimeout(() => setBuild({ state: 'idle', message: '', courseId: null }), 9000);
+    }
+  }
 
   async function handleExtractCourse(video) {
     if (!video?.id) return;
@@ -138,6 +183,38 @@ export default function VideothequePage() {
                     ? <Loader2 size={14} className="animate-spin" />
                     : <FileText size={14} />}
                   {extract.state === 'working' ? 'Extraction…' : 'Extraire le cours (PDF)'}
+                </button>
+              )}
+              {/* Construction du cours enseignable (worker) + suivi d'avancement */}
+              {build.state !== 'idle' && (
+                <span style={{
+                  fontSize: 11.5, fontWeight: 600, whiteSpace: 'nowrap', padding: '6px 10px', borderRadius: 999,
+                  color: build.state === 'error' ? '#f6b8ab' : build.state === 'done' ? '#c9dcbf' : C.muted,
+                  background: build.state === 'error' ? 'rgba(217,119,87,.14)' : build.state === 'done' ? 'rgba(159,191,143,.14)' : 'rgba(255,255,255,.05)',
+                }}>
+                  {build.message}
+                </span>
+              )}
+              {build.state === 'done' && build.courseId ? (
+                <button type="button" onClick={() => navigate(`/studio/formation?editFormationId=${build.courseId}`)}
+                  style={{ display: 'inline-flex', alignItems: 'center', gap: 7, padding: '8px 14px', borderRadius: 999, border: `1px solid ${C.coral}`, background: C.coralTint, color: '#f0c3ac', cursor: 'pointer', fontSize: 12.5, fontWeight: 700, whiteSpace: 'nowrap' }}>
+                  <GraduationCap size={14} /> Ouvrir le cours
+                </button>
+              ) : canExtract && (
+                <button
+                  type="button"
+                  onClick={() => handleBuildCourse(active)}
+                  disabled={build.state === 'working'}
+                  title="Reconstruire cette séance en cours enseignable pour débutants (plan, leçons, schémas, quiz) — déposé en brouillon au poste production"
+                  style={{
+                    display: 'inline-flex', alignItems: 'center', gap: 7, padding: '8px 14px', borderRadius: 999,
+                    border: `1px solid ${C.coral}`, background: C.coralTint, color: '#f0c3ac',
+                    cursor: build.state === 'working' ? 'wait' : 'pointer', fontSize: 12.5, fontWeight: 700,
+                    whiteSpace: 'nowrap', opacity: build.state === 'working' ? 0.7 : 1,
+                  }}
+                >
+                  {build.state === 'working' ? <Loader2 size={14} className="animate-spin" /> : <Sparkles size={14} />}
+                  {build.state === 'working' ? 'Construction…' : 'Construire le cours'}
                 </button>
               )}
               {active.precepteur_id ? (

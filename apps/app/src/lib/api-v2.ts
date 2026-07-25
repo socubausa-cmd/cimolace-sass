@@ -725,6 +725,17 @@ export const masterclassApi = {
     apiV2
       .post<ApiEnvelope<any>>('/masterclass-factory/from-replay', { videoId }, { timeout: 900000 })
       .then(unwrap),
+  /**
+   * Demande la construction d'un COURS ENSEIGNABLE depuis un replay : extraction du
+   * contenu, plan pédagogique, leçons (amorce → schéma → exemples → quiz corrigé).
+   * Traitement long côté worker → renvoie une demande à suivre, pas le cours.
+   */
+  requestCourseFromReplay: (videoId: string) =>
+    apiV2.post<ApiEnvelope<any>>('/masterclass-factory/course-from-replay', { videoId }).then(unwrap),
+  courseJob: (jobId: string) =>
+    apiV2.get<ApiEnvelope<any>>(`/masterclass-factory/course-job/${jobId}`).then(unwrap),
+  courseJobByVideo: (videoId: string) =>
+    apiV2.get<ApiEnvelope<any>>(`/masterclass-factory/course-job/by-video/${videoId}`).then(unwrap),
   savePrecepteur: (body: Record<string, unknown>) =>
     apiV2.post<ApiEnvelope<any>>('/masterclass-factory/precepteur', body).then(unwrap),
 };
