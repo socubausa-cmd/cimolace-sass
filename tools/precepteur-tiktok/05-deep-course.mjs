@@ -25,6 +25,7 @@ import { readFileSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { sql, q, TENANT_ID, ENV, log } from './common.mjs';
+import { fitSketchToCanvas } from './sketchFit.mjs';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..');
 const argv = process.argv;
@@ -69,8 +70,8 @@ phrases courtes, respirations « … », interpellations. Marqueurs : « Bon… 
 « Réfléchis avec moi : », « Eh bien voilà : », « retiens bien ça ».`;
 
 const GEOM = `REPÈRE DU CROQUIS : 0..100 en x ET en y, mais la surface est en 16:9 (160×90) —
-donc 10 unités en x sont ~2× plus courtes visuellement que 10 unités en y. Étale en x (20→85),
-resserre en y (25→75). y augmente vers le BAS.
+donc 10 unités en x sont ~2× plus courtes visuellement que 10 unités en y. OCCUPE TOUT le tableau : x de 8 à 92, y de 14 à 86. Un dessin tassé au centre est illisible.
+y augmente vers le BAS. (Un recadrage automatique corrigera, mais vise large dès le départ.)
 VOCABULAIRE FERMÉ (rien d'autre n'est dessinable) :
   • segment : {"kind":"vector|arrow|line|curve","from":[x,y],"to":[x,y]}
   • centré  : {"kind":"point|circle|spiral|axis|label","center":[x,y]} (+"radius", +"turns" pour spiral)
@@ -242,7 +243,7 @@ function sanitizeSketch(sk) {
   if (!sk || typeof sk !== 'object' || !Array.isArray(sk.elements)) return null;
   const elements = sk.elements.map(sanitizeElement).filter(Boolean).slice(0, 9);
   if (!elements.length) return null;
-  return { ...(sk.caption ? { caption: str(sk.caption, 150) } : {}), elements };
+  return { ...(sk.caption ? { caption: str(sk.caption, 150) } : {}), elements: fitSketchToCanvas(elements) };
 }
 const DEFAULT_ACK = {
   ok: ['Exactement.', 'Tu y es.', 'C’est ça même.', 'Voilà.'],
