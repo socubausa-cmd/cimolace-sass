@@ -2,6 +2,7 @@ import {
   LayoutDashboard, BookOpen, HeartHandshake as Handshake, Calendar, Library, CreditCard,
   Building2, Users, Settings, Bell, HelpCircle, Users as UsersIcon, Award, PieChart,
   Database, Users2, Sparkles, Link2, Megaphone, Flame, Star, ExternalLink, MessageCircle, Tags,
+  Film,
 } from 'lucide-react';
 
 /**
@@ -33,6 +34,13 @@ export function buildOwnerMenuGroups(payoutTenantSlug, basePath = '/owner-dashbo
       items: [
         { id: 'formations', icon: BookOpen, label: 'Formations' },
         { id: 'masterclass-factory', icon: Sparkles, label: 'Créer un cours (IA)', href: '/dashboard/tools/masterclass-factory' },
+        // Vidéothèque : les replays des directs. Le créateur y va pour EXTRAIRE le cours
+        // écrit d'une séance (bouton « Extraire le cours (PDF) », réservé owner/admin/
+        // enseignant). Sans cette entrée il n'existait AUCUN chemin owner vers la page —
+        // seul l'élève la voyait, alors que l'action est réservée aux créateurs.
+        // Route LIRI-only → on ne l'expose PAS depuis le back-office historique, sinon
+        // fuite de realm (cf. item « Encaissement » plus bas, même garde `isLiri`).
+        ...(isLiri ? [{ id: 'videotheque', icon: Film, label: 'Vidéothèque', href: '/liri/videotheque' }] : []),
         { id: 'school-life', icon: Calendar, label: 'Vie Scolaire' },
         { id: 'coaching-mentoring', icon: Handshake, label: 'Coaching & Mentorat' },
         { id: 'workshops', icon: UsersIcon, label: 'Ateliers' },

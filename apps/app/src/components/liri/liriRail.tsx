@@ -15,10 +15,12 @@ import { prefetchLiriPath } from '@/lib/prefetchLiriRoutes';
  * Un SÉLECTEUR DE MOTEUR dans l'en-tête recharge tout le rail → plus de surcharge : le rail
  * ne montre QUE les sections du moteur actif.
  *
- * Visibilité 3 niveaux (inchangée) :
- *   creator: true  → réservé au CRÉATEUR (Studio/École/CRM…)
- *   school: true   → réservé à l'ÉLÈVE d'un tenant ÉCOLE activé (agenda/notes/cours…)
- *   (aucun flag)   → partagé (Accueil, Lives, Forum, Messages, Boutique…)
+ * Visibilité 4 niveaux :
+ *   creator: true   → réservé au CRÉATEUR (Studio/École/CRM…)
+ *   school: true    → réservé à l'ÉLÈVE d'un tenant ÉCOLE activé (agenda/notes/cours…)
+ *   schoolAll: true → ÉLÈVE **ET** CRÉATEUR, si l'école est activée (ex. Vidéothèque :
+ *                     l'élève revoit le direct, le créateur en extrait le cours écrit)
+ *   (aucun flag)    → partagé (Accueil, Lives, Forum, Messages, Boutique…)
  * Un moteur n'apparaît dans le sélecteur QUE s'il a ≥ 1 item visible pour l'utilisateur.
  */
 export type EngineKey = 'liri' | 'ecole' | 'mbolo' | 'medos' | 'studio' | 'crea';
@@ -31,7 +33,7 @@ export type RailKey =
   | 'temple' | 'boutique' | 'marche' | 'produits' | 'commandes' | 'paiements' | 'factures' | 'compta'
   | 'studio' | 'ecole' | 'services' | 'crm' | 'pages' | 'contenu' | 'biblio' | 'brain' | 'integrations' | 'reglages';
 
-export type RailItem = { key: RailKey; label: string; icon: typeof House; to: string; creator?: boolean; school?: boolean };
+export type RailItem = { key: RailKey; label: string; icon: typeof House; to: string; creator?: boolean; school?: boolean; schoolAll?: boolean };
 export type RailGroup = { section?: string; items: RailItem[] };
 export type EngineDef = { key: EngineKey; label: string; sub: string; icon: typeof House; groups: RailGroup[]; home?: string };
 
@@ -60,7 +62,7 @@ export const ENGINES: EngineDef[] = [
       { section: 'Pilotage', items: [
         { key: 'ecole', label: 'École', icon: GraduationCap, to: '/liri/ecole', creator: true },
         { key: 'formations', label: 'Mes cours', icon: BookOpen, to: '/liri/formations', school: true },
-        { key: 'videotheque', label: 'Vidéothèque', icon: Film, to: '/liri/videotheque', school: true },
+        { key: 'videotheque', label: 'Vidéothèque', icon: Film, to: '/liri/videotheque', schoolAll: true },
         { key: 'semaine', label: 'Ma semaine', icon: CalendarDays, to: '/liri/semaine', school: true },
       ] },
       { section: 'Scolarité', items: [
@@ -126,8 +128,20 @@ export const ENGINES: EngineDef[] = [
 ];
 
 type Filter = { isCreator: boolean; schoolActive: boolean };
+/**
+ * `creator`   → créateurs seuls.
+ * `schoolAll` → élèves ET créateurs, tant que le moteur École est actif. Pour les
+ *               surfaces utiles aux DEUX côtés (ex. Vidéothèque : l'élève revoit le
+ *               direct, le créateur en extrait le cours écrit). Sans ce cas, un item
+ *               `school` restait invisible pour l'owner — donc inatteignable, alors
+ *               même que l'action qu'il porte lui est réservée.
+ * `school`    → élèves seuls (vue scolaire), école active.
+ */
 const isVisible = (it: RailItem, { isCreator, schoolActive }: Filter) =>
-  it.creator ? isCreator : it.school ? (!isCreator && schoolActive) : true;
+  it.creator ? isCreator
+    : it.schoolAll ? schoolActive
+      : it.school ? (!isCreator && schoolActive)
+        : true;
 
 /** Groupes d'un moteur, filtrés par rôle + mode école (sections vides retirées). */
 export function engineGroups(engine: EngineKey, f: Filter): RailGroup[] {
