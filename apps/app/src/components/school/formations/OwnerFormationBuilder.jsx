@@ -13,7 +13,7 @@ import { useToast } from '@/components/ui/use-toast';
 import {
   ArrowLeft, ArrowRight, Save, Plus, Trash, Video, FileText,
   Presentation, CheckCircle, Image as ImageIcon, Upload, Calendar, Layout, Loader2, Menu, Copy,
-  ChevronRight, Eye,
+  ChevronRight, Eye, Camera, Film, Wand2, MonitorPlay, ClipboardCheck, Sparkles,
 } from 'lucide-react';
 import ProgressivePlaylist from '@/components/school/classroom/ProgressivePlaylist';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
@@ -36,6 +36,79 @@ const isUuid = (value) => {
   if (!value) return false;
   const s = String(value);
   return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(s);
+};
+
+const PRODUCTION_PIPELINE = [
+  {
+    key: 'storyboard',
+    label: 'Storyboard',
+    title: 'Découper la leçon',
+    desc: 'Chaque jour devient une scène claire : intention, problème, démonstration, exercice.',
+    icon: ClipboardCheck,
+  },
+  {
+    key: 'frames',
+    label: 'Image par image',
+    title: 'Composer les plans',
+    desc: 'Associer vidéo, capture, croquis, slide, image générée et repères temporels.',
+    icon: Camera,
+  },
+  {
+    key: 'postprod',
+    label: 'Post-production',
+    title: 'Augmenter le replay',
+    desc: 'Transcription, mindmap, chapitres, quiz, résumé et points cliquables.',
+    icon: Wand2,
+  },
+  {
+    key: 'student',
+    label: 'Rendu élève',
+    title: 'Tester l’expérience',
+    desc: 'Contrôler ce que l’élève voit : progression, player, supports et suite logique.',
+    icon: MonitorPlay,
+  },
+];
+
+const getFormationProductionStats = (modules = []) => {
+  const stats = { modules: 0, weeks: 0, days: 0, videos: 0, supports: 0, quizzes: 0, postProdReady: 0 };
+  (modules || []).forEach((mod) => {
+    stats.modules += 1;
+    (mod?.weeks || []).forEach((week) => {
+      stats.weeks += 1;
+      (week?.days || []).forEach((day) => {
+        stats.days += 1;
+        const videos = Array.isArray(day?.videos) ? day.videos : [];
+        stats.videos += videos.length;
+        if (day?.powerpoint || day?.content?.powerpoint || day?.reader) stats.supports += 1;
+        if (day?.quiz || day?.content?.quiz) stats.quizzes += 1;
+        stats.postProdReady += videos.filter((v) => isUuid(v?.id)).length;
+      });
+    });
+  });
+  return stats;
+};
+
+const getDayFramePlan = (day) => {
+  const videos = Array.isArray(day?.videos) ? day.videos : [];
+  const frames = [];
+  videos.forEach((video, idx) => {
+    frames.push({
+      label: `Plan ${idx + 1}`,
+      title: video?.title || video?.name || `Vidéo ${idx + 1}`,
+      kind: 'Vidéo source',
+      ready: Boolean(video?.url),
+    });
+  });
+  if (day?.powerpoint || day?.reader) {
+    frames.push({ label: `Plan ${frames.length + 1}`, title: day?.powerpoint?.title || day?.reader?.title || 'Support visuel', kind: 'Slide / image', ready: true });
+  }
+  if (day?.quiz) {
+    frames.push({ label: `Plan ${frames.length + 1}`, title: day?.quiz?.title || 'Quiz de consolidation', kind: 'Interaction', ready: true });
+  }
+  if (frames.length === 0) {
+    frames.push({ label: 'Plan 1', title: 'Créer la scène pédagogique', kind: 'À produire', ready: false });
+  }
+  return frames;
 };
 
 // --- STEP 1: GENERAL INFO (Preserved) ---
@@ -206,6 +279,7 @@ const StepStructure = ({ modules, setModules, formationId }) => {
   const [activePPTModal, setActivePPTModal] = useState({ open: false, path: null });
   const [activeQuizModal, setActiveQuizModal] = useState({ open: false, path: null });
   const [postProd, setPostProd] = useState({ open: false, contentId: null });
+  const productionStats = useMemo(() => getFormationProductionStats(modules), [modules]);
 
   // Structure Helpers
   const addModule = () => setModules([...modules, { id: Date.now(), title: `Module ${modules.length + 1}`, weeks: [] }]);
@@ -272,9 +346,33 @@ const StepStructure = ({ modules, setModules, formationId }) => {
 
   return (
     <div className="space-y-6 max-w-4xl mx-auto animate-in fade-in">
-       <div className="flex justify-between items-center mb-4">
-          <h3 className="text-xl font-bold text-white">Structure du Programme</h3>
+       <div className="ofb-production-hero">
+          <div>
+            <div className="ofb-eyebrow compact">Poste production</div>
+            <h3>Créer la formation image par image</h3>
+            <p>
+              On construit l’ossature pédagogique, puis chaque journée devient une scène exploitable :
+              vidéo source, support visuel, quiz, et passage direct en post-production.
+            </p>
+          </div>
           <Button onClick={addModule} className="bg-[var(--school-accent)] text-black hover:bg-yellow-500"><Plus className="w-4 h-4 mr-2"/> Ajouter Module</Button>
+       </div>
+
+       <div className="ofb-production-strip" aria-label="Chaîne de production">
+          {PRODUCTION_PIPELINE.map(({ key, label, title, icon: Icon }) => (
+            <div key={key} className="ofb-production-step">
+              <Icon className="w-4 h-4" />
+              <span>{label}</span>
+              <strong>{title}</strong>
+            </div>
+          ))}
+       </div>
+
+       <div className="ofb-production-stats">
+          <div><strong>{productionStats.modules}</strong><span>modules</span></div>
+          <div><strong>{productionStats.days}</strong><span>jours-scènes</span></div>
+          <div><strong>{productionStats.videos}</strong><span>vidéos</span></div>
+          <div><strong>{productionStats.postProdReady}</strong><span>prêtes post-prod</span></div>
        </div>
        
        <Accordion type="multiple" className="space-y-4">
@@ -307,7 +405,7 @@ const StepStructure = ({ modules, setModules, formationId }) => {
                             {/* Days Grid */}
                             <div className="grid grid-cols-1 gap-3">
                                {week.days.map((day, dIdx) => (
-                                  <div key={day.id} className="bg-black/20 p-4 rounded border border-white/5">
+                                 <div key={day.id} className="bg-black/20 p-4 rounded border border-white/5">
                                      <div className="flex justify-between items-center mb-3 flex-wrap gap-2">
                                         <div className="flex items-center gap-2 flex-wrap min-w-0">
                                           <Input value={day.title} onChange={(e) => {
@@ -388,6 +486,28 @@ const StepStructure = ({ modules, setModules, formationId }) => {
                                            </div>
                                         )}
                                      </div>
+
+                                     <div className="ofb-frame-board">
+                                       <div className="ofb-frame-board-head">
+                                         <div>
+                                           <span>Storyboard du jour</span>
+                                           <strong>Rendu image par image</strong>
+                                         </div>
+                                         <Film className="w-4 h-4" />
+                                       </div>
+                                       <div className="ofb-frame-list">
+                                         {getDayFramePlan(day).map((frame, idx) => (
+                                           <div key={`${frame.label}-${idx}`} className={`ofb-frame-row${frame.ready ? ' ready' : ''}`}>
+                                             <span className="ofb-frame-index">{frame.label}</span>
+                                             <div className="min-w-0">
+                                               <strong>{frame.title}</strong>
+                                               <em>{frame.kind}</em>
+                                             </div>
+                                             <span className="ofb-frame-status">{frame.ready ? 'OK' : 'à créer'}</span>
+                                           </div>
+                                         ))}
+                                       </div>
+                                     </div>
                                   </div>
                                ))}
                             </div>
@@ -444,6 +564,84 @@ const StepStructure = ({ modules, setModules, formationId }) => {
 };
 
 // --- STEP 4: PROGRESSION QUIZZES ---
+const StepProductionReview = ({ data, modules, onOpenPreview }) => {
+  const stats = useMemo(() => getFormationProductionStats(modules), [modules]);
+  const checks = [
+    {
+      label: 'Identité de formation',
+      desc: data?.title ? data.title : 'Ajouter un titre lisible avant publication.',
+      ok: Boolean(data?.title),
+    },
+    {
+      label: 'Ossature pédagogique',
+      desc: `${stats.modules} modules · ${stats.weeks} semaines · ${stats.days} jours-scènes`,
+      ok: stats.modules > 0 && stats.days > 0,
+    },
+    {
+      label: 'Matière vidéo',
+      desc: `${stats.videos} vidéos sources · ${stats.postProdReady} peuvent ouvrir la post-production`,
+      ok: stats.videos > 0,
+    },
+    {
+      label: 'Rendu interactif',
+      desc: `${stats.supports} supports · ${stats.quizzes} quiz/interactions`,
+      ok: stats.supports > 0 || stats.quizzes > 0,
+    },
+  ];
+
+  return (
+    <div className="ofb-review-shell animate-in fade-in slide-in-from-bottom-4">
+      <section className="ofb-review-hero">
+        <div>
+          <div className="ofb-eyebrow compact">Contrôle rendu</div>
+          <h3>Avant de publier, on teste la formation comme un film pédagogique.</h3>
+          <p>
+            Le poste production doit garantir que l’élève ne reçoit pas seulement une liste de vidéos,
+            mais une expérience guidée : scène, image, repère, interaction, prochaine action.
+          </p>
+        </div>
+        <Button onClick={onOpenPreview} className="bg-[var(--school-accent)] text-black hover:bg-yellow-500">
+          <MonitorPlay className="w-4 h-4 mr-2" />
+          Voir le rendu élève
+        </Button>
+      </section>
+
+      <section className="ofb-review-grid">
+        {PRODUCTION_PIPELINE.map(({ key, label, title, desc, icon: Icon }, idx) => (
+          <article key={key} className="ofb-review-card">
+            <div className="ofb-review-num">{String(idx + 1).padStart(2, '0')}</div>
+            <Icon className="w-5 h-5" />
+            <span>{label}</span>
+            <h4>{title}</h4>
+            <p>{desc}</p>
+          </article>
+        ))}
+      </section>
+
+      <section className="ofb-quality-panel">
+        <div className="ofb-quality-head">
+          <Sparkles className="w-4 h-4" />
+          <div>
+            <span>Checklist qualité</span>
+            <strong>Création → Post-production → Rendu</strong>
+          </div>
+        </div>
+        <div className="ofb-quality-list">
+          {checks.map((check) => (
+            <div key={check.label} className={`ofb-quality-row${check.ok ? ' ok' : ''}`}>
+              <CheckCircle className="w-4 h-4" />
+              <div>
+                <strong>{check.label}</strong>
+                <span>{check.desc}</span>
+              </div>
+            </div>
+          ))}
+        </div>
+      </section>
+    </div>
+  );
+};
+
 const StepQuizzes = ({ formation, onUpdate }) => (
   <ProgressionQuizManager formation={formation} onUpdate={onUpdate} />
 );
@@ -812,8 +1010,8 @@ const OwnerFormationBuilder = ({ formation, onSave, onCancel }) => {
 
   const stepMeta = [
     { id: 1, label: 'Informations', subtitle: 'Identité de la formation', icon: FileText },
-    { id: 2, label: 'Structure', subtitle: 'Modules, semaines, contenus', icon: Presentation },
-    { id: 3, label: 'Vérification', subtitle: 'Contrôle du parcours', icon: CheckCircle },
+    { id: 2, label: 'Production', subtitle: 'Storyboard, images, vidéos, supports', icon: Film },
+    { id: 3, label: 'Rendu', subtitle: 'Contrôle du parcours élève', icon: MonitorPlay },
     { id: 4, label: 'Quiz', subtitle: 'Évaluations pédagogiques', icon: Layout },
     { id: 5, label: 'Configuration', subtitle: 'Certificat, accès, règles', icon: Calendar },
   ];
@@ -861,7 +1059,7 @@ const OwnerFormationBuilder = ({ formation, onSave, onCancel }) => {
           </button>
           <div className="ofb-title-wrap">
             <h1>{formation ? 'Modifier la formation' : 'Créer une formation'}</h1>
-            <p>Studio Formation — constructeur avancé</p>
+            <p>Poste production — de la création au rendu élève</p>
           </div>
           <div className="ofb-topbar-actions">
             <Button variant="outline" className="border-white/10 text-white hover:bg-white/5" onClick={() => setPreviewOpen(true)} disabled={isSaving}>
@@ -1194,7 +1392,7 @@ const OwnerFormationBuilder = ({ formation, onSave, onCancel }) => {
               >
                   {step === 1 && <StepGeneral data={data} billingPlans={billingPlans} update={(f, v) => setData({...data, [f]: v})} />}
                   {step === 2 && <StepStructure modules={modules} setModules={setModules} formationId={data?.id || formation?.id} />}
-                  {step === 3 && <StepStructure modules={modules} setModules={setModules} formationId={data?.id || formation?.id} />}
+                  {step === 3 && <StepProductionReview data={data} modules={modules} onOpenPreview={() => setPreviewOpen(true)} />}
                   {step === 4 && <StepQuizzes formation={data} onUpdate={setData} />}
                   {step === 5 && <StepConfig config={data.config} update={(f, v) => setData({...data, config: {...data.config, [f]: v}})} />}
               </motion.div>
@@ -1246,6 +1444,15 @@ const OwnerFormationBuilder = ({ formation, onSave, onCancel }) => {
                 <div className="ofb-pv-stat"><div className="v">{totalWeeks}</div><div className="k">Semaines</div></div>
                 <div className="ofb-pv-stat"><div className="v">{totalDays}</div><div className="k">Jours</div></div>
                 <div className="ofb-pv-stat"><div className="v">{totalVideos}</div><div className="k">Vidéos</div></div>
+              </div>
+              <div className="ofb-pv-pipeline">
+                <span>Chaîne de valeur</span>
+                {PRODUCTION_PIPELINE.map(({ key, label }) => (
+                  <div key={key}>
+                    <i aria-hidden />
+                    <strong>{label}</strong>
+                  </div>
+                ))}
               </div>
             </div>
             <div className="ofb-pv-foot">
