@@ -5,6 +5,11 @@ apps/app/
 apps/med-app/
 apps/patient-portal/
 apps/worker/
+apps/mobile/
+.claude/
+.wrangler/
+tools/
+scripts/
 # Tous les node_modules (root + nested — Dockerfile fait npm install)
 node_modules/
 apps/api/node_modules/
