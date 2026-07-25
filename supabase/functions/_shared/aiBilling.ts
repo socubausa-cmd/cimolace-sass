@@ -317,7 +317,7 @@ export async function estimateSttCost(
  * Usage :
  *   const result = await withBilling(
  *     req, body,
- *     { functionName: 'generate-quiz', provider: 'deepseek', model: 'deepseek-chat',
+ *     { functionName: 'generate-quiz', provider: 'deepseek', model: 'deepseek-v4-flash',
  *       estimatedInputTokens: 200, expectedOutputTokens: 300 },
  *     async () => {
  *       const aiResp = await callDeepseek(...);

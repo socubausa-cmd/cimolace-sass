@@ -109,7 +109,7 @@ Règles :
   // Preflight (best-effort, only if tenant resolved)
   if (ctx) {
     const promptText = system + userContent;
-    const estimate = await estimateLlmCost(ctx, 'deepseek', 'deepseek-chat', promptText, max_tokens);
+    const estimate = await estimateLlmCost(ctx, 'deepseek', 'deepseek-v4-flash', promptText, max_tokens);
     const reject = await preflightCheck(ctx, estimate);
     if (reject) {
       const errBody = await reject.json();

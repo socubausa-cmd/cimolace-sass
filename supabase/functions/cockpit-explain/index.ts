@@ -92,7 +92,7 @@ Deno.serve(async (req) => {
       method: 'POST',
       headers: { authorization: `Bearer ${apiKey}`, 'content-type': 'application/json' },
       body: JSON.stringify({
-        model: 'deepseek-chat',
+        model: 'deepseek-v4-flash',
         temperature: 0.4,
         response_format: { type: 'json_object' },
         messages: [

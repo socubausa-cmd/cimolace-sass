@@ -65,7 +65,7 @@ Deno.serve(async (req: Request) => {
     const { checkSmartboardAiAccess } = await import('../_shared/checkSmartboardAiAccess.ts');
     const deny = await checkSmartboardAiAccess(ctx);
     if (deny) return deny;
-    const estimate = await estimateLlmCost(ctx, 'deepseek', 'deepseek-chat', system + userContent, 2500);
+    const estimate = await estimateLlmCost(ctx, 'deepseek', 'deepseek-v4-flash', system + userContent, 2500);
     const reject = await preflightCheck(ctx, estimate);
     if (reject) {
       const errBody = await reject.json();

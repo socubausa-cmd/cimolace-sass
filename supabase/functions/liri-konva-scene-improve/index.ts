@@ -135,7 +135,7 @@ Ameliore le layout de cette scene. Retourne uniquement le JSON ameliore.
   // ─── LIRI Credits — Tenant + preflight ────────────────────────────────
   const ctx = await resolveTenant(req, body);
   if (ctx) {
-    const estimate = await estimateLlmCost(ctx, 'deepseek', 'deepseek-chat', SYSTEM_PROMPT + userContent, 6000);
+    const estimate = await estimateLlmCost(ctx, 'deepseek', 'deepseek-v4-flash', SYSTEM_PROMPT + userContent, 6000);
     const reject = await preflightCheck(ctx, estimate);
     if (reject) {
       const errBody = await reject.json();

@@ -73,7 +73,7 @@ async function probeProvider(provider: string, value: string): Promise<Record<st
             : 'https://api.openai.com/v1';
     const model =
       provider === 'deepseek'
-        ? 'deepseek-chat'
+        ? 'deepseek-v4-flash'
         : provider === 'mistral'
           ? 'mistral-medium-latest'
           : provider === 'xai'

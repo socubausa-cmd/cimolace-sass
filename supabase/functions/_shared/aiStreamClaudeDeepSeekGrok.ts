@@ -146,7 +146,7 @@ export async function* streamAiChatClaudeDeepSeekGrok(opts: {
   const deepseekModel =
     (opts.deepseekModel != null && String(opts.deepseekModel).trim()) ||
     env('SMARTBOARD_DEEPSEEK_MODEL') ||
-    'deepseek-chat';
+    'deepseek-v4-flash';
   const grokModel =
     (opts.grokModel != null && String(opts.grokModel).trim()) ||
     env('SMARTBOARD_GROK_MODEL') ||

@@ -280,7 +280,7 @@ Deno.serve(async (req) => {
     }
 
     const deepseekBaseUrl = (Deno.env.get('DEEPSEEK_BASE_URL') || 'https://api.deepseek.com').replace(/\/+$/, '');
-    const deepseekModel = Deno.env.get('DEEPSEEK_MODEL') || 'deepseek-chat';
+    const deepseekModel = Deno.env.get('DEEPSEEK_MODEL') || 'deepseek-v4-flash';
     // Mindmap = raisonnement hiérarchique structuré → on prend le modèle Mistral
     // le plus capable. Surcharge possible via MISTRAL_MODEL_MINDMAP.
     const mistralModel = Deno.env.get('MISTRAL_MODEL_MINDMAP') || Deno.env.get('MISTRAL_MODEL') || 'mistral-large-latest';

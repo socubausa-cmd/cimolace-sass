@@ -70,7 +70,7 @@ Deno.serve(async (req: Request) => {
   const ctx = await resolveTenant(req, body);
   if (ctx) {
     const preflightText = documentTitle + topicHint + selection;
-    const estimate = await estimateLlmCost(ctx, 'deepseek', 'deepseek-chat', preflightText, 900);
+    const estimate = await estimateLlmCost(ctx, 'deepseek', 'deepseek-v4-flash', preflightText, 900);
     const reject = await preflightCheck(ctx, estimate);
     if (reject) {
       const errBody = await reject.json();

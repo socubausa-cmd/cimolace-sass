@@ -94,7 +94,7 @@ function chatProviders() {
   if (process.env.OPENAI_API_KEY) p.push({ url: 'https://api.openai.com/v1/chat/completions', key: process.env.OPENAI_API_KEY, model: 'gpt-4o-mini' });
   if (process.env.MISTRAL_API_KEY) p.push({ url: 'https://api.mistral.ai/v1/chat/completions', key: process.env.MISTRAL_API_KEY, model: 'mistral-small-latest' });
   if (process.env.GROQ_API_KEY) p.push({ url: 'https://api.groq.com/openai/v1/chat/completions', key: process.env.GROQ_API_KEY, model: 'llama-3.3-70b-versatile' });
-  if (process.env.DEEPSEEK_API_KEY) p.push({ url: 'https://api.deepseek.com/v1/chat/completions', key: process.env.DEEPSEEK_API_KEY, model: 'deepseek-chat' });
+  if (process.env.DEEPSEEK_API_KEY) p.push({ url: 'https://api.deepseek.com/v1/chat/completions', key: process.env.DEEPSEEK_API_KEY, model: 'deepseek-v4-flash' });
   return p;
 }
 

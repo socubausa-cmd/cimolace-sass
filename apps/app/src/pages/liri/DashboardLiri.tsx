@@ -53,8 +53,11 @@ interface Conversation {
 // ── Model catalog ─────────────────────────────────────────────────────────────
 
 const MODELS: ModelInfo[] = [
-  { key: 'deepseek-chat',         name: 'DeepSeek V4',        provider: 'deepseek',   description: 'Généraliste · 1M tokens',         color: '#4f8ef7', icon: '🔷' },
-  { key: 'deepseek-reasoner',     name: 'DeepSeek Reasoner',  provider: 'deepseek',   description: 'Raisonnement profond',              color: '#e0976a', icon: '🧠' },
+  // ⚠️ Les cles 'deepseek-chat'/'deepseek-reasoner' sont HISTORIQUES : elles vivent
+  // deja en base (liri_conversations.model). On ne les renomme pas ; l'API les
+  // TRADUIT vers deepseek-v4-flash / -v4-pro (cf. common/deepseek-models.ts).
+  { key: 'deepseek-chat',         name: 'DeepSeek V4 Flash',  provider: 'deepseek',   description: 'Généraliste · rapide',            color: '#4f8ef7', icon: '🔷' },
+  { key: 'deepseek-reasoner',     name: 'DeepSeek V4 Pro',    provider: 'deepseek',   description: 'Raisonnement profond',              color: '#e0976a', icon: '🧠' },
   { key: 'claude-sonnet-4-6', name: 'Claude Sonnet 4.6', provider: 'anthropic',  description: 'Équilibré · rapide',                color: '#e9a079', icon: '⚡' },
   { key: 'claude-opus-4-8',   name: 'Claude Opus 4.8',   provider: 'anthropic',  description: 'Le plus puissant',                  color: '#f472b6', icon: '👑' },
   { key: 'claude-haiku-4-5-20251001', name: 'Claude Haiku 4.5', provider: 'anthropic', description: 'Léger · économique',           color: '#ecae90', icon: '🍃' },

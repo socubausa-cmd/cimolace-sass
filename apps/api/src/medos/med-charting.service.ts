@@ -10,6 +10,7 @@ import { ConfigService } from '@nestjs/config';
 import { SupabaseService } from '../supabase/supabase.service';
 import type { TenantContext } from '../tenant/tenant.types';
 import type { StartChartingDto } from './dto/start-charting.dto';
+import { DEEPSEEK_FAST_MODEL } from '../common/deepseek-models';
 
 // ─── Types internes ────────────────────────────────────────────────────────
 
@@ -255,7 +256,7 @@ export class MedChartingService {
 
     const providers: { name: string; url: string; key?: string; model: string }[] = [
       { name: 'mistral', url: 'https://api.mistral.ai/v1/chat/completions', key: this.config.get<string>('MISTRAL_API_KEY'), model: 'mistral-large-latest' },
-      { name: 'deepseek', url: 'https://api.deepseek.com/v1/chat/completions', key: this.config.get<string>('DEEPSEEK_API_KEY'), model: 'deepseek-chat' },
+      { name: 'deepseek', url: 'https://api.deepseek.com/v1/chat/completions', key: this.config.get<string>('DEEPSEEK_API_KEY'), model: DEEPSEEK_FAST_MODEL },
     ].filter((p) => !!p.key);
 
     if (providers.length === 0) {

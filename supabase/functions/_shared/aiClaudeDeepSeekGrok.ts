@@ -132,7 +132,7 @@ export async function aiChatClaudeDeepSeekGrok(opts: {
    * Rôle DeepSeek → choisit le modèle via env :
    * - `heavy` (travail de fond) → `DEEPSEEK_HEAVY_MODEL`
    * - `fast`  (réponse instantanée) → `DEEPSEEK_FAST_MODEL`
-   * Défaut : `SMARTBOARD_DEEPSEEK_MODEL` ou `deepseek-chat`.
+   * Défaut : `SMARTBOARD_DEEPSEEK_MODEL` ou `deepseek-v4-flash`.
    */
   deepseekRole?: 'heavy' | 'fast';
 }): Promise<AiChainResult> {
@@ -154,7 +154,7 @@ export async function aiChatClaudeDeepSeekGrok(opts: {
     (opts.deepseekModel != null && String(opts.deepseekModel).trim()) ||
     deepseekRoleModel ||
     env('SMARTBOARD_DEEPSEEK_MODEL') ||
-    'deepseek-chat';
+    'deepseek-v4-flash';
   const grokModel =
     (opts.grokModel != null && String(opts.grokModel).trim()) ||
     env('SMARTBOARD_GROK_MODEL') ||
@@ -326,7 +326,7 @@ export async function aiChat(opts: {
   const groqModel =
     (opts.groqModel != null && String(opts.groqModel).trim()) || 'llama-3.3-70b-versatile';
   const deepseekModel =
-    (opts.deepseekModel != null && String(opts.deepseekModel).trim()) || 'deepseek-chat';
+    (opts.deepseekModel != null && String(opts.deepseekModel).trim()) || 'deepseek-v4-flash';
 
   const anthropicKey = env('ANTHROPIC_API_KEY');
   if (anthropicKey) {

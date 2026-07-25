@@ -168,7 +168,7 @@ Deno.serve(async (req: Request) => {
           method: 'POST',
           headers: { Authorization: `Bearer ${deepseekKey}`, 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            model: 'deepseek-chat',
+            model: 'deepseek-v4-flash',
             temperature: 0.4,
             messages,
             max_tokens: 600,
@@ -180,7 +180,7 @@ Deno.serve(async (req: Request) => {
         if (!res.ok) return null;
         const data = await res.json();
         billingTrack.provider = 'deepseek';
-        billingTrack.model = 'deepseek-chat';
+        billingTrack.model = 'deepseek-v4-flash';
         billingTrack.tokens_in = data?.usage?.prompt_tokens ?? 0;
         billingTrack.tokens_out = data?.usage?.completion_tokens ?? 0;
         return String(data?.choices?.[0]?.message?.content || '').trim() || null;

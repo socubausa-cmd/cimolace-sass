@@ -1,6 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { SupabaseService } from '../supabase/supabase.service';
+import { DEEPSEEK_FAST_MODEL } from '../common/deepseek-models';
 
 @Injectable()
 export class LongiaService {
@@ -28,7 +29,7 @@ export class LongiaService {
           Authorization: 'Bearer ' + apiKey,
         },
         body: JSON.stringify({
-          model: 'deepseek-chat',
+          model: DEEPSEEK_FAST_MODEL,
           messages: messages.map((m: any) => ({
             role: m.role,
             content: m.content,
@@ -94,7 +95,7 @@ export class LongiaService {
               Authorization: 'Bearer ' + apiKey,
             },
             body: JSON.stringify({
-              model: 'deepseek-chat',
+              model: DEEPSEEK_FAST_MODEL,
               messages: msgs.map((m: any) => ({
                 role: m.role,
                 content: m.content,

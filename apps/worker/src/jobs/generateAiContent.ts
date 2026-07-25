@@ -21,7 +21,9 @@ export const generateAiContentJob = inngest.createFunction(
         ? 'https://api.deepseek.com/v1/chat/completions'
         : 'https://api.openai.com/v1/chat/completions';
       const authHeader = isDeepSeek ? `Bearer ${apiKey}` : `Bearer ${apiKey}`;
-      const modelName = isDeepSeek ? (model === 'deepseek-reasoner' ? 'deepseek-reasoner' : 'deepseek-chat') : 'gpt-4o-mini';
+      // ⚠️ deepseek-chat/-reasoner ont ete RETIRES par DeepSeek (HTTP 400) : la cle
+      // publique reste, on la TRADUIT vers un nom encore servi par l'API.
+      const modelName = isDeepSeek ? (model === 'deepseek-reasoner' ? 'deepseek-v4-pro' : 'deepseek-v4-flash') : 'gpt-4o-mini';
 
       const response = await fetch(endpoint, {
         method: 'POST',

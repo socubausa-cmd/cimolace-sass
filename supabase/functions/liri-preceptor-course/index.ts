@@ -295,7 +295,7 @@ Deno.serve(async (req) => {
     }
 
     const deepseekBaseUrl = (Deno.env.get('DEEPSEEK_BASE_URL') || 'https://api.deepseek.com').replace(/\/+$/, '');
-    const deepseekModel = Deno.env.get('DEEPSEEK_MODEL') || 'deepseek-chat';
+    const deepseekModel = Deno.env.get('DEEPSEEK_MODEL') || 'deepseek-v4-flash';
     const mistralModel = Deno.env.get('MISTRAL_MODEL') || 'mistral-large-latest';
 
     const body = await req.json().catch(() => ({}));

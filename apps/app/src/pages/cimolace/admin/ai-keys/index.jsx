@@ -20,8 +20,8 @@ const PROVIDER_HINTS = {
 };
 
 const MODEL_HINTS = {
-  DEEPSEEK_HEAVY_MODEL: 'Modèle DeepSeek « fond » (défaut deepseek-chat)',
-  DEEPSEEK_FAST_MODEL: 'Modèle DeepSeek « rapide » (défaut deepseek-chat)',
+  DEEPSEEK_HEAVY_MODEL: 'Modèle DeepSeek « fond » (défaut deepseek-v4-pro)',
+  DEEPSEEK_FAST_MODEL: 'Modèle DeepSeek « rapide » (défaut deepseek-v4-flash)',
   MISTRAL_VISION_MODEL: 'Modèle vision Mistral (défaut pixtral-12b-2409)',
   SMARTBOARD_CLAUDE_MODEL: 'Modèle Claude premium (défaut claude-haiku-4-5)',
 };
@@ -163,7 +163,7 @@ function ModelRow({ m, onSaved }) {
         <div style={{ fontSize: 13, color: C.text, fontFamily: 'monospace' }}>{m.name}</div>
         <div style={{ fontSize: 11, color: C.muted2 }}>{MODEL_HINTS[m.name]}{m.set ? ` · actuel: ${m.value || '—'}` : ''}</div>
       </div>
-      <input value={value} onChange={(e) => setValue(e.target.value)} placeholder="ex. deepseek-chat"
+      <input value={value} onChange={(e) => setValue(e.target.value)} placeholder="ex. deepseek-v4-flash"
         style={{ flex: 1, minWidth: 160, background: C.bg, border: `1px solid ${C.border2}`, borderRadius: 8, padding: '7px 10px', color: C.text, fontSize: 12 }} />
       <button onClick={save} disabled={!value.trim() || busy} style={btn(C.violet, !value.trim() || busy)}>
         {busy ? '…' : 'Définir'}

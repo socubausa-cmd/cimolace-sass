@@ -2,6 +2,7 @@ import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { SupabaseService } from '../supabase/supabase.service';
 import type { EnqueueJobDto, AiJobType } from './dto/enqueue-job.dto';
+import { resolveDeepseekApiModel } from '../common/deepseek-models';
 
 type AiJob = {
   id: string;
@@ -268,7 +269,7 @@ export class AiWorkerService {
         Authorization: `Bearer ${apiKey}`,
       },
       body: JSON.stringify({
-        model: model === 'deepseek-reasoner' ? 'deepseek-reasoner' : 'deepseek-chat',
+        model: resolveDeepseekApiModel(model),
         messages: [
           { role: 'system', content: system },
           { role: 'user', content: user },

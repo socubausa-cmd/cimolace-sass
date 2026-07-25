@@ -272,7 +272,7 @@ function buildModels() {
     openai: env('LIRI_AGENT_OPENAI_MODEL', 'gpt-4o'),
     openaiFast: env('LIRI_AGENT_OPENAI_FAST_MODEL', 'gpt-4o-mini'),
     grok: env('LIRI_AGENT_GROK_MODEL', 'grok-3-mini'),
-    deepseek: env('LIRI_AGENT_DEEPSEEK_MODEL', 'deepseek-chat'),
+    deepseek: env('LIRI_AGENT_DEEPSEEK_MODEL', 'deepseek-v4-flash'),
   };
 }
 

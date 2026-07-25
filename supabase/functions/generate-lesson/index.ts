@@ -101,7 +101,7 @@ Deno.serve(async (req: Request) => {
 
     const raw =
       (await callLLM('https://api.groq.com/openai/v1/chat/completions', groqKey, 'llama-3.3-70b-versatile')) ||
-      (await callLLM('https://api.deepseek.com/chat/completions', deepseekKey, 'deepseek-chat', 40000)) ||
+      (await callLLM('https://api.deepseek.com/chat/completions', deepseekKey, 'deepseek-v4-flash', 40000)) ||
       (await callLLM('https://api.openai.com/v1/chat/completions', openaiKey, 'gpt-4o-mini'));
 
     if (!raw) return jsonResponse({ error: 'LLM unavailable' }, 503);

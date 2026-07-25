@@ -1,5 +1,6 @@
 import { Injectable, Logger, ServiceUnavailableException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import { DEEPSEEK_FAST_MODEL } from '../../common/deepseek-models';
 
 /**
  * MEDOS v2 — Bio Digital Twin · Couche IA (agents cliniques).
@@ -195,7 +196,7 @@ export class TwinAiService {
     const chain = [
       { name: 'mistral', keyEnv: 'MISTRAL_API_KEY', url: 'https://api.mistral.ai/v1/chat/completions', model: mistralModel },
       { name: 'groq', keyEnv: 'GROQ_API_KEY', url: 'https://api.groq.com/openai/v1/chat/completions', model: cfg('GROQ_MODEL') || 'llama-3.3-70b-versatile' },
-      { name: 'deepseek', keyEnv: 'DEEPSEEK_API_KEY', url: 'https://api.deepseek.com/v1/chat/completions', model: cfg('DEEPSEEK_MODEL') || 'deepseek-chat' },
+      { name: 'deepseek', keyEnv: 'DEEPSEEK_API_KEY', url: 'https://api.deepseek.com/v1/chat/completions', model: cfg('DEEPSEEK_MODEL') || DEEPSEEK_FAST_MODEL },
     ];
     let lastErr = 'aucun fournisseur configuré';
     for (const p of chain) {

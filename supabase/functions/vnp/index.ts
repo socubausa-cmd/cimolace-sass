@@ -131,7 +131,7 @@ async function callChat(message: string, platformName: string, graph: string, hi
 
   const raw =
     (await call('https://api.groq.com/openai/v1/chat/completions', groqKey, 'llama-3.3-70b-versatile')) ||
-    (await call('https://api.deepseek.com/chat/completions', deepseekKey, 'deepseek-chat', 32000)) ||
+    (await call('https://api.deepseek.com/chat/completions', deepseekKey, 'deepseek-v4-flash', 32000)) ||
     (await call('https://api.openai.com/v1/chat/completions', openaiKey, 'gpt-4o-mini'));
   if (!raw) return json({ error: 'LLM unavailable' }, 503);
 

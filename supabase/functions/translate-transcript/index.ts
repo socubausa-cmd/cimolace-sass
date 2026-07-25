@@ -73,7 +73,7 @@ Deno.serve(async (req) => {
         'content-type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'deepseek-chat',
+        model: 'deepseek-v4-flash',
         temperature: 0.2,
         messages: [
           { role: 'system', content: 'You translate text. You only output valid JSON.' },

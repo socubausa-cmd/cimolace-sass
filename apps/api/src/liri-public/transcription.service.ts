@@ -13,6 +13,7 @@
 import { Injectable, Logger, BadRequestException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { SupabaseService } from '../supabase/supabase.service';
+import { DEEPSEEK_FAST_MODEL } from '../common/deepseek-models';
 
 @Injectable()
 export class TranscriptionService {
@@ -179,7 +180,7 @@ export class TranscriptionService {
           Authorization: `Bearer ${apiKey}`,
         },
         body: JSON.stringify({
-          model: 'deepseek-chat',
+          model: DEEPSEEK_FAST_MODEL,
           messages: [{ role: 'user', content: prompt }],
           max_tokens: 1500,
         }),
@@ -246,7 +247,7 @@ ${(session as any).transcript.slice(0, 10000)}`;
           Authorization: `Bearer ${apiKey}`,
         },
         body: JSON.stringify({
-          model: 'deepseek-chat',
+          model: DEEPSEEK_FAST_MODEL,
           messages: [{ role: 'user', content: prompt }],
           response_format: { type: 'json_object' },
           max_tokens: 3000,

@@ -212,7 +212,7 @@ Deno.serve(async (req: Request) => {
     (body as Record<string, unknown>).tenant_id = tenantId;
     const ctx = await resolveTenant(req, body);
     if (ctx) {
-      const estimate = await estimateLlmCost(ctx, 'deepseek', 'deepseek-chat', system + userContent, max_tokens);
+      const estimate = await estimateLlmCost(ctx, 'deepseek', 'deepseek-v4-flash', system + userContent, max_tokens);
       const reject = await preflightCheck(ctx, estimate);
       if (reject) {
         const errBody = await reject.json();

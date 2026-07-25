@@ -5,6 +5,7 @@ import type { TenantContext } from '../tenant/tenant.types';
 import { LIRI_MODELS, type LiriConversation, type LiriMessage, type LiriModel } from './liri-brain.types';
 import { BrainToolsService, type BrainToolContext } from './brain-tools.service';
 import { AiBillingService } from '../ai-billing/ai-billing.service';
+import { resolveDeepseekApiModel } from '../common/deepseek-models';
 
 /** Borne du contexte : nb max de messages d'historique réinjectés au LLM (coût/contexte). */
 const MAX_HISTORY_MESSAGES = 20;
@@ -339,7 +340,7 @@ export class LiriBrainService {
     if (info.provider === 'deepseek') {
       url = 'https://api.deepseek.com/v1/chat/completions';
       key = this.config.get<string>('DEEPSEEK_API_KEY');
-      apiModel = model === 'deepseek-reasoner' ? 'deepseek-reasoner' : 'deepseek-chat';
+      apiModel = resolveDeepseekApiModel(model);
     } else if (info.provider === 'mistral') {
       url = 'https://api.mistral.ai/v1/chat/completions';
       key = this.config.get<string>('MISTRAL_API_KEY');
@@ -593,7 +594,7 @@ export class LiriBrainService {
         Authorization: `Bearer ${apiKey}`,
       },
       body: JSON.stringify({
-        model: _model === 'deepseek-reasoner' ? 'deepseek-reasoner' : 'deepseek-chat',
+        model: resolveDeepseekApiModel(_model),
         messages: messages.map((m) => ({ role: m.role, content: m.content })),
         stream: true,
         max_tokens: 4096,

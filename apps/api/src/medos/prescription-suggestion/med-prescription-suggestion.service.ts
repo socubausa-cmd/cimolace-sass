@@ -11,6 +11,7 @@ import type {
   PrescriptionSuggestionResult,
   SuggestedPrescriptionItem,
 } from '../dto/suggest-prescription.dto';
+import { DEEPSEEK_FAST_MODEL } from '../../common/deepseek-models';
 
 // ─── Prompt pharmacologie CONSERVATEUR ──────────────────────────────────────
 //
@@ -201,7 +202,7 @@ export class MedPrescriptionSuggestionService {
         name: 'deepseek',
         url: 'https://api.deepseek.com/v1/chat/completions',
         key: this.config.get<string>('DEEPSEEK_API_KEY'),
-        model: 'deepseek-chat',
+        model: DEEPSEEK_FAST_MODEL,
       },
     ].filter((p) => !!p.key);
 

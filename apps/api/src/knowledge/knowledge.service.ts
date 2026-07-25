@@ -7,6 +7,7 @@ import {
 import { ConfigService } from '@nestjs/config';
 import { SupabaseService } from '../supabase/supabase.service';
 import type { TenantContext } from '../tenant/tenant.types';
+import { DEEPSEEK_FAST_MODEL } from '../common/deepseek-models';
 
 /**
  * KnowledgeService — RAG (migration des Edge Functions V1 `embed-knowledge` /
@@ -247,7 +248,7 @@ export class KnowledgeService {
         method: 'POST',
         headers: { Authorization: `Bearer ${key}`, 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          model: 'deepseek-chat',
+          model: DEEPSEEK_FAST_MODEL,
           messages: [
             { role: 'system', content: system },
             { role: 'user', content: user },

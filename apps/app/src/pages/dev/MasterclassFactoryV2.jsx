@@ -217,7 +217,7 @@ const AI_PROVIDERS = [
   { id: 'claude',   label: 'Claude',   model: 'claude-haiku-4-5', color: '#D4AF37', tokens: 180000, cost: '0.25$/1M' },
   { id: 'openai',   label: 'OpenAI',   model: 'gpt-4o-mini',      color: '#34d399', tokens: 128000, cost: '0.15$/1M' },
   { id: 'groq',     label: 'Groq',     model: 'llama-3.3-70b',    color: '#a78bfa', tokens:  32768, cost: '0.06$/1M' },
-  { id: 'deepseek', label: 'DeepSeek', model: 'deepseek-chat',    color: '#38bdf8', tokens:  65536, cost: '0.14$/1M' },
+  { id: 'deepseek', label: 'DeepSeek', model: 'deepseek-v4-flash',    color: '#38bdf8', tokens:  65536, cost: '0.14$/1M' },
 ];
 
 // ─── Switcher de modèle pédagogique ──────────────────────────────────────────
