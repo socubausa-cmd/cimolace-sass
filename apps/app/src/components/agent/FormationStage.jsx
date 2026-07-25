@@ -298,6 +298,27 @@ export default function FormationStage({ course, studentName }) {
         </div>
       ) : null}
 
+      {/* L'IMAGE de l'analogie — générée à la CRÉATION du cours (image_url en base, edge
+          generate-visual-image) et animée façon Ken Burns. Sans image_url : rien (la scène
+          reste une analogie parlée, jamais de cadre vide). */}
+      {sc?.type === 'image_analogie' && sc.image_url ? (
+        <div
+          key={`img-${idx}`}
+          className="cca-in"
+          style={{
+            width: 'min(560px, 82vw)', marginTop: 4, borderRadius: 18, overflow: 'hidden',
+            border: `1px solid ${TERRA}33`, boxShadow: '0 24px 60px -24px rgba(0,0,0,.8)',
+          }}
+        >
+          <img
+            src={sc.image_url}
+            alt={String(sc.analogie || '')}
+            style={{ display: 'block', width: '100%', aspectRatio: '3 / 2', objectFit: 'cover' }}
+            onError={(e) => { const p = e.currentTarget.parentElement; if (p) p.style.display = 'none'; }}
+          />
+        </div>
+      ) : null}
+
       {/* La voix (serif) rendue « Sherpas » : gros/gras, mots qui pop + mot-clé en boîte dorée. */}
       <div style={{ minHeight: 44, marginTop: 12, textAlign: 'center', maxWidth: 680, position: 'relative', zIndex: 2 }}>
         {message ? (
