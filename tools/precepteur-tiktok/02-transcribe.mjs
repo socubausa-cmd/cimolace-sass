@@ -15,6 +15,12 @@ import { sql, q, TENANT_ID, log } from './common.mjs';
 const argv = process.argv;
 const limit = (() => { const i = argv.indexOf('--limit'); return i > -1 ? Number(argv[i + 1]) : 5; })();
 const model = (() => { const i = argv.indexOf('--model'); return i > -1 ? argv[i + 1] : 'small'; })();
+// --subs-only : PASSE RAPIDE. Les sous-titres TikTok sortent en ~5 s et donnent les meilleures
+// transcriptions (vraie parole) ; Whisper met 1-3 min et, sur les vidéos chantées/rituelles,
+// ne produit que du bruit. Sans sous-titres → statut 'no_subs' (repris plus tard par --whisper-only).
+const subsOnly = argv.includes('--subs-only');
+// --whisper-only : la passe LENTE de rattrapage sur les 'no_subs'.
+const whisperOnly = argv.includes('--whisper-only');
 
 const WORK = path.join(os.tmpdir(), 'precepteur-tiktok');
 mkdirSync(WORK, { recursive: true });
@@ -32,7 +38,9 @@ function subsToText(raw) {
 // --ids 123,456 : cibler des vidéos précises (ex. celles dont le titre annonce un enseignement) ;
 // sinon file d'attente naturelle (les plus anciennes 'new' d'abord).
 const idsArg = (() => { const i = argv.indexOf('--ids'); return i > -1 ? String(argv[i + 1] || '').split(',').map((x) => x.trim()).filter(Boolean) : []; })();
-const whereIds = idsArg.length ? `and external_id in (${idsArg.map((x) => q(x)).join(',')})` : "and status='new'";
+const whereIds = idsArg.length
+  ? `and external_id in (${idsArg.map((x) => q(x)).join(',')})`
+  : (whisperOnly ? "and status='no_subs'" : "and status='new'");
 // PRIORITÉ : les vidéos dont le TITRE annonce un enseignement d'abord (elles donnent de vrais
 // cours ; les évocations rituelles / clips courts sont rejetés plus tard par le filtre topic_ok).
 const PRIORITY = `case when title ~* '(comment|pourquoi|différence|explique|je t.explique|c.est quoi|origine|signifie|science|doctrine|initiation|enseign|le sens|décode|savoir)' then 0 else 1 end`;
@@ -57,6 +65,11 @@ for (const r of rows) {
     if (subFile) {
       text = subsToText(readFileSync(path.join(dir, subFile), 'utf8'));
       source = 'tiktok_subs';
+    }
+    if ((!text || text.length < 40) && subsOnly) {
+      sql(`update precepteur_sources set status='no_subs', updated_at=now() where id=${q(r.id)}::uuid;`);
+      log(`⏭️  ${r.ext} — pas de sous-titres, reporté à la passe Whisper.`);
+      continue;
     }
     if (!text || text.length < 40) {
       // 2) Whisper local sur l'audio.

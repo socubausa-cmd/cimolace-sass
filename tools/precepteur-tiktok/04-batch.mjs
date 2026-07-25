@@ -20,6 +20,8 @@ const CHUNK = arg('--chunk', 6);
 const MAX = arg('--max', 1000);
 const STOP_AFTER_MS = arg('--stop-after-min', 600) * 60_000;
 
+// Options relayées au transcripteur (--subs-only = passe rapide, --whisper-only = rattrapage).
+const PASSTHRU = ['--subs-only', '--whisper-only'].filter((f) => process.argv.includes(f));
 const startedAt = Date.now();
 const counts = () => Object.fromEntries(
   sql(`select status, count(*) from precepteur_sources where tenant_id=${q(TENANT_ID)}::uuid group by status;`)
@@ -48,7 +50,7 @@ log(`   état initial : ${JSON.stringify(counts())} · cours : ${nbCourses()}`);
 
 for (;;) {
   const c = counts();
-  const restants = c.new || 0;
+  const restants = PASSTHRU.includes('--whisper-only') ? (c.no_subs || 0) : (c.new || 0);
   if (!restants) { log('✅ Plus aucune vidéo à transcrire.'); break; }
   if (transcribed >= MAX) { log(`⏹️  Plafond --max ${MAX} atteint.`); break; }
   if (Date.now() - startedAt > STOP_AFTER_MS) { log('⏹️  Durée max du run atteinte.'); break; }
@@ -56,7 +58,7 @@ for (;;) {
   round += 1;
   const take = Math.min(CHUNK, MAX - transcribed);
   log(`── tour ${round} · ${restants} vidéo(s) restante(s) · transcription de ${take}…`);
-  run('02-transcribe.mjs', ['--limit', String(take), '--model', 'small']);
+  run('02-transcribe.mjs', ['--limit', String(take), '--model', 'small', ...PASSTHRU]);
   transcribed += take;
 
   log(`   génération des cours du paquet…`);
