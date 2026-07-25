@@ -23,6 +23,7 @@ import {
   CreateProgramDto,
   CreateStepDto,
   EnrollPatientDto,
+  GenerateProgramDto,
   UpdateEnrollmentDto,
   UpdateProgramDto,
 } from './dto/programs.dto';
@@ -45,6 +46,18 @@ export class ProgramsController {
     @Req() req: AuthRequest,
   ) {
     return this.service.create(tenant, req.user.id, dto);
+  }
+
+  // Agent générateur : matière source (deck/PDF/notes) → programme + étapes
+  // calendaires, via LLM, persistés sur le modèle existant.
+  @Post('generate')
+  @Roles('owner', 'practitioner', 'clinic_admin')
+  generate(
+    @Body() dto: GenerateProgramDto,
+    @CurrentTenant() tenant: TenantContext,
+    @Req() req: AuthRequest,
+  ) {
+    return this.service.generate(tenant, req.user.id, dto);
   }
 
   @Get()

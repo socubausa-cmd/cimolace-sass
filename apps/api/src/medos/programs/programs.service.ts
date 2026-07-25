@@ -6,21 +6,90 @@ import {
   Logger,
   NotFoundException,
 } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { SupabaseService } from '../../supabase/supabase.service';
 import type { TenantContext } from '../../tenant/tenant.types';
 import {
   CreateProgramDto,
   CreateStepDto,
   EnrollPatientDto,
+  GenerateProgramDto,
   UpdateEnrollmentDto,
   UpdateProgramDto,
 } from './dto/programs.dto';
+
+// Formes libres attendues du LLM (validées défensivement à la persistance).
+type GeneratedProgram = {
+  title?: string;
+  description?: string;
+  category?: string;
+  duration_days?: number;
+};
+type GeneratedStep = {
+  position?: number;
+  title?: string;
+  description?: string;
+  step_type?:
+    | 'task'
+    | 'form'
+    | 'measurement'
+    | 'content'
+    | 'appointment'
+    | 'reminder';
+  due_after_days?: number;
+  content_md?: string;
+  is_required?: boolean;
+};
+
+/**
+ * Prompt système de l'agent générateur. Encode la règle CLÉ : le calendrier vit
+ * dans les étapes — `due_after_days` = jour du parcours (0-based), `position` =
+ * ordre du créneau dans la journée. Aucune migration : on plie le programme
+ * (repas, rituels, courses) sur le modèle med_program_steps existant.
+ */
+function buildProgramGeneratorSystemPrompt(
+  language: 'fr' | 'en',
+  category?: string,
+): string {
+  const langName = language === 'fr' ? 'French (français)' : 'English';
+  return [
+    'You are the MEDOS Program Builder — an expert clinical & nutrition program designer.',
+    'You transform source material (a program deck, PDF, or practitioner notes) into a structured, safe, day-by-day MEDOS care program.',
+    '',
+    'OUTPUT: Return ONLY valid JSON (no prose, no markdown code fences) matching EXACTLY this shape:',
+    '{',
+    '  "program": { "title": string, "description": string, "category": one of ["weight_loss","detox","stress","post_op","chronic_disease","fertility","pregnancy","nutrition","rehab","custom"], "duration_days": integer },',
+    '  "steps": [ { "position": integer, "title": string, "description": string, "step_type": one of ["task","form","measurement","content","appointment","reminder"], "due_after_days": integer, "content_md": string, "is_required": boolean } ]',
+    '}',
+    '',
+    'CALENDAR ENCODING (critical):',
+    '- "due_after_days" = the program day the step belongs to, 0-based (day 1 => 0, day 2 => 1 …).',
+    '- "position" = order of the item WITHIN that day (e.g. morning ritual = 0, breakfast = 1, snack 1 = 2, lunch = 3, snack 2 = 4, dinner = 5, snack 3 = 6).',
+    '- CALENDAR steps: emit ONE step_type "content" step PER DAY (due_after_days 0,1,2…, position 0). Title "Jour N — {weekday}". content_md = that day\'s menu as a SHORT markdown list of dish NAMES only (no recipes), grouped by slot (Petit-déjeuner / Collation 1 / Déjeuner / Collation 2 / Dîner / Collation 3). NEVER put a full recipe in a calendar step.',
+    '- RECIPE LIBRARY: after the days, emit ONE step per UNIQUE recipe (deduplicated — a recipe reused on several days appears ONCE): step_type "content", due_after_days 0, position starting at 100 (101,102…), title "📖 Recette — {name}", content_md = the concise recipe (ingredients bullet list + core directions).',
+    '- DAILY RITUALS: ONE step_type "content", due_after_days 0, position 0, title "Rituels quotidiens (chaque jour)", listing every recurring daily ritual with quantities.',
+    '- SHOPPING LIST: ONE step_type "content" per week, due_after_days 0, position 300, title "🛒 Liste de courses — Semaine N", content_md = that week\'s ingredients grouped by aisle.',
+    '- DISCLAIMER: if the source has a medical disclaimer, ONE step_type "content", due_after_days 0, position 400, title "Avertissement médical".',
+    '',
+    'RULES:',
+    '- Preserve every recipe, ritual and quantity, but keep each recipe CONCISE: ingredients list + core directions only; OMIT optional "Notes / Variations / Leftovers / Serving size" sections. Never invent medical claims.',
+    '- If the source is only part of a longer program (e.g. "week 1"), set duration_days to the FULL length if stated, and generate steps for the days you have content for.',
+    `- Write ALL titles, descriptions and content_md in ${langName}. Translate faithfully if the source is in another language.`,
+    category ? `- Category hint (use unless clearly wrong): "${category}".` : '',
+    '- Output JSON ONLY. No trailing commas. Escape newlines inside strings. Do not wrap in code fences.',
+  ]
+    .filter(Boolean)
+    .join('\n');
+}
 
 @Injectable()
 export class ProgramsService {
   private readonly logger = new Logger(ProgramsService.name);
 
-  constructor(private readonly supabase: SupabaseService) {}
+  constructor(
+    private readonly supabase: SupabaseService,
+    private readonly config: ConfigService,
+  ) {}
 
   // ─── Programs ────────────────────────────────────────────────────────────
 
@@ -47,6 +116,235 @@ export class ProgramsService {
       throw new InternalServerErrorException('Création du programme impossible');
     }
     return data;
+  }
+
+  // ─── Agent générateur (source → programme + étapes calendaires) ────────────
+
+  /**
+   * Transforme une matière source en programme MEDOS complet via LLM, puis
+   * persiste sur le modèle EXISTANT (med_programs + med_program_steps). Le
+   * calendrier est encodé dans les étapes (due_after_days = jour, position =
+   * créneau). Aucune migration requise.
+   */
+  async generate(
+    tenant: TenantContext,
+    actorId: string,
+    dto: GenerateProgramDto,
+  ) {
+    const language = dto.language ?? 'fr';
+    const parsed = await this.callProgramGenerator(dto, language);
+
+    const program = await this.create(tenant, actorId, {
+      title: (dto.title_hint || parsed.program.title || 'Programme').slice(0, 200),
+      description: parsed.program.description ?? undefined,
+      category:
+        (dto.category as CreateProgramDto['category']) ||
+        (parsed.program.category as CreateProgramDto['category']) ||
+        'custom',
+      duration_days: dto.duration_days || parsed.program.duration_days || undefined,
+      is_template: dto.is_template ?? true,
+    });
+
+    let stepsCreated = 0;
+    for (let i = 0; i < parsed.steps.length; i++) {
+      const s = parsed.steps[i];
+      try {
+        await this.addStep(tenant, program.id, {
+          position: typeof s.position === 'number' ? s.position : i,
+          title: String(s.title ?? `Étape ${i + 1}`).slice(0, 200),
+          description: s.description ?? undefined,
+          step_type: s.step_type ?? 'content',
+          due_after_days:
+            typeof s.due_after_days === 'number' ? s.due_after_days : 0,
+          content_md: s.content_md ?? undefined,
+          is_required: s.is_required ?? true,
+        });
+        stepsCreated++;
+      } catch (err) {
+        this.logger.warn(
+          `generate: étape ${i} ignorée — ${(err as Error)?.message ?? err}`,
+        );
+      }
+    }
+
+    return {
+      program,
+      steps_created: stepsCreated,
+      steps_total: parsed.steps.length,
+      language,
+    };
+  }
+
+  private async callProgramGenerator(
+    dto: GenerateProgramDto,
+    language: 'fr' | 'en',
+  ): Promise<{ program: GeneratedProgram; steps: GeneratedStep[] }> {
+    const system = buildProgramGeneratorSystemPrompt(language, dto.category);
+    const source = dto.source;
+
+    // Bascule multi-provider (ex. Anthropic sans crédits → DeepSeek/OpenAI).
+    // Ordre : DeepSeek v4-pro (fiable + JSON mode), OpenAI gpt-4o, Anthropic.
+    const deepseekKey = this.config.get<string>('DEEPSEEK_API_KEY');
+    const openaiKey = this.config.get<string>('OPENAI_API_KEY');
+    const anthropicKey = this.config.get<string>('ANTHROPIC_API_KEY');
+
+    const providers: { name: string; run: () => Promise<string> }[] = [];
+    if (deepseekKey && deepseekKey !== 'replace_me') {
+      providers.push({
+        name: 'deepseek',
+        run: () =>
+          this.chatCompletionsJson(
+            'https://api.deepseek.com/v1/chat/completions',
+            deepseekKey,
+            dto.model || 'deepseek-v4-pro',
+            32000,
+            system,
+            source,
+          ),
+      });
+    }
+    if (openaiKey && openaiKey !== 'replace_me') {
+      providers.push({
+        name: 'openai',
+        run: () =>
+          this.chatCompletionsJson(
+            'https://api.openai.com/v1/chat/completions',
+            openaiKey,
+            'gpt-4o',
+            16000,
+            system,
+            source,
+          ),
+      });
+    }
+    if (anthropicKey && anthropicKey !== 'replace_me') {
+      providers.push({
+        name: 'anthropic',
+        run: () =>
+          this.anthropicText(anthropicKey, 'claude-sonnet-4-6', system, source),
+      });
+    }
+    if (providers.length === 0) {
+      throw new InternalServerErrorException(
+        'Générateur IA non configuré (aucune clé LLM : DEEPSEEK / OPENAI / ANTHROPIC).',
+      );
+    }
+
+    let lastErr = 'aucun provider';
+    for (const p of providers) {
+      try {
+        const text = await p.run();
+        return this.parseProgramJson(text);
+      } catch (err) {
+        lastErr = `${p.name}: ${(err as Error)?.message ?? err}`;
+        this.logger.warn(`generate provider ${lastErr}`);
+      }
+    }
+    throw new InternalServerErrorException(
+      `Générateur IA indisponible (${lastErr}).`,
+    );
+  }
+
+  /** Provider OpenAI-compatible (DeepSeek, OpenAI) avec JSON mode forcé. */
+  private async chatCompletionsJson(
+    url: string,
+    apiKey: string,
+    model: string,
+    maxTokens: number,
+    system: string,
+    user: string,
+  ): Promise<string> {
+    const res = await fetch(url, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${apiKey}`,
+      },
+      body: JSON.stringify({
+        model,
+        max_tokens: maxTokens,
+        response_format: { type: 'json_object' },
+        messages: [
+          { role: 'system', content: system },
+          { role: 'user', content: user },
+        ],
+      }),
+    });
+    if (!res.ok) {
+      throw new Error(
+        `${res.status} ${(await res.text().catch(() => '')).slice(0, 200)}`,
+      );
+    }
+    const json = (await res.json()) as {
+      choices?: { message?: { content?: string }; finish_reason?: string }[];
+    };
+    if (json.choices?.[0]?.finish_reason === 'length') {
+      throw new Error('réponse tronquée (max_tokens atteint)');
+    }
+    return json.choices?.[0]?.message?.content ?? '';
+  }
+
+  private async anthropicText(
+    apiKey: string,
+    model: string,
+    system: string,
+    user: string,
+  ): Promise<string> {
+    const res = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': apiKey,
+        'anthropic-version': '2023-06-01',
+      },
+      body: JSON.stringify({
+        model,
+        max_tokens: 16000,
+        system,
+        messages: [{ role: 'user', content: user }],
+      }),
+    });
+    if (!res.ok) {
+      throw new Error(
+        `${res.status} ${(await res.text().catch(() => '')).slice(0, 200)}`,
+      );
+    }
+    const json = (await res.json()) as {
+      content?: { text?: string }[];
+      stop_reason?: string;
+    };
+    if (json.stop_reason === 'max_tokens') {
+      throw new Error('réponse tronquée (max_tokens atteint)');
+    }
+    return json.content?.[0]?.text ?? '';
+  }
+
+  private parseProgramJson(raw: string): {
+    program: GeneratedProgram;
+    steps: GeneratedStep[];
+  } {
+    let t = raw
+      .trim()
+      .replace(/^```(?:json)?/i, '')
+      .replace(/```$/i, '')
+      .trim();
+    const first = t.indexOf('{');
+    const last = t.lastIndexOf('}');
+    if (first >= 0 && last > first) t = t.slice(first, last + 1);
+    let obj: { program?: GeneratedProgram; steps?: GeneratedStep[] };
+    try {
+      obj = JSON.parse(t);
+    } catch {
+      throw new InternalServerErrorException(
+        "Réponse de l'agent non parsable (JSON invalide).",
+      );
+    }
+    if (!obj?.program || typeof obj.program !== 'object' || !Array.isArray(obj.steps)) {
+      throw new InternalServerErrorException(
+        "Réponse de l'agent au mauvais format (program/steps manquants).",
+      );
+    }
+    return { program: obj.program, steps: obj.steps };
   }
 
   async list(tenant: TenantContext, category?: string) {

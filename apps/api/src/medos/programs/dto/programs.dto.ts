@@ -167,3 +167,60 @@ export class UpdateEnrollmentDto {
   @IsString()
   notes?: string;
 }
+
+// ─── Agent générateur de programme ─────────────────────────────────────────
+// Transforme une matière source (deck, PDF, notes…) en programme MEDOS complet
+// (programme + étapes calendaires) via LLM, puis persiste sur le modèle existant.
+export class GenerateProgramDto {
+  @ApiProperty({
+    description:
+      "Matière source à transformer (texte brut : contenu d'un deck, d'un PDF, notes du praticien…).",
+  })
+  @IsString()
+  @MaxLength(200000)
+  source!: string;
+
+  @ApiPropertyOptional({
+    enum: PROGRAM_CATEGORIES,
+    description: "Indice de catégorie (sinon déduite par l'agent).",
+  })
+  @IsOptional()
+  @IsEnum(PROGRAM_CATEGORIES)
+  category?: (typeof PROGRAM_CATEGORIES)[number];
+
+  @ApiPropertyOptional({ description: "Titre suggéré (sinon déduit)." })
+  @IsOptional()
+  @IsString()
+  @MaxLength(200)
+  title_hint?: string;
+
+  @ApiPropertyOptional({ minimum: 1, description: "Durée totale en jours (sinon déduite)." })
+  @IsOptional()
+  @IsInt()
+  @Min(1)
+  duration_days?: number;
+
+  @ApiPropertyOptional({
+    enum: ["fr", "en"],
+    default: "fr",
+    description: "Langue du contenu généré (i18n FR/EN simultané = phase 2).",
+  })
+  @IsOptional()
+  @IsEnum(["fr", "en"])
+  language?: "fr" | "en";
+
+  @ApiPropertyOptional({
+    default: true,
+    description: "Créer en tant que modèle réutilisable (is_template).",
+  })
+  @IsOptional()
+  @IsBoolean()
+  is_template?: boolean;
+
+  @ApiPropertyOptional({
+    description: "Modèle LLM (défaut: PROGRAM_GENERATOR_MODEL ou claude-sonnet-4-6).",
+  })
+  @IsOptional()
+  @IsString()
+  model?: string;
+}
