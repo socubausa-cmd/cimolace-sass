@@ -1,5 +1,15 @@
-import { useState, useEffect, useCallback } from 'react';
-import { BookOpen, CheckCircle, Circle } from 'lucide-react';
+import { useState, useEffect, useCallback, type ReactNode } from 'react';
+import {
+  BookOpen,
+  CheckCircle,
+  Circle,
+  Calendar,
+  Sparkles,
+  ChevronDown,
+  Utensils,
+  ShoppingCart,
+  Info,
+} from 'lucide-react';
 
 const API = import.meta.env.VITE_API_URL || 'http://localhost:4002';
 
@@ -30,6 +40,7 @@ type Step = {
   description?: string | null;
   step_type?: string;
   due_after_days?: number;
+  content_md?: string | null;
 };
 
 function authHeaders(): HeadersInit {
@@ -38,6 +49,81 @@ function authHeaders(): HeadersInit {
     Authorization: 'Bearer ' + (t || ''),
     'X-Tenant-Slug': localStorage.getItem('tenant_slug') || '',
   };
+}
+
+// Rendu markdown léger (gras + puces + sauts de ligne), sans dépendance ni HTML brut.
+function Markdown({ md }: { md: string }) {
+  const lines = (md || '').split('\n');
+  const inline = (text: string) =>
+    text.split(/(\*\*[^*]+\*\*)/g).map((p, j) =>
+      /^\*\*[^*]+\*\*$/.test(p) ? <strong key={j}>{p.slice(2, -2)}</strong> : <span key={j}>{p}</span>,
+    );
+  return (
+    <div style={{ fontSize: 13, lineHeight: 1.6, color: '#3a3632' }}>
+      {lines.map((line, i) => {
+        if (!line.trim()) return <div key={i} style={{ height: 6 }} />;
+        const bullet = /^\s*[-*]\s+/.test(line);
+        const heading = /^\s*#{1,4}\s+/.test(line);
+        const text = line.replace(/^\s*[-*]\s+/, '').replace(/^\s*#{1,4}\s+/, '');
+        if (bullet)
+          return (
+            <div key={i} style={{ display: 'flex', gap: 8, margin: '1px 0' }}>
+              <span style={{ color: '#b0aaa2' }}>•</span>
+              <span>{inline(text)}</span>
+            </div>
+          );
+        if (heading)
+          return (
+            <div key={i} style={{ fontWeight: 700, marginTop: 6 }}>
+              {inline(text)}
+            </div>
+          );
+        return <div key={i}>{inline(line)}</div>;
+      })}
+    </div>
+  );
+}
+
+function Collapsible({
+  title,
+  icon,
+  defaultOpen = false,
+  accent,
+  children,
+}: {
+  title: ReactNode;
+  icon?: ReactNode;
+  defaultOpen?: boolean;
+  accent?: string;
+  children: ReactNode;
+}) {
+  const [open, setOpen] = useState(defaultOpen);
+  return (
+    <div style={{ border: '1px solid #ece7e1', borderRadius: 10, marginBottom: 8, overflow: 'hidden' }}>
+      <button
+        onClick={() => setOpen((v) => !v)}
+        style={{
+          width: '100%',
+          display: 'flex',
+          alignItems: 'center',
+          gap: 10,
+          padding: '11px 14px',
+          background: open ? '#faf8f5' : '#fff',
+          border: 'none',
+          cursor: 'pointer',
+          textAlign: 'left',
+          fontSize: 14,
+          fontWeight: 600,
+          color: accent || '#1e1e1e',
+        }}
+      >
+        {icon}
+        <span style={{ flex: 1 }}>{title}</span>
+        <ChevronDown size={17} style={{ transform: open ? 'rotate(180deg)' : 'none', transition: 'transform .2s', color: '#b0aaa2' }} />
+      </button>
+      {open && <div style={{ padding: '4px 14px 14px' }}>{children}</div>}
+    </div>
+  );
 }
 
 export function MyPrograms() {
@@ -55,7 +141,6 @@ export function MyPrograms() {
       const list: Enrollment[] = d.data || d || [];
       setEnrollments(list);
 
-      // Fetch each program + its steps
       const progIds = Array.from(new Set(list.map((e) => e.program_id)));
       const progMap: Record<string, Program> = {};
       const stepsMap: Record<string, Step[]> = {};
@@ -66,10 +151,12 @@ export function MyPrograms() {
               fetch(API + '/med/programs/' + pid, { headers: authHeaders() }).then((r) => r.json()),
               fetch(API + '/med/programs/' + pid + '/steps', { headers: authHeaders() }).then((r) => r.json()),
             ]);
-            const prog = pr.data || pr;
-            progMap[pid] = prog;
+            progMap[pid] = pr.data || pr;
             const steps = (st.data || st || []) as Step[];
-            stepsMap[pid] = [...steps].sort((a, b) => a.position - b.position);
+            // Tri calendaire : jour puis position.
+            stepsMap[pid] = [...steps].sort(
+              (a, b) => (a.due_after_days ?? 0) - (b.due_after_days ?? 0) || a.position - b.position,
+            );
           } catch {
             /* ignore one prog */
           }
@@ -93,10 +180,7 @@ export function MyPrograms() {
     const clamped = Math.max(0, Math.min(newPosition, totalSteps));
     const progress = totalSteps > 0 ? Math.round((clamped / totalSteps) * 100) : 0;
     const isDone = clamped >= totalSteps && totalSteps > 0;
-    const payload: Record<string, unknown> = {
-      current_step_position: clamped,
-      progress_percent: progress,
-    };
+    const payload: Record<string, unknown> = { current_step_position: clamped, progress_percent: progress };
     if (isDone) payload.status = 'completed';
     try {
       const res = await fetch(API + '/med/enrollments/' + enrollment.id, {
@@ -108,7 +192,6 @@ export function MyPrograms() {
         const b = await res.json().catch(() => ({}));
         throw new Error(b?.message || `Erreur ${res.status}`);
       }
-      // Optimistic update
       setEnrollments((prev) =>
         prev.map((e) =>
           e.id === enrollment.id
@@ -126,7 +209,7 @@ export function MyPrograms() {
   return (
     <div>
       <h2 style={{ fontSize: 24, fontWeight: 700, marginBottom: 20, display: 'flex', alignItems: 'center', gap: 8 }}>
-        <BookOpen size={22} /> Mes programmes de soins
+        <BookOpen size={22} /> Mes programmes
       </h2>
 
       {error && (
@@ -135,7 +218,7 @@ export function MyPrograms() {
         </div>
       )}
 
-      {enrollments.length === 0 && <p style={{ color: '#b0aaa2' }}>Aucun programme assigne.</p>}
+      {enrollments.length === 0 && <p style={{ color: '#b0aaa2' }}>Aucun programme assigné.</p>}
 
       {enrollments.map((enr) => {
         const program = programs[enr.program_id];
@@ -145,12 +228,28 @@ export function MyPrograms() {
         const isCompleted = enr.status === 'completed';
         const isPaused = enr.status === 'paused';
 
+        // Décodage des conventions de l'agent générateur.
+        const rituals = steps.filter((s) => /^rituels/i.test(s.title));
+        const days = steps
+          .filter((s) => /^jour\s/i.test(s.title))
+          .sort((a, b) => (a.due_after_days ?? 0) - (b.due_after_days ?? 0));
+        const recipes = steps.filter((s) => s.position >= 100 && s.position < 300);
+        const shopping = steps.filter((s) => s.position === 300 || /course/i.test(s.title));
+        const disclaimer = steps.filter((s) => s.position >= 400 || /avertiss/i.test(s.title));
+        const isCalendar = days.length > 0;
+
+        // Jour "aujourd'hui" = jours écoulés depuis l'inscription (borné à la durée).
+        const dayLen = 86400000;
+        const elapsed = Math.floor((Date.now() - new Date(enr.enrolled_at).getTime()) / dayLen);
+        const maxDay = (program?.duration_days || days.length || 1) - 1;
+        const todayIdx = Math.max(0, Math.min(elapsed, maxDay));
+
         return (
           <div
             key={enr.id}
             style={{
               background: '#fff',
-              borderRadius: 12,
+              borderRadius: 14,
               border: '1px solid #ece7e1',
               padding: 20,
               marginBottom: 16,
@@ -159,14 +258,12 @@ export function MyPrograms() {
           >
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 12, marginBottom: 12 }}>
               <div style={{ flex: 1 }}>
-                <h3 style={{ fontWeight: 600, fontSize: 16, margin: 0 }}>
+                <h3 style={{ fontWeight: 600, fontSize: 17, margin: 0 }}>
                   {program?.title || 'Programme'}
-                  {isCompleted && <span style={{ marginLeft: 8, fontSize: 11, color: 'var(--brand-accent)', fontWeight: 600 }}>✓ TERMINE</span>}
+                  {isCompleted && <span style={{ marginLeft: 8, fontSize: 11, color: 'var(--brand-accent)', fontWeight: 600 }}>✓ TERMINÉ</span>}
                   {isPaused && <span style={{ marginLeft: 8, fontSize: 11, color: '#ea580c', fontWeight: 600 }}>EN PAUSE</span>}
                 </h3>
-                {program?.description && (
-                  <p style={{ fontSize: 13, color: '#8a8580', margin: '4px 0 0' }}>{program.description}</p>
-                )}
+                {program?.description && <p style={{ fontSize: 13, color: '#8a8580', margin: '4px 0 0' }}>{program.description}</p>}
                 {enr.notes && (
                   <p style={{ fontSize: 12, color: '#475569', margin: '6px 0 0', padding: 8, background: '#fafaf8', borderRadius: 6, fontStyle: 'italic' }}>
                     Note du praticien : {enr.notes}
@@ -174,29 +271,79 @@ export function MyPrograms() {
                 )}
               </div>
               <div style={{ textAlign: 'right', fontSize: 12, color: '#8a8580', flexShrink: 0 }}>
-                <div style={{ fontSize: 20, fontWeight: 700, color: 'var(--brand-primary)' }}>
-                  {enr.progress_percent || 0}%
-                </div>
-                <div>{pos}/{total} etapes</div>
+                <div style={{ fontSize: 20, fontWeight: 700, color: 'var(--brand-primary)' }}>{enr.progress_percent || 0}%</div>
+                <div>{pos}/{total} étapes</div>
               </div>
             </div>
 
-            {/* Progress bar */}
             <div style={{ background: '#f4f0ea', borderRadius: 99, height: 6, overflow: 'hidden', marginBottom: 16 }}>
-              <div
-                style={{
-                  background: isCompleted ? 'var(--brand-accent)' : 'var(--brand-primary)',
-                  height: '100%',
-                  width: `${enr.progress_percent || 0}%`,
-                  transition: 'width 0.3s',
-                }}
-              />
+              <div style={{ background: isCompleted ? 'var(--brand-accent)' : 'var(--brand-primary)', height: '100%', width: `${enr.progress_percent || 0}%`, transition: 'width 0.3s' }} />
             </div>
 
-            {/* Steps */}
             {steps.length === 0 ? (
-              <p style={{ fontSize: 13, color: '#b0aaa2', fontStyle: 'italic' }}>Aucune etape dans ce programme.</p>
+              <p style={{ fontSize: 13, color: '#b0aaa2', fontStyle: 'italic' }}>Aucune étape dans ce programme.</p>
+            ) : isCalendar ? (
+              // ─── VUE CALENDRIER (programme nutrition / parcours par jour) ───
+              <div>
+                {rituals.map((r) => (
+                  <div key={r.id} style={{ background: '#fbf7ee', border: '1px solid #efe3c8', borderRadius: 10, padding: '12px 14px', marginBottom: 12 }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontWeight: 600, fontSize: 14, color: '#8a6d1a', marginBottom: 6 }}>
+                      <Sparkles size={16} /> {r.title}
+                    </div>
+                    {r.content_md && <Markdown md={r.content_md} />}
+                  </div>
+                ))}
+
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13, fontWeight: 700, color: '#8a8580', margin: '4px 0 8px' }}>
+                  <Calendar size={16} /> CALENDRIER
+                </div>
+                {days.map((day) => {
+                  const isToday = (day.due_after_days ?? 0) === todayIdx && !isCompleted;
+                  return (
+                    <Collapsible
+                      key={day.id}
+                      defaultOpen={isToday}
+                      accent={isToday ? 'var(--brand-primary)' : undefined}
+                      icon={isToday ? <Circle size={16} fill="var(--brand-primary)" color="var(--brand-primary)" /> : <Circle size={16} color="#cfc8bf" />}
+                      title={
+                        <span>
+                          {day.title}
+                          {isToday && <span style={{ marginLeft: 8, fontSize: 11, background: 'var(--brand-primary)', color: '#fff', padding: '1px 7px', borderRadius: 99 }}>Aujourd'hui</span>}
+                        </span>
+                      }
+                    >
+                      {day.content_md ? <Markdown md={day.content_md} /> : <span style={{ color: '#b0aaa2', fontSize: 13 }}>—</span>}
+                    </Collapsible>
+                  );
+                })}
+
+                {recipes.length > 0 && (
+                  <div style={{ marginTop: 12 }}>
+                    <Collapsible title={`Bibliothèque de recettes (${recipes.length})`} icon={<Utensils size={16} color="var(--brand-primary)" />}>
+                      {recipes.map((rec) => (
+                        <Collapsible key={rec.id} title={rec.title.replace(/^📖\s*Recette\s*—\s*/i, '')}>
+                          {rec.content_md ? <Markdown md={rec.content_md} /> : null}
+                        </Collapsible>
+                      ))}
+                    </Collapsible>
+                  </div>
+                )}
+
+                {shopping.map((sh) => (
+                  <Collapsible key={sh.id} title={sh.title} icon={<ShoppingCart size={16} color="var(--brand-primary)" />}>
+                    {sh.content_md ? <Markdown md={sh.content_md} /> : null}
+                  </Collapsible>
+                ))}
+
+                {disclaimer.map((dc) => (
+                  <div key={dc.id} style={{ marginTop: 10, padding: '10px 12px', background: '#fafaf8', borderRadius: 8, fontSize: 11, color: '#8a8580', display: 'flex', gap: 8 }}>
+                    <Info size={14} style={{ flexShrink: 0, marginTop: 2 }} />
+                    <div>{dc.content_md ? <Markdown md={dc.content_md} /> : dc.title}</div>
+                  </div>
+                ))}
+              </div>
             ) : (
+              // ─── VUE CHECKLIST LINÉAIRE (programmes de soins génériques) ───
               <ol style={{ paddingLeft: 0, listStyle: 'none', margin: 0 }}>
                 {steps.map((s, idx) => {
                   const isDone = idx < pos;
@@ -206,50 +353,28 @@ export function MyPrograms() {
                     <li
                       key={s.id}
                       style={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: 12,
-                        padding: '10px 12px',
-                        borderRadius: 8,
-                        marginBottom: 4,
+                        display: 'flex', alignItems: 'flex-start', gap: 12, padding: '10px 12px', borderRadius: 8, marginBottom: 4,
                         background: isDone ? '#ecfdf5' : isNext ? '#f0fdfa' : 'transparent',
                         border: isNext ? '1px solid var(--brand-primary)' : '1px solid transparent',
-                        cursor: isDone || isNext ? 'pointer' : 'default',
-                        opacity: isLocked ? 0.5 : 1,
+                        cursor: isDone || isNext ? 'pointer' : 'default', opacity: isLocked ? 0.5 : 1,
                       }}
                       onClick={() => {
                         if (updating || isCompleted) return;
-                        if (isDone) {
-                          // Allow unchecking the LAST completed step only (idx === pos - 1)
-                          if (idx === pos - 1) updateProgress(enr, pos - 1, total);
-                        } else if (isNext) {
-                          updateProgress(enr, pos + 1, total);
-                        }
+                        if (isDone) { if (idx === pos - 1) updateProgress(enr, pos - 1, total); }
+                        else if (isNext) updateProgress(enr, pos + 1, total);
                       }}
                     >
-                      {isDone ? (
-                        <CheckCircle size={20} color="var(--brand-accent)" style={{ flexShrink: 0 }} />
-                      ) : (
-                        <Circle size={20} color={isNext ? 'var(--brand-primary)' : '#b0aaa2'} style={{ flexShrink: 0 }} />
-                      )}
+                      {isDone ? <CheckCircle size={20} color="var(--brand-accent)" style={{ flexShrink: 0, marginTop: 1 }} /> : <Circle size={20} color={isNext ? 'var(--brand-primary)' : '#b0aaa2'} style={{ flexShrink: 0, marginTop: 1 }} />}
                       <div style={{ flex: 1 }}>
-                        <div
-                          style={{
-                            fontSize: 13,
-                            fontWeight: isNext ? 600 : 500,
-                            color: isDone ? '#065f46' : '#1e1e1e',
-                            textDecoration: isDone ? 'line-through' : 'none',
-                          }}
-                        >
+                        <div style={{ fontSize: 13, fontWeight: isNext ? 600 : 500, color: isDone ? '#065f46' : '#1e1e1e', textDecoration: isDone ? 'line-through' : 'none' }}>
                           {idx + 1}. {s.title}
                         </div>
-                        {s.description && (
-                          <div style={{ fontSize: 12, color: '#8a8580', marginTop: 2 }}>{s.description}</div>
-                        )}
+                        {s.description && <div style={{ fontSize: 12, color: '#8a8580', marginTop: 2 }}>{s.description}</div>}
+                        {s.content_md && <div style={{ marginTop: 4 }}><Markdown md={s.content_md} /></div>}
                         <div style={{ fontSize: 11, color: '#b0aaa2', marginTop: 2 }}>
                           {s.step_type}
                           {typeof s.due_after_days === 'number' && ` · J+${s.due_after_days}`}
-                          {isNext && <span style={{ color: 'var(--brand-primary)', fontWeight: 600, marginLeft: 8 }}>← A faire maintenant</span>}
+                          {isNext && <span style={{ color: 'var(--brand-primary)', fontWeight: 600, marginLeft: 8 }}>← À faire maintenant</span>}
                         </div>
                       </div>
                     </li>
