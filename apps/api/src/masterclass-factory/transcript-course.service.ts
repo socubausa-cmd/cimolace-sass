@@ -103,34 +103,58 @@ export class TranscriptCourseService {
     );
   }
 
+  /**
+   * Appel LLM RÉSILIENT. `deepseek-v4-pro` est un modèle à raisonnement : sa
+   * réflexion interne peut consommer tout le budget de tokens et renvoyer un
+   * `content` VIDE (HTTP 200 mais rien d'exploitable — constaté en prod). On
+   * réessaie donc, puis on bascule sur le modèle rapide, avant d'abandonner.
+   */
   private async askLlm(
     system: string,
     user: string,
     opts: { fast?: boolean; maxTokens?: number; timeoutMs?: number } = {},
   ): Promise<any> {
-    const llm = this.resolveLlm(opts.fast !== false);
-    const res = await fetch(llm.url, {
-      method: 'POST',
-      headers: { Authorization: `Bearer ${llm.key}`, 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        model: llm.model,
-        messages: [
-          { role: 'system', content: system },
-          { role: 'user', content: user },
-        ],
-        response_format: { type: 'json_object' },
-        max_tokens: opts.maxTokens ?? 4000,
-        temperature: 0.3,
-      }),
-      signal: AbortSignal.timeout(opts.timeoutMs ?? 120000),
-    });
-    if (!res.ok) {
-      const t = await res.text().catch(() => '');
-      throw new Error(`${llm.provider} ${res.status}: ${t.slice(0, 200)}`);
+    const maxTokens = opts.maxTokens ?? 4000;
+    const timeoutMs = opts.timeoutMs ?? 120000;
+    // 1) modèle demandé, 2) re-essai, 3) bascule sur le modèle rapide (non-raisonnant).
+    const attempts: boolean[] = opts.fast === false ? [false, false, true] : [true, true];
+    let lastErr: Error | null = null;
+
+    for (let i = 0; i < attempts.length; i += 1) {
+      const llm = this.resolveLlm(attempts[i]);
+      try {
+        const res = await fetch(llm.url, {
+          method: 'POST',
+          headers: { Authorization: `Bearer ${llm.key}`, 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            model: llm.model,
+            messages: [
+              { role: 'system', content: system },
+              { role: 'user', content: user },
+            ],
+            response_format: { type: 'json_object' },
+            // Budget élargi au fil des tentatives (le raisonnement en consomme).
+            max_tokens: Math.min(16000, Math.round(maxTokens * (1 + i * 0.5))),
+            temperature: 0.3,
+          }),
+          signal: AbortSignal.timeout(timeoutMs),
+        });
+        if (!res.ok) {
+          const t = await res.text().catch(() => '');
+          throw new Error(`${llm.provider} ${res.status}: ${t.slice(0, 200)}`);
+        }
+        const json = await res.json();
+        const raw = String(json?.choices?.[0]?.message?.content ?? '').trim();
+        if (!raw) throw new Error(`${llm.model}: réponse vide (budget de tokens absorbé)`);
+        return TranscriptCourseService.parseJsonLoose(raw);
+      } catch (e) {
+        lastErr = e as Error;
+        this.logger.warn(
+          `askLlm tentative ${i + 1}/${attempts.length} (${llm.model}) : ${(e as Error).message}`,
+        );
+      }
     }
-    const json = await res.json();
-    const raw = json?.choices?.[0]?.message?.content ?? '';
-    return TranscriptCourseService.parseJsonLoose(raw);
+    throw lastErr ?? new Error('Appel IA impossible');
   }
 
   /**
