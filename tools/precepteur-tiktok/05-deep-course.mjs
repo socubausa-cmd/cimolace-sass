@@ -112,6 +112,25 @@ async function llm(system, user, { maxTokens = 8000, temperature = 0.5, label = 
   throw new Error(`toutes les IA ont échoué (${lastErr})`);
 }
 
+/**
+ * Appel LLM AVEC REPRISE : en parallèle, les fournisseurs renvoient des 429 (limite de débit).
+ * Un échec n'est donc pas définitif — on patiente (10 s, 30 s, 90 s) et on retente. Le travail
+ * de fond ne doit pas perdre un cours entier pour une saturation passagère.
+ */
+async function llmRetry(system, user, opts = {}) {
+  const waits = [10_000, 30_000, 90_000];
+  for (let attempt = 0; ; attempt += 1) {
+    try {
+      return await llm(system, user, opts);
+    } catch (e) {
+      if (attempt >= waits.length) throw e;
+      const w = waits[attempt];
+      log(`    ⏳ ${opts.label || ''} saturation — nouvelle tentative dans ${w / 1000}s`);
+      await new Promise((r) => setTimeout(r, w));
+    }
+  }
+}
+
 /* ── PASSE A — analyse doctrinale ────────────────────────────────────────────────────────── */
 const SYS_A = `Tu es l'ANALYSTE DOCTRINAL de l'école Prorascience (fondateur : Ngowazulu).
 On te donne la transcription brute d'une vidéo d'enseignement. Tu ne rédiges RIEN pour l'élève :
@@ -295,7 +314,7 @@ async function generateImage(prompt) {
 async function buildCourse(src) {
   // ── A ──────────────────────────────────────────────────────────────────────────────────
   log('  A. analyse doctrinale…');
-  const analyse = await llm(SYS_A,
+  const analyse = await llmRetry(SYS_A,
     `TITRE TIKTOK : ${src.title || '(sans titre)'}\n\nTRANSCRIPTION :\n${src.transcript}`,
     { maxTokens: 12000, temperature: 0.3, label: 'A' });
   if (analyse?.enseignement === false) return { skip: 'non-enseignement (analyse)' };
@@ -303,7 +322,7 @@ async function buildCourse(src) {
 
   // ── B ──────────────────────────────────────────────────────────────────────────────────
   log('  B. architecture du cours…');
-  const archi = await llm(SYS_B, `ANALYSE DOCTRINALE :\n${JSON.stringify(analyse, null, 1)}`,
+  const archi = await llmRetry(SYS_B, `ANALYSE DOCTRINALE :\n${JSON.stringify(analyse, null, 1)}`,
     { maxTokens: 10000, temperature: 0.4, label: 'B' });
   const plan = (Array.isArray(archi?.concepts) ? archi.concepts : []).slice(0, 3);
   if (!plan.length) return { skip: 'architecture vide' };
@@ -314,7 +333,7 @@ async function buildCourse(src) {
   for (let i = 0; i < plan.length; i += 1) {
     const p = plan[i];
     log(`  C${i + 1}a. rédaction du TEXTE LONG « ${str(p.titre, 50)} »…`);
-    const longText = await llm(SYS_C1,
+    const longText = await llmRetry(SYS_C1,
       `CONTEXTE DOCTRINAL :\n${JSON.stringify({ these: analyse.these, symboles: analyse.symboles, termes: analyse.termes_techniques, citations: analyse.citations_fortes, objections: analyse.objections }, null, 1)}\n\n`
       + `LEÇON À RÉDIGER :\n${JSON.stringify(p, null, 1)}`,
       { maxTokens: 16000, temperature: 0.6, label: `C${i + 1}a` });
@@ -322,7 +341,7 @@ async function buildCourse(src) {
     log(`      texte : ${lessonMd.split(/\s+/).filter(Boolean).length} mots`);
 
     log(`  C${i + 1}b. mise en scène (sans résumer)…`);
-    const red = await llm(SYS_C2,
+    const red = await llmRetry(SYS_C2,
       `TEXTE COMPLET DE LA LEÇON (à découper, PAS à résumer) :\n${lessonMd}\n\n`
       + `REPÈRES : croquis attendu → ${p.croquis_doit_montrer || '(aucun)'} · analogie → ${p.analogie_du_quotidien || '(libre)'}`,
       { maxTokens: 16000, temperature: 0.4, label: `C${i + 1}b` });
@@ -334,7 +353,7 @@ async function buildCourse(src) {
     // D — croquis principal
     if (p.croquis_doit_montrer) {
       log(`  D${i + 1}. croquis : « ${str(p.croquis_doit_montrer, 60)}… »`);
-      const sk = await llm(SYS_D,
+      const sk = await llmRetry(SYS_D,
         `CE QUE LE CROQUIS DOIT DÉMONTRER :\n${p.croquis_doit_montrer}\n\n`
         + `SYMBOLE À NOMMER SUR LE DESSIN : ${p.symbole_a_expliquer || '(aucun)'}\n`
         + `IDÉE MAÎTRESSE : ${p.idee_maitresse}\n\n`
@@ -358,7 +377,7 @@ async function buildCourse(src) {
     }
     // D — croquis de révélation
     if (p.reveal_doit_montrer) {
-      const sk2 = await llm(SYS_D,
+      const sk2 = await llmRetry(SYS_D,
         `CE QUE CE CROQUIS DE RÉVÉLATION DOIT MONTRER (il vient APRÈS la réponse de l'élève, il conclut) :\n${p.reveal_doit_montrer}\n\n`
         + `IDÉE MAÎTRESSE : ${p.idee_maitresse}\n\nEXEMPLES :\n${JSON.stringify(CANON_SKETCHES, null, 1)}`,
         { maxTokens: 9000, temperature: 0.4, label: `D${i + 1}b` });
@@ -438,7 +457,7 @@ async function buildCourse(src) {
 
   // ── F — manuel ────────────────────────────────────────────────────────────────────────
   log('  F. manuel d’enseignement…');
-  const man = await llm(
+  const man = await llmRetry(
     `Tu rédiges le MANUEL D'ENSEIGNEMENT du professeur pour ce cours (markdown, français, dense et utile).
 Sections : ## Objectifs pédagogiques / ## Plan du cours / ## Argumentation détaillée (la démonstration pas à pas, avec les citations exactes du fondateur) / ## Symboles et leur sens / ## Ateliers & corrigés / ## Erreurs fréquentes des élèves / ## Objections à anticiper / ## Prolongements.
 JSON STRICT : {"manual_md":"…"}`,
