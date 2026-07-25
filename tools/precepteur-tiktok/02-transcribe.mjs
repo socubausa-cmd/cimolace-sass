@@ -33,9 +33,12 @@ function subsToText(raw) {
 // sinon file d'attente naturelle (les plus anciennes 'new' d'abord).
 const idsArg = (() => { const i = argv.indexOf('--ids'); return i > -1 ? String(argv[i + 1] || '').split(',').map((x) => x.trim()).filter(Boolean) : []; })();
 const whereIds = idsArg.length ? `and external_id in (${idsArg.map((x) => q(x)).join(',')})` : "and status='new'";
+// PRIORITÉ : les vidéos dont le TITRE annonce un enseignement d'abord (elles donnent de vrais
+// cours ; les évocations rituelles / clips courts sont rejetés plus tard par le filtre topic_ok).
+const PRIORITY = `case when title ~* '(comment|pourquoi|différence|explique|je t.explique|c.est quoi|origine|signifie|science|doctrine|initiation|enseign|le sens|décode|savoir)' then 0 else 1 end`;
 const rows = sql(`select id, external_id, url from precepteur_sources
                   where tenant_id=${q(TENANT_ID)}::uuid ${whereIds}
-                  order by created_at asc limit ${limit};`)
+                  order by ${PRIORITY} asc, length(coalesce(title,'')) desc, created_at asc limit ${limit};`)
   .split('\n').filter(Boolean).map((l) => { const [id, ext, url] = l.split('|'); return { id, ext, url }; });
 log(`${rows.length} source(s) à transcrire (modèle whisper: ${model}).`);
 
