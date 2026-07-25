@@ -4,6 +4,29 @@ import { ChevronLeft, ChevronRight, Maximize } from 'lucide-react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { SafeHtml } from '@/components/common/SafeHtml';
 
+/**
+ * Styles du contenu pédagogique riche d'une diapo : tableaux (glossaire,
+ * récapitulatif), encadrés de définition et figures (schémas SVG). Sans eux,
+ * `prose` centrait les cellules et les tableaux perdaient leurs colonnes.
+ */
+const SLIDE_RICH_CSS = `
+.ppt-rich{text-align:left}
+.ppt-rich p{margin:0 0 14px}
+.ppt-rich strong{color:#f5f4ee}
+.ppt-rich h4{color:#f0c3ac;font-size:15px;font-weight:700;margin:20px 0 8px;letter-spacing:.02em}
+.ppt-rich ul,.ppt-rich ol{margin:0 0 14px;padding-left:22px}
+.ppt-rich li{margin:0 0 8px}
+.ppt-rich ul li::marker{color:#d97757}
+.ppt-rich blockquote{margin:16px 0;padding:14px 18px;border-radius:14px;background:rgba(217,119,87,.10);border:1px solid rgba(217,119,87,.3);color:#f0ede4;font-style:normal;quotes:none}
+.ppt-rich blockquote p{margin:0}
+.ppt-rich table{width:100%;border-collapse:separate;border-spacing:0;margin:18px 0;font-size:15px;border:1px solid rgba(245,244,238,.14);border-radius:14px;overflow:hidden;text-align:left}
+.ppt-rich th{background:rgba(217,119,87,.16);color:#f0c3ac;font-weight:700;text-align:left;padding:11px 14px;font-size:13px}
+.ppt-rich td{padding:11px 14px;border-top:1px solid rgba(245,244,238,.1);vertical-align:top;text-align:left}
+.ppt-rich figure{margin:20px 0;text-align:center}
+.ppt-rich svg{max-width:100%;height:auto;margin:0 auto;display:block}
+.ppt-rich figcaption{margin-top:10px;font-size:13px;color:rgba(245,244,238,.55);font-style:italic}
+`;
+
 const PowerPointViewer = ({ powerpoint, onComplete }) => {
   const [currentSlide, setCurrentSlide] = useState(0);
   const [viewMode, setViewMode] = useState('split');
@@ -272,7 +295,8 @@ const PowerPointViewer = ({ powerpoint, onComplete }) => {
                       <span>{currentSlide + 1}</span>
                     </div>
                     <h2 className="text-3xl font-bold mb-6 text-[#f5f4ee]">{slide.title}</h2>
-                    <SafeHtml className="prose prose-invert max-w-none text-lg text-[#cfccc3]" html={slide.content} />
+                    <style>{SLIDE_RICH_CSS}</style>
+                    <SafeHtml className="ppt-rich prose prose-invert max-w-none text-lg text-[#cfccc3]" html={slide.content} />
                     {slide.image ? (
                       <img src={slide.image} alt="Slide visual" className="mt-6 max-h-64 object-contain mx-auto" />
                     ) : null}
