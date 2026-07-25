@@ -218,6 +218,15 @@ export class GenerateProgramDto {
   is_template?: boolean;
 
   @ApiPropertyOptional({
+    default: true,
+    description:
+      "Générer aussi la traduction (colonnes *_i18n). Nécessite la migration medos_programs_i18n ; sinon ignoré silencieusement.",
+  })
+  @IsOptional()
+  @IsBoolean()
+  bilingual?: boolean;
+
+  @ApiPropertyOptional({
     description: "Modèle LLM (défaut: PROGRAM_GENERATOR_MODEL ou claude-sonnet-4-6).",
   })
   @IsOptional()

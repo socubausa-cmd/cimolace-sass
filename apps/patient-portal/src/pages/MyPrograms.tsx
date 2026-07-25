@@ -24,12 +24,16 @@ type Enrollment = {
   notes?: string | null;
 };
 
+type I18nMap = Record<string, string> | null;
+
 type Program = {
   id: string;
   title: string;
   description?: string | null;
   category?: string;
   duration_days?: number | null;
+  title_i18n?: I18nMap;
+  description_i18n?: I18nMap;
 };
 
 type Step = {
@@ -41,7 +45,15 @@ type Step = {
   step_type?: string;
   due_after_days?: number;
   content_md?: string | null;
+  title_i18n?: I18nMap;
+  description_i18n?: I18nMap;
+  content_md_i18n?: I18nMap;
 };
+
+// Choisit la valeur localisée si présente, sinon la colonne de base (fallback).
+function loc(base: string | null | undefined, i18n: I18nMap | undefined, l: string): string {
+  return (i18n && i18n[l]) || base || '';
+}
 
 function authHeaders(): HeadersInit {
   const t = localStorage.getItem('supabase_token');
@@ -132,6 +144,11 @@ export function MyPrograms() {
   const [stepsByProgram, setStepsByProgram] = useState<Record<string, Step[]>>({});
   const [updating, setUpdating] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [locale, setLocale] = useState<string>(() => localStorage.getItem('portal_locale') || 'fr');
+  const setLang = (l: string) => {
+    localStorage.setItem('portal_locale', l);
+    setLocale(l);
+  };
 
   const fetchAll = useCallback(async () => {
     try {
@@ -208,9 +225,28 @@ export function MyPrograms() {
 
   return (
     <div>
-      <h2 style={{ fontSize: 24, fontWeight: 700, marginBottom: 20, display: 'flex', alignItems: 'center', gap: 8 }}>
-        <BookOpen size={22} /> Mes programmes
-      </h2>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20, gap: 12 }}>
+        <h2 style={{ fontSize: 24, fontWeight: 700, margin: 0, display: 'flex', alignItems: 'center', gap: 8 }}>
+          <BookOpen size={22} /> {locale === 'en' ? 'My programs' : 'Mes programmes'}
+        </h2>
+        <div style={{ display: 'flex', border: '1px solid #ece7e1', borderRadius: 99, overflow: 'hidden', fontSize: 12, fontWeight: 600 }}>
+          {['fr', 'en'].map((l) => (
+            <button
+              key={l}
+              onClick={() => setLang(l)}
+              style={{
+                padding: '5px 12px',
+                border: 'none',
+                cursor: 'pointer',
+                background: locale === l ? 'var(--brand-primary)' : '#fff',
+                color: locale === l ? '#fff' : '#8a8580',
+              }}
+            >
+              {l.toUpperCase()}
+            </button>
+          ))}
+        </div>
+      </div>
 
       {error && (
         <div style={{ marginBottom: 16, padding: 10, background: '#fef2f2', color: '#991b1b', borderRadius: 8, fontSize: 13 }}>
@@ -259,11 +295,11 @@ export function MyPrograms() {
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 12, marginBottom: 12 }}>
               <div style={{ flex: 1 }}>
                 <h3 style={{ fontWeight: 600, fontSize: 17, margin: 0 }}>
-                  {program?.title || 'Programme'}
+                  {loc(program?.title, program?.title_i18n, locale) || 'Programme'}
                   {isCompleted && <span style={{ marginLeft: 8, fontSize: 11, color: 'var(--brand-accent)', fontWeight: 600 }}>✓ TERMINÉ</span>}
                   {isPaused && <span style={{ marginLeft: 8, fontSize: 11, color: '#ea580c', fontWeight: 600 }}>EN PAUSE</span>}
                 </h3>
-                {program?.description && <p style={{ fontSize: 13, color: '#8a8580', margin: '4px 0 0' }}>{program.description}</p>}
+                {program?.description && <p style={{ fontSize: 13, color: '#8a8580', margin: '4px 0 0' }}>{loc(program.description, program.description_i18n, locale)}</p>}
                 {enr.notes && (
                   <p style={{ fontSize: 12, color: '#475569', margin: '6px 0 0', padding: 8, background: '#fafaf8', borderRadius: 6, fontStyle: 'italic' }}>
                     Note du praticien : {enr.notes}
@@ -288,14 +324,14 @@ export function MyPrograms() {
                 {rituals.map((r) => (
                   <div key={r.id} style={{ background: '#fbf7ee', border: '1px solid #efe3c8', borderRadius: 10, padding: '12px 14px', marginBottom: 12 }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontWeight: 600, fontSize: 14, color: '#8a6d1a', marginBottom: 6 }}>
-                      <Sparkles size={16} /> {r.title}
+                      <Sparkles size={16} /> {loc(r.title, r.title_i18n, locale)}
                     </div>
-                    {r.content_md && <Markdown md={r.content_md} />}
+                    {r.content_md && <Markdown md={loc(r.content_md, r.content_md_i18n, locale)} />}
                   </div>
                 ))}
 
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13, fontWeight: 700, color: '#8a8580', margin: '4px 0 8px' }}>
-                  <Calendar size={16} /> CALENDRIER
+                  <Calendar size={16} /> {locale === 'en' ? 'CALENDAR' : 'CALENDRIER'}
                 </div>
                 {days.map((day) => {
                   const isToday = (day.due_after_days ?? 0) === todayIdx && !isCompleted;
@@ -307,22 +343,22 @@ export function MyPrograms() {
                       icon={isToday ? <Circle size={16} fill="var(--brand-primary)" color="var(--brand-primary)" /> : <Circle size={16} color="#cfc8bf" />}
                       title={
                         <span>
-                          {day.title}
-                          {isToday && <span style={{ marginLeft: 8, fontSize: 11, background: 'var(--brand-primary)', color: '#fff', padding: '1px 7px', borderRadius: 99 }}>Aujourd'hui</span>}
+                          {loc(day.title, day.title_i18n, locale)}
+                          {isToday && <span style={{ marginLeft: 8, fontSize: 11, background: 'var(--brand-primary)', color: '#fff', padding: '1px 7px', borderRadius: 99 }}>{locale === 'en' ? 'Today' : "Aujourd'hui"}</span>}
                         </span>
                       }
                     >
-                      {day.content_md ? <Markdown md={day.content_md} /> : <span style={{ color: '#b0aaa2', fontSize: 13 }}>—</span>}
+                      {day.content_md ? <Markdown md={loc(day.content_md, day.content_md_i18n, locale)} /> : <span style={{ color: '#b0aaa2', fontSize: 13 }}>—</span>}
                     </Collapsible>
                   );
                 })}
 
                 {recipes.length > 0 && (
                   <div style={{ marginTop: 12 }}>
-                    <Collapsible title={`Bibliothèque de recettes (${recipes.length})`} icon={<Utensils size={16} color="var(--brand-primary)" />}>
+                    <Collapsible title={`${locale === 'en' ? 'Recipe library' : 'Bibliothèque de recettes'} (${recipes.length})`} icon={<Utensils size={16} color="var(--brand-primary)" />}>
                       {recipes.map((rec) => (
-                        <Collapsible key={rec.id} title={rec.title.replace(/^📖\s*Recette\s*—\s*/i, '')}>
-                          {rec.content_md ? <Markdown md={rec.content_md} /> : null}
+                        <Collapsible key={rec.id} title={loc(rec.title, rec.title_i18n, locale).replace(/^📖\s*(Recette|Recipe)\s*—\s*/i, '')}>
+                          {rec.content_md ? <Markdown md={loc(rec.content_md, rec.content_md_i18n, locale)} /> : null}
                         </Collapsible>
                       ))}
                     </Collapsible>
@@ -330,15 +366,15 @@ export function MyPrograms() {
                 )}
 
                 {shopping.map((sh) => (
-                  <Collapsible key={sh.id} title={sh.title} icon={<ShoppingCart size={16} color="var(--brand-primary)" />}>
-                    {sh.content_md ? <Markdown md={sh.content_md} /> : null}
+                  <Collapsible key={sh.id} title={loc(sh.title, sh.title_i18n, locale)} icon={<ShoppingCart size={16} color="var(--brand-primary)" />}>
+                    {sh.content_md ? <Markdown md={loc(sh.content_md, sh.content_md_i18n, locale)} /> : null}
                   </Collapsible>
                 ))}
 
                 {disclaimer.map((dc) => (
                   <div key={dc.id} style={{ marginTop: 10, padding: '10px 12px', background: '#fafaf8', borderRadius: 8, fontSize: 11, color: '#8a8580', display: 'flex', gap: 8 }}>
                     <Info size={14} style={{ flexShrink: 0, marginTop: 2 }} />
-                    <div>{dc.content_md ? <Markdown md={dc.content_md} /> : dc.title}</div>
+                    <div>{dc.content_md ? <Markdown md={loc(dc.content_md, dc.content_md_i18n, locale)} /> : loc(dc.title, dc.title_i18n, locale)}</div>
                   </div>
                 ))}
               </div>
@@ -367,10 +403,10 @@ export function MyPrograms() {
                       {isDone ? <CheckCircle size={20} color="var(--brand-accent)" style={{ flexShrink: 0, marginTop: 1 }} /> : <Circle size={20} color={isNext ? 'var(--brand-primary)' : '#b0aaa2'} style={{ flexShrink: 0, marginTop: 1 }} />}
                       <div style={{ flex: 1 }}>
                         <div style={{ fontSize: 13, fontWeight: isNext ? 600 : 500, color: isDone ? '#065f46' : '#1e1e1e', textDecoration: isDone ? 'line-through' : 'none' }}>
-                          {idx + 1}. {s.title}
+                          {idx + 1}. {loc(s.title, s.title_i18n, locale)}
                         </div>
-                        {s.description && <div style={{ fontSize: 12, color: '#8a8580', marginTop: 2 }}>{s.description}</div>}
-                        {s.content_md && <div style={{ marginTop: 4 }}><Markdown md={s.content_md} /></div>}
+                        {s.description && <div style={{ fontSize: 12, color: '#8a8580', marginTop: 2 }}>{loc(s.description, s.description_i18n, locale)}</div>}
+                        {s.content_md && <div style={{ marginTop: 4 }}><Markdown md={loc(s.content_md, s.content_md_i18n, locale)} /></div>}
                         <div style={{ fontSize: 11, color: '#b0aaa2', marginTop: 2 }}>
                           {s.step_type}
                           {typeof s.due_after_days === 'number' && ` · J+${s.due_after_days}`}

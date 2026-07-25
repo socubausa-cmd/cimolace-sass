@@ -146,10 +146,11 @@ export class ProgramsService {
     });
 
     let stepsCreated = 0;
+    const created: { id: string; idx: number }[] = [];
     for (let i = 0; i < parsed.steps.length; i++) {
       const s = parsed.steps[i];
       try {
-        await this.addStep(tenant, program.id, {
+        const step = await this.addStep(tenant, program.id, {
           position: typeof s.position === 'number' ? s.position : i,
           title: String(s.title ?? `Étape ${i + 1}`).slice(0, 200),
           description: s.description ?? undefined,
@@ -159,10 +160,29 @@ export class ProgramsService {
           content_md: s.content_md ?? undefined,
           is_required: s.is_required ?? true,
         });
+        if (step?.id) created.push({ id: step.id, idx: i });
         stepsCreated++;
       } catch (err) {
         this.logger.warn(
           `generate: étape ${i} ignorée — ${(err as Error)?.message ?? err}`,
+        );
+      }
+    }
+
+    // i18n bilingue (best-effort) : on traduit dans l'autre langue et on peuple
+    // les colonnes *_i18n. NON bloquant : si la migration i18n n'est pas encore
+    // appliquée (colonnes absentes), l'écriture échoue silencieusement et le
+    // programme reste servi en langue de base.
+    let i18n = false;
+    if (dto.bilingual !== false) {
+      try {
+        const other = language === 'fr' ? 'en' : 'fr';
+        const t = await this.translateProgram(parsed, other);
+        await this.writeI18nBestEffort(program.id, language, other, parsed, t, created);
+        i18n = true;
+      } catch (err) {
+        this.logger.warn(
+          `generate: i18n non appliqué (migration absente ?) — ${(err as Error)?.message ?? err}`,
         );
       }
     }
@@ -172,7 +192,90 @@ export class ProgramsService {
       steps_created: stepsCreated,
       steps_total: parsed.steps.length,
       language,
+      i18n,
     };
+  }
+
+  /** Traduit un programme généré dans `target` (même structure, mêmes index). */
+  private async translateProgram(
+    parsed: { program: GeneratedProgram; steps: GeneratedStep[] },
+    target: 'fr' | 'en',
+  ): Promise<{ program: GeneratedProgram; steps: GeneratedStep[] }> {
+    const targetName = target === 'fr' ? 'French (français)' : 'English';
+    const system = [
+      'You are a professional translator for a health/nutrition program.',
+      `Translate ALL values of "title", "description" and "content_md" into ${targetName}.`,
+      'Return ONLY valid JSON with EXACTLY the same shape and the SAME array order/length as the input:',
+      '{ "program": { "title": string, "description": string }, "steps": [ { "title": string, "description": string, "content_md": string } ] }',
+      'Do not translate proper nouns that should stay (brand names). Keep markdown structure (bullets, bold). JSON only.',
+    ].join('\n');
+    const payload = JSON.stringify({
+      program: { title: parsed.program.title, description: parsed.program.description },
+      steps: parsed.steps.map((s) => ({
+        title: s.title,
+        description: s.description ?? '',
+        content_md: s.content_md ?? '',
+      })),
+    });
+    const deepseekKey = this.config.get<string>('DEEPSEEK_API_KEY');
+    const openaiKey = this.config.get<string>('OPENAI_API_KEY');
+    let text = '';
+    if (deepseekKey && deepseekKey !== 'replace_me') {
+      text = await this.chatCompletionsJson(
+        'https://api.deepseek.com/v1/chat/completions',
+        deepseekKey,
+        'deepseek-v4-pro',
+        32000,
+        system,
+        payload,
+      );
+    } else if (openaiKey && openaiKey !== 'replace_me') {
+      text = await this.chatCompletionsJson(
+        'https://api.openai.com/v1/chat/completions',
+        openaiKey,
+        'gpt-4o',
+        16000,
+        system,
+        payload,
+      );
+    } else {
+      throw new Error('aucun provider LLM pour la traduction');
+    }
+    return this.parseProgramJson(text);
+  }
+
+  /** Écrit les colonnes *_i18n (best-effort ; échoue si migration absente). */
+  private async writeI18nBestEffort(
+    programId: string,
+    base: 'fr' | 'en',
+    other: 'fr' | 'en',
+    parsed: { program: GeneratedProgram; steps: GeneratedStep[] },
+    translated: { program: GeneratedProgram; steps: GeneratedStep[] },
+    created: { id: string; idx: number }[],
+  ): Promise<void> {
+    const pair = (a?: string, b?: string) => ({ [base]: a ?? '', [other]: b ?? '' });
+    // Programme (une seule requête — révèle tout de suite si les colonnes existent).
+    const { error } = await (this.supabase.client as any)
+      .from('med_programs')
+      .update({
+        title_i18n: pair(parsed.program.title, translated.program.title),
+        description_i18n: pair(parsed.program.description, translated.program.description),
+      })
+      .eq('id', programId);
+    if (error) throw new Error(error.message);
+    // Étapes.
+    for (const { id, idx } of created) {
+      const src = parsed.steps[idx];
+      const tr = translated.steps[idx];
+      await (this.supabase.client as any)
+        .from('med_program_steps')
+        .update({
+          title_i18n: pair(src?.title, tr?.title),
+          description_i18n: pair(src?.description ?? undefined, tr?.description ?? undefined),
+          content_md_i18n: pair(src?.content_md ?? undefined, tr?.content_md ?? undefined),
+        })
+        .eq('id', id);
+    }
   }
 
   private async callProgramGenerator(
