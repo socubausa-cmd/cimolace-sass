@@ -77,6 +77,10 @@ function AppTabs() {
       <Tabs.Screen name="notifications" options={{ href: null }} />
       <Tabs.Screen name="profil" options={{ href: null }} />
       <Tabs.Screen name="messages" options={{ href: null }} />
+      {/* Toute route non déclarée ici atterrit d'office dans la barre d'onglets,
+          sans titre ni icône (carré vide) — ces deux-là s'y étaient glissées. */}
+      <Tabs.Screen name="nouveau-message" options={{ href: null }} />
+      <Tabs.Screen name="forum/[topicId]" options={{ href: null }} />
       <Tabs.Screen name="vie-scolaire" options={{ href: null }} />
       <Tabs.Screen name="calendrier-annuel" options={{ href: null }} />
       <Tabs.Screen name="rendez-vous" options={{ href: null }} />
