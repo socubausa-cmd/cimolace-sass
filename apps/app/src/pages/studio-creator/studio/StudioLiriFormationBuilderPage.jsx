@@ -31,6 +31,19 @@ import {
 
 const NIVEAUX = ['débutant', 'intermédiaire', 'avancé', 'expert'];
 
+/**
+ * Moteur IA (= profil pédagogique côté edge) : chaque choix fixe le fournisseur
+ * PRÉFÉRÉ ; si indisponible (crédits, panne), l'edge bascule automatiquement sur
+ * le suivant de la chaîne et le signale dans meta.message.
+ */
+const PROFIL_OPTIONS = [
+  { value: 'auto', label: 'Auto — meilleur moteur disponible (recommandé)' },
+  { value: 'maitre_pedagogue', label: 'Maître Pédagogue — Claude (Anthropic)' },
+  { value: 'architecte', label: 'Architecte — GPT (OpenAI)' },
+  { value: 'cours_rapide', label: 'Cours Rapide — Grok (xAI)' },
+  { value: 'assistant_eco', label: 'Assistant Éco — DeepSeek' },
+];
+
 /** Transforme le JSON `cours` LIRI (10 étapes) en racine d'arbre pour la colonne Structure. */
 function formationTreeFromLiriCours(cours, typeProgrammeLabel) {
   const etapes = Array.isArray(cours?.etapes) ? cours.etapes : [];
@@ -141,7 +154,7 @@ function DetailPanel({ node }) {
 
 // ─── Form ────────────────────────────────────────────────────────────────────
 function CreationForm({ onResult, loading, setLoading, error, setError }) {
-  const [form, setForm] = useState({ sujet: '', type_programme: 'one_month_program', niveau: 'intermédiaire', contexte: 'Prorascience', profil: 'maitre_pedagogue' });
+  const [form, setForm] = useState({ sujet: '', type_programme: 'one_month_program', niveau: 'intermédiaire', contexte: 'Prorascience', profil: 'auto' });
   const set = (k, v) => setForm(f => ({ ...f, [k]: v }));
   const inputCls = 'w-full rounded-xl border border-white/10 bg-white/[0.04] px-3 py-2.5 text-[13px] text-white placeholder-white/28 outline-none transition-all focus:border-[#d97757]/50 focus:bg-white/[0.07]';
   const labelCls = 'block text-[11px] font-medium uppercase tracking-[0.12em] text-white/38 mb-1.5';
@@ -212,6 +225,13 @@ function CreationForm({ onResult, loading, setLoading, error, setError }) {
             {['Prorascience','Général','Sciences','Humanités','Technologie','Arts'].map(c => <option key={c} value={c}>{c}</option>)}
           </select>
         </div>
+      </div>
+      <div>
+        <label className={labelCls}>Moteur IA</label>
+        <select value={form.profil} onChange={e => set('profil', e.target.value)} className={cn(inputCls, 'cursor-pointer')}>
+          {PROFIL_OPTIONS.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
+        </select>
+        <p className="mt-1.5 text-[11px] text-white/32">Si le moteur choisi est indisponible (crédits, panne), LIRI bascule automatiquement sur le suivant.</p>
       </div>
       {error && <div className="flex items-start gap-2 rounded-xl border border-red-500/25 bg-red-500/10 px-3 py-2.5 text-[12px] text-red-300"><AlertCircle className="h-4 w-4 flex-shrink-0 mt-0.5" />{error}</div>}
       <button type="submit" disabled={loading || !form.sujet.trim()}
@@ -496,6 +516,12 @@ export default function StudioLiriFormationBuilderPage() {
                     Envoyer au poste production <ArrowRight className="h-3 w-3" />
                   </button>
                 </div>
+                {result?.meta?.bascule && result?.meta?.message ? (
+                  <div className="mb-4 flex items-start gap-2 rounded-xl border border-[#d4924a]/25 bg-[#d4924a]/08 px-3 py-2.5 text-[11.5px] leading-relaxed text-[#ecc98f]/90">
+                    <RefreshCw className="mt-0.5 h-3.5 w-3.5 flex-shrink-0" />
+                    <span>{result.meta.message}</span>
+                  </div>
+                ) : null}
                 <div className="rounded-2xl border border-white/10 bg-white/[0.02] p-6">
                   <DetailPanel node={selectedNode} />
                 </div>
