@@ -277,7 +277,7 @@ export default function StudioDebateDetailPage() {
 
   if (!user?.id) {
     return (
-      <div className="min-h-screen bg-[#090D14] text-white flex items-center justify-center px-4">
+      <div className="min-h-screen bg-[#262624] text-white flex items-center justify-center px-4">
         <p className="text-sm text-white/50">Connectez-vous.</p>
       </div>
     );
@@ -285,7 +285,7 @@ export default function StudioDebateDetailPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-[#090D14] text-white flex items-center justify-center">
+      <div className="min-h-screen bg-[#262624] text-white flex items-center justify-center">
         <Loader2 className="w-10 h-10 text-rose-400/60 animate-spin" />
       </div>
     );
@@ -293,7 +293,7 @@ export default function StudioDebateDetailPage() {
 
   if (error && !debate) {
     return (
-      <div className="min-h-screen bg-[#090D14] text-white px-4 py-12 max-w-lg mx-auto">
+      <div className="min-h-screen bg-[#262624] text-white px-4 py-12 max-w-lg mx-auto">
         <Link to="/studio/debate-builder" className="text-sm text-rose-300/80 hover:text-rose-200 inline-flex items-center gap-2 mb-6">
           <ArrowLeft className="w-4 h-4" />
           Retour à la liste
@@ -312,7 +312,7 @@ export default function StudioDebateDetailPage() {
       className="min-h-screen text-white"
       data-school-shell="debate-detail"
       data-tenant-brand={branding.slug}
-      style={{ ...cssVars, background: 'var(--school-background, #090D14)', fontFamily: 'var(--school-font-family, Inter, sans-serif)' }}
+      style={{ ...cssVars, background: 'var(--school-background, #262624)', fontFamily: 'var(--school-font-family, Inter, sans-serif)' }}
     >
       <div className="max-w-3xl mx-auto px-4 py-10 md:py-14">
         <Link

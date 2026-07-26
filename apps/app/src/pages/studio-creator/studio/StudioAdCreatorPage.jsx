@@ -121,7 +121,9 @@ function AdPreviewCard({ platform, headline, description, cta, hashtags, format 
         <span className="text-xs text-gray-300">{p.label}</span>
         <span className="ml-auto text-[10px] text-gray-500">{FORMAT_LABELS[format] || format}</span>
       </div>
-      <div className={cn('bg-[#0B1017] flex items-center justify-center', isVertical ? 'h-40' : 'h-28')}>
+      {/* Fenêtre d'aperçu média : surface la plus sombre de la charte (#1f1e1c, cf. --rail),
+          qui fait « scène » sous le visuel — le navy #0B1017 jurait avec les panneaux chauds. */}
+      <div className={cn('bg-[#1f1e1c] flex items-center justify-center', isVertical ? 'h-40' : 'h-28')}>
         <div className="text-center">
           <Film className="w-8 h-8 text-gray-600 mx-auto mb-1" />
           <p className="text-xs text-gray-600">Aperçu visuel</p>
@@ -198,7 +200,7 @@ function ChannelCard({ config, integration, onSave }) {
                     placeholder={field.placeholder}
                     value={form[field.key] || ''}
                     onChange={(e) => setForm((p) => ({ ...p, [field.key]: e.target.value }))}
-                    className="w-full bg-[#0F1419] border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder-gray-600 focus:outline-none focus:border-[color:var(--school-accent,#D4AF37)]"
+                    className="w-full bg-[#2b2a27] border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder-gray-600 focus:outline-none focus:border-[color:var(--school-accent,#D4AF37)]"
                   />
                 </div>
               ))}
@@ -587,9 +589,10 @@ export default function StudioAdCreatorPage() {
             placeholder="https://... (URL vidéo, enregistrement live)"
             value={sourceDescription}
             onChange={(e) => setSourceDescription(e.target.value)}
-            className="w-full bg-[#0F1419] border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder-gray-600 focus:outline-none focus:border-[color:var(--school-accent,#D4AF37)]"
+            className="w-full bg-[#2b2a27] border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder-gray-600 focus:outline-none focus:border-[color:var(--school-accent,#D4AF37)]"
           />
-          <div className="rounded-xl border border-white/10 bg-[#0B1017] p-4 space-y-3">
+          {/* Panneau (découpe du clip) → #30302e, la surface « panneau » de la charte. */}
+          <div className="rounded-xl border border-white/10 bg-[#30302e] p-4 space-y-3">
             <div className="flex items-center justify-center h-20 rounded-lg bg-black/30">
               <Film className="w-8 h-8 text-gray-600" />
             </div>
@@ -619,7 +622,7 @@ export default function StudioAdCreatorPage() {
             placeholder="Ex : Maîtrisez la symbolique du cycle Initié"
             value={sourceTitle}
             onChange={(e) => setSourceTitle(e.target.value)}
-            className="w-full bg-[#0F1419] border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder-gray-600 focus:outline-none focus:border-[color:var(--school-accent,#D4AF37)]"
+            className="w-full bg-[#2b2a27] border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder-gray-600 focus:outline-none focus:border-[color:var(--school-accent,#D4AF37)]"
           />
         </div>
         <div>
@@ -629,7 +632,7 @@ export default function StudioAdCreatorPage() {
             placeholder="Décrivez le contenu, la valeur apportée, le public cible..."
             value={sourceDescription}
             onChange={(e) => setSourceDescription(e.target.value)}
-            className="w-full bg-[#0F1419] border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder-gray-600 focus:outline-none focus:border-[color:var(--school-accent,#D4AF37)] resize-none"
+            className="w-full bg-[#2b2a27] border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder-gray-600 focus:outline-none focus:border-[color:var(--school-accent,#D4AF37)] resize-none"
           />
         </div>
       </div>
@@ -681,7 +684,7 @@ export default function StudioAdCreatorPage() {
               value={displayContent.headline}
               onChange={(e) => setAdContent((p) => ({ ...p, headline: e.target.value }))}
               placeholder="Titre de la publicité"
-              className="w-full bg-[#0F1419] border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder-gray-600 focus:outline-none focus:border-[color:var(--school-accent,#D4AF37)]"
+              className="w-full bg-[#2b2a27] border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder-gray-600 focus:outline-none focus:border-[color:var(--school-accent,#D4AF37)]"
             />
           </div>
           <div>
@@ -691,7 +694,7 @@ export default function StudioAdCreatorPage() {
               value={displayContent.description}
               onChange={(e) => setAdContent((p) => ({ ...p, description: e.target.value }))}
               placeholder="Description de la publicité"
-              className="w-full bg-[#0F1419] border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder-gray-600 focus:outline-none focus:border-[color:var(--school-accent,#D4AF37)] resize-none"
+              className="w-full bg-[#2b2a27] border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder-gray-600 focus:outline-none focus:border-[color:var(--school-accent,#D4AF37)] resize-none"
             />
           </div>
           <div className="grid grid-cols-2 gap-2">
@@ -702,7 +705,7 @@ export default function StudioAdCreatorPage() {
                 value={displayContent.cta}
                 onChange={(e) => setAdContent((p) => ({ ...p, cta: e.target.value }))}
                 placeholder="Commencer maintenant"
-                className="w-full bg-[#0F1419] border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder-gray-600 focus:outline-none focus:border-[color:var(--school-accent,#D4AF37)]"
+                className="w-full bg-[#2b2a27] border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder-gray-600 focus:outline-none focus:border-[color:var(--school-accent,#D4AF37)]"
               />
             </div>
             <div>
@@ -712,7 +715,7 @@ export default function StudioAdCreatorPage() {
                 value={(displayContent.hashtags || []).join(', ')}
                 onChange={(e) => setAdContent((p) => ({ ...p, hashtags: e.target.value.split(',').map((h) => h.trim()).filter(Boolean) }))}
                 placeholder="#prorascience, #formation"
-                className="w-full bg-[#0F1419] border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder-gray-600 focus:outline-none focus:border-[color:var(--school-accent,#D4AF37)]"
+                className="w-full bg-[#2b2a27] border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder-gray-600 focus:outline-none focus:border-[color:var(--school-accent,#D4AF37)]"
               />
             </div>
           </div>
@@ -1067,7 +1070,8 @@ export default function StudioAdCreatorPage() {
                 Installation Google Analytics 4
               </h3>
               <p className="text-xs text-gray-400 mb-3">Ajoutez ce snippet dans le <code className="bg-black/30 px-1 rounded text-[var(--school-accent,#D4AF37)]">&lt;head&gt;</code> de votre site après avoir configuré GA4 ci-dessus.</p>
-              <div className="bg-[#0B1017] rounded-xl border border-white/8 p-4">
+              {/* Bloc de code : surface sombre #1f1e1c (cf. --rail) pour détacher le snippet. */}
+              <div className="bg-[#1f1e1c] rounded-xl border border-white/8 p-4">
                 <code className="text-xs text-green-300 block whitespace-pre">{`<!-- Google tag (gtag.js) -->
 <script async src="https://www.googletagmanager.com/gtag/js?id=G-XXXXXXXXXX"></script>
 <script>

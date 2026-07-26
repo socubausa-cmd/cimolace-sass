@@ -273,7 +273,10 @@ export function LiriPortalPage() {
     { label: 'Ma semaine', icon: CalendarDays, to: '/liri/semaine', student: true },
     { label: 'Rendez-vous', icon: CalendarClock, to: '/liri/rendez-vous', student: true },
     { label: 'Programmer', icon: CalendarPlus, to: '/studio/live', creator: true },
-    { label: 'SmartBoard', icon: PenTool, to: '/studio/smartboard', creator: true },
+    // ⚠️ '/studio/smartboard' N'EXISTE PAS (lien mort : il retombait sur le fallback
+    // `*` de StudioRouter → renvoi sec au hub /studio). La vraie route de l'éditeur est
+    // '/studio/smartboard-designer' (StudioSmartboardKonvaPage) — cf. StudioRouter.
+    { label: 'SmartBoard', icon: PenTool, to: '/studio/smartboard-designer', creator: true },
     // Le Précepteur — cours enseigné (narré + dessiné main), monté DANS le portail
     // (LiriPrecepteurPage → LiriPortalShell rail « École »). Route publique /liri/precepteur.
     // PARTAGÉ (sans flag) : pertinent pour l'élève (lancer une leçon) ET le créateur (démo).

@@ -1,27 +1,42 @@
 /**
- * StudioEntryPage — Hub du Studio Créateur
- * Redesign pro (inspiration DaVinci Resolve / Premiere Pro) :
- *   • TopBar avec logo, workspace switcher, actions
- *   • Rail d'icônes gauche (catégories)
- *   • Zone principale : grille de projets/labs (cards) + search
- *   • Inspector droit : détails du lab survolé/sélectionné
- *   • StatusBar bas : infos projet & session
+ * StudioEntryPage — Hub du Studio Créateur (route index de /studio).
+ *
+ * ── LA PAGE VIT DANS LA COQUE DU PORTAIL ─────────────────────────────────────
+ * StudioRouter monte désormais cette page dans `LiriPortalShell active="studio"` :
+ * topbar, marque, rail moteur 92 px et nav basse mobile sont posés PAR LA COQUE.
+ * Conséquence directe sur la mise en page de ce hub : la barre supérieure « façon
+ * logiciel de montage » qu'il portait (wordmark LIRI + menus Fichier/Édition/Affichage/
+ * Espace/Aide + avatar de profil) faisait DOUBLON avec la topbar du portail — deux
+ * marques, deux avatars, deux barres empilées. Elle a donc été fondue dans la barre
+ * d'outils contextuelle qui existait déjà (fil d'Ariane + recherche) :
+ *   • les menus et l'avatar étaient de pures décorations (aucun `onClick`) → retirés ;
+ *   • le sélecteur d'espace et le bouton retour sont STATEFUL → conservés, déplacés.
+ * Résultat : une seule barre au lieu de deux, aucun contrôle actif perdu.
+ *
+ * ── CHARTE ───────────────────────────────────────────────────────────────────
+ * Les couleurs viennent TOUTES de `proColors` (@/styles/proTokens), désormais aligné
+ * sur la charte LIRI (surfaces #1a1917→#3a3835, encre #f5f4ee, accent coral #d97757,
+ * or #e6cc92). On ne redéfinit donc aucune palette locale : le seul ajout de ce fichier
+ * est la gamme d'accents PAR OUTIL ci-dessous, qui n'a pas sa place dans des tokens
+ * globaux. Le fond de la zone principale est laissé TRANSPARENT à dessein — c'est ce
+ * qui laisse passer le halo d'ambiance peint par ProShell.
  */
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   GraduationCap, Video, Calendar, Mic2, HeartHandshake,
   Wand2, Clapperboard, Megaphone, ArrowLeft, Swords, Brain, LayoutGrid,
-  Search, Star, Plus, ChevronRight, Settings, User, Clock, Layers,
+  Search, Star, Plus, ChevronRight, Clock, Layers,
   Film, BookOpen, Target, Sparkles, Circle, Activity,
 } from 'lucide-react';
-import { LiriWordmark } from '@/components/brand/LiriWordmark';
 import activeTenantConfig from '@/lib/tenant/activeTenantConfig';
 import {
-  ProShell, ProTopBar, ProMenuButton, ProWorkspaceSwitcher, ProRecPill,
-  ProSideRail, ProPanel, ProStatusBar, ProStatusItem,
+  ProShell, ProWorkspaceSwitcher, ProSideRail, ProPanel, ProStatusBar, ProStatusItem,
   proColors, proRadii, proType, proSize, proShadow,
 } from '@/components/studio-creator/studio-pro';
+
+/** Encre posée sur un aplat coral (5,5:1 — proColors n'expose pas de « sur-accent »). */
+const ENCRE_SUR_CORAIL = '#241a15';
 
 // Marque blanche par tenant : sur le domaine d'un tenant (ex. prorascience.org) le
 // Studio porte le nom du tenant et n'expose JAMAIS « LIRI » ; sur l'hôte produit
@@ -33,102 +48,114 @@ const STUDIO_BRAND =
 const STUDIO_AGENT_LABEL = STUDIO_IS_TENANT ? 'Agent IA' : 'Agent LIRI';
 const STUDIO_PROJECT_TAG = STUDIO_IS_TENANT ? `studio.${activeTenantConfig.slug}` : 'studio.liri';
 
+/* ── Gamme d'accents CHAUDE, par outil ─────────────────────────────────────────
+   Les accents d'origine (#D946EF magenta, #F59E0B, #F43F5E, #EAB308) cassaient la
+   charte. Ils ne pouvaient pas non plus être laissés au remap de studioWarm.css, qui
+   écrase toutes les familles froides sur UNE seule teinte : les onze laboratoires
+   seraient devenus indistinguables.
+   Principe de différenciation retenu : la TEINTE porte la catégorie, l'INTENSITÉ porte
+   l'outil dans sa catégorie. Aucune teinte froide, aucune ambiguïté entre familles.
+     • Pédagogie  → or et bronze (#e6cc92 → #b5834a)
+     • Live       → rouge et corail saturés, la famille la plus « chaude » (#e8674f → #e08b6b)
+     • Agenda     → terres désaturées, sable (#c99070 → #d99a4e)
+     • Marketing  → orange doré vif, isolé (#e8a13c)
+   Tous vérifiés ≥ 4,6:1 sur le fond de la charte (le plus bas : bronze #b5834a à 4,6:1). */
 const STUDIO_TYPES = [
   {
     id: 'course-builder', path: '/studio/formation-llm-builder', icon: Wand2,
-    title: 'Formation LLM Builder', category: 'pedagogy',
+    title: 'Constructeur de formation IA', category: 'pedagogy',
     shortDesc: 'Brief → génération pédagogique IA → scripts.',
     description: "Espace unique de création de cours par IA : brief initial, génération pédagogique, étapes structurées et scripts. Idéal pour démarrer un cours à partir d'un sujet.",
-    accent: '#D946EF',
+    accent: '#e6cc92', // or clair — le point d'entrée le plus lumineux de la grille
   },
   {
     id: 'liri-agent', path: '/studio/liri-agent', icon: Brain,
     title: STUDIO_AGENT_LABEL, category: 'pedagogy',
     shortDesc: 'Parcours complet en 10 étapes (SmartBoard + mindmap).',
     description: `Générez un parcours pédagogique complet en 10 étapes : SmartBoard, MasterScript et mindmap automatiquement, depuis un simple sujet — méthode ${STUDIO_BRAND}.`,
-    accent: '#F59E0B',
+    accent: '#d9a441', // ambre profond
   },
   {
     id: 'smartboard-designer', path: '/studio/smartboard-designer', icon: LayoutGrid,
     title: 'SmartBoard Designer', category: 'pedagogy',
     shortDesc: 'Éditeur Konva 1037×750 + Course Copilot.',
     description: "Éditeur Konva 1037×750 avec Course Copilot : scènes, calques, exports. Workspaces cloud et import Polotno historique. Aide disponible via /studio/smartboard-aide.",
-    accent: '#e3aa6b',
+    accent: '#e3aa6b', // ocre clair (déjà chaud à l'origine, conservé)
   },
   {
     id: 'formation', path: '/studio/formation', icon: GraduationCap,
     title: 'Formation', category: 'pedagogy',
     shortDesc: 'Modules, leçons, parcours structurés.',
     description: "Concevez des parcours pédagogiques complets : modules, leçons et progression, dans une expérience structurée de bout en bout.",
-    accent: '#e0926a',
+    accent: '#b5834a', // bronze — le plus sourd de la famille pédagogie
   },
   {
     id: 'live', path: '/studio/live', icon: Video,
     title: 'Live', category: 'live',
     shortDesc: 'Sessions temps réel avec interactions.',
     description: "Préparez des sessions en direct avec interactions, contrôle de salle et expérience premium en temps réel.",
-    accent: '#F59E0B',
+    accent: '#e8674f', // rouge chaud — le direct
   },
   {
     id: 'debate-builder', path: '/studio/debate-builder', icon: Swords,
     title: 'Débat', category: 'live',
     shortDesc: 'DebateCore : rounds, NeuronQ, juge IA.',
-    description: "DebateCore : configurez sujet, rounds, NeuronQ et juge IA. Préparez les débatteurs ; l'Arena exécute le mode débat.",
-    accent: '#F43F5E',
+    description: "DebateCore : configurez sujet, rounds, NeuronQ et juge IA. Préparez les débatteurs ; l'arène exécute le mode débat.",
+    accent: '#cf7b4c', // terre brûlée — la confrontation
   },
   {
     id: 'live-preparation', path: '/studio/live-preparation', icon: Clapperboard,
-    title: 'Live Production', category: 'live',
-    shortDesc: 'Blueprint + scènes + contenus avant arène.',
-    description: "Studio premium : blueprint, scènes, contenus, Secret Classroom, accès — avant d'entrer dans l'arène. N'altère pas le live messagerie.",
-    accent: '#F97316',
+    title: 'Production live', category: 'live',
+    shortDesc: 'Trame + scènes + contenus avant l’arène.',
+    description: "Studio premium : trame, scènes, contenus, Secret Classroom, accès — avant d'entrer dans l'arène. N'altère pas le live messagerie.",
+    accent: '#e08b6b', // corail doux — la préparation, plus calme que le direct
   },
   {
     id: 'appointment', path: '/studio/appointment', icon: Calendar,
     title: 'Rendez-vous', category: 'agenda',
     shortDesc: 'Créneaux et disponibilités.',
     description: "Structurez vos créneaux, modalités et disponibilités pour des rendez-vous fluides et précis.",
-    accent: '#cf8059',
+    accent: '#c99070', // terre douce
   },
   {
     id: 'event', path: '/studio/event', icon: Mic2,
     title: 'Événement', category: 'agenda',
     shortDesc: 'Ateliers, conférences, campus.',
     description: "Créez des événements impactants — ateliers ou conférences — avec une présentation claire et moderne, visibles dans la vie scolaire.",
-    accent: '#F43F5E',
+    accent: '#e0a583', // sable clair
   },
   {
     id: 'coaching', path: '/studio/coaching', icon: HeartHandshake,
     title: 'Programme / Coaching', category: 'agenda',
     shortDesc: 'Accompagnement, jalons, progression.',
     description: "Concevez des accompagnements personnalisés avec objectifs, jalons et suivi de progression.",
-    accent: '#d99a4e',
+    accent: '#d99a4e', // or ocre
   },
   {
     id: 'ad-creator', path: '/studio/ad-creator', icon: Megaphone,
-    title: 'Ad Creator', category: 'marketing',
+    title: 'Créateur de publicités', category: 'marketing',
     shortDesc: 'Publicités IA multi-plateformes.',
     description: "Créez des publicités IA pour Facebook, TikTok, YouTube et Google. Sélectionnez un extrait de cours, générez le contenu et publiez en un clic.",
-    accent: '#EAB308',
+    accent: '#e8a13c', // orange doré vif — seul de sa famille
   },
 ];
 
 const CATEGORIES = [
-  { id: 'all', label: 'Tous', shortLabel: 'All', icon: Layers },
+  { id: 'all', label: 'Tous', shortLabel: 'Tous', icon: Layers },
   { id: 'pedagogy', label: 'Pédagogie', shortLabel: 'Péda', icon: BookOpen },
   { id: 'live', label: 'Live', shortLabel: 'Live', icon: Film },
-  { id: 'agenda', label: 'Agenda', shortLabel: 'Cal', icon: Calendar },
-  { id: 'marketing', label: 'Marketing', shortLabel: 'Mkt', icon: Target },
+  { id: 'agenda', label: 'Agenda', shortLabel: 'RDV', icon: Calendar },
+  { id: 'marketing', label: 'Marketing', shortLabel: 'Pub', icon: Target },
   { divider: true, id: 'divider-1' },
-  { id: 'favorites', label: 'Favoris', shortLabel: 'Fav', icon: Star },
-  { id: 'recent', label: 'Récents', shortLabel: 'Rec', icon: Clock },
+  { id: 'favorites', label: 'Favoris', shortLabel: 'Fav.', icon: Star },
+  { id: 'recent', label: 'Récents', shortLabel: 'Réc.', icon: Clock },
 ];
 
 const WORKSPACES = [
-  { id: 'create', label: 'Create', icon: Sparkles },
-  { id: 'build', label: 'Build', icon: LayoutGrid },
-  { id: 'broadcast', label: 'Broadcast', icon: Video },
-  { id: 'export', label: 'Export', icon: Activity },
+  { id: 'create', label: 'Créer', icon: Sparkles },
+  { id: 'build', label: 'Construire', icon: LayoutGrid },
+  { id: 'broadcast', label: 'Diffuser', icon: Video },
+  { id: 'export', label: 'Exporter', icon: Activity },
 ];
 
 const FAV_STORAGE_KEY = 'studio_entry_favorites_v1';
@@ -185,98 +212,8 @@ export default function StudioEntryPage() {
 
   return (
     <ProShell
-      topBar={
-        <ProTopBar
-          logo={
-            <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-              {STUDIO_IS_TENANT ? (
-                <span
-                  style={{
-                    fontSize: proType.sm,
-                    fontWeight: 700,
-                    letterSpacing: '0.01em',
-                    color: proColors.textPrimary,
-                  }}
-                >
-                  {STUDIO_BRAND}
-                </span>
-              ) : (
-                <LiriWordmark size="compact" className="text-[#e8e0d8]" />
-              )}
-              <span
-                style={{
-                  fontSize: proType.sm,
-                  fontWeight: 600,
-                  letterSpacing: '0.02em',
-                  color: proColors.textPrimary,
-                }}
-              >
-                Studio
-              </span>
-            </div>
-          }
-          left={
-            <>
-              <ProMenuButton label="Fichier" onClick={() => { /* stub menus */ }} />
-              <ProMenuButton label="Édition" />
-              <ProMenuButton label="Affichage" />
-              <ProMenuButton label="Espace" />
-              <ProMenuButton label="Aide" />
-            </>
-          }
-          center={
-            <ProWorkspaceSwitcher
-              items={WORKSPACES}
-              activeId={workspace}
-              onChange={setWorkspace}
-            />
-          }
-          right={
-            <>
-              <ProRecPill state="idle" label="Prêt" />
-              <button
-                type="button"
-                onClick={() => navigate(-1)}
-                title="Retour"
-                aria-label="Retour"
-                style={{
-                  width: 26, height: 26, borderRadius: proRadii.sm,
-                  background: 'transparent', border: `1px solid ${proColors.border}`,
-                  color: proColors.textSecondary, display: 'inline-flex',
-                  alignItems: 'center', justifyContent: 'center', cursor: 'pointer',
-                }}
-              >
-                <ArrowLeft size={14} strokeWidth={1.75} />
-              </button>
-              <button
-                type="button"
-                onClick={() => { /* settings placeholder */ }}
-                title="Paramètres"
-                aria-label="Paramètres"
-                style={{
-                  width: 26, height: 26, borderRadius: proRadii.sm,
-                  background: 'transparent', border: `1px solid ${proColors.border}`,
-                  color: proColors.textSecondary, display: 'inline-flex',
-                  alignItems: 'center', justifyContent: 'center', cursor: 'pointer',
-                }}
-              >
-                <Settings size={14} strokeWidth={1.75} />
-              </button>
-              <div
-                style={{
-                  width: 26, height: 26, borderRadius: '50%',
-                  background: proColors.surface3, border: `1px solid ${proColors.borderStrong}`,
-                  color: proColors.textSecondary, display: 'inline-flex',
-                  alignItems: 'center', justifyContent: 'center',
-                }}
-                title="Profil"
-              >
-                <User size={13} strokeWidth={1.75} />
-              </div>
-            </>
-          }
-        />
-      }
+      /* Pas de `topBar` : la coque du portail en pose déjà une juste au-dessus.
+         Les contrôles vivants ont migré dans la barre d'outils de la grille. */
       sideRail={
         <ProSideRail
           items={CATEGORIES}
@@ -306,11 +243,11 @@ export default function StudioEntryPage() {
               <ProStatusItem label="Résultats" value={String(filtered.length)} />
             </>
           }
-          center={<ProStatusItem label="Workspace" value={WORKSPACES.find((w) => w.id === workspace)?.label} tone="ok" />}
+          center={<ProStatusItem label="Espace" value={WORKSPACES.find((w) => w.id === workspace)?.label} tone="ok" />}
           right={
             <>
               <ProStatusItem label="Version" value="2026.04" />
-              <ProStatusItem label="Auto-save" value="ON" tone="ok" />
+              <ProStatusItem label="Sauvegarde auto" value="ACTIVE" tone="ok" />
             </>
           }
         />
@@ -326,6 +263,9 @@ export default function StudioEntryPage() {
         category={category}
         favorites={favorites}
         onToggleFav={toggleFavorite}
+        espace={workspace}
+        onEspace={setWorkspace}
+        onRetour={() => navigate(-1)}
       />
     </ProShell>
   );
@@ -335,30 +275,43 @@ export default function StudioEntryPage() {
  *  MAIN — Grille principale des Studios (cards type projet)
  * ============================================================ */
 
-function MainLabsGrid({ labs, selectedId, onSelect, onOpen, search, onSearch, category, favorites, onToggleFav }) {
+function MainLabsGrid({
+  labs, selectedId, onSelect, onOpen, search, onSearch, category, favorites, onToggleFav,
+  espace, onEspace, onRetour,
+}) {
   return (
+    // Fond volontairement NON peint : ProShell peint dessous le halo coral et le lavis
+    // d'or, qu'un aplat opaque masquerait.
     <div style={{ display: 'flex', flexDirection: 'column', height: '100%', minHeight: 0 }}>
-      {/* Search bar + breadcrumb */}
+      {/* ── Barre d'outils contextuelle ──────────────────────────────────────
+          Fil d'Ariane + espace de travail + recherche + actions, sur UNE ligne
+          qui passe à la ligne si l'écran est étroit (la coque du portail sert
+          aussi le mobile — pas de débordement horizontal toléré). */}
       <div
         style={{
-          height: 42, minHeight: 42,
+          minHeight: 42,
           background: proColors.surface1,
           borderBottom: `1px solid ${proColors.border}`,
-          display: 'flex', alignItems: 'center',
-          padding: '0 14px', gap: 10,
+          display: 'flex', alignItems: 'center', flexWrap: 'wrap',
+          padding: '6px 14px', gap: 10,
         }}
       >
         <span style={{ fontSize: proType.xs, color: proColors.textMuted, letterSpacing: proType.tracking.caps, textTransform: 'uppercase' }}>
           Studio / <span style={{ color: proColors.textPrimary }}>{labelForCategory(category)}</span>
         </span>
-        <div style={{ flex: 1 }} />
+
+        <ProWorkspaceSwitcher items={WORKSPACES} activeId={espace} onChange={onEspace} />
+
+        <div style={{ flex: 1, minWidth: 8 }} />
+
         <div
           style={{
             display: 'flex', alignItems: 'center', gap: 6,
             background: proColors.surface3,
             border: `1px solid ${proColors.border}`,
             borderRadius: proRadii.sm,
-            padding: '0 8px', height: 26, width: 260,
+            padding: '0 8px', height: 26,
+            flex: '1 1 160px', maxWidth: 260,
           }}
         >
           <Search size={12} strokeWidth={2} color={proColors.textMuted} />
@@ -367,7 +320,7 @@ function MainLabsGrid({ labs, selectedId, onSelect, onOpen, search, onSearch, ca
             onChange={(e) => onSearch(e.target.value)}
             placeholder="Rechercher un laboratoire…"
             style={{
-              flex: 1, background: 'transparent', border: 'none', outline: 'none',
+              flex: 1, minWidth: 0, background: 'transparent', border: 'none', outline: 'none',
               color: proColors.textPrimary, fontSize: proType.sm,
               fontFamily: proType.ui,
             }}
@@ -375,10 +328,28 @@ function MainLabsGrid({ labs, selectedId, onSelect, onOpen, search, onSearch, ca
           {search && (
             <button
               type="button" onClick={() => onSearch('')}
+              aria-label="Effacer la recherche"
               style={{ background: 'none', border: 'none', color: proColors.textMuted, cursor: 'pointer', padding: 0 }}
             >×</button>
           )}
         </div>
+
+        <button
+          type="button"
+          onClick={onRetour}
+          title="Retour"
+          aria-label="Retour"
+          style={{
+            width: 26, height: 26, borderRadius: proRadii.sm,
+            background: 'transparent', border: `1px solid ${proColors.border}`,
+            color: proColors.textSecondary, display: 'inline-flex',
+            alignItems: 'center', justifyContent: 'center', cursor: 'pointer',
+            flexShrink: 0,
+          }}
+        >
+          <ArrowLeft size={14} strokeWidth={1.75} />
+        </button>
+
         <button
           type="button"
           onClick={() => onOpen(labs[0])}
@@ -386,12 +357,13 @@ function MainLabsGrid({ labs, selectedId, onSelect, onOpen, search, onSearch, ca
           style={{
             height: 26, padding: '0 10px',
             display: 'inline-flex', alignItems: 'center', gap: 5,
-            background: proColors.accent, color: '#0a0908',
+            background: proColors.accent, color: ENCRE_SUR_CORAIL,
             border: 'none', borderRadius: proRadii.sm,
             fontSize: proType.xs, fontWeight: 700, letterSpacing: '0.04em',
-            textTransform: 'uppercase', cursor: 'pointer',
+            textTransform: 'uppercase', cursor: labs.length ? 'pointer' : 'not-allowed',
             fontFamily: proType.ui,
             opacity: labs.length ? 1 : 0.4,
+            flexShrink: 0,
           }}
         >
           <Plus size={12} strokeWidth={2.5} /> Nouveau projet
@@ -449,7 +421,7 @@ function LabCard({ lab, active, isFav, onSelect, onDoubleClick, onToggleFav }) {
       onDoubleClick={onDoubleClick}
       style={{
         textAlign: 'left',
-        background: proColors.surface1,
+        background: proColors.surface3,
         border: `1px solid ${active ? proColors.borderAccent : proColors.border}`,
         borderRadius: proRadii.md,
         padding: 12,
@@ -462,15 +434,15 @@ function LabCard({ lab, active, isFav, onSelect, onDoubleClick, onToggleFav }) {
         minHeight: 120,
         position: 'relative',
       }}
-      onMouseEnter={(e) => { if (!active) e.currentTarget.style.background = proColors.surface2; }}
-      onMouseLeave={(e) => { if (!active) e.currentTarget.style.background = proColors.surface1; }}
+      onMouseEnter={(e) => { if (!active) e.currentTarget.style.background = proColors.surface4; }}
+      onMouseLeave={(e) => { if (!active) e.currentTarget.style.background = proColors.surface3; }}
     >
-      {/* Thumbnail strip */}
+      {/* Vignette : l'accent chaud de l'outil se fond dans les surfaces de la charte */}
       <div
         style={{
           height: 54,
           borderRadius: proRadii.sm,
-          background: `linear-gradient(135deg, ${lab.accent}33 0%, ${proColors.surface3} 60%, ${proColors.surface2} 100%)`,
+          background: `linear-gradient(135deg, ${lab.accent}33 0%, ${proColors.surface4} 60%, ${proColors.surface2} 100%)`,
           border: `1px solid ${proColors.border}`,
           display: 'flex', alignItems: 'center', justifyContent: 'center',
           color: lab.accent,
@@ -495,7 +467,7 @@ function LabCard({ lab, active, isFav, onSelect, onDoubleClick, onToggleFav }) {
           </div>
           <div
             style={{
-              fontSize: proType.xs, color: proColors.textMuted, marginTop: 2,
+              fontSize: proType.xs, color: proColors.textSecondary, marginTop: 2,
               display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical',
               overflow: 'hidden',
             }}
@@ -512,11 +484,11 @@ function LabCard({ lab, active, isFav, onSelect, onDoubleClick, onToggleFav }) {
           style={{
             width: 20, height: 20, borderRadius: proRadii.xs,
             display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
-            color: isFav ? proColors.accent : proColors.textMuted,
+            color: isFav ? proColors.gold : proColors.textMuted,
             cursor: 'pointer', flexShrink: 0,
           }}
         >
-          <Star size={12} strokeWidth={2} fill={isFav ? proColors.accent : 'transparent'} />
+          <Star size={12} strokeWidth={2} fill={isFav ? proColors.gold : 'transparent'} />
         </span>
       </div>
       {/* Footer meta */}
@@ -565,7 +537,7 @@ function InspectorSelectedLab({ selected, navigate, toggleFavorite, isFav }) {
         <div
           style={{
             height: 130, borderRadius: proRadii.md,
-            background: `linear-gradient(135deg, ${selected.accent}33 0%, ${proColors.surface3} 60%, ${proColors.surface2} 100%)`,
+            background: `linear-gradient(135deg, ${selected.accent}33 0%, ${proColors.surface4} 60%, ${proColors.surface2} 100%)`,
             border: `1px solid ${proColors.border}`,
             display: 'flex', alignItems: 'center', justifyContent: 'center',
             color: selected.accent,
@@ -597,12 +569,12 @@ function InspectorSelectedLab({ selected, navigate, toggleFavorite, isFav }) {
             style={{
               width: 26, height: 26, borderRadius: proRadii.sm,
               background: 'transparent', border: `1px solid ${proColors.border}`,
-              color: isFav ? proColors.accent : proColors.textMuted,
+              color: isFav ? proColors.gold : proColors.textMuted,
               display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
               cursor: 'pointer',
             }}
           >
-            <Star size={13} strokeWidth={2} fill={isFav ? proColors.accent : 'transparent'} />
+            <Star size={13} strokeWidth={2} fill={isFav ? proColors.gold : 'transparent'} />
           </button>
         </div>
 
@@ -617,7 +589,7 @@ function InspectorSelectedLab({ selected, navigate, toggleFavorite, isFav }) {
           onClick={() => navigate(selected.path)}
           style={{
             height: 34, borderRadius: proRadii.sm,
-            background: proColors.accent, color: '#0a0908',
+            background: proColors.accent, color: ENCRE_SUR_CORAIL,
             border: 'none', cursor: 'pointer',
             fontSize: proType.sm, fontWeight: 700, letterSpacing: '0.05em',
             textTransform: 'uppercase', fontFamily: proType.ui,

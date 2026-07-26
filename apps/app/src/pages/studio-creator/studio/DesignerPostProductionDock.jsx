@@ -333,7 +333,9 @@ export default function DesignerPostProductionDock({
               <div className="min-h-0 flex-1 overflow-auto">
                 <Suspense
                   fallback={
-                    <div className="flex min-h-[16rem] items-center justify-center bg-[#0F1419]">
+                    /* Attente de chargement : base chaude #262624 (et non le navy #0F1419,
+                       banni par la charte) — ce carré occupe le dock, entouré de panneaux chauds. */
+                    <div className="flex min-h-[16rem] items-center justify-center bg-[#262624]">
                       <Loader2 className="h-6 w-6 animate-spin text-[var(--school-accent)]" />
                     </div>
                   }

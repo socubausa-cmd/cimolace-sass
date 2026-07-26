@@ -164,6 +164,50 @@
 .studio-warm-scope [class*="bg-[#1a1e28]"], .studio-warm-scope [class*="bg-[#14161c]"] { background-color: #2b2a27 !important; }
 .studio-warm-scope [class*="text-[#6b7280]"] { color: #8a847b !important; }
 
+/* ═══════════════════════════════════════════════════════════════════════════
+ * NEUTRALISEUR DE MARQUE — pages du Studio montées DANS la coque du portail
+ * ═══════════════════════════════════════════════════════════════════════════
+ * POURQUOI. `.lp-shell-main` (LiriPortal.css) déclare `--school-accent:#d97757`, mais
+ * SANS `!important`. Or 17 racines de page du Studio étalent `...cssVars` en style INLINE
+ * (useTenantBranding → schoolShellTheme) : `--school-background`, `--school-accent`,
+ * `--school-primary`… La cascade se résout PAR ÉLÉMENT : la déclaration inline du
+ * DESCENDANT l'emporte pour tout son sous-arbre, quelle que soit la force posée sur
+ * l'ancêtre. Autrement dit : entrer dans la coque ne réchauffait RIEN sur ces pages.
+ * Concrètement, `background: var(--school-background)` y valait `branding.backgroundColor`,
+ * dont le repli codé en dur est #0b1115 (tenantBranding.js) — un navy froid, banni par la
+ * charte → page bleu-noir plein cadre à l'intérieur d'une coque #262624 à topbar corail.
+ *
+ * LA PARADE est celle DÉJÀ écrite pour la console live (LiriPortal.css, bloc
+ * `.lp-shell-main .liri-live-shell--host/--guest` : « !important bat le style inline ») :
+ * re-déclarer les variables SUR L'ÉLÉMENT MÊME qui porte le style inline, en `!important`
+ * — une déclaration `!important` de feuille de style bat un style inline non-`!important`.
+ *
+ * SCOPE = `.studio-en-coque` (le wrapper posé par CoqueStudio, StudioRouter.jsx) et NON
+ * `.lp-shell-main` : ce dernier couvre TOUT le portail, où d'autres surfaces posent un
+ * `--school-accent` VOULU (ImmersiveClassroom / ChapterInterlude en ambre #d4a36a) qu'on
+ * écraserait au passage. Hors de la coque, ces sélecteurs ne matchent jamais.
+ *
+ * DEUX sélecteurs : `[data-school-shell]` couvre les racines nommées ; `[style*="--school-"]`
+ * rattrape celles qui n'en portent pas (états chargement/erreur de LivePostIntelligencePage,
+ * et toute future page qui étalerait `cssVars` sans marquer sa racine).
+ */
+.studio-en-coque [data-school-shell],
+.studio-en-coque [style*="--school-"] {
+  /* Fond : base chaude du portail, jamais le navy du branding tenant. */
+  --school-background: #262624 !important;
+  /* Accents : corail = LES ACTIONS (remplace l'or froid #d4af37 hérité d'ISNA). */
+  --school-primary: #d97757 !important;
+  --school-primary-rgb: 217 119 87 !important;
+  --school-secondary: #c2683f !important;
+  --school-secondary-rgb: 194 104 63 !important;
+  --school-accent: #d97757 !important;
+  --school-accent-rgb: 217 119 87 !important;
+  /* Surfaces : panneau #30302e, filet ivoire à 9 % — mêmes valeurs que la coque. */
+  --school-shell-surface: rgba(43, 41, 38, 0.98) !important;
+  --school-shell-panel: rgba(48, 48, 46, 0.92) !important;
+  --school-shell-border: rgba(245, 244, 238, 0.09) !important;
+}
+
 /* ── Hex froids écrits en MAJUSCULES dans le code (#2A2F38 navy, #B8A3FF/#9485FF/#4C1D95
  *    violets) : les sélecteurs d'attribut CSS sont SENSIBLES À LA CASSE → flag `i`. ── */
 .studio-warm-scope [class*="bg-[#2a2f38]" i] { background-color: #2b2a27 !important; }

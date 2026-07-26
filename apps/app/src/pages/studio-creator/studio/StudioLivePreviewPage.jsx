@@ -126,9 +126,11 @@ export default function StudioLivePreviewPage() {
   const displayElements = applySpotlight(filteredByView, activeSlide?.sections ?? [], activeSection);
 
   return (
-    <div className="flex h-[100dvh] flex-col overflow-hidden bg-[#05070c] text-white">
+    /* Fond #262624 (base LIRI) + barre haute #1f1e1c (chrome, cf. --rail) : la page vit
+       DANS la coque du portail, un fond navy y dessinait une couture froide sur tout le tour. */
+    <div className="flex h-[100dvh] flex-col overflow-hidden bg-[#262624] text-white">
       {/* Header */}
-      <div className="flex shrink-0 items-center gap-3 border-b border-white/8 bg-[#080a12] px-4 py-2">
+      <div className="flex shrink-0 items-center gap-3 border-b border-white/8 bg-[#1f1e1c] px-4 py-2">
         <Link to="/studio" className="flex items-center gap-1 rounded-md border border-white/10 px-2 py-1 text-[11px] text-white/60 hover:text-[var(--school-accent)]">
           <ChevronLeft className="h-3.5 w-3.5" />Studio
         </Link>

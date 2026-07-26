@@ -1737,11 +1737,11 @@ export default function LivePostIntelligencePage({ mobileLiriShell = false } = {
       <div
         className={cn(
           'flex items-center justify-center',
-          mobileLiriShell ? 'min-h-[40vh] py-12' : 'min-h-screen bg-[#05070c]',
+          mobileLiriShell ? 'min-h-[40vh] py-12' : 'min-h-screen bg-[#262624]',
         )}
         style={!mobileLiriShell ? {
           ...cssVars,
-          background: 'var(--school-background, #05070c)',
+          background: 'var(--school-background, #262624)',
           fontFamily: 'var(--school-font-family, Inter, sans-serif)',
         } : undefined}
       >
@@ -1755,11 +1755,11 @@ export default function LivePostIntelligencePage({ mobileLiriShell = false } = {
       <div
         className={cn(
           'flex flex-col items-center justify-center gap-4 px-4 text-center',
-          mobileLiriShell ? 'min-h-[40vh] py-12' : 'min-h-screen bg-[#05070c]',
+          mobileLiriShell ? 'min-h-[40vh] py-12' : 'min-h-screen bg-[#262624]',
         )}
         style={!mobileLiriShell ? {
           ...cssVars,
-          background: 'var(--school-background, #05070c)',
+          background: 'var(--school-background, #262624)',
           fontFamily: 'var(--school-font-family, Inter, sans-serif)',
         } : undefined}
       >
@@ -1785,7 +1785,7 @@ export default function LivePostIntelligencePage({ mobileLiriShell = false } = {
       data-tenant-brand={branding.slug}
       style={{
         ...cssVars,
-        background: mobileLiriShell ? undefined : 'var(--school-background, #05070c)',
+        background: mobileLiriShell ? undefined : 'var(--school-background, #262624)',
         fontFamily: 'var(--school-font-family, Inter, sans-serif)',
       }}
     >

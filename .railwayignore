@@ -37,3 +37,21 @@ cloudbuild.api.yaml
 .env.staging.example
 .env.production.example
 .env.example
+
+# ── Durcissement (2026-07-26) : `railway up` timeoutait systematiquement a
+# l'upload. Le service ne compile QUE apps/api/src — tout le reste est du poids
+# mort qui allonge l'upload et le fait echouer.
+# ⚠️ MOTIFS ANCRÉS À LA RACINE (/) — OBLIGATOIRE.
+# Un motif nu comme `supabase/` exclut TOUT dossier de ce nom, y compris
+# `apps/api/src/supabase/` → le build a échoué sur 146 erreurs TS2307
+# « Cannot find module '../supabase/supabase.module' » (2026-07-26).
+**/node_modules/
+/artifacts/
+/docs/
+/tests/
+/supabase/
+/precepteur_sources/
+*.log
+*.mp4
+*.pdf
+.DS_Store

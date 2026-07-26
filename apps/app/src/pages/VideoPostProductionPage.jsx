@@ -2545,6 +2545,21 @@ const VideoPostProductionPage = ({
       </div>
     </div>
   );
+
+  // ⚠️ CE `return` EST INDISPENSABLE — sans lui, le composant calculait `_ppBody`
+  // puis se terminait sur `undefined` : React 19 n'affiche RIEN, sans la moindre
+  // erreur en console. La page de post-production (maillon du pipeline vidéo)
+  // rendait un écran BLANC en production, et le mode `embedded` avec elle (dock
+  // Designer, modale du constructeur de formation). Le `return` avait été collé
+  // par erreur à l'intérieur de `RenderExportPanel`, après le `return` de
+  // celle-ci : du code mort, référençant `embedded`/`_ppBody` hors de portée.
+  //
+  // Montage = outil de création : embarqué dans la coque portail LIRI (topbar +
+  // rail + pied). Le mode `embedded` (modale replay, dock) garde son conteneur
+  // d'accueil et ne double PAS la coque.
+  return embedded ? _ppBody : (
+    <LiriPortalShell active="studio">{_ppBody}</LiriPortalShell>
+  );
 };
 
 // ─── Render Export Panel ─────────────────────────────────────────────────────
@@ -2856,13 +2871,6 @@ function RenderExportPanel({
         <p className="text-xs text-[#b0ada3] text-center py-2">Aucun rendu pour ce contenu. Clique sur « Générer la vidéo » pour démarrer.</p>
       )}
     </div>
-  );
-
-  // Montage = outil de création : embarqué dans la coque portail LIRI (rail + topbar +
-  // footer), comme la Masterclass. Le mode `embedded` (modal replay, dock) garde son
-  // conteneur d'accueil et ne double PAS la coque.
-  return embedded ? _ppBody : (
-    <LiriPortalShell active="studio">{_ppBody}</LiriPortalShell>
   );
 }
 

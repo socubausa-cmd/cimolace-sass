@@ -31,6 +31,17 @@ const ROUTE_IMPORTERS = {
   '/liri/messages': () => import('@/pages/MessagingPage'),
   '/liri/temple': () => import('@/pages/liri/LiriTemplePage'),
   '/liri/marche': () => import('@/pages/liri/LiriMboloMarketPage'),
+  // ── Moteur STUDIO ────────────────────────────────────────────────────────────
+  // Le Studio entier tient dans UN seul lazy() d'App.jsx (`StudioRouter`, qui importe
+  // statiquement toutes ses pages) : les trois chemins ci-dessous pointent donc
+  // volontairement vers le MÊME module — Vite/ESM ne le télécharge qu'une fois, le
+  // second appel réutilise la promesse du premier.
+  // Les chemins listés sont ceux réellement portés par des items de rail
+  // (liriRail.tsx : moteur Studio → '/studio/liri', moteur Créa → Biblio.) plus la
+  // racine '/studio', pour couvrir le survol depuis n'importe quelle entrée.
+  '/studio': () => import('@/pages/studio-creator/studio/StudioRouter'),
+  '/studio/liri': () => import('@/pages/studio-creator/studio/StudioRouter'),
+  '/studio/liri/bibliotheque': () => import('@/pages/studio-creator/studio/StudioRouter'),
 };
 
 // Ordre de préchargement idle : onglets les plus consultés d'abord.
@@ -45,6 +56,11 @@ const IDLE_ORDER = [
   '/liri/absences',
   '/liri/documents',
   '/liri/bibliotheque',
+  // ⚠️ Le Studio N'EST PAS dans cette liste, à dessein : son chunk agrège tout
+  // l'écosystème de création (Konva, constructeurs, wizards…) — le précharger en idle
+  // pour TOUS les entrants du portail, élèves compris (qui n'y ont même pas accès),
+  // coûterait cher sur les liaisons africaines à faible débit. Il reste couvert par le
+  // niveau 2 (survol/focus du bouton « Studio »), qui suffit largement au ressenti.
 ];
 
 const loaded = new Set(); // chemins déjà préchargés (évite de relancer le même import).

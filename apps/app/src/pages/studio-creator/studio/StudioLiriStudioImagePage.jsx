@@ -12,8 +12,10 @@ import LiriStudioImageToolDock from '@/features/smartboard-konva-editor/componen
 
 export default function StudioLiriStudioImagePage() {
   return (
-    <div className="flex h-[100dvh] max-h-[100dvh] flex-col overflow-hidden bg-[#06080f] text-white">
-      <header className="flex h-11 shrink-0 items-center gap-3 border-b border-white/[0.08] bg-[#090b12] px-3">
+    /* Fond #262624 (base LIRI) + barre haute #1f1e1c (chrome, cf. --rail) : la page vit
+       DANS la coque du portail, un fond navy y dessinait une couture froide sur tout le tour. */
+    <div className="flex h-[100dvh] max-h-[100dvh] flex-col overflow-hidden bg-[#262624] text-white">
+      <header className="flex h-11 shrink-0 items-center gap-3 border-b border-white/[0.08] bg-[#1f1e1c] px-3">
         <Link
           to="/studio/liri"
           className="flex items-center gap-1.5 rounded-lg border border-white/10 px-2.5 py-1.5 text-[12px] text-white/65 transition hover:bg-white/[0.06] hover:text-white"

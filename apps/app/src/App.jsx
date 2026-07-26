@@ -1411,7 +1411,10 @@ const AppContent = () => {
     '/teacher-dashboard',
     '/classroom/live/',
     '/classroom/video',
-    '/studio',
+    '/studio',          // Studio — APP du portail : depuis que StudioRouter monte LiriPortalShell,
+                        // /studio/* a SA topbar (marque, fil d'Ariane, sélecteur de moteur). Le Header
+                        // vitrine par-dessus ferait DEUX barres empilées → il reste masqué. Même
+                        // raisonnement que '/lives' et '/liri' ci-dessous.
     '/lives',           // Bibliothèque des Lives — APP du portail (LiriPortalShell), pas de header vitrine
     '/dashboard/liri',  // LIRI Brain — agent IA plein écran (univers dédié), pas de header vitrine
     '/dashboard/tools',
@@ -2623,6 +2626,10 @@ isLiriHostDevPreviewRoute;
               <LiveHostPage />
             </ProtectedRoleRoute>
           } />
+          {/* La COQUE du portail (LiriPortalShell, moteur « Studio ») est posée DANS StudioRouter,
+              pas ici : elle doit épargner les routes plein écran (live-arena) et les pages qui
+              montent déjà la leur (post-production) — arbitrage que ce splat ne peut pas faire.
+              Ne pas envelopper cette route dans un shell : ce serait la 2e topbar. */}
           <Route path="/studio/*" element={
             <ProtectedLiriRoute allowedRoles={['teacher', 'admin', 'owner', 'secretariat', 'practitioner', 'clinic_admin']} allowTenantRole>
               <StudioRouter />

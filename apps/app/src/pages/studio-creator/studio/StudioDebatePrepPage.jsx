@@ -97,7 +97,7 @@ export default function StudioDebatePrepPage() {
 
   if (!user?.id) {
     return (
-      <div className="min-h-screen bg-[#090D14] text-white flex items-center justify-center px-4">
+      <div className="min-h-screen bg-[#262624] text-white flex items-center justify-center px-4">
         <p className="text-sm text-white/50">Connectez-vous.</p>
       </div>
     );
@@ -105,7 +105,7 @@ export default function StudioDebatePrepPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-[#090D14] text-white flex items-center justify-center">
+      <div className="min-h-screen bg-[#262624] text-white flex items-center justify-center">
         <Loader2 className="w-10 h-10 text-rose-400/60 animate-spin" />
       </div>
     );
@@ -113,7 +113,7 @@ export default function StudioDebatePrepPage() {
 
   if (error && !debate) {
     return (
-      <div className="min-h-screen bg-[#090D14] text-white px-4 py-12 max-w-lg mx-auto">
+      <div className="min-h-screen bg-[#262624] text-white px-4 py-12 max-w-lg mx-auto">
         <Link to="/studio" className="text-sm text-rose-300/80 hover:text-rose-200 inline-flex items-center gap-2 mb-6">
           <ArrowLeft className="w-4 h-4" />
           Studio
@@ -127,7 +127,7 @@ export default function StudioDebatePrepPage() {
   const ready = me?.ready_status === 'ready';
 
   return (
-    <div className="min-h-screen bg-[#090D14] text-white">
+    <div className="min-h-screen bg-[#262624] text-white">
       <div className="max-w-lg mx-auto px-4 py-10 md:py-14">
         <Link
           to={isDebater ? '/studio/debate-builder#debater-invites' : `/studio/debate-builder/${debateId}`}
