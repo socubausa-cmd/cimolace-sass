@@ -35,4 +35,3 @@ test-results/
 /*.pdf
 .wrangler/
 apps/app/scratch-*.mjs
-apps/mobile/tests/
