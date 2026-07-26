@@ -1,6 +1,7 @@
 import { Feather } from '@expo/vector-icons';
 import { useLocalSearchParams } from 'expo-router';
 import * as Speech from 'expo-speech';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useEffect, useMemo, useState } from 'react';
 import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 
@@ -82,6 +83,7 @@ export default function PrecepteurScreen() {
   const { masterclassId } = useLocalSearchParams<{ masterclassId?: string }>();
   const { colors: C } = useTheme();
   const styles = useMemo(() => makeStyles(C), [C]);
+  const insets = useSafeAreaInsets();
 
   const [course, setCourse] = useState<PrecepteurCourse | null>(null);
   const [loading, setLoading] = useState(true);
@@ -215,7 +217,7 @@ export default function PrecepteurScreen() {
 
   return (
     <View style={styles.root}>
-      <View style={styles.topbar}>
+      <View style={[styles.topbar, { paddingTop: insets.top + 10 }]}>
         <Text style={styles.mode}>CIMOLACE · MODE FORMATION</Text>
         <Pressable onPress={() => setMuted((m) => !m)} hitSlop={10} style={styles.muteBtn}>
           <Feather name={muted ? 'volume-x' : 'volume-2'} size={18} color={muted ? C.faint : C.coral} />
@@ -264,7 +266,9 @@ const makeStyles = (C: LiriPalette) => StyleSheet.create({
   center: { flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: C.base, paddingHorizontal: 36, gap: 10 },
   emptyTitle: { color: C.ink, fontSize: 16.5, fontWeight: '700', fontFamily: F.sans, textAlign: 'center' },
   emptyCopy: { color: C.muted, fontSize: 14, lineHeight: 20, fontFamily: F.sans, textAlign: 'center' },
-  topbar: { flexDirection: 'row', alignItems: 'center', paddingTop: 54, paddingHorizontal: 18, paddingBottom: 8 },
+  // paddingTop injecté depuis les insets : un 54 en dur passait juste sur cet
+  // émulateur mais collerait la Dynamic Island d'un iPhone récent.
+  topbar: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 18, paddingBottom: 8 },
   mode: { flex: 1, textAlign: 'center', color: C.coral, fontSize: 11, fontWeight: '800', letterSpacing: 1.4, fontFamily: F.sans, marginLeft: 26 },
   muteBtn: { width: 26, alignItems: 'flex-end' },
   stage: { flex: 1 },

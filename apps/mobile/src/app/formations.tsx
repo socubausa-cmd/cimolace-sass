@@ -2,6 +2,7 @@ import { Feather } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { ActivityIndicator, Pressable, RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { LiriFonts as F, softShadow, type LiriPalette } from '@/constants/liri-theme';
 import { fetchStudentCourses } from '@/lib/learning-api';
@@ -40,7 +41,9 @@ export default function StudentFormationsScreen() {
   };
 
   return (
-    <View style={styles.root}>
+    // `contentInsetAdjustmentBehavior` est iOS-only : sans SafeAreaView, l'entête
+    // et la flèche retour passaient SOUS la barre d'état sur Android.
+    <SafeAreaView style={styles.root} edges={['top']}>
       <ScrollView
         contentInsetAdjustmentBehavior="automatic"
         contentContainerStyle={styles.content}
@@ -108,7 +111,7 @@ export default function StudentFormationsScreen() {
           ))}
         </View>
       </ScrollView>
-    </View>
+    </SafeAreaView>
   );
 }
 

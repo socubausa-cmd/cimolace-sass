@@ -2,6 +2,7 @@ import { Feather } from '@expo/vector-icons';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useEffect, useMemo, useState } from 'react';
 import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { LiriFonts as F, softShadow, type LiriPalette } from '@/constants/liri-theme';
 import LessonPlayer from '@/components/lesson-player';
@@ -50,7 +51,9 @@ export default function CourseDetailScreen() {
   const percent = lessonCount ? Math.round((completedCount / lessonCount) * 100) : 0;
 
   return (
-    <View style={styles.root}>
+    // Sans zone sûre, l'entête passe sous la barre d'état sur Android
+    // (contentInsetAdjustmentBehavior du ScrollView est iOS-only).
+    <SafeAreaView style={styles.root} edges={['top']}>
       <ScrollView contentInsetAdjustmentBehavior="automatic" contentContainerStyle={styles.content}>
         <Pressable onPress={() => router.back()} hitSlop={10} style={styles.back}>
           <Feather name="chevron-left" size={22} color={C.ink} />
@@ -167,7 +170,7 @@ export default function CourseDetailScreen() {
         ) : null}
       </ScrollView>
       <LessonPlayer lesson={openLesson} onClose={() => setOpenLesson(null)} />
-    </View>
+    </SafeAreaView>
   );
 }
 
