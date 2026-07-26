@@ -33,6 +33,13 @@ const periodLabel = (cycle: string) =>
 const money = (cents: number) =>
   Math.round(cents / 100).toLocaleString('fr-FR').replace(/\u202f/g, ' ');
 
+/**
+ * Un palier \u00e0 0 ne s'ach\u00e8te pas : il est d\u00e9j\u00e0 acquis. On proposait \u00ab Payer \u00b7
+ * Mobile Money \u00bb sur un forfait \u00e0 0 EUR \u2014 PawaPay refuse un montant nul, et
+ * demander de r\u00e9gler z\u00e9ro n'a aucun sens pour l'utilisateur.
+ */
+const isFree = (plan: { price_cents?: number }) => !(Number(plan.price_cents) > 0);
+
 const featureLabels = (features: unknown): string[] => {
   if (Array.isArray(features)) {
     return features
@@ -125,9 +132,15 @@ export default function CommerceScreen() {
                   {index === 1 ? <View style={s.popular}><Text style={s.popularTxt}>POPULAIRE</Text></View> : null}
                   <Text style={s.planLabel}>{f.label}</Text>
                   <View style={s.priceRow}>
-                    <Text style={s.price}>{money(f.price_cents)}</Text>
-                    <Text style={s.currency}>{f.currency}</Text>
-                    <Text style={s.period}>{periodLabel(f.billing_cycle)}</Text>
+                    {isFree(f) ? (
+                      <Text style={s.price}>Gratuit</Text>
+                    ) : (
+                      <>
+                        <Text style={s.price}>{money(f.price_cents)}</Text>
+                        <Text style={s.currency}>{f.currency}</Text>
+                        <Text style={s.period}>{periodLabel(f.billing_cycle)}</Text>
+                      </>
+                    )}
                   </View>
                   <View style={s.perks}>
                     {(featureLabels(f.features).length ? featureLabels(f.features) : [f.description || 'Accès selon les conditions du forfait']).map((p) => (
@@ -137,27 +150,46 @@ export default function CommerceScreen() {
                       </View>
                     ))}
                   </View>
-                  <Pressable style={({ pressed }) => [s.cta, index === 1 && s.ctaFeatured, pressed && s.pressed]} onPress={() => buyForfait(f)}>
-                    <Feather name="smartphone" size={15} color={index === 1 ? '#fff' : C.coral} />
-                    <Text style={[s.ctaTxt, index === 1 && s.ctaTxtFeatured]}>Payer · Mobile Money</Text>
-                  </Pressable>
-                  {WEB ? (
-                    <Pressable onPress={() => openWebCheckout('forfait', f.key)} hitSlop={6}>
-                      <Text style={s.cardLink}>ou payer par carte</Text>
-                    </Pressable>
-                  ) : null}
+                  {isFree(f) ? (
+                    <View style={s.included}>
+                      <Feather name="check-circle" size={15} color={C.coral} />
+                      <Text style={s.includedTxt}>Inclus — aucun paiement requis</Text>
+                    </View>
+                  ) : (
+                    <>
+                      <Pressable style={({ pressed }) => [s.cta, index === 1 && s.ctaFeatured, pressed && s.pressed]} onPress={() => buyForfait(f)}>
+                        <Feather name="smartphone" size={15} color={index === 1 ? '#fff' : C.coral} />
+                        <Text style={[s.ctaTxt, index === 1 && s.ctaTxtFeatured]}>Payer · Mobile Money</Text>
+                      </Pressable>
+                      {WEB ? (
+                        <Pressable onPress={() => openWebCheckout('forfait', f.key)} hitSlop={6}>
+                          <Text style={s.cardLink}>ou payer par carte</Text>
+                        </Pressable>
+                      ) : null}
+                    </>
+                  )}
                 </View>
               ))
             : boutique.map((b) => (
-                <Pressable key={b.key} style={({ pressed }) => [s.shopRow, pressed && s.pressed]} onPress={() => buyBoutique(b)}>
+                <Pressable
+                  key={b.key}
+                  style={({ pressed }) => [s.shopRow, !isFree(b) && pressed && s.pressed]}
+                  onPress={isFree(b) ? undefined : () => buyBoutique(b)}
+                >
                   <View style={s.shopEmoji}><Text style={{ fontSize: 24 }}>📦</Text></View>
                   <View style={s.shopMid}>
                     <Text style={s.shopLabel}>{b.label}</Text>
                     <Text style={s.shopDesc}>{b.description || 'Offre LIRI'}</Text>
                   </View>
                   <View style={s.shopBuy}>
-                    <Text style={s.shopPrice}>{money(b.price_cents)}</Text>
-                    <Text style={s.shopFcfa}>{b.currency}</Text>
+                    {isFree(b) ? (
+                      <Text style={s.shopPrice}>Offert</Text>
+                    ) : (
+                      <>
+                        <Text style={s.shopPrice}>{money(b.price_cents)}</Text>
+                        <Text style={s.shopFcfa}>{b.currency}</Text>
+                      </>
+                    )}
                   </View>
                 </Pressable>
               ))}
@@ -198,6 +230,9 @@ const makeStyles = (C: LiriPalette) => StyleSheet.create({
   perk: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   perkTxt: { color: C.muted, fontSize: 13.5, fontFamily: F.sans },
   cta: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, borderRadius: 14, borderWidth: 1, borderColor: C.coral, paddingVertical: 12 },
+  // Palier gratuit : un état, pas une action — rien à presser.
+  included: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, borderRadius: 14, borderWidth: 1, borderColor: C.line, backgroundColor: C.coralTint, paddingVertical: 12 },
+  includedTxt: { color: C.coral, fontSize: 13.5, fontWeight: '600', fontFamily: F.sans },
   ctaFeatured: { backgroundColor: C.coral },
   ctaTxt: { color: C.coral, fontSize: 15, fontWeight: '700', fontFamily: F.sans },
   ctaTxtFeatured: { color: '#fff' },
