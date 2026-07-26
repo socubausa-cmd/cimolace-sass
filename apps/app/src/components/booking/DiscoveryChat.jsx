@@ -14,6 +14,15 @@ import { X, MessageSquare, Send, Loader2, Sparkles, CalendarClock, ChevronDown }
 import { Button } from '@/components/ui/button';
 import { BookingCalendarModal } from './BookingCalendarModal';
 import { cn } from '@/lib/utils';
+import activeTenantConfig from '@/lib/tenant/activeTenantConfig';
+
+/**
+ * Nom de l'ÉCOLE courante. Ce widget est monté par App.jsx sur les hôtes dont le
+ * portail n'est PAS prorascience — donc chez les AUTRES tenants et sur
+ * app.cimolace.space. « Prorascience » y était écrit en dur (titre, message
+ * d'accueil, suggestion) : chaque client voyait l'assistant d'une autre école.
+ */
+const SCHOOL_NAME = activeTenantConfig?.branding?.name || activeTenantConfig?.name || "l'école";
 
 /* ─── helpers ───────────────────────────────────────────────── */
 const BOOKING_INTENTS = ['booking', 'interview', 'appointment', 'entretien'];
@@ -95,7 +104,7 @@ function TypingDot() {
 
 /* ─── Suggestions initiales ─────────────────────────────────── */
 const SUGGESTIONS = [
-  "C'est quoi Prorascience ?",
+  `C'est quoi ${SCHOOL_NAME} ?`,
   "Quelles formations proposez-vous ?",
   "Quels sont les tarifs ?",
   "Je veux parler à un conseiller",
@@ -130,7 +139,7 @@ export function DiscoveryChat() {
     if (messages.length === 0) {
       setMessages([{
         role: 'ai',
-        text: 'Bonjour ! Je suis l\'assistant de Prorascience. Posez-moi une question sur l\'école, les formations ou les tarifs. Pour un entretien personnalisé, je vous oriente vers le secrétariat.',
+        text: `Bonjour ! Je suis l'assistant de ${SCHOOL_NAME}. Posez-moi une question sur l'école, les formations ou les tarifs. Pour un entretien personnalisé, je vous oriente vers le secrétariat.`,
         routes: [],
         showBook: false,
       }]);
@@ -213,7 +222,7 @@ export function DiscoveryChat() {
                     <Sparkles className="w-4 h-4 text-[var(--school-accent)]" />
                   </div>
                   <div>
-                    <p className="text-sm font-semibold text-white">Assistant Prorascience</p>
+                    <p className="text-sm font-semibold text-white">Assistant {SCHOOL_NAME}</p>
                     <p className="text-[10px] text-gray-500">Réponses instantanées · FAQ · Orientation</p>
                   </div>
                 </div>
