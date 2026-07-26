@@ -14,9 +14,11 @@ import { useStudentProgress } from '@/features/eleve/useStudentProgress';
 type IconName = React.ComponentProps<typeof Feather>['name'];
 
 const MENU: { to: string; title: string; sub: string; icon: IconName; color: string; badge?: string }[] = [
-  { to: '/reglages', title: 'Informations personnelles', sub: 'Gère ton profil et tes informations', icon: 'user', color: '#d97757' },
-  { to: '/engines', title: 'Mes statistiques', sub: 'Découvre ton évolution', icon: 'bar-chart-2', color: '#e6b878' },
-  { to: '/bibliotheque', title: 'Téléchargements', sub: 'Cours, fiches et ressources', icon: 'download', color: '#e6b878' },
+  // ⚠️ « Mes statistiques » pointait sur /engines — le hub INTERNE de parité
+  // native, qui affiche « Partiel / À faire » et les manques du portage. Retiré :
+  // les vraies statistiques de l'élève sont déjà en haut de cet écran.
+  { to: '/reglages', title: 'Paramètres', sub: 'Compte, apparence et facturation', icon: 'settings', color: '#d97757' },
+  { to: '/bibliotheque', title: 'Bibliothèque', sub: 'Cours, masterclass et ressources', icon: 'book-open', color: '#e6b878' },
   { to: '/formations', title: 'Mes formations', sub: 'Modules, leçons et progression', icon: 'book-open', color: '#e0926a' },
   { to: '/videotheque', title: 'Vidéothèque', sub: 'Séances enregistrées et transcription', icon: 'film', color: '#d97757' },
   { to: '/ma-classe', title: 'Ma classe', sub: 'Promotion et camarades', icon: 'users', color: '#e6b878' },
