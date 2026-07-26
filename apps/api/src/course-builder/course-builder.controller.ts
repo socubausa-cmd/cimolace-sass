@@ -38,4 +38,23 @@ export class CourseBuilderController {
   // ── Rendu MP4 split-screen ──
   @Post('render-enqueue') enqueueRender2(@Body() d: any, @CurrentTenant() t: TenantContext, @Req() r: Request) { return this.svc.enqueuePostprodRender(t.id, ((r as any).user?.id as string) ?? '', d ?? {}); }
   @Get('render-status') renderStatus(@Query('contentId') contentId: string, @CurrentTenant() t: TenantContext) { return this.svc.getPostprodRenderStatus(t.id, contentId); }
+
+  // ── Lecture du montage PAR LA CLASSE (élèves compris) ──────────────────────
+  // `render-status` est un outil de PRODUCTION : il vit sous le @Roles de la classe
+  // ('owner','admin','teacher') et renvoyait donc 403 à tout élève — c'est-à-dire au
+  // public même du montage. `@Roles()` avec une liste VIDE surcharge (getAllAndOverride)
+  // la restriction de rôle pour CE seul handler : RolesGuard passe, tandis que
+  // JwtAuthGuard + TenantGuard (fail-closed) continuent d'exiger un MEMBRE ACTIF du
+  // tenant.
+  //
+  // ⚠️ « Membre actif du tenant » N'EST PAS un droit de lecture sur le cours. Le montage
+  // EST le cours entier : ouvrir ce handler à tout membre contournait le paywall que
+  // `POST /courses/:id/video-url` applique sur la vidéo SOURCE. Le contrôle de forfait /
+  // d'inscription est donc fait dans le service (assertMontagePlaybackAllowed), au même
+  // niveau d'exigence que CoursesService.signCourseVideoUrl — d'où le passage du
+  // TenantContext COMPLET (on a besoin du rôle) et de l'identifiant utilisateur.
+  @Get('render-playback') @Roles()
+  renderPlayback(@Query('contentId') contentId: string, @CurrentTenant() t: TenantContext, @Req() r: Request) {
+    return this.svc.getRenderedPlaybackUrl(t, ((r as any).user?.id as string) ?? '', contentId);
+  }
 }

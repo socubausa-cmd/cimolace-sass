@@ -2,7 +2,7 @@ import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { Link, useLocation, useNavigate, useParams } from 'react-router-dom';
 import { supabase } from '@/lib/customSupabaseClient';
 import { LiriPortalShell } from '@/components/liri/LiriPortalShell';
-import { courseBuilderApi } from '@/lib/api-v2';
+import { courseBuilderApi, renderJobErrorMessage, renderJobPlayableUrl, renderJobStorageKey } from '@/lib/api-v2';
 import { normalizeReturnTo, safeDesignerReturnPathForState } from '@/lib/returnToNavigation';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -1504,6 +1504,18 @@ const VideoPostProductionPage = ({
 
       nextData.nle = usePostProdNleStore.getState().grade;
       nextData.chapterSlideMap = [...(chapterSlideMap || [])];
+      // Durée RÉELLE de la source, telle que le navigateur vient de la lire.
+      // POURQUOI la persister : c'est la seule borne autoritaire de la timeline du
+      // montage. Sans elle, l'API retombait sur `max(chapters.endSeconds)` — une valeur
+      // qui IGNORE la queue non chapitrée de la vidéo, et qui vaut 0 sur un cours pas
+      // encore chapitré. Le diaporama pouvait alors dépasser le cours et ses dernières
+      // slides étaient coupées au montage, en silence.
+      {
+        const sourceSeconds = Number(videoRef.current?.duration || previewDuration || 0);
+        if (Number.isFinite(sourceSeconds) && sourceSeconds > 0) {
+          nextData.durationSeconds = Math.round(sourceSeconds * 1000) / 1000;
+        }
+      }
       {
         const g = usePostProdNleStore.getState().grade;
         const base = useNleProjectStore.getState().getSerializableProject();
@@ -2536,15 +2548,25 @@ const VideoPostProductionPage = ({
 };
 
 // ─── Render Export Panel ─────────────────────────────────────────────────────
+// La table `course_render_jobs` ne connaît que 4 statuts (queued | rendering |
+// completed | failed). Les trois autres (preparing_assets, packaging, cancelled)
+// sont conservés par TOLÉRANCE : si le worker se met à publier des étapes plus
+// fines, l'UI les nomme déjà au lieu d'afficher un identifiant technique brut.
+// Palette chaude uniquement : l'échec est en corail (≥ 4,5:1 sur #1f1e1c), jamais
+// en rouge criard.
 const STATUS_LABELS = {
-  queued:           { label: 'En file…',          color: 'text-[#b0ada3]',    pulse: true  },
-  preparing_assets: { label: 'Préparation…',       color: 'text-[#d97757]',   pulse: true  },
-  rendering:        { label: 'Rendu en cours…',    color: 'text-[#d97757]',  pulse: true  },
-  packaging:        { label: 'Finalisation…',      color: 'text-[#d97757]', pulse: true  },
-  completed:        { label: 'Terminé',            color: 'text-[#9fbf8f]', pulse: false },
-  failed:           { label: 'Échec',              color: 'text-red-400',    pulse: false },
-  cancelled:        { label: 'Annulé',             color: 'text-[#82807a]',   pulse: false },
+  queued:           { label: 'En file…',          color: 'text-[#b0ada3]', pulse: true  },
+  preparing_assets: { label: 'Préparation…',      color: 'text-[#d97757]', pulse: true  },
+  rendering:        { label: 'Rendu en cours…',   color: 'text-[#d97757]', pulse: true  },
+  packaging:        { label: 'Finalisation…',     color: 'text-[#d97757]', pulse: true  },
+  completed:        { label: 'Terminé',           color: 'text-[#9fbf8f]', pulse: false },
+  failed:           { label: 'Échec du rendu',    color: 'text-[#e08a6b]', pulse: false },
+  cancelled:        { label: 'Annulé',            color: 'text-[#82807a]', pulse: false },
 };
+
+// Statuts pendant lesquels on continue de sonder l'API (un seul endroit, réutilisé
+// par le polling ET par l'affichage « En cours… » : les deux ne peuvent plus diverger).
+const ACTIVE_RENDER_STATUSES = ['queued', 'preparing_assets', 'rendering', 'packaging'];
 
 function RenderExportPanel({
   contentId,
@@ -2581,6 +2603,12 @@ function RenderExportPanel({
   const [jobsLoading, setJobsLoading] = React.useState(false);
   const [enqueueLoading, setEnqueueLoading] = React.useState(false);
   const [renderError, setRenderError] = React.useState('');
+  // Avertissement NON bloquant remonté par l'API au lancement (plans non placés…).
+  const [enqueueNotice, setEnqueueNotice] = React.useState('');
+  // Erreur de LECTURE du suivi (API injoignable / refus) — distincte de `renderError`
+  // qui concerne le LANCEMENT du rendu. Avant, l'échec de `renderStatus` était avalé
+  // en silence : l'écran restait figé sur « Aucun rendu » sans jamais dire pourquoi.
+  const [jobsError, setJobsError] = React.useState('');
   const pollRef = React.useRef(null);
 
   const fetchJobs = React.useCallback(async () => {
@@ -2589,8 +2617,9 @@ function RenderExportPanel({
     try {
       const body = await courseBuilderApi.renderStatus(contentId);
       setJobs(Array.isArray(body?.jobs) ? body.jobs : []);
-    } catch {
-      // silent
+      setJobsError('');
+    } catch (e) {
+      setJobsError(String(e?.message || e || 'Suivi des rendus indisponible.'));
     } finally {
       setJobsLoading(false);
     }
@@ -2600,7 +2629,7 @@ function RenderExportPanel({
 
   // Poll while any job is active
   React.useEffect(() => {
-    const hasActive = jobs.some((j) => ['queued', 'preparing_assets', 'rendering', 'packaging'].includes(j.status));
+    const hasActive = jobs.some((j) => ACTIVE_RENDER_STATUSES.includes(j.status));
     if (hasActive && !pollRef.current) {
       pollRef.current = window.setInterval(fetchJobs, 4000);
     } else if (!hasActive && pollRef.current) {
@@ -2618,8 +2647,19 @@ function RenderExportPanel({
     if (!contentId) return;
     setEnqueueLoading(true);
     setRenderError('');
+    setEnqueueNotice('');
     try {
-      await courseBuilderApi.renderEnqueue({ contentId, renderMode, exportResolution });
+      const res = await courseBuilderApi.renderEnqueue({ contentId, renderMode, exportResolution });
+      // Un plan capturé qu'AUCUN chapitre n'illustre n'a pas d'instant dans le cours :
+      // le moteur ne l'affichera pas. On le DIT au lancement, plutôt que de laisser le
+      // formateur découvrir après coup un montage amputé d'une partie de ses plans.
+      const unplaced = Number(res?.unplacedSlides || 0);
+      if (unplaced > 0 && renderMode !== 'raw') {
+        setEnqueueNotice(
+          `${unplaced} plan(s) capturé(s) ne sont rattachés à aucun chapitre : ils n'apparaîtront pas dans le montage. ` +
+            'Associe-les à un chapitre dans la timeline pour les inclure.',
+        );
+      }
       await fetchJobs();
     } catch (e) {
       setRenderError(String(e?.message || e));
@@ -2636,8 +2676,17 @@ function RenderExportPanel({
         <div>
           <p className="text-[11px] uppercase tracking-wider text-[color-mix(in_srgb,var(--coral)_60%,transparent)] font-semibold">🎬 Vidéo de sortie</p>
           <p className="text-sm text-white font-medium mt-0.5">Exporter la vidéo avec SmartBoard intégré</p>
+          {/*
+            Ce texte DÉCRIT LE MOTEUR, il ne le vend pas. Il promettait « réglages NLE
+            conservés » alors que `nleProject` (coupes, transitions, étalonnage) n'est lu
+            NULLE PART côté API ni worker : le formateur coupait 3 min d'intro, posait un
+            fondu, cliquait « Générer » — et recevait la source ENTIÈRE, sans un mot.
+            Il promettait aussi « AAC haut débit » sans que le débit soit imposé.
+            Ne réintroduire une promesse ici que le jour où le moteur la tient.
+          */}
           <p className="text-xs text-[#82807a] mt-0.5">
-            Export jusqu'en 4K, split-screen formateur + slide, audio AAC haut débit, réglages NLE conservés.
+            Export jusqu'en 4K, slide plein cadre + formateur en médaillon, audio AAC 192 kb/s.
+            Les coupes, transitions et étalonnage de l'éditeur ne sont pas encore appliqués au rendu.
             {slideFrameCount > 0 ? (
               <span className="text-[#9fbf8f]/90"> · {slideFrameCount} plan(s) capturé(s)</span>
             ) : (
@@ -2656,15 +2705,24 @@ function RenderExportPanel({
               <option key={o.id} value={o.id}>{o.label}</option>
             ))}
           </select>
+          {/*
+            Seuls les modes que le MOTEUR sait produire sont sélectionnables.
+            « Reformulation IA » et « Masterclass » étaient proposés mais RIEN ne les
+            consommait : le worker ne lisait même pas payload.renderMode et ne connaissait
+            qu'une mise en page. Choisir « Masterclass » donnait un MP4 identique, à
+            l'octet près, à « Pédagogique » — après une attente de rendu complète.
+            Mieux vaut une option grisée qu'un réglage qui ment.
+          */}
           <select
             value={renderMode}
             onChange={(e) => setRenderMode(e.target.value)}
+            title="Mise en page du montage"
             className="h-8 rounded-md border border-white/10 bg-[#1f1e1c] px-2 text-xs text-white"
           >
-            <option value="pedagogical">Pédagogique</option>
-            <option value="reformulation">Reformulation IA</option>
-            <option value="masterclass">Masterclass</option>
-            <option value="raw">Brut</option>
+            <option value="pedagogical">Pédagogique (slide + formateur)</option>
+            <option value="raw">Brut (vidéo seule, sans slide)</option>
+            <option value="reformulation" disabled>Reformulation IA — bientôt</option>
+            <option value="masterclass" disabled>Masterclass — bientôt</option>
           </select>
           <Button
             type="button"
@@ -2691,16 +2749,48 @@ function RenderExportPanel({
         </div>
       </div>
 
+      {/* Échec du LANCEMENT (POST render-enqueue) — bordure corail, texte clair (pas de rouge criard). */}
       {renderError && (
-        <div className="text-sm text-red-300 border border-red-500/20 bg-red-500/10 rounded-lg p-3">{renderError}</div>
+        <div className="rounded-lg border border-[#d97757]/45 bg-[#d97757]/10 p-3">
+          <p className="text-xs font-semibold text-[#e08a6b] uppercase tracking-wide">Le rendu n'a pas pu être lancé</p>
+          <p className="text-sm text-[#f5f4ee] mt-1 break-words">{renderError}</p>
+        </div>
       )}
 
-      {/* Jobs list */}
+      {/* Rendu LANCÉ mais incomplet par construction — avertissement, pas erreur. */}
+      {enqueueNotice && !renderError && (
+        <div className="rounded-lg border border-white/10 bg-white/5 p-3">
+          <p className="text-xs font-semibold text-[#b0ada3] uppercase tracking-wide">Rendu lancé — plans non placés</p>
+          <p className="text-sm text-[#f5f4ee] mt-1 break-words">{enqueueNotice}</p>
+        </div>
+      )}
+
+      {/* Échec de la LECTURE du suivi (GET render-status) — l'écran ne reste plus muet. */}
+      {jobsError && (
+        <div className="rounded-lg border border-[#d97757]/45 bg-[#d97757]/10 p-3">
+          <p className="text-xs font-semibold text-[#e08a6b] uppercase tracking-wide">Suivi des rendus indisponible</p>
+          <p className="text-sm text-[#f5f4ee] mt-1 break-words">{jobsError}</p>
+          <p className="text-xs text-[#b0ada3] mt-1">Le rendu en cours n'est pas annulé : réessaie avec le bouton Actualiser.</p>
+        </div>
+      )}
+
+      {/* Liste des jobs — tous les champs passent par les lecteurs tolérants de api-v2
+          (renderJob*) : l'UI ne dépend plus du nom exact des colonnes servies par l'API. */}
       {jobs.length > 0 && (
         <div className="space-y-2">
           {jobs.slice(0, 5).map((job) => {
             const s = STATUS_LABELS[job.status] || { label: job.status, color: 'text-[#b0ada3]', pulse: false };
-            const workerErr = job.manifest_json?.worker_error || job.error_message;
+            const workerErr = renderJobErrorMessage(job);
+            const playableUrl = renderJobPlayableUrl(job);
+            // Le mode de rendu n'est PAS une colonne : il vit dans payload.renderMode
+            // (posé par enqueuePostprodRender). On accepte quand même une éventuelle
+            // colonne `render_mode` si l'API en ajoute une un jour.
+            const mode = job.render_mode || job.payload?.renderMode || '';
+            // Rendu terminé mais aucune URL absolue servie → l'API n'a pas (encore)
+            // présigné la clé R2 du bucket privé. On le DIT au lieu de proposer un
+            // lien mort qui pointerait sur l'application elle-même.
+            const awaitingLink = job.status === 'completed' && !playableUrl && Boolean(renderJobStorageKey(job));
+            const isActive = ACTIVE_RENDER_STATUSES.includes(job.status);
             return (
               <div key={job.id} className="rounded-xl border border-white/10 bg-white/3 px-4 py-3 flex items-center justify-between gap-3">
                 <div className="min-w-0">
@@ -2708,18 +2798,31 @@ function RenderExportPanel({
                     <span className={`text-sm font-semibold ${s.color} ${s.pulse ? 'animate-pulse' : ''}`}>
                       {s.label}
                     </span>
-                    <span className="text-[10px] text-[#82807a] bg-white/5 px-2 py-0.5 rounded-full font-mono">{job.render_mode}</span>
+                    {mode && (
+                      <span className="text-[10px] text-[#b0ada3] bg-white/5 px-2 py-0.5 rounded-full font-mono">{mode}</span>
+                    )}
                   </div>
-                  <p className="text-[11px] text-[#82807a] font-mono mt-0.5">
+                  <p className="text-[11px] text-[#b0ada3] font-mono mt-0.5">
                     {new Date(job.created_at).toLocaleString('fr-FR')}
                   </p>
                   {workerErr && (
-                    <p className="text-xs text-red-400 mt-1 truncate max-w-sm" title={workerErr}>{workerErr}</p>
+                    <div className="mt-1.5 rounded-lg border border-[#d97757]/45 bg-[#d97757]/10 px-2.5 py-1.5 max-w-xl">
+                      <p className="text-[11px] font-semibold text-[#e08a6b] uppercase tracking-wide">Message du moteur de rendu</p>
+                      {/* Message BRUT du worker : jamais tronqué à l'affichage — c'est
+                          la seule trace exploitable côté formateur pour comprendre
+                          (source vidéo expirée, ffmpeg absent, R2 non configuré…). */}
+                      <p className="text-xs text-[#f5f4ee] mt-0.5 break-words whitespace-pre-wrap" title={workerErr}>{workerErr}</p>
+                    </div>
+                  )}
+                  {awaitingLink && (
+                    <p className="text-[11px] text-[#e6cc92] mt-1">
+                      Fichier rendu et archivé, mais son lien de lecture n'a pas encore été délivré. Actualise dans un instant.
+                    </p>
                   )}
                 </div>
-                {job.status === 'completed' && job.output_video_url && (
+                {job.status === 'completed' && playableUrl && (
                   <a
-                    href={job.output_video_url}
+                    href={playableUrl}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="shrink-0 inline-flex items-center gap-1.5 rounded-lg bg-[#7a9b6c]/15 border border-[#7a9b6c]/30 px-3 py-1.5 text-xs text-[#9fbf8f] hover:bg-[#7a9b6c]/25 transition-colors font-semibold"
@@ -2727,11 +2830,21 @@ function RenderExportPanel({
                     ⬇ Télécharger MP4
                   </a>
                 )}
-                {['queued', 'preparing_assets', 'rendering', 'packaging'].includes(job.status) && (
-                  <div className="shrink-0 flex items-center gap-1.5 text-xs text-[#82807a]">
+                {isActive && (
+                  <div className="shrink-0 flex items-center gap-1.5 text-xs text-[#b0ada3]">
                     <Loader2 className="w-3.5 h-3.5 animate-spin" />
                     En cours…
                   </div>
+                )}
+                {job.status === 'failed' && (
+                  <button
+                    type="button"
+                    onClick={handleEnqueue}
+                    disabled={enqueueLoading || !contentId}
+                    className="shrink-0 inline-flex items-center gap-1.5 rounded-lg border border-[#d97757]/45 bg-[#d97757]/10 px-3 py-1.5 text-xs text-[#e08a6b] hover:bg-[#d97757]/20 transition-colors font-semibold disabled:opacity-50"
+                  >
+                    Relancer le rendu
+                  </button>
                 )}
               </div>
             );
@@ -2739,8 +2852,8 @@ function RenderExportPanel({
         </div>
       )}
 
-      {jobs.length === 0 && !jobsLoading && (
-        <p className="text-xs text-[#82807a] text-center py-2">Aucun rendu pour ce contenu. Clique sur "Générer la vidéo" pour démarrer.</p>
+      {jobs.length === 0 && !jobsLoading && !jobsError && (
+        <p className="text-xs text-[#b0ada3] text-center py-2">Aucun rendu pour ce contenu. Clique sur « Générer la vidéo » pour démarrer.</p>
       )}
     </div>
   );

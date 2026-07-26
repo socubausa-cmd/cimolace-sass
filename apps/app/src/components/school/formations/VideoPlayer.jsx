@@ -2,15 +2,127 @@ import React, { forwardRef, useEffect, useImperativeHandle, useMemo, useRef, use
 import { Play, Pause, Volume2, VolumeX, Maximize, Settings } from 'lucide-react';
 import { Slider } from '@/components/ui/slider';
 import supabase from '@/lib/customSupabaseClient';
+import {
+  courseBuilderApi,
+  isAbsoluteMediaUrl,
+  renderJobPlayableUrl,
+  renderJobStorageKey,
+} from '@/lib/api-v2';
 
 const signedUrlCache = new Map();
 
+// URLs de montage déjà résolues, gardées le temps de la session d'onglet : le
+// même cours réouvert deux fois ne rappelle pas l'API. TTL court volontaire —
+// une URL R2 présignée expire (≈1 h côté API), on préfère re-signer trop tôt
+// que servir un lien mort à une classe entière.
+const renderedUrlCache = new Map();
+const RENDERED_URL_TTL_MS = 30 * 60 * 1000;
+
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+
+/**
+ * Ce que le contenu dit de son MONTAGE post-production, normalisé.
+ *
+ * Trois générations de champs cohabitent dans `formation_day_contents.data` et on
+ * doit toutes les lire, sans quoi un cours rendu avant/après un déploiement
+ * disparaît de la classe :
+ *   - `renderedStorageKey` (CANONIQUE, écrit par le worker) = CLÉ R2 ;
+ *   - `renderedJobId`      = identifiant exact du job, le plus fiable pour retrouver
+ *     l'URL présignée quand plusieurs rendus se sont succédé ;
+ *   - `renderedUrl`        = héritage AMBIGU : ancien miroir de la clé (worker d'avant
+ *     le correctif) MAIS AUSSI, côté CoursePlayerInterface, l'URL déjà signée de la
+ *     vidéo SOURCE pour un contenu hébergé.
+ *
+ * D'où l'ordre : la clé canonique PRIME. Servir `renderedUrl` quand il est absolu alors
+ * qu'une clé existe ferait jouer l'ORIGINAL à la place du montage. On conserve cette URL
+ * comme `fallbackUrl` : c'est elle qui sauve la séance si le montage reste irrésoluble.
+ */
+function readRenderedRef(video) {
+  const legacy = String(video?.renderedUrl || '').trim();
+  const legacyIsUrl = isAbsoluteMediaUrl(legacy);
+  const storageKey = String(video?.renderedStorageKey || (legacyIsUrl ? '' : legacy) || '').trim();
+  const jobId = String(video?.renderedJobId || '').trim();
+  if (storageKey || jobId) {
+    return { directUrl: '', storageKey, jobId, fallbackUrl: legacyIsUrl ? legacy : '' };
+  }
+  // Aucune clé : une valeur ABSOLUE est déjà lisible, on la sert telle quelle (rétro-compat).
+  if (legacyIsUrl) return { directUrl: legacy, storageKey: '', jobId: '', fallbackUrl: '' };
+  return { directUrl: '', storageKey: '', jobId: '', fallbackUrl: '' };
+}
+
+/**
+ * Résout la référence de montage d'un contenu en URL RÉELLEMENT lisible.
+ *
+ * POURQUOI : le worker (apps/worker/src/jobs/courseRender.js) stocke dans
+ * `course_render_jobs.output_url` — puis recopie dans `formation_day_contents.data`
+ * — la CLÉ R2 du MP4, pas une URL. Le bucket est PRIVÉ. Mise telle quelle dans un
+ * <video src>, cette clé est interprétée comme un chemin RELATIF de l'application :
+ * le navigateur télécharge le index.html du SPA et le lecteur reste noir. On applique
+ * donc le même motif que les replays (présignature À LA LECTURE, cf.
+ * replay.service.generatePlaybackUrl) en demandant l'URL du job de rendu à l'API.
+ *
+ * Renvoie '' si aucune URL exploitable n'est disponible — l'appelant retombe alors sur la
+ * vidéo SOURCE, et n'affiche un message qu'en dernier recours ; il ne sert JAMAIS la clé brute.
+ *
+ * Deux routes, dans cet ordre :
+ *   1. `render-playback` — route de LECTURE, ouverte à tout membre du tenant, ÉLÈVES
+ *      COMPRIS. C'est le chemin normal en classe.
+ *   2. `render-status` — route de SUIVI, réservée à owner/admin/teacher (403 pour un
+ *      élève). Conservée en repli : elle couvre l'écran de post-production et la fenêtre
+ *      pendant laquelle l'API déployée n'expose pas encore (1).
+ */
+async function resolveRenderedPlaybackUrl(contentId, ref) {
+  const cacheKey = ref.jobId || ref.storageKey;
+  const cached = renderedUrlCache.get(cacheKey);
+  if (cached && cached.expiresAt > Date.now()) return cached.url;
+
+  const remember = (url) => {
+    if (url && cacheKey) renderedUrlCache.set(cacheKey, { url, expiresAt: Date.now() + RENDERED_URL_TTL_MS });
+    return url;
+  };
+
+  // 1) Route de lecture (élèves inclus) : l'API a déjà choisi le bon job et présigné.
+  let firstError = null;
+  try {
+    const body = await courseBuilderApi.renderPlayback(contentId);
+    const direct = String(body?.url || '').trim();
+    if (isAbsoluteMediaUrl(direct)) return remember(direct);
+  } catch (e) {
+    firstError = e;
+  }
+
+  // 2) Repli encadrement : on refait le choix du job côté client.
+  try {
+    const body = await courseBuilderApi.renderStatus(contentId);
+    const jobs = Array.isArray(body?.jobs) ? body.jobs : [];
+    // a) Le job EXACT référencé par le contenu (id, sinon clé de stockage) : le contenu
+    //    peut pointer un rendu volontairement plus ancien qu'un rendu plus récent.
+    const exact =
+      (ref.jobId && jobs.find((j) => String(j?.id) === ref.jobId)) ||
+      (ref.storageKey && jobs.find((j) => renderJobStorageKey(j) === ref.storageKey)) ||
+      null;
+    // b) À défaut, le dernier rendu terminé qui expose une URL exploitable (l'API
+    //    renvoie les jobs du plus récent au plus ancien).
+    const latestDone = jobs.find((j) => String(j?.status) === 'completed' && renderJobPlayableUrl(j));
+    const url = renderJobPlayableUrl(exact) || renderJobPlayableUrl(latestDone) || '';
+    if (url) return remember(url);
+  } catch (e) {
+    firstError = firstError || e;
+  }
+
+  // Les deux routes ont échoué (et non « répondu sans URL ») : on le fait remonter pour
+  // que l'appelant distingue « rendu pas encore prêt » de « lecture refusée/injoignable ».
+  if (firstError) throw firstError;
+  return '';
+}
 
 const VideoPlayer = forwardRef(({ video, onEnded, onTimeUpdate, overlay = null }, ref) => {
   const inferredType = useMemo(() => {
-    // Le MONTAGE post-prod (renderedUrl = MP4 rendu en R2 par le worker) PRIME sur la source
-    // brute : c'est la version éditée que la classe doit voir. URL directe → lecture custom_url.
-    if (video?.renderedUrl) return 'custom_url';
+    // Le MONTAGE post-prod (MP4 rendu par le worker) PRIME sur la source brute :
+    // c'est la version éditée que la classe doit voir. C'est un FICHIER MP4 → on le
+    // joue dans la balise <video> native (timeline, chapitres, seekTo, SmartBoard
+    // superposé) et surtout PAS dans une <iframe>, qui perdait tous ces contrôles.
+    if (video?.renderedUrl || video?.renderedStorageKey || video?.renderedJobId) return 'file';
     if (video?.type) return video.type;
     if (video?.storagePath) return 'upload';
     const url = String(video?.url || '');
@@ -18,13 +130,21 @@ const VideoPlayer = forwardRef(({ video, onEnded, onTimeUpdate, overlay = null }
     if (/vimeo\.com/i.test(url)) return 'vimeo';
     if (url) return 'custom_url';
     return '';
-  }, [video?.renderedUrl, video?.storagePath, video?.type, video?.url]);
+  }, [video?.renderedJobId, video?.renderedStorageKey, video?.renderedUrl, video?.storagePath, video?.type, video?.url]);
 
   const videoRef = useRef(null);
   const lastResolvedKeyRef = useRef('');
   const [duration, setDuration] = useState(0);
   const [currentTime, setCurrentTime] = useState(0);
-  const [playableUrl, setPlayableUrl] = useState(video?.renderedUrl || video?.url || '');
+  // Amorce : UNIQUEMENT une valeur déjà absolue. Semer l'état avec `renderedUrl`
+  // sans contrôle réinjectait la clé R2 brute dans <video src> le temps d'un rendu.
+  const [playableUrl, setPlayableUrl] = useState(() => {
+    const seed = video?.renderedUrl || video?.url || '';
+    return isAbsoluteMediaUrl(seed) ? String(seed).trim() : '';
+  });
+  // Message français affiché À LA PLACE du lecteur quand le montage existe mais que
+  // son lien de lecture n'a pas pu être obtenu (API refusée, rendu non présigné…).
+  const [renderedNotice, setRenderedNotice] = useState('');
   const [videoCanPlay, setVideoCanPlay] = useState(false);
   const draggingRef = useRef(false);
 
@@ -72,16 +192,84 @@ const VideoPlayer = forwardRef(({ video, onEnded, onTimeUpdate, overlay = null }
     const run = async () => {
       if (!video) {
         setPlayableUrl('');
+        setRenderedNotice('');
         return;
       }
-      // renderedUrl (montage) en priorité, puis storagePath (upload signé), puis url brute.
-      const storagePath = video?.renderedUrl ? null : video?.storagePath;
-      const rawUrl = video?.renderedUrl || video?.url || '';
-      const cacheKey = storagePath ? `${inferredType}:${storagePath}` : `${inferredType}::${rawUrl || ''}`;
+      // Montage post-prod en priorité, puis storagePath (upload signé), puis url brute.
+      const rendered = readRenderedRef(video);
+      // `jobId` compte autant que la clé : il suffit à identifier le montage côté API.
+      const hasRendered = Boolean(rendered.directUrl || rendered.storageKey || rendered.jobId);
+      const storagePath = hasRendered ? null : video?.storagePath;
+      const rawUrl = rendered.directUrl || video?.url || '';
+      const cacheKey = storagePath
+        ? `${inferredType}:${storagePath}`
+        : `${inferredType}::${rendered.storageKey || rendered.jobId || rawUrl || ''}`;
 
       // Avoid resetting src when nothing meaningful changed.
       if (lastResolvedKeyRef.current === cacheKey) return;
       lastResolvedKeyRef.current = cacheKey;
+      setRenderedNotice('');
+
+      // ── MONTAGE post-production ─────────────────────────────────────────────
+      if (hasRendered) {
+        // REPLI de séance : si le montage reste irrésoluble, la classe doit AU MOINS
+        // garder la vidéo d'origine. `fallbackUrl` = l'URL signée par l'API gatée que
+        // CoursePlayerInterface dépose dans `renderedUrl` pour un contenu hébergé ; à
+        // défaut, l'URL brute du contenu si elle est directement jouable. On EXCLUT
+        // YouTube/Vimeo : ces pages ne se lisent pas dans une balise <video>.
+        const candidate = String(rendered.fallbackUrl || video?.url || '').trim();
+        const fallbackSource =
+          isAbsoluteMediaUrl(candidate) && !/youtube\.com|youtu\.be|vimeo\.com/i.test(candidate)
+            ? candidate
+            : '';
+        // RÉTRO-COMPAT : CoursePlayerInterface passe déjà, pour une vidéo hébergée,
+        // une URL signée côté serveur via `renderedUrl`. Absolue → on n'y touche pas.
+        if (rendered.directUrl) {
+          setPlayableUrl(rendered.directUrl);
+          return;
+        }
+        // Sinon c'est une CLÉ R2 : elle doit être présignée par l'API, jamais servie
+        // telle quelle. Il faut l'identifiant du contenu (formation_day_contents.id)
+        // pour retrouver le job de rendu correspondant.
+        const contentId = String(video?.contentId || video?.id || '').trim();
+        if (!UUID_RE.test(contentId)) {
+          if (fallbackSource) {
+            setPlayableUrl(fallbackSource);
+            return;
+          }
+          setPlayableUrl('');
+          setRenderedNotice("Le montage de ce cours est archivé, mais l'identifiant du contenu manque pour en obtenir le lien de lecture.");
+          return;
+        }
+        try {
+          const resolved = await resolveRenderedPlaybackUrl(contentId, rendered);
+          if (!alive) return;
+          if (resolved) {
+            setPlayableUrl(resolved);
+          } else if (fallbackSource) {
+            // Rendu pas encore délivré : la version NON montée vaut mieux qu'un écran vide.
+            setPlayableUrl(fallbackSource);
+          } else {
+            setPlayableUrl('');
+            setRenderedNotice("Le montage est bien archivé, mais son lien de lecture n'a pas encore été délivré. Réessaie dans un instant.");
+          }
+        } catch {
+          if (!alive) return;
+          // Refus ou API injoignable : on NE retombe JAMAIS sur la clé brute (elle
+          // chargerait l'application elle-même dans le lecteur). On sert la source si on
+          // en a une, sinon on explique — message FIXE et en français, le texte remonté
+          // par l'API (« Forbidden resource »…) n'a aucun sens pour un élève en classe.
+          if (fallbackSource) {
+            setPlayableUrl(fallbackSource);
+            return;
+          }
+          setPlayableUrl('');
+          setRenderedNotice(
+            "Lecture du montage indisponible pour le moment. Réessaie dans un instant, ou préviens l'encadrement si cela persiste.",
+          );
+        }
+        return;
+      }
 
       const derivePublicUrl = () => {
         if (!storagePath) return '';
@@ -129,13 +317,37 @@ const VideoPlayer = forwardRef(({ video, onEnded, onTimeUpdate, overlay = null }
     return () => {
       alive = false;
     };
-  }, [inferredType, video?.renderedUrl, video?.storagePath, video?.url]);
+    // `video?.id` / `video?.contentId` font partie des dépendances : c'est la clé qui
+    // permet de présigner le montage, sa disparition change le résultat de l'effet.
+  }, [
+    inferredType,
+    video?.contentId,
+    video?.id,
+    video?.renderedJobId,
+    video?.renderedStorageKey,
+    video?.renderedUrl,
+    video?.storagePath,
+    video?.url,
+  ]);
 
   // Render based on type
   if (!video) {
     return (
-      <div className="aspect-video bg-gray-900 flex items-center justify-center text-gray-500">
+      <div className="aspect-video bg-[#262624] flex items-center justify-center text-[#b0ada3] border border-white/10 rounded-lg">
         Vidéo indisponible
+      </div>
+    );
+  }
+
+  // Le montage existe mais n'est pas lisible : on explique, en français et en palette
+  // chaude, plutôt que de laisser un lecteur noir sans aucune indication.
+  if (renderedNotice && !playableUrl) {
+    return (
+      <div className="aspect-video w-full rounded-lg border border-[#d97757]/45 bg-[#262624] flex items-center justify-center p-6">
+        <div className="max-w-md text-center">
+          <p className="text-xs font-semibold uppercase tracking-wide text-[#e08a6b]">Montage indisponible</p>
+          <p className="mt-2 text-sm text-[#f5f4ee]">{renderedNotice}</p>
+        </div>
       </div>
     );
   }
@@ -150,7 +362,7 @@ const VideoPlayer = forwardRef(({ video, onEnded, onTimeUpdate, overlay = null }
           allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
           allowFullScreen
         />
-        <div className="absolute bottom-2 left-2 right-2 text-[10px] text-gray-300 bg-black/40 border border-white/10 rounded px-2 py-1">
+        <div className="absolute bottom-2 left-2 right-2 text-[10px] text-[#f5f4ee] bg-black/60 border border-white/10 rounded px-2 py-1">
           Navigation précise (timeline) disponible sur les vidéos uploadées.
         </div>
       </div>
@@ -158,21 +370,22 @@ const VideoPlayer = forwardRef(({ video, onEnded, onTimeUpdate, overlay = null }
   }
 
   if (inferredType === 'upload' || inferredType === 'file') {
-    // Basic HTML5 Video Player styling placeholder
-    // In a real app, you would wire up the custom controls to the video ref
+    // Lecteur HTML5 natif : c'est ici que passe aussi le MONTAGE post-prod (MP4 R2
+    // présigné plus haut), ce qui lui rend la timeline, les chapitres et le SmartBoard.
+    // Fonds en palette chaude LIRI (#262624 / #1f1e1c) — plus aucun bleu-nuit.
     return (
-      <div className="relative group bg-[#0b0b0f] overflow-hidden">
+      <div className="relative group bg-[#262624] overflow-hidden">
         <div className="relative">
-          {/* Overlay noir retiré dès que la vidéo peut jouer — couvre le gris natif Chrome pendant le chargement */}
+          {/* Voile retiré dès que la vidéo peut jouer — couvre le gris natif Chrome pendant le chargement */}
           {!videoCanPlay && (
-            <div className="absolute inset-0 z-10 pointer-events-none" style={{ background: '#0b0b0f' }} />
+            <div className="absolute inset-0 z-10 pointer-events-none" style={{ background: '#262624' }} />
           )}
           <video
             ref={videoRef}
             src={playableUrl}
             poster="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAC0lEQVQI12NgAAIABQAABjE+ibYAAAAASUVORK5CYII="
             className="w-full aspect-video block"
-            style={{ background: '#0b0b0f' }}
+            style={{ background: '#262624' }}
             controls
             onCanPlay={() => setVideoCanPlay(true)}
             onError={() => setVideoCanPlay(true)}
@@ -196,8 +409,8 @@ const VideoPlayer = forwardRef(({ video, onEnded, onTimeUpdate, overlay = null }
           ) : null}
         </div>
 
-        <div className="px-3 py-2 bg-[#0B0F14] border-t border-white/10">
-          <div className="flex items-center justify-between text-xs text-gray-300 mb-2">
+        <div className="px-3 py-2 bg-[#1f1e1c] border-t border-white/10">
+          <div className="flex items-center justify-between text-xs text-[#f5f4ee] mb-2">
             <div>{formatTime(currentTime)}</div>
             <div>{formatTime(duration)}</div>
           </div>
@@ -223,7 +436,7 @@ const VideoPlayer = forwardRef(({ video, onEnded, onTimeUpdate, overlay = null }
 
           {chapters.length > 0 ? (
             <div className="mt-3 border border-white/10 rounded-lg overflow-hidden">
-              <div className="px-3 py-2 text-xs text-gray-400 bg-black/30 border-b border-white/10">Horodatages</div>
+              <div className="px-3 py-2 text-xs text-[#b0ada3] bg-black/30 border-b border-white/10">Horodatages</div>
               <div className="max-h-[160px] overflow-y-auto">
                 {chapters.map((c) => (
                   <button
@@ -237,8 +450,8 @@ const VideoPlayer = forwardRef(({ video, onEnded, onTimeUpdate, overlay = null }
                       setCurrentTime(t);
                     }}
                   >
-                    <div className="text-sm text-white truncate">{c.label}</div>
-                    <div className="text-xs text-gray-400 shrink-0">{formatTime(c.timeSeconds)}</div>
+                    <div className="text-sm text-[#f5f4ee] truncate">{c.label}</div>
+                    <div className="text-xs text-[#b0ada3] shrink-0">{formatTime(c.timeSeconds)}</div>
                   </button>
                 ))}
               </div>
@@ -250,7 +463,7 @@ const VideoPlayer = forwardRef(({ video, onEnded, onTimeUpdate, overlay = null }
   }
 
   return (
-    <div className="aspect-video bg-gray-900 flex items-center justify-center text-gray-500">
+    <div className="aspect-video bg-[#262624] flex items-center justify-center text-[#b0ada3] border border-white/10 rounded-lg">
       Format vidéo non supporté
     </div>
   );

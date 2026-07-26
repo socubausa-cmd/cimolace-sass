@@ -419,6 +419,21 @@ export const courseBuilderApi = {
     apiV2.post<ApiEnvelope<any>>('/course-builder/render-enqueue', body).then(unwrap),
   renderStatus: (contentId: string) =>
     apiV2.get<ApiEnvelope<any>>('/course-builder/render-status', { params: { contentId } }).then(unwrap),
+  /**
+   * URL présignée du MONTAGE, pour la LECTURE en classe.
+   * À utiliser partout où un ÉLÈVE peut être derrière l'écran : `renderStatus` est
+   * réservé à l'encadrement (owner/admin/teacher) et répond 403 à un élève.
+   *
+   * ⚠️ Cette route n'est PAS ouverte à tout membre du tenant : le montage EST le cours,
+   * elle applique donc le MÊME gating que la vidéo source (`POST /courses/:id/video-url`)
+   * — forfait actif pour un cours en abonnement, inscription payée pour un cours en
+   * vente individuelle. Un 403 ici est une réponse NORMALE (cours non acheté), pas une
+   * panne : l'appelant doit le traiter comme « montage indisponible pour cet élève ».
+   *
+   * Réponse : { url, jobId, storageKey, status } — `url` peut être null (pas encore rendu).
+   */
+  renderPlayback: (contentId: string) =>
+    apiV2.get<ApiEnvelope<any>>('/course-builder/render-playback', { params: { contentId } }).then(unwrap),
 };
 
 // ── Rendu post-production : contrat TOLÉRANT sur course_render_jobs ──────────
