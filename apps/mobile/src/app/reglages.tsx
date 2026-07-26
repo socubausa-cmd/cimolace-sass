@@ -1,12 +1,13 @@
 import { Feather } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { useMemo } from 'react';
-import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Pressable, ScrollView, StyleSheet, Switch, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { ThemeToggle } from '@/components/theme-toggle';
 import { LiriFonts as F, softShadow, type LiriPalette } from '@/constants/liri-theme';
 import { useAuth } from '@/lib/auth';
+import { LIVE_TYPES, usePreferences } from '@/lib/preferences';
 import { useTheme } from '@/lib/theme';
 
 type IconName = React.ComponentProps<typeof Feather>['name'];
@@ -17,6 +18,14 @@ export default function ReglagesScreen() {
   const { colors: C } = useTheme();
   const styles = useMemo(() => makeStyles(C), [C]);
   const initials = (email ?? 'IS').slice(0, 2).toUpperCase();
+
+  const { prefs, setPref } = usePreferences();
+  const liveTypeLabel = LIVE_TYPES.find((t) => t.value === prefs.defaultLiveType)?.label ?? 'Webinaire';
+  // Pas de menu déroulant natif sans dépendance : un appui fait défiler la liste.
+  const cycleLiveType = () => {
+    const i = LIVE_TYPES.findIndex((t) => t.value === prefs.defaultLiveType);
+    setPref('defaultLiveType', LIVE_TYPES[(i + 1) % LIVE_TYPES.length].value);
+  };
 
   return (
     <View style={styles.root}>
@@ -57,12 +66,65 @@ export default function ReglagesScreen() {
             </Pressable>
           ))}
 
+          {/* Création de live — chaque réglage est persisté ET envoyé à l'API
+              au moment de créer la session (cf. createLive). */}
+          <Text style={styles.sectionTitle}>Création de live</Text>
+
+          <Pressable
+            accessibilityRole="button"
+            onPress={cycleLiveType}
+            style={({ pressed }) => [styles.prefRow, pressed && styles.pressed]}
+          >
+            <View style={styles.flex1}>
+              <Text style={styles.prefLabel}>Type de live par défaut</Text>
+              <Text style={styles.prefHint}>appliqué au démarrage rapide</Text>
+            </View>
+            <View style={styles.selectChip}>
+              <Text style={styles.selectTxt}>{liveTypeLabel}</Text>
+              <Feather name="chevron-down" size={14} color={C.muted} />
+            </View>
+          </Pressable>
+
+          <ToggleRow
+            label="Enregistrement automatique"
+            hint="la session est enregistrée et le replay activé"
+            value={prefs.autoRecord}
+            onValueChange={(v) => setPref('autoRecord', v)}
+          />
+          <ToggleRow
+            label="Salle d'attente"
+            hint="les participants patientent jusqu'à ton admission"
+            value={prefs.waitingRoom}
+            onValueChange={(v) => setPref('waitingRoom', v)}
+          />
+
           <Pressable style={({ pressed }) => [styles.signout, pressed && styles.pressed]} onPress={signOut}>
             <Feather name="log-out" size={17} color={C.live} />
             <Text style={styles.signoutTxt}>Se déconnecter</Text>
           </Pressable>
         </ScrollView>
       </SafeAreaView>
+    </View>
+  );
+}
+
+function ToggleRow({ label, hint, value, onValueChange }: {
+  label: string; hint: string; value: boolean; onValueChange: (v: boolean) => void;
+}) {
+  const { colors: C } = useTheme();
+  const styles = useMemo(() => makeStyles(C), [C]);
+  return (
+    <View style={styles.prefRow}>
+      <View style={styles.flex1}>
+        <Text style={styles.prefLabel}>{label}</Text>
+        <Text style={styles.prefHint}>{hint}</Text>
+      </View>
+      <Switch
+        value={value}
+        onValueChange={onValueChange}
+        trackColor={{ false: C.line, true: C.coral }}
+        thumbColor="#fff"
+      />
     </View>
   );
 }
@@ -95,6 +157,18 @@ const makeStyles = (C: LiriPalette) => StyleSheet.create({
   },
   rowIcon: { width: 30, alignItems: 'center' },
   rowLabel: { flex: 1, color: C.ink, fontSize: 14.5, fontFamily: F.sans },
+
+  prefRow: {
+    flexDirection: 'row', alignItems: 'center', gap: 12, paddingHorizontal: 15, paddingVertical: 13, borderRadius: 15,
+    backgroundColor: C.panel, borderWidth: 1, borderColor: C.line, marginBottom: 9,
+  },
+  prefLabel: { color: C.ink, fontSize: 14, fontWeight: '500', fontFamily: F.sans },
+  prefHint: { color: C.faint, fontSize: 12, marginTop: 2, fontFamily: F.sans },
+  selectChip: {
+    flexDirection: 'row', alignItems: 'center', gap: 6, paddingHorizontal: 12, height: 34, borderRadius: 10,
+    backgroundColor: C.base, borderWidth: 1, borderColor: C.line,
+  },
+  selectTxt: { color: C.muted, fontSize: 12.5, fontFamily: F.sans },
 
 
   signout: {

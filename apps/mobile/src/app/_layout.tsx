@@ -9,6 +9,7 @@ import { LoginScreen } from '@/components/login-screen';
 import { LiriFonts } from '@/constants/liri-theme';
 import { AuthProvider, useAuth } from '@/lib/auth';
 import { setupLiveKit } from '@/lib/livekit-setup';
+import { PreferencesProvider } from '@/lib/preferences';
 import { ThemeProvider, useTheme } from '@/lib/theme';
 
 // WebRTC globals nécessaires au SDK LiveKit natif — appelé une seule fois.
@@ -118,10 +119,12 @@ function ThemedStatusBar() {
 export default function RootLayout() {
   return (
     <ThemeProvider>
-      <AuthProvider>
-        <ThemedStatusBar />
-        <Gate />
-      </AuthProvider>
+      <PreferencesProvider>
+        <AuthProvider>
+          <ThemedStatusBar />
+          <Gate />
+        </AuthProvider>
+      </PreferencesProvider>
     </ThemeProvider>
   );
 }

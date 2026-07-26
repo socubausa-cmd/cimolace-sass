@@ -1,6 +1,7 @@
 import { Platform } from 'react-native';
 import EventSource from 'react-native-sse';
 
+import { getLivePrefs } from '@/lib/preferences';
 import { supabase } from '@/lib/supabase';
 
 /**
@@ -283,9 +284,17 @@ export async function postJson<T>(path: string, body?: unknown): Promise<T | nul
 
 /** Crée une session live (status = scheduled). */
 export function createLive(input: { title?: string; scheduled_at?: string } = {}): Promise<Live | null> {
+  // Préférences de l'utilisateur (Réglages > Création de live). L'API filtre sur
+  // une liste blanche de colonnes : `session_type`, `recording_requested` et
+  // `replay_enabled` en sont ; `waiting_room` NON — il vit dans `config`.
+  const prefs = getLivePrefs();
   return postJson<Live>('/lives', {
     title: input.title ?? 'Live LIRI',
     scheduled_at: input.scheduled_at ?? new Date().toISOString(),
+    session_type: prefs.defaultLiveType,
+    recording_requested: prefs.autoRecord,
+    replay_enabled: prefs.autoRecord,
+    config: { waiting_room: prefs.waitingRoom },
   });
 }
 
