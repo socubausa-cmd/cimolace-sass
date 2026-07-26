@@ -18,6 +18,7 @@ const navItems = [
   { name: 'Billing', path: '/cimolace/admin/billing', icon: '💳' },
   { name: 'Finances', path: '/cimolace/admin/finances', icon: '💰' },
   { name: 'Clés IA', path: '/cimolace/admin/ai-keys', icon: '🔑' },
+  { name: 'Tarification IA', path: '/cimolace/admin/ai-pricing', icon: '🧮' },
   { name: 'Support', path: '/cimolace/admin/support', icon: '🎫' },
 ];
 

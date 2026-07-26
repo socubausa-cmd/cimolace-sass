@@ -446,4 +446,136 @@ export class AiBillingService {
     totals.overage_pending_eur = Math.round(totals.overage_pending_eur * 100) / 100;
     return { totals, tenants: rows };
   }
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // PILOTAGE DE LA TARIFICATION — tout se règle en back-office, rien en dur.
+  // ═══════════════════════════════════════════════════════════════════════════
+
+  /** Grille COMPLÈTE (inactifs inclus) : l'écran d'admin doit voir ce qui est éteint. */
+  async listAllPricing() {
+    const { data } = await (this.supabase.client as any)
+      .from('ai_pricing')
+      .select('id, provider, model, unit_type, credits_per_unit, unit_label, is_active')
+      .order('provider')
+      .order('model')
+      .order('unit_type');
+    return data ?? [];
+  }
+
+  /** Ajoute ou met à jour un tarif. Clé métier = (provider, model, unit_type). */
+  async upsertPricing(body: {
+    provider: string; model: string; unit_type: string;
+    credits_per_unit: number; unit_label?: string; is_active?: boolean;
+  }) {
+    const provider = String(body.provider || '').trim();
+    const model = String(body.model || '').trim();
+    const unitType = String(body.unit_type || '').trim();
+    if (!provider || !model || !unitType) {
+      throw new BadRequestException('provider, model et unit_type sont obligatoires.');
+    }
+    const credits = Number(body.credits_per_unit);
+    if (!Number.isFinite(credits) || credits < 0) {
+      throw new BadRequestException('credits_per_unit doit être un nombre positif.');
+    }
+    const patch = {
+      provider, model, unit_type: unitType,
+      credits_per_unit: credits,
+      unit_label: body.unit_label ?? (unitType === 'tokens_out' ? '1 token sortie' : '1 token entrée'),
+      is_active: body.is_active ?? true,
+    };
+    const { data: existing } = await (this.supabase.client as any)
+      .from('ai_pricing')
+      .select('id')
+      .eq('provider', provider).eq('model', model).eq('unit_type', unitType)
+      .maybeSingle();
+    const q = existing?.id
+      ? (this.supabase.client as any).from('ai_pricing').update(patch).eq('id', existing.id)
+      : (this.supabase.client as any).from('ai_pricing').insert(patch);
+    const { data, error } = await q.select().single();
+    if (error) throw new BadRequestException(error.message);
+    return data;
+  }
+
+  async updatePricing(
+    id: string,
+    body: { credits_per_unit?: number; unit_label?: string; is_active?: boolean },
+  ) {
+    const patch: Record<string, unknown> = {};
+    if (body.credits_per_unit !== undefined) {
+      const c = Number(body.credits_per_unit);
+      if (!Number.isFinite(c) || c < 0) throw new BadRequestException('credits_per_unit invalide.');
+      patch.credits_per_unit = c;
+    }
+    if (body.unit_label !== undefined) patch.unit_label = body.unit_label;
+    if (body.is_active !== undefined) patch.is_active = !!body.is_active;
+    if (!Object.keys(patch).length) throw new BadRequestException('Rien à modifier.');
+    const { data, error } = await (this.supabase.client as any)
+      .from('ai_pricing').update(patch).eq('id', id).select().single();
+    if (error) throw new BadRequestException(error.message);
+    return data;
+  }
+
+  /**
+   * TROUS DE TARIFICATION — modèles réellement CONSOMMÉS (ai_usage_events) qui
+   * n'ont pas de tarif actif. `getCreditsPerUnit` renvoie 0 pour un modèle
+   * inconnu : sans ce contrôle, une migration de modèle rend la facturation
+   * muette (incident du 2026-07-26 avec deepseek-v4-*).
+   */
+  async findPricingGaps() {
+    const { data: used } = await (this.supabase.client as any)
+      .from('ai_usage_events')
+      .select('provider, model')
+      .order('created_at', { ascending: false })
+      .limit(2000);
+    const { data: priced } = await (this.supabase.client as any)
+      .from('ai_pricing')
+      .select('provider, model, unit_type')
+      .eq('is_active', true);
+
+    const have = new Set(
+      (priced ?? []).map((p: any) => `${p.provider}/${p.model}/${p.unit_type}`),
+    );
+    const seen = new Map<string, { provider: string; model: string; calls: number }>();
+    for (const u of used ?? []) {
+      if (!u?.provider || !u?.model) continue;
+      const k = `${u.provider}/${u.model}`;
+      const cur = seen.get(k);
+      if (cur) cur.calls += 1;
+      else seen.set(k, { provider: u.provider, model: u.model, calls: 1 });
+    }
+    return [...seen.values()]
+      .map((m) => ({
+        ...m,
+        missing: ['tokens_in', 'tokens_out'].filter(
+          (t) => !have.has(`${m.provider}/${m.model}/${t}`),
+        ),
+      }))
+      .filter((m) => m.missing.length > 0)
+      .sort((a, b) => b.calls - a.calls);
+  }
+
+  async updateTopupPackage(id: string, body: Record<string, unknown>) {
+    const allowed = ['label', 'credits_amount', 'price_cents', 'bonus_label', 'is_active', 'sort_order'];
+    const patch: Record<string, unknown> = {};
+    for (const k of allowed) if (body[k] !== undefined) patch[k] = body[k];
+    if (patch.price_cents !== undefined && Number(patch.price_cents) < 0) {
+      throw new BadRequestException('price_cents doit être positif.');
+    }
+    if (!Object.keys(patch).length) throw new BadRequestException('Rien à modifier.');
+    const { data, error } = await (this.supabase.client as any)
+      .from('ai_topup_packages').update(patch).eq('id', id).select().single();
+    if (error) throw new BadRequestException(error.message);
+    return data;
+  }
+
+  async updatePlanQuota(id: string, body: Record<string, unknown>) {
+    const patch: Record<string, unknown> = { ...body };
+    delete patch.id;
+    delete patch.created_at;
+    if (!Object.keys(patch).length) throw new BadRequestException('Rien à modifier.');
+    const { data, error } = await (this.supabase.client as any)
+      .from('ai_plan_quotas').update(patch).eq('id', id).select().single();
+    if (error) throw new BadRequestException(error.message);
+    return data;
+  }
 }

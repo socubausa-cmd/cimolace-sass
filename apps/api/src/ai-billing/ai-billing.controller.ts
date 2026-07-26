@@ -15,7 +15,7 @@
  */
 
 import {
-  Body, Controller, Get, Post, Query, Req, UseGuards,
+  Body, Controller, Get, Param, Patch, Post, Query, Req, UseGuards,
 } from '@nestjs/common';
 import type { Request } from 'express';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
@@ -276,5 +276,85 @@ export class AiBillingAdminController {
   @UseGuards(JwtAuthGuard, CimolaceStaffGuard)
   async costOverview() {
     return this.svc.getTenantCostOverview();
+  }
+
+  // ─── PILOTAGE DE LA TARIFICATION (aucun prix en dur : tout se règle ici) ───
+  //
+  // Ces tables étaient LISIBLES (GET ai-billing/pricing…) mais NON MODIFIABLES :
+  // ajouter un modèle ou ajuster un tarif imposait de passer par du SQL. D'où
+  // l'incident du 2026-07-26 : la migration DeepSeek v4 a laissé `ai_pricing`
+  // sur les anciens noms, et `getCreditsPerUnit` renvoyant 0 pour un modèle
+  // inconnu, toute la consommation a été facturée ZÉRO sans que rien n'alerte.
+  //
+  // Réservé au STAFF CIMOLACE : c'est la tarification de la PLATEFORME, pas
+  // celle d'un tenant (les prix tenant vivent dans billing_plans / promo_codes).
+
+  /** GET /admin/ai-billing/pricing → grille COMPLÈTE, inactifs inclus (l'écran doit tout voir). */
+  @Get('pricing/all')
+  @UseGuards(JwtAuthGuard, CimolaceStaffGuard)
+  async allPricing() {
+    return this.svc.listAllPricing();
+  }
+
+  /** POST /admin/ai-billing/pricing → ajoute (ou réactive) un tarif provider/model/unit. */
+  @Post('pricing')
+  @UseGuards(JwtAuthGuard, CimolaceStaffGuard)
+  async upsertPricing(
+    @Body()
+    body: {
+      provider: string;
+      model: string;
+      unit_type: string;
+      credits_per_unit: number;
+      unit_label?: string;
+      is_active?: boolean;
+    },
+  ) {
+    return this.svc.upsertPricing(body);
+  }
+
+  /** PATCH /admin/ai-billing/pricing/:id → ajuste un tarif (montant ou activation). */
+  @Patch('pricing/:id')
+  @UseGuards(JwtAuthGuard, CimolaceStaffGuard)
+  async updatePricing(
+    @Param('id') id: string,
+    @Body() body: { credits_per_unit?: number; unit_label?: string; is_active?: boolean },
+  ) {
+    return this.svc.updatePricing(id, body);
+  }
+
+  /** GET /admin/ai-billing/pricing/gaps → modèles APPELÉS par le code mais SANS tarif. */
+  @Get('pricing/gaps')
+  @UseGuards(JwtAuthGuard, CimolaceStaffGuard)
+  async pricingGaps() {
+    return this.svc.findPricingGaps();
+  }
+
+  /** PATCH /admin/ai-billing/topup-packages/:id → prix/crédits d'un pack de recharge. */
+  @Patch('topup-packages/:id')
+  @UseGuards(JwtAuthGuard, CimolaceStaffGuard)
+  async updateTopupPackage(
+    @Param('id') id: string,
+    @Body()
+    body: {
+      label?: string;
+      credits_amount?: number;
+      price_cents?: number;
+      bonus_label?: string | null;
+      is_active?: boolean;
+      sort_order?: number;
+    },
+  ) {
+    return this.svc.updateTopupPackage(id, body);
+  }
+
+  /** PATCH /admin/ai-billing/plans/:id → quotas mensuels d'un palier. */
+  @Patch('plans/:id')
+  @UseGuards(JwtAuthGuard, CimolaceStaffGuard)
+  async updatePlanQuota(
+    @Param('id') id: string,
+    @Body() body: Record<string, unknown>,
+  ) {
+    return this.svc.updatePlanQuota(id, body);
   }
 }

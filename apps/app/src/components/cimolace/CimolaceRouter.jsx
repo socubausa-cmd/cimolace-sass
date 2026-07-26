@@ -58,6 +58,7 @@ import CimolaceAdminFinances from '@/pages/cimolace/admin/finances/index';
 import CimolaceAdminSupport from '@/pages/cimolace/admin/support/index';
 import CimolaceAdminMonitoring from '@/pages/cimolace/admin/monitoring/index';
 import CimolaceAdminAiKeys from '@/pages/cimolace/admin/ai-keys/index';
+import CimolaceAdminAiPricing from '@/pages/cimolace/admin/ai-pricing/index';
 import CimolaceClientDashboard from '@/pages/cimolace/client/[clientSlug]/index';
 const CimolaceBillingDashboardPage = React.lazy(() => import('@/pages/cimolace/CimolaceBillingDashboardPage'));
 const CimolaceLaunchPage = React.lazy(() => import('@/pages/cimolace/CimolaceLaunchPage'));
@@ -140,6 +141,8 @@ export default function CimolaceRouter() {
           <Route path="admin/support" element={<CimolaceProtectedOwnerRoute><CimolaceAdminSupport /></CimolaceProtectedOwnerRoute>} />
           <Route path="admin/monitoring" element={<CimolaceProtectedOwnerRoute><CimolaceAdminMonitoring /></CimolaceProtectedOwnerRoute>} />
           <Route path="admin/ai-keys" element={<CimolaceProtectedOwnerRoute><CimolaceAdminAiKeys /></CimolaceProtectedOwnerRoute>} />
+          {/* Tarification IA — grille, packs, paliers. Pilotage métier sans code. */}
+          <Route path="admin/ai-pricing" element={<CimolaceProtectedOwnerRoute><CimolaceAdminAiPricing /></CimolaceProtectedOwnerRoute>} />
 
           {/* Self-service school creation */}
           <Route path="create-school" element={<CimolaceProtectedRoute><CreateSchoolPage /></CimolaceProtectedRoute>} />

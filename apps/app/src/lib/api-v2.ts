@@ -248,6 +248,28 @@ export const studentInviteApi = {
 
 // ── Marketing ───────────────────────────────────────────────────────────────
 
+/**
+ * TARIFICATION IA — pilotage PLATEFORME (staff Cimolace uniquement).
+ * Aucun prix n'est codé en dur : la grille, les packs de recharge et les quotas
+ * par palier se règlent depuis /cimolace/admin/ai-pricing.
+ * `gaps` liste les modèles réellement appelés SANS tarif actif — sans lui, une
+ * migration de modèle rend la facturation muette (elle compte alors 0 crédit).
+ */
+export const aiPricingAdminApi = {
+  list: () => apiV2.get<ApiEnvelope<any[]>>('/admin/ai-billing/pricing/all').then(unwrap),
+  gaps: () => apiV2.get<ApiEnvelope<any[]>>('/admin/ai-billing/pricing/gaps').then(unwrap),
+  upsert: (body: Record<string, unknown>) =>
+    apiV2.post<ApiEnvelope<any>>('/admin/ai-billing/pricing', body).then(unwrap),
+  update: (id: string, body: Record<string, unknown>) =>
+    apiV2.patch<ApiEnvelope<any>>(`/admin/ai-billing/pricing/${id}`, body).then(unwrap),
+  listPackages: () => apiV2.get<ApiEnvelope<any[]>>('/ai-billing/topup-packages').then(unwrap),
+  updatePackage: (id: string, body: Record<string, unknown>) =>
+    apiV2.patch<ApiEnvelope<any>>(`/admin/ai-billing/topup-packages/${id}`, body).then(unwrap),
+  listPlans: () => apiV2.get<ApiEnvelope<any[]>>('/ai-billing/plans').then(unwrap),
+  updatePlan: (id: string, body: Record<string, unknown>) =>
+    apiV2.patch<ApiEnvelope<any>>(`/admin/ai-billing/plans/${id}`, body).then(unwrap),
+};
+
 export const marketingApi = {
   // Promo codes (endpoint réel = /marketing/promos)
   listPromos: () => apiV2.get<ApiEnvelope<any[]>>('/marketing/promos').then(unwrap),
@@ -398,6 +420,63 @@ export const courseBuilderApi = {
   renderStatus: (contentId: string) =>
     apiV2.get<ApiEnvelope<any>>('/course-builder/render-status', { params: { contentId } }).then(unwrap),
 };
+
+// ── Rendu post-production : contrat TOLÉRANT sur course_render_jobs ──────────
+//
+// POURQUOI ces trois helpers plutôt qu'un accès direct aux champs :
+//
+// 1. La table `course_render_jobs` (migration 20260531000003) n'a QUE les colonnes
+//    id / tenant_id / content_id / status / payload / output_url / error / dates.
+//    L'UI lisait `output_video_url`, `render_mode`, `error_message`, `manifest_json`
+//    — quatre colonnes INEXISTANTES : le bouton « Télécharger MP4 » ne pouvait donc
+//    JAMAIS s'afficher et l'échec du worker restait totalement invisible (panne B3).
+//
+// 2. `output_url` n'est PAS une URL : le worker (apps/worker/src/jobs/courseRender.js,
+//    uploadToR2) y stocke la CLÉ R2 d'un bucket PRIVÉ. Elle n'est donc jamais lisible
+//    telle quelle — il faut une présignature à la lecture (même motif que
+//    replay.service.generatePlaybackUrl). L'API est en train d'être complétée pour
+//    renvoyer EN PLUS un `output_video_url` déjà présigné.
+//
+// 3. Front et API ne sont pas déployés au même instant. On accepte donc les DEUX
+//    générations de noms : tant que l'API n'a pas basculé, le front dégrade
+//    proprement au lieu d'afficher un lien mort ; dès qu'elle bascule, il fonctionne
+//    sans redéploiement du front.
+
+/** Une valeur est-elle une URL réellement ouvrable par le navigateur (≠ clé de stockage) ? */
+export const isAbsoluteMediaUrl = (value: unknown): boolean =>
+  /^(https?:\/\/|blob:|data:)/i.test(String(value ?? '').trim());
+
+/**
+ * URL de LECTURE/TÉLÉCHARGEMENT d'un job de rendu, ou '' si aucune n'est exploitable.
+ * Ordre : nouveau nom présigné → variantes de lecture → ancien `output_url` (retenu
+ * UNIQUEMENT s'il est déjà absolu, car il contient normalement une clé R2 brute qui,
+ * mise dans un <video src>, serait résolue en URL RELATIVE de l'application).
+ */
+export function renderJobPlayableUrl(job: any): string {
+  const candidates = [job?.output_video_url, job?.playback_url, job?.playbackUrl, job?.url, job?.output_url];
+  for (const candidate of candidates) {
+    if (isAbsoluteMediaUrl(candidate)) return String(candidate).trim();
+  }
+  return '';
+}
+
+/** Clé de stockage R2 du rendu (valeur non-absolue d'`output_url`), ou '' si absente. */
+export function renderJobStorageKey(job: any): string {
+  const raw = String(job?.output_storage_key ?? job?.storage_key ?? job?.output_url ?? '').trim();
+  return raw && !isAbsoluteMediaUrl(raw) ? raw : '';
+}
+
+/** Message d'échec du worker, quel que soit le nom de colonne servi par l'API. */
+export function renderJobErrorMessage(job: any): string {
+  const raw =
+    job?.error ??
+    job?.error_message ??
+    job?.errorMessage ??
+    job?.manifest_json?.worker_error ??
+    job?.payload?.worker_error ??
+    '';
+  return String(raw ?? '').trim();
+}
 
 // ── Courses ─────────────────────────────────────────────────────────────────
 
