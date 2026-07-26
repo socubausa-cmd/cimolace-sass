@@ -532,9 +532,20 @@ export class AiBillingService {
       .select('provider, model, unit_type')
       .eq('is_active', true);
 
-    const have = new Set(
-      (priced ?? []).map((p: any) => `${p.provider}/${p.model}/${p.unit_type}`),
-    );
+    // ⚠️ Tous les modèles ne se facturent PAS au jeton : la synthèse vocale est au
+    // CARACTÈRE (`chars`), la transcription à la SECONDE (`seconds`). Exiger
+    // tokens_in/out partout produisait de faux positifs (tts-neural, eleven_flash,
+    // whisper — tous correctement tarifés sous une autre unité).
+    //
+    // Règle retenue : un modèle est « sans tarif » s'il n'a AUCUNE ligne active,
+    // quelle que soit l'unité. S'il en a au moins une, on ne présume pas de l'unité
+    // attendue — mais on signale la moitié manquante quand il est facturé au jeton.
+    const units = new Map<string, Set<string>>();
+    for (const p of priced ?? []) {
+      const k = `${p.provider}/${p.model}`;
+      if (!units.has(k)) units.set(k, new Set());
+      units.get(k)!.add(p.unit_type);
+    }
     const seen = new Map<string, { provider: string; model: string; calls: number }>();
     for (const u of used ?? []) {
       if (!u?.provider || !u?.model) continue;
@@ -544,12 +555,19 @@ export class AiBillingService {
       else seen.set(k, { provider: u.provider, model: u.model, calls: 1 });
     }
     return [...seen.values()]
-      .map((m) => ({
-        ...m,
-        missing: ['tokens_in', 'tokens_out'].filter(
-          (t) => !have.has(`${m.provider}/${m.model}/${t}`),
-        ),
-      }))
+      .map((m) => {
+        const have = units.get(`${m.provider}/${m.model}`);
+        if (!have || have.size === 0) {
+          // Aucun tarif du tout → facturé zéro, quel que soit le mode de comptage.
+          return { ...m, severity: 'aucun_tarif' as const, missing: ['tokens_in', 'tokens_out'] };
+        }
+        // Facturé au jeton mais une seule moitié définie → l'autre passe à zéro.
+        const tokenBilled = have.has('tokens_in') || have.has('tokens_out');
+        const missing = tokenBilled
+          ? ['tokens_in', 'tokens_out'].filter((t) => !have.has(t))
+          : [];
+        return { ...m, severity: 'moitie_manquante' as const, missing };
+      })
       .filter((m) => m.missing.length > 0)
       .sort((a, b) => b.calls - a.calls);
   }
