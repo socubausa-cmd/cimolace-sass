@@ -30,10 +30,10 @@ import { LIVE_DECK, slideAtIn } from '@/components/live-host/live-deck';
 const P = {
   bg: '#0A0A0F',
   panel: 'rgba(255,255,255,0.05)',
-  panelSolid: '#15151E',
+  panelSolid: '#30302e',
   line: 'rgba(255,255,255,0.10)',
-  violet: '#8B5CF6',
-  violetSoft: '#A78BFA',
+  violet: '#d97757',
+  violetSoft: '#e0926a',
   live: '#EF4444',
   ink: '#FFFFFF',
   muted: '#9CA3AF',
@@ -51,7 +51,7 @@ const RAIL: { key: string; label: string; mci: keyof typeof MaterialCommunityIco
   { key: 'joykit', label: 'JoyKit', mci: 'gamepad-variant-outline', tint: P.violetSoft, panel: 'joykit' },
   { key: 'scenes', label: 'Scènes', mci: 'drama-masks', tint: P.violetSoft, panel: 'scenes' },
   { key: 'focus', label: 'Focus', mci: 'lightbulb-on-outline', tint: '#FCD34D' },
-  { key: 'invite', label: 'Inviter', mci: 'link-variant', tint: '#60A5FA', panel: 'invite' },
+  { key: 'invite', label: 'Inviter', mci: 'link-variant', tint: '#e0926a', panel: 'invite' },
 ];
 
 /** Un membre de la salle (réel = LiveKit participant, ou mock en preview). */
@@ -65,14 +65,14 @@ export type LiveQuestion = { id: string; author: string; text: string; resolved?
 export type RemoteTile = { id: string; name: string; role?: string; node?: React.ReactNode; speaking?: boolean };
 
 const MEMBERS: LiveMember[] = [
-  { name: 'Manikongo', role: 'PROF', tint: '#7C3AED' },
+  { name: 'Manikongo', role: 'PROF', tint: '#c2683f' },
   { name: 'Aïcha', tint: '#EC4899' },
   { name: 'Jean', tint: '#22C55E' },
   { name: 'Léa', tint: '#F59E0B' },
 ];
 
 /** Palette stable pour colorer un avatar à partir d'un nom/identité. */
-const AVATAR_TINTS = ['#7C3AED', '#EC4899', '#22C55E', '#F59E0B', '#60A5FA', '#14B8A6', '#F472B6', '#A78BFA'];
+const AVATAR_TINTS = ['#c2683f', '#EC4899', '#22C55E', '#F59E0B', '#e0926a', '#e6b878', '#F472B6', '#e0926a'];
 export function tintFor(seed: string): string {
   let h = 0;
   for (let i = 0; i < seed.length; i++) h = (h * 31 + seed.charCodeAt(i)) >>> 0;
@@ -644,7 +644,7 @@ const s = StyleSheet.create({
   stopTxt: { color: P.live, fontSize: 13, fontWeight: '700' },
 
   stage: { flex: 1, alignItems: 'center', justifyContent: 'center' },
-  selfAvatar: { width: 150, height: 150, borderRadius: 75, backgroundColor: 'rgba(139,92,246,0.12)', borderWidth: 1, borderColor: 'rgba(139,92,246,0.4)', alignItems: 'center', justifyContent: 'center' },
+  selfAvatar: { width: 150, height: 150, borderRadius: 75, backgroundColor: 'rgba(217,119,87,0.12)', borderWidth: 1, borderColor: 'rgba(217,119,87,0.4)', alignItems: 'center', justifyContent: 'center' },
   selfAvatarTxt: { color: P.violetSoft, fontSize: 60, fontWeight: '800' },
   camOff: { color: P.muted, fontSize: 14, fontWeight: '700', letterSpacing: 0.5, marginTop: 22 },
   previewTxt: { color: P.ink, fontSize: 22, fontWeight: '700', marginTop: 6 },
@@ -663,7 +663,7 @@ const s = StyleSheet.create({
   rail: { position: 'absolute', right: 10, top: '28%', alignItems: 'center', gap: 14 },
   fab: { alignItems: 'center', gap: 4, width: 64 },
   fabCircle: { width: 52, height: 52, borderRadius: 26, backgroundColor: 'rgba(255,255,255,0.05)', borderWidth: 1, borderColor: P.line, alignItems: 'center', justifyContent: 'center' },
-  fabActive: { backgroundColor: 'rgba(139,92,246,0.3)', borderColor: P.violet },
+  fabActive: { backgroundColor: 'rgba(217,119,87,0.3)', borderColor: P.violet },
   fabLabel: { color: P.muted, fontSize: 11, fontWeight: '600' },
   recCircle: { borderColor: 'rgba(239,68,68,0.45)' },
   recActive: { backgroundColor: P.live, borderColor: P.live },
@@ -692,7 +692,7 @@ const s = StyleSheet.create({
 
   sectionRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, paddingHorizontal: 16, paddingTop: 12, paddingBottom: 6 },
   sectionChip: { flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: P.panel, borderRadius: 12, paddingHorizontal: 11, paddingVertical: 8, borderWidth: 1, borderColor: 'transparent' },
-  sectionChipActive: { backgroundColor: 'rgba(139,92,246,0.18)', borderColor: P.violet },
+  sectionChipActive: { backgroundColor: 'rgba(217,119,87,0.18)', borderColor: P.violet },
   sectionEmoji: { fontSize: 14 },
   sectionLabel: { color: P.muted, fontSize: 12.5, fontWeight: '600' },
   sectionLabelActive: { color: P.ink },
@@ -703,7 +703,7 @@ const s = StyleSheet.create({
   memberOnline: { position: 'absolute', right: 0, bottom: 0, width: 11, height: 11, borderRadius: 6, backgroundColor: P.emerald, borderWidth: 2, borderColor: P.panelSolid },
   memberSpeaking: { backgroundColor: P.violetSoft, borderColor: P.violet },
   memberName: { color: P.ink, fontSize: 14.5, fontWeight: '600', flex: 1 },
-  memberRole: { color: P.violetSoft, fontSize: 10, fontWeight: '800', backgroundColor: 'rgba(139,92,246,0.15)', borderRadius: 6, paddingHorizontal: 7, paddingVertical: 3 },
+  memberRole: { color: P.violetSoft, fontSize: 10, fontWeight: '800', backgroundColor: 'rgba(217,119,87,0.15)', borderRadius: 6, paddingHorizontal: 7, paddingVertical: 3 },
   toolCard: { flexDirection: 'row', alignItems: 'center', gap: 12, backgroundColor: P.panel, borderRadius: 14, padding: 13, marginTop: 8 },
   toolEmoji: { fontSize: 20 },
   toolLabel: { color: P.ink, fontSize: 14, fontWeight: '700' },
@@ -757,14 +757,14 @@ const s = StyleSheet.create({
 
   // Scène FOCUS
   focusWrap: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: 18, gap: 14 },
-  focusTile: { width: '76%', aspectRatio: 3 / 4, borderRadius: 24, overflow: 'hidden', backgroundColor: 'rgba(255,255,255,0.04)', borderWidth: 1, borderColor: 'rgba(139,92,246,0.4)', alignItems: 'center', justifyContent: 'center' },
+  focusTile: { width: '76%', aspectRatio: 3 / 4, borderRadius: 24, overflow: 'hidden', backgroundColor: 'rgba(255,255,255,0.04)', borderWidth: 1, borderColor: 'rgba(217,119,87,0.4)', alignItems: 'center', justifyContent: 'center' },
   focusAvatar: { width: 120, height: 120, borderRadius: 60, alignItems: 'center', justifyContent: 'center' },
   focusAvatarTxt: { color: '#fff', fontSize: 48, fontWeight: '800' },
   focusBadge: { flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: 'rgba(0,0,0,0.55)', borderRadius: 14, paddingHorizontal: 14, paddingVertical: 8 },
   focusDot: { width: 7, height: 7, borderRadius: 4, backgroundColor: P.live },
   focusName: { color: '#fff', fontSize: 13.5, fontWeight: '700' },
   focusRole: { color: '#fff', fontSize: 9, fontWeight: '800', backgroundColor: P.violet, borderRadius: 6, paddingHorizontal: 6, paddingVertical: 2 },
-  sceneCardActive: { borderColor: P.violet, backgroundColor: 'rgba(139,92,246,0.18)' },
+  sceneCardActive: { borderColor: P.violet, backgroundColor: 'rgba(217,119,87,0.18)' },
   sceneActiveTag: { color: P.violetSoft, fontSize: 9, fontWeight: '800', marginTop: 4, letterSpacing: 0.4 },
   // Smartboard immersif : rendu délégué à ImmersiveSmartboard (cf. immersive-smartboard.tsx).
 });

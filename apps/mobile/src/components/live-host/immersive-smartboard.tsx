@@ -31,9 +31,9 @@ export interface SmartboardSlide {
 
 export type CameraSize = 'sm' | 'md' | 'lg';
 
-const V = '#A78BFA';
-const V_BORDER = 'rgba(139,92,246,0.45)';
-const V_FILL = 'rgba(139,92,246,0.10)';
+const V = '#e0926a';
+const V_BORDER = 'rgba(217,119,87,0.45)';
+const V_FILL = 'rgba(217,119,87,0.10)';
 const GREEN = '#34D399';
 const GREEN_BORDER = 'rgba(52,211,153,0.40)';
 
@@ -155,7 +155,7 @@ function SmartboardGrid() {
         </Pattern>
         {/* Lignes majeures (tous les 5 carreaux) — léger ton violet « tableau » */}
         <Pattern id="sb-grid-major" width={220} height={220} patternUnits="userSpaceOnUse">
-          <Path d="M 220 0 L 0 0 0 220" fill="none" stroke="rgba(139,92,246,0.12)" strokeWidth={1} />
+          <Path d="M 220 0 L 0 0 0 220" fill="none" stroke="rgba(217,119,87,0.12)" strokeWidth={1} />
         </Pattern>
       </Defs>
       <Rect x={0} y={0} width="100%" height="100%" fill="#0a0b0f" />
@@ -222,7 +222,7 @@ const s = StyleSheet.create({
   camTop: { top: 16, right: 16 },
   camBottom: { bottom: 16, right: 16 },
   camFill: { ...StyleSheet.absoluteFillObject },
-  camPlaceholder: { backgroundColor: '#0D0D16', alignItems: 'center', justifyContent: 'center', gap: 6 },
+  camPlaceholder: { backgroundColor: '#262624', alignItems: 'center', justifyContent: 'center', gap: 6 },
   camTxt: { color: 'rgba(255,255,255,0.6)', fontSize: 12, fontWeight: '600' },
   camBadge: { position: 'absolute', left: 6, top: 6, flexDirection: 'row', alignItems: 'center', gap: 3, backgroundColor: 'rgba(0,0,0,0.55)', borderRadius: 5, paddingHorizontal: 5, paddingVertical: 2 },
   camDot: { width: 5, height: 5, borderRadius: 3, backgroundColor: '#EF4444' },
@@ -233,17 +233,17 @@ const s = StyleSheet.create({
 
   head: {},
   headClear: { paddingRight: 168 }, // laisse la place à la vignette caméra
-  chapter: { alignSelf: 'flex-start', backgroundColor: 'rgba(139,92,246,0.9)', borderRadius: 8, paddingHorizontal: 10, paddingVertical: 4, marginBottom: 12 },
+  chapter: { alignSelf: 'flex-start', backgroundColor: 'rgba(217,119,87,0.9)', borderRadius: 8, paddingHorizontal: 10, paddingVertical: 4, marginBottom: 12 },
   chapterTxt: { color: '#fff', fontSize: 11, fontWeight: '800', letterSpacing: 0.6 },
   title: { color: '#FFFFFF', fontSize: 30, fontWeight: '800', lineHeight: 34 },
-  rule: { width: 56, height: 4, borderRadius: 2, backgroundColor: '#7C3AED', marginTop: 12 },
+  rule: { width: 56, height: 4, borderRadius: 2, backgroundColor: '#c2683f', marginTop: 12 },
 
   // paddingRight : dégage le rail de FAB du régie (à droite) — pas de chevauchement.
   blocks: { marginTop: 22, gap: 16, paddingRight: 64 },
 
   // key-idea — translucide léger (fondu)
   keyIdea: { flexDirection: 'row', gap: 12, alignItems: 'flex-start' },
-  keyBulb: { width: 36, height: 36, borderRadius: 18, backgroundColor: '#6366F1', alignItems: 'center', justifyContent: 'center' },
+  keyBulb: { width: 36, height: 36, borderRadius: 18, backgroundColor: '#d97757', alignItems: 'center', justifyContent: 'center' },
   keyLabel: { color: V, fontSize: 11, fontWeight: '800', letterSpacing: 0.6, marginBottom: 3 },
   keyTxt: { color: 'rgba(255,255,255,0.9)', fontSize: 15.5, lineHeight: 22 },
 
@@ -251,7 +251,7 @@ const s = StyleSheet.create({
   formulaWrap: { gap: 8 },
   formulaLabel: { color: V, fontSize: 11, fontWeight: '800', letterSpacing: 0.8 },
   formulaBox: { borderWidth: 1, borderColor: V_BORDER, backgroundColor: V_FILL, borderRadius: 14, paddingVertical: 16, alignItems: 'center' },
-  formulaTxt: { color: '#C4B5FD', fontSize: 22, fontWeight: '800' },
+  formulaTxt: { color: '#e6b878', fontSize: 22, fontWeight: '800' },
 
   // retain — bordure verte translucide
   retain: { borderWidth: 1, borderColor: GREEN_BORDER, backgroundColor: 'rgba(52,211,153,0.05)', borderRadius: 14, padding: 14, gap: 9 },

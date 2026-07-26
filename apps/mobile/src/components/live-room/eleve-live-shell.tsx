@@ -25,7 +25,7 @@ import ImmersiveSmartboard, { type SmartboardSlide } from '@/components/live-hos
  * props (`chatMessages` / `onSendChat`) → branché au data channel « chat » côté
  * natif, local côté web.
  */
-const P = { bg: '#0A0A0F', panel: 'rgba(255,255,255,0.05)', line: 'rgba(255,255,255,0.10)', violet: '#8B5CF6', live: '#EF4444', ink: '#FFFFFF', muted: '#9CA3AF' };
+const P = { bg: '#0A0A0F', panel: 'rgba(255,255,255,0.05)', line: 'rgba(255,255,255,0.10)', violet: '#d97757', live: '#EF4444', ink: '#FFFFFF', muted: '#9CA3AF' };
 
 export interface ChatMessage {
   id: string;
@@ -243,7 +243,7 @@ const s = StyleSheet.create({
   safe: { flex: 1 },
   pressed: { opacity: 0.7 },
   top: { flexDirection: 'row', alignItems: 'center', gap: 10, paddingHorizontal: 14, paddingTop: 10, paddingBottom: 6 },
-  modBanner: { flexDirection: 'row', alignItems: 'center', gap: 8, marginHorizontal: 14, marginBottom: 6, paddingHorizontal: 12, paddingVertical: 8, borderRadius: 12, backgroundColor: 'rgba(139,92,246,0.15)', borderWidth: 1, borderColor: 'rgba(139,92,246,0.4)' },
+  modBanner: { flexDirection: 'row', alignItems: 'center', gap: 8, marginHorizontal: 14, marginBottom: 6, paddingHorizontal: 12, paddingVertical: 8, borderRadius: 12, backgroundColor: 'rgba(217,119,87,0.15)', borderWidth: 1, borderColor: 'rgba(217,119,87,0.4)' },
   modBannerTxt: { color: P.ink, fontSize: 13, fontWeight: '600', flex: 1 },
   liveBadge: { flexDirection: 'row', alignItems: 'center', gap: 5, backgroundColor: P.live, borderRadius: 8, paddingHorizontal: 8, paddingVertical: 4 },
   liveDot: { width: 6, height: 6, borderRadius: 3, backgroundColor: '#fff' },

@@ -50,15 +50,15 @@ const SLIDES = [
 
 /* Palette de la maquette (violet sombre — distincte du thème portail coral). */
 const P = {
-  bg: '#050812',
-  cardA: '#0f1525',
-  cardB: '#080c18',
-  navBg: 'rgba(11,16,28,0.95)',
-  navRing: '#0b101c',
-  violet600: '#7c3aed',
-  violet500: '#8b5cf6',
-  violet400: '#a78bfa',
-  violet300: '#c4b5fd',
+  bg: '#1a1918',
+  cardA: '#262624',
+  cardB: '#1f1e1c',
+  navBg: 'rgba(26,26,24,0.95)',
+  navRing: '#1f1e1c',
+  violet600: '#c2683f',
+  violet500: '#d97757',
+  violet400: '#e0926a',
+  violet300: '#e6b878',
   violet200: '#ddd6fe',
   red500: '#ef4444',
   red400: '#f87171',
@@ -67,8 +67,8 @@ const P = {
   cyan400: '#22d3ee',
   cyan200: '#a5f3fc',
   amber200: '#fde68a',
-  slate900: '#0f172a',
-  slate800: '#1e293b',
+  slate900: '#262624',
+  slate800: '#3a3936',
   white: '#ffffff',
 };
 
@@ -237,7 +237,7 @@ export default function HostMaquette() {
               <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={s.membersRow}>
                 {participants.map((p) => (
                   <View key={p.name} style={s.member}>
-                    <LinearGradient colors={[P.violet500, '#3b82f6']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={s.avatarRing}>
+                    <LinearGradient colors={[P.violet500, '#d97757']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={s.avatarRing}>
                       <View style={s.avatarInner} />
                       {p.online ? <View style={s.avatarOnline} /> : null}
                     </LinearGradient>
@@ -361,7 +361,7 @@ function BarAction({
 function Speedometer() {
   return (
     <Svg width={80} height={64} viewBox="0 0 96 72">
-      <Path d="M8 64 A40 40 0 0 1 80 20" stroke="rgba(139,92,246,0.3)" strokeWidth={3} strokeLinecap="round" fill="none" />
+      <Path d="M8 64 A40 40 0 0 1 80 20" stroke="rgba(217,119,87,0.3)" strokeWidth={3} strokeLinecap="round" fill="none" />
       <Path d="M8 64 A40 40 0 0 1 64 32" stroke="rgba(232,121,249,0.9)" strokeWidth={2.5} strokeLinecap="round" fill="none" />
       <Line x1={48} y1={64} x2={64} y2={32} stroke="rgba(255,255,255,0.8)" strokeWidth={2} />
       <Circle cx={48} cy={64} r={3} fill={P.violet400} />
@@ -404,7 +404,7 @@ const s = StyleSheet.create({
   slideHead: { flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between', gap: 8, marginBottom: 8 },
   slideHeadText: { flex: 1, paddingRight: 4 },
   slideHeadRight: { alignItems: 'flex-end', gap: 8 },
-  chapterKicker: { fontSize: 10, fontWeight: '800', letterSpacing: 2, color: 'rgba(167,139,250,0.9)' },
+  chapterKicker: { fontSize: 10, fontWeight: '800', letterSpacing: 2, color: 'rgba(224,146,106,0.9)' },
   slideTitle: { marginTop: 2, fontFamily: SERIF, fontSize: 22, fontWeight: '700', lineHeight: 26, color: '#f0e6ff' },
 
   slideBody: { marginTop: 4, gap: 12 },
@@ -412,11 +412,11 @@ const s = StyleSheet.create({
   em: { fontStyle: 'italic' },
   strong: { fontWeight: '700', color: '#fff' },
   formula: {
-    borderRadius: 12, borderWidth: 2, borderColor: 'rgba(139,92,246,0.5)', backgroundColor: 'rgba(46,16,101,0.4)',
+    borderRadius: 12, borderWidth: 2, borderColor: 'rgba(217,119,87,0.5)', backgroundColor: 'rgba(52,36,28,0.4)',
     paddingHorizontal: 12, paddingVertical: 10, alignItems: 'center',
   },
   formulaTxt: { fontSize: 13, fontWeight: '600', letterSpacing: 0.5, color: P.violet200, textAlign: 'center' },
-  formulaDim: { color: 'rgba(167,139,250,0.8)' },
+  formulaDim: { color: 'rgba(224,146,106,0.8)' },
   retainBox: { borderRadius: 16, borderWidth: 2, borderColor: 'rgba(16,185,129,0.5)', backgroundColor: 'rgba(2,44,34,0.25)', padding: 12 },
   retainLabel: { fontSize: 10, fontWeight: '800', letterSpacing: 1.5, color: P.emerald300 },
   ul: { marginTop: 6, gap: 6 },
@@ -431,7 +431,7 @@ const s = StyleSheet.create({
   },
   sunTxt: { fontSize: 12, fontWeight: '700', color: P.amber200 },
   dash: { flex: 1, height: 0, borderBottomWidth: 1, borderStyle: 'dashed', borderColor: 'rgba(255,255,255,0.25)' },
-  diagDot: { height: 8, width: 8, borderRadius: 4, borderWidth: 1, borderColor: 'rgba(34,211,238,0.5)', backgroundColor: 'rgba(6,182,212,0.3)' },
+  diagDot: { height: 8, width: 8, borderRadius: 4, borderWidth: 1, borderColor: 'rgba(230,184,120,0.5)', backgroundColor: 'rgba(230,184,120,0.3)' },
   caption: { textAlign: 'center', fontSize: 10, fontWeight: '500', color: 'rgba(165,243,252,0.9)' },
   previewNote: { marginTop: 8, fontSize: 14, color: 'rgba(255,255,255,0.55)' },
 
@@ -440,7 +440,7 @@ const s = StyleSheet.create({
   planLabel: { marginBottom: 6, paddingHorizontal: 2, fontSize: 10, fontWeight: '700', letterSpacing: 1.5, color: 'rgba(255,255,255,0.35)' },
   planRow: { gap: 10, paddingBottom: 8 },
   planItem: { minWidth: 66, alignItems: 'center', borderRadius: 16, borderWidth: 1, padding: 6, paddingTop: 8 },
-  planItemActive: { borderColor: P.violet500, backgroundColor: 'rgba(139,92,246,0.15)', ...sh(0.2, 10) },
+  planItemActive: { borderColor: P.violet500, backgroundColor: 'rgba(217,119,87,0.15)', ...sh(0.2, 10) },
   planItemIdle: { borderColor: 'rgba(255,255,255,0.08)', backgroundColor: 'rgba(255,255,255,0.04)' },
   planNum: { height: 24, width: 24, borderRadius: 8, alignItems: 'center', justifyContent: 'center' },
   planNumActive: { backgroundColor: P.violet500 },
@@ -455,7 +455,7 @@ const s = StyleSheet.create({
   /* Ma vidéo */
   videoSection: { marginTop: 8, borderRadius: 26, borderWidth: 1, borderColor: 'rgba(255,255,255,0.1)', backgroundColor: 'rgba(255,255,255,0.04)', padding: 16 },
   sectionH2: { fontSize: 18, fontWeight: '700', color: '#fff' },
-  videoFrame: { marginTop: 12, borderRadius: 22, borderWidth: 1, borderColor: 'rgba(139,92,246,0.6)', backgroundColor: P.slate900, overflow: 'hidden' },
+  videoFrame: { marginTop: 12, borderRadius: 22, borderWidth: 1, borderColor: 'rgba(217,119,87,0.6)', backgroundColor: P.slate900, overflow: 'hidden' },
   videoImg: { width: '100%', aspectRatio: 16 / 9, justifyContent: 'flex-start' },
   videoImgInner: { resizeMode: 'cover' },
   videoTopLeft: {
@@ -478,7 +478,7 @@ const s = StyleSheet.create({
   pagerDot: { height: 6, width: 6, borderRadius: 3 },
 
   /* PiP */
-  pip: { width: 100, borderRadius: 16, overflow: 'hidden', borderWidth: 2, borderColor: 'rgba(139,92,246,0.5)', backgroundColor: 'rgba(15,23,42,0.95)', ...sh(0.45, 12) },
+  pip: { width: 100, borderRadius: 16, overflow: 'hidden', borderWidth: 2, borderColor: 'rgba(217,119,87,0.5)', backgroundColor: 'rgba(35,35,33,0.95)', ...sh(0.45, 12) },
   pipImg: { width: '100%', aspectRatio: 16 / 9 },
   pipImgInner: { resizeMode: 'cover' },
   pipBadge: { position: 'absolute', left: 6, top: 6, flexDirection: 'row', alignItems: 'center', gap: 2, borderRadius: 4, backgroundColor: 'rgba(0,0,0,0.55)', paddingLeft: 2, paddingRight: 5, paddingVertical: 2 },

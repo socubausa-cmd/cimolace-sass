@@ -3,7 +3,9 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { LiriFonts as F, type LiriPalette } from '@/constants/liri-theme';
 import { supabase } from '@/lib/supabase';
+import { useTheme } from '@/lib/theme';
 
 type CalendarItem = {
   id: string;
@@ -14,12 +16,12 @@ type CalendarItem = {
   holiday?: boolean;
 };
 
-const C = { bg: '#0B0B0F', card: '#16161E', ink: '#FFF', muted: '#92929B', line: 'rgba(255,255,255,.09)', coral: '#E08A5F' };
-
 const formatDate = (value: string) =>
   new Intl.DateTimeFormat('fr-FR', { day: '2-digit', month: 'short' }).format(new Date(`${value.slice(0, 10)}T12:00:00`));
 
 export default function CalendrierAnnuelScreen() {
+  const { colors: C } = useTheme();
+  const s = useMemo(() => makeStyles(C), [C]);
   const [items, setItems] = useState<CalendarItem[] | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [year, setYear] = useState(new Date().getFullYear());
@@ -106,15 +108,15 @@ export default function CalendrierAnnuelScreen() {
   );
 }
 
-const s = StyleSheet.create({
-  root: { flex: 1, backgroundColor: C.bg }, safe: { flex: 1 },
+const makeStyles = (C: LiriPalette) => StyleSheet.create({
+  root: { flex: 1, backgroundColor: C.base }, safe: { flex: 1 },
   header: { paddingHorizontal: 18, paddingVertical: 14, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 12 },
-  kicker: { color: C.muted, fontSize: 10, fontWeight: '800', letterSpacing: 1.5 }, title: { color: C.ink, fontSize: 25, fontWeight: '800' },
+  kicker: { color: C.muted, fontSize: 10, fontWeight: '800', letterSpacing: 1.5 }, title: { color: C.ink, fontSize: 25, fontWeight: '800', fontFamily: F.sans },
   yearPicker: { flexDirection: 'row', alignItems: 'center', gap: 8, borderWidth: 1, borderColor: C.line, borderRadius: 14, paddingHorizontal: 9, paddingVertical: 8 },
   year: { color: C.ink, fontSize: 14, fontWeight: '800', fontVariant: ['tabular-nums'] }, center: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: 12, padding: 28 },
-  error: { color: '#FB7185', textAlign: 'center' }, empty: { color: C.muted, textAlign: 'center' }, button: { backgroundColor: C.coral, paddingHorizontal: 16, paddingVertical: 10, borderRadius: 12 }, buttonText: { color: '#21140E', fontWeight: '800' },
+  error: { color: C.live, textAlign: 'center' }, empty: { color: C.muted, textAlign: 'center' }, button: { backgroundColor: C.coral, paddingHorizontal: 16, paddingVertical: 10, borderRadius: 12 }, buttonText: { color: C.panelTint, fontWeight: '800', fontFamily: F.sans },
   scroll: { paddingHorizontal: 18, paddingBottom: 40, gap: 20 }, group: { gap: 8 }, month: { color: C.coral, fontSize: 13, fontWeight: '800', textTransform: 'capitalize', letterSpacing: .5 },
-  row: { flexDirection: 'row', gap: 11, borderWidth: 1, borderColor: C.line, backgroundColor: C.card, borderRadius: 16, padding: 12 },
-  dateBox: { width: 58, alignItems: 'center', justifyContent: 'center', backgroundColor: 'rgba(224,138,95,.12)', borderRadius: 11 }, holiday: { backgroundColor: 'rgba(52,211,153,.13)' },
+  row: { flexDirection: 'row', gap: 11, borderWidth: 1, borderColor: C.line, backgroundColor: C.panel, borderRadius: 16, padding: 12 },
+  dateBox: { width: 58, alignItems: 'center', justifyContent: 'center', backgroundColor: C.coralTint, borderRadius: 11 }, holiday: { backgroundColor: C.coralTint },
   date: { color: C.ink, fontWeight: '800', fontSize: 12 }, rowBody: { flex: 1, gap: 3 }, rowTitle: { color: C.ink, fontWeight: '700', fontSize: 14 }, rowSub: { color: C.muted, fontSize: 12, lineHeight: 17 },
 });

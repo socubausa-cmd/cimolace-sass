@@ -22,9 +22,9 @@ function iconFor(type: string | null | undefined, C: LiriPalette): { name: IconN
       return { name: 'radio', color: '#F87171' };
     case 'course':
     case 'formation':
-      return { name: 'book-open', color: '#A78BFA' };
+      return { name: 'book-open', color: '#e0926a' };
     case 'announcement':
-      return { name: 'volume-2', color: '#60A5FA' };
+      return { name: 'volume-2', color: '#e0926a' };
     case 'event':
     case 'calendar':
       return { name: 'calendar', color: '#34D399' };
