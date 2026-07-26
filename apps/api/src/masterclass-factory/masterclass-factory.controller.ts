@@ -10,6 +10,8 @@ import { MasterclassFactoryService } from './masterclass-factory.service';
 import { TranscriptCourseService } from './transcript-course.service';
 import { CourseJobService } from './course-job.service';
 import { ReplayChaptersService } from './replay-chapters.service';
+import { ComprehensionService } from './comprehension.service';
+import { SourceAdaptersService } from './source-adapters.service';
 
 // Guards au niveau CLASSE, mais @Roles au niveau MÉTHODE : l'ÉCRITURE
 // (générer/sauver/analyser) reste réservée aux créateurs (owner/admin/teacher),
@@ -25,7 +27,41 @@ export class MasterclassFactoryController {
     private transcriptCourse: TranscriptCourseService,
     private courseJobs: CourseJobService,
     private replayChapters: ReplayChaptersService,
+    private comprehension: ComprehensionService,
+    private sourceAdapters: SourceAdaptersService,
   ) {}
+
+  // ═══ ATELIER DE COURS UNIFIÉ (lot 2) — le NOYAU ═══
+  //
+  // Une seule extraction pour TOUTES les sources (replay, TikTok, document,
+  // texte). Produit le pivot « comprehension » : le FOND, extrait UNE fois.
+  // Les formes et les rendus en découleront sans rappeler le modèle.
+
+  /** Sources disponibles et état de leur transcription (écran Atelier). */
+  @Get('atelier/sources/:type')
+  @Roles('owner', 'admin', 'teacher')
+  listSources(@Param('type') type: string, @CurrentTenant() t: TenantContext) {
+    return this.sourceAdapters.listSources(t.id, type as any);
+  }
+
+  /**
+   * Extrait (ou récupère) le FOND d'une source. Idempotent : si le pivot
+   * existe déjà, il est rendu tel quel — on ne repaye jamais l'IA deux fois
+   * pour la même source, sauf `force: true`.
+   */
+  @Post('atelier/comprendre')
+  @Roles('owner', 'admin', 'teacher')
+  comprendre(
+    @Body() d: { sourceType?: string; sourceId?: string; force?: boolean },
+    @CurrentTenant() t: TenantContext,
+  ) {
+    return this.comprehension.build(
+      t.id,
+      (d?.sourceType ?? 'replay') as any,
+      String(d?.sourceId ?? ''),
+      { force: !!d?.force },
+    );
+  }
 
   /**
    * Extrait un COURS ÉCRIT depuis la transcription d'un replay (Vidéothèque).
