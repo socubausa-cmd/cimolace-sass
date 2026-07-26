@@ -1,5 +1,5 @@
 /**
- * Course Building Control Room — interface logiciel unifiée.
+ * Centre de pilotage de construction de cours — interface logicielle unifiée.
  * Route : /studio/liri/constructeurs
  */
 import React, { useMemo, useState } from 'react';
@@ -12,10 +12,22 @@ import { cn } from '@/lib/utils';
 import StudioDesignerLikeShell from '@/components/liri/liri-ecosystem/StudioDesignerLikeShell';
 import { CONSTRUCTEURS_CATALOG, DESIGNER_HREF } from '@/lib/liriConstructeursCatalog';
 
+// ── Charte LIRI ────────────────────────────────────────────────────────────
+// Cette page était bâtie sur deux teintes FROIDES : cyan (sélections, CTA,
+// liens de pipeline, trait de liaison) et violet (badge de tête). Elles sont
+// remplacées à la SOURCE par la famille chaude, en gardant la même opposition
+// « une couleur pour le badge, une autre pour tout ce qui est actionnable » :
+//   corail #d97757 (encre #e08a5f / #e8a97f) → sélection + actions
+//   or     #d99a4e (encre #e6b878)           → badge, accent secondaire
+// Fonds : page (fournie par la coque) #262624 · panneau #30302e · bloc #1f1e1c.
+// Les anciens panneaux #0b1020 et #0a0f1d étaient des bleus nuit.
+//
+// Les ids ('assist' / 'manual' / 'hybrid') pilotent getStartRoute : ce sont des
+// identifiants, ils ne changent PAS. Seuls les libellés visibles sont corrigés.
 const BUILD_MODES = [
-  { id: 'assist', title: 'Assiste IA', hint: 'Generation auto + validation humaine' },
-  { id: 'manual', title: 'Manuel', hint: 'Conception complete par le professeur' },
-  { id: 'hybrid', title: 'Mixte', hint: 'IA + edition manuelle continue' },
+  { id: 'assist', title: 'Assisté par IA', hint: 'Génération automatique + validation humaine' },
+  { id: 'manual', title: 'Manuel', hint: 'Conception complète par le professeur' },
+  { id: 'hybrid', title: 'Mixte', hint: 'IA + édition manuelle continue' },
 ];
 
 const PIPELINE = [
@@ -30,17 +42,21 @@ const PIPELINE = [
   },
   {
     id: 'content',
-    title: 'Construction pedagogique',
+    title: 'Construction pédagogique',
     subtitle: 'Structure, scripts, checkpoints',
     options: [
+      // « Course Builder », « Formation Builder », « SmartBoard Designer » sont
+      // les NOMS des produits du studio, employés tels quels dans tout le
+      // portail et dans les routes : on ne les traduit pas, on traduit les
+      // qualificatifs qui les accompagnent.
       { label: 'Agent LIRI', to: '/studio/liri-agent' },
-      { label: 'Course Builder Studio (video)', to: '/studio/course-builder' },
+      { label: 'Course Builder Studio (vidéo)', to: '/studio/course-builder' },
       { label: 'Course Builder Pro (arbre)', to: '/studio/course-builder-pro' },
     ],
   },
   {
     id: 'design',
-    title: 'Mise en scene visuelle',
+    title: 'Mise en scène visuelle',
     subtitle: 'Slides, canvas, diffusion',
     options: [
       { label: 'SmartBoard Designer', to: DESIGNER_HREF },
@@ -62,12 +78,13 @@ function ConstructorDock({ item, active, onPick }) {
       className={cn(
         'w-full rounded-xl border px-3 py-2.5 text-left transition',
         active
-          ? 'border-cyan-400/35 bg-cyan-500/[0.12]'
-          : 'border-white/10 bg-white/[0.03] hover:border-white/20',
+          ? 'border-[#d97757]/40 bg-[#d97757]/[0.14]'
+          : 'border-[#f5f4ee]/10 bg-[#f5f4ee]/[0.03] hover:border-[#d97757]/30',
       )}
     >
-      <p className="text-[12px] font-semibold text-white/90">{item.title}</p>
-      <p className="mt-0.5 text-[11px] text-white/45">{item.subtitle}</p>
+      <p className="text-[12px] font-semibold text-[#f5f4ee]">{item.title}</p>
+      {/* Sous-titre du dock : /45 valait 3,0:1 sur ce composite → /65 = 6,1:1. */}
+      <p className="mt-0.5 text-[11px] text-[#f5f4ee]/65">{item.subtitle}</p>
     </button>
   );
 }
@@ -88,14 +105,17 @@ export default function StudioLiriConstructeursHubPage() {
   return (
     <StudioDesignerLikeShell
       railActiveKey="constructeurs"
-      pageLabel="Course Building Control Room"
-      pageAccent="violet"
+      pageLabel="Centre de pilotage"
+      // La coque expose des alias CHAUDS (coral/terre/or/ambre/brique/argile)
+      // en plus des anciennes clés froides conservées pour compatibilité :
+      // on passe par le nom chaud pour ne plus propager « violet ».
+      pageAccent="coral"
       TitleIcon={Compass}
       titleLine="Nouveau hub logiciel"
       topBarCenter={(
         <Link
           to="/studio/liri/constructeurs/guide"
-          className="whitespace-nowrap rounded-lg border border-white/12 bg-white/[0.05] px-2.5 py-1 text-[11px] font-medium text-white/55 transition-all hover:border-violet-500/30 hover:text-white/85"
+          className="whitespace-nowrap rounded-lg border border-[#f5f4ee]/10 bg-[#f5f4ee]/[0.05] px-2.5 py-1 text-[11px] font-medium text-[#f5f4ee]/65 transition-all hover:border-[#d97757]/40 hover:text-[#f5f4ee]"
         >
           Guide
         </Link>
@@ -105,23 +125,25 @@ export default function StudioLiriConstructeursHubPage() {
         <motion.div
           initial={{ opacity: 0, y: -6 }}
           animate={{ opacity: 1, y: 0 }}
-          className="mb-5 rounded-2xl border border-white/10 bg-[#0b1020] px-5 py-4"
+          className="mb-5 rounded-2xl border border-[#f5f4ee]/10 bg-[#30302e] px-5 py-4"
         >
-          <div className="mb-2 inline-flex items-center gap-2 rounded-full border border-violet-500/30 bg-violet-500/[0.12] px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.16em] text-violet-200">
+          {/* Badge en OR : il gardait sa propre couleur (violet) face au cyan de
+              tout le reste — on conserve cette opposition en chaud. */}
+          <div className="mb-2 inline-flex items-center gap-2 rounded-full border border-[#d99a4e]/35 bg-[#d99a4e]/[0.14] px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.16em] text-[#e6b878]">
             <Sparkles className="h-3 w-3" />
-            Course Builder Software UI
+            Interface logicielle de construction de cours
           </div>
-          <h1 className="text-[24px] font-bold text-white">Centre de pilotage de construction de cours</h1>
-          <p className="mt-1 text-[13px] text-white/60">
-            Une seule logique: choisir le mode de build, construire le contenu, puis envoyer au Designer pour la scene visuelle.
+          <h1 className="text-[24px] font-bold text-[#f5f4ee]">Centre de pilotage de construction de cours</h1>
+          <p className="mt-1 text-[13px] text-[#f5f4ee]/80">
+            Une seule logique : choisir le mode de construction, bâtir le contenu, puis l'envoyer au Designer pour la mise en scène visuelle.
           </p>
         </motion.div>
 
         <div className="grid gap-4 lg:grid-cols-[300px_minmax(0,1fr)]">
-          <aside className="rounded-2xl border border-white/10 bg-[#0b1020] p-3">
-            <p className="mb-2 flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.14em] text-white/45">
+          <aside className="rounded-2xl border border-[#f5f4ee]/10 bg-[#30302e] p-3">
+            <p className="mb-2 flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.14em] text-[#f5f4ee]/65">
               <BookOpen className="h-3.5 w-3.5" />
-              Constructeurs connectes
+              Constructeurs connectés
             </p>
             <div className="space-y-2">
               {allCourseConstructors.map((item) => (
@@ -136,8 +158,8 @@ export default function StudioLiriConstructeursHubPage() {
           </aside>
 
           <section className="min-w-0 space-y-4">
-            <div className="rounded-2xl border border-white/10 bg-[#0b1020] p-4">
-              <p className="mb-2 flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.14em] text-white/45">
+            <div className="rounded-2xl border border-[#f5f4ee]/10 bg-[#30302e] p-4">
+              <p className="mb-2 flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.14em] text-[#f5f4ee]/65">
                 <SlidersHorizontal className="h-3.5 w-3.5" />
                 Mode de construction
               </p>
@@ -150,26 +172,29 @@ export default function StudioLiriConstructeursHubPage() {
                     className={cn(
                       'rounded-xl border px-3 py-2.5 text-left transition',
                       mode === m.id
-                        ? 'border-cyan-400/35 bg-cyan-500/[0.12]'
-                        : 'border-white/10 bg-white/[0.03] hover:border-white/20',
+                        ? 'border-[#d97757]/40 bg-[#d97757]/[0.14]'
+                        : 'border-[#f5f4ee]/10 bg-[#f5f4ee]/[0.03] hover:border-[#d97757]/30',
                     )}
                   >
-                    <p className="text-[13px] font-semibold text-white">{m.title}</p>
-                    <p className="mt-0.5 text-[11px] text-white/50">{m.hint}</p>
+                    <p className="text-[13px] font-semibold text-[#f5f4ee]">{m.title}</p>
+                    <p className="mt-0.5 text-[11px] text-[#f5f4ee]/65">{m.hint}</p>
                   </button>
                 ))}
               </div>
               <div className="mt-3 flex flex-wrap gap-2">
+                {/* CTA principal : corail plein + encre sombre #1f1e1c (5,3:1).
+                    Le `text-black` d'origine sur cyan-500 tenait déjà, mais le
+                    cyan est banni ; on garde le principe encre-sombre-sur-plein. */}
                 <Link
                   to={startRoute}
-                  className="inline-flex items-center gap-1.5 rounded-xl bg-cyan-500 px-4 py-2 text-[12px] font-semibold text-black transition hover:bg-cyan-400"
+                  className="inline-flex items-center gap-1.5 rounded-xl bg-[#d97757] px-4 py-2 text-[12px] font-semibold text-[#1f1e1c] transition hover:bg-[#e08a5f]"
                 >
-                  Ouvrir l outil recommande
+                  Ouvrir l'outil recommandé
                   <ArrowRight className="h-4 w-4" />
                 </Link>
                 <Link
                   to={DESIGNER_HREF}
-                  className="inline-flex items-center gap-1.5 rounded-xl border border-white/15 bg-white/[0.04] px-4 py-2 text-[12px] font-medium text-white/85 transition hover:bg-white/[0.08]"
+                  className="inline-flex items-center gap-1.5 rounded-xl border border-[#f5f4ee]/15 bg-[#f5f4ee]/[0.04] px-4 py-2 text-[12px] font-medium text-[#f5f4ee]/80 transition hover:bg-[#f5f4ee]/[0.08]"
                 >
                   Ouvrir Designer
                   <LayoutGrid className="h-4 w-4" />
@@ -177,23 +202,24 @@ export default function StudioLiriConstructeursHubPage() {
               </div>
             </div>
 
-            <div className="rounded-2xl border border-white/10 bg-[#0b1020] p-4">
-              <p className="mb-3 flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.14em] text-white/45">
+            <div className="rounded-2xl border border-[#f5f4ee]/10 bg-[#30302e] p-4">
+              <p className="mb-3 flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.14em] text-[#f5f4ee]/65">
                 <Workflow className="h-3.5 w-3.5" />
-                Pipeline connecte
+                Chaîne connectée
               </p>
               <div className="grid gap-3 md:grid-cols-3">
                 {PIPELINE.map((step, idx) => (
-                  <div key={step.id} className="relative rounded-xl border border-white/10 bg-white/[0.03] p-3">
-                    <p className="text-[10px] uppercase tracking-[0.14em] text-white/35">Etape {idx + 1}</p>
-                    <p className="mt-1 text-[14px] font-semibold text-white/90">{step.title}</p>
-                    <p className="mt-0.5 text-[11px] text-white/50">{step.subtitle}</p>
+                  <div key={step.id} className="relative rounded-xl border border-[#f5f4ee]/10 bg-[#f5f4ee]/[0.03] p-3">
+                    {/* « Étape N » est un repère de lecture : /35 valait 2,4:1. */}
+                    <p className="text-[10px] uppercase tracking-[0.14em] text-[#e6b878]">Étape {idx + 1}</p>
+                    <p className="mt-1 text-[14px] font-semibold text-[#f5f4ee]">{step.title}</p>
+                    <p className="mt-0.5 text-[11px] text-[#f5f4ee]/65">{step.subtitle}</p>
                     <div className="mt-2 space-y-1.5">
                       {step.options.map((opt) => (
                         <Link
                           key={opt.to}
                           to={opt.to}
-                          className="flex items-center justify-between rounded-lg border border-white/10 bg-[#0a0f1d] px-2.5 py-2 text-[11px] text-white/80 transition hover:border-cyan-400/35 hover:text-cyan-200"
+                          className="flex items-center justify-between rounded-lg border border-[#f5f4ee]/10 bg-[#1f1e1c] px-2.5 py-2 text-[11px] text-[#f5f4ee]/80 transition hover:border-[#d97757]/40 hover:text-[#e8a97f]"
                         >
                           <span>{opt.label}</span>
                           <ArrowRight className="h-3.5 w-3.5" />
@@ -201,29 +227,29 @@ export default function StudioLiriConstructeursHubPage() {
                       ))}
                     </div>
                     {idx < PIPELINE.length - 1 ? (
-                      <div className="pointer-events-none absolute -right-2 top-1/2 hidden h-px w-4 bg-cyan-400/40 md:block" />
+                      <div className="pointer-events-none absolute -right-2 top-1/2 hidden h-px w-4 bg-[#d97757]/45 md:block" />
                     ) : null}
                   </div>
                 ))}
               </div>
             </div>
 
-            <div className="rounded-2xl border border-white/10 bg-[#0b1020] p-4">
-              <p className="mb-1 text-[11px] font-semibold uppercase tracking-[0.14em] text-white/45">Focus constructeur</p>
-              <h2 className="text-[18px] font-semibold text-white">{focused?.title}</h2>
-              <p className="mt-1 text-[13px] text-white/60">{focused?.subtitle}</p>
-              <p className="mt-2 text-[12px] text-white/50">{focused?.cahierDesCharges}</p>
+            <div className="rounded-2xl border border-[#f5f4ee]/10 bg-[#30302e] p-4">
+              <p className="mb-1 text-[11px] font-semibold uppercase tracking-[0.14em] text-[#f5f4ee]/65">Focus constructeur</p>
+              <h2 className="text-[18px] font-semibold text-[#f5f4ee]">{focused?.title}</h2>
+              <p className="mt-1 text-[13px] text-[#f5f4ee]/80">{focused?.subtitle}</p>
+              <p className="mt-2 text-[12px] text-[#f5f4ee]/65">{focused?.cahierDesCharges}</p>
               <div className="mt-3 flex flex-wrap gap-2">
                 <Link
                   to={focused?.href || '/studio/liri/cours'}
-                  className="inline-flex items-center gap-1.5 rounded-lg border border-cyan-400/30 bg-cyan-500/10 px-3 py-1.5 text-[12px] font-medium text-cyan-200 transition hover:bg-cyan-500/20"
+                  className="inline-flex items-center gap-1.5 rounded-lg border border-[#d97757]/35 bg-[#d97757]/10 px-3 py-1.5 text-[12px] font-medium text-[#e8a97f] transition hover:bg-[#d97757]/20"
                 >
                   Ouvrir ce constructeur
                   <ArrowRight className="h-3.5 w-3.5" />
                 </Link>
                 <Link
                   to="/studio/liri/constructeurs/guide"
-                  className="inline-flex items-center gap-1.5 rounded-lg border border-white/15 bg-white/[0.04] px-3 py-1.5 text-[12px] font-medium text-white/75 transition hover:bg-white/[0.08]"
+                  className="inline-flex items-center gap-1.5 rounded-lg border border-[#f5f4ee]/15 bg-[#f5f4ee]/[0.04] px-3 py-1.5 text-[12px] font-medium text-[#f5f4ee]/80 transition hover:bg-[#f5f4ee]/[0.08]"
                 >
                   Voir le guide complet
                   <BookOpen className="h-3.5 w-3.5" />

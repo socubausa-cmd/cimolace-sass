@@ -32,7 +32,11 @@ const CARDS = [
     title: 'Studio Live (classique)',
     desc: 'Configuration session live, interactions et contrôle de salle (héritage).',
     tag: 'Realtime',
-    accent: 'from-cyan-500/12 to-transparent',
+    /* Troisième carte : cyan → argile #cf8059. Les trois accents du laboratoire servent
+       à SÉPARER les trois cartes ; on garde trois teintes distinctes, mais toutes
+       chaudes : orange (Production) · ambre (SmartBoard) · argile (Studio classique).
+       Opacité remontée de /12 à /15 pour peser comme les deux autres. */
+    accent: 'from-[#cf8059]/15 to-transparent',
   },
 ];
 
@@ -59,8 +63,8 @@ export default function StudioLiveLabPage() {
         >
           <div>
             <div className="mb-2 flex items-center gap-2">
-              <Sparkles className="h-4 w-4 text-[var(--school-accent,#D4AF37)]" />
-              <p className="text-xs uppercase tracking-[0.22em] text-[var(--school-accent,#D4AF37)] opacity-85">Laboratoire Live</p>
+              <Sparkles className="h-4 w-4 text-[var(--school-accent,#d97757)]" />
+              <p className="text-xs uppercase tracking-[0.22em] text-[var(--school-accent,#d97757)] opacity-85">Laboratoire Live</p>
             </div>
             <h1 className="text-3xl font-serif font-bold text-white">Constructeur de lives</h1>
             <p className="mt-2 text-gray-400">
@@ -89,7 +93,7 @@ export default function StudioLiveLabPage() {
                     <div className="rounded-lg bg-white/5 p-3">
                       <c.icon className="h-6 w-6 text-white/90" />
                     </div>
-                    <ChevronRight className="h-5 w-5 text-gray-600 transition-colors group-hover:text-[var(--school-accent,#D4AF37)]" />
+                    <ChevronRight className="h-5 w-5 text-gray-600 transition-colors group-hover:text-[var(--school-accent,#d97757)]" />
                   </div>
                   <p className="mb-1 text-[11px] uppercase tracking-wider text-gray-500">{c.tag}</p>
                   <h2 className="mb-2 text-xl font-bold text-white">{c.title}</h2>

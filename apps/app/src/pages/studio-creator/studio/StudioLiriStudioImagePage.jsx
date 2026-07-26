@@ -24,7 +24,10 @@ export default function StudioLiriStudioImagePage() {
           <LiriWordmark size="compact" className="text-white/80" />
         </Link>
         <div className="flex items-center gap-2">
-          <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-violet-500/20 text-violet-300">
+          {/* Pastille d'en-tête : violet → corail. Le voile #d97757 à 20 % composé sur la
+              barre haute #1f1e1c donne #443028 ; l'icône en #e8a97f y tient 6,13:1 —
+              largement au-dessus des 3:1 exigés d'une icône porteuse de sens. */}
+          <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-[#d97757]/20 text-[#e8a97f]">
             <ImageIcon className="h-4 w-4" />
           </span>
           <div>

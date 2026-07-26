@@ -153,11 +153,20 @@ const TOOLS = [
   { id: 'modeles',  icon: FileImage,  label: 'Modèles',       accent: 'teal' },
 ];
 
+/**
+ * ⚠️ Les CLÉS (`cyan`, `violet`, `blue`, `teal`…) ne sont plus que des NOMS DE
+ * FENTE hérités : les valeurs qu'elles portent sont toutes chaudes. On ne les
+ * renomme pas ici parce qu'elles sont référencées par une douzaine de tables
+ * (TOOLS, DOC_TYPES, ELEMENT_META, FV_BOOLEAN, PEDAGOGIC_TOOLS…) derrière un
+ * `?? ACCENT.cyan` : une clé oubliée retomberait SILENCIEUSEMENT sur le mauvais
+ * accent. C'est du renommage, pas de la couleur — hors périmètre de cette passe.
+ */
 const ACCENT = {
   cyan:    { text: 'text-[#e3aa6b]',    bg: 'bg-[#e3aa6b]/15',    border: 'border-[#e3aa6b]/30',    glow: 'shadow-[0_0_14px_rgba(227,170,107,0.3)]'    },
-  violet:  { text: 'text-[#e08a5f]',  bg: 'bg-[#d97757]/15',  border: 'border-[#d97757]/30',  glow: 'shadow-[0_0_14px_rgba(236,174,144,0.3)]'   },
+  violet:  { text: 'text-[#e08a5f]',  bg: 'bg-[#d97757]/15',  border: 'border-[#d97757]/30',  glow: 'shadow-[0_0_14px_rgba(217,119,87,0.3)]'   },
   amber:   { text: 'text-amber-400',   bg: 'bg-amber-500/15',   border: 'border-amber-500/30',   glow: 'shadow-[0_0_14px_rgba(251,191,36,0.3)]'    },
-  emerald: { text: 'text-[#7bb06a]', bg: 'bg-[#5a8f52]/15', border: 'border-[#5a8f52]/30', glow: 'shadow-[0_0_14px_rgba(207,128,89,0.3)]'    },
+  /* Halo aligné sur l'olive de la fente (il était resté sur une argile orangée). */
+  emerald: { text: 'text-[#7bb06a]', bg: 'bg-[#5a8f52]/15', border: 'border-[#5a8f52]/30', glow: 'shadow-[0_0_14px_rgba(90,143,82,0.32)]'    },
   pink:    { text: 'text-pink-400',    bg: 'bg-pink-500/15',    border: 'border-pink-500/30',    glow: 'shadow-[0_0_14px_rgba(244,114,182,0.3)]'   },
   blue:    { text: 'text-[#daa07a]',    bg: 'bg-[#daa07a]/15',    border: 'border-[#daa07a]/30',    glow: 'shadow-[0_0_14px_rgba(218,160,122,0.3)]'    },
   orange:  { text: 'text-orange-400',  bg: 'bg-orange-500/15',  border: 'border-orange-500/30',  glow: 'shadow-[0_0_14px_rgba(251,146,60,0.3)]'    },
@@ -983,7 +992,14 @@ function DesignerQuickRail({
   );
 }
 
-/* Background presets */
+/**
+ * ⛔ NE PAS « réchauffer » cette table. Ce sont les THÈMES DE TABLEAU proposés à
+ * l'enseignant : « Minuit », « Royal », « Forêt », « Or »… autrement dit des
+ * DONNÉES qu'il choisit et qui atterrissent dans project.canvas.background — pas
+ * du chrome LIRI. Un professeur a parfaitement le droit d'un tableau bleu nuit ;
+ * les remplacer par du corail supprimerait des choix, pas de la décoration.
+ * (Le chrome de l'éditeur — barres, panneaux, boutons — suit la charte chaude.)
+ */
 const BG_PRESETS = [
   { id: 'dark',        label: 'Nuit',         value: '#07080c',                              swatch: '#07080c'   },
   { id: 'midnight',    label: 'Minuit',        value: '#0b0d1a',                              swatch: '#0b0d1a'   },
@@ -1009,6 +1025,23 @@ const TEXT_FONTS = [
   { value: 'Courier New',      label: 'Courier New',      category: 'Mono'        },
 ];
 
+/**
+ * ⚠️ Les `fill` des presets ci-dessous ne sont PAS des données utilisateur : ce
+ * sont les encres par défaut que LIRI pose sur le tableau. Elles formaient une
+ * échelle FROIDE (#F7F2E8 ivoire, puis lavande #d4d0e0/#c4bfd4, gris-bleu
+ * #8892aa, ciel #7dd3fc pour le code) — l'ivoire chaud du titre jurait donc avec
+ * son propre sous-titre. L'échelle est rejouée dans la famille chaude, en
+ * gardant EXACTEMENT la même hiérarchie de valeurs (4 marches + 1 accent) :
+ *   #F7F2E8 titre/corps · #ddd9cf intro · #c9c5bb sous-titre & citation
+ *   · #a8a29a légende/note · #e6c48f code (sable, remplace le ciel #7dd3fc).
+ * Les neutres sont ceux de @/styles/proTokens (textSecondary #c9c5bb, textMuted
+ * #a8a29a), pas des valeurs inventées. Mesurés sur le fond de tableau sombre
+ * (« Nuit » #07080c) : 14,2:1 · 11,6:1 · 7,9:1 · 12,1:1 — tous très au-dessus de
+ * 4,5:1, comme les froids qu'ils remplacent. Cette famille d'encres a toujours
+ * visé un tableau SOMBRE (même l'ivoire #F7F2E8 est illisible sur le preset
+ * « Blanc », avant comme après). Le thème du tableau, lui, reste le choix de
+ * l'enseignant et n'est pas touché (cf. BG_PRESETS).
+ */
 const TOOL_CONTENT = {
   selection: {
     label: 'Sélection',
@@ -1032,25 +1065,25 @@ const TOOL_CONTENT = {
           style: { fontSize: 22, fontWeight: 600, lineHeight: 1.3,  letterSpacing: 0,    fill: '#F7F2E8' } } },
       { id: 'subtitle',label: 'Sous-titre',   sub: '20px · Regular',      shape: 'S',
         textPreset: { w: 540, h: 38, text: 'Sous-titre de la présentation',
-          style: { fontSize: 20, fontWeight: 400, lineHeight: 1.4,  letterSpacing: 0,    fill: '#c4bfd4' } } },
+          style: { fontSize: 20, fontWeight: 400, lineHeight: 1.4,  letterSpacing: 0,    fill: '#c9c5bb' } } },
       { id: 'lead',    label: 'Introduction', sub: '18px · Léger',        shape: '⁋',
         textPreset: { w: 580, h: 58, text: "Texte d'introduction pour accrocher le lecteur dès la première ligne.",
-          style: { fontSize: 18, fontWeight: 300, lineHeight: 1.6,  letterSpacing: 0.2,  fill: '#d4d0e0' } } },
+          style: { fontSize: 18, fontWeight: 300, lineHeight: 1.6,  letterSpacing: 0.2,  fill: '#ddd9cf' } } },
       { id: 'body',    label: 'Corps',        sub: '16px · Regular',      shape: 'ΒΤ',
         textPreset: { w: 520, h: 80, text: 'Votre texte principal va ici. Cliquez deux fois pour éditer directement sur le canvas.',
           style: { fontSize: 16, fontWeight: 400, lineHeight: 1.65, letterSpacing: 0.1,  fill: '#F7F2E8' } } },
       { id: 'caption', label: 'Légende',      sub: '12px · Gris',         shape: 'ab',
         textPreset: { w: 340, h: 32, text: 'Légende ou note de bas de page',
-          style: { fontSize: 12, fontWeight: 400, lineHeight: 1.5,  letterSpacing: 0.2,  fill: '#8892aa' } } },
+          style: { fontSize: 12, fontWeight: 400, lineHeight: 1.5,  letterSpacing: 0.2,  fill: '#a8a29a' } } },
       { id: 'quote',   label: 'Citation',     sub: '16px · Italique',     shape: '❝',
         textPreset: { w: 480, h: 64, text: '« Une pensée inspirante que vous souhaitez mettre en valeur »',
-          style: { fontSize: 16, fontWeight: 400, fontStyle: 'italic', lineHeight: 1.7, fill: '#c4bfd4' } } },
+          style: { fontSize: 16, fontWeight: 400, fontStyle: 'italic', lineHeight: 1.7, fill: '#c9c5bb' } } },
       { id: 'label',   label: 'Étiquette',    sub: '10px · Majuscules',   shape: 'TT',
         textPreset: { w: 220, h: 28, text: 'ÉTIQUETTE',
           style: { fontSize: 10, fontWeight: 700, lineHeight: 1.4,  letterSpacing: 3,    fill: '#F7F2E8' } } },
       { id: 'code',    label: 'Code',         sub: 'Monospace · 13px',    shape: '</>',
         textPreset: { w: 380, h: 44, text: 'console.log("Hello, world!")',
-          style: { fontSize: 13, fontWeight: 400, fontFamily: 'Courier New, monospace', lineHeight: 1.6, fill: '#7dd3fc' } } },
+          style: { fontSize: 13, fontWeight: 400, fontFamily: 'Courier New, monospace', lineHeight: 1.6, fill: '#e6c48f' } } },
       { id: 'ai',      label: 'IA Texte',     sub: 'Générer avec LONGIA', icon: Sparkles, ai: true },
     ],
     tabs: ['Styles', 'Police', 'IA'],
@@ -1451,10 +1484,10 @@ function ElementPanel({ obj, onClose }) {
                 { lbl: 'H2',  style: { fontSize: 36, fontWeight: 700, lineHeight: 1.2  } },
                 { lbl: 'H3',  style: { fontSize: 28, fontWeight: 600, lineHeight: 1.25 } },
                 { lbl: 'H4',  style: { fontSize: 22, fontWeight: 600, lineHeight: 1.3  } },
-                { lbl: 'S',   style: { fontSize: 20, fontWeight: 400, lineHeight: 1.4,  fill: '#c4bfd4' } },
+                { lbl: 'S',   style: { fontSize: 20, fontWeight: 400, lineHeight: 1.4,  fill: '#c9c5bb' } },
                 { lbl: 'ΒΤ',  style: { fontSize: 16, fontWeight: 400, lineHeight: 1.65 } },
-                { lbl: 'ab',  style: { fontSize: 12, fontWeight: 400, lineHeight: 1.5,  fill: '#8892aa' } },
-                { lbl: '❝',   style: { fontSize: 16, fontWeight: 400, fontStyle: 'italic', lineHeight: 1.7, fill: '#c4bfd4' } },
+                { lbl: 'ab',  style: { fontSize: 12, fontWeight: 400, lineHeight: 1.5,  fill: '#a8a29a' } },
+                { lbl: '❝',   style: { fontSize: 16, fontWeight: 400, fontStyle: 'italic', lineHeight: 1.7, fill: '#c9c5bb' } },
               ].map(p => (
                 <button key={p.lbl} type="button" onClick={() => updateStyle(p.style)}
                   className="flex h-7 min-w-[30px] items-center justify-center rounded-lg border border-white/[0.08] bg-white/[0.03] px-2 text-[10px] font-bold text-white/45 transition-all hover:border-[#d4924a]/30 hover:bg-[#d4924a]/10 hover:text-[#e6b566]">
@@ -1897,8 +1930,8 @@ function FormesVectorPanel({ onClose }) {
       case 'hexagon':   addObject({ ...base, type: 'starshape', width: 130, height: 130, content: { numPoints: 6, innerRadius: 56, outerRadius: 64 } }); break;
       case 'starshape': addObject({ ...base, type: 'starshape', width: 130, height: 130, content: { numPoints: 5, innerRadius: 28, outerRadius: 64 } }); break;
       case 'star6':     addObject({ ...base, type: 'starshape', width: 130, height: 130, content: { numPoints: 6, innerRadius: 32, outerRadius: 64 } }); break;
-      case 'line':      addObject({ type: 'line', x: 80, y: 200, width: 200, height: 4, content: { points: [0,0,200,0] }, style: { stroke: '#94a3b8', strokeWidth: 3 } }); break;
-      case 'arrow':     addObject({ type: 'arrow', x: 80, y: 200, width: 200, height: 4, content: { points: [0,0,200,0] }, style: { stroke: '#94a3b8', fill: '#94a3b8', strokeWidth: 3, pointerLength: 10, pointerWidth: 10 } }); break;
+      case 'line':      addObject({ type: 'line', x: 80, y: 200, width: 200, height: 4, content: { points: [0,0,200,0] }, style: { stroke: '#a8a29a', strokeWidth: 3 } }); break;
+      case 'arrow':     addObject({ type: 'arrow', x: 80, y: 200, width: 200, height: 4, content: { points: [0,0,200,0] }, style: { stroke: '#a8a29a', fill: '#a8a29a', strokeWidth: 3, pointerLength: 10, pointerWidth: 10 } }); break;
       default:          addObject({ ...base, type: 'rect', width: 160, height: 130, style: { ...base.style, cornerRadius: 0 } });
     }
   };
@@ -2104,7 +2137,7 @@ function FormesVectorPanel({ onClose }) {
         <div className="mx-3 mb-4">
           <button
             onClick={() => addLongiaMessage({ role: 'ai', text: 'Décrivez la forme ou le vecteur que vous souhaitez créer. Ex : "un hexagone avec dégradé bleu", "une flèche courbée pointant vers le haut"…' })}
-            className="flex w-full items-center gap-2 rounded-xl border border-[#d97757]/20 bg-[#d97757]/[0.07] px-3 py-2.5 hover:bg-[#d97757]/12 transition-colors">
+            className="flex w-full items-center gap-2 rounded-xl border border-[#d97757]/20 bg-[#d97757]/[0.07] px-3 py-2.5 hover:bg-[#d97757]/10 transition-colors">
             <Sparkles className="h-4 w-4 text-[#e08a5f] shrink-0" />
             <div>
               <p className="text-[11px] font-semibold text-[#e8a97f]">IA Forme — LONGIA</p>
@@ -2124,16 +2157,22 @@ const DESIGNER_STOCK_IMAGE_URL = {
   'tpl-iso': '/image-pro/aprendre-a-distance.png',
 };
 
+/**
+ * Prompts d'amorce du générateur d'images. Ils dictaient « bleu nuit » et
+ * « or et bleu » : les visuels fabriqués depuis le studio arrivaient donc froids
+ * sur un canvas chaud. Les consignes de palette suivent maintenant la charte
+ * (terre / terracotta / or) — le reste du prompt est inchangé.
+ */
 const DESIGNER_IA_IMAGE_PRESETS = [
   {
     label: 'LIRI',
     prompt:
-      'Illustration pédagogique : immersion LIRI, écran montrant un transmetteur digne, élève concentré, palette sombre bleu nuit et or, cinématique, aucun texte lisible dans l\'image.',
+      'Illustration pédagogique : immersion LIRI, écran montrant un transmetteur digne, élève concentré, palette sombre terre et or chaud, cinématique, aucun texte lisible dans l\'image.',
   },
   {
     label: 'MK5',
     prompt:
-      'Infographie pédagogique sombre : schéma clair or et bleu sur fond #262624, flux ou cycles, style académique premium, pas de texte dans l\'image.',
+      'Infographie pédagogique sombre : schéma clair or et terracotta sur fond #262624, flux ou cycles, style académique premium, pas de texte dans l\'image.',
   },
   {
     label: 'Symbole',
@@ -2269,12 +2308,12 @@ function ContextualPanel({ tool, onClose }) {
     if (tool === 'formes') {
       const typeMap = { rect: 'rect', circle: 'circle', ellipse: 'ellipse', triangle: 'triangle', diamond: 'diamond', starshape: 'starshape', line: 'line', arrow: 'arrow' };
       const t = typeMap[item.id] ?? 'rect';
-      if (t === 'line') addObject({ type: 'line', x: 80, y: 200, width: 200, height: 4, content: { points: [0,0,200,0] }, style: { stroke: '#94a3b8', strokeWidth: 3 } });
-      else if (t === 'arrow') addObject({ type: 'arrow', x: 80, y: 200, width: 200, height: 4, content: { points: [0,0,200,0] }, style: { stroke: '#94a3b8', fill: '#94a3b8', strokeWidth: 3, pointerLength: 10, pointerWidth: 10 } });
+      if (t === 'line') addObject({ type: 'line', x: 80, y: 200, width: 200, height: 4, content: { points: [0,0,200,0] }, style: { stroke: '#a8a29a', strokeWidth: 3 } });
+      else if (t === 'arrow') addObject({ type: 'arrow', x: 80, y: 200, width: 200, height: 4, content: { points: [0,0,200,0] }, style: { stroke: '#a8a29a', fill: '#a8a29a', strokeWidth: 3, pointerLength: 10, pointerWidth: 10 } });
       else addObject({ type: t, x: 100, y: 100, width: 160, height: 140, style: { fill: 'rgba(217,119,87,0.25)', stroke: '#d97757', strokeWidth: 2, cornerRadius: t === 'rect' ? 6 : 0 } });
     }
     if (tool === 'animes' && item.id === 'html') {
-      addObject({ type: 'html', x: 120, y: 180, width: 360, height: 200, content: { html: '<!DOCTYPE html><html><body style="margin:0;background:#262624;display:flex;align-items:center;justify-content:center;height:100vh"><div style="width:60px;height:60px;border:3px solid rgba(212,175,55,.2);border-top-color:#D4AF37;border-radius:50%;animation:s 1s linear infinite"></div><style>@keyframes s{to{transform:rotate(360deg)}}</style></body></html>' } });
+      addObject({ type: 'html', x: 120, y: 180, width: 360, height: 200, content: { html: '<!DOCTYPE html><html><body style="margin:0;background:#262624;display:flex;align-items:center;justify-content:center;height:100vh"><div style="width:60px;height:60px;border:3px solid rgba(217,154,78,.2);border-top-color:#d99a4e;border-radius:50%;animation:s 1s linear infinite"></div><style>@keyframes s{to{transform:rotate(360deg)}}</style></body></html>' } });
     }
     if (tool === 'modeles' && item.id !== 'ai') {
       if (item.id === 'intro') {
@@ -2287,20 +2326,20 @@ function ContextualPanel({ tool, onClose }) {
           mkTextObject({
             x: 72, y: 128, width: 720, height: 120,
             content: { text: 'Objectifs pédagogiques\n• …\n• …' },
-            style: { fontSize: 17, fontWeight: 400, lineHeight: 1.55, fill: '#c4bfd4' },
+            style: { fontSize: 17, fontWeight: 400, lineHeight: 1.55, fill: '#c9c5bb' },
           }),
         ]);
         return;
       }
       if (item.id === 'timeline') {
         addObjects([
-          mkRectObject({ x: 64, y: 204, width: 820, height: 6, style: { fill: 'rgba(212,175,55,0.35)', stroke: 'none', cornerRadius: 3 } }),
-          mkRectObject({ x: 118, y: 178, width: 16, height: 16, style: { fill: '#D4AF37', cornerRadius: 8 } }),
-          mkRectObject({ x: 398, y: 178, width: 16, height: 16, style: { fill: '#D4AF37', cornerRadius: 8 } }),
-          mkRectObject({ x: 678, y: 178, width: 16, height: 16, style: { fill: '#D4AF37', cornerRadius: 8 } }),
-          mkTextObject({ x: 90, y: 222, width: 200, height: 28, content: { text: 'Étape 1' }, style: { fontSize: 14, fill: '#8892aa' } }),
-          mkTextObject({ x: 370, y: 222, width: 200, height: 28, content: { text: 'Étape 2' }, style: { fontSize: 14, fill: '#8892aa' } }),
-          mkTextObject({ x: 650, y: 222, width: 200, height: 28, content: { text: 'Étape 3' }, style: { fontSize: 14, fill: '#8892aa' } }),
+          mkRectObject({ x: 64, y: 204, width: 820, height: 6, style: { fill: 'rgba(217,154,78,0.35)', stroke: 'none', cornerRadius: 3 } }),
+          mkRectObject({ x: 118, y: 178, width: 16, height: 16, style: { fill: '#d99a4e', cornerRadius: 8 } }),
+          mkRectObject({ x: 398, y: 178, width: 16, height: 16, style: { fill: '#d99a4e', cornerRadius: 8 } }),
+          mkRectObject({ x: 678, y: 178, width: 16, height: 16, style: { fill: '#d99a4e', cornerRadius: 8 } }),
+          mkTextObject({ x: 90, y: 222, width: 200, height: 28, content: { text: 'Étape 1' }, style: { fontSize: 14, fill: '#a8a29a' } }),
+          mkTextObject({ x: 370, y: 222, width: 200, height: 28, content: { text: 'Étape 2' }, style: { fontSize: 14, fill: '#a8a29a' } }),
+          mkTextObject({ x: 650, y: 222, width: 200, height: 28, content: { text: 'Étape 3' }, style: { fontSize: 14, fill: '#a8a29a' } }),
         ]);
         return;
       }
@@ -2310,25 +2349,25 @@ function ContextualPanel({ tool, onClose }) {
           mkRectObject({ x: 480, y: 100, width: 380, height: 220, style: { fill: 'rgba(236,174,144,0.12)', stroke: '#d97757', strokeWidth: 2 } }),
           mkTextObject({ x: 92, y: 118, width: 320, height: 36, content: { text: 'Colonne A' }, style: { fontSize: 22, fontWeight: 600, fill: '#F7F2E8' } }),
           mkTextObject({ x: 500, y: 118, width: 320, height: 36, content: { text: 'Colonne B' }, style: { fontSize: 22, fontWeight: 600, fill: '#F7F2E8' } }),
-          mkTextObject({ x: 92, y: 160, width: 340, height: 140, content: { text: 'Arguments, exemples…' }, style: { fontSize: 15, fill: '#c4bfd4', lineHeight: 1.5 } }),
-          mkTextObject({ x: 500, y: 160, width: 340, height: 140, content: { text: 'Arguments, exemples…' }, style: { fontSize: 15, fill: '#c4bfd4', lineHeight: 1.5 } }),
+          mkTextObject({ x: 92, y: 160, width: 340, height: 140, content: { text: 'Arguments, exemples…' }, style: { fontSize: 15, fill: '#c9c5bb', lineHeight: 1.5 } }),
+          mkTextObject({ x: 500, y: 160, width: 340, height: 140, content: { text: 'Arguments, exemples…' }, style: { fontSize: 15, fill: '#c9c5bb', lineHeight: 1.5 } }),
         ]);
         return;
       }
       if (item.id === 'mindmap') {
         addObjects([
-          mkRectObject({ x: 380, y: 160, width: 200, height: 72, style: { fill: 'rgba(212,175,55,0.2)', stroke: '#D4AF37', strokeWidth: 2, cornerRadius: 12 } }),
+          mkRectObject({ x: 380, y: 160, width: 200, height: 72, style: { fill: 'rgba(217,154,78,0.2)', stroke: '#d99a4e', strokeWidth: 2, cornerRadius: 12 } }),
           mkTextObject({ x: 400, y: 178, width: 160, height: 40, content: { text: 'Idée centrale' }, style: { fontSize: 18, fontWeight: 700, fill: '#F7F2E8', align: 'center' } }),
-          mkTextObject({ x: 120, y: 80, width: 160, height: 36, content: { text: 'Branche 1' }, style: { fontSize: 15, fill: '#c4bfd4' } }),
-          mkTextObject({ x: 640, y: 80, width: 160, height: 36, content: { text: 'Branche 2' }, style: { fontSize: 15, fill: '#c4bfd4' } }),
-          mkTextObject({ x: 120, y: 300, width: 160, height: 36, content: { text: 'Branche 3' }, style: { fontSize: 15, fill: '#c4bfd4' } }),
+          mkTextObject({ x: 120, y: 80, width: 160, height: 36, content: { text: 'Branche 1' }, style: { fontSize: 15, fill: '#c9c5bb' } }),
+          mkTextObject({ x: 640, y: 80, width: 160, height: 36, content: { text: 'Branche 2' }, style: { fontSize: 15, fill: '#c9c5bb' } }),
+          mkTextObject({ x: 120, y: 300, width: 160, height: 36, content: { text: 'Branche 3' }, style: { fontSize: 15, fill: '#c9c5bb' } }),
         ]);
         return;
       }
       if (item.id === 'quiz') {
         addObjects([
           mkTextObject({ x: 72, y: 72, width: 760, height: 48, content: { text: 'Question QCM ?' }, style: { fontSize: 26, fontWeight: 600, fill: '#F7F2E8' } }),
-          mkTextObject({ x: 92, y: 130, width: 700, height: 120, content: { text: 'A) …\nB) …\nC) …\nD) …' }, style: { fontSize: 16, fill: '#c4bfd4', lineHeight: 1.65 } }),
+          mkTextObject({ x: 92, y: 130, width: 700, height: 120, content: { text: 'A) …\nB) …\nC) …\nD) …' }, style: { fontSize: 16, fill: '#c9c5bb', lineHeight: 1.65 } }),
         ]);
         return;
       }
@@ -2341,7 +2380,7 @@ function ContextualPanel({ tool, onClose }) {
       const sz = sizeMap[item.id] ?? 16;
       addObject({ type: 'text', x: 40, y: 60, width: 700, height: sz + 20,
         content: { text: item.label },
-        style: { fontSize: sz, fill: item.id === 'note' ? '#8892aa' : '#F7F2E8',
+        style: { fontSize: sz, fill: item.id === 'note' ? '#a8a29a' : '#F7F2E8',
           fontStyle: italicIds.has(item.id) ? 'italic' : 'normal',
           fontVariant: boldIds.has(item.id) ? 'bold' : 'normal',
           fontFamily: 'Inter, system-ui, sans-serif' } });
@@ -2362,7 +2401,7 @@ function ContextualPanel({ tool, onClose }) {
     if (tool === 'slide-forme') {
       const typeMap2 = { rect: 'rect', circle: 'circle', triangle: 'triangle', arrow: 'arrow' };
       const t2 = typeMap2[item.id] ?? 'rect';
-      if (t2 === 'arrow') addObject({ type: 'arrow', x: 80, y: 200, width: 200, height: 4, content: { points: [0,0,200,0] }, style: { stroke: '#94a3b8', fill: '#94a3b8', strokeWidth: 3, pointerLength: 10, pointerWidth: 10 } });
+      if (t2 === 'arrow') addObject({ type: 'arrow', x: 80, y: 200, width: 200, height: 4, content: { points: [0,0,200,0] }, style: { stroke: '#a8a29a', fill: '#a8a29a', strokeWidth: 3, pointerLength: 10, pointerWidth: 10 } });
       else addObject({ type: t2, x: 200, y: 200, width: 160, height: 140, style: { fill: 'rgba(218,160,122,0.2)', stroke: '#cf7a52', strokeWidth: 2 } });
     }
   };
@@ -2979,7 +3018,7 @@ function AIHub({ docType = null, designerMode = 'design', onClose = () => {} }) 
                 ) : null}
               </button>
             </PopoverTrigger>
-            <PopoverContent align="end" side="bottom" sideOffset={8} className="z-[5000] w-[min(100vw-2rem,340px)] border-white/[0.1] bg-[#14131c] p-0">
+            <PopoverContent align="end" side="bottom" sideOffset={8} className="z-[5000] w-[min(100vw-2rem,340px)] border-white/[0.1] bg-[#1f1e1c] p-0">
               <div className="border-b border-white/[0.07] px-3 py-2">
                 <p className="text-[11px] font-bold text-white/85">Activité en direct</p>
                 <p className="text-[9px] leading-snug text-white/40">
@@ -3022,7 +3061,7 @@ function AIHub({ docType = null, designerMode = 'design', onClose = () => {} }) 
             <div className="relative z-[199] w-[min(420px,calc(100vw-1.5rem))] max-w-full">
               <div
                 ref={unifiedHubScrollRef}
-                className="max-h-[min(68vh,560px)] overflow-y-auto rounded-2xl border border-white/[0.12] bg-[#14131c]/95 px-3 py-3 shadow-[0_20px_60px_rgba(0,0,0,0.55)] backdrop-blur-sm [scrollbar-width:thin] [scrollbar-color:rgba(245,158,11,0.2)_transparent]"
+                className="max-h-[min(68vh,560px)] overflow-y-auto rounded-2xl border border-white/[0.12] bg-[#1f1e1c]/95 px-3 py-3 shadow-[0_20px_60px_rgba(0,0,0,0.55)] backdrop-blur-sm [scrollbar-width:thin] [scrollbar-color:rgba(245,158,11,0.2)_transparent]"
               >
 
         {aiHubTab === 'suggest' && (
@@ -3108,7 +3147,7 @@ function AIHub({ docType = null, designerMode = 'design', onClose = () => {} }) 
               className={cn(
                 'flex w-full items-center justify-center gap-2 rounded-xl border py-2.5 text-[10px] font-semibold transition-colors',
                 selectedIds.length >= 2
-                  ? 'border-[#d97757]/35 bg-[#d97757]/12 text-[#f0c4b3] hover:bg-[#d97757]/18'
+                  ? 'border-[#d97757]/35 bg-[#d97757]/10 text-[#f0c4b3] hover:bg-[#d97757]/20'
                   : 'cursor-not-allowed border-white/10 text-white/25',
               )}
             >
@@ -3121,7 +3160,7 @@ function AIHub({ docType = null, designerMode = 'design', onClose = () => {} }) 
               className={cn(
                 'flex w-full items-center justify-center gap-2 rounded-xl border py-2.5 text-[10px] font-semibold transition-colors',
                 selectedIds.length
-                  ? 'border-[#d4924a]/35 bg-[#d4924a]/12 text-[#ecc98f] hover:bg-[#d4924a]/18'
+                  ? 'border-[#d4924a]/35 bg-[#d4924a]/10 text-[#ecc98f] hover:bg-[#d4924a]/20'
                   : 'cursor-not-allowed border-white/10 text-white/25',
               )}
             >
@@ -3134,7 +3173,7 @@ function AIHub({ docType = null, designerMode = 'design', onClose = () => {} }) 
               className={cn(
                 'flex w-full items-center justify-center gap-2 rounded-xl border py-2.5 text-[10px] font-semibold transition-colors',
                 selectedIds.length
-                  ? 'border-[#5a8f52]/35 bg-[#5a8f52]/12 text-[#bcd9a4] hover:bg-[#5a8f52]/18'
+                  ? 'border-[#5a8f52]/35 bg-[#5a8f52]/10 text-[#bcd9a4] hover:bg-[#5a8f52]/20'
                   : 'cursor-not-allowed border-white/10 text-white/25',
               )}
             >
@@ -3549,7 +3588,7 @@ function LongiaCompactDock({ rightOffsetPx = 0, onExpandHub }) {
                 key={`short_${lastAi.id}_${i}`}
                 type="button"
                 onClick={() => handleLongiaChip(s, lastAi)}
-                className="rounded-md border border-[#d4924a]/35 bg-[#d4924a]/12 px-1.5 py-0.5 text-[9px] font-semibold text-[#f0d9b8]/90 hover:bg-[#d4924a]/20"
+                className="rounded-md border border-[#d4924a]/35 bg-[#d4924a]/10 px-1.5 py-0.5 text-[9px] font-semibold text-[#f0d9b8]/90 hover:bg-[#d4924a]/20"
               >
                 {s.label}
               </button>
@@ -3678,7 +3717,9 @@ function PropertiesBar() {
       exit={{ height: 0, opacity: 0 }}
       transition={{ duration: 0.15, ease: 'easeOut' }}
       className="flex shrink-0 items-center gap-1.5 overflow-x-auto overflow-y-hidden border-b border-white/[0.06] px-3 [scrollbar-width:none]"
-      style={{ background: 'rgba(11,10,18,0.98)', backdropFilter: 'blur(14px)' }}
+      /* Barre de propriétés : surface « rail sombre » #1f1e1c de la charte.
+         C'était rgba(11,10,18) — un noir BLEUTÉ qui tranchait sur le canvas chaud. */
+      style={{ background: 'rgba(31,30,28,0.98)', backdropFilter: 'blur(14px)' }}
     >
 
       {/* ── TYPE BADGE ── */}
@@ -3822,7 +3863,7 @@ function PropertiesBar() {
         <button type="button" className="shrink-0 flex items-center gap-1.5 rounded-lg border border-white/[0.07] bg-white/[0.04] px-2.5 py-1 text-[10px] text-white/45 hover:text-white/70 hover:bg-white/[0.07] transition-colors">
           <ScanLine className="h-3 w-3" /> Tracé
         </button>
-        <button type="button" className="shrink-0 flex items-center gap-1.5 rounded-lg border border-[#d97757]/20 bg-[#d97757]/[0.07] px-2.5 py-1 text-[10px] text-[#e8a97f] hover:bg-[#d97757]/12 transition-colors">
+        <button type="button" className="shrink-0 flex items-center gap-1.5 rounded-lg border border-[#d97757]/20 bg-[#d97757]/[0.07] px-2.5 py-1 text-[10px] text-[#e8a97f] hover:bg-[#d97757]/10 transition-colors">
           <SlidersHorizontal className="h-3 w-3" /> Déformer
         </button>
       </>}
@@ -3830,7 +3871,7 @@ function PropertiesBar() {
       {/* ══════════════════════════════════ LINE / ARROW ══════════════════════════════════ */}
       {isLine && <>
         <Lbl>Trait</Lbl>
-        <ColorSwatch value={obj.style?.stroke ?? '#94a3b8'} onChange={v => updateStyle({ stroke: v, fill: v })} title="Couleur" />
+        <ColorSwatch value={obj.style?.stroke ?? '#a8a29a'} onChange={v => updateStyle({ stroke: v, fill: v })} title="Couleur" />
         <NumInput value={obj.style?.strokeWidth ?? 3} onChange={v => updateStyle({ strokeWidth: v })} min={1} max={20} step={1} width="w-10" />
 
         <Divider />
@@ -3873,7 +3914,7 @@ function PropertiesBar() {
         <button type="button" className="shrink-0 flex items-center gap-1.5 rounded-lg border border-white/[0.07] bg-white/[0.04] px-2.5 py-1 text-[10px] text-white/50 hover:text-white/70 transition-colors">
           <MessageSquare className="h-3 w-3" /> Éditer HTML
         </button>
-        <button type="button" className="shrink-0 flex items-center gap-1.5 rounded-lg border border-[#d4924a]/20 bg-[#d4924a]/[0.07] px-2.5 py-1 text-[10px] text-[#e6b566] hover:bg-[#d4924a]/12 transition-colors">
+        <button type="button" className="shrink-0 flex items-center gap-1.5 rounded-lg border border-[#d4924a]/20 bg-[#d4924a]/[0.07] px-2.5 py-1 text-[10px] text-[#e6b566] hover:bg-[#d4924a]/10 transition-colors">
           <Sparkles className="h-3 w-3" /> IA → anim
         </button>
 
@@ -4296,7 +4337,8 @@ function BottomBar({
   return (
     <div
       className="flex min-h-0 flex-shrink-0 items-center gap-2 border-t border-white/[0.06] px-3 py-1.5"
-      style={{ minHeight: bottomBarH, background: 'rgba(11,10,18,0.98)', backdropFilter: 'blur(16px)' }}
+      /* Même surface #1f1e1c que la barre de propriétés (ex-rgba(11,10,18) bleuté). */
+      style={{ minHeight: bottomBarH, background: 'rgba(31,30,28,0.98)', backdropFilter: 'blur(16px)' }}
     >
       {/* ── Timeline contrôles ── */}
       <div className="flex items-center gap-1 shrink-0">
@@ -4973,7 +5015,7 @@ export default function StudioSmartboardKonvaPage() {
         >
           {isnaImportSummary && !fullscreen ? (
             <div className="pointer-events-none absolute right-3 top-3 z-30">
-              <div className="pointer-events-auto w-[320px] rounded-xl border border-[#d97757]/30 bg-[#120c1f]/90 p-3 text-[11px] text-[#f5d9cc] shadow-[0_10px_30px_rgba(0,0,0,0.35)] backdrop-blur">
+              <div className="pointer-events-auto w-[320px] rounded-xl border border-[#d97757]/30 bg-[#1f1e1c]/90 p-3 text-[11px] text-[#f5d9cc] shadow-[0_10px_30px_rgba(0,0,0,0.35)] backdrop-blur">
                 <div className="mb-1 flex items-center gap-2">
                   <Info className="h-3.5 w-3.5 text-[#e8a97f]" />
                   <p className="font-semibold text-[#f5d9cc]">Import source actif</p>
@@ -5035,7 +5077,8 @@ export default function StudioSmartboardKonvaPage() {
                 exit={{ opacity: 0, scale: 0.96 }}
                 transition={{ duration: 0.22, ease: 'easeOut' }}
                 className="absolute inset-0 z-20 flex flex-col"
-                style={{ background: 'rgba(10,11,15,0.96)' }}
+                /* Voile « Nouveau document » : fond de page #262624 (ex-rgba(10,11,15) froid). */
+                style={{ background: 'rgba(38,38,36,0.96)' }}
               >
                 <NewDocumentScreen
                   onCreate={(type, outputs) => {
@@ -5100,8 +5143,11 @@ export default function StudioSmartboardKonvaPage() {
                     title={m.name || m.userId}
                     className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full border-2 text-[10px] font-bold text-white/95 shadow-sm"
                     style={{
+                      // m.color vient du moteur de collaboration : c'est la couleur
+                      // du participant, une DONNÉE — on n'y touche pas. Seul le repli
+                      // « membre sans couleur » passe du slate #64748b au neutre chaud.
                       borderColor: m.color || 'rgba(255,255,255,.25)',
-                      background: `${m.color || '#64748b'}29`,
+                      background: `${m.color || '#a8a29a'}29`,
                     }}
                   >
                     {(m.name || '?').trim().slice(0, 2).toUpperCase()}

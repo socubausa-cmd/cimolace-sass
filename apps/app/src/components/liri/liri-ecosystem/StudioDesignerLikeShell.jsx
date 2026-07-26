@@ -66,12 +66,12 @@ import '@/styles/formation-studio.css';
 // les anciens seront renommés page par page (liste dans le rapport).
 // Toutes ces valeurs tiennent ≥ 4,7:1 sur #262624 et ≥ 5,2:1 sur #1f1e1c.
 const ACCENT = {
-  teal: { text: 'text-[#d8916a]', bg: 'bg-[#d8916a]/14', border: 'border-[#d8916a]/30', ring: 'rgba(216,145,106,0.22)' },
-  cyan: { text: 'text-[#e3aa6b]', bg: 'bg-[#e3aa6b]/14', border: 'border-[#e3aa6b]/30', ring: 'rgba(227,170,107,0.22)' },
-  violet: { text: 'text-[#d97757]', bg: 'bg-[#d97757]/14', border: 'border-[#d97757]/32', ring: 'rgba(217,119,87,0.24)' },
-  blue: { text: 'text-[#cf7a52]', bg: 'bg-[#cf7a52]/14', border: 'border-[#cf7a52]/30', ring: 'rgba(207,122,82,0.20)' },
-  amber: { text: 'text-[#d99a4e]', bg: 'bg-[#d99a4e]/14', border: 'border-[#d99a4e]/30', ring: 'rgba(217,154,78,0.20)' },
-  emerald: { text: 'text-[#cf8059]', bg: 'bg-[#cf8059]/14', border: 'border-[#cf8059]/30', ring: 'rgba(207,128,89,0.20)' },
+  teal: { text: 'text-[#d8916a]', bg: 'bg-[#d8916a]/15', border: 'border-[#d8916a]/30', ring: 'rgba(216,145,106,0.22)' },
+  cyan: { text: 'text-[#e3aa6b]', bg: 'bg-[#e3aa6b]/15', border: 'border-[#e3aa6b]/30', ring: 'rgba(227,170,107,0.22)' },
+  violet: { text: 'text-[#d97757]', bg: 'bg-[#d97757]/15', border: 'border-[#d97757]/30', ring: 'rgba(217,119,87,0.24)' },
+  blue: { text: 'text-[#cf7a52]', bg: 'bg-[#cf7a52]/15', border: 'border-[#cf7a52]/30', ring: 'rgba(207,122,82,0.20)' },
+  amber: { text: 'text-[#d99a4e]', bg: 'bg-[#d99a4e]/15', border: 'border-[#d99a4e]/30', ring: 'rgba(217,154,78,0.20)' },
+  emerald: { text: 'text-[#cf8059]', bg: 'bg-[#cf8059]/15', border: 'border-[#cf8059]/30', ring: 'rgba(207,128,89,0.20)' },
 };
 // Alias chauds → même objet, pas de duplication de valeur.
 ACCENT.coral = ACCENT.violet;

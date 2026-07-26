@@ -747,10 +747,15 @@ export default function DocumentStudioLauncher({ onClose, onLaunch }) {
 
               {/* Header */}
               <div className="mb-8 text-center">
-                <div className="mx-auto mb-3 flex h-10 w-10 items-center justify-center rounded-2xl bg-gradient-to-br from-cyan-500/30 to-violet-500/30">
+                {/* Pastille d'en-tête du Studio Documentaire : dégradé cyan→violet →
+                    corail→cuivre. C'est du CHROME d'interface — à ne pas confondre avec
+                    les encres des GABARITS de document plus bas dans ce fichier (facture,
+                    lettre, rapport, CV), qui sont des DONNÉES imprimées sur papier blanc
+                    et n'ont rien à voir avec la charte de l'application. */}
+                <div className="mx-auto mb-3 flex h-10 w-10 items-center justify-center rounded-2xl bg-gradient-to-br from-[#d97757]/30 to-[#c96544]/30">
                   <FileText className="h-5 w-5 text-white/80" />
                 </div>
-                <h2 className="text-[20px] font-bold text-white/88">Studio Documentaire</h2>
+                <h2 className="text-[20px] font-bold text-white/90">Studio Documentaire</h2>
                 <p className="mt-1 text-[12px] text-white/35">Comment souhaitez-vous créer votre document ?</p>
               </div>
 
@@ -804,7 +809,7 @@ export default function DocumentStudioLauncher({ onClose, onLaunch }) {
                         <p className="text-[14px] font-bold text-white/85">{card.label}</p>
                         <p className="text-[11px]" style={{ color: card.color }}>{card.sub}</p>
                       </div>
-                      <p className="text-[11px] leading-relaxed text-white/38">{card.desc}</p>
+                      <p className="text-[11px] leading-relaxed text-white/40">{card.desc}</p>
                       <div className="flex items-center gap-1 text-[10px] text-white/25 group-hover:text-white/50 transition-colors">
                         Démarrer <ArrowRight className="h-3 w-3" />
                       </div>
@@ -900,7 +905,7 @@ export default function DocumentStudioLauncher({ onClose, onLaunch }) {
                     return (
                       <button key={tpl.id} type="button"
                         onClick={() => launchJsonTemplate(tpl)}
-                        className="group flex flex-col gap-2 rounded-2xl border border-white/[0.07] bg-white/[0.025] p-3.5 text-left transition-all hover:scale-[1.02] hover:border-white/14 hover:bg-white/[0.05]">
+                        className="group flex flex-col gap-2 rounded-2xl border border-white/[0.07] bg-white/[0.025] p-3.5 text-left transition-all hover:scale-[1.02] hover:border-white/15 hover:bg-white/[0.05]">
 
                         {/* Aperçu icône domaine */}
                         <div
@@ -916,7 +921,7 @@ export default function DocumentStudioLauncher({ onClose, onLaunch }) {
                             {domMeta.label}
                           </span>
                           {/* Nom */}
-                          <p className="mt-1 text-[11px] font-semibold leading-tight text-white/82">
+                          <p className="mt-1 text-[11px] font-semibold leading-tight text-white/85">
                             {tpl.name}
                           </p>
                           {/* Style variants badge */}
@@ -966,7 +971,10 @@ export default function DocumentStudioLauncher({ onClose, onLaunch }) {
 
               {/* LONGIA avatar */}
               <div className="mb-6 flex items-start gap-3">
-                <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-amber-500/30 to-violet-500/30">
+                {/* Avatar LONGIA : la butée violette du dégradé passe à l'ambre foncée
+                    #b87a35 — même famille que le départ amber-500, donc le dégradé garde
+                    sa direction chaud→chaud au lieu de dériver vers le froid. */}
+                <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-amber-500/30 to-[#b87a35]/30">
                   <Sparkles className="h-4 w-4 text-amber-300" />
                 </div>
                 <div className="rounded-2xl rounded-tl-sm border border-white/[0.07] bg-white/[0.04] px-4 py-3">

@@ -230,7 +230,10 @@ export default function StudioLiriEmbeddedControlPage() {
     <StudioDesignerLikeShell
       railActiveKey="embedded"
       pageLabel="Contrôle intégré"
-      pageAccent="cyan"
+      /* `cyan` était une CLÉ de la table ACCENT du shell, pas une couleur : elle pointe
+         déjà sur l'or #e3aa6b. On passe à son alias chaud `or` — même objet, rendu
+         strictement identique — pour que plus aucun nom froid ne traîne dans le code. */
+      pageAccent="or"
       TitleIcon={Monitor}
       titleLine="App intégrée (LIRI_FULL_SYSTEM)"
       breadcrumbMiddle={[{ label: 'Hub', href: '/studio/liri' }]}
@@ -277,8 +280,14 @@ export default function StudioLiriEmbeddedControlPage() {
               type="button"
               className={cn(
                 'rounded-lg border px-3 py-2 text-[12px] font-medium transition',
+                /* État ACTIF du sélecteur de focus : violet → corail plein-voile.
+                   LA DISTINCTION ACTIF/INACTIF EST PRÉSERVÉE, elle se joue sur les
+                   mêmes trois leviers qu'avant : filet marqué (60 % vs 10 %), fond
+                   teinté (corail 25 % vs blanc 4 %) et encre pleine (blanc vs 60 %).
+                   Blanc sur le fond composé #533a31 = 10,41:1. (25 et non 22 : Tailwind
+                   3.4 n'émet que les opacités multiples de 5.) */
                 runtimeState.focusMode === m
-                  ? 'border-violet-400/50 bg-violet-500/20 text-white'
+                  ? 'border-[#d97757]/60 bg-[#d97757]/25 text-white'
                   : 'border-white/10 bg-white/[0.04] text-white/60 hover:bg-white/10',
               )}
               onClick={() => void setFocusMode(m)}
@@ -333,13 +342,21 @@ export default function StudioLiriEmbeddedControlPage() {
                   .map((row, i) => (
                     <li key={`${row.at}-${i}`} className="rounded border border-white/5 bg-white/[0.03] p-2 font-mono leading-snug">
                       <span className="text-white/40">{new Date(row.at).toLocaleTimeString()}</span>{' '}
-                      {row.kind === 'ui' && <span className="text-cyan-300/90">{JSON.stringify(row.cmd)}</span>}
+                      {/* Journal : TROIS natures d'événement, donc TROIS encres qui doivent
+                          rester lisibles ET distinctes. Avant, `text-cyan-300` et
+                          `text-emerald-300` étaient tous deux ramenés à #e0926a par
+                          studioWarm.css → « ui » et « result » se confondaient à l'écran.
+                          On pose donc les hex de la rampe, hors d'atteinte du remap :
+                          ui = corail #e8a97f (8,59:1) · stub = ambre #e0a458 (7,93:1) ·
+                          result = olive #8fbf7a (8,16:1, la teinte « succès/validé »),
+                          tous sur le fond composé du panneau (noir 30 % ≈ #1b1b19). */}
+                      {row.kind === 'ui' && <span className="text-[#e8a97f]">{JSON.stringify(row.cmd)}</span>}
                       {row.kind === 'stub' && (
-                        <span className="text-amber-200/90">
+                        <span className="text-[#e0a458]">
                           {JSON.stringify(row.cmd)} — {row.note}
                         </span>
                       )}
-                      {row.kind === 'result' && <span className="text-emerald-300/90">{JSON.stringify(row.res)}</span>}
+                      {row.kind === 'result' && <span className="text-[#8fbf7a]">{JSON.stringify(row.res)}</span>}
                     </li>
                   ))
               )}

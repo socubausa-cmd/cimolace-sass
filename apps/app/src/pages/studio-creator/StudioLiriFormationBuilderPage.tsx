@@ -64,17 +64,19 @@ function TreeNodeComponent({ node, depth = 0, onSelect, selected }: {
   return (
     <div>
       <button onClick={() => { setOpen(v => !v); onSelect?.(node); }}
-        className={cn('flex w-full items-center gap-2 rounded-lg px-2 py-1.5 text-left transition-all hover:bg-white/5',
-          isSelected && 'bg-violet-500/15 border border-violet-500/25')}
+        // Sélection dans l'arbre : corail (était violet). C'est le seul repère
+        // de « où je suis » → il garde toute son intensité.
+        className={cn('flex w-full items-center gap-2 rounded-lg px-2 py-1.5 text-left transition-all hover:bg-[#f5f4ee]/[0.05]',
+          isSelected && 'bg-[#d97757]/15 border border-[#d97757]/30')}
         style={{ paddingLeft: `${8 + depth * 14}px` }}>
         {children.length > 0 ? (
-          open ? <ChevronDown className="h-3 w-3 flex-shrink-0 text-white/30" />
-            : <ChevronRight className="h-3 w-3 flex-shrink-0 text-white/30" />
+          open ? <ChevronDown className="h-3 w-3 flex-shrink-0 text-[#f5f4ee]/45" />
+            : <ChevronRight className="h-3 w-3 flex-shrink-0 text-[#f5f4ee]/45" />
         ) : <span className="h-3 w-3 flex-shrink-0" />}
-        <span className={cn('truncate text-[12px]', isSelected ? 'text-violet-300 font-medium' : depth === 0 ? 'text-white/80 font-medium' : 'text-white/50')}>
+        <span className={cn('truncate text-[12px]', isSelected ? 'text-[#e8a97f] font-medium' : depth === 0 ? 'text-[#f5f4ee]/80 font-medium' : 'text-[#f5f4ee]/65')}>
           {node.titre || node.id}
         </span>
-        {node.duree && <span className="ml-auto flex-shrink-0 text-[10px] text-white/22">{node.duree}</span>}
+        {node.duree && <span className="ml-auto flex-shrink-0 text-[10px] text-[#f5f4ee]/60">{node.duree}</span>}
       </button>
       {open && children.map(child => (
         <TreeNodeComponent key={child.id} node={child} depth={depth + 1} onSelect={onSelect} selected={selected} />
@@ -88,42 +90,44 @@ function TreeNodeComponent({ node, depth = 0, onSelect, selected }: {
 function DetailPanel({ node }: { node: TreeNode | null }) {
   if (!node) return (
     <div className="flex flex-col items-center justify-center h-full text-center">
-      <Target className="h-8 w-8 text-white/10 mb-2" />
-      <p className="text-[12px] text-white/25">Sélectionnez un élément dans l'arbre</p>
+      <Target className="h-8 w-8 text-[#f5f4ee]/20 mb-2" />
+      <p className="text-[12px] text-[#f5f4ee]/65">Sélectionnez un élément dans l'arbre</p>
     </div>
   );
 
   return (
+    // Les intitulés de champ étaient tous à /25 (2,3:1) : ce sont des étiquettes
+    // à LIRE, pas de la décoration → remontées à /65 (6,7:1).
     <div className="flex flex-col gap-4 p-4">
       {node.titre && (
         <div>
-          <div className="text-[10px] uppercase tracking-[0.15em] text-white/25 mb-1">Titre</div>
-          <div className="text-[15px] font-semibold text-white">{node.titre}</div>
+          <div className="text-[10px] uppercase tracking-[0.15em] text-[#f5f4ee]/65 mb-1">Titre</div>
+          <div className="text-[15px] font-semibold text-[#f5f4ee]">{node.titre}</div>
         </div>
       )}
       {node.objectif && (
         <div>
-          <div className="text-[10px] uppercase tracking-[0.15em] text-white/25 mb-1 flex items-center gap-1.5">
+          <div className="text-[10px] uppercase tracking-[0.15em] text-[#f5f4ee]/65 mb-1 flex items-center gap-1.5">
             <Target className="h-3 w-3" /> Objectif
           </div>
-          <p className="text-[12px] text-white/50 leading-relaxed">{node.objectif}</p>
+          <p className="text-[12px] text-[#f5f4ee]/80 leading-relaxed">{node.objectif}</p>
         </div>
       )}
       {(node.duree || node.duree_estimee) && (
         <div>
-          <div className="text-[10px] uppercase tracking-[0.15em] text-white/25 mb-1 flex items-center gap-1.5">
+          <div className="text-[10px] uppercase tracking-[0.15em] text-[#f5f4ee]/65 mb-1 flex items-center gap-1.5">
             <Clock className="h-3 w-3" /> Durée
           </div>
-          <div className="text-[12px] text-white/50">{node.duree || node.duree_estimee}</div>
+          <div className="text-[12px] text-[#f5f4ee]/80">{node.duree || node.duree_estimee}</div>
         </div>
       )}
       {node.tag_pedagogique && (
-        <span className="inline-flex rounded-full bg-violet-500/15 border border-violet-500/25 px-2.5 py-1 text-[10px] text-violet-300">{node.tag_pedagogique}</span>
+        <span className="inline-flex rounded-full bg-[#d97757]/15 border border-[#d97757]/30 px-2.5 py-1 text-[10px] text-[#e8a97f]">{node.tag_pedagogique}</span>
       )}
       {node.idee_centrale && (
         <div>
-          <div className="text-[10px] uppercase tracking-[0.15em] text-white/25 mb-1">Idée centrale</div>
-          <p className="text-[12px] text-white/50 leading-relaxed">{node.idee_centrale}</p>
+          <div className="text-[10px] uppercase tracking-[0.15em] text-[#f5f4ee]/65 mb-1">Idée centrale</div>
+          <p className="text-[12px] text-[#f5f4ee]/80 leading-relaxed">{node.idee_centrale}</p>
         </div>
       )}
     </div>
@@ -136,23 +140,23 @@ function LiriAssistant() {
   const [prompt, setPrompt] = useState('');
   return (
     <div className="flex flex-col h-full">
-      <div className="flex items-center gap-2 border-b border-white/[0.07] px-4 py-3">
-        <Sparkles className="h-3.5 w-3.5 text-violet-400" />
-        <span className="text-[11px] font-semibold uppercase tracking-[0.12em] text-white/45">LIRI Assistant</span>
+      <div className="flex items-center gap-2 border-b border-[#f5f4ee]/[0.09] px-4 py-3">
+        <Sparkles className="h-3.5 w-3.5 text-[#e08a5f]" />
+        <span className="text-[11px] font-semibold uppercase tracking-[0.12em] text-[#f5f4ee]/65">Assistant LIRI</span>
       </div>
       <div className="flex-1 overflow-y-auto p-4">
-        <div className="rounded-lg border border-white/[0.06] bg-white/[0.01] p-3 mb-3">
-          <p className="text-[11px] text-white/40 leading-relaxed">
+        <div className="rounded-lg border border-[#f5f4ee]/[0.09] bg-[#1f1e1c] p-3 mb-3">
+          <p className="text-[11px] text-[#f5f4ee]/65 leading-relaxed">
             L'assistant LIRI peut vous aider à structurer votre formation, générer des objectifs pédagogiques, et suggérer une progression.
           </p>
         </div>
       </div>
-      <div className="border-t border-white/[0.07] p-3">
+      <div className="border-t border-[#f5f4ee]/[0.09] p-3">
         <div className="flex gap-2">
           <input value={prompt} onChange={e => setPrompt(e.target.value)}
             placeholder="Décrivez votre besoin..."
-            className="flex-1 rounded-lg border border-white/10 bg-white/[0.04] px-3 py-2 text-[11px] text-white placeholder-white/22 outline-none focus:border-violet-500/30" />
-          <button className="flex items-center gap-1 rounded-lg bg-violet-600 px-3 py-2 text-[11px] font-medium text-white hover:bg-violet-500">
+            className="flex-1 rounded-lg border border-[#f5f4ee]/10 bg-[#2b2a27] px-3 py-2 text-[11px] text-[#f5f4ee] placeholder-[#f5f4ee]/45 outline-none focus:border-[#d97757]/45" />
+          <button className="flex items-center gap-1 rounded-lg bg-[#d97757] px-3 py-2 text-[11px] font-medium text-[#1f1e1c] hover:bg-[#e08a5f] transition-colors">
             <Sparkles className="h-3 w-3" />
           </button>
         </div>
@@ -230,29 +234,31 @@ export default function StudioLiriFormationBuilderPage() {
   }, [titre, tree, typeProgramme, niveau]);
 
   return (
-    <div className="flex flex-col min-h-screen bg-[#0a0a14] text-white">
+    <div className="flex flex-col min-h-screen bg-[#262624] text-[#f5f4ee]">
       {/* Header */}
-      <header className="flex items-center justify-between px-6 py-4 border-b border-white/[0.06]">
+      <header className="flex items-center justify-between px-6 py-4 border-b border-[#f5f4ee]/[0.09]">
         <div className="flex items-center gap-4">
-          <Link to="/studio/liri" className="text-white/40 hover:text-white/70">
+          <Link to="/studio/liri" className="text-[#f5f4ee]/65 hover:text-[#d97757] transition-colors">
             <ArrowLeft className="h-5 w-5" />
           </Link>
           <div>
-            <h1 className="text-lg font-bold text-white">Formation Builder</h1>
-            <p className="text-[11px] text-white/30">Programme pédagogique structuré</p>
+            <h1 className="text-lg font-bold text-[#f5f4ee]">Formation Builder</h1>
+            <p className="text-[11px] text-[#f5f4ee]/65">Programme pédagogique structuré</p>
           </div>
         </div>
         <div className="flex items-center gap-3">
+          {/* Les <select> ont besoin d'un fond OPAQUE : la liste déroulante est
+              rendue par l'OS et un bg translucide laissait passer le fond bleu. */}
           <select value={typeProgramme} onChange={e => setTypeProgramme(e.target.value)}
-            className="rounded-lg border border-white/10 bg-white/[0.04] px-3 py-1.5 text-[11px] text-white/70 outline-none">
+            className="rounded-lg border border-[#f5f4ee]/10 bg-[#2b2a27] px-3 py-1.5 text-[11px] text-[#f5f4ee]/80 outline-none">
             {TYPE_PROGRAMMES.map(t => <option key={t.id} value={t.id}>{t.label} ({t.duree})</option>)}
           </select>
           <select value={niveau} onChange={e => setNiveau(e.target.value)}
-            className="rounded-lg border border-white/10 bg-white/[0.04] px-3 py-1.5 text-[11px] text-white/70 outline-none">
+            className="rounded-lg border border-[#f5f4ee]/10 bg-[#2b2a27] px-3 py-1.5 text-[11px] text-[#f5f4ee]/80 outline-none">
             {NIVEAUX.map(n => <option key={n} value={n}>{n}</option>)}
           </select>
           <button onClick={handleSave} disabled={saving}
-            className="flex items-center gap-1.5 rounded-lg bg-violet-600 px-3 py-1.5 text-[11px] font-semibold text-white hover:bg-violet-500 disabled:opacity-50">
+            className="flex items-center gap-1.5 rounded-lg bg-[#d97757] px-3 py-1.5 text-[11px] font-semibold text-[#1f1e1c] hover:bg-[#e08a5f] disabled:opacity-50 transition-colors">
             {saving ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Save className="h-3.5 w-3.5" />}
             Sauver
           </button>
@@ -262,37 +268,40 @@ export default function StudioLiriFormationBuilderPage() {
       {/* 3-col layout */}
       <div className="flex min-h-0 flex-1">
         {/* Col 1 — Tree */}
-        <aside className="flex w-56 flex-shrink-0 flex-col border-r border-white/[0.07]">
-          <div className="flex items-center justify-between border-b border-white/[0.07] px-4 py-3">
+        <aside className="flex w-56 flex-shrink-0 flex-col border-r border-[#f5f4ee]/[0.09] bg-[#30302e]">
+          <div className="flex items-center justify-between border-b border-[#f5f4ee]/[0.09] px-4 py-3">
             <div className="flex items-center gap-2">
-              <Calendar className="h-3.5 w-3.5 text-amber-400" />
-              <span className="text-[11px] font-semibold uppercase tracking-[0.12em] text-white/45">Structure</span>
+              <Calendar className="h-3.5 w-3.5 text-[#e0a458]" />
+              <span className="text-[11px] font-semibold uppercase tracking-[0.12em] text-[#f5f4ee]/65">Structure</span>
             </div>
             <div className="flex gap-1">
-              <button onClick={addModule} title="Ajouter module"
-                className="flex h-6 w-6 items-center justify-center rounded-md hover:bg-white/10">
-                <Plus className="h-3.5 w-3.5 text-white/40" />
+              <button onClick={addModule} title="Ajouter un module"
+                className="flex h-6 w-6 items-center justify-center rounded-md hover:bg-[#d97757]/20 transition-colors">
+                <Plus className="h-3.5 w-3.5 text-[#e08a5f]" />
               </button>
             </div>
           </div>
           <div className="flex-1 overflow-y-auto p-2">
             <input value={titre} onChange={e => { setTitre(e.target.value); setTree({ ...tree, titre: e.target.value || tree.titre }); }}
               placeholder="Titre de la formation..."
-              className="w-full mb-2 rounded-lg border border-white/10 bg-white/[0.04] px-3 py-1.5 text-[12px] text-white placeholder-white/22 outline-none focus:border-violet-500/30" />
+              className="w-full mb-2 rounded-lg border border-[#f5f4ee]/10 bg-[#2b2a27] px-3 py-1.5 text-[12px] text-[#f5f4ee] placeholder-[#f5f4ee]/45 outline-none focus:border-[#d97757]/45" />
             <TreeNodeComponent node={tree} onSelect={setSelected} selected={selected} />
           </div>
         </aside>
 
         {/* Col 2 — Editor */}
-        <main className="flex-1 overflow-y-auto border-r border-white/[0.07]">
-          <div className="flex items-center justify-between border-b border-white/[0.07] px-4 py-3">
+        <main className="flex-1 overflow-y-auto border-r border-[#f5f4ee]/[0.09]">
+          <div className="flex items-center justify-between border-b border-[#f5f4ee]/[0.09] px-4 py-3">
             <div className="flex items-center gap-2">
-              <BookOpen className="h-3.5 w-3.5 text-blue-400" />
-              <span className="text-[11px] font-semibold uppercase tracking-[0.12em] text-white/45">Éditeur</span>
+              <BookOpen className="h-3.5 w-3.5 text-[#e0a458]" />
+              <span className="text-[11px] font-semibold uppercase tracking-[0.12em] text-[#f5f4ee]/65">Éditeur</span>
             </div>
             {selected && (
+              // « Cours » est une action locale à la colonne : ambre plein pour
+              // la distinguer du corail de « Sauver » (action globale de la
+              // page) sans revenir à un bleu. Encre sombre → 6,9:1.
               <button onClick={addCourse} title="Ajouter un cours"
-                className="flex items-center gap-1 rounded-lg bg-blue-600 px-2.5 py-1 text-[11px] font-medium text-white hover:bg-blue-500">
+                className="flex items-center gap-1 rounded-lg bg-[#d99a4e] px-2.5 py-1 text-[11px] font-medium text-[#1f1e1c] hover:bg-[#e0a458] transition-colors">
                 <Plus className="h-3 w-3" /> Cours
               </button>
             )}
@@ -300,8 +309,8 @@ export default function StudioLiriFormationBuilderPage() {
           <DetailPanel node={selected} />
         </main>
 
-        {/* Col 3 — LIRI Assistant */}
-        <aside className="flex w-64 flex-shrink-0 flex-col">
+        {/* Col 3 — Assistant LIRI */}
+        <aside className="flex w-64 flex-shrink-0 flex-col bg-[#30302e]">
           <LiriAssistant />
         </aside>
       </div>

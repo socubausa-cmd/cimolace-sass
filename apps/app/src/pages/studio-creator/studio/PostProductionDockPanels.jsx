@@ -14,30 +14,30 @@ import { usePostProdNleStore } from '@/features/smartboard-konva-editor/store/us
 
 const ACCENT = {
   amber:   { text: 'text-amber-400',   bg: 'bg-amber-500/12',   border: 'border-amber-500/28',   glow: 'shadow-[0_0_12px_rgba(245,158,11,0.2)]' },
-  violet:  { text: 'text-violet-400',  bg: 'bg-violet-500/12',  border: 'border-violet-500/28',  glow: 'shadow-[0_0_12px_rgba(236,174,144,0.2)]' },
-  cyan:    { text: 'text-cyan-400',    bg: 'bg-cyan-500/12',    border: 'border-cyan-500/28',    glow: 'shadow-[0_0_12px_rgba(227,170,107,0.2)]' },
-  emerald: { text: 'text-emerald-400', bg: 'bg-emerald-500/12', border: 'border-emerald-500/28', glow: 'shadow-[0_0_12px_rgba(207,128,89,0.2)]' },
+  violet:  { text: 'text-[#e08b6d]',   bg: 'bg-[#d97757]/10',   border: 'border-[#d97757]/30',   glow: 'shadow-[0_0_12px_rgba(236,174,144,0.2)]' },
+  cyan:    { text: 'text-[#e3aa6b]',   bg: 'bg-[#e3aa6b]/10',   border: 'border-[#e3aa6b]/30',   glow: 'shadow-[0_0_12px_rgba(227,170,107,0.2)]' },
+  emerald: { text: 'text-[#cf8059]',   bg: 'bg-[#cf8059]/10',   border: 'border-[#cf8059]/30',   glow: 'shadow-[0_0_12px_rgba(207,128,89,0.2)]' },
   rose:    { text: 'text-rose-400',    bg: 'bg-rose-500/12',    border: 'border-rose-500/28',    glow: 'shadow-[0_0_12px_rgba(251,113,133,0.2)]' },
   orange:  { text: 'text-orange-400',  bg: 'bg-orange-500/12',  border: 'border-orange-500/28', glow: 'shadow-[0_0_12px_rgba(251,146,60,0.2)]' },
 };
 
 function SectionLabel({ children }) {
   return (
-    <p className="mb-1.5 text-[9px] font-bold uppercase tracking-widest text-white/22">{children}</p>
+    <p className="mb-1.5 text-[9px] font-bold uppercase tracking-widest text-white/58">{children}</p>
   );
 }
 
 function DockHint({ title, children }) {
   return (
-    <div className="rounded-lg border border-cyan-500/15 bg-cyan-500/[0.06] px-2 py-1.5">
-      <p className="text-[10px] font-medium text-cyan-100/90">{title}</p>
-      <div className="mt-1 text-[9px] leading-relaxed text-white/40">{children}</div>
+    <div className="rounded-lg border border-[#e3aa6b]/20 bg-[#e3aa6b]/[0.07] px-2 py-1.5">
+      <p className="text-[10px] font-medium text-[#f0d3ab]">{title}</p>
+      <div className="mt-1 text-[9px] leading-relaxed text-white/62">{children}</div>
     </div>
   );
 }
 
 function RoadmapNote({ children }) {
-  return <p className="text-[8px] leading-snug text-white/22">{children}</p>;
+  return <p className="text-[8px] leading-snug text-white/58">{children}</p>;
 }
 
 function NleDockControls() {
@@ -47,8 +47,8 @@ function NleDockControls() {
   const row = (key, label, min, max, step) => (
     <div className="space-y-1">
       <div className="flex justify-between gap-2">
-        <Label className="text-[9px] text-white/45">{label}</Label>
-        <span className="font-mono text-[9px] text-white/35">{Math.round(Number(grade[key]) || 0)}</span>
+        <Label className="text-[9px] text-white/62">{label}</Label>
+        <span className="font-mono text-[9px] text-white/62">{Math.round(Number(grade[key]) || 0)}</span>
       </div>
       <Slider
         value={[Number(grade[key]) || 0]}
@@ -68,15 +68,15 @@ function NleDockControls() {
           type="button"
           variant="ghost"
           size="sm"
-          className="h-6 px-1.5 text-[8px] text-white/35 hover:text-white/70"
+          className="h-6 px-1.5 text-[8px] text-white/60 hover:text-white/85"
           onClick={() => resetGrade()}
           title="Réinitialiser"
         >
           <RotateCcw className="h-3 w-3" />
         </Button>
       </div>
-      <p className="text-[8px] leading-snug text-white/30">
-        Filtres CSS sur la preview — enregistrés dans <span className="font-mono text-white/45">data.nle</span> avec Valider.
+      <p className="text-[8px] leading-snug text-white/58">
+        Filtres CSS sur la preview — enregistrés dans <span className="font-mono text-white/75">data.nle</span> avec Valider.
       </p>
       {row('exposure', 'Luminosité', -100, 100, 1)}
       {row('contrast', 'Contraste %', 0, 200, 1)}
@@ -151,7 +151,7 @@ export function PostProductionContextPanel({
     <div className="flex h-full min-h-0 w-[220px] flex-shrink-0 flex-col overflow-hidden border-r border-white/[0.06]" style={{ background: '#1f1e1c' }}>
       <div className="shrink-0 border-b border-white/[0.06] px-2.5 py-2">
         <p className="text-[10px] font-semibold text-white/70">Sous-outils</p>
-        <p className="text-[9px] text-white/30">Varie selon l'onglet actif</p>
+        <p className="text-[9px] text-white/58">Varie selon l'onglet actif</p>
       </div>
 
       <div className="min-h-0 flex-1 overflow-y-auto overflow-x-hidden px-2.5 py-2 [scrollbar-width:thin] [scrollbar-color:rgba(255,255,255,0.08)_transparent]">
@@ -168,7 +168,7 @@ export function PostProductionContextPanel({
         {activeTool === 'source' && (
           <div className="space-y-2">
             <SectionLabel>Source & import</SectionLabel>
-            <p className="text-[10px] leading-relaxed text-white/40">
+            <p className="text-[10px] leading-relaxed text-white/62">
               Identifiant du contenu vidéo (formation). Les données viennent de la même base que la page post-production
               dédiée.
             </p>
@@ -176,24 +176,24 @@ export function PostProductionContextPanel({
               <button
                 type="button"
                 onClick={onOpenVideoStudio}
-                className="flex w-full items-center justify-center gap-2 rounded-lg border border-cyan-500/30 bg-cyan-500/10 py-2 text-[10px] font-semibold text-cyan-200 transition-colors hover:bg-cyan-500/18"
+                className="flex w-full items-center justify-center gap-2 rounded-lg border border-[#d97757]/40 bg-[#d97757]/10 py-2 text-[10px] font-semibold text-[#e08b6d] transition-colors hover:bg-[#d97757]/20"
               >
                 <Camera className="h-3.5 w-3.5 shrink-0" />
                 Capturer ou importer
               </button>
             ) : null}
-            <p className="text-[9px] leading-snug text-white/28">
+            <p className="text-[9px] leading-snug text-white/58">
               Webcam, téléphone (QR), écran, fichier — même flux que le constructeur de cours. Ensuite validation pour
               ouvrir la post-prod ici (brouillon si pas encore en base).
             </p>
             <div className="h-px bg-white/[0.06]" />
-            <p className="text-[9px] font-medium uppercase tracking-wide text-white/25">Ou coller un UUID existant</p>
+            <p className="text-[9px] font-medium uppercase tracking-wide text-white/58">Ou coller un UUID existant</p>
             <input
               value={draft}
               onChange={(e) => onDraftChange(e.target.value)}
               onKeyDown={(e) => e.key === 'Enter' && draftValid && onApplyContentId()}
               placeholder="UUID…"
-              className="w-full rounded-lg border border-white/10 bg-black/35 px-2 py-1.5 font-mono text-[10px] text-white/80 placeholder:text-white/20 focus:border-amber-500/35 focus:outline-none"
+              className="w-full rounded-lg border border-white/10 bg-[#2b2a27] px-2 py-1.5 font-mono text-[10px] text-white/85 placeholder:text-white/50 focus:border-amber-500/35 focus:outline-none"
             />
             <button
               type="button"
@@ -203,7 +203,7 @@ export function PostProductionContextPanel({
                 'w-full rounded-lg border py-1.5 text-[10px] font-semibold transition-colors',
                 draftValid
                   ? 'border-amber-500/35 bg-amber-500/10 text-amber-200 hover:bg-amber-500/18'
-                  : 'cursor-not-allowed border-white/10 text-white/25',
+                  : 'cursor-not-allowed border-white/10 text-white/35',
               )}
             >
               Charger le contenu
@@ -211,27 +211,27 @@ export function PostProductionContextPanel({
             <Link
               to="/studio/course-builder"
               state={designerBackHref ? { returnToDesigner: designerBackHref } : undefined}
-              className="block text-center text-[9px] text-amber-500/50 hover:text-amber-400/90"
+              className="block text-center text-[9px] text-amber-300/85 hover:text-amber-200"
             >
               Configurateur de formation →
             </Link>
             <div className="h-px bg-white/[0.06]" />
             <SectionLabel>Live & NeuroRecall</SectionLabel>
-            <p className="flex items-start gap-1.5 text-[9px] leading-relaxed text-white/38">
+            <p className="flex items-start gap-1.5 text-[9px] leading-relaxed text-white/62">
               <Radio className="mt-0.5 h-3 w-3 shrink-0 text-rose-400/70" />
               Après un live avec NeuroRecall, un contenu post-prod peut être créé : récupérez l'UUID (
-              <code className="rounded bg-black/40 px-0.5 font-mono text-[8px] text-white/55">postproduction_content_id</code>
+              <code className="rounded bg-[#262624] px-0.5 font-mono text-[8px] text-white/75">postproduction_content_id</code>
               ) dans la fiche post-live ou collez-le ci-dessus.
             </p>
             <Link
               to="/studio/liri"
-              className="block text-center text-[9px] text-rose-400/45 hover:text-rose-300/90"
+              className="block text-center text-[9px] text-rose-300/85 hover:text-rose-200"
             >
               Hub LIRI — lives & parcours →
             </Link>
             <Link
               to="/studio/smartboard-cinema"
-              className="mt-1 flex items-center justify-center gap-1 text-center text-[9px] text-violet-400/55 hover:text-violet-300/90"
+              className="mt-1 flex items-center justify-center gap-1 text-center text-[9px] text-[#e08b6d]/85 hover:text-[#f0a98d]"
             >
               <Film className="h-3 w-3 shrink-0" />
               Cinéma pédagogique (prises sur le canvas) →
@@ -243,7 +243,7 @@ export function PostProductionContextPanel({
           <div className="space-y-2">
             <SectionLabel>Transcription</SectionLabel>
             <DockHint title="Synchronisé avec la zone centrale">
-              L'icône <strong className="text-white/55">Transcription</strong> ouvre le workflow classique et fait défiler
+              L'icône <strong className="text-white/85">Transcription</strong> ouvre le workflow classique et fait défiler
               jusqu'au bloc Transcription (ASR, éditeur, export). Toute action se fait dans le panneau principal.
             </DockHint>
           </div>
@@ -253,7 +253,7 @@ export function PostProductionContextPanel({
           <div className="space-y-2">
             <SectionLabel>Segments & chapitres</SectionLabel>
             <DockHint title="Synchronisé">
-              Défilement vers la carte <strong className="text-white/55">Chapitres</strong> : IN/OUT, validation
+              Défilement vers la carte <strong className="text-white/85">Chapitres</strong> : IN/OUT, validation
               progressive, alignement avec la preview.
             </DockHint>
           </div>
@@ -263,7 +263,7 @@ export function PostProductionContextPanel({
           <div className="space-y-2">
             <SectionLabel>Montage NLE</SectionLabel>
             <DockHint title="Timeline multi-piste">
-              La zone centrale affiche <strong className="text-white/55">NleEngineWorkspace</strong> (timeline, clips,
+              La zone centrale affiche <strong className="text-white/85">NleEngineWorkspace</strong> (timeline, clips,
               transitions) — même vue que l'onglet « Montage NLE » de la page post-prod plein écran. Les sources
               additionnelles pour l'export FFmpeg sont sous la timeline.
             </DockHint>
@@ -274,7 +274,7 @@ export function PostProductionContextPanel({
           <div className="space-y-2">
             <SectionLabel>Pipeline IA</SectionLabel>
             <DockHint title="Vue Pipeline">
-              Bascule la zone centrale vers <strong className="text-white/55">CoursePipelineView</strong> (graphe,
+              Bascule la zone centrale vers <strong className="text-white/85">CoursePipelineView</strong> (graphe,
               étapes, même invocation edge functions que la page dédiée).
             </DockHint>
           </div>
@@ -293,11 +293,11 @@ export function PostProductionContextPanel({
         {activeTool === 'properties' && (
           <div className="space-y-3">
             <SectionLabel>Propriétés & SmartBoard</SectionLabel>
-            <p className="text-[9px] text-white/35">
-              Ouvre la vue <strong className="text-white/50">SmartBoard</strong> (split vidéo + contenu). Les onglets
+            <p className="text-[9px] text-white/62">
+              Ouvre la vue <strong className="text-white/85">SmartBoard</strong> (split vidéo + contenu). Les onglets
               vidéo / image / texte ci-dessous décrivent la roadmap ; le rendu utile est dans la zone centrale.
             </p>
-            <div className="flex gap-1 rounded-lg border border-white/[0.07] bg-black/25 p-0.5">
+            <div className="flex gap-1 rounded-lg border border-white/[0.07] bg-[#262624] p-0.5">
               {(
                 /** @type {{ id: PropertyKind; Icon: typeof Film; label: string }[]} */
                 [
@@ -316,7 +316,7 @@ export function PostProductionContextPanel({
                     onClick={() => onPropertyKindChange(id)}
                     className={cn(
                       'flex flex-1 flex-col items-center gap-0.5 rounded-md py-1.5 text-[8px] font-semibold transition-all',
-                      on ? cn(a.bg, a.border, 'border text-white/90', a.glow) : 'text-white/35 hover:bg-white/[0.04]',
+                      on ? cn(a.bg, a.border, 'border text-white/90', a.glow) : 'text-white/60 hover:bg-white/[0.04]',
                     )}
                   >
                     <Icon className={cn('h-3.5 w-3.5', on ? a.text : '')} />
@@ -331,7 +331,7 @@ export function PostProductionContextPanel({
       </div>
 
       <div className="shrink-0 border-t border-white/[0.06] px-2 py-1.5">
-        <p className="flex items-center gap-1 text-[8px] text-white/22">
+        <p className="flex items-center gap-1 text-[8px] text-white/58">
           <Sparkles className="h-2.5 w-2.5" />
           Dock relié à la zone centrale — onglets = vues + défilement
         </p>

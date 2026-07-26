@@ -268,12 +268,18 @@ export default function StudioLiveImmersivePage() {
       data-tenant-brand={branding.slug}
       style={{
         ...cssVars,
-        background: 'var(--school-background, #090D14)',
+        /* Repli du fond de page : #090D14 (navy banni) → base chaude #262624. Ce repli
+           n'est PAS décoratif : hors de la coque Studio, `--school-background` vient du
+           branding tenant, et si ce dernier ne le fournit pas, c'est ce repli qui peint
+           tout l'écran. Un navy y suffisait à trahir la charte sur toute la page. */
+        background: 'var(--school-background, #262624)',
         fontFamily: 'var(--school-font-family, Inter, sans-serif)',
       }}
     >
       <div className="max-w-[1400px] mx-auto space-y-4">
-        <div className="rounded-2xl border border-white/10 bg-[#0d1420]/75 backdrop-blur-xl px-4 py-3 flex flex-wrap items-center gap-3 justify-between">
+        {/* Bandeau de titre : #0d1420 (navy banni) → #1f1e1c, la surface « bloc » de la
+            rampe. Même clarté perçue, sans le virage bleu sous le backdrop-blur. */}
+        <div className="rounded-2xl border border-white/10 bg-[#1f1e1c]/75 backdrop-blur-xl px-4 py-3 flex flex-wrap items-center gap-3 justify-between">
           <div>
             <p className="text-xs text-gray-400">Studio Live Immersif</p>
             <h1 className="text-sm md:text-base font-semibold">Constructeur de scènes immersives</h1>
@@ -292,7 +298,7 @@ export default function StudioLiveImmersivePage() {
               value={recipientId}
               onChange={(e) => setRecipientId(e.target.value)}
               placeholder="ID interlocuteur (optionnel)"
-              className="h-9 w-52 rounded-xl bg-black/25 border border-white/10 px-3 text-xs outline-none focus:border-[color:var(--school-accent,#D4AF37)]"
+              className="h-9 w-52 rounded-xl bg-black/25 border border-white/10 px-3 text-xs outline-none focus:border-[color:var(--school-accent,#d97757)]"
             />
             <SlideNavigator
               index={index}
@@ -309,9 +315,11 @@ export default function StudioLiveImmersivePage() {
           <AssetPicker onPick={addImage} />
         </div>
 
-        <div className="rounded-2xl border border-violet-500/25 bg-[#0d1420]/80 px-4 py-4 space-y-3">
+        {/* Bloc « Atmosphère de salle » : filet violet + fond navy #0d1420 → corail + #1f1e1c.
+            L'icône Music passe en #e8a97f : 8,11:1 sur le fond composé #20201e. */}
+        <div className="rounded-2xl border border-[#d97757]/30 bg-[#1f1e1c]/80 px-4 py-4 space-y-3">
           <div className="flex items-center gap-2">
-            <Music className="w-4 h-4 text-violet-300" />
+            <Music className="w-4 h-4 text-[#e8a97f]" />
             <div>
               <p className="text-xs font-semibold text-white/90">Atmosphère de salle (MP3)</p>
               <p className="text-[11px] text-white/45">
@@ -349,12 +357,12 @@ export default function StudioLiveImmersivePage() {
           className="rounded-2xl border px-4 py-4 space-y-3"
           style={{
             background: 'var(--school-shell-panel, rgba(13, 20, 32, 0.8))',
-            borderColor: 'color-mix(in srgb, var(--school-accent, #D4AF37) 20%, transparent)',
+            borderColor: 'color-mix(in srgb, var(--school-accent, #d97757) 20%, transparent)',
             borderRadius: 'var(--school-radius, 1rem)',
           }}
         >
           <div className="flex items-center gap-2">
-            <Headphones className="w-4 h-4 text-[var(--school-accent,#D4AF37)]" />
+            <Headphones className="w-4 h-4 text-[var(--school-accent,#d97757)]" />
             <div>
               <p className="text-xs font-semibold text-white/90">Moteur audio scènes (LIRI)</p>
               <p className="text-[11px] text-white/45">

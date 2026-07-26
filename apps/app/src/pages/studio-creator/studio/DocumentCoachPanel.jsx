@@ -5,6 +5,18 @@
  * Gère 6 phases : idle · detecting · questioning · generating · editing · reviewing
  *
  * Design tokens : #1f1e1c · border-white/[0.07] · text-[10px..12px]
+ *
+ * Couleurs — charte LIRI, ZÉRO froid. Correspondance appliquée ici (la même que
+ * la table ACCENT de StudioDesignerLikeShell, pour que tout le Studio parle la
+ * même langue) :
+ *   cyan   → or/ocre  #e3aa6b   (sélection, choix en cours)
+ *   violet → corail   #d97757 / #e08b6d en texte   (ACTIONS)
+ *   emerald décoratif → argile  #cf8059  (identité « Architect »)
+ *   blue (info)       → or      #e6cc92
+ * Restent en l'état, parce qu'ils sont des CODES D'ÉTAT et non de la décoration :
+ * rouge = erreur, ambre = avertissement. Le vert n'est gardé QUE pour un verdict
+ * de validation, et en olive chaud (#5a8f52/#7bb06a/#9cc48a) — jamais en émeraude
+ * bleutée — pour rester distinguable du rouge et de l'ambre.
  */
 import React, { useRef, useEffect, useState, useCallback } from 'react';
 import {
@@ -31,7 +43,7 @@ import { useSmartboardKonvaStore } from '@/features/smartboard-konva-editor/stor
 const SEVERITY_STYLES = {
   error:   { icon: AlertTriangle, cls: 'text-red-400',     bg: 'bg-red-500/[0.07] border-red-500/20'     },
   warning: { icon: AlertTriangle, cls: 'text-amber-400',   bg: 'bg-amber-500/[0.07] border-amber-500/20' },
-  info:    { icon: Info,          cls: 'text-blue-400',    bg: 'bg-blue-500/[0.07] border-blue-500/20'   },
+  info:    { icon: Info,          cls: 'text-[#e6cc92]',   bg: 'bg-[#e6cc92]/[0.07] border-[#e6cc92]/25' },
 };
 
 const REWRITE_MODES = [
@@ -58,7 +70,7 @@ function CoachBubble({ msg }) {
           'max-w-[85%] rounded-xl px-2.5 py-2 text-[10.5px] leading-relaxed',
           isUser
             ? 'bg-white/[0.07] text-white/75 rounded-tr-sm'
-            : 'bg-emerald-500/[0.07] border border-emerald-500/15 text-white/80 rounded-tl-sm',
+            : 'bg-[#cf8059]/[0.08] border border-[#cf8059]/20 text-white/80 rounded-tl-sm',
         )}
       >
         {/* Bold markdown simple : **text** */}
@@ -105,13 +117,13 @@ function GuidedQuestion({ question, onAnswer, onSkip }) {
         <div className="flex gap-2">
           <button
             type="button" onClick={() => onAnswer('Oui')}
-            className="flex-1 rounded-lg border border-emerald-500/25 bg-emerald-500/[0.07] py-2 text-[10px] font-semibold text-emerald-400 hover:bg-emerald-500/15 transition-colors"
+            className="flex-1 rounded-lg border border-[#5a8f52]/35 bg-[#5a8f52]/[0.10] py-2 text-[10px] font-semibold text-[#9cc48a] hover:bg-[#5a8f52]/20 transition-colors"
           >
             Oui
           </button>
           <button
             type="button" onClick={() => onAnswer('Non')}
-            className="flex-1 rounded-lg border border-white/[0.08] bg-white/[0.03] py-2 text-[10px] font-semibold text-white/50 hover:bg-white/[0.06] transition-colors"
+            className="flex-1 rounded-lg border border-white/[0.08] bg-white/[0.03] py-2 text-[10px] font-semibold text-white/60 hover:bg-white/[0.06] transition-colors"
           >
             Non
           </button>
@@ -128,8 +140,8 @@ function GuidedQuestion({ question, onAnswer, onSkip }) {
               className={cn(
                 'rounded-lg border px-2.5 py-2 text-[10px] font-medium transition-all',
                 selected === opt
-                  ? 'border-cyan-500/40 bg-cyan-500/10 text-cyan-300'
-                  : 'border-white/[0.07] bg-white/[0.02] text-white/55 hover:bg-white/[0.05]',
+                  ? 'border-[#e3aa6b]/45 bg-[#e3aa6b]/10 text-[#e3aa6b]'
+                  : 'border-white/[0.07] bg-white/[0.02] text-white/60 hover:bg-white/[0.05]',
               )}
             >
               {opt}
@@ -147,26 +159,26 @@ function GuidedQuestion({ question, onAnswer, onSkip }) {
               value={value} onChange={e => setValue(e.target.value)} onKeyDown={handleKey}
               rows={3}
               placeholder="Votre réponse…"
-              className="w-full resize-none rounded-lg border border-white/[0.08] bg-white/[0.03] px-2.5 py-2 text-[10.5px] text-white/80 placeholder:text-white/20 outline-none focus:border-cyan-500/30 focus:bg-cyan-500/[0.03] transition-colors"
+              className="w-full resize-none rounded-lg border border-white/[0.08] bg-[#2b2a27] px-2.5 py-2 text-[10.5px] text-white/80 placeholder:text-white/50 outline-none focus:border-[#e3aa6b]/40 focus:bg-[#e3aa6b]/[0.04] transition-colors"
             />
           ) : (
             <input
               ref={inputRef}
               value={value} onChange={e => setValue(e.target.value)} onKeyDown={handleKey}
               placeholder="Votre réponse…"
-              className="w-full rounded-lg border border-white/[0.08] bg-white/[0.03] px-2.5 py-2 text-[10.5px] text-white/80 placeholder:text-white/20 outline-none focus:border-cyan-500/30 transition-colors"
+              className="w-full rounded-lg border border-white/[0.08] bg-[#2b2a27] px-2.5 py-2 text-[10.5px] text-white/80 placeholder:text-white/50 outline-none focus:border-[#e3aa6b]/40 transition-colors"
             />
           )}
           <div className="flex items-center justify-between">
             <button
               type="button" onClick={onSkip}
-              className="text-[9.5px] text-white/25 hover:text-white/45 transition-colors"
+              className="text-[9.5px] text-white/60 hover:text-white/85 transition-colors"
             >
               Passer
             </button>
             <button
               type="button" onClick={submit} disabled={!value.trim()}
-              className="flex items-center gap-1 rounded-lg border border-cyan-500/25 bg-cyan-500/[0.08] px-3 py-1.5 text-[10px] font-semibold text-cyan-400 hover:bg-cyan-500/15 disabled:opacity-30 disabled:cursor-not-allowed transition-all"
+              className="flex items-center gap-1 rounded-lg border border-[#d97757]/35 bg-[#d97757]/10 px-3 py-1.5 text-[10px] font-semibold text-[#e08b6d] hover:bg-[#d97757]/20 disabled:opacity-30 disabled:cursor-not-allowed transition-all"
             >
               Suivant <ChevronRight className="h-3 w-3" />
             </button>
@@ -251,23 +263,23 @@ export default function DocumentCoachPanel() {
   return (
     <div className="space-y-2">
       {/* ── Header Document Coach ── */}
-      <div className="mx-3 rounded-2xl border border-emerald-500/20 bg-emerald-500/[0.05] p-3">
+      <div className="mx-3 rounded-2xl border border-[#cf8059]/25 bg-[#cf8059]/[0.06] p-3">
         <div className="flex items-center justify-between mb-1.5">
           <div className="flex items-center gap-2">
-            <div className="flex h-6 w-6 items-center justify-center rounded-lg border border-emerald-500/25 bg-emerald-500/10">
-              <FileText className="h-3 w-3 text-emerald-400" />
+            <div className="flex h-6 w-6 items-center justify-center rounded-lg border border-[#cf8059]/30 bg-[#cf8059]/10">
+              <FileText className="h-3 w-3 text-[#cf8059]" />
             </div>
-            <span className="text-[11px] font-bold text-emerald-300">Architect Documentaire</span>
+            <span className="text-[11px] font-bold text-[#e0a07e]">Architect Documentaire</span>
           </div>
           {phase !== 'idle' && (
             <button type="button" onClick={resetFlow} title="Recommencer"
-              className="flex h-5 w-5 items-center justify-center rounded-md text-white/20 hover:text-white/50 transition-colors"
+              className="flex h-5 w-5 items-center justify-center rounded-md text-white/55 hover:text-white/85 transition-colors"
             >
               <RotateCcw className="h-3 w-3" />
             </button>
           )}
         </div>
-        <p className="text-[9.5px] text-white/40 leading-relaxed">
+        <p className="text-[9.5px] text-white/62 leading-relaxed">
           {phase === 'idle' && 'Décrivez votre document ou choisissez un mode ci-dessous.'}
           {phase === 'detecting' && 'Précisez le type de document souhaité.'}
           {phase === 'questioning' && meta && `${meta.icon} ${meta.label} · Question ${currentQIdx + 1}/${guidedFlow.length}`}
@@ -280,7 +292,7 @@ export default function DocumentCoachPanel() {
         {phase === 'questioning' && guidedFlow.length > 0 && (
           <div className="mt-2 h-1 w-full rounded-full bg-white/[0.06]">
             <motion.div
-              className="h-1 rounded-full bg-gradient-to-r from-emerald-500 to-cyan-500"
+              className="h-1 rounded-full bg-gradient-to-r from-[#cf8059] to-[#e3aa6b]"
               animate={{ width: `${progressPct}%` }}
               transition={{ duration: 0.3 }}
             />
@@ -291,7 +303,7 @@ export default function DocumentCoachPanel() {
       {/* ── Niveaux d'assistance ── */}
       {phase === 'idle' && (
         <div className="mx-3 space-y-1">
-          <p className="text-[9px] font-bold uppercase tracking-widest text-white/25 mb-1.5">Niveau d'assistance</p>
+          <p className="text-[9px] font-bold uppercase tracking-widest text-white/60 mb-1.5">Niveau d'assistance</p>
           {ASSISTANCE_LEVELS.map(lvl => (
             <button
               key={lvl.level} type="button"
@@ -299,7 +311,7 @@ export default function DocumentCoachPanel() {
               className={cn(
                 'flex w-full items-center gap-2.5 rounded-xl border px-3 py-2 text-left transition-all',
                 assistanceLevel === lvl.level
-                  ? 'border-cyan-500/30 bg-cyan-500/[0.07]'
+                  ? 'border-[#e3aa6b]/35 bg-[#e3aa6b]/[0.08]'
                   : 'border-white/[0.06] bg-white/[0.02] hover:bg-white/[0.05]',
               )}
             >
@@ -307,12 +319,12 @@ export default function DocumentCoachPanel() {
               <div className="min-w-0 flex-1">
                 <p className={cn(
                   'text-[10.5px] font-semibold',
-                  assistanceLevel === lvl.level ? 'text-cyan-300' : 'text-white/60',
+                  assistanceLevel === lvl.level ? 'text-[#e3aa6b]' : 'text-white/65',
                 )}>{lvl.label}</p>
-                <p className="text-[9px] text-white/30">{lvl.desc}</p>
+                <p className="text-[9px] text-white/58">{lvl.desc}</p>
               </div>
               {assistanceLevel === lvl.level && (
-                <div className="h-1.5 w-1.5 rounded-full bg-cyan-400 shrink-0" />
+                <div className="h-1.5 w-1.5 rounded-full bg-[#e3aa6b] shrink-0" />
               )}
             </button>
           ))}
@@ -322,18 +334,18 @@ export default function DocumentCoachPanel() {
       {/* ── Input intention (idle / detecting) ── */}
       {(phase === 'idle' || phase === 'detecting') && (
         <div className="mx-3">
-          <div className="flex items-center gap-1.5 rounded-xl border border-white/[0.09] bg-white/[0.03] px-2.5 py-2">
-            <MessageSquare className="h-3 w-3 shrink-0 text-white/25" />
+          <div className="flex items-center gap-1.5 rounded-xl border border-white/[0.09] bg-[#2b2a27] px-2.5 py-2">
+            <MessageSquare className="h-3 w-3 shrink-0 text-white/50" />
             <input
               value={intentInput}
               onChange={e => setIntentInput(e.target.value)}
               onKeyDown={handleIntentKey}
               placeholder="Ex : Je veux une lettre à une mairie…"
-              className="flex-1 bg-transparent text-[10.5px] text-white/80 placeholder:text-white/20 outline-none"
+              className="flex-1 bg-transparent text-[10.5px] text-white/80 placeholder:text-white/50 outline-none"
             />
             <button
               type="button" onClick={handleIntentSubmit} disabled={!intentInput.trim()}
-              className="flex h-5 w-5 items-center justify-center rounded-md text-emerald-400 disabled:text-white/15 hover:text-emerald-300 transition-colors"
+              className="flex h-5 w-5 items-center justify-center rounded-md text-[#e08b6d] disabled:text-white/15 hover:text-[#f0a98d] transition-colors"
             >
               <ArrowRight className="h-3.5 w-3.5" />
             </button>
@@ -351,7 +363,7 @@ export default function DocumentCoachPanel() {
                     className="flex flex-col items-center gap-0.5 rounded-xl border border-white/[0.06] bg-white/[0.02] p-2 hover:bg-white/[0.05] hover:border-white/10 transition-all"
                   >
                     <span className="text-[13px]">{m.icon}</span>
-                    <span className="text-[8.5px] text-white/40">{m.label}</span>
+                    <span className="text-[8.5px] text-white/62">{m.label}</span>
                   </button>
                 );
               })}
@@ -388,7 +400,7 @@ export default function DocumentCoachPanel() {
             </motion.div>
             <div>
               <p className="text-[10.5px] font-semibold text-amber-300">Architect en cours…</p>
-              <p className="text-[9px] text-white/35">Construction du plan documentaire</p>
+              <p className="text-[9px] text-white/60">Construction du plan documentaire</p>
             </div>
           </motion.div>
         )}
@@ -406,7 +418,7 @@ export default function DocumentCoachPanel() {
               <span className="text-[14px]">{documentPlan.icon}</span>
               <div className="min-w-0 flex-1">
                 <p className="text-[11px] font-bold text-white/85">{documentPlan.label}</p>
-                <p className="text-[9px] text-white/35">
+                <p className="text-[9px] text-white/60">
                   {documentPlan.blocks.length} blocs · {documentPlan.pages} page{documentPlan.pages > 1 ? 's' : ''} · {documentPlan.tone}
                 </p>
               </div>
@@ -416,7 +428,7 @@ export default function DocumentCoachPanel() {
             <div className="p-2.5 space-y-1">
               {documentPlan.blocks.map((block, i) => (
                 <div key={i} className="flex items-center gap-2 rounded-lg px-2 py-1.5">
-                  <div className="h-1.5 w-1.5 rounded-full bg-emerald-400/60 shrink-0" />
+                  <div className="h-1.5 w-1.5 rounded-full bg-[#cf8059]/75 shrink-0" />
                   <span className="text-[10px] text-white/65 capitalize">{block}</span>
                 </div>
               ))}
@@ -425,7 +437,7 @@ export default function DocumentCoachPanel() {
             {/* ── Templates recommandés depuis la bibliothèque ── */}
             {matchedTemplates.length > 0 && (
               <div className="border-t border-white/[0.06] p-2.5 space-y-1.5">
-                <p className="text-[8.5px] font-bold uppercase tracking-widest text-white/25 mb-1.5">
+                <p className="text-[8.5px] font-bold uppercase tracking-widest text-white/60 mb-1.5">
                   Modèles recommandés ({matchedTemplates.length})
                 </p>
                 <div className="space-y-1 max-h-44 overflow-y-auto [scrollbar-width:thin] [scrollbar-color:rgba(255,255,255,0.07)_transparent]">
@@ -444,7 +456,7 @@ export default function DocumentCoachPanel() {
                         className={cn(
                           'flex w-full items-center gap-2 rounded-xl border px-2.5 py-2 text-left transition-all',
                           isSelected
-                            ? 'border-emerald-500/30 bg-emerald-500/[0.07]'
+                            ? 'border-[#cf8059]/35 bg-[#cf8059]/[0.08]'
                             : 'border-white/[0.07] bg-white/[0.02] hover:bg-white/[0.05]',
                         )}
                       >
@@ -452,13 +464,13 @@ export default function DocumentCoachPanel() {
                         <div className="min-w-0 flex-1">
                           <p className={cn(
                             'text-[10px] font-semibold truncate',
-                            isSelected ? 'text-emerald-300' : 'text-white/70',
+                            isSelected ? 'text-[#e0a07e]' : 'text-white/70',
                           )}>{tpl.name}</p>
-                          <p className="text-[8.5px] text-white/30">
+                          <p className="text-[8.5px] text-white/58">
                             {tpl.style_variants?.length ?? 1} style{tpl.style_variants?.length > 1 ? 's' : ''} · {tpl.zones?.length ?? 0} zones
                           </p>
                         </div>
-                        {isSelected && <CheckCircle2 className="h-3 w-3 shrink-0 text-emerald-400" />}
+                        {isSelected && <CheckCircle2 className="h-3 w-3 shrink-0 text-[#cf8059]" />}
                       </button>
                     );
                   })}
@@ -481,7 +493,7 @@ export default function DocumentCoachPanel() {
               <button
                 type="button"
                 onClick={validateDocument}
-                className="flex w-full items-center justify-center gap-2 rounded-xl border border-white/[0.08] bg-white/[0.03] py-2 text-[10.5px] font-semibold text-white/55 hover:bg-white/[0.06] transition-all"
+                className="flex w-full items-center justify-center gap-2 rounded-xl border border-white/[0.08] bg-white/[0.03] py-2 text-[10.5px] font-semibold text-white/65 hover:bg-white/[0.06] transition-all"
               >
                 <CheckCircle2 className="h-3.5 w-3.5" />
                 Valider le document
@@ -494,7 +506,7 @@ export default function DocumentCoachPanel() {
       {/* ── Outils de reformulation (editing) ── */}
       {phase === 'editing' && (
         <div className="mx-3 space-y-2">
-          <p className="text-[9px] font-bold uppercase tracking-widest text-white/25">Reformulation</p>
+          <p className="text-[9px] font-bold uppercase tracking-widest text-white/60">Reformulation</p>
 
           {/* Modes de réécriture */}
           <div className="grid grid-cols-3 gap-1">
@@ -507,12 +519,12 @@ export default function DocumentCoachPanel() {
                   className={cn(
                     'flex flex-col items-center gap-1 rounded-xl border py-2 px-1 transition-all',
                     rewriteMode === m.id
-                      ? 'border-violet-500/30 bg-violet-500/[0.07]'
+                      ? 'border-[#d97757]/35 bg-[#d97757]/[0.09]'
                       : 'border-white/[0.06] bg-white/[0.02] hover:bg-white/[0.05]',
                   )}
                 >
-                  <Icon className={cn('h-3 w-3', rewriteMode === m.id ? 'text-violet-400' : 'text-white/25')} />
-                  <span className={cn('text-[8.5px]', rewriteMode === m.id ? 'text-violet-300' : 'text-white/35')}>{m.label}</span>
+                  <Icon className={cn('h-3 w-3', rewriteMode === m.id ? 'text-[#e08b6d]' : 'text-white/50')} />
+                  <span className={cn('text-[8.5px]', rewriteMode === m.id ? 'text-[#e08b6d]' : 'text-white/60')}>{m.label}</span>
                 </button>
               );
             })}
@@ -525,13 +537,13 @@ export default function DocumentCoachPanel() {
               onChange={e => setRewriteInput(e.target.value)}
               placeholder="Collez le texte à reformuler…"
               rows={3}
-              className="w-full resize-none rounded-xl border border-white/[0.08] bg-white/[0.03] px-2.5 py-2 text-[10px] text-white/75 placeholder:text-white/20 outline-none focus:border-violet-500/30 transition-colors"
+              className="w-full resize-none rounded-xl border border-white/[0.08] bg-[#2b2a27] px-2.5 py-2 text-[10px] text-white/80 placeholder:text-white/50 outline-none focus:border-[#d97757]/45 transition-colors"
             />
             <button
               type="button"
               onClick={() => { if (rewriteInput.trim()) { requestRewrite(rewriteInput.trim(), rewriteMode); setRewriteInput(''); } }}
               disabled={!rewriteInput.trim()}
-              className="flex w-full items-center justify-center gap-1.5 rounded-xl border border-violet-500/25 bg-violet-500/[0.07] py-2 text-[10px] font-semibold text-violet-400 hover:bg-violet-500/12 disabled:opacity-30 disabled:cursor-not-allowed transition-all"
+              className="flex w-full items-center justify-center gap-1.5 rounded-xl border border-[#d97757]/30 bg-[#d97757]/[0.09] py-2 text-[10px] font-semibold text-[#e08b6d] hover:bg-[#d97757]/20 disabled:opacity-30 disabled:cursor-not-allowed transition-all"
             >
               <PenLine className="h-3 w-3" />
               Reformuler en {REWRITE_MODES.find(m => m.id === rewriteMode)?.label}
@@ -543,7 +555,7 @@ export default function DocumentCoachPanel() {
       {/* ── Suggestions intelligentes ── */}
       {suggestions.length > 0 && (phase === 'editing' || phase === 'reviewing') && (
         <div className="mx-3 space-y-1">
-          <p className="text-[9px] font-bold uppercase tracking-widest text-white/25">Suggestions</p>
+          <p className="text-[9px] font-bold uppercase tracking-widest text-white/60">Suggestions</p>
           {suggestions.map((s, i) => {
             const style = SEVERITY_STYLES[s.severity] ?? SEVERITY_STYLES.info;
             const Icon = style.icon;
@@ -560,11 +572,11 @@ export default function DocumentCoachPanel() {
       {/* ── Résultats de validation ── */}
       {phase === 'reviewing' && (
         <div className="mx-3 space-y-1">
-          <p className="text-[9px] font-bold uppercase tracking-widest text-white/25">Validation</p>
+          <p className="text-[9px] font-bold uppercase tracking-widest text-white/60">Validation</p>
           {validationIssues.length === 0 ? (
-            <div className="flex items-center gap-2 rounded-xl border border-emerald-500/20 bg-emerald-500/[0.07] px-2.5 py-2.5">
-              <CheckCircle2 className="h-4 w-4 shrink-0 text-emerald-400" />
-              <span className="text-[10.5px] font-semibold text-emerald-300">Document validé — prêt pour export</span>
+            <div className="flex items-center gap-2 rounded-xl border border-[#5a8f52]/30 bg-[#5a8f52]/[0.10] px-2.5 py-2.5">
+              <CheckCircle2 className="h-4 w-4 shrink-0 text-[#7bb06a]" />
+              <span className="text-[10.5px] font-semibold text-[#9cc48a]">Document validé — prêt pour export</span>
             </div>
           ) : (
             validationIssues.map((issue, i) => {
@@ -580,7 +592,7 @@ export default function DocumentCoachPanel() {
           )}
           <button
             type="button" onClick={resetFlow}
-            className="flex w-full items-center justify-center gap-1.5 rounded-xl border border-white/[0.07] bg-white/[0.03] py-2 text-[10px] text-white/40 hover:text-white/60 hover:bg-white/[0.05] transition-all"
+            className="flex w-full items-center justify-center gap-1.5 rounded-xl border border-white/[0.07] bg-white/[0.03] py-2 text-[10px] text-white/62 hover:text-white/85 hover:bg-white/[0.05] transition-all"
           >
             <RotateCcw className="h-3 w-3" /> Nouveau document
           </button>
@@ -590,7 +602,7 @@ export default function DocumentCoachPanel() {
       {/* ── Flux messages du coach ── */}
       {coachMessages.length > 0 && (
         <div className="mx-3 space-y-1.5">
-          <p className="text-[9px] font-bold uppercase tracking-widest text-white/25">Historique Architect</p>
+          <p className="text-[9px] font-bold uppercase tracking-widest text-white/60">Historique Architect</p>
           <div className="max-h-52 space-y-1.5 overflow-y-auto [scrollbar-width:thin] [scrollbar-color:rgba(255,255,255,0.07)_transparent]">
             {coachMessages.map(msg => (
               <CoachBubble key={msg.id} msg={msg} />

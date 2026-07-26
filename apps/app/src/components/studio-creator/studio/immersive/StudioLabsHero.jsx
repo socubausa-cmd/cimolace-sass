@@ -57,25 +57,30 @@ export function StudioLabsHero({ isActive, index, total, onEnterView }) {
             whileTap={{ scale: 0.99 }}
             className={cn(
               'relative text-left rounded-3xl border p-8 md:p-10 transition-all overflow-hidden group backdrop-blur-xl cursor-pointer',
-              'border-fuchsia-400/25 bg-gradient-to-br from-fuchsia-950/35 via-[#0a0908]/95 to-[#060504]',
-              'hover:border-fuchsia-300/60 hover:shadow-[0_15px_60px_rgba(217,70,239,0.24)]',
+              // Le fuchsia distinguait ce laboratoire du second (or). On garde
+              // l'opposition, en corail : deux teintes chaudes nettement séparées.
+              // Le dégradé reprend la structure de la carte 2 (teinte profonde →
+              // noirs chauds #0a0908/#060504, déjà conformes).
+              'border-[#d97757]/30 bg-gradient-to-br from-[#2a1712]/90 via-[#0a0908]/95 to-[#060504]',
+              'hover:border-[#e08a5f]/60 hover:shadow-[0_15px_60px_rgba(217,119,87,0.24)]',
             )}
           >
-            <div className="absolute -right-16 -top-16 h-48 w-48 rounded-full bg-fuchsia-500/10 blur-3xl pointer-events-none" />
+            <div className="absolute -right-16 -top-16 h-48 w-48 rounded-full bg-[#d97757]/10 blur-3xl pointer-events-none" />
             <div className="relative">
               <div className="flex items-center gap-3 mb-4">
-                <div className="w-14 h-14 rounded-2xl bg-fuchsia-500/20 flex items-center justify-center text-fuchsia-300">
+                <div className="w-14 h-14 rounded-2xl bg-[#d97757]/20 flex items-center justify-center text-[#e8a97f]">
                   <Wand2 className="w-7 h-7" />
                 </div>
-                <span className="font-display text-[10px] font-semibold uppercase tracking-widest text-fuchsia-300/80">
+                <span className="font-display text-[10px] font-semibold uppercase tracking-widest text-[#e8a97f]/85">
                   Laboratoire 1
                 </span>
               </div>
               <h2 className="font-display mb-3 text-2xl font-semibold tracking-tight text-white md:text-3xl">
                 Constructeur de cours
               </h2>
-              <p className="text-sm text-white/55 leading-relaxed mb-6">
-                Course Builder IA, parcours formation, post-production — tout pour transformer vos contenus pédagogiques.
+              <p className="text-sm text-white/65 leading-relaxed mb-6">
+                Constructeur de cours IA, parcours formation, post-production — tout pour transformer vos contenus
+                pédagogiques.
               </p>
               <div className="flex flex-wrap gap-2 mb-6">
                 <span className="rounded-full border border-white/15 bg-white/5 px-2.5 py-1 text-[10px] text-white/65">Transcription IA</span>
@@ -83,9 +88,12 @@ export function StudioLabsHero({ isActive, index, total, onEnterView }) {
                 <span className="rounded-full border border-white/15 bg-white/5 px-2.5 py-1 text-[10px] text-white/65">Post-production</span>
               </div>
               <div className="flex flex-wrap items-center gap-3">
+                {/* Aplat corail : l'encre doit être SOMBRE (#1f1e1c → 5,34:1).
+                    Du blanc sur ce corail ne ferait que 2,83:1 — c'est aussi la
+                    raison pour laquelle le bouton de la carte 2 est en text-black. */}
                 <Button
                   type="button"
-                  className="rounded-xl bg-fuchsia-600 hover:bg-fuchsia-500 text-white"
+                  className="rounded-xl bg-[#d97757] hover:bg-[#e08a5f] text-[#1f1e1c]"
                   onClick={(e) => {
                     e.stopPropagation();
                     navigate('/studio/course-lab');
@@ -94,7 +102,7 @@ export function StudioLabsHero({ isActive, index, total, onEnterView }) {
                   Entrer
                   <ArrowRight className="w-4 h-4 ml-2" />
                 </Button>
-                <span className="inline-flex items-center gap-1.5 text-[11px] text-white/35">
+                <span className="inline-flex items-center gap-1.5 text-[11px] text-white/60">
                   <BookOpen className="w-3.5 h-3.5" />
                   Accès réservé aux rôles studio
                 </span>
@@ -113,7 +121,10 @@ export function StudioLabsHero({ isActive, index, total, onEnterView }) {
             className={cn(
               'relative text-left rounded-3xl border p-8 md:p-10 transition-all overflow-hidden group backdrop-blur-xl cursor-pointer',
               'border-[color-mix(in_srgb,var(--school-accent)_30%,transparent)] bg-gradient-to-br from-[#1a1510]/90 via-[#0a0908]/95 to-[#060504]',
-              'hover:border-[color-mix(in_srgb,var(--school-accent)_50%,transparent)] hover:shadow-[0_15px_60px_rgba(212,175,55,0.22)]',
+              // rgba(212,175,55) = #D4AF37, l'or froid banni : remplacé par l'or de
+              // la charte #d99a4e. (La var --school-accent reste un token : il se
+              // corrige à sa définition, pas ici.)
+              'hover:border-[color-mix(in_srgb,var(--school-accent)_50%,transparent)] hover:shadow-[0_15px_60px_rgba(217,154,78,0.22)]',
             )}
           >
             <div className="absolute -right-16 -top-16 h-48 w-48 rounded-full bg-amber-500/10 blur-3xl pointer-events-none" />
@@ -129,8 +140,9 @@ export function StudioLabsHero({ isActive, index, total, onEnterView }) {
               <h2 className="font-display mb-3 text-2xl font-semibold tracking-tight text-white md:text-3xl">
                 Constructeur de lives
               </h2>
-              <p className="text-sm text-white/55 leading-relaxed mb-6">
-                Blueprint production, scènes immersives SmartBoard, studio live — préparez vos sessions comme une vraie régie.
+              <p className="text-sm text-white/65 leading-relaxed mb-6">
+                Plan de production, scènes immersives SmartBoard, studio live — préparez vos sessions comme une vraie
+                régie.
               </p>
               <div className="flex flex-wrap gap-2 mb-6">
                 <span className="rounded-full border border-white/15 bg-white/5 px-2.5 py-1 text-[10px] text-white/65">Régie live</span>
@@ -149,7 +161,7 @@ export function StudioLabsHero({ isActive, index, total, onEnterView }) {
                   Entrer
                   <ArrowRight className="w-4 h-4 ml-2" />
                 </Button>
-                <span className="inline-flex items-center gap-1.5 text-[11px] text-white/35">
+                <span className="inline-flex items-center gap-1.5 text-[11px] text-white/60">
                   <Video className="w-3.5 h-3.5" />
                   Messagerie & arène
                 </span>
@@ -166,11 +178,15 @@ export function StudioLabsHero({ isActive, index, total, onEnterView }) {
         >
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <div className="flex items-start gap-3 text-left">
-              <div className="mt-0.5 flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-cyan-500/15 text-cyan-200">
+              {/* Bandeau « Constructeurs » : troisième repère de l'écran, après le
+                  corail (labo 1) et l'or de marque (labo 2). Le cyan devient un
+                  or plus clair — assez proche pour rester secondaire, assez distinct
+                  du corail pour qu'on ne le confonde pas avec une action. */}
+              <div className="mt-0.5 flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#d99a4e]/15 text-[#e6b878]">
                 <Compass className="h-5 w-5" />
               </div>
               <div>
-                <LiriWordmark size="kicker" className="text-cyan-200/90" />
+                <LiriWordmark size="kicker" className="text-[#e6b878]/90" />
                 <p className="mt-1 text-sm text-white/70 leading-snug">
                   Hub unifié : choisir le bon constructeur (programme, cours unique, parcours scolaire…) et lire le guide
                   comparatif.
@@ -181,7 +197,7 @@ export function StudioLabsHero({ isActive, index, total, onEnterView }) {
               <Button
                 type="button"
                 variant="outline"
-                className="rounded-xl border-cyan-400/35 bg-cyan-950/20 text-cyan-100 hover:bg-cyan-500/15 hover:text-white"
+                className="rounded-xl border-[#d99a4e]/35 bg-[#3a2c18]/40 text-[#e6c48f] hover:bg-[#d99a4e]/15 hover:text-[#f5f4ee]"
                 onClick={() => navigate('/studio/liri/constructeurs')}
               >
                 <Compass className="w-4 h-4 mr-2" />
@@ -200,7 +216,7 @@ export function StudioLabsHero({ isActive, index, total, onEnterView }) {
           </div>
         </motion.div>
 
-        <p className="text-center text-[11px] text-white/35 mt-10 md:mt-14">
+        <p className="text-center text-[11px] text-white/60 mt-10 md:mt-14">
           Faites défiler pour parcourir tous les outils — ou choisissez un laboratoire ci-dessus.
         </p>
       </div>

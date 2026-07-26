@@ -11,11 +11,17 @@
     --btn-border: hsl(214deg, 31.8%, 91.4%);
     --input: hsl(220, 20%, 90%);
     --radius: 0.5rem;
-    /* Accent tenant par défaut = OR ISNA (#D4AF37). Surchargé par tenant via
-       schoolShellTheme (--school-accent). Permet de migrer les couleurs codées
-       en dur vers var(--school-accent) sans changer l'apparence d'ISNA. */
-    --school-accent: #d4af37;
-    --school-accent-rgb: 212 175 55;
+    /* Accent tenant par défaut. Surchargé par tenant via schoolShellTheme.
+       ⚠️ C'ÉTAIT L'OR FROID ISNA #d4af37 — et comme cette variable est déclarée
+       ICI, au :root, les quelque 300 replis `var(--school-accent, …)` du studio
+       n'étaient JAMAIS atteints : c'est cette ligne qui décidait de la couleur
+       réelle partout où la coque du portail ne passe pas (studioWarm.css ne la
+       force qu'à l'intérieur de `.studio-en-coque`). Purger les replis en aval
+       sans corriger cette source ne changeait donc rien à l'écran.
+       Le corail LIRI devient le défaut ; un tenant qui veut son or le pose via
+       son branding. */
+    --school-accent: #d97757;
+    --school-accent-rgb: 217 119 87;
   }
 
   .dark {

@@ -95,15 +95,31 @@ export default function StudioFormationPage() {
   };
 
   if (loading || loadingStructure) {
+    /**
+     * REPLI DE FOND — pourquoi il compte vraiment.
+     * Contrairement à `--school-accent` (déclarée au :root dans index.css),
+     * `--school-background` n'a AUCUNE déclaration globale : elle n'existe que si
+     * `cssVars` (useTenantBranding) la pose, ou si la page est montée dans la coque
+     * du portail (studioWarm.css la force alors à #262624). Hors de ces deux cas —
+     * et cet écran de chargement s'affiche en `fixed inset-0`, plein cadre — le
+     * repli est RÉELLEMENT ATTEINT. Il valait 0F1419, un navy froid banni par la
+     * charte : un plein écran bleu-nuit au démarrage du studio. Il vaut désormais
+     * la base chaude de la charte, #262624.
+     *
+     * `text-gray-300` (encre du bloc) : les gris Tailwind sont teintés BLEU
+     * (gray-300 = #d1d5db). Sur une base chaude ils virent au froid → on repasse
+     * sur l'encre de la charte, #f5f4ee à 80 % = 9,33:1 sur #262624.
+     */
     return (
       <div
-        className="fixed inset-0 flex items-center justify-center text-gray-300"
+        className="fixed inset-0 flex items-center justify-center text-[#f5f4ee]/80"
         data-school-shell="formation-builder"
         data-tenant-brand={branding.slug}
-        style={{ ...cssVars, background: 'var(--school-background, #0F1419)', fontFamily: 'var(--school-font-family, Inter, sans-serif)' }}
+        style={{ ...cssVars, background: 'var(--school-background, #262624)', fontFamily: 'var(--school-font-family, Inter, sans-serif)' }}
       >
         <div className="flex items-center gap-2">
-          <Loader2 className="w-4 h-4 animate-spin text-[var(--school-accent,#D4AF37)]" />
+          {/* Repli d'accent aligné sur l'or CHAUD #d99a4e (6,27:1 sur #262624). */}
+          <Loader2 className="w-4 h-4 animate-spin text-[var(--school-accent,#d99a4e)]" />
           Chargement du constructeur de formation...
         </div>
       </div>

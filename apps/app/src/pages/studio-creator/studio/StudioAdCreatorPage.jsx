@@ -27,25 +27,38 @@ import useTenantBranding from '@/hooks/useTenantBranding';
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
+/**
+ * ⚠️ Les couleurs des PLATEFORMES sont des COULEURS DE MARQUE TIERCE : le bleu
+ * Facebook et le cyan TikTok IDENTIFIENT le réseau, ils ne décorent pas. On les
+ * garde tels quels malgré la charte chaude — les réchauffer rendrait les six
+ * cartes indistinctes. Seul « Multi-canal », qui n'appartient à aucune marque,
+ * passe sur le corail LIRI.
+ */
 const PLATFORMS = [
   { id: 'facebook', label: 'Facebook', icon: Facebook, color: 'text-blue-400', bg: 'bg-blue-500/15', border: 'border-blue-500/30', formats: ['feed', 'story', 'carousel', 'reel'] },
   { id: 'instagram', label: 'Instagram', icon: Instagram, color: 'text-pink-400', bg: 'bg-pink-500/15', border: 'border-pink-500/30', formats: ['feed', 'story', 'reel', 'carousel'] },
   { id: 'tiktok', label: 'TikTok', icon: Film, color: 'text-cyan-400', bg: 'bg-cyan-500/15', border: 'border-cyan-500/30', formats: ['short', 'feed'] },
   { id: 'youtube', label: 'YouTube', icon: Youtube, color: 'text-red-400', bg: 'bg-red-500/15', border: 'border-red-500/30', formats: ['short', 'banner', 'feed'] },
   { id: 'google', label: 'Google Ads', icon: Globe, color: 'text-yellow-400', bg: 'bg-yellow-500/15', border: 'border-yellow-500/30', formats: ['banner', 'search'] },
-  { id: 'multi', label: 'Multi-canal', icon: Share2, color: 'text-purple-400', bg: 'bg-purple-500/15', border: 'border-purple-500/30', formats: ['feed', 'story', 'short'] },
+  { id: 'multi', label: 'Multi-canal', icon: Share2, color: 'text-[#e8a97f]', bg: 'bg-[#d97757]/15', border: 'border-[#d97757]/30', formats: ['feed', 'story', 'short'] },
 ];
 
+/**
+ * Objectifs : ici la couleur porte du SENS (5 intentions distinctes), pas une
+ * marque. Elle est donc rejouée sur la rampe chaude en gardant 5 teintes
+ * franchement séparables : corail · olive · sable · ambre · rose.
+ */
 const OBJECTIVES = [
-  { id: 'acquisition', label: 'Acquisition', desc: 'Attirer de nouveaux prospects', icon: Target, color: 'text-blue-400' },
-  { id: 'conversion', label: 'Conversion', desc: 'Transformer en clients payants', icon: TrendingUp, color: 'text-emerald-400' },
-  { id: 'awareness', label: 'Notoriété', desc: 'Faire connaître votre marque', icon: Eye, color: 'text-purple-400' },
+  { id: 'acquisition', label: 'Acquisition', desc: 'Attirer de nouveaux prospects', icon: Target, color: 'text-[#e08a5f]' },
+  { id: 'conversion', label: 'Conversion', desc: 'Transformer en clients payants', icon: TrendingUp, color: 'text-[#9cc48a]' },
+  { id: 'awareness', label: 'Notoriété', desc: 'Faire connaître votre marque', icon: Eye, color: 'text-[#e6c48f]' },
   { id: 'retargeting', label: 'Relance', desc: 'Relancer les prospects tièdes', icon: RefreshCw, color: 'text-amber-400' },
   { id: 'engagement', label: 'Engagement', desc: 'Générer interactions et partages', icon: Star, color: 'text-pink-400' },
 ];
 
 const FORMAT_LABELS = { feed: 'Fil d\'actualité', story: 'Story (9:16)', reel: 'Reel / Short', short: 'Short vidéo', banner: 'Bannière', search: 'Annonce search', carousel: 'Carrousel' };
 
+/* Idem : bleu Meta et cyan TikTok = identité des réseaux, on ne les réchauffe pas. */
 const CHANNEL_CONFIGS = [
   { platform: 'facebook', label: 'Meta (Facebook / Instagram)', icon: Facebook, color: 'text-blue-400', bg: 'bg-blue-500/10', border: 'border-blue-500/25', desc: 'Facebook Ads + Instagram Ads via Meta Business Suite', fields: [{ key: 'pixel_id', label: 'Pixel ID', placeholder: '1234567890' }, { key: 'access_token', label: 'Token d\'accès', placeholder: 'EAAxxxx...', secret: true }, { key: 'ad_account_id', label: 'ID Compte publicitaire', placeholder: 'act_123456789' }] },
   { platform: 'tiktok', label: 'TikTok Ads', icon: Film, color: 'text-cyan-400', bg: 'bg-cyan-500/10', border: 'border-cyan-500/25', desc: 'TikTok for Business — pixel et campagnes automatisées', fields: [{ key: 'pixel_id', label: 'Pixel ID', placeholder: 'XXXXXXXX' }, { key: 'access_token', label: 'Token d\'accès', placeholder: 'xxxxx', secret: true }, { key: 'advertiser_id', label: 'Advertiser ID', placeholder: '7234567890' }] },
@@ -81,7 +94,7 @@ function StepDots({ step, total }) {
           key={i}
           className={cn(
             'rounded-full transition-all',
-            i < step ? 'w-6 h-2 bg-[var(--school-accent,#D4AF37)]' : i === step - 1 ? 'w-8 h-2 bg-[var(--school-accent,#D4AF37)]' : 'w-2 h-2 bg-white/15'
+            i < step ? 'w-6 h-2 bg-[var(--school-accent,#d99a4e)]' : i === step - 1 ? 'w-8 h-2 bg-[var(--school-accent,#d99a4e)]' : 'w-2 h-2 bg-white/15'
           )}
         />
       ))}
@@ -103,7 +116,7 @@ function PlatformCard({ platform, selected, onSelect }) {
         selected ? `${platform.border} ${platform.bg}` : 'border-white/10 bg-white/3 hover:bg-white/5'
       )}
     >
-      {selected && <div className="absolute top-2 right-2 w-5 h-5 bg-[var(--school-accent,#D4AF37)] rounded-full flex items-center justify-center"><Check className="w-3 h-3 text-black" /></div>}
+      {selected && <div className="absolute top-2 right-2 w-5 h-5 bg-[var(--school-accent,#d99a4e)] rounded-full flex items-center justify-center"><Check className="w-3 h-3 text-black" /></div>}
       <platform.icon className={cn('w-6 h-6 mb-3', platform.color)} />
       <p className="text-sm font-semibold text-white">{platform.label}</p>
       <p className="text-xs text-gray-400 mt-1">{platform.formats.slice(0, 2).map((f) => FORMAT_LABELS[f] || f).join(' · ')}</p>
@@ -132,8 +145,10 @@ function AdPreviewCard({ platform, headline, description, cta, hashtags, format 
       <div className="p-3 space-y-1">
         {headline && <p className="text-sm font-semibold text-white line-clamp-2">{headline}</p>}
         {description && <p className="text-xs text-gray-300 line-clamp-3">{description}</p>}
+        {/* Hashtags : teinte « lien » générique, commune à tous les réseaux — ce
+            n'est PAS une couleur de marque, elle passe donc sur l'or de la charte. */}
         {hashtags?.length > 0 && (
-          <p className="text-xs text-blue-400">{hashtags.slice(0, 4).map((h) => `#${h.replace('#', '')}`).join(' ')}</p>
+          <p className="text-xs text-[#e6b878]">{hashtags.slice(0, 4).map((h) => `#${h.replace('#', '')}`).join(' ')}</p>
         )}
         {cta && (
           <button type="button" className={cn('mt-2 w-full py-1.5 rounded-lg text-xs font-semibold', p.bg, p.color, 'border', p.border)}>
@@ -173,7 +188,8 @@ function ChannelCard({ config, integration, onSave }) {
           </div>
         </div>
         <div className="flex items-center gap-2 shrink-0">
-          <span className={cn('text-[10px] px-2 py-0.5 rounded-full border font-medium', isConnected ? 'bg-emerald-500/15 text-emerald-300 border-emerald-500/30' : 'bg-white/5 text-gray-400 border-white/10')}>
+          {/* Connecté = olive chaud #5a8f52 (validé/succès de la rampe), plus l'émeraude froide. */}
+          <span className={cn('text-[10px] px-2 py-0.5 rounded-full border font-medium', isConnected ? 'bg-[#5a8f52]/20 text-[#9cc48a] border-[#5a8f52]/35' : 'bg-white/5 text-gray-400 border-white/10')}>
             {isConnected ? '✓ Connecté' : 'Non connecté'}
           </span>
           <button type="button" onClick={() => setExpanded((e) => !e)} className="p-1 text-gray-400 hover:text-white transition-colors">
@@ -200,7 +216,7 @@ function ChannelCard({ config, integration, onSave }) {
                     placeholder={field.placeholder}
                     value={form[field.key] || ''}
                     onChange={(e) => setForm((p) => ({ ...p, [field.key]: e.target.value }))}
-                    className="w-full bg-[#2b2a27] border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder-gray-600 focus:outline-none focus:border-[color:var(--school-accent,#D4AF37)]"
+                    className="w-full bg-[#2b2a27] border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder-gray-600 focus:outline-none focus:border-[color:var(--school-accent,#d99a4e)]"
                   />
                 </div>
               ))}
@@ -208,7 +224,7 @@ function ChannelCard({ config, integration, onSave }) {
                 type="button"
                 onClick={handleSave}
                 disabled={saving}
-                className="mt-2 w-full py-2 rounded-lg bg-[var(--school-accent,#D4AF37)] text-black text-sm font-semibold hover:opacity-90 transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
+                className="mt-2 w-full py-2 rounded-lg bg-[var(--school-accent,#d99a4e)] text-black text-sm font-semibold hover:opacity-90 transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
               >
                 {saving && <Loader2 className="w-4 h-4 animate-spin" />}
                 {isConnected ? 'Mettre à jour' : 'Connecter ce canal'}
@@ -497,14 +513,14 @@ export default function StudioAdCreatorPage() {
                   className={cn(
                     'flex items-center gap-3 rounded-xl border p-3 text-left transition-all',
                     selectedObjective === obj.id
-                      ? 'border-[color:var(--school-accent,#D4AF37)] bg-[color-mix(in_srgb,var(--school-accent,#D4AF37)_10%,transparent)]'
+                      ? 'border-[color:var(--school-accent,#d99a4e)] bg-[color-mix(in_srgb,var(--school-accent,#d99a4e)_10%,transparent)]'
                       : 'border-white/10 bg-white/3 hover:bg-white/5',
                   )}
                 >
                   <obj.icon
                     className={cn(
                       'h-4 w-4 shrink-0',
-                      selectedObjective === obj.id ? 'text-[var(--school-accent,#D4AF37)]' : obj.color,
+                      selectedObjective === obj.id ? 'text-[var(--school-accent,#d99a4e)]' : obj.color,
                     )}
                   />
                   <div className="min-w-0">
@@ -512,7 +528,7 @@ export default function StudioAdCreatorPage() {
                     <p className="truncate text-xs text-gray-400">{obj.desc}</p>
                   </div>
                   {selectedObjective === obj.id && (
-                    <Check className="ml-auto h-4 w-4 shrink-0 text-[var(--school-accent,#D4AF37)]" />
+                    <Check className="ml-auto h-4 w-4 shrink-0 text-[var(--school-accent,#d99a4e)]" />
                   )}
                 </button>
               ))}
@@ -541,11 +557,11 @@ export default function StudioAdCreatorPage() {
               className={cn(
                 'p-3 rounded-xl border text-center transition-all',
                 sourceType === s.id
-                  ? 'border-[color:var(--school-accent,#D4AF37)] bg-[color-mix(in_srgb,var(--school-accent,#D4AF37)_10%,transparent)]'
+                  ? 'border-[color:var(--school-accent,#d99a4e)] bg-[color-mix(in_srgb,var(--school-accent,#d99a4e)_10%,transparent)]'
                   : 'border-white/10 bg-white/3 hover:bg-white/5'
               )}
             >
-              <s.icon className={cn('w-5 h-5 mx-auto mb-1.5', sourceType === s.id ? 'text-[var(--school-accent,#D4AF37)]' : 'text-gray-400')} />
+              <s.icon className={cn('w-5 h-5 mx-auto mb-1.5', sourceType === s.id ? 'text-[var(--school-accent,#d99a4e)]' : 'text-gray-400')} />
               <p className="text-xs font-medium text-white">{s.label}</p>
             </button>
           ))}
@@ -567,7 +583,7 @@ export default function StudioAdCreatorPage() {
                   className={cn(
                     'w-full text-left p-3 rounded-xl border transition-all',
                     selectedModuleId === mod.id
-                      ? 'border-[color:var(--school-accent,#D4AF37)] bg-[color-mix(in_srgb,var(--school-accent,#D4AF37)_8%,transparent)]'
+                      ? 'border-[color:var(--school-accent,#d99a4e)] bg-[color-mix(in_srgb,var(--school-accent,#d99a4e)_8%,transparent)]'
                       : 'border-white/10 bg-white/3 hover:bg-white/5'
                   )}
                 >
@@ -589,7 +605,7 @@ export default function StudioAdCreatorPage() {
             placeholder="https://... (URL vidéo, enregistrement live)"
             value={sourceDescription}
             onChange={(e) => setSourceDescription(e.target.value)}
-            className="w-full bg-[#2b2a27] border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder-gray-600 focus:outline-none focus:border-[color:var(--school-accent,#D4AF37)]"
+            className="w-full bg-[#2b2a27] border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder-gray-600 focus:outline-none focus:border-[color:var(--school-accent,#d99a4e)]"
           />
           {/* Panneau (découpe du clip) → #30302e, la surface « panneau » de la charte. */}
           <div className="rounded-xl border border-white/10 bg-[#30302e] p-4 space-y-3">
@@ -600,13 +616,13 @@ export default function StudioAdCreatorPage() {
             <div className="space-y-2">
               <div className="flex items-center gap-3">
                 <span className="text-xs text-gray-400 w-12">Début</span>
-                <input type="range" min={0} max={300} value={clipStart} onChange={(e) => setClipStart(Number(e.target.value))} className="flex-1 accent-[var(--school-accent,#D4AF37)]" />
-                <span className="text-xs text-[var(--school-accent,#D4AF37)] w-10 text-right">{clipStart}s</span>
+                <input type="range" min={0} max={300} value={clipStart} onChange={(e) => setClipStart(Number(e.target.value))} className="flex-1 accent-[var(--school-accent,#d99a4e)]" />
+                <span className="text-xs text-[var(--school-accent,#d99a4e)] w-10 text-right">{clipStart}s</span>
               </div>
               <div className="flex items-center gap-3">
                 <span className="text-xs text-gray-400 w-12">Fin</span>
-                <input type="range" min={0} max={300} value={clipEnd} onChange={(e) => setClipEnd(Math.max(clipStart + 5, Number(e.target.value)))} className="flex-1 accent-[var(--school-accent,#D4AF37)]" />
-                <span className="text-xs text-[var(--school-accent,#D4AF37)] w-10 text-right">{clipEnd}s</span>
+                <input type="range" min={0} max={300} value={clipEnd} onChange={(e) => setClipEnd(Math.max(clipStart + 5, Number(e.target.value)))} className="flex-1 accent-[var(--school-accent,#d99a4e)]" />
+                <span className="text-xs text-[var(--school-accent,#d99a4e)] w-10 text-right">{clipEnd}s</span>
               </div>
               <p className="text-[10px] text-gray-500 text-center">Durée sélectionnée : {clipEnd - clipStart} secondes</p>
             </div>
@@ -622,7 +638,7 @@ export default function StudioAdCreatorPage() {
             placeholder="Ex : Maîtrisez la symbolique du cycle Initié"
             value={sourceTitle}
             onChange={(e) => setSourceTitle(e.target.value)}
-            className="w-full bg-[#2b2a27] border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder-gray-600 focus:outline-none focus:border-[color:var(--school-accent,#D4AF37)]"
+            className="w-full bg-[#2b2a27] border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder-gray-600 focus:outline-none focus:border-[color:var(--school-accent,#d99a4e)]"
           />
         </div>
         <div>
@@ -632,7 +648,7 @@ export default function StudioAdCreatorPage() {
             placeholder="Décrivez le contenu, la valeur apportée, le public cible..."
             value={sourceDescription}
             onChange={(e) => setSourceDescription(e.target.value)}
-            className="w-full bg-[#2b2a27] border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder-gray-600 focus:outline-none focus:border-[color:var(--school-accent,#D4AF37)] resize-none"
+            className="w-full bg-[#2b2a27] border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder-gray-600 focus:outline-none focus:border-[color:var(--school-accent,#d99a4e)] resize-none"
           />
         </div>
       </div>
@@ -650,10 +666,10 @@ export default function StudioAdCreatorPage() {
           type="button"
           onClick={generateAdCopy}
           disabled={generating}
-          className="inline-flex items-center gap-2 px-4 py-2 rounded-xl border text-[var(--school-accent,#D4AF37)] text-sm hover:bg-white/[0.06] transition-all disabled:opacity-50"
+          className="inline-flex items-center gap-2 px-4 py-2 rounded-xl border text-[var(--school-accent,#d99a4e)] text-sm hover:bg-white/[0.06] transition-all disabled:opacity-50"
           style={{
-            backgroundColor: 'color-mix(in srgb, var(--school-accent, #D4AF37) 15%, transparent)',
-            borderColor: 'color-mix(in srgb, var(--school-accent, #D4AF37) 30%, transparent)',
+            backgroundColor: 'color-mix(in srgb, var(--school-accent, #d99a4e) 15%, transparent)',
+            borderColor: 'color-mix(in srgb, var(--school-accent, #d99a4e) 30%, transparent)',
           }}
         >
           {generating ? <Loader2 className="w-4 h-4 animate-spin" /> : <Sparkles className="w-4 h-4" />}
@@ -665,11 +681,11 @@ export default function StudioAdCreatorPage() {
         <div
           className="rounded-xl border px-4 py-3"
           style={{
-            backgroundColor: 'color-mix(in srgb, var(--school-accent, #D4AF37) 8%, transparent)',
-            borderColor: 'color-mix(in srgb, var(--school-accent, #D4AF37) 20%, transparent)',
+            backgroundColor: 'color-mix(in srgb, var(--school-accent, #d99a4e) 8%, transparent)',
+            borderColor: 'color-mix(in srgb, var(--school-accent, #d99a4e) 20%, transparent)',
           }}
         >
-          <p className="text-xs text-[var(--school-accent,#D4AF37)] uppercase tracking-wider mb-1">Accroche</p>
+          <p className="text-xs text-[var(--school-accent,#d99a4e)] uppercase tracking-wider mb-1">Accroche</p>
           <p className="text-sm text-white font-medium italic">"{adContent.hook}"</p>
         </div>
       )}
@@ -684,7 +700,7 @@ export default function StudioAdCreatorPage() {
               value={displayContent.headline}
               onChange={(e) => setAdContent((p) => ({ ...p, headline: e.target.value }))}
               placeholder="Titre de la publicité"
-              className="w-full bg-[#2b2a27] border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder-gray-600 focus:outline-none focus:border-[color:var(--school-accent,#D4AF37)]"
+              className="w-full bg-[#2b2a27] border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder-gray-600 focus:outline-none focus:border-[color:var(--school-accent,#d99a4e)]"
             />
           </div>
           <div>
@@ -694,7 +710,7 @@ export default function StudioAdCreatorPage() {
               value={displayContent.description}
               onChange={(e) => setAdContent((p) => ({ ...p, description: e.target.value }))}
               placeholder="Description de la publicité"
-              className="w-full bg-[#2b2a27] border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder-gray-600 focus:outline-none focus:border-[color:var(--school-accent,#D4AF37)] resize-none"
+              className="w-full bg-[#2b2a27] border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder-gray-600 focus:outline-none focus:border-[color:var(--school-accent,#d99a4e)] resize-none"
             />
           </div>
           <div className="grid grid-cols-2 gap-2">
@@ -705,7 +721,7 @@ export default function StudioAdCreatorPage() {
                 value={displayContent.cta}
                 onChange={(e) => setAdContent((p) => ({ ...p, cta: e.target.value }))}
                 placeholder="Commencer maintenant"
-                className="w-full bg-[#2b2a27] border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder-gray-600 focus:outline-none focus:border-[color:var(--school-accent,#D4AF37)]"
+                className="w-full bg-[#2b2a27] border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder-gray-600 focus:outline-none focus:border-[color:var(--school-accent,#d99a4e)]"
               />
             </div>
             <div>
@@ -715,7 +731,7 @@ export default function StudioAdCreatorPage() {
                 value={(displayContent.hashtags || []).join(', ')}
                 onChange={(e) => setAdContent((p) => ({ ...p, hashtags: e.target.value.split(',').map((h) => h.trim()).filter(Boolean) }))}
                 placeholder="#prorascience, #formation"
-                className="w-full bg-[#2b2a27] border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder-gray-600 focus:outline-none focus:border-[color:var(--school-accent,#D4AF37)]"
+                className="w-full bg-[#2b2a27] border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder-gray-600 focus:outline-none focus:border-[color:var(--school-accent,#d99a4e)]"
               />
             </div>
           </div>
@@ -729,7 +745,7 @@ export default function StudioAdCreatorPage() {
                     key={i}
                     type="button"
                     onClick={() => setActiveVariation(activeVariation === i ? null : i)}
-                    className={cn('w-full text-left p-2 rounded-lg border text-xs transition-all', activeVariation === i ? 'border-[color:var(--school-accent,#D4AF37)] bg-[color-mix(in_srgb,var(--school-accent,#D4AF37)_8%,transparent)] text-white' : 'border-white/10 bg-white/3 text-gray-400 hover:text-white')}
+                    className={cn('w-full text-left p-2 rounded-lg border text-xs transition-all', activeVariation === i ? 'border-[color:var(--school-accent,#d99a4e)] bg-[color-mix(in_srgb,var(--school-accent,#d99a4e)_8%,transparent)] text-white' : 'border-white/10 bg-white/3 text-gray-400 hover:text-white')}
                   >
                     <span className="font-medium">Variante {String.fromCharCode(65 + i)}</span> — {v.headline?.slice(0, 40)}...
                   </button>
@@ -772,7 +788,7 @@ export default function StudioAdCreatorPage() {
           type="button"
           onClick={() => saveCreative('ready')}
           disabled={saving || !adContent.headline}
-          className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-[var(--school-accent,#D4AF37)] text-black text-sm font-semibold hover:opacity-90 transition-all disabled:opacity-50"
+          className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-[var(--school-accent,#d99a4e)] text-black text-sm font-semibold hover:opacity-90 transition-all disabled:opacity-50"
         >
           {saving && <Loader2 className="w-4 h-4 animate-spin" />}
           <Zap className="w-4 h-4" />
@@ -782,7 +798,9 @@ export default function StudioAdCreatorPage() {
           type="button"
           onClick={() => saveCreative('published')}
           disabled={saving || !adContent.headline}
-          className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-emerald-600 text-white text-sm font-semibold hover:bg-emerald-500 transition-all disabled:opacity-50"
+          /* Publier = action confirmée → olive PROFOND : l'encre blanche y tient
+             5,7:1 (l'émeraude d'origine ne faisait que 3,8:1). */
+          className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-[#47713f] text-white text-sm font-semibold hover:bg-[#527f49] transition-all disabled:opacity-50"
         >
           {saving && <Loader2 className="w-4 h-4 animate-spin" />}
           <Share2 className="w-4 h-4" />
@@ -828,7 +846,7 @@ export default function StudioAdCreatorPage() {
             'Testez 2-3 variantes pour identifier la plus performante',
           ].map((tip, i) => (
             <li key={i} className="flex gap-2 text-xs text-gray-400">
-              <Sparkles className="mt-0.5 h-3 w-3 shrink-0 text-[var(--school-accent,#D4AF37)]" />
+              <Sparkles className="mt-0.5 h-3 w-3 shrink-0 text-[var(--school-accent,#d99a4e)]" />
               {tip}
             </li>
           ))}
@@ -878,7 +896,7 @@ export default function StudioAdCreatorPage() {
         className="flex shrink-0 items-center justify-between gap-4 border-b px-4 py-4 backdrop-blur-xl sm:px-6"
         style={{
           backgroundColor: 'color-mix(in srgb, var(--school-background, #0a0908) 95%, transparent)',
-          borderColor: 'color-mix(in srgb, var(--school-accent, #D4AF37) 12%, transparent)',
+          borderColor: 'color-mix(in srgb, var(--school-accent, #d99a4e) 12%, transparent)',
         }}
       >
         <div className="flex items-center gap-3">
@@ -887,7 +905,7 @@ export default function StudioAdCreatorPage() {
           </Link>
           <div className="min-w-0">
             <h1 className="flex items-center gap-2 text-base font-semibold tracking-tight text-white">
-              <Megaphone className="h-5 w-5 shrink-0 text-[var(--school-accent,#D4AF37)]" />
+              <Megaphone className="h-5 w-5 shrink-0 text-[var(--school-accent,#d99a4e)]" />
               <span className="truncate">Ad Creator Studio</span>
             </h1>
             <p className="text-xs text-gray-400">Créez et publiez des publicités IA multi-plateformes</p>
@@ -895,8 +913,8 @@ export default function StudioAdCreatorPage() {
         </div>
         <Link
           to="/liri/crm?tab=analytics"
-          className="text-xs text-[var(--school-accent,#D4AF37)] border rounded-lg px-3 py-1.5 hover:bg-white/[0.06] transition-colors flex items-center gap-1.5"
-          style={{ borderColor: 'color-mix(in srgb, var(--school-accent, #D4AF37) 25%, transparent)' }}
+          className="text-xs text-[var(--school-accent,#d99a4e)] border rounded-lg px-3 py-1.5 hover:bg-white/[0.06] transition-colors flex items-center gap-1.5"
+          style={{ borderColor: 'color-mix(in srgb, var(--school-accent, #d99a4e) 25%, transparent)' }}
         >
           <BarChart3 className="w-3.5 h-3.5" /> Analytics
         </Link>
@@ -913,7 +931,7 @@ export default function StudioAdCreatorPage() {
               className={cn(
                 'flex items-center gap-2 px-4 py-3 text-sm font-medium border-b-2 transition-all whitespace-nowrap',
                 activeTab === t.id
-                  ? 'border-[var(--school-accent,#D4AF37)] text-[var(--school-accent,#D4AF37)]'
+                  ? 'border-[var(--school-accent,#d99a4e)] text-[var(--school-accent,#d99a4e)]'
                   : 'border-transparent text-gray-400 hover:text-white hover:border-white/20'
               )}
             >
@@ -921,8 +939,8 @@ export default function StudioAdCreatorPage() {
               {t.label}
               {t.badge ? (
                 <span
-                  className="ml-1 text-[10px] text-[var(--school-accent,#D4AF37)] rounded-full px-1.5 py-0.5"
-                  style={{ backgroundColor: 'color-mix(in srgb, var(--school-accent, #D4AF37) 20%, transparent)' }}
+                  className="ml-1 text-[10px] text-[var(--school-accent,#d99a4e)] rounded-full px-1.5 py-0.5"
+                  style={{ backgroundColor: 'color-mix(in srgb, var(--school-accent, #d99a4e) 20%, transparent)' }}
                 >
                   {t.badge}
                 </span>
@@ -935,7 +953,7 @@ export default function StudioAdCreatorPage() {
       <Dialog open={recapOpen} onOpenChange={setRecapOpen}>
         <DialogContent
           className="max-h-[88dvh] max-w-md overflow-y-auto border bg-[#0a0908] text-white sm:rounded-2xl"
-          style={{ borderColor: 'color-mix(in srgb, var(--school-accent, #D4AF37) 25%, transparent)' }}
+          style={{ borderColor: 'color-mix(in srgb, var(--school-accent, #d99a4e) 25%, transparent)' }}
         >
           <DialogHeader>
             <DialogTitle className="font-display text-left text-lg text-white">Récap &amp; conseils</DialogTitle>
@@ -958,9 +976,9 @@ export default function StudioAdCreatorPage() {
                     onClick={() => setRecapOpen(true)}
                     className="inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 font-display text-[11px] font-semibold transition-colors hover:bg-white/[0.06] xl:hidden"
                     style={{
-                      backgroundColor: 'color-mix(in srgb, var(--school-accent, #D4AF37) 10%, transparent)',
-                      borderColor: 'color-mix(in srgb, var(--school-accent, #D4AF37) 30%, transparent)',
-                      color: 'color-mix(in srgb, var(--school-accent, #D4AF37) 35%, #ffffff)',
+                      backgroundColor: 'color-mix(in srgb, var(--school-accent, #d99a4e) 10%, transparent)',
+                      borderColor: 'color-mix(in srgb, var(--school-accent, #d99a4e) 30%, transparent)',
+                      color: 'color-mix(in srgb, var(--school-accent, #d99a4e) 35%, #ffffff)',
                     }}
                   >
                     <ClipboardList className="h-3.5 w-3.5" />
@@ -986,7 +1004,7 @@ export default function StudioAdCreatorPage() {
                         onClick={() => setAdStep1Pane(i)}
                         className={cn(
                           'h-1.5 rounded-full transition-all',
-                          adStep1Pane === i ? 'w-6 bg-[var(--school-accent,#D4AF37)]' : 'w-1.5 bg-white/20 hover:bg-white/35',
+                          adStep1Pane === i ? 'w-6 bg-[var(--school-accent,#d99a4e)]' : 'w-1.5 bg-white/20 hover:bg-white/35',
                         )}
                       />
                     ))}
@@ -1026,7 +1044,7 @@ export default function StudioAdCreatorPage() {
                   <button
                     type="button"
                     onClick={goNextCreate}
-                    className="inline-flex items-center gap-2 rounded-xl bg-[var(--school-accent,#D4AF37)] px-5 py-2 text-sm font-semibold text-black transition-all hover:opacity-90"
+                    className="inline-flex items-center gap-2 rounded-xl bg-[var(--school-accent,#d99a4e)] px-5 py-2 text-sm font-semibold text-black transition-all hover:opacity-90"
                   >
                     {step === 1 && adStep1Pane === 0 ? 'Écran suivant' : 'Suivant'}{' '}
                     <ArrowRight className="h-4 w-4" />
@@ -1049,7 +1067,7 @@ export default function StudioAdCreatorPage() {
                 <h2 className="text-lg font-bold text-white">Canaux de vente & publicité</h2>
                 <p className="text-sm text-gray-400 mt-1">Connectez vos plateformes pour automatiser la diffusion.</p>
               </div>
-              {loadingChannels && <Loader2 className="w-5 h-5 animate-spin text-[var(--school-accent,#D4AF37)]" />}
+              {loadingChannels && <Loader2 className="w-5 h-5 animate-spin text-[var(--school-accent,#d99a4e)]" />}
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -1069,10 +1087,10 @@ export default function StudioAdCreatorPage() {
                 <BarChart3 className="w-4 h-4 text-yellow-400" />
                 Installation Google Analytics 4
               </h3>
-              <p className="text-xs text-gray-400 mb-3">Ajoutez ce snippet dans le <code className="bg-black/30 px-1 rounded text-[var(--school-accent,#D4AF37)]">&lt;head&gt;</code> de votre site après avoir configuré GA4 ci-dessus.</p>
+              <p className="text-xs text-gray-400 mb-3">Ajoutez ce snippet dans le <code className="bg-black/30 px-1 rounded text-[var(--school-accent,#d99a4e)]">&lt;head&gt;</code> de votre site après avoir configuré GA4 ci-dessus.</p>
               {/* Bloc de code : surface sombre #1f1e1c (cf. --rail) pour détacher le snippet. */}
               <div className="bg-[#1f1e1c] rounded-xl border border-white/8 p-4">
-                <code className="text-xs text-green-300 block whitespace-pre">{`<!-- Google tag (gtag.js) -->
+                <code className="text-xs text-[#9cc48a] block whitespace-pre">{`<!-- Google tag (gtag.js) -->
 <script async src="https://www.googletagmanager.com/gtag/js?id=G-XXXXXXXXXX"></script>
 <script>
   window.dataLayer = window.dataLayer || [];
@@ -1081,7 +1099,7 @@ export default function StudioAdCreatorPage() {
   gtag('config', 'G-XXXXXXXXXX');
 </script>`}</code>
               </div>
-              <p className="text-xs text-gray-500 mt-2">Remplacez <code className="text-[var(--school-accent,#D4AF37)]">G-XXXXXXXXXX</code> par votre Measurement ID ci-dessus.</p>
+              <p className="text-xs text-gray-500 mt-2">Remplacez <code className="text-[var(--school-accent,#d99a4e)]">G-XXXXXXXXXX</code> par votre Measurement ID ci-dessus.</p>
             </div>
           </div>
         )}
@@ -1098,19 +1116,19 @@ export default function StudioAdCreatorPage() {
                 <button type="button" onClick={fetchHistory} className="p-2 rounded-xl border border-white/10 text-gray-400 hover:text-white transition-colors">
                   <RefreshCw className="w-4 h-4" />
                 </button>
-                <button type="button" onClick={() => setActiveTab('create')} className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-[var(--school-accent,#D4AF37)] text-black text-sm font-semibold hover:opacity-90 transition-all">
+                <button type="button" onClick={() => setActiveTab('create')} className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-[var(--school-accent,#d99a4e)] text-black text-sm font-semibold hover:opacity-90 transition-all">
                   <Plus className="w-4 h-4" /> Nouvelle pub
                 </button>
               </div>
             </div>
 
             {loadingHistory ? (
-              <div className="flex items-center gap-3 text-gray-400 py-8"><Loader2 className="w-5 h-5 animate-spin text-[var(--school-accent,#D4AF37)]" /> Chargement...</div>
+              <div className="flex items-center gap-3 text-gray-400 py-8"><Loader2 className="w-5 h-5 animate-spin text-[var(--school-accent,#d99a4e)]" /> Chargement...</div>
             ) : creatives.length === 0 ? (
               <div className="text-center py-16 border border-dashed border-white/15 rounded-2xl">
                 <Megaphone className="w-12 h-12 text-gray-600 mx-auto mb-3" />
                 <p className="text-gray-400 text-sm">Aucune publicité créée pour l'instant.</p>
-                <button type="button" onClick={() => setActiveTab('create')} className="mt-4 px-5 py-2 rounded-xl bg-[var(--school-accent,#D4AF37)] text-black text-sm font-semibold hover:opacity-90 transition-all">
+                <button type="button" onClick={() => setActiveTab('create')} className="mt-4 px-5 py-2 rounded-xl bg-[var(--school-accent,#d99a4e)] text-black text-sm font-semibold hover:opacity-90 transition-all">
                   Créer ma première pub
                 </button>
               </div>
@@ -1118,7 +1136,9 @@ export default function StudioAdCreatorPage() {
               <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
                 {creatives.map((c) => {
                   const p = getPlatform(c.platform);
-                  const statusColors = { draft: 'text-gray-400 bg-white/5 border-white/10', ready: 'text-blue-300 bg-blue-500/10 border-blue-500/25', published: 'text-emerald-300 bg-emerald-500/10 border-emerald-500/25', paused: 'text-amber-300 bg-amber-500/10 border-amber-500/25', archived: 'text-gray-500 bg-white/3 border-white/8' };
+                  /* 5 statuts, 5 teintes toujours séparables mais toutes chaudes :
+                     brouillon (gris) · prête (corail) · publiée (olive) · en pause (ambre) · archivée (gris pâle). */
+                  const statusColors = { draft: 'text-gray-400 bg-white/5 border-white/10', ready: 'text-[#f0c4b3] bg-[#d97757]/10 border-[#d97757]/30', published: 'text-[#9cc48a] bg-[#5a8f52]/10 border-[#5a8f52]/30', paused: 'text-amber-300 bg-amber-500/10 border-amber-500/25', archived: 'text-gray-500 bg-white/3 border-white/8' };
                   return (
                     <div key={c.id} className="premium-panel p-4 space-y-3">
                       <div className="flex items-start justify-between gap-2">
@@ -1138,7 +1158,7 @@ export default function StudioAdCreatorPage() {
                       </div>
                       <div className="flex items-center justify-between text-[10px] text-gray-500">
                         <span className="flex items-center gap-1"><Clock className="w-3 h-3" />{new Date(c.created_at).toLocaleDateString('fr-FR')}</span>
-                        {c.published_at && <span className="text-emerald-400">Publiée le {new Date(c.published_at).toLocaleDateString('fr-FR')}</span>}
+                        {c.published_at && <span className="text-[#9cc48a]">Publiée le {new Date(c.published_at).toLocaleDateString('fr-FR')}</span>}
                       </div>
                     </div>
                   );

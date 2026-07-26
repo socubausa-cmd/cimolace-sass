@@ -291,19 +291,23 @@ function DebateModeBanner({ debate, liveVoteCounts }) {
 
   return (
     <div className="absolute top-14 left-1/2 -translate-x-1/2 z-[52] w-[min(94vw,780px)] pointer-events-none">
-      <div className="rounded-2xl border border-rose-500/35 bg-[#1a0f14]/92 backdrop-blur-xl px-4 py-2.5 shadow-lg shadow-black/40">
+      <div className="rounded-2xl border border-rose-500/35 bg-[#1a0f14]/90 backdrop-blur-xl px-4 py-2.5 shadow-lg shadow-black/40">
         <div className="flex flex-wrap items-center justify-center gap-x-3 gap-y-1.5 text-center">
           <div className="flex items-center gap-2">
             <Swords className="w-4 h-4 text-rose-400 shrink-0" />
             <span className="text-[10px] uppercase tracking-widest text-rose-300/90 font-semibold">DebateCore</span>
           </div>
           <span className="text-sm font-medium text-white/90 truncate max-w-[48vw]">{debate.title}</span>
+          {/* Pastille de PHASE — l'ancien cyan portait du sens (« on n'est pas en Match ») :
+              il devient l'or #e6cc92 de la charte, qui reste la teinte la plus « signal »
+              du bandeau sans être froide. 12,0:1 sur le fond #1a0f14 du bandeau. */}
           {debate.status && debate.status !== 'live' ? (
-            <span className="text-[10px] text-cyan-200/85 border border-cyan-500/30 rounded-full px-2 py-0.5">
+            <span className="text-[10px] text-[#e6cc92] border border-[#e6cc92]/35 rounded-full px-2 py-0.5">
               {DEBATE_STATUS_LABELS[debate.status] || debate.status}
             </span>
           ) : null}
-          <span className="text-[11px] text-sky-200/85 font-medium tabular-nums">
+          {/* Ligne round / parole : sable doré #e3aa6b (9,1:1) — distincte de l'or de la phase. */}
+          <span className="text-[11px] text-[#e3aa6b] font-medium tabular-nums">
             Round {roundIdx}/{debate.roundCount}
             {roundTitle ? ` · ${roundTitle}` : ''} · {floorLabel}
           </span>
@@ -331,8 +335,10 @@ function DebateModeBanner({ debate, liveVoteCounts }) {
               {blended.sumA.toFixed(1)} · B {blended.sumB.toFixed(1)}
             </span>
           ) : null}
+          {/* Compteur de votes : corail clair #eba98d (9,4:1) — 4ᵉ teinte chaude du bandeau,
+              toujours séparable de l'or (phase), du sable (round) et de l'ambre (score IA). */}
           {votingOpen && liveVoteCounts ? (
-            <span className="text-[11px] text-violet-200/90 tabular-nums">
+            <span className="text-[11px] text-[#eba98d] tabular-nums">
               Votes · A {liveVoteCounts.a} · = {liveVoteCounts.tie} · B {liveVoteCounts.b}
               {liveVoteCounts.total > 0 ? ` (${liveVoteCounts.total})` : ''}
             </span>
@@ -349,7 +355,7 @@ function DebateModeBanner({ debate, liveVoteCounts }) {
             </p>
           ) : null}
           {phaseHint ? (
-            <p className="w-full text-center text-[10px] text-sky-200/70 leading-snug px-2 border-t border-white/10 pt-1.5 mt-0.5">
+            <p className="w-full text-center text-[10px] text-[#e3aa6b]/85 leading-snug px-2 border-t border-white/10 pt-1.5 mt-0.5">
               {phaseHint}
             </p>
           ) : null}
@@ -457,10 +463,16 @@ function DebateModeratorPanel({
           <p className="text-[10px] uppercase tracking-wide text-white/40">Phase débat</p>
           <p className="text-[10px] text-white/45">
             Actuel :{' '}
-            <span className="text-cyan-200/90">
+            <span className="text-[#e6cc92]">
               {DEBATE_STATUS_LABELS[debate.status] || debate.status || '—'}
             </span>
           </p>
+          {/* Code couleur des bascules du pilotage — trois états, trois CHAUDS distincts,
+              jamais deux allumés en même temps dans une paire :
+                sélectionné / activé  → corail #d97757 (charte : le corail = l'action)
+                désactivé             → rose (inchangé, déjà chaud)
+                juge IA               → ambre (inchangé, déjà chaud)
+              L'ancien cyan de l'état sélectionné disparaît sans perte d'information. */}
           <div className="flex flex-wrap gap-1.5">
             {DEBATE_ARENA_PHASES.map((ph) => (
               <button
@@ -471,7 +483,7 @@ function DebateModeratorPanel({
                 className={cn(
                   'h-7 px-2 rounded-lg text-[10px] font-medium border transition-colors disabled:opacity-40',
                   debate.status === ph.value
-                    ? 'border-cyan-400/45 bg-cyan-500/20 text-cyan-100'
+                    ? 'border-[#d97757]/50 bg-[#d97757]/20 text-[#f4c0aa]'
                     : 'border-white/12 bg-white/[0.04] text-white/75 hover:bg-white/10',
                 )}
               >
@@ -488,7 +500,7 @@ function DebateModeratorPanel({
               className={cn(
                 'h-7 px-2 rounded-lg text-[10px] font-medium border transition-colors disabled:opacity-40',
                 debate.neuronqEnabled !== false
-                  ? 'border-cyan-400/45 bg-cyan-500/20 text-cyan-100'
+                  ? 'border-[#d97757]/50 bg-[#d97757]/20 text-[#f4c0aa]'
                   : 'border-white/12 bg-white/[0.04] text-white/75 hover:bg-white/10',
               )}
             >
@@ -560,6 +572,9 @@ function DebateModeratorPanel({
             </div>
           ) : null}
           <p className="text-[10px] uppercase tracking-wide text-white/40">Parole</p>
+          {/* Camp A / Camp B : la couleur EST l'information (qui a la parole). L'opposition
+              rose ↔ bleu ciel devient rose ↔ or #e6cc92 — deux chaudes franchement
+              séparables (rouge rosé vs jaune doré), y compris vues de loin en projection. */}
           <div className="flex flex-wrap gap-2">
             <button
               type="button"
@@ -581,7 +596,7 @@ function DebateModeratorPanel({
               className={cn(
                 'h-8 px-3 rounded-lg text-xs font-medium border transition-colors disabled:opacity-40',
                 debate.arenaActiveSide === 'B'
-                  ? 'bg-sky-600/45 border-sky-400/45 text-white'
+                  ? 'bg-[#e6cc92]/30 border-[#e6cc92]/55 text-white'
                   : 'bg-white/5 border-white/15 text-white/80 hover:bg-white/10',
               )}
             >
@@ -646,7 +661,9 @@ function DebateModeratorPanel({
               type="button"
               disabled={busy || voting}
               onClick={() => void onOpenVoting?.()}
-              className="h-8 px-3 rounded-lg bg-violet-600/70 hover:bg-violet-600 text-xs font-medium disabled:opacity-40"
+              /* Action « Ouvrir vote » — terre cuite pleine (et non le corail clair) :
+                 le blanc du libellé y tient 4,8:1, ce que le violet plein ne donnait pas. */
+              className="h-8 px-3 rounded-lg bg-[#b8543a] hover:bg-[#c9603f] text-xs font-medium text-white disabled:opacity-40"
             >
               Ouvrir vote
             </button>
@@ -660,7 +677,7 @@ function DebateModeratorPanel({
             </button>
           </div>
           {voting && liveVoteCounts ? (
-            <p className="text-[10px] text-violet-200/85 tabular-nums">
+            <p className="text-[10px] text-[#eba98d] tabular-nums">
               A {liveVoteCounts.a} · = {liveVoteCounts.tie} · B {liveVoteCounts.b}
               {liveVoteCounts.total > 0 ? ` · ${liveVoteCounts.total} voix` : ''}
             </p>
@@ -710,7 +727,8 @@ function LiveStatusBadge({ phase, duration, participantCount, recording }) {
     height: 22,
     padding: '0 10px',
     borderRadius: proRadii.sm,
-    background: 'rgba(18,18,22,0.88)',
+    // rgba(18,18,22) tirait sur le bleu ; #1f1e1c = l'aplat sombre chaud de la charte.
+    background: 'rgba(31,30,28,0.88)',
     border: `1px solid ${proColors.border}`,
     backdropFilter: 'blur(10px)',
     fontFamily: proType.ui,
@@ -780,9 +798,15 @@ function PhaseScreen({ phase, error, sessionId, isHost, recoveryAsHost, joinCode
   const { toast } = useToast();
   const { branding, cssVars } = useTenantBranding();
   const studioRecovery = recoveryAsHost ?? isHost;
+  /**
+   * Écrans de phase (préparation / erreur / fin).
+   * Le REPLI seul change : l'ancien bleu nuit devient #1f1e1c, l'aplat sombre chaud de
+   * la charte. On garde la variable de tenant en tête, donc aucun branding n'est touché ;
+   * et on garde l'obscurité — c'est une scène de diffusion, pas une page de travail.
+   */
   const phaseScreenStyle = {
     ...cssVars,
-    background: 'var(--school-background, #05070c)',
+    background: 'var(--school-background, #1f1e1c)',
     fontFamily: 'var(--school-font-family, Inter, sans-serif)',
   };
 
@@ -800,20 +824,23 @@ function PhaseScreen({ phase, error, sessionId, isHost, recoveryAsHost, joinCode
         style={phaseScreenStyle}
       >
         <div className="relative flex flex-col items-center gap-3 py-1">
+          {/* NOTE couleur — dans tout ce fichier, `var(--school-accent, …)` a désormais pour
+              REPLI l'or #e6cc92 de la charte, et non plus l'or banni d'avant. Le repli ne sert
+              que si le tenant n'a pas défini son accent : le branding client est intact. */}
           {/* Cercle d'attente : centré sur le bloc logo + titres (pas ancré en bas) */}
           <div
             className="pointer-events-none absolute left-1/2 top-1/2 z-0 h-[min(24rem,88vw)] w-[min(24rem,88vw)] -translate-x-1/2 -translate-y-1/2 rounded-full border animate-ping [animation-duration:2.25s]"
-            style={{ borderColor: 'color-mix(in srgb, var(--school-accent, #D4AF37) 18%, transparent)' }}
+            style={{ borderColor: 'color-mix(in srgb, var(--school-accent, #e6cc92) 18%, transparent)' }}
             aria-hidden
           />
           <motion.div
             initial={{ opacity: 0, scale: 0.94, y: 6 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             transition={{ duration: 0.45, ease: [0.22, 1, 0.36, 1] }}
-            className="relative z-10 h-16 w-16 rounded-2xl border bg-[#0b1220]/85 p-2"
+            className="relative z-10 h-16 w-16 rounded-2xl border bg-[#1f1e1c]/85 p-2"
             style={{
-              borderColor: 'color-mix(in srgb, var(--school-accent, #D4AF37) 30%, transparent)',
-              boxShadow: '0 0 40px -20px color-mix(in srgb, var(--school-accent, #D4AF37) 55%, transparent)',
+              borderColor: 'color-mix(in srgb, var(--school-accent, #e6cc92) 30%, transparent)',
+              boxShadow: '0 0 40px -20px color-mix(in srgb, var(--school-accent, #e6cc92) 55%, transparent)',
             }}
           >
             <img
@@ -824,32 +851,34 @@ function PhaseScreen({ phase, error, sessionId, isHost, recoveryAsHost, joinCode
           </motion.div>
           <div className="relative z-10 text-center">
             <div className="flex items-center justify-center gap-2">
-              <LiriWordmark size="compact" className="text-[var(--school-accent,#D4AF37)] opacity-85" />
+              <LiriWordmark size="compact" className="text-[var(--school-accent,#e6cc92)] opacity-85" />
               <LiriProductBadge product="studio" size="xs" />
             </div>
-            <p className="text-[11px] text-white/45">Immersive Live Studio</p>
+            {/* Opacités remontées sur tout cet écran : le fond a changé, et .35–.45
+                plafonnaient sous 4,5:1 (3,2 à 4,4). .55/.58 → 5,9:1 / 6,4:1. */}
+            <p className="text-[11px] text-white/55">Immersive Live Studio</p>
           </div>
         </div>
         <div className="relative">
           <div
             className="w-14 h-14 rounded-full border-2 flex items-center justify-center"
-            style={{ borderColor: 'color-mix(in srgb, var(--school-accent, #D4AF37) 20%, transparent)' }}
+            style={{ borderColor: 'color-mix(in srgb, var(--school-accent, #e6cc92) 20%, transparent)' }}
           >
-            <Loader2 className="w-6 h-6 text-[var(--school-accent,#D4AF37)] animate-spin" />
+            <Loader2 className="w-6 h-6 text-[var(--school-accent,#e6cc92)] animate-spin" />
           </div>
         </div>
         <div className="text-center -mt-1">
           <p className="text-white font-semibold text-lg">
             {phase === PHASE.LOADING ? 'Préparation du live…' : 'Connexion à la salle…'}
           </p>
-          <p className="mt-1 text-sm text-white/40">
+          <p className="mt-1 text-sm text-white/58">
             {phase === PHASE.LOADING
               ? 'Chargement de la session'
               : 'Initialisation de la connexion vidéo'}
           </p>
           {joinCode ? (
             <div className="mt-4 flex flex-col items-center gap-2 px-4">
-              <p className="text-[10px] uppercase tracking-[0.14em] text-white/35">Code mobile LIRI</p>
+              <p className="text-[10px] uppercase tracking-[0.14em] text-white/58">Code mobile LIRI</p>
               <button
                 type="button"
                 onClick={() => {
@@ -860,15 +889,15 @@ function PhaseScreen({ phase, error, sessionId, isHost, recoveryAsHost, joinCode
                 }}
                 className="inline-flex items-center gap-2 rounded-xl border px-4 py-2 font-mono text-sm font-semibold tracking-wider transition-colors hover:bg-white/[0.06]"
                 style={{
-                  backgroundColor: 'color-mix(in srgb, var(--school-accent, #D4AF37) 10%, transparent)',
-                  borderColor: 'color-mix(in srgb, var(--school-accent, #D4AF37) 35%, transparent)',
-                  color: 'color-mix(in srgb, var(--school-accent, #D4AF37) 35%, #ffffff)',
+                  backgroundColor: 'color-mix(in srgb, var(--school-accent, #e6cc92) 10%, transparent)',
+                  borderColor: 'color-mix(in srgb, var(--school-accent, #e6cc92) 35%, transparent)',
+                  color: 'color-mix(in srgb, var(--school-accent, #e6cc92) 35%, #ffffff)',
                 }}
               >
                 <Copy className="h-4 w-4 shrink-0 opacity-80" aria-hidden />
                 {formatJoinCodeDisplay(joinCode)}
               </button>
-              <p className="max-w-xs text-center text-[11px] text-white/35">
+              <p className="max-w-xs text-center text-[11px] text-white/58">
                 Les élèves peuvent saisir ce code dans l&apos;app LIRI (connexion → rejoindre avec un code).
               </p>
             </div>
@@ -897,9 +926,9 @@ function PhaseScreen({ phase, error, sessionId, isHost, recoveryAsHost, joinCode
           to={studioRecovery ? `/studio/live-preparation/${sessionId}` : '/app'}
           className="mt-2 h-11 px-8 rounded-full border text-sm font-medium flex items-center gap-2 transition-colors hover:bg-white/[0.06]"
           style={{
-            backgroundColor: 'color-mix(in srgb, var(--school-accent, #D4AF37) 20%, transparent)',
-            borderColor: 'color-mix(in srgb, var(--school-accent, #D4AF37) 35%, transparent)',
-            color: 'var(--school-accent, #D4AF37)',
+            backgroundColor: 'color-mix(in srgb, var(--school-accent, #e6cc92) 20%, transparent)',
+            borderColor: 'color-mix(in srgb, var(--school-accent, #e6cc92) 35%, transparent)',
+            color: 'var(--school-accent, #e6cc92)',
           }}
         >
           {studioRecovery ? '← Retour au studio' : "← Retour à l'accueil"}
@@ -934,9 +963,9 @@ function PhaseScreen({ phase, error, sessionId, isHost, recoveryAsHost, joinCode
                 to="/lives"
                 className="inline-flex h-11 px-8 rounded-full border text-sm font-medium items-center gap-2 transition-colors hover:bg-white/[0.06]"
                 style={{
-                  backgroundColor: 'color-mix(in srgb, var(--school-accent, #D4AF37) 25%, transparent)',
-                  borderColor: 'color-mix(in srgb, var(--school-accent, #D4AF37) 45%, transparent)',
-                  color: 'var(--school-accent, #D4AF37)',
+                  backgroundColor: 'color-mix(in srgb, var(--school-accent, #e6cc92) 25%, transparent)',
+                  borderColor: 'color-mix(in srgb, var(--school-accent, #e6cc92) 45%, transparent)',
+                  color: 'var(--school-accent, #e6cc92)',
                 }}
               >
                 Voir directs & replays
@@ -945,9 +974,9 @@ function PhaseScreen({ phase, error, sessionId, isHost, recoveryAsHost, joinCode
                 to="/app"
                 className="inline-flex h-11 px-8 rounded-full border text-sm font-medium items-center gap-2 transition-colors hover:bg-white/[0.06]"
                 style={{
-                  backgroundColor: 'color-mix(in srgb, var(--school-accent, #D4AF37) 15%, transparent)',
-                  borderColor: 'color-mix(in srgb, var(--school-accent, #D4AF37) 30%, transparent)',
-                  color: 'color-mix(in srgb, var(--school-accent, #D4AF37) 95%, white)',
+                  backgroundColor: 'color-mix(in srgb, var(--school-accent, #e6cc92) 15%, transparent)',
+                  borderColor: 'color-mix(in srgb, var(--school-accent, #e6cc92) 30%, transparent)',
+                  color: 'color-mix(in srgb, var(--school-accent, #e6cc92) 95%, white)',
                 }}
               >
                 Accueil membre
@@ -955,10 +984,10 @@ function PhaseScreen({ phase, error, sessionId, isHost, recoveryAsHost, joinCode
             </div>
           )}
           {!isHost && (
-            <p className="text-white/35 text-xs mt-4">Redirection automatique vers les lives dans 10 s…</p>
+            <p className="text-white/58 text-xs mt-4">Redirection automatique vers les lives dans 10 s…</p>
           )}
           {isHost && (
-            <p className="text-white/35 text-xs mt-4">Redirection vers le récapitulatif…</p>
+            <p className="text-white/58 text-xs mt-4">Redirection vers le récapitulatif…</p>
           )}
         </div>
       </motion.div>
@@ -4301,19 +4330,21 @@ export default function LiveArenaPage() {
         <button
           type="button"
           onClick={() => setLayoutPreviewModalOpen(true)}
-          className="pointer-events-auto fixed bottom-[5.5rem] right-3 z-[305] rounded-full border border-white/15 bg-[#14131c]/90 px-3 py-2 text-[10px] font-semibold uppercase tracking-wide text-white/75 shadow-lg backdrop-blur-md transition hover:border-violet-400/35 hover:text-violet-100 sm:right-4"
+          className="pointer-events-auto fixed bottom-[5.5rem] right-3 z-[305] rounded-full border border-white/15 bg-[#1f1e1c]/90 px-3 py-2 text-[10px] font-semibold uppercase tracking-wide text-white/75 shadow-lg backdrop-blur-md transition hover:border-[#d97757]/45 hover:text-[#f4c0aa] sm:right-4"
         >
           Aperçu vues
         </button>
       ) : null}
 
+      {/* Les deux bandeaux d'aperçu doivent rester distinguables d'un coup d'œil :
+          aperçu MOBILE = corail · aperçu PROJECTEUR = ambre (déjà chaud, inchangé). */}
       {isHost && previewMobileMaquette && !arenaLiriCompact ? (
-        <div className="pointer-events-auto fixed left-1/2 top-3 z-[305] flex max-w-[min(92vw,420px)] -translate-x-1/2 items-center gap-2 rounded-full border border-violet-400/35 bg-[#0c0a18]/95 px-3 py-1.5 text-[11px] text-violet-100 shadow-lg backdrop-blur-md">
+        <div className="pointer-events-auto fixed left-1/2 top-3 z-[305] flex max-w-[min(92vw,420px)] -translate-x-1/2 items-center gap-2 rounded-full border border-[#d97757]/40 bg-[#1f1e1c]/95 px-3 py-1.5 text-[11px] text-[#f4c0aa] shadow-lg backdrop-blur-md">
           <span className="truncate font-medium text-white/85">Vue mobile (aperçu)</span>
           <button
             type="button"
             onClick={() => setPreviewMobileMaquette(false)}
-            className="shrink-0 rounded-lg bg-violet-500/25 px-2 py-0.5 text-[10px] font-semibold hover:bg-violet-500/40"
+            className="shrink-0 rounded-lg bg-[#d97757]/30 px-2 py-0.5 text-[10px] font-semibold hover:bg-[#d97757]/45"
           >
             Fermer
           </button>
@@ -4710,7 +4741,9 @@ export default function LiveArenaPage() {
             animate={{ opacity: 1, x: 0 }}
             exit={{ opacity: 0, x: 320 }}
             transition={{ type: 'spring', stiffness: 300, damping: 30 }}
-            className="absolute top-20 right-4 z-50 w-72 rounded-2xl border border-white/10 bg-[#080c14]/95 backdrop-blur-xl shadow-2xl overflow-hidden"
+            /* Panneau salle d'attente : l'ancien bleu nuit devient #1f1e1c — même
+               obscurité (on est sur une scène de diffusion), teinte chaude. */
+            className="absolute top-20 right-4 z-50 w-72 rounded-2xl border border-white/10 bg-[#1f1e1c]/95 backdrop-blur-xl shadow-2xl overflow-hidden"
           >
             {/* Header */}
             <div className="flex items-center justify-between px-4 py-3 border-b border-white/[0.06]">
@@ -4742,10 +4775,10 @@ export default function LiveArenaPage() {
                       <img src={entry.profiles.avatar_url} alt="" className="w-8 h-8 rounded-full object-cover border border-white/10 flex-shrink-0" />
                     ) : (
                       <div
-                        className="w-8 h-8 rounded-full border flex items-center justify-center text-[11px] font-bold text-[var(--school-accent,#D4AF37)] flex-shrink-0"
+                        className="w-8 h-8 rounded-full border flex items-center justify-center text-[11px] font-bold text-[var(--school-accent,#e6cc92)] flex-shrink-0"
                         style={{
-                          backgroundColor: 'color-mix(in srgb, var(--school-accent, #D4AF37) 20%, transparent)',
-                          borderColor: 'color-mix(in srgb, var(--school-accent, #D4AF37) 30%, transparent)',
+                          backgroundColor: 'color-mix(in srgb, var(--school-accent, #e6cc92) 20%, transparent)',
+                          borderColor: 'color-mix(in srgb, var(--school-accent, #e6cc92) 30%, transparent)',
                         }}
                       >
                         {(entry.profiles?.name || '?')[0].toUpperCase()}
@@ -4755,7 +4788,8 @@ export default function LiveArenaPage() {
                       <p className="text-xs font-medium text-white truncate">
                         {entry.profiles?.name || 'Participant'}
                       </p>
-                      <p className="text-[10px] text-white/40 capitalize">
+                      {/* .40 donnait 3,8:1 sur le nouveau fond de panneau — .58 → 6,5:1. */}
+                      <p className="text-[10px] text-white/58 capitalize">
                         {entry.invitation_type || 'individuel'}
                       </p>
                     </div>
@@ -4781,10 +4815,10 @@ export default function LiveArenaPage() {
                     <button
                       type="button"
                       onClick={() => approveWaiting(entry.id, { audioOnly: true })}
-                      className="h-7 px-2 rounded-lg border text-[10px] text-[var(--school-accent,#D4AF37)] hover:bg-white/[0.06] transition-colors"
+                      className="h-7 px-2 rounded-lg border text-[10px] text-[var(--school-accent,#e6cc92)] hover:bg-white/[0.06] transition-colors"
                       style={{
-                        backgroundColor: 'color-mix(in srgb, var(--school-accent, #D4AF37) 10%, transparent)',
-                        borderColor: 'color-mix(in srgb, var(--school-accent, #D4AF37) 25%, transparent)',
+                        backgroundColor: 'color-mix(in srgb, var(--school-accent, #e6cc92) 10%, transparent)',
+                        borderColor: 'color-mix(in srgb, var(--school-accent, #e6cc92) 25%, transparent)',
                       }}
                       title="Auditeur seulement"
                     >

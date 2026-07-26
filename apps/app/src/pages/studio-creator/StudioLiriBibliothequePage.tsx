@@ -42,7 +42,13 @@ export default function StudioLiriBibliothequePage() {
   }, [activeTab]);
 
   return (
-    <div className="flex flex-col min-h-screen bg-[#0a0a14] text-white">
+    /* Fond de page = base chaude LIRI #262624.
+       POURQUOI À LA SOURCE ET PAS PAR studioWarm.css : la feuille de remap ne connaît
+       que les hex navy qu'elle a listés un à un (#0a0c10, #0d0f14, #12141a…). #0a0a14
+       n'y figurait pas — la Bibliothèque restait donc bleu nuit PLEIN CADRE, à
+       l'intérieur d'une coque #262624. Un hex de plus dans le CSS n'aurait fait que
+       déplacer le problème au prochain oubli : on corrige la valeur elle-même. */
+    <div className="flex flex-col min-h-screen bg-[#262624] text-white">
       <header className="flex items-center gap-4 px-6 py-4 border-b border-white/[0.06]">
         <Link to="/studio/liri" className="text-white/40 hover:text-white/70">
           <ArrowLeft className="h-5 w-5" />

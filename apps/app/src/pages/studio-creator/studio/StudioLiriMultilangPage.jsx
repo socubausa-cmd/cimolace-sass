@@ -1,6 +1,18 @@
 /**
  * StudioLiriMultilangPage — Multilingue live + vidéo (pack liri_complete_multilang_system intégré).
  * Route : /studio/liri/multilang
+ *
+ * Couleurs — charte LIRI, ZÉRO froid. Les trois blocs de la page étaient
+ * différenciés par émeraude / cyan / violet ; la différenciation est conservée
+ * mais transposée en chaud, et sur les MÊMES teintes que la table ACCENT de
+ * StudioDesignerLikeShell (une seule langue de couleur pour tout le Studio) :
+ *   Live translate      émeraude → argile #cf8059
+ *   Vidéo / transcript  cyan     → or/ocre #e3aa6b
+ *   Sous-titres         violet   → corail #d97757 (#e08b6d en texte)
+ * Les ombres portées de ces cartes étaient DÉJÀ chaudes (rgba(207,128,89),
+ * rgba(227,170,107), rgba(217,119,87)) : les bordures et titres ne faisaient
+ * que les contredire. Les boutons d'ACTION passent en corail plein, encre
+ * sombre #1f1e1c dessus (5,3:1) — du blanc sur corail ne tiendrait que 3,1:1.
  */
 import React, { useCallback, useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
@@ -25,7 +37,7 @@ import { synthesizeMultilangTtsOnce } from '@/lib/liriMultilangTtsEdge';
 import { downloadSubtitleFile } from '@/lib/generateSrtFromLines';
 
 const inputCls =
-  'w-full rounded-lg border border-white/12 bg-black/30 px-3 py-2 text-[13px] text-white placeholder:text-white/25 focus:border-emerald-500/40 focus:outline-none focus:ring-1 focus:ring-emerald-500/30';
+  'w-full rounded-lg border border-white/12 bg-[#2b2a27] px-3 py-2 text-[13px] text-[#f5f4ee] placeholder:text-white/50 focus:border-[#d97757]/50 focus:outline-none focus:ring-1 focus:ring-[#d97757]/30';
 
 export default function StudioLiriMultilangPage() {
   const { user, loading: authLoading } = useAuth();
@@ -281,15 +293,15 @@ export default function StudioLiriMultilangPage() {
     <StudioDesignerLikeShell
       railActiveKey="multilang"
       pageLabel="Multilingue"
-      pageAccent="emerald"
+      pageAccent="argile"
       TitleIcon={Languages}
       titleLine="Live translate · Vidéo multilingue"
       breadcrumbMiddle={[{ label: 'LIRI', href: '/studio/liri' }]}
       footer={
         <footer className="flex h-14 flex-shrink-0 items-center gap-3 border-t border-white/[0.07] px-3" style={{ background: '#1f1e1c' }}>
-          <Sparkles className="h-4 w-4 shrink-0 text-emerald-400/80" />
-          <p className="truncate text-[11px] text-white/38">
-            <span className="text-white/55">Pack liri_complete_multilang_system</span>
+          <Sparkles className="h-4 w-4 shrink-0 text-[#e6cc92]/85" />
+          <p className="truncate text-[11px] text-white/62">
+            <span className="text-white/85">Pack liri_complete_multilang_system</span>
             {' '}
             — tables + Edge <code className="rounded bg-white/[0.06] px-1 text-[10px]">liri-multilang-live</code>
             {' / '}
@@ -298,7 +310,7 @@ export default function StudioLiriMultilangPage() {
           </p>
           <Link
             to="/studio/liri"
-            className="ml-auto hidden shrink-0 items-center gap-1 text-[11px] font-semibold text-emerald-300/90 sm:flex"
+            className="ml-auto hidden shrink-0 items-center gap-1 text-[11px] font-semibold text-[#e08b6d] sm:flex"
           >
             Hub <ArrowRight className="h-3 w-3" />
           </Link>
@@ -308,7 +320,7 @@ export default function StudioLiriMultilangPage() {
       <div className="mx-auto max-w-5xl px-4 py-8 pb-16">
         <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="mb-8">
           <h1 className="text-xl font-semibold text-white/90 sm:text-2xl">Multilingue LIRI</h1>
-          <p className="mt-2 max-w-2xl text-[13px] leading-relaxed text-white/45">
+          <p className="mt-2 max-w-2xl text-[13px] leading-relaxed text-white/62">
             Traduction live (sessions) et projets vidéo multilingues. Les créations passent par les fonctions Edge ;
             les listes sont lues directement en base (RLS).
           </p>
@@ -316,7 +328,8 @@ export default function StudioLiriMultilangPage() {
 
         {authLoading ? (
           <div className="flex justify-center py-20">
-            <Loader2 className="h-8 w-8 animate-spin text-white/20" />
+            {/* Indicateur non textuel : 3:1 minimum → /20 (1,9:1) était invisible. */}
+            <Loader2 className="h-8 w-8 animate-spin text-white/55" />
           </div>
         ) : !user ? (
           <p className="rounded-xl border border-amber-500/25 bg-amber-500/10 px-4 py-3 text-[13px] text-amber-100/90">
@@ -333,33 +346,33 @@ export default function StudioLiriMultilangPage() {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.05 }}
                 onSubmit={onStartLive}
-                className="rounded-2xl border border-emerald-500/20 bg-[#1f1e1c]/90 p-5 shadow-[0_0_40px_rgba(207,128,89,0.06)]"
+                className="rounded-2xl border border-[#cf8059]/25 bg-[#1f1e1c]/90 p-5 shadow-[0_0_40px_rgba(207,128,89,0.06)]"
               >
-                <div className="mb-4 flex items-center gap-2 text-[13px] font-semibold text-emerald-300/95">
+                <div className="mb-4 flex items-center gap-2 text-[13px] font-semibold text-[#e0a07e]">
                   <Radio className="h-4 w-4" />
                   Live translate
                 </div>
-                <label className="mb-1 block text-[10px] font-semibold uppercase tracking-wider text-white/35">Salle / libellé</label>
+                <label className="mb-1 block text-[10px] font-semibold uppercase tracking-wider text-white/62">Salle / libellé</label>
                 <input className={cn(inputCls, 'mb-3')} value={liveRoom} onChange={(e) => setLiveRoom(e.target.value)} placeholder="Live formation Q2" />
-                <label className="mb-1 block text-[10px] font-semibold uppercase tracking-wider text-white/35">Langue source</label>
+                <label className="mb-1 block text-[10px] font-semibold uppercase tracking-wider text-white/62">Langue source</label>
                 <input className={cn(inputCls, 'mb-3')} value={liveSource} onChange={(e) => setLiveSource(e.target.value)} />
-                <label className="mb-1 block text-[10px] font-semibold uppercase tracking-wider text-white/35">Langues cibles (virgules)</label>
+                <label className="mb-1 block text-[10px] font-semibold uppercase tracking-wider text-white/62">Langues cibles (virgules)</label>
                 <input className={cn(inputCls, 'mb-3')} value={liveTargets} onChange={(e) => setLiveTargets(e.target.value)} />
                 <div className="mb-3 grid grid-cols-2 gap-2">
                   <div>
-                    <label className="mb-1 block text-[10px] font-semibold uppercase tracking-wider text-white/35">Durée (min)</label>
+                    <label className="mb-1 block text-[10px] font-semibold uppercase tracking-wider text-white/62">Durée (min)</label>
                     <input type="number" min={1} max={480} className={inputCls} value={liveMinutes} onChange={(e) => setLiveMinutes(+e.target.value)} />
                   </div>
                   <div>
-                    <label className="mb-1 block text-[10px] font-semibold uppercase tracking-wider text-white/35">Participants (est.)</label>
+                    <label className="mb-1 block text-[10px] font-semibold uppercase tracking-wider text-white/62">Participants (est.)</label>
                     <input type="number" min={1} max={500} className={inputCls} value={liveParticipants} onChange={(e) => setLiveParticipants(+e.target.value)} />
                   </div>
                 </div>
-                <p className="mb-3 text-[11px] text-white/35">Estimation crédits (indicative) : {livePreview}</p>
+                <p className="mb-3 text-[11px] text-white/62">Estimation crédits (indicative) : {livePreview}</p>
                 <button
                   type="submit"
                   disabled={busy}
-                  className="inline-flex w-full items-center justify-center gap-2 rounded-lg bg-emerald-600 py-2.5 text-[13px] font-semibold text-white hover:bg-emerald-500 disabled:opacity-40"
+                  className="inline-flex w-full items-center justify-center gap-2 rounded-lg bg-[#d97757] py-2.5 text-[13px] font-semibold text-[#1f1e1c] hover:bg-[#e08b6d] disabled:opacity-40"
                 >
                   {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
                   Démarrer la session
@@ -371,25 +384,25 @@ export default function StudioLiriMultilangPage() {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.1 }}
                 onSubmit={onCreateVideo}
-                className="rounded-2xl border border-cyan-500/20 bg-[#1f1e1c]/90 p-5 shadow-[0_0_40px_rgba(227,170,107,0.06)]"
+                className="rounded-2xl border border-[#e3aa6b]/25 bg-[#1f1e1c]/90 p-5 shadow-[0_0_40px_rgba(227,170,107,0.06)]"
               >
-                <div className="mb-4 flex items-center gap-2 text-[13px] font-semibold text-cyan-300/95">
+                <div className="mb-4 flex items-center gap-2 text-[13px] font-semibold text-[#e3aa6b]">
                   <Film className="h-4 w-4" />
                   Vidéo multilingue
                 </div>
-                <label className="mb-1 block text-[10px] font-semibold uppercase tracking-wider text-white/35">Titre du projet</label>
+                <label className="mb-1 block text-[10px] font-semibold uppercase tracking-wider text-white/62">Titre du projet</label>
                 <input className={cn(inputCls, 'mb-3')} value={videoTitle} onChange={(e) => setVideoTitle(e.target.value)} placeholder="Module 3 — exports" />
-                <label className="mb-1 block text-[10px] font-semibold uppercase tracking-wider text-white/35">Langue source</label>
+                <label className="mb-1 block text-[10px] font-semibold uppercase tracking-wider text-white/62">Langue source</label>
                 <input className={cn(inputCls, 'mb-3')} value={videoSource} onChange={(e) => setVideoSource(e.target.value)} />
-                <label className="mb-1 block text-[10px] font-semibold uppercase tracking-wider text-white/35">Langues cibles</label>
+                <label className="mb-1 block text-[10px] font-semibold uppercase tracking-wider text-white/62">Langues cibles</label>
                 <input className={cn(inputCls, 'mb-3')} value={videoTargets} onChange={(e) => setVideoTargets(e.target.value)} />
-                <label className="mb-1 block text-[10px] font-semibold uppercase tracking-wider text-white/35">Durée vidéo (min)</label>
+                <label className="mb-1 block text-[10px] font-semibold uppercase tracking-wider text-white/62">Durée vidéo (min)</label>
                 <input type="number" min={1} max={600} className={cn(inputCls, 'mb-3')} value={videoDuration} onChange={(e) => setVideoDuration(+e.target.value)} />
-                <p className="mb-3 text-[11px] text-white/35">Estimation crédits (indicative) : {videoPreview}</p>
+                <p className="mb-3 text-[11px] text-white/62">Estimation crédits (indicative) : {videoPreview}</p>
                 <button
                   type="submit"
                   disabled={busy}
-                  className="inline-flex w-full items-center justify-center gap-2 rounded-lg bg-cyan-600 py-2.5 text-[13px] font-semibold text-white hover:bg-cyan-500 disabled:opacity-40"
+                  className="inline-flex w-full items-center justify-center gap-2 rounded-lg bg-[#e3aa6b] py-2.5 text-[13px] font-semibold text-[#1f1e1c] hover:bg-[#efbc82] disabled:opacity-40"
                 >
                   {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
                   Créer le projet
@@ -401,20 +414,20 @@ export default function StudioLiriMultilangPage() {
               initial={{ opacity: 0, y: 8 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.12 }}
-              className="mt-8 rounded-2xl border border-cyan-500/15 bg-[#1f1e1c]/90 p-5 shadow-[0_0_32px_rgba(227,170,107,0.05)]"
+              className="mt-8 rounded-2xl border border-[#e3aa6b]/20 bg-[#1f1e1c]/90 p-5 shadow-[0_0_32px_rgba(227,170,107,0.05)]"
             >
-              <div className="mb-3 flex items-center gap-2 text-[13px] font-semibold text-cyan-300/95">
+              <div className="mb-3 flex items-center gap-2 text-[13px] font-semibold text-[#e3aa6b]">
                 <Film className="h-4 w-4" />
                 Transcript vidéo → traductions (base)
               </div>
-              <p className="mb-4 text-[11px] leading-relaxed text-white/38">
+              <p className="mb-4 text-[11px] leading-relaxed text-white/62">
                 Une ligne = un segment. Les langues cibles viennent du projet. Les résultats sont stockés dans{' '}
                 <code className="rounded bg-white/[0.06] px-1 text-[10px]">liri_multilang_video_translations</code>
                 {' '}(secret <code className="rounded bg-white/[0.06] px-1 text-[10px]">DEEPSEEK_API_KEY</code> requis).
               </p>
               <form onSubmit={onTranslateVideoTranscript} className="space-y-3">
                 <div>
-                  <label className="mb-1 block text-[10px] font-semibold uppercase tracking-wider text-white/35">Projet</label>
+                  <label className="mb-1 block text-[10px] font-semibold uppercase tracking-wider text-white/62">Projet</label>
                   <select
                     className={inputCls}
                     value={selectedVideoProjectId}
@@ -429,7 +442,7 @@ export default function StudioLiriMultilangPage() {
                   </select>
                 </div>
                 <div>
-                  <label className="mb-1 block text-[10px] font-semibold uppercase tracking-wider text-white/35">Transcript source</label>
+                  <label className="mb-1 block text-[10px] font-semibold uppercase tracking-wider text-white/62">Transcript source</label>
                   <textarea
                     className={cn(inputCls, 'min-h-[160px] resize-y font-mono text-[12px]')}
                     value={videoTranscriptBody}
@@ -438,19 +451,19 @@ export default function StudioLiriMultilangPage() {
                   />
                 </div>
                 {videoTranslateMsg ? (
-                  <p className="text-[12px] text-emerald-300/85">{videoTranslateMsg}</p>
+                  <p className="text-[12px] text-[#9cc48a]">{videoTranslateMsg}</p>
                 ) : null}
                 <button
                   type="submit"
                   disabled={busy || !videoRows.length}
-                  className="inline-flex w-full items-center justify-center gap-2 rounded-lg bg-cyan-700 py-2.5 text-[13px] font-semibold text-white hover:bg-cyan-600 disabled:opacity-40 sm:w-auto sm:px-8"
+                  className="inline-flex w-full items-center justify-center gap-2 rounded-lg bg-[#c98f4f] py-2.5 text-[13px] font-semibold text-[#1f1e1c] hover:bg-[#e3aa6b] disabled:opacity-40 sm:w-auto sm:px-8"
                 >
                   {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
                   Traduire et enregistrer
                 </button>
                 <div className="flex flex-col gap-2 border-t border-white/[0.08] pt-4 sm:flex-row sm:flex-wrap sm:items-end">
                   <div className="min-w-[120px] flex-1">
-                    <label className="mb-1 block text-[10px] font-semibold uppercase tracking-wider text-white/35">
+                    <label className="mb-1 block text-[10px] font-semibold uppercase tracking-wider text-white/62">
                       Code langue TTS export
                     </label>
                     <input
@@ -465,13 +478,13 @@ export default function StudioLiriMultilangPage() {
                     type="button"
                     disabled={busy || !user}
                     onClick={() => void onDownloadTtsExportSample()}
-                    className="inline-flex w-full items-center justify-center gap-2 rounded-lg border border-violet-500/35 bg-violet-500/15 py-2.5 text-[13px] font-semibold text-violet-200/95 hover:bg-violet-500/25 disabled:opacity-40 sm:w-auto sm:px-6"
+                    className="inline-flex w-full items-center justify-center gap-2 rounded-lg border border-[#d97757]/40 bg-[#d97757]/15 py-2.5 text-[13px] font-semibold text-[#e08b6d] hover:bg-[#d97757]/25 disabled:opacity-40 sm:w-auto sm:px-6"
                   >
                     {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
                     Télécharger MP3 (1ʳᵉ ligne · Multilingual)
                   </button>
                 </div>
-                <p className="text-[10px] leading-relaxed text-white/30">
+                <p className="text-[10px] leading-relaxed text-white/58">
                   Edge <code className="rounded bg-white/[0.06] px-1">liri-tts</code> tier <code className="rounded bg-white/[0.06] px-1">export</code> : ElevenLabs Multilingual v2, puis Google Cloud TTS si échec. Secrets :{' '}
                   <code className="rounded bg-white/[0.06] px-1">ELEVENLABS_API_KEY</code>,{' '}
                   <code className="rounded bg-white/[0.06] px-1">GOOGLE_CLOUD_TTS_API_KEY</code>.
@@ -483,19 +496,19 @@ export default function StudioLiriMultilangPage() {
               initial={{ opacity: 0, y: 8 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.14 }}
-              className="mt-8 rounded-2xl border border-violet-500/15 bg-[#1f1e1c]/90 p-5 shadow-[0_0_32px_rgba(217,119,87,0.05)]"
+              className="mt-8 rounded-2xl border border-[#d97757]/20 bg-[#1f1e1c]/90 p-5 shadow-[0_0_32px_rgba(217,119,87,0.05)]"
             >
-              <div className="mb-3 flex items-center gap-2 text-[13px] font-semibold text-violet-300/95">
+              <div className="mb-3 flex items-center gap-2 text-[13px] font-semibold text-[#e08b6d]">
                 <Sparkles className="h-4 w-4" />
                 Export sous-titres (SRT / VTT)
               </div>
-              <p className="mb-4 text-[11px] leading-relaxed text-white/38">
+              <p className="mb-4 text-[11px] leading-relaxed text-white/62">
                 Télécharge un fichier de sous-titres par langue à partir des traductions enregistrées.
                 Les horodatages sont distribués équitablement sur la durée du projet.
               </p>
               <div className="flex flex-wrap items-end gap-3">
                 <div className="flex-1 min-w-[160px]">
-                  <label className="mb-1 block text-[10px] font-semibold uppercase tracking-wider text-white/35">Projet</label>
+                  <label className="mb-1 block text-[10px] font-semibold uppercase tracking-wider text-white/62">Projet</label>
                   <select
                     className={inputCls}
                     value={selectedVideoProjectId}
@@ -511,7 +524,7 @@ export default function StudioLiriMultilangPage() {
                   type="button"
                   disabled={srtBusy || !selectedVideoProjectId}
                   onClick={() => void onLoadSrtTranslations()}
-                  className="inline-flex items-center gap-2 rounded-lg border border-violet-500/35 bg-violet-500/15 px-4 py-2.5 text-[13px] font-semibold text-violet-200/95 hover:bg-violet-500/25 disabled:opacity-40"
+                  className="inline-flex items-center gap-2 rounded-lg border border-[#d97757]/40 bg-[#d97757]/15 px-4 py-2.5 text-[13px] font-semibold text-[#e08b6d] hover:bg-[#d97757]/25 disabled:opacity-40"
                 >
                   {srtBusy ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
                   Charger les traductions
@@ -550,30 +563,30 @@ export default function StudioLiriMultilangPage() {
             </motion.div>
 
             <div className="mt-10 grid gap-6 lg:grid-cols-2">
-              <div className="rounded-xl border border-white/[0.08] bg-black/20 p-4">
-                <h3 className="mb-3 text-[12px] font-semibold uppercase tracking-wider text-white/40">Sessions live récentes</h3>
+              <div className="rounded-xl border border-white/[0.08] bg-[#1f1e1c]/80 p-4">
+                <h3 className="mb-3 text-[12px] font-semibold uppercase tracking-wider text-white/62">Sessions live récentes</h3>
                 <ul className="space-y-2 text-[12px] text-white/65">
-                  {liveRows.length === 0 ? <li className="text-white/35">Aucune session.</li> : null}
+                  {liveRows.length === 0 ? <li className="text-white/62">Aucune session.</li> : null}
                   {liveRows.map((r) => (
                     <li key={r.id} className="rounded-lg border border-white/[0.06] bg-white/[0.03] px-3 py-2">
                       <span className="text-white/80">{r.room_label || 'Sans titre'}</span>
-                      <span className="text-white/35"> · {r.status}</span>
-                      <span className="block text-[11px] text-white/35">
+                      <span className="text-white/62"> · {r.status}</span>
+                      <span className="block text-[11px] text-white/62">
                         {(r.target_langs || []).join(', ') || '—'} — {r.credits_estimate} cr.
                       </span>
                     </li>
                   ))}
                 </ul>
               </div>
-              <div className="rounded-xl border border-white/[0.08] bg-black/20 p-4">
-                <h3 className="mb-3 text-[12px] font-semibold uppercase tracking-wider text-white/40">Projets vidéo</h3>
+              <div className="rounded-xl border border-white/[0.08] bg-[#1f1e1c]/80 p-4">
+                <h3 className="mb-3 text-[12px] font-semibold uppercase tracking-wider text-white/62">Projets vidéo</h3>
                 <ul className="space-y-2 text-[12px] text-white/65">
-                  {videoRows.length === 0 ? <li className="text-white/35">Aucun projet.</li> : null}
+                  {videoRows.length === 0 ? <li className="text-white/62">Aucun projet.</li> : null}
                   {videoRows.map((r) => (
                     <li key={r.id} className="rounded-lg border border-white/[0.06] bg-white/[0.03] px-3 py-2">
                       <span className="text-white/80">{r.title}</span>
-                      <span className="text-white/35"> · {r.status}</span>
-                      <span className="block text-[11px] text-white/35">
+                      <span className="text-white/62"> · {r.status}</span>
+                      <span className="block text-[11px] text-white/62">
                         {(r.target_langs || []).join(', ') || '—'} — {r.credits_estimate} cr.
                       </span>
                     </li>

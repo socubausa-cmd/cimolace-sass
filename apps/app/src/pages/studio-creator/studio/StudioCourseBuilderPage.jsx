@@ -219,10 +219,15 @@ export default function StudioCourseBuilderPage() {
   return (
     <div className="flex min-h-0 flex-1 flex-col">
       {designerBackHref ? (
-        <div className="flex shrink-0 items-center justify-center border-b border-cyan-500/25 bg-cyan-950/35 px-4 py-2">
+        /* Bandeau « retour au designer » : cyan → corail (LES ACTIONS).
+           CALCUL DE L'ENCRE : le voile #d97757 à 10 % composé sur la page #262624
+           donne #382e29 ; l'encre corail claire #e8a97f de la rampe y tient 6,54:1.
+           L'opacité est à 10 et non 12 parce que Tailwind 3.4 n'émet que les multiples
+           de 5 : `bg-[#d97757]/10` n'aurait produit AUCUN fond. */
+        <div className="flex shrink-0 items-center justify-center border-b border-[#d97757]/30 bg-[#d97757]/10 px-4 py-2">
           <Link
             to={designerBackHref}
-            className="text-[12px] font-semibold text-cyan-200/95 underline-offset-2 transition-colors hover:text-cyan-100 hover:underline"
+            className="text-[12px] font-semibold text-[#e8a97f] underline-offset-2 transition-colors hover:text-[#f0c0a0] hover:underline"
           >
             ← Retour au SmartBoard Designer
           </Link>

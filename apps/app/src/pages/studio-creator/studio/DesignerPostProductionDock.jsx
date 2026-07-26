@@ -39,13 +39,34 @@ const isUuid = (value) => {
   return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(s);
 };
 
+/**
+ * Accents de la barre d'outils post-prod.
+ *
+ * POURQUOI ces valeurs exactes : ce fichier est le PARENT direct de
+ * `PostProductionDockPanels.jsx`, qui affiche le panneau contextuel juste à
+ * droite de cette barre. Les deux moitiés du même dock sont collées à l'écran ;
+ * si leurs rampes divergent, l'utilisateur voit littéralement une couture. Les
+ * teintes ci-dessous sont donc RECOPIÉES à l'identique de la constante `ACCENT`
+ * de l'enfant — même hex, à la lettre. Ne modifier ici que si l'enfant bouge
+ * aussi, sinon la couture revient.
+ *
+ * Les clés gardent leurs noms froids d'origine (violet/cyan/emerald) : elles
+ * sont référencées par `POST_PROD_TOOLS.accent` et par l'enfant. Les renommer
+ * serait un changement de comportement, pas un travail de couleur — on ne
+ * touche qu'aux valeurs. Seules amber / rose / orange étaient déjà chaudes et
+ * restent telles quelles, exactement comme chez l'enfant.
+ *
+ * Les alphas (/15, /30, 0.22) sont volontairement plus soutenus que ceux de
+ * l'enfant (/12, /28, 0.2) : ici l'accent marque l'outil ACTIF d'une barre
+ * d'icônes, là-bas il ne fait que teinter un fond de panneau.
+ */
 const PP_ACCENTS = {
-  amber:   { text: 'text-amber-400',   bg: 'bg-amber-500/15',   border: 'border-amber-500/30',   glow: 'shadow-[0_0_12px_rgba(245,158,11,0.22)]' },
-  violet:  { text: 'text-violet-400',  bg: 'bg-violet-500/15',  border: 'border-violet-500/30',  glow: 'shadow-[0_0_12px_rgba(236,174,144,0.22)]' },
-  cyan:    { text: 'text-cyan-400',    bg: 'bg-cyan-500/15',    border: 'border-cyan-500/30',    glow: 'shadow-[0_0_12px_rgba(227,170,107,0.22)]' },
-  emerald: { text: 'text-emerald-400', bg: 'bg-emerald-500/15', border: 'border-emerald-500/30', glow: 'shadow-[0_0_12px_rgba(207,128,89,0.22)]' },
-  rose:    { text: 'text-rose-400',    bg: 'bg-rose-500/15',    border: 'border-rose-500/30',    glow: 'shadow-[0_0_12px_rgba(251,113,133,0.22)]' },
-  orange:  { text: 'text-orange-400',  bg: 'bg-orange-500/15',  border: 'border-orange-500/30',  glow: 'shadow-[0_0_12px_rgba(251,146,60,0.22)]' },
+  amber:   { text: 'text-amber-400',    bg: 'bg-amber-500/15',    border: 'border-amber-500/30',    glow: 'shadow-[0_0_12px_rgba(245,158,11,0.22)]' },
+  violet:  { text: 'text-[#e08b6d]',    bg: 'bg-[#d97757]/15',    border: 'border-[#d97757]/30',    glow: 'shadow-[0_0_12px_rgba(236,174,144,0.22)]' },
+  cyan:    { text: 'text-[#e3aa6b]',    bg: 'bg-[#e3aa6b]/15',    border: 'border-[#e3aa6b]/30',    glow: 'shadow-[0_0_12px_rgba(227,170,107,0.22)]' },
+  emerald: { text: 'text-[#cf8059]',    bg: 'bg-[#cf8059]/15',    border: 'border-[#cf8059]/30',    glow: 'shadow-[0_0_12px_rgba(207,128,89,0.22)]' },
+  rose:    { text: 'text-rose-400',     bg: 'bg-rose-500/15',     border: 'border-rose-500/30',     glow: 'shadow-[0_0_12px_rgba(251,113,133,0.22)]' },
+  orange:  { text: 'text-orange-400',   bg: 'bg-orange-500/15',   border: 'border-orange-500/30',   glow: 'shadow-[0_0_12px_rgba(251,146,60,0.22)]' },
 };
 
 const POST_PROD_TOOLS = [
@@ -76,7 +97,9 @@ function PostProdToolStrip({ activeTool, onTool }) {
             onClick={() => onTool(tool.id)}
             className={cn(
               'flex h-9 w-9 items-center justify-center rounded-xl transition-all duration-150',
-              isActive ? [a.bg, 'border', a.border, a.glow] : 'border border-transparent text-white/30 hover:bg-white/[0.06] hover:text-white/60',
+              // Icône au repos : white/30 tombait à 2,7:1 sur le #1f1e1c de la barre,
+              // sous le seuil 3:1 des composants d'interface. white/45 = 4,4:1.
+              isActive ? [a.bg, 'border', a.border, a.glow] : 'border border-transparent text-white/45 hover:bg-white/[0.06] hover:text-white/70',
             )}
           >
             <Icon className={cn('h-4 w-4', isActive ? a.text : '')} />
@@ -204,7 +227,8 @@ export default function DesignerPostProductionDock({
         </span>
         <div className="min-w-0 flex-1">
           <p className="truncate text-[11px] font-semibold text-white/80">Post-production</p>
-          <p className="truncate text-[9px] text-white/30">Outils · sous-panneaux · workflow</p>
+          {/* white/30 → white/58 : même encre secondaire que l'enfant (« Varie selon l'onglet actif ») */}
+          <p className="truncate text-[9px] text-white/58">Outils · sous-panneaux · séquence de travail</p>
         </div>
         {returnToHref ? (
           <Link
@@ -232,7 +256,7 @@ export default function DesignerPostProductionDock({
               ? "Ouvrir dans un onglet (retour designer conservé via l'URL)"
               : "Ouvrir dans un onglet"
           }
-          className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md text-white/25 transition-colors hover:bg-white/[0.06] hover:text-amber-400/90"
+          className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md text-white/45 transition-colors hover:bg-white/[0.06] hover:text-amber-400/90"
         >
           <ExternalLink className="h-3.5 w-3.5" />
         </Link>
@@ -240,7 +264,7 @@ export default function DesignerPostProductionDock({
           type="button"
           title="Fermer le panneau"
           onClick={onClose}
-          className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md text-white/25 transition-colors hover:bg-white/[0.06] hover:text-white/70"
+          className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md text-white/45 transition-colors hover:bg-white/[0.06] hover:text-white/70"
         >
           <X className="h-3.5 w-3.5" />
         </button>
@@ -271,36 +295,46 @@ export default function DesignerPostProductionDock({
                 <Clapperboard className="h-8 w-8" />
               </div>
 
-              {/* Titre + sous-titre */}
+              {/* Titre + sous-titre — sous-titre remonté de white/35 (3,2:1) à white/62 */}
               <div>
-                <p className="text-[13px] font-bold text-white/70">Post-production</p>
-                <p className="mt-1 text-[10px] leading-relaxed text-white/35">
+                <p className="text-[13px] font-bold text-white/80">Post-production</p>
+                <p className="mt-1 text-[10px] leading-relaxed text-white/62">
                   Importez ou liez une vidéo pour démarrer le studio.
                 </p>
               </div>
 
-              {/* CTA principal — ouvre directement la modale d'import */}
+              {/* CTA principal — ouvre directement la modale d'import.
+                  Corail = LES ACTIONS (charte LIRI) : c'est le bouton qui fait
+                  vraiment quelque chose sur cet écran vide. Mêmes valeurs que le
+                  bouton « Capturer ou importer » de l'enfant PostProductionDockPanels
+                  — c'est LE MÊME geste, il ne doit pas changer de couleur selon
+                  qu'on le déclenche depuis le vide central ou depuis l'onglet Source. */}
               <button
                 type="button"
                 onClick={() => { onTool('source'); setVideoStudioOpen(true); }}
-                className="flex w-full max-w-[180px] items-center justify-center gap-2 rounded-xl border border-cyan-500/35 bg-cyan-500/[0.12] px-3 py-2.5 text-[11px] font-semibold text-cyan-200 shadow-[0_0_12px_rgba(227,170,107,0.12)] transition-all hover:bg-cyan-500/20"
+                className="flex w-full max-w-[180px] items-center justify-center gap-2 rounded-xl border border-[#d97757]/40 bg-[#d97757]/[0.12] px-3 py-2.5 text-[11px] font-semibold text-[#e08b6d] shadow-[0_0_12px_rgba(217,119,87,0.18)] transition-all hover:bg-[#d97757]/20"
                 style={{ borderRadius: 'var(--school-radius, 12px)' }}
               >
                 <span className="text-[12px]">📹</span>
                 Capturer ou importer
               </button>
 
-              {/* Ou UUID */}
-              <p className="text-[9px] text-white/25">ou collez un UUID dans l'onglet <span className="text-amber-400/70">Source ←</span></p>
+              {/* Ou UUID — était en white/25 (2,3:1) : illisible. La charte réserve
+                  l'encre ≤ .40 au DÉCORATIF, jamais à une phrase. */}
+              <p className="text-[9px] text-white/58">ou collez un UUID dans l'onglet <span className="text-amber-400/90">Source ←</span></p>
 
               <div className="h-px w-full max-w-[160px] bg-white/[0.06]" />
 
+              {/* amber-500/50 (≈3,4:1) → amber-300/85 : la même encre de lien que
+                  l'enfant utilise pour « Configurateur de formation → ».
+                  Le libellé passe au français : la route reste /studio/course-builder,
+                  seul le texte affiché change. */}
               <Link
                 to="/studio/course-builder"
                 state={designerBackHref ? { returnToDesigner: designerBackHref } : undefined}
-                className="text-[9px] text-amber-500/50 underline-offset-2 hover:text-amber-400/90 hover:underline"
+                className="text-[9px] text-amber-300/85 underline-offset-2 hover:text-amber-200 hover:underline"
               >
-                Créer un contenu vidéo via le Course Builder →
+                Créer un contenu vidéo via le configurateur de formation →
               </Link>
             </div>
           ) : (

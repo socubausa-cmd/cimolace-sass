@@ -45,7 +45,7 @@ export function StudioBuilder({
   initialNavigation = null,
   /** Dernière étape : id DOM à faire défiler (ex. barre « Programmer / Lancer » du live) — remplace l'absence de « Suivant » */
   lastStepScrollToActionsId = null,
-  /** Shell pixel-perfect « Studio de création live » (#0a0c10, stepper or, colonnes live-studio-*) */
+  /** Shell « Studio de création live » (fond de page #262624 de la charte, stepper or, colonnes live-studio-*) */
   liveCreationShell = false,
   /** Imbriqué dans la coque « LIRI Studio » (StudioDesignerLikeShell) : pas de
    *  plein écran `fixed inset-0`, header propre MASQUÉ (la coque fournit topbar +
@@ -204,13 +204,16 @@ export function StudioBuilder({
   }, [steps, getStepCompletion, draft, currentStep, maxReachedStep, stepErrors]);
 
   const saveStateLabel = useMemo(() => {
-    if (saveStatus === 'saving') return { icon: Loader2, text: 'Sauvegarde...', className: 'text-blue-300' };
+    // Trois états, trois teintes CHAUDES distinctes (la différenciation passait
+    // par bleu/vert/rouge — elle passe maintenant par ambre/olive/rouge chaud) :
+    //   en cours = ambre #e0a458 · enregistré = olive #9cc48a · erreur = rouge chaud.
+    if (saveStatus === 'saving') return { icon: Loader2, text: 'Sauvegarde...', className: 'text-[#e0a458]' };
     if (saveStatus === 'error') return { icon: AlertCircle, text: saveError || 'Erreur de sauvegarde', className: 'text-red-300' };
     if (lastSavedAt != null) {
       return {
         icon: liveCreationShell ? CheckCircle2 : Save,
         text: 'Brouillon enregistré',
-        className: liveCreationShell ? 'text-emerald-400' : 'text-[#22c55e]/90',
+        className: liveCreationShell ? 'text-[#9cc48a]' : 'text-[#9cc48a]/90',
       };
     }
     return null;
@@ -263,7 +266,7 @@ export function StudioBuilder({
         'flex flex-col overflow-hidden text-white',
         embedInShell ? 'min-h-0 flex-1' : 'fixed inset-0 z-[2000]',
         liveCreationShell
-          ? cn('live-studio-premium', !embedInShell && 'bg-[#0a0c10]')
+          ? cn('live-studio-premium', !embedInShell && 'bg-[#262624]')
           : studioCreatorShellBg,
       )}
     >
@@ -271,7 +274,8 @@ export function StudioBuilder({
         <div className="pointer-events-none fixed inset-0 z-0">
           <div className="absolute -top-32 left-1/3 h-[min(420px,50vh)] w-[min(520px,120vw)] -translate-x-1/2 rounded-full bg-[color-mix(in_srgb,var(--school-accent)_10%,transparent)] blur-[100px]" />
           <div className="absolute bottom-0 right-0 h-72 w-72 rounded-full bg-amber-950/25 blur-[90px]" />
-          <div className="absolute inset-0 bg-[radial-gradient(ellipse_80%_50%_at_50%_-20%,rgba(212,175,55,0.07),transparent)]" />
+          {/* Halo décoratif : or de la charte #d99a4e (l'or froid #D4AF37 est banni). */}
+          <div className="absolute inset-0 bg-[radial-gradient(ellipse_80%_50%_at_50%_-20%,rgba(217,154,78,0.07),transparent)]" />
         </div>
       )}
       {!embedInShell && (
@@ -279,9 +283,9 @@ export function StudioBuilder({
         className={cn(
           'relative z-30 shrink-0',
           liveCreationShell
-            ? 'premium-topbar border-b border-[#2D3139] px-4 py-3 lg:px-6'
+            ? 'premium-topbar border-b border-[rgba(245,244,238,0.09)] px-4 py-3 lg:px-6'
             : cn(
-                'flex-shrink-0 shadow-[inset_0_1px_0_0_rgba(212,175,55,0.08)]',
+                'flex-shrink-0 shadow-[inset_0_1px_0_0_rgba(217,154,78,0.08)]',
                 studioCreatorHeader,
               ),
         )}
@@ -294,7 +298,7 @@ export function StudioBuilder({
                 variant="ghost"
                 size="icon"
                 onClick={onClose}
-                className="h-9 w-9 shrink-0 rounded-lg border border-[#2D3139] bg-[#181B22] text-gray-400 hover:border-white/15 hover:bg-white/5 hover:text-white"
+                className="h-9 w-9 shrink-0 rounded-lg border border-[rgba(245,244,238,0.09)] bg-[#30302e] text-gray-400 hover:border-white/15 hover:bg-white/5 hover:text-white"
                 aria-label="Fermer"
               >
                 <X className="h-4 w-4" />
@@ -304,7 +308,8 @@ export function StudioBuilder({
                   <LiriWordmark
                     size="compact"
                     letterClassName="text-white"
-                    className="drop-shadow-[0_2px_12px_rgba(91,141,239,0.2)]"
+                    /* Halo du wordmark : corail #d97757 — c'était un bleu #5B8DEF. */
+                    className="drop-shadow-[0_2px_12px_rgba(217,119,87,0.22)]"
                   />
                   <p className="mt-1 text-[8px] font-bold uppercase tracking-[0.35em] text-white/45">
                     LEARN • LIVE • GROW
@@ -319,8 +324,8 @@ export function StudioBuilder({
                         saveStatus === 'error'
                           ? 'border-red-400/25 bg-red-500/[0.08]'
                           : saveStatus === 'saving'
-                            ? 'border-sky-400/20 bg-sky-500/[0.08]'
-                            : 'border-white/18 bg-transparent text-emerald-400',
+                            ? 'border-[#d4924a]/25 bg-[#d4924a]/[0.10]'
+                            : 'border-white/18 bg-transparent text-[#9cc48a]',
                       )}
                     >
                       <saveStateLabel.icon
@@ -339,7 +344,8 @@ export function StudioBuilder({
                 type="button"
                 variant="outline"
                 onClick={() => setStepsMenuOpen(true)}
-                className="ml-auto shrink-0 rounded-lg border-[#7B61FF]/35 bg-[#7B61FF]/10 text-[11px] font-semibold text-[#c4b5fd] hover:bg-[#7B61FF]/18 lg:hidden"
+                /* Compteur d'étapes : corail = les actions (c'était le violet #7B61FF). */
+                className="ml-auto shrink-0 rounded-lg border-[#d97757]/35 bg-[#d97757]/10 text-[11px] font-semibold text-[#e8a97f] hover:bg-[#d97757]/20 lg:hidden"
               >
                 <ListOrdered className="mr-1 h-3.5 w-3.5" />
                 {currentStep}/{totalSteps}
@@ -384,8 +390,8 @@ export function StudioBuilder({
                         saveStatus === 'error'
                           ? 'border-red-400/25 bg-red-500/[0.08]'
                           : saveStatus === 'saving'
-                            ? 'border-sky-400/20 bg-sky-500/[0.08]'
-                            : 'border-emerald-500/25 bg-emerald-500/[0.07]',
+                            ? 'border-[#d4924a]/25 bg-[#d4924a]/[0.10]'
+                            : 'border-[#5a8f52]/30 bg-[#5a8f52]/[0.10]',
                       )}
                     >
                       <saveStateLabel.icon
@@ -449,7 +455,7 @@ export function StudioBuilder({
         <DialogContent
           className={cn(
             'max-h-[88dvh] max-w-md overflow-hidden text-white sm:rounded-2xl',
-            liveCreationShell ? 'border-[#2D3139] bg-[#12141a]' : 'border-[color-mix(in_srgb,var(--school-accent)_25%,transparent)] bg-[#0a0908]',
+            liveCreationShell ? 'border-[rgba(245,244,238,0.09)] bg-[#1f1e1c]' : 'border-[color-mix(in_srgb,var(--school-accent)_25%,transparent)] bg-[#0a0908]',
           )}
         >
           <DialogHeader>
@@ -500,18 +506,18 @@ export function StudioBuilder({
                     animate={{ opacity: 1, x: 0 }}
                     exit={{ opacity: 0, x: -16 }}
                     transition={{ duration: 0.22, ease: 'easeOut' }}
-                    className="mx-auto w-full max-w-[700px] rounded-xl border border-[#2D3139] bg-[#12141a]/95 p-6 shadow-[0_24px_50px_-32px_rgba(0,0,0,0.75)] backdrop-blur-md sm:p-7"
+                    className="mx-auto w-full max-w-[700px] rounded-xl border border-[rgba(245,244,238,0.09)] bg-[#1f1e1c]/95 p-6 shadow-[0_24px_50px_-32px_rgba(0,0,0,0.75)] backdrop-blur-md sm:p-7"
                   >
                     <StepComponent {...stepProps} />
                   </motion.div>
                 </AnimatePresence>
 
                 {showPreview && previewEl && (
-                  <div className="mt-8 border-t border-[#2D3139] pt-6 lg:hidden">
+                  <div className="mt-8 border-t border-[rgba(245,244,238,0.09)] pt-6 lg:hidden">
                     <Button
                       variant="outline"
                       onClick={() => setShowMobilePreview((prev) => !prev)}
-                      className="rounded-lg border-[#3D424C] text-gray-300 hover:bg-white/[0.04]"
+                      className="rounded-lg border-[rgba(245,244,238,0.16)] text-gray-300 hover:bg-white/[0.04]"
                     >
                       {showMobilePreview ? <EyeOff className="mr-2 h-4 w-4" /> : <Eye className="mr-2 h-4 w-4" />}
                       {showMobilePreview ? 'Masquer aperçu' : 'Voir aperçu'}
@@ -524,7 +530,7 @@ export function StudioBuilder({
                           animate={{ opacity: 1, y: 0, scale: 1 }}
                           exit={{ opacity: 0, y: -10, scale: 0.98 }}
                           transition={{ duration: 0.24 }}
-                          className="mt-4 rounded-xl border border-[#2D3139] bg-[#14161c]/95 p-4 backdrop-blur-sm"
+                          className="mt-4 rounded-xl border border-[rgba(245,244,238,0.09)] bg-[#262624]/95 p-4 backdrop-blur-sm"
                         >
                           {previewEl}
                         </motion.div>
@@ -533,12 +539,12 @@ export function StudioBuilder({
                   </div>
                 )}
 
-                <div className="mx-auto mt-4 flex w-full max-w-[700px] items-center justify-between rounded-xl border border-[#2D3139] bg-[#14161c]/90 px-4 py-3 sm:px-5">
+                <div className="mx-auto mt-4 flex w-full max-w-[700px] items-center justify-between rounded-xl border border-[rgba(245,244,238,0.09)] bg-[#262624]/90 px-4 py-3 sm:px-5">
                   <Button
                     variant="outline"
                     onClick={goPrev}
                     disabled={!canGoPrev}
-                    className="rounded-lg border-[#3D424C] bg-transparent text-xs font-semibold uppercase tracking-wide text-gray-300 hover:bg-white/[0.04] disabled:opacity-40"
+                    className="rounded-lg border-[rgba(245,244,238,0.16)] bg-transparent text-xs font-semibold uppercase tracking-wide text-gray-300 hover:bg-white/[0.04] disabled:opacity-40"
                   >
                     <ChevronLeft className="mr-2 h-4 w-4" /> Précédent
                   </Button>
@@ -557,7 +563,8 @@ export function StudioBuilder({
                         type="button"
                         variant="outline"
                         onClick={scrollToLastStepActions}
-                        className="rounded-lg border-[#7B61FF]/40 text-[#c4b5fd] hover:bg-[#7B61FF]/10"
+                        /* « Programmer ou lancer » = une ACTION → corail (c'était le violet #7B61FF). */
+                        className="rounded-lg border-[#d97757]/40 text-[#e8a97f] hover:bg-[#d97757]/10"
                       >
                         <span className="hidden text-xs font-semibold uppercase tracking-wide sm:inline">
                           Programmer ou lancer
@@ -574,7 +581,7 @@ export function StudioBuilder({
                       initial={{ opacity: 0, y: 6 }}
                       animate={{ opacity: 1, y: 0 }}
                       exit={{ opacity: 0, y: -6 }}
-                      className="mx-auto mt-2 inline-flex max-w-[700px] items-center gap-1.5 text-xs text-emerald-300"
+                      className="mx-auto mt-2 inline-flex max-w-[700px] items-center gap-1.5 text-xs text-[#9cc48a]"
                     >
                       <CheckCircle2 className="h-3.5 w-3.5" />
                       Étape validée: {validationPulse.label}
@@ -588,7 +595,8 @@ export function StudioBuilder({
               <aside className="live-studio-pane-right hidden w-[min(100%,320px)] shrink-0 flex-col lg:flex">
                 <div className="live-studio-pane-head">
                   <p className="flex items-center gap-2 text-[11px] font-bold uppercase tracking-[0.14em] text-white">
-                    <span className="inline-flex h-7 w-7 items-center justify-center rounded-lg bg-[#7B61FF]/12 text-[#7B61FF]">
+                    {/* Pastille « aperçu » : corail de la charte (c'était le violet #7B61FF). */}
+                    <span className="inline-flex h-7 w-7 items-center justify-center rounded-lg bg-[#d97757]/15 text-[#e08a5f]">
                       <Eye className="h-4 w-4" strokeWidth={2.25} />
                     </span>
                     APERÇU VISUEL
@@ -682,7 +690,7 @@ export function StudioBuilder({
                     {currentStep < totalSteps ? (
                       <Button
                         onClick={goNext}
-                        className="font-display max-w-[min(100%,24rem)] bg-gradient-to-r from-[var(--school-accent)] to-amber-500 font-semibold text-black shadow-[0_8px_32px_rgba(212,175,55,0.25)] hover:from-amber-400 hover:to-[var(--school-accent)]"
+                        className="font-display max-w-[min(100%,24rem)] bg-gradient-to-r from-[var(--school-accent)] to-amber-500 font-semibold text-black shadow-[0_8px_32px_rgba(217,154,78,0.25)] hover:from-amber-400 hover:to-[var(--school-accent)]"
                       >
                         <span className="truncate">{liveNextLabel || 'Suivant'}</span>
                         <ChevronRight className="ml-2 h-4 w-4 shrink-0" />
@@ -707,7 +715,7 @@ export function StudioBuilder({
                       initial={{ opacity: 0, y: 6 }}
                       animate={{ opacity: 1, y: 0 }}
                       exit={{ opacity: 0, y: -6 }}
-                      className="mt-2 inline-flex items-center gap-1.5 text-xs text-emerald-300"
+                      className="mt-2 inline-flex items-center gap-1.5 text-xs text-[#9cc48a]"
                     >
                       <CheckCircle2 className="h-3.5 w-3.5" />
                       Étape validée: {validationPulse.label}

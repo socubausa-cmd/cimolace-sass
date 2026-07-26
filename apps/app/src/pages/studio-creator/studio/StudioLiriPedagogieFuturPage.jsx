@@ -27,12 +27,30 @@ function assetUrl(filename) {
   return `${prefix}liri-pedagogie-futur/${filename}`;
 }
 
+/**
+ * Palette d'accents — CHARTE LIRI, corrigée À LA SOURCE (plus aucune classe froide).
+ *
+ * POURQUOI ces hexadécimaux et pas des classes Tailwind : les clés (`teal`, `cyan`,
+ * `violet`, `blue`, `amber`) sont des IDENTIFIANTS de rôle, pas des teintes — elles sont
+ * passées telles quelles au shell (`pageAccent="teal"`). On garde donc les clés et on
+ * remplace uniquement les VALEURS, en reprenant exactement les mêmes hexadécimaux chauds
+ * que StudioDesignerLikeShell : la page et sa coque restent d'un seul bloc.
+ *
+ * La DIFFÉRENCIATION est préservée — cinq familles chaudes distinctes :
+ *   teal   → terre rosée  #d8916a   (parcours)
+ *   cyan   → sable doré   #e3aa6b   (designer / roadmap)
+ *   violet → corail       #d97757   (blocs pédagogiques)
+ *   blue   → terre brûlée #cf7a52   (formation)
+ *   amber  → ocre         #d99a4e   (cours / semaine)
+ * Contrastes sur le fond de page #262624 : 5,9:1 · 7,4:1 · 4,9:1 · 4,7:1 · 6,3:1.
+ * Les `glow` étaient déjà chauds — inchangés.
+ */
 const ACCENT = {
-  teal: { text: 'text-teal-400', bg: 'bg-teal-500/15', border: 'border-teal-500/30', glow: 'shadow-[0_0_14px_rgba(224,151,106,0.3)]' },
-  cyan: { text: 'text-cyan-400', bg: 'bg-cyan-500/15', border: 'border-cyan-500/30', glow: 'shadow-[0_0_14px_rgba(227,170,107,0.3)]' },
-  violet: { text: 'text-violet-400', bg: 'bg-violet-500/15', border: 'border-violet-500/30', glow: 'shadow-[0_0_14px_rgba(236,174,144,0.3)]' },
-  blue: { text: 'text-blue-400', bg: 'bg-blue-500/15', border: 'border-blue-500/30', glow: 'shadow-[0_0_14px_rgba(218,160,122,0.25)]' },
-  amber: { text: 'text-amber-400', bg: 'bg-amber-500/15', border: 'border-amber-500/30', glow: 'shadow-[0_0_14px_rgba(251,191,36,0.25)]' },
+  teal: { text: 'text-[#d8916a]', bg: 'bg-[#d8916a]/15', border: 'border-[#d8916a]/30', glow: 'shadow-[0_0_14px_rgba(224,151,106,0.3)]' },
+  cyan: { text: 'text-[#e3aa6b]', bg: 'bg-[#e3aa6b]/15', border: 'border-[#e3aa6b]/30', glow: 'shadow-[0_0_14px_rgba(227,170,107,0.3)]' },
+  violet: { text: 'text-[#d97757]', bg: 'bg-[#d97757]/15', border: 'border-[#d97757]/30', glow: 'shadow-[0_0_14px_rgba(236,174,144,0.3)]' },
+  blue: { text: 'text-[#cf7a52]', bg: 'bg-[#cf7a52]/15', border: 'border-[#cf7a52]/30', glow: 'shadow-[0_0_14px_rgba(218,160,122,0.25)]' },
+  amber: { text: 'text-[#d99a4e]', bg: 'bg-[#d99a4e]/15', border: 'border-[#d99a4e]/30', glow: 'shadow-[0_0_14px_rgba(217,154,78,0.25)]' },
 };
 
 const BLOCK_LABELS = {
@@ -63,17 +81,33 @@ function PedagogieFooter() {
       style={{ background: '#1f1e1c' }}
     >
       <div className="flex min-w-0 flex-1 items-center gap-2 rounded-xl border border-white/[0.08] bg-black/25 px-3 py-2">
-        <Sparkles className="h-4 w-4 shrink-0 text-amber-400/85" />
-        <p className="truncate text-[11px] leading-snug text-white/38">
-          <span className="text-white/55">Parcours scolaire</span>
+        <Sparkles className="h-4 w-4 shrink-0 text-[#d99a4e]" />
+        {/* Opacités remontées : sur le fond de pied #1f1e1c, .38 ne donnait que 3,5:1.
+            Recalées ensuite sur l'échelle Tailwind (/65, /85, /70) — les valeurs /62, /82
+            et /68 précédemment posées n'étaient JAMAIS émises, ces textes retombaient sur
+            la couleur héritée. Sur le fond composé du bandeau (black/25 sur #1f1e1c =
+            #171715) : 8,08:1 · 13,09:1 · 8,26:1. */}
+        <p className="truncate text-[11px] leading-snug text-white/65">
+          <span className="text-white/85">Parcours scolaire</span>
           {' '}·           Tables{' '}
-          <code className="rounded bg-white/[0.06] px-1 py-0.5 text-[10px] text-white/45">school_paths</code>
+          <code className="rounded bg-white/[0.06] px-1 py-0.5 text-[10px] text-white/70">school_paths</code>
           {' '}— CRUD parcours & cours disponible sur cette page (modules / semaines à venir).
         </p>
       </div>
+      {/* Raccourci Formation — accent « blue » d'origine remplacé par la brique #cf7a52.
+          ⚠️ PIÈGE RÉEL, corrigé ici : le fond de ce bouton était écrit `bg-[#cf7a52]/10`.
+          Tailwind 3.4 ne génère un modificateur `/NN` que si NN existe dans `theme.opacity`
+          — c'est-à-dire les MULTIPLES DE 5 uniquement. `/12` ne produisait aucune règle :
+          le bouton n'avait PAS de fond du tout, il se lisait à même le pied #1f1e1c. Toute
+          composition d'alpha faite sur le papier était donc fausse. Recalé à `/10`, une
+          valeur que Tailwind émet réellement (vérifié dans le CSS construit).
+          CALCUL SUR LE FOND QUI EXISTE MAINTENANT : #cf7a52 à 10 % composé sur #1f1e1c
+          donne #312721. Le libellé en #cf7a52 n'y tient que 4,55:1 — la norme au ras ;
+          en #daa07a, l'éclaircie de brique de la rampe, il tient 6,44:1. Filet et fond
+          restent #cf7a52 : décoratifs, la norme de texte ne s'y applique pas. */}
       <Link
         to="/studio/liri/formation"
-        className="hidden shrink-0 items-center gap-1.5 rounded-lg border border-blue-500/25 bg-blue-500/10 px-3 py-2 text-[11px] font-semibold text-blue-300/95 transition-all hover:bg-blue-500/18 sm:flex"
+        className="hidden shrink-0 items-center gap-1.5 rounded-lg border border-[#cf7a52]/30 bg-[#cf7a52]/10 px-3 py-2 text-[11px] font-semibold text-[#daa07a] transition-all hover:bg-[#cf7a52]/20 sm:flex"
       >
         <GraduationCap className="h-3.5 w-3.5" />
         Formation
@@ -87,16 +121,17 @@ function QuickLink({ to, icon: Icon, title, desc, accentKey }) {
   return (
     <Link
       to={to}
-      className="flex items-center gap-3 rounded-xl border border-white/[0.08] bg-white/[0.03] p-4 transition-all hover:border-white/14 hover:bg-white/[0.06]"
+      className="flex items-center gap-3 rounded-xl border border-white/[0.08] bg-white/[0.03] p-4 transition-all hover:border-white/15 hover:bg-white/[0.06]"
     >
       <div className={cn('flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border', a.bg, a.border)}>
         <Icon className={cn('h-5 w-5', a.text)} />
       </div>
       <div className="min-w-0 flex-1">
-        <div className="text-[13px] font-semibold text-white/88">{title}</div>
-        <div className="text-[11px] text-white/38">{desc}</div>
+        <div className="text-[13px] font-semibold text-white/90">{title}</div>
+        {/* .38 → .62 : le descriptif est du texte courant, il lui faut ≥ 4,5:1 (6,3:1 ici). */}
+        <div className="text-[11px] text-white/65">{desc}</div>
       </div>
-      <ArrowRight className="h-4 w-4 shrink-0 text-white/22" />
+      <ArrowRight className="h-4 w-4 shrink-0 text-white/40" />
     </Link>
   );
 }
@@ -105,9 +140,9 @@ function SectionTitle({ icon: Icon, children, id: sectionId }) {
   return (
     <h2
       id={sectionId}
-      className="mb-3 flex scroll-mt-24 items-center gap-2 text-[12px] font-semibold uppercase tracking-[0.15em] text-white/35"
+      className="mb-3 flex scroll-mt-24 items-center gap-2 text-[12px] font-semibold uppercase tracking-[0.15em] text-white/65"
     >
-      {Icon ? <Icon className="h-3.5 w-3.5 text-white/28" /> : null}
+      {Icon ? <Icon className="h-3.5 w-3.5 text-white/45" /> : null}
       {children}
     </h2>
   );
@@ -129,11 +164,12 @@ function TopBarSectionNav() {
           type="button"
           onClick={() => document.getElementById(t.id)?.scrollIntoView({ behavior: 'smooth', block: 'start' })}
           className={cn(
-            'whitespace-nowrap rounded-lg border border-transparent px-2.5 py-1 text-[11px] font-semibold text-white/35 transition-all hover:bg-white/[0.06] hover:text-white/65',
-            t.color === 'teal' && 'hover:border-teal-500/25',
-            t.color === 'amber' && 'hover:border-amber-500/25',
-            t.color === 'violet' && 'hover:border-violet-500/25',
-            t.color === 'cyan' && 'hover:border-cyan-500/25',
+            // Les quatre familles restent DISTINCTES au survol, mais en chaud (charte LIRI).
+            'whitespace-nowrap rounded-lg border border-transparent px-2.5 py-1 text-[11px] font-semibold text-white/65 transition-all hover:bg-white/[0.06] hover:text-white/90',
+            t.color === 'teal' && 'hover:border-[#d8916a]/35',
+            t.color === 'amber' && 'hover:border-[#d99a4e]/35',
+            t.color === 'violet' && 'hover:border-[#d97757]/35',
+            t.color === 'cyan' && 'hover:border-[#e3aa6b]/35',
           )}
         >
           {t.label}
@@ -181,32 +217,33 @@ export default function StudioLiriPedagogieFuturPage() {
     >
       <div className="mx-auto max-w-5xl px-5 py-6 pb-10 lg:px-8">
         <motion.div initial={{ opacity: 0, y: -6 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.32 }} className="mb-8 space-y-4">
-          <p className="max-w-2xl text-[14px] leading-relaxed text-white/42">
+          <p className="max-w-2xl text-[14px] leading-relaxed text-white/70">
             Parcours scolaire structuré, weekly grammar, blocs pédagogiques et post-production IA — navigation et coque alignées sur le
             SmartBoard Designer.
           </p>
           <div className="max-w-2xl rounded-xl border border-white/[0.08] bg-white/[0.04] px-4 py-3.5">
-            <p className="text-[12px] font-semibold uppercase tracking-[0.12em] text-teal-400/90 mb-2">Enchaînement produit</p>
-            <p className="mb-3 text-[12px] text-white/38">
+            <p className="text-[12px] font-semibold uppercase tracking-[0.12em] text-[#d8916a] mb-2">Enchaînement produit</p>
+            <p className="mb-3 text-[12px] text-white/65">
               Vue d'ensemble de tous les outils :{' '}
-              <Link to="/studio/liri/constructeurs" className="text-teal-400/90 underline-offset-2 hover:underline">hub Constructeurs</Link>
+              <Link to="/studio/liri/constructeurs" className="text-[#d8916a] underline-offset-2 hover:underline">hub Constructeurs</Link>
               {' '}(choix guidé) ·{' '}
-              <Link to="/studio/liri/constructeurs/guide" className="text-teal-400/90 underline-offset-2 hover:underline">guide comparatif</Link>.
+              <Link to="/studio/liri/constructeurs/guide" className="text-[#d8916a] underline-offset-2 hover:underline">guide comparatif</Link>.
             </p>
-            <ol className="list-decimal space-y-2 pl-4 text-[13px] leading-relaxed text-white/50">
+            <ol className="list-decimal space-y-2 pl-4 text-[13px] leading-relaxed text-white/75">
               <li>
-                <strong className="text-white/78">Constructeurs</strong> —{' '}
-                <Link to="/studio/liri/formation" className="text-blue-400/90 underline-offset-2 hover:underline">Formation</Link>,{' '}
-                <Link to="/studio/liri/cours" className="text-amber-400/90 underline-offset-2 hover:underline">Cours</Link> : programmes,
+                {/* Chaque lien garde SA famille d'accent (Formation / Cours / Designer) — en chaud. */}
+                <strong className="text-white/90">Constructeurs</strong> —{' '}
+                <Link to="/studio/liri/formation" className="text-[#cf7a52] underline-offset-2 hover:underline">Formation</Link>,{' '}
+                <Link to="/studio/liri/cours" className="text-[#d99a4e] underline-offset-2 hover:underline">Cours</Link> : programmes,
                 modules, les 10 étapes LIRI, scripts et intention pédagogique. Ce n'est pas encore la scène graphique.
               </li>
               <li>
-                <span className="inline-flex items-end gap-1 font-semibold text-white/78">
-                  <LiriWordmark size="kicker" className="text-white/78" subtleGlow />
+                <span className="inline-flex items-end gap-1 font-semibold text-white/90">
+                  <LiriWordmark size="kicker" className="text-white/90" subtleGlow />
                   <span>Designer</span>
                 </span>{' '}
                 —{' '}
-                <Link to="/studio/smartboard-designer" className="text-cyan-400/90 underline-offset-2 hover:underline">SmartBoard Designer</Link>{' '}
+                <Link to="/studio/smartboard-designer" className="text-[#e3aa6b] underline-offset-2 hover:underline">SmartBoard Designer</Link>{' '}
                 : une fois le cours construit, vous y concevez les slides, les objets, les fonds et toutes les couches designables du
                 canevas, jusqu'à l\'export ou le live.
               </li>
@@ -216,7 +253,7 @@ export default function StudioLiriPedagogieFuturPage() {
 
         <section className="mb-10" id="pedago-parcours">
           <SectionTitle icon={Route}>Parcours scolaires (cloud)</SectionTitle>
-          <p className="mb-4 max-w-2xl text-[12px] leading-relaxed text-white/38">
+          <p className="mb-4 max-w-2xl text-[12px] leading-relaxed text-white/65">
             Créez des parcours <code className="rounded bg-white/[0.06] px-1 text-[10px]">school_paths</code>, des{' '}
             <code className="rounded bg-white/[0.06] px-1 text-[10px]">path_courses</code>, puis ouvrez la structure : modules, semaines, jours typés et blocs pédagogiques (données JSON par bloc).
           </p>
@@ -263,16 +300,16 @@ export default function StudioLiriPedagogieFuturPage() {
                   key={key}
                   className="rounded-xl border border-white/[0.08] bg-white/[0.03] px-3 py-2.5 backdrop-blur-sm"
                 >
-                  <div className="text-[10px] font-medium uppercase tracking-wider text-white/28">{key.replace(/_/g, ' ')}</div>
-                  <div className="text-[12px] font-medium text-white/82">{BLOCK_LABELS[day?.type] || day?.type || '—'}</div>
-                  {day?.goal ? <div className="mt-1 text-[11px] text-white/38">{day.goal}</div> : null}
+                  <div className="text-[10px] font-medium uppercase tracking-wider text-white/60">{key.replace(/_/g, ' ')}</div>
+                  <div className="text-[12px] font-medium text-white/85">{BLOCK_LABELS[day?.type] || day?.type || '—'}</div>
+                  {day?.goal ? <div className="mt-1 text-[11px] text-white/65">{day.goal}</div> : null}
                 </div>
               ))}
             </div>
 
             {weeklyGrammar && (
               <div className="mt-6">
-                <p className="mb-3 text-[12px] font-semibold uppercase tracking-[0.12em] text-teal-400/80">
+                <p className="mb-3 text-[12px] font-semibold uppercase tracking-[0.12em] text-[#d8916a]">
                   Appliquer un template à la semaine sélectionnée
                 </p>
                 <WeekGrammarTemplateSelector
@@ -287,8 +324,9 @@ export default function StudioLiriPedagogieFuturPage() {
         {selectedWeekId && (
           <section className="mb-10" id="pedago-edition-semaine">
             <SectionTitle icon={Calendar}>Edition semaine</SectionTitle>
-            <div className="rounded-xl border border-amber-500/20 bg-amber-500/5 px-4 py-3 text-[12px] text-amber-300/70">
-              Semaine sélectionnée : <code className="rounded bg-white/[0.06] px-1.5 py-0.5 text-[11px] text-white/60">{selectedWeekId}</code>
+            {/* Encart « semaine sélectionnée » : or #e6cc92 (accent secondaire de la charte) — 9,7:1. */}
+            <div className="rounded-xl border border-[#d99a4e]/30 bg-[#d99a4e]/10 px-4 py-3 text-[12px] text-[#e6cc92]">
+              Semaine sélectionnée : <code className="rounded bg-white/[0.06] px-1.5 py-0.5 text-[11px] text-white/80">{selectedWeekId}</code>
             </div>
             <React.Suspense fallback={null}>
               <WeekDayEditorPanel weekId={selectedWeekId} />
@@ -300,12 +338,14 @@ export default function StudioLiriPedagogieFuturPage() {
           <SectionTitle icon={Layers}>Types de blocs pédagogiques</SectionTitle>
           <div className="flex flex-wrap gap-2 rounded-xl border border-white/[0.08] bg-white/[0.03] p-4 backdrop-blur-sm">
             {blockTypes.length === 0 ? (
-              <span className="text-[12px] text-white/35">Chargement ou schéma indisponible — vérifiez public/liri-pedagogie-futur/.</span>
+              <span className="text-[12px] text-white/65">Chargement ou schéma indisponible — vérifiez public/liri-pedagogie-futur/.</span>
             ) : null}
             {blockTypes.map(type => (
+              // Pastilles « types de blocs » : famille corail (l'ancien violet), teinte claire pour
+              // rester lisible en 11 px sur le panneau (≈ 6,8:1).
               <span
                 key={type}
-                className="rounded-full border border-violet-500/22 bg-violet-500/10 px-3 py-1 text-[11px] text-violet-200/90"
+                className="rounded-full border border-[#d97757]/30 bg-[#d97757]/10 px-3 py-1 text-[11px] text-[#eba98d]"
               >
                 {BLOCK_LABELS[type] || type}
               </span>
@@ -316,13 +356,13 @@ export default function StudioLiriPedagogieFuturPage() {
         <section className="mb-10">
           <SectionTitle icon={Clapperboard}>Post-production IA</SectionTitle>
           <div className="rounded-xl border border-white/[0.08] bg-white/[0.03] p-4 backdrop-blur-sm">
-            <p className="mb-3 text-[13px] text-white/40">
+            <p className="mb-3 text-[13px] text-white/65">
               Pipeline : transcription, segmentation, chapitres, résumé, points clés, quiz, mindmap, replays —{' '}
-              <code className="rounded bg-white/[0.06] px-1.5 py-0.5 text-[11px] text-white/52">post_production_pipeline.json</code>.
+              <code className="rounded bg-white/[0.06] px-1.5 py-0.5 text-[11px] text-white/75">post_production_pipeline.json</code>.
             </p>
             <Link
               to="/studio/export-center"
-              className="inline-flex items-center gap-2 rounded-lg border border-white/10 bg-white/[0.04] px-3 py-2 text-[12px] text-white/58 transition-all hover:border-white/18 hover:text-white/85"
+              className="inline-flex items-center gap-2 rounded-lg border border-white/10 bg-white/[0.04] px-3 py-2 text-[12px] text-white/75 transition-all hover:border-white/20 hover:text-white/95"
             >
               <Film className="h-3.5 w-3.5" />
               Export Center
@@ -339,11 +379,11 @@ export default function StudioLiriPedagogieFuturPage() {
                 key={phase.title}
                 className="rounded-xl border border-white/[0.08] bg-white/[0.03] p-4 backdrop-blur-sm"
               >
-                <div className="mb-2 text-[13px] font-semibold text-white/86">{phase.title}</div>
-                <ul className="space-y-1.5 text-[12px] text-white/42">
+                <div className="mb-2 text-[13px] font-semibold text-white/90">{phase.title}</div>
+                <ul className="space-y-1.5 text-[12px] text-white/70">
                   {phase.items.map(item => (
                     <li key={item} className="flex gap-2">
-                      <span className="text-teal-500/75">·</span>
+                      <span className="text-[#d8916a]">·</span>
                       {item}
                     </li>
                   ))}

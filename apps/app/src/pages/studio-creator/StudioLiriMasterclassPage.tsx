@@ -83,22 +83,25 @@ export default function StudioLiriMasterclassPage() {
 
   return (
     <div
-      className="flex min-h-screen flex-col text-white"
+      className="flex min-h-screen flex-col text-[#f5f4ee]"
       style={{
-        background: 'var(--school-background, #0a0a14)',
+        // Le repli du fond tenant devient le #262624 de la charte : quand un
+        // tenant ne surcharge pas --school-background, la page tombait sur le
+        // bleu nuit #0a0a14.
+        background: 'var(--school-background, #262624)',
         fontFamily: 'var(--school-font-family, Inter, system-ui, sans-serif)',
         ...cssVars,
       }}
       data-school-shell="masterclass-factory"
       data-tenant-brand={branding.name}
     >
-      <header className="flex items-center gap-4 px-6 py-4 border-b border-white/[0.06]" style={{ background: shellTheme.topBarBackground }}>
-        <Link to="/studio/liri" className="text-white/40 hover:text-white/70">
+      <header className="flex items-center gap-4 px-6 py-4 border-b border-[#f5f4ee]/[0.09]" style={{ background: shellTheme.topBarBackground }}>
+        <Link to="/studio/liri" className="text-[#f5f4ee]/65 hover:text-[#d97757] transition-colors">
           <ArrowLeft className="h-5 w-5" />
         </Link>
         <div>
-          <h1 className="text-lg font-bold text-white">Masterclass Factory</h1>
-          <p className="text-[11px] text-white/30">{branding.name} · Génération IA de cours complets</p>
+          <h1 className="text-lg font-bold text-[#f5f4ee]">Masterclass Factory</h1>
+          <p className="text-[11px] text-[#f5f4ee]/65">{branding.name} · Génération IA de cours complets</p>
         </div>
       </header>
 
@@ -106,92 +109,100 @@ export default function StudioLiriMasterclassPage() {
         {/* Model selection */}
         <div className="grid grid-cols-2 gap-3 mb-6">
           {MODELS.map(m => (
+            // Modèle sélectionné = corail (était violet). Non sélectionné =
+            // encre neutre, mais assez contrastée pour rester lisible : c'est
+            // un choix, pas un élément désactivé.
             <button key={m.id} onClick={() => setModel(m.id)}
               className={cn('rounded-xl border p-4 text-left transition-all',
-                model === m.id ? 'border-violet-500/40 bg-violet-500/10' : 'border-white/[0.08] hover:border-white/15')}
+                model === m.id ? 'border-[#d97757]/45 bg-[#d97757]/10' : 'border-[#f5f4ee]/[0.09] hover:border-[#d97757]/30')}
               style={{ borderRadius: 'var(--school-radius, 12px)' }}>
               <div className="flex items-center gap-2 mb-1">
-                <Brain className={cn('h-4 w-4', model === m.id ? 'text-violet-400' : 'text-white/40')} />
-                <span className={cn('text-[13px] font-medium', model === m.id ? 'text-violet-300' : 'text-white/70')}>{m.label}</span>
+                <Brain className={cn('h-4 w-4', model === m.id ? 'text-[#e08a5f]' : 'text-[#f5f4ee]/65')} />
+                <span className={cn('text-[13px] font-medium', model === m.id ? 'text-[#e8a97f]' : 'text-[#f5f4ee]/80')}>{m.label}</span>
               </div>
-              <p className="text-[11px] text-white/30">{m.desc}</p>
-              <p className="text-[10px] text-white/20 mt-1">{m.segments} segments</p>
+              <p className="text-[11px] text-[#f5f4ee]/65">{m.desc}</p>
+              <p className="text-[10px] text-[#f5f4ee]/60 mt-1">{m.segments} segments</p>
             </button>
           ))}
         </div>
 
         {/* Source text */}
         <div className="mb-4">
-          <label className="flex items-center gap-2 text-[12px] text-white/40 mb-2">
+          <label className="flex items-center gap-2 text-[12px] text-[#f5f4ee]/65 mb-2">
             <FileText className="h-4 w-4" /> Texte source
           </label>
           <textarea value={sourceText} onChange={e => setSourceText(e.target.value)}
             placeholder="Collez votre document source ici (PDF, notes, transcription...)"
             rows={12}
-            className="w-full resize-none rounded-xl border border-white/10 bg-white/[0.04] px-4 py-3 text-[13px] text-white/80 placeholder-white/22 outline-none focus:border-violet-500/40 leading-relaxed"
+            className="w-full resize-none rounded-xl border border-[#f5f4ee]/10 bg-[#2b2a27] px-4 py-3 text-[13px] text-[#f5f4ee]/80 placeholder-[#f5f4ee]/45 outline-none focus:border-[#d97757]/50 leading-relaxed"
             style={{ borderRadius: 'var(--school-radius, 12px)' }} />
         </div>
 
         {error && (
-          <div className="flex items-center gap-2 text-[12px] text-red-400 mb-4">
+          <div className="flex items-center gap-2 text-[12px] text-[#ef6a52] mb-4">
             <AlertTriangle className="h-4 w-4" /> {error}
           </div>
         )}
 
         {/* Actions */}
         <div className="flex gap-3 mb-8">
+          {/* La hiérarchie plein / contourné existait déjà : on la garde, en
+              corail. Encre sombre sur le plein (5,3:1 contre 2,8:1 en blanc). */}
           <button onClick={handleGenerate} disabled={generating}
-            className="flex items-center gap-2 rounded-xl bg-violet-600 px-5 py-2.5 text-[13px] font-semibold text-white hover:bg-violet-500 disabled:opacity-50 transition-all"
+            className="flex items-center gap-2 rounded-xl bg-[#d97757] px-5 py-2.5 text-[13px] font-semibold text-[#1f1e1c] hover:bg-[#e08a5f] disabled:opacity-50 transition-all"
             style={{ borderRadius: 'var(--school-radius, 12px)' }}>
             {generating && step === 'generating' ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />}
             Générer (synchrone)
           </button>
           <button onClick={handleOrchestrate} disabled={generating}
-            className="flex items-center gap-2 rounded-xl border border-violet-500/30 bg-violet-500/10 px-5 py-2.5 text-[13px] font-medium text-violet-300 hover:bg-violet-500/20 disabled:opacity-50 transition-all"
+            className="flex items-center gap-2 rounded-xl border border-[#d97757]/35 bg-[#d97757]/10 px-5 py-2.5 text-[13px] font-medium text-[#e8a97f] hover:bg-[#d97757]/20 disabled:opacity-50 transition-all"
             style={{ borderRadius: 'var(--school-radius, 12px)' }}>
             <Layers className="h-4 w-4" />
-            Orchestrer (pipeline async)
+            Orchestrer (chaîne différée)
           </button>
         </div>
 
         {/* Results */}
         {result && (
           <div className="space-y-4">
-            <div className="flex items-center gap-2 text-emerald-400">
+            <div className="flex items-center gap-2 text-[#8fbf7a]">
               <CheckCircle2 className="h-4 w-4" />
               <span className="text-[13px] font-medium">Génération terminée</span>
-              {result.orchestrated && <span className="text-[11px] text-white/30">(pipeline async — projet {result.projectId?.slice(0, 8)}...)</span>}
+              {result.orchestrated && <span className="text-[11px] text-[#f5f4ee]/65">(chaîne différée — projet {result.projectId?.slice(0, 8)}...)</span>}
             </div>
 
             {result.deck_title && (
-              <div className="rounded-xl border border-white/[0.08] bg-white/[0.02] p-4">
-                <h2 className="text-[16px] font-bold text-white mb-1">{result.deck_title}</h2>
-                <p className="text-[12px] text-white/40 mb-3">{result.subtitle}</p>
-                <div className="flex gap-3 text-[11px] text-white/30">
+              <div className="rounded-xl border border-[#f5f4ee]/[0.09] bg-[#30302e] p-4">
+                <h2 className="text-[16px] font-bold text-[#f5f4ee] mb-1">{result.deck_title}</h2>
+                <p className="text-[12px] text-[#f5f4ee]/80 mb-3">{result.subtitle}</p>
+                <div className="flex gap-3 text-[11px] text-[#f5f4ee]/65">
                   <span>{result.chapters?.length || 0} chapitres</span>
                   <span>•</span>
-                  <span>Modèle: {result.pedagogical_model}</span>
+                  <span>Modèle : {result.pedagogical_model}</span>
                   <span>•</span>
-                  <span>Provider: {result.provider || 'fallback'}</span>
+                  <span>Moteur : {result.provider || 'repli'}</span>
                 </div>
               </div>
             )}
 
             {result.chapters?.map((ch: any, i: number) => (
-              <div key={ch.id || i} className="rounded-xl border border-white/[0.06] bg-white/[0.01] p-4">
+              <div key={ch.id || i} className="rounded-xl border border-[#f5f4ee]/[0.09] bg-[#30302e] p-4">
                 <div className="flex items-center gap-2 mb-2">
-                  <span className="flex h-6 w-6 items-center justify-center rounded-full bg-violet-500/15 text-[10px] font-bold text-violet-400">
+                  <span className="flex h-6 w-6 items-center justify-center rounded-full bg-[#d97757]/15 text-[10px] font-bold text-[#e08a5f]">
                     {i + 1}
                   </span>
-                  <h3 className="text-[14px] font-semibold text-white">{ch.title}</h3>
-                  <span className="text-[10px] text-white/20">{ch.duration}</span>
+                  <h3 className="text-[14px] font-semibold text-[#f5f4ee]">{ch.title}</h3>
+                  <span className="text-[10px] text-[#f5f4ee]/65">{ch.duration}</span>
                 </div>
-                <p className="text-[11px] text-white/40 mb-3">{ch.objective}</p>
+                <p className="text-[11px] text-[#f5f4ee]/80 mb-3">{ch.objective}</p>
                 <div className="grid grid-cols-3 gap-1.5">
+                  {/* Vignettes de segments sur #1f1e1c (bloc « aperçu » de la
+                      charte) : le nom à /80 et le titre à /65 restent lisibles
+                      malgré leurs 10 et 9 px — ils étaient à /60 et /25. */}
                   {ch.segments?.map((seg: any) => (
-                    <div key={seg.segment_id} className="rounded-lg border border-white/[0.04] bg-white/[0.01] px-2.5 py-1.5">
-                      <div className="text-[10px] font-medium text-white/60">{seg.segment_id}. {seg.name}</div>
-                      <div className="text-[9px] text-white/25 truncate">{seg.title}</div>
+                    <div key={seg.segment_id} className="rounded-lg border border-[#f5f4ee]/[0.07] bg-[#1f1e1c] px-2.5 py-1.5">
+                      <div className="text-[10px] font-medium text-[#f5f4ee]/80">{seg.segment_id}. {seg.name}</div>
+                      <div className="text-[9px] text-[#f5f4ee]/65 truncate">{seg.title}</div>
                     </div>
                   ))}
                 </div>

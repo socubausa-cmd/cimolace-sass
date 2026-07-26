@@ -69,7 +69,11 @@ function StatCard({ icon: Icon, label, value, color = 'amber' }) {
   const colors = {
     amber:   'from-amber-500/15 to-amber-600/5 border-amber-500/25 text-amber-300',
     emerald: 'from-[#5a8f52]/15 to-emerald-600/5 border-[#5a8f52]/25 text-[#9cc48a]',
-    blue:    'from-[#d4924a]/15 to-blue-600/5 border-[#d4924a]/25 text-[#e6b566]',
+    /* Clé `blue` déjà réchauffée à l'ambre #d4924a — sauf la butée du dégradé, restée
+       `to-blue-600/5` : un bleu qui, à 5 %, teintait quand même le bas de la carte.
+       Remplacée par l'ambre foncée #b87a35, la butée que les autres lignes utilisent
+       pour leur propre teinte (amber-600, #c96544…). */
+    blue:    'from-[#d4924a]/15 to-[#b87a35]/5 border-[#d4924a]/25 text-[#e6b566]',
     purple:  'from-[#d97757]/15 to-[#c96544]/5 border-[#d97757]/25 text-[#e8a97f]',
   };
   return (
@@ -103,7 +107,7 @@ function Section({ title, icon: Icon, children, defaultOpen = false }) {
         className="w-full flex items-center justify-between p-4 text-left hover:bg-white/[0.02] transition-colors"
       >
         <div className="flex items-center gap-3">
-          <Icon className="w-4 h-4 text-[var(--school-accent,#D4AF37)]" />
+          <Icon className="w-4 h-4 text-[var(--school-accent,#d97757)]" />
           <span className="text-sm font-semibold text-white">{title}</span>
         </div>
         {open
@@ -270,12 +274,12 @@ function ReplayPlayer({ recordings }) {
               className={cn(
                 'h-7 px-3 rounded-full text-[11px] border transition-all',
                 i === selected
-                  ? 'text-[var(--school-accent,#D4AF37)]'
+                  ? 'text-[var(--school-accent,#d97757)]'
                   : 'bg-white/[0.04] border-white/10 text-white/50 hover:text-white'
               )}
               style={i === selected ? {
-                backgroundColor: 'color-mix(in srgb, var(--school-accent, #D4AF37) 20%, transparent)',
-                borderColor: 'color-mix(in srgb, var(--school-accent, #D4AF37) 40%, transparent)',
+                backgroundColor: 'color-mix(in srgb, var(--school-accent, #d97757) 20%, transparent)',
+                borderColor: 'color-mix(in srgb, var(--school-accent, #d97757) 40%, transparent)',
               } : undefined}
             >
               Enregistrement {i + 1}
@@ -306,9 +310,9 @@ function ReplayPlayer({ recordings }) {
               download
               className="h-8 px-4 rounded-xl border text-xs hover:bg-white/[0.06] flex items-center gap-1.5 transition-colors"
               style={{
-                backgroundColor: 'color-mix(in srgb, var(--school-accent, #D4AF37) 15%, transparent)',
-                borderColor: 'color-mix(in srgb, var(--school-accent, #D4AF37) 30%, transparent)',
-                color: 'var(--school-accent, #D4AF37)',
+                backgroundColor: 'color-mix(in srgb, var(--school-accent, #d97757) 15%, transparent)',
+                borderColor: 'color-mix(in srgb, var(--school-accent, #d97757) 30%, transparent)',
+                color: 'var(--school-accent, #d97757)',
               }}
             >
               <Download className="w-3.5 h-3.5" />
@@ -356,7 +360,7 @@ function NotesEditor({ sessionId, initialNotes }) {
         onChange={handleChange}
         placeholder="Points clés de la session, observations, actions à suivre…"
         rows={6}
-        className="w-full bg-black/30 border border-white/10 rounded-xl px-4 py-3 text-sm text-white/80 placeholder:text-white/25 outline-none focus:border-[color:var(--school-accent,#D4AF37)] resize-none transition-colors"
+        className="w-full bg-black/30 border border-white/10 rounded-xl px-4 py-3 text-sm text-white/80 placeholder:text-white/25 outline-none focus:border-[color:var(--school-accent,#d97757)] resize-none transition-colors"
       />
       <div className="absolute bottom-3 right-3 text-[10px]">
         {saving && <span className="text-white/30">Sauvegarde…</span>}
@@ -378,9 +382,9 @@ function ChatReplay({ messages }) {
           <div
             className="w-6 h-6 rounded-full border flex items-center justify-center flex-shrink-0 text-[10px] font-bold"
             style={{
-              backgroundColor: 'color-mix(in srgb, var(--school-accent, #D4AF37) 20%, transparent)',
-              borderColor: 'color-mix(in srgb, var(--school-accent, #D4AF37) 30%, transparent)',
-              color: 'var(--school-accent, #D4AF37)',
+              backgroundColor: 'color-mix(in srgb, var(--school-accent, #d97757) 20%, transparent)',
+              borderColor: 'color-mix(in srgb, var(--school-accent, #d97757) 30%, transparent)',
+              color: 'var(--school-accent, #d97757)',
             }}
           >
             {(m.name || '?')[0].toUpperCase()}
@@ -443,9 +447,9 @@ function ExportSection({ session, participants, messages, notes }) {
         onClick={downloadText}
         className="h-9 px-4 rounded-xl border text-xs hover:bg-white/[0.06] flex items-center gap-1.5 transition-colors"
         style={{
-          backgroundColor: 'color-mix(in srgb, var(--school-accent, #D4AF37) 15%, transparent)',
-          borderColor: 'color-mix(in srgb, var(--school-accent, #D4AF37) 30%, transparent)',
-          color: 'var(--school-accent, #D4AF37)',
+          backgroundColor: 'color-mix(in srgb, var(--school-accent, #d97757) 15%, transparent)',
+          borderColor: 'color-mix(in srgb, var(--school-accent, #d97757) 30%, transparent)',
+          color: 'var(--school-accent, #d97757)',
         }}
       >
         <FileText className="w-3.5 h-3.5" />
@@ -724,9 +728,9 @@ function NeuroRecallPanel({ sessionId, isTeacher, lirSummaryReady, compact = fal
                   to={postProductionEditorPath(row.postproduction_content_id)}
                   className="inline-flex items-center gap-1.5 h-8 px-3 rounded-lg border text-xs hover:bg-white/[0.06] transition-colors"
                   style={{
-                    backgroundColor: 'color-mix(in srgb, var(--school-accent, #D4AF37) 15%, transparent)',
-                    borderColor: 'color-mix(in srgb, var(--school-accent, #D4AF37) 35%, transparent)',
-                    color: 'var(--school-accent, #D4AF37)',
+                    backgroundColor: 'color-mix(in srgb, var(--school-accent, #d97757) 15%, transparent)',
+                    borderColor: 'color-mix(in srgb, var(--school-accent, #d97757) 35%, transparent)',
+                    color: 'var(--school-accent, #d97757)',
                   }}
                 >
                   <Link2 className="w-3.5 h-3.5" />
@@ -856,7 +860,7 @@ function NeuroRecallFlashcardFullSheet({
             exit={{ y: '105%' }}
             transition={{ type: 'spring', damping: 32, stiffness: 340 }}
             onClick={(e) => e.stopPropagation()}
-            className="fixed inset-x-0 bottom-0 top-[12vh] z-[71] flex flex-col rounded-t-[26px] border border-white/14 bg-[#0a0f18]/98 backdrop-blur-2xl shadow-[0_-28px_80px_-12px_rgba(0,0,0,0.92)] overflow-hidden"
+            className="fixed inset-x-0 bottom-0 top-[12vh] z-[71] flex flex-col rounded-t-[26px] border border-white/15 bg-[#1f1e1c]/95 backdrop-blur-2xl shadow-[0_-28px_80px_-12px_rgba(0,0,0,0.92)] overflow-hidden"
           >
             <div className="flex-shrink-0 flex justify-center pt-2 pb-1" aria-hidden>
               <div className="h-1 w-10 rounded-full bg-white/20" />
@@ -885,9 +889,9 @@ function NeuroRecallFlashcardFullSheet({
                 onClick={() => setShowAns((s) => !s)}
                 className="min-h-11 w-full rounded-xl border text-sm font-medium"
                 style={{
-                  backgroundColor: 'color-mix(in srgb, var(--school-accent, #D4AF37) 12%, transparent)',
-                  borderColor: 'color-mix(in srgb, var(--school-accent, #D4AF37) 35%, transparent)',
-                  color: 'var(--school-accent, #D4AF37)',
+                  backgroundColor: 'color-mix(in srgb, var(--school-accent, #d97757) 12%, transparent)',
+                  borderColor: 'color-mix(in srgb, var(--school-accent, #d97757) 35%, transparent)',
+                  color: 'var(--school-accent, #d97757)',
                 }}
               >
                 {showAns ? 'Masquer la réponse' : 'Voir la réponse'}
@@ -958,7 +962,7 @@ function NeuroRecallReportFullSheet({ open, onClose, title, nodeKey, content }) 
             exit={{ y: '105%' }}
             transition={{ type: 'spring', damping: 32, stiffness: 340 }}
             onClick={(e) => e.stopPropagation()}
-            className="fixed inset-x-0 bottom-0 top-[18vh] z-[71] flex flex-col rounded-t-[26px] border border-white/14 bg-[#0a0f18]/98 backdrop-blur-2xl shadow-[0_-28px_80px_-12px_rgba(0,0,0,0.92)] overflow-hidden"
+            className="fixed inset-x-0 bottom-0 top-[18vh] z-[71] flex flex-col rounded-t-[26px] border border-white/15 bg-[#1f1e1c]/95 backdrop-blur-2xl shadow-[0_-28px_80px_-12px_rgba(0,0,0,0.92)] overflow-hidden"
           >
             <div className="flex-shrink-0 flex justify-center pt-2 pb-1" aria-hidden>
               <div className="h-1 w-10 rounded-full bg-white/20" />
@@ -1016,7 +1020,7 @@ function NeuroRecallFlashcardRow({
           {difficulty ? <span>{difficulty}</span> : null}
         </div>
         <p className="text-sm text-white/85 leading-snug line-clamp-3">{question}</p>
-        <span className="inline-flex items-center text-[11px] font-medium text-[var(--school-accent,#D4AF37)]">
+        <span className="inline-flex items-center text-[11px] font-medium text-[var(--school-accent,#d97757)]">
           Ouvrir la fiche
           <ChevronRight className="w-3.5 h-3.5 ml-0.5" />
         </span>
@@ -1039,7 +1043,7 @@ function NeuroRecallFlashcardRow({
       <button
         type="button"
         onClick={() => setShow((s) => !s)}
-        className="text-[11px] text-[var(--school-accent,#D4AF37)] hover:underline min-h-10 sm:min-h-0 py-2 sm:py-0 text-left w-full sm:w-auto"
+        className="text-[11px] text-[var(--school-accent,#d97757)] hover:underline min-h-10 sm:min-h-0 py-2 sm:py-0 text-left w-full sm:w-auto"
       >
         {show ? 'Masquer la réponse' : 'Voir la réponse'}
       </button>
@@ -1088,12 +1092,12 @@ function NeuroRecallReportRow({ title, nodeKey, content, compact = false, timest
       onClick={!replayUrl ? (e) => e.preventDefault() : undefined}
       className={cn(
         'inline-flex items-center gap-1 text-[10px] font-mono px-1.5 py-0.5 rounded',
-        'border shrink-0 text-[var(--school-accent,#D4AF37)] opacity-80',
+        'border shrink-0 text-[var(--school-accent,#d97757)] opacity-80',
         replayUrl && 'hover:bg-white/[0.06] cursor-pointer',
       )}
       style={{
-        backgroundColor: 'color-mix(in srgb, var(--school-accent, #D4AF37) 10%, transparent)',
-        borderColor: 'color-mix(in srgb, var(--school-accent, #D4AF37) 20%, transparent)',
+        backgroundColor: 'color-mix(in srgb, var(--school-accent, #d97757) 10%, transparent)',
+        borderColor: 'color-mix(in srgb, var(--school-accent, #d97757) 20%, transparent)',
       }}
     >
       <PlayCircle className="w-2.5 h-2.5" />
@@ -1108,11 +1112,11 @@ function NeuroRecallReportRow({ title, nodeKey, content, compact = false, timest
         onClick={() => onOpenSheet({ title, nodeKey, content })}
         className="w-full rounded-xl border border-white/[0.08] bg-white/[0.03] p-3 text-left flex items-start gap-2 hover:bg-white/[0.06] transition-colors active:scale-[0.99]"
       >
-        <ChevronRight className="w-4 h-4 text-[var(--school-accent,#D4AF37)] opacity-80 shrink-0 mt-0.5" />
+        <ChevronRight className="w-4 h-4 text-[var(--school-accent,#d97757)] opacity-80 shrink-0 mt-0.5" />
         <div className="min-w-0 flex-1">
           <span className="text-sm text-white/85 line-clamp-2 block">{title || nodeKey}</span>
           <div className="flex items-center gap-2 mt-1">
-            <span className="text-[10px] text-[var(--school-accent,#D4AF37)] opacity-90">Lire le rapport</span>
+            <span className="text-[10px] text-[var(--school-accent,#d97757)] opacity-90">Lire le rapport</span>
             {timestampBadge}
           </div>
         </div>
@@ -1258,7 +1262,7 @@ function NeuroRecallRevisionSection({ sessionId, userId, compact = false }) {
     return (
       <Section title="Révision NeuroRecall" icon={GraduationCap}>
         <div className="flex justify-center py-6">
-          <Loader2 className="w-5 h-5 text-[var(--school-accent,#D4AF37)] opacity-60 animate-spin" />
+          <Loader2 className="w-5 h-5 text-[var(--school-accent,#d97757)] opacity-60 animate-spin" />
         </div>
       </Section>
     );
@@ -1287,7 +1291,7 @@ function NeuroRecallRevisionSection({ sessionId, userId, compact = false }) {
             <p className="text-xs text-white/45">Aucune série enregistrée pour ce live — notez-vous après chaque révision.</p>
           )}
           {roundAttempted > 0 && (
-            <p className="text-[11px] text-[var(--school-accent,#D4AF37)] opacity-80">
+            <p className="text-[11px] text-[var(--school-accent,#d97757)] opacity-80">
               Série en cours : {roundCorrect} / {roundAttempted} « Je savais »
             </p>
           )}
@@ -1296,12 +1300,12 @@ function NeuroRecallRevisionSection({ sessionId, userId, compact = false }) {
             disabled={savingProgress || roundAttempted === 0}
             onClick={() => void saveProgress()}
             className={cn(
-              'rounded-lg border text-[var(--school-accent,#D4AF37)] hover:bg-white/[0.06] disabled:opacity-40 disabled:pointer-events-none transition-colors text-[11px]',
+              'rounded-lg border text-[var(--school-accent,#d97757)] hover:bg-white/[0.06] disabled:opacity-40 disabled:pointer-events-none transition-colors text-[11px]',
               compact ? 'min-h-11 w-full px-3 py-2' : 'px-3 py-1.5',
             )}
             style={{
-              backgroundColor: 'color-mix(in srgb, var(--school-accent, #D4AF37) 10%, transparent)',
-              borderColor: 'color-mix(in srgb, var(--school-accent, #D4AF37) 40%, transparent)',
+              backgroundColor: 'color-mix(in srgb, var(--school-accent, #d97757) 10%, transparent)',
+              borderColor: 'color-mix(in srgb, var(--school-accent, #d97757) 40%, transparent)',
             }}
           >
             {savingProgress ? 'Enregistrement…' : 'Enregistrer ma progression'}
@@ -1450,14 +1454,14 @@ function MindmapNode({ node, depth = 0 }) {
         className={cn(
           'flex items-center gap-2 py-1.5 px-3 rounded-xl text-left w-full transition-colors',
           isRoot
-            ? 'border text-[var(--school-accent,#D4AF37)] font-semibold text-sm mb-2'
+            ? 'border text-[var(--school-accent,#d97757)] font-semibold text-sm mb-2'
             : depth === 1
               ? 'bg-white/[0.04] border border-white/[0.08] text-white/80 text-xs font-medium mb-1 hover:bg-white/[0.07]'
               : 'text-white/50 text-[11px] hover:text-white/70 mb-0.5'
         )}
         style={isRoot ? {
-          backgroundColor: 'color-mix(in srgb, var(--school-accent, #D4AF37) 15%, transparent)',
-          borderColor: 'color-mix(in srgb, var(--school-accent, #D4AF37) 30%, transparent)',
+          backgroundColor: 'color-mix(in srgb, var(--school-accent, #d97757) 15%, transparent)',
+          borderColor: 'color-mix(in srgb, var(--school-accent, #d97757) 30%, transparent)',
         } : undefined}
       >
         {hasChildren && (
@@ -1745,7 +1749,7 @@ export default function LivePostIntelligencePage({ mobileLiriShell = false } = {
           fontFamily: 'var(--school-font-family, Inter, sans-serif)',
         } : undefined}
       >
-        <Loader2 className="w-8 h-8 text-[var(--school-accent,#D4AF37)] animate-spin" />
+        <Loader2 className="w-8 h-8 text-[var(--school-accent,#d97757)] animate-spin" />
       </div>
     );
   }
@@ -1767,7 +1771,7 @@ export default function LivePostIntelligencePage({ mobileLiriShell = false } = {
         <p className="text-white/60">{error}</p>
         <Link
           to={mobileLiriShell ? LIRI_MOBILE.postLive : '/studio'}
-          className="text-sm text-[var(--school-accent,#D4AF37)] hover:underline"
+          className="text-sm text-[var(--school-accent,#d97757)] hover:underline"
         >
           {mobileLiriShell ? '← Autre session' : '← Retour au studio'}
         </Link>
@@ -1794,7 +1798,7 @@ export default function LivePostIntelligencePage({ mobileLiriShell = false } = {
       <div
         className={cn(
           'border-b border-white/[0.06] backdrop-blur-xl sticky top-0 z-20',
-          mobileLiriShell ? 'bg-[#0d0b09]/92 -mx-4 px-4' : '',
+          mobileLiriShell ? 'bg-[#0d0b09]/90 -mx-4 px-4' : '',
         )}
         style={!mobileLiriShell ? { background: shellTheme.topBarBackground } : undefined}
       >
@@ -1802,7 +1806,7 @@ export default function LivePostIntelligencePage({ mobileLiriShell = false } = {
           <div className="flex items-center gap-3 min-w-0">
             <Link
               to={mobileLiriShell ? LIRI_MOBILE.neuron : `/studio/live-preparation/${sessionId}`}
-              className="flex items-center gap-1.5 text-sm text-white/50 hover:text-[var(--school-accent,#D4AF37)] transition-colors shrink-0"
+              className="flex items-center gap-1.5 text-sm text-white/50 hover:text-[var(--school-accent,#d97757)] transition-colors shrink-0"
             >
               <ArrowLeft className="w-4 h-4" />
               {mobileLiriShell ? 'Neuron' : 'Studio'}
@@ -1851,8 +1855,8 @@ export default function LivePostIntelligencePage({ mobileLiriShell = false } = {
         <div
           className="rounded-2xl border overflow-hidden"
           style={{
-            borderColor: 'color-mix(in srgb, var(--school-accent, #D4AF37) 20%, transparent)',
-            background: 'linear-gradient(135deg, color-mix(in srgb, var(--school-accent, #D4AF37) 5%, transparent), transparent)',
+            borderColor: 'color-mix(in srgb, var(--school-accent, #d97757) 20%, transparent)',
+            background: 'linear-gradient(135deg, color-mix(in srgb, var(--school-accent, #d97757) 5%, transparent), transparent)',
             borderRadius: 'var(--school-radius, 1rem)',
           }}
         >
@@ -1864,14 +1868,14 @@ export default function LivePostIntelligencePage({ mobileLiriShell = false } = {
             <div
               className="w-9 h-9 rounded-xl border flex items-center justify-center flex-shrink-0"
               style={{
-                backgroundColor: 'color-mix(in srgb, var(--school-accent, #D4AF37) 15%, transparent)',
-                borderColor: 'color-mix(in srgb, var(--school-accent, #D4AF37) 25%, transparent)',
+                backgroundColor: 'color-mix(in srgb, var(--school-accent, #d97757) 15%, transparent)',
+                borderColor: 'color-mix(in srgb, var(--school-accent, #d97757) 25%, transparent)',
                 borderRadius: 'var(--school-radius, 0.75rem)',
               }}
             >
               {aiStatus === 'loading'
-                ? <Loader2 className="w-4 h-4 text-[var(--school-accent,#D4AF37)] animate-spin" />
-                : <Brain className="w-4 h-4 text-[var(--school-accent,#D4AF37)]" />
+                ? <Loader2 className="w-4 h-4 text-[var(--school-accent,#d97757)] animate-spin" />
+                : <Brain className="w-4 h-4 text-[var(--school-accent,#d97757)]" />
               }
             </div>
             <div className="flex-1 min-w-0">
@@ -1888,9 +1892,9 @@ export default function LivePostIntelligencePage({ mobileLiriShell = false } = {
                 <span
                   className="h-6 px-2.5 rounded-full border text-[10px] font-semibold"
                   style={{
-                    backgroundColor: 'color-mix(in srgb, var(--school-accent, #D4AF37) 20%, transparent)',
-                    borderColor: 'color-mix(in srgb, var(--school-accent, #D4AF37) 30%, transparent)',
-                    color: 'var(--school-accent, #D4AF37)',
+                    backgroundColor: 'color-mix(in srgb, var(--school-accent, #d97757) 20%, transparent)',
+                    borderColor: 'color-mix(in srgb, var(--school-accent, #d97757) 30%, transparent)',
+                    color: 'var(--school-accent, #d97757)',
                   }}
                 >
                   Générer
@@ -1915,7 +1919,7 @@ export default function LivePostIntelligencePage({ mobileLiriShell = false } = {
               >
                 <div className="px-5 pb-5 space-y-4">
                   <div className="border-t border-white/[0.06] pt-4">
-                    <p className="text-xs font-semibold text-[var(--school-accent,#D4AF37)] mb-2 flex items-center gap-1.5">
+                    <p className="text-xs font-semibold text-[var(--school-accent,#d97757)] mb-2 flex items-center gap-1.5">
                       <Sparkles className="w-3.5 h-3.5" /> Résumé
                     </p>
                     <p className="text-sm text-white/75 leading-relaxed">{aiSummary}</p>
@@ -1929,7 +1933,7 @@ export default function LivePostIntelligencePage({ mobileLiriShell = false } = {
                       <ul className="space-y-1.5">
                         {aiKeyPoints.map((kp, i) => (
                           <li key={i} className="flex items-start gap-2 text-sm text-white/70">
-                            <Zap className="w-3.5 h-3.5 text-[var(--school-accent,#D4AF37)] flex-shrink-0 mt-0.5" />
+                            <Zap className="w-3.5 h-3.5 text-[var(--school-accent,#d97757)] flex-shrink-0 mt-0.5" />
                             {kp}
                           </li>
                         ))}
@@ -2026,9 +2030,9 @@ export default function LivePostIntelligencePage({ mobileLiriShell = false } = {
                 <div
                   className="w-8 h-8 rounded-full border flex items-center justify-center text-xs font-bold"
                   style={{
-                    backgroundColor: 'color-mix(in srgb, var(--school-accent, #D4AF37) 20%, transparent)',
-                    borderColor: 'color-mix(in srgb, var(--school-accent, #D4AF37) 30%, transparent)',
-                    color: 'var(--school-accent, #D4AF37)',
+                    backgroundColor: 'color-mix(in srgb, var(--school-accent, #d97757) 20%, transparent)',
+                    borderColor: 'color-mix(in srgb, var(--school-accent, #d97757) 30%, transparent)',
+                    color: 'var(--school-accent, #d97757)',
                   }}
                 >
                   {(p.profiles?.name || '?')[0].toUpperCase()}

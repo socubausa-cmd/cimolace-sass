@@ -317,7 +317,7 @@ export default function StudioDebateDetailPage() {
       <div className="max-w-3xl mx-auto px-4 py-10 md:py-14">
         <Link
           to="/studio/debate-builder"
-          className="inline-flex items-center gap-2 text-sm text-white/50 hover:text-[var(--school-accent,#D4AF37)] transition-colors mb-6"
+          className="inline-flex items-center gap-2 text-sm text-white/50 hover:text-[var(--school-accent,#d97757)] transition-colors mb-6"
         >
           <ArrowLeft className="w-4 h-4" />
           Tous les débats
@@ -396,7 +396,7 @@ export default function StudioDebateDetailPage() {
               Préparation « prêt » : camp A {readyA ? '✓' : '—'} · camp B {readyB ? '✓' : '—'}
             </p>
 
-            <div className="rounded-lg border border-white/8 bg-black/20 p-3 mb-4 space-y-3">
+            <div className="rounded-lg border border-white/10 bg-black/20 p-3 mb-4 space-y-3">
               <p className="text-[10px] uppercase text-white/35 font-semibold tracking-wide">Invitations débatteurs</p>
               <p className="text-[11px] text-white/40">
                 Générez un lien par camp. Le destinataire se connecte puis est ajouté automatiquement au débat.
@@ -415,7 +415,14 @@ export default function StudioDebateDetailPage() {
                   type="button"
                   disabled={inviteBusy}
                   onClick={() => void createInvitation('B')}
-                  className="h-9 px-3 rounded-lg bg-sky-600/25 hover:bg-sky-600/40 border border-sky-500/20 text-xs font-medium disabled:opacity-40"
+                  /* Camp B : bleu ciel → ambre #d4924a. LES DEUX CAMPS DOIVENT RESTER
+                     DISTINGUABLES au premier coup d'œil — c'est toute la fonction de ces
+                     deux boutons. La distinction ne se joue plus rouge/bleu mais
+                     ROSE (camp A, inchangé) / AMBRE (camp B) : deux chaudes nettement
+                     séparées en teinte. Opacités calées sur celles du camp A (35/50 →
+                     30/45) pour que les deux pastilles pèsent pareil. Encre héritée
+                     #f5f4ee sur le fond composé #5a462f = 8,10:1. */
+                  className="h-9 px-3 rounded-lg bg-[#d4924a]/30 hover:bg-[#d4924a]/45 border border-[#d4924a]/30 text-xs font-medium disabled:opacity-40"
                 >
                   Nouveau lien · camp B
                 </button>
@@ -428,7 +435,7 @@ export default function StudioDebateDetailPage() {
                     return (
                       <li
                         key={inv.id}
-                        className="flex flex-col gap-2 py-2 border-t border-white/8 first:border-0 text-[11px]"
+                        className="flex flex-col gap-2 py-2 border-t border-white/10 first:border-0 text-[11px]"
                       >
                         <div className="flex flex-col sm:flex-row sm:items-center gap-2">
                           <span className="text-white/55 shrink-0">
@@ -440,7 +447,7 @@ export default function StudioDebateDetailPage() {
                               type="button"
                               disabled={used || expired}
                               onClick={() => void copyInviteLink(inv)}
-                              className="inline-flex items-center gap-1.5 h-8 px-2.5 rounded-lg border border-white/12 text-white/70 hover:bg-white/5 disabled:opacity-35"
+                              className="inline-flex items-center gap-1.5 h-8 px-2.5 rounded-lg border border-white/10 text-white/70 hover:bg-white/5 disabled:opacity-35"
                             >
                               {copiedId === inv.id ? (
                                 <Check className="w-3.5 h-3.5 text-emerald-400" />
@@ -523,12 +530,12 @@ export default function StudioDebateDetailPage() {
               <ListOrdered className="w-4 h-4 text-rose-300/80" />
               Rounds ({rounds.length})
             </div>
-            <p className="text-[11px] text-white/38 mb-3">
+            <p className="text-[11px] text-white/40 mb-3">
               Titre et consigne par round — visibles dans l'espace préparation et le bandeau Arena pour le round en cours.
             </p>
             <ul className="space-y-3 max-h-[min(70vh,28rem)] overflow-y-auto pr-1">
               {rounds.map((r) => (
-                <li key={r.id} className="rounded-lg border border-white/8 bg-black/25 p-3 space-y-2">
+                <li key={r.id} className="rounded-lg border border-white/10 bg-black/25 p-3 space-y-2">
                   <div className="flex items-center justify-between gap-2">
                     <span className="text-xs font-medium text-white/75">Round {r.round_number}</span>
                     <span className="text-[10px] text-white/30 uppercase tracking-wide">{r.status}</span>

@@ -205,7 +205,7 @@ export function Countdown({ scheduledAt }) {
 // ─── Statut badge ──────────────────────────────────────────────────────────────
 export function StatusBadge({ status }) {
   const map = {
-    scheduled: { label: 'Planifié', color: 'text-[#ebca5e] bg-[#ebca5e]/12 border-[#ebca5e]/30' },
+    scheduled: { label: 'Planifié', color: 'text-[#ebca5e] bg-[#ebca5e]/10 border-[#ebca5e]/30' },
     live:      { label: 'En cours', color: 'text-emerald-300 bg-emerald-500/15 border-emerald-500/30', pulse: true },
     ended:     { label: 'Terminé',  color: 'text-white/30 bg-white/5 border-white/10' },
     waiting:   { label: 'En attente', color: 'text-amber-300 bg-amber-500/15 border-amber-500/30', pulse: true },
@@ -916,7 +916,7 @@ export default function LiveWaitingRoomPage() {
           style={{ backgroundImage: `url(${liveSession.cover_image_url})` }}
         />
       )}
-      <div className="pointer-events-none fixed inset-0 z-[1] bg-gradient-to-b from-[#262624]/50 via-[#262624]/82 to-[#262624]" />
+      <div className="pointer-events-none fixed inset-0 z-[1] bg-gradient-to-b from-[#262624]/50 via-[#262624]/80 to-[#262624]" />
 
       <div className="pointer-events-none fixed inset-0 z-[36]">
         <AmbientAudioLayer
@@ -967,9 +967,9 @@ export default function LiveWaitingRoomPage() {
             {liveSession?.profiles ? (
               <div className="flex items-center justify-center gap-2.5 pt-1 lg:justify-start">
                 {liveSession.profiles.avatar_url ? (
-                  <img src={liveSession.profiles.avatar_url} alt="" className="h-8 w-8 rounded-full border border-white/12 object-cover" />
+                  <img src={liveSession.profiles.avatar_url} alt="" className="h-8 w-8 rounded-full border border-white/10 object-cover" />
                 ) : (
-                  <div className="flex h-8 w-8 items-center justify-center rounded-full border border-[color-mix(in_srgb,var(--school-accent)_35%,transparent)] bg-gradient-to-br from-[color-mix(in_srgb,var(--school-accent)_25%,transparent)] to-[#ebca5e]/12 text-xs font-bold text-[#ebca5e]">
+                  <div className="flex h-8 w-8 items-center justify-center rounded-full border border-[color-mix(in_srgb,var(--school-accent)_35%,transparent)] bg-gradient-to-br from-[color-mix(in_srgb,var(--school-accent)_25%,transparent)] to-[#ebca5e]/10 text-xs font-bold text-[#ebca5e]">
                     {displayNameInitials(liveSession.profiles.name)}
                   </div>
                 )}
@@ -979,10 +979,23 @@ export default function LiveWaitingRoomPage() {
               </div>
             ) : null}
 
-            <ProrasciencePublicCard className="border-cyan-500/20 bg-cyan-950/10 text-left">
-              <p className="text-[11px] font-semibold uppercase tracking-wide text-cyan-200/85">Messagerie</p>
-              <p className="mt-1 text-xs leading-relaxed text-white/50">
-                Icône cyan en bas à droite : même accès que sur le live hôte — fil de session (forum) et messages privés au formateur (connexion, audio, apartés).
+            {/* Carte Messagerie de la SALLE D'ATTENTE — dernier écran vu par l'élève avant
+                un direct, donc celui qu'on soigne le plus.
+                COULEURS : cyan → corail. Le voile #d97757 à 10 % composé sur la coque
+                #262624 donne #382e29 ; le titre en #e8a97f y tient 6,54:1.
+                CORPS DE TEXTE : le corail à 10 % éclaircit la carte par rapport au
+                cyan-950 qu'elle portait ; `text-white/50` n'y tenait plus que 4,54:1,
+                soit la norme au ras. Remonté à /65 → 6,55:1. (/65 et non /62 : Tailwind
+                3.4 ne génère un `/NN` que pour les multiples de 5 — un /62 n'aurait
+                produit aucune couleur, le texte serait retombé sur la couleur héritée.)
+                LIBELLÉ : le texte annonçait une « icône cyan ». Le déclencheur réel
+                (LiveHostFooterMessaging) est ambré — `border-amber-500/25 bg-amber-500/10
+                text-amber-100/90` — et l'était déjà avant cette passe : la phrase
+                désignait donc une couleur qui n'existe plus à l'écran. Corrigée. */}
+            <ProrasciencePublicCard className="border-[#d97757]/30 bg-[#d97757]/10 text-left">
+              <p className="text-[11px] font-semibold uppercase tracking-wide text-[#e8a97f]">Messagerie</p>
+              <p className="mt-1 text-xs leading-relaxed text-white/65">
+                Icône ambrée en bas à droite : même accès que sur le live hôte — fil de session (forum) et messages privés au formateur (connexion, audio, apartés).
               </p>
             </ProrasciencePublicCard>
 
@@ -1102,7 +1115,7 @@ export default function LiveWaitingRoomPage() {
                       onChange={(e) => setPassword(e.target.value)}
                       onKeyDown={(e) => e.key === 'Enter' && submitPassword()}
                       placeholder="Mot de passe du live"
-                      className="h-10 w-full rounded-xl border border-white/12 bg-black/45 px-4 pr-10 text-sm text-white placeholder:text-white/25 outline-none transition-colors focus:border-[color-mix(in_srgb,var(--school-accent)_45%,transparent)]"
+                      className="h-10 w-full rounded-xl border border-white/10 bg-black/45 px-4 pr-10 text-sm text-white placeholder:text-white/25 outline-none transition-colors focus:border-[color-mix(in_srgb,var(--school-accent)_45%,transparent)]"
                     />
                     <button
                       type="button"
@@ -1180,7 +1193,7 @@ export default function LiveWaitingRoomPage() {
           </motion.div>
 
           <aside className="order-1 space-y-4 lg:sticky lg:top-24 lg:order-2 lg:self-start">
-            <ProrasciencePublicCard className="overflow-hidden border-white/12 bg-black/40 p-0">
+            <ProrasciencePublicCard className="overflow-hidden border-white/10 bg-black/40 p-0">
               {liveSession?.cover_image_url ? (
                 <div className="aspect-video w-full bg-black/50">
                   <img
@@ -1255,7 +1268,7 @@ export default function LiveWaitingRoomPage() {
                   ) : null}
                   <Link
                     to="/messages"
-                    className="inline-flex items-center gap-2 rounded-lg border border-white/12 bg-white/[0.04] px-3 py-2 text-xs font-medium text-white/75 transition-colors hover:border-white/20 hover:bg-white/[0.07]"
+                    className="inline-flex items-center gap-2 rounded-lg border border-white/10 bg-white/[0.04] px-3 py-2 text-xs font-medium text-white/75 transition-colors hover:border-white/20 hover:bg-white/[0.07]"
                   >
                     Messagerie (profil)
                   </Link>

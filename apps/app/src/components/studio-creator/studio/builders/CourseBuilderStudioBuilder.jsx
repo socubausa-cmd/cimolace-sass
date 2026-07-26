@@ -1,3 +1,33 @@
+/**
+ * COULEURS — purge du froid, lot « builders ». Les cinq builders (formation, cours IA,
+ * rendez-vous, événement, coaching) partagent la même grammaire de formulaire : les
+ * valeurs ci-dessous sont donc IDENTIQUES d'un fichier à l'autre, c'est volontaire.
+ *
+ *   · panneau (carte enveloppant libellé + champ, ligne d'option) ...... #30302e
+ *   · champ de saisie (Input / Textarea / select / textarea natif) ..... #2b2a27
+ *   · aperçu média / bloc récapitulatif ................................ #1f1e1c
+ *   · encre .................. #f5f4ee, puis rgba(245,244,238,.78/.65/.55)
+ *
+ * POURQUOI ce fichier était froid : il posait #0F1419 (bleu nuit) sur TOUTES ses
+ * surfaces. Ce hex n'est pas remappé par studioWarm.css — il était donc pleinement
+ * visible à l'écran. Le correctif est fait à la source, dans le JSX, jamais par un
+ * remap CSS : c'est ce genre de pansement qui a laissé des écrans bleus des mois.
+ *
+ * POURQUOI l'alpha /50 disparaît sur les panneaux : la coque du studio est #0a0908
+ * (studioCreatorShellBg). Un panneau à 50 % y retombait à ~#0d0f11, soit quasiment la
+ * couleur de la coque — il ne se lisait plus comme un panneau. La valeur pleine de la
+ * charte lui rend son relief, et augmente au passage le contraste du texte posé dessus.
+ *
+ * POURQUOI les gris Tailwind partent aussi : gray-200/300/400/500 sont des « cool gray »
+ * à dominante bleue, ils refroidissent l'écran autant que les hex bannis. On conserve
+ * TROIS paliers d'encre chaude pour ne pas écraser la hiérarchie qui existait —
+ * .78 (libellés) > .65 (sous-titres) > .55 (descriptions). Bonus : la description des
+ * options passe de 3,97:1 (échec WCAG AA) à 4,80:1.
+ *
+ * CE QUI RESTE INTACT : var(--school-accent) (jeton d'accent du tenant, résolu à
+ * l'exécution — le figer casserait le branding client) et border-white/10 (le blanc est
+ * achromatique : à 10 % d'opacité il n'apporte aucune froideur perceptible).
+ */
 import React, { useMemo, useState } from 'react';
 import { Sparkles, Upload, FileText, Scissors, CheckCircle2 } from 'lucide-react';
 import { StudioBuilder } from '../StudioBuilder';
@@ -58,16 +88,16 @@ function autoSegmentsFromTranscript(lines = []) {
 function StepInfo({ draft, updateDraft }) {
   return (
     <div className="space-y-5">
-      <h2 className="text-2xl font-semibold text-white">Créer un cours IA</h2>
+      <h2 className="text-2xl font-semibold text-[#f5f4ee]">Créer un cours IA</h2>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div className="space-y-2">
           <Label>Titre</Label>
-          <Input className="bg-[#0F1419] border-white/10" value={draft.title || ''} onChange={(e) => updateDraft({ title: e.target.value })} />
+          <Input className="bg-[#2b2a27] border-white/10" value={draft.title || ''} onChange={(e) => updateDraft({ title: e.target.value })} />
         </div>
         <div className="space-y-2">
           <Label>Niveau</Label>
           <select
-            className="h-10 w-full rounded-md bg-[#0F1419] border border-white/10 px-3 text-sm"
+            className="h-10 w-full rounded-md bg-[#2b2a27] border border-white/10 px-3 text-sm"
             value={draft.level || 'intermediaire'}
             onChange={(e) => updateDraft({ level: e.target.value })}
           >
@@ -79,16 +109,16 @@ function StepInfo({ draft, updateDraft }) {
       </div>
       <div className="space-y-2">
         <Label>Description</Label>
-        <Textarea className="bg-[#0F1419] border-white/10 min-h-[110px]" value={draft.description || ''} onChange={(e) => updateDraft({ description: e.target.value })} />
+        <Textarea className="bg-[#2b2a27] border-white/10 min-h-[110px]" value={draft.description || ''} onChange={(e) => updateDraft({ description: e.target.value })} />
       </div>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div className="space-y-2">
           <Label>Catégorie</Label>
-          <Input className="bg-[#0F1419] border-white/10" value={draft.category || ''} onChange={(e) => updateDraft({ category: e.target.value })} />
+          <Input className="bg-[#2b2a27] border-white/10" value={draft.category || ''} onChange={(e) => updateDraft({ category: e.target.value })} />
         </div>
         <div className="space-y-2">
           <Label>Langue</Label>
-          <Input className="bg-[#0F1419] border-white/10" value={draft.language || 'fr'} onChange={(e) => updateDraft({ language: e.target.value })} />
+          <Input className="bg-[#2b2a27] border-white/10" value={draft.language || 'fr'} onChange={(e) => updateDraft({ language: e.target.value })} />
         </div>
       </div>
     </div>
@@ -133,7 +163,7 @@ function StepVideo({ draft, updateDraft }) {
         });
       }
     } catch (err) {
-      toast({ title: 'Upload échoué', description: String(err?.message || err), variant: 'destructive' });
+      toast({ title: 'Envoi échoué', description: String(err?.message || err), variant: 'destructive' });
     } finally {
       setUploading(false);
       e.target.value = '';
@@ -142,26 +172,26 @@ function StepVideo({ draft, updateDraft }) {
 
   return (
     <div className="space-y-4">
-      <h2 className="text-2xl font-semibold text-white">Import vidéo</h2>
+      <h2 className="text-2xl font-semibold text-[#f5f4ee]">Import vidéo</h2>
       <div className="space-y-2">
         <Label>URL vidéo (optionnel)</Label>
         <Input
-          className="bg-[#0F1419] border-white/10"
+          className="bg-[#2b2a27] border-white/10"
           value={draft.video_url || ''}
           onChange={(e) => updateDraft({ video_url: e.target.value })}
           placeholder="https://..."
         />
       </div>
       <div className="space-y-2">
-        <Label>Ou uploader un fichier</Label>
+        <Label>Ou envoyer un fichier</Label>
         <input type="file" accept="video/*" onChange={onPickFile} className="block w-full text-sm" />
-        {uploading ? <p className="text-xs text-gray-400">Upload en cours...</p> : null}
+        {uploading ? <p className="text-xs text-[rgba(245,244,238,0.65)]">Envoi en cours…</p> : null}
       </div>
-      <Card className="bg-[#0F1419] border-white/10">
-        <CardContent className="p-4 text-sm text-gray-300">
+      <Card className="bg-[#30302e] border-white/10">
+        <CardContent className="p-4 text-sm text-[rgba(245,244,238,0.78)]">
           Durée détectée: {draft.duration_seconds ? `${Math.round(draft.duration_seconds)}s` : '—'}
           {Number(draft.duration_seconds || 0) > 1020 ? (
-            <p className="mt-2 text-amber-300">Suggestion: découper en Partie 1 / 2 / 3.</p>
+            <p className="mt-2 text-[#e0a458]">Suggestion: découper en Partie 1 / 2 / 3.</p>
           ) : null}
         </CardContent>
       </Card>
@@ -190,12 +220,12 @@ function StepTranscript({ draft, updateDraft }) {
   };
   return (
     <div className="space-y-4">
-      <h2 className="text-2xl font-semibold text-white">Transcription</h2>
-      <Button onClick={run} disabled={loading || !draft.video_url} className="bg-[var(--school-accent)] text-black hover:bg-yellow-500">
+      <h2 className="text-2xl font-semibold text-[#f5f4ee]">Transcription</h2>
+      <Button onClick={run} disabled={loading || !draft.video_url} className="bg-[var(--school-accent)] text-black hover:bg-[#e6b878]">
         {loading ? 'Génération...' : 'Générer transcription'}
       </Button>
       <Textarea
-        className="bg-[#0F1419] border-white/10 min-h-[240px]"
+        className="bg-[#2b2a27] border-white/10 min-h-[240px]"
         value={(draft.transcript || []).map((l) => `[${l.time || '0:00'}] ${l.text || ''}`).join('\n')}
         onChange={(e) => {
           const lines = String(e.target.value || '')
@@ -214,11 +244,11 @@ function StepSegments({ draft, updateDraft }) {
   const segments = draft.segments || [];
   return (
     <div className="space-y-4">
-      <h2 className="text-2xl font-semibold text-white">Horodatages</h2>
+      <h2 className="text-2xl font-semibold text-[#f5f4ee]">Horodatages</h2>
       <div className="flex gap-2">
         <Button
           variant="outline"
-          className="border-white/10 text-white hover:bg-white/5"
+          className="border-white/10 text-[#f5f4ee] hover:bg-white/5"
           onClick={() => {
             const generated = autoSegmentsFromTranscript(draft.transcript || []);
             updateDraft({ segments: generated });
@@ -228,7 +258,7 @@ function StepSegments({ draft, updateDraft }) {
         </Button>
         <Button
           variant="outline"
-          className="border-white/10 text-white hover:bg-white/5"
+          className="border-white/10 text-[#f5f4ee] hover:bg-white/5"
           onClick={() => updateDraft({ segments: [...segments, { startText: '', endText: '', label: '' }] })}
         >
           Ajouter segment
@@ -237,17 +267,17 @@ function StepSegments({ draft, updateDraft }) {
       <div className="space-y-2">
         {segments.map((s, idx) => (
           <div key={`seg-${idx}`} className="grid grid-cols-12 gap-2">
-            <Input className="col-span-2 bg-[#0F1419] border-white/10" value={s.startText || ''} onChange={(e) => {
+            <Input className="col-span-2 bg-[#2b2a27] border-white/10" value={s.startText || ''} onChange={(e) => {
               const next = [...segments];
               next[idx] = { ...next[idx], startText: e.target.value };
               updateDraft({ segments: next });
             }} placeholder="0:00" />
-            <Input className="col-span-2 bg-[#0F1419] border-white/10" value={s.endText || ''} onChange={(e) => {
+            <Input className="col-span-2 bg-[#2b2a27] border-white/10" value={s.endText || ''} onChange={(e) => {
               const next = [...segments];
               next[idx] = { ...next[idx], endText: e.target.value };
               updateDraft({ segments: next });
             }} placeholder="0:30" />
-            <Input className="col-span-7 bg-[#0F1419] border-white/10" value={s.label || ''} onChange={(e) => {
+            <Input className="col-span-7 bg-[#2b2a27] border-white/10" value={s.label || ''} onChange={(e) => {
               const next = [...segments];
               next[idx] = { ...next[idx], label: e.target.value };
               updateDraft({ segments: next });
@@ -263,21 +293,21 @@ function StepSegments({ draft, updateDraft }) {
 function StepFinalize({ draft, onSubmit, creating }) {
   return (
     <div className="space-y-4">
-      <h2 className="text-2xl font-semibold text-white">Prêt à lancer la post-production</h2>
-      <Card className="bg-[#0F1419] border-[color-mix(in_srgb,var(--school-accent)_30%,transparent)]">
-        <CardContent className="p-4 text-sm text-gray-200 space-y-1">
+      <h2 className="text-2xl font-semibold text-[#f5f4ee]">Prêt à lancer la post-production</h2>
+      <Card className="bg-[#30302e] border-[color-mix(in_srgb,var(--school-accent)_30%,transparent)]">
+        <CardContent className="p-4 text-sm text-[rgba(245,244,238,0.78)] space-y-1">
           <p>Titre: {draft.title || '—'}</p>
           <p>Durée: {draft.duration_seconds ? `${Math.round(draft.duration_seconds)}s` : '—'}</p>
           <p>Transcription: {(draft.transcript || []).length} lignes</p>
           <p>Segments: {(draft.segments || []).length}</p>
         </CardContent>
       </Card>
-      <p className="text-xs text-gray-400">
+      <p className="text-xs text-[rgba(245,244,238,0.65)]">
         Le workflow crée une formation brouillon + un contenu vidéo, puis ouvre le{' '}
-        <strong className="text-white/55">SmartBoard Designer</strong> avec la post-production (transcription, pipeline…)
+        <strong className="text-[#e6b878]">SmartBoard Designer</strong> avec la post-production (transcription, pipeline…)
         sur ce contenu. La page post-prod plein écran reste disponible via le hub studio.
       </p>
-      <Button onClick={onSubmit} disabled={creating} className="bg-[var(--school-accent)] text-black hover:bg-yellow-500">
+      <Button onClick={onSubmit} disabled={creating} className="bg-[var(--school-accent)] text-black hover:bg-[#e6b878]">
         {creating ? 'Création...' : 'Créer et ouvrir le studio'}
       </Button>
     </div>
@@ -297,25 +327,25 @@ function Preview({ draft }) {
   const segmentsCount = (draft?.segments || []).length;
   return (
     <div className="space-y-3">
-      <div className="rounded-xl border border-white/10 bg-[#0F1419]/60 p-4">
-        <div className="text-xs text-gray-400 mb-1">Prorascience Course Builder AI</div>
-        <div className="text-sm text-white font-semibold">{draft?.title || 'Nouveau cours IA'}</div>
-        <div className="text-xs text-gray-500 mt-1">{draft?.description || 'Ajoutez une description.'}</div>
+      <div className="rounded-xl border border-white/10 bg-[#1f1e1c] p-4">
+        <div className="text-xs text-[rgba(245,244,238,0.65)] mb-1">Prorascience — Constructeur de cours IA</div>
+        <div className="text-sm text-[#f5f4ee] font-semibold">{draft?.title || 'Nouveau cours IA'}</div>
+        <div className="text-xs text-[rgba(245,244,238,0.55)] mt-1">{draft?.description || 'Ajoutez une description.'}</div>
       </div>
       <div className="grid grid-cols-2 gap-2 text-xs">
-        <div className="rounded-lg border border-white/10 bg-[#0F1419]/60 p-3">
+        <div className="rounded-lg border border-white/10 bg-[#1f1e1c] p-3">
           <Upload className="w-4 h-4 text-[var(--school-accent)] mb-1" />
           Durée: {draft?.duration_seconds ? `${Math.round(draft.duration_seconds)}s` : '—'}
         </div>
-        <div className="rounded-lg border border-white/10 bg-[#0F1419]/60 p-3">
+        <div className="rounded-lg border border-white/10 bg-[#1f1e1c] p-3">
           <FileText className="w-4 h-4 text-[var(--school-accent)] mb-1" />
-          Transcript: {transcriptCount}
+          Transcription : {transcriptCount}
         </div>
-        <div className="rounded-lg border border-white/10 bg-[#0F1419]/60 p-3">
+        <div className="rounded-lg border border-white/10 bg-[#1f1e1c] p-3">
           <Scissors className="w-4 h-4 text-[var(--school-accent)] mb-1" />
           Segments: {segmentsCount}
         </div>
-        <div className="rounded-lg border border-white/10 bg-[#0F1419]/60 p-3">
+        <div className="rounded-lg border border-white/10 bg-[#1f1e1c] p-3">
           <Sparkles className="w-4 h-4 text-[var(--school-accent)] mb-1" />
           Mode: SmartBoard
         </div>
