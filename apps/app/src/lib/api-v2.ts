@@ -726,6 +726,40 @@ export const masterclassApi = {
       .post<ApiEnvelope<any>>('/masterclass-factory/from-replay', { videoId }, { timeout: 900000 })
       .then(unwrap),
   /**
+   * CHAPITRAGE SÉMANTIQUE d'un replay : le modèle lit la transcription horodatée
+   * et pose les VRAIES ruptures de sujet (au lieu du découpage à intervalle fixe
+   * du lecteur). Les chapitres sont persistés côté API : un élève les lit ensuite
+   * sans rien déclencher. Réservé aux créateurs (403 sinon).
+   * Renvoie { chapters:[{t,label,summary}], generated_at, source:'ia'|'repli', persisted }.
+   *
+   * ⚠️ TIMEOUT ALIGNÉ SUR LE SERVEUR — chiffre à RECALCULER si l'on touche aux
+   * constantes du service. Pire cas mesuré aujourd'hui (replay-chapters.service.ts) :
+   * lecture ~1 s + MAP 360 s (BUDGET_MAP_MS, enveloppe dure : chaque tentative est
+   * rognée sur l'échéance) + REDUCE 270 s (3 × TIMEOUT_REDUCE_MS) + sélection locale
+   * + écriture ~1 s ≈ 633 s. Les 780 s laissent 147 s de marge. Un timeout client
+   * plus court (300 s auparavant) coupait un
+   * travail LÉGITIME encore en cours, affichait un message axios en anglais dans une
+   * UI française, et rendait le bouton cliquable pendant que le premier run tournait
+   * toujours — d'où un second appel modèle facturé pour rien.
+   *
+   * ⚠️ `force` N'EST PAS DÉCORATIF : le contrôleur lit littéralement
+   * `{ force: d?.force === true }` (masterclass-factory.controller.ts) et le service
+   * renvoie le CACHE de `published_videos.chapters` tant qu'il est faux. Ne pas
+   * transmettre ce champ (ce qui était le cas) rendait « Rechapitrer avec l'IA »
+   * strictement inopérant : l'écran annonçait « N chapitres générés » en réaffichant
+   * exactement les chapitres déjà en base. On l'envoie donc explicitement, faux par
+   * défaut — un premier chapitrage n'a rien à forcer, et forcer par défaut
+   * refacturerait un appel modèle à chaque ouverture du replay.
+   */
+  chaptersFromReplay: (videoId: string, force = false) =>
+    apiV2
+      .post<ApiEnvelope<any>>(
+        '/masterclass-factory/chapters-from-replay',
+        { videoId, force },
+        { timeout: 780000 },
+      )
+      .then(unwrap),
+  /**
    * Demande la construction d'un COURS ENSEIGNABLE depuis un replay : extraction du
    * contenu, plan pédagogique, leçons (amorce → schéma → exemples → quiz corrigé).
    * Traitement long côté worker → renvoie une demande à suivre, pas le cours.

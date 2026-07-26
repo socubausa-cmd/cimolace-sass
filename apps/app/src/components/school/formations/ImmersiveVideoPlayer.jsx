@@ -1,5 +1,5 @@
 import React, { forwardRef, useCallback, useEffect, useImperativeHandle, useMemo, useRef, useState } from 'react';
-import { ArrowLeft, Play, Pause, Volume2, VolumeX, Maximize2, Rewind, FastForward, ListTree, AlignLeft, X } from 'lucide-react';
+import { ArrowLeft, Play, Pause, Volume2, VolumeX, Maximize2, Rewind, FastForward, ListTree, AlignLeft, X, Sparkles, Loader2 } from 'lucide-react';
 
 /**
  * ImmersiveVideoPlayer — rend une VRAIE vidéo (replay Zoom, rendu post-prod) dans la
@@ -9,9 +9,20 @@ import { ArrowLeft, Play, Pause, Volume2, VolumeX, Maximize2, Rewind, FastForwar
  * Props :
  *   src, poster, title, description
  *   crumb    { module, semaine, jour }
- *   cues     [{ t:secondes, text }]  — transcription horodatée (sync + chapitres auto)
+ *   cues     [{ t:secondes, text }]  — transcription horodatée (sync + repères auto)
  *   transcript  texte brut (repli si pas de cues)
- *   chapters [{ t, label }]  — sinon dérivés des cues
+ *   chapters [{ t, label, summary }] — chapitrage IA persisté ; sinon repères dérivés localement
+ *   chaptersSource  'ia' | 'repli'   — origine de `chapters` : 'repli' = heuristique
+ *                                      SERVEUR (l'IA a échoué). On continue alors
+ *                                      d'annoncer des « repères automatiques » : sans
+ *                                      cela, un résultat dégradé passait pour un vrai
+ *                                      chapitrage dès que le parent l'injectait.
+ *   onGenerateChapters  (force:boolean) => void — si fourni (créateur), bouton
+ *                                      « Chapitrer avec l'IA ». `force` vaut vrai
+ *                                      quand le bouton dit « Rechapitrer » : sans
+ *                                      lui, l'API renvoie son cache et le clic ne
+ *                                      régénère RIEN tout en annonçant le contraire.
+ *   chaptersState  { state:'idle'|'working'|'error'|'done', message }
  *   onExit
  */
 
@@ -40,21 +51,136 @@ const fmt = (s) => {
   return (h ? `${h}:${String(m).padStart(2, '0')}` : `${m}`) + ':' + String(x).padStart(2, '0');
 };
 
-function deriveChapters(cues, duration) {
-  if (!cues?.length || !duration) return [];
-  const N = Math.min(9, Math.max(3, Math.round(duration / 600)));
-  const step = duration / N;
-  const out = [];
-  for (let i = 0; i < N; i++) {
-    const start = i * step;
-    const cue = cues.find((c) => c.t >= start) || cues[cues.length - 1];
-    const label = (cue?.text || '').split(/[.…!?]/)[0].slice(0, 48).trim() || `Partie ${i + 1}`;
-    out.push({ t: start, label });
+/**
+ * Débuts d'étiquette refusés. Deux niveaux, parce qu'un seul ne suffit pas :
+ *
+ *  - STRICT : tout ce qui trahit un fragment d'oral ou une phrase anaphorique —
+ *    connecteurs, tics de langue, pronoms, démonstratifs. On le tente d'abord :
+ *    ce qui passe ce filtre ressemble à un vrai titre.
+ *  - SOUPLE : uniquement les connecteurs et les tics. Second passage, quand le
+ *    filtre strict n'a rien laissé : une phrase complète (« Nous allons voir la
+ *    digestion ») reste MILLE fois plus lisible qu'un « Partie 4 » anonyme.
+ *
+ * ⚠️ « la » (article) n'est PAS interdit — « La circulation sanguine… » est un
+ * excellent repère. Seul « là » (adverbe, accentué) l'est. La confusion des deux
+ * faisait retomber TOUTES les étiquettes sur « Partie N » (vérifié en test).
+ * Mêmes listes côté API (replay-chapters.service.ts) : le front et l'API ne
+ * partagent aucun bundle, la duplication est assumée.
+ */
+const TICS = "et|mais|donc|or|alors|car|parce|puis|ensuite|voilà|voila|bon|ben|euh|ok|okay|oui|non|que|qu'|qui|quoi|dont|ou|enfin|bref|du coup|en fait|attends|attendez|excuse|excusez|alright|so|well";
+const ANAPHORES = "où|c'est|ça|ca|cela|ce|cet|cette|ces|je|j'|tu|il|elle|on|nous|vous|ils|elles|là|ici|si|quand|comme|par exemple";
+const DEBUT_INTERDIT = new RegExp(`^(${TICS}|${ANAPHORES})\\b`, 'i');
+const DEBUT_INTERDIT_SOUPLE = new RegExp(`^(${TICS})\\b`, 'i');
+
+/**
+ * Cherche AU VOISINAGE d'une borne un cue exploitable comme étiquette.
+ * Exigences (dans l'ordre où elles éliminent les faux chapitres constatés en prod
+ * — « Excuse », « Mais deux fois, c'est no », « parce que vo ») :
+ *   1. le cue doit COMMENCER une phrase : le cue précédent se termine par . ! ? … »
+ *      (sinon on tombe au milieu d'une phrase, d'où les débuts absurdes) ;
+ *   2. au moins 4 mots (« Excuse » n'est pas un chapitre) ;
+ *   3. ne commence pas par une conjonction / un mot vide ;
+ *   4. coupe sur une FRONTIÈRE DE MOT, avec ellipse (jamais « parce que vo »).
+ * On tolère un décalage de quelques cues autour de la borne : mieux vaut un repère
+ * lisible 20 s plus loin qu'un fragment illisible pile à l'heure.
+ */
+function labelDepuisCues(cues, t) {
+  let idx = cues.findIndex((c) => c.t >= t);
+  if (idx < 0) idx = cues.length - 1;
+  for (const filtre of [DEBUT_INTERDIT, DEBUT_INTERDIT_SOUPLE]) {
+    for (const d of [0, 1, 2, -1, 3, -2]) {
+      const i = idx + d;
+      if (i < 0 || i >= cues.length) continue;
+      const texte = String(cues[i]?.text || '').trim();
+      const precedent = i > 0 ? String(cues[i - 1]?.text || '').trim() : '';
+      if (i > 0 && !/[.!?…»]$/.test(precedent)) continue;
+      if (texte.split(/\s+/).filter(Boolean).length < 4) continue;
+      if (filtre.test(texte)) continue;
+      let phrase = texte.split(/[.!?…]/)[0].trim();
+      if (phrase.length > 52) phrase = `${phrase.slice(0, 52).replace(/\s+\S*$/, '')}…`;
+      if (phrase.split(/\s+/).filter(Boolean).length < 4) continue;
+      return phrase.charAt(0).toUpperCase() + phrase.slice(1);
+    }
   }
-  return out;
+  return '';
 }
 
-function ImmersiveVideoPlayer({ src, poster, title, description, crumb, cues, transcript, chapters, onExit, embedded = false, headerAction = null }, ref) {
+/**
+ * REPÈRES AUTOMATIQUES (repli local) — utilisés UNIQUEMENT quand aucun chapitrage
+ * IA n'existe pour ce replay.
+ *
+ * POURQUOI PAS UN DÉCOUPAGE RÉGULIER (l'ancienne version) : diviser la durée en N
+ * parts égales produit des bornes qui ne correspondent à RIEN dans le discours ;
+ * l'étiquette tombe alors en plein milieu d'une phrase. Sur un direct de 3 h 44 cela
+ * donnait « Excuse », « Mais deux fois, c'est no », « Alright So dit que tu… ».
+ *
+ * CE QU'ON FAIT À LA PLACE : on pose les bornes aux plus grands SILENCES. Les cues
+ * étant des paragraphes fusionnés, l'écart entre deux départs consécutifs est un bon
+ * proxy du temps de parole + pause qui les sépare : un grand écart = une respiration,
+ * donc un candidat naturel à la rupture.
+ * Sans étiquette acceptable, on écrit « Partie N » — plus honnête qu'un fragment.
+ *
+ * ⚠️ PIÈGE CORRIGÉ (couverture) : avec un pas FIXE de 4 à 15 min et un plafond de
+ * 14 repères, la fin d'un long direct n'était JAMAIS atteinte — et comme on retient
+ * le PREMIER cue de plus grand écart, le pas réel s'écrasait sur son minimum. Mesuré
+ * sur « L'arbre du Manikongo » (3 h 44, 1 121 cues) : dernier repère à 02:10:23, donc
+ * 1 h 33 de vidéo (42 %) sans aucun repère — et l'entrée surlignée restait la même
+ * pendant tout ce temps. Le pas est donc RECALCULÉ à chaque tour depuis le temps
+ * restant et le nombre de repères encore posables : la couverture s'auto-corrige.
+ * Sur un très long direct les chapitres dépassent forcément 15 min : c'est la
+ * conséquence assumée du plafond de 14 entrées (au-delà, la liste devient illisible).
+ *
+ * Cela reste une HEURISTIQUE : elle ne lit pas le sens. Le vrai chapitrage est celui
+ * de l'IA (POST /masterclass-factory/chapters-from-replay), rendu via la prop `chapters`.
+ * ⚠️ Miroir EXACT de `repli()` côté API (replay-chapters.service.ts) : toute correction
+ * ici doit y être reportée — les deux applications ne partagent aucun bundle.
+ */
+const MAX_CHAPITRES = 14; // plafond dur : au-delà, la liste devient illisible
+
+function deriveChapters(cues, duration) {
+  const MIN = 240;  // 4 min : en dessous, ce n'est plus un chapitre
+  if (!cues?.length || cues.length < 4 || !duration) return [];
+
+  // On ne pose des repères que sur ce qui est TRANSCRIT : si les cues s'arrêtent
+  // à mi-parcours (VTT partiel), rien à étiqueter au-delà.
+  const fin = Math.min(duration, cues[cues.length - 1].t + 60);
+  const bornes = [0];
+  let courant = 0;
+  while (courant + MIN < fin && bornes.length < MAX_CHAPITRES) {
+    // Pas CIBLE : ce qu'il reste à couvrir, réparti sur les repères restants.
+    const pas = Math.max(MIN, (fin - courant) / (MAX_CHAPITRES - bornes.length));
+    const bas = courant + Math.max(MIN, pas * 0.6);
+    const haut = Math.min(courant + pas * 1.4, fin);
+    if (bas >= fin) break;
+    let meilleur = -1;
+    let meilleurEcart = -1;
+    let meilleureDist = Infinity;
+    for (let i = 1; i < cues.length; i++) {
+      const t = cues[i].t;
+      if (t < bas) continue;
+      if (t > haut) break;
+      const ecart = t - cues[i - 1].t; // proxy du silence précédant ce cue
+      const dist = Math.abs(t - (courant + pas)); // écart au pas cible
+      // À silence ÉGAL (débit régulier : le cas le plus fréquent), on prend le
+      // candidat le plus proche du pas cible. Sans ce départage, le premier cue
+      // de la fenêtre gagnait toujours et le pas retombait à son minimum.
+      if (ecart > meilleurEcart || (ecart === meilleurEcart && dist < meilleureDist)) {
+        meilleurEcart = ecart; meilleureDist = dist; meilleur = i;
+      }
+    }
+    if (meilleur < 0) { // blanc dans la transcription : on avance d'un cran
+      courant = haut;
+      if (haut >= fin) break;
+      continue;
+    }
+    courant = cues[meilleur].t;
+    bornes.push(courant);
+  }
+
+  return bornes.map((t, i) => ({ t, label: labelDepuisCues(cues, t) || `Partie ${i + 1}` }));
+}
+
+function ImmersiveVideoPlayer({ src, poster, title, description, crumb, cues, transcript, chapters, chaptersSource, onGenerateChapters, chaptersState, onExit, embedded = false, headerAction = null }, ref) {
   const vref = useRef(null);
   const railRef = useRef(null);
   const [playing, setPlaying] = useState(false);
@@ -73,8 +199,22 @@ function ImmersiveVideoPlayer({ src, poster, title, description, crumb, cues, tr
   }, []);
 
   const reduce = typeof window !== 'undefined' && window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
-  const chaps = useMemo(() => (chapters?.length ? chapters : deriveChapters(cues, dur)), [chapters, cues, dur]);
-  const hasRail = Boolean(cues?.length || transcript || chaps.length);
+  // Chapitrage IA (persisté) s'il existe, sinon repères dérivés localement. On
+  // garde l'origine : elle change ce qu'on annonce à l'élève (de vrais chapitres
+  // vs de simples repères), et on ne veut pas faire passer l'heuristique pour un
+  // travail éditorial.
+  const chapsFournis = Array.isArray(chapters) && chapters.length ? chapters : null;
+  // Des chapitres fournis mais issus du REPLI serveur restent une heuristique :
+  // on ne les fait pas passer pour un vrai chapitrage (même mention, même bouton
+  // « Chapitrer » plutôt que « Rechapitrer »).
+  const chapsIa = chapsFournis && chaptersSource !== 'repli' ? chapsFournis : null;
+  const chapsLocaux = useMemo(() => deriveChapters(cues, dur), [cues, dur]);
+  const chaps = chapsFournis || chapsLocaux;
+  const chapsDerives = !chapsIa && chaps.length > 0;
+  const chapWorking = chaptersState?.state === 'working';
+  // Le bouton de chapitrage vit dans le rail : on ouvre le rail dès qu'un créateur
+  // peut agir, même sans transcription affichable (sinon l'action serait inatteignable).
+  const hasRail = Boolean(cues?.length || transcript || chaps.length || onGenerateChapters);
   const activeCue = useMemo(() => {
     if (!cues?.length) return -1;
     let lo = 0, hi = cues.length - 1, ans = -1;
@@ -137,14 +277,69 @@ function ImmersiveVideoPlayer({ src, poster, title, description, crumb, cues, tr
           )) : transcript ? <p style={{ whiteSpace: 'pre-wrap', color: T.muted, fontSize: 13.5, lineHeight: 1.75, padding: '4px 14px' }}>{transcript}</p>
             : <p style={{ color: T.faint, fontSize: 13, padding: '20px 14px', textAlign: 'center' }}>Transcription bientôt disponible.</p>
         ) : (
-          chaps.length ? chaps.map((c, i) => (
-            <button key={i} type="button" onClick={() => seek(c.t)} className="ivp-ctl"
-              style={{ display: 'flex', alignItems: 'baseline', gap: 11, width: '100%', textAlign: 'left', padding: '11px 13px', borderRadius: 12, cursor: 'pointer', marginBottom: 4,
-                border: `1px solid ${i === activeChap ? 'rgba(217,119,87,0.34)' : 'transparent'}`, background: i === activeChap ? 'rgba(217,119,87,0.12)' : 'transparent' }}>
-              <span style={{ fontFamily: T.grotesque, fontSize: 11, fontWeight: 800, color: i === activeChap ? T.gold : T.faint, fontVariantNumeric: 'tabular-nums', minWidth: 40 }}>{fmt(c.t)}</span>
-              <span style={{ fontFamily: T.body, fontSize: 14, lineHeight: 1.4, color: i === activeChap ? T.ink : T.muted }}>{c.label}</span>
-            </button>
-          )) : <p style={{ color: T.faint, fontSize: 13, padding: '20px 14px', textAlign: 'center' }}>Chapitres bientôt disponibles.</p>
+          <>
+            {/* Action créateur : le chapitrage sémantique consomme des jetons IA,
+                il n'est donc proposé que si le parent fournit le handler (l'élève
+                n'a pas ce bouton, et l'API le refuserait de toute façon). */}
+            {onGenerateChapters && (
+              <div style={{ padding: '4px 8px 10px' }}>
+                {/* `force` = REFAIRE le chapitrage. Vrai uniquement quand le bouton
+                    dit « Rechapitrer » (des chapitres IA existent déjà en base) :
+                    sans ce paramètre, l'API renvoyait son cache et le clic annonçait
+                    une génération qui n'avait pas eu lieu. Faux au premier chapitrage :
+                    il n'y a rien à écraser, et forcer coûterait un appel modèle. */}
+                <button type="button" onClick={() => onGenerateChapters(Boolean(chapsIa))} disabled={chapWorking} className="ivp-ctl"
+                  style={{ display: 'inline-flex', alignItems: 'center', gap: 7, padding: '8px 13px', borderRadius: 999, width: '100%', justifyContent: 'center',
+                    border: '1px solid rgba(217,119,87,0.42)', background: 'rgba(217,119,87,0.14)', color: '#f0c3ac',
+                    cursor: chapWorking ? 'wait' : 'pointer', opacity: chapWorking ? 0.7 : 1,
+                    fontFamily: T.grotesque, fontSize: 12.5, fontWeight: 700 }}>
+                  {chapWorking
+                    ? <Loader2 size={14} style={{ animation: reduce ? 'none' : 'ivpSpin .9s linear infinite' }} />
+                    : <Sparkles size={14} />}
+                  {chapWorking ? 'Chapitrage en cours…' : chapsIa ? 'Rechapitrer avec l\'IA' : 'Chapitrer avec l\'IA'}
+                </button>
+                {chaptersState?.message ? (
+                  <p style={{ margin: '7px 2px 0', fontSize: 11.5, lineHeight: 1.45, color: chaptersState.state === 'error' ? '#f6b8ab' : T.muted }}>
+                    {chaptersState.message}
+                  </p>
+                ) : null}
+              </div>
+            )}
+            {/* Honnêteté : on annonce quand ces repères sont dérivés des silences
+                et non d'une lecture du contenu.
+                ⚠️ L'APPEL À L'ACTION est réservé à qui PEUT agir : un élève n'a pas
+                le bouton (et l'API lui répondrait 403). Lui ordonner de « lancer le
+                chapitrage IA » revenait à lui demander l'impossible tout en lui
+                annonçant que ce qu'il lit est de seconde zone. */}
+            {/* T.muted et non T.faint : à 11 px, T.faint plafonne à 3,4:1 sur le fond
+                du rail — sous la norme WCAG (4,5:1) pour du texte courant. Une
+                mention d'honnêteté illisible ne remplit pas son office. */}
+            {chapsDerives && (
+              <p style={{ margin: '0 10px 8px', fontSize: 11, lineHeight: 1.45, color: T.muted }}>
+                {onGenerateChapters
+                  ? 'Repères automatiques — lance le chapitrage IA pour de vrais chapitres.'
+                  : 'Repères automatiques, générés à partir de la transcription.'}
+              </p>
+            )}
+            {chaps.length ? chaps.map((c, i) => (
+              <button key={i} type="button" onClick={() => seek(c.t)} className="ivp-ctl"
+                style={{ display: 'flex', alignItems: 'flex-start', gap: 11, width: '100%', textAlign: 'left', padding: '11px 13px', borderRadius: 12, cursor: 'pointer', marginBottom: 4,
+                  border: `1px solid ${i === activeChap ? 'rgba(217,119,87,0.34)' : 'transparent'}`, background: i === activeChap ? 'rgba(217,119,87,0.12)' : 'transparent' }}>
+                <span style={{ fontFamily: T.grotesque, fontSize: 11, fontWeight: 800, color: i === activeChap ? T.gold : T.faint, fontVariantNumeric: 'tabular-nums', minWidth: 40, paddingTop: 3 }}>{fmt(c.t)}</span>
+                {/* L'ÉTAT ACTIF SE DIT PAR LE TITRE (couleur + graisse), jamais en
+                    éteignant le résumé : une opacité additionnelle sur T.muted le
+                    faisait tomber à 3,9:1 (norme 4,5:1) — le texte le moins lisible
+                    de l'écran était précisément l'apport du chapitrage IA. À plein
+                    T.muted il tient 6,3:1 sur le rail, 6,0:1 en slide-over mobile. */}
+                <span style={{ minWidth: 0 }}>
+                  <span style={{ display: 'block', fontFamily: T.body, fontSize: 14, lineHeight: 1.4, fontWeight: i === activeChap ? 600 : 400, color: i === activeChap ? T.ink : T.muted }}>{c.label}</span>
+                  {c.summary ? (
+                    <span style={{ display: 'block', marginTop: 3, fontFamily: T.body, fontSize: 12, lineHeight: 1.45, color: T.muted }}>{c.summary}</span>
+                  ) : null}
+                </span>
+              </button>
+            )) : <p style={{ color: T.faint, fontSize: 13, padding: '20px 14px', textAlign: 'center' }}>Chapitres bientôt disponibles.</p>}
+          </>
         )}
       </div>
     </aside>

@@ -9,6 +9,7 @@ import type { TenantContext } from '../tenant/tenant.types';
 import { MasterclassFactoryService } from './masterclass-factory.service';
 import { TranscriptCourseService } from './transcript-course.service';
 import { CourseJobService } from './course-job.service';
+import { ReplayChaptersService } from './replay-chapters.service';
 
 // Guards au niveau CLASSE, mais @Roles au niveau MÉTHODE : l'ÉCRITURE
 // (générer/sauver/analyser) reste réservée aux créateurs (owner/admin/teacher),
@@ -23,6 +24,7 @@ export class MasterclassFactoryController {
     private svc: MasterclassFactoryService,
     private transcriptCourse: TranscriptCourseService,
     private courseJobs: CourseJobService,
+    private replayChapters: ReplayChaptersService,
   ) {}
 
   /**
@@ -35,6 +37,23 @@ export class MasterclassFactoryController {
   fromReplay(@Body() d: { videoId?: string }, @CurrentTenant() t: TenantContext) {
     return this.transcriptCourse.buildFromReplay(t.id, String(d?.videoId ?? ''));
   }
+  /**
+   * CHAPITRAGE SÉMANTIQUE d'un replay : repère les vraies ruptures de sujet dans
+   * la transcription horodatée et les persiste dans published_videos.chapters.
+   * Réservé aux créateurs, comme from-replay : l'opération consomme des jetons IA.
+   * Les ÉLÈVES se contentent de LIRE les chapitres déjà générés (published_videos
+   * remonte au front via zoom-engine) — ils n'en déclenchent jamais.
+   * Idempotent : renvoie l'existant sans rappeler le modèle, sauf `force: true`.
+   */
+  @Post('chapters-from-replay')
+  @Roles('owner', 'admin', 'teacher')
+  chaptersFromReplay(
+    @Body() d: { videoId?: string; force?: boolean },
+    @CurrentTenant() t: TenantContext,
+  ) {
+    return this.replayChapters.generate(t.id, String(d?.videoId ?? ''), { force: d?.force === true });
+  }
+
   /**
    * Demande la construction d'un COURS ENSEIGNABLE depuis un replay (Vidéothèque).
    * Traitement long → on enregistre la demande, le worker la traite et dépose le

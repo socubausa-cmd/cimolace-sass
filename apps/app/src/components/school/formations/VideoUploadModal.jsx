@@ -26,7 +26,12 @@ function PhoneCapturePanel({ onBack, onVideoReady }) {
   const baseUrl = typeof window !== 'undefined' ? `${window.location.origin}/companion-capture` : '/companion-capture';
   const uploadUrl = `${baseUrl}?session=${sessionId}&mode=upload`;
   const streamUrl = `${baseUrl}?session=${sessionId}&mode=stream`;
-  const qrUrl = (url) => `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(url)}&color=D4AF37&bgcolor=070d18`;
+  // Le QR est généré côté service : ses deux couleurs sont des paramètres d'URL,
+  // donc elles échappent à Tailwind — il faut les repalettrer ici sinon le code
+  // reste imprimé sur un fond navy #070d18 au milieu d'un studio chaud.
+  // Modules or #e6cc92 sur fond #262624 = 9.7:1, soit plus de contraste de
+  // scan que l'ancien couple (7.1:1) : lisibilité caméra préservée.
+  const qrUrl = (url) => `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(url)}&color=E6CC92&bgcolor=262624`;
 
   // Listen for phone signals via Supabase Realtime
   React.useEffect(() => {
@@ -54,29 +59,31 @@ function PhoneCapturePanel({ onBack, onVideoReady }) {
   if (!mode) {
     return (
       <div className="space-y-5">
-        <button type="button" onClick={onBack} className="flex items-center gap-1 text-xs text-gray-400 hover:text-white transition-colors">
+        <button type="button" onClick={onBack} className="flex items-center gap-1 text-xs text-[rgba(245,244,238,0.62)] hover:text-[#f5f4ee] transition-colors">
           <ChevronLeft className="w-3.5 h-3.5" /> Retour aux sources
         </button>
         <div className="text-center space-y-1">
-          <p className="text-sm font-semibold text-white flex items-center justify-center gap-2"><Smartphone className="w-4 h-4 text-[var(--school-accent)]" /> Caméra téléphone</p>
-          <p className="text-xs text-gray-500">Scanne le QR code sur ton téléphone pour utiliser sa caméra</p>
+          <p className="text-sm font-semibold text-[#f5f4ee] flex items-center justify-center gap-2"><Smartphone className="w-4 h-4 text-[var(--school-accent)]" /> Caméra téléphone</p>
+          <p className="text-xs text-[rgba(245,244,238,0.62)]">Scanne le QR code sur ton téléphone pour utiliser sa caméra</p>
         </div>
+        {/* Les deux modes se différencient en chaud comme les cartes de source :
+            corail = le chemin recommandé (action), or = l'option secondaire. */}
         <div className="grid grid-cols-2 gap-3">
-          <button type="button" onClick={() => setMode('upload')} className="flex flex-col items-center gap-3 rounded-2xl border border-white/10 hover:border-[color-mix(in_srgb,var(--school-accent)_40%,transparent)] bg-white/2 hover:bg-[color-mix(in_srgb,var(--school-accent)_5%,transparent)] p-5 transition-all">
-            <Upload className="w-8 h-8 text-[var(--school-accent)]" />
+          <button type="button" onClick={() => setMode('upload')} className="flex flex-col items-center gap-3 rounded-2xl border border-[rgba(245,244,238,0.09)] hover:border-[rgba(217,119,87,0.42)] bg-[rgba(245,244,238,0.04)] hover:bg-[rgba(217,119,87,0.06)] p-5 transition-all">
+            <Upload className="w-8 h-8 text-[#d97757]" />
             <div className="text-center">
-              <p className="text-xs font-semibold text-white">Filmer et envoyer</p>
-              <p className="text-[10px] text-gray-500 mt-0.5">Le téléphone filme, puis envoie la vidéo</p>
+              <p className="text-xs font-semibold text-[#f5f4ee]">Filmer et envoyer</p>
+              <p className="text-[10px] text-[rgba(245,244,238,0.62)] mt-0.5">Le téléphone filme, puis envoie la vidéo</p>
             </div>
-            <span className="text-[10px] bg-emerald-500/20 text-emerald-400 px-2 py-0.5 rounded-full font-semibold">Simple + Fiable</span>
+            <span className="text-[10px] bg-[rgba(217,119,87,0.18)] text-[#f0a98d] px-2 py-0.5 rounded-full font-semibold">Simple + Fiable</span>
           </button>
-          <button type="button" onClick={() => setMode('stream')} className="flex flex-col items-center gap-3 rounded-2xl border border-white/10 hover:border-blue-500/40 bg-white/2 hover:bg-blue-500/5 p-5 transition-all">
-            <Wifi className="w-8 h-8 text-blue-400" />
+          <button type="button" onClick={() => setMode('stream')} className="flex flex-col items-center gap-3 rounded-2xl border border-[rgba(245,244,238,0.09)] hover:border-[rgba(230,204,146,0.38)] bg-[rgba(245,244,238,0.04)] hover:bg-[rgba(230,204,146,0.05)] p-5 transition-all">
+            <Wifi className="w-8 h-8 text-[#e6cc92]" />
             <div className="text-center">
-              <p className="text-xs font-semibold text-white">Flux en direct</p>
-              <p className="text-[10px] text-gray-500 mt-0.5">WebRTC — stream live du téléphone au PC</p>
+              <p className="text-xs font-semibold text-[#f5f4ee]">Flux en direct</p>
+              <p className="text-[10px] text-[rgba(245,244,238,0.62)] mt-0.5">WebRTC — stream live du téléphone au PC</p>
             </div>
-            <span className="text-[10px] bg-blue-500/20 text-blue-400 px-2 py-0.5 rounded-full font-semibold">Live</span>
+            <span className="text-[10px] bg-[rgba(230,204,146,0.16)] text-[#efd9ad] px-2 py-0.5 rounded-full font-semibold">Live</span>
           </button>
         </div>
       </div>
@@ -86,29 +93,36 @@ function PhoneCapturePanel({ onBack, onVideoReady }) {
   const chosenUrl = mode === 'upload' ? uploadUrl : streamUrl;
   return (
     <div className="space-y-4">
-      <button type="button" onClick={() => setMode(null)} className="flex items-center gap-1 text-xs text-gray-400 hover:text-white transition-colors">
+      <button type="button" onClick={() => setMode(null)} className="flex items-center gap-1 text-xs text-[rgba(245,244,238,0.62)] hover:text-[#f5f4ee] transition-colors">
         <ChevronLeft className="w-3.5 h-3.5" /> Choisir un autre mode
       </button>
       <div className="text-center space-y-1">
-        <p className="text-sm font-semibold text-white">{mode === 'upload' ? '📤 Filmer et envoyer' : '📡 Flux en direct'}</p>
-        <p className="text-xs text-gray-500">Scanne ce QR code avec ton téléphone</p>
+        <p className="text-sm font-semibold text-[#f5f4ee]">{mode === 'upload' ? '📤 Filmer et envoyer' : '📡 Flux en direct'}</p>
+        <p className="text-xs text-[rgba(245,244,238,0.62)]">Scanne ce QR code avec ton téléphone</p>
       </div>
       <div className="flex flex-col items-center gap-4">
-        <div className="rounded-2xl border border-[color-mix(in_srgb,var(--school-accent)_30%,transparent)] p-3 bg-[color-mix(in_srgb,var(--school-accent)_5%,transparent)]">
+        {/* Cadre or, accordé aux modules or du QR généré plus haut. */}
+        <div className="rounded-2xl border border-[rgba(230,204,146,0.30)] p-3 bg-[rgba(230,204,146,0.05)]">
           <img src={qrUrl(chosenUrl)} alt="QR Code" className="w-48 h-48 rounded-xl" />
         </div>
-        <p className="text-[10px] text-gray-600 text-center max-w-xs break-all">{chosenUrl}</p>
+        {/* URL destinée à être LUE (recopiée à la main si le scan échoue) : on
+            reste à .62 d'encre — le .40 « discret » tomberait à 3.4:1. */}
+        <p className="text-[10px] text-[rgba(245,244,238,0.62)] text-center max-w-xs break-all">{chosenUrl}</p>
         {received ? (
-          <div className="flex items-center gap-2 text-emerald-400 text-sm font-semibold">
+          // Succès : vert sauge chaud (jaune-vert) plutôt qu'émeraude, qui tire
+          // vers le teal interdit. On garde la sémantique « c'est bon ».
+          <div className="flex items-center gap-2 text-[#b5d38a] text-sm font-semibold">
             <Check className="w-5 h-5" /> Vidéo reçue — ajoutée au studio !
           </div>
         ) : waitingFor ? (
-          <div className="flex items-center gap-2 text-blue-400 text-xs">
+          <div className="flex items-center gap-2 text-[#e6cc92] text-xs">
             <Loader2 className="w-4 h-4 animate-spin" /> En attente du téléphone…
           </div>
         ) : (
-          <p className="text-xs text-gray-500">En attente de connexion…</p>
+          <p className="text-xs text-[rgba(245,244,238,0.62)]">En attente de connexion…</p>
         )}
+        {/* L'erreur reste dans le rouge : c'est une teinte chaude ET la seule
+            qui ne se confonde pas avec le corail des actions. */}
         {error && <p className="text-xs text-red-400">{error}</p>}
       </div>
     </div>
@@ -385,7 +399,10 @@ const VideoUploadModal = ({ isOpen, onClose, onSave }) => {
       }}
     />
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="bg-[#192734] border-white/10 text-white max-w-4xl max-h-[90vh] overflow-y-auto">
+      {/* Le DialogContent partagé peint un navy `bg-[#121A25]/95` par défaut :
+          on le surcharge ici (twMerge fait gagner la classe locale) pour rester
+          sur le fond chaud #262624 du studio. */}
+      <DialogContent className="bg-[#262624] border-[rgba(245,244,238,0.09)] text-[#f5f4ee] max-w-4xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2 text-[var(--school-accent)]"><Video className="w-5 h-5"/> Ajouter une vidéo</DialogTitle>
         </DialogHeader>
@@ -425,15 +442,19 @@ const VideoUploadModal = ({ isOpen, onClose, onSave }) => {
            {/* Left Column: Inputs */}
            <div className="space-y-6">
               <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-                <TabsList className="bg-[#0F1419] border border-white/10 w-full grid grid-cols-2">
-                  <TabsTrigger value="link" className="data-[state=active]:bg-[var(--school-accent)] data-[state=active]:text-black">Lien Externe</TabsTrigger>
-                  <TabsTrigger value="upload" className="data-[state=active]:bg-[var(--school-accent)] data-[state=active]:text-black">Téléverser Fichier</TabsTrigger>
+                <TabsList className="bg-[#30302e] border border-[rgba(245,244,238,0.09)] w-full grid grid-cols-2 text-[rgba(245,244,238,0.62)]">
+                  {/* Onglet actif : accent tenant (chaud dans toutes ses valeurs)
+                      sur une encre très sombre chaude — 5.6:1 sur le corail. */}
+                  <TabsTrigger value="link" className="data-[state=active]:bg-[var(--school-accent)] data-[state=active]:text-[#1c1a18]">Lien Externe</TabsTrigger>
+                  <TabsTrigger value="upload" className="data-[state=active]:bg-[var(--school-accent)] data-[state=active]:text-[#1c1a18]">Téléverser Fichier</TabsTrigger>
                 </TabsList>
 
                 <div className="mt-6 space-y-4">
                   <div className="space-y-2">
                      <Label>Titre de la vidéo</Label>
-                     <Input value={data.title} onChange={e => setData({...data, title: e.target.value})} className="bg-[#0F1419] border-white/10" placeholder="Ex: Introduction au module..." />
+                     {/* Input/Textarea partagés : fond navy `#121A25/80` + placeholder
+                         gris froid. On surcharge les deux localement. */}
+                     <Input value={data.title} onChange={e => setData({...data, title: e.target.value})} className="bg-[#30302e] border-[rgba(245,244,238,0.09)] text-[#f5f4ee] placeholder:text-[rgba(245,244,238,0.40)]" placeholder="Ex: Introduction au module..." />
                   </div>
 
                   <div className="space-y-2">
@@ -444,7 +465,7 @@ const VideoUploadModal = ({ isOpen, onClose, onSave }) => {
                           type="button"
                           onClick={() => handleReformulate('description')}
                           disabled={reformulateLoading === 'description'}
-                          className="flex items-center gap-1.5 text-xs text-[var(--school-accent)] hover:text-amber-400 disabled:opacity-50 transition-colors"
+                          className="flex items-center gap-1.5 text-xs text-[var(--school-accent)] hover:text-[#e6cc92] disabled:opacity-50 transition-colors"
                           title="Reformuler avec l'IA"
                         >
                           {reformulateLoading === 'description'
@@ -457,7 +478,7 @@ const VideoUploadModal = ({ isOpen, onClose, onSave }) => {
                     <Textarea
                       value={data.description}
                       onChange={(e) => setData({ ...data, description: e.target.value })}
-                      className="bg-[#0F1419] border-white/10 h-28"
+                      className="bg-[#30302e] border-[rgba(245,244,238,0.09)] text-[#f5f4ee] placeholder:text-[rgba(245,244,238,0.40)] h-28"
                       placeholder="Décris brièvement l'objectif de cette vidéo..."
                     />
                   </div>
@@ -467,8 +488,11 @@ const VideoUploadModal = ({ isOpen, onClose, onSave }) => {
                         <div className="space-y-2">
                            <Label>Plateforme</Label>
                            <Select value={data.type} onValueChange={v => setData({...data, type: v})}>
-                              <SelectTrigger className="bg-[#0F1419] border-white/10"><SelectValue /></SelectTrigger>
-                              <SelectContent>
+                              <SelectTrigger className="bg-[#30302e] border-[rgba(245,244,238,0.09)] text-[#f5f4ee]"><SelectValue /></SelectTrigger>
+                              {/* Le panneau déroulant partagé est en navy `#121A25/95` :
+                                  on le repalette via la prop className (le composant
+                                  partagé lui-même reste hors périmètre). */}
+                              <SelectContent className="bg-[#30302e] border-[rgba(245,244,238,0.09)] text-[#f5f4ee]">
                                  <SelectItem value="youtube">YouTube</SelectItem>
                                  <SelectItem value="vimeo">Vimeo</SelectItem>
                                  <SelectItem value="custom_url">Autre URL</SelectItem>
@@ -477,14 +501,16 @@ const VideoUploadModal = ({ isOpen, onClose, onSave }) => {
                         </div>
                         <div className="space-y-2">
                            <Label>Durée (min)</Label>
-                           <Input type="number" value={data.duration} onChange={e => setData({...data, duration: parseInt(e.target.value)})} className="bg-[#0F1419] border-white/10" />
+                           <Input type="number" value={data.duration} onChange={e => setData({...data, duration: parseInt(e.target.value)})} className="bg-[#30302e] border-[rgba(245,244,238,0.09)] text-[#f5f4ee]" />
                         </div>
                      </div>
                      <div className="space-y-2">
                         <Label>Lien URL</Label>
                         <div className="flex gap-2">
-                           <Input value={data.url} onChange={e => setData({...data, url: e.target.value})} placeholder="https://..." className="bg-[#0F1419] border-white/10" />
-                           <Button onClick={loadPreview} className="bg-white/10 hover:bg-white/20 text-white" disabled={!data.url}>
+                           <Input value={data.url} onChange={e => setData({...data, url: e.target.value})} placeholder="https://..." className="bg-[#30302e] border-[rgba(245,244,238,0.09)] text-[#f5f4ee] placeholder:text-[rgba(245,244,238,0.40)]" />
+                           {/* Action secondaire : surface d'encre translucide, pas de
+                               couleur — l'accent reste réservé au CTA de validation. */}
+                           <Button onClick={loadPreview} className="bg-[rgba(245,244,238,0.08)] hover:bg-[rgba(245,244,238,0.14)] text-[#f5f4ee]" disabled={!data.url}>
                               {loading ? <Loader2 className="w-4 h-4 animate-spin"/> : 'Aperçu'}
                            </Button>
                         </div>
@@ -492,28 +518,30 @@ const VideoUploadModal = ({ isOpen, onClose, onSave }) => {
                   </TabsContent>
 
                   <TabsContent value="upload" className="space-y-4 mt-0">
-                     <div className="border-2 border-dashed border-white/10 rounded-lg p-8 text-center bg-[#0F1419] hover:bg-white/5 transition-colors cursor-pointer relative group">
+                     <div className="border-2 border-dashed border-[rgba(245,244,238,0.14)] rounded-lg p-8 text-center bg-[#30302e] hover:bg-[rgba(245,244,238,0.06)] transition-colors cursor-pointer relative group">
                         <input type="file" accept="video/mp4,video/webm,video/ogg" onChange={handleFileChange} className="absolute inset-0 opacity-0 cursor-pointer z-10" />
-                        <Upload className="w-8 h-8 mx-auto text-gray-400 mb-2 group-hover:text-[var(--school-accent)] transition-colors"/>
-                        <p className="text-sm text-gray-400">Cliquez pour sélectionner un fichier (MP4, WebM)</p>
+                        <Upload className="w-8 h-8 mx-auto text-[rgba(245,244,238,0.62)] mb-2 group-hover:text-[var(--school-accent)] transition-colors"/>
+                        <p className="text-sm text-[rgba(245,244,238,0.62)]">Cliquez pour sélectionner un fichier (MP4, WebM)</p>
                         {(data.type === 'upload' || data.type === 'file') && <p className="text-[var(--school-accent)] mt-2 font-bold"><Check className="inline w-4 h-4 mr-1"/> {data.title}</p>}
-                        {loading && <div className="absolute inset-0 bg-black/50 flex items-center justify-center rounded-lg"><Loader2 className="w-8 h-8 text-[var(--school-accent)] animate-spin"/></div>}
+                        {/* Voile de chargement teinté fond studio, pas noir pur. */}
+                        {loading && <div className="absolute inset-0 bg-[rgba(38,38,36,0.72)] flex items-center justify-center rounded-lg"><Loader2 className="w-8 h-8 text-[var(--school-accent)] animate-spin"/></div>}
                      </div>
 
                      {(loading || uploadProgress > 0) ? (
                        <div className="space-y-2">
-                         <div className="flex items-center justify-between text-xs text-gray-400">
+                         <div className="flex items-center justify-between text-xs text-[rgba(245,244,238,0.62)]">
                            <span>Téléversement</span>
                            <span>{uploadProgress}%</span>
                          </div>
-                         <div className="h-2 bg-white/10 rounded overflow-hidden">
+                         <div className="h-2 bg-[rgba(245,244,238,0.10)] rounded overflow-hidden">
                            <div className="h-full bg-[var(--school-accent)] transition-all" style={{ width: `${uploadProgress}%` }} />
                          </div>
                        </div>
                      ) : null}
 
                      {uploadDone && !error ? (
-                       <div className="p-3 bg-green-500/10 border border-green-500/30 rounded text-sm text-green-200">
+                       // Même vert sauge chaud que l'accusé de réception téléphone.
+                       <div className="p-3 bg-[rgba(181,211,138,0.10)] border border-[rgba(181,211,138,0.30)] rounded text-sm text-[#b5d38a]">
                          <span className="flex items-center gap-2"><Check className="w-4 h-4" /> Vidéo chargée</span>
                        </div>
                      ) : null}
@@ -529,9 +557,12 @@ const VideoUploadModal = ({ isOpen, onClose, onSave }) => {
            {/* Right Column: Preview */}
            <div className="space-y-4">
               <Label className="text-[var(--school-accent)]">Aperçu Vidéo</Label>
-              <div className="aspect-video bg-black rounded-lg overflow-hidden border border-white/10 relative flex items-center justify-center group">
+              {/* Cadre vidéo : quasi-noir CHAUD (#1c1a18) au lieu du noir pur —
+                  les bandes latérales d'une vidéo au mauvais ratio ne creusent
+                  plus un trou froid dans le panneau. */}
+              <div className="aspect-video bg-[#1c1a18] rounded-lg overflow-hidden border border-[rgba(245,244,238,0.09)] relative flex items-center justify-center group">
                  {!previewUrl ? (
-                   <div className="text-gray-500 flex flex-col items-center">
+                   <div className="text-[rgba(245,244,238,0.62)] flex flex-col items-center">
                      <Video className="w-12 h-12 mb-2 opacity-20" />
                      <p className="text-sm">L'aperçu apparaîtra ici</p>
                    </div>
@@ -555,16 +586,21 @@ const VideoUploadModal = ({ isOpen, onClose, onSave }) => {
                        onPlay={() => setIsPlaying(true)}
                        onPause={() => setIsPlaying(false)}
                      />
-                     <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent p-4 opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-4">
-                       <Button size="icon" variant="ghost" className="text-white hover:text-[var(--school-accent)]" onClick={togglePlay}>
+                     <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-[rgba(28,26,24,0.85)] to-transparent p-4 opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-4">
+                       <Button size="icon" variant="ghost" className="text-[#f5f4ee] hover:text-[var(--school-accent)]" onClick={togglePlay}>
                          {isPlaying ? <Pause className="w-5 h-5" /> : <Play className="w-5 h-5" />}
                        </Button>
-                       <div className="flex-1 h-1 bg-white/20 rounded-full overflow-hidden">
+                       <div className="flex-1 h-1 bg-[rgba(245,244,238,0.16)] rounded-full overflow-hidden">
                          <div className="h-full bg-[var(--school-accent)]" style={{ width: `${progress}%` }} />
                        </div>
-                       <div className="text-[10px] text-gray-300 w-20 text-right">{formatSecondsToTimeText(previewCurrentTime)}</div>
+                       <div className="text-[10px] text-[rgba(245,244,238,0.72)] w-20 text-right">{formatSecondsToTimeText(previewCurrentTime)}</div>
                        <div className="flex items-center gap-2 w-24">
-                         <Volume2 className="w-4 h-4 text-white" />
+                         <Volume2 className="w-4 h-4 text-[#f5f4ee]" />
+                         {/* Le Slider partagé peint sa piste en `bg-gray-700` (slate froid)
+                             et sa poignée en `bg-[#192734]` (navy), en dur dans ses enfants.
+                             Le composant étant hors périmètre, on le repalette depuis la
+                             racine par variantes arbitraires — la spécificité (0,1,1) de
+                             `[&>div:first-child]` bat la classe utilitaire (0,1,0). */}
                          <Slider
                            value={volume}
                            max={100}
@@ -573,7 +609,7 @@ const VideoUploadModal = ({ isOpen, onClose, onSave }) => {
                              setVolume(v);
                              if (videoRef.current) videoRef.current.volume = v[0] / 100;
                            }}
-                           className="w-full"
+                           className="w-full [&>div:first-child]:bg-[rgba(245,244,238,0.16)] [&>div:last-child]:bg-[#30302e]"
                          />
                        </div>
                      </div>
@@ -591,12 +627,13 @@ const VideoUploadModal = ({ isOpen, onClose, onSave }) => {
 
               {(previewUrl && (data.type === 'file' || data.type === 'upload')) ? (
                 <div className="space-y-2">
-                  <div className="flex items-center justify-between text-xs text-gray-400">
+                  <div className="flex items-center justify-between text-xs text-[rgba(245,244,238,0.62)]">
                     <span>Navigation</span>
                     <span>
                       {formatSecondsToTimeText(previewCurrentTime)} / {formatSecondsToTimeText(previewDuration)}
                     </span>
                   </div>
+                  {/* Même surcharge chaude que le slider de volume (piste + poignée). */}
                   <Slider
                     value={[previewDuration ? (previewCurrentTime / previewDuration) * 100 : 0]}
                     max={100}
@@ -606,12 +643,16 @@ const VideoUploadModal = ({ isOpen, onClose, onSave }) => {
                       const next = previewDuration ? (pct / 100) * previewDuration : 0;
                       seekPreviewToSeconds(next);
                     }}
+                    className="[&>div:first-child]:bg-[rgba(245,244,238,0.16)] [&>div:last-child]:bg-[#30302e]"
                   />
                 </div>
               ) : null}
 
               {previewUrl ? (
-                <div className="p-4 bg-blue-500/10 border border-blue-500/30 rounded-lg text-sm text-blue-200">
+                // Encart informatif (confirmation + rappel) : or, l'accent
+                // secondaire LIRI — 11:1 sur son fond, et il ne se confond pas
+                // avec le corail des actions ni avec le vert de succès.
+                <div className="p-4 bg-[rgba(230,204,146,0.08)] border border-[rgba(230,204,146,0.26)] rounded-lg text-sm text-[#efd9ad]">
                   <p className="flex items-center gap-2"><Check className="w-4 h-4"/> Vidéo chargée avec succès</p>
                   <p className="text-xs opacity-70 mt-1">N'oubliez pas de vérifier le son et la qualité.</p>
                 </div>
@@ -620,17 +661,22 @@ const VideoUploadModal = ({ isOpen, onClose, onSave }) => {
         </div>}
 
         {creationMode === 'upload' && (
-        <DialogFooter className="mt-6 border-t border-white/10 pt-4">
-          <Button variant="ghost" onClick={onClose} className="text-white hover:bg-white/10">Annuler</Button>
-          <Button onClick={handleSave} disabled={!data.title || (!previewUrl && !data.url)} className="bg-[var(--school-accent)] text-black hover:bg-yellow-500 font-bold">
+        <DialogFooter className="mt-6 border-t border-[rgba(245,244,238,0.09)] pt-4">
+          <Button variant="ghost" onClick={onClose} className="text-[#f5f4ee] hover:bg-[rgba(245,244,238,0.08)]">Annuler</Button>
+          {/* CTA principal : l'accent tenant (corail dans le portail LIRI) avec
+              une encre très sombre chaude. Le survol partait sur `yellow-500`,
+              un jaune qui n'appartient à aucune de nos deux valeurs d'accent :
+              on l'éclaircit désormais À PARTIR de l'accent lui-même, donc le
+              survol reste juste quelle que soit la marque du tenant. */}
+          <Button onClick={handleSave} disabled={!data.title || (!previewUrl && !data.url)} className="bg-[var(--school-accent)] text-[#1c1a18] hover:bg-[color-mix(in_srgb,var(--school-accent)_86%,#f5f4ee)] font-bold">
             Ajouter la vidéo
           </Button>
         </DialogFooter>
         )}
 
         {!creationMode && (
-          <div className="flex justify-end pt-2 border-t border-white/10">
-            <Button variant="ghost" onClick={onClose} className="text-gray-400 hover:text-white">Annuler</Button>
+          <div className="flex justify-end pt-2 border-t border-[rgba(245,244,238,0.09)]">
+            <Button variant="ghost" onClick={onClose} className="text-[rgba(245,244,238,0.62)] hover:text-[#f5f4ee]">Annuler</Button>
           </div>
         )}
       </DialogContent>

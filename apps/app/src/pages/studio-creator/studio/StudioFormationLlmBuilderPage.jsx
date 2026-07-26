@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { BookOpen, CheckCircle2, Loader2, Sparkles, Wand2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/lib/customSupabaseClient';
@@ -6,6 +6,8 @@ import { invokeSupabaseFunction } from '@/lib/supabaseEdgeInvoke';
 import StudioDesignerLikeShell from '@/components/liri/liri-ecosystem/StudioDesignerLikeShell';
 import { usePublishToClassroom } from '@/hooks/usePublishToClassroom';
 import { agentCourseToClassroomDraft } from '@/lib/precepteur/toClassroomDraft';
+import { useTenantContext } from '@/hooks/useTenantModules';
+import { tenantsApi } from '@/lib/api-v2';
 
 const PEDAGOGICAL_PROFILES = [
   { id: 'auto', label: 'Auto' },
@@ -14,6 +16,31 @@ const PEDAGOGICAL_PROFILES = [
   { id: 'cours_rapide', label: 'Cours rapide' },
   { id: 'assistant_eco', label: 'Assistant éco' },
 ];
+
+/**
+ * Contexte NEUTRE envoyé au LLM quand aucun tenant n'est résolu ET que l'utilisateur
+ * n'a rien saisi. Ce n'est PAS un repli cosmétique : l'edge `liri-agent-course-generate`
+ * (via `_shared/liriAgentCourseLlmShared.ts`) applique son propre défaut `'Prorascience'`
+ * dès que `contexte` est vide. Envoyer explicitement un mot neutre empêche donc les cours
+ * d'un client d'être générés « en contexte Prorascience » à son insu.
+ */
+const CONTEXTE_NEUTRE = 'Général';
+
+/**
+ * Nom AFFICHABLE d'un tenant à partir d'une ligne `tenants` brute (resolver d'hôte ou
+ * `/tenants/current`). On lit les mêmes champs que `normalizeTenantBranding` MAIS sans
+ * son repli : ici, « pas de tenant » doit rester une chaîne VIDE. Le champ Contexte part
+ * réellement au LLM ; un repli en dur (ISNA, LIRI, Prorascience…) ferait générer les cours
+ * d'un client sous l'identité d'un autre — exactement le bug qu'on corrige.
+ */
+function tenantDisplayName(row) {
+  if (!row || typeof row !== 'object') return '';
+  const candidats = [row.branding?.name, row.metadata?.branding?.name, row.name, row.business_name];
+  for (const c of candidats) {
+    if (typeof c === 'string' && c.trim()) return c.trim();
+  }
+  return '';
+}
 
 function Badge({ ready, label }) {
   return (
@@ -30,7 +57,9 @@ function Badge({ ready, label }) {
 
 export default function StudioFormationLlmBuilderPage() {
   const [title, setTitle] = useState('');
-  const [context, setContext] = useState('ISNA');
+  // Contexte = TENANT COURANT, jamais une constante (cf. blocs tenant ci-dessous).
+  // On démarre vide : tant que le tenant n'est pas résolu, aucun nom ne doit être inventé.
+  const [context, setContext] = useState('');
   const [level, setLevel] = useState('intermediaire');
   const [profile, setProfile] = useState('auto');
   const [prompt, setPrompt] = useState('');
@@ -40,6 +69,50 @@ export default function StudioFormationLlmBuilderPage() {
   const [publishing, setPublishing] = useState(false);
   const navigate = useNavigate();
   const { publish } = usePublishToClassroom();
+
+  /* ─── Contexte tenant (2 sources, dans cet ordre) ───────────────────────────
+   * 1. Resolver d'HÔTE (`useTenantContext`) : domaine custom du tenant ou /t/:slug.
+   *    Synchrone-ish et déjà en cache (le shell l'appelle aussi) → zéro appel en plus.
+   *    MAIS il rend `null` sur l'hôte PLATEFORME (app.cimolace.space, localhost), là
+   *    où le Studio vit justement le plus souvent : insuffisant à lui seul.
+   * 2. Tenant du COMPTE connecté (`GET /tenants/current`) : marche sur tous les hôtes,
+   *    c'est la bonne notion pour un back-office (« l'école que j'administre »).
+   *    ⚠️ DOUBLE ENVELOPPE : le contrôleur renvoie `{ data: tenant }` que l'intercepteur
+   *    NestJS ré-emballe → `{data:{data:{…}}}`, alors qu'`unwrap` n'ôte QU'UNE couche.
+   *    Même parade défensive que VideothequePage : on déballe une couche de plus si besoin.
+   */
+  const { tenant: hostTenant } = useTenantContext();
+  const [accountTenant, setAccountTenant] = useState(null);
+  useEffect(() => {
+    let alive = true;
+    tenantsApi
+      .current()
+      .then((res) => {
+        const row = res?.slug || res?.name ? res : (res?.data ?? res);
+        if (alive) setAccountTenant(row && typeof row === 'object' ? row : null);
+      })
+      .catch(() => {
+        /* pas de session / aucun tenant → champ laissé vide, l'utilisateur saisit. */
+      });
+    return () => {
+      alive = false;
+    };
+  }, []);
+
+  const tenantName = useMemo(
+    () => tenantDisplayName(hostTenant) || tenantDisplayName(accountTenant),
+    [hostTenant, accountTenant],
+  );
+
+  // Le tenant arrive APRÈS le premier rendu (les deux sources sont async). On ne
+  // pré-remplit donc QUE si l'utilisateur n'a pas encore touché au champ, sinon on
+  // écraserait sa saisie en cours de frappe (piège classique du champ « contrôlé
+  // hydraté en retard »). Une fois touché, le champ lui appartient définitivement.
+  const contextTouchedRef = useRef(false);
+  useEffect(() => {
+    if (!tenantName || contextTouchedRef.current) return;
+    setContext(tenantName);
+  }, [tenantName]);
 
   const steps = useMemo(() => (Array.isArray(result?.etapes) ? result.etapes : []), [result]);
   const canGenerate = title.trim().length > 3 || prompt.trim().length > 10;
@@ -54,7 +127,10 @@ export default function StudioFormationLlmBuilderPage() {
         body: {
           sujet,
           niveau: level,
-          contexte: context,
+          // Vide → mot NEUTRE explicite (voir CONTEXTE_NEUTRE) : sans ça, l'edge
+          // retomberait sur son défaut « Prorascience » et signerait le cours d'un
+          // tenant qui n'est pas celui de l'utilisateur.
+          contexte: context.trim() || CONTEXTE_NEUTRE,
           profil_pedagogique: profile,
         },
       });
@@ -95,7 +171,11 @@ export default function StudioFormationLlmBuilderPage() {
     <StudioDesignerLikeShell
       railActiveKey="constructeurs"
       pageLabel="Création de cours par LLM"
-      pageAccent="violet"
+      // Accent CHAUD (directive artistique LIRI : zéro froid). La table ACCENT du shell
+      // rend déjà toutes ses clés en teintes chaudes, mais « violet » restait un nom banni
+      // dans le code : `amber` est la seule clé dont le NOM ET la valeur (#d99a4e, ambre)
+      // sont chauds — proche de l'or #e6cc92 de la charte, la famille des accents.
+      pageAccent="amber"
       TitleIcon={Sparkles}
       titleLine="Formation LLM Builder"
     >
@@ -123,7 +203,14 @@ export default function StudioFormationLlmBuilderPage() {
                   <label className="mb-1 block text-[11px] text-white/60">Contexte</label>
                   <input
                     value={context}
-                    onChange={(e) => setContext(e.target.value)}
+                    onChange={(e) => {
+                      // Dès la 1re frappe, le champ appartient à l'utilisateur :
+                      // l'hydratation tardive du tenant ne l'écrasera plus.
+                      contextTouchedRef.current = true;
+                      setContext(e.target.value);
+                    }}
+                    placeholder={tenantName || 'Votre école / organisation'}
+                    title="Contexte transmis au moteur IA — pré-rempli avec votre organisation, modifiable."
                     className={inputCls}
                   />
                 </div>
