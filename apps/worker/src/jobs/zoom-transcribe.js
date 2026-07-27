@@ -55,6 +55,7 @@ async function whisperChunk(file) {
         return (d.segments || []).map((s) => ({ start: Number(s.start) || 0, text: String(s.text || '').trim() })).filter((s) => s.text);
       } catch (e) { lastErr = `${p.name}: ${e.message}`; await sleep(2000 * (a + 1)); }
     }
+    console.log(`[zoom-transcribe] fournisseur ${p.name} indisponible → ${lastErr}`);
   }
   throw new Error(lastErr);
 }
