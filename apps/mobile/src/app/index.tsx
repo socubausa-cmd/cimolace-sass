@@ -5,8 +5,10 @@ import { ActivityIndicator, Alert, Pressable, ScrollView, StyleSheet, Text, View
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { Ember } from '@/components/ember';
+import { EngineSwitcher } from '@/components/engine-switcher';
 import { LiriMark } from '@/components/liri-mark';
 import { LiriFonts as F, softShadow, type LiriPalette } from '@/constants/liri-theme';
+import { useEngine } from '@/lib/engine-context';
 import { useTheme } from '@/lib/theme';
 import { fetchLives, fetchStats, quickStartLive, type Live, type Stats } from '@/lib/liri-api';
 
@@ -30,6 +32,7 @@ const QUICK: { label: string; icon: React.ComponentProps<typeof Feather>['name']
 ];
 
 export default function HomeScreen() {
+  const { engine, engines, setEngine: selectEngine } = useEngine();
   const router = useRouter();
   const { colors: C } = useTheme();
   const styles = useMemo(() => makeStyles(C), [C]);
@@ -127,6 +130,9 @@ export default function HomeScreen() {
           <View style={styles.row}>
             <LiriMark size={30} />
             <Text style={styles.logoText}>LIRI</Text>
+            {/* Sélecteur de MOTEUR — même place que dans l'en-tête du portail web.
+                Il pilote la barre du bas ; masqué s'il n'y a qu'un moteur. */}
+            <EngineSwitcher engines={engines} active={engine} onSelect={selectEngine} />
           </View>
           <View style={styles.row}>
             <Pressable style={styles.iconBtn} hitSlop={8} onPress={() => router.push('/notifications')}>

@@ -59,6 +59,8 @@ test('community parity uses protected Forum and Messaging APIs', async () => {
 });
 
 test('critical student routes are registered in the native shell', async () => {
+  // Le shell déclare ses routes via les listes HIDDEN / IMMERSIVE depuis le
+  // passage aux moteurs : on cherche la chaîne, pas l'ancien attribut JSX.
   const code = await source('app/_layout.tsx');
   for (const route of [
     'formations',
@@ -67,7 +69,7 @@ test('critical student routes are registered in the native shell', async () => {
     'rendez-vous',
     'ma-classe',
   ]) {
-    assert.ok(code.includes(`name="${route}"`), `route ${route} absente du shell`);
+    assert.ok(code.includes(`'${route}'`), `route ${route} absente du shell`);
   }
 });
 
@@ -85,7 +87,7 @@ test('toute route de src/app est déclarée dans le shell', async () => {
     return out;
   };
   const code = await source('app/_layout.tsx');
-  const manquantes = (await walk(appDir)).filter((r) => !code.includes(`name="${r}"`));
+  const manquantes = (await walk(appDir)).filter((r) => !code.includes(`'${r}'`));
   assert.deepEqual(manquantes, [], `routes absentes du shell : ${manquantes.join(', ')}`);
 });
 
@@ -106,4 +108,30 @@ test('les préférences de live sont réellement envoyées à la création', asy
   for (const type of ['webinar', 'class', 'workshop', 'masterclass', 'debate']) {
     assert.match(prefs, new RegExp(`'${type}'`), `type ${type} hors vocabulaire`);
   }
+});
+
+test('les moteurs natifs ne pointent que vers des écrans existants', async () => {
+  // Le rail web liste des surfaces qui n'ont pas toutes d'équivalent natif :
+  // en lister une sans écran donnerait un onglet qui ne mène nulle part.
+  const { access } = await import('node:fs/promises');
+  const nav = await source('lib/engines-nav.ts');
+  const routes = [...nav.matchAll(/route: '([^']+)'/g)].map((m) => m[1]);
+  assert.ok(routes.length >= 8, 'catalogue de moteurs suspicieusement court');
+  for (const r of new Set(routes)) {
+    await access(new URL(`../src/app/${r}.tsx`, import.meta.url));
+  }
+  // Et tout item de moteur doit être déclaré dans le shell, sinon pas d'onglet.
+  const shell = await source('app/_layout.tsx');
+  for (const r of new Set(routes)) {
+    assert.ok(shell.includes(`'${r}'`), `route de moteur ${r} absente du shell`);
+  }
+});
+
+test('les moteurs payants sont bien conditionnés à un service', async () => {
+  const nav = await source('lib/engines-nav.ts');
+  assert.match(nav, /key: 'ecole'[\s\S]{0,200}requires: 'school'/);
+  assert.match(nav, /key: 'mbolo'[\s\S]{0,200}requires: 'shop'/);
+  const tenant = await source('lib/tenant.tsx');
+  assert.match(tenant, /from\('tenant_services'\)/, 'la source des moteurs doit être tenant_services');
+  assert.match(tenant, /from\('tenant_memberships'\)/, 'le rôle doit venir de tenant_memberships');
 });

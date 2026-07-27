@@ -8,8 +8,10 @@ import { ActivityIndicator, View, type ColorValue } from 'react-native';
 import { LoginScreen } from '@/components/login-screen';
 import { LiriFonts } from '@/constants/liri-theme';
 import { AuthProvider, useAuth } from '@/lib/auth';
+import { EngineProvider, useEngine } from '@/lib/engine-context';
 import { setupLiveKit } from '@/lib/livekit-setup';
 import { PreferencesProvider } from '@/lib/preferences';
+import { TenantProvider } from '@/lib/tenant';
 import { ThemeProvider, useTheme } from '@/lib/theme';
 
 // WebRTC globals nécessaires au SDK LiveKit natif — appelé une seule fois.
@@ -31,8 +33,39 @@ const tab = (name: FeatherName) =>
  */
 const fullScreen = { href: null, tabBarStyle: { display: 'none' as const } };
 
+/**
+ * Toutes les routes de l'app. Celles du moteur ACTIF prennent un titre et une
+ * icône dans la barre du bas ; les autres passent en `href: null`.
+ * ⚠️ Une route absente de cette liste est ajoutée d'office à la barre par Expo
+ * Router, sans titre ni icône — un test de contrat le vérifie.
+ */
+const HIDDEN = [
+  // ⚠️ L'ORDRE fait l'ordre de la barre du bas. Accueil d'abord (il ouvre chaque
+  // moteur), puis les items dans l'ordre où les moteurs les listent.
+  'index',
+  'lives', 'forum', 'bibliotheque', 'brain',
+  'formations', 'videotheque', 'vie-scolaire', 'ma-classe',
+  'commerce',
+  'studio', 'masterscript', 'neuro-recall',
+  // Le reste n'apparaît jamais dans la barre, mais doit être déclaré.
+  'integrations', 'reglages', 'creer-formation', 'creer-masterclass',
+  'creer-arena', 'creer-discussion', 'engines', 'notifications', 'profil',
+  'messages', 'nouveau-message', 'forum/[topicId]', 'calendrier-annuel',
+  'rendez-vous', 'waiting-room', 'export', 'orchestrator-live',
+];
+/** Coques immersives : hors barre ET barre masquée à l'affichage. */
+const IMMERSIVE = [
+  'formation/[courseId]', 'live-room', 'precepteur/[masterclassId]',
+  'live-host', 'arena/[sessionId]', 'smartboard',
+];
+
 function AppTabs() {
   const { colors } = useTheme();
+  const { items } = useEngine();
+
+  // Route → options d'onglet, recalculées à chaque changement de moteur.
+  const shown = new Map(items.map((it) => [it.route, it]));
+
   return (
     <Tabs
       screenOptions={{
@@ -49,47 +82,17 @@ function AppTabs() {
         sceneStyle: { backgroundColor: colors.base },
       }}
     >
-      {/* Onglets principaux — alignés sur le rail du portail web */}
-      <Tabs.Screen name="index" options={{ title: 'Accueil', tabBarIcon: tab('home') }} />
-      <Tabs.Screen name="lives" options={{ title: 'Lives', tabBarIcon: tab('video') }} />
-      <Tabs.Screen name="forum" options={{ title: 'Forum', tabBarIcon: tab('message-square') }} />
-      <Tabs.Screen name="studio" options={{ title: 'Studio', tabBarIcon: tab('edit-3') }} />
-      <Tabs.Screen name="bibliotheque" options={{ title: 'Biblio.', tabBarIcon: tab('book-open') }} />
-      <Tabs.Screen name="brain" options={{ title: 'Brain', tabBarIcon: tab('zap') }} />
-      {/* Secondaires — accessibles via liens, masqués de la barre (comme le web) */}
-      <Tabs.Screen name="formations" options={{ href: null }} />
-      <Tabs.Screen name="videotheque" options={{ href: null }} />
-      <Tabs.Screen name="formation/[courseId]" options={fullScreen} />
-      <Tabs.Screen name="integrations" options={{ href: null }} />
-      <Tabs.Screen name="reglages" options={{ href: null }} />
-      <Tabs.Screen name="live-room" options={fullScreen} />
-      <Tabs.Screen name="creer-formation" options={{ href: null }} />
-      <Tabs.Screen name="creer-masterclass" options={{ href: null }} />
-      <Tabs.Screen name="precepteur/[masterclassId]" options={fullScreen} />
-      <Tabs.Screen name="creer-arena" options={{ href: null }} />
-      <Tabs.Screen name="creer-discussion" options={{ href: null }} />
-      {/* Moteurs natifs immersifs — plein écran : masqués de la barre ET barre cachée à l'affichage */}
-      <Tabs.Screen name="live-host" options={fullScreen} />
-      <Tabs.Screen name="arena/[sessionId]" options={fullScreen} />
-      <Tabs.Screen name="smartboard" options={fullScreen} />
-      <Tabs.Screen name="neuro-recall" options={{ href: null }} />
-      <Tabs.Screen name="masterscript" options={{ href: null }} />
-      <Tabs.Screen name="engines" options={{ href: null }} />
-      <Tabs.Screen name="notifications" options={{ href: null }} />
-      <Tabs.Screen name="profil" options={{ href: null }} />
-      <Tabs.Screen name="messages" options={{ href: null }} />
-      {/* Toute route non déclarée ici atterrit d'office dans la barre d'onglets,
-          sans titre ni icône (carré vide) — ces deux-là s'y étaient glissées. */}
-      <Tabs.Screen name="nouveau-message" options={{ href: null }} />
-      <Tabs.Screen name="forum/[topicId]" options={{ href: null }} />
-      <Tabs.Screen name="vie-scolaire" options={{ href: null }} />
-      <Tabs.Screen name="calendrier-annuel" options={{ href: null }} />
-      <Tabs.Screen name="rendez-vous" options={{ href: null }} />
-      <Tabs.Screen name="ma-classe" options={{ href: null }} />
-      <Tabs.Screen name="commerce" options={{ href: null }} />
-      <Tabs.Screen name="waiting-room" options={{ href: null }} />
-      <Tabs.Screen name="export" options={{ href: null }} />
-      <Tabs.Screen name="orchestrator-live" options={{ href: null }} />
+      {HIDDEN.map((name) => {
+        const it = shown.get(name);
+        return (
+          <Tabs.Screen
+            key={name}
+            name={name}
+            options={it ? { title: it.label, tabBarIcon: tab(it.icon) } : { href: null }}
+          />
+        );
+      })}
+      {IMMERSIVE.map((name) => <Tabs.Screen key={name} name={name} options={fullScreen} />)}
     </Tabs>
   );
 }
@@ -121,8 +124,14 @@ export default function RootLayout() {
     <ThemeProvider>
       <PreferencesProvider>
         <AuthProvider>
-          <ThemedStatusBar />
-          <Gate />
+          {/* TenantProvider sous AuthProvider : il lit tenant_services, protégé
+              par RLS, donc il lui faut la session. EngineProvider en dépend. */}
+          <TenantProvider>
+            <EngineProvider>
+              <ThemedStatusBar />
+              <Gate />
+            </EngineProvider>
+          </TenantProvider>
         </AuthProvider>
       </PreferencesProvider>
     </ThemeProvider>
