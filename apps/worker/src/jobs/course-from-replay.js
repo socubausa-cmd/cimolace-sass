@@ -131,6 +131,20 @@ const setJob = (id, patch) => supabase.from('course_generation_jobs').update({ .
 
 // ── Traitement d'un job ─────────────────────────────────────────────────────
 /**
+ * Le modèle rend parfois un champ de LISTE sous forme de chaîne (ou d'objet).
+ * `(x || []).join()` explosait alors — 2 jobs perdus après ~10 min de travail
+ * chacun (« appuis.join is not a function », 2026-07-27). On normalise au lieu
+ * de faire confiance à la forme.
+ */
+function asList(v) {
+  if (Array.isArray(v)) return v.map((x) => (typeof x === 'string' ? x : JSON.stringify(x)));
+  if (v == null || v === '') return [];
+  if (typeof v === 'string') return [v];
+  if (typeof v === 'object') return Object.values(v).map((x) => (typeof x === 'string' ? x : JSON.stringify(x)));
+  return [String(v)];
+}
+
+/**
  * Charge la source d'un job, quel que soit son type.
  * Le worker ne lisait que `published_videos` : les 622 vidéos TikTok restantes
  * étaient donc structurellement hors d'atteinte, même une fois transcrites.
@@ -216,7 +230,7 @@ async function processJob(job) {
     let lesson = null, verdict = '';
     for (let attempt = 1; attempt <= 3; attempt++) {
       const extra = verdict ? `\n\nTA VERSION PRÉCÉDENTE A ÉTÉ REFUSÉE : ${verdict}\nCorrige impérativement.` : '';
-      lesson = await llm(SYS_LECON, `NOTION : ${notion.titre}\nIdée centrale : ${notion.idee_centrale}\nPourquoi : ${notion.pourquoi}\nAppuis : ${(notion.appuis || []).join(' · ')}\n\nGLOSSAIRE : ${(plan.glossaire || []).map((g) => `${g.terme} = ${g.simple}`).join(' | ')}\n\nDOCUMENT SOURCE (rester fidèle, NE PAS RECOPIER) :\n${doc.slice(0, 22000)}${extra}`, { maxTokens: 16000 });
+      lesson = await llm(SYS_LECON, `NOTION : ${notion.titre}\nIdée centrale : ${notion.idee_centrale}\nPourquoi : ${notion.pourquoi}\nAppuis : ${asList(notion.appuis).join(' · ')}\n\nGLOSSAIRE : ${(Array.isArray(plan.glossaire) ? plan.glossaire : []).map((g) => `${g?.terme} = ${g?.simple}`).join(' | ')}\n\nDOCUMENT SOURCE (rester fidèle, NE PAS RECOPIER) :\n${doc.slice(0, 22000)}${extra}`, { maxTokens: 16000 });
       if (!lesson) { verdict = 'réponse vide'; continue; }
       const missing = ['amorce', 'intuition', 'definition', 'schema', 'exemple', 'contre_exemple', 'erreur_frequente', 'experience_pensee', 'mise_en_situation', 'je_retiens', 'quiz'].filter((k) => !lesson[k]);
       if (missing.length) { verdict = `blocs manquants : ${missing.join(', ')}`; continue; }
