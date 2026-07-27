@@ -19,7 +19,7 @@ import { pollEmailQueue }      from './jobs/email.js';
 import { pollLiveReminders }   from './jobs/live-reminders.js';
 import { pollMasterclassReminders } from './jobs/masterclass-reminders.js';
 import { pollLiveInvitations } from './jobs/live-invitations.js';
-import { pollLiveReplayShorts } from './jobs/short-generator.js';
+import { pollLiveReplayShorts, pollShortGeneration } from './jobs/short-generator.js';
 import { pollReplayPostprod } from './jobs/replay-postprod.js';
 import { pollDraftSocialPosts } from './jobs/social-poster.js';
 import { pollImapSync }         from './jobs/imap-sync.js';
@@ -98,6 +98,26 @@ startPingJob();
       if (n > 0) console.log(`[worker:live] Shorts: ${n} clip(s) généré(s)`);
     } catch (e: unknown) { console.error('[worker:live] Shorts error:', (e as Error)?.message || e); }
     await sleep(300_000);
+  }
+})();
+
+// ── Extraits courts des replays de la VIDÉOTHÈQUE, À LA DEMANDE (60s) ────────
+//    ⚠️ Ce poller vivait dans index.ts (jamais déployé) : les 61 replays de la
+//    Vidéothèque n'ont donc JAMAIS produit le moindre extrait. Rapatrié ici, le
+//    seul entrypoint réellement déployé — mais il ne balaie PLUS toute la
+//    Vidéothèque : il ne prend que les replays dont le créateur a explicitement
+//    demandé les extraits (zoom_recordings.shorts_status = 'requested'). Traiter
+//    61 fichiers de plusieurs Go sans que le fondateur l'ait demandé serait une
+//    dépense qu'il n'a pas décidée. Un seul replay par cycle ; 60 s parce qu'un
+//    clic ne doit pas attendre 5 minutes, et que la requête est indexée (elle ne
+//    coûte rien quand la file est vide).
+(async () => {
+  while (true) {
+    try {
+      const n = await (pollShortGeneration as () => Promise<number>)();
+      if (n > 0) console.log(`[worker:live] Extraits Vidéothèque: ${n} clip(s) généré(s)`);
+    } catch (e: unknown) { console.error('[worker:live] Extraits Vidéothèque error:', (e as Error)?.message || e); }
+    await sleep(60_000);
   }
 })();
 
@@ -187,4 +207,4 @@ startPingJob();
   }
 })();
 
-console.log('[worker:live] Pollers actifs ✅ (email 15s · rappels 60s · invitations 120s · imap 90s · shorts 5min · posts 90s · rgpd 60s · replay post-prod 60s · rendu cours 60s · zoom-transfer 20s · cours-depuis-replay 30s · zoom-transcribe 180s)');
+console.log('[worker:live] Pollers actifs ✅ (email 15s · rappels 60s · invitations 120s · imap 90s · shorts live 5min · extraits vidéothèque 60s · posts 90s · rgpd 60s · replay post-prod 60s · rendu cours 60s · zoom-transfer 20s · cours-depuis-replay 30s · zoom-transcribe 180s)');

@@ -59,6 +59,160 @@ export function sanitizeTenantMetadata(metadata: unknown): unknown {
   return rest;
 }
 
+/* ─── VOCABULAIRE DE L'ÉCOLE (glossaire de noms propres) ────────────────────
+ *
+ * POURQUOI CETTE DONNÉE EXISTE. La reconnaissance vocale qui transcrit les replays
+ * écrit ce qu'elle ENTEND. Sur le replay de référence elle a écrit « Je suis Shao,
+ * cinquième Manikongo » là où l'orateur dit « Je suis Cheo ». Tant que le texte était
+ * un ornement de 18 px, la faute passait ; depuis que la parole EST le contenu du clip
+ * (sous-titre à ~110 px, plein cadre), cette faute EST le clip. Or aucun modèle ne peut
+ * DEVINER « Cheo » à partir de « Shao » : ce n'est pas un mot de la langue, c'est le nom
+ * de l'orateur. Deux tours de relecture sur le même corpus l'ont mesuré — 3 corrections
+ * sur 9, puis 1 sur 9, et zéro invention : le modèle recopie au lieu de corriger, et il
+ * a raison de le faire. Sans autorité extérieure, corriger un nom qu'on ne connaît pas
+ * s'appelle inventer.
+ *
+ * Le glossaire EST cette autorité extérieure. C'est le créateur qui l'écrit, parce que
+ * c'est lui — et lui seul — qui sait comment s'écrivent les noms de son enseignement.
+ *
+ * ⭐ CONTRAT PARTAGÉ, ET IL NE SE DÉCIDE PAS ICI. La table et ses colonnes sont posées
+ * par `supabase/migrations/20260727180000_tenant_glossary.sql` ; le consommateur est
+ * `apps/worker/src/jobs/short-sous-titres.js` (`chargerGlossaire`/`preparerGlossaire`),
+ * qui lit `public.tenant_glossary` en `select('term, variants, category')` filtré sur
+ * `tenant_id` et `active = true`. Les noms de champs ci-dessous sont DÉLIBÉRÉMENT ceux
+ * des colonnes, de bout en bout (base → API → écran) : une donnée qui change de nom à
+ * chaque étage est une donnée qu'on finit par mal brancher. Le français est dans les
+ * libellés de l'écran, pas dans le schéma.
+ *
+ * ⚠️ Migration appliquée HORS-BANDE (règle Cimolace : psql, jamais `supabase db push`).
+ * Tant qu'elle ne l'est pas, la lecture ne casse pas l'écran : elle rend une liste vide
+ * ET une phrase qui dit quoi faire (`indisponible`) — le worker pose le même diagnostic
+ * de son côté, les deux surfaces doivent parler au même moment.
+ */
+export interface EntreeGlossaire {
+  /** Orthographe qui FAIT AUTORITÉ — celle qui sera affichée en 110 px. Ex. « Cheo ». */
+  term: string;
+  /**
+   * Graphies fautives DÉJÀ CONSTATÉES, remplacées mot entier et SANS modèle.
+   * ⚠️ Du constaté uniquement : une variante est un remplacement aveugle sur toute la
+   * transcription de l'école (le moteur ignore celles de moins de 4 caractères).
+   */
+  variants: string[];
+  /** Nature du terme, reprise telle quelle dans la consigne du modèle. Ex. « personne ». */
+  category: string;
+  /** Mémo pour l'humain (« entendu Shao le 12/03 ») — le moteur ne le lit jamais. */
+  note: string;
+  /** false = l'entrée reste visible ici mais ne part plus au moteur. Bouton d'arrêt. */
+  active: boolean;
+}
+
+/** Ce que rendent lecture et écriture : la liste, et l'aveu quand la table manque. */
+export interface GlossaireTenant {
+  entrees: EntreeGlossaire[];
+  /** null = tout va bien. Sinon : phrase française qui dit ce qui bloque et quoi faire. */
+  indisponible: string | null;
+}
+
+/**
+ * Bornes DURES. Ces valeurs partent dans une consigne de modèle et dans des expressions
+ * régulières de substitution : une entrée démesurée y ferait plus de dégâts qu'un champ
+ * vide.
+ * ⚠️ Le worker plafonne DÉJÀ à 60 termes envoyés au modèle (MAX_TERMES_PROMPT) et le dit
+ * dans son journal. On borne ici plus haut (200) volontairement : on stocke plus qu'on
+ * n'envoie, parce que la couche DÉTERMINISTE (substitution des variantes, sans modèle)
+ * profite, elle, de toutes les entrées.
+ */
+const GLO_MAX_ENTREES = 200;
+const GLO_MAX_VARIANTES = 12;
+const GLO_LONGUEUR_TERME = 80;
+const GLO_LONGUEUR_CATEGORIE = 40;
+const GLO_LONGUEUR_NOTE = 500;
+
+/**
+ * Comparaison « c'est le même mot » : minuscules, sans accents ni ponctuation.
+ * ⚠️ VOLONTAIREMENT PLUS SÉVÈRE que l'index unique de la base, qui porte sur
+ * `lower(btrim(term))`. Tout ce que cette clé confond, l'index le confond aussi ou
+ * l'accepte — jamais l'inverse : aucun doublon accepté ici ne peut donc faire violer
+ * la contrainte à l'insertion. Le sens de la marche est le bon.
+ */
+function cleGlossaire(mot: string): string {
+  return String(mot ?? "")
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^a-z0-9]/g, "");
+}
+
+/**
+ * Nettoyage SERVEUR du glossaire — jamais côté client seul : ce tableau finit dans une
+ * consigne envoyée à un modèle et dans des expressions régulières de substitution. Une
+ * entrée vide, démesurée ou dupliquée y ferait des dégâts silencieux.
+ * Règles : on jette les entrées sans terme ; on dédoublonne sur la forme normalisée
+ * (« Cheo » et « CHÉO » sont le même mot) ; une variante identique à son terme est
+ * inutile — elle ne remplacerait rien et bouclerait sur elle-même côté worker.
+ */
+export function nettoyerGlossaire(brut: unknown): EntreeGlossaire[] {
+  if (!Array.isArray(brut)) return [];
+  const vues = new Set<string>();
+  const sortie: EntreeGlossaire[] = [];
+  for (const item of brut) {
+    if (!item || typeof item !== "object") continue;
+    const src = item as Record<string, unknown>;
+    const term = String(src.term ?? "").trim().slice(0, GLO_LONGUEUR_TERME);
+    if (!term) continue;
+    const cle = cleGlossaire(term);
+    if (!cle || vues.has(cle)) continue;
+    vues.add(cle);
+
+    const brutesVariantes = Array.isArray(src.variants)
+      ? src.variants
+      : typeof src.variants === "string"
+        // Saisie humaine : « Shao, Chao ; Shô » — les trois séparateurs sont acceptés.
+        ? String(src.variants).split(/[,;\n]/)
+        : [];
+    const vuesVar = new Set<string>([cle]);
+    const variants: string[] = [];
+    for (const v of brutesVariantes) {
+      const mot = String(v ?? "").trim().slice(0, GLO_LONGUEUR_TERME);
+      if (!mot) continue;
+      const cv = cleGlossaire(mot);
+      if (!cv || vuesVar.has(cv)) continue;
+      vuesVar.add(cv);
+      variants.push(mot);
+      if (variants.length >= GLO_MAX_VARIANTES) break;
+    }
+
+    sortie.push({
+      term,
+      variants,
+      category: String(src.category ?? "").trim().slice(0, GLO_LONGUEUR_CATEGORIE),
+      note: String(src.note ?? "").trim().slice(0, GLO_LONGUEUR_NOTE),
+      // Absent = actif. Un champ manquant ne doit pas éteindre silencieusement une
+      // entrée : le défaut de la colonne est `true`, l'API dit la même chose.
+      active: src.active === undefined ? true : !!src.active,
+    });
+    if (sortie.length >= GLO_MAX_ENTREES) break;
+  }
+  return sortie;
+}
+
+/**
+ * La table n'est pas là — et on ne le cache pas.
+ * 42P01 = relation absente côté Postgres ; PGRST205 = le cache de schéma de PostgREST ne
+ * la connaît pas. Même cause, deux codes selon le chemin. Le worker pose EXACTEMENT ce
+ * diagnostic de son côté : les deux surfaces doivent dire la même chose au même moment,
+ * sinon l'écran affirme que tout va bien pendant que le rendu tourne sans vocabulaire.
+ */
+function tableGlossaireAbsente(error: { code?: string } | null | undefined): boolean {
+  return error?.code === "42P01" || error?.code === "PGRST205";
+}
+
+const MSG_GLOSSAIRE_ABSENT =
+  "Le vocabulaire n'est pas encore branché sur cette base : la table tenant_glossary "
+  + "n'existe pas. La migration 20260727180000_tenant_glossary.sql doit être appliquée "
+  + "(les migrations Cimolace passent par psql, hors-bande). En attendant, la relecture "
+  + "des sous-titres continue sans vocabulaire d'école.";
+
 @Injectable()
 export class TenantService {
   constructor(
@@ -704,5 +858,152 @@ export class TenantService {
       .single();
     return (data as { metadata?: { os_knowledge?: unknown } } | null)?.metadata
       ?.os_knowledge ?? null;
+  }
+
+  /* ─── VOCABULAIRE DE L'ÉCOLE — accès à `public.tenant_glossary` ────────────
+   *
+   * ⭐ SEUL ENDROIT DE L'API qui connaisse le nom de cette table et de ses colonnes.
+   * Le glossaire est ÉCRIT par le créateur (écran /liri/reglages) et LU par le
+   * générateur d'extraits courts dans le worker : deux processus, un seul contrat.
+   *
+   * ⚠️ CLOISON TENANT. La table porte des policies RLS (lecture membres, écriture
+   * owner/admin), mais l'API travaille avec la clé service_role, qui les OUTREPASSE.
+   * La cloison effective est donc ici, dans le code : `tenantId` vient du contexte
+   * authentifié (TenantGuard), jamais du corps de la requête, et TOUTES les requêtes
+   * ci-dessous portent `.eq('tenant_id', tenantId)` — y compris la suppression, où
+   * l'oubli serait le plus coûteux.
+   */
+
+  /**
+   * Lecture du glossaire pour L'ÉCRAN D'ÉDITION.
+   *
+   * ⚠️ SANS filtre sur `active`, contrairement au worker — et ce n'est pas une
+   * inattention. Le worker ne veut que ce qui doit servir ; l'écran doit montrer TOUT
+   * ce qui existe, sinon une entrée mise en pause disparaîtrait de la liste et le
+   * prochain enregistrement (qui remplace la liste entière) la supprimerait pour de
+   * bon. Une lecture partielle suivie d'une écriture totale efface toujours ce qu'elle
+   * n'a pas lu.
+   *
+   * Rend TOUJOURS un objet exploitable, jamais une exception sur table absente : un
+   * écran de réglages qui refuse de s'afficher parce qu'une migration n'est pas passée
+   * est un écran qui empêche de réparer le problème qu'il signale.
+   */
+  async getGlossaire(tenantId: string): Promise<GlossaireTenant> {
+    const sb: any = this.authService.getClient();
+    const { data, error } = await sb
+      .from("tenant_glossary")
+      .select("term, variants, category, note, active")
+      .eq("tenant_id", tenantId)
+      .order("term", { ascending: true });
+    if (error) {
+      if (tableGlossaireAbsente(error)) {
+        return { entrees: [], indisponible: MSG_GLOSSAIRE_ABSENT };
+      }
+      throw new Error(error.message);
+    }
+    return { entrees: nettoyerGlossaire(data ?? []), indisponible: null };
+  }
+
+  /**
+   * Écriture du glossaire — REMPLACEMENT INTÉGRAL de la liste, pas un patch.
+   *
+   * POURQUOI un remplacement : l'écran édite la liste entière et l'enregistre d'un
+   * bloc ; un patch additif ne saurait pas dire « ce nom n'est plus dans mon
+   * vocabulaire » — la suppression n'y a aucune représentation.
+   *
+   * ⚠️ POURQUOI PAS `delete(tout) puis insert(tout)`, QUI TIENDRAIT EN DEUX LIGNES :
+   * entre les deux appels PostgREST il n'y a AUCUNE transaction. Un worker qui
+   * fabrique un clip pendant cette fenêtre lirait un glossaire vide et publierait
+   * « Shao » en 110 px — exactement la faute que cet écran existe pour empêcher. On
+   * réconcilie donc ligne à ligne : à aucun instant la table ne passe par un état vide,
+   * et les `id` survivent (avec eux `created_at`, `created_by`, et la trace).
+   *
+   * Rend la liste RELUE en base, pas celle reçue : l'écran affiche ce qui est réellement
+   * stocké (doublons fusionnés, entrées vides tombées, tri alphabétique appliqué).
+   */
+  async replaceGlossaire(
+    tenantId: string,
+    entrees: unknown,
+    createdBy?: string,
+  ): Promise<GlossaireTenant> {
+    const sb: any = this.authService.getClient();
+    const propre = nettoyerGlossaire(entrees);
+
+    // 1. L'existant, par id. On ne s'appuie PAS sur un `upsert onConflict` : la
+    //    contrainte d'unicité appartient à la migration, ce code ne doit pas en
+    //    dépendre pour être correct. La réconciliation se fait sur la forme
+    //    normalisée du terme — la même clé que celle du nettoyage, donc les deux
+    //    étapes ne peuvent pas être en désaccord sur « c'est le même mot ».
+    const { data: existantes, error: erreurLecture } = await sb
+      .from("tenant_glossary")
+      .select("id, term")
+      .eq("tenant_id", tenantId);
+    if (erreurLecture) {
+      if (tableGlossaireAbsente(erreurLecture)) {
+        return { entrees: [], indisponible: MSG_GLOSSAIRE_ABSENT };
+      }
+      throw new Error(erreurLecture.message);
+    }
+
+    const parCle = new Map<string, string>(); // terme normalisé → id de ligne
+    for (const l of (existantes ?? []) as Array<{ id: string; term: string }>) {
+      const cle = cleGlossaire(l.term);
+      // Doublon historique (deux lignes que la base distingue mais pas nous, ex.
+      // « Chéo » et « Cheo ») : on garde la première, la seconde tombera dans les
+      // suppressions. Le ménage vaut aussi pour la base.
+      if (cle && !parCle.has(cle)) parCle.set(cle, l.id);
+    }
+
+    // 2. Mises à jour et insertions AVANT les suppressions — dans cet ordre, un
+    //    renommage ne peut jamais laisser la table sans le terme concerné.
+    const gardes = new Set<string>();
+    const aInserer: Array<Record<string, unknown>> = [];
+    for (const e of propre) {
+      const colonnes = {
+        term: e.term,
+        variants: e.variants,
+        // null plutôt que '' : la colonne est nullable, et « pas de catégorie » se dit
+        // NULL en base. Une chaîne vide partirait au modèle comme « () » vide.
+        category: e.category || null,
+        note: e.note || null,
+        active: e.active,
+      };
+      const id = parCle.get(cleGlossaire(e.term));
+      if (id) {
+        gardes.add(id);
+        const { error } = await sb
+          .from("tenant_glossary")
+          .update(colonnes)
+          .eq("id", id)
+          .eq("tenant_id", tenantId); // cloison tenant même quand l'id suffirait
+        if (error) throw new Error(error.message);
+      } else {
+        // `created_by` n'est renseigné qu'à la CRÉATION : c'est qui a introduit le
+        // terme, pas qui l'a retouché en dernier (ça, c'est `updated_at`).
+        aInserer.push({
+          tenant_id: tenantId,
+          ...(createdBy ? { created_by: createdBy } : {}),
+          ...colonnes,
+        });
+      }
+    }
+
+    if (aInserer.length > 0) {
+      const { error } = await sb.from("tenant_glossary").insert(aInserer);
+      if (error) throw new Error(error.message);
+    }
+
+    // 3. Ce qui n'est plus dans la liste s'en va — et SEULEMENT ça.
+    const aSupprimer = [...parCle.values()].filter((id) => !gardes.has(id));
+    if (aSupprimer.length > 0) {
+      const { error } = await sb
+        .from("tenant_glossary")
+        .delete()
+        .eq("tenant_id", tenantId)
+        .in("id", aSupprimer);
+      if (error) throw new Error(error.message);
+    }
+
+    return this.getGlossaire(tenantId);
   }
 }

@@ -20,7 +20,7 @@
  * Connecté à PATCH /tenants/current/branding et GET /tenants/current.
  */
 import { useEffect, useState } from 'react';
-import { Settings, Save, Loader2, Check, AlertCircle, Globe, Palette, School, KeyRound, CreditCard, MessageCircle, Mail, Share2, Store, FileText } from 'lucide-react';
+import { Settings, Save, Loader2, Check, AlertCircle, Globe, Palette, School, KeyRound, CreditCard, MessageCircle, Mail, Share2, Store, FileText, SpellCheck } from 'lucide-react';
 import { tenantsApi } from '@/lib/api-v2';
 import { useStudentDossierSetting } from '@/hooks/useStudentDossierSetting';
 import { LiriPortalShell } from '@/components/liri/LiriPortalShell';
@@ -31,6 +31,7 @@ import TenantPayPalSettings from '@/components/admin/TenantPayPalSettings';
 import TenantWhatsAppSettings from '@/components/admin/TenantWhatsAppSettings';
 import TenantEmailSettings from '@/components/admin/TenantEmailSettings';
 import TenantSocialSettings from '@/components/admin/TenantSocialSettings';
+import TenantVocabulaireSettings from '@/components/admin/TenantVocabulaireSettings';
 import BoutiqueManager from '@/components/admin/BoutiqueManager';
 
 /**
@@ -143,7 +144,22 @@ export default function TenantAdminSettingsPage() {
 
   useEffect(() => {
     tenantsApi.current()
-      .then(t => {
+      .then(brut => {
+        /**
+         * ⚠️ DOUBLE ENVELOPPE — piège récurrent du projet, et ici il ne se voyait pas.
+         * `GET /tenants/current` renvoie `{ data: req.tenant }` PUIS le ResponseInterceptor
+         * global enveloppe une seconde fois → le corps HTTP est `{ data: { data: tenant } }`
+         * (c'est écrit noir sur blanc dans tenant.controller.ts). Or `unwrap` d'api-v2 ne
+         * retire QU'UNE couche : cette promesse résout `{ data: tenant }`, pas le tenant.
+         * Conséquence silencieuse : `t.name`, `t.slug`, `t.metadata.site` étaient tous
+         * `undefined` — le formulaire d'identité s'affichait VIDE, et « Sauvegarder »
+         * envoyait alors `name: ''`, effaçant le nom de l'école en base.
+         * Les autres appelants (useStudentDossierSetting, VideothequePage) déballent déjà
+         * défensivement ; celui-ci ne le faisait pas. On teste une clé QUI EXISTE TOUJOURS
+         * sur un tenant (`slug`) plutôt que l'absence de `data` : un tenant n'a pas de
+         * champ `data`, mais l'enveloppe, elle, n'a pas de `slug`.
+         */
+        const t = (brut?.slug || brut?.id) ? brut : (brut?.data ?? brut);
         setTenant(t);
         const site = t?.metadata?.site ?? {};
         setBranding({
@@ -185,7 +201,12 @@ export default function TenantAdminSettingsPage() {
       // Payload CANONIQUE attendu par UpdateBrandingDto (le camelCase brut était
       // silencieusement jeté par la whitelist ValidationPipe → rien ne persistait).
       await tenantsApi.updateBranding({
-        name: branding.name,
+        // Ceinture ET bretelles sur le NOM : c'est le seul champ d'ici dont l'effacement
+        // est irréversible et visible partout (interface, e-mails, vitrine). Un état
+        // vide — chargement échoué, réponse inattendue — ne doit jamais pouvoir
+        // l'écraser ; on omet la clé plutôt que d'envoyer une chaîne vide (le service
+        // n'écrit que les champs présents dans le DTO).
+        ...(branding.name?.trim() ? { name: branding.name } : {}),
         logo_url: branding.logoUrl,
         brand_colors: { accent: branding.accentColor },
         site: {
@@ -269,6 +290,20 @@ export default function TenantAdminSettingsPage() {
             <div id="reseaux-sociaux" style={{ scrollMarginTop: 24 }}>
               <Section title="Réseaux sociaux — publication des shorts" icon={Share2}>
                 <TenantSocialSettings />
+              </Section>
+            </div>
+          )}
+
+          {/* VOCABULAIRE juste APRÈS les réseaux sociaux : les deux servent la même
+              chaîne (fabriquer un extrait, puis le publier), et c'est dans cet ordre
+              qu'on la parcourt. Un créateur qui vient brancher TikTok découvre du même
+              coup pourquoi ses sous-titres écrivaient « Shao ».
+              Ancre `#vocabulaire` pour un lien direct depuis une notice ou le journal
+              de fabrication d'un extrait. */}
+          {tenant && (
+            <div id="vocabulaire" style={{ scrollMarginTop: 24 }}>
+              <Section title="Vocabulaire de l'école — noms propres" icon={SpellCheck}>
+                <TenantVocabulaireSettings />
               </Section>
             </div>
           )}

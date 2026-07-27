@@ -6,6 +6,8 @@ import { ZoomEngineService } from './zoom-engine.service';
 import { ZoomOAuthService } from './zoom-oauth.service';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { TenantGuard } from '../tenant/tenant.guard';
+import { Roles } from '../common/decorators/roles.decorator';
+import { RolesGuard } from '../common/guards/roles.guard';
 import { SyncRecordingsDto, UpdateRecordingDto, PublishVideoDto } from './dto/zoom-recordings.dto';
 
 @ApiTags('Zoom Engine')
@@ -142,7 +144,40 @@ export class ZoomEngineController {
     // TenantGuard) ni req.user.tenantId (absent pour un élève). Sans ça, listPublishedVideos
     // recevait `undefined` → `where tenant_id = undefined` → 0 vidéo malgré les replays publiés.
     const tenantId = req.tenant?.id || req.tenantId || req.user?.tenantId;
-    return this.service.listPublishedVideos(tenantId);
+    // L'état des EXTRAITS n'est rattaché que pour les créateurs : c'est la seule
+    // audience qui peut en faire quelque chose, et cela évite deux requêtes de plus
+    // sur l'écran que chaque élève ouvre.
+    const role = String(req.tenant?.userRole || '').toLowerCase();
+    const estCreateur = ['owner', 'admin', 'teacher'].includes(role);
+    return this.service.listPublishedVideos(tenantId, estCreateur);
+  }
+
+  /* ─── Extraits courts (short_clips) fabriqués depuis un replay ──────────── */
+
+  /**
+   * Le créateur DÉSIGNE le replay à découper. On n'attend rien ici : la route
+   * pose une demande que le poller du worker viendra prendre (téléchargement du
+   * fichier, transcription, découpe ffmpeg — plusieurs minutes). Idempotente.
+   *
+   * Cloisonnement : TenantGuard résout l'école depuis X-Tenant-Slug et refuse les
+   * non-membres ; RolesGuard limite aux créateurs. Le service revérifie le tenant
+   * à chaque saut (vidéo publiée → enregistrement source).
+   */
+  @Post('shorts-from-replay')
+  @UseGuards(TenantGuard, RolesGuard)
+  @Roles('owner', 'admin', 'teacher')
+  @ApiOperation({ summary: 'Demander la fabrication d\'extraits courts pour un replay' })
+  async requestShorts(@Req() req: any, @Body() dto: { videoId?: string }) {
+    return this.service.requestReplayShorts(req.tenant?.id, String(dto?.videoId ?? ''));
+  }
+
+  /** Avancement de la fabrication pour UN replay (sondage lent de la Vidéothèque). */
+  @Get('shorts-state/:videoId')
+  @UseGuards(TenantGuard, RolesGuard)
+  @Roles('owner', 'admin', 'teacher')
+  @ApiOperation({ summary: 'État des extraits courts d\'un replay' })
+  async shortsState(@Req() req: any, @Param('videoId') videoId: string) {
+    return this.service.getReplayShortsState(req.tenant?.id, videoId);
   }
 
   @Post('unpublish/:id')

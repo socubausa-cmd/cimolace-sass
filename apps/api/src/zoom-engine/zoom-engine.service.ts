@@ -5,7 +5,7 @@
  * les enregistrements, puis stocker les métadonnées en base.
  */
 
-import { Injectable, Logger } from '@nestjs/common';
+import { BadRequestException, Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { S3Client, GetObjectCommand } from '@aws-sdk/client-s3';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
@@ -13,6 +13,75 @@ import { SupabaseService } from '../supabase/supabase.service';
 import { ZoomOAuthService } from './zoom-oauth.service';
 
 const ZOOM_API_BASE = 'https://api.zoom.us/v2';
+
+/**
+ * ── EXTRAITS COURTS : vocabulaire d'idempotence de `zoom_recordings` ─────────
+ *
+ * Cette colonne N'APPARTIENT PAS à l'API : elle est définie par le worker
+ * (apps/worker/src/jobs/short-generator.js) et par sa migration
+ * supabase/migrations/20260727140000_zoom_shorts_idempotence.sql. On la lit et on
+ * l'écrit, on ne l'invente pas — d'où ces constantes plutôt que des chaînes
+ * dispersées : le jour où le worker change de vocabulaire, il y a UN endroit à
+ * corriger, et la traduction vers l'écran (ci-dessous) ne bouge pas.
+ *
+ *   NULL         → jamais demandé. Le poller du worker NE PREND PAS la ligne :
+ *                  c'est précisément la garde qui empêche les dizaines de replays
+ *                  déjà en base de partir tout seuls à l'encodage.
+ *   'requested'  → un créateur a explicitement demandé la fabrication (ce que
+ *                  pose cette API). Le poller ne travaille QUE sur cette valeur.
+ *   'processing' → pris en charge par un worker (posé avant le travail).
+ *   'done'       → terminé. Les clips sont dans `short_clips` (statut 'ready').
+ *   'error'      → échoué ; motif dans `shorts_error`, essais dans `shorts_attempts`.
+ *
+ * Colonnes compagnes posées par la même migration :
+ *   `shorts_requested_at` — horodatage de la demande. ⚠️ NON DÉCORATIF : le poller
+ *                           sert la file DANS L'ORDRE D'ARRIVÉE sur cette colonne.
+ *                           L'oublier ferait passer les demandes en dernier (NULL).
+ *   `shorts_started_at`   — prise en charge par un worker (au worker, pas à nous).
+ *   `shorts_attempts`     — essais cumulés ; au-delà de 3 le poller renonce EN
+ *                           L'ÉCRIVANT. Une nouvelle demande du créateur le remet à 0.
+ *   `shorts_error`        — motif du dernier échec, volontairement distinct de
+ *                           `error_message` (réservé au transfert Zoom → R2).
+ */
+const SHORTS_DEMANDE = 'requested';
+
+/**
+ * Vocabulaire rendu à l'ÉCRAN — cinq mots français, stables, qui ne trahissent ni
+ * le nom des colonnes ni les valeurs du worker. La Vidéothèque ne connaît que
+ * ceux-là : le front n'a donc rien à réécrire si le worker renomme ses états.
+ */
+export type ShortsEtat = 'aucun' | 'demande' | 'encours' | 'pret' | 'erreur';
+
+export interface ReplayShortsState {
+  state: ShortsEtat;
+  /** Extraits réellement disponibles (short_clips en statut 'ready'). */
+  clips: number;
+  error_message: string | null;
+  requested_at: string | null;
+  /**
+   * VRAI quand ce replay ne produira AUCUN sous-titre, et qu'aucun automatisme ne
+   * viendra y changer quoi que ce soit. Cf. `SHORTS_WHISPER_MAX_MIN` ci-dessous.
+   * L'écran doit le dire AVANT le clic — sinon le créateur relance la fabrication
+   * en boucle en croyant que la transcription finira par arriver.
+   */
+  sans_transcription: boolean;
+}
+
+/**
+ * Seuil, EN MINUTES, au-delà duquel le worker renonce à transcrire un replay qui
+ * n'a pas déjà ses cues (miroir de `WHISPER_INLINE_MAX_SEC` dans
+ * apps/worker/src/jobs/short-generator.js : un WAV 16 kHz mono dépasse la limite
+ * de 25 Mo des fournisseurs Whisper au-delà d'environ 12 minutes).
+ *
+ * ⚠️ ET LE RATTRAPAGE N'EXISTE PAS. Le poller de transcription
+ * (apps/worker/src/jobs/zoom-transcribe.js) ne reprend que les vidéos dont
+ * `published_videos.transcript_text` est NULL, alors qu'il pose lui-même la chaîne
+ * vide comme sentinelle « tenté, en échec ». Un replay long déjà tenté est donc
+ * sorti de sa file DÉFINITIVEMENT : ses extraits sortiront sans sous-titres
+ * aujourd'hui comme dans six mois. Seule reprise possible, à la main :
+ *   update published_videos set transcript_text = null where transcript_text = '';
+ */
+const SHORTS_WHISPER_MAX_MIN = 12;
 
 @Injectable()
 export class ZoomEngineService {
@@ -271,7 +340,12 @@ export class ZoomEngineService {
     return data;
   }
 
-  async listPublishedVideos(tenantId: string) {
+  /**
+   * @param pourCreateur rattache l'état des EXTRAITS à chaque replay. Réservé aux
+   * créateurs : un élève n'a rien à faire d'un motif d'échec de worker, et cette
+   * lecture ferait deux requêtes de plus sur l'écran le plus chargé du portail.
+   */
+  async listPublishedVideos(tenantId: string, pourCreateur = false) {
     const { data } = await (this.supabase.client as any)
       .from('published_videos')
       .select('*')
@@ -304,7 +378,240 @@ export class ZoomEngineService {
         if (p) { row.precepteur_id = p.id; row.precepteur_title = p.title; }
       }
     }
+    // ── État des EXTRAITS COURTS, rattaché à chaque replay ────────────────────
+    // POURQUOI GROUPÉ ICI : la Vidéothèque montre l'avancement sur les cartes.
+    // Le demander depuis l'écran coûterait une requête PAR replay (des dizaines)
+    // à chaque ouverture de page ; deux requêtes groupées suffisent.
+    //
+    // ⚠️ FAIL-SOFT ASSUMÉ : cette table est aussi celle des ÉLÈVES. Si la colonne
+    // d'idempotence n'existe pas encore (API déployée avant l'application de la
+    // migration — l'ordre n'est pas garanti), une erreur PostgREST ferait ici
+    // disparaître TOUTE la vidéothèque pour tout le monde. On préfère perdre une
+    // pastille d'état : les replays restent lisibles, l'écran affichera « aucun ».
+    if (pourCreateur && rows.length) {
+      try {
+        const recIds = [...new Set(rows.map((r) => r.recording_id).filter(Boolean))] as string[];
+        if (recIds.length) {
+          const { data: recs, error: recErr } = await (this.supabase.client as any)
+            .from('zoom_recordings')
+            .select('id, shorts_status, shorts_error, duration_min')
+            .eq('tenant_id', tenantId)
+            .in('id', recIds);
+          if (recErr) throw recErr;
+          const parRec = new Map<string, any>();
+          for (const r of recs || []) parRec.set(r.id, r);
+          const clipsParRec = await this.countClipsPrets(tenantId, recIds);
+          for (const row of rows) {
+            const rec = row.recording_id ? parRec.get(row.recording_id) : null;
+            // `row.transcript_cues` vient de la ligne `published_videos` déjà chargée :
+            // le booléen ne coûte donc aucune requête ni aucun octet de plus.
+            const etat = this.formatShortsState(
+              rec,
+              clipsParRec.get(row.recording_id) || 0,
+              row.transcript_cues,
+            );
+            row.shorts_state = etat.state;
+            row.shorts_clips = etat.clips;
+            row.shorts_error = etat.error_message;
+            row.shorts_sans_transcription = etat.sans_transcription;
+          }
+        }
+      } catch (err) {
+        this.logger.warn(`[shorts] État non rattaché à la vidéothèque : ${(err as Error).message}`);
+      }
+    }
     return rows;
+  }
+
+  /* ─── EXTRAITS COURTS (short_clips) fabriqués depuis un replay ──────────── */
+
+  /** Traduit l'état brut du worker en mot d'écran. Toute valeur inconnue → 'aucun'. */
+  private mapShortsEtat(brut: unknown): ShortsEtat {
+    switch (String(brut ?? '').toLowerCase()) {
+      // 'queued' est toléré : le worker l'accepte comme synonyme de 'requested'.
+      case 'requested':
+      case 'queued':
+        return 'demande';
+      case 'processing':
+        return 'encours';
+      case 'done':
+        return 'pret';
+      case 'error':
+        return 'erreur';
+      default:
+        return 'aucun';
+    }
+  }
+
+  /**
+   * Assemble l'état rendu à l'écran. `error_message` n'est renvoyé QU'EN ÉCHEC :
+   * `shorts_error` peut rester renseigné d'un essai précédent après une reprise
+   * réussie, et afficher « Échec : … » sur un replay dont les extraits sont prêts
+   * serait un mensonge.
+   */
+  private formatShortsState(rec: any, clips: number, cuesConnues?: unknown): ReplayShortsState {
+    const state = this.mapShortsEtat(rec?.shorts_status);
+    return {
+      state,
+      clips,
+      error_message: state === 'erreur' ? (rec?.shorts_error || null) : null,
+      requested_at: rec?.shorts_requested_at || null,
+      sans_transcription: this.manqueTranscription(rec, cuesConnues),
+    };
+  }
+
+  /**
+   * Ce replay est-il condamné à des extraits SANS sous-titres ?
+   *
+   * Deux conditions, exactement celles du worker : aucune cue horodatée nulle part,
+   * et une durée qui dépasse ce qu'un envoi Whisper en une passe peut avaler. Dans
+   * ce cas la branche (b) du générateur saute la transcription — et, contrairement à
+   * ce que son commentaire affirmait, personne ne viendra la combler ensuite.
+   *
+   * `cuesConnues` sert la liste de la Vidéothèque : la ligne `published_videos` y est
+   * DÉJÀ chargée avec ses cues, alors qu'aller les relire sur `zoom_recordings`
+   * ramènerait des dizaines de gros JSON pour un simple booléen.
+   */
+  private manqueTranscription(rec: any, cuesConnues?: unknown): boolean {
+    const cuesRec = rec?.transcript_cues;
+    const aDesCues =
+      (Array.isArray(cuesRec) && cuesRec.length > 0) ||
+      (Array.isArray(cuesConnues) && cuesConnues.length > 0);
+    if (aDesCues) return false;
+    // Sans durée connue on ne présume RIEN : un avertissement faux ferait renoncer
+    // à une fabrication qui se serait très bien passée.
+    const minutes = Number(rec?.duration_min) || 0;
+    return minutes > SHORTS_WHISPER_MAX_MIN;
+  }
+
+  /**
+   * Compte les extraits RÉELLEMENT disponibles, par enregistrement source.
+   * Seuls les clips 'ready' comptent : un clip 'generating' ou 'error' n'est pas
+   * un extrait qu'on peut montrer, l'annoncer gonflerait le chiffre pour rien.
+   */
+  private async countClipsPrets(tenantId: string, recordingIds: string[]): Promise<Map<string, number>> {
+    const parRec = new Map<string, number>();
+    if (!recordingIds.length) return parRec;
+    const { data } = await (this.supabase.client as any)
+      .from('short_clips')
+      .select('recording_id')
+      .eq('tenant_id', tenantId)
+      .eq('status', 'ready')
+      .in('recording_id', recordingIds);
+    for (const c of data || []) {
+      if (!c?.recording_id) continue;
+      parRec.set(c.recording_id, (parRec.get(c.recording_id) || 0) + 1);
+    }
+    return parRec;
+  }
+
+  /**
+   * Remonte de la vidéo PUBLIÉE (le seul identifiant que la Vidéothèque manipule)
+   * jusqu'à son enregistrement source, en restant cloisonné au tenant à CHAQUE
+   * saut : filtrer le premier ne suffit pas, un `recording_id` mal apparié
+   * donnerait accès à l'enregistrement d'une autre école.
+   */
+  private async resolveRecordingDeVideo(tenantId: string, videoId: string) {
+    if (!tenantId) throw new BadRequestException('École non identifiée.');
+    if (!videoId) throw new BadRequestException('Replay non identifié.');
+
+    const { data: video } = await (this.supabase.client as any)
+      .from('published_videos')
+      .select('id, recording_id')
+      .eq('id', videoId)
+      .eq('tenant_id', tenantId)
+      .maybeSingle();
+    if (!video) throw new NotFoundException('Replay introuvable pour cette école.');
+    if (!video.recording_id) {
+      throw new BadRequestException(
+        "Ce replay n'a pas d'enregistrement source : il n'y a rien à découper.",
+      );
+    }
+
+    // `select('*')` à dessein : la ligne est UNIQUE (coût négligeable) et cette
+    // lecture survit à l'ajout ou au renommage d'une colonne d'idempotence côté
+    // worker — un `select` nominatif renverrait une erreur PostgREST 42703 et
+    // casserait le bouton pour une colonne absente.
+    const { data: rec } = await (this.supabase.client as any)
+      .from('zoom_recordings')
+      .select('*')
+      .eq('id', video.recording_id)
+      .eq('tenant_id', tenantId)
+      .maybeSingle();
+    if (!rec) throw new NotFoundException('Enregistrement source introuvable pour cette école.');
+    return rec;
+  }
+
+  /** État d'avancement des extraits d'UN replay (sondage de l'écran). */
+  async getReplayShortsState(tenantId: string, videoId: string): Promise<ReplayShortsState> {
+    const rec = await this.resolveRecordingDeVideo(tenantId, videoId);
+    const clips = (await this.countClipsPrets(tenantId, [rec.id])).get(rec.id) || 0;
+    return this.formatShortsState(rec, clips);
+  }
+
+  /**
+   * ENREGISTRE une demande de fabrication d'extraits pour UN replay.
+   *
+   * Cette méthode ne fabrique RIEN : elle pose un drapeau que le poller du worker
+   * viendra prendre. C'est délibéré — la chaîne (téléchargement R2 du fichier
+   * complet, transcription, découpe ffmpeg, remontée R2) se compte en minutes et
+   * ne peut pas tenir dans une requête HTTP.
+   *
+   * IDEMPOTENTE : si une fabrication est déjà en file ('demande') ou en cours
+   * ('encours'), on renvoie l'état sans rien réécrire. Sans cette garde, un
+   * double-clic remettrait la ligne en tête de file et ferait retélécharger un
+   * fichier de plusieurs centaines de Mo pour rien.
+   */
+  async requestReplayShorts(tenantId: string, videoId: string): Promise<ReplayShortsState> {
+    const rec = await this.resolveRecordingDeVideo(tenantId, videoId);
+    const clips = (await this.countClipsPrets(tenantId, [rec.id])).get(rec.id) || 0;
+    const etat = this.mapShortsEtat(rec.shorts_status);
+
+    if (etat === 'demande' || etat === 'encours') {
+      return this.formatShortsState(rec, clips);
+    }
+
+    // Sans fichier sur le stockage de l'école, le worker n'aurait rien à ouvrir :
+    // on le dit maintenant plutôt que de laisser une demande échouer dans dix minutes.
+    if (!rec.storage_key) {
+      throw new BadRequestException(
+        "Ce replay n'est pas encore déposé sur le stockage de l'école : il n'y a rien à découper pour l'instant.",
+      );
+    }
+
+    const demandeLe = new Date().toISOString();
+    const { error } = await (this.supabase.client as any)
+      .from('zoom_recordings')
+      .update({
+        shorts_status: SHORTS_DEMANDE,
+        // Ordre d'arrivée de la file du worker : sans cet horodatage, la demande
+        // se retrouverait derrière toutes celles qui en portent un.
+        shorts_requested_at: demandeLe,
+        // On efface le motif du tour précédent : le garder ferait afficher
+        // « Échec : … » sur une fabrication qui vient d'être relancée.
+        shorts_error: null,
+        // Remise à zéro du compteur d'essais : le worker renonce au bout de trois
+        // prises en charge (fail-closed, il ne retente jamais seul). Un clic humain
+        // EST la décision de repartir — sans cette remise à zéro, « Relancer la
+        // fabrication » retomberait immédiatement en échec sur un replay déjà
+        // épuisé, sans qu'aucun travail ne soit tenté.
+        shorts_attempts: 0,
+        updated_at: demandeLe,
+      })
+      .eq('id', rec.id)
+      .eq('tenant_id', tenantId);
+    if (error) throw new Error(`Demande non enregistrée : ${error.message}`);
+
+    this.logger.log(`[shorts] Demande enregistrée pour zoom_recording ${rec.id} (tenant ${tenantId})`);
+    return {
+      state: 'demande',
+      clips,
+      error_message: null,
+      requested_at: demandeLe,
+      // Le drapeau reste vrai APRÈS la demande : l'écran continue de dire pourquoi
+      // les extraits sortiront nus, au lieu de laisser croire à un incident.
+      sans_transcription: this.manqueTranscription(rec),
+    };
   }
 
   // ── Présignature R2 (lecture) ─────────────────────────────────────────────

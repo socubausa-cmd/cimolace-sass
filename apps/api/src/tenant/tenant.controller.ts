@@ -10,6 +10,7 @@ import {
   Param,
   Patch,
   Post,
+  Put,
   Req,
   UseGuards,
 } from "@nestjs/common";
@@ -285,6 +286,75 @@ export class TenantController {
     }
     // Retour BRUT (cf. GET ci-dessus) : l'intercepteur enveloppe en { data }.
     return this.tenantService.updateOsKnowledge(req.tenant.id, knowledge);
+  }
+
+  /* ─── VOCABULAIRE DE L'ÉCOLE (glossaire de noms propres) ──────────────────
+   *
+   * À QUOI ÇA SERT. La transcription automatique des replays écrit ce qu'elle
+   * ENTEND : elle a écrit « Shao » là où l'orateur dit « Cheo ». Depuis que le
+   * sous-titre est le contenu du clip (110 px, plein cadre), cette faute est
+   * publiée en grand sous le nom de l'école. Aucun modèle ne peut deviner
+   * l'orthographe d'un nom qu'il ne connaît pas — c'est le créateur qui la donne,
+   * ici, une fois pour toutes. Stockage : `public.tenant_glossary` (migration
+   * 20260727180000), lue par le worker qui fabrique les extraits.
+   *
+   * CLOISON. `current/*` + TenantGuard : le tenant vient du contexte authentifié,
+   * jamais du corps de la requête — aucun chemin pour écrire chez le voisin.
+   * `@Roles('owner','admin')` sur les DEUX verbes, LECTURE COMPRISE. Ce n'est pas
+   * de la confidentialité (ces noms sont dits en cours et écrits sur les diapos,
+   * et la policy RLS de la table les ouvre d'ailleurs aux membres) : c'est que
+   * cette route sert L'ÉCRAN D'ÉDITION, qui rend aussi les entrées désactivées et
+   * l'état d'application de la migration. Un futur écran de consultation côté
+   * classe passera par sa propre route, en lecture seule.
+   * ⚠️ Routes déclarées AVANT `@Patch(':tenantId/branding')` — l'ordre compte dans
+   * Nest, un segment littéral doit précéder le paramètre qui l'absorberait.
+   */
+
+  @Get("current/vocabulaire")
+  @UseGuards(JwtAuthGuard, TenantGuard, RolesGuard)
+  @Roles("owner", "admin")
+  async currentVocabulaire(@Req() req: any) {
+    // Retour BRUT : l'intercepteur de réponse global enveloppe en { data } — UNE
+    // seule fois. Un { data } manuel ici produirait le double-wrap
+    // { data: { data: … } } dont le client (unwrap = response.data.data) ne
+    // sortirait qu'un objet enveloppe. Piège récurrent du projet, déjà documenté
+    // sur current/os-knowledge.
+    return this.tenantService.getGlossaire(req.tenant.id);
+  }
+
+  /**
+   * PUT (et non PATCH) : le corps porte la liste ENTIÈRE, il la REMPLACE. C'est le
+   * seul verbe qui permette d'exprimer une suppression — retirer un nom, c'est
+   * envoyer la liste sans lui. Un PATCH additif ne saurait pas dire « ce nom n'est
+   * plus dans mon vocabulaire ».
+   */
+  @Put("current/vocabulaire")
+  @UseGuards(JwtAuthGuard, TenantGuard, RolesGuard)
+  @Roles("owner", "admin")
+  async updateOwnVocabulaire(
+    @Req() req: any,
+    @Body() body: { entrees?: unknown } | unknown[],
+  ) {
+    // On accepte le tableau nu comme l'objet { entrees } : deux appelants, deux
+    // habitudes, et un 400 sur une forme évidente est du temps perdu pour rien.
+    const entrees = Array.isArray(body)
+      ? body
+      : (body as { entrees?: unknown })?.entrees;
+    if (!Array.isArray(entrees)) {
+      throw new BadRequestException(
+        "Corps attendu : { entrees: [ { term, variants, category, note, active } ] }",
+      );
+    }
+    // Retour BRUT (cf. GET) — et c'est la liste RELUE EN BASE qui revient, pas celle
+    // envoyée : l'écran affiche donc exactement ce qui est stocké (doublons fusionnés,
+    // entrées vides tombées, tri alphabétique), sans avoir à recharger.
+    // `req.user.id` alimente `created_by` sur les seules lignes CRÉÉES — savoir qui a
+    // introduit un terme est utile le jour où une substitution se révèle mauvaise.
+    return this.tenantService.replaceGlossaire(
+      req.tenant.id,
+      entrees,
+      req.user?.id,
+    );
   }
 
   /**

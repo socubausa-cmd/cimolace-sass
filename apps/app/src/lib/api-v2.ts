@@ -51,6 +51,41 @@ export const authApi = {
 
 // ── Tenant ──────────────────────────────────────────────────────────────────
 
+/**
+ * Une entrée du VOCABULAIRE DE L'ÉCOLE : l'orthographe qui fait foi, les graphies
+ * fautives constatées, la nature du terme.
+ *
+ * ⚠️ LES NOMS DE CHAMPS SONT CEUX DES COLONNES de `public.tenant_glossary` (migration
+ * 20260727180000), et ils le restent de la base jusqu'à l'écran. Le worker qui fabrique
+ * les extraits lit les mêmes (`apps/worker/src/jobs/short-sous-titres.js`). Traduire
+ * les clés en français à cet étage n'aurait acheté qu'une chose : une correspondance de
+ * plus à tenir à jour. Le français est dans les LIBELLÉS de l'écran.
+ * Le serveur reste seul juge du nettoyage (bornes, dédoublonnage) : ce type décrit la
+ * forme, pas les limites.
+ */
+export interface VocabulaireEntree {
+  /** Orthographe qui FAIT AUTORITÉ, celle qui sera affichée en 110 px. Ex. « Cheo ». */
+  term: string;
+  /** Graphies fautives DÉJÀ CONSTATÉES. Ex. ['Shao']. Peut être vide. */
+  variants: string[];
+  /** Nature du terme, envoyée au modèle avec lui. Ex. « personne », « lieu ». */
+  category: string;
+  /** Mémo pour l'humain (« entendu Shao le 12/03 ») — le moteur ne le lit pas. */
+  note: string;
+  /** false = l'entrée reste listée ici mais ne part plus au moteur. */
+  active: boolean;
+}
+
+/**
+ * Réponse des deux verbes. `indisponible` n'est pas une erreur d'appel : c'est l'aveu
+ * que la table n'existe pas encore sur cette base (migrations Cimolace appliquées
+ * hors-bande). L'écran doit le DIRE plutôt que d'afficher une liste vide rassurante.
+ */
+export interface VocabulaireReponse {
+  entrees: VocabulaireEntree[];
+  indisponible: string | null;
+}
+
 export const tenantsApi = {
   create: (body: { name: string; slug: string }) =>
     apiV2.post<ApiEnvelope<any>>('/tenants', body).then(unwrap),
@@ -70,6 +105,19 @@ export const tenantsApi = {
     apiV2.get<ApiEnvelope<any>>('/tenants/current/os-knowledge').then(unwrap),
   updateOsKnowledge: (knowledge: Record<string, unknown>) =>
     apiV2.patch<ApiEnvelope<any>>('/tenants/current/os-knowledge', { knowledge }).then(unwrap),
+  // VOCABULAIRE DE L'ÉCOLE (owner/admin) — les noms propres que la transcription
+  // automatique écorche. Sert d'AUTORITÉ à la relecture des sous-titres : sans lui, la
+  // machine écrit « Shao » et le modèle n'a aucun moyen de savoir qu'il faut lire
+  // « Cheo » (ce n'est pas un mot de la langue, c'est le nom de l'orateur).
+  // Le serveur renvoie l'objet NU { entrees, indisponible } — une seule enveloppe, pas
+  // le double-wrap de /tenants/current.
+  getVocabulaire: (): Promise<VocabulaireReponse> =>
+    apiV2.get<ApiEnvelope<VocabulaireReponse>>('/tenants/current/vocabulaire').then(unwrap),
+  // PUT = remplacement INTÉGRAL : c'est le seul verbe qui sache exprimer une
+  // suppression (retirer un nom = envoyer la liste sans lui). La réponse est la liste
+  // RELUE EN BASE, pas celle envoyée — l'écran s'aligne dessus sans recharger.
+  saveVocabulaire: (entrees: VocabulaireEntree[]): Promise<VocabulaireReponse> =>
+    apiV2.put<ApiEnvelope<VocabulaireReponse>>('/tenants/current/vocabulaire', { entrees }).then(unwrap),
   mine: () => apiV2.get<ApiEnvelope<any[]>>('/tenants/mine').then(unwrap),
   dashboard: () => apiV2.get<ApiEnvelope<any>>('/tenants/current/dashboard').then(unwrap),
   listMembers: () => apiV2.get<ApiEnvelope<any[]>>('/tenants/current/members').then(unwrap),
@@ -921,6 +969,63 @@ export const masterclassApi = {
     apiV2.get<ApiEnvelope<any>>(`/masterclass-factory/course-job/by-video/${videoId}`).then(unwrap),
   savePrecepteur: (body: Record<string, unknown>) =>
     apiV2.post<ApiEnvelope<any>>('/masterclass-factory/precepteur', body).then(unwrap),
+};
+
+// ── Vidéothèque : EXTRAITS COURTS (short_clips) d'un replay ──────────────────
+//
+// POURQUOI CE CONTRAT EST « MAIGRE » CÔTÉ CLIENT : la fabrication d'extraits est
+// un travail de WORKER (téléchargement R2 → transcription → découpe ffmpeg →
+// remontée R2), pas un appel synchrone. La route ne fait donc que POSER UNE
+// DEMANDE ; elle rend la main tout de suite. C'est exactement le motif de
+// `requestCourseFromReplay` juste au-dessus — surtout pas celui de
+// `chaptersFromReplay`, qui attend le modèle en ligne avec un timeout de 780 s.
+// Une requête qui resterait ouverte plusieurs minutes ici serait coupée par le
+// proxy bien avant que le premier clip existe.
+//
+// ⚠️ VOCABULAIRE NORMALISÉ PAR LE SERVEUR. `state` ne trahit JAMAIS le nom ni les
+// valeurs de la colonne d'idempotence portée par `zoom_recordings` (le worker et
+// l'API en sont seuls propriétaires, et le poller peut les faire évoluer). L'écran
+// ne connaît que ces cinq mots français, stables :
+//   'aucun'   → jamais demandé pour ce replay ;
+//   'demande' → demande enregistrée, le worker ne l'a pas encore prise ;
+//   'encours' → découpage en cours (plusieurs minutes) ;
+//   'pret'    → terminé — `clips` dit COMBIEN d'extraits sont réellement prêts
+//               (peut valoir 0 : un replay sans passage saillant ne rend rien) ;
+//   'erreur'  → échec, `error_message` porte le motif brut du worker.
+export interface ReplayShortsState {
+  state: 'aucun' | 'demande' | 'encours' | 'pret' | 'erreur';
+  /** Nombre d'extraits en statut `ready` réellement disponibles pour ce replay. */
+  clips: number;
+  /** Motif d'échec renvoyé par le worker (déjà en français quand il vient de nous). */
+  error_message?: string | null;
+  /** Horodatage de la demande — sert à dire « demandé il y a X » sans deviner. */
+  requested_at?: string | null;
+  /**
+   * VRAI quand ce replay n'a AUCUNE transcription et qu'il est trop long pour être
+   * transcrit au vol : les extraits sortiront sans sous-titres, et aucun automatisme
+   * ne viendra corriger ça (le poller de transcription a définitivement écarté les
+   * replays qu'il a déjà tentés en vain). À DIRE AVANT LE CLIC — sans cet
+   * avertissement, le créateur relance la fabrication de semaine en semaine en
+   * croyant que la transcription va finir par arriver.
+   */
+  sans_transcription?: boolean;
+}
+
+export const videothequeApi = {
+  /**
+   * Demande la fabrication d'extraits courts pour UN replay (owner/admin/teacher).
+   * Idempotent côté serveur : redemander pendant que le worker travaille ne
+   * relance rien et ne refacture pas la transcription — la route renvoie l'état
+   * courant. Le paramètre est l'ID de la vidéo PUBLIÉE (`published_videos.id`),
+   * seul identifiant que la Vidéothèque manipule ; le serveur remonte lui-même
+   * jusqu'à l'enregistrement source.
+   */
+  requestShorts: (videoId: string): Promise<ReplayShortsState> =>
+    apiV2.post<ApiEnvelope<ReplayShortsState>>('/zoom-engine/shorts-from-replay', { videoId }).then(unwrap),
+
+  /** État d'avancement d'UN replay — appelé en boucle lente pendant le travail. */
+  shortsState: (videoId: string): Promise<ReplayShortsState> =>
+    apiV2.get<ApiEnvelope<ReplayShortsState>>(`/zoom-engine/shorts-state/${videoId}`).then(unwrap),
 };
 
 // ── Mbolo ───────────────────────────────────────────────────────────────────

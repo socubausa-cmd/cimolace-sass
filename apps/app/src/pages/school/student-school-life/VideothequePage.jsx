@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Play, Search, Film, GraduationCap, FileText, Loader2, Sparkles, ListTree } from 'lucide-react';
-import { apiV2, masterclassApi, tenantsApi } from '@/lib/api-v2';
+import { Play, Search, Film, GraduationCap, FileText, Loader2, Sparkles, ListTree, Scissors } from 'lucide-react';
+import { apiV2, masterclassApi, tenantsApi, videothequeApi } from '@/lib/api-v2';
 import { exportCoursePdf } from '@/lib/exportCoursePdf';
 import ImmersiveVideoPlayer from '@/components/school/formations/ImmersiveVideoPlayer';
 
@@ -151,6 +151,92 @@ export default function VideothequePage() {
         message: /403|forbidden/i.test(msg) ? "Réservé aux enseignants et responsables de l'école." : (msg || 'Construction impossible.'),
       });
       setTimeout(() => setBuild({ state: 'idle', message: '', courseId: null }), 9000);
+    }
+  }
+
+  // ── EXTRAITS COURTS (short_clips) fabriqués DEPUIS CE REPLAY ──────────────
+  //
+  // POURQUOI UNE DEMANDE EXPLICITE, ET PAS UN TRAITEMENT AUTOMATIQUE : le moteur
+  // d'extraits sait faire (il a déjà produit un short depuis un direct), mais le
+  // brancher en balayage sur toute la vidéothèque ferait retélécharger et
+  // retranscrire des dizaines de replays de plusieurs heures — une dépense réelle
+  // que personne n'a décidée. Ici c'est le créateur qui désigne LE replay.
+  //
+  // La fabrication vit côté worker (téléchargement R2 → transcription → découpe
+  // ffmpeg → remontée R2) : l'API ne fait qu'ENREGISTRER la demande. On suit donc
+  // l'avancement par sondage lent, exactement comme la construction de cours.
+  //
+  // ⚠️ L'ÉTAT DE VÉRITÉ EST PORTÉ PAR LA VIDÉO (`shorts_state` / `shorts_clips` /
+  // `shorts_error`, posés par l'API sur chaque ligne), PAS par un état d'écran.
+  // Même leçon que le chapitrage : un avancement appartient à UN replay. Rangé
+  // dans la liste, fermer le lecteur ne le perd pas et la grille reste juste.
+  // `extraits` ci-dessous ne porte que ce qui est purement d'interface : l'étape
+  // d'armement (dire le coût en temps AVANT le clic) et l'échec de la demande.
+  const [extraits, setExtraits] = useState({ videoId: null, arme: false, envoi: false, message: '' });
+  const extraitsPollRef = useRef(null);
+  const extraitsTimerRef = useRef(null);
+
+  /** État des extraits d'une vidéo. Repli 'aucun' : les lignes servies avant cette
+   *  fonctionnalité — et celles servies à un élève — ne portent pas ces champs. */
+  const etatExtraits = (v) => ({
+    state: v?.shorts_state || 'aucun',
+    clips: Number(v?.shorts_clips || 0),
+    erreur: String(v?.shorts_error || ''),
+    // Replay sans transcription ET trop long pour être transcrit au vol : les
+    // extraits sortiront NUS, et rien ne viendra y remédier tout seul. On le dit
+    // avant le clic — c'est la différence entre « patienter » et « recliquer
+    // chaque semaine pour le même résultat ».
+    sansTranscription: Boolean(v?.shorts_sans_transcription),
+  });
+
+  /**
+   * Range une réponse serveur DANS la vidéo ouverte ET dans la liste. Sans les
+   * deux, refermer le lecteur reperdrait l'avancement jusqu'au rechargement, et
+   * la pastille de la grille mentirait.
+   */
+  const patchExtraits = useCallback((videoId, s) => {
+    const patch = {
+      shorts_state: s?.state || 'aucun',
+      shorts_clips: Number(s?.clips || 0),
+      shorts_error: s?.error_message || '',
+      shorts_sans_transcription: Boolean(s?.sans_transcription),
+    };
+    setActive((a) => (a && a.id === videoId ? { ...a, ...patch } : a));
+    setVideos((prev) => (Array.isArray(prev) ? prev.map((v) => (v.id === videoId ? { ...v, ...patch } : v)) : prev));
+  }, []);
+
+  /**
+   * Demande la fabrication pour LE replay ouvert. Le serveur est idempotent :
+   * redemander pendant que le worker travaille ne relance rien — on affiche
+   * simplement l'état qu'il renvoie.
+   */
+  async function handleDemanderExtraits(video) {
+    if (!video?.id) return;
+    clearTimeout(extraitsTimerRef.current);
+    // ⚠️ ON RESTE « ARMÉ » PENDANT L'ENVOI. Repasser `arme` à faux dès le clic
+    // faisait disparaître le bouton « Lancer » et réapparaître « Fabriquer des
+    // extraits », CLIQUABLE, pendant que la requête était encore en vol : deux
+    // demandes partaient pour le même replay. Le serveur est idempotent, mais
+    // l'écran n'a aucune raison d'ouvrir cette fenêtre.
+    setExtraits({ videoId: video.id, arme: true, envoi: true, message: '' });
+    try {
+      const s = await videothequeApi.requestShorts(video.id);
+      patchExtraits(video.id, s);
+      setExtraits({ videoId: null, arme: false, envoi: false, message: '' });
+    } catch (e) {
+      const msg = String(e?.message || '');
+      setExtraits({
+        videoId: video.id,
+        arme: false,
+        envoi: false,
+        message: /403|forbidden/i.test(msg)
+          ? "Réservé aux enseignants et responsables de l'école."
+          : msg || 'Demande impossible.',
+      });
+      extraitsTimerRef.current = setTimeout(
+        () => setExtraits({ videoId: null, arme: false, envoi: false, message: '' }),
+        12000,
+      );
     }
   }
 
@@ -309,6 +395,34 @@ export default function VideothequePage() {
     }
   }
 
+  // SONDAGE LENT de la fabrication en cours, uniquement pour le replay OUVERT et
+  // uniquement tant qu'il y a quelque chose à attendre. 20 s : le travail se compte
+  // en minutes, sonder plus vite ne ferait qu'ajouter du bruit réseau. Le sondage
+  // s'arrête de lui-même dès que l'état est terminal ('pret' / 'erreur'), et
+  // l'intervalle est nettoyé au changement de replay comme au démontage — un
+  // intervalle oublié continuerait d'interroger l'API depuis un écran fermé.
+  const etatActifExtraits = active ? etatExtraits(active) : null;
+  useEffect(() => {
+    clearInterval(extraitsPollRef.current);
+    if (!active?.id || !canExtract) return undefined;
+    const enCours = etatActifExtraits?.state === 'demande' || etatActifExtraits?.state === 'encours';
+    if (!enCours) return undefined;
+    const videoId = active.id;
+    extraitsPollRef.current = setInterval(async () => {
+      try {
+        const s = await videothequeApi.shortsState(videoId);
+        patchExtraits(videoId, s);
+        if (s?.state === 'pret' || s?.state === 'erreur') clearInterval(extraitsPollRef.current);
+      } catch { /* réseau capricieux : on retentera au prochain tour */ }
+    }, 20000);
+    return () => clearInterval(extraitsPollRef.current);
+  }, [active?.id, etatActifExtraits?.state, canExtract, patchExtraits]);
+
+  useEffect(() => () => {
+    clearInterval(extraitsPollRef.current);
+    clearTimeout(extraitsTimerRef.current);
+  }, []);
+
   useEffect(() => {
     let alive = true;
     apiV2.get('/zoom-engine/published')
@@ -355,6 +469,48 @@ export default function VideothequePage() {
     ),
     [videos],
   );
+
+  // ── Ce que l'en-tête du lecteur doit dire des EXTRAITS, en un seul endroit ──
+  // Calculé ici plutôt qu'en ligne dans le JSX : la bande d'actions du lecteur est
+  // déjà dense (PDF, cours, précepteur) et un troisième bloc ternaire imbriqué y
+  // deviendrait illisible.
+  const exActif = active
+    ? etatExtraits(active)
+    : { state: 'aucun', clips: 0, erreur: '', sansTranscription: false };
+  const exArme = Boolean(active && extraits.videoId === active.id && extraits.arme);
+  const exEnvoi = Boolean(active && extraits.videoId === active.id && extraits.envoi);
+  const exEchec = active && extraits.videoId === active.id ? extraits.message : '';
+  const exTravaille = exActif.state === 'demande' || exActif.state === 'encours';
+  // Accord en nombre : « 1 extrait prêt » / « 3 extraits prêts ».
+  const exPluriel = exActif.clips > 1 ? 's' : '';
+  const exTexte = exEchec
+    || (exArme
+      // HONNÊTETÉ AVANT LE CLIC : la fabrication n'est pas instantanée, elle ne
+      // publie rien, et sur certains replays elle ne peut PAS sous-titrer. Dire les
+      // trois ici évite trois déceptions — attendre devant un écran qui ne bouge
+      // pas, croire que les réseaux sont servis, et surtout relancer indéfiniment
+      // en espérant des sous-titres qui ne viendront jamais tout seuls.
+      ? (exActif.sansTranscription
+        ? 'Ce replay n’a pas de transcription et il est trop long pour être transcrit au vol : les extraits sortiront SANS sous-titres, et relancer n’y changera rien. Comptez plusieurs minutes de découpe. Rien n’est publié sur les réseaux — les extraits vous attendront au Créateur de publicités.'
+        : 'Téléchargement du replay, transcription puis découpe : comptez plusieurs minutes. Rien n’est publié sur les réseaux — les extraits vous attendront au Créateur de publicités.')
+      : exActif.state === 'demande'
+        ? 'Demande enregistrée : la fabrication démarre d’ici quelques minutes.'
+        : exActif.state === 'encours'
+          ? 'Découpage en cours… comptez plusieurs minutes.'
+          : exActif.state === 'pret'
+            ? (exActif.clips > 0
+              ? `${exActif.clips} extrait${exPluriel} prêt${exPluriel} — Studio › Créateur de publicités.`
+              : 'Aucun passage exploitable : ce replay n’a produit aucun extrait.')
+            : exActif.state === 'erreur'
+              ? `Échec : ${exActif.erreur || 'motif non communiqué par le moteur'}.`
+              : '');
+  // Vert = un résultat réellement livré. Corail = un échec. Neutre partout ailleurs,
+  // y compris pour un « terminé sans extrait » qui n'est ni l'un ni l'autre.
+  // ⚠️ L'ARMEMENT NEUTRALISE LA COULEUR : après un échec, « Relancer » affiche la
+  // phrase d'avertissement — la peindre en corail donnerait à lire un nouvel échec
+  // là où on explique simplement ce qui va se passer.
+  const exSucces = !exArme && exActif.state === 'pret' && exActif.clips > 0 && !exEchec;
+  const exErreur = Boolean(exEchec) || (!exArme && exActif.state === 'erreur');
 
   return (
     <div style={{ minHeight: 'calc(100vh - 120px)', background: C.base, color: C.ink, fontFamily: "'Inter', system-ui, sans-serif", padding: '18px 20px 48px' }}>
@@ -447,6 +603,77 @@ export default function VideothequePage() {
                   {build.state === 'working' ? 'Construction…' : 'Construire le cours'}
                 </button>
               )}
+              {/* ── EXTRAITS COURTS depuis CE replay (créateurs) ─────────────────
+                  Deux temps volontaires : « Fabriquer des extraits » ARME la
+                  demande et affiche ce qu'elle coûte en temps ; « Lancer » seul
+                  l'envoie. Un traitement de plusieurs minutes ne se déclenche pas
+                  d'un clic distrait. Une fois lancé, plus de bouton : l'état parle. */}
+              {canExtract && exTexte ? (
+                <span style={{
+                  display: 'inline-flex', alignItems: 'center', gap: 6,
+                  fontSize: 11.5, fontWeight: 600, padding: '6px 10px', borderRadius: 999,
+                  maxWidth: exArme ? 340 : undefined,
+                  whiteSpace: exArme ? 'normal' : 'nowrap', lineHeight: 1.45, textAlign: 'left',
+                  color: exErreur ? '#f6b8ab' : exSucces ? '#c9dcbf' : C.muted,
+                  background: exErreur ? 'rgba(217,119,87,.14)' : exSucces ? 'rgba(159,191,143,.14)' : 'rgba(255,255,255,.05)',
+                }}>
+                  {exTravaille && !exEchec ? <Loader2 size={12} className="animate-spin" style={{ flexShrink: 0 }} /> : null}
+                  {exTexte}
+                </span>
+              ) : null}
+              {canExtract && exArme ? (
+                <>
+                  <button
+                    type="button"
+                    onClick={() => handleDemanderExtraits(active)}
+                    disabled={exEnvoi}
+                    style={{
+                      display: 'inline-flex', alignItems: 'center', gap: 7, padding: '8px 14px', borderRadius: 999,
+                      border: `1px solid ${C.coral}`, background: C.coralTint, color: '#f0c3ac',
+                      cursor: exEnvoi ? 'wait' : 'pointer', fontSize: 12.5, fontWeight: 700,
+                      whiteSpace: 'nowrap', opacity: exEnvoi ? 0.7 : 1,
+                    }}
+                  >
+                    {exEnvoi ? <Loader2 size={14} className="animate-spin" /> : <Scissors size={14} />}
+                    {exEnvoi ? 'Envoi…' : 'Lancer la fabrication'}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setExtraits({ videoId: null, arme: false, envoi: false, message: '' })}
+                    style={{ display: 'inline-flex', alignItems: 'center', padding: '8px 14px', borderRadius: 999, border: `1px solid ${C.line}`, background: 'rgba(255,255,255,.05)', color: C.ink, cursor: 'pointer', fontSize: 12.5, fontWeight: 700, whiteSpace: 'nowrap' }}
+                  >
+                    Annuler
+                  </button>
+                </>
+              ) : canExtract && exTravaille ? null
+                : canExtract && exActif.state === 'pret' && exActif.clips > 0 ? (
+                  <button
+                    type="button"
+                    onClick={() => navigate('/studio/ad-creator')}
+                    title="Ouvrir le Créateur de publicités : les extraits prêts s'y choisissent à l'étape de publication"
+                    style={{ display: 'inline-flex', alignItems: 'center', gap: 7, padding: '8px 14px', borderRadius: 999, border: `1px solid ${C.coral}`, background: C.coralTint, color: '#f0c3ac', cursor: 'pointer', fontSize: 12.5, fontWeight: 700, whiteSpace: 'nowrap' }}
+                  >
+                    <Film size={14} /> Voir les extraits
+                  </button>
+                ) : canExtract ? (
+                  <button
+                    type="button"
+                    onClick={() => setExtraits({ videoId: active.id, arme: true, envoi: false, message: '' })}
+                    // ⚠️ NE PAS PROMETTRE « sous-titrés » TOUT COURT. L'incrustation
+                    // dépend d'une transcription (absente sur les replays longs jamais
+                    // transcrits) ET du filtre `subtitles` de ffmpeg côté worker. Le
+                    // texte armé, lui, dit précisément ce qu'il en sera pour CE replay.
+                    title="Découper ce replay en extraits verticaux — sous-titres incrustés quand une transcription existe. Traitement long (plusieurs minutes), sans aucune publication automatique"
+                    style={{
+                      display: 'inline-flex', alignItems: 'center', gap: 7, padding: '8px 14px', borderRadius: 999,
+                      border: `1px solid ${C.line}`, background: 'rgba(255,255,255,.05)', color: C.ink,
+                      cursor: 'pointer', fontSize: 12.5, fontWeight: 700, whiteSpace: 'nowrap',
+                    }}
+                  >
+                    <Scissors size={14} />
+                    {exActif.state === 'aucun' ? 'Fabriquer des extraits' : 'Relancer la fabrication'}
+                  </button>
+                ) : null}
               {active.precepteur_id ? (
                 <button type="button" onClick={() => navigate(`/liri/precepteur/cours/${active.precepteur_id}`)}
                   style={{ display: 'inline-flex', alignItems: 'center', gap: 7, padding: '8px 14px', borderRadius: 999, border: `1px solid ${C.coral}`, background: C.coralTint, color: '#f0c3ac', cursor: 'pointer', fontSize: 12.5, fontWeight: 700, whiteSpace: 'nowrap' }}>
@@ -548,6 +775,30 @@ export default function VideothequePage() {
                           : etatChapitrage(v) === 'volatil'
                             ? 'Chapitres non enregistrés'
                             : 'Non chapitré'}
+                      </span>
+                    ) : null}
+                    {/* État des EXTRAITS, d'un coup d'œil sur toute la vidéothèque.
+                        Affiché UNIQUEMENT quand quelque chose a été demandé : la
+                        très grande majorité des replays n'a rien à dire ici, et une
+                        pastille « aucun extrait » sur chacun ne serait que du bruit
+                        (le chapitrage occupe déjà cette ligne). */}
+                    {canExtract && v.shorts_state && v.shorts_state !== 'aucun' ? (
+                      <span style={{
+                        display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: 10.5, fontWeight: 700,
+                        padding: '2px 7px', borderRadius: 999,
+                        color: v.shorts_state === 'pret' && Number(v.shorts_clips) > 0 ? '#f0c3ac' : C.muted,
+                        background: v.shorts_state === 'pret' && Number(v.shorts_clips) > 0 ? C.coralTint : 'rgba(255,255,255,.05)',
+                      }}>
+                        <Scissors size={11} />
+                        {v.shorts_state === 'pret'
+                          ? (Number(v.shorts_clips) > 0
+                            ? `${v.shorts_clips} extrait${Number(v.shorts_clips) > 1 ? 's' : ''}`
+                            : 'Aucun extrait')
+                          : v.shorts_state === 'erreur'
+                            ? 'Extraits en échec'
+                            : v.shorts_state === 'encours'
+                              ? 'Extraits en cours'
+                              : 'Extraits demandés'}
                       </span>
                     ) : null}
                   </div>
