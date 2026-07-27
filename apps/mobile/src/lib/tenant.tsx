@@ -24,7 +24,10 @@ const CREATOR_ROLES = ['owner', 'admin', 'creator', 'teacher', 'secretariat'];
  *  `course_builder`), d'où plusieurs clés acceptées plutôt qu'une seule. */
 const SCHOOL_KEYS = ['school', 'school_engine', 'course_builder'];
 const SHOP_KEYS = ['pay_engine', 'cinetpay', 'mbolo', 'stripe_connect'];
-const HEALTH_KEYS = ['med_ehr', 'med_notes', 'med_programs'];
+// Pas de MEDOS ici : le tenant peut l'avoir souscrit (med_ehr/medos/twin sont
+// bien en base pour isna) mais aucun écran natif ne le sert, et le rail web non
+// plus. Un drapeau qui n'allume rien n'a pas sa place — on l'ajoutera avec les
+// écrans.
 
 type TenantValue = {
   ready: boolean;
@@ -34,12 +37,11 @@ type TenantValue = {
   hasAny: (keys: string[]) => boolean;
   schoolActive: boolean;
   shopActive: boolean;
-  healthActive: boolean;
 };
 
 const EMPTY: TenantValue = {
   ready: false, role: null, isCreator: false, services: [],
-  hasAny: () => false, schoolActive: false, shopActive: false, healthActive: false,
+  hasAny: () => false, schoolActive: false, shopActive: false,
 };
 
 const TenantContext = createContext<TenantValue>(EMPTY);
@@ -96,7 +98,6 @@ export function TenantProvider({ children }: { children: React.ReactNode }) {
       hasAny,
       schoolActive: hasAny(SCHOOL_KEYS),
       shopActive: hasAny(SHOP_KEYS),
-      healthActive: hasAny(HEALTH_KEYS),
     };
   }, [role, services]);
 
