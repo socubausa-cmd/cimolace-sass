@@ -43,17 +43,24 @@ async function whisperChunk(file) {
   const buf = await fsp.readFile(file);
   let lastErr = 'aucun fournisseur';
   for (const p of providers) {
-    for (let a = 0; a < 4; a++) {
+    for (let a = 0; a < 6; a++) {
       try {
         const form = new FormData();
         form.append('file', new Blob([buf], { type: 'audio/ogg' }), 'a.ogg');
         form.append('model', p.model); form.append('language', 'fr'); form.append('response_format', 'verbose_json');
-        const res = await fetch(p.url, { method: 'POST', headers: { Authorization: `Bearer ${p.key}` }, body: form });
-        if (res.status === 429) { const ra = Number(res.headers.get('retry-after')) || 20; await sleep((ra + 2) * 1000); lastErr = `${p.name} 429`; continue; }
-        if (!res.ok) { lastErr = `${p.name} ${res.status} ${(await res.text()).slice(0, 100)}`; break; }
+        const ctl = new AbortController(); const to = setTimeout(() => ctl.abort(), 180_000);
+        let res;
+        try { res = await fetch(p.url, { method: 'POST', headers: { Authorization: `Bearer ${p.key}` }, body: form, signal: ctl.signal }); }
+        finally { clearTimeout(to); }
+        // 429 (débit) ou 5xx (erreur transitoire, ex. Groq 500) → RÉESSAYER avec backoff
+        if (res.status === 429 || res.status >= 500) {
+          const ra = Number(res.headers.get('retry-after')) || 0;
+          lastErr = `${p.name} ${res.status}`; await sleep(Math.max((ra + 1) * 1000, 3000 * (a + 1))); continue;
+        }
+        if (!res.ok) { lastErr = `${p.name} ${res.status} ${(await res.text()).slice(0, 100)}`; break; } // 4xx client → abandonner ce fournisseur
         const d = await res.json();
         return (d.segments || []).map((s) => ({ start: Number(s.start) || 0, text: String(s.text || '').trim() })).filter((s) => s.text);
-      } catch (e) { lastErr = `${p.name}: ${e.message}`; await sleep(2000 * (a + 1)); }
+      } catch (e) { lastErr = `${p.name}: ${e.message}`; await sleep(3000 * (a + 1)); } // réseau/timeout → réessayer
     }
     console.log(`[zoom-transcribe] fournisseur ${p.name} indisponible → ${lastErr}`);
   }
