@@ -135,3 +135,18 @@ test('les moteurs payants sont bien conditionnés à un service', async () => {
   assert.match(tenant, /from\('tenant_services'\)/, 'la source des moteurs doit être tenant_services');
   assert.match(tenant, /from\('tenant_memberships'\)/, 'le rôle doit venir de tenant_memberships');
 });
+
+test('Ma semaine lit la chaîne LEGACY des parcours, pas celle des formations', async () => {
+  // Deux structures cohabitent en base : `modules/formation_weeks/...` porte les
+  // FORMATIONS, `course_modules/module_weeks/week_days` porte les PARCOURS
+  // hebdomadaires. Se tromper de chaîne donne un écran vide (vérifié en prod :
+  // 33 module_weeks, 165 week_days, 363 pedagogical_blocks).
+  const code = await source('app/semaine.tsx');
+  for (const table of ['school_paths', 'path_courses', 'course_modules', 'module_weeks', 'week_days']) {
+    assert.match(code, new RegExp(`from\\('${table}'\\)`), `${table} absente`);
+  }
+  assert.match(code, /pedagogical_blocks\(\*\)/, 'les blocs doivent être joints aux jours');
+  assert.doesNotMatch(code, /from\('formation_weeks'\)/, 'mauvaise chaîne : formations ≠ parcours');
+  // Le parcours vient du profil, pas d'un identifiant en dur.
+  assert.match(code, /metadata\?\.school_path_id/);
+});

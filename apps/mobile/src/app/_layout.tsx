@@ -44,7 +44,7 @@ const HIDDEN = [
   // moteur), puis les items dans l'ordre où les moteurs les listent.
   'index',
   'lives', 'forum', 'bibliotheque', 'brain',
-  'formations', 'videotheque', 'vie-scolaire', 'ma-classe',
+  'semaine', 'formations', 'videotheque', 'vie-scolaire', 'ma-classe',
   'commerce',
   'studio', 'masterscript', 'neuro-recall',
   // Le reste n'apparaît jamais dans la barre, mais doit être déclaré.

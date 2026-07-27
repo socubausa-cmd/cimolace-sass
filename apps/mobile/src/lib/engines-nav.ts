@@ -62,12 +62,14 @@ export const ENGINES: EngineDef[] = [
   },
   {
     key: 'ecole', label: 'École', sub: 'Pédagogie', icon: 'book', requires: 'school',
+    // La barre plafonne à 5 : « Ma classe » n'y figure pas, c'est la surface la
+    // moins quotidienne des six — elle reste dans la liste du Profil.
     items: [
       ACCUEIL,
+      { route: 'semaine', label: 'Ma semaine', icon: 'calendar', student: true },
       { route: 'formations', label: 'Mes cours', icon: 'book' },
       { route: 'videotheque', label: 'Vidéothèque', icon: 'film' },
       { route: 'vie-scolaire', label: 'Vie scolaire', icon: 'clipboard', student: true },
-      { route: 'ma-classe', label: 'Ma classe', icon: 'users' },
     ],
   },
   {
