@@ -26,6 +26,7 @@ import { pollImapSync }         from './jobs/imap-sync.js';
 import { pollGdprExports }      from './jobs/gdpr-export.js';
 import { pollCourseRenderJobs } from './jobs/courseRender.js';
 import { pollZoomTransfer } from './jobs/zoom-transfer.js';
+import { pollZoomTranscribe } from './jobs/zoom-transcribe.js';
 import { pollCourseFromReplay } from './jobs/course-from-replay.js';
 
 const sleep = (ms: number) => new Promise<void>((r) => setTimeout(r, ms));
@@ -173,4 +174,17 @@ startPingJob();
   }
 })();
 
-console.log('[worker:live] Pollers actifs ✅ (email 15s · rappels 60s · invitations 120s · imap 90s · shorts 5min · posts 90s · rgpd 60s · replay post-prod 60s · rendu cours 60s · zoom-transfer 20s · cours-depuis-replay 30s)');
+// ── Transcription des replays SANS VTT (imports locaux → Whisper Groq, 180s) ──
+//    Réseau US du worker = Groq NON géo-bloqué (contrairement à la machine du
+//    fondateur en Chine). 1 vidéo/cycle, découpe 20 min, écrit cues + transcript.
+(async () => {
+  while (true) {
+    try {
+      const n = await (pollZoomTranscribe as () => Promise<number>)();
+      if (n > 0) console.log(`[worker:live] Zoom transcription: ${n} replay(s) transcrit(s)`);
+    } catch (e: unknown) { console.error('[worker:live] Zoom transcribe error:', (e as Error)?.message || e); }
+    await sleep(180_000);
+  }
+})();
+
+console.log('[worker:live] Pollers actifs ✅ (email 15s · rappels 60s · invitations 120s · imap 90s · shorts 5min · posts 90s · rgpd 60s · replay post-prod 60s · rendu cours 60s · zoom-transfer 20s · cours-depuis-replay 30s · zoom-transcribe 180s)');
