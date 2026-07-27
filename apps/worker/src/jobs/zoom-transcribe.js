@@ -119,11 +119,12 @@ export async function pollZoomTranscribe() {
     log(`✅ ${v.title} — ${allCues.length} cues`);
     return 1;
   } catch (e) {
-    log(`❌ ${v.title}: ${String(e.message).slice(0, 200)}${e.throttled ? ' (quota — retenté plus tard)' : ''}`);
-    // Throttle (429) = quota temporaire → LAISSER en attente (null) pour re-tenter quand
-    // le quota se libère. Autre erreur (4xx/ffmpeg/corrompu) = sentinelle '' pour ne pas
-    // boucler indéfiniment sur une vidéo cassée.
-    if (!e.throttled) await supabase.from('published_videos').update({ transcript_text: '' }).eq('id', v.id);
+    log(`❌ ${v.title}: ${String(e.message).slice(0, 200)}${e.throttled ? ' (quota Whisper)' : ''}`);
+    // Sentinelle '' = « tenté, en échec » → le poller n'y revient plus (query filtre null),
+    // donc il S'ARRÊTE (pas de re-download 690 Mo en boucle, pas de martèlement de la clé
+    // Groq partagée avec isna-api). Pour re-transcrire quand un quota Whisper est dispo :
+    // `update published_videos set transcript_text=null where transcript_text=''`.
+    await supabase.from('published_videos').update({ transcript_text: '' }).eq('id', v.id);
     return 0;
   } finally {
     try { unlinkSync(mp4); } catch {}
