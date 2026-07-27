@@ -56,7 +56,10 @@ const OBJECTIVES = [
   { id: 'engagement', label: 'Engagement', desc: 'Générer interactions et partages', icon: Star, color: 'text-pink-400' },
 ];
 
-const FORMAT_LABELS = { feed: 'Fil d\'actualité', story: 'Story (9:16)', reel: 'Reel / Short', short: 'Short vidéo', banner: 'Bannière', search: 'Annonce search', carousel: 'Carrousel' };
+// « Story », « Reel » et « Short » sont les noms que les plateformes donnent
+// elles-mêmes à ces formats : les traduire embrouillerait plus qu'autre chose.
+// Tout le reste est en français.
+const FORMAT_LABELS = { feed: 'Fil d\'actualité', story: 'Story (9:16)', reel: 'Reel / Short', short: 'Vidéo courte', banner: 'Bannière', search: 'Annonce de recherche', carousel: 'Carrousel' };
 
 /* Idem : bleu Meta et cyan TikTok = identité des réseaux, on ne les réchauffe pas. */
 const CHANNEL_CONFIGS = [
@@ -694,7 +697,7 @@ export default function StudioAdCreatorPage() {
         {/* Editor */}
         <div className="space-y-3">
           <div>
-            <label className="text-xs text-gray-400 mb-1 block">Titre / Headline</label>
+            <label className="text-xs text-gray-400 mb-1 block">Titre de la publicité</label>
             <input
               type="text"
               value={displayContent.headline}
@@ -715,7 +718,7 @@ export default function StudioAdCreatorPage() {
           </div>
           <div className="grid grid-cols-2 gap-2">
             <div>
-              <label className="text-xs text-gray-400 mb-1 block">Bouton CTA</label>
+              <label className="text-xs text-gray-400 mb-1 block">Bouton d'action</label>
               <input
                 type="text"
                 value={displayContent.cta}
@@ -725,7 +728,7 @@ export default function StudioAdCreatorPage() {
               />
             </div>
             <div>
-              <label className="text-xs text-gray-400 mb-1 block">Hashtags (csv)</label>
+              <label className="text-xs text-gray-400 mb-1 block">Hashtags (séparés par des virgules)</label>
               <input
                 type="text"
                 value={(displayContent.hashtags || []).join(', ')}
@@ -906,7 +909,7 @@ export default function StudioAdCreatorPage() {
           <div className="min-w-0">
             <h1 className="flex items-center gap-2 text-base font-semibold tracking-tight text-white">
               <Megaphone className="h-5 w-5 shrink-0 text-[var(--school-accent,#d99a4e)]" />
-              <span className="truncate">Ad Creator Studio</span>
+              <span className="truncate">Créateur de publicités</span>
             </h1>
             <p className="text-xs text-gray-400">Créez et publiez des publicités IA multi-plateformes</p>
           </div>
@@ -916,7 +919,7 @@ export default function StudioAdCreatorPage() {
           className="text-xs text-[var(--school-accent,#d99a4e)] border rounded-lg px-3 py-1.5 hover:bg-white/[0.06] transition-colors flex items-center gap-1.5"
           style={{ borderColor: 'color-mix(in srgb, var(--school-accent, #d99a4e) 25%, transparent)' }}
         >
-          <BarChart3 className="w-3.5 h-3.5" /> Analytics
+          <BarChart3 className="w-3.5 h-3.5" /> Statistiques
         </Link>
       </div>
 
