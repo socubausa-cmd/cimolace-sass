@@ -159,3 +159,19 @@ test('les erreurs de connexion sont en français', async () => {
   assert.match(code, /E-mail ou mot de passe incorrect/);
   assert.doesNotMatch(code, /return \{ error: error\.message \}/, 'plus de message brut');
 });
+
+test('la connexion offre une sortie en cas de mot de passe oublié', async () => {
+  // L'écran n'en avait aucune : un utilisateur qui oubliait son mot de passe
+  // était bloqué définitivement (constaté sur émulateur).
+  const screen = await source('components/login-screen.tsx');
+  assert.match(screen, /Mot de passe oublié/);
+  assert.match(screen, /resetPassword\(email\)/);
+
+  const auth = await source('lib/auth.tsx');
+  assert.match(auth, /resetPasswordForEmail\(/);
+  // Une app mobile n'a pas d'origine HTTP : la redirection vise le portail web.
+  assert.match(auth, /\$\{PORTAL_URL\}\/update-password/);
+
+  const api = await source('lib/liri-api.ts');
+  assert.match(api, /EXPO_PUBLIC_PORTAL_URL/, "l'URL du portail doit être configurable");
+});

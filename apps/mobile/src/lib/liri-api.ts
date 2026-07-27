@@ -14,6 +14,14 @@ import { supabase } from '@/lib/supabase';
  */
 export const API_BASE = (process.env.EXPO_PUBLIC_API_URL ?? 'http://localhost:4002').replace(/\/+$/, '');
 export const TENANT_SLUG = process.env.EXPO_PUBLIC_TENANT_SLUG ?? 'isna';
+/**
+ * Portail web du tenant. Sert de destination aux liens envoyés par e-mail
+ * (réinitialisation de mot de passe → page /update-password du portail) : une
+ * app mobile n'a pas d'origine HTTP à donner à Supabase.
+ * ⚠️ Cette URL doit figurer dans les « Redirect URLs » autorisées du projet
+ * Supabase, sinon le lien reçu par l'utilisateur est rejeté.
+ */
+export const PORTAL_URL = (process.env.EXPO_PUBLIC_PORTAL_URL ?? 'https://app.prorascience.org').replace(/\/+$/, '');
 export const DEV_TOKEN = process.env.EXPO_PUBLIC_DEV_TOKEN ?? '';
 export const DEFAULT_MODEL = 'claude-haiku-4-5-20251001';
 

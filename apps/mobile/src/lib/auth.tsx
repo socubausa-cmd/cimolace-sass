@@ -1,7 +1,7 @@
 import type { Session } from '@supabase/supabase-js';
 import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
 
-import { setActiveTenantId, setAuthToken, TENANT_SLUG } from './liri-api';
+import { PORTAL_URL, setActiveTenantId, setAuthToken, TENANT_SLUG } from './liri-api';
 import { supabase } from './supabase';
 
 interface AuthValue {
@@ -9,6 +9,7 @@ interface AuthValue {
   loading: boolean;
   email: string | null;
   signIn: (email: string, password: string) => Promise<{ error?: string }>;
+  resetPassword: (email: string) => Promise<{ error?: string }>;
   signOut: () => Promise<void>;
 }
 
@@ -84,6 +85,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       email: session?.user?.email ?? null,
       signIn: async (email, password) => {
         const { error } = await supabase.auth.signInWithPassword({ email: email.trim(), password });
+        return error ? { error: messageAuth(error.message) } : {};
+      },
+      /**
+       * Envoie le lien de réinitialisation. Une app mobile n'a pas d'origine
+       * HTTP : on renvoie vers la page /update-password du portail web, celle
+       * que le web utilise déjà.
+       */
+      resetPassword: async (email) => {
+        const trimmed = String(email ?? '').trim();
+        if (!trimmed) return { error: 'Renseigne ton adresse e-mail d’abord.' };
+        const { error } = await supabase.auth.resetPasswordForEmail(trimmed, {
+          redirectTo: `${PORTAL_URL}/update-password`,
+        });
         return error ? { error: messageAuth(error.message) } : {};
       },
       signOut: async () => {

@@ -18,13 +18,14 @@ import { useAuth } from '@/lib/auth';
 import { useTheme } from '@/lib/theme';
 
 export function LoginScreen() {
-  const { signIn } = useAuth();
+  const { signIn, resetPassword } = useAuth();
   const { colors: C } = useTheme();
   const styles = useMemo(() => makeStyles(C), [C]);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [sent, setSent] = useState(false);
 
   const canSubmit = !!email.trim() && !!password && !busy;
 
@@ -39,6 +40,17 @@ export function LoginScreen() {
     }
     // En cas de succès : AuthProvider met à jour la session → le gate bascule
     // vers les onglets et démonte cet écran (pas besoin de reset le busy).
+  };
+
+  const forgot = async () => {
+    if (busy) return;
+    setBusy(true);
+    setError(null);
+    setSent(false);
+    const res = await resetPassword(email);
+    setBusy(false);
+    if (res.error) setError(res.error);
+    else setSent(true);
   };
 
   return (
@@ -89,8 +101,29 @@ export function LoginScreen() {
             </View>
           ) : null}
 
+          {sent ? (
+            <View style={styles.okRow}>
+              <Feather name="check-circle" size={14} color={C.coral} />
+              <Text style={styles.okTxt}>
+                Lien envoyé à {email.trim()}. Ouvre-le pour choisir un nouveau mot de passe.
+              </Text>
+            </View>
+          ) : null}
+
           <Pressable style={[styles.btn, !canSubmit && styles.btnOff]} onPress={submit} disabled={!canSubmit}>
             {busy ? <ActivityIndicator color="#fff" /> : <Text style={styles.btnTxt}>Se connecter</Text>}
+          </Pressable>
+
+          {/* Sans ça, un utilisateur qui oublie son mot de passe est bloqué
+              définitivement : l'écran n'offrait aucune sortie. */}
+          <Pressable
+            accessibilityRole="button"
+            onPress={forgot}
+            disabled={busy}
+            hitSlop={10}
+            style={({ pressed }) => [styles.forgot, pressed && styles.pressed]}
+          >
+            <Text style={styles.forgotTxt}>Mot de passe oublié&nbsp;?</Text>
           </Pressable>
 
           <Text style={styles.footer}>LIRI v2.0 · Cimolace</Text>
@@ -125,5 +158,10 @@ const makeStyles = (C: LiriPalette) => StyleSheet.create({
   btnOff: { opacity: 0.45 },
   btnTxt: { color: '#fff', fontSize: 16, fontWeight: '700', fontFamily: F.sans },
 
+  pressed: { opacity: 0.7 },
+  forgot: { alignSelf: 'center', marginTop: 14, paddingVertical: 6, paddingHorizontal: 10 },
+  forgotTxt: { color: C.coral, fontSize: 13.5, fontWeight: '600', fontFamily: F.sans },
+  okRow: { flexDirection: 'row', alignItems: 'flex-start', gap: 7, marginBottom: 12, paddingHorizontal: 2 },
+  okTxt: { flex: 1, color: C.muted, fontSize: 12.5, lineHeight: 18, fontFamily: F.sans },
   footer: { color: C.faint, fontSize: 11.5, textAlign: 'center', marginTop: 28, fontFamily: F.sans },
 });
