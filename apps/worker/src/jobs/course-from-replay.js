@@ -243,12 +243,38 @@ async function processJob(job) {
   try {
     const srcType = job.source_type || 'replay';
     const srcId = job.source_id || job.video_id;
-    const { data: root } = await supabase
+    let { data: root } = await supabase
       .from('course_pivots')
       .select('id')
       .eq('tenant_id', job.tenant_id).eq('source_type', srcType)
       .eq('source_id', srcId).eq('kind', 'comprehension').is('parent_id', null)
       .maybeSingle();
+
+    // Job lancé SANS passer par « comprendre » (cas du batch) : le plan vient
+    // d'être produit ici, on le range comme pivot de fond. Sans cela, un job
+    // direct ne capitalisait RIEN — sur 622 vidéos, tout le bénéfice du pivot
+    // était perdu (défaut trouvé par le pilote TikTok du 2026-07-27).
+    if (!root?.id) {
+      const { data: created } = await supabase.from('course_pivots').insert({
+        tenant_id: job.tenant_id, source_type: srcType, source_id: srcId,
+        kind: 'comprehension', parent_id: null,
+        payload: {
+          schema_version: 1,
+          titre: plan.titre, promesse: plan.promesse,
+          notions: plan.notions, glossaire: plan.glossaire || [],
+          meta: {
+            source_type: srcType, source_id: srcId, source_title: video.title,
+            transcript_chars: (video.transcript_text || '').length,
+            segments: 0, model: process.env.COURSE_ENGINE_MODEL || MODEL,
+            generated_at: new Date().toISOString(), origin: 'worker',
+          },
+        },
+        model: process.env.COURSE_ENGINE_MODEL || MODEL,
+      }).select('id').single();
+      root = created;
+      if (root?.id) console.log('[course-from-replay] 💾 pivot « comprehension » créé depuis le plan du job');
+    }
+
     if (root?.id) {
       await supabase.from('course_pivots').delete()
         .eq('parent_id', root.id).eq('kind', 'ecrit');
