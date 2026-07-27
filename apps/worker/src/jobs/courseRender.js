@@ -31,8 +31,18 @@
 // à l'inverse, sur une source muette, la sortie DÉPASSAIT la durée du cours avec
 // une image gelée. La durée de sortie est maintenant celle de la SOURCE, mesurée
 // par ffprobe : déterministe, avec ou sans audio.
+//
+// ── POURQUOI LE MONTAGE ARRIVE *AVANT* LA MISE EN PAGE ────────────────────────
+// `nleProject` (coupes, trims, fondus, opacité, volume) n'était lu NULLE PART côté
+// serveur : le formateur coupait son intro et recevait la source entière. Le traducteur
+// vit dans `nleToFfmpeg.js` et se branche ICI en PRÉFIXE de filtergraph : il produit
+// `[nle_pv]` / `[nle_pa]`, qui se substituent à `[0:v]` / `0:a` en entrée de la mise en
+// page. Le reste du graphe (slide plein cadre, incrustation, diaporama RGBA, faststart)
+// n'a pas bougé d'une virgule — un montage absent ou inerte redonne le graphe historique,
+// à l'argument près.
 import { createClient } from '@supabase/supabase-js';
 import { S3Client, PutObjectCommand } from '@aws-sdk/client-s3';
+import { planMontage, buildMontageFilters, remapSlidesForMontage } from './nleToFfmpeg.js';
 import { spawn } from 'child_process';
 import { writeFile, unlink, readFile } from 'fs/promises';
 import { tmpdir } from 'os';
@@ -228,7 +238,18 @@ function parseFrameRate(raw) {
  * Fail-soft : si ffprobe manque ou échoue, on renvoie des zéros et l'appelant
  * retombe sur l'ancien comportement (borne `-shortest`, cadence par défaut).
  *
- * @returns {Promise<{duration:number, fps:number, hasAudio:boolean, audioCodec:string}>}
+ * ⚠️ `measured` DIT SI CE FAIL-SOFT S'EST DÉCLENCHÉ, et il n'est pas décoratif. Sans lui,
+ * `hasAudio:false` était indiscernable de « la source est réellement muette » : le montage
+ * s'appliquait quand même (grâce à `payload.sourceDurationSeconds`), `buildMontageFilters`
+ * n'émettait aucun segment audio, aucun `-map` audio n'était ajouté, et le cours entier
+ * partait à la classe SANS SON, statut `completed`, sans une ligne de message. La même
+ * source, sans montage, gardait son audio via `-map 0:a?`.
+ *
+ * `sampleRate` / `channelLayout` ne servent QU'AU montage : quand on recolle des
+ * segments audio, le silence des trous doit avoir EXACTEMENT le même format que le son
+ * des clips, sinon `concat` refuse le graphe (cf. nleToFfmpeg.buildMontageFilters).
+ *
+ * @returns {Promise<{measured:boolean, duration:number, fps:number, hasAudio:boolean, audioCodec:string, sampleRate:number, channelLayout:string}>}
  */
 async function probeSource(filePath) {
   try {
@@ -238,16 +259,20 @@ async function probeSource(filePath) {
     const v = streams.find((s) => s?.codec_type === 'video');
     const a = streams.find((s) => s?.codec_type === 'audio');
     const candidates = [Number(j?.format?.duration), Number(v?.duration)].filter((n) => Number.isFinite(n) && n > 0);
+    const channels = Number(a?.channels);
     return {
+      measured: true,
       duration: candidates.length ? Math.max(...candidates) : 0,
       // avg_frame_rate décrit la cadence RÉELLE ; r_frame_rate n'est qu'une borne.
       fps: parseFrameRate(v?.avg_frame_rate) || parseFrameRate(v?.r_frame_rate) || 0,
       hasAudio: Boolean(a),
       audioCodec: String(a?.codec_name || ''),
+      sampleRate: Number.isFinite(Number(a?.sample_rate)) && Number(a?.sample_rate) > 0 ? Number(a.sample_rate) : 48000,
+      channelLayout: Number.isFinite(channels) && channels === 1 ? 'mono' : 'stereo',
     };
   } catch (e) {
     console.warn(`[course-render] ffprobe indisponible/échoué (${e.message}) — durée et cadence non mesurées`);
-    return { duration: 0, fps: 0, hasAudio: false, audioCodec: '' };
+    return { measured: false, duration: 0, fps: 0, hasAudio: false, audioCodec: '', sampleRate: 48000, channelLayout: 'stereo' };
   }
 }
 
@@ -276,13 +301,24 @@ const MIN_SEGMENT_SECONDS = 0.04;
  *      11 et 12 n'étaient JAMAIS encodées). Mieux vaut des slides un peu courtes
  *      que des slides invisibles.
  *
+ * ⛔ LE RÉGIME 2 EST INTERDIT APRÈS UN RECALAGE DE MONTAGE. Il ne vaut QUE pour un job
+ * ancien dont AUCUNE slide n'a jamais porté d'horodatage. Après `remapSlidesForMontage`,
+ * une liste vide (ou entièrement dépourvue de fenêtres) signifie « le montage a coupé tous
+ * ces passages » — y répondre par une répartition uniforme republierait en plein cadre,
+ * formateur réduit au médaillon, EXACTEMENT les plans que le moteur annonce avoir retirés.
+ * D'où `allowUniformFallback:false`, posé par l'appelant dès qu'un recalage a eu lieu.
+ *
  * @param {Array<{startSeconds?:number, endSeconds?:number, durationSeconds?:number}>} slides
  * @param {number} srcDur durée de la source en secondes (0 = inconnue)
+ * @param {{allowUniformFallback?:boolean}} [options]
  */
-export function buildDeckTimeline(slides, srcDur) {
+export function buildDeckTimeline(slides, srcDur, options = {}) {
   const list = Array.isArray(slides) ? slides : [];
   if (!list.length) return [];
   const total = Number.isFinite(srcDur) && srcDur > 0 ? srcDur : 0;
+  // Défaut `true` : les appelants historiques (et le harnais de preuve) gardent le
+  // comportement d'hier à la virgule près.
+  const allowUniformFallback = options?.allowUniformFallback !== false;
 
   const absolute = [];
   list.forEach((s, i) => {
@@ -308,6 +344,8 @@ export function buildDeckTimeline(slides, srcDur) {
     }
     if (out.length) return out;
   }
+
+  if (!allowUniformFallback) return [];
 
   // Régime de repli : durées relatives, total mis à l'échelle de la source.
   const durs = list.map((s) => {
@@ -339,15 +377,23 @@ const FALLBACK_FPS = 25;
  * payload = {
  *   sourceVideoUrl, sourceVideoStoragePath?, sourceVideoStorageBucket?,
  *   sourceDurationSeconds?,
- *   slides:[{ url, storagePath?, storageBucket?, durationSeconds, startSeconds?, endSeconds? }],
- *   width?, height?, renderMode?
+ *   slides:[{ url, storagePath?, storageBucket?, durationSeconds, startSeconds?, endSeconds?, chapterIndices? }],
+ *   width?, height?, renderMode?,
+ *   nleProject?, montageChapterWindows?
  * }
  * Les champs `storagePath` sont ceux posés par l'API (course-builder.service). Un job
  * ANCIEN, qui ne porte que des URLs et aucun `startSeconds`, reste valide :
  * `resolveAssetUrl` redérive le chemin et `buildDeckTimeline` bascule en régime de repli.
+ * `nleProject` / `montageChapterWindows` / `slides[].chapterIndices` sont eux aussi
+ * facultatifs : sans eux, aucun montage n'est appliqué et le rendu est celui d'hier.
  * Renvoie le chemin du MP4 produit. Les fichiers temporaires sont listés dans `tmpFiles`.
+ *
+ * @param {Array<string>} [diagnostics] rempli avec ce que le moteur a REFUSÉ de traduire ou
+ *   a dû ajuster. Paramètre de SORTIE (comme `tmpFiles`) pour ne pas changer le type de
+ *   retour, dont dépendent l'appelant et le harnais de preuve.
  */
-export async function renderSplitScreen(payload, jobId, tmpFiles) {
+export async function renderSplitScreen(payload, jobId, tmpFiles, diagnostics) {
+  const notes = Array.isArray(diagnostics) ? diagnostics : [];
   // Dimensions PAIRES : une hauteur impaire (1280×721) était silencieusement corrigée
   // par ffmpeg — on la corrige nous-mêmes pour que la sortie soit celle qu'on annonce.
   const W = even(Number(payload?.width) || 1280);
@@ -391,38 +437,127 @@ export async function renderSplitScreen(payload, jobId, tmpFiles) {
   // l'encodage : on la ramène dans une plage exploitable.
   const fps = probe.fps > 0 ? Math.min(60, Math.max(10, Math.round(probe.fps * 1000) / 1000)) : FALLBACK_FPS;
 
+  // ── MONTAGE ────────────────────────────────────────────────────────────────
+  // Le plan est calculé AVANT tout téléchargement de slide : il décide de la durée de
+  // sortie, donc de la fenêtre de chaque plan, donc des plans qui valent la peine d'être
+  // téléchargés. `planMontage` est volontairement AVARE : projet absent, vide, ou qui
+  // reprend la source à l'identique → `applied:false`, et plus rien ci-dessous ne change.
+  // `sourceMeasured` : voir probeSource. Une source non mesurée interdit le montage (sinon,
+  // MP4 muet livré en silence) — c'est `planMontage` qui rend le plan inerte et le motif.
+  const montage = planMontage(payload?.nleProject, { sourceDuration: srcDur, sourceMeasured: probe.measured });
+  for (const n of montage.notices) notes.push(n);
+  if (!montage.applied) {
+    // Un projet vide ou inerte n'est pas un incident : on ne dérange le formateur que
+    // lorsqu'il a POSÉ un montage et que le moteur refuse de le traduire.
+    if (montage.segments.length === 0 && payload?.nleProject && !/aucun montage|identique/.test(montage.reason)) {
+      notes.push(`montage NON appliqué — ${montage.reason}`);
+      console.warn(`[course-render] ${jobId} montage refusé : ${montage.reason}`);
+    }
+  } else {
+    console.log(
+      `[course-render] ${jobId} montage appliqué : ${montage.segments.length} segment(s), ` +
+        `${montage.timelineDuration.toFixed(3)} s (source ${srcDur.toFixed(3)} s)`,
+    );
+    // Ceinture-bretelles : un montage sans son est un fait TROP GRAVE pour rester implicite.
+    // Ici la source a bien été mesurée (le cas contraire rend le plan inerte plus haut), donc
+    // elle est réellement muette — mais le formateur doit le lire AVANT de publier en classe,
+    // et non le découvrir en lançant la vidéo devant ses élèves.
+    if (!probe.hasAudio) {
+      notes.push('la vidéo source ne porte aucune piste audio : le montage est rendu SANS SON.');
+    }
+  }
+
+  // ⭐ LE NOUVEL AXE DE TEMPS. Dès qu'une coupe raccourcit le cours, PLUS RIEN n'est
+  // exprimable en temps source : ni le placement des slides, ni la durée de sortie.
+  const outDur = montage.applied ? montage.timelineDuration : srcDur;
+
+  // Recalage des plans sur ce nouvel axe (cf. remapSlidesForMontage), puis élagage : une
+  // slide dont le passage a été coupé n'est même pas téléchargée.
+  let deckSlides = slides;
+  // Un recalage a-t-il eu lieu ? Si oui, l'absence de fenêtre est une DÉCISION du montage
+  // (« ce passage n'existe plus »), pas une lacune du job → régime de repli interdit.
+  let deckRemapped = false;
+  if (montage.applied && slides.length) {
+    const placed = slides.some((s) => Number.isFinite(Number(s?.startSeconds)));
+    if (placed) {
+      const remap = remapSlidesForMontage(slides, montage, payload?.montageChapterWindows, payload?.nleProject);
+      for (const n of remap.notices) notes.push(n);
+      deckRemapped = true;
+      // ⚠️ TESTER LA VALEUR, JAMAIS SA COERCITION. `remapSlidesForMontage` marque un plan
+      // coupé avec `startSeconds: null` — or `Number(null) === 0` et `Number.isFinite(0)`
+      // vaut `true` : l'ancien filtre ne retirait donc RIEN. Les plans morts restaient dans
+      // `deckSlides` (téléchargés depuis le bucket privé pour rien) et, quand TOUS étaient
+      // coupés, `buildDeckTimeline` basculait dans son régime de repli et republiait la
+      // TOTALITÉ du diaporama sur la durée du montage — le MP4 affichait plein cadre
+      // exactement les plans que la notice annonçait retirés.
+      deckSlides = remap.slides.filter(
+        (s) =>
+          s?.startSeconds != null &&
+          Number.isFinite(Number(s.startSeconds)) &&
+          Number(s.endSeconds) > Number(s.startSeconds),
+      );
+    } else {
+      // Aucune slide n'est horodatée (job d'un ancien émetteur) : il n'y a rien à recaler.
+      // On laisse le régime de repli de `buildDeckTimeline` les répartir — sur `outDur`,
+      // donc sur le montage et non sur la source.
+      notes.push('plans non horodatés : répartis uniformément sur la durée du montage.');
+    }
+  }
+
   const slidePaths = [];
-  for (let i = 0; i < slides.length; i++) {
+  for (let i = 0; i < deckSlides.length; i++) {
     const p = join(dir, `cr_slide_${jobId}_${i}.png`);
     // Signature au dernier moment (bucket privé) — cf. commentaire SMARTBOARD_CANVAS_BUCKET.
-    await materialize(await resolveAssetUrl(slides[i], SMARTBOARD_CANVAS_BUCKET), p);
+    await materialize(await resolveAssetUrl(deckSlides[i], SMARTBOARD_CANVAS_BUCKET), p);
     tmpFiles.push(p);
     slidePaths.push(p);
   }
 
-  const timeline = slidePaths.length ? buildDeckTimeline(slides, srcDur) : [];
+  // `outDur` et non `srcDur` : c'est le seul changement que la coupe impose au diaporama.
+  const timeline = slidePaths.length
+    ? buildDeckTimeline(deckSlides, outDur, { allowUniformFallback: !deckRemapped })
+    : [];
   const outPath = join(dir, `cr_out_${jobId}.mp4`);
   tmpFiles.push(outPath);
 
   const args = ['-y', '-loglevel', 'error', '-i', srcPath];
 
+  // Préfixe de montage : il consomme `[0:v]` / `[0:a]` et rend `[nle_pv]` / `[nle_pa]`.
+  // Toute la mise en page ci-dessous lit ensuite `VSRC` au lieu de `[0:v]` — c'est le SEUL
+  // point de contact entre les deux étages.
+  const parts = [];
+  let montageAudioLabel = null;
+  if (montage.applied) {
+    const mf = buildMontageFilters(montage, {
+      width: W,
+      height: H,
+      fps,
+      hasAudio: probe.hasAudio,
+      sampleRate: probe.sampleRate,
+      channelLayout: probe.channelLayout,
+    });
+    parts.push(...mf.parts);
+    montageAudioLabel = mf.audioLabel;
+  }
+  const VSRC = montage.applied ? '[nle_pv]' : '[0:v]';
+
   if (timeline.length === 0) {
     // Aucune slide (ou mode « Brut ») → normalisation plein cadre de la source.
     // `fps` est appliqué ICI AUSSI : sans lui, deux rendus du même cours (avec puis
     // sans slides) n'avaient pas la même cadence.
-    args.push(
-      '-filter_complex',
-      `[0:v]scale=${W}:${H}:force_original_aspect_ratio=decrease:flags=lanczos,` +
+    parts.push(
+      `${VSRC}scale=${W}:${H}:force_original_aspect_ratio=decrease:flags=lanczos,` +
         `pad=${W}:${H}:(ow-iw)/2:(oh-ih)/2,setsar=1,fps=${fps}[v]`,
-      '-map', '[v]', '-map', '0:a?',
     );
   } else {
     const pipW = even(W * PIP_WIDTH_RATIO);
     const pipH = even(H * PIP_WIDTH_RATIO);
     const margin = even(W * PIP_MARGIN_RATIO);
     // Fin de timeline : le diaporama doit couvrir EXACTEMENT [0, deckEnd] pour que le
-    // concat ne dérive pas d'une image par rapport à l'horloge du cours.
-    const deckEnd = srcDur > 0 ? srcDur : timeline[timeline.length - 1].end;
+    // concat ne dérive pas d'une image par rapport à l'horloge du cours. `outDur` vaut la
+    // durée de la SOURCE sans montage, et celle du MONTAGE sinon — c'est là que le
+    // diaporama suit la coupe au lieu de rester sur l'ancien axe.
+    const deckEnd = outDur > 0 ? outDur : timeline[timeline.length - 1].end;
 
     // Une entrée ffmpeg par slide RETENUE (une slide éliminée par la timeline — fenêtre
     // vide ou avalée — n'est pas décodée pour rien). `-loop 1 -t` fige le PNG le temps
@@ -434,9 +569,8 @@ export async function renderSplitScreen(payload, jobId, tmpFiles) {
       inputOfSegment.set(k, k + 1); // l'entrée 0 est la source vidéo
     });
 
-    const parts = [];
-    // Deux copies de la source : le plein cadre (fond) et le médaillon (incrustation).
-    parts.push(`[0:v]split=2[vbase][vpip]`);
+    // Deux copies de la source (ou du MONTAGE) : le plein cadre (fond) et le médaillon.
+    parts.push(`${VSRC}split=2[vbase][vpip]`);
     parts.push(
       `[vbase]scale=${W}:${H}:force_original_aspect_ratio=decrease:flags=lanczos,` +
         `pad=${W}:${H}:(ow-iw)/2:(oh-ih)/2,setsar=1,fps=${fps}[base]`,
@@ -496,17 +630,29 @@ export async function renderSplitScreen(payload, jobId, tmpFiles) {
       `[stage][pip]overlay=x=W-w-${margin}:y=H-h-${margin}:eof_action=pass:enable='${pipEnable}'[v]`,
     );
 
-    args.push('-filter_complex', parts.join(';'), '-map', '[v]', '-map', '0:a?');
+  }
+
+  args.push('-filter_complex', parts.join(';'), '-map', '[v]');
+  // ⚠️ AUDIO : sans montage on garde `-map 0:a?` (la piste de la source, telle quelle).
+  // AVEC montage il serait CATASTROPHIQUE de la remapper : elle dure la source entière
+  // alors que l'image a été coupée — le cours entier partirait en décalage son/image.
+  // On mappe donc la piste RECONSTRUITE, ou aucune si la source est muette.
+  if (montage.applied) {
+    if (montageAudioLabel) args.push('-map', montageAudioLabel);
+  } else {
+    args.push('-map', '0:a?');
   }
 
   args.push('-c:v', 'libx264', '-pix_fmt', 'yuv420p', '-preset', 'veryfast', '-crf', '23');
   // Audio : ne PAS réencoder ce qui est déjà de l'AAC (perte de qualité + temps CPU
   // pour rien). Sinon AAC à un débit EXPLICITE — l'ancien `-c:a aac` nu laissait
   // ffmpeg choisir son débit par défaut.
-  if (probe.hasAudio && probe.audioCodec === 'aac') args.push('-c:a', 'copy');
+  // Le montage, lui, PASSE PAR LE GRAPHE (découpe, silences, volumes) : ses échantillons
+  // n'existent plus tels quels dans le fichier d'entrée, `copy` est alors impossible.
+  if (!montage.applied && probe.hasAudio && probe.audioCodec === 'aac') args.push('-c:a', 'copy');
   else args.push('-c:a', 'aac', '-b:a', '192k');
-  // Durée DÉTERMINISTE : celle de la source, qu'elle porte ou non de l'audio.
-  if (srcDur > 0) args.push('-t', srcDur.toFixed(3));
+  // Durée DÉTERMINISTE : celle de la source, ou celle du MONTAGE quand il coupe.
+  if (outDur > 0) args.push('-t', outDur.toFixed(3));
   else args.push('-shortest'); // durée de la source inconnue → ancien garde-fou
   // `+faststart` déplace le moov en tête : la lecture depuis une URL R2 présignée
   // démarre sans requête Range supplémentaire.
@@ -527,8 +673,12 @@ export async function pollCourseRenderJobs() {
   for (const job of jobs) {
     await supabase.from('course_render_jobs').update({ status: 'rendering', updated_at: new Date().toISOString() }).eq('id', job.id);
     const tmpFiles = [];
+    // Ce que le moteur a refusé de traduire ou a dû ajuster. Ce n'est PAS une erreur, mais
+    // ça doit atteindre le formateur : sans ça, un fondu enchaîné ou un étalonnage
+    // disparaîtrait du MP4 sans que personne ne l'apprenne.
+    const notes = [];
     try {
-      const outPath = await renderSplitScreen(job.payload || {}, job.id, tmpFiles);
+      const outPath = await renderSplitScreen(job.payload || {}, job.id, tmpFiles, notes);
       const key = `tenants/${job.tenant_id}/postprod/${job.content_id}_${job.id}.mp4`;
       const storageKey = await uploadToR2(outPath, key);
       // Sans R2, le MP4 vient d'être produit puis SUPPRIMÉ avec les temporaires : le job
@@ -539,9 +689,16 @@ export async function pollCourseRenderJobs() {
       // ⚠️ `output_url` porte en réalité la CLÉ R2 (nom de colonne historique, migration
       // 20260531000003). Le bucket R2 est PRIVÉ : l'URL jouable est PRÉSIGNÉE à la lecture
       // par l'API (CourseBuilderService.getPostprodRenderStatus → `output_video_url`).
-      // `error: null` remet le job au propre s'il avait échoué lors d'un passage précédent.
+      //
+      // La colonne `error` sert ICI de canal de MESSAGE, pas seulement d'échec : c'est le
+      // seul champ que l'API relaie (→ `error_message`) et que l'écran de post-production
+      // affiche déjà, quel que soit le statut, sous « Message du moteur de rendu »
+      // (VideoPostProductionPage). Le statut reste `completed` : le rendu a bien abouti,
+      // mais le formateur doit savoir ce qui n'a PAS été appliqué. Sans notes → null,
+      // ce qui remet au propre un job qui avait échoué lors d'un passage précédent.
+      const noteText = notes.length ? `Montage — ${notes.join(' · ')}` : null;
       await supabase.from('course_render_jobs')
-        .update({ status: 'completed', output_url: storageKey, error: null, updated_at: new Date().toISOString() })
+        .update({ status: 'completed', output_url: storageKey, error: noteText, updated_at: new Date().toISOString() })
         .eq('id', job.id);
       // Reflète le montage dans le contenu de la formation.
       try {
@@ -567,9 +724,13 @@ export async function pollCourseRenderJobs() {
         if (nd.renderedUrl && !/^(https?:\/\/|blob:|data:)/i.test(String(nd.renderedUrl).trim())) {
           delete nd.renderedUrl;
         }
+        // Trace DURABLE de ce que le montage a fait au contenu : le job peut être purgé,
+        // le contenu non. C'est aussi ce qui permettra à l'écran d'afficher « ce montage
+        // ne contient pas vos fondus enchaînés » sans relire la file.
+        nd.renderedMontageNotes = notes.length ? [...notes] : null;
         await supabase.from('formation_day_contents').update({ data: nd }).eq('id', job.content_id);
       } catch { /* non bloquant */ }
-      console.log('[course-render] completed', job.id, storageKey);
+      console.log('[course-render] completed', job.id, storageKey, notes.length ? `(${notes.length} note(s))` : '');
     } catch (e) {
       console.error('[course-render] failed', job.id, e.message);
       await supabase.from('course_render_jobs')

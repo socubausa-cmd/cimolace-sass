@@ -392,6 +392,24 @@ export class CourseBuilderService {
     _userId: string,
     dto: { contentId: string; renderMode?: string; exportResolution?: string },
   ) {
+    // ── `renderMode` NE DOIT PAS MENTIR ───────────────────────────────────────
+    // Le moteur ne connaît que deux mises en page : `pedagogical` (slide plein cadre +
+    // formateur en médaillon) et `raw` (vidéo seule, aucune slide — cf. courseRender.js).
+    // Le sélecteur du front grise déjà « Reformulation IA » et « Masterclass », mais l'API
+    // acceptait N'IMPORTE QUELLE chaîne et le worker rendait alors du `pedagogical` : un
+    // appelant qui demandait « masterclass » attendait un rendu complet pour recevoir,
+    // à l'octet près, autre chose. On refuse tout de suite, avec la liste des modes réels.
+    // ⚠️ `raw` ne dit rien du MONTAGE : il ne gouverne que le diaporama. Les coupes du
+    // projet NLE s'appliquent dans les deux modes (le sélecteur s'intitule « Mise en page »).
+    const RENDER_MODES = ['pedagogical', 'raw'];
+    const renderMode = String(dto.renderMode ?? 'pedagogical').trim() || 'pedagogical';
+    if (!RENDER_MODES.includes(renderMode)) {
+      throw new BadRequestException(
+        `Mise en page « ${renderMode} » non prise en charge par le moteur de rendu. ` +
+          `Modes disponibles : ${RENDER_MODES.join(', ')}.`,
+      );
+    }
+
     const content = await this.loadFormationContent(dto.contentId);
     if (!content) throw new NotFoundException('Contenu de formation introuvable.');
 
@@ -496,24 +514,40 @@ export class CourseBuilderService {
      * Fenêtre temporelle d'une SCÈNE : union des chapitres qui pointent vers elle.
      * Une scène qui illustre deux chapitres consécutifs reste donc affichée du début du
      * premier à la fin du second, au lieu de recevoir la durée d'un chapitre au hasard.
+     *
+     * `chapters` (les INDICES, pas les fenêtres) est renvoyé en plus : quand un montage
+     * coupe la vidéo, le worker doit refaire cette union sur le NOUVEL axe de temps, et
+     * il ne peut le faire qu'en sachant de quels chapitres la scène dépend. Sans ça il
+     * lui resterait une fenêtre en temps SOURCE, c'est-à-dire une slide affichée pendant
+     * qu'on parle d'autre chose (cf. worker/src/jobs/nleToFfmpeg.remapSlidesForMontage).
      */
-    const windowForScene = (sceneIdx: number): { start: number; end: number } | null => {
+    const windowForScene = (
+      sceneIdx: number,
+    ): { start: number; end: number; chapters: number[] } | null => {
       const mapped: { start: number; end: number }[] = [];
+      const used: number[] = [];
       if (slideMap.length) {
         for (let c = 0; c < Math.min(slideMap.length, chapters.length); c += 1) {
           if (slideMap[c] !== sceneIdx) continue;
           const w = chapterWindow(chapters[c]);
-          if (w) mapped.push(w);
+          if (w) {
+            mapped.push(w);
+            used.push(c);
+          }
         }
       } else {
         // Pas de correspondance explicite → convention historique : scène i ↔ chapitre i.
         const w = chapterWindow(chapters[sceneIdx]);
-        if (w) mapped.push(w);
+        if (w) {
+          mapped.push(w);
+          used.push(sceneIdx);
+        }
       }
       if (!mapped.length) return null;
       return {
         start: Math.min(...mapped.map((w) => w.start)),
         end: Math.max(...mapped.map((w) => w.end)),
+        chapters: used,
       };
     };
 
@@ -526,7 +560,7 @@ export class CourseBuilderService {
       if (!w) return null;
       const start = Math.max(0, knownSourceSeconds > 0 ? Math.min(w.start, knownSourceSeconds) : w.start);
       const end = knownSourceSeconds > 0 ? Math.min(w.end, knownSourceSeconds) : w.end;
-      return end > start ? { start, end } : null;
+      return end > start ? { start, end, chapters: w.chapters } : null;
     });
 
     // Aucune capture rattachée à un chapitre (cours non chapitré) → répartition
@@ -546,10 +580,13 @@ export class CourseBuilderService {
       durationSeconds: number;
       startSeconds: number;
       endSeconds: number;
+      chapterIndices?: number[];
     }[] = frames
       .map((f, i) => {
         const url = typeof f === 'string' ? f : String(f?.url || f?.dataUrl || f?.image || '');
-        const win = placements[i] || (uniformStep > 0 ? { start: i * uniformStep, end: (i + 1) * uniformStep } : null);
+        const win =
+          placements[i] ||
+          (uniformStep > 0 ? { start: i * uniformStep, end: (i + 1) * uniformStep, chapters: [] } : null);
         const path =
           (typeof f === 'object' && f && f.storagePath ? String(f.storagePath) : '') ||
           this.smartboardCanvasStoragePath(url) ||
@@ -559,12 +596,15 @@ export class CourseBuilderService {
           : { url };
         // `durationSeconds` est conservé pour un worker pas encore redéployé (il ignore
         // start/end) ; `startSeconds`/`endSeconds` sont ce qui permet le placement absolu.
+        // `chapterIndices` ne sert QU'au recalage après montage (worker) : un worker qui
+        // ne le connaît pas l'ignore, et un job sans montage ne s'en sert jamais.
         return win
           ? {
               ...base,
               startSeconds: Math.round(win.start * 1000) / 1000,
               endSeconds: Math.round(win.end * 1000) / 1000,
               durationSeconds: Math.round((win.end - win.start) * 1000) / 1000,
+              ...(win.chapters?.length ? { chapterIndices: win.chapters } : {}),
             }
           : null;
       })
@@ -582,6 +622,45 @@ export class CourseBuilderService {
     };
     const resStr = String(dto.exportResolution || '1080p').toLowerCase().trim();
     const [w, h] = RES_MAP[resStr] || resStr.split('x').map((n) => parseInt(n, 10));
+
+    // ── MONTAGE : transport du projet NLE jusqu'au worker ─────────────────────
+    // `data.nleProject` est écrit à CHAQUE enregistrement de l'écran de post-production
+    // (VideoPostProductionPage) mais n'était embarqué NULLE PART : coupes, trims et fondus
+    // mouraient en base. On le transporte tel quel — c'est le worker (nleToFfmpeg) qui
+    // décide ce qui est traduisible, et qui refuse tout haut le reste. Un projet vide ou
+    // qui reprend la source à l'identique y est détecté comme inerte : le rendu est alors
+    // EXACTEMENT celui d'avant ce changement.
+    const nleProject =
+      d.nleProject && typeof d.nleProject === 'object' && !Array.isArray(d.nleProject) ? d.nleProject : null;
+    // Fenêtres SOURCE des chapitres, DANS L'ORDRE ET AU COMPLET — `d.chapters` est recopié
+    // tel quel, sans le moindre filtre.
+    //
+    // ⚠️ LE NOMBRE EST LE PIVOT, PAS LE CONTENU. C'est sur `clips.length === chapitres.length`
+    // que l'aperçu ET le worker décident d'apparier clip k ↔ chapitre k
+    // (applySegmentsFromNleV1Clips). En filtrer un seul ICI ferait diverger le MP4 de ce que
+    // l'éditeur affiche — divergence que nleToFfmpeg.js déclare « PIRE que l'absence de
+    // montage » : le formateur publierait à sa classe une vidéo dont il n'a jamais vu le
+    // placement des plans.
+    //
+    // Le critère qui gouverne ce nombre vit CÔTÉ FRONT et nulle part ailleurs :
+    // `isMontageEligibleChapterRow` (VideoPostProductionPage) — IN/OUT lisibles et OUT > IN,
+    // sans condition de libellé. Il est appliqué aux trois endroits qui comptent : la
+    // fabrication des clips (syncVideoTrackFromChapters), l'aperçu, et la liste persistée en
+    // `d.chapters` que l'on relaie ci-dessous. Historiquement ces trois filtres divergeaient
+    // (le persisté exigeait un libellé non vide) et l'aperçu et le rendu prenaient alors des
+    // régimes de recalage OPPOSÉS. Ne réintroduis aucun filtre ici : c'est la longueur de
+    // `d.chapters` qui fait foi.
+    const montageChapterWindows = nleProject
+      ? chapters.map((c) => {
+          const s = Number(c?.startSeconds);
+          const e = Number(c?.endSeconds);
+          return {
+            startSeconds: Number.isFinite(s) ? s : null,
+            endSeconds: Number.isFinite(e) ? e : null,
+          };
+        })
+      : [];
+
     const payload = {
       sourceVideoUrl,
       // Chemin nu + bucket : le worker re-signe si l'URL ci-dessus a expiré en file.
@@ -590,9 +669,10 @@ export class CourseBuilderService {
       // Durée AUTORITAIRE de la source quand on la connaît : le worker la re-mesure par
       // ffprobe, mais cette valeur lui sert de repli si ffprobe est indisponible.
       ...(knownSourceSeconds > 0 ? { sourceDurationSeconds: knownSourceSeconds } : {}),
+      ...(nleProject ? { nleProject, montageChapterWindows } : {}),
       width: w || 1920,
       height: h || 1080,
-      renderMode: dto.renderMode ?? 'pedagogical',
+      renderMode,
     };
 
     const { data: job } = await (this.supabase.client as any)
@@ -613,6 +693,20 @@ export class CourseBuilderService {
       unplacedSlides,
       sourceDurationSeconds: knownSourceSeconds || null,
       hasSource: Boolean(sourceVideoUrl || storagePath),
+      // Le montage part-il AVEC le job ? On n'annonce ici QUE ce fait — c'est le worker
+      // (nleToFfmpeg) qui juge de sa traduisibilité, et il remonte son verdict dans
+      // `course_render_jobs.error` (relayé en `error_message` par render-status, déjà
+      // affiché par l'écran de post-production sous « Message du moteur de rendu »).
+      montage: nleProject
+        ? {
+            joined: true,
+            clips: Array.isArray((nleProject as any)?.tracks)
+              ? (nleProject as any).tracks
+                  .filter((t: any) => t?.id === 'v1')
+                  .reduce((n: number, t: any) => n + (Array.isArray(t?.clips) ? t.clips.length : 0), 0)
+              : 0,
+          }
+        : { joined: false, clips: 0 },
     };
   }
 

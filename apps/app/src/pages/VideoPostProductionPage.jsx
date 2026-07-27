@@ -34,6 +34,13 @@ import CoursePipelineView from '@/components/school/course-builder/CoursePipelin
 import NleEngineWorkspace from '@/features/nle-engine/components/NleEngineWorkspace';
 import { useNleProjectStore } from '@/features/nle-engine/store/useNleProjectStore';
 import { applyNleProjectToChapterRows } from '@/lib/nleEngine/applyNleProjectToChapterRows';
+// POURQUOI importer le normaliseur ici : le panneau d'export doit comparer le montage
+// AFFICHÉ (store, déjà normalisé par `hydrate`) au montage ENREGISTRÉ (JSONB brut de la
+// base, qui peut manquer des champs). Les passer tous les deux par `parseNleProject`
+// est la seule façon de comparer des pommes avec des pommes — sinon l'écran annonçait
+// « modifications non enregistrées » en permanence, y compris juste après un
+// enregistrement, et l'avertissement devenait du bruit qu'on apprend à ignorer.
+import { parseNleProject } from '@/lib/nleEngine/nleProjectModel';
 
 const EXPORT_RESOLUTION_OPTIONS = [
   { id: '720p', label: '720p HD' },
@@ -74,6 +81,32 @@ const formatSecondsToTimeText = (seconds) => {
 };
 
 const round05 = (v) => Math.round(Number(v) * 2) / 2;
+
+/**
+ * ⭐ LE CRITÈRE UNIQUE : « cette ligne de chapitre pèse-t-elle dans le montage ? »
+ *
+ * POURQUOI IL EXISTE. `applySegmentsFromNleV1Clips` (aperçu ET worker, port verbatim) ne
+ * recale les chapitres sur l'axe du montage que si `clips.length === chapitres.length`.
+ * Ce nombre était calculé par TROIS filtres différents :
+ *   · les CLIPS      → syncVideoTrackFromChapters : IN/OUT lisibles et OUT > IN, libellé inventé ;
+ *   · l'APERÇU       → applyNleProjectToChapterRows : AUCUN filtre, toutes les lignes brutes ;
+ *   · le RENDU       → `normalizedChapterSegments` persisté en `d.chapters`, qui exigeait EN PLUS
+ *                      un libellé non vide (et tolérait OUT == IN).
+ * Résultat mesuré : 5 lignes dont une sans libellé → l'aperçu recalait (5 clips = 5 lignes)
+ * pendant que le MP4 refusait (4 chapitres persistés ≠ 5 clips) ; 5 lignes dont une sans OUT →
+ * l'inverse exact. Dans les deux cas l'écran affichait un placement de plans et le fichier en
+ * produisait un autre — la divergence que l'en-tête de nleToFfmpeg.js déclare « PIRE que
+ * l'absence de montage ».
+ *
+ * Ce prédicat est la copie du critère des CLIPS (la seule liste qui fasse foi, puisque c'est
+ * elle qu'on compte en face). Toute modification ici doit être répercutée dans
+ * `syncVideoTrackFromChapters` (nleProjectModel.js) et dans `normalizedChapterSegments`.
+ */
+const isMontageEligibleChapterRow = (c) => {
+  const start = parseTimestampToSeconds(c?.startText);
+  const end = parseTimestampToSeconds(c?.endText);
+  return Number.isFinite(start) && start >= 0 && Number.isFinite(end) && end > start;
+};
 
 /** ISO (timestamptz) → valeur d'un input `datetime-local` (heure locale, sans secondes). */
 const isoToDatetimeLocalInput = (iso) => {
@@ -184,10 +217,36 @@ const VideoPostProductionPage = ({
   const [activeChapterIdx, setActiveChapterIdx] = useState(null);
 
   const nleProjectForPreview = useNleProjectStore((s) => s.project);
-  const chaptersForPreview = useMemo(
-    () => applyNleProjectToChapterRows(chapters, nleProjectForPreview),
-    [chapters, nleProjectForPreview],
-  );
+  // APERÇU du recalage. On ne soumet à `applyNleProjectToChapterRows` que les lignes ÉLIGIBLES
+  // au montage (cf. isMontageEligibleChapterRow) : ce sont exactement celles qui ont produit un
+  // clip, donc le seul décompte qui puisse répondre `clips.length === chapitres.length` en
+  // même temps que le worker. Avec le tableau brut, une ligne sans IN/OUT gonflait le compte,
+  // l'aperçu refusait de recaler et laissait les lignes en temps SOURCE pendant que le MP4,
+  // lui, recalait — l'écran montrait un placement, le fichier en produisait un autre.
+  //
+  // On RÉINJECTE ensuite les lignes recalées à leur position d'origine : la longueur et l'ordre
+  // de `chaptersForPreview` restent ceux de `chapters` (tout le reste de l'écran indexe dessus :
+  // activeChapterIdx, chapterSlideMap, la liste des segments…), et les lignes non éligibles
+  // ressortent inchangées — ce qui est déjà ce que faisait `applyNleProjectToChapterRows`
+  // pour elles, faute d'IN/OUT lisible.
+  const chaptersForPreview = useMemo(() => {
+    const rows = Array.isArray(chapters) ? chapters : [];
+    const eligibleIdx = [];
+    const eligibleRows = [];
+    rows.forEach((c, i) => {
+      if (!isMontageEligibleChapterRow(c)) return;
+      eligibleIdx.push(i);
+      eligibleRows.push(c);
+    });
+    if (!eligibleRows.length) return rows;
+    const applied = applyNleProjectToChapterRows(eligibleRows, nleProjectForPreview);
+    if (applied === eligibleRows) return rows;
+    const merged = rows.slice();
+    eligibleIdx.forEach((rowIdx, k) => {
+      merged[rowIdx] = applied[k];
+    });
+    return merged;
+  }, [chapters, nleProjectForPreview]);
 
   const activeSegment = useMemo(() => {
     if (activeChapterIdx == null) return null;
@@ -1013,14 +1072,30 @@ const VideoPostProductionPage = ({
       }
     }
 
+    // ⭐ CE FILTRE EST LE MÊME QUE `isMontageEligibleChapterRow` — ET IL DOIT LE RESTER.
+    // `chapters` persistés ici deviennent `d.chapters`, que l'API renvoie AU WORKER sous
+    // `montageChapterWindows` ; c'est sur leur NOMBRE que `applySegmentsFromNleV1Clips`
+    // décide d'apparier clip k ↔ chapitre k. Or la liste des CLIPS est bâtie par
+    // `syncVideoTrackFromChapters` (nleProjectModel) avec un critère différent, et l'APERÇU
+    // se prononçait sur un troisième (toutes les lignes brutes) : trois filtres, trois
+    // longueurs possibles, donc un aperçu et un MP4 qui pouvaient prendre des régimes de
+    // recalage OPPOSÉS pour la même liste.
+    //
+    // Ce qui a changé : (1) le libellé n'est plus une condition de survie — une ligne
+    // horodatée mais pas encore nommée produisait bel et bien un clip, la jeter ici faisait
+    // mentir le compte (et perdait le chapitre en base) ; on lui pose le MÊME libellé de
+    // repli que le clip correspondant. (2) `endSeconds >= startSeconds` devient `>` : un
+    // chapitre de durée nulle ne produit AUCUN clip et n'a jamais placé la moindre slide.
     const normalizedChapterSegments = (chapters || [])
-      .map((c) => {
+      .map((c, idx) => {
         const start = parseTimestampToSeconds(c?.startText);
         const end = parseTimestampToSeconds(c?.endText);
         return {
           startSeconds: start,
           endSeconds: end,
-          label: String(c?.label || '').trim(),
+          // Repli IDENTIQUE à syncVideoTrackFromChapters (`Chapitre N`, N = rang de la LIGNE)
+          // pour que le chapitre et son clip portent exactement le même nom.
+          label: String(c?.label || '').trim() || `Chapitre ${idx + 1}`,
         };
       })
       .filter(
@@ -1028,8 +1103,7 @@ const VideoPostProductionPage = ({
           Number.isFinite(c.startSeconds) &&
           c.startSeconds >= 0 &&
           Number.isFinite(c.endSeconds) &&
-          c.endSeconds >= c.startSeconds &&
-          c.label
+          c.endSeconds > c.startSeconds
       )
       .sort((a, b) => a.startSeconds - b.startSeconds);
 
@@ -1709,11 +1783,19 @@ const VideoPostProductionPage = ({
           >
             ⚙ Pipeline
           </Button>
+          {/*
+            Ce sélecteur-ci pilote l'ASSISTANCE IA et la prévisualisation SmartBoard
+            (`segmentAiGenerate({ mode })` + `SplitScreenCoursePreview`), PAS l'encodage.
+            Il s'appelait « Mode » tout court, à deux écrans du « mode de rendu » du
+            panneau d'export qui porte les mêmes quatre valeurs : on croyait régler son
+            export en réglant l'IA. Le nom dit maintenant ce qu'il commande.
+          */}
           <div className="ml-auto flex items-center gap-2">
-            <Label className="text-xs text-[#b0ada3]">Mode</Label>
+            <Label className="text-xs text-[#b0ada3]">Mode SmartBoard</Label>
             <select
               value={smartboardMode}
               onChange={(e) => setSmartboardMode(e.target.value)}
+              title="Style de l'assistance IA et de la prévisualisation — sans effet sur le fichier exporté"
               className="h-8 rounded-md border border-white/10 bg-[#1f1e1c] px-2 text-xs text-white"
             >
               <option value="raw">Brut</option>
@@ -2537,6 +2619,15 @@ const VideoPostProductionPage = ({
             contentId={contentId}
             slideFrameCount={Array.isArray(row?.data?.renderSlideFrames) ? row.data.renderSlideFrames.length : 0}
             defaultExportResolution={row?.data?.exportResolution}
+            // Montage AFFICHÉ (store, vivant) vs montage ENREGISTRÉ (JSONB relu au
+            // chargement) : le panneau compare les deux pour dire si le rendu partira
+            // bien avec ce qu'on voit — l'API relit la base, pas le navigateur.
+            nleProject={nleProjectForPreview}
+            savedNleProject={row?.data?.nleProject ?? null}
+            // Durée mesurée par le <video> de la prévisualisation : c'est elle qui
+            // détermine la longueur du fichier produit (le worker encode avec
+            // `-t <durée de la source>`).
+            sourceDurationSeconds={Number(previewDuration) || 0}
             invokeFn={invokeCourseBuilderFunction}
             invokeFnGet={invokeCourseBuilderFunctionGet}
           />
@@ -2583,10 +2674,288 @@ const STATUS_LABELS = {
 // par le polling ET par l'affichage « En cours… » : les deux ne peuvent plus diverger).
 const ACTIVE_RENDER_STATUSES = ['queued', 'preparing_assets', 'rendering', 'packaging'];
 
+// Au-delà de ce délai passé en file SANS qu'aucun worker ne prenne le job, ce n'est
+// plus « ça arrive » : c'est un symptôme. On le dit au formateur au lieu de le laisser
+// regarder une pastille pulser pendant vingt minutes.
+const QUEUE_STALL_SECONDS = 120;
+
+// ─── CE QUE LE MOTEUR DE RENDU APPLIQUE — ET CE QU'IL IGNORE ─────────────────
+//
+// ⚠️ CES DEUX LISTES SONT UN CONTRAT, PAS UN ARGUMENTAIRE. Elles décrivent le
+// comportement observable de deux fichiers, et de rien d'autre :
+//   · apps/worker/src/jobs/courseRender.js        → renderSplitScreen (le filtergraph)
+//   · apps/api/src/course-builder/course-builder.service.ts → enqueuePostprodRender
+//     (ce qui est réellement MIS DANS LE PAYLOAD du job)
+// Ne déplacer une ligne de « ignoré » vers « appliqué » qu'après avoir relu CES
+// fichiers. La version précédente de cet écran annonçait « réglages NLE conservés » :
+// le formateur coupait trois minutes d'introduction, posait un fondu au noir, cliquait
+// « Générer » — et récupérait sa source entière, sans le moindre avertissement. Une
+// promesse d'interface qui n'est tenue par aucun code coûte plus cher qu'une absence
+// de fonctionnalité : elle fait perdre un rendu complet ET la confiance dans l'outil.
+//
+// ⭐ INTERRUPTEUR DE VÉRITÉ. Il commande TOUT ce que cet écran raconte du montage :
+// les deux listes ci-dessous, l'annonce de la durée de sortie (source ou timeline),
+// l'avertissement « montage non enregistré » (qui n'a de sens que si le rendu relit la
+// base) et le contrôle avant vol des montages que le moteur refuse.
+//
+// ⚠️ CONDITION POUR QU'IL VAILLE `true` — les DEUX bouts de la chaîne, pas un seul :
+//   1. `enqueuePostprodRender` met `nleProject` dans le payload du job (API), ET
+//   2. `renderSplitScreen` fait passer la vidéo/l'audio par le traducteur avant la mise
+//      en page (worker : `planMontage` / `buildMontageFilters` de `nleToFfmpeg.js`).
+// Le traducteur seul ne suffit pas : tant que l'API n'envoie rien, il n'a rien à lire.
+//
+// ÉTAT VÉRIFIÉ LE 2026-07-27, par lecture des deux fichiers — la chaîne est complète :
+//   · API  : `...(nleProject ? { nleProject, montageChapterWindows } : {})` dans le
+//            payload de `enqueuePostprodRender`.
+//   · worker : `planMontage(payload?.nleProject, …)` puis `VSRC = '[nle_pv]'`, et la
+//            durée de sortie devient `-t outDur` (= durée du montage) au lieu de la
+//            durée de la source.
+// Un projet absent, vide, ou qui reprend la source à l'identique repasse par le chemin
+// historique (`applied:false`) : le MP4 est alors exactement celui d'avant.
+const RENDER_ENGINE_READS_MONTAGE = true;
+
+// Liste ON : écrite d'après le contrat explicite de `apps/worker/src/jobs/nleToFfmpeg.js`
+// (en-tête « CE QUI EST TRADUIT » / « CE QUI EST REFUSÉ »). Elle ne s'affiche que si le
+// drapeau ci-dessus est vrai — donc jamais avant que la chaîne complète existe.
+const RENDER_ENGINE_APPLIES = RENDER_ENGINE_READS_MONTAGE
+  ? [
+      'les coupes et les rognages de la timeline : le fichier dure ce que dure le montage',
+      'l’ordre des clips, et les vides entre eux rendus en noir',
+      'les fondus au noir (entrée et sortie de clip)',
+      'l’opacité et le volume de chaque clip, plus le volume général',
+      'le recalage des plans capturés sur le cours coupé (un plan dont le passage est coupé disparaît)',
+      'la mise en page : le plan plein cadre, le formateur en médaillon en bas à droite',
+      'la résolution choisie ci-contre, jusqu’en 4K, et la bande son recoupée avec l’image (AAC 192 kb/s)',
+    ]
+  : [
+      'la mise en page : le plan plein cadre, le formateur en médaillon en bas à droite',
+      'le placement des plans dans le temps, calé sur les chapitres',
+      'la résolution choisie ci-contre, jusqu’en 4K',
+      'la bande son de la source (recodée en AAC 192 kb/s seulement si elle ne l’est pas déjà)',
+    ];
+const RENDER_ENGINE_IGNORES = RENDER_ENGINE_READS_MONTAGE
+  ? [
+      'le fondu enchaîné : la jonction est rendue en coupe franche (utilise « Fondu au noir »)',
+      'l’étalonnage (exposition, contraste, saturation, température) — l’aperçu seul le montre',
+      'les clips posés sur la piste « Slides & incrustations » et sur la piste audio',
+      'un montage à vitesse modifiée, à clips qui se chevauchent, ou pointant un autre fichier : le moteur refuse le montage EN BLOC et rend la source entière, en disant lequel',
+    ]
+  : [
+      'les coupes et les rognages de la timeline : la vidéo produite dure exactement comme la source',
+      'les transitions (fondu enchaîné, fondu au noir)',
+      'l’étalonnage (exposition, contraste, saturation, température)',
+      'le volume des clips et le volume général',
+      'les clips posés sur la piste « Slides & incrustations » et sur la piste audio',
+    ];
+
+/** Nombre lu avec une valeur de repli explicite (Number(undefined) vaut NaN, pas null). */
+const nleNum = (value, fallback) => (Number.isFinite(Number(value)) ? Number(value) : fallback);
+
+// ── CONTRÔLE AVANT VOL : les montages que le moteur REFUSE ───────────────────
+// ⚠️ MIROIR de `planMontage` (apps/worker/src/jobs/nleToFfmpeg.js). Les trois constantes
+// et les quatre règles ci-dessous y portent les mêmes noms et les mêmes valeurs ; si
+// elles y changent, elles doivent changer ici (grep « MONTAGE_EPSILON »).
+//
+// POURQUOI DOUBLER LA RÈGLE CÔTÉ ÉCRAN plutôt que d'attendre le verdict du worker : le
+// verdict n'arrive qu'À LA FIN d'un encodage complet, qui peut durer une demi-heure, et
+// il dit « montage refusé, source rendue entière ». Le formateur a alors attendu très
+// longtemps pour recevoir exactement ce qu'il ne voulait pas. Le cas le plus fréquent
+// est aussi le plus sournois : dans l'éditeur, changer Trim IN / Trim OUT ne change PAS
+// la durée du clip sur la timeline — le projet décrit alors un ralenti, que le moteur
+// refuse de traduire (la voix serait transposée). Autant le dire avant le clic.
+const MONTAGE_EPSILON = 0.05;
+const MONTAGE_MIN_SEGMENT_SECONDS = 0.04;
+/** `sourceRef` qui désignent LA vidéo du cours (cf. syncVideoTrackFromChapters → 'main'). */
+const MONTAGE_PRIMARY_SOURCE_REFS = new Set(['', 'main', 'source', 'primary', '0', 'principal']);
+
+/**
+ * Raisons pour lesquelles le moteur rendrait la source ENTIÈRE au lieu du montage.
+ * Vide = rien ne s'oppose à la traduction. L'ordre reproduit celui du worker, qui
+ * s'arrête au premier refus.
+ * @param {Array<Record<string, unknown>>} primaryClips clips « source principale » de v1
+ * @returns {string[]}
+ */
+function montageRefusals(primaryClips) {
+  const reasons = [];
+  if (!Array.isArray(primaryClips) || primaryClips.length === 0) return reasons;
+
+  const foreign = primaryClips.filter(
+    (c) => !MONTAGE_PRIMARY_SOURCE_REFS.has(String(c?.sourceRef ?? '').trim().toLowerCase()),
+  );
+  if (foreign.length) {
+    reasons.push(
+      `${foreign.length} clip(s) pointent un autre fichier que la vidéo du cours : le rendu ne télécharge que celle-ci.`,
+    );
+  }
+
+  const parsed = [];
+  for (let i = 0; i < primaryClips.length; i += 1) {
+    const c = primaryClips[i];
+    const label = String(c?.label || `Clip ${i + 1}`);
+    const start = Number(c?.startOnTimeline);
+    const dur = Number(c?.duration);
+    const trimIn = Number(c?.trimIn);
+    const trimOut = Number(c?.trimOut);
+    if (!Number.isFinite(start) || start < 0 || !Number.isFinite(dur) || dur <= MONTAGE_MIN_SEGMENT_SECONDS) {
+      reasons.push(`clip « ${label} » sans position ou sans durée exploitable.`);
+      continue;
+    }
+    if (!Number.isFinite(trimIn) || trimIn < 0 || !Number.isFinite(trimOut) || trimOut <= trimIn + 0.02) {
+      reasons.push(`clip « ${label} » sans point de sortie exploitable (Trim OUT ≤ Trim IN).`);
+      continue;
+    }
+    const span = trimOut - trimIn;
+    if (Math.abs(span - dur) > MONTAGE_EPSILON) {
+      reasons.push(
+        `clip « ${label} » : ${formatMediaDurationFr(dur)} sur la timeline pour ${formatMediaDurationFr(span)} de matière ` +
+          '— cela décrit un ralenti/accéléré, que le rendu n’applique pas. Aligne la durée sur Trim OUT − Trim IN.',
+      );
+      continue;
+    }
+    parsed.push({ start, dur, label });
+  }
+
+  parsed.sort((a, b) => a.start - b.start || a.dur - b.dur);
+  for (let i = 1; i < parsed.length; i += 1) {
+    const prevEnd = parsed[i - 1].start + parsed[i - 1].dur;
+    if (parsed[i].start < prevEnd - MONTAGE_EPSILON) {
+      reasons.push(
+        `les clips « ${parsed[i - 1].label} » et « ${parsed[i].label} » se chevauchent : rien ne dit lequel doit être visible.`,
+      );
+      break;
+    }
+  }
+  return reasons;
+}
+
+/**
+ * Résumé LISIBLE du montage tel qu'il est posé dans l'éditeur.
+ *
+ * POURQUOI : avant de lancer un encodage qui peut durer très longtemps, le formateur
+ * doit voir d'un coup d'œil ce qu'il a construit ET ce qui, là-dedans, atteindra
+ * réellement le fichier de sortie. C'est la même donnée que celle envoyée au serveur
+ * (`data.nleProject`), lue avec les mêmes clés que `applySegmentsFromNleV1Clips`.
+ */
+function summarizeNleProject(project) {
+  const tracks = Array.isArray(project?.tracks) ? project.tracks : [];
+  const v1 = tracks.find((t) => t && t.id === 'v1');
+  const v2 = tracks.find((t) => t && t.id === 'v2');
+  const a1 = tracks.find((t) => t && t.id === 'a1');
+  const clips = Array.isArray(v1?.clips) ? v1.clips : [];
+  // Même filtre que le moteur de prévisualisation : un clip sans `sourceType` est un
+  // plan de la vidéo source (défaut historique du modèle).
+  const primary = clips.filter((c) => String(c?.sourceType || 'primary_video') === 'primary_video');
+
+  let timelineEnd = 0;
+  let trimmedCount = 0;
+  let transitionCount = 0;
+  for (const c of clips) {
+    const start = nleNum(c?.startOnTimeline, 0);
+    const dur = nleNum(c?.duration, 0);
+    if (start + dur > timelineEnd) timelineEnd = start + dur;
+    const trimIn = nleNum(c?.trimIn, 0);
+    const trimOut = nleNum(c?.trimOut, 0);
+    // Ce qui compte comme une COUPE : le clip ne montre pas la matière qui se trouve à
+    // sa place sur la timeline (`trimIn` décalé de `startOnTimeline`), ou sa fenêtre
+    // source n'a pas la longueur du rectangle dessiné.
+    // ⚠️ PAS « trimIn > 0 » : après « Sync chapitres », le 2ᵉ chapitre a légitimement
+    // trimIn = 40 s parce qu'il EST à 40 s. Compter ça comme une coupe affichait
+    // « 3 rognages » sur un montage qui ne coupe rigoureusement rien.
+    const displaced = Math.abs(trimIn - start) > 0.05;
+    const windowed = trimOut > trimIn + 0.05 && Math.abs(trimOut - trimIn - dur) > 0.05;
+    if (displaced || windowed) trimmedCount += 1;
+    for (const key of ['transitionIn', 'transitionOut']) {
+      const t = c?.[key];
+      if (t && String(t.type || 'cut') !== 'cut' && nleNum(t.durationSec, 0) > 0) transitionCount += 1;
+    }
+  }
+
+  const g = project?.master?.colorGrade || {};
+  const graded =
+    Math.abs(nleNum(g.exposure, 0)) > 0.5 ||
+    Math.abs(nleNum(g.contrast, 100) - 100) > 0.5 ||
+    Math.abs(nleNum(g.saturation, 100) - 100) > 0.5 ||
+    Math.abs(nleNum(g.warmth, 0)) > 0.5;
+
+  const overlayCount = Array.isArray(v2?.clips) ? v2.clips.length : 0;
+  const audioCount = Array.isArray(a1?.clips) ? a1.clips.length : 0;
+  return {
+    clipCount: primary.length,
+    // Ce qui ferait rendre la source ENTIÈRE malgré le montage — dit avant l'encodage.
+    refusals: montageRefusals(primary),
+    overlayCount,
+    audioCount,
+    timelineSeconds: Math.round(timelineEnd * 100) / 100,
+    trimmedCount,
+    transitionCount,
+    graded,
+    volumeTouched: Math.abs(nleNum(project?.mix?.masterVolumeDb, 0)) > 0.01,
+    isEmpty: clips.length === 0 && overlayCount === 0 && audioCount === 0,
+  };
+}
+
+/**
+ * Empreinte STABLE des pistes, pour répondre à une seule question : « ce que je vois à
+ * l'écran est-il bien ce qui est enregistré en base ? ». Le rendu part de la BASE
+ * (l'API relit `formation_day_contents.data`), jamais de l'état du navigateur : un
+ * montage non enregistré ne partira pas au rendu, et le formateur doit le savoir AVANT
+ * d'attendre un encodage complet. On ne retient que les champs qui changent l'image ou
+ * le son — pas les libellés, pas la sélection, pas le zoom de la timeline.
+ */
+function nleTracksFingerprint(project) {
+  const tracks = Array.isArray(project?.tracks) ? project.tracks : [];
+  return JSON.stringify(
+    tracks.map((t) => ({
+      id: String(t?.id || ''),
+      clips: (Array.isArray(t?.clips) ? [...t.clips] : [])
+        .sort((a, b) => nleNum(a?.startOnTimeline, 0) - nleNum(b?.startOnTimeline, 0))
+        .map((c) => [
+          String(c?.sourceType || 'primary_video'),
+          String(c?.sourceRef || ''),
+          Math.round(nleNum(c?.startOnTimeline, 0) * 1000),
+          Math.round(nleNum(c?.duration, 0) * 1000),
+          Math.round(nleNum(c?.trimIn, 0) * 1000),
+          Math.round(nleNum(c?.trimOut, 0) * 1000),
+          Math.round(nleNum(c?.opacity, 1) * 1000),
+          Math.round(nleNum(c?.volume, 1) * 1000),
+          `${c?.transitionIn?.type || 'cut'}:${Math.round(nleNum(c?.transitionIn?.durationSec, 0) * 1000)}`,
+          `${c?.transitionOut?.type || 'cut'}:${Math.round(nleNum(c?.transitionOut?.durationSec, 0) * 1000)}`,
+        ]),
+    })),
+  );
+}
+
+/** Durée d'attente en clair : « 48 s », « 3 min 07 s », « 1 h 12 min ». */
+function formatElapsedFr(seconds) {
+  const s = Math.max(0, Math.floor(Number(seconds) || 0));
+  if (s < 60) return `${s} s`;
+  if (s < 3600) return `${Math.floor(s / 60)} min ${String(s % 60).padStart(2, '0')} s`;
+  return `${Math.floor(s / 3600)} h ${String(Math.floor((s % 3600) / 60)).padStart(2, '0')} min`;
+}
+
+/** Secondes → durée parlée pour une VIDÉO (« 1 h 04 min 20 s »). */
+function formatMediaDurationFr(seconds) {
+  const s = Math.max(0, Math.round(Number(seconds) || 0));
+  if (s <= 0) return '';
+  const h = Math.floor(s / 3600);
+  const m = Math.floor((s % 3600) / 60);
+  const sec = s % 60;
+  if (h > 0) return `${h} h ${String(m).padStart(2, '0')} min`;
+  if (m > 0) return `${m} min ${String(sec).padStart(2, '0')} s`;
+  return `${sec} s`;
+}
+
 function RenderExportPanel({
   contentId,
   slideFrameCount = 0,
   defaultExportResolution = '1080p',
+  // Montage AFFICHÉ (store zustand) et montage ENREGISTRÉ (JSONB de la base) : les deux
+  // sont nécessaires, parce que le rendu lit la base et pas l'écran.
+  nleProject = null,
+  savedNleProject = null,
+  // Durée de la source mesurée par le navigateur — sert à annoncer la durée du fichier
+  // produit sans la deviner.
+  sourceDurationSeconds = 0,
   invokeFn,
   invokeFnGet,
 }) {
@@ -2626,6 +2995,22 @@ function RenderExportPanel({
   const [jobsError, setJobsError] = React.useState('');
   const pollRef = React.useRef(null);
 
+  // ── Ce que le formateur a monté, et ce qui en partira réellement au rendu ──
+  const montage = React.useMemo(() => summarizeNleProject(nleProject), [nleProject]);
+  // Le montage est-il déjà EN BASE ? `savedNleProject` est le JSONB brut relu au
+  // chargement de la page ; l'API repart exactement de cette valeur-là.
+  const hasSavedMontage = Boolean(savedNleProject && typeof savedNleProject === 'object');
+  const montageUnsaved = React.useMemo(() => {
+    if (!nleProject) return false;
+    if (!hasSavedMontage) return !summarizeNleProject(nleProject).isEmpty;
+    return nleTracksFingerprint(nleProject) !== nleTracksFingerprint(parseNleProject(savedNleProject));
+  }, [nleProject, savedNleProject, hasSavedMontage]);
+
+  // Horloge locale : elle ne sert QU'À faire vieillir les compteurs d'attente à
+  // l'écran. Elle ne tourne que tant qu'un job est actif — un onglet laissé ouvert
+  // sur un rendu terminé ne doit pas réveiller React chaque seconde.
+  const [nowTs, setNowTs] = React.useState(() => Date.now());
+
   const fetchJobs = React.useCallback(async () => {
     if (!contentId) return;
     setJobsLoading(true);
@@ -2653,6 +3038,17 @@ function RenderExportPanel({
     }
     return () => {};
   }, [jobs, fetchJobs]);
+
+  // Compteur d'attente : sans lui, l'écran affichait « En file… » de façon strictement
+  // identique à la première seconde et au bout d'un quart d'heure. Le formateur ne
+  // pouvait pas distinguer « ça travaille » de « personne ne ramasse le job ».
+  React.useEffect(() => {
+    const hasActive = jobs.some((j) => ACTIVE_RENDER_STATUSES.includes(j.status));
+    if (!hasActive) return undefined;
+    setNowTs(Date.now());
+    const id = window.setInterval(() => setNowTs(Date.now()), 1000);
+    return () => window.clearInterval(id);
+  }, [jobs]);
 
   React.useEffect(() => () => {
     if (pollRef.current) window.clearInterval(pollRef.current);
@@ -2685,23 +3081,36 @@ function RenderExportPanel({
 
   const latestJob = jobs[0] || null;
 
+  // Durée du FICHIER PRODUIT. Le worker termine son encodage par `-t <outDur>`, où
+  // `outDur` vaut la durée du MONTAGE quand il est appliqué, et celle de la source
+  // sinon. C'est la première chose qu'on vérifie en récupérant un export : l'écran doit
+  // l'annoncer avant l'attente, pas la laisser découvrir après.
+  const timelineDiffers =
+    !montage.isEmpty &&
+    montage.timelineSeconds > 0 &&
+    sourceDurationSeconds > 0 &&
+    Math.abs(montage.timelineSeconds - sourceDurationSeconds) > 1;
+  // La sortie suit-elle le montage ? Il faut les TROIS : que le moteur le lise, qu'il y
+  // ait un montage, et qu'il ne tombe sous aucune règle de refus.
+  const montageDrivesOutput =
+    RENDER_ENGINE_READS_MONTAGE &&
+    !montage.isEmpty &&
+    montage.timelineSeconds > 0 &&
+    montage.refusals.length === 0;
+
   return (
     <div className="rounded-2xl border border-[color-mix(in_srgb,var(--coral)_20%,transparent)] bg-[#1f1e1c] p-4 space-y-4">
-      <div className="flex items-center justify-between gap-3">
-        <div>
+      <div className="flex items-start justify-between gap-3 flex-wrap">
+        <div className="min-w-0">
           <p className="text-[11px] uppercase tracking-wider text-[color-mix(in_srgb,var(--coral)_60%,transparent)] font-semibold">🎬 Vidéo de sortie</p>
           <p className="text-sm text-white font-medium mt-0.5">Exporter la vidéo avec SmartBoard intégré</p>
           {/*
-            Ce texte DÉCRIT LE MOTEUR, il ne le vend pas. Il promettait « réglages NLE
-            conservés » alors que `nleProject` (coupes, transitions, étalonnage) n'est lu
-            NULLE PART côté API ni worker : le formateur coupait 3 min d'intro, posait un
-            fondu, cliquait « Générer » — et recevait la source ENTIÈRE, sans un mot.
-            Il promettait aussi « AAC haut débit » sans que le débit soit imposé.
-            Ne réintroduire une promesse ici que le jour où le moteur la tient.
+            Ce texte DÉCRIT LE MOTEUR, il ne le vend pas. La liste détaillée de ce qui est
+            appliqué (et de ce qui ne l'est pas) vit juste en dessous, dans un bloc que
+            l'on ne peut pas manquer : ici on se contente de dire ce que coûte l'attente.
           */}
           <p className="text-xs text-[#82807a] mt-0.5">
-            Export jusqu'en 4K, slide plein cadre + formateur en médaillon, audio AAC 192 kb/s.
-            Les coupes, transitions et étalonnage de l'éditeur ne sont pas encore appliqués au rendu.
+            Le moteur réencode le cours entier : l'attente grandit avec la durée de la source et la résolution choisie.
             {slideFrameCount > 0 ? (
               <span className="text-[#9fbf8f]/90"> · {slideFrameCount} plan(s) capturé(s)</span>
             ) : (
@@ -2731,7 +3140,7 @@ function RenderExportPanel({
           <select
             value={renderMode}
             onChange={(e) => setRenderMode(e.target.value)}
-            title="Mise en page du montage"
+            title="Mise en page du fichier exporté — seuls « Pédagogique » et « Brut » sont produits par le moteur"
             className="h-8 rounded-md border border-white/10 bg-[#1f1e1c] px-2 text-xs text-white"
           >
             <option value="pedagogical">Pédagogique (slide + formateur)</option>
@@ -2762,6 +3171,141 @@ function RenderExportPanel({
             <Loader2 className={`w-3.5 h-3.5 ${jobsLoading ? 'animate-spin' : ''}`} />
           </Button>
         </div>
+      </div>
+
+      {/*
+        LE CONTRAT DU MOTEUR, EN CLAIR ET AVANT LE CLIC.
+        Deux colonnes, jamais repliées derrière une infobulle : ce qui atteint le
+        fichier, et ce que l'éditeur laisse sur le carreau. C'est la seule information
+        qui évite au formateur de découvrir, après une attente d'encodage complète,
+        que son fondu au noir et ses trois minutes coupées n'ont servi à rien.
+      */}
+      <div className="grid gap-3 sm:grid-cols-2">
+        <div className="rounded-xl border border-[#9fbf8f]/25 bg-[#7a9b6c]/10 px-3 py-2.5">
+          <p className="text-[11px] font-semibold uppercase tracking-wide text-[#9fbf8f]">
+            Appliqué au fichier produit
+          </p>
+          <ul className="mt-1 space-y-0.5">
+            {RENDER_ENGINE_APPLIES.map((line) => (
+              <li key={line} className="flex gap-1.5 text-[11px] leading-snug text-[#f5f4ee]">
+                <span aria-hidden="true" className="text-[#9fbf8f]">✓</span>
+                <span>{line}</span>
+              </li>
+            ))}
+          </ul>
+        </div>
+        <div className="rounded-xl border border-[#d97757]/35 bg-[#d97757]/10 px-3 py-2.5">
+          <p className="text-[11px] font-semibold uppercase tracking-wide text-[#e08a6b]">
+            Pas encore appliqué — le rendu ignore ces réglages
+          </p>
+          <ul className="mt-1 space-y-0.5">
+            {RENDER_ENGINE_IGNORES.map((line) => (
+              <li key={line} className="flex gap-1.5 text-[11px] leading-snug text-[#f5f4ee]">
+                <span aria-hidden="true" className="text-[#e08a6b]">✕</span>
+                <span>{line}</span>
+              </li>
+            ))}
+          </ul>
+          <p className="mt-1.5 text-[10px] leading-snug text-[#b0ada3]">
+            {RENDER_ENGINE_READS_MONTAGE
+              ? 'Rien n’est écarté en silence : ce que le moteur n’a pas su appliquer est écrit noir sur blanc dans le message affiché avec le rendu terminé.'
+              : 'Ces réglages restent enregistrés avec le cours et pilotent la prévisualisation de cet écran ; ils ne sont simplement pas encore lus par le moteur d’encodage.'}
+          </p>
+        </div>
+      </div>
+
+      {/*
+        CE QUE CE COURS-CI CONTIENT COMME MONTAGE, et si la base le connaît.
+        Le rendu part de `formation_day_contents.data`, relu par l'API : l'état du
+        navigateur n'y participe jamais. Tant que `RENDER_ENGINE_READS_MONTAGE` est
+        faux, cette section sert d'inventaire honnête (« voilà ce que tu as construit,
+        voilà ce qu'il en restera ») ; quand il passera à vrai, elle devient l'endroit
+        où l'on prévient qu'un montage non enregistré ne partira pas à l'encodage.
+      */}
+      <div className="rounded-xl border border-white/10 bg-white/5 px-3 py-2.5 space-y-1">
+        <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
+          <p className="text-[11px] font-semibold uppercase tracking-wide text-[#b0ada3]">Montage de l'éditeur</p>
+          {montage.isEmpty ? (
+            <span className="text-xs text-[#82807a]">
+              Aucun clip posé — le rendu utilise la source entière.
+            </span>
+          ) : (
+            <span className="text-xs text-[#f5f4ee]">
+              {montage.clipCount} plan(s) sur la piste caméra
+              {montage.timelineSeconds > 0 ? ` · timeline de ${formatMediaDurationFr(montage.timelineSeconds)}` : ''}
+              {montage.trimmedCount > 0 ? ` · ${montage.trimmedCount} coupe(s)` : ''}
+              {montage.transitionCount > 0 ? ` · ${montage.transitionCount} transition(s)` : ''}
+              {montage.graded ? ' · étalonnage retouché' : ''}
+              {montage.overlayCount > 0 ? ` · ${montage.overlayCount} incrustation(s)` : ''}
+              {montage.audioCount > 0 ? ` · ${montage.audioCount} clip(s) audio` : ''}
+            </span>
+          )}
+        </div>
+        <p className="text-[11px] leading-snug text-[#b0ada3]">
+          {/*
+            Une coupe change la longueur du fichier : c'est la première chose qu'on
+            regarde en récupérant un export. On l'annonce AVANT l'attente, et on nomme
+            l'écart quand la timeline ne dit pas la même chose que la source.
+          */}
+          Durée du fichier produit :{' '}
+          {montageDrivesOutput ? (
+            <>
+              {`celle du montage, ${formatMediaDurationFr(montage.timelineSeconds)}`}
+              {timelineDiffers ? ` (la source en fait ${formatMediaDurationFr(sourceDurationSeconds)}).` : '.'}
+            </>
+          ) : (
+            <>
+              {sourceDurationSeconds > 0
+                ? `celle de la source, ${formatMediaDurationFr(sourceDurationSeconds)}`
+                : 'celle de la source'}
+              {/* Pourquoi la source alors qu'une timeline plus courte est dessinée ? Deux
+                  causes possibles, et l'écran ne doit pas les confondre : soit le moteur
+                  n'applique pas encore le montage, soit il le refusera (le bloc
+                  d'avertissement juste en dessous nomme alors le clip fautif). */}
+              {timelineDiffers && !RENDER_ENGINE_READS_MONTAGE
+                ? ` — et non celle de la timeline (${formatMediaDurationFr(montage.timelineSeconds)}), les coupes n’étant pas encore appliquées.`
+                : '.'}
+            </>
+          )}
+        </p>
+        {/*
+          REFUS ANNONCÉ AVANT L'ENCODAGE. Sans ce bloc, le formateur découvrait le verdict
+          « montage refusé, source rendue entière » à la FIN d'un rendu complet — c'est-à-dire
+          après avoir attendu très longtemps pour recevoir précisément ce qu'il ne voulait pas.
+        */}
+        {RENDER_ENGINE_READS_MONTAGE && montage.refusals.length > 0 && (
+          <div className="rounded-lg border border-[#d99a4e]/45 bg-[#d99a4e]/10 px-2.5 py-1.5">
+            <p className="text-[11px] font-semibold uppercase tracking-wide text-[#e6b878]">
+              Ce montage sera refusé — la source serait rendue entière
+            </p>
+            <ul className="mt-0.5 space-y-0.5">
+              {montage.refusals.map((reason) => (
+                <li key={reason} className="text-[11px] leading-snug text-[#f5f4ee]">{reason}</li>
+              ))}
+            </ul>
+            <p className="text-[10px] text-[#b0ada3] mt-1">
+              Corrige le clip dans l'éditeur de montage, enregistre, puis relance le rendu.
+            </p>
+          </div>
+        )}
+        {montageUnsaved && (
+          <p className="text-[11px] leading-snug text-[#e6b878]">
+            {/*
+              Deux messages, parce qu'il y a deux vérités. Tant que l'encodeur ignore le
+              montage, prétendre qu'il faut enregistrer « avant de générer » serait un
+              mensonge symétrique de celui qu'on vient de retirer : ça laisserait croire
+              que le montage compte pour le rendu. Ce qui reste vrai dans les deux cas,
+              c'est qu'un montage non enregistré est perdu au rechargement de la page.
+            */}
+            {RENDER_ENGINE_READS_MONTAGE
+              ? hasSavedMontage
+                ? 'Le montage affiché diffère de la version enregistrée. Le rendu relit la base : enregistre le cours avant de générer, sinon c’est l’ancien montage qui partira.'
+                : 'Ce montage n’a jamais été enregistré. Le rendu relit la base : enregistre le cours avant de générer.'
+              : hasSavedMontage
+                ? 'Le montage affiché diffère de la version enregistrée : enregistre le cours pour ne pas le perdre au rechargement.'
+                : 'Ce montage n’est pas encore enregistré : enregistre le cours pour ne pas le perdre au rechargement.'}
+          </p>
+        )}
       </div>
 
       {/* Échec du LANCEMENT (POST render-enqueue) — bordure corail, texte clair (pas de rouge criard). */}
@@ -2806,13 +3350,47 @@ function RenderExportPanel({
             // lien mort qui pointerait sur l'application elle-même.
             const awaitingLink = job.status === 'completed' && !playableUrl && Boolean(renderJobStorageKey(job));
             const isActive = ACTIVE_RENDER_STATUSES.includes(job.status);
+            // ── ATTENDRE SANS ÊTRE AVEUGLE ────────────────────────────────────
+            // Un encodage se compte en minutes, parfois en dizaines de minutes. Sans
+            // compteur, « En file… » à la première seconde et « En file… » au bout
+            // d'un quart d'heure s'écrivent exactement pareil : impossible de
+            // distinguer un moteur qui travaille d'un worker à l'arrêt.
+            const createdMs = Date.parse(job.created_at || '');
+            const updatedMs = Date.parse(job.updated_at || job.created_at || '');
+            const elapsedSec = Number.isFinite(createdMs) ? Math.max(0, (nowTs - createdMs) / 1000) : 0;
+            // Pour un job TERMINÉ (ou échoué), la durée utile est celle qu'il a mise à
+            // s'exécuter — `updated_at` est écrit par le worker à chaque changement
+            // d'état, y compris le dernier.
+            const takenSec =
+              Number.isFinite(createdMs) && Number.isFinite(updatedMs) && updatedMs > createdMs
+                ? (updatedMs - createdMs) / 1000
+                : 0;
+            // Toujours en file bien après le lancement : ce n'est plus de la patience,
+            // c'est un diagnostic. Le job est en base, personne ne l'a ramassé.
+            const queueStalled = job.status === 'queued' && elapsedSec > QUEUE_STALL_SECONDS;
+            // Le worker écrit ses REMARQUES dans la même colonne que ses ERREURS
+            // (`course_render_jobs.error`) : un rendu qui a réussi peut donc porter du
+            // texte — « tel réglage n'a pas été traduit », « tel plan a été déplacé ».
+            // Le peindre en corail sous le titre « Message du moteur de rendu » ferait
+            // lire un échec là où il y a un fichier parfaitement utilisable. On sépare
+            // donc les deux lectures : avertissement doré si le rendu a abouti, alerte
+            // corail seulement quand il a échoué.
+            const workerNoticeIsWarning = Boolean(workerErr) && job.status !== 'failed';
             return (
-              <div key={job.id} className="rounded-xl border border-white/10 bg-white/3 px-4 py-3 flex items-center justify-between gap-3">
+              <div key={job.id} className="rounded-xl border border-white/10 bg-white/5 px-4 py-3 flex items-center justify-between gap-3">
                 <div className="min-w-0">
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-2 flex-wrap">
                     <span className={`text-sm font-semibold ${s.color} ${s.pulse ? 'animate-pulse' : ''}`}>
                       {s.label}
                     </span>
+                    {isActive && elapsedSec > 0 && (
+                      <span className="text-[11px] text-[#b0ada3]">depuis {formatElapsedFr(elapsedSec)}</span>
+                    )}
+                    {!isActive && takenSec > 0 && (
+                      <span className="text-[11px] text-[#b0ada3]">
+                        {job.status === 'failed' ? 'arrêté après' : 'rendu en'} {formatElapsedFr(takenSec)}
+                      </span>
+                    )}
                     {mode && (
                       <span className="text-[10px] text-[#b0ada3] bg-white/5 px-2 py-0.5 rounded-full font-mono">{mode}</span>
                     )}
@@ -2820,12 +3398,39 @@ function RenderExportPanel({
                   <p className="text-[11px] text-[#b0ada3] font-mono mt-0.5">
                     {new Date(job.created_at).toLocaleString('fr-FR')}
                   </p>
+                  {job.status === 'rendering' && (
+                    <p className="text-[11px] text-[#b0ada3] mt-1">
+                      Le moteur réencode chaque image du cours. Cette page se met à jour toute seule, tu peux la quitter.
+                    </p>
+                  )}
+                  {queueStalled && (
+                    <p className="text-[11px] text-[#e6b878] mt-1 max-w-xl leading-snug">
+                      Toujours en file après {formatElapsedFr(elapsedSec)} : aucun moteur de rendu ne l'a pris en charge.
+                      Le rendu n'est pas perdu — il repartira dès qu'un moteur sera disponible. Si l'attente se prolonge,
+                      c'est le service de rendu qu'il faut vérifier, pas ce cours.
+                    </p>
+                  )}
                   {workerErr && (
-                    <div className="mt-1.5 rounded-lg border border-[#d97757]/45 bg-[#d97757]/10 px-2.5 py-1.5 max-w-xl">
-                      <p className="text-[11px] font-semibold text-[#e08a6b] uppercase tracking-wide">Message du moteur de rendu</p>
+                    <div
+                      className={`mt-1.5 rounded-lg border px-2.5 py-1.5 max-w-xl ${
+                        workerNoticeIsWarning
+                          ? 'border-[#d99a4e]/45 bg-[#d99a4e]/10'
+                          : 'border-[#d97757]/45 bg-[#d97757]/10'
+                      }`}
+                    >
+                      <p
+                        className={`text-[11px] font-semibold uppercase tracking-wide ${
+                          workerNoticeIsWarning ? 'text-[#e6b878]' : 'text-[#e08a6b]'
+                        }`}
+                      >
+                        {workerNoticeIsWarning
+                          ? 'Le moteur signale — la vidéo est produite'
+                          : 'Message du moteur de rendu'}
+                      </p>
                       {/* Message BRUT du worker : jamais tronqué à l'affichage — c'est
                           la seule trace exploitable côté formateur pour comprendre
-                          (source vidéo expirée, ffmpeg absent, R2 non configuré…). */}
+                          (source vidéo expirée, ffmpeg absent, R2 non configuré, réglage
+                          de montage non traduit…). */}
                       <p className="text-xs text-[#f5f4ee] mt-0.5 break-words whitespace-pre-wrap" title={workerErr}>{workerErr}</p>
                     </div>
                   )}
