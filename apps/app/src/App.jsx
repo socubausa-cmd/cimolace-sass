@@ -2044,6 +2044,17 @@ isLiriHostDevPreviewRoute;
               <LiriServicesPage />
             </ProtectedLiriRoute>
           } />
+          {/* Réglages · Intégrations & canaux DANS le portail LIRI (clé de rail « reglages »).
+              C'est le SEUL écran d'écriture des identifiants d'applications tierces du tenant —
+              notamment les clés OAuth des réseaux sociaux, que l'API lit exclusivement dans
+              `tenants.metadata.social_apps` (aucun repli sur l'environnement). La page existait
+              mais n'était routée nulle part : le publieur social était donc impossible à armer.
+              owner/admin STRICTEMENT : cet écran porte des SECRETS d'application. */}
+          <Route path="/liri/reglages" element={
+            <ProtectedLiriRoute allowedRoles={['owner', 'admin']} allowTenantRole>
+              <TenantAdminSettingsPage />
+            </ProtectedLiriRoute>
+          } />
           {/* CRM / Growth Engine (leads, campagnes, funnels, automation, analytics) DANS le
               portail LIRI (rail « CRM », créateur owner/admin). Remplace /admin/marketing. */}
           <Route path="/liri/crm" element={

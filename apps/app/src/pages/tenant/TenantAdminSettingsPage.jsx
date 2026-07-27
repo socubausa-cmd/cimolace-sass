@@ -1,15 +1,30 @@
 /**
- * TenantAdminSettingsPage — /t/:tenantSlug/admin/settings
- * Paramètres branding + infos de l'école.
+ * TenantAdminSettingsPage — RÉGLAGES · INTÉGRATIONS & CANAUX du tenant, monté à
+ * `/liri/reglages` DANS la coque du portail LIRI (même montage que /liri/compte,
+ * /liri/ecole, /liri/services : `<ProtectedLiriRoute>` en garde + `<LiriPortalShell>`
+ * posé PAR LA PAGE — jamais deux coques, jamais deux bandeaux).
+ *
+ * POURQUOI cette page existe : elle est le SEUL chemin d'écriture des identifiants
+ * d'applications tierces du tenant — Google, Stripe, PayPal, WhatsApp, e-mail, et
+ * surtout les RÉSEAUX SOCIAUX, dont les clés OAuth sont lues exclusivement dans
+ * `tenants.metadata.social_apps[platform]` (aucun repli sur l'environnement).
+ * Elle a longtemps été importée sans jamais être routée : le portail affichait un
+ * publieur social opérationnel côté API, sans aucun écran pour lui donner ses clés.
+ *
+ * ACCÈS : owner/admin uniquement — cet écran porte des SECRETS d'application.
+ *
+ * ORDRE DES SECTIONS : « Réseaux sociaux » en premier (c'est l'entrée manquante du
+ * parcours de publication) ; l'identité/marque reste en bas, /liri/compte › Marque
+ * couvrant déjà le même terrain.
+ *
  * Connecté à PATCH /tenants/current/branding et GET /tenants/current.
  */
 import { useEffect, useState } from 'react';
-import { useParams } from 'react-router-dom';
 import { Settings, Save, Loader2, Check, AlertCircle, Globe, Palette, School, KeyRound, CreditCard, MessageCircle, Mail, Share2, Store, FileText } from 'lucide-react';
 import { tenantsApi } from '@/lib/api-v2';
 import { useStudentDossierSetting } from '@/hooks/useStudentDossierSetting';
-import TenantAdminShell from '@/components/admin/TenantAdminShell';
-import { ADMIN_T as T } from '@/lib/tenantAdminTheme';
+import { LiriPortalShell } from '@/components/liri/LiriPortalShell';
+import { usePortalCrumb } from '@/components/liri/portalHeader';
 import TenantOAuthSettings from '@/components/admin/TenantOAuthSettings';
 import TenantStripeSettings from '@/components/admin/TenantStripeSettings';
 import TenantPayPalSettings from '@/components/admin/TenantPayPalSettings';
@@ -18,6 +33,49 @@ import TenantEmailSettings from '@/components/admin/TenantEmailSettings';
 import TenantSocialSettings from '@/components/admin/TenantSocialSettings';
 import BoutiqueManager from '@/components/admin/BoutiqueManager';
 
+/**
+ * Tokens de la page — CHARTE LIRI (fond #262624 · panneau #30302e · champ #2b2a27 ·
+ * encre #f5f4ee · corail = actions · or #d99a4e · lignes rgba(245,244,238,.09)).
+ * On garde EXACTEMENT les noms de clés de l'ancien `ADMIN_T` (navy + #D4AF37, bannis
+ * par la charte) : le corps de la page n'a pas à changer, seules les valeurs changent.
+ */
+const T = {
+  bg:          '#262624',
+  surface:     '#2b2a27',
+  surface2:    '#34332f',
+  surfaceCard: '#30302e',
+  surfaceSoft: 'rgba(245,244,238,0.04)',
+  border:      'rgba(245,244,238,0.09)',
+  borderMid:   'rgba(245,244,238,0.15)',
+  gold:        '#d99a4e',
+  goldDim:     'rgba(217,154,78,0.12)',
+  goldMid:     'rgba(217,154,78,0.30)',
+  coral:       '#d97757',
+  coralInk:    '#1f1e1c', // encre SOMBRE sur aplat corail (5,34:1)
+  success:     '#9fbf8f',
+  warning:     '#d99a4e',
+  danger:      '#e2553f',
+  t1: '#f5f4ee',
+  t2: '#b0ada3',
+  t3: '#82807a',
+  t4: 'rgba(245,244,238,0.16)',
+  mono: "'JetBrains Mono','Fira Code',ui-monospace,monospace",
+};
+
+/**
+ * Remise au chaud des composants ENFANTS (TenantOAuth/Stripe/PayPal/WhatsApp/Email,
+ * BoutiqueManager) : ils portent en dur `bg-[#0F1419]`, un navy banni par la charte.
+ * On ne les modifie pas (hors périmètre) — on neutralise la couleur dans le scope de
+ * cette page, comme le fait déjà `/liri/ecole` avec `.ecole-warm-scope`.
+ * Leur accent passe par `var(--school-accent, #D4AF37)` : la coque du portail règle
+ * déjà `--school-accent: #d97757`, l'or froid n'est donc jamais atteint ici.
+ */
+const REGLAGES_WARM_CSS = `
+.liri-reglages-scope [class*="bg-[#0F1419]"] { background-color: #2b2a27 !important; }
+.liri-reglages-scope input, .liri-reglages-scope textarea, .liri-reglages-scope select { color: #f5f4ee; }
+.liri-reglages-scope input::placeholder, .liri-reglages-scope textarea::placeholder { color: #82807a; }
+`;
+
 const inputStyle = {
   width: '100%', borderRadius: 8, border: `1px solid ${T.border}`,
   background: T.surface, color: T.t1, padding: '8px 12px', fontSize: 13, outline: 'none',
@@ -25,9 +83,11 @@ const inputStyle = {
 const onInputFocus = (e) => { e.target.style.borderColor = T.goldMid; };
 const onInputBlur = (e) => { e.target.style.borderColor = T.border; };
 
+// CORAIL = LES ACTIONS (charte LIRI), avec une encre SOMBRE : sur l'aplat corail le
+// blanc tombe à 2,83:1 alors que #1f1e1c tient 5,34:1.
 const btnPrimary = {
   display: 'inline-flex', alignItems: 'center', gap: 6, borderRadius: 8,
-  background: T.gold, color: '#000', padding: '8px 16px', fontSize: 13, fontWeight: 600,
+  background: T.coral, color: T.coralInk, padding: '8px 16px', fontSize: 13, fontWeight: 600,
   border: 'none', cursor: 'pointer',
 };
 const btnGhost = {
@@ -59,7 +119,9 @@ function Section({ title, icon: Icon, children }) {
 }
 
 export default function TenantAdminSettingsPage() {
-  const { tenantSlug } = useParams();
+  // Fil d'Ariane poussé dans l'EN-TÊTE du portail (règle d'organisation des menus :
+  // pas de barre de titre concurrente dans le corps de la page).
+  usePortalCrumb(['Réglages', 'Intégrations & canaux']);
   const [tenant, setTenant] = useState(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -98,8 +160,24 @@ export default function TenantAdminSettingsPage() {
       .finally(() => setLoading(false));
   }, []);
 
+  /**
+   * Sauvegarde de la MARQUE (PATCH /tenants/current/branding) — et RIEN d'autre.
+   *
+   * ⚠️ N'est plus déclenchée par un `onSubmit` de formulaire, mais par le `onClick`
+   * du bouton « Sauvegarder ». POURQUOI : cette page monte des composants qui rendent
+   * CHACUN leur propre `<form onSubmit>` avec un bouton `type="submit"`
+   * (TenantSocialSettings, TenantOAuthSettings, TenantStripeSettings,
+   * TenantPayPalSettings). Tant que le corps de page était lui-même un `<form>`, ces
+   * formulaires étaient IMBRIQUÉS : l'événement `submit` de l'enfant remonte l'arbre
+   * React jusqu'au parent (le `e.preventDefault()` de l'enfant bloque la soumission
+   * NATIVE, pas la propagation), et enregistrer une clé TikTok déclenchait EN PLUS un
+   * PATCH branding avec l'état chargé au montage — écrasant toute modification de
+   * marque faite entre-temps sur /liri/compte, et affichant une erreur de branding
+   * alors que la clé, elle, était bien passée. Le conteneur est donc un `<div>`.
+   * `e` peut être absent : on ne suppose pas d'événement.
+   */
   async function handleSave(e) {
-    e.preventDefault();
+    e?.preventDefault?.();
     setSaving(true);
     setSaved(false);
     setError(null);
@@ -126,16 +204,29 @@ export default function TenantAdminSettingsPage() {
     }
   }
 
+  // Clé de rail `integrations`, PAS `reglages` : `reglages` est déjà revendiquée par
+  // /liri/compte (LiriAccountPage) et par LiriUpgradeWall. Réutiliser la même clé
+  // allumerait la même entrée pour deux surfaces différentes. `integrations` était
+  // déjà déclarée dans le type RailKey, orpheline — elle trouve ici son écran.
   return (
-    <TenantAdminShell>
+    <LiriPortalShell active="integrations" rail>
+      <style>{REGLAGES_WARM_CSS}</style>
+      <div
+        className="lp-scroll liri-reglages-scope relative min-h-0 overflow-y-auto"
+        style={{ background: T.bg, color: T.t1 }}
+      >
+        <div style={{ margin: '0 auto', width: '100%', maxWidth: 880, padding: '24px 16px 48px' }}>
       {/* Header */}
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 24 }}>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 24, flexWrap: 'wrap', gap: 12 }}>
         <div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-            <Settings style={{ width: 20, height: 20, color: T.gold }} />
-            <h1 style={{ fontSize: 19, fontWeight: 700, color: T.t1, margin: 0 }}>Paramètres de l'école</h1>
+            <Settings style={{ width: 20, height: 20, color: T.coral }} />
+            <h1 style={{ fontSize: 19, fontWeight: 700, color: T.t1, margin: 0 }}>Réglages · Intégrations & canaux</h1>
           </div>
-          <p style={{ marginTop: 2, fontSize: 13, color: T.t2 }}>Branding, identité et configuration</p>
+          <p style={{ marginTop: 2, fontSize: 13, color: T.t2 }}>
+            Les services extérieurs que ton organisation branche à son portail : réseaux sociaux,
+            connexion Google, encaissement, messages, boutique.
+          </p>
         </div>
         {tenant && (
           <span style={{
@@ -155,15 +246,30 @@ export default function TenantAdminSettingsPage() {
       )}
 
       {!loading && (
-        <form onSubmit={handleSave} style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
+        /* ⛔ PAS de <form> ici : voir handleSave. Un formulaire à cet endroit
+           englobait les formulaires des sections (réseaux sociaux, Google, Stripe,
+           PayPal) et faisait partir un PATCH branding parasite à chaque
+           enregistrement de clés. La sauvegarde de la marque part du bouton. */
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
           {error && (
             <div style={{
               display: 'flex', alignItems: 'center', gap: 8, borderRadius: 10,
-              background: 'rgba(239,68,68,0.12)', border: `1px solid rgba(239,68,68,0.28)`,
+              background: 'rgba(226,85,63,0.10)', border: `1px solid rgba(226,85,63,0.30)`,
               padding: 16, fontSize: 13, color: T.danger,
             }}>
               <AlertCircle style={{ width: 16, height: 16, flexShrink: 0 }} />
               {error}
+            </div>
+          )}
+
+          {/* RÉSEAUX SOCIAUX EN PREMIER : c'est le maillon qui manquait au parcours de
+              publication (l'API sait publier, mais personne ne pouvait lui donner de clés).
+              Ancre `#reseaux-sociaux` pour un lien direct depuis le rail ou une notice. */}
+          {tenant && (
+            <div id="reseaux-sociaux" style={{ scrollMarginTop: 24 }}>
+              <Section title="Réseaux sociaux — publication des shorts" icon={Share2}>
+                <TenantSocialSettings />
+              </Section>
             </div>
           )}
 
@@ -337,13 +443,6 @@ export default function TenantAdminSettingsPage() {
             </Section>
           )}
 
-          {/* Réseaux sociaux — auto-promo des lives (config app + connexion OAuth) */}
-          {tenant && (
-            <Section title="Réseaux sociaux — auto-promo des lives" icon={Share2}>
-              <TenantSocialSettings />
-            </Section>
-          )}
-
           {/* Boutique en ligne — moteur mbolo (produits + codes promo) */}
           {tenant && (
             <Section title="Boutique en ligne" icon={Store}>
@@ -368,8 +467,8 @@ export default function TenantAdminSettingsPage() {
                   <span style={{
                     display: 'inline-flex', alignItems: 'center', borderRadius: 999, padding: '2px 8px', fontSize: 11, fontWeight: 500,
                     ...(tenant.status === 'active'
-                      ? { background: 'rgba(34,197,94,0.14)', color: T.success }
-                      : { background: 'rgba(245,158,11,0.14)', color: T.warning }),
+                      ? { background: 'rgba(159,191,143,0.15)', color: T.success }
+                      : { background: 'rgba(217,154,78,0.15)', color: T.warning }),
                   }}>
                     {tenant.status ?? 'active'}
                   </span>
@@ -394,13 +493,18 @@ export default function TenantAdminSettingsPage() {
             <button type="button" style={btnGhost} onClick={() => window.history.back()}>
               Annuler
             </button>
-            <button type="submit" style={{ ...btnPrimary, opacity: saving ? 0.5 : 1 }} disabled={saving}>
+            {/* type="button" + onClick : le conteneur n'est plus un <form>, un
+                type="submit" ne déclencherait plus rien (et, dans l'ancien montage,
+                aurait continué d'attraper les submit des sections enfants). */}
+            <button type="button" onClick={handleSave} style={{ ...btnPrimary, opacity: saving ? 0.5 : 1 }} disabled={saving}>
               {saving ? <Loader2 className="animate-spin" style={{ width: 16, height: 16 }} /> : <Save style={{ width: 16, height: 16 }} />}
               Sauvegarder
             </button>
           </div>
-        </form>
+        </div>
       )}
-    </TenantAdminShell>
+        </div>
+      </div>
+    </LiriPortalShell>
   );
 }

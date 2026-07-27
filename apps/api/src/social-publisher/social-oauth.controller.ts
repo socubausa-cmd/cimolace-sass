@@ -88,15 +88,21 @@ export class SocialOAuthController {
   ) {
     const front =
       process.env.APP_PUBLIC_URL || 'https://prorascience.org';
+    // On revient sur L'ÉCRAN QUI SAIT LIRE LE RÉSULTAT. Ces paramètres étaient
+    // jusqu'ici renvoyés sur la RACINE du front, qui ne les traite pas : après
+    // avoir autorisé son compte chez la plateforme, l'utilisateur atterrissait
+    // sur l'accueil sans la moindre confirmation ni message d'erreur, et devait
+    // deviner si la connexion avait abouti.
+    const retour = `${front}/liri/reglages`;
     if (!this.oauth.isPlatform(platform)) {
-      return res.redirect(`${front}/?social_error=plateforme_inconnue`);
+      return res.redirect(`${retour}?social_error=plateforme_inconnue`);
     }
     try {
       await this.oauth.handleCallback(platform, code, state);
-      return res.redirect(`${front}/?social_connected=${platform}`);
+      return res.redirect(`${retour}?social_connected=${platform}`);
     } catch (e) {
       return res.redirect(
-        `${front}/?social_error=${encodeURIComponent((e as Error).message)}`,
+        `${retour}?social_error=${encodeURIComponent((e as Error).message)}`,
       );
     }
   }

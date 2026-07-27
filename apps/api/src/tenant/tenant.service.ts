@@ -29,6 +29,36 @@ export function isPlatformOrigin(originOrReferer: string | undefined): boolean {
   return /(^|\/\/|\.)cimolace\.space([/:]|$)/.test(s) || /localhost|127\.0\.0\.1/.test(s);
 }
 
+/**
+ * ⛔ FUITE DE SECRET FERMÉE À LA SOURCE (P0).
+ *
+ * POURQUOI ce filtre existe : `GET /tenants/current` renvoie `req.tenant` TEL QUEL
+ * (tenant.controller.ts) et n'est gardé que par `JwtAuthGuard + TenantGuard` — aucun
+ * `@Roles`. TOUT membre actif du tenant, élève compris, lit donc cette réponse. Or
+ * `resolveTenant()` faisait `select("*")` puis `{ ...tenant }` : la colonne `metadata`
+ * partait entière. Et `SocialOAuthService.saveConfig()` écrit EN CLAIR dans cette
+ * colonne `metadata.social_apps[platform].client_secret`. Conséquence : à la seconde
+ * où un owner colle son Client Secret TikTok/Meta/LinkedIn dans /liri/reglages,
+ * n'importe quel élève le lit dans l'onglet Réseau de son navigateur (sa Vidéothèque
+ * appelle déjà `tenantsApi.current()`). La cloison owner/admin posée sur la ROUTE et
+ * sur `POST oauth/:platform/config` était contournée par la simple LECTURE.
+ *
+ * POURQUOI on ne supprime PAS `metadata` en entier : `metadata.site` (description,
+ * slogan, vision, site web de la vitrine) alimente le formulaire de marque
+ * (TenantAdminSettingsPage lit `t.metadata.site`), et `metadata.hosting_mode` sert
+ * la cloison hébergé/embarqué. On retire donc CHIRURGICALEMENT la seule branche qui
+ * porte des identifiants d'application tierce.
+ *
+ * ⚠️ Ceci est un pansement de surface : le bon patron est celui de Stripe/PayPal
+ * (`tenant_payment_providers`, table dédiée + chiffrée, jamais exposée en lecture,
+ * cf. `hasSecret`). Sortir `social_apps` de `tenants.metadata` reste à faire.
+ */
+export function sanitizeTenantMetadata(metadata: unknown): unknown {
+  if (!metadata || typeof metadata !== "object" || Array.isArray(metadata)) return metadata;
+  const { social_apps: _secretApps, ...rest } = metadata as Record<string, unknown>;
+  return rest;
+}
+
 @Injectable()
 export class TenantService {
   constructor(
@@ -71,6 +101,10 @@ export class TenantService {
         ...tenant,
         role,
         userRole: role,
+        // Le spread ci-dessus recopie la ligne `tenants` ENTIÈRE : on écrase
+        // `metadata` par sa version sans identifiants d'app (cf. commentaire de
+        // `sanitizeTenantMetadata`). Doit rester APRÈS le spread.
+        metadata: sanitizeTenantMetadata((tenant as any).metadata),
         data_region: (tenant as any).data_region ?? "global",
       };
     }
@@ -87,6 +121,8 @@ export class TenantService {
       ...tenant,
       role,
       userRole: role,
+      // Même filtre que la branche par slug : ce chemin sert AUSSI `GET /tenants/current`.
+      metadata: sanitizeTenantMetadata(tenant?.metadata),
       data_region: tenant?.data_region ?? "global",
     };
   }
@@ -125,6 +161,9 @@ export class TenantService {
       ...tenant,
       role,
       userRole: role,
+      // Chemin @AllowNonMember : encore PLUS exposé (l'appelant n'est même pas
+      // membre). Le filtre y est donc obligatoire, pas optionnel.
+      metadata: sanitizeTenantMetadata((tenant as any).metadata),
       data_region: (tenant as any).data_region ?? "global",
     };
   }

@@ -18,6 +18,7 @@
 // Map chemin de route → importer du chunk. Sert à la fois à l'idle (toutes les valeurs) et au
 // survol (valeur d'un chemin précis). Un chemin absent = no-op (il se chargera au clic).
 const ROUTE_IMPORTERS = {
+  '/liri/reglages': () => import('@/pages/tenant/TenantAdminSettingsPage'),
   '/liri/formations': () => import('@/pages/school/student-school-life/StudentFormationsOsPage'),
   '/liri/videotheque': () => import('@/pages/school/student-school-life/VideothequePage'),
   '/liri/semaine': () => import('@/pages/school/student-school-life/StudentWeeklySchedulePage'),

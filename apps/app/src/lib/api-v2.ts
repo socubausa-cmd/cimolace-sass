@@ -92,6 +92,32 @@ export interface SocialPlatformStatus {
   connected: boolean;
 }
 
+/**
+ * Token social RÉELLEMENT stocké (table social_tokens). `page_id` porte l'identifiant
+ * SANS LEQUEL la publication échoue côté serveur : Page Facebook pour Meta, URN
+ * `urn:li:person:…` pour LinkedIn. Le secret n'est jamais renvoyé.
+ */
+export interface SocialToken {
+  platform: string;
+  page_id: string | null;
+  page_name: string | null;
+  created_at?: string;
+}
+
+/**
+ * Clip vidéo publiable (short_clips, statut `ready`). ⚠️ `storage_key` est la
+ * CONDITION DURE de toute publication : le publieur présigne cette clé R2 puis
+ * l'envoie à la plateforme (PULL_FROM_URL / upload d'octets). Sans elle, aucune
+ * diffusion n'est possible — une publicité « texte + visuel » n'a pas de chemin.
+ */
+export interface SocialShortClip {
+  id: string;
+  title?: string | null;
+  storage_key?: string | null;
+  duration_sec?: number | null;
+  thumbnail_url?: string | null;
+}
+
 export const socialApi = {
   status: (): Promise<SocialPlatformStatus[]> =>
     apiV2.get('/social-publisher/oauth/status').then(loose),
@@ -101,6 +127,35 @@ export const socialApi = {
       .then(loose),
   authorizeUrl: (platform: string): Promise<{ url: string }> =>
     apiV2.get(`/social-publisher/oauth/${platform}/start`).then(loose),
+
+  // ── Publieur (social_posts / short_clips) ─────────────────────────────────
+  // ⚠️ Toutes ces réponses passent par le ResponseInterceptor NestJS : le corps
+  // est TOUJOURS { data: … }. `loose` déballe une seule couche et tolère l'absence
+  // d'enveloppe — c'est le piège {data:{data}} récurrent du projet.
+
+  /** Comptes connectés, avec page_id/page_name (Page Meta, URN LinkedIn). */
+  tokens: (): Promise<SocialToken[]> =>
+    apiV2.get('/social-publisher/tokens').then(loose).then((r: any) => (Array.isArray(r) ? r : [])),
+
+  /** Clips prêts à publier. Seuls ceux qui portent un `storage_key` sont diffusables. */
+  shorts: (): Promise<SocialShortClip[]> =>
+    apiV2.get('/social-publisher/shorts').then(loose).then((r: any) => (Array.isArray(r) ? r : [])),
+
+  /** Brouillon de publication : exige un short_clip_id (UUID) — pas de chemin « texte seul ». */
+  createDraft: (body: {
+    short_clip_id: string;
+    platform: 'tiktok' | 'facebook' | 'instagram' | 'linkedin' | 'youtube_shorts';
+    title?: string;
+    description?: string;
+    hashtags?: string[];
+  }): Promise<{ id: string }> => apiV2.post('/social-publisher/draft', body).then(loose),
+
+  /** Envoi RÉEL vers le réseau. Irréversible : à n'appeler que sur action explicite. */
+  publish: (
+    postId: string,
+    platform: 'tiktok' | 'facebook' | 'instagram' | 'linkedin',
+  ): Promise<{ success: boolean; message?: string }> =>
+    apiV2.post(`/social-publisher/publish/${postId}/${platform}`).then(loose),
 };
 
 // ── Lives ───────────────────────────────────────────────────────────────────

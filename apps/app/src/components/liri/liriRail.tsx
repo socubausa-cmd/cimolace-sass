@@ -2,7 +2,7 @@ import React from 'react';
 import {
   House, Video, MessagesSquare, MessageCircle, WandSparkles, Library, GraduationCap, Sparkles,
   CalendarDays, BookOpen, Film, School, Calendar, FileText, Award, AlertTriangle, FolderOpen, Tag, Files,
-  SquarePen, CreditCard, Flame, ShoppingBag, Megaphone, Package, ReceiptText, Link2, Landmark,
+  SquarePen, CreditCard, Flame, ShoppingBag, Megaphone, Package, ReceiptText, Link2, Landmark, Plug,
 } from 'lucide-react';
 import { prefetchLiriPath } from '@/lib/prefetchLiriRoutes';
 
@@ -53,6 +53,12 @@ export const ENGINES: EngineDef[] = [
       { section: 'Espace', items: [
         { key: 'temple', label: 'Temple', icon: Flame, to: '/liri/temple' },
         { key: 'forfaits', label: 'Forfaits', icon: CreditCard, to: '/liri/forfaits' },
+        // Intégrations & canaux : clés OAuth des réseaux sociaux, paiements, e-mail.
+        // ⚠️ CRÉATEUR SEUL — cet écran porte des secrets d'application.
+        // ⚠️ La clé est `integrations`, PAS `reglages` : cette dernière est déjà
+        // prise par /liri/compte (LiriPortalShell.tsx, LiriAccountPage) et
+        // réutiliser le même nom allumerait deux surfaces distinctes à la fois.
+        { key: 'integrations', label: 'Intégrations', icon: Plug, to: '/liri/reglages', creator: true },
       ] },
     ],
   },
