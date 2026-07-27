@@ -60,6 +60,62 @@ export class CourseJobService {
     return { job: data, reused: false };
   }
 
+  /**
+   * Met en file une source QUELCONQUE (Atelier unifié). `request()` reste
+   * réservé aux replays pour ne rien casser côté Vidéothèque.
+   *
+   * Idempotent sur deux plans : un job déjà en vol pour cette source est
+   * renvoyé tel quel, et une source déjà transformée en cours n'est pas
+   * refaite (sauf `force`) — sans quoi un batch relancé repayerait tout.
+   */
+  async requestAny(
+    tenantId: string,
+    userId: string,
+    sourceType: string,
+    sourceId: string,
+    opts: { force?: boolean } = {},
+  ) {
+    if (!sourceId) throw new BadRequestException('sourceId manquant');
+
+    const { data: running } = await this.db
+      .from('course_generation_jobs')
+      .select('*')
+      .eq('tenant_id', tenantId)
+      .eq('source_type', sourceType)
+      .eq('source_id', sourceId)
+      .in('status', ['pending', 'extracting', 'planning', 'writing', 'publishing'])
+      .maybeSingle();
+    if (running) return { job: running, reused: true };
+
+    if (!opts.force) {
+      const { data: done } = await this.db
+        .from('course_generation_jobs')
+        .select('*')
+        .eq('tenant_id', tenantId)
+        .eq('source_type', sourceType)
+        .eq('source_id', sourceId)
+        .eq('status', 'done')
+        .maybeSingle();
+      if (done) return { job: done, reused: true, alreadyDone: true };
+    }
+
+    const { data, error } = await this.db
+      .from('course_generation_jobs')
+      .insert({
+        tenant_id: tenantId,
+        source_type: sourceType,
+        source_id: sourceId,
+        // La colonne reste alimentée pour les replays (compatibilité + FK).
+        video_id: sourceType === 'replay' ? sourceId : null,
+        requested_by: userId,
+        status: 'pending',
+      })
+      .select('*')
+      .single();
+    if (error) throw new BadRequestException(error.message);
+    return { job: data, reused: false };
+  }
+
   /** État d'une demande (le front interroge pour suivre l'avancement). */
   async get(tenantId: string, jobId: string) {
     const { data } = await this.db

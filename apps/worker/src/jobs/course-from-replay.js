@@ -130,10 +130,34 @@ function lessonSlides(L) {
 const setJob = (id, patch) => supabase.from('course_generation_jobs').update({ ...patch, updated_at: new Date().toISOString() }).eq('id', id);
 
 // ── Traitement d'un job ─────────────────────────────────────────────────────
+/**
+ * Charge la source d'un job, quel que soit son type.
+ * Le worker ne lisait que `published_videos` : les 622 vidéos TikTok restantes
+ * étaient donc structurellement hors d'atteinte, même une fois transcrites.
+ */
+async function loadJobSource(job) {
+  const type = job.source_type || 'replay';
+  if (type === 'tiktok') {
+    const { data } = await supabase
+      .from('precepteur_sources')
+      .select('id,title,transcript_text,duration_sec,status')
+      .eq('id', job.source_id)
+      .single();
+    if (!data?.transcript_text) throw new Error(`Vidéo TikTok non transcrite (statut ${data?.status || 'inconnu'}).`);
+    return { id: data.id, title: data.title || 'Vidéo', transcript_text: data.transcript_text, transcript_cues: [], duration_sec: data.duration_sec };
+  }
+  const { data } = await supabase
+    .from('published_videos')
+    .select('id,title,transcript_text,transcript_cues,duration_sec')
+    .eq('id', job.video_id || job.source_id)
+    .single();
+  if (!data?.transcript_text) throw new Error('Ce replay n’a pas de transcription exploitable.');
+  return data;
+}
+
 async function processJob(job) {
   const t0 = Date.now();
-  const { data: video } = await supabase.from('published_videos').select('id,title,transcript_text,transcript_cues,duration_sec').eq('id', job.video_id).single();
-  if (!video?.transcript_text) throw new Error('Ce replay n’a pas de transcription exploitable.');
+  const video = await loadJobSource(job);
 
   // 1. EXTRACTION
   await setJob(job.id, { status: 'extracting', progress: 'Extraction du contenu enseigné…' });
@@ -281,18 +305,49 @@ async function processJob(job) {
   return true;
 }
 
+/** Traitements simultanés. Volontairement BAS par défaut : chaque job tient
+ *  ~13 min et consomme des jetons ; on ne veut pas d'emballement silencieux. */
+const CONCURRENCY = Math.max(1, Math.min(6, Number(process.env.COURSE_WORKER_CONCURRENCY || 2)));
+
+/**
+ * PREND un job de façon ATOMIQUE. Sans ce verrou, deux passes concurrentes
+ * peuvent lire la même ligne `pending` et la traiter DEUX fois — soit une
+ * facture IA payée en double pour un seul cours. Le `.eq('status','pending')`
+ * dans le UPDATE fait office de compare-and-swap : le perdant reçoit 0 ligne.
+ */
+async function claimJob(job) {
+  const { data } = await supabase
+    .from('course_generation_jobs')
+    .update({ status: 'extracting', progress: 'Prise en charge…', updated_at: new Date().toISOString() })
+    .eq('id', job.id)
+    .eq('status', 'pending')
+    .select('id');
+  return Array.isArray(data) && data.length === 1;
+}
+
 export async function pollCourseFromReplay() {
   if (!DEEPSEEK_KEY || !process.env.SUPABASE_SERVICE_ROLE_KEY) return 0;
-  const { data: jobs } = await supabase.from('course_generation_jobs').select('*').eq('status', 'pending').order('created_at').limit(1);
+  const { data: jobs } = await supabase
+    .from('course_generation_jobs')
+    .select('*')
+    .eq('status', 'pending')
+    .order('created_at')
+    .limit(CONCURRENCY);
   if (!jobs?.length) return 0;
-  const job = jobs[0];
-  try {
-    await processJob(job);
-    return 1;
-  } catch (e) {
-    const msg = String(e?.message || e).slice(0, 400);
-    console.error('[course-from-replay] ❌', msg);
-    await setJob(job.id, { status: 'failed', error_message: msg, progress: null });
-    return 0;
-  }
+
+  const results = await Promise.all(
+    jobs.map(async (job) => {
+      if (!(await claimJob(job))) return 0; // un autre l'a pris — on passe
+      try {
+        await processJob(job);
+        return 1;
+      } catch (e) {
+        const msg = String(e?.message || e).slice(0, 400);
+        console.error(`[course-from-replay] ❌ ${job.source_type || 'replay'}/${job.source_id || job.video_id} — ${msg}`);
+        await setJob(job.id, { status: 'failed', error_message: msg, progress: null });
+        return 0;
+      }
+    }),
+  );
+  return results.reduce((a, b) => a + b, 0);
 }

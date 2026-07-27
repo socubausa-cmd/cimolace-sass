@@ -71,6 +71,27 @@ export class MasterclassFactoryController {
     return this.renderPivot.renderPdf(t.id, (d?.sourceType ?? 'replay') as any, String(d?.sourceId ?? ''));
   }
 
+  /**
+   * Met une source QUELCONQUE en file de construction (replay ou TikTok).
+   * Idempotent : source déjà en cours ou déjà transformée → on renvoie le job
+   * existant au lieu de repayer.
+   */
+  @Post('atelier/construire')
+  @Roles('owner', 'admin', 'teacher')
+  atelierConstruire(
+    @Body() d: { sourceType?: string; sourceId?: string; force?: boolean },
+    @CurrentTenant() t: TenantContext,
+    @Req() r: Request,
+  ) {
+    return this.courseJobs.requestAny(
+      t.id,
+      (r as any).user?.id,
+      d?.sourceType ?? 'replay',
+      String(d?.sourceId ?? ''),
+      { force: !!d?.force },
+    );
+  }
+
   @Post('atelier/comprendre')
   @Roles('owner', 'admin', 'teacher')
   comprendre(
