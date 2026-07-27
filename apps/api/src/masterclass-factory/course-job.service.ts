@@ -41,9 +41,19 @@ export class CourseJobService {
       .maybeSingle();
     if (running) return { job: running, reused: true };
 
+    // `source_type`/`source_id` sont renseignés dès la création : la file est
+    // désormais multi-sources (Atelier unifié) et le worker s'en sert pour
+    // retrouver un pivot déjà extrait — auquel cas il NE REFAIT PAS le plan.
     const { data, error } = await this.db
       .from('course_generation_jobs')
-      .insert({ tenant_id: tenantId, video_id: videoId, requested_by: userId, status: 'pending' })
+      .insert({
+        tenant_id: tenantId,
+        video_id: videoId,
+        source_type: 'replay',
+        source_id: videoId,
+        requested_by: userId,
+        status: 'pending',
+      })
       .select('*')
       .single();
     if (error) throw new BadRequestException(error.message);

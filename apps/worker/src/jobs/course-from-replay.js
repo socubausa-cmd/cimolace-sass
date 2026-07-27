@@ -152,9 +152,37 @@ async function processJob(job) {
   if (doc.length > MAX_DOC) doc = doc.slice(0, MAX_DOC - 200) + '\n\n[…]';
   const srcGrams = grams(doc);
 
-  // 2. PLAN
+  // 2. PLAN — RÉUTILISE le pivot de l'Atelier s'il existe.
+  //
+  // L'Atelier unifié (docs/ATELIER_COURS_UNIFIE_SPEC.md) extrait le FOND d'une
+  // source UNE fois et le range dans `course_pivots`. Si ce travail a déjà été
+  // payé, on ne le refait pas : on repart de là. Le reste du job (rédaction des
+  // leçons, rendu, insertion) est INCHANGÉ → la sortie reste identique.
   await setJob(job.id, { status: 'planning', progress: 'Conception du plan pédagogique…' });
-  const plan = await llm(SYS_PLAN, `DOCUMENT :\n\n${doc}`, { maxTokens: 14000 });
+  let plan = null;
+  const { data: pivot } = await supabase
+    .from('course_pivots')
+    .select('payload')
+    .eq('tenant_id', job.tenant_id)
+    .eq('source_type', job.source_type || 'replay')
+    .eq('source_id', job.source_id || job.video_id)
+    .eq('kind', 'comprehension')
+    .is('parent_id', null)
+    .maybeSingle();
+  if (pivot?.payload?.notions?.length) {
+    // Le pivot porte les mêmes champs que SYS_PLAN (titre, promesse, notions,
+    // glossaire) : il est directement consommable par l'étape suivante.
+    plan = {
+      titre: pivot.payload.titre,
+      promesse: pivot.payload.promesse,
+      notions: pivot.payload.notions,
+      glossaire: pivot.payload.glossaire || [],
+    };
+    console.log(`[course-from-replay] ♻️  pivot réutilisé — ${plan.notions.length} notions, plan NON regénéré`);
+    await setJob(job.id, { progress: `Plan repris de l'Atelier (${plan.notions.length} notions)` });
+  } else {
+    plan = await llm(SYS_PLAN, `DOCUMENT :\n\n${doc}`, { maxTokens: 14000 });
+  }
   if (!plan?.notions?.length) throw new Error('Plan pédagogique vide.');
 
   // 3. LEÇONS (avec contrôle qualité)
