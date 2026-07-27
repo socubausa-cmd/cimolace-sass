@@ -66,10 +66,13 @@ export const ENGINES: EngineDef[] = [
     // moins quotidienne des six — elle reste dans la liste du Profil.
     items: [
       ACCUEIL,
-      { route: 'semaine', label: 'Ma semaine', icon: 'calendar', student: true },
+      // Ouvertes aux créateurs AUSSI : un propriétaire doit pouvoir voir ce que
+      // vivent ses élèves. Les écrans restent scopés à l'utilisateur courant —
+      // sans parcours assigné, ils affichent leur état vide.
+      { route: 'semaine', label: 'Ma semaine', icon: 'calendar' },
       { route: 'formations', label: 'Mes cours', icon: 'book' },
       { route: 'videotheque', label: 'Vidéothèque', icon: 'film' },
-      { route: 'vie-scolaire', label: 'Vie scolaire', icon: 'clipboard', student: true },
+      { route: 'vie-scolaire', label: 'Vie scolaire', icon: 'clipboard' },
     ],
   },
   {

@@ -69,10 +69,10 @@ export const ENGINES: EngineDef[] = [
         { key: 'ecole', label: 'École', icon: GraduationCap, to: '/liri/ecole', creator: true },
         { key: 'formations', label: 'Mes cours', icon: BookOpen, to: '/liri/formations', school: true },
         { key: 'videotheque', label: 'Vidéothèque', icon: Film, to: '/liri/videotheque', schoolAll: true },
-        { key: 'semaine', label: 'Ma semaine', icon: CalendarDays, to: '/liri/semaine', school: true },
+        { key: 'semaine', label: 'Ma semaine', icon: CalendarDays, to: '/liri/semaine', schoolAll: true },
       ] },
       { section: 'Scolarité', items: [
-        { key: 'vie-scolaire', label: 'Vie scolaire', icon: School, to: '/liri/vie-scolaire', school: true },
+        { key: 'vie-scolaire', label: 'Vie scolaire', icon: School, to: '/liri/vie-scolaire', schoolAll: true },
         { key: 'agenda', label: 'Agenda', icon: Calendar, to: '/liri/agenda', school: true },
         { key: 'notes', label: 'Notes', icon: FileText, to: '/liri/notes', school: true },
         { key: 'evaluations', label: 'Évals', icon: Award, to: '/liri/evaluations', school: true },
