@@ -42,8 +42,9 @@ async function whisperChunk(file) {
   if (process.env.OPENAI_API_KEY) providers.push({ name: 'OpenAI', url: 'https://api.openai.com/v1/audio/transcriptions', key: process.env.OPENAI_API_KEY, model: 'whisper-1' });
   const buf = await fsp.readFile(file);
   let lastErr = 'aucun fournisseur';
+  let throttled = false;
   for (const p of providers) {
-    for (let a = 0; a < 6; a++) {
+    for (let a = 0; a < 3; a++) {
       try {
         const form = new FormData();
         form.append('file', new Blob([buf], { type: 'audio/ogg' }), 'a.ogg');
@@ -52,19 +53,17 @@ async function whisperChunk(file) {
         let res;
         try { res = await fetch(p.url, { method: 'POST', headers: { Authorization: `Bearer ${p.key}` }, body: form, signal: ctl.signal }); }
         finally { clearTimeout(to); }
-        // 429 (débit) ou 5xx (erreur transitoire, ex. Groq 500) → RÉESSAYER avec backoff
-        if (res.status === 429 || res.status >= 500) {
-          const ra = Number(res.headers.get('retry-after')) || 0;
-          lastErr = `${p.name} ${res.status}`; await sleep(Math.max((ra + 1) * 1000, 3000 * (a + 1))); continue;
-        }
-        if (!res.ok) { lastErr = `${p.name} ${res.status} ${(await res.text()).slice(0, 100)}`; break; } // 4xx client → abandonner ce fournisseur
+        // 5xx transitoire → réessayer (backoff court, plafonné 12s) ; 429 = quota → fail-fast
+        if (res.status >= 500) { lastErr = `${p.name} ${res.status}`; await sleep(Math.min(3000 * (a + 1), 12_000)); continue; }
+        if (res.status === 429) { lastErr = `${p.name} 429`; throttled = true; break; } // quota épuisé → passer/laisser en attente
+        if (!res.ok) { lastErr = `${p.name} ${res.status} ${(await res.text()).slice(0, 100)}`; break; } // 4xx → abandonner ce fournisseur
         const d = await res.json();
         return (d.segments || []).map((s) => ({ start: Number(s.start) || 0, text: String(s.text || '').trim() })).filter((s) => s.text);
-      } catch (e) { lastErr = `${p.name}: ${e.message}`; await sleep(3000 * (a + 1)); } // réseau/timeout → réessayer
+      } catch (e) { lastErr = `${p.name}: ${e.message}`; await sleep(Math.min(3000 * (a + 1), 12_000)); } // réseau/timeout → réessayer
     }
     console.log(`[zoom-transcribe] fournisseur ${p.name} indisponible → ${lastErr}`);
   }
-  throw new Error(lastErr);
+  const err = new Error(lastErr); if (throttled) err.throttled = true; throw err;
 }
 
 // segments timés → cues {t,text} fusionnées (paragraphes, comme les 55 existantes)
@@ -90,9 +89,12 @@ export async function pollZoomTranscribe() {
     .not('storage_key', 'is', null)
     .is('transcript_text', null)
     .like('storage_key', '%local-%')
-    .limit(1);
-  const v = (rows || [])[0];
-  if (!v) return 0;
+    .limit(6);
+  // rotation : une vidéo AU HASARD parmi les restantes (évite de rester coincé sur la
+  // même si elle est throttlée, laisse les autres passer quand le quota se libère).
+  const pending = rows || [];
+  if (!pending.length) return 0;
+  const v = pending[Math.floor(Math.random() * pending.length)];
 
   const base = join(tmpdir(), `zt_${v.id}`);
   const mp4 = `${base}.mp4`, prefix = `${base}_a`;
@@ -117,9 +119,11 @@ export async function pollZoomTranscribe() {
     log(`✅ ${v.title} — ${allCues.length} cues`);
     return 1;
   } catch (e) {
-    log(`❌ ${v.title}: ${String(e.message).slice(0, 200)}`);
-    // marque un transcript vide sentinelle pour ne pas boucler indéfiniment sur la même vidéo
-    await supabase.from('published_videos').update({ transcript_text: '' }).eq('id', v.id);
+    log(`❌ ${v.title}: ${String(e.message).slice(0, 200)}${e.throttled ? ' (quota — retenté plus tard)' : ''}`);
+    // Throttle (429) = quota temporaire → LAISSER en attente (null) pour re-tenter quand
+    // le quota se libère. Autre erreur (4xx/ffmpeg/corrompu) = sentinelle '' pour ne pas
+    // boucler indéfiniment sur une vidéo cassée.
+    if (!e.throttled) await supabase.from('published_videos').update({ transcript_text: '' }).eq('id', v.id);
     return 0;
   } finally {
     try { unlinkSync(mp4); } catch {}
