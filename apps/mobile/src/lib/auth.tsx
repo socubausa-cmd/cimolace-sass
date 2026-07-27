@@ -12,6 +12,25 @@ interface AuthValue {
   signOut: () => Promise<void>;
 }
 
+/**
+ * Supabase renvoie ses erreurs d'authentification en ANGLAIS. Les laisser passer
+ * telles quelles affichait « Invalid login credentials » au milieu d'une app
+ * entièrement française — constaté sur émulateur.
+ *
+ * On traduit les cas courants et on garde le message d'origine en dernier
+ * recours : mieux vaut un texte anglais qu'un « une erreur est survenue » qui
+ * n'apprend rien à l'utilisateur.
+ */
+export function messageAuth(raw?: string): string {
+  const m = String(raw ?? '').toLowerCase();
+  if (m.includes('invalid login credentials')) return 'E-mail ou mot de passe incorrect.';
+  if (m.includes('email not confirmed')) return "Cette adresse n'est pas encore confirmée. Vérifie ta boîte mail.";
+  if (m.includes('too many requests') || m.includes('rate limit')) return 'Trop de tentatives. Réessaie dans quelques minutes.';
+  if (m.includes('user not found')) return 'Aucun compte pour cette adresse.';
+  if (m.includes('network') || m.includes('fetch')) return 'Connexion impossible. Vérifie ton réseau.';
+  return raw || 'Connexion impossible.';
+}
+
 const AuthCtx = createContext<AuthValue | null>(null);
 
 export function useAuth(): AuthValue {
@@ -65,7 +84,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       email: session?.user?.email ?? null,
       signIn: async (email, password) => {
         const { error } = await supabase.auth.signInWithPassword({ email: email.trim(), password });
-        return error ? { error: error.message } : {};
+        return error ? { error: messageAuth(error.message) } : {};
       },
       signOut: async () => {
         await supabase.auth.signOut();

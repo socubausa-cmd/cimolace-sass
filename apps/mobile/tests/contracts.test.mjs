@@ -150,3 +150,12 @@ test('Ma semaine lit la chaîne LEGACY des parcours, pas celle des formations', 
   // Le parcours vient du profil, pas d'un identifiant en dur.
   assert.match(code, /metadata\?\.school_path_id/);
 });
+
+test('les erreurs de connexion sont en français', async () => {
+  // Supabase répond en anglais ; « Invalid login credentials » s'affichait tel
+  // quel au milieu d'une app entièrement française (constaté sur émulateur).
+  const code = await source('lib/auth.tsx');
+  assert.match(code, /messageAuth\(error\.message\)/, 'signIn doit traduire l’erreur');
+  assert.match(code, /E-mail ou mot de passe incorrect/);
+  assert.doesNotMatch(code, /return \{ error: error\.message \}/, 'plus de message brut');
+});
