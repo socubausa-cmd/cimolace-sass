@@ -208,6 +208,38 @@ async function processJob(job) {
   }
   if (!lessons.length) throw new Error('Aucune leçon conforme produite.');
 
+  // 3b. PERSISTE LES LEÇONS COMME PIVOT « ecrit » (Atelier unifié).
+  //
+  // Ces leçons coûtent l'essentiel du job (~2 min chacune, contrôle qualité
+  // inclus). Jusqu'ici elles étaient insérées dans les tables élève puis
+  // OUBLIÉES : produire le PDF du même cours relançait toute la chaîne.
+  // Rangées ici, les autres rendus (PDF, masterclass, précepteur) les
+  // relisent GRATUITEMENT. Best-effort : un échec ici ne doit pas perdre
+  // un job qui a réussi.
+  try {
+    const srcType = job.source_type || 'replay';
+    const srcId = job.source_id || job.video_id;
+    const { data: root } = await supabase
+      .from('course_pivots')
+      .select('id')
+      .eq('tenant_id', job.tenant_id).eq('source_type', srcType)
+      .eq('source_id', srcId).eq('kind', 'comprehension').is('parent_id', null)
+      .maybeSingle();
+    if (root?.id) {
+      await supabase.from('course_pivots').delete()
+        .eq('parent_id', root.id).eq('kind', 'ecrit');
+      await supabase.from('course_pivots').insert({
+        tenant_id: job.tenant_id, source_type: srcType, source_id: srcId,
+        kind: 'ecrit', parent_id: root.id,
+        payload: { schema_version: 1, kind: 'ecrit', titre: plan.titre, promesse: plan.promesse, lecons: lessons },
+        model: process.env.COURSE_ENGINE_MODEL || MODEL,
+      });
+      console.log(`[course-from-replay] 💾 pivot « ecrit » enregistré — ${lessons.length} leçons réutilisables`);
+    }
+  } catch (e) {
+    console.warn('[course-from-replay] pivot ecrit non enregistré :', e?.message || e);
+  }
+
   // 4. PUBLICATION (brouillon)
   await setJob(job.id, { status: 'publishing', progress: 'Mise en place au poste production…' });
   const carte = plan.notions.map((n, i) => [String(i + 1), n.titre, n.idee_centrale]);

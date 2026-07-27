@@ -12,6 +12,7 @@ import { CourseJobService } from './course-job.service';
 import { ReplayChaptersService } from './replay-chapters.service';
 import { ComprehensionService } from './comprehension.service';
 import { SourceAdaptersService } from './source-adapters.service';
+import { RenderPivotService } from './render-pivot.service';
 
 // Guards au niveau CLASSE, mais @Roles au niveau MÉTHODE : l'ÉCRITURE
 // (générer/sauver/analyser) reste réservée aux créateurs (owner/admin/teacher),
@@ -29,6 +30,7 @@ export class MasterclassFactoryController {
     private replayChapters: ReplayChaptersService,
     private comprehension: ComprehensionService,
     private sourceAdapters: SourceAdaptersService,
+    private renderPivot: RenderPivotService,
   ) {}
 
   // ═══ ATELIER DE COURS UNIFIÉ (lot 2) — le NOYAU ═══
@@ -49,6 +51,26 @@ export class MasterclassFactoryController {
    * existe déjà, il est rendu tel quel — on ne repaye jamais l'IA deux fois
    * pour la même source, sauf `force: true`.
    */
+  /** Ce qui existe déjà pour une source — donc rendable SANS nouveau coût IA. */
+  @Get('atelier/etat/:type/:id')
+  @Roles('owner', 'admin', 'teacher')
+  atelierEtat(@Param('type') type: string, @Param('id') id: string, @CurrentTenant() t: TenantContext) {
+    return this.renderPivot.status(t.id, type as any, id);
+  }
+
+  /**
+   * PDF depuis le pivot — ZÉRO appel IA. Si le cours écrit n'existe pas encore,
+   * on refuse franchement plutôt que de relancer une génération facturée.
+   */
+  @Post('atelier/rendre/pdf')
+  @Roles('owner', 'admin', 'teacher')
+  rendrePdf(
+    @Body() d: { sourceType?: string; sourceId?: string },
+    @CurrentTenant() t: TenantContext,
+  ) {
+    return this.renderPivot.renderPdf(t.id, (d?.sourceType ?? 'replay') as any, String(d?.sourceId ?? ''));
+  }
+
   @Post('atelier/comprendre')
   @Roles('owner', 'admin', 'teacher')
   comprendre(
