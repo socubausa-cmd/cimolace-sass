@@ -1,10 +1,11 @@
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useLocation, useNavigate } from 'react-router-dom';
 import {
   Film, Music2, FileText, Type, Sparkles, BookOpen, Presentation, Radio,
   FileDown, Loader2, Check, AlertTriangle, RefreshCw, Search, ArrowUpRight,
 } from 'lucide-react';
 import { masterFactoryApi } from '@/lib/api-v2';
+import { authStore } from '@/lib/auth-store';
 import { exportCoursePdf } from '@/lib/exportCoursePdf';
 
 /**
@@ -43,7 +44,12 @@ const ACTIONS = [
 
 export default function LiriAtelierPage() {
   const navigate = useNavigate();
-  const [type, setType] = useState('replay');
+  const location = useLocation();
+  const bootSourceRef = useRef('');
+  const urlParams = useMemo(() => new URLSearchParams(location.search), [location.search]);
+  const urlSourceType = urlParams.get('mfSourceType') || urlParams.get('sourceType') || 'replay';
+  const urlSourceId = urlParams.get('mfSourceId') || urlParams.get('sourceId') || '';
+  const [type, setType] = useState(TYPES.some((t) => t.key === urlSourceType) ? urlSourceType : 'replay');
   const [sources, setSources] = useState(null);
   const [q, setQ] = useState('');
   const [sel, setSel] = useState(null);
@@ -62,6 +68,32 @@ export default function LiriAtelierPage() {
   }, []);
   useEffect(() => { load(type); }, [type, load]);
 
+  useEffect(() => {
+    if (!Array.isArray(sources) || !urlSourceId) return;
+    const signature = `${type}:${urlSourceId}`;
+    if (bootSourceRef.current === signature) return;
+    const found = sources.find((s) => String(s.id) === String(urlSourceId));
+    if (!found) return;
+    bootSourceRef.current = signature;
+    void openSource(found);
+    window.setTimeout(() => {
+      try {
+        document.querySelector(`[data-source-id="${CSS.escape(String(urlSourceId))}"]`)?.scrollIntoView({
+          block: 'center',
+          behavior: 'smooth',
+        });
+      } catch {
+        // ignore
+      }
+    }, 250);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [sources, type, urlSourceId]);
+
+  useEffect(() => {
+    if (!urlSourceType || !TYPES.some((t) => t.key === urlSourceType)) return;
+    if (urlSourceType !== type) setType(urlSourceType);
+  }, [urlSourceType, type]);
+
   const openSource = async (s) => {
     setMsg(null);
     setSel(s); setEtat('loading');
@@ -72,7 +104,7 @@ export default function LiriAtelierPage() {
   const openInStudio = (target, source = sel) => {
     if (!source?.id) return;
     const params = new URLSearchParams({
-      tenant: 'isna',
+      tenant: authStore.getTenantSlug?.() || 'isna',
       mfSourceType: type,
       mfSourceId: source.id,
     });
