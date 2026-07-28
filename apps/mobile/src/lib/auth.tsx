@@ -1,7 +1,7 @@
 import type { Session } from '@supabase/supabase-js';
 import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
 
-import { PORTAL_URL, setActiveTenantId, setAuthToken, TENANT_SLUG } from './liri-api';
+import { API_BASE, PORTAL_URL, setActiveTenantId, setAuthToken, TENANT_SLUG } from './liri-api';
 import { supabase } from './supabase';
 
 interface AuthValue {
@@ -95,9 +95,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       resetPassword: async (email) => {
         const trimmed = String(email ?? '').trim();
         if (!trimmed) return { error: 'Renseigne ton adresse e-mail d’abord.' };
-        const { error } = await supabase.auth.resetPasswordForEmail(trimmed, {
-          redirectTo: `${PORTAL_URL}/update-password`,
-        });
+        const redirectTo = `${PORTAL_URL}/update-password`;
+        // L'API envoie le mail AUX COULEURS DU TENANT (expéditeur, marque, clé
+        // Resend). L'envoi intégré de Supabase, lui, part d'un gabarit anglais
+        // générique — on ne l'utilise qu'en repli si l'API est injoignable.
+        try {
+          const res = await fetch(`${API_BASE}/auth-public/password-reset`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'X-Tenant-Slug': TENANT_SLUG },
+            body: JSON.stringify({ email: trimmed, redirect_to: redirectTo }),
+          });
+          if (res.ok) return {};
+        } catch {
+          /* réseau ou API indisponible → repli ci-dessous */
+        }
+        const { error } = await supabase.auth.resetPasswordForEmail(trimmed, { redirectTo });
         return error ? { error: messageAuth(error.message) } : {};
       },
       signOut: async () => {
