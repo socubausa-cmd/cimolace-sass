@@ -365,8 +365,37 @@ async function claimJob(job) {
   return Array.isArray(data) && data.length === 1;
 }
 
+/**
+ * RÉCUPÈRE LES JOBS ORPHELINS.
+ *
+ * `claimJob()` ne prend que les `pending`. Un job passé en cours puis
+ * interrompu — redéploiement du worker, crash, coupure réseau — reste figé
+ * pour toujours dans son statut intermédiaire : personne ne le reprend, et
+ * rien ne le signale. Constaté le 2026-07-28 : les 2 sources les PLUS RICHES
+ * du batch (31 342 et 28 756 car) bloquées 8 h en « extracting ».
+ *
+ * Un job vivant met `updated_at` à jour à chaque étape (et à chaque leçon).
+ * Au-delà du seuil, il est donc mort : on le remet en file.
+ */
+const STALE_MIN = Math.max(10, Number(process.env.COURSE_JOB_STALE_MINUTES || 30));
+
+async function requeueStaleJobs() {
+  const cutoff = new Date(Date.now() - STALE_MIN * 60_000).toISOString();
+  const { data } = await supabase
+    .from('course_generation_jobs')
+    .update({ status: 'pending', progress: 'Reprise après interruption…' })
+    .in('status', ['extracting', 'planning', 'writing', 'publishing'])
+    .lt('updated_at', cutoff)
+    .select('id');
+  if (data?.length) {
+    console.warn(`[course-from-replay] ♻️ ${data.length} job(s) orphelin(s) remis en file (aucune activité depuis ${STALE_MIN} min)`);
+  }
+  return data?.length || 0;
+}
+
 export async function pollCourseFromReplay() {
   if (!DEEPSEEK_KEY || !process.env.SUPABASE_SERVICE_ROLE_KEY) return 0;
+  await requeueStaleJobs();
   const { data: jobs } = await supabase
     .from('course_generation_jobs')
     .select('*')
