@@ -180,6 +180,18 @@ export class ZoomEngineController {
     return this.service.getReplayShortsState(req.tenant?.id, videoId);
   }
 
+  /**
+   * Les extraits d'un replay, avec une URL jouable — pour les REGARDER sur place.
+   * Même garde que l'état : c'est un outil de créateur, pas une vitrine élève.
+   */
+  @Get('shorts/:videoId')
+  @UseGuards(TenantGuard, RolesGuard)
+  @Roles('owner', 'admin', 'teacher')
+  @ApiOperation({ summary: 'Lister les extraits courts jouables d\'un replay' })
+  async listShorts(@Req() req: any, @Param('videoId') videoId: string) {
+    return this.service.listReplayShorts(req.tenant?.id, videoId);
+  }
+
   @Post('unpublish/:id')
   @ApiOperation({ summary: 'Dépublier une vidéo' })
   async unpublishVideo(@Req() req: any, @Param('id') id: string) {

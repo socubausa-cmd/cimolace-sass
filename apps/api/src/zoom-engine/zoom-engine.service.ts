@@ -550,6 +550,58 @@ export class ZoomEngineService {
   }
 
   /**
+   * LISTE les extraits d'un replay, prêts à être REGARDÉS.
+   *
+   * Pourquoi une route à part alors que `GET social-publisher/shorts` existe déjà :
+   * celle-là renvoie TOUS les extraits de l'école, sans URL jouable, pour alimenter
+   * un sélecteur de publication. Ici on répond à une autre question — « montre-moi
+   * ce que CE replay a produit » — posée depuis le lecteur, par quelqu'un qui veut
+   * voir avant de publier. Le renvoyer vers un assistant de publication en trois
+   * étapes pour ça, c'était la promesse non tenue du bouton « Voir les extraits ».
+   *
+   * Le fichier vit sur un bucket R2 PRIVÉ : sans présignature, le lecteur HTML5
+   * recevrait un 403 et afficherait un cadre noir muet. On présigne donc ici, à
+   * la demande, plutôt que de stocker une URL qui expirerait en base.
+   *
+   * TTL de 6 h et non les 7 jours de la lecture des replays : cette liste est
+   * consultée dans la foulée d'un clic, et une URL présignée est un droit d'accès
+   * en clair — on lui donne la durée de l'usage, pas davantage.
+   */
+  async listReplayShorts(tenantId: string, videoId: string) {
+    const rec = await this.resolveRecordingDeVideo(tenantId, videoId);
+
+    const { data, error } = await (this.supabase.client as any)
+      .from('short_clips')
+      .select('id, title, description, start_sec, end_sec, duration_sec, storage_key, transcript_snippet, created_at')
+      .eq('tenant_id', tenantId)
+      .eq('recording_id', rec.id)
+      .eq('status', 'ready')
+      // Ordre du RÉCIT, pas de la fabrication : les extraits se lisent dans l'ordre
+      // où ils sont apparus dans la séance, c'est ce que l'œil attend d'une liste
+      // rattachée à un replay.
+      .order('start_sec', { ascending: true });
+    if (error) throw new Error(`Extraits illisibles : ${error.message}`);
+
+    // Présignatures en parallèle : cinq allers-retours en série ajouteraient une
+    // demi-seconde visible à l'ouverture du panneau.
+    const clips = await Promise.all(
+      (data || []).map(async (c: any) => ({
+        id: c.id,
+        titre: c.title || null,
+        description: c.description || null,
+        debut_sec: c.start_sec ?? null,
+        fin_sec: c.end_sec ?? null,
+        duree_sec: c.duration_sec ?? null,
+        extrait_texte: c.transcript_snippet || null,
+        // `null` si la présignature échoue (variables R2 absentes) : l'écran doit
+        // pouvoir dire « fichier indisponible » au lieu de servir un lecteur mort.
+        url: await this.presignR2(c.storage_key, 6 * 3600),
+      })),
+    );
+    return { clips };
+  }
+
+  /**
    * ENREGISTRE une demande de fabrication d'extraits pour UN replay.
    *
    * Cette méthode ne fabrique RIEN : elle pose un drapeau que le poller du worker

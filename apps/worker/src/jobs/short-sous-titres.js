@@ -81,6 +81,23 @@ const OR_LIRI = 'e6cc92';                // titre (le corail est réservé aux A
  */
 const TAILLE_PAROLE = 110;
 /**
+ * PLAFOND du corps de la parole, et la raison du plafond.
+ *
+ * 110 était un PLANCHER de lisibilité, pas une cible : il place la médiane de glyphe
+ * à 3,15 % de la hauteur de trame pour un plancher de 3 %. Mesuré sur l'extrait
+ * « Je suis Cheo » réellement produit, la trame n'était encrée qu'à 26 % et le bloc
+ * de parole pesait 447 px contre 530 px pour la bande vidéo : la PAROLE, qu'on avait
+ * décidé de faire passer au rang de sujet, restait plus petite que l'image reléguée
+ * au rang d'accessoire.
+ *
+ * 131 est choisi pour que 3 lignes (3 × 1,35 × 131 = 531 px) pèsent exactement le
+ * poids de la bande vidéo de la source de référence (530 px). Le glyphe médian monte
+ * à 3,75 %. Au-delà, la ligne devient trop courte pour les mots du domaine —
+ * « Manikongo » et « cinquième » font 9 caractères, et un mot n'est JAMAIS coupé
+ * (voir `couperEnLignes`).
+ */
+const TAILLE_PAROLE_MAX = 131;
+/**
  * Interligne de Noto Sans : ascendante 1,069 + descendante 0,293 = 1,362 cadratin.
  * On budgète 1,35 — la valeur sert à RÉSERVER de la place, pas à positionner (libass
  * fait l'interligne lui-même), donc mieux vaut l'arrondir vers le bas et vérifier que
@@ -104,6 +121,52 @@ export const HAUTEUR_LIGNE_PAROLE = Math.round(TAILLE_PAROLE * INTERLIGNE); // 1
  * bloc passe de 3 à 4 lignes — cas pour lequel la zone de texte est dimensionnée.
  */
 export const MAX_CAR_LIGNE = 13;
+
+/**
+ * LA TYPOGRAPHIE DE LA PAROLE SE DÉDUIT DE LA ZONE, ELLE N'EST PAS UNE CONSTANTE.
+ *
+ * ⭐ POURQUOI — et c'est le calcul qui a tué l'idée d'un simple « on met 131 partout ».
+ * La zone de texte ne fait pas la même hauteur selon la source : la bande vidéo est
+ * ajustée à la LARGEUR de la trame, donc une source large (2,04:1 — un partage
+ * d'écran Zoom) laisse 821 px au texte, tandis qu'une source portrait, dont la bande
+ * bute sur le plafond de 740 px, ne lui en laisse que 611. Poser 131 partout ferait
+ * déborder le pire cas sous l'interface de TikTok :
+ *     4 lignes × 1,35 × 131 = 708 px  >  611 px disponibles.
+ * Le corps est donc le plus grand qui tienne LA RÉSERVE DE 4 LIGNES dans la zone,
+ * borné en bas par le plancher de lisibilité (110) et en haut par 131.
+ *   · source 2,04:1 (référence) : 821 / 5,4 = 152 → plafonné à **131**
+ *   · source 16:9               : 743 / 5,4 = 137 → plafonné à **131**
+ *   · source portrait (pire cas): 611 / 5,4 = 113 → **113**, et rien ne déborde
+ *
+ * ⚠️ LA LONGUEUR DE LIGNE DOIT SUIVRE, EN SENS INVERSE. La contrainte de largeur est
+ * inchangée (870 px utiles), donc grossir le corps sans raccourcir la ligne ferait
+ * replier libass en permanence : les 13 caractères mesurés à 110 donnent un p95 de
+ * 798 px, qui à 131 deviendrait 950 px — au-delà des 870. On conserve la MÊME
+ * sévérité que le réglage d'origine (0,6 % de lignes en dépassement) en gardant le
+ * produit `maxCar × taille` constant : 13 × 110 = 1430.
+ *   · à 131 → 10 caractères  ·  à 113 → 12  ·  à 110 → 13 (le réglage d'origine)
+ */
+export function typographieParole(hauteurZone) {
+  const h = Math.max(0, Number(hauteurZone) || 0);
+  // ⚠️ ON PART DE LA HAUTEUR DE LIGNE, PAS DU CORPS. Poser
+  // `taille = floor(h / (4 × 1,35))` paraît équivalent et ne l'est pas : la hauteur
+  // de ligne réellement employée est `round(taille × 1,35)`, et cet arrondi peut
+  // monter. Mesuré sur une source 4:3 avec coiffe (zone de 611 px) :
+  // floor(611 / 5,4) = 113, mais round(113 × 1,35) = 153 et 4 × 153 = 612 — UN pixel
+  // sous l'interface de TikTok. Le garde-fou de `geometrieVerticale` l'a signalé ;
+  // c'est exactement ce pour quoi il existe. On borne donc la LIGNE, puis on en
+  // déduit le corps.
+  const ligneMax = Math.floor(h / LIGNES_RESERVEES);
+  const brut = Math.floor(ligneMax / INTERLIGNE);
+  const taille = Math.max(TAILLE_PAROLE, Math.min(TAILLE_PAROLE_MAX, brut || TAILLE_PAROLE));
+  return {
+    taille,
+    hauteurLigne: Math.round(taille * INTERLIGNE),
+    // `Math.floor` et non un arrondi : dépasser la largeur ne casse rien (libass
+    // replie) mais consomme la réserve de 4e ligne, qui existe pour autre chose.
+    maxCar: Math.max(8, Math.floor((MAX_CAR_LIGNE * TAILLE_PAROLE) / taille)),
+  };
+}
 /**
  * 3 lignes au plus par unité d'affichage. Ni un mot isolé, ni un paragraphe :
  *  · 3 × 13 = 39 caractères, soit ~2,8 s au débit du français parlé (≈14 car/s, la
@@ -449,7 +512,13 @@ export function construireAss({ unites, lignesTitre, geo, duree }) {
     // Alignment=8 (haut-centre) : MarginV compte alors depuis le HAUT de la trame et
     // désigne le haut du bloc. Le bloc grandit donc vers le BAS — la première ligne ne
     // bouge jamais d'un carton à l'autre, ce qui est la seule façon de lire vite.
-    `Style: Parole,Noto Sans,${TAILLE_PAROLE},${encre},${encre},${fond},${fond},`
+    // ⚠️ LE CORPS VIENT DE LA GÉOMÉTRIE, PAS D'UNE CONSTANTE (voir
+    // `typographieParole`) : `geometrieVerticale` a dimensionné la zone, l'ancre et
+    // la longueur de ligne pour CE corps-là. Réécrire `TAILLE_PAROLE` ici — ce que
+    // faisait la version précédente — dessinerait un texte dont la taille ne
+    // correspondrait plus à la place qu'on lui a réservée. Le repli existe pour les
+    // appels anciens qui ne passent pas encore de `taille`.
+    `Style: Parole,Noto Sans,${a.taille || TAILLE_PAROLE},${encre},${encre},${fond},${fond},`
       + `-1,0,0,0,100,100,0,0,3,10,0,8,${a.margeGauche},${a.margeDroite},${a.margeHauteParole},1`,
     `Style: Titre,Noto Sans,${TAILLE_TITRE},${or},${or},${fond},${fond},`
       + `-1,0,0,0,100,100,0,0,3,8,0,8,${MARGE_TITRE},${MARGE_TITRE},${a.margeHauteTitre},1`,

@@ -4,6 +4,7 @@ import { Play, Search, Film, GraduationCap, FileText, Loader2, Sparkles, ListTre
 import { apiV2, masterclassApi, tenantsApi, videothequeApi } from '@/lib/api-v2';
 import { exportCoursePdf } from '@/lib/exportCoursePdf';
 import ImmersiveVideoPlayer from '@/components/school/formations/ImmersiveVideoPlayer';
+import ExtraitsCourtsModal from '@/components/school/formations/ExtraitsCourtsModal';
 
 // Palette LIRI (alignée sur /liri).
 const C = {
@@ -175,6 +176,8 @@ export default function VideothequePage() {
   const [extraits, setExtraits] = useState({ videoId: null, arme: false, envoi: false, message: '' });
   const extraitsPollRef = useRef(null);
   const extraitsTimerRef = useRef(null);
+  /** Replay dont on REGARDE les extraits (null = panneau fermé). */
+  const [vitrine, setVitrine] = useState(null);
 
   /** État des extraits d'une vidéo. Repli 'aucun' : les lignes servies avant cette
    *  fonctionnalité — et celles servies à un élève — ne portent pas ces champs. */
@@ -514,6 +517,16 @@ export default function VideothequePage() {
 
   return (
     <div style={{ minHeight: 'calc(100vh - 120px)', background: C.base, color: C.ink, fontFamily: "'Inter', system-ui, sans-serif", padding: '18px 20px 48px' }}>
+      {/* Les extraits se regardent PAR-DESSUS le lecteur du replay dont ils sortent :
+          on ne quitte pas le replay pour voir ce qu'il a produit. */}
+      {vitrine ? (
+        <ExtraitsCourtsModal
+          videoId={vitrine.id}
+          titreReplay={vitrine.title}
+          onClose={() => setVitrine(null)}
+          onPublier={() => navigate('/studio/ad-creator')}
+        />
+      ) : null}
       {/* Lecteur immersif plein-écran */}
       {active && (
         <ImmersiveVideoPlayer
@@ -649,8 +662,13 @@ export default function VideothequePage() {
                 : canExtract && exActif.state === 'pret' && exActif.clips > 0 ? (
                   <button
                     type="button"
-                    onClick={() => navigate('/studio/ad-creator')}
-                    title="Ouvrir le Créateur de publicités : les extraits prêts s'y choisissent à l'étape de publication"
+                    // ⚠️ CE BOUTON A LONGTEMPS MENTI. Il faisait
+                    // `navigate('/studio/ad-creator')` : on atterrissait à l'étape 1
+                    // d'un assistant de publication qui ne connaissait ni ce replay
+                    // ni ses extraits, et qui n'en montrait donc aucun. « Voir » et
+                    // « aller ailleurs » ne sont pas le même verbe — il montre.
+                    onClick={() => setVitrine(active)}
+                    title="Regarder les extraits produits pour ce replay"
                     style={{ display: 'inline-flex', alignItems: 'center', gap: 7, padding: '8px 14px', borderRadius: 999, border: `1px solid ${C.coral}`, background: C.coralTint, color: '#f0c3ac', cursor: 'pointer', fontSize: 12.5, fontWeight: 700, whiteSpace: 'nowrap' }}
                   >
                     <Film size={14} /> Voir les extraits

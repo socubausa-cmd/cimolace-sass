@@ -82,7 +82,7 @@ import {
   FOND_LIRI_HEX,
   MAX_LIGNES_PAROLE, HAUTEUR_LIGNE_PAROLE, LIGNES_RESERVEES, MARGE_GAUCHE, MARGE_DROITE,
   MAX_LIGNES_TITRE, HAUTEUR_LIGNE_TITRE, MAX_CAR_LIGNE,
-  TAILLE_SOUS_TITRE,
+  TAILLE_SOUS_TITRE, typographieParole,
   capaciteSousTitres, construireAss, corrigerTitre, corrigerTranscription,
   couperEnLignes, decouperEnUnites, echapperCheminFiltre, pairesDeCorrection,
   preparerTitre, srtDesUnites,
@@ -422,6 +422,23 @@ function sonderVideo(filePath) {
  * image entière dans la bande).
  * `opts.avecTitre` = réserve-t-on la coiffe ? (voir `preparerTitre`).
  */
+/**
+ * LA TYPOGRAPHIE D'UNE SÉANCE, décidée avant le premier découpage de texte.
+ *
+ * On prend délibérément le PIRE CAS — avec coiffe, donc la zone de texte la plus
+ * courte — et on l'applique à tous les extraits de la séance, y compris à ceux qui
+ * n'auront pas de titre. Deux raisons, et la seconde est la plus importante :
+ *  1. le texte est découpé en lignes une seule fois, pour tous les extraits : la
+ *     longueur de ligne employée doit être valable pour le plus contraint d'entre eux ;
+ *  2. cinq extraits d'une même séance publiés à la suite doivent se ressembler. Une
+ *     taille de sous-titre qui change d'un clip à l'autre se voit immédiatement dans
+ *     un fil, et se lit comme un défaut de fabrication.
+ */
+export function typographieSeance(largeur, hauteur) {
+  const geo = geometrieVerticale(largeur, hauteur, null, { avecTitre: true });
+  return geo.typo;
+}
+
 export function geometrieVerticale(largeur, hauteur, cadrage = null, opts = {}) {
   const avecTitre = Boolean(opts.avecTitre);
   const src = { l: Number(largeur) || 1920, h: Number(hauteur) || 1080 };
@@ -505,19 +522,36 @@ export function geometrieVerticale(largeur, hauteur, cadrage = null, opts = {}) 
   //    cas serrés, le bloc remonte de quelques pixels (1 px en 16:9, 67 px en portrait)
   //    et n'est plus parfaitement centré — un décalage invisible à l'œil, contre un
   //    sous-titre passant sous les icônes de TikTok, lui parfaitement visible.
-  const hBloc = MAX_LIGNES_PAROLE * HAUTEUR_LIGNE_PAROLE;          // 447 px — 3 lignes
-  const hReserve = LIGNES_RESERVEES * HAUTEUR_LIGNE_PAROLE;        // 596 px — 4 lignes
+  // ⭐ LE CORPS DE LA PAROLE EST DÉDUIT DE LA ZONE (voir `typographieParole`) : le
+  //    plancher de lisibilité, 110, laissait la parole (447 px) plus petite que
+  //    l'image (530 px) alors qu'on avait décidé d'en faire le sujet. On prend donc
+  //    le plus grand corps qui tienne encore la réserve de 4 lignes — 131 sur les
+  //    sources larges, 113 dans le pire cas portrait — au lieu du même 110 partout.
+  // ⚠️ LA TYPOGRAPHIE PEUT ÊTRE IMPOSÉE, ET ELLE DOIT L'ÊTRE EN PRODUCTION.
+  // Le découpage du texte en lignes se fait UNE FOIS pour tous les extraits d'une
+  // séance, alors que cette fonction est appelée UNE FOIS PAR EXTRAIT — et la zone
+  // de texte n'a pas la même hauteur selon qu'un extrait porte une coiffe ou non.
+  // Laisser chacun recalculer son corps produirait des lignes coupées pour 10
+  // caractères mais dessinées à un corps prévu pour 12 : le texte déborderait.
+  // L'appelant fige donc `opts.typo` sur le pire cas de la séance (avec coiffe) et le
+  // passe à tous. Effet de bord recherché : les cinq clips d'une même séance ont
+  // exactement la même mise en page, comme la bande vidéo (voir plus haut).
+  const typo = opts.typo || typographieParole(hTexte);
+  const hBloc = MAX_LIGNES_PAROLE * typo.hauteurLigne;   // 531 px à 131 (3 lignes)
+  const hReserve = LIGNES_RESERVEES * typo.hauteurLigne; // 708 px à 131 (4 lignes)
   const ancreCentree = yTexte + Math.max(0, Math.round((hTexte - hBloc) / 2));
-  const ancreBasseMax = BAS_SUR - hReserve;                        // 1017 px
+  const ancreBasseMax = BAS_SUR - hReserve;                        // 905 px à 131
   const margeHauteParole = Math.max(yTexte, Math.min(ancreCentree, ancreBasseMax));
 
-  // GARDE-FOU SILENCIEUX — il contrôle maintenant CE QUI EST DESSINÉ, pas une réserve
-  // abstraite : le bas d'un bloc de 4 lignes posé sur l'ancre réelle. Après le
-  // plafonnement ci-dessus, il ne peut plus se déclencher que si la zone elle-même
-  // descend sous 596 px, c'est-à-dire si quelqu'un a touché à MARGE_HAUTE,
-  // HAUTEUR_TITRE, VIDEO_H_MAX ou au corps du sous-titre sans refaire le calcul (pire
-  // cas actuel : 611 px, il reste 15 px de marge). Le symptôme, sinon, serait un
-  // sous-titre glissé sous l'interface de TikTok — invisible dans les journaux.
+  // GARDE-FOU SILENCIEUX — il contrôle CE QUI EST DESSINÉ, pas une réserve abstraite :
+  // le bas d'un bloc de 4 lignes posé sur l'ancre réelle. Depuis que le corps se déduit
+  // de la zone (`typographieParole`), il est structurellement impossible à déclencher
+  // TANT QUE le corps peut descendre : la taille est justement choisie pour que
+  // 4 lignes tiennent. Il ne peut donc plus mordre que si la zone descend sous ce que
+  // permet le PLANCHER de 110 — soit 596 px — c'est-à-dire si quelqu'un a touché à
+  // MARGE_HAUTE, HAUTEUR_TITRE ou VIDEO_H_MAX sans refaire le calcul (pire cas actuel :
+  // 611 px, il reste 15 px de marge). Le symptôme, sinon, serait un sous-titre glissé
+  // sous l'interface de TikTok — invisible dans les journaux.
   const basQuatreLignes = margeHauteParole + hReserve;
   if (basQuatreLignes > BAS_SUR) {
     console.error(
@@ -540,7 +574,14 @@ export function geometrieVerticale(largeur, hauteur, cadrage = null, opts = {}) 
       margeHauteTitre: MARGE_HAUTE,
       margeGauche: MARGE_GAUCHE,
       margeDroite: MARGE_DROITE,
+      // Le corps RÉELLEMENT dessiné. `construireAss` le lit ici plutôt que de
+      // recopier la constante : la zone, l'ancre et la longueur de ligne ont toutes
+      // été dimensionnées pour cette valeur-là.
+      taille: typo.taille,
     },
+    // La typographie déduite, pour que le découpage en lignes emploie la MÊME
+    // longueur maximale que celle sur laquelle la géométrie a été calculée.
+    typo,
     // Part de la trame donnée à chaque rôle — c'est la mesure qui dit si le texte est
     // vraiment le héros, et elle est journalisée à chaque extrait.
     partTexte: hTexte / TRAME_H,
@@ -550,7 +591,7 @@ export function geometrieVerticale(largeur, hauteur, cadrage = null, opts = {}) 
     // depuis l'ancre et non depuis le haut de la zone : c'est de l'ancre que le bloc
     // descend, et l'ancienne formule (hTexte / 149) surestimait donc la capacité de
     // 1 à 2 lignes sur les sources les plus carrées.
-    lignesTenables: Math.floor((BAS_SUR - margeHauteParole) / HAUTEUR_LIGNE_PAROLE),
+    lignesTenables: Math.floor((BAS_SUR - margeHauteParole) / typo.hauteurLigne),
     // Ancre du bloc et bas d'un 4e repli : les deux nombres que le garde-fou compare.
     ancreParole: margeHauteParole,
     ancreCentree,
@@ -1243,6 +1284,14 @@ async function processVideoForShorts(recordingId, tenantId, storageKey, videoUrl
     // choisir les moments. La mise en page réellement encodée est recalculée par
     // extrait (le cadrage change dans la bande, et la coiffe n'est pas toujours là).
     const geometrieTemoin = geometrieVerticale(sonde?.largeur || 1920, sonde?.hauteur || 1080);
+    // La typographie de TOUTE la séance, figée ici : le découpage du texte en lignes
+    // (plus bas) et chaque géométrie d'extrait doivent employer la même.
+    const typoSeance = typographieSeance(sonde?.largeur || 1920, sonde?.hauteur || 1080);
+    console.log(
+      `[short-gen] Typographie de la séance : corps ${typoSeance.taille} px ` +
+        `(${(typoSeance.taille / 1920 * 100).toFixed(2)} % de cadratin), ligne ${typoSeance.hauteurLigne} px, ` +
+        `${typoSeance.maxCar} caractères au plus par ligne`,
+    );
     console.log(
       `[short-gen] Trame 9:16 « le texte est le héros » : bande vidéo ${geometrieTemoin.bande.h} px ` +
         `(${Math.round(geometrieTemoin.partVideo * 100)} % de la trame), zone de parole ${geometrieTemoin.zoneTexte.h} px ` +
@@ -1359,9 +1408,13 @@ async function processVideoForShorts(recordingId, tenantId, storageKey, videoUrl
         // raisonne cue par cue et produit encore des cartons de 0,15 s (le dernier
         // d'une cue, borné par sa fin) ; les absorber demande de voir la cue d'à côté,
         // donc la liste entière. Voir `fusionnerCartonsCourts`.
+        // ⚠️ `maxCar` DOIT venir de la typographie de la séance. Couper à 13
+        // caractères puis dessiner à un corps prévu pour 10, c'est exactement le
+        // bug que `typographieSeance` existe pour empêcher : les lignes sortiraient
+        // plus larges que les 870 px utiles et libass replierait en permanence.
         unites: fusionnerCartonsCourts(
-          decouperEnUnites(segmentsAffiches, e.start, e.end),
-          { duree: e.end - e.start },
+          decouperEnUnites(segmentsAffiches, e.start, e.end, { maxCar: typoSeance.maxCar }),
+          { duree: e.end - e.start, maxCar: typoSeance.maxCar },
         ),
       };
     });
@@ -1445,7 +1498,7 @@ async function processVideoForShorts(recordingId, tenantId, storageKey, videoUrl
       // pas la hauteur de la bande : la mise en page reste identique d'un extrait à
       // l'autre (voir `geometrieVerticale`).
       const avecTitre = Boolean(lignesTitre);
-      let geometrie = geometrieVerticale(sonde?.largeur || 1920, sonde?.hauteur || 1080, null, { avecTitre });
+      let geometrie = geometrieVerticale(sonde?.largeur || 1920, sonde?.hauteur || 1080, null, { avecTitre, typo: typoSeance });
       try {
         const cadrage = await detecterRegionUtile({
           fichier: videoFile,
@@ -1454,7 +1507,7 @@ async function processVideoForShorts(recordingId, tenantId, storageKey, videoUrl
           largeur: sonde?.largeur || 1920,
           hauteur: sonde?.hauteur || 1080,
         });
-        geometrie = geometrieVerticale(sonde?.largeur || 1920, sonde?.hauteur || 1080, cadrage, { avecTitre });
+        geometrie = geometrieVerticale(sonde?.largeur || 1920, sonde?.hauteur || 1080, cadrage, { avecTitre, typo: typoSeance });
         hl.cadrage = {
           mode: geometrie.mode,
           gain: Number(geometrie.gain.toFixed(3)),
@@ -1567,10 +1620,14 @@ async function processVideoForShorts(recordingId, tenantId, storageKey, videoUrl
             // ── Traçabilité des SOUS-TITRES ────────────────────────────────────
             sous_titres: hl.unites.length > 0 ? {
               ...hl.unites.diagnostic,
-              // La taille vient de la constante employée pour fabriquer l'ASS : une
-              // valeur recopiée à la main finirait par mentir dès qu'on la changerait.
-              taille_police: TAILLE_SOUS_TITRE,
-              part_hauteur_cadratin: Number((TAILLE_SOUS_TITRE / 1920).toFixed(4)),
+              // ⚠️ LA TAILLE VIENT DE LA GÉOMÉTRIE, PLUS D'UNE CONSTANTE. Depuis que
+              // le corps se déduit de la hauteur de zone (`typographieParole`), citer
+              // `TAILLE_SOUS_TITRE` écrirait 110 en base pour un texte dessiné à 131 —
+              // une trace fausse est pire que pas de trace, puisqu'on s'y fie ensuite
+              // pour juger la lisibilité sans rouvrir le fichier.
+              taille_police: geometrie.typo.taille,
+              part_hauteur_cadratin: Number((geometrie.typo.taille / 1920).toFixed(4)),
+              max_caracteres_ligne: geometrie.typo.maxCar,
             } : null,
             // ── Traçabilité de la RELECTURE ────────────────────────────────────
             // Ce que la machine avait entendu, et ce qu'on affiche à la place. Sans

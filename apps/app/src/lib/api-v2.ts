@@ -1071,7 +1071,28 @@ export const videothequeApi = {
   /** État d'avancement d'UN replay — appelé en boucle lente pendant le travail. */
   shortsState: (videoId: string): Promise<ReplayShortsState> =>
     apiV2.get<ApiEnvelope<ReplayShortsState>>(`/zoom-engine/shorts-state/${videoId}`).then(unwrap),
+
+  /**
+   * Les extraits d'un replay, AVEC une URL jouable (présignée R2, ~6 h).
+   * Distincte de `shortsState`, qui n'en renvoie que le NOMBRE : voir les extraits
+   * et savoir combien il y en a sont deux questions, et la seconde se pose en
+   * boucle alors que la première ne se pose qu'à l'ouverture d'un panneau.
+   */
+  listShorts: (videoId: string): Promise<{ clips: ReplayShortClip[] }> =>
+    apiV2.get<ApiEnvelope<{ clips: ReplayShortClip[] }>>(`/zoom-engine/shorts/${videoId}`).then(unwrap),
 };
+
+/** Un extrait court prêt à être regardé. `url` est nulle si la présignature a échoué. */
+export interface ReplayShortClip {
+  id: string;
+  titre: string | null;
+  description: string | null;
+  debut_sec: number | null;
+  fin_sec: number | null;
+  duree_sec: number | null;
+  extrait_texte: string | null;
+  url: string | null;
+}
 
 // ── Mbolo ───────────────────────────────────────────────────────────────────
 
