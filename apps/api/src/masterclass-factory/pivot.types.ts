@@ -13,9 +13,39 @@
  * sortir en PDF **et** en parcours élève sans être régénéré.
  */
 
-export type SourceType = 'replay' | 'tiktok' | 'document' | 'texte';
-export type PivotKind = 'comprehension' | 'ecrit' | 'joue';
-export type RenderTarget = 'pdf' | 'parcours' | 'masterclass' | 'precepteur' | 'smartboard';
+export type SourceType =
+  | 'replay'
+  | 'live'
+  | 'tiktok'
+  | 'document'
+  | 'texte'
+  | 'pdf'
+  | 'audio'
+  | 'video'
+  | 'url';
+
+export type PivotKind =
+  | 'comprehension'
+  | 'ecrit'
+  | 'joue'
+  | 'master_script'
+  | 'smartboard_timeline'
+  | 'live_scenario'
+  | 'replay_postprod';
+
+export type RenderTarget =
+  | 'pdf'
+  | 'parcours'
+  | 'masterclass'
+  | 'precepteur'
+  | 'smartboard'
+  | 'live'
+  | 'master_script'
+  | 'video_semaine'
+  | 'quiz'
+  | 'forum'
+  | 'faq'
+  | 'manuel';
 
 /** Toute source, une fois normalisée. Le noyau ignore d'où vient le contenu. */
 export interface NormalizedSource {
@@ -126,7 +156,179 @@ export interface CoursJoue {
   scenes: SceneJouee[];
 }
 
-/** Ligne de `course_pivots`. `payload` porte l'un des trois contrats ci-dessus. */
+/**
+ * NIVEAU 2-C — MASTER SCRIPT. C'est le conducteur pédagogique oral : comment
+ * l'enseignant dit le fond, dans quel ordre, avec quelles transitions, et quels
+ * moments doivent déclencher une image/tableau/interaction. Il devient la pièce
+ * centrale entre `Comprehension`, SmartBoard et Liri Live.
+ */
+export interface MasterScriptMoment {
+  id: string;
+  notion_id?: string;
+  title: string;
+  intention: string;
+  message_central: string;
+  teacher_script: string;
+  key_points: string[];
+  student_understanding?: string;
+  simple_version?: string;
+  transition?: string;
+  duration_sec?: number;
+  interaction?: {
+    question: string;
+    expected_answers?: string[];
+    expected_errors?: string[];
+    remediation?: string;
+  };
+}
+
+export interface MasterScriptPivot {
+  schema_version: 1;
+  kind: 'master_script';
+  title: string;
+  audience?: string;
+  intention_generale: string;
+  estimated_duration_minutes?: number;
+  moments: MasterScriptMoment[];
+  meta?: {
+    source_kind?: SourceType;
+    source_id?: string;
+    comprehension_pivot_id?: string;
+    generated_at: string;
+    model?: string;
+  };
+}
+
+/**
+ * NIVEAU 2-D — SMARTBOARD TIMELINE. Ce n'est pas une slide statique : c'est le
+ * tableau vivant décrit dans le cahier des charges. La voix pilote l'apparition
+ * des blocs, l'écriture, le surlignage et les schémas.
+ */
+export interface SmartboardTimelineAction {
+  id: string;
+  at_sec?: number;
+  after_action_id?: string;
+  type:
+    | 'show'
+    | 'write'
+    | 'highlight'
+    | 'draw'
+    | 'zoom'
+    | 'pause'
+    | 'clear'
+    | 'camera_focus'
+    | 'student_prompt';
+  target_id?: string;
+  text?: string;
+  payload?: Record<string, unknown>;
+  duration_sec?: number;
+}
+
+export interface SmartboardTimelineScene {
+  id: string;
+  script_moment_id?: string;
+  title: string;
+  visual_intent: string;
+  camera_zone?: 'top-right' | 'bottom-right' | 'none';
+  blocks: {
+    id: string;
+    type: 'title' | 'key-idea' | 'formula' | 'retain' | 'paragraph' | 'list' | 'diagram' | 'image';
+    text?: string;
+    items?: string[];
+    asset_url?: string;
+    layout?: Record<string, unknown>;
+  }[];
+  timeline: SmartboardTimelineAction[];
+}
+
+export interface SmartboardTimelinePivot {
+  schema_version: 1;
+  kind: 'smartboard_timeline';
+  title: string;
+  scenes: SmartboardTimelineScene[];
+  meta?: {
+    master_script_pivot_id?: string;
+    generated_at: string;
+    model?: string;
+  };
+}
+
+/**
+ * NIVEAU 2-E — LIVE SCENARIO. C'est la transformation d'un Master Script en
+ * séance Liri pilotable : ordre des scènes, instructions hôte, interactions,
+ * salle d'attente, clôture et sorties post-live.
+ */
+export interface LiveScenarioPivot {
+  schema_version: 1;
+  kind: 'live_scenario';
+  live_title: string;
+  preparation_notes: string[];
+  waiting_room_message?: string;
+  closing_sequence?: string;
+  scenes: {
+    id: string;
+    order: number;
+    type: 'intro' | 'teaching' | 'smartboard' | 'interaction' | 'qa' | 'summary' | 'closing';
+    script_moment_id?: string;
+    smartboard_scene_id?: string;
+    host_instruction: string;
+    student_action?: string;
+    duration_minutes?: number;
+  }[];
+  replay_postprod_targets: RenderTarget[];
+  meta?: {
+    master_script_pivot_id?: string;
+    smartboard_timeline_pivot_id?: string;
+    live_session_id?: string;
+    generated_at: string;
+    model?: string;
+  };
+}
+
+/**
+ * NIVEAU 3 — REPLAY POST-PRODUCTION. Après un live réel, le replay redevient une
+ * source Master Factory et propose des sorties : cours, résumé, quiz, vidéo de
+ * la semaine, enrichissement précepteur, forum/FAQ.
+ */
+export interface ReplayPostprodPivot {
+  schema_version: 1;
+  kind: 'replay_postprod';
+  live_session_id: string;
+  replay_source_id?: string;
+  summary: string;
+  chapters: {
+    title: string;
+    start_sec?: number;
+    end_sec?: number;
+    key_points: string[];
+    suggested_outputs?: RenderTarget[];
+  }[];
+  suggested_outputs: {
+    target: RenderTarget;
+    title: string;
+    reason: string;
+    priority?: 'low' | 'medium' | 'high';
+  }[];
+  meta?: {
+    comprehension_pivot_id?: string;
+    transcript_chars?: number;
+    generated_at: string;
+    model?: string;
+  };
+}
+
+export type CoursePivotPayload =
+  | Comprehension
+  | CoursEcrit
+  | CoursJoue
+  | MasterScriptPivot
+  | SmartboardTimelinePivot
+  | LiveScenarioPivot
+  | ReplayPostprodPivot;
+
+export type RenderablePivotPayload = Exclude<CoursePivotPayload, Comprehension>;
+
+/** Ligne de `course_pivots`. `payload` porte l'un des contrats ci-dessus. */
 export interface CoursePivotRow {
   id: string;
   tenant_id: string;
@@ -134,7 +336,7 @@ export interface CoursePivotRow {
   source_id: string;
   kind: PivotKind;
   parent_id: string | null;
-  payload: Comprehension | CoursEcrit | CoursJoue;
+  payload: CoursePivotPayload;
   model: string | null;
   created_at: string;
   updated_at: string;
@@ -152,7 +354,7 @@ export interface RenderAdapter {
   /** Forme attendue en entrée — un rendu « joué » ne sait pas lire un « écrit ». */
   accepts: Exclude<PivotKind, 'comprehension'>;
   render(
-    pivot: CoursEcrit | CoursJoue,
+    pivot: RenderablePivotPayload,
     ctx: { tenantId: string; userId?: string; sourceTitle: string },
   ): Promise<{ ref?: string; url?: string }>;
 }

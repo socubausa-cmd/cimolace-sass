@@ -126,12 +126,25 @@ export class RenderPivotService {
       .eq('source_id', sourceId);
     const rows = data ?? [];
     const root = rows.find((r: any) => r.kind === 'comprehension');
+    const has = (kind: string) => rows.some((r: any) => r.kind === kind);
+    const rendusGratuits = [
+      ...(has('ecrit') ? ['pdf', 'parcours', 'masterclass', 'manuel', 'quiz', 'forum', 'faq'] : []),
+      ...(has('joue') ? ['precepteur'] : []),
+      ...(has('master_script') ? ['master_script'] : []),
+      ...(has('smartboard_timeline') ? ['smartboard'] : []),
+      ...(has('live_scenario') ? ['live'] : []),
+      ...(has('replay_postprod') ? ['video_semaine'] : []),
+    ];
     return {
       comprehension: !!root,
-      ecrit: rows.some((r: any) => r.kind === 'ecrit'),
-      joue: rows.some((r: any) => r.kind === 'joue'),
+      ecrit: has('ecrit'),
+      joue: has('joue'),
+      master_script: has('master_script'),
+      smartboard_timeline: has('smartboard_timeline'),
+      live_scenario: has('live_scenario'),
+      replay_postprod: has('replay_postprod'),
       /** Ce qui peut être rendu SANS nouveau coût IA. */
-      rendusGratuits: rows.some((r: any) => r.kind === 'ecrit') ? ['pdf'] : [],
+      rendusGratuits,
       pivots: rows.map((r: any) => ({ kind: r.kind, model: r.model, created_at: r.created_at })),
     };
   }
