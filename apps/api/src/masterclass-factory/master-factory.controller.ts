@@ -39,6 +39,17 @@ export class MasterFactoryController {
     return this.factory.listSources(tenant.id, type);
   }
 
+  /** Métadonnées d'une source précise : utilisé par les liens directs Studio/Atelier. */
+  @Get('source/:type/:id')
+  @Roles('owner', 'admin', 'teacher')
+  getSource(
+    @Param('type') type: SourceType,
+    @Param('id') id: string,
+    @CurrentTenant() tenant: TenantContext,
+  ) {
+    return this.factory.getSource(tenant.id, type, id);
+  }
+
   /** Comprendre une source : produit/récupère le pivot `comprehension`. */
   @Post('understand')
   @Roles('owner', 'admin', 'teacher')

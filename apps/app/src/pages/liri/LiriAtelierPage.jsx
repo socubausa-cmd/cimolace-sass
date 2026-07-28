@@ -57,8 +57,12 @@ export default function LiriAtelierPage() {
   const [busy, setBusy] = useState('');
   const [msg, setMsg] = useState(null);
 
-  const load = useCallback(async (t) => {
-    setSources(null); setSel(null); setEtat(null);
+  const load = useCallback(async (t, opts = {}) => {
+    setSources(null);
+    if (!opts.keepSelection) {
+      setSel(null);
+      setEtat(null);
+    }
     try {
       const r = await masterFactoryApi.listSources(t);
       setSources(Array.isArray(r) ? r : (Array.isArray(r?.data) ? r.data : []));
@@ -66,16 +70,49 @@ export default function LiriAtelierPage() {
       setSources([]); setMsg({ k: 'err', t: e?.message || 'Chargement impossible.' });
     }
   }, []);
-  useEffect(() => { load(type); }, [type, load]);
+  useEffect(() => { load(type, { keepSelection: !!urlSourceId }); }, [type, load, urlSourceId]);
+
+  useEffect(() => {
+    if (!urlSourceId) return;
+    const signature = `${type}:${urlSourceId}:direct`;
+    if (bootSourceRef.current === signature) return;
+    bootSourceRef.current = signature;
+    const placeholder = {
+      id: urlSourceId,
+      title: 'Source sélectionnée',
+      ready: true,
+      chars: 0,
+      direct: true,
+    };
+    setMsg(null);
+    setSel((prev) => (String(prev?.id || '') === String(urlSourceId) ? prev : placeholder));
+    setEtat('loading');
+    let cancelled = false;
+    void masterFactoryApi.getSource(type, urlSourceId)
+      .then((source) => {
+        if (!cancelled) setSel((prev) => ({ ...(prev || placeholder), ...(source?.data || source || {}) }));
+      })
+      .catch(() => {
+        if (!cancelled) setSel(placeholder);
+      });
+    void masterFactoryApi.status(type, urlSourceId)
+      .then((status) => {
+        if (!cancelled) setEtat(status);
+      })
+      .catch(() => {
+        if (!cancelled) setEtat(null);
+      });
+    return () => { cancelled = true; };
+  }, [type, urlSourceId]);
 
   useEffect(() => {
     if (!Array.isArray(sources) || !urlSourceId) return;
     const signature = `${type}:${urlSourceId}`;
-    if (bootSourceRef.current === signature) return;
     const found = sources.find((s) => String(s.id) === String(urlSourceId));
     if (!found) return;
     bootSourceRef.current = signature;
-    void openSource(found);
+    setSel(found);
+    void masterFactoryApi.status(type, found.id).then(setEtat).catch(() => setEtat(null));
     window.setTimeout(() => {
       try {
         document.querySelector(`[data-source-id="${CSS.escape(String(urlSourceId))}"]`)?.scrollIntoView({

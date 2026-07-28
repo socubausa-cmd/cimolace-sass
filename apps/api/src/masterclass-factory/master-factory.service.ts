@@ -44,6 +44,11 @@ export class MasterFactoryService {
     return this.sources.listSources(tenantId, sourceType);
   }
 
+  /** Métadonnées d'une seule source, pour ouvrir un dossier direct sans attendre tout l'inventaire. */
+  getSource(tenantId: string, sourceType: SourceType, sourceId: string) {
+    return this.sources.getSource(tenantId, sourceType, sourceId);
+  }
+
   /**
    * Étape 1 : comprendre une source. C'est le seul endroit autorisé à produire
    * le fond invariant (`kind = comprehension`).

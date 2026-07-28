@@ -133,6 +133,60 @@ export class SourceAdaptersService {
    * l'état de leur transcription. Sans cette vue, l'utilisateur ne sait pas
    * ce qui est prêt à être transformé.
    */
+  async getSource(tenantId: string, type: SourceType, id: string) {
+    if (type === 'replay') {
+      const { data } = await (this.supabase.client as any)
+        .from('published_videos')
+        .select('id, title, duration_sec, transcript_text, created_at')
+        .eq('id', id)
+        .eq('tenant_id', tenantId)
+        .maybeSingle();
+      if (!data) throw new NotFoundException('Replay introuvable pour cette école.');
+      const transcript = String(data.transcript_text || '');
+      return {
+        id: data.id,
+        title: data.title,
+        durationSec: data.duration_sec,
+        ready: !!transcript.trim(),
+        chars: transcript.length,
+        createdAt: data.created_at,
+      };
+    }
+    if (type === 'tiktok') {
+      const { data } = await (this.supabase.client as any)
+        .from('precepteur_sources')
+        .select('id, title, status, transcript_text, published_at')
+        .eq('id', id)
+        .eq('tenant_id', tenantId)
+        .maybeSingle();
+      if (!data) throw new NotFoundException('Vidéo TikTok introuvable pour cette école.');
+      const transcript = String(data.transcript_text || '');
+      return {
+        id: data.id,
+        title: data.title,
+        status: data.status,
+        ready: !!transcript.trim(),
+        chars: transcript.length,
+        publishedAt: data.published_at,
+      };
+    }
+    if (type === 'texte') {
+      const raw = String(id || '');
+      const firstLine = raw.split('\n').find((l) => l.trim().length > 3) || 'Texte collé';
+      return {
+        id: raw,
+        title: firstLine.trim().slice(0, 120),
+        ready: raw.trim().length >= 200,
+        chars: raw.length,
+      };
+    }
+    if (type === 'document') {
+      const title = decodeURIComponent(String(id || '')).split('/').filter(Boolean).pop() || 'Document';
+      return { id, title, ready: true, chars: 0 };
+    }
+    throw new BadRequestException(`Type de source inconnu : ${type}`);
+  }
+
   async listSources(tenantId: string, type: SourceType) {
     if (type === 'replay') {
       const { data } = await (this.supabase.client as any)

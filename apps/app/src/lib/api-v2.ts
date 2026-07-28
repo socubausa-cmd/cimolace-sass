@@ -991,6 +991,8 @@ export type MasterFactorySourceType =
 export const masterFactoryApi = {
   listSources: (type: MasterFactorySourceType) =>
     apiV2.get<ApiEnvelope<any>>(`/master-factory/sources/${type}`).then(unwrap),
+  getSource: (type: MasterFactorySourceType, sourceId: string) =>
+    apiV2.get<ApiEnvelope<any>>(`/master-factory/source/${type}/${encodeURIComponent(sourceId)}`).then(unwrap),
   understand: (body: { sourceType?: MasterFactorySourceType; sourceId: string; force?: boolean }) =>
     apiV2.post<ApiEnvelope<any>>('/master-factory/understand', body, { timeout: 900000 }).then(unwrap),
   status: (sourceType: MasterFactorySourceType, sourceId: string) =>
