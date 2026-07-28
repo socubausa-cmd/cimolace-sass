@@ -304,6 +304,7 @@ const StudentFormationsPage = lazy(() => import('@/pages/school/student-school-l
 // « Mes formations » rendu par le moteur OS Cimolace (immersif, branché sur les données de cours).
 const StudentFormationsOsPage = lazy(() => import('@/pages/school/student-school-life/StudentFormationsOsPage'));
 const VideothequePage = lazy(() => import('@/pages/school/student-school-life/VideothequePage'));
+const LiriAtelierPage = lazy(() => import('@/pages/liri/LiriAtelierPage'));
 const DevImmersiveVideoPage = lazy(() => import('@/pages/dev/DevImmersiveVideoPage'));
 const StudentAgendaPage = lazy(() => import('@/pages/school/student-school-life/StudentAgendaPage'));
 const StudentNotesPage = lazy(() => import('@/pages/school/student-school-life/StudentNotesPage'));
@@ -2160,6 +2161,9 @@ isLiriHostDevPreviewRoute;
           <Route path="/liri/semaine" element={<ProtectedLiriRoute allowedRoles={['owner', 'admin', 'teacher', 'secretariat', 'student', 'practitioner', 'clinic_admin']} allowTenantRole><LiriSchoolShell active="semaine"><StudentWeeklySchedulePage /></LiriSchoolShell></ProtectedLiriRoute>} />
           <Route path="/liri/formations" element={<ProtectedLiriRoute allowedRoles={['owner', 'admin', 'teacher', 'secretariat', 'student', 'practitioner', 'clinic_admin']} allowTenantRole><LiriSchoolShell active="formations"><StudentFormationsOsPage /></LiriSchoolShell></ProtectedLiriRoute>} />
           <Route path="/liri/videotheque" element={<ProtectedLiriRoute allowedRoles={['owner', 'admin', 'teacher', 'secretariat', 'student', 'practitioner', 'clinic_admin']} allowTenantRole><LiriSchoolShell active="videotheque"><VideothequePage /></LiriSchoolShell></ProtectedLiriRoute>} />
+          {/* Atelier de cours — toutes les sources, tous les rendus, un seul écran.
+              CRÉATEURS SEULS : chaque production consomme des jetons IA. */}
+          <Route path="/liri/atelier" element={<ProtectedLiriRoute allowedRoles={['owner', 'admin', 'teacher']} allowTenantRole><LiriSchoolShell active="atelier"><LiriAtelierPage /></LiriSchoolShell></ProtectedLiriRoute>} />
           {/* Bibliothèque du Précepteur : cours générés par l'agent depuis les TikTok du fondateur. */}
           <Route path="/liri/precepteur-bibliotheque" element={<ProtectedLiriRoute allowedRoles={['owner', 'admin', 'teacher', 'secretariat', 'student', 'practitioner', 'clinic_admin']} allowTenantRole><LiriPrecepteurLibraryPage /></ProtectedLiriRoute>} />
           <Route path="/liri/vie-scolaire" element={<ProtectedLiriRoute allowedRoles={['owner', 'admin', 'teacher', 'secretariat', 'student', 'practitioner', 'clinic_admin']} allowTenantRole><LiriSchoolShell active="vie-scolaire"><SchoolLifePage embedded /></LiriSchoolShell></ProtectedLiriRoute>} />

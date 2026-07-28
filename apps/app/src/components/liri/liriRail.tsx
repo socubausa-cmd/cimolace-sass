@@ -27,7 +27,7 @@ export type EngineKey = 'liri' | 'ecole' | 'mbolo' | 'medos' | 'studio' | 'crea'
 
 export type RailKey =
   | 'accueil' | 'forfaits' | 'semaine' | 'formations'
-  | 'vie-scolaire' | 'agenda' | 'notes' | 'evaluations' | 'absences' | 'videotheque'
+  | 'vie-scolaire' | 'agenda' | 'notes' | 'evaluations' | 'absences' | 'videotheque' | 'atelier'
   | 'lives' | 'forum' | 'messages'
   | 'biblio-eleve' | 'documents'
   | 'temple' | 'boutique' | 'marche' | 'produits' | 'commandes' | 'paiements' | 'factures' | 'compta'
@@ -69,6 +69,8 @@ export const ENGINES: EngineDef[] = [
         { key: 'ecole', label: 'École', icon: GraduationCap, to: '/liri/ecole', creator: true },
         { key: 'formations', label: 'Mes cours', icon: BookOpen, to: '/liri/formations', school: true },
         { key: 'videotheque', label: 'Vidéothèque', icon: Film, to: '/liri/videotheque', schoolAll: true },
+        // Atelier : transformer une source en cours. Consomme des jetons → créateurs seuls.
+        { key: 'atelier', label: 'Atelier', icon: Sparkles, to: '/liri/atelier', creator: true },
         { key: 'semaine', label: 'Ma semaine', icon: CalendarDays, to: '/liri/semaine', schoolAll: true },
       ] },
       { section: 'Scolarité', items: [
