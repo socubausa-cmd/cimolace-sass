@@ -83,7 +83,8 @@ import {
   MAX_LIGNES_PAROLE, HAUTEUR_LIGNE_PAROLE, LIGNES_RESERVEES, MARGE_GAUCHE, MARGE_DROITE,
   MAX_LIGNES_TITRE, HAUTEUR_LIGNE_TITRE, MAX_CAR_LIGNE,
   TAILLE_SOUS_TITRE, typographieParole,
-  capaciteSousTitres, construireAss, corrigerTitre, corrigerTranscription,
+  appliquerGlossaire, capaciteSousTitres, chargerGlossaire, construireAss,
+  corrigerTitre, corrigerTranscription,
   couperEnLignes, decouperEnUnites, echapperCheminFiltre, pairesDeCorrection,
   preparerTitre, srtDesUnites,
 } from './short-sous-titres.js';
@@ -1300,9 +1301,44 @@ async function processVideoForShorts(recordingId, tenantId, storageKey, videoUrl
         `le cadrage DANS la bande est décidé extrait par extrait`,
     );
 
+    // 3ter. LE GLOSSAIRE MORD **AVANT** LA SÉLECTION, ET C'EST GRATUIT.
+    //
+    // ⭐ POURQUOI CET ORDRE EST LE BON, ET POURQUOI L'ANCIEN ÉTAIT STRUCTURELLEMENT FAUX.
+    // La relecture (bloc 5) tournait APRÈS le choix des moments. Le modèle sélectionnait
+    // donc, et TITRAIT, sur ce que la machine avait mal entendu : « Je suis Shao
+    // cinquième Manikongo piste Vita Kimba ». L'affichage, lui, était corrigé ensuite.
+    // Résultat mesuré sur le replay du 11 avril : un extrait intitulé « La femme aux neuf
+    // FEMELLES » — le titre gardait la faute que le sous-titre, lui, avait corrigée. Ce
+    // n'est pas un défaut du titreur, c'est l'ordre des opérations : on ne peut pas
+    // choisir ni nommer correctement un passage qu'on lit de travers.
+    //
+    // ⚠️ ON NE DÉPLACE QUE LA COUCHE DÉTERMINISTE. `appliquerGlossaire` remplace des
+    // graphies que l'ÉCOLE a déclarées fautives — zéro modèle, zéro invention possible,
+    // zéro appel réseau au-delà de la lecture de la table. La relecture PAR MODÈLE reste
+    // en aval, sur les seules fenêtres retenues : la passer sur toute la transcription
+    // coûterait ~25 lots d'appels sur un replay de 2 h, pour déplacer le risque au lieu
+    // de le supprimer.
+    //
+    // Le glossaire chargé ici est repassé tel quel au bloc 5 (`glossaire: glo`) : la
+    // table n'est lue qu'une fois.
+    const glo = await chargerGlossaire({ tenantId, journal: console });
+    let segmentsPourSelection = transcript.segments;
+    if (glo.substitutions.length > 0) {
+      let touches = 0;
+      segmentsPourSelection = transcript.segments.map((s) => {
+        const { texte, remplacements } = appliquerGlossaire(String(s?.text || ''), glo);
+        if (remplacements?.length) touches += 1;
+        return texte === s.text ? s : { ...s, text: texte };
+      });
+      console.log(
+        `[short-gen] Glossaire appliqué AVANT la sélection : ${touches} segment(s) sur `
+        + `${transcript.segments.length} corrigé(s) — le modèle choisit et titre sur le texte JUSTE`,
+      );
+    }
+
     // 4. CHOISIR LES MOMENTS — par le SENS, avec veto du signal (short-highlights.js).
     const { extraits, origine, diagnostic } = await selectionnerMoments({
-      segments: transcript.segments,
+      segments: segmentsPourSelection,
       dureeSec: dureeReelle,
       titre: opts.titre || '',
       fichier: videoFile,
@@ -1358,7 +1394,11 @@ async function processVideoForShorts(recordingId, tenantId, storageKey, videoUrl
     });
     const lignesARelire = [...indexTouches.keys()]
       .sort((a, b) => a - b)
-      .map((idx) => ({ ref: String(idx), texte: String(transcript.segments[idx].text || '') }));
+      // ⚠️ ON RELIT `segmentsPourSelection`, PAS `transcript.segments`. Le glossaire
+      // déterministe a déjà mordu dessus (bloc 3ter) ; repartir de l'original ferait
+      // refaire au modèle un travail déjà fait sûrement, et lui redonnerait l'occasion
+      // de se tromper là où une substitution ne se trompe jamais.
+      .map((idx) => ({ ref: String(idx), texte: String(segmentsPourSelection[idx].text || '') }));
     const { textes: textesRelus, trace: traceRelecture } = await corrigerTranscription({
       lignes: lignesARelire,
       // ⚠️ SANS `tenantId`, TOUT LE GLOSSAIRE EST INERTE. `chargerGlossaire` rend
@@ -1368,6 +1408,9 @@ async function processVideoForShorts(recordingId, tenantId, storageKey, videoUrl
       // bande vidéo où la diapo écrit « JE SUIS CHEO … fils de vita kimpa ».
       // Avec le tenant : 24/24, zéro invention.
       tenantId,
+      // Le glossaire est déjà en main (bloc 3ter) : on l'passe pour ne pas relire la
+      // table une seconde fois dans le même traitement.
+      glossaire: glo,
       titre: opts.titre || '',
       journal: console,
     });
