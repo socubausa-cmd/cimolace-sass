@@ -4,7 +4,7 @@ import {
   Film, Music2, FileText, Type, Sparkles, BookOpen, Presentation, Radio,
   FileDown, Loader2, Check, AlertTriangle, RefreshCw, Search, ArrowUpRight,
 } from 'lucide-react';
-import { masterFactoryApi } from '@/lib/api-v2';
+import { masterFactoryApi, masterclassApi } from '@/lib/api-v2';
 import { authStore } from '@/lib/auth-store';
 import { exportCoursePdf } from '@/lib/exportCoursePdf';
 
@@ -56,6 +56,7 @@ export default function LiriAtelierPage() {
   const [etat, setEtat] = useState(null);
   const [busy, setBusy] = useState('');
   const [msg, setMsg] = useState(null);
+  const [extractedCourse, setExtractedCourse] = useState(null);
 
   const load = useCallback(async (t, opts = {}) => {
     setSources(null);
@@ -133,6 +134,7 @@ export default function LiriAtelierPage() {
 
   const openSource = async (s) => {
     setMsg(null);
+    setExtractedCourse(null);
     setSel(s); setEtat('loading');
     try { setEtat(await masterFactoryApi.status(type, s.id)); }
     catch { setEtat(null); }
@@ -193,6 +195,88 @@ export default function LiriAtelierPage() {
       flash('ok', 'PDF produit depuis le pivot — aucun appel IA.');
     } catch (e) { flash('err', e?.message || 'PDF indisponible.'); }
     setBusy('');
+  };
+
+  const courseToMasterFactoryText = (course) => {
+    if (!course) return '';
+    const lines = [
+      `# ${course.title || 'Cours extrait'}`,
+      course.subtitle ? `\n${course.subtitle}` : '',
+      course.summary ? `\n## Résumé\n${course.summary}` : '',
+      Array.isArray(course.objectives) && course.objectives.length
+        ? `\n## Objectifs\n${course.objectives.map((o) => `- ${o}`).join('\n')}`
+        : '',
+    ].filter(Boolean);
+    (course.modules || []).forEach((mod, mIdx) => {
+      lines.push(`\n## Module ${mIdx + 1} — ${mod.title || 'Module'}`);
+      if (mod.description) lines.push(mod.description);
+      (mod.lessons || []).forEach((lesson, lIdx) => {
+        lines.push(`\n### Leçon ${mIdx + 1}.${lIdx + 1} — ${lesson.title || 'Leçon'}`);
+        if (lesson.content) lines.push(lesson.content);
+        if (Array.isArray(lesson.key_points) && lesson.key_points.length) {
+          lines.push('\nPoints clés :');
+          lines.push(lesson.key_points.map((p) => `- ${p}`).join('\n'));
+        }
+      });
+    });
+    if (Array.isArray(course.glossary) && course.glossary.length) {
+      lines.push('\n## Glossaire');
+      lines.push(course.glossary.map((g) => `- ${g.term} : ${g.definition}`).join('\n'));
+    }
+    return lines.join('\n').trim();
+  };
+
+  const extractCourse = async () => {
+    if (!sel) return;
+    setBusy('extract-course');
+    setExtractedCourse(null);
+    try {
+      let course = null;
+      let source = 'masterclass';
+      if (type === 'replay') {
+        try {
+          course = await masterclassApi.fromReplay(sel.id);
+        } catch (e) {
+          // Le replay direct peut échouer si la transcription est trop bruitée ou
+          // si le fournisseur IA est indisponible. Dans ce cas, on ne bloque pas
+          // le tunnel : Master Factory sait déjà rendre un cours depuis le pivot
+          // écrit existant, sans nouvel appel modèle.
+          source = 'pivot';
+          course = await masterFactoryApi.renderPdf({ sourceType: type, sourceId: sel.id });
+          course = course?.data ?? course;
+        }
+      } else {
+        source = 'pivot';
+        course = await masterFactoryApi.renderPdf({ sourceType: type, sourceId: sel.id });
+        course = course?.data ?? course;
+      }
+      if (!course?.modules?.length) throw new Error('Aucun cours exploitable extrait.');
+      setExtractedCourse(course);
+      const nbLessons = course.modules.reduce((n, mod) => n + (mod.lessons?.length || 0), 0);
+      flash('ok', `Rendu extrait prêt : ${course.modules.length} module(s), ${nbLessons} leçon(s)${source === 'pivot' ? ' · depuis le pivot Master Factory' : ''}.`);
+    } catch (e) {
+      flash('err', e?.message || 'Extraction du cours impossible.');
+    }
+    setBusy('');
+  };
+
+  const sendExtractedCourseToMasterclassFactory = () => {
+    if (!extractedCourse) return;
+    const text = courseToMasterFactoryText(extractedCourse);
+    if (!text.trim()) {
+      flash('err', 'Le rendu extrait est vide.');
+      return;
+    }
+    try {
+      window.localStorage.setItem('masterclass:prefillRawText', text.slice(0, 40000));
+      window.localStorage.setItem('masterclass:prefillSourceTitle', extractedCourse.title || sel?.title || 'Cours extrait');
+    } catch {
+      flash('err', "Impossible d'envoyer le rendu au Masterclass Factory : stockage local indisponible.");
+      return;
+    }
+    const params = new URLSearchParams({ step: '0', from: 'liri-atelier' });
+    if (urlParams.get('preview') === '1') params.set('preview', '1');
+    navigate(`/dashboard/tools/masterclass-factory?${params.toString()}`);
   };
 
   const filtered = useMemo(() => {
@@ -393,6 +477,47 @@ export default function LiriAtelierPage() {
                     {busy === 'pdf' ? <Loader2 size={15} className="animate-spin" /> : <FileDown size={15} />}
                     PDF {gratuits.includes('pdf') && <span style={{ fontSize: 10.5, color: C.ok }}>· gratuit</span>}
                   </button>
+
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginTop: 10 }}>
+                    <button type="button" onClick={extractCourse} disabled={!!busy || type !== 'replay'}
+                      style={{
+                        ...btn(false), justifyContent: 'center',
+                        opacity: type === 'replay' ? 1 : 0.45,
+                        cursor: busy ? 'wait' : type === 'replay' ? 'pointer' : 'not-allowed',
+                      }}>
+                      {busy === 'extract-course' ? <Loader2 size={14} className="animate-spin" /> : <BookOpen size={14} />}
+                      Voir le cours extrait
+                    </button>
+                    <button type="button" onClick={sendExtractedCourseToMasterclassFactory} disabled={!extractedCourse || !!busy}
+                      style={{ ...btn(Boolean(extractedCourse)), justifyContent: 'center', opacity: extractedCourse ? 1 : 0.45 }}>
+                      <ArrowUpRight size={14} /> Envoyer au Masterclass Factory
+                    </button>
+                  </div>
+
+                  {extractedCourse ? (
+                    <div style={{
+                      marginTop: 12, borderRadius: 12, border: `1px solid rgba(122,181,122,.30)`,
+                      background: 'rgba(122,181,122,.08)', padding: 12,
+                    }}>
+                      <p style={{ margin: '0 0 4px', color: C.ok, fontSize: 10.5, fontWeight: 850, textTransform: 'uppercase', letterSpacing: '.12em' }}>
+                        Rendu extrait · prêt à envoyer
+                      </p>
+                      <p style={{ margin: '0 0 8px', color: C.ink, fontSize: 13, fontWeight: 750 }}>
+                        {extractedCourse.title || sel.title}
+                      </p>
+                      <div style={{ display: 'grid', gap: 7, maxHeight: 185, overflowY: 'auto', paddingRight: 4 }}>
+                        {(extractedCourse.modules || []).slice(0, 4).map((mod, idx) => (
+                          <div key={`${mod.title}-${idx}`} style={{ borderRadius: 10, background: 'rgba(0,0,0,.16)', padding: '8px 10px' }}>
+                            <p style={{ margin: 0, color: C.ink, fontSize: 12.5, fontWeight: 750 }}>{mod.title || `Module ${idx + 1}`}</p>
+                            <p style={{ margin: '4px 0 0', color: C.muted, fontSize: 11.5 }}>
+                              {(mod.lessons || []).length} leçon(s)
+                              {(mod.lessons || [])[0]?.title ? ` · ${(mod.lessons || [])[0].title}` : ''}
+                            </p>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  ) : null}
 
                   <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginTop: 10 }}>
                     <button type="button" onClick={() => openInStudio('live')} style={{ ...btn(false), justifyContent: 'center' }}>
