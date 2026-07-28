@@ -69,18 +69,46 @@ function faststart(input, output) {
 }
 
 const hms = (s) => { const p = s.split(':').map(Number); return p.length === 3 ? p[0] * 3600 + p[1] * 60 + p[2] : p.length === 2 ? p[0] * 60 + p[1] : p[0]; };
+/**
+ * Le VTT de Zoom → texte plat + DEUX granularités.
+ *
+ * ⭐ ON NE JETTE PLUS LA FINESSE. Cette fonction agglomérait `parsed` (une entrée
+ * par prise de parole, avec son début ET sa fin) en paragraphes de 200 caractères,
+ * et ne conservait que le `t` de la première de chaque paquet. Mesuré sur le replay
+ * du 11 avril 2026 : 57 cues pour 21 minutes, soit **20 secondes de granularité**.
+ * Conséquence en aval, sur les extraits courts : 5 sur 5 non publiables (ouverture
+ * en plein milieu d'un propos, fermeture amputée) et 10 % des cartons de sous-titre
+ * tenus plus de 6 s — parce que sans FIN de segment, le temps d'affichage se
+ * répartit au prorata des caractères au lieu d'être mesuré.
+ *
+ * On rend donc les deux : `cues` (paragraphes, contrat inchangé pour ~55
+ * consommateurs) et `segments` (ce que la source a réellement dit, avec `e`).
+ */
 async function fetchCues(vttUrl) {
-  if (!vttUrl) return { text: null, cues: null };
+  if (!vttUrl) return { text: null, cues: null, segments: null };
   const res = await fetch(vttUrl + (vttUrl.includes('?') ? '&' : '?') + 'access_token=' + await zoomToken());
-  if (!res.ok) return { text: null, cues: null };
+  if (!res.ok) return { text: null, cues: null, segments: null };
   const raw = await res.text();
   const parsed = [];
   for (const b of raw.replace(/\r/g, '').split(/\n\n+/)) {
     const lines = b.split('\n').map((s) => s.trim()).filter(Boolean);
     const tl = lines.find((l) => l.includes('-->')); if (!tl) continue;
-    const t = Math.round(hms(tl.split('-->')[0].trim()) * 100) / 100;
+    const [debut, fin] = tl.split('-->').map((s) => s.trim());
+    const t = Math.round(hms(debut) * 100) / 100;
+    // ⚠️ LA FIN, c'est elle qui manquait. Le VTT la donne depuis toujours sur la même
+    // ligne ; on ne lisait que la moitié gauche de la flèche. Sans `e`, impossible de
+    // distinguer « l'orateur enchaîne » de « l'orateur s'est tu 3 secondes » — et
+    // c'est exactement là qu'un extrait doit commencer ou finir.
+    //
+    // ⚠️ `split(/\s/)[0]` N'EST PAS DÉCORATIF : en WebVTT, l'horodatage de fin peut être
+    // suivi de réglages de cue sur la même ligne — « 00:00:05.780 align:start
+    // position:0% ». Sans ce découpage, `hms` recevrait « 05.780 align » et rendrait
+    // NaN. La garde `Number.isFinite` plus bas rattraperait le cas, mais en perdant
+    // silencieusement TOUTES les fins du fichier : on serait revenu au point de départ
+    // sans qu'aucun journal ne le dise.
+    const e = Math.round(hms(fin.split(/\s/)[0]) * 100) / 100;
     const text = lines.filter((l) => !l.includes('-->') && !/^\d+$/.test(l) && l !== 'WEBVTT' && !l.startsWith('NOTE')).map((l) => l.replace(/^[^:]{2,40}:\s+/, '')).join(' ').trim();
-    if (text) parsed.push({ t, text });
+    if (text) parsed.push({ t, e: Number.isFinite(e) && e > t ? e : null, text });
   }
   const cues = []; let cur = null;
   for (const c of parsed) {
@@ -90,7 +118,11 @@ async function fetchCues(vttUrl) {
     if (/[.!?…»]$/.test(c.text) || cur.text.length > 200) { cues.push(cur); cur = null; }
   }
   if (cur) cues.push(cur);
-  return { text: parsed.map((c) => c.text).join('\n') || null, cues: cues.length ? cues : null };
+  return {
+    text: parsed.map((c) => c.text).join('\n') || null,
+    cues: cues.length ? cues : null,
+    segments: parsed.length ? parsed : null,
+  };
 }
 
 const PART = 8 * 1024 * 1024;
@@ -127,16 +159,16 @@ async function processOne(rec) {
     await downloadResumable(rec.download_url, raw);
     const ok = await faststart(raw, fs);
     const up = ok ? fs : raw;
-    const { text, cues } = await fetchCues(vttUrl);
-    console.log(`[zoom-transfer]    dl+mux ${((Date.now() - t0) / 1000).toFixed(0)}s · faststart:${ok} · cues:${cues ? cues.length : 0}`);
+    const { text, cues, segments } = await fetchCues(vttUrl);
+    console.log(`[zoom-transfer]    dl+mux ${((Date.now() - t0) / 1000).toFixed(0)}s · faststart:${ok} · cues:${cues ? cues.length : 0} · segments:${segments ? segments.length : 0}`);
     const t1 = Date.now();
     await r2Upload(up, key, 'video/mp4');
     console.log(`[zoom-transfer]    ⏫ R2 ${((Date.now() - t1) / 1000).toFixed(0)}s → ${key}`);
 
-    await supabase.from('zoom_recordings').update({ status: 'downloaded', storage_key: key, transcript_text: text, transcript_cues: cues, is_published: true, published_at: new Date().toISOString(), updated_at: new Date().toISOString(), error_message: null }).eq('id', rec.id);
+    await supabase.from('zoom_recordings').update({ status: 'downloaded', storage_key: key, transcript_text: text, transcript_cues: cues, transcript_segments: segments, is_published: true, published_at: new Date().toISOString(), updated_at: new Date().toISOString(), error_message: null }).eq('id', rec.id);
     const title = rec.topic?.replace(/^R[ée]union Zoom de\s*/i, '').trim();
     await supabase.from('published_videos').delete().eq('tenant_id', rec.tenant_id).eq('storage_key', key);
-    await supabase.from('published_videos').insert({ recording_id: rec.id, tenant_id: rec.tenant_id, title: rec.metadata?.title || title, description: rec.metadata?.description || null, playback_url: key, thumbnail_url: rec.thumbnail_url || null, duration_sec: (rec.duration_min || 0) * 60, category: title, transcript_text: text, transcript_cues: cues, storage_key: key, source: 'zoom', locale: 'fr', is_public: true, published_at: new Date().toISOString() });
+    await supabase.from('published_videos').insert({ recording_id: rec.id, tenant_id: rec.tenant_id, title: rec.metadata?.title || title, description: rec.metadata?.description || null, playback_url: key, thumbnail_url: rec.thumbnail_url || null, duration_sec: (rec.duration_min || 0) * 60, category: title, transcript_text: text, transcript_cues: cues, transcript_segments: segments, storage_key: key, source: 'zoom', locale: 'fr', is_public: true, published_at: new Date().toISOString() });
     console.log(`[zoom-transfer] ✅ ${title}`);
     return true;
   } catch (e) {

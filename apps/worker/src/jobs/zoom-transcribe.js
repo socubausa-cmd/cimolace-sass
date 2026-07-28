@@ -58,7 +58,13 @@ async function whisperChunk(file) {
         if (res.status === 429) { lastErr = `${p.name} 429`; throttled = true; break; } // quota épuisé → passer/laisser en attente
         if (!res.ok) { lastErr = `${p.name} ${res.status} ${(await res.text()).slice(0, 100)}`; break; } // 4xx → abandonner ce fournisseur
         const d = await res.json();
-        return (d.segments || []).map((s) => ({ start: Number(s.start) || 0, text: String(s.text || '').trim() })).filter((s) => s.text);
+        // ⚠️ `end` EST RENVOYÉ PAR WHISPER DEPUIS TOUJOURS et n'était pas lu. Sans lui,
+        // le moteur d'extraits ne peut pas savoir où l'orateur s'arrête : il reconstruit
+        // une fin fictive en prenant le début du segment suivant, ce qui efface les
+        // silences — précisément les endroits où un extrait doit commencer ou finir.
+        return (d.segments || [])
+          .map((s) => ({ start: Number(s.start) || 0, end: Number.isFinite(Number(s.end)) ? Number(s.end) : null, text: String(s.text || '').trim() }))
+          .filter((s) => s.text);
       } catch (e) { lastErr = `${p.name}: ${e.message}`; await sleep(Math.min(3000 * (a + 1), 12_000)); } // réseau/timeout → réessayer
     }
     console.log(`[zoom-transcribe] fournisseur ${p.name} indisponible → ${lastErr}`);
@@ -66,7 +72,17 @@ async function whisperChunk(file) {
   const err = new Error(lastErr); if (throttled) err.throttled = true; throw err;
 }
 
-// segments timés → cues {t,text} fusionnées (paragraphes, comme les 55 existantes)
+/**
+ * Segments timés → cues {t,text} fusionnées en paragraphes.
+ *
+ * ⚠️ CETTE FONCTION DÉTRUIT DE L'INFORMATION, ET C'EST VOULU — mais elle ne doit plus
+ * être la SEULE sortie. Elle agglomère jusqu'à 200 caractères et ne garde que le `t`
+ * du premier segment de chaque paquet : la fin de chacun, et tous les débuts
+ * intermédiaires, disparaissent. Résultat mesuré en aval : ~20 s de granularité, des
+ * extraits courts qui ouvrent au milieu d'une phrase et des sous-titres dont le temps
+ * d'affichage est réparti au prorata des caractères (jusqu'à 11,8 s sur un carton).
+ * `toSegments` ci-dessous conserve la granularité d'origine ; on stocke les deux.
+ */
 function toCues(segments) {
   const cues = []; let cur = null;
   for (const s of segments) {
@@ -77,6 +93,17 @@ function toCues(segments) {
   }
   if (cur) cues.push(cur);
   return cues;
+}
+
+/** La granularité que Whisper a réellement rendue : [{t,e,text}], rien d'aggloméré. */
+function toSegments(segments) {
+  return segments
+    .map((s) => ({
+      t: Math.round((Number(s.start) || 0) * 100) / 100,
+      e: Number.isFinite(s.end) ? Math.round(s.end * 100) / 100 : null,
+      text: String(s.text || '').trim(),
+    }))
+    .filter((s) => s.text);
 }
 
 export async function pollZoomTranscribe() {
@@ -105,18 +132,19 @@ export async function pollZoomTranscribe() {
     await pipeline(obj.Body, createWriteStream(mp4));
     await segmentAudio(mp4, prefix);
     const chunks = readdirSync(tmpdir()).filter((f) => f.startsWith(`zt_${v.id}_a_`) && f.endsWith('.ogg')).sort();
-    let allText = ''; const allCues = [];
+    let allText = ''; const allCues = []; const allSegments = [];
     for (let c = 0; c < chunks.length; c++) {
       const cf = join(tmpdir(), chunks[c]);
       const segs = (await whisperChunk(cf)).map((s) => ({ ...s, start: s.start + c * SEG }));
       allText += (allText ? '\n' : '') + segs.map((s) => s.text).join(' ');
       allCues.push(...toCues(segs));
+      allSegments.push(...toSegments(segs));
       try { unlinkSync(cf); } catch {}
     }
-    const upd = { transcript_text: allText || null, transcript_cues: allCues.length ? allCues : null };
+    const upd = { transcript_text: allText || null, transcript_cues: allCues.length ? allCues : null, transcript_segments: allSegments.length ? allSegments : null };
     await supabase.from('published_videos').update(upd).eq('id', v.id);
     await supabase.from('zoom_recordings').update(upd).eq('tenant_id', v.tenant_id).eq('storage_key', v.storage_key);
-    log(`✅ ${v.title} — ${allCues.length} cues`);
+    log(`✅ ${v.title} — ${allCues.length} cues · ${allSegments.length} segments fins`);
     return 1;
   } catch (e) {
     log(`❌ ${v.title}: ${String(e.message).slice(0, 200)}${e.throttled ? ' (quota Whisper)' : ''}`);
