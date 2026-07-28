@@ -80,7 +80,12 @@ export default function ExtraitsCourtsModal({ videoId, titreReplay, onClose, onP
       aria-label={`Extraits courts de ${titreReplay || 'ce replay'}`}
       onMouseDown={(e) => { if (e.target === e.currentTarget) onClose?.(); }}
       style={{
-        position: 'fixed', inset: 0, zIndex: 90,
+        // ⚠️ 4100 ET PAS 90. Ce panneau s'ouvre DEPUIS le lecteur immersif, qui est
+        // lui-même un plein écran à `zIndex: 4000` (ImmersiveVideoPlayer.jsx:349).
+        // À 90 il se montait correctement — invisible, entièrement recouvert par le
+        // lecteur. Symptôme trompeur : le bouton « ne fait rien », alors que l'état
+        // et la requête étaient bons.
+        position: 'fixed', inset: 0, zIndex: 4100,
         background: 'rgba(20,19,18,.86)', backdropFilter: 'blur(6px)',
         display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20,
       }}
