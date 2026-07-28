@@ -4,6 +4,7 @@ import { HealthController } from './health.controller';
 import { SupabaseModule } from './supabase/supabase.module';
 import { LiveKitModule } from './livekit/livekit.module';
 import { AuthModule } from './auth/auth.module';
+import { PasswordResetModule } from './auth/password-reset.module';
 import { TenantModule } from './tenant/tenant.module';
 import { CimolaceModule } from './cimolace/cimolace.module';
 import { CimolaceBackofficeModule } from './cimolace-backoffice/cimolace-backoffice.module';
@@ -77,6 +78,7 @@ import { UsageModule } from './usage/usage.module';
     LiveKitModule,
     // Core domain
     AuthModule,
+    PasswordResetModule,
     TenantModule,
     CimolaceModule,
     CimolaceBackofficeModule,
