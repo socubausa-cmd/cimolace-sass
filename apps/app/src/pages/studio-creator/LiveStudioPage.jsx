@@ -14,6 +14,7 @@ import { useToast } from '@/components/ui/use-toast';
 import { pushWizardSmartboardToLiveScenes } from '@/lib/pushWizardSmartboardToLiveScenes';
 import { formatJoinCodeDisplay } from '@/lib/liveJoinCode';
 import { teleconsultApi } from '@/lib/api';
+import { masterFactoryApi } from '@/lib/api-v2';
 
 export default function LiveStudioPage() {
   const { user } = useAuth();
@@ -26,6 +27,8 @@ export default function LiveStudioPage() {
   // l'étape 8 (Validation) → le praticien clique « Lancer maintenant » (1 clic).
   // « Préparer le live » = wizard normal depuis l'étape 1.
   const quickLaunch = searchParams.get('launch') === '1';
+  const masterFactorySourceType = searchParams.get('mfSourceType');
+  const masterFactorySourceId = searchParams.get('mfSourceId');
   // Live lancé depuis MEDOS (santé) → marque le live → cockpit clinique embarqué.
   const medosContext = searchParams.get('context') === 'medos';
   const liriWizardBootRef = useRef(null);
@@ -65,6 +68,22 @@ export default function LiveStudioPage() {
       updateDraft({ title: `Live — ${new Date().toLocaleDateString('fr-FR')}` });
     }
   }, [quickLaunch, draft, updateDraft]);
+
+  // Pont officiel Master Factory → Live Studio :
+  // /studio/live?mfSourceType=replay&mfSourceId=<uuid> arme la publication du scénario
+  // dans la session live créée par le wizard. On évite d'écraser un draft déjà armé.
+  const masterFactoryPrefillRef = useRef(false);
+  useEffect(() => {
+    if (!draft || masterFactoryPrefillRef.current || !masterFactorySourceId) return;
+    masterFactoryPrefillRef.current = true;
+    updateDraft({
+      master_factory_enabled: true,
+      master_factory_source_type: masterFactorySourceType || draft.master_factory_source_type || 'replay',
+      master_factory_source_id: masterFactorySourceId,
+      master_factory_replace_existing: searchParams.get('mfReplace') === '1',
+      master_factory_force: searchParams.get('mfForce') === '1',
+    });
+  }, [draft, masterFactorySourceId, masterFactorySourceType, searchParams, updateDraft]);
 
   // Pré-remplissage depuis MEDOS (bouton « Préparer » d'un RDV téléconsult) :
   // titre = patient, date/heure = RDV, mode santé (cockpit clinique) activé —
@@ -198,6 +217,47 @@ export default function LiveStudioPage() {
         });
       }
     }
+    const masterFactoryConfig = fullPayload.config?.master_factory || {};
+    const masterFactoryEnabled =
+      masterFactoryConfig.enabled === true ||
+      draft?.master_factory_enabled === true ||
+      Boolean(masterFactoryConfig.source_id || draft?.master_factory_source_id || masterFactorySourceId);
+    const sourceId =
+      masterFactoryConfig.source_id ||
+      draft?.master_factory_source_id ||
+      masterFactorySourceId ||
+      '';
+    if (sessionId && masterFactoryEnabled && sourceId) {
+      try {
+        const published = await masterFactoryApi.publishLiveSession({
+          sourceType:
+            masterFactoryConfig.source_type ||
+            draft?.master_factory_source_type ||
+            masterFactorySourceType ||
+            'replay',
+          sourceId,
+          liveSessionId: sessionId,
+          replaceExisting:
+            masterFactoryConfig.replace_existing === true ||
+            draft?.master_factory_replace_existing === true ||
+            searchParams.get('mfReplace') === '1',
+          force:
+            masterFactoryConfig.force === true ||
+            draft?.master_factory_force === true ||
+            searchParams.get('mfForce') === '1',
+        });
+        toast({
+          title: 'Master Factory publié',
+          description: `${published?.counts?.scenes ?? 0} scène(s) SmartBoard et ${published?.counts?.scriptSections ?? 0} section(s) de script prêtes dans le live.`,
+        });
+      } catch (e) {
+        toast({
+          title: 'Master Factory',
+          description: `Live créé, mais la publication du scénario a échoué : ${e?.message || 'erreur inconnue'}.`,
+          variant: 'destructive',
+        });
+      }
+    }
     const joinHint =
       join_code &&
       `Code mobile LIRI : ${formatJoinCodeDisplay(join_code)} — partager pour rejoindre depuis l'app (écran « Rejoindre avec un code »).`;
@@ -254,4 +314,3 @@ export default function LiveStudioPage() {
     </div>
   );
 }
-

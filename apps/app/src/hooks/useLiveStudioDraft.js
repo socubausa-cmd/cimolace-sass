@@ -73,6 +73,14 @@ export const DEFAULT_DRAFT = {
   smartboard_element_scenes: [],
   /** Sections de script maître (aperçu hôte) — optionnel */
   smartboard_master_script_sections: [],
+  // Master Factory — pont source universelle → scénario live.
+  // Quand renseigné, la création du live publie automatiquement le stack
+  // Master Script + SmartBoard + scénario dans live_blueprints/live_scenes/live_script_sections.
+  master_factory_enabled: false,
+  master_factory_source_type: 'replay',
+  master_factory_source_id: '',
+  master_factory_replace_existing: false,
+  master_factory_force: false,
   smartboard_default_browser_url: '',
   smartboard_shop_products: [],
   // Étape 7

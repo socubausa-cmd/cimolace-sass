@@ -82,6 +82,13 @@ function buildConfig(draft) {
     smartboard_shop_products:  draft.smartboard_shop_products,
     smartboard_element_scenes: Array.isArray(draft.smartboard_element_scenes) ? draft.smartboard_element_scenes : [],
     smartboard_master_script_sections: Array.isArray(draft.smartboard_master_script_sections) ? draft.smartboard_master_script_sections : [],
+    master_factory: {
+      enabled: draft.master_factory_enabled === true,
+      source_type: draft.master_factory_source_type || 'replay',
+      source_id: draft.master_factory_source_id || '',
+      replace_existing: draft.master_factory_replace_existing === true,
+      force: draft.master_factory_force === true,
+    },
   };
 }
 
@@ -241,6 +248,15 @@ export function Step8Validation({ draft, updateDraft, onSubmit, creating, user, 
               <p className="text-sm text-[#f0b89a] mt-1">
                 {(draft.liri_audio_scenes || []).filter((s) => String(s?.name || '').trim()).length} scène(s) — panneau dans l&apos;Arène
               </p>
+            </div>
+          ) : null}
+          {draft.master_factory_enabled && draft.master_factory_source_id ? (
+            <div className="rounded-xl border border-[#e3b574]/35 bg-[#e3b574]/10 p-3 md:col-span-2">
+              <p className="text-xs font-medium text-[#e3b574]">Master Factory armé</p>
+              <p className="mt-1 text-sm text-white">
+                Source {draft.master_factory_source_type || 'replay'} → Master Script, SmartBoard et scénario live publiés automatiquement à la création.
+              </p>
+              <p className="mt-1 break-all text-[11px] text-white/45">{draft.master_factory_source_id}</p>
             </div>
           ) : null}
         </div>
