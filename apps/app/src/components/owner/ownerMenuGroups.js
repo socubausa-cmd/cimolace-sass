@@ -41,6 +41,9 @@ export function buildOwnerMenuGroups(payoutTenantSlug, basePath = '/owner-dashbo
         // Route LIRI-only → on ne l'expose PAS depuis le back-office historique, sinon
         // fuite de realm (cf. item « Encaissement » plus bas, même garde `isLiri`).
         ...(isLiri ? [{ id: 'videotheque', icon: Film, label: 'Vidéothèque', href: '/liri/videotheque' }] : []),
+        // Atelier de cours : transformer une source (replay, TikTok, document)
+        // en cours. Même garde `isLiri` — route LIRI-only.
+        ...(isLiri ? [{ id: 'atelier', icon: Sparkles, label: 'Atelier de cours', href: '/liri/atelier' }] : []),
         { id: 'school-life', icon: Calendar, label: 'Vie Scolaire' },
         { id: 'coaching-mentoring', icon: Handshake, label: 'Coaching & Mentorat' },
         { id: 'workshops', icon: UsersIcon, label: 'Ateliers' },
