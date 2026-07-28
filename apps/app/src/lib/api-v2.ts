@@ -971,6 +971,51 @@ export const masterclassApi = {
     apiV2.post<ApiEnvelope<any>>('/masterclass-factory/precepteur', body).then(unwrap),
 };
 
+// ── Master Factory officiel ─────────────────────────────────────────────────
+//
+// Nouveau point d'entrée Liri : un seul cerveau, plusieurs sorties.
+// Les anciennes routes `masterclass-factory/*` restent compatibles, mais les
+// nouveaux écrans doivent préférer cette API.
+
+export type MasterFactorySourceType =
+  | 'replay'
+  | 'live'
+  | 'tiktok'
+  | 'document'
+  | 'texte'
+  | 'pdf'
+  | 'audio'
+  | 'video'
+  | 'url';
+
+export const masterFactoryApi = {
+  listSources: (type: MasterFactorySourceType) =>
+    apiV2.get<ApiEnvelope<any>>(`/master-factory/sources/${type}`).then(unwrap),
+  understand: (body: { sourceType?: MasterFactorySourceType; sourceId: string; force?: boolean }) =>
+    apiV2.post<ApiEnvelope<any>>('/master-factory/understand', body, { timeout: 900000 }).then(unwrap),
+  status: (sourceType: MasterFactorySourceType, sourceId: string) =>
+    apiV2.get<ApiEnvelope<any>>(`/master-factory/status/${sourceType}/${encodeURIComponent(sourceId)}`).then(unwrap),
+  produceCourse: (body: { sourceType?: MasterFactorySourceType; sourceId: string; force?: boolean }) =>
+    apiV2.post<ApiEnvelope<any>>('/master-factory/produce/course', body).then(unwrap),
+  produceMasterScript: (body: { sourceType?: MasterFactorySourceType; sourceId: string; force?: boolean }) =>
+    apiV2.post<ApiEnvelope<any>>('/master-factory/produce/master-script', body).then(unwrap),
+  produceSmartboard: (body: { sourceType?: MasterFactorySourceType; sourceId: string; force?: boolean }) =>
+    apiV2.post<ApiEnvelope<any>>('/master-factory/produce/smartboard', body).then(unwrap),
+  produceLiveScenario: (body: { sourceType?: MasterFactorySourceType; sourceId: string; force?: boolean }) =>
+    apiV2.post<ApiEnvelope<any>>('/master-factory/produce/live-scenario', body).then(unwrap),
+  produceLiveStack: (body: { sourceType?: MasterFactorySourceType; sourceId: string; force?: boolean }) =>
+    apiV2.post<ApiEnvelope<any>>('/master-factory/produce/live-stack', body).then(unwrap),
+  publishLiveSession: (body: {
+    sourceType?: MasterFactorySourceType;
+    sourceId: string;
+    liveSessionId: string;
+    replaceExisting?: boolean;
+    force?: boolean;
+  }) => apiV2.post<ApiEnvelope<any>>('/master-factory/publish/live-session', body).then(unwrap),
+  renderPdf: (body: { sourceType?: MasterFactorySourceType; sourceId: string }) =>
+    apiV2.post<ApiEnvelope<any>>('/master-factory/render/pdf', body).then(unwrap),
+};
+
 // ── Vidéothèque : EXTRAITS COURTS (short_clips) d'un replay ──────────────────
 //
 // POURQUOI CE CONTRAT EST « MAIGRE » CÔTÉ CLIENT : la fabrication d'extraits est
