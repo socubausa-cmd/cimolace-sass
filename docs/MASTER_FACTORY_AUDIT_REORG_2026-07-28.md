@@ -381,6 +381,7 @@ Routes officielles disponibles :
 | `POST` | `/master-factory/produce/smartboard` | owner/admin/teacher | Générer le pivot `smartboard_timeline` depuis le Master Script |
 | `POST` | `/master-factory/produce/live-scenario` | owner/admin/teacher | Générer le pivot `live_scenario` depuis Master Script + SmartBoard |
 | `POST` | `/master-factory/produce/live-stack` | owner/admin/teacher | Générer la chaîne vivante complète |
+| `POST` | `/master-factory/publish/live-session` | owner/admin/teacher | Publier la chaîne vivante dans `live_blueprints`, `live_scenes`, `live_script_sections` |
 | `POST` | `/master-factory/render/pdf` | owner/admin/teacher | Rendre le PDF depuis le pivot écrit |
 
 Routes legacy conservées :
@@ -415,6 +416,7 @@ Ce service doit envelopper les services existants, pas les supprimer.
 - `buildSmartboardTimeline()` existe en version déterministe v0.
 - `buildLiveScenario()` existe en version déterministe v0.
 - `buildLiveStack()` orchestre les trois pivots depuis une `comprehension` existante.
+- `publishLiveStackToSession()` pousse la sortie dans une vraie session Liri Live.
 - Test : `apps/api/test/master-factory-pivots.test.js`.
 - Preuve visuelle : `artifacts/master-factory-proof/01-pipeline-proof.png`.
 
@@ -456,6 +458,14 @@ La régie live doit lire :
 - `live_session_participants` pour la salle d'attente/membres.
 
 Elle ne doit pas contenir de logique pédagogique lourde.
+
+État 2026-07-28 :
+
+- la route `/master-factory/publish/live-session` publie :
+  - `live_blueprints` pour le contexte ;
+  - `live_scenes` pour le SmartBoard central ;
+  - `live_script_sections` pour le prompteur / Master Script.
+- le test automatisé vérifie aussi le mapping des lignes live.
 
 ### Lot 6 — Brancher Replay Postprod
 

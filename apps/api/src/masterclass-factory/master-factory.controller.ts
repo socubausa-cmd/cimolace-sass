@@ -22,6 +22,7 @@ import type { SourceType } from './pivot.types';
  *   /master-factory/produce/smartboard
  *   /master-factory/produce/live-scenario
  *   /master-factory/produce/live-stack
+ *   /master-factory/publish/live-session
  *   /master-factory/render/pdf
  *
  * Ces routes partent toutes du même pivot `comprehension`.
@@ -144,6 +145,34 @@ export class MasterFactoryController {
       body?.sourceType ?? 'replay',
       String(body?.sourceId ?? ''),
       { force: body?.force === true },
+    );
+  }
+
+  /**
+   * Publier la chaîne vivante dans une vraie session Liri Live :
+   * live_blueprints + live_scenes + live_script_sections.
+   */
+  @Post('publish/live-session')
+  @Roles('owner', 'admin', 'teacher')
+  publishLiveSession(
+    @Body()
+    body: {
+      sourceType?: SourceType;
+      sourceId?: string;
+      liveSessionId?: string;
+      replaceExisting?: boolean;
+      force?: boolean;
+    },
+    @CurrentTenant() tenant: TenantContext,
+    @Req() req: Request,
+  ) {
+    return this.factory.publishLiveStackToSession(
+      tenant.id,
+      (req as any).user?.id,
+      body?.sourceType ?? 'replay',
+      String(body?.sourceId ?? ''),
+      String(body?.liveSessionId ?? ''),
+      { replaceExisting: body?.replaceExisting === true, force: body?.force === true },
     );
   }
 

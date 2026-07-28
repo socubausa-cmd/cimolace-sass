@@ -195,6 +195,112 @@ export class MasterFactoryService {
     };
   }
 
+  /**
+   * Publie la chaîne vivante dans une vraie session Liri Live.
+   *
+   * Tables alimentées :
+   * - live_blueprints       : contexte / objectifs / notes
+   * - live_scenes           : scènes SmartBoard lisibles par la régie
+   * - live_script_sections  : Master Script / prompteur hôte
+   */
+  async publishLiveStackToSession(
+    tenantId: string,
+    userId: string,
+    sourceType: SourceType,
+    sourceId: string,
+    liveSessionId: string,
+    opts: { replaceExisting?: boolean; force?: boolean } = {},
+  ) {
+    if (!liveSessionId) throw new BadRequestException('liveSessionId manquant');
+    await this.assertLiveSessionBelongsToTenant(tenantId, liveSessionId);
+
+    const stack = await this.buildLiveStack(tenantId, sourceType, sourceId, { force: opts.force === true });
+    const masterScript = stack.masterScript as MasterScriptPivot;
+    const smartboard = stack.smartboardTimeline as SmartboardTimelinePivot;
+    const liveScenario = stack.liveScenario as LiveScenarioPivot;
+
+    const blueprint = {
+      live_session_id: liveSessionId,
+      outline_json: {
+        source: { sourceType, sourceId },
+        live_title: liveScenario.live_title,
+        scenes: liveScenario.scenes.map((s) => ({
+          id: s.id,
+          order: s.order,
+          type: s.type,
+          script_moment_id: s.script_moment_id,
+          smartboard_scene_id: s.smartboard_scene_id,
+        })),
+      },
+      goals_json: {
+        intention: masterScript.intention_generale,
+        audience: masterScript.audience,
+        waiting_room_message: liveScenario.waiting_room_message,
+        closing_sequence: liveScenario.closing_sequence,
+      },
+      key_points_json: masterScript.moments.flatMap((m) => m.key_points.slice(0, 2)).slice(0, 12),
+      private_notes: liveScenario.preparation_notes.join('\n'),
+      estimated_duration_minutes: masterScript.estimated_duration_minutes ?? null,
+      blueprint_score: 92,
+    };
+    const { error: blueprintError } = await this.db
+      .from('live_blueprints')
+      .upsert(blueprint, { onConflict: 'live_session_id' });
+    if (blueprintError) throw new ServiceUnavailableException(blueprintError.message);
+
+    if (opts.replaceExisting) {
+      await this.db.from('live_scenes').delete().eq('live_session_id', liveSessionId);
+      await this.db.from('live_script_sections').delete().eq('session_id', liveSessionId);
+    }
+
+    const sceneRows = this.makeLiveSceneRows(liveSessionId, smartboard, liveScenario);
+    const scriptRows = this.makeLiveScriptRows(liveSessionId, userId, masterScript);
+
+    let scenesInserted = 0;
+    if (sceneRows.length) {
+      const { data: existingScenes } = await this.db
+        .from('live_scenes')
+        .select('id')
+        .eq('live_session_id', liveSessionId)
+        .limit(1);
+      if (opts.replaceExisting || !(existingScenes || []).length) {
+        const { error } = await this.db.from('live_scenes').insert(sceneRows);
+        if (error) throw new ServiceUnavailableException(error.message);
+        scenesInserted = sceneRows.length;
+      }
+    }
+
+    let scriptSectionsInserted = 0;
+    if (scriptRows.length) {
+      const { data: existingScripts } = await this.db
+        .from('live_script_sections')
+        .select('id')
+        .eq('session_id', liveSessionId)
+        .limit(1);
+      if (opts.replaceExisting || !(existingScripts || []).length) {
+        const { error } = await this.db.from('live_script_sections').insert(scriptRows);
+        if (error) throw new ServiceUnavailableException(error.message);
+        scriptSectionsInserted = scriptRows.length;
+      }
+    }
+
+    return {
+      ok: true,
+      liveSessionId,
+      source: { sourceType, sourceId },
+      pivots: stack.pivots,
+      published: {
+        blueprint: true,
+        live_scenes: scenesInserted,
+        live_script_sections: scriptSectionsInserted,
+      },
+      skipped: {
+        live_scenes: scenesInserted === 0,
+        live_script_sections: scriptSectionsInserted === 0,
+      },
+    };
+  }
+
   private async requireComprehension(tenantId: string, sourceType: SourceType, sourceId: string) {
     if (!sourceId) throw new BadRequestException('sourceId manquant');
     const { data, error } = await this.db
@@ -211,6 +317,17 @@ export class MasterFactoryService {
       throw new NotFoundException("Cette source n'a pas encore de pivot comprehension. Lance d'abord /master-factory/understand.");
     }
     return { pivotId: data.id as string, comprehension: data.payload as Comprehension };
+  }
+
+  private async assertLiveSessionBelongsToTenant(tenantId: string, liveSessionId: string) {
+    const { data, error } = await this.db
+      .from('live_sessions')
+      .select('id, tenant_id')
+      .eq('id', liveSessionId)
+      .eq('tenant_id', tenantId)
+      .maybeSingle();
+    if (error) throw new ServiceUnavailableException(error.message);
+    if (!data) throw new NotFoundException("Live introuvable pour ce tenant.");
   }
 
   private async findChildPivot(parentId: string, kind: string) {
@@ -379,5 +496,66 @@ export class MasterFactoryService {
         model: 'deterministic-live-scenario-v0',
       },
     };
+  }
+
+  private makeLiveSceneRows(
+    liveSessionId: string,
+    smartboard: SmartboardTimelinePivot,
+    liveScenario: LiveScenarioPivot,
+  ) {
+    return smartboard.scenes.map((scene, index) => {
+      const liveScene = liveScenario.scenes.find((s) => s.smartboard_scene_id === scene.id);
+      return {
+        live_session_id: liveSessionId,
+        name: scene.title || `Scène ${index + 1}`,
+        scene_type: 'smartboard',
+        order_index: index,
+        is_active: index === 0,
+        content_payload_json: {
+          source: 'master_factory',
+          live_scenario_scene_id: liveScene?.id,
+          script_moment_id: scene.script_moment_id,
+          ia_data: {
+            title: scene.title,
+            core_idea: scene.visual_intent,
+            camera_zone: scene.camera_zone,
+            timeline: scene.timeline,
+            blocks: scene.blocks,
+          },
+          smartboard_timeline_scene: scene,
+        },
+      };
+    });
+  }
+
+  private makeLiveScriptRows(liveSessionId: string, userId: string, masterScript: MasterScriptPivot) {
+    return masterScript.moments.map((moment, index) => ({
+      session_id: liveSessionId,
+      created_by: userId,
+      slide_index: index,
+      order_index: index,
+      title: moment.title,
+      content: [
+        `【Intention du slide】\n${moment.intention}`,
+        `【Message central】\n${moment.message_central}`,
+        `【Discours du professeur】\n${moment.teacher_script}`,
+        moment.key_points.length ? `【Grandes idées à insister】\n${moment.key_points.map((k) => `• ${k}`).join('\n')}` : null,
+        moment.student_understanding ? `【Ce que l'élève doit comprendre】\n${moment.student_understanding}` : null,
+        moment.transition ? `【Transition】\n${moment.transition}` : null,
+      ]
+        .filter(Boolean)
+        .join('\n\n'),
+      master_agent: {
+        slide_title: moment.title,
+        intention: moment.intention,
+        message_central: moment.message_central,
+        teacher_script: moment.teacher_script,
+        key_points: moment.key_points,
+        student_understanding: moment.student_understanding,
+        transition: moment.transition,
+        simple_version: moment.simple_version,
+        interaction: moment.interaction,
+      },
+    }));
   }
 }

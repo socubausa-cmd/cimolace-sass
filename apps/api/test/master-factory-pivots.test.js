@@ -66,4 +66,18 @@ test('comprehension → master script → smartboard timeline → live scenario'
   assert.equal(live.scenes[0].smartboard_scene_id, smartboard.scenes[0].id);
   assert.equal(live.replay_postprod_targets.includes('video_semaine'), true);
   assert.equal(live.replay_postprod_targets.includes('quiz'), true);
+
+  const liveSceneRows = svc.makeLiveSceneRows('live-session-1', smartboard, live);
+  assert.equal(liveSceneRows.length, 2);
+  assert.equal(liveSceneRows[0].live_session_id, 'live-session-1');
+  assert.equal(liveSceneRows[0].scene_type, 'smartboard');
+  assert.equal(liveSceneRows[0].content_payload_json.source, 'master_factory');
+  assert.equal(liveSceneRows[0].content_payload_json.ia_data.timeline.length > 0, true);
+
+  const scriptRows = svc.makeLiveScriptRows('live-session-1', 'user-1', master);
+  assert.equal(scriptRows.length, 2);
+  assert.equal(scriptRows[0].session_id, 'live-session-1');
+  assert.equal(scriptRows[0].created_by, 'user-1');
+  assert.match(scriptRows[0].content, /Discours du professeur/);
+  assert.equal(scriptRows[0].master_agent.message_central, master.moments[0].message_central);
 });
