@@ -46,6 +46,8 @@ export default function LiveStudioPage() {
   const { draft, updateDraft, clearDraft, lastSavedAt, saveStatus, saveError } = useLiveStudioDraft(user?.id, selectedTeacherId || user?.id);
   const { createLiveSession } = useTeacherAppointments(selectedTeacherId || user?.id);
   const [creating, setCreating] = useState(false);
+  const [masterFactorySource, setMasterFactorySource] = useState(null);
+  const [masterFactoryStatus, setMasterFactoryStatus] = useState(null);
 
   useEffect(() => {
     if (isStaff) fetchTeachers().then(setTeachers);
@@ -84,6 +86,44 @@ export default function LiveStudioPage() {
       master_factory_force: searchParams.get('mfForce') === '1',
     });
   }, [draft, masterFactorySourceId, masterFactorySourceType, searchParams, updateDraft]);
+
+  useEffect(() => {
+    if (!masterFactorySourceId) return;
+    let alive = true;
+    const sourceType = masterFactorySourceType || 'replay';
+    const loadMasterFactoryContext = async () => {
+      try {
+        const [source, status] = await Promise.all([
+          masterFactoryApi.getSource(sourceType, masterFactorySourceId).catch(() => null),
+          masterFactoryApi.status(sourceType, masterFactorySourceId).catch(() => null),
+        ]);
+        if (!alive) return;
+        const normalizedSource = source?.data || source || null;
+        setMasterFactorySource(normalizedSource);
+        setMasterFactoryStatus(status?.data || status || null);
+        if (normalizedSource?.title) {
+          const patch = {};
+          if (!String(draft?.title || '').trim()) patch.title = `Live · ${normalizedSource.title}`;
+          if (!String(draft?.description || '').trim()) {
+            patch.description =
+              `Session préparée depuis Master Factory : ${normalizedSource.title}. ` +
+              'Le Master Script, le SmartBoard et le scénario live seront publiés à la création.';
+          }
+          if (!draft?.session_type || draft.session_type === 'teleconsult') patch.session_type = 'classe';
+          if (!draft?.category || draft.category === 'teleconsultation') patch.category = 'formation';
+          if (Object.keys(patch).length) updateDraft(patch);
+        }
+      } catch {
+        if (alive) {
+          setMasterFactorySource(null);
+          setMasterFactoryStatus(null);
+        }
+      }
+    };
+    loadMasterFactoryContext();
+    return () => { alive = false; };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [masterFactorySourceId, masterFactorySourceType]);
 
   // Pré-remplissage depuis MEDOS (bouton « Préparer » d'un RDV téléconsult) :
   // titre = patient, date/heure = RDV, mode santé (cockpit clinique) activé —
@@ -292,6 +332,32 @@ export default function LiveStudioPage() {
       hideRail
       hideEcosystemActions
     >
+      {masterFactorySourceId ? (
+        <div className="mb-4 rounded-2xl border border-[#e3b574]/35 bg-[#e3b574]/10 px-4 py-3 text-[#f5f4ee] shadow-[0_18px_48px_rgba(0,0,0,.22)]">
+          <div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
+            <div>
+              <p className="text-[11px] font-black uppercase tracking-[.18em] text-[#e3b574]">Master Factory armé</p>
+              <p className="mt-1 text-sm font-semibold">
+                {masterFactorySource?.title || 'Source en cours de chargement…'}
+              </p>
+              <p className="mt-1 text-xs text-white/55">
+                Source {masterFactorySourceType || 'replay'} · scénario live, Master Script et SmartBoard réutilisés à la création.
+              </p>
+            </div>
+            <div className="grid grid-cols-3 gap-2 text-center text-[11px]">
+              {[
+                ['Comprendre', masterFactoryStatus?.comprehension],
+                ['Script', masterFactoryStatus?.master_script],
+                ['Live', masterFactoryStatus?.live_scenario],
+              ].map(([label, ok]) => (
+                <span key={label} className={`rounded-xl border px-3 py-2 ${ok ? 'border-emerald-400/35 bg-emerald-400/10 text-emerald-200' : 'border-white/10 bg-white/5 text-white/55'}`}>
+                  {label}<br /><strong>{ok ? 'Prêt' : 'Lecture'}</strong>
+                </span>
+              ))}
+            </div>
+          </div>
+        </div>
+      ) : null}
       <LiveStudioBuilder
         draft={draft}
         updateDraft={updateDraft}

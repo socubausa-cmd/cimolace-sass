@@ -6,6 +6,73 @@ import { useFormations } from '@/hooks/useFormations';
 import { useFormationStructure } from '@/hooks/useFormationStructure';
 import { useToast } from '@/components/ui/use-toast';
 import useTenantBranding from '@/hooks/useTenantBranding';
+import { masterFactoryApi } from '@/lib/api-v2';
+
+const buildMasterFactoryFormationDraft = ({ sourceType, sourceId, source, status }) => {
+  const title = source?.title || 'Source Master Factory';
+  return {
+    title,
+    description:
+      `Formation préparée depuis Master Factory : ${title}. ` +
+      'Le parcours reprend la source, puis organise le contenu en storyboard, SmartBoard, quiz et rendu élève.',
+    category: 'masterclass',
+    level: 'Tous niveaux',
+    thumbnail: '',
+    coverImage: '',
+    year: 'Programme Master Factory',
+    status: 'draft',
+    config: {
+      hasCertificate: true,
+      isPrivate: false,
+      minPassScore: 70,
+      master_factory: {
+        enabled: true,
+        source_type: sourceType,
+        source_id: sourceId,
+        source_title: title,
+        status,
+      },
+    },
+    modules: [
+      {
+        id: `mf-${sourceId}-module-1`,
+        title: 'Module 1 · De la source au cours',
+        weeks: [
+          {
+            id: `mf-${sourceId}-week-1`,
+            title: 'Semaine 1 · Comprendre, structurer, transmettre',
+            days: [
+              {
+                id: `mf-${sourceId}-day-1`,
+                title: title || 'Séance issue de la source',
+                videos: [
+                  {
+                    id: sourceId,
+                    title,
+                    source_type: sourceType,
+                    master_factory: true,
+                    duration_sec: source?.durationSec || null,
+                  },
+                ],
+                powerpoint: {
+                  id: `mf-${sourceId}-smartboard`,
+                  title: 'SmartBoard Master Factory',
+                  type: 'master_factory',
+                  ready: Boolean(status?.smartboard_timeline),
+                },
+                quiz: {
+                  id: `mf-${sourceId}-quiz`,
+                  title: 'Quiz de consolidation',
+                  questions: [],
+                },
+              },
+            ],
+          },
+        ],
+      },
+    ],
+  };
+};
 
 export default function StudioFormationPage() {
   const navigate = useNavigate();
@@ -16,6 +83,8 @@ export default function StudioFormationPage() {
   const { fetchStructure, saveStructure } = useFormationStructure();
   const [selectedFormation, setSelectedFormation] = useState(null);
   const [loadingStructure, setLoadingStructure] = useState(false);
+  const [masterFactoryDraft, setMasterFactoryDraft] = useState(null);
+  const [loadingMasterFactory, setLoadingMasterFactory] = useState(false);
 
   const editFormationId = useMemo(() => {
     try {
@@ -25,6 +94,43 @@ export default function StudioFormationPage() {
       return null;
     }
   }, [location.search]);
+
+  const masterFactoryParams = useMemo(() => {
+    try {
+      const params = new URLSearchParams(location.search || '');
+      return {
+        sourceType: params.get('mfSourceType') || 'replay',
+        sourceId: params.get('mfSourceId') || '',
+      };
+    } catch {
+      return { sourceType: 'replay', sourceId: '' };
+    }
+  }, [location.search]);
+
+  useEffect(() => {
+    if (!masterFactoryParams.sourceId || editFormationId) return;
+    let alive = true;
+    const loadMasterFactoryDraft = async () => {
+      setLoadingMasterFactory(true);
+      try {
+        const [source, status] = await Promise.all([
+          masterFactoryApi.getSource(masterFactoryParams.sourceType, masterFactoryParams.sourceId).catch(() => null),
+          masterFactoryApi.status(masterFactoryParams.sourceType, masterFactoryParams.sourceId).catch(() => null),
+        ]);
+        if (!alive) return;
+        setMasterFactoryDraft(buildMasterFactoryFormationDraft({
+          sourceType: masterFactoryParams.sourceType,
+          sourceId: masterFactoryParams.sourceId,
+          source: source?.data || source || null,
+          status: status?.data || status || null,
+        }));
+      } finally {
+        if (alive) setLoadingMasterFactory(false);
+      }
+    };
+    loadMasterFactoryDraft();
+    return () => { alive = false; };
+  }, [masterFactoryParams.sourceId, masterFactoryParams.sourceType, editFormationId]);
 
   useEffect(() => {
     if (!editFormationId || loading) return;
@@ -94,7 +200,7 @@ export default function StudioFormationPage() {
     navigate('/studio');
   };
 
-  if (loading || loadingStructure) {
+  if (loading || loadingStructure || loadingMasterFactory) {
     /**
      * REPLI DE FOND — pourquoi il compte vraiment.
      * Contrairement à `--school-accent` (déclarée au :root dans index.css),
@@ -128,7 +234,7 @@ export default function StudioFormationPage() {
 
   return (
     <OwnerFormationBuilder
-      formation={selectedFormation}
+      formation={selectedFormation || masterFactoryDraft}
       onSave={handleSaveFormation}
       onCancel={handleCancel}
     />

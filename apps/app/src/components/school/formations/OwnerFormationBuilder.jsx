@@ -1045,6 +1045,7 @@ const OwnerFormationBuilder = ({ formation, onSave, onCancel }) => {
       ),
     [modules]
   );
+  const masterFactoryConfig = data?.config?.master_factory || null;
 
   return (
     // Le constructeur s'inscrit DANS le shell du dashboard (LiriDashboardShell) :
@@ -1058,7 +1059,7 @@ const OwnerFormationBuilder = ({ formation, onSave, onCancel }) => {
             <ArrowLeft className="w-[18px] h-[18px]" />
           </button>
           <div className="ofb-title-wrap">
-            <h1>{formation ? 'Modifier la formation' : 'Créer une formation'}</h1>
+            <h1>{formation?.id ? 'Modifier la formation' : 'Créer une formation'}</h1>
             <p>Poste production — de la création au rendu élève</p>
           </div>
           <div className="ofb-topbar-actions">
@@ -1072,6 +1073,32 @@ const OwnerFormationBuilder = ({ formation, onSave, onCancel }) => {
             </Button>
           </div>
         </div>
+
+        {masterFactoryConfig?.enabled ? (
+          <div className="mx-4 mb-4 rounded-2xl border border-[var(--school-accent)]/35 bg-[color-mix(in_srgb,var(--school-accent)_12%,transparent)] px-4 py-3 text-white shadow-[0_18px_52px_rgba(0,0,0,.22)] md:mx-6">
+            <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+              <div>
+                <div className="ofb-eyebrow compact">Master Factory · source armée</div>
+                <h3 className="mt-1 text-base font-black">{masterFactoryConfig.source_title || data?.title || 'Source Master Factory'}</h3>
+                <p className="mt-1 max-w-3xl text-xs text-white/55">
+                  Le constructeur part d’une source {masterFactoryConfig.source_type || 'replay'} déjà comprise :
+                  storyboard, vidéo source, SmartBoard, quiz et rendu élève sont liés au même fond.
+                </p>
+              </div>
+              <div className="grid grid-cols-3 gap-2 text-center text-[11px]">
+                {[
+                  ['Comprendre', masterFactoryConfig.status?.comprehension],
+                  ['SmartBoard', masterFactoryConfig.status?.smartboard_timeline],
+                  ['Live', masterFactoryConfig.status?.live_scenario],
+                ].map(([label, ok]) => (
+                  <span key={label} className={`rounded-xl border px-3 py-2 ${ok ? 'border-emerald-300/35 bg-emerald-300/10 text-emerald-100' : 'border-white/10 bg-white/5 text-white/55'}`}>
+                    {label}<br /><strong>{ok ? 'Prêt' : 'À produire'}</strong>
+                  </span>
+                ))}
+              </div>
+            </div>
+          </div>
+        ) : null}
 
       <Dialog open={previewOpen} onOpenChange={setPreviewOpen}>
         <DialogContent className="max-w-[98vw] w-full h-[92vh] bg-[#151a21]/95 backdrop-blur-xl border border-white/10 p-0 overflow-hidden">
