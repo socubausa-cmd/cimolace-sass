@@ -18,10 +18,13 @@ import type { SourceType } from './pivot.types';
  *   /master-factory/sources
  *   /master-factory/understand
  *   /master-factory/produce/course
+ *   /master-factory/produce/master-script
+ *   /master-factory/produce/smartboard
+ *   /master-factory/produce/live-scenario
+ *   /master-factory/produce/live-stack
  *   /master-factory/render/pdf
  *
- * Les futurs rendus `master-script`, `smartboard-timeline`, `live-scenario`
- * seront ajoutés ici, sans multiplier les moteurs.
+ * Ces routes partent toutes du même pivot `comprehension`.
  */
 @Controller('master-factory')
 @UseGuards(JwtAuthGuard, TenantGuard, RolesGuard)
@@ -75,6 +78,69 @@ export class MasterFactoryController {
     return this.factory.requestWrittenCourse(
       tenant.id,
       (req as any).user?.id,
+      body?.sourceType ?? 'replay',
+      String(body?.sourceId ?? ''),
+      { force: body?.force === true },
+    );
+  }
+
+  /** Produire le conducteur oral officiel depuis le pivot compréhension. */
+  @Post('produce/master-script')
+  @Roles('owner', 'admin', 'teacher')
+  produceMasterScript(
+    @Body() body: { sourceType?: SourceType; sourceId?: string; force?: boolean },
+    @CurrentTenant() tenant: TenantContext,
+  ) {
+    return this.factory.buildMasterScript(
+      tenant.id,
+      body?.sourceType ?? 'replay',
+      String(body?.sourceId ?? ''),
+      { force: body?.force === true },
+    );
+  }
+
+  /** Produire la timeline SmartBoard vivant depuis le Master Script. */
+  @Post('produce/smartboard')
+  @Roles('owner', 'admin', 'teacher')
+  produceSmartboard(
+    @Body() body: { sourceType?: SourceType; sourceId?: string; force?: boolean },
+    @CurrentTenant() tenant: TenantContext,
+  ) {
+    return this.factory.buildSmartboardTimeline(
+      tenant.id,
+      body?.sourceType ?? 'replay',
+      String(body?.sourceId ?? ''),
+      { force: body?.force === true },
+    );
+  }
+
+  /** Produire le scénario Liri Live depuis Master Script + SmartBoard. */
+  @Post('produce/live-scenario')
+  @Roles('owner', 'admin', 'teacher')
+  produceLiveScenario(
+    @Body() body: { sourceType?: SourceType; sourceId?: string; force?: boolean },
+    @CurrentTenant() tenant: TenantContext,
+  ) {
+    return this.factory.buildLiveScenario(
+      tenant.id,
+      body?.sourceType ?? 'replay',
+      String(body?.sourceId ?? ''),
+      { force: body?.force === true },
+    );
+  }
+
+  /**
+   * Produire toute la chaîne vivante :
+   * comprehension existante → Master Script → SmartBoard Timeline → Live Scenario.
+   */
+  @Post('produce/live-stack')
+  @Roles('owner', 'admin', 'teacher')
+  produceLiveStack(
+    @Body() body: { sourceType?: SourceType; sourceId?: string; force?: boolean },
+    @CurrentTenant() tenant: TenantContext,
+  ) {
+    return this.factory.buildLiveStack(
+      tenant.id,
       body?.sourceType ?? 'replay',
       String(body?.sourceId ?? ''),
       { force: body?.force === true },

@@ -377,6 +377,10 @@ Routes officielles disponibles :
 | `POST` | `/master-factory/understand` | owner/admin/teacher | Produire/récupérer le pivot `comprehension` |
 | `GET` | `/master-factory/status/:type/:id` | owner/admin/teacher | Voir les pivots/rendus disponibles |
 | `POST` | `/master-factory/produce/course` | owner/admin/teacher | Demander un cours écrit/parcours |
+| `POST` | `/master-factory/produce/master-script` | owner/admin/teacher | Générer le pivot `master_script` depuis `comprehension` |
+| `POST` | `/master-factory/produce/smartboard` | owner/admin/teacher | Générer le pivot `smartboard_timeline` depuis le Master Script |
+| `POST` | `/master-factory/produce/live-scenario` | owner/admin/teacher | Générer le pivot `live_scenario` depuis Master Script + SmartBoard |
+| `POST` | `/master-factory/produce/live-stack` | owner/admin/teacher | Générer la chaîne vivante complète |
 | `POST` | `/master-factory/render/pdf` | owner/admin/teacher | Rendre le PDF depuis le pivot écrit |
 
 Routes legacy conservées :
@@ -403,6 +407,16 @@ processReplay()
 ```
 
 Ce service doit envelopper les services existants, pas les supprimer.
+
+État 2026-07-28 :
+
+- `MasterFactoryService` existe.
+- `buildMasterScript()` existe en version déterministe v0.
+- `buildSmartboardTimeline()` existe en version déterministe v0.
+- `buildLiveScenario()` existe en version déterministe v0.
+- `buildLiveStack()` orchestre les trois pivots depuis une `comprehension` existante.
+- Test : `apps/api/test/master-factory-pivots.test.js`.
+- Preuve visuelle : `artifacts/master-factory-proof/01-pipeline-proof.png`.
 
 ### Lot 3 — Brancher SmartBoard sur Master Script
 
