@@ -50,6 +50,7 @@ let AuthService = class AuthService {
     constructor() {
         this.supabase = (0, supabase_js_1.createClient)(process.env.SUPABASE_URL ?? '', process.env.SUPABASE_SERVICE_ROLE_KEY ?? '', { auth: { persistSession: false } });
         this.jwtSecret = process.env.MEDOS_JWT_SECRET ?? '';
+        this.supabaseJwtSecret = process.env.SUPABASE_JWT_SECRET ?? '';
         if (!this.jwtSecret) {
             console.warn('[MedOS] MEDOS_JWT_SECRET non défini — le pont tenant-token ne fonctionnera pas');
         }
@@ -60,15 +61,34 @@ let AuthService = class AuthService {
     }
     async verifyToken(token) {
         const { data, error } = await this.supabase.auth.getUser(token);
-        if (error || !data.user)
-            return null;
-        return {
-            id: data.user.id,
-            email: data.user.email ?? '',
-            role: 'authenticated',
-            user_metadata: (data.user.user_metadata ?? {}),
-            app_metadata: (data.user.app_metadata ?? {}),
-        };
+        if (!error && data.user) {
+            return {
+                id: data.user.id,
+                email: data.user.email ?? '',
+                role: 'authenticated',
+                user_metadata: (data.user.user_metadata ?? {}),
+                app_metadata: (data.user.app_metadata ?? {}),
+            };
+        }
+        if (this.supabaseJwtSecret && this.supabaseJwtSecret !== 'replace_me') {
+            try {
+                const payload = jwt.verify(token, this.supabaseJwtSecret, {
+                    algorithms: ['HS256'],
+                });
+                if (payload?.sub) {
+                    return {
+                        id: payload.sub,
+                        email: payload.email ?? '',
+                        role: payload.role ?? 'authenticated',
+                        user_metadata: (payload.user_metadata ?? {}),
+                        app_metadata: (payload.app_metadata ?? {}),
+                    };
+                }
+            }
+            catch {
+            }
+        }
+        return null;
     }
     async resolveCimolaceIdentity(user) {
         const userId = user.id;

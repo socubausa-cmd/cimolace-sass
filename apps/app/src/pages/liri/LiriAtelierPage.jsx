@@ -1,7 +1,8 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
   Film, Music2, FileText, Type, Sparkles, BookOpen, Presentation, Radio,
-  FileDown, Loader2, Check, AlertTriangle, RefreshCw, Search,
+  FileDown, Loader2, Check, AlertTriangle, RefreshCw, Search, ArrowUpRight,
 } from 'lucide-react';
 import { masterFactoryApi } from '@/lib/api-v2';
 import { exportCoursePdf } from '@/lib/exportCoursePdf';
@@ -41,6 +42,7 @@ const ACTIONS = [
 ];
 
 export default function LiriAtelierPage() {
+  const navigate = useNavigate();
   const [type, setType] = useState('replay');
   const [sources, setSources] = useState(null);
   const [q, setQ] = useState('');
@@ -61,9 +63,24 @@ export default function LiriAtelierPage() {
   useEffect(() => { load(type); }, [type, load]);
 
   const openSource = async (s) => {
+    setMsg(null);
     setSel(s); setEtat('loading');
     try { setEtat(await masterFactoryApi.status(type, s.id)); }
     catch { setEtat(null); }
+  };
+
+  const openInStudio = (target, source = sel) => {
+    if (!source?.id) return;
+    const params = new URLSearchParams({
+      tenant: 'isna',
+      mfSourceType: type,
+      mfSourceId: source.id,
+    });
+    if (target === 'formation') {
+      navigate(`/studio/formation?${params.toString()}`);
+      return;
+    }
+    navigate(`/studio/live?${params.toString()}`);
   };
 
   const flash = (k, t) => { setMsg({ k, t }); setTimeout(() => setMsg(null), 7000); };
@@ -160,7 +177,7 @@ export default function LiriAtelierPage() {
         </button>
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0,1fr) 340px', gap: 18, alignItems: 'start' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0,1fr) minmax(380px, 440px)', gap: 18, alignItems: 'start' }}>
         {/* ── Sources ── */}
         <div style={{ background: C.panel, borderRadius: 14, border: `1px solid ${C.line}`, overflow: 'hidden' }}>
           {sources === null ? (
@@ -176,11 +193,18 @@ export default function LiriAtelierPage() {
                 {filtered.map((s) => {
                   const on = sel?.id === s.id;
                   return (
-                    <button key={s.id} type="button" onClick={() => openSource(s)}
+                    <button
+                      key={s.id}
+                      type="button"
+                      data-source-id={s.id}
+                      onClick={() => openSource(s)}
+                      onDoubleClick={() => openInStudio('live', s)}
                       style={{
                         display: 'flex', alignItems: 'center', gap: 12, width: '100%', textAlign: 'left',
                         padding: '11px 14px', border: 'none', borderBottom: `1px solid ${C.line}`,
-                        background: on ? 'rgba(217,119,87,.14)' : 'transparent', color: C.ink, cursor: 'pointer',
+                        background: on ? 'linear-gradient(90deg, rgba(217,119,87,.24), rgba(217,119,87,.08))' : 'transparent',
+                        color: C.ink, cursor: 'pointer',
+                        boxShadow: on ? 'inset 3px 0 0 #d97757' : 'none',
                       }}>
                       <span style={{ flex: 1, minWidth: 0, fontSize: 13.5, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                         {s.title || <em style={{ color: C.faint }}>sans titre</em>}
@@ -188,6 +212,11 @@ export default function LiriAtelierPage() {
                       {typeof s.chars === 'number' && s.chars > 0 && (
                         <span style={{ fontSize: 11.5, color: s.chars >= 10000 ? C.coral : C.faint, fontWeight: s.chars >= 10000 ? 700 : 400 }}>
                           {(s.chars / 1000).toFixed(1)}k
+                        </span>
+                      )}
+                      {on && (
+                        <span style={{ fontSize: 10, color: C.coral, fontWeight: 800, textTransform: 'uppercase', letterSpacing: '.08em' }}>
+                          ouverte
                         </span>
                       )}
                       {!pret(s) && <AlertTriangle size={14} style={{ color: C.warn }} title="Pas de transcription" />}
@@ -200,17 +229,46 @@ export default function LiriAtelierPage() {
         </div>
 
         {/* ── Panneau d'action ── */}
-        <div style={{ background: C.panel, borderRadius: 14, border: `1px solid ${C.line}`, padding: 16, position: 'sticky', top: 16 }}>
+        <div style={{ background: C.panel, borderRadius: 14, border: `1px solid ${sel ? 'rgba(217,119,87,.36)' : C.line}`, padding: 16, position: 'sticky', top: 16, boxShadow: sel ? '0 20px 55px rgba(0,0,0,.25)' : 'none' }}>
           {!sel ? (
-            <p style={{ color: C.muted, fontSize: 13, margin: 0 }}>Choisis une source pour voir ce qui est déjà produit.</p>
+            <div>
+              <p style={{ color: C.ink, fontSize: 15, fontWeight: 750, margin: '0 0 7px' }}>Choisis une source</p>
+              <p style={{ color: C.muted, fontSize: 13, margin: 0, lineHeight: 1.55 }}>
+                Le panneau se transforme en poste Master Factory : extraction, cours,
+                SmartBoard, live, PDF et ouverture directe dans le Studio.
+              </p>
+            </div>
           ) : (
             <>
+              <div style={{
+                margin: '-2px 0 14px', padding: '10px 12px', borderRadius: 12,
+                background: 'rgba(217,119,87,.12)', border: '1px solid rgba(217,119,87,.25)',
+              }}>
+                <p style={{ margin: '0 0 4px', color: C.coral, fontSize: 10.5, fontWeight: 850, textTransform: 'uppercase', letterSpacing: '.12em' }}>
+                  Source ouverte · Master Factory
+                </p>
+                <p style={{ margin: 0, color: C.ink, fontSize: 12.5, lineHeight: 1.45 }}>
+                  Cette source devient le fond commun : une seule compréhension, puis plusieurs rendus.
+                </p>
+              </div>
               <p style={{ margin: '0 0 4px', fontSize: 14, fontWeight: 700, lineHeight: 1.35 }}>
                 {sel.title || 'Sans titre'}
               </p>
               <p style={{ margin: '0 0 14px', fontSize: 12, color: C.faint }}>
                 {sel.chars ? `${sel.chars.toLocaleString('fr-FR')} caractères de matière` : 'Transcription absente'}
               </p>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0,1fr))', gap: 7, marginBottom: 14 }}>
+                {[
+                  ['Comprendre', etat?.comprehension],
+                  ['Écrire', etat?.ecrit],
+                  ['Live', etat?.live_scenario],
+                ].map(([label, ok]) => (
+                  <div key={label} style={{ borderRadius: 10, padding: '9px 8px', background: ok ? 'rgba(122,181,122,.10)' : 'rgba(245,244,238,.06)', border: `1px solid ${ok ? 'rgba(122,181,122,.35)' : C.line}` }}>
+                    <p style={{ margin: 0, fontSize: 10, color: C.faint, textTransform: 'uppercase', letterSpacing: '.08em' }}>{label}</p>
+                    <p style={{ margin: '4px 0 0', fontSize: 12, color: ok ? C.ok : C.muted, fontWeight: 750 }}>{ok ? 'Prêt' : etat === 'loading' ? 'Lecture…' : 'À faire'}</p>
+                  </div>
+                ))}
+              </div>
 
               {!pret(sel) ? (
                 <p style={{ fontSize: 12.5, color: C.warn, lineHeight: 1.5 }}>
@@ -228,6 +286,11 @@ export default function LiriAtelierPage() {
                   {etat?.comprehension && (
                     <p style={{ fontSize: 11.5, color: C.ok, margin: '0 0 12px', lineHeight: 1.45 }}>
                       L'analyse est faite : les rendus ci-dessous la réutilisent sans nouveau coût.
+                    </p>
+                  )}
+                  {etat === 'loading' && (
+                    <p style={{ fontSize: 11.5, color: C.muted, margin: '0 0 12px', lineHeight: 1.45 }}>
+                      Lecture des pivots existants… les actions restent disponibles dès que l'état revient.
                     </p>
                   )}
 
@@ -261,6 +324,15 @@ export default function LiriAtelierPage() {
                     {busy === 'pdf' ? <Loader2 size={15} className="animate-spin" /> : <FileDown size={15} />}
                     PDF {gratuits.includes('pdf') && <span style={{ fontSize: 10.5, color: C.ok }}>· gratuit</span>}
                   </button>
+
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginTop: 10 }}>
+                    <button type="button" onClick={() => openInStudio('live')} style={{ ...btn(false), justifyContent: 'center' }}>
+                      <ArrowUpRight size={14} /> Live Studio
+                    </button>
+                    <button type="button" onClick={() => openInStudio('formation')} style={{ ...btn(false), justifyContent: 'center' }}>
+                      <ArrowUpRight size={14} /> Formation
+                    </button>
+                  </div>
 
                   <p style={{ fontSize: 11, color: C.faint, margin: '12px 0 0', lineHeight: 1.5 }}>
                     Un cours complet demande une quinzaine de minutes : le travail se poursuit

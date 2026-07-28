@@ -23,6 +23,7 @@ export declare function capMedosRole(membershipRole: string | null, requestedRol
 export declare class AuthService {
     private supabase;
     private readonly jwtSecret;
+    private readonly supabaseJwtSecret;
     private readonly cimolaceAdminEmails;
     constructor();
     verifyToken(token: string): Promise<{

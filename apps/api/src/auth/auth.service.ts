@@ -69,6 +69,7 @@ export function capMedosRole(membershipRole: string | null, requestedRole: strin
 export class AuthService {
   private supabase: SupabaseClient;
   private readonly jwtSecret: string;
+  private readonly supabaseJwtSecret: string;
   private readonly cimolaceAdminEmails: Set<string>;
 
   constructor() {
@@ -78,6 +79,7 @@ export class AuthService {
       { auth: { persistSession: false } },
     );
     this.jwtSecret = process.env.MEDOS_JWT_SECRET ?? '';
+    this.supabaseJwtSecret = process.env.SUPABASE_JWT_SECRET ?? '';
     if (!this.jwtSecret) {
       console.warn('[MedOS] MEDOS_JWT_SECRET non défini — le pont tenant-token ne fonctionnera pas');
     }
@@ -96,14 +98,47 @@ export class AuthService {
    */
   async verifyToken(token: string) {
     const { data, error } = await this.supabase.auth.getUser(token);
-    if (error || !data.user) return null;
-    return {
-      id: data.user.id,
-      email: data.user.email ?? '',
-      role: 'authenticated',
-      user_metadata: (data.user.user_metadata ?? {}) as Record<string, unknown>,
-      app_metadata: (data.user.app_metadata ?? {}) as Record<string, unknown>,
-    };
+    if (!error && data.user) {
+      return {
+        id: data.user.id,
+        email: data.user.email ?? '',
+        role: 'authenticated',
+        user_metadata: (data.user.user_metadata ?? {}) as Record<string, unknown>,
+        app_metadata: (data.user.app_metadata ?? {}) as Record<string, unknown>,
+      };
+    }
+
+    // Repli local : utile pour les tests E2E/dev et cohérent avec
+    // apps/api/src/auth/jwt.strategy.ts, qui accepte déjà les tokens Supabase HS256.
+    // En production, les vrais tokens continuent de passer par auth.getUser ci-dessus ;
+    // ce fallback ne s'active que si Supabase refuse/est indisponible et si le secret
+    // Supabase est explicitement configuré.
+    if (this.supabaseJwtSecret && this.supabaseJwtSecret !== 'replace_me') {
+      try {
+        const payload = jwt.verify(token, this.supabaseJwtSecret, {
+          algorithms: ['HS256'],
+        }) as {
+          sub?: string;
+          email?: string;
+          role?: string;
+          user_metadata?: Record<string, unknown>;
+          app_metadata?: Record<string, unknown>;
+        };
+        if (payload?.sub) {
+          return {
+            id: payload.sub,
+            email: payload.email ?? '',
+            role: payload.role ?? 'authenticated',
+            user_metadata: (payload.user_metadata ?? {}) as Record<string, unknown>,
+            app_metadata: (payload.app_metadata ?? {}) as Record<string, unknown>,
+          };
+        }
+      } catch {
+        // ignore — on retourne null comme avant
+      }
+    }
+
+    return null;
   }
 
   /**
