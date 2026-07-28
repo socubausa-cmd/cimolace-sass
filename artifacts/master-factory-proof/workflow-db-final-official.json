@@ -1,0 +1,120 @@
+{
+  "job": {
+    "id": "e8b8edfe-6a97-482c-af6c-2de8cb828975",
+    "status": "done",
+    "progress": "2/6 leçons",
+    "error_message": null,
+    "metrics": {
+      "days": 8,
+      "source": "L'arbre du Manikongo — 31 mai 2026",
+      "lessons": 6,
+      "notions": 6,
+      "seconds": 339,
+      "doc_chars": 3114
+    },
+    "course_id": "442cc9c5-9c8b-41ef-9ba4-96ab86192ea1",
+    "updated_at": "2026-07-28T13:54:04.075+00:00"
+  },
+  "pivots": [
+    {
+      "id": "7ad3c8db-0700-4587-a4e5-1f5d96accf2d",
+      "kind": "comprehension",
+      "parent_id": null,
+      "model": "deepseek-v4-flash",
+      "created_at": "2026-07-28T13:47:17.417088+00:00",
+      "payloadSummary": {
+        "keys": [
+          "meta",
+          "titre",
+          "public",
+          "notions",
+          "promesse",
+          "glossaire",
+          "prerequis",
+          "schema_version"
+        ],
+        "notions": 6,
+        "title": "Rituel de guérison et de protection par l'invocation des ancêtres"
+      }
+    },
+    {
+      "id": "10ecf197-6d3f-4c4b-92dc-b62db00d9f8f",
+      "kind": "master_script",
+      "parent_id": "7ad3c8db-0700-4587-a4e5-1f5d96accf2d",
+      "model": "deterministic-master-script-v0",
+      "created_at": "2026-07-28T13:47:20.931515+00:00",
+      "payloadSummary": {
+        "keys": [
+          "kind",
+          "meta",
+          "title",
+          "moments",
+          "audience",
+          "schema_version",
+          "intention_generale",
+          "estimated_duration_minutes"
+        ],
+        "moments": 6,
+        "title": "Rituel de guérison et de protection par l'invocation des ancêtres"
+      }
+    },
+    {
+      "id": "3f3d40dc-a5ff-42b6-8ac5-c0b82122d5c5",
+      "kind": "smartboard_timeline",
+      "parent_id": "10ecf197-6d3f-4c4b-92dc-b62db00d9f8f",
+      "model": "deterministic-smartboard-timeline-v0",
+      "created_at": "2026-07-28T13:47:23.113354+00:00",
+      "payloadSummary": {
+        "keys": [
+          "kind",
+          "meta",
+          "title",
+          "scenes",
+          "schema_version"
+        ],
+        "scenes": 6,
+        "title": "Rituel de guérison et de protection par l'invocation des ancêtres — Tableau vivant"
+      }
+    },
+    {
+      "id": "8a4269d0-0d7f-4a8c-8c6c-818ffe0dbab1",
+      "kind": "live_scenario",
+      "parent_id": "10ecf197-6d3f-4c4b-92dc-b62db00d9f8f",
+      "model": "deterministic-live-scenario-v0",
+      "created_at": "2026-07-28T13:47:25.698349+00:00",
+      "payloadSummary": {
+        "keys": [
+          "kind",
+          "meta",
+          "scenes",
+          "live_title",
+          "schema_version",
+          "closing_sequence",
+          "preparation_notes",
+          "waiting_room_message",
+          "replay_postprod_targets"
+        ],
+        "scenes": 6,
+        "title": "Rituel de guérison et de protection par l'invocation des ancêtres"
+      }
+    },
+    {
+      "id": "d6fd47d3-760f-43a6-823d-5a22d77190fb",
+      "kind": "ecrit",
+      "parent_id": "7ad3c8db-0700-4587-a4e5-1f5d96accf2d",
+      "model": "deepseek-v4-flash",
+      "created_at": "2026-07-28T13:53:52.690333+00:00",
+      "payloadSummary": {
+        "keys": [
+          "kind",
+          "titre",
+          "lecons",
+          "promesse",
+          "schema_version"
+        ],
+        "lecons": 6,
+        "title": "Rituel de guérison et de protection par l'invocation des ancêtres"
+      }
+    }
+  ]
+}

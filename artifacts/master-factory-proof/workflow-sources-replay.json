@@ -1,0 +1,437 @@
+{
+  "name": "sources-replay",
+  "status": 200,
+  "ok": true,
+  "durationMs": 7874,
+  "response": {
+    "data": [
+      {
+        "id": "a069f7cc-7ffa-4ac5-9660-739b3184e8a0",
+        "title": "L'arbre du Manikongo — 24 juillet 2026",
+        "durationSec": 8222,
+        "ready": false,
+        "chars": 0
+      },
+      {
+        "id": "c3cc87e4-dd30-4e6a-a3c9-276bd8bb5990",
+        "title": "L'arbre du Manikongo — 5 juillet 2026",
+        "durationSec": 12477,
+        "ready": false,
+        "chars": 0
+      },
+      {
+        "id": "3d1916b0-0a75-4b31-b76d-7a5583ffa766",
+        "title": "L'arbre du Manikongo — 26 juin 2026",
+        "durationSec": 4791,
+        "ready": false,
+        "chars": 0
+      },
+      {
+        "id": "65892a0a-b203-4fba-9742-efdd4303521f",
+        "title": "L'arbre du Manikongo — 21 juin 2026",
+        "durationSec": 1342,
+        "ready": false,
+        "chars": 0
+      },
+      {
+        "id": "9807dd6c-57c5-4dcd-970a-dc5690bc351e",
+        "title": "L'arbre du Manikongo — 19 juin 2026",
+        "durationSec": 5256,
+        "ready": false,
+        "chars": 0
+      },
+      {
+        "id": "8719c02e-34bb-4008-8e94-3a179630bd7a",
+        "title": "L'arbre du Manikongo — 31 mai 2026",
+        "durationSec": 598,
+        "ready": true,
+        "chars": 3952
+      },
+      {
+        "id": "b56d4cde-e28a-4b19-8ba5-e542bfcab950",
+        "title": "L'arbre du Manikongo — 22 août 2025",
+        "durationSec": 13440,
+        "ready": true,
+        "chars": 168765
+      },
+      {
+        "id": "fa54948f-a168-415b-a737-d497da278eaa",
+        "title": "L'arbre du Manikongo — 8 août 2025",
+        "durationSec": 18060,
+        "ready": true,
+        "chars": 230736
+      },
+      {
+        "id": "c6b9a18e-d7dd-4936-9d85-5d01590b8f9f",
+        "title": "L'arbre du Manikongo — 19 août 2025",
+        "durationSec": 8520,
+        "ready": true,
+        "chars": 97859
+      },
+      {
+        "id": "6b83498b-0377-484f-9091-7227b6ab96c4",
+        "title": "L'arbre du Manikongo — 2 avril 2025",
+        "durationSec": 8580,
+        "ready": true,
+        "chars": 122243
+      },
+      {
+        "id": "e1430276-6bdd-4aef-9536-218fa4b3c52a",
+        "title": "L'arbre du Manikongo — 19 mars 2025",
+        "durationSec": 4620,
+        "ready": true,
+        "chars": 51320
+      },
+      {
+        "id": "6d1c6278-a4e0-48d4-b966-3295ea14d2f0",
+        "title": "L'arbre du Manikongo — 29 août 2025",
+        "durationSec": 4440,
+        "ready": true,
+        "chars": 60437
+      },
+      {
+        "id": "671dbcbf-443e-4e9d-af1c-76c38fc98c30",
+        "title": "L'arbre du Manikongo — 24 mars 2025",
+        "durationSec": 5220,
+        "ready": true,
+        "chars": 65019
+      },
+      {
+        "id": "8789e19e-e021-4a5a-a86d-c1703252bf11",
+        "title": "L'arbre du Manikongo — 29 août 2025",
+        "durationSec": 7800,
+        "ready": true,
+        "chars": 97344
+      },
+      {
+        "id": "aa730d01-5ac2-4558-918c-e9fe1202e1f6",
+        "title": "L'arbre du Manikongo — 15 avril 2025",
+        "durationSec": 5040,
+        "ready": true,
+        "chars": 58602
+      },
+      {
+        "id": "5955f33a-62cf-4611-9cc1-4efdd4c4c44d",
+        "title": "L'arbre du Manikongo — 29 avril 2025",
+        "durationSec": 5760,
+        "ready": true,
+        "chars": 53918
+      },
+      {
+        "id": "0e768e1d-78b1-4e73-9d73-bc7e97024128",
+        "title": "L'arbre du Manikongo — 7 avril 2025",
+        "durationSec": 5220,
+        "ready": true,
+        "chars": 63374
+      },
+      {
+        "id": "c0d605a4-28aa-4cfe-9a7e-b9df6bc1819d",
+        "title": "NKKISSAMBILA 1 — 13 mai 2025",
+        "durationSec": 6660,
+        "ready": true,
+        "chars": 88769
+      },
+      {
+        "id": "d449d680-32b8-4d29-89d7-6d1dcc1dcf00",
+        "title": "L'arbre du Manikongo — 23 février 2025",
+        "durationSec": 4560,
+        "ready": true,
+        "chars": 29698
+      },
+      {
+        "id": "03748b5f-f276-4309-8981-85c45254d147",
+        "title": "L'arbre du Manikongo — 12 août 2025",
+        "durationSec": 8640,
+        "ready": true,
+        "chars": 93162
+      },
+      {
+        "id": "4053ce79-cc93-4d27-a1e8-ec33b129ddde",
+        "title": "L'arbre du Manikongo — 25 avril 2025",
+        "durationSec": 4860,
+        "ready": true,
+        "chars": 44720
+      },
+      {
+        "id": "882ddc93-d5f4-4e00-978b-a042c793e095",
+        "title": "L'arbre du Manikongo — 9 avril 2025",
+        "durationSec": 4140,
+        "ready": true,
+        "chars": 51848
+      },
+      {
+        "id": "550d30e7-535f-4017-80cc-e7873f68a4e0",
+        "title": "Culte du dimanche — 9 février 2025",
+        "durationSec": 4140,
+        "ready": true,
+        "chars": 47438
+      },
+      {
+        "id": "2e5735bf-1686-4cbe-b39c-cd510a84a3b7",
+        "title": "L'arbre du Manikongo — 9 mai 2025",
+        "durationSec": 3300,
+        "ready": true,
+        "chars": 32652
+      },
+      {
+        "id": "ea03d662-e916-456b-b33d-544b9e89a363",
+        "title": "NKKISSAMBILA 1 — 29 mai 2025",
+        "durationSec": 6540,
+        "ready": true,
+        "chars": 87962
+      },
+      {
+        "id": "3498b710-75b4-4c6f-9573-8a1783ca9392",
+        "title": "L'arbre du Manikongo — 26 mars 2025",
+        "durationSec": 4080,
+        "ready": true,
+        "chars": 59092
+      },
+      {
+        "id": "2252fcab-14d3-42be-8446-9b0d0d5330b6",
+        "title": "L'arbre du Manikongo — 2 mars 2025",
+        "durationSec": 3060,
+        "ready": true,
+        "chars": 24996
+      },
+      {
+        "id": "5730157b-73f6-4935-8b67-2cb8027a5555",
+        "title": "NKKISSAMBILA 1 — 23 mai 2025",
+        "durationSec": 1200,
+        "ready": true,
+        "chars": 10446
+      },
+      {
+        "id": "a8857fc1-9d9b-4e77-a2bd-dde53b084d9c",
+        "title": "culte hebdomadaire — 6 avril 2025",
+        "durationSec": 2880,
+        "ready": true,
+        "chars": 31439
+      },
+      {
+        "id": "0ba53025-4c02-4c84-980a-e1ccfbd1194f",
+        "title": "culte hebdomadaire — 9 mars 2025",
+        "durationSec": 2760,
+        "ready": true,
+        "chars": 30584
+      },
+      {
+        "id": "4515e5df-d74f-4814-837e-7ee91e86a47a",
+        "title": "culte hebdomadaire — 4 mai 2025",
+        "durationSec": 2100,
+        "ready": true,
+        "chars": 23725
+      },
+      {
+        "id": "32ac9f2f-f86e-4459-9cab-3ff0bd42a51b",
+        "title": "L'arbre du Manikongo — 30 janvier 2026",
+        "durationSec": 10620,
+        "ready": true,
+        "chars": 116896
+      },
+      {
+        "id": "662d03d9-5c82-47dc-b43f-07b622786fb8",
+        "title": "L'arbre du Manikongo — 1 février 2026",
+        "durationSec": 5040,
+        "ready": true,
+        "chars": 40759
+      },
+      {
+        "id": "c9432c2c-0670-46b5-abc1-9962ddf5227c",
+        "title": "L'arbre du Manikongo — 5 avril 2026",
+        "durationSec": 7080,
+        "ready": true,
+        "chars": 85635
+      },
+      {
+        "id": "64b8e08f-2284-4ea6-952d-c5dca27d3732",
+        "title": "L'arbre du Manikongo — 18 novembre 2025",
+        "durationSec": 8580,
+        "ready": true,
+        "chars": 119300
+      },
+      {
+        "id": "c2ede468-fb6b-417b-b71b-2bb68b96618e",
+        "title": "L'arbre du Manikongo — 26 novembre 2025",
+        "durationSec": 10980,
+        "ready": true,
+        "chars": 136293
+      },
+      {
+        "id": "893251ce-492b-464a-b0b4-81d1f792e797",
+        "title": "L'arbre du Manikongo — 7 juin 2026",
+        "durationSec": 6780,
+        "ready": true,
+        "chars": 79426
+      },
+      {
+        "id": "393c94d5-f7e0-4ef2-877e-0ddb54d76cb0",
+        "title": "L'arbre du Manikongo — 17 novembre 2025",
+        "durationSec": 6480,
+        "ready": true,
+        "chars": 85295
+      },
+      {
+        "id": "dfe01e0c-515a-4c40-9cb7-760e895ccbcc",
+        "title": "L'arbre du Manikongo — 24 janvier 2026",
+        "durationSec": 11280,
+        "ready": true,
+        "chars": 148155
+      },
+      {
+        "id": "cb173402-48ee-491a-954a-a4de423a7b54",
+        "title": "L'arbre du Manikongo — 25 janvier 2026",
+        "durationSec": 7140,
+        "ready": true,
+        "chars": 77609
+      },
+      {
+        "id": "20ce53f1-0f19-48ab-af55-788c1cd408e8",
+        "title": "L'arbre du Manikongo — 14 décembre 2025",
+        "durationSec": 15480,
+        "ready": true,
+        "chars": 168173
+      },
+      {
+        "id": "984b47c3-f0f3-4365-a39e-7b32c226ecbc",
+        "title": "L'arbre du Manikongo — 28 novembre 2025",
+        "durationSec": 11820,
+        "ready": true,
+        "chars": 96491
+      },
+      {
+        "id": "7e42c441-525a-4d10-893c-e4c52476bb4a",
+        "title": "L'arbre du Manikongo — 24 novembre 2025",
+        "durationSec": 6000,
+        "ready": true,
+        "chars": 64135
+      },
+      {
+        "id": "2d72df15-4196-4ea2-b718-dbe0707a8476",
+        "title": "ECOLE DE PRORASCIENCE CYCLE ACADEMYQUE — 20 février 2026",
+        "durationSec": 6660,
+        "ready": true,
+        "chars": 83127
+      },
+      {
+        "id": "c952cdbd-611b-4693-9fb5-f8e07b4fc6d0",
+        "title": "L'arbre du Manikongo — 14 février 2026",
+        "durationSec": 6300,
+        "ready": true,
+        "chars": 87180
+      },
+      {
+        "id": "6a95f61b-92a2-4b4e-80cf-00717874ecd7",
+        "title": "L'arbre du Manikongo — 9 novembre 2025",
+        "durationSec": 5340,
+        "ready": true,
+        "chars": 68340
+      },
+      {
+        "id": "731a483f-337e-4692-b028-676a1b9e3a2b",
+        "title": "L'arbre du Manikongo — 10 octobre 2025",
+        "durationSec": 5640,
+        "ready": true,
+        "chars": 74945
+      },
+      {
+        "id": "b8c98ee2-6747-4bdd-a331-2581f8c9e4bc",
+        "title": "L'arbre du Manikongo — 12 février 2026",
+        "durationSec": 2400,
+        "ready": true,
+        "chars": 24604
+      },
+      {
+        "id": "045ec68b-0987-46bf-bee7-48f1ebddbfce",
+        "title": "L'arbre du Manikongo — 7 février 2026",
+        "durationSec": 6420,
+        "ready": true,
+        "chars": 77934
+      },
+      {
+        "id": "de829fab-aa69-4e15-b9ef-29f700bc4e1c",
+        "title": "L'arbre du Manikongo — 6 février 2026",
+        "durationSec": 5340,
+        "ready": true,
+        "chars": 64058
+      },
+      {
+        "id": "4bddca38-31f7-4f33-a514-144d87001d2d",
+        "title": "L'arbre du Manikongo — 13 février 2026",
+        "durationSec": 5460,
+        "ready": true,
+        "chars": 61204
+      },
+      {
+        "id": "bdba063a-92c5-4c9a-8965-240ed846cb6a",
+        "title": "L'arbre du Manikongo — 19 septembre 2025",
+        "durationSec": 2700,
+        "ready": true,
+        "chars": 24936
+      },
+      {
+        "id": "00ff7091-2e24-4cbb-9ccb-adc3c388c78c",
+        "title": "L'arbre du Manikongo — 11 avril 2026",
+        "durationSec": 1200,
+        "ready": true,
+        "chars": 8041
+      },
+      {
+        "id": "75dba57f-67b8-4a3c-a24e-076dfb38985a",
+        "title": "L'arbre du Manikongo — 14 novembre 2025",
+        "durationSec": 5640,
+        "ready": true,
+        "chars": 69857
+      },
+      {
+        "id": "0ccf3ae8-51d6-4fa9-95ba-59c570ab92e6",
+        "title": "L'arbre du Manikongo — 13 novembre 2025",
+        "durationSec": 6180,
+        "ready": true,
+        "chars": 7770
+      },
+      {
+        "id": "2adc0262-048d-43ee-97ec-64bc0885c3f7",
+        "title": "L'arbre du Manikongo — 12 novembre 2025",
+        "durationSec": 7560,
+        "ready": true,
+        "chars": 47454
+      },
+      {
+        "id": "9ab8a277-cb7b-42ba-be61-c6cfc3d9cf04",
+        "title": "L'arbre du Manikongo — 10 novembre 2025",
+        "durationSec": 6720,
+        "ready": true,
+        "chars": 88259
+      },
+      {
+        "id": "f5e0190c-ec74-488c-b364-92c711abc811",
+        "title": "L'arbre du Manikongo — 6 novembre 2025",
+        "durationSec": 52920,
+        "ready": true,
+        "chars": 71951
+      },
+      {
+        "id": "33d7ede2-4d14-4930-aa58-9662897e8555",
+        "title": "L'arbre du Manikongo — 5 novembre 2025",
+        "durationSec": 5940,
+        "ready": true,
+        "chars": 68377
+      },
+      {
+        "id": "7c0be0c7-3c58-49c6-9ab2-a6819b188076",
+        "title": "NKISSAMBILA 2 — 2 septembre 2025",
+        "durationSec": 14400,
+        "ready": true,
+        "chars": 190895
+      },
+      {
+        "id": "46ff1c73-aa9a-4cb9-916f-496f79c14df5",
+        "title": "L'arbre du Manikongo — 11 novembre 2025",
+        "durationSec": 1860,
+        "ready": true,
+        "chars": 20694
+      }
+    ]
+  }
+}

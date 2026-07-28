@@ -1,0 +1,180 @@
+{
+  "name": "master-script-official",
+  "status": 201,
+  "ok": true,
+  "durationMs": 2347,
+  "request": {
+    "method": "POST",
+    "url": "/master-factory/produce/master-script",
+    "body": {
+      "sourceType": "replay",
+      "sourceId": "8719c02e-34bb-4008-8e94-3a179630bd7a",
+      "force": false
+    }
+  },
+  "response": {
+    "data": {
+      "pivotId": "10ecf197-6d3f-4c4b-92dc-b62db00d9f8f",
+      "masterScript": {
+        "schema_version": 1,
+        "kind": "master_script",
+        "title": "Rituel de guérison et de protection par l'invocation des ancêtres",
+        "audience": "Praticiens de rituels africains, guérisseurs, étudiants en spiritualité.",
+        "intention_generale": "L'élève saura structurer une invocation rituelle pour la guérison en convoquant la famille, les ancêtres et les autorités traditionnelles.",
+        "estimated_duration_minutes": 42,
+        "moments": [
+          {
+            "id": "ms-1",
+            "notion_id": "n1",
+            "title": "Lamentation sur la perte de spiritualité",
+            "intention": "Cela justifie l'urgence du rituel et la nécessité de retrouver la ferveur spirituelle.",
+            "message_central": "Le locuteur déplore qu'on n'entende plus les cris de spiritualisation et de malheur, signe d'une crise spirituelle.",
+            "teacher_script": "On aborde maintenant Lamentation sur la perte de spiritualité. Le locuteur déplore qu'on n'entende plus les cris de spiritualisation et de malheur, signe d'une crise spirituelle. L'enjeu est simple : Cela justifie l'urgence du rituel et la nécessité de retrouver la ferveur spirituelle. Dans la source, on s'appuie sur ce repère : « On entend plus les cris de spiritualisation. On entend plus les cris de malheur. ».  Je vais le rendre concret, puis vérifier que le point est bien compris avant de continuer.",
+            "key_points": [
+              "Le locuteur déplore qu'on n'entende plus les cris de spiritualisation et de malheur, signe d'une crise spirituelle.",
+              "On entend plus les cris de spiritualisation. On entend plus les cris de malheur."
+            ],
+            "student_understanding": "L'élève doit pouvoir expliquer Lamentation sur la perte de spiritualité avec ses propres mots et l'appliquer dans un exemple.",
+            "simple_version": "Le locuteur déplore qu'on n'entende plus les cris de spiritualisation et de malheur, signe d'une crise spirituelle.",
+            "transition": "Ce point prépare Convocation de la famille et des ancêtres.",
+            "duration_sec": 360,
+            "interaction": {
+              "question": "Peux-tu reformuler l'idée principale de « Lamentation sur la perte de spiritualité » ?",
+              "expected_answers": [
+                "Le locuteur déplore qu'on n'entende plus les cris de spiritualisation et de malheur, signe d'une crise spirituelle."
+              ],
+              "remediation": "Revenir à l'appui source principal et redonner un exemple simple."
+            }
+          },
+          {
+            "id": "ms-2",
+            "notion_id": "n2",
+            "title": "Convocation de la famille et des ancêtres",
+            "intention": "Cela montre l'importance des liens familiaux et spirituels dans le processus de guérison.",
+            "message_central": "Le locuteur convoque la famille et les ancêtres pour un rituel de guérison et de protection.",
+            "teacher_script": "On aborde maintenant Convocation de la famille et des ancêtres. Le locuteur convoque la famille et les ancêtres pour un rituel de guérison et de protection. L'enjeu est simple : Cela montre l'importance des liens familiaux et spirituels dans le processus de guérison. Dans la source, on s'appuie sur ce repère : « je convoque la famille avec mon coeur et la famille ».  Je vais le rendre concret, puis vérifier que le point est bien compris avant de continuer.",
+            "key_points": [
+              "Le locuteur convoque la famille et les ancêtres pour un rituel de guérison et de protection.",
+              "je convoque la famille avec mon coeur et la famille",
+              "Les héros de cette famille, les sages de cette famille, les guérisseurs de cette famille"
+            ],
+            "student_understanding": "L'élève doit pouvoir expliquer Convocation de la famille et des ancêtres avec ses propres mots et l'appliquer dans un exemple.",
+            "simple_version": "Le locuteur convoque la famille et les ancêtres pour un rituel de guérison et de protection.",
+            "transition": "Ce point prépare Appel au conseil des anciens (Odéla).",
+            "duration_sec": 360,
+            "interaction": {
+              "question": "Peux-tu reformuler l'idée principale de « Convocation de la famille et des ancêtres » ?",
+              "expected_answers": [
+                "Le locuteur convoque la famille et les ancêtres pour un rituel de guérison et de protection."
+              ],
+              "remediation": "Revenir à l'appui source principal et redonner un exemple simple."
+            }
+          },
+          {
+            "id": "ms-3",
+            "notion_id": "n3",
+            "title": "Appel au conseil des anciens (Odéla)",
+            "intention": "Cela souligne l'autorité traditionnelle et la nécessité d'une médiation ancestrale.",
+            "message_central": "Le locuteur demande l'intervention du conseil des anciens (Odéla) pour mettre fin à une crise familiale.",
+            "teacher_script": "On aborde maintenant Appel au conseil des anciens (Odéla). Le locuteur demande l'intervention du conseil des anciens (Odéla) pour mettre fin à une crise familiale. L'enjeu est simple : Cela souligne l'autorité traditionnelle et la nécessité d'une médiation ancestrale. Dans la source, on s'appuie sur ce repère : « Il y a un conseil des anciens. Dans l'Odéla, on peut mettre fin à cette activité. ».  Je vais le rendre concret, puis vérifier que le point est bien compris avant de continuer.",
+            "key_points": [
+              "Le locuteur demande l'intervention du conseil des anciens (Odéla) pour mettre fin à une crise familiale.",
+              "Il y a un conseil des anciens. Dans l'Odéla, on peut mettre fin à cette activité.",
+              "Nous posons donc ainsi la plainte. Cela a insisté pendant longtemps et que l'Odéla puisse accorder grâce et faveur."
+            ],
+            "student_understanding": "L'élève doit pouvoir expliquer Appel au conseil des anciens (Odéla) avec ses propres mots et l'appliquer dans un exemple.",
+            "simple_version": "Le locuteur demande l'intervention du conseil des anciens (Odéla) pour mettre fin à une crise familiale.",
+            "transition": "Ce point prépare Contrôle de la situation hospitalière et médicale.",
+            "duration_sec": 360,
+            "interaction": {
+              "question": "Peux-tu reformuler l'idée principale de « Appel au conseil des anciens (Odéla) » ?",
+              "expected_answers": [
+                "Le locuteur demande l'intervention du conseil des anciens (Odéla) pour mettre fin à une crise familiale."
+              ],
+              "remediation": "Revenir à l'appui source principal et redonner un exemple simple."
+            }
+          },
+          {
+            "id": "ms-4",
+            "notion_id": "n4",
+            "title": "Contrôle de la situation hospitalière et médicale",
+            "intention": "Cela montre une volonté de domination sur les forces matérielles et spirituelles pour assurer la guérison.",
+            "message_central": "Le locuteur affirme contrôler les médecins, l'hôpital et l'environnement thérapeutique.",
+            "teacher_script": "On aborde maintenant Contrôle de la situation hospitalière et médicale. Le locuteur affirme contrôler les médecins, l'hôpital et l'environnement thérapeutique. L'enjeu est simple : Cela montre une volonté de domination sur les forces matérielles et spirituelles pour assurer la guérison. Dans la source, on s'appuie sur ce repère : « Les médecins qui vont travailler derrière elle et avec elle doivent être hypnotisés dans la sagesse de la guérison ».  Je vais le rendre concret, puis vérifier que le point est bien compris avant de continuer.",
+            "key_points": [
+              "Le locuteur affirme contrôler les médecins, l'hôpital et l'environnement thérapeutique.",
+              "Les médecins qui vont travailler derrière elle et avec elle doivent être hypnotisés dans la sagesse de la guérison",
+              "Nous contrôlons donc la situation de l'hôpital, nous contrôlons la situation des médecins"
+            ],
+            "student_understanding": "L'élève doit pouvoir expliquer Contrôle de la situation hospitalière et médicale avec ses propres mots et l'appliquer dans un exemple.",
+            "simple_version": "Le locuteur affirme contrôler les médecins, l'hôpital et l'environnement thérapeutique.",
+            "transition": "Ce point prépare Invocation de puissance sur le temps et la magie.",
+            "duration_sec": 360,
+            "interaction": {
+              "question": "Peux-tu reformuler l'idée principale de « Contrôle de la situation hospitalière et médicale » ?",
+              "expected_answers": [
+                "Le locuteur affirme contrôler les médecins, l'hôpital et l'environnement thérapeutique."
+              ],
+              "remediation": "Revenir à l'appui source principal et redonner un exemple simple."
+            }
+          },
+          {
+            "id": "ms-5",
+            "notion_id": "n5",
+            "title": "Invocation de puissance sur le temps et la magie",
+            "intention": "Cela renforce l'idée d'un pouvoir surnaturel capable de modifier les lois naturelles.",
+            "message_central": "Le locuteur proclame son contrôle sur le temps et affirme que la magie et la guérison se réalisent.",
+            "teacher_script": "On aborde maintenant Invocation de puissance sur le temps et la magie. Le locuteur proclame son contrôle sur le temps et affirme que la magie et la guérison se réalisent. L'enjeu est simple : Cela renforce l'idée d'un pouvoir surnaturel capable de modifier les lois naturelles. Dans la source, on s'appuie sur ce repère : « Le temps est à mon contrôle. Le temps est à mon contrôle. ».  Je vais le rendre concret, puis vérifier que le point est bien compris avant de continuer.",
+            "key_points": [
+              "Le locuteur proclame son contrôle sur le temps et affirme que la magie et la guérison se réalisent.",
+              "Le temps est à mon contrôle. Le temps est à mon contrôle.",
+              "Et que la magie se perd. Et que la guérison se perd."
+            ],
+            "student_understanding": "L'élève doit pouvoir expliquer Invocation de puissance sur le temps et la magie avec ses propres mots et l'appliquer dans un exemple.",
+            "simple_version": "Le locuteur proclame son contrôle sur le temps et affirme que la magie et la guérison se réalisent.",
+            "transition": "Ce point prépare Demande de restauration de la santé et guérison immédiate.",
+            "duration_sec": 360,
+            "interaction": {
+              "question": "Peux-tu reformuler l'idée principale de « Invocation de puissance sur le temps et la magie » ?",
+              "expected_answers": [
+                "Le locuteur proclame son contrôle sur le temps et affirme que la magie et la guérison se réalisent."
+              ],
+              "remediation": "Revenir à l'appui source principal et redonner un exemple simple."
+            }
+          },
+          {
+            "id": "ms-6",
+            "notion_id": "n6",
+            "title": "Demande de restauration de la santé et guérison immédiate",
+            "intention": "C'est le but principal du rituel : obtenir une guérison instantanée par la parole et l'invocation.",
+            "message_central": "Le locuteur demande la guérison immédiate et la restauration des cellules de la personne malade.",
+            "teacher_script": "On aborde maintenant Demande de restauration de la santé et guérison immédiate. Le locuteur demande la guérison immédiate et la restauration des cellules de la personne malade. L'enjeu est simple : C'est le but principal du rituel : obtenir une guérison instantanée par la parole et l'invocation. Dans la source, on s'appuie sur ce repère : « je demande la restauration de la santé et l'oragenissement des cellules et la guérison immédiate maintenant ».  Je vais le rendre concret, puis vérifier que le point est bien compris avant de continuer.",
+            "key_points": [
+              "Le locuteur demande la guérison immédiate et la restauration des cellules de la personne malade.",
+              "je demande la restauration de la santé et l'oragenissement des cellules et la guérison immédiate maintenant"
+            ],
+            "student_understanding": "L'élève doit pouvoir expliquer Demande de restauration de la santé et guérison immédiate avec ses propres mots et l'appliquer dans un exemple.",
+            "simple_version": "Le locuteur demande la guérison immédiate et la restauration des cellules de la personne malade.",
+            "transition": "On peut maintenant conclure et transformer ces idées en action.",
+            "duration_sec": 360,
+            "interaction": {
+              "question": "Peux-tu reformuler l'idée principale de « Demande de restauration de la santé et guérison immédiate » ?",
+              "expected_answers": [
+                "Le locuteur demande la guérison immédiate et la restauration des cellules de la personne malade."
+              ],
+              "remediation": "Revenir à l'appui source principal et redonner un exemple simple."
+            }
+          }
+        ],
+        "meta": {
+          "source_kind": "replay",
+          "source_id": "8719c02e-34bb-4008-8e94-3a179630bd7a",
+          "comprehension_pivot_id": "7ad3c8db-0700-4587-a4e5-1f5d96accf2d",
+          "generated_at": "2026-07-28T13:47:19.738Z",
+          "model": "deterministic-master-script-v0"
+        }
+      },
+      "cached": false
+    }
+  }
+}

@@ -1,0 +1,130 @@
+{
+  "name": "understand-replay-official",
+  "status": 201,
+  "ok": true,
+  "durationMs": 31559,
+  "request": {
+    "method": "POST",
+    "url": "/master-factory/understand",
+    "body": {
+      "sourceType": "replay",
+      "sourceId": "8719c02e-34bb-4008-8e94-3a179630bd7a",
+      "force": false
+    }
+  },
+  "response": {
+    "data": {
+      "pivotId": "7ad3c8db-0700-4587-a4e5-1f5d96accf2d",
+      "comprehension": {
+        "schema_version": 1,
+        "titre": "Rituel de guérison et de protection par l'invocation des ancêtres",
+        "promesse": "L'élève saura structurer une invocation rituelle pour la guérison en convoquant la famille, les ancêtres et les autorités traditionnelles.",
+        "public": "Praticiens de rituels africains, guérisseurs, étudiants en spiritualité.",
+        "prerequis": [
+          "Connaissance de base des croyances ancestrales"
+        ],
+        "notions": [
+          {
+            "id": "n1",
+            "titre": "Lamentation sur la perte de spiritualité",
+            "idee_centrale": "Le locuteur déplore qu'on n'entende plus les cris de spiritualisation et de malheur, signe d'une crise spirituelle.",
+            "pourquoi": "Cela justifie l'urgence du rituel et la nécessité de retrouver la ferveur spirituelle.",
+            "prerequis": [],
+            "appuis": [
+              "On entend plus les cris de spiritualisation. On entend plus les cris de malheur."
+            ]
+          },
+          {
+            "id": "n2",
+            "titre": "Convocation de la famille et des ancêtres",
+            "idee_centrale": "Le locuteur convoque la famille et les ancêtres pour un rituel de guérison et de protection.",
+            "pourquoi": "Cela montre l'importance des liens familiaux et spirituels dans le processus de guérison.",
+            "prerequis": [
+              "n1"
+            ],
+            "appuis": [
+              "je convoque la famille avec mon coeur et la famille",
+              "Les héros de cette famille, les sages de cette famille, les guérisseurs de cette famille"
+            ]
+          },
+          {
+            "id": "n3",
+            "titre": "Appel au conseil des anciens (Odéla)",
+            "idee_centrale": "Le locuteur demande l'intervention du conseil des anciens (Odéla) pour mettre fin à une crise familiale.",
+            "pourquoi": "Cela souligne l'autorité traditionnelle et la nécessité d'une médiation ancestrale.",
+            "prerequis": [
+              "n2"
+            ],
+            "appuis": [
+              "Il y a un conseil des anciens. Dans l'Odéla, on peut mettre fin à cette activité.",
+              "Nous posons donc ainsi la plainte. Cela a insisté pendant longtemps et que l'Odéla puisse accorder grâce et faveur."
+            ]
+          },
+          {
+            "id": "n4",
+            "titre": "Contrôle de la situation hospitalière et médicale",
+            "idee_centrale": "Le locuteur affirme contrôler les médecins, l'hôpital et l'environnement thérapeutique.",
+            "pourquoi": "Cela montre une volonté de domination sur les forces matérielles et spirituelles pour assurer la guérison.",
+            "prerequis": [
+              "n3"
+            ],
+            "appuis": [
+              "Les médecins qui vont travailler derrière elle et avec elle doivent être hypnotisés dans la sagesse de la guérison",
+              "Nous contrôlons donc la situation de l'hôpital, nous contrôlons la situation des médecins"
+            ]
+          },
+          {
+            "id": "n5",
+            "titre": "Invocation de puissance sur le temps et la magie",
+            "idee_centrale": "Le locuteur proclame son contrôle sur le temps et affirme que la magie et la guérison se réalisent.",
+            "pourquoi": "Cela renforce l'idée d'un pouvoir surnaturel capable de modifier les lois naturelles.",
+            "prerequis": [
+              "n4"
+            ],
+            "appuis": [
+              "Le temps est à mon contrôle. Le temps est à mon contrôle.",
+              "Et que la magie se perd. Et que la guérison se perd."
+            ]
+          },
+          {
+            "id": "n6",
+            "titre": "Demande de restauration de la santé et guérison immédiate",
+            "idee_centrale": "Le locuteur demande la guérison immédiate et la restauration des cellules de la personne malade.",
+            "pourquoi": "C'est le but principal du rituel : obtenir une guérison instantanée par la parole et l'invocation.",
+            "prerequis": [
+              "n5"
+            ],
+            "appuis": [
+              "je demande la restauration de la santé et l'oragenissement des cellules et la guérison immédiate maintenant"
+            ]
+          }
+        ],
+        "glossaire": [
+          {
+            "terme": "Odéla",
+            "simple": "Conseil des anciens ou assemblée traditionnelle chargée de résoudre les conflits et de prendre des décisions importantes dans certaines cultures africaines."
+          },
+          {
+            "terme": "Kimbamu",
+            "simple": "Nom propre probablement d'un ancêtre ou d'une entité spirituelle invoquée lors du rituel."
+          },
+          {
+            "terme": "Manu Congo",
+            "simple": "Titre ou nom d'une figure d'autorité spirituelle, possiblement un ancêtre ou un chef traditionnel."
+          }
+        ],
+        "meta": {
+          "source_type": "replay",
+          "source_id": "8719c02e-34bb-4008-8e94-3a179630bd7a",
+          "source_title": "L'arbre du Manikongo — 31 mai 2026",
+          "duration_min": 10,
+          "transcript_chars": 3952,
+          "segments": 1,
+          "model": "deepseek-v4-flash",
+          "generated_at": "2026-07-28T13:47:16.469Z"
+        }
+      },
+      "cached": false
+    }
+  }
+}

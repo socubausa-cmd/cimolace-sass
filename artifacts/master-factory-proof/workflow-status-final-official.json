@@ -1,0 +1,56 @@
+{
+  "name": "status-final-official",
+  "status": 200,
+  "ok": true,
+  "durationMs": 1132,
+  "response": {
+    "data": {
+      "comprehension": true,
+      "ecrit": true,
+      "joue": false,
+      "master_script": true,
+      "smartboard_timeline": true,
+      "live_scenario": true,
+      "replay_postprod": false,
+      "rendusGratuits": [
+        "pdf",
+        "parcours",
+        "masterclass",
+        "manuel",
+        "quiz",
+        "forum",
+        "faq",
+        "master_script",
+        "smartboard",
+        "live"
+      ],
+      "pivots": [
+        {
+          "kind": "comprehension",
+          "model": "deepseek-v4-flash",
+          "created_at": "2026-07-28T13:47:17.417088+00:00"
+        },
+        {
+          "kind": "master_script",
+          "model": "deterministic-master-script-v0",
+          "created_at": "2026-07-28T13:47:20.931515+00:00"
+        },
+        {
+          "kind": "smartboard_timeline",
+          "model": "deterministic-smartboard-timeline-v0",
+          "created_at": "2026-07-28T13:47:23.113354+00:00"
+        },
+        {
+          "kind": "live_scenario",
+          "model": "deterministic-live-scenario-v0",
+          "created_at": "2026-07-28T13:47:25.698349+00:00"
+        },
+        {
+          "kind": "ecrit",
+          "model": "deepseek-v4-flash",
+          "created_at": "2026-07-28T13:53:52.690333+00:00"
+        }
+      ]
+    }
+  }
+}

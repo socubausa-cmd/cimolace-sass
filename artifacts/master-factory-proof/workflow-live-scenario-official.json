@@ -1,0 +1,108 @@
+{
+  "name": "live-scenario-official",
+  "status": 201,
+  "ok": true,
+  "durationMs": 2496,
+  "request": {
+    "method": "POST",
+    "url": "/master-factory/produce/live-scenario",
+    "body": {
+      "sourceType": "replay",
+      "sourceId": "8719c02e-34bb-4008-8e94-3a179630bd7a",
+      "force": false
+    }
+  },
+  "response": {
+    "data": {
+      "pivotId": "8a4269d0-0d7f-4a8c-8c6c-818ffe0dbab1",
+      "liveScenario": {
+        "schema_version": 1,
+        "kind": "live_scenario",
+        "live_title": "Rituel de guérison et de protection par l'invocation des ancêtres",
+        "preparation_notes": [
+          "Ouvrir la salle 5 minutes avant.",
+          "Vérifier micro, caméra, SmartBoard et salle d'attente.",
+          "Suivre le Master Script, mais reformuler si les élèves bloquent."
+        ],
+        "waiting_room_message": "Bienvenue. Le live « Rituel de guérison et de protection par l'invocation des ancêtres » va commencer. Préparez de quoi noter une question.",
+        "closing_sequence": "Résumer les trois idées principales, demander une reformulation aux élèves, puis annoncer les supports post-live.",
+        "scenes": [
+          {
+            "id": "live-1",
+            "order": 1,
+            "type": "intro",
+            "script_moment_id": "ms-1",
+            "smartboard_scene_id": "sb-1",
+            "host_instruction": "Présenter « Lamentation sur la perte de spiritualité », puis déclencher le tableau vivant et poser la question de vérification.",
+            "student_action": "Peux-tu reformuler l'idée principale de « Lamentation sur la perte de spiritualité » ?",
+            "duration_minutes": 6
+          },
+          {
+            "id": "live-2",
+            "order": 2,
+            "type": "teaching",
+            "script_moment_id": "ms-2",
+            "smartboard_scene_id": "sb-2",
+            "host_instruction": "Présenter « Convocation de la famille et des ancêtres », puis déclencher le tableau vivant et poser la question de vérification.",
+            "student_action": "Peux-tu reformuler l'idée principale de « Convocation de la famille et des ancêtres » ?",
+            "duration_minutes": 6
+          },
+          {
+            "id": "live-3",
+            "order": 3,
+            "type": "teaching",
+            "script_moment_id": "ms-3",
+            "smartboard_scene_id": "sb-3",
+            "host_instruction": "Présenter « Appel au conseil des anciens (Odéla) », puis déclencher le tableau vivant et poser la question de vérification.",
+            "student_action": "Peux-tu reformuler l'idée principale de « Appel au conseil des anciens (Odéla) » ?",
+            "duration_minutes": 6
+          },
+          {
+            "id": "live-4",
+            "order": 4,
+            "type": "teaching",
+            "script_moment_id": "ms-4",
+            "smartboard_scene_id": "sb-4",
+            "host_instruction": "Présenter « Contrôle de la situation hospitalière et médicale », puis déclencher le tableau vivant et poser la question de vérification.",
+            "student_action": "Peux-tu reformuler l'idée principale de « Contrôle de la situation hospitalière et médicale » ?",
+            "duration_minutes": 6
+          },
+          {
+            "id": "live-5",
+            "order": 5,
+            "type": "teaching",
+            "script_moment_id": "ms-5",
+            "smartboard_scene_id": "sb-5",
+            "host_instruction": "Présenter « Invocation de puissance sur le temps et la magie », puis déclencher le tableau vivant et poser la question de vérification.",
+            "student_action": "Peux-tu reformuler l'idée principale de « Invocation de puissance sur le temps et la magie » ?",
+            "duration_minutes": 6
+          },
+          {
+            "id": "live-6",
+            "order": 6,
+            "type": "teaching",
+            "script_moment_id": "ms-6",
+            "smartboard_scene_id": "sb-6",
+            "host_instruction": "Présenter « Demande de restauration de la santé et guérison immédiate », puis déclencher le tableau vivant et poser la question de vérification.",
+            "student_action": "Peux-tu reformuler l'idée principale de « Demande de restauration de la santé et guérison immédiate » ?",
+            "duration_minutes": 6
+          }
+        ],
+        "replay_postprod_targets": [
+          "parcours",
+          "video_semaine",
+          "quiz",
+          "forum",
+          "precepteur"
+        ],
+        "meta": {
+          "master_script_pivot_id": "10ecf197-6d3f-4c4b-92dc-b62db00d9f8f",
+          "smartboard_timeline_pivot_id": "3f3d40dc-a5ff-42b6-8ac5-c0b82122d5c5",
+          "generated_at": "2026-07-28T13:47:25.194Z",
+          "model": "deterministic-live-scenario-v0"
+        }
+      },
+      "cached": false
+    }
+  }
+}
