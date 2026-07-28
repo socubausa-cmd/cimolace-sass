@@ -111,8 +111,11 @@ export default function ExtraitsCourtsModal({ videoId, titreReplay, onClose, onP
             </h2>
             {etat.phase === 'pret' ? (
               <p style={{ color: C.muted, fontSize: 12.5, margin: '4px 0 0' }}>
-                {etat.clips.length} extrait{etat.clips.length > 1 ? 's' : ''} vertical
-                {etat.clips.length > 1 ? 'aux' : ''} · format 1080×1920, sous-titres incrustés
+                {/* ⚠️ « vertical » ne prend pas un `s` : il devient « verticaux ». Écrire
+                    `vertical{n>1?'aux':''}` — ce que faisait la première version —
+                    donnait « verticalaux » à l'écran. On remplace la FIN du mot. */}
+                {etat.clips.length} extrait{etat.clips.length > 1 ? 's' : ''}{' '}
+                vertic{etat.clips.length > 1 ? 'aux' : 'al'} · format 1080×1920, sous-titres incrustés
               </p>
             ) : null}
           </div>
@@ -184,10 +187,15 @@ export default function ExtraitsCourtsModal({ videoId, titreReplay, onClose, onP
                     {Number.isFinite(c.debut_sec) ? ` · à ${mmss(c.debut_sec)} du replay` : ''}
                   </p>
 
-                  {c.url ? (
+                  {c.url_telechargement || c.url ? (
                     <a
-                      href={c.url}
-                      download={`${(c.titre || `extrait-${i + 1}`).replace(/[^\wÀ-ſ -]/g, '').trim().slice(0, 60)}.mp4`}
+                      // ⚠️ PAS `c.url` + `download`. L'attribut `download` est ignoré
+                      // sur une cible d'un AUTRE domaine — et R2 en est un : le clic
+                      // aurait ouvert la vidéo dans un onglet au lieu de
+                      // l'enregistrer. C'est le serveur qui impose le
+                      // téléchargement, via un `Content-Disposition: attachment`
+                      // demandé dans l'URL présignée (`url_telechargement`).
+                      href={c.url_telechargement || c.url}
                       style={{
                         display: 'inline-flex', alignItems: 'center', gap: 6, marginTop: 8,
                         fontSize: 11.5, fontWeight: 700, color: C.muted, textDecoration: 'none',

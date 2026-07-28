@@ -1091,7 +1091,15 @@ export interface ReplayShortClip {
   fin_sec: number | null;
   duree_sec: number | null;
   extrait_texte: string | null;
+  /** Lecture en ligne. */
   url: string | null;
+  /**
+   * Téléchargement forcé. DISTINCTE de `url` : l'attribut `download` d'un <a> est
+   * ignoré quand la cible est sur un autre domaine (R2 en est un), donc seul un
+   * `Content-Disposition: attachment` servi par le stockage enregistre le fichier
+   * au lieu de l'ouvrir. Le serveur le demande dans l'URL présignée.
+   */
+  url_telechargement: string | null;
 }
 
 // ── Mbolo ───────────────────────────────────────────────────────────────────

@@ -596,9 +596,33 @@ export class ZoomEngineService {
         // `null` si la présignature échoue (variables R2 absentes) : l'écran doit
         // pouvoir dire « fichier indisponible » au lieu de servir un lecteur mort.
         url: await this.presignR2(c.storage_key, 6 * 3600),
+        // ⚠️ UNE SECONDE URL, ET CE N'EST PAS UN DOUBLON. L'attribut `download` d'un
+        // <a> est IGNORÉ par les navigateurs quand la cible est sur un autre domaine
+        // — et R2 en est un. Le bouton « Télécharger » aurait donc ouvert la vidéo
+        // dans un onglet au lieu de l'enregistrer. La seule façon d'imposer le
+        // téléchargement est que le stockage réponde `Content-Disposition:
+        // attachment`, ce que R2 fait si on le lui demande DANS l'URL présignée.
+        url_telechargement: await this.presignR2(c.storage_key, 6 * 3600, {
+          nomFichier: `${this.nomDeFichier(c.title)}.mp4`,
+        }),
       })),
     );
     return { clips };
+  }
+
+  /**
+   * Un titre d'extrait → un nom de fichier sûr. Les titres viennent d'un modèle et
+   * contiennent apostrophes, virgules et accents ; `Content-Disposition` ne tolère
+   * ni guillemet ni retour à la ligne, et un nom vide donnerait « .mp4ted ».
+   */
+  private nomDeFichier(titre: unknown): string {
+    const base = String(titre ?? '')
+      .normalize('NFD').replace(/[̀-ͯ]/g, '')  // accents
+      .replace(/[^\w\s-]/g, '')
+      .trim()
+      .replace(/\s+/g, '-')
+      .slice(0, 60);
+    return base || 'extrait';
   }
 
   /**
@@ -667,7 +691,14 @@ export class ZoomEngineService {
   }
 
   // ── Présignature R2 (lecture) ─────────────────────────────────────────────
-  private async presignR2(key: string, ttlSeconds = 604800): Promise<string | null> {
+  private async presignR2(
+    key: string,
+    ttlSeconds = 604800,
+    // `nomFichier` demande à R2 de répondre `Content-Disposition: attachment` —
+    // le SEUL moyen d'obtenir un vrai téléchargement depuis un autre domaine (voir
+    // `listReplayShorts`). Absent = lecture en ligne, le comportement par défaut.
+    opts: { nomFichier?: string } = {},
+  ): Promise<string | null> {
     const accountId = process.env.CF_R2_ACCOUNT_ID;
     const accessKeyId = process.env.CF_R2_ACCESS_KEY_ID;
     const secretAccessKey = process.env.CF_R2_SECRET_ACCESS_KEY;
@@ -680,9 +711,17 @@ export class ZoomEngineService {
         credentials: { accessKeyId, secretAccessKey },
         forcePathStyle: true,
       });
-      return await getSignedUrl(client, new GetObjectCommand({ Bucket: bucket, Key: key }), {
-        expiresIn: ttlSeconds,
-      });
+      return await getSignedUrl(
+        client,
+        new GetObjectCommand({
+          Bucket: bucket,
+          Key: key,
+          ...(opts.nomFichier
+            ? { ResponseContentDisposition: `attachment; filename="${opts.nomFichier}"` }
+            : {}),
+        }),
+        { expiresIn: ttlSeconds },
+      );
     } catch (err) {
       this.logger.error(`presignR2 failed: ${(err as Error).message}`);
       return null;
