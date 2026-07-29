@@ -95,23 +95,56 @@ xcrun stapler validate "release/mac-arm64/LIRI.app"
 
 ### Windows — signature de code
 
-Deux voies :
-- **Certificat OV/EV** (Sectigo, DigiCert…) en `.pfx` :
-  ```bash
-  export WIN_CSC_LINK="/chemin/cert.pfx"     # ou CSC_LINK
-  export WIN_CSC_KEY_PASSWORD="motdepasse"
-  npm run build:win
-  ```
-  La signature depuis macOS passe par `osslsigncode` (electron-builder le gère) ;
-  idéalement, builder/vérifier **sur une machine Windows**.
-- **Azure Trusted Signing** (moderne, aucun `.pfx` à stocker) : renseigner
-  `win.azureSignOptions` dans `package.json` (electron-builder 25). Recommandé si
-  tu n'as pas encore de certificat physique.
+#### Option A (recommandée) — Azure Trusted Signing, **câblée** (`npm run build:win:azure`)
+
+Aucun certificat `.pfx` à acheter ni à stocker : Microsoft détient le certificat,
+tu signes via ton identité Entra. Le wrapper `scripts/build-win.cjs` est déjà en
+place et **gaté par env** — sans les variables, il produit un build non signé.
+
+Mise en place Azure (une fois) :
+1. **Trusted Signing Account** + **Certificate Profile** dans le portail Azure
+   (Marketplace → « Trusted Signing »). Note l'**endpoint régional**
+   (`https://<region>.codesigning.azure.net/`), le **nom du compte** et le **nom du profil**.
+2. **Validation d'identité** du profil (l'organisation « Cimolace » doit être validée par Microsoft — quelques jours).
+3. **App Entra (service principal)** + rôle **« Trusted Signing Certificate Profile Signer »**
+   sur le compte → récupère `TenantId`, `ClientId`, un `ClientSecret`.
+
+Puis, **sur Windows** (poste ou CI — voir plus bas) :
+
+```bash
+# Coordonnées du compte (non secrètes)
+export AZURE_TS_ENDPOINT="https://weu.codesigning.azure.net/"
+export AZURE_TS_ACCOUNT="cimolace-signing"
+export AZURE_TS_CERT_PROFILE="cimolace-profile"
+export WIN_PUBLISHER_NAME="Cimolace"
+# Authentification Entra (secrète)
+export AZURE_TENANT_ID="…"  AZURE_CLIENT_ID="…"  AZURE_CLIENT_SECRET="…"
+npm run build:win:azure     # build + signature Azure Trusted Signing
+```
+
+⚠️ La signature Azure passe par **PowerShell + le module `TrustedSigning` + signtool** :
+elle s'exécute **sous Windows** (poste Windows ou **runner CI Windows**), pas depuis
+ce Mac. Depuis macOS, `build:win:azure` produit le binaire **non signé**.
+
+#### Option B — certificat OV/EV classique (`.pfx`)
+
+```bash
+export WIN_CSC_LINK="/chemin/cert.pfx"      # ou base64
+export WIN_CSC_KEY_PASSWORD="motdepasse"
+npm run build:win
+```
 
 Vérifier (sur Windows) : `signtool verify /pa /v "release\LIRI Setup 1.0.0.exe"`.
 
+#### Construire/signer Windows sans machine Windows → CI
+
+Comme tu es sur Mac, le plus simple pour signer Windows est un **runner CI Windows**.
+Un modèle prêt à l'emploi est fourni : **`ci/desktop-release.yml`** — copie-le dans
+`.github/workflows/`, ajoute les secrets (Apple + Azure) au dépôt, puis pousse un tag
+`desktop-v*`. Il build+signe macOS **et** Windows et publie les artefacts.
+
 ⚠️ Le binaire Windows peut être **produit** depuis ce Mac mais pas **exécuté** ni
-vérifié ici : la validation réelle demande une machine Windows.
+signé ici : signature + validation demandent Windows.
 
 ### En attendant les certificats (intérim)
 

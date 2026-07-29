@@ -8,6 +8,7 @@
     "start": "electron .",
     "build:mac": "electron-builder --mac",
     "build:win": "electron-builder --win",
+    "build:win:azure": "node scripts/build-win.cjs",
     "build:all": "electron-builder --mac --win",
     "icons": "node scripts/gen-icons.mjs"
   },

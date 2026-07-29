@@ -1,0 +1,70 @@
+# LIRI desktop — build + signature (macOS Developer ID + notarisation · Windows Azure Trusted Signing)
+#
+# ▶ POUR ACTIVER : copier ce fichier dans `.github/workflows/desktop-release.yml`
+#   à la RACINE du dépôt, ajouter les secrets ci-dessous, puis pousser un tag :
+#     git tag desktop-v1.0.0 && git push origin desktop-v1.0.0
+#
+# Secrets à définir (Settings → Secrets and variables → Actions) :
+#   macOS   : MAC_CSC_LINK (base64 du .p12 Developer ID), MAC_CSC_KEY_PASSWORD,
+#             APPLE_ID, APPLE_APP_SPECIFIC_PASSWORD, APPLE_TEAM_ID
+#   Windows : AZURE_TS_ENDPOINT, AZURE_TS_ACCOUNT, AZURE_TS_CERT_PROFILE,
+#             WIN_PUBLISHER_NAME, AZURE_TENANT_ID, AZURE_CLIENT_ID, AZURE_CLIENT_SECRET
+#
+# Sans un secret, le job correspondant produit un artefact NON signé (il n'échoue pas).
+
+name: desktop-release
+
+on:
+  push:
+    tags: ['desktop-v*']
+  workflow_dispatch: {}
+
+defaults:
+  run:
+    working-directory: apps/desktop
+
+jobs:
+  macos:
+    runs-on: macos-14
+    env:
+      CSC_LINK: ${{ secrets.MAC_CSC_LINK }}
+      CSC_KEY_PASSWORD: ${{ secrets.MAC_CSC_KEY_PASSWORD }}
+      APPLE_ID: ${{ secrets.APPLE_ID }}
+      APPLE_APP_SPECIFIC_PASSWORD: ${{ secrets.APPLE_APP_SPECIFIC_PASSWORD }}
+      APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - run: npm ci
+      - run: npm run build:mac
+      - uses: actions/upload-artifact@v4
+        with:
+          name: liri-macos
+          path: |
+            apps/desktop/release/*.dmg
+            apps/desktop/release/*.zip
+
+  windows:
+    runs-on: windows-latest
+    env:
+      AZURE_TS_ENDPOINT: ${{ secrets.AZURE_TS_ENDPOINT }}
+      AZURE_TS_ACCOUNT: ${{ secrets.AZURE_TS_ACCOUNT }}
+      AZURE_TS_CERT_PROFILE: ${{ secrets.AZURE_TS_CERT_PROFILE }}
+      WIN_PUBLISHER_NAME: ${{ secrets.WIN_PUBLISHER_NAME }}
+      AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
+      AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
+      AZURE_CLIENT_SECRET: ${{ secrets.AZURE_CLIENT_SECRET }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - run: npm ci
+      - run: npm run build:win:azure
+      - uses: actions/upload-artifact@v4
+        with:
+          name: liri-windows
+          path: |
+            apps/desktop/release/*.exe
