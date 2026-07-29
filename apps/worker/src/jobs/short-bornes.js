@@ -422,24 +422,54 @@ export async function bornesAuMot({
 
     const ouv = retrouverCitation(phraseOuverture, phrases);
     const clo = retrouverCitation(phraseCloture, phrases);
-    if (!ouv || !clo) {
-      // ⛔ REFUS, PAS REPLI. Une citation introuvable dans l'audio signifie que le
-      // modèle a écrit une phrase qui n'a pas été prononcée. Fabriquer l'extrait
-      // « quand même », sur les bornes approximatives, publierait un clip dont on
-      // sait qu'il repose sur une invention.
+
+    // ⛔ SEULE L'OUVERTURE EST OBLIGATOIRE — et cette asymétrie est une correction
+    // d'un défaut de conception constaté en production.
+    //
+    // Exiger que LES DEUX citations s'ancrent doublait la probabilité d'échec pour
+    // un gain faible : l'extrait phare du replay a été refusé deux fois de suite,
+    // d'abord sur l'ouverture (corrigé par le glossaire sur les mots), puis sur la
+    // CLÔTURE — alors que son ouverture, elle, s'ancrait à 86 %. Or les deux bornes
+    // ne se valent pas :
+    //   · l'OUVERTURE décide de tout. Un short se juge dans sa première seconde, et
+    //     c'est là que « et l'onction de… » tuait les extraits. Elle doit être
+    //     retrouvée dans l'audio — c'est aussi le seul vrai signal d'invention : un
+    //     modèle qui écrit une phrase jamais prononcée l'écrit d'abord ici.
+    //   · la CLÔTURE est un CONFORT. Ne pas la retrouver ne prouve rien de mauvais :
+    //     la fin d'un passage est souvent la partie la moins bien entendue (voix qui
+    //     baisse, chevauchement). On peut la choisir mécaniquement — sur une vraie
+    //     frontière de phrase, ce qui reste tout l'intérêt du module.
+    if (!ouv) {
       return {
         granularite: 'mot', debut: zoneDebut, fin: zoneFin, motif: null, mots: motsAbsolus, phrases,
         refus: {
           code: 'citation_introuvable',
-          detail: !ouv && !clo
-            ? 'ni la phrase d\'ouverture ni celle de clôture ne se retrouvent dans l\'audio'
-            : `la phrase de ${!ouv ? "l'ouverture" : 'clôture'} ne se retrouve pas dans l'audio`,
+          detail: "la phrase d'ouverture citée ne se retrouve pas dans l'audio : elle n'a pas été prononcée",
         },
       };
     }
 
     const pOuv = phrases[ouv.index];
-    const pClo = phrases[Math.min(phrases.length - 1, clo.index + clo.largeur - 1)];
+    let pClo;
+    if (clo && clo.index >= ouv.index) {
+      pClo = phrases[Math.min(phrases.length - 1, clo.index + clo.largeur - 1)];
+    } else {
+      // Clôture non retrouvée (ou placée AVANT l'ouverture, ce qui revient au même) :
+      // on prend la dernière phrase entière qui tient dans le budget de durée. Le
+      // clip finit donc sur une vraie fin de propos, simplement pas sur celle que le
+      // modèle avait en tête.
+      const budget = dureeMax || (zoneFin - zoneDebut);
+      pClo = pOuv;
+      for (const p of phrases.slice(ouv.index)) {
+        if (p.fin + RESPIRATION_QUEUE - (pOuv.debut - RESPIRATION_TETE) <= budget) pClo = p;
+        else break;
+      }
+      journal.log?.(
+        `[short-bornes] clôture non retrouvée dans l'audio — fin posée sur la dernière `
+        + `frontière de phrase du budget (${arrondi(pClo.fin)} s). L'ouverture, elle, est ancrée à `
+        + `${Math.round(ouv.score * 100)} %.`,
+      );
+    }
     if (pClo.fin <= pOuv.debut) {
       return {
         granularite: 'mot', debut: zoneDebut, fin: zoneFin, motif: null, mots: motsAbsolus, phrases,
@@ -480,7 +510,10 @@ export async function bornesAuMot({
     journal.log?.(
       `[short-bornes] ${fournisseur} · ${motsAbsolus.length} mots, ${phrases.length} phrases · `
       + `${zoneDebut}→${zoneFin} recalé en ${debut}→${fin} `
-      + `(ouverture ${Math.round(ouv.score * 100)} %, clôture ${Math.round(clo.score * 100)} %) `
+      // ⚠️ `clo` PEUT ÊTRE NUL depuis que la clôture est facultative. Écrire
+      // `clo.score` ici jetait sur le chemin nominal du repli — une ligne de
+      // journal qui fait tomber la fabrication qu'elle décrit.
+      + `(ouverture ${Math.round(ouv.score * 100)} %, clôture ${clo ? `${Math.round(clo.score * 100)} %` : 'posée sur le budget'}) `
       + `· ${Date.now() - t0} ms`,
     );
     return { granularite: 'mot', debut, fin, motif: null, refus: null, mots: motsAbsolus, phrases };
