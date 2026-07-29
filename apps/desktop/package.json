@@ -1,0 +1,46 @@
+{
+  "name": "liri-desktop",
+  "version": "1.0.0",
+  "private": true,
+  "description": "LIRI — application de bureau (macOS, Windows)",
+  "main": "src/main.js",
+  "scripts": {
+    "start": "electron .",
+    "build:mac": "electron-builder --mac",
+    "build:win": "electron-builder --win",
+    "build:all": "electron-builder --mac --win",
+    "icons": "node scripts/gen-icons.mjs"
+  },
+  "devDependencies": {
+    "electron": "^33.2.0",
+    "electron-builder": "^25.1.8"
+  },
+  "build": {
+    "appId": "org.prorascience.liri.desktop",
+    "productName": "LIRI",
+    "copyright": "© Cimolace",
+    "directories": { "output": "release", "buildResources": "assets" },
+    "files": ["src/**/*", "assets/icon.png"],
+    "mac": {
+      "category": "public.app-category.education",
+      "icon": "assets/icon.icns",
+      "target": [
+        { "target": "dmg", "arch": ["arm64", "x64"] },
+        { "target": "zip", "arch": ["arm64", "x64"] }
+      ]
+    },
+    "win": {
+      "icon": "assets/icon.ico",
+      "target": [
+        { "target": "nsis", "arch": ["x64"] },
+        { "target": "portable", "arch": ["x64"] }
+      ]
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "shortcutName": "LIRI"
+    }
+  }
+}

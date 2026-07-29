@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8" />
+  <title>LIRI — hors ligne</title>
+  <style>
+    /* Mêmes couleurs que le portail : la coupure ne doit pas ressembler
+       à une page d'erreur de navigateur. */
+    :root { --base:#262624; --ink:#f5f1e9; --muted:#b0ada3; --faint:#82807a; --coral:#d97757; --line:rgba(245,241,233,.08); }
+    * { box-sizing: border-box; }
+    body {
+      margin:0; height:100vh; display:flex; align-items:center; justify-content:center;
+      background:var(--base); color:var(--ink);
+      font:15px/1.6 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      -webkit-user-select:none; user-select:none;
+    }
+    .box { max-width:420px; padding:32px; text-align:center; }
+    h1 { margin:0 0 10px; font-size:21px; font-weight:600; }
+    p { margin:0 0 22px; color:var(--muted); }
+    .why { color:var(--faint); font-size:12.5px; margin-top:18px; }
+    button {
+      background:var(--coral); color:#fff; border:0; border-radius:12px;
+      padding:12px 26px; font-size:15px; font-weight:600; cursor:pointer;
+    }
+    button:hover { opacity:.9; }
+    .mark { width:52px; height:52px; margin:0 auto 18px; display:block; }
+  </style>
+</head>
+<body>
+  <div class="box">
+    <svg class="mark" viewBox="0 0 24 24" fill="none" stroke="#d97757" stroke-width="1.6" stroke-linecap="round">
+      <path d="M2 8.8a15 15 0 0 1 20 0" opacity=".35"/>
+      <path d="M5.5 12.4a10 10 0 0 1 13 0" opacity=".6"/>
+      <path d="M9 16a5 5 0 0 1 6 0"/>
+      <circle cx="12" cy="19.5" r="1.1" fill="#d97757" stroke="none"/>
+    </svg>
+    <h1>Portail injoignable</h1>
+    <p>LIRI n’a pas réussi à joindre <strong id="host">le portail</strong>.</p>
+    <button onclick="location.reload()">Réessayer</button>
+    <p class="why" id="why"></p>
+  </div>
+  <script>
+    const p = new URLSearchParams(location.search);
+    const desc = p.get('desc');
+    if (desc) document.getElementById('why').textContent = 'Détail : ' + desc;
+  </script>
+</body>
+</html>
