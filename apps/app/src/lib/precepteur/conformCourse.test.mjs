@@ -278,6 +278,30 @@ const CROQUIS_PROJECT = {
   }],
 };
 
+test('conversion Précepteur conserve le contrat et le graphe de l’analogie visuelle', () => {
+  const project = {
+    pedagogy: [{ chapter_id: 1, title: 'Signal', simple_lesson: 'Une alerte déclenche une action.', analogies: [{ content: 'Le veilleur donne l’alerte.' }] }],
+    slides: [{ chapter_id: 1, title: 'Analogies', visual_role: 'analogy', image_url: 'https://example.test/analogie.png', image_prompt: 'prompt', image_status: 'approved', alt_text: 'Deux signaux comparés.', must_show: ['A', 'B', 'lien'], reject_if: ['A absent', 'lien absent'], analogy_map: { shared_mechanism: 'Alerter', mappings: [{ familiar: 'fumée', target: 'danger', why: 'signal' }] } }],
+  };
+  const course = masterclassProjectToPrecepteurCourse(project);
+  const scene = course.concepts[0].scenes.find((candidate) => candidate.type === 'image_analogie');
+  assert.equal(scene.image_url, 'https://example.test/analogie.png');
+  assert.equal(scene.image_status, 'approved');
+  assert.equal(scene.analogy_map.shared_mechanism, 'Alerter');
+  assert.deepEqual(scene.must_show, ['A', 'B', 'lien']);
+});
+
+test('conversion Précepteur ne publie jamais une image en attente de revue', () => {
+  const project = {
+    chapters: [{ chapter_id: 1, title: 'Alerte', analogies: [{ content: 'La fumée avertit du feu.' }] }],
+    slides: [{ chapter_id: 1, title: 'Analogies', visual_role: 'analogy', image_url: 'https://example.test/non-validee.png', image_status: 'pending_review', alt_text: 'Une alerte visuelle.' }],
+  };
+  const course = masterclassProjectToPrecepteurCourse(project);
+  const scene = course.concepts[0].scenes.find((item) => item.type === 'image_analogie');
+  assert.equal(scene.image_url, undefined);
+  assert.equal(scene.image_status, 'pending_review');
+});
+
 test('conformCourse : LLM OPT-OUT (défaut) → CROQUIS_MANQUANT reste flaggé, aucun croquis', async () => {
   const course = masterclassProjectToPrecepteurCourse(CROQUIS_PROJECT);
   const { course: out, report } = await conformCourse(course); // enrichCroquis=false par défaut

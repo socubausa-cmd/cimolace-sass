@@ -342,7 +342,7 @@ export default function FormationStage({ course, studentName }) {
       {/* L'IMAGE de l'analogie — générée à la CRÉATION du cours (image_url en base, edge
           generate-visual-image) et animée façon Ken Burns. Sans image_url : rien (la scène
           reste une analogie parlée, jamais de cadre vide). */}
-      {sc?.type === 'image_analogie' && sc.image_url ? (
+      {sc?.type === 'image_analogie' && sc.image_status === 'approved' && sc.image_url ? (
         <div
           key={`img-${idx}`}
           className="cca-in"
@@ -353,7 +353,7 @@ export default function FormationStage({ course, studentName }) {
         >
           <img
             src={sc.image_url}
-            alt={String(sc.analogie || '')}
+            alt={String(sc.alt_text || sc.analogie || '')}
             style={{ display: 'block', width: '100%', aspectRatio: '3 / 2', objectFit: 'cover' }}
             onError={(e) => { const p = e.currentTarget.parentElement; if (p) p.style.display = 'none'; }}
           />

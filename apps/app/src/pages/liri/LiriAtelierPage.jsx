@@ -3,10 +3,12 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import {
   Film, Music2, FileText, Type, Sparkles, BookOpen, Presentation, Radio,
   FileDown, Loader2, Check, AlertTriangle, RefreshCw, Search, ArrowUpRight,
+  Upload, AudioLines, Link2,
 } from 'lucide-react';
 import { masterFactoryApi } from '@/lib/api-v2';
 import { authStore } from '@/lib/auth-store';
 import { exportCoursePdf } from '@/lib/exportCoursePdf';
+import { extractTextFromFile } from '@/lib/extractDocumentText';
 
 /**
  * ATELIER DE COURS — lot 6 de l'unification (docs/ATELIER_COURS_UNIFIE_SPEC.md).
@@ -29,10 +31,16 @@ const C = {
 
 const TYPES = [
   { key: 'replay', label: 'Replays', icon: Film },
+  { key: 'live', label: 'Lives', icon: Radio },
   { key: 'tiktok', label: 'TikTok', icon: Music2 },
   { key: 'document', label: 'Documents', icon: FileText },
+  { key: 'pdf', label: 'PDF', icon: FileText },
+  { key: 'audio', label: 'Audio', icon: AudioLines },
+  { key: 'video', label: 'Vidéo', icon: Film },
+  { key: 'url', label: 'Lien', icon: Link2 },
   { key: 'texte', label: 'Texte', icon: Type },
 ];
+const INGEST_TYPES = new Set(['document', 'pdf', 'audio', 'video', 'url', 'texte']);
 
 /** Rendus proposés. `needs` = le pivot requis ; sans lui, l'action COÛTE de l'IA. */
 const ACTIONS = [
@@ -46,6 +54,7 @@ export default function LiriAtelierPage() {
   const navigate = useNavigate();
   const location = useLocation();
   const bootSourceRef = useRef('');
+  const importInputRef = useRef(null);
   const urlParams = useMemo(() => new URLSearchParams(location.search), [location.search]);
   const urlSourceType = urlParams.get('mfSourceType') || urlParams.get('sourceType') || 'replay';
   const urlSourceId = urlParams.get('mfSourceId') || urlParams.get('sourceId') || '';
@@ -57,6 +66,8 @@ export default function LiriAtelierPage() {
   const [busy, setBusy] = useState('');
   const [msg, setMsg] = useState(null);
   const [extractedCourse, setExtractedCourse] = useState(null);
+  const [precepteurCourse, setPrecepteurCourse] = useState(null);
+  const [sourceDraft, setSourceDraft] = useState({ title: '', text: '', url: '', fileName: '', mimeType: '' });
 
   const load = useCallback(async (t, opts = {}) => {
     setSources(null);
@@ -159,6 +170,48 @@ export default function LiriAtelierPage() {
 
   const flash = (k, t) => { setMsg({ k, t }); setTimeout(() => setMsg(null), 7000); };
 
+  const chooseSourceFile = async (file) => {
+    if (!file) return;
+    const isRawMedia = /^(audio|video)\//.test(file.type || '');
+    if (isRawMedia) {
+      flash('err', 'Le média brut passe d’abord par Import vidéo/audio du Studio pour être transcrit. Ici, dépose sa transcription .txt, .srt ou .vtt.');
+      return;
+    }
+    setBusy('extract-source');
+    try {
+      const text = await extractTextFromFile(file);
+      if (text.length < 200) throw new Error('Le fichier ne contient pas assez de texte exploitable.');
+      setSourceDraft({ title: file.name.replace(/\.[^.]+$/, ''), text, url: '', fileName: file.name, mimeType: file.type || 'text/plain' });
+      flash('ok', `${file.name} extrait localement · ${text.length.toLocaleString('fr-FR')} caractères prêts.`);
+    } catch (error) {
+      flash('err', error?.message || 'Extraction du fichier impossible.');
+    }
+    setBusy('');
+  };
+
+  const ingestSource = async () => {
+    if (!INGEST_TYPES.has(type) || (type === 'url' ? !sourceDraft.url.trim() : sourceDraft.text.trim().length < 200)) return;
+    setBusy('ingest-source');
+    try {
+      const created = await masterFactoryApi.ingestSource({
+        sourceType: type,
+        title: sourceDraft.title || undefined,
+        contentText: sourceDraft.text,
+        sourceUrl: type === 'url' ? sourceDraft.url.trim() : undefined,
+        mimeType: sourceDraft.mimeType || undefined,
+        metadata: sourceDraft.fileName ? { original_filename: sourceDraft.fileName, extractor: 'liri-atelier-browser' } : { extractor: 'manual' },
+      });
+      const source = created?.data || created;
+      setSourceDraft({ title: '', text: '', url: '', fileName: '', mimeType: '' });
+      await load(type);
+      await openSource(source);
+      flash('ok', 'Source enregistrée et normalisée. Elle peut maintenant alimenter tous les moteurs Master Factory.');
+    } catch (error) {
+      flash('err', error?.message || 'Import de la source impossible.');
+    }
+    setBusy('');
+  };
+
   const run = async (action) => {
     if (!sel) return;
     setBusy(action.key);
@@ -200,6 +253,36 @@ export default function LiriAtelierPage() {
     setBusy('');
   };
 
+  const manual = async () => {
+    if (!sel) return;
+    setBusy('manual');
+    try {
+      const result = await masterFactoryApi.renderManual({ sourceType: type, sourceId: sel.id });
+      const value = result?.data || result;
+      const blob = new Blob([value.markdown || ''], { type: 'text/markdown;charset=utf-8' });
+      const link = document.createElement('a');
+      link.href = URL.createObjectURL(blob);
+      link.download = `${String(value.title || sel.title || 'manuel').replace(/[^a-z0-9à-ÿ]+/gi, '-').replace(/^-|-$/g, '')}.md`;
+      link.click();
+      URL.revokeObjectURL(link.href);
+      flash('ok', 'Manuel Markdown produit depuis le pivot — aucun appel IA.');
+    } catch (error) { flash('err', error?.message || 'Manuel indisponible.'); }
+    setBusy('');
+  };
+
+  const precepteur = async () => {
+    if (!sel) return;
+    setBusy('precepteur');
+    try {
+      const result = await masterFactoryApi.renderPrecepteur({ sourceType: type, sourceId: sel.id });
+      const value = result?.data || result;
+      setPrecepteurCourse(value.course || value);
+      setEtat(await masterFactoryApi.status(type, sel.id));
+      flash('ok', value.cached ? 'Précepteur déjà prêt — rendu réutilisé.' : 'Précepteur construit et mémorisé sans nouvel appel IA.');
+    } catch (error) { flash('err', error?.message || 'Précepteur indisponible.'); }
+    setBusy('');
+  };
+
   const extractCourse = async () => {
     if (!sel) return;
     setBusy('extract-course');
@@ -219,8 +302,14 @@ export default function LiriAtelierPage() {
 
   const sendExtractedCourseToMasterclassFactory = () => {
     if (!sel || !etat?.ecrit) return;
+    // Le Studio Masterclass vit sur une route produit partagée (sans `/t/:slug`).
+    // On transporte donc explicitement le tenant, comme pour les ponts Formation
+    // et Live ci-dessus. Sans ce paramètre, un nouvel onglet / un localhost sans
+    // tenant en cache appelle l'API sans `X-Tenant-Slug` et perd le cours extrait.
+    const tenantSlug = authStore.getTenantSlug?.() || 'isna';
     const params = new URLSearchParams({
       from: 'liri-atelier',
+      tenant: tenantSlug,
       mfSourceType: type,
       mfSourceId: sel.id,
     });
@@ -279,9 +368,47 @@ export default function LiriAtelierPage() {
         </button>
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0,1fr) minmax(380px, 440px)', gap: 18, alignItems: 'start' }}>
+      <style>{`@media (max-width: 980px){.mf-atelier-grid{grid-template-columns:1fr!important}.mf-action-panel{position:static!important}}`}</style>
+      <div className="mf-atelier-grid" style={{ display: 'grid', gridTemplateColumns: 'minmax(0,1fr) minmax(380px, 440px)', gap: 18, alignItems: 'start' }}>
         {/* ── Sources ── */}
-        <div style={{ background: C.panel, borderRadius: 14, border: `1px solid ${C.line}`, overflow: 'hidden' }}>
+        <div style={{ display: 'grid', gap: 12 }}>
+          {INGEST_TYPES.has(type) && (
+            <section style={{ background: C.panel, borderRadius: 14, border: `1px solid ${C.line}`, padding: 15 }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', gap: 12, alignItems: 'start', marginBottom: 10 }}>
+                <div>
+                  <p style={{ margin: 0, fontSize: 14, fontWeight: 750 }}>Ajouter une source</p>
+                  <p style={{ margin: '4px 0 0', color: C.muted, fontSize: 11.5, lineHeight: 1.45 }}>
+                    {type === 'url' ? 'Colle un lien public : Liri extrait le texte, bloque les réseaux privés et conserve la source.' : ['audio', 'video'].includes(type)
+                      ? 'Colle la transcription ou dépose un fichier de sous-titres. Le média brut se transcrit dans le Studio.'
+                      : 'Dépose un PDF, Word ou texte : l’extraction reste locale, puis seul le texte utile est enregistré.'}
+                  </p>
+                </div>
+                <button type="button" onClick={() => importInputRef.current?.click()} style={btn(false)} disabled={!!busy}>
+                  {busy === 'extract-source' ? <Loader2 size={14} className="animate-spin" /> : <Upload size={14} />} Fichier
+                </button>
+                <input ref={importInputRef} type="file" hidden accept=".pdf,.docx,.txt,.md,.srt,.vtt,text/*,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document" onChange={(event) => chooseSourceFile(event.target.files?.[0])} />
+              </div>
+              {type === 'url' && <input value={sourceDraft.url} onChange={(event) => setSourceDraft((prev) => ({ ...prev, url: event.target.value }))}
+                placeholder="https://…"
+                style={{ width: '100%', boxSizing: 'border-box', borderRadius: 9, border: `1px solid ${C.line}`, background: C.panel2, color: C.ink, padding: '9px 11px', fontSize: 12.5, marginBottom: 8 }} />}
+              <input value={sourceDraft.title} onChange={(event) => setSourceDraft((prev) => ({ ...prev, title: event.target.value }))}
+                placeholder="Titre de la source"
+                style={{ width: '100%', boxSizing: 'border-box', borderRadius: 9, border: `1px solid ${C.line}`, background: C.panel2, color: C.ink, padding: '9px 11px', fontSize: 12.5, marginBottom: 8 }} />
+              {type !== 'url' && <textarea value={sourceDraft.text} onChange={(event) => setSourceDraft((prev) => ({ ...prev, text: event.target.value }))}
+                placeholder={['audio', 'video'].includes(type) ? 'Colle ici la transcription…' : 'Colle ici le contenu, ou choisis un fichier…'}
+                style={{ width: '100%', minHeight: 104, resize: 'vertical', boxSizing: 'border-box', borderRadius: 9, border: `1px solid ${C.line}`, background: C.panel2, color: C.ink, padding: '10px 11px', fontSize: 12.5, lineHeight: 1.5 }} />}
+              <div style={{ display: 'flex', justifyContent: 'space-between', gap: 10, alignItems: 'center', marginTop: 9 }}>
+                <span style={{ color: type === 'url' ? (sourceDraft.url ? C.ok : C.faint) : sourceDraft.text.length >= 200 ? C.ok : C.faint, fontSize: 11.5 }}>
+                  {type === 'url' ? (sourceDraft.url ? 'Lien prêt à extraire' : 'Lien public requis') : `${sourceDraft.text.length.toLocaleString('fr-FR')} / 200 caractères minimum`}
+                </span>
+                <button type="button" onClick={ingestSource} disabled={!!busy || (type === 'url' ? !sourceDraft.url.trim() : sourceDraft.text.trim().length < 200)}
+                  style={{ ...btn(true), opacity: busy || (type === 'url' ? !sourceDraft.url.trim() : sourceDraft.text.trim().length < 200) ? 0.45 : 1 }}>
+                  {busy === 'ingest-source' ? <Loader2 size={14} className="animate-spin" /> : <Sparkles size={14} />} Envoyer au moteur
+                </button>
+              </div>
+            </section>
+          )}
+          <div style={{ background: C.panel, borderRadius: 14, border: `1px solid ${C.line}`, overflow: 'hidden' }}>
           {sources === null ? (
             <p style={{ padding: 22, color: C.muted, fontSize: 13 }}>Chargement…</p>
           ) : !filtered.length ? (
@@ -328,10 +455,11 @@ export default function LiriAtelierPage() {
               </div>
             </>
           )}
+          </div>
         </div>
 
         {/* ── Panneau d'action ── */}
-        <div style={{ background: C.panel, borderRadius: 14, border: `1px solid ${sel ? 'rgba(217,119,87,.36)' : C.line}`, padding: 16, position: 'sticky', top: 16, boxShadow: sel ? '0 20px 55px rgba(0,0,0,.25)' : 'none' }}>
+        <div className="mf-action-panel" style={{ background: C.panel, borderRadius: 14, border: `1px solid ${sel ? 'rgba(217,119,87,.36)' : C.line}`, padding: 16, position: 'sticky', top: 16, boxShadow: sel ? '0 20px 55px rgba(0,0,0,.25)' : 'none' }}>
           {!sel ? (
             <div>
               <p style={{ color: C.ink, fontSize: 15, fontWeight: 750, margin: '0 0 7px' }}>Choisis une source</p>
@@ -410,7 +538,9 @@ export default function LiriAtelierPage() {
                   {/* Étape 2 — les FORMES */}
                   <div style={{ display: 'grid', gap: 8, marginBottom: 12 }}>
                     {ACTIONS.map((a) => {
-                      const fait = etat && etat !== 'loading' && etat[a.needs];
+                      // Un pivot écrit rend le PDF/manuel possibles, mais ne signifie
+                      // pas que le parcours élève a déjà été publié par le worker.
+                      const fait = etat && etat !== 'loading' && (a.key === 'course' ? Boolean(etat?.course?.id) : etat[a.needs]);
                       return (
                         <button key={a.key} type="button" onClick={() => run(a)} disabled={!!busy}
                           style={{
@@ -428,15 +558,27 @@ export default function LiriAtelierPage() {
                   </div>
 
                   {/* Rendu immédiat, sans IA */}
-                  <button type="button" onClick={pdf} disabled={!!busy || !gratuits.includes('pdf')}
-                    style={{
-                      ...btn(false), width: '100%', justifyContent: 'center',
-                      opacity: gratuits.includes('pdf') ? 1 : 0.45, cursor: gratuits.includes('pdf') ? 'pointer' : 'not-allowed',
-                    }}
-                    title={gratuits.includes('pdf') ? 'Aucun appel IA' : "Le cours écrit n'existe pas encore"}>
-                    {busy === 'pdf' ? <Loader2 size={15} className="animate-spin" /> : <FileDown size={15} />}
-                    PDF {gratuits.includes('pdf') && <span style={{ fontSize: 10.5, color: C.ok }}>· gratuit</span>}
-                  </button>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,minmax(0,1fr))', gap: 8 }}>
+                    <button type="button" onClick={pdf} disabled={!!busy || !gratuits.includes('pdf')}
+                      style={{ ...btn(false), justifyContent: 'center', opacity: gratuits.includes('pdf') ? 1 : 0.45 }} title="Rendu sans IA">
+                      {busy === 'pdf' ? <Loader2 size={15} className="animate-spin" /> : <FileDown size={15} />} PDF
+                    </button>
+                    <button type="button" onClick={manual} disabled={!!busy || !etat?.ecrit}
+                      style={{ ...btn(false), justifyContent: 'center', opacity: etat?.ecrit ? 1 : 0.45 }} title="Rendu sans IA">
+                      {busy === 'manual' ? <Loader2 size={15} className="animate-spin" /> : <BookOpen size={15} />} Manuel
+                    </button>
+                    <button type="button" onClick={precepteur} disabled={!!busy || !etat?.ecrit}
+                      style={{ ...btn(Boolean(etat?.joue)), justifyContent: 'center', opacity: etat?.ecrit ? 1 : 0.45 }} title="Rendu joué sans IA">
+                      {busy === 'precepteur' ? <Loader2 size={15} className="animate-spin" /> : <Sparkles size={15} />} Précepteur
+                    </button>
+                  </div>
+
+                  {precepteurCourse?.concepts?.length ? (
+                    <div style={{ marginTop: 10, padding: 11, borderRadius: 10, background: 'rgba(217,119,87,.10)', border: '1px solid rgba(217,119,87,.28)' }}>
+                      <p style={{ margin: 0, color: C.coral, fontSize: 10.5, fontWeight: 850, textTransform: 'uppercase', letterSpacing: '.1em' }}>Précepteur jouable</p>
+                      <p style={{ margin: '5px 0 0', fontSize: 12.5, color: C.ink }}>{precepteurCourse.concepts.length} concept(s) · {precepteurCourse.concepts.reduce((total, concept) => total + (concept.scenes?.length || 0), 0)} scène(s)</p>
+                    </div>
+                  ) : null}
 
                   <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginTop: 10 }}>
                     <button type="button" onClick={extractCourse} disabled={!!busy || !etat?.ecrit}

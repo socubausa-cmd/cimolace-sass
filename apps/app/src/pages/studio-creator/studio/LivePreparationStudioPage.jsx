@@ -353,6 +353,10 @@ export default function LivePreparationStudioPage() {
   const liriPrepFileRef = useRef(null);
   const liriPrepTargetIdxRef = useRef(null);
   const sessionConfigRef = useRef(null);
+  // Empêche l'autosave du blueprint par défaut avant que la ligne distante soit hydratée.
+  // Sans cette garde, l'ouverture d'un live Master Factory pouvait écraser la mindmap
+  // et les métadonnées enrichies pendant les premières centaines de millisecondes.
+  const blueprintHydratedRef = useRef(!paramSessionId);
 
   // ── Scènes ─────────────────────────────────────────────────────────────────
   const [scenes, setScenes] = useState([]);
@@ -457,6 +461,7 @@ export default function LivePreparationStudioPage() {
     ]);
     if (scData) setScenes(scData);
     if (coData) setContents(coData);
+    blueprintHydratedRef.current = true;
     setLoading(false);
   }, [sessionId]);
 
@@ -516,7 +521,7 @@ export default function LivePreparationStudioPage() {
   }, 600);
 
   useEffect(() => {
-    if (!sessionId || stepIndex !== 0) return;
+    if (!sessionId || stepIndex !== 0 || !blueprintHydratedRef.current) return;
     persistBlueprint(outline, privateNotes, goalsJson);
   }, [outline, privateNotes, goalsJson, sessionId, stepIndex, persistBlueprint]);
 
@@ -1226,21 +1231,51 @@ export default function LivePreparationStudioPage() {
                 </div>
               )}
               {step.id === 'blueprint' && stepSubPage === 1 && (
-                <div className="space-y-4">
-                  <label className="block text-xs uppercase tracking-wide text-white/40">Durée estimée (min)</label>
-                  <input
-                    type="number"
-                    min={5}
-                    className="w-full max-w-xs rounded-xl border border-white/10 bg-black/30 px-4 py-2.5 text-sm outline-none focus:border-amber-500/40"
-                    value={outline.estimatedMinutes}
-                    onChange={(e) => setOutline((o) => ({ ...o, estimatedMinutes: Number(e.target.value) || 0 }))}
-                  />
-                  <label className="block text-xs uppercase tracking-wide text-white/40">Notes privées (hôte)</label>
-                  <textarea
-                    className="min-h-[120px] w-full rounded-xl border border-white/10 bg-black/30 px-4 py-2.5 text-sm outline-none focus:border-amber-500/40"
-                    value={privateNotes}
-                    onChange={(e) => setPrivateNotes(e.target.value)}
-                  />
+                <div className="grid min-h-0 gap-4 lg:grid-cols-[minmax(260px,0.8fr)_minmax(360px,1.2fr)]">
+                  <div className="space-y-4">
+                    <label className="block text-xs uppercase tracking-wide text-white/40">Durée estimée (min)</label>
+                    <input
+                      type="number"
+                      min={5}
+                      className="w-full max-w-xs rounded-xl border border-white/10 bg-black/30 px-4 py-2.5 text-sm outline-none focus:border-amber-500/40"
+                      value={outline.estimatedMinutes}
+                      onChange={(e) => setOutline((o) => ({ ...o, estimatedMinutes: Number(e.target.value) || 0 }))}
+                    />
+                    <label className="block text-xs uppercase tracking-wide text-white/40">Notes privées (hôte)</label>
+                    <textarea
+                      className="min-h-[150px] w-full rounded-xl border border-white/10 bg-black/30 px-4 py-2.5 text-sm outline-none focus:border-amber-500/40"
+                      value={privateNotes}
+                      onChange={(e) => setPrivateNotes(e.target.value)}
+                    />
+                  </div>
+                  <div className="min-h-0 rounded-2xl border border-[#d97757]/20 bg-[#d97757]/[0.04] p-4">
+                    <div className="mb-3 flex items-start justify-between gap-3">
+                      <div>
+                        <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-[#e99475]">Mindmap Master Factory</p>
+                        <h3 className="mt-1 font-display text-base text-white/90">{outline.mindmap?.root?.label || outline.title || 'Plan du cours'}</h3>
+                      </div>
+                      <span className="rounded-full border border-white/10 bg-black/25 px-2.5 py-1 text-[10px] text-white/45">
+                        {outline.mindmap?.branches?.length || 0} branches
+                      </span>
+                    </div>
+                    {outline.mindmap?.branches?.length ? (
+                      <div className="max-h-[280px] space-y-2 overflow-y-auto pr-1 [scrollbar-width:thin]">
+                        {outline.mindmap.branches.map((branch, index) => (
+                          <div key={branch.id || index} className="rounded-xl border border-white/[0.08] bg-black/20 px-3 py-2.5">
+                            <div className="flex items-center gap-2">
+                              <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-[#d97757]/15 text-[9px] font-semibold text-[#ef9b7d]">{index + 1}</span>
+                              <p className="text-xs font-semibold text-white/80">{branch.label}</p>
+                            </div>
+                            {branch.key_points?.length ? (
+                              <p className="mt-1.5 pl-7 text-[10.5px] leading-relaxed text-white/42">{branch.key_points.join(' · ')}</p>
+                            ) : null}
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <p className="rounded-xl border border-dashed border-white/10 px-3 py-6 text-center text-xs text-white/35">Aucune mindmap publiée pour ce live.</p>
+                    )}
+                  </div>
                 </div>
               )}
 

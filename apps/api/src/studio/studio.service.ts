@@ -73,6 +73,7 @@ export class StudioService {
       'quality_score',
       'is_public',
       'metadata',
+      'versions',
     ];
     const filtered: Record<string, any> = {};
     for (const k of allowed) if (patch[k] !== undefined) filtered[k] = patch[k];

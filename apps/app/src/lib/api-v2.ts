@@ -1003,6 +1003,8 @@ export type MasterFactorySourceType =
   | 'url';
 
 export const masterFactoryApi = {
+  ingestSource: (body: { sourceType: MasterFactorySourceType; title?: string; contentText: string; sourceUrl?: string; mimeType?: string; durationSec?: number; metadata?: Record<string, unknown> }) =>
+    apiV2.post<ApiEnvelope<any>>('/master-factory/sources/ingest', body, { timeout: 120000 }).then(unwrap),
   listSources: (type: MasterFactorySourceType) =>
     apiV2.get<ApiEnvelope<any>>(`/master-factory/sources/${type}`).then(unwrap),
   getSource: (type: MasterFactorySourceType, sourceId: string) =>
@@ -1010,11 +1012,13 @@ export const masterFactoryApi = {
   understand: (body: { sourceType?: MasterFactorySourceType; sourceId: string; force?: boolean }) =>
     apiV2.post<ApiEnvelope<any>>('/master-factory/understand', body, { timeout: 900000 }).then(unwrap),
   status: (sourceType: MasterFactorySourceType, sourceId: string) =>
-    apiV2.get<ApiEnvelope<any>>(`/master-factory/status/${sourceType}/${encodeURIComponent(sourceId)}`).then(unwrap),
+    apiV2.post<ApiEnvelope<any>>('/master-factory/status', { sourceType, sourceId }).then(unwrap),
   produceCourse: (body: { sourceType?: MasterFactorySourceType; sourceId: string; force?: boolean }) =>
     apiV2.post<ApiEnvelope<any>>('/master-factory/produce/course', body).then(unwrap),
   produceMasterScript: (body: { sourceType?: MasterFactorySourceType; sourceId: string; force?: boolean }) =>
     apiV2.post<ApiEnvelope<any>>('/master-factory/produce/master-script', body).then(unwrap),
+  produceMindmap: (body: { sourceType?: MasterFactorySourceType; sourceId: string }) =>
+    apiV2.post<ApiEnvelope<any>>('/master-factory/produce/mindmap', body).then(unwrap),
   produceSmartboard: (body: { sourceType?: MasterFactorySourceType; sourceId: string; force?: boolean }) =>
     apiV2.post<ApiEnvelope<any>>('/master-factory/produce/smartboard', body).then(unwrap),
   produceLiveScenario: (body: { sourceType?: MasterFactorySourceType; sourceId: string; force?: boolean }) =>
@@ -1032,6 +1036,10 @@ export const masterFactoryApi = {
     apiV2.post<ApiEnvelope<any>>('/master-factory/render/pdf', body).then(unwrap),
   renderMasterclassProject: (body: { sourceType?: MasterFactorySourceType; sourceId: string }) =>
     apiV2.post<ApiEnvelope<any>>('/master-factory/render/masterclass-project', body).then(unwrap),
+  renderPrecepteur: (body: { sourceType?: MasterFactorySourceType; sourceId: string }) =>
+    apiV2.post<ApiEnvelope<any>>('/master-factory/render/precepteur', body).then(unwrap),
+  renderManual: (body: { sourceType?: MasterFactorySourceType; sourceId: string }) =>
+    apiV2.post<ApiEnvelope<any>>('/master-factory/render/manual', body).then(unwrap),
   enrichVisualPedagogy: (body: { sourceType?: MasterFactorySourceType; sourceId: string; force?: boolean }) =>
     apiV2.post<ApiEnvelope<any>>('/master-factory/enrich/visual-pedagogy', body, { timeout: 240000 }).then(unwrap),
   reviewVisualImage: (body: { sourceType?: MasterFactorySourceType; sourceId: string; chapterId: number; role: string; status: 'pending_review' | 'approved' | 'rejected'; imageUrl?: string; provider?: string; note?: string }) =>

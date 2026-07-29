@@ -1,0 +1,19 @@
+{
+  "generatedAt": "2026-07-29T17:23:30.267Z",
+  "ok": true,
+  "sourceId": "b11a419e-8508-4058-a42c-eda9cb3a5f2d",
+  "liveSessionId": "368fddd0-46cb-409e-9811-ff3f12c30a18",
+  "scenes": 12,
+  "arena": {
+    "hasSequenceCounter": true,
+    "hasFirstSceneTitle": true,
+    "hasFirstSceneIdea": false
+  },
+  "screenshots": [
+    "47-real-smartboard-scenes.png",
+    "48-real-live-mindmap.png",
+    "49-real-master-script-prompter.png",
+    "50-real-live-arena-ready.png"
+  ],
+  "browserErrors": []
+}

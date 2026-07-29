@@ -77,20 +77,43 @@ export class CourseJobService {
     opts: { force?: boolean } = {},
   ) {
     if (!sourceId) throw new BadRequestException('sourceId manquant');
-    if (!['replay', 'tiktok'].includes(sourceType)) {
+    const registeredTypes = ['document', 'texte', 'pdf', 'audio', 'video', 'url'];
+    if (!['replay', 'tiktok', 'live', ...registeredTypes].includes(sourceType)) {
       throw new BadRequestException(
         `La production de parcours depuis « ${sourceType} » n'est pas encore branchée au worker. ` +
-        'Utilise un replay ou une vidéo TikTok transcrite.',
+        'Utilise une source transcrite ou extraite par Master Factory.',
       );
     }
 
-    const sourceTable = sourceType === 'replay' ? 'published_videos' : 'precepteur_sources';
-    const { data: source } = await this.db
-      .from(sourceTable)
-      .select('id, transcript_text')
-      .eq('id', sourceId)
-      .eq('tenant_id', tenantId)
-      .maybeSingle();
+    let source: any = null;
+    if (sourceType === 'live') {
+      const { data: session } = await this.db.from('live_sessions').select('id, kind')
+        .eq('id', sourceId).eq('tenant_id', tenantId).maybeSingle();
+      if (session?.kind === 'teleconsult') throw new BadRequestException('Une téléconsultation ne peut pas devenir un cours.');
+      if (session) {
+        const { data: state } = await this.db.from('live_neuro_recall_state')
+          .select('transcript_text').eq('live_session_id', sourceId).maybeSingle();
+        let transcript = String(state?.transcript_text || '').trim();
+        if (!transcript) {
+          const { data: captions } = await this.db.from('liri_multilang_live_captions')
+            .select('source_text').eq('live_session_id', sourceId).order('occurred_at', { ascending: true });
+          transcript = (captions || []).map((caption: any) => caption.source_text).filter(Boolean).join(' ').trim();
+        }
+        source = { id: session.id, transcript_text: transcript };
+      }
+    } else if (registeredTypes.includes(sourceType)) {
+      const result = await this.db.from('master_factory_sources').select('id, content_text, status')
+        .eq('id', sourceId).eq('tenant_id', tenantId).eq('source_type', sourceType).maybeSingle();
+      source = result.data ? { ...result.data, transcript_text: result.data.content_text } : null;
+      if (source && source.status !== 'ready') {
+        throw new BadRequestException("L'extraction de cette source n'est pas terminée.");
+      }
+    } else {
+      const sourceTable = sourceType === 'replay' ? 'published_videos' : 'precepteur_sources';
+      const result = await this.db.from(sourceTable).select('id, transcript_text')
+        .eq('id', sourceId).eq('tenant_id', tenantId).maybeSingle();
+      source = result.data;
+    }
     if (!source) throw new NotFoundException('Source introuvable pour cette école.');
     if (!String(source.transcript_text || '').trim()) {
       throw new BadRequestException("Cette source n'a pas encore de transcription exploitable.");

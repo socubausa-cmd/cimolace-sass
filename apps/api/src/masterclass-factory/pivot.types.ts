@@ -31,7 +31,8 @@ export type PivotKind =
   | 'master_script'
   | 'smartboard_timeline'
   | 'live_scenario'
-  | 'replay_postprod';
+  | 'replay_postprod'
+  | 'visual_pedagogy';
 
 export type RenderTarget =
   | 'pdf'
@@ -41,6 +42,7 @@ export type RenderTarget =
   | 'smartboard'
   | 'live'
   | 'master_script'
+  | 'mindmap'
   | 'video_semaine'
   | 'quiz'
   | 'forum'
@@ -200,6 +202,32 @@ export interface MasterScriptPivot {
 }
 
 /**
+ * Vue de navigation du Master Script. Elle est déterministe : elle ne relit pas
+ * la vidéo et ne rappelle aucun modèle. Le Studio, le prompteur et la régie LIVE
+ * reçoivent donc exactement la même structure.
+ */
+export interface CourseMindmap {
+  schema_version: 1;
+  kind: 'mindmap';
+  title: string;
+  root: { id: string; label: string };
+  branches: {
+    id: string;
+    label: string;
+    notion_id?: string;
+    key_points: string[];
+    script_moment_id: string;
+  }[];
+  edges: { from: string; to: string }[];
+  mermaid: string;
+  meta: {
+    master_script_pivot_id: string;
+    generated_at: string;
+    model: 'deterministic-mindmap-v1';
+  };
+}
+
+/**
  * NIVEAU 2-D — SMARTBOARD TIMELINE. Ce n'est pas une slide statique : c'est le
  * tableau vivant décrit dans le cahier des charges. La voix pilote l'apparition
  * des blocs, l'écriture, le surlignage et les schémas.
@@ -317,6 +345,22 @@ export interface ReplayPostprodPivot {
   };
 }
 
+/** Brief raisonné qui transforme des notions en situations, analogies et visuels. */
+export interface VisualPedagogyPivot {
+  schema_version: 1;
+  title: string;
+  chapters: Array<{
+    chapter_id: number;
+    diagnostic: Record<string, unknown>;
+    reformulation: Record<string, unknown>;
+    scenario: Record<string, unknown>;
+    analogy: Record<string, unknown>;
+    visual_anchors: Array<Record<string, unknown>>;
+    quality: Record<string, unknown>;
+  }>;
+  meta?: Record<string, unknown>;
+}
+
 export type CoursePivotPayload =
   | Comprehension
   | CoursEcrit
@@ -324,7 +368,8 @@ export type CoursePivotPayload =
   | MasterScriptPivot
   | SmartboardTimelinePivot
   | LiveScenarioPivot
-  | ReplayPostprodPivot;
+  | ReplayPostprodPivot
+  | VisualPedagogyPivot;
 
 export type RenderablePivotPayload = Exclude<CoursePivotPayload, Comprehension>;
 

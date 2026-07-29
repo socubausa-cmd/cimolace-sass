@@ -68,7 +68,7 @@ function firstAnalogyContent(analogies) {
  * @param {Object} ch  un MasterclassChapter (idéalement issu de project.pedagogy)
  * @returns {Object[]} scènes (jamais crashantes pour le renderer)
  */
-function chapterToScenes(ch) {
+function chapterToScenes(ch, analogyVisual) {
   const chapter = ch || {};
   const scenes = [];
   const title = txt(chapter.title);
@@ -151,6 +151,13 @@ function chapterToScenes(ch) {
       type: 'image_analogie',
       analogie,
       narration: analogie,
+      ...(analogyVisual?.image_status === 'approved' && analogyVisual?.image_url ? { image_url: analogyVisual.image_url } : {}),
+      ...(analogyVisual?.image_prompt ? { image_prompt: analogyVisual.image_prompt } : {}),
+      ...(analogyVisual?.image_status ? { image_status: analogyVisual.image_status } : {}),
+      ...(analogyVisual?.alt_text ? { alt_text: analogyVisual.alt_text } : {}),
+      ...(Array.isArray(analogyVisual?.must_show) ? { must_show: analogyVisual.must_show } : {}),
+      ...(Array.isArray(analogyVisual?.reject_if) ? { reject_if: analogyVisual.reject_if } : {}),
+      ...(analogyVisual?.analogy_map ? { analogy_map: analogyVisual.analogy_map } : {}),
     };
     // `real_application` sert de légende à l'exemple « Dans la nature » (approx.).
     // `subject` n'a pas de source (enum d'anim front) → on ne fournit pas
@@ -205,7 +212,11 @@ export function masterclassProjectToPrecepteurCourse(project) {
   const concepts = [];
   chapters.forEach((ch, i) => {
     const chapter = ch || {};
-    const scenes = chapterToScenes(chapter);
+    const analogyVisual = Array.isArray(p.slides)
+      ? p.slides.find((slide) => Number(slide?.chapter_id) === Number(chapter?.chapter_id)
+        && (slide?.visual_role === 'analogy' || String(slide?.title || '').toLocaleLowerCase('fr') === 'analogies'))
+      : null;
+    const scenes = chapterToScenes(chapter, analogyVisual);
     if (scenes.length === 0) return; // concept vide → écarté (sinon rendu vide)
     const conceptTitle = txt(chapter.title) || `Chapitre ${i + 1}`;
     const idSource = chapter.chapter_id != null ? chapter.chapter_id : chapter.id;

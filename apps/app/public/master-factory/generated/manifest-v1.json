@@ -1,0 +1,53 @@
+{
+  "version": "1.0.0",
+  "subject": "Transfert d'apprentissage",
+  "provider": "codex-built-in-imagegen",
+  "publicationStatus": "pending_review",
+  "policy": "Une image ne devient visible par l'apprenant qu'apres validation humaine.",
+  "assets": [
+    {
+      "id": "learning-transfer-situation-v1",
+      "role": "situation",
+      "status": "pending_review",
+      "path": "/master-factory/generated/learning-transfer-situation-v1.png",
+      "sha256": "44d8ee69346adbb7e0243fee5d4162027a90d42ddaeff3dc7a0d099b2f169076",
+      "dimensions": { "width": 1672, "height": 941 },
+      "pedagogicalContract": "Faire ressentir l'obstacle cognitif : deux situations proches ne produisent pas forcement la meme decision.",
+      "alt": "Une apprenante compare deux montages proches dont un contexte additionnel modifie le resultat.",
+      "prompt": "Mise en situation premium et cinematographique : une apprenante compare deux montages electromagnetiques presque identiques, mais un ventilateur et un contexte different changent le resultat. Composition lisible, sans texte ni logo."
+    },
+    {
+      "id": "learning-transfer-concept-v1",
+      "role": "concept",
+      "status": "pending_review",
+      "path": "/master-factory/generated/learning-transfer-concept-v1.png",
+      "sha256": "2bd5292faff77528f60ff23f76f7027ae79df7460ba73c205e4a0c5d160f0a9d",
+      "dimensions": { "width": 1672, "height": 941 },
+      "pedagogicalContract": "Montrer qu'un concept utile conserve un invariant tout en changeant de contexte.",
+      "alt": "Un meme arc couleur terre est isole puis reutilise dans deux configurations nouvelles.",
+      "prompt": "Infographie conceptuelle haut de gamme en trois etapes : isoler un invariant visuel, puis le reutiliser dans deux configurations nouvelles. Fond sombre, hierarchie nette, sans texte ni logo."
+    },
+    {
+      "id": "learning-transfer-bridge-v1",
+      "role": "analogy",
+      "status": "pending_review",
+      "path": "/master-factory/generated/learning-transfer-bridge-v1.png",
+      "sha256": "d6ad04991bf8364d0608fc9e862333c1d37559404bd3b381ce2433342aab38cd",
+      "dimensions": { "width": 1672, "height": 941 },
+      "pedagogicalContract": "Demystifier le transfert par l'analogie d'un pont reliant une connaissance acquise a une situation nouvelle.",
+      "alt": "Un pont lumineux relie une rive de connaissances maitrisees a une situation nouvelle.",
+      "prompt": "Analogie visuelle premium du transfert d'apprentissage : un pont lumineux relie une connaissance acquise a une situation nouvelle, avec des indices de reconnaissance, adaptation et justification. Sans texte ni logo."
+    },
+    {
+      "id": "learning-transfer-synthesis-v1",
+      "role": "synthesis",
+      "status": "pending_review",
+      "path": "/master-factory/generated/learning-transfer-synthesis-v1.png",
+      "sha256": "98ae7d8bfa99fb32bdfbd870ef0885992416db7e885cabd3e553ce82ee6e26fd",
+      "dimensions": { "width": 1672, "height": 941 },
+      "pedagogicalContract": "Fixer la procedure mentale : reconnaitre, choisir une action, puis justifier.",
+      "alt": "Une loupe, des engrenages, une boussole, une balance et un trajet representent les etapes d'une decision transferee.",
+      "prompt": "Synthese visuelle editoriale premium : loupe et engrenages pour reconnaitre, boussole et trajet pour agir, balance pour justifier. Composition coherente sur fond sombre, sans texte ni logo."
+    }
+  ]
+}

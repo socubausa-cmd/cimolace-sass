@@ -63,7 +63,7 @@ export class TranscriptionService {
     const { data: recording } = await (this.supabase.client as any)
       .from('live_recordings')
       .select('id, file_url, duration_seconds, status')
-      .eq('session_id', sessionId)
+      .eq('live_session_id', sessionId)
       .eq('status', 'completed')
       .order('completed_at', { ascending: false })
       .limit(1)

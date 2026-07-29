@@ -43,7 +43,13 @@ export class LiveService {
       "join_code", "production_live_type", "production_category", "room_mode",
       "timezone", "access_mode", "kind",
     ];
-    const row: Record<string, any> = { tenant_id: tenantId, status: "scheduled" };
+    const row: Record<string, any> = {
+      tenant_id: tenantId,
+      status: "scheduled",
+      // Le contrat Studio autorise un live immédiat sans date explicite, tandis
+      // que la base distante impose scheduled_at NOT NULL.
+      scheduled_at: data?.scheduled_at || new Date().toISOString(),
+    };
     for (const k of COLS) if (data?.[k] !== undefined) row[k] = data[k];
     // Vocabulaire : CHECK session_type accepte 'class', pas 'classe' (legacy front).
     if (row.session_type === "classe") row.session_type = "class";
@@ -52,6 +58,10 @@ export class LiveService {
     const ACCESS = ["public", "invite_only", "password", "subscription"];
     if (row.access_mode && !ACCESS.includes(String(row.access_mode))) delete row.access_mode;
     if (!row.host_user_id && data?.teacher_id) row.host_user_id = data.teacher_id;
+    // Les politiques RLS historiques de la régie (live_scenes/blueprints)
+    // reconnaissent teacher_id, tandis que la salle moderne utilise
+    // host_user_id. Un live créé par l'API doit renseigner les deux identités.
+    if (!row.teacher_id && row.host_user_id) row.teacher_id = row.host_user_id;
 
     const { data: session, error } = await this.supabase
       .from("live_sessions")

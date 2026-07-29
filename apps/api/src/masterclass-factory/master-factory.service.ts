@@ -2,6 +2,7 @@ import { BadRequestException, Injectable, NotFoundException, ServiceUnavailableE
 import { SupabaseService } from '../supabase/supabase.service';
 import type {
   Comprehension,
+  CourseMindmap,
   CoursePivotPayload,
   LiveScenarioPivot,
   MasterScriptPivot,
@@ -13,6 +14,7 @@ import { ComprehensionService } from './comprehension.service';
 import { CourseJobService } from './course-job.service';
 import { RenderPivotService } from './render-pivot.service';
 import { SourceAdaptersService } from './source-adapters.service';
+import { VisualPedagogyService } from './visual-pedagogy.service';
 
 /**
  * MASTER FACTORY — façade d'orchestration.
@@ -33,6 +35,7 @@ export class MasterFactoryService {
     private readonly comprehension: ComprehensionService,
     private readonly courseJobs: CourseJobService,
     private readonly renderPivot: RenderPivotService,
+    private readonly visualPedagogy: VisualPedagogyService,
   ) {}
 
   private get db(): any {
@@ -47,6 +50,10 @@ export class MasterFactoryService {
   /** Métadonnées d'une seule source, pour ouvrir un dossier direct sans attendre tout l'inventaire. */
   getSource(tenantId: string, sourceType: SourceType, sourceId: string) {
     return this.sources.getSource(tenantId, sourceType, sourceId);
+  }
+
+  ingestSource(tenantId: string, userId: string, input: Parameters<SourceAdaptersService['ingest']>[2]) {
+    return this.sources.ingest(tenantId, userId, input);
   }
 
   /**
@@ -89,6 +96,35 @@ export class MasterFactoryService {
   /** Projet éditable Masterclass Factory dérivé du pivot écrit, sans seconde IA. */
   renderMasterclassProject(tenantId: string, sourceType: SourceType, sourceId: string) {
     return this.renderPivot.renderMasterclassProject(tenantId, sourceType, sourceId);
+  }
+
+  renderPrecepteur(tenantId: string, sourceType: SourceType, sourceId: string) {
+    return this.renderPivot.renderPrecepteur(tenantId, sourceType, sourceId);
+  }
+
+  renderManual(tenantId: string, sourceType: SourceType, sourceId: string) {
+    return this.renderPivot.renderManual(tenantId, sourceType, sourceId);
+  }
+
+  /** Enrichissement coûteux mais mis en cache : diagnostic → analogie → briefs visuels. */
+  enrichVisualPedagogy(
+    tenantId: string,
+    userId: string,
+    sourceType: SourceType,
+    sourceId: string,
+    opts: { force?: boolean } = {},
+  ) {
+    return this.visualPedagogy.generate(tenantId, userId, sourceType, sourceId, opts);
+  }
+
+  reviewVisualImage(
+    tenantId: string,
+    userId: string,
+    sourceType: SourceType,
+    sourceId: string,
+    input: { chapterId: number; role: string; status: string; imageUrl?: string; provider?: string; note?: string },
+  ) {
+    return this.visualPedagogy.reviewImage(tenantId, userId, sourceType, sourceId, input);
   }
 
   /** Étape 2-B : construire le conducteur oral officiel depuis la compréhension. */
@@ -144,6 +180,20 @@ export class MasterFactoryService {
     return { pivotId, smartboardTimeline, cached: false };
   }
 
+  /**
+   * La mindmap est une vue gratuite du Master Script persistant. Elle n'est pas
+   * un moteur concurrent : le même moment oral, la même branche et la même scène
+   * SmartBoard partagent leurs identifiants.
+   */
+  async buildMindmap(tenantId: string, sourceType: SourceType, sourceId: string) {
+    const master = await this.buildMasterScript(tenantId, sourceType, sourceId, { force: false });
+    return {
+      masterScriptPivotId: master.pivotId,
+      mindmap: this.makeMindmap(master.masterScript as MasterScriptPivot, master.pivotId),
+      cached: master.cached,
+    };
+  }
+
   /** Étape 2-D : produire le scénario Liri Live pilotable depuis le script + smartboard. */
   async buildLiveScenario(
     tenantId: string,
@@ -184,6 +234,7 @@ export class MasterFactoryService {
     opts: { force?: boolean } = {},
   ) {
     const masterScript = await this.buildMasterScript(tenantId, sourceType, sourceId, opts);
+    const mindmap = await this.buildMindmap(tenantId, sourceType, sourceId);
     const smartboardTimeline = await this.buildSmartboardTimeline(tenantId, sourceType, sourceId, opts);
     const liveScenario = await this.buildLiveScenario(tenantId, sourceType, sourceId, opts);
     return {
@@ -200,6 +251,7 @@ export class MasterFactoryService {
         live_scenario: liveScenario.cached,
       },
       masterScript: masterScript.masterScript,
+      mindmap: mindmap.mindmap,
       smartboardTimeline: smartboardTimeline.smartboardTimeline,
       liveScenario: liveScenario.liveScenario,
     };
@@ -226,14 +278,25 @@ export class MasterFactoryService {
 
     const stack = await this.buildLiveStack(tenantId, sourceType, sourceId, { force: opts.force === true });
     const masterScript = stack.masterScript as MasterScriptPivot;
+    const mindmap = stack.mindmap as CourseMindmap;
     const smartboard = stack.smartboardTimeline as SmartboardTimelinePivot;
     const liveScenario = stack.liveScenario as LiveScenarioPivot;
 
     const blueprint = {
       live_session_id: liveSessionId,
       outline_json: {
+        title: liveScenario.live_title,
+        description: masterScript.intention_generale,
+        estimatedMinutes: masterScript.estimated_duration_minutes ?? null,
+        chapters: mindmap.branches.map((branch) => ({
+          id: branch.id,
+          title: branch.label,
+          key_points: branch.key_points,
+          script_moment_id: branch.script_moment_id,
+        })),
         source: { sourceType, sourceId },
         live_title: liveScenario.live_title,
+        mindmap,
         scenes: liveScenario.scenes.map((s) => ({
           id: s.id,
           order: s.order,
@@ -293,6 +356,33 @@ export class MasterFactoryService {
         scriptSectionsInserted = scriptRows.length;
       }
     }
+
+    const { data: currentSession } = await this.db
+      .from('live_sessions')
+      .select('config')
+      .eq('id', liveSessionId)
+      .eq('tenant_id', tenantId)
+      .maybeSingle();
+    const currentConfig = currentSession?.config && typeof currentSession.config === 'object'
+      ? currentSession.config
+      : {};
+    const { error: sessionConfigError } = await this.db
+      .from('live_sessions')
+      .update({
+        config: {
+          ...currentConfig,
+          ai_mindmap_enabled: true,
+          master_factory: {
+            source_type: sourceType,
+            source_id: sourceId,
+            pivots: stack.pivots,
+            master_script_pivot_id: mindmap.meta.master_script_pivot_id,
+          },
+        },
+      })
+      .eq('id', liveSessionId)
+      .eq('tenant_id', tenantId);
+    if (sessionConfigError) throw new ServiceUnavailableException(sessionConfigError.message);
 
     return {
       ok: true,
@@ -429,6 +519,43 @@ export class MasterFactoryService {
         comprehension_pivot_id: comprehensionPivotId,
         generated_at: new Date().toISOString(),
         model: 'deterministic-master-script-v0',
+      },
+    };
+  }
+
+  private makeMindmap(masterScript: MasterScriptPivot, masterScriptPivotId: string): CourseMindmap {
+    const clean = (value: unknown) => String(value || '')
+      .replace(/["\n\r]/g, ' ')
+      .replace(/\s+/g, ' ')
+      .trim();
+    const root = { id: 'mindmap-root', label: clean(masterScript.title) || 'Cours' };
+    const branches = masterScript.moments.map((moment, index) => ({
+      id: `mindmap-${index + 1}`,
+      label: clean(moment.title) || `Partie ${index + 1}`,
+      notion_id: moment.notion_id,
+      key_points: (moment.key_points || []).map(clean).filter(Boolean).slice(0, 3),
+      script_moment_id: moment.id,
+    }));
+    const mermaid = [
+      'mindmap',
+      `  root(("${root.label}"))`,
+      ...branches.flatMap((branch) => [
+        `    ("${branch.label}")`,
+        ...branch.key_points.map((point) => `      ("${point}")`),
+      ]),
+    ].join('\n');
+    return {
+      schema_version: 1,
+      kind: 'mindmap',
+      title: `${root.label} — Carte mentale`,
+      root,
+      branches,
+      edges: branches.map((branch) => ({ from: root.id, to: branch.id })),
+      mermaid,
+      meta: {
+        master_script_pivot_id: masterScriptPivotId,
+        generated_at: new Date().toISOString(),
+        model: 'deterministic-mindmap-v1',
       },
     };
   }

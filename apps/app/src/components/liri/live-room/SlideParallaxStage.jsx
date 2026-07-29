@@ -1536,7 +1536,11 @@ export default function SlideParallaxStage({
               iaRemoteApplyKey={iaRemoteApplyKey}
               onIaTacticalEmit={tacticalSyncRole === 'host' ? handleIaTacticalEmit : undefined}
               immersiveMaskStyle={immersiveMaskStyle}
-              canvasScaleMode={liveStageFillCover ? 'cover' : 'contain'}
+              // Un canevas pédagogique peut être plus vertical que l'arène 16:9.
+              // Le mode cover rognait alors le titre et l'idée centrale hors écran.
+              // On conserve le fond transparent immersif, mais le contenu est ajusté
+              // intégralement dans la scène afin que chaque étape reste lisible.
+              canvasScaleMode="contain"
               transparentStageBackground={liveStageFillCover}
             />
           </motion.div>

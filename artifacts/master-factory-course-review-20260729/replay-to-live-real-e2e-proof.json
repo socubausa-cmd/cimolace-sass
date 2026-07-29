@@ -1,0 +1,480 @@
+{
+  "generatedAt": "2026-07-29T16:37:30.857Z",
+  "tenant": {
+    "id": "4f6faaa8-43a0-46d6-b98a-99ea1154f9ea",
+    "slug": "isna",
+    "name": "Prorascience"
+  },
+  "testActor": {
+    "userId": "4ba38648-9261-4ab6-b601-33c819435bd4",
+    "email": "codex-replay-live-1785343001675@cimolace.test"
+  },
+  "source": {
+    "id": "b11a419e-8508-4058-a42c-eda9cb3a5f2d",
+    "title": "La physique quantique décodée par l'Égypte antique",
+    "transcriptChars": 23537,
+    "libraryReady": true
+  },
+  "liveSession": {
+    "id": "368fddd0-46cb-409e-9811-ff3f12c30a18",
+    "title": "Master Factory · La physique quantique décodée par l'Égypte antique",
+    "status": "scheduled"
+  },
+  "counts": {
+    "notions": 12,
+    "chapters": 12,
+    "masterScriptMoments": 12,
+    "mindmapBranches": 12,
+    "smartboardScenes": 12,
+    "liveScenarioScenes": 12,
+    "persistedLiveScenes": 12,
+    "persistedScriptSections": 12,
+    "pivots": [
+      "comprehension",
+      "ecrit",
+      "master_script",
+      "smartboard_timeline",
+      "live_scenario"
+    ]
+  },
+  "ids": {
+    "comprehension": "5d3bb0cd-4f6b-48ff-8482-2ac0cfb8ef05",
+    "masterScript": "4e2ac676-a987-4c6b-8b93-e943c2261692",
+    "smartboard": "d7d85471-17e1-410a-b5df-a0933486be80",
+    "liveScenario": "03cdef05-d18d-460b-bddb-2ba401459336"
+  },
+  "publication": {
+    "ok": true,
+    "liveSessionId": "368fddd0-46cb-409e-9811-ff3f12c30a18",
+    "source": {
+      "sourceType": "replay",
+      "sourceId": "b11a419e-8508-4058-a42c-eda9cb3a5f2d"
+    },
+    "pivots": {
+      "master_script": "4e2ac676-a987-4c6b-8b93-e943c2261692",
+      "smartboard_timeline": "d7d85471-17e1-410a-b5df-a0933486be80",
+      "live_scenario": "03cdef05-d18d-460b-bddb-2ba401459336"
+    },
+    "published": {
+      "blueprint": true,
+      "live_scenes": 12,
+      "live_script_sections": 12
+    },
+    "skipped": {
+      "live_scenes": false,
+      "live_script_sections": false
+    }
+  },
+  "status": {
+    "comprehension": true,
+    "ecrit": true,
+    "joue": false,
+    "master_script": true,
+    "smartboard_timeline": true,
+    "live_scenario": true,
+    "replay_postprod": false,
+    "visual_pedagogy": false,
+    "course": {
+      "id": "7489d159-32ce-4b29-b368-2996f081662e",
+      "jobId": "2bd099c4-fcf7-42f1-a460-6cf9f1907997",
+      "pivotId": "5d3bb0cd-4f6b-48ff-8482-2ac0cfb8ef05"
+    },
+    "rendusGratuits": [
+      "pdf",
+      "manual",
+      "masterclass",
+      "parcours",
+      "master_script",
+      "smartboard",
+      "live"
+    ],
+    "pivots": [
+      {
+        "kind": "comprehension",
+        "model": "deepseek-v4-pro",
+        "created_at": "2026-07-29T09:43:20.923076+00:00"
+      },
+      {
+        "kind": "ecrit",
+        "model": "deepseek-v4-pro",
+        "created_at": "2026-07-29T09:43:21.530874+00:00"
+      },
+      {
+        "kind": "master_script",
+        "model": "deterministic-master-script-v0",
+        "created_at": "2026-07-29T16:26:31.97131+00:00"
+      },
+      {
+        "kind": "smartboard_timeline",
+        "model": "deterministic-smartboard-timeline-v0",
+        "created_at": "2026-07-29T16:26:34.656697+00:00"
+      },
+      {
+        "kind": "live_scenario",
+        "model": "deterministic-live-scenario-v0",
+        "created_at": "2026-07-29T16:26:40.809851+00:00"
+      }
+    ]
+  },
+  "assertions": {
+    "replay_is_real_library_source": true,
+    "comprehension_has_notions": true,
+    "written_course_has_chapters": true,
+    "master_script_aligned": true,
+    "mindmap_aligned": true,
+    "smartboard_aligned": true,
+    "live_scenario_aligned": true,
+    "live_created_for_tenant": true,
+    "blueprint_contains_mindmap": true,
+    "scenes_persisted": true,
+    "scripts_persisted": true,
+    "mindmap_enabled_in_live": true,
+    "source_trace_in_live": true
+  },
+  "browser": {
+    "factoryPage": {
+      "url": "http://localhost:5173/dashboard/tools/masterclass-factory?mfSourceType=replay&mfSourceId=b11a419e-8508-4058-a42c-eda9cb3a5f2d&step=5",
+      "title": "Prorascience",
+      "text": ""
+    },
+    "livePage": {
+      "url": "http://localhost:5173/studio/live-preparation/368fddd0-46cb-409e-9811-ff3f12c30a18",
+      "title": "Prorascience",
+      "text": ""
+    },
+    "errors": []
+  },
+  "samples": {
+    "mindmapMermaid": "mindmap\n  root((\"Initiation à la pro-rascience\"))\n    (\"Les limites du critère de falsifiabilité\")\n      (\"Le critère de Popper, qui exige qu'une théorie scientifique soit réfutable par l'expérience, exclut des réalités humaines non mesurables en laboratoire.\")\n      (\"K\")\n      (\"a\")\n    (\"La pro-rascience : une approche à trois piliers\")\n      (\"La pro-rascience combine trois sources de connaissance : les témoignages convergents (pro), la cohérence philosophique (ra) et la démonstration scientifique (science).\")\n      (\"D\")\n      (\"é\")\n    (\"La singularité initiale comme confinement total\")\n      (\"Avant le Big Bang, tout l'univers était superposé en un point unique, comme des passagers dans un bus réduit à une place.\")\n      (\"A\")\n      (\"n\")\n    (\"Le mur de Planck et l'échec de la physique actuelle\")\n      (\"À 5,39×10⁻⁴² s après le Big Bang, les théories de la relativité et de la quantique deviennent incompatibles, empêchant de remonter plus loin.\")\n      (\"M\")\n      (\"o\")\n    (\"Le mur ontologique et l'impossibilité du néant absolu\")\n      (\"Le principe de Landauer (effacer une information coûte de l'énergie) implique que le néant total est impossible, il reste toujours un 'moule ontologique'.\")\n      (\"P\")\n      (\"r\")\n    (\"Le delane : le potentiel sans masse\")\n      (\"Le delane désigne ce qui est absent en masse mais présent en potentiel, le moule informationnel irréductible de l'univers primordial.\")\n      (\"'\")\n      (\"A\")\n    (\"La loi de relation : le temps anime, l'espace subit\")\n      (\"La pro-rascience postule une asymétrie fondamentale où le temps tire l'expansion et l'espace est contraint de suivre.\")\n      (\"'\")\n      (\"L\")\n    (\"Le témoignage convergent comme source de vérité\")\n      (\"Des expériences subjectives massivement partagées, comme la douleur de l'accouchement, sont considérées comme des preuves irréfutables par convergence des témoignages.\")\n      (\"A\")\n      (\"n\")\n    (\"L'hypostase : la survie de la conscience hors du corps\")\n      (\"Selon la pro-rascience, la conscience ne disparaît pas avec le cerveau mais existe de manière indépendante, comme le montreraient les expériences de mort imminente.\")\n      (\"E\")\n      (\"M\")\n    (\"La création ex-interiori : l'univers fractal encapsulé\")\n      (\"L'univers entier est contenu dans chaque point de la singularité, comme l'ADN dans une cellule, et l'introspection permet d'accéder à cette connaissance cosmique.\")\n      (\"'\")\n      (\"C\")\n    (\"Les correspondances entre mythes anciens et physique moderne\")\n      (\"La pro-rascience interprète les mythes égyptiens (Noun, Amon, Apophis/Rê) comme des descriptions codées du vide quantique et de l'asymétrie matière-antimatière.\")\n      (\"N\")\n      (\"o\")\n    (\"Le débat épistémologique : science ou métaphysique ?\")\n      (\"Les critiques soulignent les risques de biais de confirmation et l'absence de prédictions testables, rappelant l'importance du critère de falsifiabilité pour la science.\")\n      (\"'\")\n      (\"C\")",
+    "firstMasterScriptMoment": {
+      "id": "ms-1",
+      "title": "Les limites du critère de falsifiabilité",
+      "intention": "Pour comprendre pourquoi la pro-rascience propose une méthode plus large, il faut d'abord saisir le problème qu'elle entend résoudre.",
+      "notion_id": "n1",
+      "key_points": [
+        "Le critère de Popper, qui exige qu'une théorie scientifique soit réfutable par l'expérience, exclut des réalités humaines non mesurables en laboratoire.",
+        "K",
+        "a"
+      ],
+      "transition": "Ce point prépare La pro-rascience : une approche à trois piliers.",
+      "interaction": {
+        "question": "Peux-tu reformuler l'idée principale de « Les limites du critère de falsifiabilité » ?",
+        "remediation": "Revenir à l'appui source principal et redonner un exemple simple.",
+        "expected_answers": [
+          "Le critère de Popper, qui exige qu'une théorie scientifique soit réfutable par l'expérience, exclut des réalités humaines non mesurables en laboratoire."
+        ]
+      },
+      "duration_sec": 360,
+      "simple_version": "Le critère de Popper, qui exige qu'une théorie scientifique soit réfutable par l'expérience, exclut des réalités humaines non mesurables en laboratoire.",
+      "teacher_script": "On aborde maintenant Les limites du critère de falsifiabilité. Le critère de Popper, qui exige qu'une théorie scientifique soit réfutable par l'expérience, exclut des réalités humaines non mesurables en laboratoire. L'enjeu est simple : Pour comprendre pourquoi la pro-rascience propose une méthode plus large, il faut d'abord saisir le problème qu'elle entend résoudre. Dans la source, on s'appuie sur ce repère : « K ».  Je vais le rendre concret, puis vérifier que le point est bien compris avant de continuer.",
+      "message_central": "Le critère de Popper, qui exige qu'une théorie scientifique soit réfutable par l'expérience, exclut des réalités humaines non mesurables en laboratoire.",
+      "student_understanding": "L'élève doit pouvoir expliquer Les limites du critère de falsifiabilité avec ses propres mots et l'appliquer dans un exemple."
+    },
+    "firstSmartboardScene": {
+      "id": "sb-1",
+      "title": "Les limites du critère de falsifiabilité",
+      "blocks": [
+        {
+          "id": "sb-1-title",
+          "text": "Les limites du critère de falsifiabilité",
+          "type": "title"
+        },
+        {
+          "id": "sb-1-idea",
+          "text": "Le critère de Popper, qui exige qu'une théorie scientifique soit réfutable par l'expérience, exclut des réalités humaines non mesurables en laboratoire.",
+          "type": "key-idea"
+        },
+        {
+          "id": "sb-1-retain",
+          "type": "retain",
+          "items": [
+            "Le critère de Popper, qui exige qu'une théorie scientifique soit réfutable par l'expérience, exclut des réalités humaines non mesurables en laboratoire.",
+            "K",
+            "a"
+          ]
+        },
+        {
+          "id": "sb-1-prompt",
+          "text": "Peux-tu reformuler l'idée principale de « Les limites du critère de falsifiabilité » ?",
+          "type": "paragraph"
+        }
+      ],
+      "timeline": [
+        {
+          "id": "sb-1-a1",
+          "type": "write",
+          "at_sec": 0,
+          "target_id": "sb-1-title",
+          "duration_sec": 4
+        },
+        {
+          "id": "sb-1-a2",
+          "type": "show",
+          "at_sec": 5,
+          "target_id": "sb-1-idea",
+          "duration_sec": 3
+        },
+        {
+          "id": "sb-1-a3",
+          "type": "highlight",
+          "at_sec": 12,
+          "target_id": "sb-1-idea",
+          "duration_sec": 5
+        },
+        {
+          "id": "sb-1-a4",
+          "type": "draw",
+          "at_sec": 20,
+          "target_id": "sb-1-retain",
+          "duration_sec": 8
+        },
+        {
+          "id": "sb-1-a5",
+          "type": "student_prompt",
+          "at_sec": 34,
+          "target_id": "sb-1-prompt",
+          "duration_sec": 12
+        }
+      ],
+      "camera_zone": "bottom-right",
+      "visual_intent": "Faire respirer l'idée : Le critère de Popper, qui exige qu'une théorie scientifique soit réfutable par l'expérience, exclut des réalités humaines non mesurables en laboratoire.",
+      "script_moment_id": "ms-1"
+    },
+    "firstPersistedLiveScene": {
+      "id": "929f66cf-1ba3-447f-895a-f2eb4ad4f7b9",
+      "name": "Les limites du critère de falsifiabilité",
+      "order_index": 0,
+      "content_payload_json": {
+        "source": "master_factory",
+        "ia_data": {
+          "title": "Les limites du critère de falsifiabilité",
+          "blocks": [
+            {
+              "id": "sb-1-title",
+              "text": "Les limites du critère de falsifiabilité",
+              "type": "title"
+            },
+            {
+              "id": "sb-1-idea",
+              "text": "Le critère de Popper, qui exige qu'une théorie scientifique soit réfutable par l'expérience, exclut des réalités humaines non mesurables en laboratoire.",
+              "type": "key-idea"
+            },
+            {
+              "id": "sb-1-retain",
+              "type": "retain",
+              "items": [
+                "Le critère de Popper, qui exige qu'une théorie scientifique soit réfutable par l'expérience, exclut des réalités humaines non mesurables en laboratoire.",
+                "K",
+                "a"
+              ]
+            },
+            {
+              "id": "sb-1-prompt",
+              "text": "Peux-tu reformuler l'idée principale de « Les limites du critère de falsifiabilité » ?",
+              "type": "paragraph"
+            }
+          ],
+          "timeline": [
+            {
+              "id": "sb-1-a1",
+              "type": "write",
+              "at_sec": 0,
+              "target_id": "sb-1-title",
+              "duration_sec": 4
+            },
+            {
+              "id": "sb-1-a2",
+              "type": "show",
+              "at_sec": 5,
+              "target_id": "sb-1-idea",
+              "duration_sec": 3
+            },
+            {
+              "id": "sb-1-a3",
+              "type": "highlight",
+              "at_sec": 12,
+              "target_id": "sb-1-idea",
+              "duration_sec": 5
+            },
+            {
+              "id": "sb-1-a4",
+              "type": "draw",
+              "at_sec": 20,
+              "target_id": "sb-1-retain",
+              "duration_sec": 8
+            },
+            {
+              "id": "sb-1-a5",
+              "type": "student_prompt",
+              "at_sec": 34,
+              "target_id": "sb-1-prompt",
+              "duration_sec": 12
+            }
+          ],
+          "core_idea": "Faire respirer l'idée : Le critère de Popper, qui exige qu'une théorie scientifique soit réfutable par l'expérience, exclut des réalités humaines non mesurables en laboratoire.",
+          "camera_zone": "bottom-right"
+        },
+        "script_moment_id": "ms-1",
+        "live_scenario_scene_id": "live-1",
+        "smartboard_timeline_scene": {
+          "id": "sb-1",
+          "title": "Les limites du critère de falsifiabilité",
+          "blocks": [
+            {
+              "id": "sb-1-title",
+              "text": "Les limites du critère de falsifiabilité",
+              "type": "title"
+            },
+            {
+              "id": "sb-1-idea",
+              "text": "Le critère de Popper, qui exige qu'une théorie scientifique soit réfutable par l'expérience, exclut des réalités humaines non mesurables en laboratoire.",
+              "type": "key-idea"
+            },
+            {
+              "id": "sb-1-retain",
+              "type": "retain",
+              "items": [
+                "Le critère de Popper, qui exige qu'une théorie scientifique soit réfutable par l'expérience, exclut des réalités humaines non mesurables en laboratoire.",
+                "K",
+                "a"
+              ]
+            },
+            {
+              "id": "sb-1-prompt",
+              "text": "Peux-tu reformuler l'idée principale de « Les limites du critère de falsifiabilité » ?",
+              "type": "paragraph"
+            }
+          ],
+          "timeline": [
+            {
+              "id": "sb-1-a1",
+              "type": "write",
+              "at_sec": 0,
+              "target_id": "sb-1-title",
+              "duration_sec": 4
+            },
+            {
+              "id": "sb-1-a2",
+              "type": "show",
+              "at_sec": 5,
+              "target_id": "sb-1-idea",
+              "duration_sec": 3
+            },
+            {
+              "id": "sb-1-a3",
+              "type": "highlight",
+              "at_sec": 12,
+              "target_id": "sb-1-idea",
+              "duration_sec": 5
+            },
+            {
+              "id": "sb-1-a4",
+              "type": "draw",
+              "at_sec": 20,
+              "target_id": "sb-1-retain",
+              "duration_sec": 8
+            },
+            {
+              "id": "sb-1-a5",
+              "type": "student_prompt",
+              "at_sec": 34,
+              "target_id": "sb-1-prompt",
+              "duration_sec": 12
+            }
+          ],
+          "camera_zone": "bottom-right",
+          "visual_intent": "Faire respirer l'idée : Le critère de Popper, qui exige qu'une théorie scientifique soit réfutable par l'expérience, exclut des réalités humaines non mesurables en laboratoire.",
+          "script_moment_id": "ms-1"
+        }
+      }
+    },
+    "firstPersistedScriptSection": {
+      "id": "49c8afb7-0fe5-4ccc-821a-61112bfbd830",
+      "title": "Les limites du critère de falsifiabilité",
+      "order_index": 0,
+      "content": "【Intention du slide】\nPour comprendre pourquoi la pro-rascience propose une méthode plus large, il faut d'abord saisir le problème qu'elle entend résoudre.\n\n【Message central】\nLe critère de Popper, qui exige qu'une théorie scientifique soit réfutable par l'expérience, exclut des réalités humaines non mesurables en laboratoire.\n\n【Discours du professeur】\nOn aborde maintenant Les limites du critère de falsifiabilité. Le critère de Popper, qui exige qu'une théorie scientifique soit réfutable par l'expérience, exclut des réalités humaines non mesurables en laboratoire. L'enjeu est simple : Pour comprendre pourquoi la pro-rascience propose une méthode plus large, il faut d'abord saisir le problème qu'elle entend résoudre. Dans la source, on s'appuie sur ce repère : « K ».  Je vais le rendre concret, puis vérifier que le point est bien compris avant de continuer.\n\n【Grandes idées à insister】\n• Le critère de Popper, qui exige qu'une théorie scientifique soit réfutable par l'expérience, exclut des réalités humaines non mesurables en laboratoire.\n• K\n• a\n\n【Ce que l'élève doit comprendre】\nL'élève doit pouvoir expliquer Les limites du critère de falsifiabilité avec ses propres mots et l'appliquer dans un exemple.\n\n【Transition】\nCe point prépare La pro-rascience : une approche à trois piliers.",
+      "master_agent": {
+        "intention": "Pour comprendre pourquoi la pro-rascience propose une méthode plus large, il faut d'abord saisir le problème qu'elle entend résoudre.",
+        "key_points": [
+          "Le critère de Popper, qui exige qu'une théorie scientifique soit réfutable par l'expérience, exclut des réalités humaines non mesurables en laboratoire.",
+          "K",
+          "a"
+        ],
+        "transition": "Ce point prépare La pro-rascience : une approche à trois piliers.",
+        "interaction": {
+          "question": "Peux-tu reformuler l'idée principale de « Les limites du critère de falsifiabilité » ?",
+          "remediation": "Revenir à l'appui source principal et redonner un exemple simple.",
+          "expected_answers": [
+            "Le critère de Popper, qui exige qu'une théorie scientifique soit réfutable par l'expérience, exclut des réalités humaines non mesurables en laboratoire."
+          ]
+        },
+        "slide_title": "Les limites du critère de falsifiabilité",
+        "simple_version": "Le critère de Popper, qui exige qu'une théorie scientifique soit réfutable par l'expérience, exclut des réalités humaines non mesurables en laboratoire.",
+        "teacher_script": "On aborde maintenant Les limites du critère de falsifiabilité. Le critère de Popper, qui exige qu'une théorie scientifique soit réfutable par l'expérience, exclut des réalités humaines non mesurables en laboratoire. L'enjeu est simple : Pour comprendre pourquoi la pro-rascience propose une méthode plus large, il faut d'abord saisir le problème qu'elle entend résoudre. Dans la source, on s'appuie sur ce repère : « K ».  Je vais le rendre concret, puis vérifier que le point est bien compris avant de continuer.",
+        "message_central": "Le critère de Popper, qui exige qu'une théorie scientifique soit réfutable par l'expérience, exclut des réalités humaines non mesurables en laboratoire.",
+        "student_understanding": "L'élève doit pouvoir expliquer Les limites du critère de falsifiabilité avec ses propres mots et l'appliquer dans un exemple."
+      }
+    },
+    "liveReadback": {
+      "id": "368fddd0-46cb-409e-9811-ff3f12c30a18",
+      "tenant_id": "4f6faaa8-43a0-46d6-b98a-99ea1154f9ea",
+      "host_user_id": "4ba38648-9261-4ab6-b601-33c819435bd4",
+      "title": "Master Factory · La physique quantique décodée par l'Égypte antique",
+      "description": "LIVE préparé de bout en bout depuis le replay b11a419e-8508-4058-a42c-eda9cb3a5f2d.",
+      "scheduled_at": "2026-07-29T16:37:05.913+00:00",
+      "price_cents": 0,
+      "currency": "EUR",
+      "capacity": null,
+      "status": "scheduled",
+      "livekit_room_name": null,
+      "replay_enabled": true,
+      "created_at": "2026-07-29T16:37:07.342099+00:00",
+      "updated_at": "2026-07-29T16:37:16.029235+00:00",
+      "transcript": null,
+      "summary": null,
+      "teacher_id": null,
+      "cover_image_url": null,
+      "started_at": null,
+      "ended_at": null,
+      "session_type": "class",
+      "formation_id": null,
+      "video_room_url": null,
+      "video_room_id": null,
+      "config": {
+        "e2e_proof": true,
+        "waiting_room": true,
+        "master_factory": {
+          "pivots": {
+            "live_scenario": "03cdef05-d18d-460b-bddb-2ba401459336",
+            "master_script": "4e2ac676-a987-4c6b-8b93-e943c2261692",
+            "smartboard_timeline": "d7d85471-17e1-410a-b5df-a0933486be80"
+          },
+          "source_id": "b11a419e-8508-4058-a42c-eda9cb3a5f2d",
+          "source_type": "replay",
+          "master_script_pivot_id": "4e2ac676-a987-4c6b-8b93-e943c2261692"
+        },
+        "ai_mindmap_enabled": true
+      },
+      "debate_id": null,
+      "video_provider": "livekit",
+      "duration_minutes": 84,
+      "ambient_tracks_json": [],
+      "join_code": null,
+      "immersive_live_session_id": null,
+      "production_live_type": null,
+      "production_category": null,
+      "room_mode": "secret_classroom",
+      "preparation_status": "draft",
+      "timezone": "Europe/Paris",
+      "access_mode": "invite_only",
+      "access_password_hash": null,
+      "interaction_script_json": {},
+      "scheduling_json": {},
+      "ai_prep_json": {},
+      "engagement_snapshot_json": {},
+      "kind": "class",
+      "reminder_sent_at": null,
+      "invitations_sent_at": null
+    }
+  }
+}

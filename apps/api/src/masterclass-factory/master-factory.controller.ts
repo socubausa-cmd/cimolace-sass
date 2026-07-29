@@ -50,6 +50,17 @@ export class MasterFactoryController {
     return this.factory.getSource(tenant.id, type, id);
   }
 
+  /** Persiste le texte produit par un extracteur de document, OCR ou ASR. */
+  @Post('sources/ingest')
+  @Roles('owner', 'admin', 'teacher')
+  ingestSource(
+    @Body() body: { sourceType: SourceType; title?: string; contentText?: string; sourceUrl?: string; mimeType?: string; durationSec?: number; metadata?: Record<string, unknown> },
+    @CurrentTenant() tenant: TenantContext,
+    @Req() req: Request,
+  ) {
+    return this.factory.ingestSource(tenant.id, (req as any).user?.id, body);
+  }
+
   /** Comprendre une source : produit/récupère le pivot `comprehension`. */
   @Post('understand')
   @Roles('owner', 'admin', 'teacher')
@@ -74,6 +85,34 @@ export class MasterFactoryController {
     @CurrentTenant() tenant: TenantContext,
   ) {
     return this.factory.status(tenant.id, type, id);
+  }
+
+  /** Variante POST pour les sources texte/document dont l'identifiant dépasse une URL sûre. */
+  @Post('status')
+  @Roles('owner', 'admin', 'teacher')
+  statusBody(
+    @Body() body: { sourceType?: SourceType; sourceId?: string },
+    @CurrentTenant() tenant: TenantContext,
+  ) {
+    return this.factory.status(tenant.id, body?.sourceType ?? 'replay', String(body?.sourceId ?? ''));
+  }
+
+  @Post('render/precepteur')
+  @Roles('owner', 'admin', 'teacher')
+  renderPrecepteur(
+    @Body() body: { sourceType?: SourceType; sourceId?: string },
+    @CurrentTenant() tenant: TenantContext,
+  ) {
+    return this.factory.renderPrecepteur(tenant.id, body?.sourceType ?? 'replay', String(body?.sourceId ?? ''));
+  }
+
+  @Post('render/manual')
+  @Roles('owner', 'admin', 'teacher')
+  renderManual(
+    @Body() body: { sourceType?: SourceType; sourceId?: string },
+    @CurrentTenant() tenant: TenantContext,
+  ) {
+    return this.factory.renderManual(tenant.id, body?.sourceType ?? 'replay', String(body?.sourceId ?? ''));
   }
 
   /**
@@ -108,6 +147,20 @@ export class MasterFactoryController {
       body?.sourceType ?? 'replay',
       String(body?.sourceId ?? ''),
       { force: body?.force === true },
+    );
+  }
+
+  /** Carte mentale officielle dérivée du Master Script, sans seconde IA. */
+  @Post('produce/mindmap')
+  @Roles('owner', 'admin', 'teacher')
+  produceMindmap(
+    @Body() body: { sourceType?: SourceType; sourceId?: string },
+    @CurrentTenant() tenant: TenantContext,
+  ) {
+    return this.factory.buildMindmap(
+      tenant.id,
+      body?.sourceType ?? 'replay',
+      String(body?.sourceId ?? ''),
     );
   }
 
@@ -212,6 +265,46 @@ export class MasterFactoryController {
       tenant.id,
       body?.sourceType ?? 'replay',
       String(body?.sourceId ?? ''),
+    );
+  }
+
+  /** Choisit les mises en situation, analogies et briefs graphiques à fort impact. */
+  @Post('enrich/visual-pedagogy')
+  @Roles('owner', 'admin', 'teacher')
+  enrichVisualPedagogy(
+    @Body() body: { sourceType?: SourceType; sourceId?: string; force?: boolean },
+    @CurrentTenant() tenant: TenantContext,
+    @Req() req: Request,
+  ) {
+    return this.factory.enrichVisualPedagogy(
+      tenant.id,
+      (req as any).user?.id,
+      body?.sourceType ?? 'replay',
+      String(body?.sourceId ?? ''),
+      { force: body?.force === true },
+    );
+  }
+
+  @Post('review/visual-image')
+  @Roles('owner', 'admin', 'teacher')
+  reviewVisualImage(
+    @Body() body: { sourceType?: SourceType; sourceId?: string; chapterId?: number; role?: string; status?: string; imageUrl?: string; provider?: string; note?: string },
+    @CurrentTenant() tenant: TenantContext,
+    @Req() req: Request,
+  ) {
+    return this.factory.reviewVisualImage(
+      tenant.id,
+      (req as any).user?.id,
+      body?.sourceType ?? 'replay',
+      String(body?.sourceId ?? ''),
+      {
+        chapterId: Number(body?.chapterId),
+        role: String(body?.role || ''),
+        status: String(body?.status || ''),
+        imageUrl: body?.imageUrl,
+        provider: body?.provider,
+        note: body?.note,
+      },
     );
   }
 }

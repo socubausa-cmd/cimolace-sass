@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { Link, useLocation, useNavigate, useSearchParams } from 'react-router-dom';
 import {
+  AlertTriangle,
   ArrowLeft,
   ArrowRight,
   BookOpen,
@@ -57,6 +58,7 @@ import { usePublishToClassroom } from '@/hooks/usePublishToClassroom';
 import { conformCourse } from '@/lib/precepteur/conformCourse';
 import { supabase } from '@/lib/supabaseCompat';
 import { masterclassApi, masterFactoryApi, apiV2 } from '@/lib/api-v2';
+import { aiGenerateImage } from '@/lib/neuroInkAi';
 
 const EXAMPLE_TYPES = [
   'Cours théologique',
@@ -363,17 +365,23 @@ function FactoryHeader({ onReset, isRealBrain }) {
   );
 }
 
-function FactoryProgress({ active, onJump, status }) {
+function FactoryProgress({ active, onJump, status, maxReachable = active }) {
   return (
     <div className="mb-3 flex shrink-0 items-center gap-1 overflow-x-auto px-1 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
       {MASTERCLASS_STEPS.map((step, index) => {
         const done = index < active;
         const current = index === active;
-        const reachable = index <= active || status === 'ready';
+        // Un projet importé depuis le pivot Master Factory possède déjà ses
+        // résultats aval. Revenir inspecter la source ne doit pas verrouiller
+        // Analyse → Export : l'avancement métier et l'écran actuellement ouvert
+        // sont deux notions différentes.
+        const reachable = index <= Math.max(active, maxReachable) || status === 'ready';
         return (
           <React.Fragment key={step.key}>
             <button
               type="button"
+              data-factory-step={index}
+              aria-current={current ? 'step' : undefined}
               onClick={() => reachable && onJump(index)}
               disabled={!reachable}
               className={`group flex shrink-0 items-center gap-1.5 rounded-lg px-1 py-0.5 transition ${
@@ -829,23 +837,40 @@ function normalizeAnalysisView(analysis) {
 
 function deriveFactoryStats(project) {
   const sd = project?.analysis?.structured_document;
+  const chapterRows = Array.isArray(project?.chapters) ? project.chapters : [];
   const chapters =
-    project?.chapters?.length ||
+    chapterRows.length ||
     sd?.recommended_chapter_order?.length ||
     project?.analysis?.chapters_count ||
     0;
   const est = project?.analysis?.estimated_duration || project?.analysis?.estimated_total_duration || '';
   const minMatch = typeof est === 'string' ? est.match(/(\d+)\s*min/i) : null;
-  const minutes = minMatch ? minMatch[1] : chapters ? String(Math.max(1, Number(chapters) * 20)) : '—';
+  const chapterMinutes = chapterRows.reduce(
+    (total, chapter) => total + Number(chapter?.recommended_duration_minutes || 0),
+    0,
+  );
+  const minutes = minMatch
+    ? minMatch[1]
+    : chapterMinutes
+      ? String(chapterMinutes)
+      : chapters
+        ? String(Math.max(1, Number(chapters) * 20))
+        : '—';
   const slideCount = project?.slides?.length || 0;
-  const revelationCount =
-    (project?.blocks || []).reduce((a, b) => a + (Array.isArray(b.revelations) ? b.revelations.length : 0), 0) || '—';
+  const exerciseCount = chapterRows.reduce(
+    (total, chapter) => total + (chapter?.workshop?.instructions ? 1 : 0),
+    0,
+  );
+  const testCount = chapterRows.reduce(
+    (total, chapter) => total + (Array.isArray(chapter?.understanding_test) ? chapter.understanding_test.length : 0),
+    0,
+  );
   return {
     chapters: chapters || '—',
     minutes,
     slides: slideCount || '—',
-    exercises: revelationCount,
-    tests: '—',
+    exercises: exerciseCount || '—',
+    tests: testCount || '—',
   };
 }
 
@@ -881,7 +906,7 @@ function Step2Analysis({ analysis, status, pipelineStage, onContinue, onRetry, s
   const statLine = [
     stats.chapters ? `${stats.chapters} chapitres` : null,
     stats.minutes && stats.minutes !== '—' ? `${stats.minutes} min` : null,
-    stats.slides && stats.slides !== '—' ? `${stats.slides} slides` : null,
+    stats.slides && stats.slides !== '—' ? `${stats.slides} scènes` : null,
     stats.exercises && stats.exercises !== '—' ? `${stats.exercises} révélations` : null,
   ].filter(Boolean);
 
@@ -1340,7 +1365,7 @@ function Step4Chapters({ chapters, onContinue, onPrev, stats }) {
             <span className="text-white/25">·</span>
             <span className="tabular-nums text-white/80">{stats.minutes}</span> min
             <span className="text-white/25">·</span>
-            <span className="tabular-nums text-white/80">{stats.slides}</span> slides
+            <span className="tabular-nums text-white/80">{stats.slides}</span> scènes
             <span className="text-white/25">·</span>
             <span className="tabular-nums text-white/80">{stats.tests}</span> tests
           </div>
@@ -1661,7 +1686,7 @@ function Step5Pedagogy({ chapters, onContinue, onPrev }) {
           className="group mt-8 flex h-[54px] w-full items-center justify-center gap-3 rounded-2xl bg-gradient-to-r from-[#d97757] to-[#d97757] text-[13.5px] font-extrabold uppercase tracking-[0.09em] text-white shadow-[0_16px_40px_-14px_rgba(217,119,87,0.7)] transition duration-200 hover:brightness-110 active:scale-[0.99]"
         >
           <Monitor className="h-[18px] w-[18px]" strokeWidth={2.1} />
-          Générer les slides
+          Construire le storyboard
           <ArrowRight className="h-[18px] w-[18px]" strokeWidth={2.2} />
         </button>
 
@@ -1677,10 +1702,70 @@ function Step5Pedagogy({ chapters, onContinue, onPrev }) {
   );
 }
 
-function Step6Slides({ slides, chapters, onContinue, onPrev }) {
-  const [activeIdx, setActiveIdx] = React.useState(0);
-  const active = slides[activeIdx] || null;
+function AnalogyMechanism({ analogy }) {
+  const mappings = Array.isArray(analogy?.mappings) ? analogy.mappings.slice(0, 3) : [];
+  if (!analogy?.shared_mechanism || mappings.length < 2) return null;
+  return (
+    <div data-testid="analogy-mechanism" className="mt-4 max-w-3xl shrink-0 overflow-hidden rounded-2xl border border-white/[0.1] bg-[#161513]/90">
+      <div className="flex items-center justify-center border-b border-white/[0.08] bg-[#d97757]/[0.08] px-4 py-2.5 text-center">
+        <Network size={14} className="mr-2 shrink-0 text-[#e58a69]" />
+        <span className="text-[10.5px] font-semibold text-[#f0c1af]">Mécanisme commun — {analogy.shared_mechanism}</span>
+      </div>
+      <div className="grid grid-cols-[1fr_34px_1fr] items-center border-b border-white/[0.07] px-4 py-2 text-[9px] font-bold uppercase tracking-[0.13em] text-white/35">
+        <span>{analogy.familiar_domain}</span><span /><span>{analogy.target_domain}</span>
+      </div>
+      <div className="divide-y divide-white/[0.06]">
+        {mappings.map((mapping, index) => (
+          <div key={`${mapping.familiar}-${index}`} className="grid grid-cols-[1fr_34px_1fr] items-center gap-2 px-4 py-3">
+            <p className="text-[11px] leading-snug text-white/72">{mapping.familiar}</p>
+            <div className="flex h-7 w-7 items-center justify-center rounded-full border border-[#d97757]/30 bg-[#d97757]/10">
+              <ArrowRight size={13} className="text-[#e58a69]" />
+            </div>
+            <div>
+              <p className="text-[11px] leading-snug text-white/80">{mapping.target}</p>
+              <p className="mt-1 text-[9.5px] leading-snug text-white/35">{mapping.why}</p>
+            </div>
+          </div>
+        ))}
+      </div>
+      {analogy.limit ? (
+        <div className="border-t border-[#d97757]/15 bg-[#d97757]/[0.045] px-4 py-2.5 text-[9.5px] leading-relaxed text-[#e8ad97]/70">
+          <strong className="mr-1 uppercase tracking-[0.12em] text-[#e58a69]">Limite</strong>{analogy.limit}
+        </div>
+      ) : null}
+    </div>
+  );
+}
+
+function Step6Slides({
+  slides,
+  chapters,
+  onContinue,
+  onPrev,
+  visualPedagogy,
+  visualLoading,
+  visualError,
+  visualImageLoadingId,
+  onEnrichVisuals,
+  onGenerateImage,
+  onReviewImage,
+}) {
+  const [activeChapterId, setActiveChapterId] = React.useState(slides[0]?.chapter_id || null);
+  const [activeSlideId, setActiveSlideId] = React.useState(slides[0]?.slide_id || slides[0]?.id || null);
+  React.useEffect(() => {
+    if (!activeChapterId && slides[0]) setActiveChapterId(slides[0].chapter_id);
+  }, [activeChapterId, slides]);
+  const chapterSlides = slides.filter((slide) => slide.chapter_id === activeChapterId);
+  const active = chapterSlides.find((slide) => (slide.slide_id || slide.id) === activeSlideId) || chapterSlides[0] || slides[0] || null;
   const activeChapter = active ? chapters.find((c) => c.chapter_id === active.chapter_id) : null;
+  const chapterIds = [...new Set(slides.map((slide) => slide.chapter_id).filter(Boolean))];
+  const visualAnchorCount = slides.filter((slide) => slide.visual_anchor).length;
+
+  const chooseChapter = (chapterId) => {
+    setActiveChapterId(chapterId);
+    const first = slides.find((slide) => slide.chapter_id === chapterId);
+    setActiveSlideId(first?.slide_id || first?.id || null);
+  };
 
   return (
     <div className="relative flex min-h-0 flex-1 flex-col overflow-y-auto">
@@ -1699,11 +1784,63 @@ function Step6Slides({ slides, chapters, onContinue, onPrev }) {
           </div>
           <div className="text-[10px] font-bold uppercase tracking-[0.16em] text-[#d97757]">Masterclass · Étape 6 sur 8</div>
           <h2 className="mt-1.5 text-[25px] font-extrabold leading-tight tracking-tight text-white" style={{ textWrap: 'balance' }}>
-            Slides Smartboard
+            Storyboard SmartBoard
           </h2>
           <p className="mx-auto mt-2 max-w-md text-[13.5px] leading-relaxed text-white/55">
-            {slides.length} slide{slides.length > 1 ? 's' : ''} généré{slides.length > 1 ? 's' : ''} — parcours-les avant de passer au script.
+            {slides.length} scène{slides.length > 1 ? 's' : ''} · {chapterIds.length} chapitre{chapterIds.length > 1 ? 's' : ''} — chaque intention pédagogique possède son écran.
           </p>
+        </div>
+
+        <div className="mb-4 flex flex-wrap items-center justify-center gap-1.5" aria-label="Chapitres du storyboard">
+          {chapterIds.map((chapterId) => {
+            const selected = active?.chapter_id === chapterId;
+            const count = slides.filter((slide) => slide.chapter_id === chapterId).length;
+            return (
+              <button
+                key={chapterId}
+                type="button"
+                onClick={() => chooseChapter(chapterId)}
+                className={`rounded-full border px-3 py-1 text-[11.5px] transition ${
+                  selected
+                    ? 'border-[#d97757]/55 bg-[#d97757]/15 text-white'
+                    : 'border-white/10 bg-white/[0.03] text-white/45 hover:border-white/20 hover:text-white/80'
+                }`}
+              >
+                Ch. {chapterId} <span className="ml-1 text-white/35">{count}</span>
+              </button>
+            );
+          })}
+        </div>
+
+        <div className="mb-4 flex flex-col items-center justify-center gap-2">
+          {visualPedagogy?.chapters?.length ? (
+            <div className={`inline-flex items-center gap-2 rounded-full border px-3 py-1.5 text-[11px] ${
+              visualPedagogy?.meta?.quality_gate === 'needs_review'
+                ? 'border-[#d9a657]/30 bg-[#d9a657]/[0.07] text-[#e8c991]'
+                : 'border-[#9fbf8f]/25 bg-[#9fbf8f]/[0.07] text-[#c8dfbd]'
+            }`}>
+              {visualPedagogy?.meta?.quality_gate === 'needs_review' ? <AlertTriangle size={13} /> : <CheckCircle2 size={13} />}
+              {visualPedagogy?.meta?.quality_gate === 'needs_review'
+                ? `Brief généré · ${visualAnchorCount} ancrages · revue humaine requise (${visualPedagogy?.meta?.review_chapters?.length || 0} chap.)`
+                : `Direction visuelle validée · ${visualAnchorCount} ancrages forts`}
+            </div>
+          ) : (
+            <button
+              type="button"
+              onClick={onEnrichVisuals}
+              disabled={visualLoading}
+              className="inline-flex items-center gap-2 rounded-full border border-[#d97757]/35 bg-[#d97757]/10 px-4 py-2 text-[11.5px] font-semibold text-[#f0b49e] transition hover:bg-[#d97757]/15 disabled:opacity-50"
+            >
+              {visualLoading ? <Loader2 size={14} className="animate-spin" /> : <Sparkles size={14} />}
+              {visualLoading ? 'Analyse des obstacles et analogies…' : 'Lancer la direction visuelle intelligente'}
+            </button>
+          )}
+          {visualPedagogy?.chapters?.length && visualPedagogy?.meta?.persisted === false ? (
+            <p className="max-w-xl text-center text-[10.5px] text-amber-200/70">
+              Disponible temporairement — la sauvegarde du pivot visuel a échoué. Ne recharge pas cette page avant de réessayer.
+            </p>
+          ) : null}
+          {visualError ? <p className="max-w-xl text-center text-[11px] text-red-300/80">{visualError}</p> : null}
         </div>
 
         {/* Maître-détail : liste + prévisualisation */}
@@ -1711,26 +1848,30 @@ function Step6Slides({ slides, chapters, onContinue, onPrev }) {
 
           {/* Liste des slides */}
           <div className="min-h-0">
-            <div className="max-h-[460px] space-y-1.5 overflow-y-auto pr-1">
-              {slides.map((s, i) => (
+            <div className="max-h-[min(640px,68vh)] space-y-1.5 overflow-y-auto pr-1">
+              {chapterSlides.map((s, i) => {
+                const slideKey = s.slide_id || s.id || i;
+                const selected = active && (active.slide_id || active.id) === slideKey;
+                return (
                 <button
-                  key={s.slide_id || i}
+                  key={slideKey}
                   type="button"
-                  onClick={() => setActiveIdx(i)}
+                  onClick={() => setActiveSlideId(slideKey)}
                   className={`flex w-full items-center justify-between rounded-2xl border px-3 py-2.5 text-left text-xs transition ${
-                    i === activeIdx
+                    selected
                       ? 'border-[#d97757]/50 bg-[#d97757]/12 text-white'
                       : 'border-white/[0.07] bg-white/[0.02] text-white/60 hover:bg-white/[0.04]'
                   }`}
                 >
                   <span className="truncate">
-                    <span className="text-[#d97757]">#{i + 1}</span> {s.title}
+                    <span className="text-[#d97757]">{String(i + 1).padStart(2, '0')}</span> {s.title}
                   </span>
                   <span className="ml-2 shrink-0 rounded-md bg-white/[0.05] px-1.5 py-0.5 text-[10px] text-white/50">
-                    {s.kind}
+                    {s.duration_seconds ? `${Math.round(s.duration_seconds / 60)} min` : s.kind}
                   </span>
                 </button>
-              ))}
+                );
+              })}
               {slides.length === 0 ? (
                 <p className="rounded-2xl border border-white/[0.07] bg-white/[0.02] px-3 py-4 text-xs text-white/45">
                   Aucun slide. Relance la transformation.
@@ -1742,16 +1883,64 @@ function Step6Slides({ slides, chapters, onContinue, onPrev }) {
           {/* Prévisualisation */}
           <div className="min-h-0">
             {active ? (
-              <div className="flex h-[460px] flex-col justify-center rounded-2xl border border-[#d97757]/20 bg-gradient-to-br from-[#1f1e1c] via-[#1f1e1c] to-[#1f1e1c] p-9">
+              <div
+                className="flex h-[min(640px,68vh)] flex-col overflow-y-auto rounded-2xl border border-[#d97757]/20 bg-gradient-to-br from-[#1f1e1c] via-[#1f1e1c] to-[#1f1e1c] p-9"
+                style={active.image_url ? {
+                  backgroundImage: `linear-gradient(90deg, rgba(20,19,17,.96) 0%, rgba(20,19,17,.84) 55%, rgba(20,19,17,.38) 100%), url(${active.image_url})`,
+                  backgroundSize: 'cover',
+                  backgroundPosition: 'center',
+                } : undefined}
+              >
                 <div className="mb-3 flex items-center gap-2 text-[10px] font-bold uppercase tracking-[0.16em] text-[#d97757]">
-                  {String(active.kind || 'slide').toUpperCase()}
+                  {String(active.visual_mode || active.kind || 'slide').toUpperCase()}
                   {activeChapter ? (
                     <span className="text-white/35">· Chapitre {activeChapter.chapter_id}</span>
                   ) : null}
                 </div>
-                <h3 className="text-3xl font-bold leading-tight md:text-4xl">{active.title}</h3>
+                <h3 className="max-w-3xl text-3xl font-bold leading-tight md:text-4xl">
+                  {active.on_screen_text?.[0] || active.title}
+                </h3>
                 {active.subtitle ? <p className="mt-2 text-sm text-[#e8b6a3]/70">{active.subtitle}</p> : null}
-                {active.body ? <p className="mt-6 max-w-2xl text-base leading-relaxed text-white/75">{active.body}</p> : null}
+                {active.visual_anchor ? (
+                  <div className="mt-5 max-w-3xl rounded-2xl border border-white/[0.08] bg-black/20 p-4 backdrop-blur-sm">
+                    <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-[#9fbf8f]">Ce que le visuel doit faire comprendre</p>
+                    <p className="mt-1.5 text-[13.5px] leading-relaxed text-white/80">{active.learning_job}</p>
+                    <p className="mt-2 text-[12px] leading-relaxed text-white/50">{active.visual_brief}</p>
+                  </div>
+                ) : active.body ? <p className="mt-6 max-w-2xl text-base leading-relaxed text-white/75">{active.body}</p> : null}
+                {active.visual_role === 'analogy' ? <AnalogyMechanism analogy={active.analogy_map} /> : null}
+                {active.visual_anchor && active.pictograms?.length ? (
+                  <div className="mt-4 grid max-w-3xl grid-cols-2 gap-2 md:grid-cols-3">
+                    {active.pictograms.slice(0, 6).map((item, index) => (
+                      <div key={`${item.symbol}-${index}`} className="rounded-xl border border-white/[0.08] bg-white/[0.04] p-3">
+                        <p className="text-[13px] font-semibold text-[#f0b49e]">{item.symbol}</p>
+                        <p className="mt-1 text-[10.5px] leading-snug text-white/50">{item.meaning}</p>
+                      </div>
+                    ))}
+                  </div>
+                ) : null}
+                {active.visual_anchor && !active.pictograms?.length && active.diagram?.nodes?.length ? (
+                  <div className="mt-4 flex max-w-3xl flex-wrap items-center gap-2">
+                    {active.diagram.nodes.slice(0, 6).map((node, index) => (
+                      <React.Fragment key={`${node}-${index}`}>
+                        <span className="rounded-xl border border-white/[0.1] bg-white/[0.05] px-3 py-2 text-[11px] text-white/75">{node}</span>
+                        {index < Math.min(active.diagram.nodes.length, 6) - 1 ? <ArrowRight size={13} className="text-[#d97757]" /> : null}
+                      </React.Fragment>
+                    ))}
+                  </div>
+                ) : null}
+                {active.visual_anchor && (active.must_show?.length || active.reject_if?.length) ? (
+                  <div className="mt-4 grid max-w-3xl gap-2 md:grid-cols-2">
+                    <div className="rounded-xl border border-[#9fbf8f]/20 bg-[#9fbf8f]/[0.05] p-3">
+                      <p className="text-[9px] font-bold uppercase tracking-[0.14em] text-[#b7d4aa]">Le visuel doit montrer</p>
+                      <p className="mt-1.5 text-[10.5px] leading-relaxed text-white/55">{active.must_show?.join(' · ')}</p>
+                    </div>
+                    <div className="rounded-xl border border-[#d97757]/20 bg-[#d97757]/[0.05] p-3">
+                      <p className="text-[9px] font-bold uppercase tracking-[0.14em] text-[#e9a58d]">Refuser si</p>
+                      <p className="mt-1.5 text-[10.5px] leading-relaxed text-white/55">{active.reject_if?.join(' · ')}</p>
+                    </div>
+                  </div>
+                ) : null}
                 {active.bullets?.length ? (
                   <ul className="mt-6 max-w-2xl space-y-2">
                     {active.bullets.map((b, i) => (
@@ -1762,9 +1951,56 @@ function Step6Slides({ slides, chapters, onContinue, onPrev }) {
                     ))}
                   </ul>
                 ) : null}
+                {active.visual_anchor ? (
+                  <div className="mt-4 flex flex-wrap items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={() => onGenerateImage(active)}
+                      disabled={visualImageLoadingId === (active.slide_id || active.id)}
+                      className="inline-flex items-center gap-2 rounded-xl border border-[#d97757]/35 bg-[#d97757]/10 px-3 py-2 text-[11px] font-semibold text-[#f0b49e] transition hover:bg-[#d97757]/15 disabled:opacity-50"
+                    >
+                      {visualImageLoadingId === (active.slide_id || active.id)
+                        ? <Loader2 size={13} className="animate-spin" />
+                        : active.image_url ? <RefreshCcw size={13} /> : <Sparkles size={13} />}
+                      {active.image_url ? 'Régénérer le visuel' : 'Générer le visuel final'}
+                    </button>
+                    {active.image_status === 'pending_review' && active.image_url ? (
+                      <>
+                        <button
+                          type="button"
+                          onClick={() => onReviewImage(active, 'approved')}
+                          disabled={visualImageLoadingId === (active.slide_id || active.id)}
+                          className="inline-flex items-center gap-2 rounded-xl border border-[#9fbf8f]/35 bg-[#9fbf8f]/10 px-3 py-2 text-[11px] font-semibold text-[#c8dfbd] transition hover:bg-[#9fbf8f]/15 disabled:opacity-50"
+                        >
+                          <Check size={13} /> Approuver
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => onReviewImage(active, 'rejected')}
+                          disabled={visualImageLoadingId === (active.slide_id || active.id)}
+                          className="inline-flex items-center gap-2 rounded-xl border border-red-400/30 bg-red-400/[0.07] px-3 py-2 text-[11px] font-semibold text-red-200 transition hover:bg-red-400/10 disabled:opacity-50"
+                        >
+                          <X size={13} /> Refuser
+                        </button>
+                      </>
+                    ) : null}
+                    <span className="text-[10px] text-white/30">{active.alt_text}</span>
+                  </div>
+                ) : null}
+                <div className="mt-auto flex flex-wrap items-center justify-between gap-3 border-t border-white/[0.07] pt-4 text-[10.5px] text-white/35">
+                  <span>Scène {active.sequence_number || 1}/{active.sequence_total || chapterSlides.length}</span>
+                  <span>{active.provenance === 'visual-pedagogy-ai'
+                    ? active.image_status === 'approved' ? 'Visuel vérifié et approuvé' : 'Brief IA · validation humaine requise'
+                    : active.provenance === 'master-factory-derived' ? 'Enrichissement Master Factory' : 'Pivot écrit vérifié'}</span>
+                </div>
+                {active.interaction ? (
+                  <div className="mt-3 rounded-xl border border-[#9fbf8f]/20 bg-[#9fbf8f]/[0.06] px-3 py-2 text-[11.5px] text-[#c8dfbd]">
+                    Interaction — {active.interaction}
+                  </div>
+                ) : null}
               </div>
             ) : (
-              <div className="flex h-[460px] items-center justify-center rounded-2xl border border-white/[0.07] bg-white/[0.02]">
+              <div className="flex h-[min(640px,68vh)] items-center justify-center rounded-2xl border border-white/[0.07] bg-white/[0.02]">
                 <p className="text-sm text-white/45">Aucun slide à afficher.</p>
               </div>
             )}
@@ -1949,7 +2185,7 @@ function Step8Export({ stats, project, onPrev, onReset, onDownloadJson, onDownlo
   const statLine = [
     `${stats.chapters} chapitres`,
     `${stats.minutes} min`,
-    `${stats.slides} slides`,
+    `${stats.slides} scènes SmartBoard`,
     `${stats.exercises} exercices`,
     `${stats.tests} tests`,
     revelations ? `${revelations} révélations` : null,
@@ -2071,11 +2307,23 @@ function MasterclassFactoryPage() {
   const m = useMasterclassProject();
   const { publish: publishToClassroom } = usePublishToClassroom();
   const [precepteurLoading, setPrecepteurLoading] = useState(false);
+  const [visualPedagogyLoading, setVisualPedagogyLoading] = useState(false);
+  const [visualPedagogyError, setVisualPedagogyError] = useState('');
+  const [visualImageLoadingId, setVisualImageLoadingId] = useState(null);
   const [sourceReplayId, setSourceReplayId] = useState(null); // replay Zoom source (→ Précepteur rattaché à la vidéo)
   const [masterFactoryImport, setMasterFactoryImport] = useState(null);
   const masterFactoryImportRef = useRef('');
   const factoryStats = useMemo(() => deriveFactoryStats(m.project), [m.project]);
   const pipelineStage = useMemo(() => derivePipelineStage(m.status, m.step), [m.status, m.step]);
+  const maxReachableStep = useMemo(() => {
+    if (m.project?.scripts?.length) return 7;
+    if (m.project?.slides?.length) return 6;
+    if (m.project?.pedagogy?.length) return 5;
+    if (m.project?.chapters?.length) return 4;
+    if (m.project?.blocks?.length) return 3;
+    if (m.project?.analysis) return 2;
+    return 0;
+  }, [m.project]);
 
   /* Lecture/écriture URL pour partager une étape */
   useEffect(() => {
@@ -2144,6 +2392,92 @@ function MasterclassFactoryPage() {
 
   const handleLaunch = async () => {
     await m.launchPipeline();
+  };
+
+  const handleEnrichVisualPedagogy = async () => {
+    const sourceType = searchParams.get('mfSourceType');
+    const sourceId = searchParams.get('mfSourceId');
+    if (!sourceType || !sourceId) {
+      setVisualPedagogyError('Cet enrichissement exige une source Master Factory traçable.');
+      return;
+    }
+    setVisualPedagogyLoading(true);
+    setVisualPedagogyError('');
+    try {
+      const response = await masterFactoryApi.enrichVisualPedagogy({ sourceType, sourceId });
+      const enriched = response?.project || response?.data?.project;
+      if (!enriched?.slides?.length) throw new Error('Le moteur n’a renvoyé aucun storyboard enrichi.');
+      m.importProject(enriched);
+      m.goToStep(5);
+    } catch (error) {
+      setVisualPedagogyError(error?.message || 'La direction visuelle IA a échoué.');
+    } finally {
+      setVisualPedagogyLoading(false);
+    }
+  };
+
+  const handleGenerateVisualImage = async (slide) => {
+    if (!slide?.image_prompt) return;
+    const slideId = slide.slide_id || slide.id;
+    setVisualImageLoadingId(slideId);
+    setVisualPedagogyError('');
+    try {
+      const negative = slide.negative_prompt ? `\n\nAvoid: ${slide.negative_prompt}` : '';
+      const mustShow = slide.must_show?.length ? `\n\nMANDATORY OBSERVABLE ELEMENTS: ${slide.must_show.join('; ')}.` : '';
+      const rejectIf = slide.reject_if?.length ? `\n\nREJECT THE IMAGE IF: ${slide.reject_if.join('; ')}.` : '';
+      const generated = await aiGenerateImage({
+        prompt: `${slide.image_prompt}${mustShow}${rejectIf}${negative}`,
+        size: '1792x1024',
+        tier: 'premium',
+      });
+      if (!generated.imageUrl) throw new Error("Le moteur d'image n'a renvoyé aucun visuel.");
+      const sourceType = searchParams.get('mfSourceType');
+      const sourceId = searchParams.get('mfSourceId');
+      if (!sourceType || !sourceId) throw new Error('Source Master Factory introuvable pour sauvegarder le visuel.');
+      const response = await masterFactoryApi.reviewVisualImage({
+        sourceType,
+        sourceId,
+        chapterId: Number(slide.chapter_id),
+        role: slide.visual_role,
+        status: 'pending_review',
+        imageUrl: generated.imageUrl,
+        provider: generated.provider,
+      });
+      const enriched = response?.project || response?.data?.project;
+      if (!enriched?.slides?.length) throw new Error('Le visuel a été généré mais le projet persistant est invalide.');
+      m.importProject(enriched);
+      m.goToStep(5);
+    } catch (error) {
+      setVisualPedagogyError(error?.message || "La génération de l'image a échoué.");
+    } finally {
+      setVisualImageLoadingId(null);
+    }
+  };
+
+  const handleReviewVisualImage = async (slide, status) => {
+    const slideId = slide?.slide_id || slide?.id;
+    const sourceType = searchParams.get('mfSourceType');
+    const sourceId = searchParams.get('mfSourceId');
+    if (!slideId || !sourceType || !sourceId) return;
+    setVisualImageLoadingId(slideId);
+    setVisualPedagogyError('');
+    try {
+      const response = await masterFactoryApi.reviewVisualImage({
+        sourceType,
+        sourceId,
+        chapterId: Number(slide.chapter_id),
+        role: slide.visual_role,
+        status,
+      });
+      const enriched = response?.project || response?.data?.project;
+      if (!enriched?.slides?.length) throw new Error('La revue visuelle n’a pas été sauvegardée.');
+      m.importProject(enriched);
+      m.goToStep(5);
+    } catch (error) {
+      setVisualPedagogyError(error?.message || 'La revue du visuel a échoué.');
+    } finally {
+      setVisualImageLoadingId(null);
+    }
   };
 
   const handleDownloadJson = () => {
@@ -2371,6 +2705,13 @@ function MasterclassFactoryPage() {
             chapters={m.project.chapters ?? []}
             onContinue={m.next}
             onPrev={m.prev}
+            visualPedagogy={m.project.visualPedagogy}
+            visualLoading={visualPedagogyLoading}
+            visualError={visualPedagogyError}
+            visualImageLoadingId={visualImageLoadingId}
+            onEnrichVisuals={handleEnrichVisualPedagogy}
+            onGenerateImage={handleGenerateVisualImage}
+            onReviewImage={handleReviewVisualImage}
           />
         );
       case 6:
@@ -2419,7 +2760,12 @@ function MasterclassFactoryPage() {
             </div>
           ) : null}
 
-          <FactoryProgress active={m.step} onJump={m.goToStep} status={m.status} />
+          <FactoryProgress
+            active={m.step}
+            onJump={m.goToStep}
+            status={m.status}
+            maxReachable={maxReachableStep}
+          />
 
           {m.error ? (
             <div className="mb-2 shrink-0 rounded-lg border border-red-500/40 bg-red-500/10 p-2 text-xs text-red-200">

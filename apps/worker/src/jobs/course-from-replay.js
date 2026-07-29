@@ -152,6 +152,58 @@ function asList(v) {
  */
 async function loadJobSource(job) {
   const type = job.source_type || 'replay';
+  if (['document', 'texte', 'pdf', 'audio', 'video', 'url'].includes(type)) {
+    const { data } = await supabase
+      .from('master_factory_sources')
+      .select('id,title,content_text,duration_sec,status')
+      .eq('id', job.source_id)
+      .eq('tenant_id', job.tenant_id)
+      .eq('source_type', type)
+      .single();
+    if (!data) throw new Error('Source Master Factory introuvable pour ce tenant.');
+    if (data.status !== 'ready' || !String(data.content_text || '').trim()) {
+      throw new Error("L'extraction de cette source n'est pas terminée.");
+    }
+    return { id: data.id, title: data.title || 'Source', transcript_text: data.content_text, transcript_cues: [], duration_sec: data.duration_sec };
+  }
+  if (type === 'live') {
+    const { data: session } = await supabase
+      .from('live_sessions')
+      .select('id,title,kind,started_at,ended_at')
+      .eq('id', job.source_id)
+      .eq('tenant_id', job.tenant_id)
+      .single();
+    if (!session) throw new Error('Session LIVE introuvable pour ce tenant.');
+    if (session.kind === 'teleconsult') throw new Error('Une téléconsultation ne peut pas devenir un cours.');
+    const { data: state } = await supabase
+      .from('live_neuro_recall_state')
+      .select('transcript_text')
+      .eq('live_session_id', job.source_id)
+      .maybeSingle();
+    let transcript = String(state?.transcript_text || '').trim();
+    let transcript_cues = [];
+    if (!transcript) {
+      const { data: captions } = await supabase
+        .from('liri_multilang_live_captions')
+        .select('source_text,occurred_at')
+        .eq('live_session_id', job.source_id)
+        .order('occurred_at', { ascending: true });
+      const started = session.started_at ? new Date(session.started_at).getTime() : 0;
+      const seen = new Set();
+      transcript_cues = (captions || []).map((caption, index) => ({
+        t: started && caption.occurred_at ? Math.max(0, Math.round((new Date(caption.occurred_at).getTime() - started) / 1000)) : index * 4,
+        text: String(caption.source_text || '').trim(),
+      })).filter((cue) => cue.text && !seen.has(cue.text) && seen.add(cue.text));
+      transcript = transcript_cues.map((cue) => cue.text).join(' ').trim();
+    }
+    if (!transcript) throw new Error('Ce LIVE ne possède aucune transcription exploitable.');
+    const { data: recording } = await supabase.from('live_recordings').select('duration_seconds')
+      .eq('live_session_id', job.source_id).order('created_at', { ascending: false }).limit(1).maybeSingle();
+    const elapsed = session.started_at && session.ended_at
+      ? Math.max(0, Math.round((new Date(session.ended_at).getTime() - new Date(session.started_at).getTime()) / 1000))
+      : 0;
+    return { id: session.id, title: session.title || 'Session LIVE', transcript_text: transcript, transcript_cues, duration_sec: recording?.duration_seconds || elapsed };
+  }
   if (type === 'tiktok') {
     const { data } = await supabase
       .from('precepteur_sources')
