@@ -905,21 +905,12 @@ export default function CaptureStudioModal({ open, onClose, onVideoReady, initia
     if (!activeSeg) return;
     setAiGenerating(true);
     try {
-      const { data: { session } } = await supabase.auth.getSession();
-      const res = await fetch('/.netlify/functions/capture-studio-slide-ai', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${session?.access_token || ''}`,
-        },
-        body: JSON.stringify({
-          mode: 'slide',
-          title: activeSeg.title,
-          points: activeSeg.points.filter(Boolean),
-        }),
+      // Vraie edge function (JWT auto-attaché par invoke) — remplace le backend
+      // Netlify fantôme qui n'existait pas et faisait échouer ce bouton en silence.
+      const { data, error } = await supabase.functions.invoke('capture-studio-slide-ai', {
+        body: { mode: 'slide', title: activeSeg.title, points: activeSeg.points.filter(Boolean) },
       });
-      if (!res.ok) throw new Error('AI unavailable');
-      const data = await res.json();
+      if (error || !data) throw new Error('AI unavailable');
       setSbCustomSlides((prev) => {
         const prevC = prev[activeSeg.id];
         const base = prevC ? { ...activeSeg, ...prevC } : { ...activeSeg };
@@ -973,24 +964,11 @@ export default function CaptureStudioModal({ open, onClose, onVideoReady, initia
     if (usePedagogy && pendingNextSeg !== null) {
       setPedagogyGenerating(true);
       try {
-        const { data: { session } } = await supabase.auth.getSession();
         const seg = segments[activeSegmentIdx];
-        const res = await fetch('/.netlify/functions/capture-studio-slide-ai', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            Authorization: `Bearer ${session?.access_token || ''}`,
-          },
-          body: JSON.stringify({
-            mode: 'transition',
-            title: seg.title,
-            points: seg.points.filter(Boolean),
-          }),
+        const { data } = await supabase.functions.invoke('capture-studio-slide-ai', {
+          body: { mode: 'transition', title: seg.title, points: seg.points.filter(Boolean) },
         });
-        if (res.ok) {
-          const data = await res.json();
-          setPedagogyText(data?.text?.trim() || '');
-        }
+        if (data?.text) setPedagogyText(String(data.text).trim());
       } catch { /* silently ignore */ }
       finally { setPedagogyGenerating(false); }
     }
