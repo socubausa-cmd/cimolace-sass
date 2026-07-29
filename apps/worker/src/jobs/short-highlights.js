@@ -505,6 +505,29 @@ CONTRAINTES (impératives) :
 - "fin" = une seconde entière, strictement supérieure à "debut".
   Durée entre ${DUREE_MIN} et ${DUREE_MAX} secondes. Un extrait doit se terminer sur une idée
   achevée, jamais au milieu d'un mot.
+
+⭐ LES DEUX CHAMPS LES PLUS IMPORTANTS — "phrase_ouverture" ET "phrase_cloture".
+  Le texte que tu lis est horodaté par blocs d'une vingtaine de secondes : tes "debut" et
+  "fin" ne peuvent donc PAS être précis, et ce n'est pas grave — ils servent seulement à
+  SITUER la zone. Ce sont ces deux citations qui décideront des bornes réelles.
+- "phrase_ouverture" = la PREMIÈRE PHRASE ENTIÈRE de l'extrait, RECOPIÉE MOT POUR MOT
+  depuis le texte ci-dessous. Pas résumée, pas reformulée, pas corrigée.
+- "phrase_cloture" = la DERNIÈRE PHRASE ENTIÈRE de l'extrait, recopiée de la même façon.
+- ⛔ L'OUVERTURE NE COMMENCE JAMAIS PAR UN MOT DE LIAISON — « et », « donc », « alors »,
+  « mais », « puis », « ensuite », « car », « parce que », « or ». Un extrait qui démarre
+  sur « et l'onction de… » ou « et après on continue… » ouvre au milieu d'un propos :
+  celui qui le découvre dans son fil ne sait ni de qui ni de quoi on parle. Recule
+  jusqu'au vrai début de l'idée, même si cela allonge l'extrait.
+- ⛔ L'OUVERTURE NE COMMENCE PAS NON PLUS PAR UN PRONOM SANS ANTÉCÉDENT — « elle », « il »,
+  « ça », « ce dernier » — si la personne ou la chose désignée n'est nommée qu'AVANT.
+- ⛔ LA CLÔTURE FERME QUELQUE CHOSE. Ce n'est ni une question laissée sans réponse, ni une
+  phrase inachevée, ni le début d'une énumération qui continue après.
+- ⛔ CES DEUX PHRASES DOIVENT EXISTER DANS LE TEXTE. Elles seront recherchées dans
+  l'enregistrement lui-même ; une phrase que tu aurais écrite de toi-même ne s'y trouvera
+  pas et l'extrait sera REFUSÉ. Dans le doute, recopie plus court mais exact.
+- "referent" = le nom propre réellement prononcé ENTRE ces deux phrases (la personne, le
+  lieu, la notion dont il est question), ou null s'il n'y en a aucun. Un extrait sans
+  aucun nom est souvent un extrait qu'on ne peut pas comprendre seul.
 - ⛔ Aucune borne en dehors de l'intervalle [${tranche.debut}, ${tranche.fin}] : tu ne vois que cet extrait.
 - Les extraits que tu proposes ne se chevauchent pas entre eux.
 - Propose TOUS les passages qui accrochent, jusqu'à ${attendus} sur cette tranche. Ne fais pas
@@ -548,7 +571,7 @@ EXEMPLES DE TITRES, tirés de cette séance même (apprends de l'écart) :
        Un titre emprunté à un autre moment est un mensonge, même s'il est excellent.
 
 JSON attendu, strictement :
-{"extraits":[{"debut":${tranche.debut},"fin":${tranche.debut + 40},"titre":"…","raison":"…","force":4}]}
+{"extraits":[{"debut":${tranche.debut},"fin":${tranche.debut + 40},"phrase_ouverture":"la première phrase entière, recopiée mot pour mot","phrase_cloture":"la dernière phrase entière, recopiée mot pour mot","referent":"le nom propre prononcé, ou null","titre":"…","raison":"…","force":4}]}
 
 TRANSCRIPTION HORODATÉE (chaque ligne = « [seconde] texte ») :
 """
@@ -841,7 +864,25 @@ export function lireExtraits(brut, bas, haut, dureeSec, plafond, blocs = null) {
       }
     }
 
-    out.push({ start: debut, end: fin, titre, raison, force, ...(titreEcarte ? { titreEcarte } : {}) });
+    // ⭐ LES CITATIONS TRAVERSENT SANS ÊTRE JUGÉES ICI. On ne peut pas les vérifier à ce
+    // stade : elles seront cherchées dans l'audio RE-TRANSCRIT AU MOT de la zone
+    // (`short-bornes.js`), pas dans les cues de 20 s qu'on a sous la main — et c'est
+    // tout l'intérêt, puisque la passe courte entend souvent autre chose que la longue.
+    // On se contente d'un plancher de longueur : une « citation » de trois caractères
+    // s'ancrerait n'importe où et ferait passer le garde-fou pour un tamis.
+    const citation = (v) => {
+      const s = String(v ?? '').replace(/\s+/g, ' ').trim();
+      return s.length >= 15 ? s.slice(0, 400) : null;
+    };
+    const phraseOuverture = citation(it?.phrase_ouverture ?? it?.ouverture);
+    const phraseCloture = citation(it?.phrase_cloture ?? it?.cloture);
+    const referent = String(it?.referent ?? '').replace(/\s+/g, ' ').trim().slice(0, 80) || null;
+
+    out.push({
+      start: debut, end: fin, titre, raison, force,
+      phraseOuverture, phraseCloture, referent,
+      ...(titreEcarte ? { titreEcarte } : {}),
+    });
   }
 
   out.sort((a, b) => a.start - b.start || b.force - a.force);

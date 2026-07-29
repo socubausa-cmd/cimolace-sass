@@ -83,11 +83,13 @@ import {
   MAX_LIGNES_PAROLE, HAUTEUR_LIGNE_PAROLE, LIGNES_RESERVEES, MARGE_GAUCHE, MARGE_DROITE,
   MAX_LIGNES_TITRE, HAUTEUR_LIGNE_TITRE, MAX_CAR_LIGNE,
   TAILLE_SOUS_TITRE, typographieParole,
-  appliquerGlossaire, capaciteSousTitres, chargerGlossaire, construireAss,
+  appliquerGlossaire, appliquerGlossaireAuxMots, capaciteSousTitres, chargerGlossaire,
+  construireAss, decouperEnUnitesDepuisMots,
   corrigerTitre, corrigerTranscription,
   couperEnLignes, decouperEnUnites, echapperCheminFiltre, pairesDeCorrection,
   preparerTitre, srtDesUnites,
 } from './short-sous-titres.js';
+import { bornesAuMot } from './short-bornes.js';
 
 const supabase = createClient(
   process.env.SUPABASE_URL || '',
@@ -1368,6 +1370,72 @@ async function processVideoForShorts(recordingId, tenantId, storageKey, videoUrl
       );
     }
 
+    // 4bis. RECALER LES BORNES SUR DES PHRASES RÉELLES (short-bornes.js).
+    //
+    // ⭐ POURQUOI CETTE PASSE EXISTE. Un audit contradictoire des 5 extraits produits
+    // pour le replay du 11 avril les a TOUS refusés, et toujours pour la même raison
+    // matérielle : les bornes suivaient des cues de ~20 s. On ouvrait sur « et
+    // l'onction de… », on fermait au milieu d'une phrase (« C'est un » → « C'est »).
+    // Le modèle, lui, ne peut pas faire mieux : il ne voit que ces cues.
+    // On lui demande donc de CITER ses phrases d'ouverture et de clôture, et on
+    // retrouve ces phrases dans un audio re-transcrit AU MOT sur la seule zone
+    // candidate. Le modèle ne rend plus une seconde : il désigne un propos.
+    //
+    // ⚠️ NON BLOQUANT, MAIS JAMAIS SILENCIEUX. Chaque extrait garde sa granularité
+    // ('mot' ou 'cue') et, en cas de repli, le motif. Un moteur qui dégrade sans le
+    // dire produit exactement le défaut qu'on vient de passer une session à traquer.
+    const refusesAuRecalage = [];
+    for (const e of extraits) {
+      const r = await bornesAuMot({
+        fichier: videoFile,
+        zoneDebut: e.start,
+        zoneFin: e.end,
+        phraseOuverture: e.phraseOuverture,
+        phraseCloture: e.phraseCloture,
+        dureeSource: dureeReelle,
+        glossaire: glo,
+        journal: console,
+      });
+      e.granulariteBornes = r.granularite;
+      e.motifBornes = r.motif || null;
+      if (r.refus) {
+        // ⛔ Une citation absente de l'audio = une phrase que le modèle a écrite
+        // lui-même. On ne fabrique pas : on note et on écarte.
+        refusesAuRecalage.push({ start: e.start, end: e.end, titre: e.titre, ...r.refus });
+        e.ecarte = r.refus.code;
+        continue;
+      }
+      if (r.granularite === 'mot') {
+        const avant = `${e.start}→${e.end}`;
+        e.start = r.debut;
+        e.end = r.fin;
+        // Les mots servent ensuite aux SOUS-TITRES : c'est la même dépense qui paie
+        // les bornes et le calage des cartons (voir `decouperEnUnitesDepuisMots`).
+        e.mots = r.mots.filter((m) => m.e > r.debut && m.t < r.fin);
+        e.phrasesMesurees = r.phrases;
+        if (avant !== `${e.start}→${e.end}`) {
+          console.log(`[short-gen] Bornes recalées sur la parole : ${avant} → ${e.start}→${e.end}`);
+        }
+      } else if (r.motif) {
+        console.warn(`[short-gen] ⚠️ Extrait ${e.start}s : bornes NON recalées (${r.motif}) — granularité « cue »`);
+      }
+    }
+    const extraitsRecales = extraits.filter((e) => !e.ecarte);
+    if (refusesAuRecalage.length) {
+      console.warn(
+        `[short-gen] ⛔ ${refusesAuRecalage.length} extrait(s) écarté(s) au recalage : `
+        + refusesAuRecalage.map((r) => `${r.start}s (${r.code})`).join(', '),
+      );
+    }
+    if (extraitsRecales.length === 0) {
+      throw new Error(
+        "Aucun extrait n'a survécu au recalage sur la parole : les phrases citées par le "
+        + "modèle ne se retrouvent pas dans l'enregistrement. Rien n'a été fabriqué.",
+      );
+    }
+    extraits.length = 0;
+    extraits.push(...extraitsRecales);
+
     // 5. RELIRE LE TEXTE QUI VA ÊTRE AFFICHÉ EN GROS.
     // ⚠️ Whisper écrit « Je suis Shao cinquième Manikongo piste Vita Kimba » pour
     // « Je suis Cheo, cinquième Manikongo, fils de Kimpa Vita ». En 18 px au bas d'une
@@ -1455,8 +1523,17 @@ async function processVideoForShorts(recordingId, tenantId, storageKey, videoUrl
         // caractères puis dessiner à un corps prévu pour 10, c'est exactement le
         // bug que `typographieSeance` existe pour empêcher : les lignes sortiraient
         // plus larges que les 870 px utiles et libass replierait en permanence.
+        // ⭐ LE TEMPS DES CARTONS VIENT DES MOTS QUAND ON LES A. Sinon on retombe sur
+        // l'estimation à 14 car/s, qui produisait des cartons de 11,8 s (le reliquat
+        // d'une cue de 20 s versé sur son dernier carton). `granulariteBornes` dit
+        // laquelle des deux voies a servi — la trace en base le cite.
         unites: fusionnerCartonsCourts(
-          decouperEnUnites(segmentsAffiches, e.start, e.end, { maxCar: typoSeance.maxCar }),
+          e.mots?.length
+            ? decouperEnUnitesDepuisMots(
+              appliquerGlossaireAuxMots(e.mots, glo).mots,
+              e.start, e.end, { maxCar: typoSeance.maxCar },
+            )
+            : decouperEnUnites(segmentsAffiches, e.start, e.end, { maxCar: typoSeance.maxCar }),
           { duree: e.end - e.start, maxCar: typoSeance.maxCar },
         ),
       };

@@ -393,6 +393,155 @@ export function decouperEnUnites(segments, debut, fin, opts = {}) {
 }
 
 /**
+ * LE GLOSSAIRE APPLIQUÉ À UN FLUX DE MOTS HORODATÉS.
+ *
+ * ⚠️ POURQUOI ON NE PEUT PAS SE CONTENTER DE CORRIGER LE TEXTE FINAL. Les mots
+ * viennent de la re-transcription au mot (`short-bornes.js`), qui n'a jamais vu le
+ * vocabulaire de l'école : elle rend « Vitakimpa », « Mani Kongo », « Takenaro ».
+ * Corriger seulement la chaîne assemblée casserait la correspondance mot↔temps —
+ * or c'est précisément elle qui fait tout l'intérêt de la passe.
+ *
+ * ⭐ LA RÈGLE EST SIMPLE ET JUSTE : une substitution remplace une SUITE CONTIGUË de
+ * mots prononcés par une suite de mots affichés, et la nouvelle suite hérite de
+ * l'INTERVALLE COMPLET de l'ancienne (début du premier, fin du dernier). Que le
+ * nombre de mots change n'a aucune importance — « ciment qui margut » (3 mots) et
+ * « Simon Kimbangu » (2 mots) occupent le même moment de l'enregistrement. Quand
+ * un mot se développe en plusieurs, on partage son intervalle également : la
+ * position d'un mot À L'INTÉRIEUR d'un mot prononcé n'a pas de sens, et personne
+ * ne peut la percevoir sur un carton de sous-titre.
+ *
+ * Les substitutions sont déjà triées de la plus longue à la plus courte par
+ * `preparerGlossaire` — on garde cet ordre, sans quoi « Kimbangu » consommerait la
+ * moitié de « Simon Kimbangu ».
+ */
+export function appliquerGlossaireAuxMots(mots, glossaire) {
+  const subs = glossaire?.substitutions || [];
+  if (!Array.isArray(mots) || mots.length === 0 || subs.length === 0) {
+    return { mots: mots || [], remplacements: [] };
+  }
+  const nu = (s) => String(s).toLowerCase().normalize('NFD')
+    .replace(/[̀-ͯ]/g, '').replace(/[^a-z0-9' ]/g, '').replace(/\s+/g, ' ').trim();
+
+  let courant = mots.map((m) => ({ ...m }));
+  const remplacements = [];
+
+  for (const sub of subs) {
+    const cible = nu(sub.avant);
+    if (!cible) continue;
+    const nbCible = cible.split(' ').length;
+    for (let i = 0; i + nbCible <= courant.length; i += 1) {
+      const fenetre = courant.slice(i, i + nbCible);
+      if (nu(fenetre.map((m) => m.mot).join(' ')) !== cible) continue;
+
+      // La ponctuation du DERNIER mot prononcé est conservée : elle marque une fin
+      // de phrase, et c'est sur elle que `phrasesDepuisMots` s'appuie ensuite.
+      const queue = (String(fenetre[fenetre.length - 1].mot).match(/[.,;:!?…»]+$/) || [''])[0];
+      const t = fenetre[0].t;
+      const e = fenetre[fenetre.length - 1].e;
+      const nouveaux = String(sub.apres).split(/\s+/).filter(Boolean);
+      const pas = nouveaux.length > 0 ? (e - t) / nouveaux.length : 0;
+      const remplaçants = nouveaux.map((mot, k) => ({
+        t: Math.round((t + k * pas) * 100) / 100,
+        e: Math.round((t + (k + 1) * pas) * 100) / 100,
+        mot: k === nouveaux.length - 1 ? mot + queue : mot,
+      }));
+      courant = [...courant.slice(0, i), ...remplaçants, ...courant.slice(i + nbCible)];
+      remplacements.push({ avant: sub.avant, apres: sub.apres, t });
+      i += remplaçants.length - 1;
+    }
+  }
+  return { mots: courant, remplacements };
+}
+
+/**
+ * LES MÊMES CARTONS, MAIS CALÉS SUR DES MOTS MESURÉS — pas estimés.
+ *
+ * ⭐ CE QUE ÇA CORRIGE, EN CHIFFRES. `decouperEnUnites` (ci-dessus) ne connaît que le
+ * début et la fin d'une cue de ~20 s : elle répartit ce temps entre ses cartons AU
+ * PRORATA DES CARACTÈRES, et verse tout le reliquat sur le dernier. Mesuré sur les
+ * 5 extraits réellement produits pour le replay du 11 avril : **5 cartons sur 48
+ * (10 %) tenus plus de 6 secondes**, jusqu'à **11,8 s** pour « Simon Kimbangu.
+ * C'est » — et toujours le DERNIER carton d'une cue. Ce n'était pas un défaut de
+ * découpe, c'était la signature d'un temps qui n'avait jamais été mesuré.
+ *
+ * Ici chaque carton commence au début de son premier mot et finit à la fin de son
+ * dernier. Il n'y a plus ni débit supposé (14 car/s), ni reliquat à placer.
+ *
+ * ⚠️ ON NE COUPE JAMAIS AU MILIEU D'UN MOT : `couperEnLignes` décide des lignes sur
+ * le TEXTE, puis on ré-associe ces lignes aux mots dans l'ordre. Les deux découpes
+ * ne peuvent diverger que si un mot contient une espace, ce qui n'existe pas.
+ *
+ * `mots` = `[{t, e, mot}]` en secondes ABSOLUES (short-bornes.js les rend ainsi).
+ * `debut`/`fin` = bornes de l'extrait, en secondes absolues. Les unités rendues sont
+ * en secondes RELATIVES à `debut`, comme celles de `decouperEnUnites`.
+ */
+export function decouperEnUnitesDepuisMots(mots, debut, fin, opts = {}) {
+  const maxCar = opts.maxCar || MAX_CAR_LIGNE;
+  const maxLignes = opts.maxLignes || MAX_LIGNES_PAROLE;
+  const dedans = (Array.isArray(mots) ? mots : [])
+    .filter((m) => m && Number.isFinite(m.t) && Number.isFinite(m.e) && m.e > debut && m.t < fin)
+    .sort((a, b) => a.t - b.t);
+  const unites = [];
+  let tropRapides = 0;
+  if (dedans.length === 0) {
+    unites.diagnostic = {
+      unites: 0, caracteres: 0, debit_car_par_s: 0, trop_rapides: 0,
+      lignes_max: 0, caracteres_ligne_max: 0, source_temps: 'mot',
+    };
+    return unites;
+  }
+
+  const lignes = couperEnLignes(dedans.map((m) => m.mot).join(' '), maxCar);
+  // Combien de MOTS chaque ligne consomme. On avance dans `dedans` au même rythme
+  // que dans le texte : la ligne « Je suis Cheo » consomme trois mots, quelles que
+  // soient leurs durées.
+  let curseurMot = 0;
+  const lignesAvecMots = lignes.map((l) => {
+    const n = l.split(/\s+/).filter(Boolean).length;
+    const tranche = dedans.slice(curseurMot, curseurMot + n);
+    curseurMot += n;
+    return { ligne: l, mots: tranche };
+  }).filter((x) => x.mots.length > 0);
+
+  for (let i = 0; i < lignesAvecMots.length; i += maxLignes) {
+    const groupe = lignesAvecMots.slice(i, i + maxLignes);
+    const motsCarton = groupe.flatMap((g) => g.mots);
+    if (motsCarton.length === 0) continue;
+    const d = Math.max(debut, motsCarton[0].t);
+    // ⚠️ LE CARTON TIENT AU MOINS `DUREE_UNITE_MIN`, MÊME MESURÉ. Trois mots
+    // prononcés en 0,3 s existent (« et donc voilà ») ; les afficher 0,3 s produit
+    // un clignotement illisible. On étire alors vers l'avant, sans jamais dépasser
+    // la fin de l'extrait — l'unité suivante démarre à son propre premier mot, donc
+    // un chevauchement d'un dixième de seconde reste possible et sans conséquence
+    // visible (libass affiche le dernier déclaré).
+    const f = Math.min(fin, Math.max(motsCarton[motsCarton.length - 1].e, d + DUREE_UNITE_MIN));
+    if (f - d < DUREE_UNITE_MIN) tropRapides += 1;
+    unites.push({
+      debut: Math.max(0, d - debut),
+      fin: Math.max(0, f - debut),
+      lignes: groupe.map((g) => g.ligne),
+      texte: groupe.map((g) => g.ligne).join(' '),
+    });
+  }
+
+  const carTotal = unites.reduce((s, u) => s + u.texte.length, 0);
+  const dureeTotale = unites.reduce((s, u) => s + (u.fin - u.debut), 0);
+  unites.diagnostic = {
+    unites: unites.length,
+    caracteres: carTotal,
+    debit_car_par_s: dureeTotale > 0 ? Number((carTotal / dureeTotale).toFixed(1)) : 0,
+    trop_rapides: tropRapides,
+    lignes_max: unites.reduce((m, u) => Math.max(m, u.lignes.length), 0),
+    caracteres_ligne_max: unites.reduce((m, u) => Math.max(m, ...u.lignes.map((l) => l.length)), 0),
+    // ⭐ La trace dit d'où vient le TEMPS, pas seulement le texte. Devant un carton
+    // qui traîne, on doit pouvoir répondre « mesuré » ou « estimé » sans supposer.
+    source_temps: 'mot',
+    carton_le_plus_long_s: unites.reduce((m, u) => Math.max(m, Number((u.fin - u.debut).toFixed(2))), 0),
+  };
+  return unites;
+}
+
+/**
  * SRT correspondant EXACTEMENT à ce qui sera à l'écran (mêmes cartons, mêmes bornes).
  * C'est ce qu'on archive dans `short_clips.subtitle_srt` : la colonne doit attester du
  * texte AFFICHÉ, pas d'un texte parallèle que personne n'a vu.
