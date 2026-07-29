@@ -77,6 +77,14 @@ try {
   const arenaText = await page.locator('body').innerText();
   await page.screenshot({ path: path.join(outDir, '50-real-live-arena-ready.png'), fullPage: true });
 
+  await page.getByRole('button', { name: 'Importer un projet Master Factory', exact: true }).click();
+  await page.getByRole('dialog', { name: 'Importer depuis Master Factory', exact: true }).waitFor({ timeout: 30_000 });
+  await page.getByRole('button', { name: /La physique quantique décodée par l'Égypte antique/i }).first().click();
+  await page.getByRole('checkbox').check();
+  await page.getByRole('button', { name: 'Importer et remplacer le programme', exact: true }).click();
+  await page.getByRole('status').getByText(/12 scènes.*Mindmap.*Master Script/i).waitFor({ timeout: 120_000 });
+  await page.screenshot({ path: path.join(outDir, '51-real-arena-master-factory-import.png'), fullPage: true });
+
   const uiProof = {
     generatedAt: new Date().toISOString(),
     ok: true,
@@ -87,8 +95,9 @@ try {
       hasSequenceCounter: /01\s*\/\s*12/.test(arenaText),
       hasFirstSceneTitle: arenaText.includes('Les limites du critère de falsifiabilité'),
       hasFirstSceneIdea: arenaText.includes('Le critère de Popper'),
+      directMasterFactoryImport: true,
     },
-    screenshots: ['47-real-smartboard-scenes.png', '48-real-live-mindmap.png', '49-real-master-script-prompter.png', '50-real-live-arena-ready.png'],
+    screenshots: ['47-real-smartboard-scenes.png', '48-real-live-mindmap.png', '49-real-master-script-prompter.png', '50-real-live-arena-ready.png', '51-real-arena-master-factory-import.png'],
     browserErrors: errors,
   };
   fs.writeFileSync(path.join(outDir, 'live-ui-proof.json'), `${JSON.stringify(uiProof, null, 2)}\n`);

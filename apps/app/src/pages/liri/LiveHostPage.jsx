@@ -78,6 +78,7 @@ import {
 } from '@/features/live/host/components/LiveHostPhaseScreens';
 import { LiveHostPreviewOverlays } from '@/features/live/host/components/LiveHostPreviewOverlays';
 import { LiveHostLongiaSignalHub } from '@/features/live/host/components/LiveHostLongiaSignalHub';
+import MasterFactoryArenaImporter from '@/features/live/host/components/MasterFactoryArenaImporter';
 import { LiveHostLiveCenterColumn } from '@/features/live/host/components/LiveHostLiveCenterColumn';
 import { LiveHostLivePostGridSlots } from '@/features/live/host/components/LiveHostLivePostGridSlots';
 import { ETAPES_FALLBACK } from '@/features/live/host/liveSmartboardLegacySlides';
@@ -1204,6 +1205,17 @@ export default function LiveHostPage({ forceGuestRoute = false, joyKitSignalGran
     setMsTyped, stepRef, smartBoardStageRef, stepPersistTimerRef, msTypedIvRef,
   });
 
+  const handleMasterFactoryArenaImported = useCallback(({ scenes, source }) => {
+    setLiveScenes(scenes);
+    setSbActiveScene('smartboard');
+    gotoStep(0);
+    queueMicrotask(() => sendSmartboardHostPayload());
+    toast({
+      title: 'Projet Master Factory chargé',
+      description: `${scenes.length} scènes prêtes dans l'arène${source?.title ? ` · ${source.title}` : ''}.`,
+    });
+  }, [gotoStep, sendSmartboardHostPayload, toast]);
+
   useLiveHostLiriAudioSync({
     isGuestUi, phase, liriAudioScenes, liveScenes, gotoStep,
     sendSmartboardHostPayload,
@@ -1634,6 +1646,9 @@ export default function LiveHostPage({ forceGuestRoute = false, joyKitSignalGran
         toggleNeuronQ={toggleNeuronQ}
         setAmbientMasterVolume={setAmbientMasterVolume}
       />
+      {!isGuestUi && sessionId ? (
+        <MasterFactoryArenaImporter sessionId={sessionId} onImported={handleMasterFactoryArenaImported} />
+      ) : null}
       {medCockpit}
       </>
     );
@@ -1661,6 +1676,9 @@ export default function LiveHostPage({ forceGuestRoute = false, joyKitSignalGran
 
       <LiveHostLivePostGridSlots {...liveHostPostGridSlotsSpreadProps} />
     </LiveHostLiveSessionChrome>
+    {!isGuestUi && sessionId ? (
+      <MasterFactoryArenaImporter sessionId={sessionId} onImported={handleMasterFactoryArenaImported} />
+    ) : null}
     {medCockpit}
     </>
   );

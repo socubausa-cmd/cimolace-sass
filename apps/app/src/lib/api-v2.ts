@@ -1031,7 +1031,7 @@ export const masterFactoryApi = {
     liveSessionId: string;
     replaceExisting?: boolean;
     force?: boolean;
-  }) => apiV2.post<ApiEnvelope<any>>('/master-factory/publish/live-session', body).then(unwrap),
+  }) => apiV2.post<ApiEnvelope<any>>('/master-factory/publish/live-session', body, { timeout: 900000 }).then(unwrap),
   renderPdf: (body: { sourceType?: MasterFactorySourceType; sourceId: string }) =>
     apiV2.post<ApiEnvelope<any>>('/master-factory/render/pdf', body).then(unwrap),
   renderMasterclassProject: (body: { sourceType?: MasterFactorySourceType; sourceId: string }) =>
