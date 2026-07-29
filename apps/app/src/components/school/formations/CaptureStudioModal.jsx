@@ -322,6 +322,14 @@ export default function CaptureStudioModal({ open, onClose, onVideoReady, initia
 
   // Refs
   const liveVideoRef = useRef(null);
+  /**
+   * État de la caméra, DESTINÉ À L'ÉCRAN.
+   * 'demande' = l'invite d'autorisation est ouverte et la promesse de
+   * `getUserMedia` ne rendra RIEN tant qu'elle n'est pas traitée — mesuré : 45 s
+   * d'attente sans le moindre signe. C'est l'état le plus important à afficher :
+   * sans lui, un rectangle noir immobile ressemble à une panne.
+   */
+  const [etatCamera, setEtatCamera] = useState({ phase: 'demande', motif: '' });
   const previewVideoRef = useRef(null);
   const streamRef = useRef(null);
   const recorderRef = useRef(null);
@@ -343,6 +351,29 @@ export default function CaptureStudioModal({ open, onClose, onVideoReady, initia
   }, [open]);
 
   // ── open stream based on source type ─────────────────────────────────────
+  /**
+   * Traduit l'erreur de `getUserMedia` en une phrase QUI DIT QUOI FAIRE.
+   *
+   * ⭐ LES NOMS D'ERREUR SONT LA SEULE INFORMATION FIABLE — le `message` du
+   * navigateur varie d'un navigateur à l'autre et n'est jamais en français. On
+   * s'appuie donc sur `err.name`, normalisé par la spécification.
+   * Chaque cas mène à un geste différent : autoriser, fermer l'autre logiciel,
+   * brancher une caméra. Les confondre revient à ne rien dire.
+   */
+  const motifCamera = (err) => {
+    const n = String(err?.name || '');
+    if (n === 'NotAllowedError' || n === 'SecurityError') {
+      return "Ton navigateur bloque la caméra pour ce site. Clique sur l'icône de caméra dans la barre d'adresse, choisis « Autoriser », puis relance l'aperçu.";
+    }
+    if (n === 'NotFoundError' || n === 'OverconstrainedError') {
+      return "Aucune caméra détectée sur cet ordinateur. Branche une webcam, ou choisis une autre source de captation (téléphone, écran).";
+    }
+    if (n === 'NotReadableError' || n === 'AbortError') {
+      return "La caméra est déjà utilisée par un autre logiciel (Zoom, Teams, OBS…). Ferme-le, puis relance l'aperçu.";
+    }
+    return `La caméra n'a pas pu démarrer (${n || 'cause inconnue'}). Relance l'aperçu, ou choisis une autre source.`;
+  };
+
   const openCamera = useCallback(async () => {
     try {
       const recState = recorderRef.current?.state;
@@ -350,6 +381,7 @@ export default function CaptureStudioModal({ open, onClose, onVideoReady, initia
       if (streamRef.current) {
         streamRef.current.getTracks().forEach((t) => t.stop());
       }
+      setEtatCamera({ phase: 'demande', motif: '' });
       let stream;
       if (source === 'screen') {
         // Screen capture — getDisplayMedia + optional mic
@@ -388,8 +420,16 @@ export default function CaptureStudioModal({ open, onClose, onVideoReady, initia
       if (liveVideoRef.current) {
         liveVideoRef.current.srcObject = stream;
       }
+      setEtatCamera({ phase: 'ok', motif: '' });
     } catch (err) {
+      // ⚠️ UN `console.error` NE SUFFIT PAS, ET C'ÉTAIT TOUT CE QU'IL Y AVAIT ICI.
+      // Constaté à l'écran : caméra refusée, caméra occupée par un autre logiciel,
+      // caméra absente — les TROIS donnaient exactement le même résultat, un
+      // rectangle noir sans un mot. Le formateur n'avait aucun moyen de savoir s'il
+      // devait autoriser, fermer Zoom, ou changer d'ordinateur. Un échec qui produit
+      // du silence est un échec que personne ne corrige.
       console.error('[CaptureStudio] stream error', err);
+      setEtatCamera({ phase: 'echec', motif: motifCamera(err) });
     }
   }, [source, selectedVideoDevice, selectedAudioDevice]);
 
@@ -1097,8 +1137,42 @@ export default function CaptureStudioModal({ open, onClose, onVideoReady, initia
                         className="w-full h-full object-cover"
                         style={{ transform: source === 'screen' ? 'none' : 'scaleX(-1)' }}
                       />
-                      {/* Safety frame */}
-                      <div className="absolute inset-[5%] border border-dashed border-white/20 rounded-lg pointer-events-none" />
+                      {/* ── CE QUE FAIT LA CAMÉRA, ÉCRIT ────────────────────
+                          Avant, l'aperçu restait noir et muet dans les trois cas
+                          d'échec. On couvre donc l'attente ET l'échec, avec le
+                          geste à faire dans chaque cas. La trame de sécurité ne
+                          s'affiche que quand l'image est là : superposée à un
+                          message, elle le rendait illisible. */}
+                      {etatCamera.phase === 'ok' && (
+                        <div className="absolute inset-[5%] border border-dashed border-white/20 rounded-lg pointer-events-none" />
+                      )}
+                      {etatCamera.phase !== 'ok' && (
+                        <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 px-6 text-center bg-[#1f1e1c]/92">
+                          {etatCamera.phase === 'demande' ? (
+                            <>
+                              <Loader2 className="w-6 h-6 animate-spin text-[var(--school-accent)]" />
+                              <p className="text-sm font-semibold text-[#f5f4ee]">En attente de ta caméra…</p>
+                              <p className="text-xs leading-relaxed text-[rgba(245,244,238,0.62)] max-w-xs">
+                                Ton navigateur demande l'autorisation. Réponds « Autoriser » —
+                                tant que l'invite reste ouverte, l'aperçu ne peut pas démarrer.
+                              </p>
+                            </>
+                          ) : (
+                            <>
+                              <VideoOff className="w-6 h-6 text-[#d97757]" />
+                              <p className="text-sm font-semibold text-[#f5f4ee]">La caméra n'a pas démarré</p>
+                              <p className="text-xs leading-relaxed text-[rgba(245,244,238,0.72)] max-w-sm">{etatCamera.motif}</p>
+                              <button
+                                type="button"
+                                onClick={() => openCamera()}
+                                className="mt-1 inline-flex items-center gap-2 rounded-full border border-[#d97757] bg-[rgba(217,119,87,0.14)] px-4 py-1.5 text-xs font-bold text-[#f0c3ac] hover:bg-[rgba(217,119,87,0.22)] transition-colors"
+                              >
+                                Relancer l'aperçu
+                              </button>
+                            </>
+                          )}
+                        </div>
+                      )}
                       <div className="absolute bottom-2 left-2 right-2 flex items-center justify-center gap-3">
                         <button
                           type="button"
