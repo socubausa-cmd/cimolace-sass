@@ -86,6 +86,11 @@ export class MasterFactoryService {
     return this.renderPivot.renderPdf(tenantId, sourceType, sourceId);
   }
 
+  /** Projet éditable Masterclass Factory dérivé du pivot écrit, sans seconde IA. */
+  renderMasterclassProject(tenantId: string, sourceType: SourceType, sourceId: string) {
+    return this.renderPivot.renderMasterclassProject(tenantId, sourceType, sourceId);
+  }
+
   /** Étape 2-B : construire le conducteur oral officiel depuis la compréhension. */
   async buildMasterScript(
     tenantId: string,

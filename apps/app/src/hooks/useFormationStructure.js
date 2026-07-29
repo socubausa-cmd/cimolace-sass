@@ -1,5 +1,6 @@
 import { useCallback, useState } from 'react';
 import { supabase } from '@/lib/customSupabaseClient';
+import { coursesApi } from '@/lib/api-v2';
 
 /**
  * Unifie les clés vidéo (DB / studio / meta) pour CoursePlayer + VideoPlayer.
@@ -242,23 +243,13 @@ export const useFormationStructure = () => {
     setLoading(true);
     setError(null);
 
-    const { data, error: err } = await supabase
-      .from('modules')
-      .select(
-        `id, formation_id, title, description, sort_order,
-         formation_weeks (
-           id, module_id, title, sort_order,
-           formation_days (
-             id, week_id, title, sort_order,
-             formation_day_contents (id, day_id, type, sort_order, data)
-           )
-         )`
-      )
-      .eq('formation_id', formationId)
-      .order('sort_order', { ascending: true })
-      .order('sort_order', { foreignTable: 'formation_weeks', ascending: true })
-      .order('sort_order', { foreignTable: 'formation_weeks.formation_days', ascending: true })
-      .order('sort_order', { foreignTable: 'formation_weeks.formation_days.formation_day_contents', ascending: true });
+    let data;
+    let err = null;
+    try {
+      data = await coursesApi.getFormationStructure(formationId);
+    } catch (error) {
+      err = error;
+    }
 
     if (err) {
       const hint =

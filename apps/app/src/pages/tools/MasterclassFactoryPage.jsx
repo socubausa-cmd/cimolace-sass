@@ -56,7 +56,7 @@ import { masterclassProjectToProductionDraft } from '@/lib/masterclass/toProduct
 import { usePublishToClassroom } from '@/hooks/usePublishToClassroom';
 import { conformCourse } from '@/lib/precepteur/conformCourse';
 import { supabase } from '@/lib/supabaseCompat';
-import { masterclassApi, apiV2 } from '@/lib/api-v2';
+import { masterclassApi, masterFactoryApi, apiV2 } from '@/lib/api-v2';
 
 const EXAMPLE_TYPES = [
   'Cours théologique',
@@ -2072,6 +2072,8 @@ function MasterclassFactoryPage() {
   const { publish: publishToClassroom } = usePublishToClassroom();
   const [precepteurLoading, setPrecepteurLoading] = useState(false);
   const [sourceReplayId, setSourceReplayId] = useState(null); // replay Zoom source (→ Précepteur rattaché à la vidéo)
+  const [masterFactoryImport, setMasterFactoryImport] = useState(null);
+  const masterFactoryImportRef = useRef('');
   const factoryStats = useMemo(() => deriveFactoryStats(m.project), [m.project]);
   const pipelineStage = useMemo(() => derivePipelineStage(m.status, m.step), [m.status, m.step]);
 
@@ -2081,6 +2083,35 @@ function MasterclassFactoryPage() {
     if (Number.isFinite(fromUrl) && fromUrl >= 0 && fromUrl <= 7 && fromUrl !== m.step) {
       m.goToStep(fromUrl);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  /* Import canonique depuis l'Atelier : on charge le projet structuré directement
+     depuis `CoursEcritPivot`. Aucun Markdown intermédiaire et aucun appel IA. */
+  useEffect(() => {
+    const sourceType = searchParams.get('mfSourceType');
+    const sourceId = searchParams.get('mfSourceId');
+    if (!sourceType || !sourceId) return;
+    const signature = `${sourceType}:${sourceId}`;
+    if (masterFactoryImportRef.current === signature) return;
+    masterFactoryImportRef.current = signature;
+    setMasterFactoryImport({ loading: true, sourceType, sourceId });
+    void masterFactoryApi.renderMasterclassProject({ sourceType, sourceId })
+      .then((project) => {
+        const normalized = project?.data || project;
+        m.importProject(normalized);
+        if (sourceType === 'replay') setSourceReplayId(sourceId);
+        setMasterFactoryImport({
+          loading: false,
+          sourceType,
+          sourceId,
+          title: normalized?.analysis?.global_subject || 'Cours Master Factory',
+          writtenPivotId: normalized?.master_factory?.written_pivot_id || null,
+        });
+      })
+      .catch((error) => {
+        setMasterFactoryImport({ loading: false, sourceType, sourceId, error: error?.message || 'Import impossible.' });
+      });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -2098,6 +2129,10 @@ function MasterclassFactoryPage() {
      texte extrait du document, on le pose dans l'étape 1, puis on nettoie la clé (usage unique). */
   useEffect(() => {
     try {
+      // Une navigation canonique depuis l'Atelier a priorité sur l'ancien pont
+      // localStorage. Sans ce garde, un vieux document pouvait écraser le pivot
+      // quelques millisecondes après son import et réintroduire deux vérités.
+      if (searchParams.get('mfSourceId')) return;
       const pre = window.localStorage.getItem('masterclass:prefillRawText');
       if (pre && pre.trim() && !m.project.rawText) {
         m.setRawText(pre.slice(0, m.MAX_RAW_CHARS || 40000));
@@ -2373,6 +2408,16 @@ function MasterclassFactoryPage() {
         <section className="relative flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden p-3 sm:p-4">
           <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(75%_55%_at_50%_0%,rgba(217,119,87,0.12),transparent_68%)]" />
           <FactoryHeader onReset={m.reset} isRealBrain={m.isRealBrain} />
+
+          {masterFactoryImport ? (
+            <div className={`mb-2 shrink-0 rounded-xl border px-3 py-2 text-xs ${masterFactoryImport.error ? 'border-red-500/35 bg-red-500/10 text-red-200' : 'border-emerald-400/30 bg-emerald-400/10 text-emerald-100'}`}>
+              {masterFactoryImport.loading
+                ? 'Chargement du cours écrit depuis Master Factory…'
+                : masterFactoryImport.error
+                  ? `Master Factory : ${masterFactoryImport.error}`
+                  : `Même cours, même pivot · ${masterFactoryImport.title} · aucune seconde analyse IA`}
+            </div>
+          ) : null}
 
           <FactoryProgress active={m.step} onJump={m.goToStep} status={m.status} />
 

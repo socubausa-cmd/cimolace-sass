@@ -35,6 +35,31 @@ export class CoursesService {
     return data;
   }
 
+  async getFormationStructure(tenantId: string, courseId: string) {
+    // Ancre anti-BOLA avant de suivre la hiérarchie historique du Studio, dont
+    // les tables enfants ne portent pas toutes tenant_id.
+    await this.getCourse(tenantId, courseId);
+    const { data, error } = await (this.supabase.client as any)
+      .from('modules')
+      .select(`
+        id, formation_id, title, description, sort_order,
+        formation_weeks (
+          id, module_id, title, sort_order,
+          formation_days (
+            id, week_id, title, sort_order,
+            formation_day_contents (id, day_id, type, sort_order, data)
+          )
+        )
+      `)
+      .eq('formation_id', courseId)
+      .order('sort_order', { ascending: true })
+      .order('sort_order', { foreignTable: 'formation_weeks', ascending: true })
+      .order('sort_order', { foreignTable: 'formation_weeks.formation_days', ascending: true })
+      .order('sort_order', { foreignTable: 'formation_weeks.formation_days.formation_day_contents', ascending: true });
+    if (error) throw new BadRequestException(error.message);
+    return data ?? [];
+  }
+
   async updateCourse(tenantId: string, courseId: string, updates: Record<string, any>) {
     // Whitelist des colonnes modifiables (n'altère pas tenant_id/id/created_by ; évite les colonnes inexistantes).
     const allowed = ['title', 'description', 'category', 'price_cents', 'status'];

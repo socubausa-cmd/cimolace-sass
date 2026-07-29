@@ -118,11 +118,18 @@ export default function StudioFormationPage() {
           masterFactoryApi.status(masterFactoryParams.sourceType, masterFactoryParams.sourceId).catch(() => null),
         ]);
         if (!alive) return;
+        const normalizedStatus = status?.data || status || null;
+        if (normalizedStatus?.course?.id) {
+          const params = new URLSearchParams(location.search || '');
+          params.set('editFormationId', normalizedStatus.course.id);
+          navigate(`/studio/formation?${params.toString()}`, { replace: true });
+          return;
+        }
         setMasterFactoryDraft(buildMasterFactoryFormationDraft({
           sourceType: masterFactoryParams.sourceType,
           sourceId: masterFactoryParams.sourceId,
           source: source?.data || source || null,
-          status: status?.data || status || null,
+          status: normalizedStatus,
         }));
       } finally {
         if (alive) setLoadingMasterFactory(false);
@@ -130,7 +137,7 @@ export default function StudioFormationPage() {
     };
     loadMasterFactoryDraft();
     return () => { alive = false; };
-  }, [masterFactoryParams.sourceId, masterFactoryParams.sourceType, editFormationId]);
+  }, [masterFactoryParams.sourceId, masterFactoryParams.sourceType, editFormationId, location.search, navigate]);
 
   useEffect(() => {
     if (!editFormationId || loading) return;

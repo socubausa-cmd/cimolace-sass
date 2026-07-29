@@ -4,7 +4,7 @@ import {
   Film, Music2, FileText, Type, Sparkles, BookOpen, Presentation, Radio,
   FileDown, Loader2, Check, AlertTriangle, RefreshCw, Search, ArrowUpRight,
 } from 'lucide-react';
-import { masterFactoryApi, masterclassApi } from '@/lib/api-v2';
+import { masterFactoryApi } from '@/lib/api-v2';
 import { authStore } from '@/lib/auth-store';
 import { exportCoursePdf } from '@/lib/exportCoursePdf';
 
@@ -148,6 +148,9 @@ export default function LiriAtelierPage() {
       mfSourceId: source.id,
     });
     if (target === 'formation') {
+      if (etat?.course?.id) {
+        params.set('editFormationId', etat.course.id);
+      }
       navigate(`/studio/formation?${params.toString()}`);
       return;
     }
@@ -197,63 +200,17 @@ export default function LiriAtelierPage() {
     setBusy('');
   };
 
-  const courseToMasterFactoryText = (course) => {
-    if (!course) return '';
-    const lines = [
-      `# ${course.title || 'Cours extrait'}`,
-      course.subtitle ? `\n${course.subtitle}` : '',
-      course.summary ? `\n## Résumé\n${course.summary}` : '',
-      Array.isArray(course.objectives) && course.objectives.length
-        ? `\n## Objectifs\n${course.objectives.map((o) => `- ${o}`).join('\n')}`
-        : '',
-    ].filter(Boolean);
-    (course.modules || []).forEach((mod, mIdx) => {
-      lines.push(`\n## Module ${mIdx + 1} — ${mod.title || 'Module'}`);
-      if (mod.description) lines.push(mod.description);
-      (mod.lessons || []).forEach((lesson, lIdx) => {
-        lines.push(`\n### Leçon ${mIdx + 1}.${lIdx + 1} — ${lesson.title || 'Leçon'}`);
-        if (lesson.content) lines.push(lesson.content);
-        if (Array.isArray(lesson.key_points) && lesson.key_points.length) {
-          lines.push('\nPoints clés :');
-          lines.push(lesson.key_points.map((p) => `- ${p}`).join('\n'));
-        }
-      });
-    });
-    if (Array.isArray(course.glossary) && course.glossary.length) {
-      lines.push('\n## Glossaire');
-      lines.push(course.glossary.map((g) => `- ${g.term} : ${g.definition}`).join('\n'));
-    }
-    return lines.join('\n').trim();
-  };
-
   const extractCourse = async () => {
     if (!sel) return;
     setBusy('extract-course');
     setExtractedCourse(null);
     try {
-      let course = null;
-      let source = 'masterclass';
-      if (type === 'replay') {
-        try {
-          course = await masterclassApi.fromReplay(sel.id);
-        } catch (e) {
-          // Le replay direct peut échouer si la transcription est trop bruitée ou
-          // si le fournisseur IA est indisponible. Dans ce cas, on ne bloque pas
-          // le tunnel : Master Factory sait déjà rendre un cours depuis le pivot
-          // écrit existant, sans nouvel appel modèle.
-          source = 'pivot';
-          course = await masterFactoryApi.renderPdf({ sourceType: type, sourceId: sel.id });
-          course = course?.data ?? course;
-        }
-      } else {
-        source = 'pivot';
-        course = await masterFactoryApi.renderPdf({ sourceType: type, sourceId: sel.id });
-        course = course?.data ?? course;
-      }
+      let course = await masterFactoryApi.renderPdf({ sourceType: type, sourceId: sel.id });
+      course = course?.data ?? course;
       if (!course?.modules?.length) throw new Error('Aucun cours exploitable extrait.');
       setExtractedCourse(course);
       const nbLessons = course.modules.reduce((n, mod) => n + (mod.lessons?.length || 0), 0);
-      flash('ok', `Rendu extrait prêt : ${course.modules.length} module(s), ${nbLessons} leçon(s)${source === 'pivot' ? ' · depuis le pivot Master Factory' : ''}.`);
+      flash('ok', `Rendu du pivot prêt : ${course.modules.length} module(s), ${nbLessons} leçon(s) · aucune seconde analyse IA.`);
     } catch (e) {
       flash('err', e?.message || 'Extraction du cours impossible.');
     }
@@ -261,20 +218,12 @@ export default function LiriAtelierPage() {
   };
 
   const sendExtractedCourseToMasterclassFactory = () => {
-    if (!extractedCourse) return;
-    const text = courseToMasterFactoryText(extractedCourse);
-    if (!text.trim()) {
-      flash('err', 'Le rendu extrait est vide.');
-      return;
-    }
-    try {
-      window.localStorage.setItem('masterclass:prefillRawText', text.slice(0, 40000));
-      window.localStorage.setItem('masterclass:prefillSourceTitle', extractedCourse.title || sel?.title || 'Cours extrait');
-    } catch {
-      flash('err', "Impossible d'envoyer le rendu au Masterclass Factory : stockage local indisponible.");
-      return;
-    }
-    const params = new URLSearchParams({ step: '0', from: 'liri-atelier' });
+    if (!sel || !etat?.ecrit) return;
+    const params = new URLSearchParams({
+      from: 'liri-atelier',
+      mfSourceType: type,
+      mfSourceId: sel.id,
+    });
     if (urlParams.get('preview') === '1') params.set('preview', '1');
     navigate(`/dashboard/tools/masterclass-factory?${params.toString()}`);
   };
@@ -410,10 +359,11 @@ export default function LiriAtelierPage() {
               <p style={{ margin: '0 0 14px', fontSize: 12, color: C.faint }}>
                 {sel.chars ? `${sel.chars.toLocaleString('fr-FR')} caractères de matière` : 'Transcription absente'}
               </p>
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0,1fr))', gap: 7, marginBottom: 14 }}>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, minmax(0,1fr))', gap: 7, marginBottom: 10 }}>
                 {[
                   ['Comprendre', etat?.comprehension],
                   ['Écrire', etat?.ecrit],
+                  ['Parcours', Boolean(etat?.course?.id)],
                   ['Live', etat?.live_scenario],
                 ].map(([label, ok]) => (
                   <div key={label} style={{ borderRadius: 10, padding: '9px 8px', background: ok ? 'rgba(122,181,122,.10)' : 'rgba(245,244,238,.06)', border: `1px solid ${ok ? 'rgba(122,181,122,.35)' : C.line}` }}>
@@ -422,6 +372,16 @@ export default function LiriAtelierPage() {
                   </div>
                 ))}
               </div>
+              {etat?.course?.id && (
+                <div style={{
+                  marginBottom: 14, padding: '8px 10px', borderRadius: 9,
+                  color: C.ok, background: 'rgba(122,181,122,.08)',
+                  border: '1px solid rgba(122,181,122,.25)', fontSize: 10.5,
+                  lineHeight: 1.5, overflowWrap: 'anywhere',
+                }}>
+                  Traçabilité vérifiée · pivot {String(etat.course.pivotId || '—').slice(0, 8)} · cours {String(etat.course.id).slice(0, 8)}
+                </div>
+              )}
 
               {!pret(sel) ? (
                 <p style={{ fontSize: 12.5, color: C.warn, lineHeight: 1.5 }}>
@@ -479,18 +439,18 @@ export default function LiriAtelierPage() {
                   </button>
 
                   <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginTop: 10 }}>
-                    <button type="button" onClick={extractCourse} disabled={!!busy || type !== 'replay'}
+                    <button type="button" onClick={extractCourse} disabled={!!busy || !etat?.ecrit}
                       style={{
                         ...btn(false), justifyContent: 'center',
-                        opacity: type === 'replay' ? 1 : 0.45,
-                        cursor: busy ? 'wait' : type === 'replay' ? 'pointer' : 'not-allowed',
+                        opacity: etat?.ecrit ? 1 : 0.45,
+                        cursor: busy ? 'wait' : etat?.ecrit ? 'pointer' : 'not-allowed',
                       }}>
                       {busy === 'extract-course' ? <Loader2 size={14} className="animate-spin" /> : <BookOpen size={14} />}
                       Voir le cours extrait
                     </button>
-                    <button type="button" onClick={sendExtractedCourseToMasterclassFactory} disabled={!extractedCourse || !!busy}
-                      style={{ ...btn(Boolean(extractedCourse)), justifyContent: 'center', opacity: extractedCourse ? 1 : 0.45 }}>
-                      <ArrowUpRight size={14} /> Envoyer au Masterclass Factory
+                    <button type="button" onClick={sendExtractedCourseToMasterclassFactory} disabled={!etat?.ecrit || !!busy}
+                      style={{ ...btn(Boolean(etat?.ecrit)), justifyContent: 'center', opacity: etat?.ecrit ? 1 : 0.45 }}>
+                      <ArrowUpRight size={14} /> Éditer dans Masterclass Factory
                     </button>
                   </div>
 

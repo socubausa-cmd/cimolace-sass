@@ -109,13 +109,13 @@ export interface LeconEcrite {
   titre: string;
   amorce: { situation: string; question: string };
   intuition: string;
-  definition: string;
+  definition: string | { enonce: string; citation?: string; mots_cles?: { mot: string; sens: string }[] };
   schema?: Record<string, unknown>;
   exemple: { titre: string; deroule: string };
   contre_exemple: { titre: string; pourquoi_faux: string };
-  erreur_frequente: string;
-  experience_pensee: string;
-  mise_en_situation: string;
+  erreur_frequente: string | { erreur: string; correction: string };
+  experience_pensee: string | { consigne: string; deroule: string; ce_que_ca_montre?: string };
+  mise_en_situation: string | { contexte: string; consigne: string; reussite?: string };
   je_retiens: { phrases: string[]; mots_cles: string[] };
   quiz: { question: string; options: string[]; correctAnswer: number; explication: string }[];
 }

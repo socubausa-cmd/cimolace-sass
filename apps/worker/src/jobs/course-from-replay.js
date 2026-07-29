@@ -14,6 +14,7 @@
  * Le cours n'est JAMAIS publié aux élèves : il arrive en brouillon au poste production.
  */
 import { createClient } from '@supabase/supabase-js';
+import { createHash } from 'node:crypto';
 
 const supabase = createClient(process.env.SUPABASE_URL || '', process.env.SUPABASE_SERVICE_ROLE_KEY || '');
 const DEEPSEEK_KEY = process.env.DEEPSEEK_API_KEY || '';
@@ -173,19 +174,45 @@ async function processJob(job) {
   const t0 = Date.now();
   const video = await loadJobSource(job);
 
+  const srcType = job.source_type || 'replay';
+  const srcId = job.source_id || job.video_id;
+  const { data: existingRoot } = await supabase
+    .from('course_pivots')
+    .select('id,payload')
+    .eq('tenant_id', job.tenant_id)
+    .eq('source_type', srcType)
+    .eq('source_id', srcId)
+    .eq('kind', 'comprehension')
+    .is('parent_id', null)
+    .maybeSingle();
+  if (existingRoot?.id) await setJob(job.id, { pivot_id: existingRoot.id });
+
   // 1. EXTRACTION
-  await setJob(job.id, { status: 'extracting', progress: 'Extraction du contenu enseigné…' });
+  await setJob(job.id, {
+    status: 'extracting',
+    progress: existingRoot?.payload?.notions?.length
+      ? 'Source normalisée — compréhension Master Factory réutilisée…'
+      : 'Extraction du contenu enseigné…',
+  });
   const cues = Array.isArray(video.transcript_cues) ? video.transcript_cues : [];
   const cleaned = (cues.length ? cues.map((c) => c.text).join(' ') : video.transcript_text).replace(/\s+/g, ' ').trim();
-  const chunks = [];
-  for (let i = 0; i < cleaned.length; i += WINDOW) chunks.push(cleaned.slice(i, i + WINDOW));
-  const parts = [];
-  for (const [i, c] of chunks.entries()) {
-    const t = await llm(SYS_DOC, `Extrait ${i + 1}/${chunks.length} de la séance.\n\n---\n${c}\n---`, { maxTokens: 8000, json: false, temp: 0.2 });
-    if (t) parts.push(t);
-    await setJob(job.id, { progress: `Extraction ${i + 1}/${chunks.length}…` });
+  let doc = '';
+  if (existingRoot?.payload?.notions?.length) {
+    // La compréhension a déjà été payée et validée. La transcription brute reste
+    // disponible comme preuve pour rédiger les leçons, mais aucun second appel
+    // « archiviste » / « plan » n'est effectué.
+    doc = cleaned.slice(0, MAX_DOC);
+  } else {
+    const chunks = [];
+    for (let i = 0; i < cleaned.length; i += WINDOW) chunks.push(cleaned.slice(i, i + WINDOW));
+    const parts = [];
+    for (const [i, c] of chunks.entries()) {
+      const t = await llm(SYS_DOC, `Extrait ${i + 1}/${chunks.length} de la séance.\n\n---\n${c}\n---`, { maxTokens: 8000, json: false, temp: 0.2 });
+      if (t) parts.push(t);
+      await setJob(job.id, { progress: `Extraction ${i + 1}/${chunks.length}…` });
+    }
+    doc = parts.join('\n\n');
   }
-  let doc = parts.join('\n\n');
   if (!doc.trim()) throw new Error('Extraction impossible (moteur IA indisponible).');
   if (doc.length > MAX_DOC) doc = doc.slice(0, MAX_DOC - 200) + '\n\n[…]';
   const srcGrams = grams(doc);
@@ -198,15 +225,7 @@ async function processJob(job) {
   // leçons, rendu, insertion) est INCHANGÉ → la sortie reste identique.
   await setJob(job.id, { status: 'planning', progress: 'Conception du plan pédagogique…' });
   let plan = null;
-  const { data: pivot } = await supabase
-    .from('course_pivots')
-    .select('payload')
-    .eq('tenant_id', job.tenant_id)
-    .eq('source_type', job.source_type || 'replay')
-    .eq('source_id', job.source_id || job.video_id)
-    .eq('kind', 'comprehension')
-    .is('parent_id', null)
-    .maybeSingle();
+  const pivot = existingRoot;
   if (pivot?.payload?.notions?.length) {
     // Le pivot porte les mêmes champs que SYS_PLAN (titre, promesse, notions,
     // glossaire) : il est directement consommable par l'étape suivante.
@@ -255,8 +274,6 @@ async function processJob(job) {
   // relisent GRATUITEMENT. Best-effort : un échec ici ne doit pas perdre
   // un job qui a réussi.
   try {
-    const srcType = job.source_type || 'replay';
-    const srcId = job.source_id || job.video_id;
     let { data: root } = await supabase
       .from('course_pivots')
       .select('id')
@@ -292,16 +309,20 @@ async function processJob(job) {
     if (root?.id) {
       await supabase.from('course_pivots').delete()
         .eq('parent_id', root.id).eq('kind', 'ecrit');
-      await supabase.from('course_pivots').insert({
+      const { data: written, error: writtenError } = await supabase.from('course_pivots').insert({
         tenant_id: job.tenant_id, source_type: srcType, source_id: srcId,
         kind: 'ecrit', parent_id: root.id,
         payload: { schema_version: 1, kind: 'ecrit', titre: plan.titre, promesse: plan.promesse, lecons: lessons },
         model: process.env.COURSE_ENGINE_MODEL || MODEL,
-      });
+      }).select('id').single();
+      if (writtenError) throw writtenError;
+      await setJob(job.id, { pivot_id: root.id });
+      job._written_pivot_id = written?.id || null;
+      job._comprehension_pivot_id = root.id;
       console.log(`[course-from-replay] 💾 pivot « ecrit » enregistré — ${lessons.length} leçons réutilisables`);
     }
   } catch (e) {
-    console.warn('[course-from-replay] pivot ecrit non enregistré :', e?.message || e);
+    throw new Error(`Persistance Master Factory impossible : ${e?.message || e}`);
   }
 
   // 4. PUBLICATION (brouillon)
@@ -322,24 +343,53 @@ async function processJob(job) {
   const weeks = [];
   for (let i = 0; i < days.length; i += 4) weeks.push({ title: `Semaine ${weeks.length + 1}`, days: days.slice(i, i + 4) });
 
-  const { data: course, error: ce } = await supabase.from('courses').insert({
-    tenant_id: job.tenant_id, created_by: job.requested_by || null, status: 'draft',
-    title: plan.titre, description: plan.promesse,
-  }).select('id').single();
-  if (ce) throw new Error('Création du cours : ' + ce.message);
-  const { data: mod } = await supabase.from('modules').insert({ formation_id: course.id, title: 'Programme', sort_order: 0 }).select('id').single();
-  for (const [wi, w] of weeks.entries()) {
-    const { data: week } = await supabase.from('formation_weeks').insert({ module_id: mod.id, title: w.title, sort_order: wi }).select('id').single();
-    for (const [di, d] of w.days.entries()) {
-      const { data: day } = await supabase.from('formation_days').insert({ week_id: week.id, title: d.title, sort_order: di }).select('id').single();
-      const rows = [{ day_id: day.id, type: 'powerpoint', sort_order: 0, data: { type: 'slides', title: d.title, slides: d.slides } }];
-      if (d.quiz?.questions?.length) rows.push({ day_id: day.id, type: 'quiz', sort_order: 1, data: d.quiz });
-      await supabase.from('formation_day_contents').insert(rows);
+  const contentHash = createHash('sha256').update(JSON.stringify({ plan, lessons })).digest('hex');
+  let course = null;
+  try {
+    const created = await supabase.from('courses').insert({
+      tenant_id: job.tenant_id, created_by: job.requested_by || null, status: 'draft',
+      title: plan.titre, description: plan.promesse,
+    }).select('id').single();
+    if (created.error || !created.data) throw new Error('Création du cours : ' + (created.error?.message || 'réponse vide'));
+    course = created.data;
+    const moduleInsert = await supabase.from('modules').insert({ formation_id: course.id, title: 'Programme', sort_order: 0 }).select('id').single();
+    if (moduleInsert.error || !moduleInsert.data) throw new Error('Création du module : ' + (moduleInsert.error?.message || 'réponse vide'));
+    const mod = moduleInsert.data;
+    for (const [wi, w] of weeks.entries()) {
+      const weekInsert = await supabase.from('formation_weeks').insert({ module_id: mod.id, title: w.title, sort_order: wi }).select('id').single();
+      if (weekInsert.error || !weekInsert.data) throw new Error('Création de la semaine : ' + (weekInsert.error?.message || 'réponse vide'));
+      const week = weekInsert.data;
+      for (const [di, d] of w.days.entries()) {
+        const dayInsert = await supabase.from('formation_days').insert({ week_id: week.id, title: d.title, sort_order: di }).select('id').single();
+        if (dayInsert.error || !dayInsert.data) throw new Error('Création du jour : ' + (dayInsert.error?.message || 'réponse vide'));
+        const day = dayInsert.data;
+        const rows = [{ day_id: day.id, type: 'powerpoint', sort_order: 0, data: { type: 'slides', title: d.title, slides: d.slides } }];
+        if (d.quiz?.questions?.length) rows.push({ day_id: day.id, type: 'quiz', sort_order: 1, data: d.quiz });
+        const contentInsert = await supabase.from('formation_day_contents').insert(rows);
+        if (contentInsert.error) throw new Error('Création du contenu : ' + contentInsert.error.message);
+      }
     }
+  } catch (error) {
+    // Compensation : les relations enfants sont en cascade. Un job ne doit jamais
+    // être marqué terminé avec un parcours incomplet.
+    if (course?.id) await supabase.from('courses').delete().eq('id', course.id);
+    throw error;
   }
   await setJob(job.id, {
-    status: 'done', course_id: course.id, progress: null,
-    metrics: { source: video.title, doc_chars: doc.length, notions: plan.notions.length, lessons: lessons.length, days: days.length, seconds: Math.round((Date.now() - t0) / 1000) },
+    status: 'done', course_id: course.id,
+    pivot_id: job._comprehension_pivot_id || existingRoot?.id || null,
+    progress: null,
+    metrics: {
+      source: video.title, doc_chars: doc.length, notions: plan.notions.length,
+      lessons: lessons.length, days: days.length,
+      seconds: Math.round((Date.now() - t0) / 1000), content_hash: contentHash,
+      master_factory: {
+        source_type: srcType,
+        source_id: srcId,
+        comprehension_pivot_id: job._comprehension_pivot_id || existingRoot?.id || null,
+        written_pivot_id: job._written_pivot_id || null,
+      },
+    },
   });
   console.log(`[course-from-replay] ✅ « ${plan.titre} » — ${lessons.length} leçons, ${days.length} jours (${Math.round((Date.now() - t0) / 60000)} min)`);
   return true;

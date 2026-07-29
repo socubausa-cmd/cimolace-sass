@@ -173,6 +173,28 @@ export class LiveService {
       .select("*")
       .single();
     if (!data) throw new NotFoundException("Session introuvable");
+
+    // Fermer aussi la porte, pas seulement la vidéo. Une entrée `waiting`
+    // survivait à la fin de séance : l'invité continuait d'afficher « en attente
+    // d'autorisation » et l'hôte conservait une notification fantôme. Les admis
+    // passent à `left`, les non admis à `rejected`; le polling/realtime de la
+    // salle d'attente reçoit en parallèle le statut `ended` de la session.
+    const waitingClose = await this.supabase
+      .from('live_waiting_room_entries')
+      .update({ status: 'rejected' })
+      .eq('live_session_id', sessionId)
+      .eq('status', 'waiting');
+    if (waitingClose.error) {
+      this.logger.warn(`Fin live ${sessionId}: salle d'attente non vidée (${waitingClose.error.message})`);
+    }
+    const admittedClose = await this.supabase
+      .from('live_waiting_room_entries')
+      .update({ status: 'left' })
+      .eq('live_session_id', sessionId)
+      .eq('status', 'admitted');
+    if (admittedClose.error) {
+      this.logger.warn(`Fin live ${sessionId}: participants non clôturés (${admittedClose.error.message})`);
+    }
     return data;
   }
 

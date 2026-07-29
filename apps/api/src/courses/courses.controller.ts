@@ -18,6 +18,13 @@ export class CoursesController {
   createCourse(@Body() d: CreateCourseDto, @CurrentTenant() t: TenantContext, @Req() r: Request) { return this.svc.createCourse(t, (r as any).user.id, d); }
   @Get() listCourses(@CurrentTenant() t: TenantContext) { return this.svc.listCourses(t.id, t.userRole); }
   @Get(':id') getCourse(@Param('id') id: string, @CurrentTenant() t: TenantContext) { return this.svc.getCourse(t.id, id); }
+  /** Structure du poste production (modules → semaines → jours → contenus).
+   * Lecture serveur tenant-scopée : le Studio ne dépend plus des politiques RLS
+   * différentes entre les quatre tables imbriquées. */
+  @Get(':id/formation-structure') @UseGuards(RolesGuard) @Roles('owner','admin','teacher')
+  getFormationStructure(@Param('id') id: string, @CurrentTenant() t: TenantContext) {
+    return this.svc.getFormationStructure(t.id, id);
+  }
   @Patch(':id') @UseGuards(RolesGuard) @Roles('owner','admin','teacher')
   updateCourse(@Param('id') id: string, @Body() d: Record<string, unknown>, @CurrentTenant() t: TenantContext) { return this.svc.updateCourse(t.id, id, d); }
   @Delete(':id') @UseGuards(RolesGuard) @Roles('owner','admin','teacher')

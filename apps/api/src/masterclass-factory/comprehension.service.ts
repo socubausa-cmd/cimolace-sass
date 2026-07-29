@@ -171,6 +171,42 @@ export class ComprehensionService {
     return out;
   }
 
+  /** Rattache un appui textuel au meilleur repère de transcription. */
+  private locateSourceSpans(appuis: string[], cues?: { t: number; text: string }[]) {
+    if (!Array.isArray(cues) || !cues.length) return undefined;
+    const words = (text: string) => new Set(
+      String(text || '')
+        .toLocaleLowerCase('fr')
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '')
+        .replace(/[^a-z0-9\s]/g, ' ')
+        .split(/\s+/)
+        .filter((word) => word.length >= 4),
+    );
+    const spans: { start_sec: number; end_sec: number }[] = [];
+    for (const appui of appuis.slice(0, 3)) {
+      const needle = words(appui);
+      if (!needle.size) continue;
+      let best = { index: -1, overlap: 0, score: 0 };
+      cues.forEach((cue, index) => {
+        const hay = words(cue.text);
+        const overlap = [...needle].filter((word) => hay.has(word)).length;
+        const score = overlap / needle.size;
+        if (overlap > best.overlap || (overlap === best.overlap && score > best.score)) {
+          best = { index, overlap, score };
+        }
+      });
+      if (best.index < 0 || best.overlap < 2 || best.score < 0.3) continue;
+      const start = Number(cues[best.index].t) || 0;
+      const next = Number(cues[best.index + 1]?.t);
+      spans.push({ start_sec: start, end_sec: Number.isFinite(next) ? next : start + 30 });
+    }
+    const unique = spans.filter(
+      (span, index) => spans.findIndex((candidate) => candidate.start_sec === span.start_sec) === index,
+    );
+    return unique.length ? unique : undefined;
+  }
+
   // ─────────────────────── Extraction du FOND ───────────────────────
 
   private static readonly SYS_MAP = `Tu analyses la TRANSCRIPTION ORALE BRUTE d'un enseignement (dictée automatique : hésitations, répétitions, faux départs, mots mal transcrits, incidents techniques).
@@ -273,6 +309,7 @@ RÉPONSE — JSON strict :
         pourquoi: String(n.pourquoi || ''),
         prerequis: Array.isArray(n.prerequis) ? n.prerequis.map(String) : undefined,
         appuis: n.appuis.map(String).slice(0, 6),
+        source_spans: this.locateSourceSpans(n.appuis.map(String), src.cues),
       }));
     const ecartees = (Array.isArray(plan.notions) ? plan.notions.length : 0) - notions.length;
     if (ecartees > 0) {

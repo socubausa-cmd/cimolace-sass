@@ -603,6 +603,8 @@ export const coursesApi = {
     apiV2.post<ApiEnvelope<any>>('/courses', body).then(unwrap),
   list: () => apiV2.get<ApiEnvelope<any[]>>('/courses').then(unwrap),
   get: (id: string) => apiV2.get<ApiEnvelope<any>>(`/courses/${id}`).then(unwrap),
+  getFormationStructure: (id: string) =>
+    apiV2.get<ApiEnvelope<any[]>>(`/courses/${id}/formation-structure`).then(unwrap),
   update: (id: string, body: Record<string, unknown>) =>
     apiV2.patch<ApiEnvelope<any>>(`/courses/${id}`, body).then(unwrap),
   delete: (id: string) =>

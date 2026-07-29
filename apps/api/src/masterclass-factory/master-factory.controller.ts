@@ -200,4 +200,18 @@ export class MasterFactoryController {
       String(body?.sourceId ?? ''),
     );
   }
+
+  /** Ouvrir le même cours dans l'éditeur Masterclass, sans le faire ré-analyser. */
+  @Post('render/masterclass-project')
+  @Roles('owner', 'admin', 'teacher')
+  renderMasterclassProject(
+    @Body() body: { sourceType?: SourceType; sourceId?: string },
+    @CurrentTenant() tenant: TenantContext,
+  ) {
+    return this.factory.renderMasterclassProject(
+      tenant.id,
+      body?.sourceType ?? 'replay',
+      String(body?.sourceId ?? ''),
+    );
+  }
 }

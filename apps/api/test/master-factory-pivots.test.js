@@ -9,6 +9,8 @@ const test = require('node:test');
 const assert = require('node:assert/strict');
 
 const { MasterFactoryService } = require('../dist/masterclass-factory/master-factory.service.js');
+const { RenderPivotService } = require('../dist/masterclass-factory/render-pivot.service.js');
+const { SourceAdaptersService } = require('../dist/masterclass-factory/source-adapters.service.js');
 
 const svc = new MasterFactoryService(null, null, null, null, null);
 
@@ -80,4 +82,74 @@ test('comprehension → master script → smartboard timeline → live scenario'
   assert.equal(scriptRows[0].created_by, 'user-1');
   assert.match(scriptRows[0].content, /Discours du professeur/);
   assert.equal(scriptRows[0].master_agent.message_central, master.moments[0].message_central);
+});
+
+test('cours écrit → projet Masterclass éditable sans nouvelle génération', async () => {
+  const written = {
+    titre: 'Introduction à la Prorascience',
+    lecons: [
+      {
+        notion_id: 'n1',
+        titre: 'La problématique',
+        amorce: { situation: 'Une page saturée.', question: 'Comment mieux guider ?' },
+        intuition: 'Commencer par une intention, pas par un menu.',
+        definition: { enonce: 'La navigation intelligente répond et agit.' },
+        exemple: { deroule: 'Liri ouvre le bon écran au bon moment.' },
+        erreur_frequente: { erreur: 'Tout afficher.', correction: 'Révéler progressivement.' },
+        mise_en_situation: { contexte: 'Accueil', consigne: 'Poser une question', reussite: 'Le bon parcours est ouvert.' },
+        je_retiens: { phrases: ['Une intention produit un parcours.'] },
+        quiz: [{ question: 'Que faut-il privilégier ?', options: ['Le guidage', 'La saturation'], explication: 'Le guidage.' }],
+      },
+    ],
+  };
+  const db = {
+    from(table) {
+      const query = {
+        select() { return query; },
+        eq() { return query; },
+        is() { return query; },
+        maybeSingle() {
+          if (table !== 'course_pivots') return Promise.resolve({ data: null });
+          query.calls = (query.calls || 0) + 1;
+          const data = db.pivotCall++ === 0
+            ? { id: 'pivot-comp', payload: comprehension }
+            : { id: 'pivot-ecrit', payload: written };
+          return Promise.resolve({ data });
+        },
+      };
+      return query;
+    },
+    pivotCall: 0,
+  };
+  const render = new RenderPivotService({ client: db });
+  const project = await render.renderMasterclassProject('tenant-1', 'replay', 'replay-1');
+
+  assert.equal(project.analysis.global_subject, written.titre);
+  assert.equal(project.chapters.length, 1);
+  assert.equal(project.chapters[0].segments.length, 21);
+  assert.equal(project.chapters[0].segments.find((s) => s.name === 'JE RETIENS').content, 'Une intention produit un parcours.');
+  assert.equal(project.master_factory.comprehension_pivot_id, 'pivot-comp');
+  assert.equal(project.master_factory.written_pivot_id, 'pivot-ecrit');
+  assert.equal(project.master_factory.imported_without_regeneration, true);
+  assert.equal(project.analysis.provider, 'master-factory-pivot');
+});
+
+test('adaptateur replay normalise les trois dialectes de repères temporels', async () => {
+  const row = {
+    id: 'replay-1', tenant_id: 'tenant-1', title: 'Replay',
+    transcript_text: 'Une transcription suffisamment longue et réellement exploitable.',
+    transcript_cues: [
+      { start: 12, text: 'ancien format start' },
+      { start_sec: 34, text: 'format start sec' },
+      { t: 56, text: 'format canonique' },
+    ],
+  };
+  const query = {
+    select() { return query; },
+    eq() { return query; },
+    maybeSingle() { return Promise.resolve({ data: row }); },
+  };
+  const adapter = new SourceAdaptersService({ client: { from: () => query } });
+  const source = await adapter.load('replay', row.id, row.tenant_id);
+  assert.deepEqual(source.cues.map((cue) => cue.t), [12, 34, 56]);
 });

@@ -52,7 +52,17 @@ export class SourceAdaptersService {
       tenantId: data.tenant_id,
       title: data.title || 'Séance',
       transcript,
-      cues: Array.isArray(data.transcript_cues) ? data.transcript_cues : undefined,
+      // Les imports historiques ont employé `start`, `start_sec` puis `t`.
+      // Le noyau ne doit pas connaître ces trois dialectes : il reçoit toujours
+      // un repère `t` normalisé, sinon toute nouvelle notion retombe à 0 seconde.
+      cues: Array.isArray(data.transcript_cues)
+        ? data.transcript_cues
+            .map((cue: any) => ({
+              t: Number(cue?.t ?? cue?.start_sec ?? cue?.start ?? 0),
+              text: String(cue?.text ?? cue?.transcript ?? '').trim(),
+            }))
+            .filter((cue: any) => cue.text)
+        : undefined,
       durationSec: data.duration_sec ?? undefined,
     };
   }

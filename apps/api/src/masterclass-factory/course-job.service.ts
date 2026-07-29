@@ -76,6 +76,24 @@ export class CourseJobService {
     opts: { force?: boolean } = {},
   ) {
     if (!sourceId) throw new BadRequestException('sourceId manquant');
+    if (!['replay', 'tiktok'].includes(sourceType)) {
+      throw new BadRequestException(
+        `La production de parcours depuis « ${sourceType} » n'est pas encore branchée au worker. ` +
+        'Utilise un replay ou une vidéo TikTok transcrite.',
+      );
+    }
+
+    const sourceTable = sourceType === 'replay' ? 'published_videos' : 'precepteur_sources';
+    const { data: source } = await this.db
+      .from(sourceTable)
+      .select('id, transcript_text')
+      .eq('id', sourceId)
+      .eq('tenant_id', tenantId)
+      .maybeSingle();
+    if (!source) throw new NotFoundException('Source introuvable pour cette école.');
+    if (!String(source.transcript_text || '').trim()) {
+      throw new BadRequestException("Cette source n'a pas encore de transcription exploitable.");
+    }
 
     const { data: running } = await this.db
       .from('course_generation_jobs')
@@ -96,7 +114,29 @@ export class CourseJobService {
         .eq('source_id', sourceId)
         .eq('status', 'done')
         .maybeSingle();
-      if (done) return { job: done, reused: true, alreadyDone: true };
+      if (done) {
+        if (!done.pivot_id) {
+          const { data: root } = await this.db
+            .from('course_pivots')
+            .select('id')
+            .eq('tenant_id', tenantId)
+            .eq('source_type', sourceType)
+            .eq('source_id', sourceId)
+            .eq('kind', 'comprehension')
+            .is('parent_id', null)
+            .maybeSingle();
+          if (root?.id) {
+            const { data: linked } = await this.db
+              .from('course_generation_jobs')
+              .update({ pivot_id: root.id })
+              .eq('id', done.id)
+              .select('*')
+              .single();
+            if (linked) return { job: linked, reused: true, alreadyDone: true };
+          }
+        }
+        return { job: done, reused: true, alreadyDone: true };
+      }
     }
 
     const { data, error } = await this.db
