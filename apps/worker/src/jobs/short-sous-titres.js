@@ -1010,12 +1010,12 @@ function lireJson(brut) {
 }
 
 /** Normalisation pour comparer des mots : minuscules, sans accents ni ponctuation. */
-function normaliserMot(m) {
+export function normaliserMot(m) {
   return String(m).toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9]/g, '');
 }
 
 /** Distance de Levenshtein bornée (on ne s'intéresse jamais aux grandes distances). */
-function distanceEdition(a, b, plafond = 3) {
+export function distanceEdition(a, b, plafond = 3) {
   if (a === b) return 0;
   if (Math.abs(a.length - b.length) > plafond) return plafond + 1;
   let prec = Array.from({ length: b.length + 1 }, (_, i) => i);
@@ -1069,7 +1069,7 @@ function motGlossaireAncre(mot, motsOrigine) {
 }
 
 /** Un mot corrigé est-il « déjà là » dans la ligne d'origine ? */
-function motAncre(mot, motsOrigine) {
+export function motAncre(mot, motsOrigine) {
   if (mot.length < 3) return true; // les outils grammaticaux ne prouvent rien
   for (const o of motsOrigine) {
     if (o === mot) return true;
