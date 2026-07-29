@@ -1,13 +1,13 @@
 {
-  "generatedAt": "2026-07-29T16:37:30.857Z",
+  "generatedAt": "2026-07-29T18:50:05.872Z",
   "tenant": {
     "id": "4f6faaa8-43a0-46d6-b98a-99ea1154f9ea",
     "slug": "isna",
     "name": "Prorascience"
   },
   "testActor": {
-    "userId": "4ba38648-9261-4ab6-b601-33c819435bd4",
-    "email": "codex-replay-live-1785343001675@cimolace.test"
+    "userId": "6d2cf9e1-0f10-4dd0-8ba6-5216198a47e2",
+    "email": "codex-replay-live-1785350954487@cimolace.test"
   },
   "source": {
     "id": "b11a419e-8508-4058-a42c-eda9cb3a5f2d",
@@ -16,7 +16,7 @@
     "libraryReady": true
   },
   "liveSession": {
-    "id": "368fddd0-46cb-409e-9811-ff3f12c30a18",
+    "id": "4a6abaa9-304e-493c-9113-58a9d9666f7c",
     "title": "Master Factory · La physique quantique décodée par l'Égypte antique",
     "status": "scheduled"
   },
@@ -39,21 +39,21 @@
   },
   "ids": {
     "comprehension": "5d3bb0cd-4f6b-48ff-8482-2ac0cfb8ef05",
-    "masterScript": "4e2ac676-a987-4c6b-8b93-e943c2261692",
-    "smartboard": "d7d85471-17e1-410a-b5df-a0933486be80",
-    "liveScenario": "03cdef05-d18d-460b-bddb-2ba401459336"
+    "masterScript": "26fa4e01-0e29-4e8c-a2c3-9fb3b36a2ec5",
+    "smartboard": "d8d37358-4c45-4b02-9f2a-2cce6c69624d",
+    "liveScenario": "e185027c-f58a-4c29-aba5-a13806bba160"
   },
   "publication": {
     "ok": true,
-    "liveSessionId": "368fddd0-46cb-409e-9811-ff3f12c30a18",
+    "liveSessionId": "4a6abaa9-304e-493c-9113-58a9d9666f7c",
     "source": {
       "sourceType": "replay",
       "sourceId": "b11a419e-8508-4058-a42c-eda9cb3a5f2d"
     },
     "pivots": {
-      "master_script": "4e2ac676-a987-4c6b-8b93-e943c2261692",
-      "smartboard_timeline": "d7d85471-17e1-410a-b5df-a0933486be80",
-      "live_scenario": "03cdef05-d18d-460b-bddb-2ba401459336"
+      "master_script": "26fa4e01-0e29-4e8c-a2c3-9fb3b36a2ec5",
+      "smartboard_timeline": "d8d37358-4c45-4b02-9f2a-2cce6c69624d",
+      "live_scenario": "e185027c-f58a-4c29-aba5-a13806bba160"
     },
     "published": {
       "blueprint": true,
@@ -102,25 +102,47 @@
       {
         "kind": "master_script",
         "model": "deterministic-master-script-v0",
-        "created_at": "2026-07-29T16:26:31.97131+00:00"
+        "created_at": "2026-07-29T18:49:25.800783+00:00"
       },
       {
         "kind": "smartboard_timeline",
         "model": "deterministic-smartboard-timeline-v0",
-        "created_at": "2026-07-29T16:26:34.656697+00:00"
+        "created_at": "2026-07-29T18:49:28.782355+00:00"
       },
       {
         "kind": "live_scenario",
         "model": "deterministic-live-scenario-v0",
-        "created_at": "2026-07-29T16:26:40.809851+00:00"
+        "created_at": "2026-07-29T18:49:33.34018+00:00"
       }
     ]
+  },
+  "cached": {
+    "understand": true,
+    "master_script": false,
+    "mindmap": true,
+    "smartboard": false,
+    "live_stack": {
+      "master_script": true,
+      "smartboard_timeline": true,
+      "live_scenario": false
+    }
+  },
+  "rls_readable": {
+    "course_pivots": false,
+    "live_blueprints": true,
+    "live_scenes": true,
+    "live_script_sections": true,
+    "live_sessions": true
   },
   "assertions": {
     "replay_is_real_library_source": true,
     "comprehension_has_notions": true,
     "written_course_has_chapters": true,
     "master_script_aligned": true,
+    "master_script_key_points_clean": true,
+    "smartboard_scene_titles_non_empty": true,
+    "rls_professor_reads_scenes": true,
+    "rls_professor_reads_scripts": true,
     "mindmap_aligned": true,
     "smartboard_aligned": true,
     "live_scenario_aligned": true,
@@ -133,115 +155,113 @@
   },
   "browser": {
     "factoryPage": {
-      "url": "http://localhost:5173/dashboard/tools/masterclass-factory?mfSourceType=replay&mfSourceId=b11a419e-8508-4058-a42c-eda9cb3a5f2d&step=5",
+      "url": "http://localhost:5173/dashboard/tools/masterclass-factory?mfSourceType=replay&mfSourceId=b11a419e-8508-4058-a42c-eda9cb3a5f2d&step=0",
       "title": "Prorascience",
-      "text": ""
+      "text": "LIRI\nLIRI\nLIVE\nÉcole\nPÉDAGOGIE\nmbolo\nBOUTIQUE\nStudio\nCRÉATION\nCréa\nCONTENU\nIS\nStudio\nRéglages\nIS\nMasterclass Factory\nAuto\nHistorique\nNouveau projet\nChargement du cours écrit depuis Master Factory…\nContenu brut\nAnalyse\nBlocs de sens\nChapitres\nPédagogie\n6\nSlides\n7\nScript\n8\nExport\nMASTERCLASS · ÉTAPE 6 SUR 8\nStoryboard SmartBoard\n\n0 scène · 0 chapitre — chaque intention pédagogique possède son écran.\n\nLancer la direction visuelle intelligente\n\nAucun slide. Relance la transformation.\n\nAucun slide à afficher.\n\nSCRIPT & DOCS\nPrécédent\nConnecté ·\nIsna\nLIRI v2.0"
     },
     "livePage": {
-      "url": "http://localhost:5173/studio/live-preparation/368fddd0-46cb-409e-9811-ff3f12c30a18",
+      "url": "http://localhost:5173/studio/live-preparation/4a6abaa9-304e-493c-9113-58a9d9666f7c",
       "title": "Prorascience",
-      "text": ""
+      "text": "LIRI\nLIRI\nLIVE\nÉcole\nPÉDAGOGIE\nmbolo\nBOUTIQUE\nStudio\nCRÉATION\nCréa\nCONTENU\nIS\nTableau de bord\nStudio créateur\nAutres brouillons\nConnecté ·\nIsna\nLIRI v2.0"
     },
     "errors": []
   },
   "samples": {
-    "mindmapMermaid": "mindmap\n  root((\"Initiation à la pro-rascience\"))\n    (\"Les limites du critère de falsifiabilité\")\n      (\"Le critère de Popper, qui exige qu'une théorie scientifique soit réfutable par l'expérience, exclut des réalités humaines non mesurables en laboratoire.\")\n      (\"K\")\n      (\"a\")\n    (\"La pro-rascience : une approche à trois piliers\")\n      (\"La pro-rascience combine trois sources de connaissance : les témoignages convergents (pro), la cohérence philosophique (ra) et la démonstration scientifique (science).\")\n      (\"D\")\n      (\"é\")\n    (\"La singularité initiale comme confinement total\")\n      (\"Avant le Big Bang, tout l'univers était superposé en un point unique, comme des passagers dans un bus réduit à une place.\")\n      (\"A\")\n      (\"n\")\n    (\"Le mur de Planck et l'échec de la physique actuelle\")\n      (\"À 5,39×10⁻⁴² s après le Big Bang, les théories de la relativité et de la quantique deviennent incompatibles, empêchant de remonter plus loin.\")\n      (\"M\")\n      (\"o\")\n    (\"Le mur ontologique et l'impossibilité du néant absolu\")\n      (\"Le principe de Landauer (effacer une information coûte de l'énergie) implique que le néant total est impossible, il reste toujours un 'moule ontologique'.\")\n      (\"P\")\n      (\"r\")\n    (\"Le delane : le potentiel sans masse\")\n      (\"Le delane désigne ce qui est absent en masse mais présent en potentiel, le moule informationnel irréductible de l'univers primordial.\")\n      (\"'\")\n      (\"A\")\n    (\"La loi de relation : le temps anime, l'espace subit\")\n      (\"La pro-rascience postule une asymétrie fondamentale où le temps tire l'expansion et l'espace est contraint de suivre.\")\n      (\"'\")\n      (\"L\")\n    (\"Le témoignage convergent comme source de vérité\")\n      (\"Des expériences subjectives massivement partagées, comme la douleur de l'accouchement, sont considérées comme des preuves irréfutables par convergence des témoignages.\")\n      (\"A\")\n      (\"n\")\n    (\"L'hypostase : la survie de la conscience hors du corps\")\n      (\"Selon la pro-rascience, la conscience ne disparaît pas avec le cerveau mais existe de manière indépendante, comme le montreraient les expériences de mort imminente.\")\n      (\"E\")\n      (\"M\")\n    (\"La création ex-interiori : l'univers fractal encapsulé\")\n      (\"L'univers entier est contenu dans chaque point de la singularité, comme l'ADN dans une cellule, et l'introspection permet d'accéder à cette connaissance cosmique.\")\n      (\"'\")\n      (\"C\")\n    (\"Les correspondances entre mythes anciens et physique moderne\")\n      (\"La pro-rascience interprète les mythes égyptiens (Noun, Amon, Apophis/Rê) comme des descriptions codées du vide quantique et de l'asymétrie matière-antimatière.\")\n      (\"N\")\n      (\"o\")\n    (\"Le débat épistémologique : science ou métaphysique ?\")\n      (\"Les critiques soulignent les risques de biais de confirmation et l'absence de prédictions testables, rappelant l'importance du critère de falsifiabilité pour la science.\")\n      (\"'\")\n      (\"C\")",
+    "mindmapMermaid": "mindmap\n  root((\"Initiation à la pro-rascience\"))\n    (\"Les limites du critère de falsifiabilité\")\n      (\"Le critère de Popper, qui exige qu'une théorie scientifique soit réfutable par l'expérience, exclut des réalités humaines non mesurables en laboratoire.\")\n      (\"Karl Popper (1934) ; 'dogme de la falsifiabilité' ; exclusion des réalités authentiques échappant aux instruments de mesure.\")\n    (\"La pro-rascience : une approche à trois piliers\")\n      (\"La pro-rascience combine trois sources de connaissance : les témoignages convergents (pro), la cohérence philosophique (ra) et la démonstration scientifique (science).\")\n      (\"Définition tripartite dans le document ; pro (prophétie/témoignage convergent), ra (raison), science (démonstration matérielle).\")\n    (\"La singularité initiale comme confinement total\")\n      (\"Avant le Big Bang, tout l'univers était superposé en un point unique, comme des passagers dans un bus réduit à une place.\")\n      (\"Analogie du bus municipal à 18 passagers ; théorème Borde-Guth-Vilenkin (2003) ; axiome de continuité anthologique ('rien ne vient du néant absolu').\")\n    (\"Le mur de Planck et l'échec de la physique actuelle\")\n      (\"À 5,39×10⁻⁴² s après le Big Bang, les théories de la relativité et de la quantique deviennent incompatibles, empêchant de remonter plus loin.\")\n      (\"Moment où 'relativité générale et mécanique quantique deviennent incompatibles' ; appelé 'mur de Planck'.\")\n    (\"Le mur ontologique et l'impossibilité du néant absolu\")\n      (\"Le principe de Landauer (effacer une information coûte de l'énergie) implique que le néant total est impossible, il reste toujours un 'moule ontologique'.\")\n      (\"Principe de Landauer (1971) ; analogie du bœuf dépouillé (il reste la silhouette, matrice irréductible).\")\n    (\"Le delane : le potentiel sans masse\")\n      (\"Le delane désigne ce qui est absent en masse mais présent en potentiel, le moule informationnel irréductible de l'univers primordial.\")\n      (\"'Absent en masse, présent en potentiel' ; moule ontologique après le dépouillement du bœuf.\")\n    (\"La loi de relation : le temps anime, l'espace subit\")\n      (\"La pro-rascience postule une asymétrie fondamentale où le temps tire l'expansion et l'espace est contraint de suivre.\")\n      (\"'Le temps anime et l'espace subit' ; expansion de l'univers décrite comme 'le temps qui tire vers l'avant et l'espace qui est forcé de s'étirer'.\")\n    (\"Le témoignage convergent comme source de vérité\")\n      (\"Des expériences subjectives massivement partagées, comme la douleur de l'accouchement, sont considérées comme des preuves irréfutables par convergence des témoignages.\")\n      (\"Analogie de l'accouchement : 'aucune machine ne peut mesurer la douleur', mais 'convergence des témoignages vécus devient une vérité irréfutable'.\")\n    (\"L'hypostase : la survie de la conscience hors du corps\")\n      (\"Selon la pro-rascience, la conscience ne disparaît pas avec le cerveau mais existe de manière indépendante, comme le montreraient les expériences de mort imminente.\")\n      (\"EMI avec encéphalogramme plat (études van Lommel) ; concept d''individualisation de la conscience qui survit hors du confinement matériel'.\")\n    (\"La création ex-interiori : l'univers fractal encapsulé\")\n      (\"L'univers entier est contenu dans chaque point de la singularité, comme l'ADN dans une cellule, et l'introspection permet d'accéder à cette connaissance cosmique.\")\n      (\"'Création ex interiori' ; analogie de l'ADN encapsulant un organisme ; prêtres égyptiens explorant l'intériorité pour accéder à 'l'architecture fractale de l'univers'.\")\n    (\"Les correspondances entre mythes anciens et physique moderne\")\n      (\"La pro-rascience interprète les mythes égyptiens (Noun, Amon, Apophis/Rê) comme des descriptions codées du vide quantique et de l'asymétrie matière-antimatière.\")\n      (\"Noun = océan primordial (vide quantique fluctuant) ; Amon = le Caché (particules virtuelles) ; Apophis/Rê = chaos/ordre (matière/antimatière) ; savoir Dogon sur Sirius B.\")\n    (\"Le débat épistémologique : science ou métaphysique ?\")\n      (\"Les critiques soulignent les risques de biais de confirmation et l'absence de prédictions testables, rappelant l'importance du critère de falsifiabilité pour la science.\")\n      (\"'Corrélation rétrospective' ; 'biais de confirmation' ; 'l'allégorie n'est pas prédictive' ; exigence de 'prédictions testables' (exemple de l'énergie noire) ; rappel de l'effet Casimir et de la relativité générale.\")",
     "firstMasterScriptMoment": {
       "id": "ms-1",
+      "notion_id": "n1",
       "title": "Les limites du critère de falsifiabilité",
       "intention": "Pour comprendre pourquoi la pro-rascience propose une méthode plus large, il faut d'abord saisir le problème qu'elle entend résoudre.",
-      "notion_id": "n1",
+      "message_central": "Le critère de Popper, qui exige qu'une théorie scientifique soit réfutable par l'expérience, exclut des réalités humaines non mesurables en laboratoire.",
+      "teacher_script": "On aborde maintenant Les limites du critère de falsifiabilité. Le critère de Popper, qui exige qu'une théorie scientifique soit réfutable par l'expérience, exclut des réalités humaines non mesurables en laboratoire. L'enjeu est simple : Pour comprendre pourquoi la pro-rascience propose une méthode plus large, il faut d'abord saisir le problème qu'elle entend résoudre. Dans la source, on s'appuie sur ce repère : « Karl Popper (1934) ; 'dogme de la falsifiabilité' ; exclusion des réalités authentiques échappant aux instruments de mesure. ».  Je vais le rendre concret, puis vérifier que le point est bien compris avant de continuer.",
       "key_points": [
         "Le critère de Popper, qui exige qu'une théorie scientifique soit réfutable par l'expérience, exclut des réalités humaines non mesurables en laboratoire.",
-        "K",
-        "a"
+        "Karl Popper (1934) ; 'dogme de la falsifiabilité' ; exclusion des réalités authentiques échappant aux instruments de mesure."
       ],
+      "student_understanding": "L'élève doit pouvoir expliquer Les limites du critère de falsifiabilité avec ses propres mots et l'appliquer dans un exemple.",
+      "simple_version": "Le critère de Popper, qui exige qu'une théorie scientifique soit réfutable par l'expérience, exclut des réalités humaines non mesurables en laboratoire.",
       "transition": "Ce point prépare La pro-rascience : une approche à trois piliers.",
+      "duration_sec": 360,
       "interaction": {
         "question": "Peux-tu reformuler l'idée principale de « Les limites du critère de falsifiabilité » ?",
-        "remediation": "Revenir à l'appui source principal et redonner un exemple simple.",
         "expected_answers": [
           "Le critère de Popper, qui exige qu'une théorie scientifique soit réfutable par l'expérience, exclut des réalités humaines non mesurables en laboratoire."
-        ]
-      },
-      "duration_sec": 360,
-      "simple_version": "Le critère de Popper, qui exige qu'une théorie scientifique soit réfutable par l'expérience, exclut des réalités humaines non mesurables en laboratoire.",
-      "teacher_script": "On aborde maintenant Les limites du critère de falsifiabilité. Le critère de Popper, qui exige qu'une théorie scientifique soit réfutable par l'expérience, exclut des réalités humaines non mesurables en laboratoire. L'enjeu est simple : Pour comprendre pourquoi la pro-rascience propose une méthode plus large, il faut d'abord saisir le problème qu'elle entend résoudre. Dans la source, on s'appuie sur ce repère : « K ».  Je vais le rendre concret, puis vérifier que le point est bien compris avant de continuer.",
-      "message_central": "Le critère de Popper, qui exige qu'une théorie scientifique soit réfutable par l'expérience, exclut des réalités humaines non mesurables en laboratoire.",
-      "student_understanding": "L'élève doit pouvoir expliquer Les limites du critère de falsifiabilité avec ses propres mots et l'appliquer dans un exemple."
+        ],
+        "remediation": "Revenir à l'appui source principal et redonner un exemple simple."
+      }
     },
     "firstSmartboardScene": {
       "id": "sb-1",
+      "script_moment_id": "ms-1",
       "title": "Les limites du critère de falsifiabilité",
+      "visual_intent": "Faire respirer l'idée : Le critère de Popper, qui exige qu'une théorie scientifique soit réfutable par l'expérience, exclut des réalités humaines non mesurables en laboratoire.",
+      "camera_zone": "bottom-right",
       "blocks": [
         {
           "id": "sb-1-title",
-          "text": "Les limites du critère de falsifiabilité",
-          "type": "title"
+          "type": "title",
+          "text": "Les limites du critère de falsifiabilité"
         },
         {
           "id": "sb-1-idea",
-          "text": "Le critère de Popper, qui exige qu'une théorie scientifique soit réfutable par l'expérience, exclut des réalités humaines non mesurables en laboratoire.",
-          "type": "key-idea"
+          "type": "key-idea",
+          "text": "Le critère de Popper, qui exige qu'une théorie scientifique soit réfutable par l'expérience, exclut des réalités humaines non mesurables en laboratoire."
         },
         {
           "id": "sb-1-retain",
           "type": "retain",
           "items": [
             "Le critère de Popper, qui exige qu'une théorie scientifique soit réfutable par l'expérience, exclut des réalités humaines non mesurables en laboratoire.",
-            "K",
-            "a"
+            "Karl Popper (1934) ; 'dogme de la falsifiabilité' ; exclusion des réalités authentiques échappant aux instruments de mesure."
           ]
         },
         {
           "id": "sb-1-prompt",
-          "text": "Peux-tu reformuler l'idée principale de « Les limites du critère de falsifiabilité » ?",
-          "type": "paragraph"
+          "type": "paragraph",
+          "text": "Peux-tu reformuler l'idée principale de « Les limites du critère de falsifiabilité » ?"
         }
       ],
       "timeline": [
         {
           "id": "sb-1-a1",
-          "type": "write",
           "at_sec": 0,
+          "type": "write",
           "target_id": "sb-1-title",
           "duration_sec": 4
         },
         {
           "id": "sb-1-a2",
-          "type": "show",
           "at_sec": 5,
+          "type": "show",
           "target_id": "sb-1-idea",
           "duration_sec": 3
         },
         {
           "id": "sb-1-a3",
-          "type": "highlight",
           "at_sec": 12,
+          "type": "highlight",
           "target_id": "sb-1-idea",
           "duration_sec": 5
         },
         {
           "id": "sb-1-a4",
-          "type": "draw",
           "at_sec": 20,
+          "type": "draw",
           "target_id": "sb-1-retain",
           "duration_sec": 8
         },
         {
           "id": "sb-1-a5",
-          "type": "student_prompt",
           "at_sec": 34,
+          "type": "student_prompt",
           "target_id": "sb-1-prompt",
           "duration_sec": 12
         }
-      ],
-      "camera_zone": "bottom-right",
-      "visual_intent": "Faire respirer l'idée : Le critère de Popper, qui exige qu'une théorie scientifique soit réfutable par l'expérience, exclut des réalités humaines non mesurables en laboratoire.",
-      "script_moment_id": "ms-1"
+      ]
     },
     "firstPersistedLiveScene": {
-      "id": "929f66cf-1ba3-447f-895a-f2eb4ad4f7b9",
+      "id": "954fe37e-501a-4a4f-8a00-a4a5cfe979bc",
       "name": "Les limites du critère de falsifiabilité",
       "order_index": 0,
       "content_payload_json": {
@@ -264,8 +284,7 @@
               "type": "retain",
               "items": [
                 "Le critère de Popper, qui exige qu'une théorie scientifique soit réfutable par l'expérience, exclut des réalités humaines non mesurables en laboratoire.",
-                "K",
-                "a"
+                "Karl Popper (1934) ; 'dogme de la falsifiabilité' ; exclusion des réalités authentiques échappant aux instruments de mesure."
               ]
             },
             {
@@ -335,8 +354,7 @@
               "type": "retain",
               "items": [
                 "Le critère de Popper, qui exige qu'une théorie scientifique soit réfutable par l'expérience, exclut des réalités humaines non mesurables en laboratoire.",
-                "K",
-                "a"
+                "Karl Popper (1934) ; 'dogme de la falsifiabilité' ; exclusion des réalités authentiques échappant aux instruments de mesure."
               ]
             },
             {
@@ -389,16 +407,15 @@
       }
     },
     "firstPersistedScriptSection": {
-      "id": "49c8afb7-0fe5-4ccc-821a-61112bfbd830",
+      "id": "756a95c4-bdcf-4db1-83d7-4322c38d6f99",
       "title": "Les limites du critère de falsifiabilité",
       "order_index": 0,
-      "content": "【Intention du slide】\nPour comprendre pourquoi la pro-rascience propose une méthode plus large, il faut d'abord saisir le problème qu'elle entend résoudre.\n\n【Message central】\nLe critère de Popper, qui exige qu'une théorie scientifique soit réfutable par l'expérience, exclut des réalités humaines non mesurables en laboratoire.\n\n【Discours du professeur】\nOn aborde maintenant Les limites du critère de falsifiabilité. Le critère de Popper, qui exige qu'une théorie scientifique soit réfutable par l'expérience, exclut des réalités humaines non mesurables en laboratoire. L'enjeu est simple : Pour comprendre pourquoi la pro-rascience propose une méthode plus large, il faut d'abord saisir le problème qu'elle entend résoudre. Dans la source, on s'appuie sur ce repère : « K ».  Je vais le rendre concret, puis vérifier que le point est bien compris avant de continuer.\n\n【Grandes idées à insister】\n• Le critère de Popper, qui exige qu'une théorie scientifique soit réfutable par l'expérience, exclut des réalités humaines non mesurables en laboratoire.\n• K\n• a\n\n【Ce que l'élève doit comprendre】\nL'élève doit pouvoir expliquer Les limites du critère de falsifiabilité avec ses propres mots et l'appliquer dans un exemple.\n\n【Transition】\nCe point prépare La pro-rascience : une approche à trois piliers.",
+      "content": "【Intention du slide】\nPour comprendre pourquoi la pro-rascience propose une méthode plus large, il faut d'abord saisir le problème qu'elle entend résoudre.\n\n【Message central】\nLe critère de Popper, qui exige qu'une théorie scientifique soit réfutable par l'expérience, exclut des réalités humaines non mesurables en laboratoire.\n\n【Discours du professeur】\nOn aborde maintenant Les limites du critère de falsifiabilité. Le critère de Popper, qui exige qu'une théorie scientifique soit réfutable par l'expérience, exclut des réalités humaines non mesurables en laboratoire. L'enjeu est simple : Pour comprendre pourquoi la pro-rascience propose une méthode plus large, il faut d'abord saisir le problème qu'elle entend résoudre. Dans la source, on s'appuie sur ce repère : « Karl Popper (1934) ; 'dogme de la falsifiabilité' ; exclusion des réalités authentiques échappant aux instruments de mesure. ».  Je vais le rendre concret, puis vérifier que le point est bien compris avant de continuer.\n\n【Grandes idées à insister】\n• Le critère de Popper, qui exige qu'une théorie scientifique soit réfutable par l'expérience, exclut des réalités humaines non mesurables en laboratoire.\n• Karl Popper (1934) ; 'dogme de la falsifiabilité' ; exclusion des réalités authentiques échappant aux instruments de mesure.\n\n【Ce que l'élève doit comprendre】\nL'élève doit pouvoir expliquer Les limites du critère de falsifiabilité avec ses propres mots et l'appliquer dans un exemple.\n\n【Transition】\nCe point prépare La pro-rascience : une approche à trois piliers.",
       "master_agent": {
         "intention": "Pour comprendre pourquoi la pro-rascience propose une méthode plus large, il faut d'abord saisir le problème qu'elle entend résoudre.",
         "key_points": [
           "Le critère de Popper, qui exige qu'une théorie scientifique soit réfutable par l'expérience, exclut des réalités humaines non mesurables en laboratoire.",
-          "K",
-          "a"
+          "Karl Popper (1934) ; 'dogme de la falsifiabilité' ; exclusion des réalités authentiques échappant aux instruments de mesure."
         ],
         "transition": "Ce point prépare La pro-rascience : une approche à trois piliers.",
         "interaction": {
@@ -410,29 +427,29 @@
         },
         "slide_title": "Les limites du critère de falsifiabilité",
         "simple_version": "Le critère de Popper, qui exige qu'une théorie scientifique soit réfutable par l'expérience, exclut des réalités humaines non mesurables en laboratoire.",
-        "teacher_script": "On aborde maintenant Les limites du critère de falsifiabilité. Le critère de Popper, qui exige qu'une théorie scientifique soit réfutable par l'expérience, exclut des réalités humaines non mesurables en laboratoire. L'enjeu est simple : Pour comprendre pourquoi la pro-rascience propose une méthode plus large, il faut d'abord saisir le problème qu'elle entend résoudre. Dans la source, on s'appuie sur ce repère : « K ».  Je vais le rendre concret, puis vérifier que le point est bien compris avant de continuer.",
+        "teacher_script": "On aborde maintenant Les limites du critère de falsifiabilité. Le critère de Popper, qui exige qu'une théorie scientifique soit réfutable par l'expérience, exclut des réalités humaines non mesurables en laboratoire. L'enjeu est simple : Pour comprendre pourquoi la pro-rascience propose une méthode plus large, il faut d'abord saisir le problème qu'elle entend résoudre. Dans la source, on s'appuie sur ce repère : « Karl Popper (1934) ; 'dogme de la falsifiabilité' ; exclusion des réalités authentiques échappant aux instruments de mesure. ».  Je vais le rendre concret, puis vérifier que le point est bien compris avant de continuer.",
         "message_central": "Le critère de Popper, qui exige qu'une théorie scientifique soit réfutable par l'expérience, exclut des réalités humaines non mesurables en laboratoire.",
         "student_understanding": "L'élève doit pouvoir expliquer Les limites du critère de falsifiabilité avec ses propres mots et l'appliquer dans un exemple."
       }
     },
     "liveReadback": {
-      "id": "368fddd0-46cb-409e-9811-ff3f12c30a18",
+      "id": "4a6abaa9-304e-493c-9113-58a9d9666f7c",
       "tenant_id": "4f6faaa8-43a0-46d6-b98a-99ea1154f9ea",
-      "host_user_id": "4ba38648-9261-4ab6-b601-33c819435bd4",
+      "host_user_id": "6d2cf9e1-0f10-4dd0-8ba6-5216198a47e2",
       "title": "Master Factory · La physique quantique décodée par l'Égypte antique",
       "description": "LIVE préparé de bout en bout depuis le replay b11a419e-8508-4058-a42c-eda9cb3a5f2d.",
-      "scheduled_at": "2026-07-29T16:37:05.913+00:00",
+      "scheduled_at": "2026-07-29T18:49:33.261+00:00",
       "price_cents": 0,
       "currency": "EUR",
       "capacity": null,
       "status": "scheduled",
       "livekit_room_name": null,
       "replay_enabled": true,
-      "created_at": "2026-07-29T16:37:07.342099+00:00",
-      "updated_at": "2026-07-29T16:37:16.029235+00:00",
+      "created_at": "2026-07-29T18:49:34.435015+00:00",
+      "updated_at": "2026-07-29T18:49:38.968526+00:00",
       "transcript": null,
       "summary": null,
-      "teacher_id": null,
+      "teacher_id": "6d2cf9e1-0f10-4dd0-8ba6-5216198a47e2",
       "cover_image_url": null,
       "started_at": null,
       "ended_at": null,
@@ -445,15 +462,125 @@
         "waiting_room": true,
         "master_factory": {
           "pivots": {
-            "live_scenario": "03cdef05-d18d-460b-bddb-2ba401459336",
-            "master_script": "4e2ac676-a987-4c6b-8b93-e943c2261692",
-            "smartboard_timeline": "d7d85471-17e1-410a-b5df-a0933486be80"
+            "live_scenario": "e185027c-f58a-4c29-aba5-a13806bba160",
+            "master_script": "26fa4e01-0e29-4e8c-a2c3-9fb3b36a2ec5",
+            "smartboard_timeline": "d8d37358-4c45-4b02-9f2a-2cce6c69624d"
           },
           "source_id": "b11a419e-8508-4058-a42c-eda9cb3a5f2d",
           "source_type": "replay",
-          "master_script_pivot_id": "4e2ac676-a987-4c6b-8b93-e943c2261692"
+          "master_script_pivot_id": "26fa4e01-0e29-4e8c-a2c3-9fb3b36a2ec5"
         },
-        "ai_mindmap_enabled": true
+        "ai_mindmap_enabled": true,
+        "smartboard_master_script_sections": [
+          {
+            "id": "ms-1",
+            "title": "Les limites du critère de falsifiabilité",
+            "script": "On aborde maintenant Les limites du critère de falsifiabilité. Le critère de Popper, qui exige qu'une théorie scientifique soit réfutable par l'expérience, exclut des réalités humaines non mesurables en laboratoire. L'enjeu est simple : Pour comprendre pourquoi la pro-rascience propose une méthode plus large, il faut d'abord saisir le problème qu'elle entend résoudre. Dans la source, on s'appuie sur ce repère : « Karl Popper (1934) ; 'dogme de la falsifiabilité' ; exclusion des réalités authentiques échappant aux instruments de mesure. ».  Je vais le rendre concret, puis vérifier que le point est bien compris avant de continuer.",
+            "content": "On aborde maintenant Les limites du critère de falsifiabilité. Le critère de Popper, qui exige qu'une théorie scientifique soit réfutable par l'expérience, exclut des réalités humaines non mesurables en laboratoire. L'enjeu est simple : Pour comprendre pourquoi la pro-rascience propose une méthode plus large, il faut d'abord saisir le problème qu'elle entend résoudre. Dans la source, on s'appuie sur ce repère : « Karl Popper (1934) ; 'dogme de la falsifiabilité' ; exclusion des réalités authentiques échappant aux instruments de mesure. ».  Je vais le rendre concret, puis vérifier que le point est bien compris avant de continuer.",
+            "objective": "Pour comprendre pourquoi la pro-rascience propose une méthode plus large, il faut d'abord saisir le problème qu'elle entend résoudre.",
+            "retention": "L'élève doit pouvoir expliquer Les limites du critère de falsifiabilité avec ses propres mots et l'appliquer dans un exemple.",
+            "slide_index": 0
+          },
+          {
+            "id": "ms-2",
+            "title": "La pro-rascience : une approche à trois piliers",
+            "script": "On aborde maintenant La pro-rascience : une approche à trois piliers. La pro-rascience combine trois sources de connaissance : les témoignages convergents (pro), la cohérence philosophique (ra) et la démonstration scientifique (science). L'enjeu est simple : Elle constitue la réponse du maître aux limites de la science classique et introduit le vocabulaire central du cours. Dans la source, on s'appuie sur ce repère : « Définition tripartite dans le document ; pro (prophétie/témoignage convergent), ra (raison), science (démonstration matérielle). ».  Je vais le rendre concret, puis vérifier que le point est bien compris avant de continuer.",
+            "content": "On aborde maintenant La pro-rascience : une approche à trois piliers. La pro-rascience combine trois sources de connaissance : les témoignages convergents (pro), la cohérence philosophique (ra) et la démonstration scientifique (science). L'enjeu est simple : Elle constitue la réponse du maître aux limites de la science classique et introduit le vocabulaire central du cours. Dans la source, on s'appuie sur ce repère : « Définition tripartite dans le document ; pro (prophétie/témoignage convergent), ra (raison), science (démonstration matérielle). ».  Je vais le rendre concret, puis vérifier que le point est bien compris avant de continuer.",
+            "objective": "Elle constitue la réponse du maître aux limites de la science classique et introduit le vocabulaire central du cours.",
+            "retention": "L'élève doit pouvoir expliquer La pro-rascience : une approche à trois piliers avec ses propres mots et l'appliquer dans un exemple.",
+            "slide_index": 1
+          },
+          {
+            "id": "ms-3",
+            "title": "La singularité initiale comme confinement total",
+            "script": "On aborde maintenant La singularité initiale comme confinement total. Avant le Big Bang, tout l'univers était superposé en un point unique, comme des passagers dans un bus réduit à une place. L'enjeu est simple : Elle pose le premier jalon cosmologique en montrant que rien n'est créé à partir de rien : tout existait déjà en puissance. Dans la source, on s'appuie sur ce repère : « Analogie du bus municipal à 18 passagers ; théorème Borde-Guth-Vilenkin (2003) ; axiome de continuité anthologique ('rien ne vient du néant absolu'). ».  Je vais le rendre concret, puis vérifier que le point est bien compris avant de continuer.",
+            "content": "On aborde maintenant La singularité initiale comme confinement total. Avant le Big Bang, tout l'univers était superposé en un point unique, comme des passagers dans un bus réduit à une place. L'enjeu est simple : Elle pose le premier jalon cosmologique en montrant que rien n'est créé à partir de rien : tout existait déjà en puissance. Dans la source, on s'appuie sur ce repère : « Analogie du bus municipal à 18 passagers ; théorème Borde-Guth-Vilenkin (2003) ; axiome de continuité anthologique ('rien ne vient du néant absolu'). ».  Je vais le rendre concret, puis vérifier que le point est bien compris avant de continuer.",
+            "objective": "Elle pose le premier jalon cosmologique en montrant que rien n'est créé à partir de rien : tout existait déjà en puissance.",
+            "retention": "L'élève doit pouvoir expliquer La singularité initiale comme confinement total avec ses propres mots et l'appliquer dans un exemple.",
+            "slide_index": 2
+          },
+          {
+            "id": "ms-4",
+            "title": "Le mur de Planck et l'échec de la physique actuelle",
+            "script": "On aborde maintenant Le mur de Planck et l'échec de la physique actuelle. À 5,39×10⁻⁴² s après le Big Bang, les théories de la relativité et de la quantique deviennent incompatibles, empêchant de remonter plus loin. L'enjeu est simple : Montre la nécessité d'un nouveau cadre conceptuel pour décrire l'origine, justifiant la suite de la démarche pro-rascientifique. Dans la source, on s'appuie sur ce repère : « Moment où 'relativité générale et mécanique quantique deviennent incompatibles' ; appelé 'mur de Planck'. ».  Je vais le rendre concret, puis vérifier que le point est bien compris avant de continuer.",
+            "content": "On aborde maintenant Le mur de Planck et l'échec de la physique actuelle. À 5,39×10⁻⁴² s après le Big Bang, les théories de la relativité et de la quantique deviennent incompatibles, empêchant de remonter plus loin. L'enjeu est simple : Montre la nécessité d'un nouveau cadre conceptuel pour décrire l'origine, justifiant la suite de la démarche pro-rascientifique. Dans la source, on s'appuie sur ce repère : « Moment où 'relativité générale et mécanique quantique deviennent incompatibles' ; appelé 'mur de Planck'. ».  Je vais le rendre concret, puis vérifier que le point est bien compris avant de continuer.",
+            "objective": "Montre la nécessité d'un nouveau cadre conceptuel pour décrire l'origine, justifiant la suite de la démarche pro-rascientifique.",
+            "retention": "L'élève doit pouvoir expliquer Le mur de Planck et l'échec de la physique actuelle avec ses propres mots et l'appliquer dans un exemple.",
+            "slide_index": 3
+          },
+          {
+            "id": "ms-5",
+            "title": "Le mur ontologique et l'impossibilité du néant absolu",
+            "script": "On aborde maintenant Le mur ontologique et l'impossibilité du néant absolu. Le principe de Landauer (effacer une information coûte de l'énergie) implique que le néant total est impossible, il reste toujours un 'moule ontologique'. L'enjeu est simple : Sert de base à l'idée que le vide avant le Big Bang n'est pas vide mais plein de potentiel, introduisant le concept de delane. Dans la source, on s'appuie sur ce repère : « Principe de Landauer (1971) ; analogie du bœuf dépouillé (il reste la silhouette, matrice irréductible). ».  Je vais le rendre concret, puis vérifier que le point est bien compris avant de continuer.",
+            "content": "On aborde maintenant Le mur ontologique et l'impossibilité du néant absolu. Le principe de Landauer (effacer une information coûte de l'énergie) implique que le néant total est impossible, il reste toujours un 'moule ontologique'. L'enjeu est simple : Sert de base à l'idée que le vide avant le Big Bang n'est pas vide mais plein de potentiel, introduisant le concept de delane. Dans la source, on s'appuie sur ce repère : « Principe de Landauer (1971) ; analogie du bœuf dépouillé (il reste la silhouette, matrice irréductible). ».  Je vais le rendre concret, puis vérifier que le point est bien compris avant de continuer.",
+            "objective": "Sert de base à l'idée que le vide avant le Big Bang n'est pas vide mais plein de potentiel, introduisant le concept de delane.",
+            "retention": "L'élève doit pouvoir expliquer Le mur ontologique et l'impossibilité du néant absolu avec ses propres mots et l'appliquer dans un exemple.",
+            "slide_index": 4
+          },
+          {
+            "id": "ms-6",
+            "title": "Le delane : le potentiel sans masse",
+            "script": "On aborde maintenant Le delane : le potentiel sans masse. Le delane désigne ce qui est absent en masse mais présent en potentiel, le moule informationnel irréductible de l'univers primordial. L'enjeu est simple : Introduit le concept clé de la pro-rascience pour décrire l'état ontologique avant le Big Bang, un vide quantique non vide. Dans la source, on s'appuie sur ce repère : « 'Absent en masse, présent en potentiel' ; moule ontologique après le dépouillement du bœuf. ».  Je vais le rendre concret, puis vérifier que le point est bien compris avant de continuer.",
+            "content": "On aborde maintenant Le delane : le potentiel sans masse. Le delane désigne ce qui est absent en masse mais présent en potentiel, le moule informationnel irréductible de l'univers primordial. L'enjeu est simple : Introduit le concept clé de la pro-rascience pour décrire l'état ontologique avant le Big Bang, un vide quantique non vide. Dans la source, on s'appuie sur ce repère : « 'Absent en masse, présent en potentiel' ; moule ontologique après le dépouillement du bœuf. ».  Je vais le rendre concret, puis vérifier que le point est bien compris avant de continuer.",
+            "objective": "Introduit le concept clé de la pro-rascience pour décrire l'état ontologique avant le Big Bang, un vide quantique non vide.",
+            "retention": "L'élève doit pouvoir expliquer Le delane : le potentiel sans masse avec ses propres mots et l'appliquer dans un exemple.",
+            "slide_index": 5
+          },
+          {
+            "id": "ms-7",
+            "title": "La loi de relation : le temps anime, l'espace subit",
+            "script": "On aborde maintenant La loi de relation : le temps anime, l'espace subit. La pro-rascience postule une asymétrie fondamentale où le temps tire l'expansion et l'espace est contraint de suivre. L'enjeu est simple : Propose une vision dynamique originale de l'espace-temps, distincte de la relativité générale, pour expliquer l'expansion. Dans la source, on s'appuie sur ce repère : « 'Le temps anime et l'espace subit' ; expansion de l'univers décrite comme 'le temps qui tire vers l'avant et l'espace qui est forcé de s'étirer'. ».  Je vais le rendre concret, puis vérifier que le point est bien compris avant de continuer.",
+            "content": "On aborde maintenant La loi de relation : le temps anime, l'espace subit. La pro-rascience postule une asymétrie fondamentale où le temps tire l'expansion et l'espace est contraint de suivre. L'enjeu est simple : Propose une vision dynamique originale de l'espace-temps, distincte de la relativité générale, pour expliquer l'expansion. Dans la source, on s'appuie sur ce repère : « 'Le temps anime et l'espace subit' ; expansion de l'univers décrite comme 'le temps qui tire vers l'avant et l'espace qui est forcé de s'étirer'. ».  Je vais le rendre concret, puis vérifier que le point est bien compris avant de continuer.",
+            "objective": "Propose une vision dynamique originale de l'espace-temps, distincte de la relativité générale, pour expliquer l'expansion.",
+            "retention": "L'élève doit pouvoir expliquer La loi de relation : le temps anime, l'espace subit avec ses propres mots et l'appliquer dans un exemple.",
+            "slide_index": 6
+          },
+          {
+            "id": "ms-8",
+            "title": "Le témoignage convergent comme source de vérité",
+            "script": "On aborde maintenant Le témoignage convergent comme source de vérité. Des expériences subjectives massivement partagées, comme la douleur de l'accouchement, sont considérées comme des preuves irréfutables par convergence des témoignages. L'enjeu est simple : Illustre le pilier 'pro' de la pro-rascience et prépare le terrain pour les affirmations sur la conscience. Dans la source, on s'appuie sur ce repère : « Analogie de l'accouchement : 'aucune machine ne peut mesurer la douleur', mais 'convergence des témoignages vécus devient une vérité irréfutable'. ».  Je vais le rendre concret, puis vérifier que le point est bien compris avant de continuer.",
+            "content": "On aborde maintenant Le témoignage convergent comme source de vérité. Des expériences subjectives massivement partagées, comme la douleur de l'accouchement, sont considérées comme des preuves irréfutables par convergence des témoignages. L'enjeu est simple : Illustre le pilier 'pro' de la pro-rascience et prépare le terrain pour les affirmations sur la conscience. Dans la source, on s'appuie sur ce repère : « Analogie de l'accouchement : 'aucune machine ne peut mesurer la douleur', mais 'convergence des témoignages vécus devient une vérité irréfutable'. ».  Je vais le rendre concret, puis vérifier que le point est bien compris avant de continuer.",
+            "objective": "Illustre le pilier 'pro' de la pro-rascience et prépare le terrain pour les affirmations sur la conscience.",
+            "retention": "L'élève doit pouvoir expliquer Le témoignage convergent comme source de vérité avec ses propres mots et l'appliquer dans un exemple.",
+            "slide_index": 7
+          },
+          {
+            "id": "ms-9",
+            "title": "L'hypostase : la survie de la conscience hors du corps",
+            "script": "On aborde maintenant L'hypostase : la survie de la conscience hors du corps. Selon la pro-rascience, la conscience ne disparaît pas avec le cerveau mais existe de manière indépendante, comme le montreraient les expériences de mort imminente. L'enjeu est simple : Application directe du témoignage convergent à la nature de la conscience, reliant le pilier 'pro' à la structure du réel. Dans la source, on s'appuie sur ce repère : « EMI avec encéphalogramme plat (études van Lommel) ; concept d''individualisation de la conscience qui survit hors du confinement matériel'. ».  Je vais le rendre concret, puis vérifier que le point est bien compris avant de continuer.",
+            "content": "On aborde maintenant L'hypostase : la survie de la conscience hors du corps. Selon la pro-rascience, la conscience ne disparaît pas avec le cerveau mais existe de manière indépendante, comme le montreraient les expériences de mort imminente. L'enjeu est simple : Application directe du témoignage convergent à la nature de la conscience, reliant le pilier 'pro' à la structure du réel. Dans la source, on s'appuie sur ce repère : « EMI avec encéphalogramme plat (études van Lommel) ; concept d''individualisation de la conscience qui survit hors du confinement matériel'. ».  Je vais le rendre concret, puis vérifier que le point est bien compris avant de continuer.",
+            "objective": "Application directe du témoignage convergent à la nature de la conscience, reliant le pilier 'pro' à la structure du réel.",
+            "retention": "L'élève doit pouvoir expliquer L'hypostase : la survie de la conscience hors du corps avec ses propres mots et l'appliquer dans un exemple.",
+            "slide_index": 8
+          },
+          {
+            "id": "ms-10",
+            "title": "La création ex-interiori : l'univers fractal encapsulé",
+            "script": "On aborde maintenant La création ex-interiori : l'univers fractal encapsulé. L'univers entier est contenu dans chaque point de la singularité, comme l'ADN dans une cellule, et l'introspection permet d'accéder à cette connaissance cosmique. L'enjeu est simple : Fusionne la cosmologie de la singularité avec la possibilité d'une exploration intérieure de la conscience, bouclant la boucle ontologique. Dans la source, on s'appuie sur ce repère : « 'Création ex interiori' ; analogie de l'ADN encapsulant un organisme ; prêtres égyptiens explorant l'intériorité pour accéder à 'l'architecture fractale de l'univers'. ».  Je vais le rendre concret, puis vérifier que le point est bien compris avant de continuer.",
+            "content": "On aborde maintenant La création ex-interiori : l'univers fractal encapsulé. L'univers entier est contenu dans chaque point de la singularité, comme l'ADN dans une cellule, et l'introspection permet d'accéder à cette connaissance cosmique. L'enjeu est simple : Fusionne la cosmologie de la singularité avec la possibilité d'une exploration intérieure de la conscience, bouclant la boucle ontologique. Dans la source, on s'appuie sur ce repère : « 'Création ex interiori' ; analogie de l'ADN encapsulant un organisme ; prêtres égyptiens explorant l'intériorité pour accéder à 'l'architecture fractale de l'univers'. ».  Je vais le rendre concret, puis vérifier que le point est bien compris avant de continuer.",
+            "objective": "Fusionne la cosmologie de la singularité avec la possibilité d'une exploration intérieure de la conscience, bouclant la boucle ontologique.",
+            "retention": "L'élève doit pouvoir expliquer La création ex-interiori : l'univers fractal encapsulé avec ses propres mots et l'appliquer dans un exemple.",
+            "slide_index": 9
+          },
+          {
+            "id": "ms-11",
+            "title": "Les correspondances entre mythes anciens et physique moderne",
+            "script": "On aborde maintenant Les correspondances entre mythes anciens et physique moderne. La pro-rascience interprète les mythes égyptiens (Noun, Amon, Apophis/Rê) comme des descriptions codées du vide quantique et de l'asymétrie matière-antimatière. L'enjeu est simple : Montre comment le pilier 'ra' établit des ponts entre traditions initiatiques et science, renforçant l'idée d'une connaissance antique préfigurant la physique actuelle. Dans la source, on s'appuie sur ce repère : « Noun = océan primordial (vide quantique fluctuant) ; Amon = le Caché (particules virtuelles) ; Apophis/Rê = chaos/ordre (matière/antimatière) ; savoir Dogon sur Sirius B. ».  Je vais le rendre concret, puis vérifier que le point est bien compris avant de continuer.",
+            "content": "On aborde maintenant Les correspondances entre mythes anciens et physique moderne. La pro-rascience interprète les mythes égyptiens (Noun, Amon, Apophis/Rê) comme des descriptions codées du vide quantique et de l'asymétrie matière-antimatière. L'enjeu est simple : Montre comment le pilier 'ra' établit des ponts entre traditions initiatiques et science, renforçant l'idée d'une connaissance antique préfigurant la physique actuelle. Dans la source, on s'appuie sur ce repère : « Noun = océan primordial (vide quantique fluctuant) ; Amon = le Caché (particules virtuelles) ; Apophis/Rê = chaos/ordre (matière/antimatière) ; savoir Dogon sur Sirius B. ».  Je vais le rendre concret, puis vérifier que le point est bien compris avant de continuer.",
+            "objective": "Montre comment le pilier 'ra' établit des ponts entre traditions initiatiques et science, renforçant l'idée d'une connaissance antique préfigurant la physique actuelle.",
+            "retention": "L'élève doit pouvoir expliquer Les correspondances entre mythes anciens et physique moderne avec ses propres mots et l'appliquer dans un exemple.",
+            "slide_index": 10
+          },
+          {
+            "id": "ms-12",
+            "title": "Le débat épistémologique : science ou métaphysique ?",
+            "script": "On aborde maintenant Le débat épistémologique : science ou métaphysique ?. Les critiques soulignent les risques de biais de confirmation et l'absence de prédictions testables, rappelant l'importance du critère de falsifiabilité pour la science. L'enjeu est simple : Offre un regard critique indispensable pour évaluer la validité méthodologique de la pro-rascience et sa démarcation d'avec la science empirique. Dans la source, on s'appuie sur ce repère : « 'Corrélation rétrospective' ; 'biais de confirmation' ; 'l'allégorie n'est pas prédictive' ; exigence de 'prédictions testables' (exemple de l'énergie noire) ; rappel de l'effet Casimir et de la relativité générale. ».  Je vais le rendre concret, puis vérifier que le point est bien compris avant de continuer.",
+            "content": "On aborde maintenant Le débat épistémologique : science ou métaphysique ?. Les critiques soulignent les risques de biais de confirmation et l'absence de prédictions testables, rappelant l'importance du critère de falsifiabilité pour la science. L'enjeu est simple : Offre un regard critique indispensable pour évaluer la validité méthodologique de la pro-rascience et sa démarcation d'avec la science empirique. Dans la source, on s'appuie sur ce repère : « 'Corrélation rétrospective' ; 'biais de confirmation' ; 'l'allégorie n'est pas prédictive' ; exigence de 'prédictions testables' (exemple de l'énergie noire) ; rappel de l'effet Casimir et de la relativité générale. ».  Je vais le rendre concret, puis vérifier que le point est bien compris avant de continuer.",
+            "objective": "Offre un regard critique indispensable pour évaluer la validité méthodologique de la pro-rascience et sa démarcation d'avec la science empirique.",
+            "retention": "L'élève doit pouvoir expliquer Le débat épistémologique : science ou métaphysique ? avec ses propres mots et l'appliquer dans un exemple.",
+            "slide_index": 11
+          }
+        ]
       },
       "debate_id": null,
       "video_provider": "livekit",

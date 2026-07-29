@@ -1,13 +1,14 @@
 {
-  "generatedAt": "2026-07-29T17:49:02.688Z",
+  "generatedAt": "2026-07-29T18:55:13.609Z",
   "ok": true,
   "sourceId": "b11a419e-8508-4058-a42c-eda9cb3a5f2d",
-  "liveSessionId": "368fddd0-46cb-409e-9811-ff3f12c30a18",
+  "liveSessionId": "4a6abaa9-304e-493c-9113-58a9d9666f7c",
   "scenes": 12,
+  "expectedScenes": 12,
   "arena": {
     "hasSequenceCounter": true,
     "hasFirstSceneTitle": true,
-    "hasFirstSceneIdea": false,
+    "hasFirstSceneIdea": true,
     "directMasterFactoryImport": true
   },
   "screenshots": [
@@ -17,5 +18,6 @@
     "50-real-live-arena-ready.png",
     "51-real-arena-master-factory-import.png"
   ],
-  "browserErrors": []
+  "browserErrors": [],
+  "failures": []
 }

@@ -315,9 +315,12 @@ RÉPONSE — JSON strict :
     // « a ») n'est pas un appui — une notion qui n'a que ça est écartée aussi.
     const planNotions: any[] = Array.isArray(plan.notions) ? plan.notions : [];
     const notions: PivotNotion[] = planNotions
-      .filter((n: any) => Array.isArray(n?.appuis) && n?.titre)
+      .filter((n: any) => n?.appuis && n?.titre)
       .map((n: any, idx: number) => {
-        const appuis = n.appuis
+        // Le modèle rend parfois `appuis` en CHAÎNE : on normalise en tableau
+        // au lieu d'écarter la notion (un spread de chaîne plus bas dans la
+        // chaîne produirait des débris caractère par caractère — cf. « K »/« a »).
+        const appuis = (Array.isArray(n.appuis) ? n.appuis : [n.appuis])
           .map(String)
           .map((s: string) => s.trim())
           .filter((s: string) => s.length >= 3)

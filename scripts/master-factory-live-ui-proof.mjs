@@ -123,7 +123,10 @@ try {
     await page.getByRole('button', { name: /La physique quantique décodée par l'Égypte antique/i }).first().click();
     await page.getByRole('checkbox').check();
     await page.getByRole('button', { name: 'Importer et remplacer le programme', exact: true }).click();
-    await page.getByRole('status').getByText(new RegExp(`${expectedScenes} scènes.*Mindmap.*Master Script`, 'i')).waitFor({ timeout: 120_000 });
+    // Le toast honnête post-correctif n'annonce QUE ce qui est réellement chargé :
+    // « N scènes prêtes dans l'arène · <titre> » (l'ancien texte revendiquait à
+    // tort la Mindmap et le Master Script — cf. audit B7).
+    await page.getByText(new RegExp(`${expectedScenes} scènes prêtes dans l'arène`, 'i')).first().waitFor({ timeout: 120_000 });
     await page.screenshot({ path: path.join(outDir, '51-real-arena-master-factory-import.png'), fullPage: true });
     return true;
   });

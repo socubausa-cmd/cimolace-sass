@@ -539,7 +539,15 @@ export class MasterFactoryService {
       moments: notions.map((notion, index) => {
         // Appuis nettoyés AVANT toute troncature : un fragment corrompu ne doit
         // ni être cité dans le prompteur, ni évincer un appui réel du slice.
-        const usableAppuis = (notion.appuis || [])
+        // ⚠️ Des pivots historiques portent `appuis` en CHAÎNE, pas en tableau —
+        // c'est l'origine réelle des points « K »/« a » : un spread de chaîne
+        // l'éclate caractère par caractère. On normalise donc en tableau ici.
+        const rawAppuis: unknown[] = Array.isArray(notion.appuis)
+          ? notion.appuis
+          : notion.appuis
+            ? [notion.appuis]
+            : [];
+        const usableAppuis = rawAppuis
           .map((appui) => String(appui || '').trim())
           .filter((appui) => usableKeyPoint(appui));
         return {
