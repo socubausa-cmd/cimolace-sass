@@ -379,8 +379,15 @@ export async function bornesAuMot({
   if (!fichier || !Number.isFinite(zoneDebut) || !Number.isFinite(zoneFin) || zoneFin <= zoneDebut) {
     return repli('zone invalide');
   }
-  if (!phraseOuverture || !phraseCloture) {
-    return repli('le modèle n\'a pas cité ses phrases de bornes');
+  // ⚠️ SEULE L'OUVERTURE EST EXIGÉE ICI AUSSI — la garde d'entrée doit dire la même
+  // chose que la règle d'appariement plus bas. Elle réclamait les DEUX citations
+  // alors que la clôture y est devenue facultative : un extrait dont le modèle
+  // n'avait cité que l'ouverture repartait en granularité « cue », donc en
+  // sous-titres estimés, sans que rien ne signale l'incohérence. Constaté en
+  // production sur l'extrait phare, qui a ainsi reproduit le carton de 11,83 s
+  // qu'on venait de supprimer.
+  if (!phraseOuverture) {
+    return repli("le modèle n'a pas cité sa phrase d'ouverture");
   }
 
   const t0 = Date.now();
