@@ -1056,7 +1056,7 @@ export default function CaptureStudioModal({ open, onClose, onVideoReady, initia
                         <Input
                           value={formTitle}
                           onChange={(e) => setFormTitle(e.target.value)}
-                          className="bg-[#0F1419] border-white/10"
+                          className="bg-[#2b2a27] border-white/10"
                           placeholder="Ex: Introduction à la thermodynamique"
                         />
                       </div>
@@ -1065,7 +1065,7 @@ export default function CaptureStudioModal({ open, onClose, onVideoReady, initia
                         <Textarea
                           value={formDescription}
                           onChange={(e) => setFormDescription(e.target.value)}
-                          className="bg-[#0F1419] border-white/10 min-h-[64px]"
+                          className="bg-[#2b2a27] border-white/10 min-h-[64px]"
                           placeholder="Décris brièvement ce que tu vas enseigner..."
                         />
                       </div>
@@ -1201,7 +1201,7 @@ export default function CaptureStudioModal({ open, onClose, onVideoReady, initia
                         <select
                           value={selectedVideoDevice}
                           onChange={(e) => setSelectedVideoDevice(e.target.value)}
-                          className="w-full text-sm bg-[#0F1419] border border-white/10 rounded-md px-3 py-2 text-white"
+                          className="w-full text-sm bg-[#2b2a27] border border-white/10 rounded-md px-3 py-2 text-white"
                         >
                           {videoDevices.map((d) => (
                             <option key={d.deviceId} value={d.deviceId}>{d.label || `Caméra ${d.deviceId.slice(0, 8)}`}</option>
@@ -1215,7 +1215,7 @@ export default function CaptureStudioModal({ open, onClose, onVideoReady, initia
                         <select
                           value={selectedAudioDevice}
                           onChange={(e) => setSelectedAudioDevice(e.target.value)}
-                          className="w-full text-sm bg-[#0F1419] border border-white/10 rounded-md px-3 py-2 text-white"
+                          className="w-full text-sm bg-[#2b2a27] border border-white/10 rounded-md px-3 py-2 text-white"
                         >
                           {audioDevices.map((d) => (
                             <option key={d.deviceId} value={d.deviceId}>{d.label || `Micro ${d.deviceId.slice(0, 8)}`}</option>

@@ -242,7 +242,7 @@ export default function KonvaParityFeatureRoot({ className, editorRef }) {
           disabled={pdfBusy}
           onClick={() => void runPdfExport()}
           title="PDF — une page A4 paysage par scène Konva (raster)"
-          className="inline-flex items-center gap-1 rounded-lg border border-cyan-500/25 bg-cyan-950/35 px-2 py-1 text-[10px] text-cyan-100/90 hover:bg-cyan-950/55 disabled:opacity-50"
+          className="inline-flex items-center gap-1 rounded-lg border border-[rgba(230,204,146,0.30)] bg-[rgba(230,204,146,0.10)] px-2 py-1 text-[10px] text-[#e6cc92] hover:bg-[rgba(230,204,146,0.18)] disabled:opacity-50"
         >
           {pdfBusy ? (
             <Loader2 className="h-3 w-3 animate-spin opacity-90" />
@@ -255,15 +255,15 @@ export default function KonvaParityFeatureRoot({ className, editorRef }) {
           type="button"
           onClick={runExportWorkspaceJson}
           title="Bundle workspace : konvaProject + Course Copilot (JSON v1)"
-          className="inline-flex items-center gap-1 rounded-lg border border-violet-500/25 bg-violet-950/35 px-2 py-1 text-[10px] text-violet-100/90 hover:bg-violet-950/55"
+          className="inline-flex items-center gap-1 rounded-lg border border-[rgba(230,204,146,0.30)] bg-[rgba(230,204,146,0.10)] px-2 py-1 text-[10px] text-[#e6cc92] hover:bg-[rgba(230,204,146,0.18)]"
         >
           <FileJson className="h-3 w-3 opacity-85" />
           Workspace JSON
         </button>
-        {hint ? <span className="text-[10px] text-emerald-200/90">{hint}</span> : null}
-        {pdfHint ? <span className="text-[10px] text-cyan-200/85">{pdfHint}</span> : null}
+        {hint ? <span className="text-[10px] text-[rgba(245,244,238,0.72)]">{hint}</span> : null}
+        {pdfHint ? <span className="text-[10px] text-[rgba(245,244,238,0.62)]">{pdfHint}</span> : null}
         {workspaceJsonHint ? (
-          <span className="text-[10px] text-violet-200/85">{workspaceJsonHint}</span>
+          <span className="text-[10px] text-[rgba(245,244,238,0.62)]">{workspaceJsonHint}</span>
         ) : null}
       </div>
       <div
@@ -281,7 +281,7 @@ export default function KonvaParityFeatureRoot({ className, editorRef }) {
           onApplyTypography={applyTypographyToCanvas}
         />
         {themeHint ? (
-          <p className="mt-1.5 text-[9px] text-emerald-200/85">{themeHint}</p>
+          <p className="mt-1.5 text-[9px] text-[rgba(245,244,238,0.62)]">{themeHint}</p>
         ) : null}
       </div>
       <div
@@ -308,7 +308,7 @@ export default function KonvaParityFeatureRoot({ className, editorRef }) {
           ))}
         </div>
         {pblockHint ? (
-          <span className="text-[10px] text-emerald-200/85">{pblockHint}</span>
+          <span className="text-[10px] text-[rgba(245,244,238,0.62)]">{pblockHint}</span>
         ) : null}
       </div>
       </div>
