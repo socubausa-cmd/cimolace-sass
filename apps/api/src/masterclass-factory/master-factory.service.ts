@@ -250,6 +250,12 @@ export class MasterFactoryService {
         smartboard_timeline: smartboardTimeline.cached,
         live_scenario: liveScenario.cached,
       },
+      // Troncatures rendues VISIBLES : un plafond silencieux (12 notions) est un
+      // trou de contenu que l'appelant doit pouvoir signaler à l'enseignant.
+      truncated: {
+        master_script_notions:
+          (masterScript.masterScript as MasterScriptPivot).meta?.truncated_notions ?? 0,
+      },
       masterScript: masterScript.masterScript,
       mindmap: mindmap.mindmap,
       smartboardTimeline: smartboardTimeline.smartboardTimeline,
@@ -271,10 +277,22 @@ export class MasterFactoryService {
     sourceType: SourceType,
     sourceId: string,
     liveSessionId: string,
-    opts: { replaceExisting?: boolean; force?: boolean } = {},
+    opts: { replaceExisting?: boolean; force?: boolean; allowDuringLive?: boolean } = {},
   ) {
     if (!liveSessionId) throw new BadRequestException('liveSessionId manquant');
-    await this.assertLiveSessionBelongsToTenant(tenantId, liveSessionId);
+    // Une session ne peut pas être sa propre source : la boucle écraserait le
+    // contenu du direct par un dérivé de lui-même.
+    if (sourceType === 'live' && sourceId === liveSessionId) {
+      throw new BadRequestException('Une session ne peut pas être sa propre source de publication.');
+    }
+    const session = await this.assertLiveSessionBelongsToTenant(tenantId, liveSessionId);
+    // Publier pendant un direct remplace le prompteur sous les yeux de l'hôte :
+    // exigé explicitement, jamais par défaut.
+    if (session.status === 'live' && opts.allowDuringLive !== true) {
+      throw new BadRequestException(
+        'Un direct est en cours sur cette session. Confirme explicitement le remplacement pendant le live.',
+      );
+    }
 
     const stack = await this.buildLiveStack(tenantId, sourceType, sourceId, { force: opts.force === true });
     const masterScript = stack.masterScript as MasterScriptPivot;
@@ -314,75 +332,53 @@ export class MasterFactoryService {
       key_points_json: masterScript.moments.flatMap((m) => m.key_points.slice(0, 2)).slice(0, 12),
       private_notes: liveScenario.preparation_notes.join('\n'),
       estimated_duration_minutes: masterScript.estimated_duration_minutes ?? null,
-      blueprint_score: 92,
+      // Aucun score n'est calculé : on n'invente pas une note flatteuse.
+      blueprint_score: null,
     };
-    const { error: blueprintError } = await this.db
-      .from('live_blueprints')
-      .upsert(blueprint, { onConflict: 'live_session_id' });
-    if (blueprintError) throw new ServiceUnavailableException(blueprintError.message);
-
-    if (opts.replaceExisting) {
-      await this.db.from('live_scenes').delete().eq('live_session_id', liveSessionId);
-      await this.db.from('live_script_sections').delete().eq('session_id', liveSessionId);
-    }
 
     const sceneRows = this.makeLiveSceneRows(liveSessionId, smartboard, liveScenario);
     const scriptRows = this.makeLiveScriptRows(liveSessionId, userId, masterScript);
 
-    let scenesInserted = 0;
-    if (sceneRows.length) {
-      const { data: existingScenes } = await this.db
-        .from('live_scenes')
-        .select('id')
-        .eq('live_session_id', liveSessionId)
-        .limit(1);
-      if (opts.replaceExisting || !(existingScenes || []).length) {
-        const { error } = await this.db.from('live_scenes').insert(sceneRows);
-        if (error) throw new ServiceUnavailableException(error.message);
-        scenesInserted = sceneRows.length;
-      }
-    }
+    // Le prompteur de l'arène lit `config.smartboard_master_script_sections`
+    // (apps/app — liveHostSessionAndLiveKitInit / normalizeScriptSections) :
+    // sans cette clé, l'hôte voit les MOCKS au lieu de son Master Script.
+    const scriptSections = masterScript.moments.map((moment, index) => ({
+      id: moment.id,
+      slide_index: index,
+      title: moment.title,
+      content: moment.teacher_script,
+      script: moment.teacher_script,
+      objective: moment.intention,
+      retention: moment.student_understanding || moment.transition || '',
+    }));
 
-    let scriptSectionsInserted = 0;
-    if (scriptRows.length) {
-      const { data: existingScripts } = await this.db
-        .from('live_script_sections')
-        .select('id')
-        .eq('session_id', liveSessionId)
-        .limit(1);
-      if (opts.replaceExisting || !(existingScripts || []).length) {
-        const { error } = await this.db.from('live_script_sections').insert(scriptRows);
-        if (error) throw new ServiceUnavailableException(error.message);
-        scriptSectionsInserted = scriptRows.length;
-      }
-    }
+    const configPatch = {
+      ai_mindmap_enabled: true,
+      smartboard_master_script_sections: scriptSections,
+      master_factory: {
+        source_type: sourceType,
+        source_id: sourceId,
+        pivots: stack.pivots,
+        master_script_pivot_id: mindmap.meta.master_script_pivot_id,
+      },
+    };
 
-    const { data: currentSession } = await this.db
-      .from('live_sessions')
-      .select('config')
-      .eq('id', liveSessionId)
-      .eq('tenant_id', tenantId)
-      .maybeSingle();
-    const currentConfig = currentSession?.config && typeof currentSession.config === 'object'
-      ? currentSession.config
-      : {};
-    const { error: sessionConfigError } = await this.db
-      .from('live_sessions')
-      .update({
-        config: {
-          ...currentConfig,
-          ai_mindmap_enabled: true,
-          master_factory: {
-            source_type: sourceType,
-            source_id: sourceId,
-            pivots: stack.pivots,
-            master_script_pivot_id: mindmap.meta.master_script_pivot_id,
-          },
-        },
-      })
-      .eq('id', liveSessionId)
-      .eq('tenant_id', tenantId);
-    if (sessionConfigError) throw new ServiceUnavailableException(sessionConfigError.message);
+    // Publication ATOMIQUE côté SQL : blueprint + scènes + prompteur + patch de
+    // config partent dans une seule transaction (le merge du config se fait en
+    // base, plus de read-modify-write perdant les écritures concurrentes). Une
+    // erreur au milieu annule tout — plus de session à moitié équipée.
+    const { data: rpcResult, error: rpcError } = await this.db.rpc('publish_master_factory_stack', {
+      p_session_id: liveSessionId,
+      p_blueprint: blueprint,
+      p_scenes: sceneRows,
+      p_scripts: scriptRows,
+      p_config_patch: configPatch,
+      p_replace: opts.replaceExisting === true,
+    });
+    if (rpcError) throw new ServiceUnavailableException(rpcError.message);
+
+    const scenesInserted = Number((rpcResult as any)?.scenes_inserted ?? 0);
+    const scriptSectionsInserted = Number((rpcResult as any)?.scripts_inserted ?? 0);
 
     return {
       ok: true,
@@ -419,23 +415,31 @@ export class MasterFactoryService {
     return { pivotId: data.id as string, comprehension: data.payload as Comprehension };
   }
 
-  private async assertLiveSessionBelongsToTenant(tenantId: string, liveSessionId: string) {
+  private async assertLiveSessionBelongsToTenant(
+    tenantId: string,
+    liveSessionId: string,
+  ): Promise<{ id: string; tenant_id: string; status: string | null }> {
     const { data, error } = await this.db
       .from('live_sessions')
-      .select('id, tenant_id')
+      .select('id, tenant_id, status')
       .eq('id', liveSessionId)
       .eq('tenant_id', tenantId)
       .maybeSingle();
     if (error) throw new ServiceUnavailableException(error.message);
     if (!data) throw new NotFoundException("Live introuvable pour ce tenant.");
+    return data;
   }
 
   private async findChildPivot(parentId: string, kind: string) {
+    // Des doublons historiques existent : `maybeSingle` sur 2 lignes est une
+    // ERREUR Supabase — on prend la plus récente au lieu d'exploser.
     const { data, error } = await this.db
       .from('course_pivots')
       .select('id, payload')
       .eq('parent_id', parentId)
       .eq('kind', kind)
+      .order('created_at', { ascending: false })
+      .limit(1)
       .maybeSingle();
     if (error) throw new ServiceUnavailableException(error.message);
     return data ?? null;
@@ -450,7 +454,28 @@ export class MasterFactoryService {
     payload: CoursePivotPayload;
     model: string;
   }) {
-    await this.db.from('course_pivots').delete().eq('parent_id', args.parentId).eq('kind', args.kind);
+    // UPDATE en place plutôt que DELETE+INSERT : l'ancien enchaînement laissait
+    // un trou si l'insert échouait après la suppression (pivot perdu).
+    const now = new Date().toISOString();
+    const { data: existing, error: findError } = await this.db
+      .from('course_pivots')
+      .select('id')
+      .eq('parent_id', args.parentId)
+      .eq('kind', args.kind)
+      .order('created_at', { ascending: false })
+      .limit(1)
+      .maybeSingle();
+    if (findError) throw new ServiceUnavailableException(findError.message);
+
+    if (existing?.id) {
+      const { error: updateError } = await this.db
+        .from('course_pivots')
+        .update({ payload: args.payload, model: args.model, updated_at: now })
+        .eq('id', existing.id);
+      if (updateError) throw new ServiceUnavailableException(updateError.message);
+      return existing.id as string;
+    }
+
     const { data, error } = await this.db
       .from('course_pivots')
       .insert({
@@ -461,17 +486,47 @@ export class MasterFactoryService {
         parent_id: args.parentId,
         payload: args.payload,
         model: args.model,
-        updated_at: new Date().toISOString(),
+        updated_at: now,
       })
       .select('id')
       .single();
-    if (error) throw new ServiceUnavailableException(error.message);
+    if (error) {
+      // Course avec une requête concurrente sur l'index unique : on reprend la
+      // ligne gagnante et on la met à jour (même motif que renderPrecepteur).
+      const isDuplicate = (error as any)?.code === '23505' || /duplicate/i.test(String(error.message || ''));
+      if (isDuplicate) {
+        const { data: concurrent, error: reError } = await this.db
+          .from('course_pivots')
+          .select('id')
+          .eq('parent_id', args.parentId)
+          .eq('kind', args.kind)
+          .order('created_at', { ascending: false })
+          .limit(1)
+          .maybeSingle();
+        if (reError) throw new ServiceUnavailableException(reError.message);
+        if (concurrent?.id) {
+          const { error: updateError } = await this.db
+            .from('course_pivots')
+            .update({ payload: args.payload, model: args.model, updated_at: now })
+            .eq('id', concurrent.id);
+          if (updateError) throw new ServiceUnavailableException(updateError.message);
+          return concurrent.id as string;
+        }
+      }
+      throw new ServiceUnavailableException(error.message);
+    }
     return data.id as string;
   }
 
   private makeMasterScript(comprehension: Comprehension, comprehensionPivotId: string): MasterScriptPivot {
     const notions = comprehension.notions.slice(0, 12);
+    // Troncature TRACÉE : au-delà de 12 notions, le surplus n'est pas perdu en
+    // silence — le compte remonte jusqu'à la réponse de buildLiveStack.
+    const truncatedNotions = Math.max(0, comprehension.notions.length - 12);
     const minutes = Math.max(15, Math.min(90, notions.length * 7));
+    // Filtre défensif : des appuis corrompus (« K », « a ») ne doivent jamais
+    // devenir des points-clés affichés à l'écran.
+    const usableKeyPoint = (value: unknown) => String(value || '').trim().length >= 3;
     return {
       schema_version: 1,
       kind: 'master_script',
@@ -481,7 +536,13 @@ export class MasterFactoryService {
         comprehension.promesse ||
         "Transformer la source en explication claire, progressive et actionnable pour l'apprenant.",
       estimated_duration_minutes: minutes,
-      moments: notions.map((notion, index) => ({
+      moments: notions.map((notion, index) => {
+        // Appuis nettoyés AVANT toute troncature : un fragment corrompu ne doit
+        // ni être cité dans le prompteur, ni évincer un appui réel du slice.
+        const usableAppuis = (notion.appuis || [])
+          .map((appui) => String(appui || '').trim())
+          .filter((appui) => usableKeyPoint(appui));
+        return {
         id: `ms-${index + 1}`,
         notion_id: notion.id,
         title: notion.titre,
@@ -491,15 +552,15 @@ export class MasterFactoryService {
           `On aborde maintenant ${notion.titre}.`,
           notion.idee_centrale,
           notion.pourquoi ? `L'enjeu est simple : ${notion.pourquoi}` : null,
-          notion.appuis?.[0] ? `Dans la source, on s'appuie sur ce repère : « ${notion.appuis[0]} ». ` : null,
+          usableAppuis[0] ? `Dans la source, on s'appuie sur ce repère : « ${usableAppuis[0]} ». ` : null,
           "Je vais le rendre concret, puis vérifier que le point est bien compris avant de continuer.",
         ]
           .filter(Boolean)
           .join(' '),
         key_points: [
           notion.idee_centrale,
-          ...(notion.appuis || []).slice(0, 2),
-        ].filter(Boolean).slice(0, 3),
+          ...usableAppuis.slice(0, 2),
+        ].filter(usableKeyPoint).map((point) => String(point).trim()).slice(0, 3),
         student_understanding: `L'élève doit pouvoir expliquer ${notion.titre} avec ses propres mots et l'appliquer dans un exemple.`,
         simple_version: notion.idee_centrale,
         transition:
@@ -512,13 +573,15 @@ export class MasterFactoryService {
           expected_answers: [notion.idee_centrale].filter(Boolean),
           remediation: `Revenir à l'appui source principal et redonner un exemple simple.`,
         },
-      })),
+        };
+      }),
       meta: {
         source_kind: comprehension.meta.source_type,
         source_id: comprehension.meta.source_id,
         comprehension_pivot_id: comprehensionPivotId,
         generated_at: new Date().toISOString(),
         model: 'deterministic-master-script-v0',
+        truncated_notions: truncatedNotions,
       },
     };
   }
@@ -533,7 +596,7 @@ export class MasterFactoryService {
       id: `mindmap-${index + 1}`,
       label: clean(moment.title) || `Partie ${index + 1}`,
       notion_id: moment.notion_id,
-      key_points: (moment.key_points || []).map(clean).filter(Boolean).slice(0, 3),
+      key_points: (moment.key_points || []).map(clean).filter((point) => point.length >= 3).slice(0, 3),
       script_moment_id: moment.id,
     }));
     const mermaid = [

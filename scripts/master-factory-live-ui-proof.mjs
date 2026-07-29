@@ -19,6 +19,22 @@ const auth = createClient(env.SUPABASE_URL, env.SUPABASE_ANON_KEY, { auth: { per
 const signed = await auth.auth.signInWithPassword({ email: proof.testActor.email, password });
 if (signed.error) throw signed.error;
 
+// Une preuve qui ne peut pas échouer ne prouve rien : aucun indicateur n'est
+// affirmé en dur, tout est MESURÉ sur la page ; chaque étape ratée est
+// consignée dans le JSON et fait sortir le run en code 1.
+const expectedScenes = proof.counts?.smartboardScenes ?? proof.counts?.persistedLiveScenes ?? 0;
+const firstSceneTitle = proof.samples?.firstSmartboardScene?.title || 'Les limites du critère de falsifiabilité';
+const firstSceneIdea = String(proof.samples?.firstMasterScriptMoment?.message_central || 'Le critère de Popper').slice(0, 24).trim();
+const failures = [];
+const step = async (name, fn) => {
+  try {
+    return await fn();
+  } catch (error) {
+    failures.push({ step: name, error: String(error?.message || error).slice(0, 600) });
+    return undefined;
+  }
+};
+
 const browser = await chromium.launch({ headless: true });
 try {
   const page = await browser.newPage({ viewport: { width: 1600, height: 1080 } });
@@ -32,76 +48,113 @@ try {
     localStorage.setItem('selectedTenantSlug', 'isna');
   }, { key: `sb-${ref}-auth-token`, value: JSON.stringify(signed.data.session) });
 
-  await page.goto(`http://localhost:5173/studio/live-preparation/${proof.liveSession.id}`, { waitUntil: 'domcontentloaded', timeout: 120_000 });
-  await page.waitForFunction(() => /SCÈNES\s+12/.test(document.body?.innerText || ''), null, { timeout: 60_000 });
+  // Le compteur de scènes est LU depuis la page, jamais supposé.
+  let measuredScenes = 0;
+  await step('preparation-scenes-counter', async () => {
+    await page.goto(`http://localhost:5173/studio/live-preparation/${proof.liveSession.id}`, { waitUntil: 'domcontentloaded', timeout: 120_000 });
+    await page.waitForFunction(() => /SCÈNES\s+\d+/.test(document.body?.innerText || ''), null, { timeout: 60_000 });
+    const match = (await page.locator('body').innerText()).match(/SCÈNES\s+(\d+)/);
+    measuredScenes = match ? Number(match[1]) : 0;
+  });
 
-  // Le rail expose des noms accessibles stables (ex. « 2. Scènes »).
-  await page.getByRole('button', { name: '2. Scènes', exact: true }).click();
-  await page.getByRole('heading', { name: 'Scènes', exact: true }).waitFor({ timeout: 30_000 });
-  await page.getByRole('button', { name: 'Écran 2 sur 3', exact: true }).click();
-  await page.getByText("Composez l'ordre et le type de chaque scène du live.", { exact: true }).waitFor({ timeout: 30_000 });
-  await page.screenshot({ path: path.join(outDir, '47-real-smartboard-scenes.png'), fullPage: true });
+  await step('preparation-smartboard-screen', async () => {
+    // Le rail expose des noms accessibles stables (ex. « 2. Scènes »).
+    await page.getByRole('button', { name: '2. Scènes', exact: true }).click();
+    await page.getByRole('heading', { name: 'Scènes', exact: true }).waitFor({ timeout: 30_000 });
+    await page.getByRole('button', { name: 'Écran 2 sur 3', exact: true }).click();
+    await page.getByText("Composez l'ordre et le type de chaque scène du live.", { exact: true }).waitFor({ timeout: 30_000 });
+    await page.screenshot({ path: path.join(outDir, '47-real-smartboard-scenes.png'), fullPage: true });
+  });
 
-  await page.getByRole('button', { name: '1. Blueprint', exact: true }).click();
-  await page.getByRole('heading', { name: 'Blueprint', exact: true }).waitFor({ timeout: 30_000 });
-  await page.getByRole('button', { name: 'Écran 2 sur 2', exact: true }).click();
-  await page.getByText('Mindmap Master Factory', { exact: true }).waitFor({ timeout: 30_000 });
-  await page.screenshot({ path: path.join(outDir, '48-real-live-mindmap.png'), fullPage: true });
+  await step('preparation-mindmap-screen', async () => {
+    await page.getByRole('button', { name: '1. Blueprint', exact: true }).click();
+    await page.getByRole('heading', { name: 'Blueprint', exact: true }).waitFor({ timeout: 30_000 });
+    await page.getByRole('button', { name: 'Écran 2 sur 2', exact: true }).click();
+    await page.getByText('Mindmap Master Factory', { exact: true }).waitFor({ timeout: 30_000 });
+    await page.screenshot({ path: path.join(outDir, '48-real-live-mindmap.png'), fullPage: true });
+  });
 
-  await page.getByRole('button', { name: '3. Script', exact: true }).click();
-  await page.getByRole('heading', { name: 'Script', exact: true }).waitFor({ timeout: 30_000 });
-  await page.getByRole('button', { name: /Ouvrir.*script/i }).click();
-  await page.getByRole('heading', { name: /Script.*prompteur/i }).waitFor({ timeout: 30_000 });
-  await page.waitForTimeout(1000);
-  await page.screenshot({ path: path.join(outDir, '49-real-master-script-prompter.png'), fullPage: true });
+  await step('preparation-prompter-screen', async () => {
+    await page.getByRole('button', { name: '3. Script', exact: true }).click();
+    await page.getByRole('heading', { name: 'Script', exact: true }).waitFor({ timeout: 30_000 });
+    await page.getByRole('button', { name: /Ouvrir.*script/i }).click();
+    await page.getByRole('heading', { name: /Script.*prompteur/i }).waitFor({ timeout: 30_000 });
+    await page.waitForTimeout(1000);
+    await page.screenshot({ path: path.join(outDir, '49-real-master-script-prompter.png'), fullPage: true });
+  });
 
-  await page.goto(`http://localhost:5173/studio/live-arena/${proof.liveSession.id}`, { waitUntil: 'domcontentloaded', timeout: 120_000 });
-  await page.waitForFunction(() => (document.body?.innerText || '').length > 150, null, { timeout: 60_000 });
-  await page.getByText('Les limites du critère de falsifiabilité', { exact: true }).first().waitFor({ state: 'visible', timeout: 60_000 });
-  await page.waitForTimeout(700);
-  const firstReveal = page.getByRole('button', { name: /Idée centrale/i });
-  if (await firstReveal.isVisible().catch(() => false)) {
-    const progressiveCanvas = page.locator('[title^="Cliquer pour révéler"]:visible').first();
-    if (await progressiveCanvas.isVisible().catch(() => false)) {
-      await progressiveCanvas.click({ position: { x: 360, y: 300 }, force: true });
-    } else {
-      await firstReveal.click({ force: true });
-    }
-    const revealed = await page.waitForFunction(() => (document.body?.innerText || '').includes('Le critère de Popper'), null, { timeout: 2500 }).then(() => true).catch(() => false);
-    if (!revealed) {
-      if (await progressiveCanvas.isVisible().catch(() => false)) await progressiveCanvas.click({ position: { x: 360, y: 300 }, force: true });
-      await page.waitForFunction(() => (document.body?.innerText || '').includes('Le critère de Popper'), null, { timeout: 5000 }).catch(() => {});
-    }
+  let arenaText = '';
+  await step('arena-first-scene', async () => {
+    await page.goto(`http://localhost:5173/studio/live-arena/${proof.liveSession.id}`, { waitUntil: 'domcontentloaded', timeout: 120_000 });
+    await page.waitForFunction(() => (document.body?.innerText || '').length > 150, null, { timeout: 60_000 });
+    await page.getByText(firstSceneTitle, { exact: true }).first().waitFor({ state: 'visible', timeout: 60_000 });
     await page.waitForTimeout(700);
-  }
-  const arenaText = await page.locator('body').innerText();
-  await page.screenshot({ path: path.join(outDir, '50-real-live-arena-ready.png'), fullPage: true });
+  });
 
-  await page.getByRole('button', { name: 'Importer un projet Master Factory', exact: true }).click();
-  await page.getByRole('dialog', { name: 'Importer depuis Master Factory', exact: true }).waitFor({ timeout: 30_000 });
-  await page.getByRole('button', { name: /La physique quantique décodée par l'Égypte antique/i }).first().click();
-  await page.getByRole('checkbox').check();
-  await page.getByRole('button', { name: 'Importer et remplacer le programme', exact: true }).click();
-  await page.getByRole('status').getByText(/12 scènes.*Mindmap.*Master Script/i).waitFor({ timeout: 120_000 });
-  await page.screenshot({ path: path.join(outDir, '51-real-arena-master-factory-import.png'), fullPage: true });
+  await step('arena-reveal-first-idea', async () => {
+    // Révélation progressive : canvas si présent, sinon bouton. L'idée doit
+    // réellement apparaître — plus d'échec silencieux avalé par un catch.
+    const progressiveCanvas = page.locator('[title^="Cliquer pour révéler"]:visible').first();
+    const firstReveal = page.getByRole('button', { name: /Idée centrale/i });
+    const useCanvas = (await progressiveCanvas.count()) > 0;
+    if (!useCanvas && !(await firstReveal.isVisible())) return; // déjà révélée : l'indicateur final tranche sur le texte mesuré
+    for (let attempt = 0; attempt < 2; attempt += 1) {
+      if (useCanvas) await progressiveCanvas.click({ position: { x: 360, y: 300 }, force: true });
+      else await firstReveal.click({ force: true });
+      const revealed = await page
+        .waitForFunction((probe) => (document.body?.innerText || '').includes(probe), firstSceneIdea, { timeout: attempt === 0 ? 2500 : 5000 })
+        .then(() => true, () => false);
+      if (revealed) return;
+    }
+    throw new Error(`L'idée « ${firstSceneIdea} » n'apparaît pas après la révélation.`);
+  });
+
+  await step('arena-body-text', async () => {
+    await page.waitForTimeout(700);
+    arenaText = await page.locator('body').innerText();
+    await page.screenshot({ path: path.join(outDir, '50-real-live-arena-ready.png'), fullPage: true });
+  });
+
+  // Le parcours d'import est MESURÉ : l'indicateur ne vaut true que si le toast
+  // de confirmation (avec le bon nombre de scènes) apparaît réellement.
+  const importDone = await step('arena-master-factory-import', async () => {
+    await page.getByRole('button', { name: 'Importer un projet Master Factory', exact: true }).click();
+    await page.getByRole('dialog', { name: 'Importer depuis Master Factory', exact: true }).waitFor({ timeout: 30_000 });
+    await page.getByRole('button', { name: /La physique quantique décodée par l'Égypte antique/i }).first().click();
+    await page.getByRole('checkbox').check();
+    await page.getByRole('button', { name: 'Importer et remplacer le programme', exact: true }).click();
+    await page.getByRole('status').getByText(new RegExp(`${expectedScenes} scènes.*Mindmap.*Master Script`, 'i')).waitFor({ timeout: 120_000 });
+    await page.screenshot({ path: path.join(outDir, '51-real-arena-master-factory-import.png'), fullPage: true });
+    return true;
+  });
+
+  const sequencePattern = new RegExp(`01\\s*/\\s*${String(expectedScenes).padStart(2, '0')}`);
+  const arena = {
+    hasSequenceCounter: sequencePattern.test(arenaText),
+    hasFirstSceneTitle: arenaText.includes(firstSceneTitle),
+    hasFirstSceneIdea: arenaText.includes(firstSceneIdea),
+    directMasterFactoryImport: importDone === true,
+  };
+  const ok = expectedScenes > 0
+    && measuredScenes === expectedScenes
+    && Object.values(arena).every((value) => value === true)
+    && failures.length === 0;
 
   const uiProof = {
     generatedAt: new Date().toISOString(),
-    ok: true,
+    ok,
     sourceId: proof.source.id,
     liveSessionId: proof.liveSession.id,
-    scenes: 12,
-    arena: {
-      hasSequenceCounter: /01\s*\/\s*12/.test(arenaText),
-      hasFirstSceneTitle: arenaText.includes('Les limites du critère de falsifiabilité'),
-      hasFirstSceneIdea: arenaText.includes('Le critère de Popper'),
-      directMasterFactoryImport: true,
-    },
+    scenes: measuredScenes,
+    expectedScenes,
+    arena,
     screenshots: ['47-real-smartboard-scenes.png', '48-real-live-mindmap.png', '49-real-master-script-prompter.png', '50-real-live-arena-ready.png', '51-real-arena-master-factory-import.png'],
     browserErrors: errors,
+    failures,
   };
   fs.writeFileSync(path.join(outDir, 'live-ui-proof.json'), `${JSON.stringify(uiProof, null, 2)}\n`);
   console.log(JSON.stringify(uiProof, null, 2));
+  if (!ok) process.exitCode = 1;
 } finally {
   await browser.close();
 }

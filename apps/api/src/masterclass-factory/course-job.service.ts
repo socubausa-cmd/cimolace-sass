@@ -34,9 +34,12 @@ export class CourseJobService {
     }
 
     // Une demande déjà en cours pour ce replay ? On la renvoie plutôt que d'empiler.
+    // Scopée tenant comme toutes les autres requêtes du fichier : un UUID de
+    // replay ne doit jamais faire fuiter le job d'une autre école.
     const { data: running } = await this.db
       .from('course_generation_jobs')
       .select('*')
+      .eq('tenant_id', tenantId)
       .eq('video_id', videoId)
       .in('status', ['pending', 'extracting', 'planning', 'writing', 'publishing'])
       .maybeSingle();

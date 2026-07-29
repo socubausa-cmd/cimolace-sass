@@ -44,6 +44,10 @@ const unwrapEnvelope = (input) => {
   return value;
 };
 
+// Sans ce champ, impossible de savoir si l'IA a réellement tourné : le run du
+// 29/07 a servi un cache vieux de 7 h en se faisant passer pour une génération.
+const cachedOf = (call) => call.body?.cached ?? call.data?.cached ?? null;
+
 const jsonCall = async (route, token, options = {}) => {
   const response = await fetch(`${apiOrigin}${route}`, {
     method: options.method || 'GET',
@@ -134,16 +138,37 @@ try {
   const liveReadback = await jsonCall(`/lives/${liveSessionId}`, token);
   const status = await jsonCall(`/master-factory/status/replay/${sourceId}`, token);
 
-  const [pivotRows, blueprintRow, sceneRows, scriptRows, sessionRow] = await Promise.all([
-    admin.from('course_pivots').select('id,kind,parent_id,model,payload').eq('tenant_id', tenant.id).eq('source_type', 'replay').eq('source_id', sourceId),
-    admin.from('live_blueprints').select('*').eq('live_session_id', liveSessionId).single(),
-    admin.from('live_scenes').select('id,name,order_index,content_payload_json').eq('live_session_id', liveSessionId).order('order_index'),
-    admin.from('live_script_sections').select('id,title,order_index,content,master_agent').eq('session_id', liveSessionId).order('order_index'),
-    admin.from('live_sessions').select('id,title,status,config,tenant_id').eq('id', liveSessionId).single(),
-  ]);
-  for (const result of [pivotRows, blueprintRow, sceneRows, scriptRows, sessionRow]) {
-    if (result.error) throw result.error;
+  // Relecture croisée : le client admin établit l'état réel en base, le client
+  // JWT utilisateur prouve que le professeur relit ses propres données après le
+  // durcissement RLS. Une table illisible côté user = rls_readable: false.
+  const userDb = createClient(supabaseUrl, anonKey, {
+    auth: { persistSession: false },
+    global: { headers: { Authorization: `Bearer ${token}` } },
+  });
+  const tableReads = {
+    course_pivots: (db) => db.from('course_pivots').select('id,kind,parent_id,model,payload').eq('tenant_id', tenant.id).eq('source_type', 'replay').eq('source_id', sourceId),
+    live_blueprints: (db) => db.from('live_blueprints').select('*').eq('live_session_id', liveSessionId).single(),
+    live_scenes: (db) => db.from('live_scenes').select('id,name,order_index,content_payload_json').eq('live_session_id', liveSessionId).order('order_index'),
+    live_script_sections: (db) => db.from('live_script_sections').select('id,title,order_index,content,master_agent').eq('session_id', liveSessionId).order('order_index'),
+    live_sessions: (db) => db.from('live_sessions').select('id,title,status,config,tenant_id').eq('id', liveSessionId).single(),
+  };
+  const adminReads = {};
+  const rlsReadable = {};
+  for (const [table, buildQuery] of Object.entries(tableReads)) {
+    const [adminResult, userResult] = await Promise.all([buildQuery(admin), buildQuery(userDb)]);
+    if (adminResult.error) throw adminResult.error;
+    adminReads[table] = adminResult;
+    // Une liste vide sous RLS ne renvoie pas d'erreur : la lecture n'est
+    // « réussie » que si le user voit exactement ce que voit l'admin.
+    rlsReadable[table] = !userResult.error && (Array.isArray(adminResult.data)
+      ? Array.isArray(userResult.data) && userResult.data.length === adminResult.data.length
+      : Boolean(userResult.data));
   }
+  const pivotRows = adminReads.course_pivots;
+  const blueprintRow = adminReads.live_blueprints;
+  const sceneRows = adminReads.live_scenes;
+  const scriptRows = adminReads.live_script_sections;
+  const sessionRow = adminReads.live_sessions;
 
   const sourceData = source.data;
   const understandingData = understanding.data;
@@ -156,11 +181,28 @@ try {
   const mm = mindmapData?.mindmap;
   const sb = smartboardData?.smartboardTimeline;
   const blueprintMindmap = blueprintRow.data?.outline_json?.mindmap;
+  const cached = {
+    understand: cachedOf(understanding),
+    master_script: cachedOf(masterScript),
+    mindmap: cachedOf(mindmap),
+    smartboard: cachedOf(smartboard),
+    live_stack: cachedOf(liveStack),
+  };
   const assertions = {
     replay_is_real_library_source: Boolean(librarySource && sourceData?.ready && sourceData?.chars > 0),
-    comprehension_has_notions: (understandingData?.comprehension?.notions?.length || 0) > 0,
-    written_course_has_chapters: (masterclassData?.chapters?.length || 0) > 0,
-    master_script_aligned: ms?.moments?.length > 0,
+    // Des seuils réels : « > 0 » laissait passer un cours d'une seule notion.
+    comprehension_has_notions: (understandingData?.comprehension?.notions?.length || 0) >= 3,
+    written_course_has_chapters: (masterclassData?.chapters?.length || 0) >= 3,
+    master_script_aligned: (ms?.moments?.length || 0) >= 3 && ms?.moments?.length === masterclassData?.chapters?.length,
+    // Garde de CONTENU (bug « K »/« a » du 29/07) : aucun key_point fragmentaire,
+    // aucun titre de scène vide ne doit atteindre le tableau.
+    master_script_key_points_clean: (ms?.moments?.length || 0) > 0
+      && ms.moments.every((moment) => (moment.key_points || []).every((point) => String(point).trim().length >= 3)),
+    smartboard_scene_titles_non_empty: (sb?.scenes?.length || 0) > 0
+      && sb.scenes.every((scene) => String(scene.title || '').trim().length > 0),
+    // Le professeur doit relire ses propres scènes et scripts avec son JWT.
+    rls_professor_reads_scenes: rlsReadable.live_scenes === true,
+    rls_professor_reads_scripts: rlsReadable.live_script_sections === true,
     mindmap_aligned: mm?.branches?.length === ms?.moments?.length && mm?.edges?.length === mm?.branches?.length,
     smartboard_aligned: sb?.scenes?.length === ms?.moments?.length,
     live_scenario_aligned: stack?.liveScenario?.scenes?.length === ms?.moments?.length,
@@ -227,6 +269,8 @@ try {
     },
     publication: publication.data,
     status: status.data,
+    cached,
+    rls_readable: rlsReadable,
     assertions,
     browser: { factoryPage, livePage, errors: browserErrors },
     samples: {
@@ -245,6 +289,8 @@ try {
     source: proof.source,
     liveSession: proof.liveSession,
     counts: proof.counts,
+    cached,
+    rls_readable: rlsReadable,
     assertions,
     browserErrors,
     screenshots: ['45-real-replay-master-factory.png', '46-real-live-preparation.png'],

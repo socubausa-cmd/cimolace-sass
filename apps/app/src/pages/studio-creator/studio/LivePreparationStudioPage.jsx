@@ -429,6 +429,10 @@ export default function LivePreparationStudioPage() {
     }
     setLoading(true);
     setError(null);
+    // Changement de sessionId = nouvelle hydratation : sans ce reset, la garde
+    // restait à true et l'autosave repartait aussitôt avec le blueprint de la
+    // session précédente — en écrasant celui de la nouvelle.
+    blueprintHydratedRef.current = false;
     const { data: s, error: e1 } = await getLiveSession(sessionId);
     if (e1 || !s) {
       setError(e1?.message || 'Session introuvable');

@@ -151,12 +151,17 @@ export class ComprehensionService {
     return JSON.parse(out);
   }
 
-  /** Découpe en tranches, en coupant de préférence en fin de phrase. */
-  private segment(text: string): string[] {
+  /**
+   * Découpe en tranches, en coupant de préférence en fin de phrase.
+   * `truncated` signale qu'il RESTAIT du texte après MAX_SEGMENTS : le plafond
+   * ne doit plus manger la fin d'un long direct en silence.
+   */
+  private segment(text: string): { segments: string[]; truncated: boolean } {
     const { CHUNK, OVERLAP, MAX_SEGMENTS } = ComprehensionService;
-    if (text.length <= CHUNK) return [text];
+    if (text.length <= CHUNK) return { segments: [text], truncated: false };
     const out: string[] = [];
     let i = 0;
+    let lastEnd = 0;
     while (i < text.length && out.length < MAX_SEGMENTS) {
       let end = Math.min(i + CHUNK, text.length);
       if (end < text.length) {
@@ -165,10 +170,11 @@ export class ComprehensionService {
         if (dot > 200) end = Math.max(i, end - 800) + dot + 1;
       }
       out.push(text.slice(i, end));
+      lastEnd = end;
       if (end >= text.length) break;
       i = Math.max(i + 1, end - OVERLAP);
     }
-    return out;
+    return { segments: out, truncated: lastEnd < text.length };
   }
 
   /** Rattache un appui textuel au meilleur repère de transcription. */
@@ -258,10 +264,15 @@ RÉPONSE — JSON strict :
     }
 
     const src = await this.sources.load(sourceType, sourceId, tenantId);
-    const segments = this.segment(src.transcript);
+    const { segments, truncated: transcriptTruncated } = this.segment(src.transcript);
     this.log.log(
       `[comprehension] ${sourceType}/${sourceId} — ${src.transcript.length} car → ${segments.length} segment(s)`,
     );
+    if (transcriptTruncated) {
+      this.log.warn(
+        `[comprehension] plafond de ${ComprehensionService.MAX_SEGMENTS} segments atteint : la fin de la transcription n'est PAS analysée`,
+      );
+    }
 
     // ── MAP : notions par segment, par lots ──
     const notionsBrutes: any[] = [];
@@ -300,18 +311,29 @@ RÉPONSE — JSON strict :
     );
 
     // ── ⛔ GARDE ANTI-INVENTION : toute notion sans appui est ÉCARTÉE ──
-    const notions: PivotNotion[] = (Array.isArray(plan.notions) ? plan.notions : [])
-      .filter((n: any) => Array.isArray(n?.appuis) && n.appuis.length > 0 && n?.titre)
-      .map((n: any, idx: number) => ({
-        id: String(n.id || `n${idx + 1}`),
-        titre: String(n.titre),
-        idee_centrale: String(n.idee_centrale || ''),
-        pourquoi: String(n.pourquoi || ''),
-        prerequis: Array.isArray(n.prerequis) ? n.prerequis.map(String) : undefined,
-        appuis: n.appuis.map(String).slice(0, 6),
-        source_spans: this.locateSourceSpans(n.appuis.map(String), src.cues),
-      }));
-    const ecartees = (Array.isArray(plan.notions) ? plan.notions.length : 0) - notions.length;
+    // Les appuis sont NETTOYÉS d'abord : un débris de transcription (« K »,
+    // « a ») n'est pas un appui — une notion qui n'a que ça est écartée aussi.
+    const planNotions: any[] = Array.isArray(plan.notions) ? plan.notions : [];
+    const notions: PivotNotion[] = planNotions
+      .filter((n: any) => Array.isArray(n?.appuis) && n?.titre)
+      .map((n: any, idx: number) => {
+        const appuis = n.appuis
+          .map(String)
+          .map((s: string) => s.trim())
+          .filter((s: string) => s.length >= 3)
+          .slice(0, 6);
+        return {
+          id: String(n.id || `n${idx + 1}`),
+          titre: String(n.titre),
+          idee_centrale: String(n.idee_centrale || ''),
+          pourquoi: String(n.pourquoi || ''),
+          prerequis: Array.isArray(n.prerequis) ? n.prerequis.map(String) : undefined,
+          appuis,
+          source_spans: this.locateSourceSpans(appuis, src.cues),
+        };
+      })
+      .filter((n) => n.appuis.length > 0);
+    const ecartees = planNotions.length - notions.length;
     if (ecartees > 0) {
       this.log.warn(`[comprehension] ${ecartees} notion(s) SANS APPUI écartée(s) (anti-invention)`);
     }
@@ -339,6 +361,7 @@ RÉPONSE — JSON strict :
         duration_min: src.durationSec ? Math.round(src.durationSec / 60) : undefined,
         transcript_chars: src.transcript.length,
         segments: segments.length,
+        ...(transcriptTruncated ? { transcript_truncated: true } : {}),
         model: this.resolveLlm(true).model,
         generated_at: new Date().toISOString(),
       },
@@ -352,7 +375,10 @@ RÉPONSE — JSON strict :
   }
 
   private async findPivot(tenantId: string, sourceType: SourceType, sourceId: string) {
-    const { data } = await (this.supabase.client as any)
+    // Des doublons historiques rendent `maybeSingle` seul FAILLIBLE : l'erreur
+    // avalée faisait repayer l'IA à chaque appel. On prend la plus récente et
+    // on LÈVE si la base répond mal.
+    const { data, error } = await (this.supabase.client as any)
       .from('course_pivots')
       .select('id, payload')
       .eq('tenant_id', tenantId)
@@ -360,7 +386,10 @@ RÉPONSE — JSON strict :
       .eq('source_id', sourceId)
       .eq('kind', 'comprehension')
       .is('parent_id', null)
+      .order('created_at', { ascending: false })
+      .limit(1)
       .maybeSingle();
+    if (error) throw new ServiceUnavailableException(error.message);
     return data ?? null;
   }
 

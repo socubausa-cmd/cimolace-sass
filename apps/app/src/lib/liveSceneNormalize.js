@@ -129,6 +129,50 @@ function pickImmersiveEdgeFeatherExtras(scene, payload, slideContent, iaRaw) {
   return { immersive_edge_feather: Math.min(100, Math.max(0, n)) };
 }
 
+/**
+ * Scènes Master Factory : tout le contenu pédagogique vit dans `ia_data.blocks`
+ * (types 'title' | 'key-idea' | 'retain' (items[]) | 'paragraph' | 'list'…), or
+ * ProgressiveBuildSlide ne lit que title/core_idea/development[] — sans cette
+ * dérivation, la scène s'affichait quasi vide (titre seul). On dérive donc :
+ * - `core_idea` depuis le bloc key-idea, UNIQUEMENT si core_idea est absent ;
+ * - `development[]` depuis les items du bloc retain + le texte du bloc paragraph,
+ *   au format « legacy » (tableau de chaînes) que ProgressiveBuildSlide révèle
+ *   progressivement une à une (le format structuré { label, points[] } bascule
+ *   la slide en layout horizontal ET tronque à 3 points — pas voulu ici).
+ * Les scènes sans `blocks` (non-Master-Factory) repartent strictement inchangées.
+ */
+function enrichIaDataFromFactoryBlocks(iaRaw) {
+  if (!iaRaw || typeof iaRaw !== 'object' || !Array.isArray(iaRaw.blocks) || iaRaw.blocks.length === 0) {
+    return iaRaw;
+  }
+  const blocks = iaRaw.blocks.filter((b) => b && typeof b === 'object');
+  const textOf = (b) => String(b?.text || '').trim();
+
+  const out = { ...iaRaw };
+
+  if (!(typeof out.core_idea === 'string' && out.core_idea.trim())) {
+    const keyIdea = blocks.find((b) => b.type === 'key-idea' && textOf(b));
+    if (keyIdea) out.core_idea = textOf(keyIdea);
+  }
+
+  if (!(Array.isArray(out.development) && out.development.length > 0)) {
+    const points = [];
+    for (const b of blocks) {
+      if ((b.type === 'retain' || b.type === 'list') && Array.isArray(b.items)) {
+        for (const item of b.items) {
+          const t = String(item ?? '').trim();
+          if (t) points.push(t);
+        }
+      } else if (b.type === 'paragraph' && textOf(b)) {
+        points.push(textOf(b));
+      }
+    }
+    if (points.length) out.development = points;
+  }
+
+  return out;
+}
+
 export function normalizeLiveSceneToSlide(scene) {
   if (!scene) return null;
   const id = scene.id || scene.scene_id || `slide-${scene.order_index ?? 0}`;
@@ -136,7 +180,7 @@ export function normalizeLiveSceneToSlide(scene) {
   const slideContent = payload.slide_content_json;
 
   // Brouillon wizard / réponse IA : ia_data à la racine (pas dans content_payload_json)
-  const iaRaw = scene.ia_data ?? payload.ia_data;
+  const iaRaw = enrichIaDataFromFactoryBlocks(scene.ia_data ?? payload.ia_data);
   const fe = pickImmersiveEdgeFeatherExtras(scene, payload, slideContent, iaRaw);
   // Propage is_active (le spread `...fe` est présent dans toutes les branches de retour) →
   // permet l'auto-projection de la scène active à l'ouverture de l'arène (issue #3).

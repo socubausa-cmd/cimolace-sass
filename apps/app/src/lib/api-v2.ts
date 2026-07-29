@@ -1031,6 +1031,9 @@ export const masterFactoryApi = {
     liveSessionId: string;
     replaceExisting?: boolean;
     force?: boolean;
+    // Sans ce flag, l'API répond 400 « Un direct est en cours… » : remplacer le
+    // programme sous les yeux des invités exige une confirmation explicite de l'hôte.
+    allowDuringLive?: boolean;
   }) => apiV2.post<ApiEnvelope<any>>('/master-factory/publish/live-session', body, { timeout: 900000 }).then(unwrap),
   renderPdf: (body: { sourceType?: MasterFactorySourceType; sourceId: string }) =>
     apiV2.post<ApiEnvelope<any>>('/master-factory/render/pdf', body).then(unwrap),

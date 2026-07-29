@@ -94,6 +94,8 @@ export interface Comprehension {
     duration_min?: number;
     transcript_chars: number;
     segments: number;
+    /** Vrai si le plafond de segments a laissé de la transcription NON analysée. */
+    transcript_truncated?: boolean;
     model: string;
     generated_at: string;
   };
@@ -198,6 +200,8 @@ export interface MasterScriptPivot {
     comprehension_pivot_id?: string;
     generated_at: string;
     model?: string;
+    /** Notions au-delà du plafond du Master Script (0 = rien de perdu). */
+    truncated_notions?: number;
   };
 }
 

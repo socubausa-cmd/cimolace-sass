@@ -32,7 +32,7 @@ export function useLiveHostLiveScenesRealtime({
           const [{ data: rows }, { data: sessRow }] = await Promise.all([
             supabase
               .from('live_scenes')
-              .select('id, name, order_index, content_payload_json')
+              .select('id, name, order_index, content_payload_json, is_active')
               .eq('live_session_id', sessionId)
               .order('order_index', { ascending: true }),
             supabase.from('live_sessions').select('config').eq('id', sessionId).maybeSingle(),
@@ -52,10 +52,12 @@ export function useLiveHostLiveScenesRealtime({
               (a, b) => (a.order_index ?? 0) - (b.order_index ?? 0),
             );
           }
-          if (initialSlides.length) {
-            const normalized = initialSlides.map(normalizeLiveSceneToSlide).filter(Boolean);
-            if (normalized.length) setLiveScenes(normalized);
-          }
+          // La publication Master Factory est désormais ATOMIQUE côté API
+          // (delete + insert + config dans une même transaction SQL) : un résultat
+          // vide n'est plus l'état transitoire entre delete et insert, c'est le
+          // vrai contenu de la session. On l'applique donc tel quel — l'ancienne
+          // garde `if (initialSlides.length)` masquait les vidages réels.
+          setLiveScenes(initialSlides.map(normalizeLiveSceneToSlide).filter(Boolean));
           queueMicrotask(() => sendSmartboardHostPayload());
         },
       )

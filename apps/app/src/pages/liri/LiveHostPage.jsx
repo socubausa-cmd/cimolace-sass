@@ -79,6 +79,7 @@ import {
 import { LiveHostPreviewOverlays } from '@/features/live/host/components/LiveHostPreviewOverlays';
 import { LiveHostLongiaSignalHub } from '@/features/live/host/components/LiveHostLongiaSignalHub';
 import MasterFactoryArenaImporter from '@/features/live/host/components/MasterFactoryArenaImporter';
+import { normalizeScriptSections } from '@/features/live/host/liveSmartboardLegacySlides';
 import { LiveHostLiveCenterColumn } from '@/features/live/host/components/LiveHostLiveCenterColumn';
 import { LiveHostLivePostGridSlots } from '@/features/live/host/components/LiveHostLivePostGridSlots';
 import { ETAPES_FALLBACK } from '@/features/live/host/liveSmartboardLegacySlides';
@@ -1205,16 +1206,30 @@ export default function LiveHostPage({ forceGuestRoute = false, joyKitSignalGran
     setMsTyped, stepRef, smartBoardStageRef, stepPersistTimerRef, msTypedIvRef,
   });
 
-  const handleMasterFactoryArenaImported = useCallback(({ scenes, source }) => {
+  // Rediffusion APRÈS commit React : queueMicrotask partait avant que setLiveScenes
+  // soit commité → le broadcast portait l'état périmé (anciennes scènes). Un effet
+  // armé par le handler ne se déclenche qu'une fois le nouvel état visible.
+  const [masterFactoryBroadcastTick, setMasterFactoryBroadcastTick] = useState(0);
+  useEffect(() => {
+    if (!masterFactoryBroadcastTick) return;
+    sendSmartboardHostPayload();
+  }, [masterFactoryBroadcastTick, sendSmartboardHostPayload]);
+
+  const handleMasterFactoryArenaImported = useCallback(({ scenes, source, scriptSections, resynced }) => {
     setLiveScenes(scenes);
+    // Le publish écrit le vrai Master Script dans la config — l'importer le relit
+    // et le fournit ici : on remplace le contenu du prompteur (sinon mock/périmé).
+    if (Array.isArray(scriptSections) && scriptSections.length > 0) {
+      setLiveEtapes(normalizeScriptSections(scriptSections));
+    }
     setSbActiveScene('smartboard');
     gotoStep(0);
-    queueMicrotask(() => sendSmartboardHostPayload());
+    setMasterFactoryBroadcastTick((t) => t + 1);
     toast({
-      title: 'Projet Master Factory chargé',
+      title: resynced ? 'Arène resynchronisée' : 'Projet Master Factory chargé',
       description: `${scenes.length} scènes prêtes dans l'arène${source?.title ? ` · ${source.title}` : ''}.`,
     });
-  }, [gotoStep, sendSmartboardHostPayload, toast]);
+  }, [gotoStep, toast]);
 
   useLiveHostLiriAudioSync({
     isGuestUi, phase, liriAudioScenes, liveScenes, gotoStep,

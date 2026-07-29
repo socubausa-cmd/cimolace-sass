@@ -226,6 +226,8 @@ export class MasterFactoryController {
       liveSessionId?: string;
       replaceExisting?: boolean;
       force?: boolean;
+      /** Requis pour écraser le prompteur pendant qu'un direct est EN COURS. */
+      allowDuringLive?: boolean;
     },
     @CurrentTenant() tenant: TenantContext,
     @Req() req: Request,
@@ -236,7 +238,11 @@ export class MasterFactoryController {
       body?.sourceType ?? 'replay',
       String(body?.sourceId ?? ''),
       String(body?.liveSessionId ?? ''),
-      { replaceExisting: body?.replaceExisting === true, force: body?.force === true },
+      {
+        replaceExisting: body?.replaceExisting === true,
+        force: body?.force === true,
+        allowDuringLive: body?.allowDuringLive === true,
+      },
     );
   }
 
