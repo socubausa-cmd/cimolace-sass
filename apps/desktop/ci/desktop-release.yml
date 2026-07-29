@@ -27,8 +27,8 @@ jobs:
   macos:
     runs-on: macos-14
     env:
-      CSC_LINK: ${{ secrets.MAC_CSC_LINK }}
-      CSC_KEY_PASSWORD: ${{ secrets.MAC_CSC_KEY_PASSWORD }}
+      MAC_CSC_LINK: ${{ secrets.MAC_CSC_LINK }}
+      MAC_CSC_KEY_PASSWORD: ${{ secrets.MAC_CSC_KEY_PASSWORD }}
       APPLE_ID: ${{ secrets.APPLE_ID }}
       APPLE_APP_SPECIFIC_PASSWORD: ${{ secrets.APPLE_APP_SPECIFIC_PASSWORD }}
       APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
@@ -38,7 +38,50 @@ jobs:
         with:
           node-version: 20
       - run: npm ci
-      - run: npm run build:mac
+
+      # Import du certificat « Developer ID Application » depuis un secret base64
+      # dans un trousseau temporaire (le motif macOS canonique). Sans le secret :
+      # étape sautée → build non signé (aucun échec).
+      - name: Importer le certificat Developer ID (secret base64 → trousseau temporaire)
+        run: |
+          if [ -z "$MAC_CSC_LINK" ]; then echo "MAC_CSC_LINK absent → build non signé."; exit 0; fi
+          KEYCHAIN="$RUNNER_TEMP/liri-signing.keychain-db"
+          KPWD="ci-$GITHUB_RUN_ID"
+          echo "$MAC_CSC_LINK" | base64 --decode > "$RUNNER_TEMP/cert.p12"
+          security create-keychain -p "$KPWD" "$KEYCHAIN"
+          security set-keychain-settings -lut 21600 "$KEYCHAIN"
+          security unlock-keychain -p "$KPWD" "$KEYCHAIN"
+          security import "$RUNNER_TEMP/cert.p12" -P "$MAC_CSC_KEY_PASSWORD" -A -t cert -f pkcs12 -k "$KEYCHAIN"
+          security set-key-partition-list -S apple-tool:,apple: -k "$KPWD" "$KEYCHAIN" >/dev/null
+          security list-keychains -d user -s "$KEYCHAIN" login.keychain-db
+          echo "— identités de signature disponibles :"
+          security find-identity -v -p codesigning "$KEYCHAIN"
+          # electron-builder cherchera l'identité dans CE trousseau (pas de CSC_LINK
+          # → il n'essaie pas de ré-importer).
+          echo "CSC_KEYCHAIN=$KEYCHAIN" >> "$GITHUB_ENV"
+
+      - name: Build macOS (signe si certificat présent · notarise si APPLE_* présents)
+        run: npm run build:mac
+
+      # Garde-fou : si un certificat a été fourni, le build DOIT être signé Developer
+      # ID + notarisé. Sinon on fait échouer le job (plutôt que livrer un binaire
+      # « accepté » qui déclencherait Gatekeeper chez l'utilisateur).
+      - name: Vérifier signature + notarisation
+        run: |
+          if [ -z "$MAC_CSC_LINK" ]; then echo "Pas de certificat → vérif ignorée (build non signé)."; exit 0; fi
+          APP="release/mac-arm64/LIRI.app"
+          echo "— codesign --verify (strict, profond) :"
+          codesign --verify --deep --strict --verbose=2 "$APP"
+          echo "— autorité + Team ID :"
+          codesign -dv --verbose=4 "$APP" 2>&1 | grep -E "Authority=|TeamIdentifier=" || true
+          codesign -dv --verbose=4 "$APP" 2>&1 | grep -q "Developer ID Application" \
+            || { echo "❌ non signé Developer ID"; exit 1; }
+          echo "— Gatekeeper (spctl) sur le .dmg :"
+          DMG="$(ls release/*arm64*.dmg | head -1)"
+          spctl -a -vvv -t install "$DMG"
+          echo "— ticket de notarisation agrafé :"
+          xcrun stapler validate "$APP"
+
       - uses: actions/upload-artifact@v4
         with:
           name: liri-macos
