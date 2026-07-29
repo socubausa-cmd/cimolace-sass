@@ -162,8 +162,18 @@ const MAX_TOKENS = 14000;
  * 110 s laisse deux tentatives entières dans le budget total, contre trois tentatives
  * dont aucune n'avait le temps d'aboutir.
  */
-const TIMEOUT_APPEL_MS = 110000;
-const BUDGET_TOTAL_MS = 240000; // 4 min pour toute la phase de sélection
+/**
+ * ⚠️ RELEVÉ À 140 s QUAND LE CONTRAT DE CITATION EST ARRIVÉ, et pour la même raison
+ * qui avait fait passer 75 → 110 : le travail a grossi, pas la prudence. Le prompt
+ * réclame désormais DEUX phrases recopiées mot pour mot par extrait, en plus du
+ * titre et de la raison. Mesuré en production sans ce relèvement : **3 expirations
+ * sur 3**, la sélection par le sens abandonnée, et un repli mécanique qui a livré
+ * quatre extraits de 45 s sans titre — exactement ce que ce moteur existe pour ne
+ * plus faire.
+ */
+const TIMEOUT_APPEL_MS = 140000;
+/** 5 min : deux tentatives ENTIÈRES à 140 s, plus la marge de la relance ciblée. */
+const BUDGET_TOTAL_MS = 300000;
 
 // ── Seuils du garde-fou (calibrés sur le replay de référence, cf. en-tête) ─────
 /**
@@ -512,6 +522,9 @@ CONTRAINTES (impératives) :
   SITUER la zone. Ce sont ces deux citations qui décideront des bornes réelles.
 - "phrase_ouverture" = la PREMIÈRE PHRASE ENTIÈRE de l'extrait, RECOPIÉE MOT POUR MOT
   depuis le texte ci-dessous. Pas résumée, pas reformulée, pas corrigée.
+  ⚠️ COURTE : 12 mots au plus. Si la phrase est longue, recopie ses 12 premiers mots —
+  ils suffisent à la retrouver. Une citation à rallonge coûte du temps de réponse et
+  n'apporte aucune précision de plus.
 - "phrase_cloture" = la DERNIÈRE PHRASE ENTIÈRE de l'extrait, recopiée de la même façon.
 - ⛔ L'OUVERTURE NE COMMENCE JAMAIS PAR UN MOT DE LIAISON — « et », « donc », « alors »,
   « mais », « puis », « ensuite », « car », « parce que », « or ». Un extrait qui démarre
@@ -1565,7 +1578,12 @@ async function demanderAuModele(segments, dureeSec, titre, max, journal, diagnos
   const parTranche = Math.max(
     2,
     Math.min(
-      Math.max(3, Math.round((tranches[0].fin - tranches[0].debut) / 120)),
+      // ⚠️ 180 ET NON 120 DEPUIS LE CONTRAT DE CITATION. Chaque moment demandé coûte
+      // maintenant deux phrases RECOPIÉES en plus de son titre et de sa raison :
+      // en réclamer un toutes les deux minutes faisait sortir 10 moments d'une tranche
+      // de 21 min, et l'appel n'aboutissait plus (3 expirations sur 3 en production).
+      // Un toutes les trois minutes en donne 7 — on n'en garde que 5 de toute façon.
+      Math.max(3, Math.round((tranches[0].fin - tranches[0].debut) / 180)),
       Math.ceil((max * SUR_PRODUCTION) / tranches.length),
     ),
   );
