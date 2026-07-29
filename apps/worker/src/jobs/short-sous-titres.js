@@ -501,17 +501,35 @@ export function decouperEnUnitesDepuisMots(mots, debut, fin, opts = {}) {
     return unites;
   }
 
-  const lignes = couperEnLignes(dedans.map((m) => m.mot).join(' '), maxCar);
-  // Combien de MOTS chaque ligne consomme. On avance dans `dedans` au même rythme
-  // que dans le texte : la ligne « Je suis Cheo » consomme trois mots, quelles que
-  // soient leurs durées.
-  let curseurMot = 0;
-  const lignesAvecMots = lignes.map((l) => {
-    const n = l.split(/\s+/).filter(Boolean).length;
-    const tranche = dedans.slice(curseurMot, curseurMot + n);
-    curseurMot += n;
-    return { ligne: l, mots: tranche };
-  }).filter((x) => x.mots.length > 0);
+  // ⭐ LE TEMPS D'ABORD, LES CARACTÈRES ENSUITE — et l'ordre inverse a produit un
+  // carton de 16,28 s EN PRODUCTION, après un premier correctif qui n'allait pas
+  // assez loin.
+  // `couperEnLignes` ne connaît que les CARACTÈRES : deux mots séparés par dix-huit
+  // secondes de silence atterrissent dans la même ligne (« Cele, Takenaro »), et
+  // aucune coupure appliquée ENTRE les lignes ne peut plus les séparer. On découpe
+  // donc le flux en RUNS DE PAROLE CONTINUE d'abord, puis on met chaque run en
+  // lignes. Une ligne ne peut alors plus enjamber un blanc, par construction.
+  const runs = [];
+  for (const m of dedans) {
+    const cour = runs[runs.length - 1];
+    if (cour && m.t - cour[cour.length - 1].e < COUPURE_CARTON_SEC) cour.push(m);
+    else runs.push([m]);
+  }
+
+  const lignesAvecMots = [];
+  for (const run of runs) {
+    const lignes = couperEnLignes(run.map((m) => m.mot).join(' '), maxCar);
+    // Combien de MOTS chaque ligne consomme. On avance dans le run au même rythme
+    // que dans le texte : la ligne « Je suis Cheo » consomme trois mots, quelles que
+    // soient leurs durées.
+    let curseurMot = 0;
+    for (const l of lignes) {
+      const n = l.split(/\s+/).filter(Boolean).length;
+      const tranche = run.slice(curseurMot, curseurMot + n);
+      curseurMot += n;
+      if (tranche.length) lignesAvecMots.push({ ligne: l, mots: tranche });
+    }
+  }
 
   // ⭐ UN CARTON NE DOIT JAMAIS ENJAMBER UN SILENCE — et l'avoir oublié a produit,
   // EN PRODUCTION, un carton de 18,96 s : pire que les 11,83 s de la voie estimée
