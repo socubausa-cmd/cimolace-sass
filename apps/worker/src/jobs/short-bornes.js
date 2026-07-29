@@ -53,7 +53,7 @@ import { spawn } from 'child_process';
 import { readFile, unlink } from 'fs/promises';
 import { tmpdir } from 'os';
 import { join } from 'path';
-import { normaliserMot, motAncre } from './short-sous-titres.js';
+import { normaliserMot, motAncre, appliquerGlossaireAuxMots } from './short-sous-titres.js';
 
 // ── Les nombres, et d'où ils viennent ─────────────────────────────────────
 
@@ -367,6 +367,8 @@ export async function bornesAuMot({
   phraseCloture,
   dureeSource = Infinity,
   glossaire = null,
+  /** Plafond de durée de l'extrait, en secondes. 0 ou null = pas de plafond. */
+  dureeMax = 0,
   journal = console,
   budgetMs = BUDGET_BORNES_MS,
 }) {
@@ -404,7 +406,17 @@ export async function bornesAuMot({
     // ⚠️ REMETTRE LES MOTS À L'HEURE DU FICHIER COMPLET. Whisper horodate la
     // TRANCHE, qui commence à 0 ; sans ce décalage, toutes les bornes sortiraient
     // ~11 minutes trop tôt sur ce replay, et rien dans le résultat ne le dirait.
-    const motsAbsolus = mots.map((m) => ({ ...m, t: arrondi(m.t + z0), e: arrondi(m.e + z0) }));
+    const motsBruts = mots.map((m) => ({ ...m, t: arrondi(m.t + z0), e: arrondi(m.e + z0) }));
+
+    // ⭐ LE GLOSSAIRE MORD SUR LES MOTS **AVANT** DE CHERCHER LES CITATIONS, et
+    // l'oublier a coûté un rejet à tort en production.
+    // Le modèle cite depuis le texte des cues, DÉJÀ passé au glossaire : il écrit
+    // « Manikongo fils de Kimpa Vita ». La passe au mot, elle, entend le son brut et
+    // rend « Mani Kongo » puis « Vitakimpa ». Sur 7 mots porteurs cherchés, 2 seulement
+    // s'ancraient — sous le seuil de 0,5 — et l'extrait phare du replay était REFUSÉ
+    // pour « citation introuvable » alors que la phrase était là, mot pour mot.
+    // On met donc les deux côtés dans la même orthographe avant de les comparer.
+    const { mots: motsAbsolus } = appliquerGlossaireAuxMots(motsBruts, glossaire);
     const phrases = phrasesDepuisMots(motsAbsolus);
     if (phrases.length === 0) return repli('aucune phrase reconstituée');
 
@@ -436,7 +448,35 @@ export async function bornesAuMot({
     }
 
     const debut = arrondi(Math.max(z0, pOuv.debut - RESPIRATION_TETE));
-    const fin = arrondi(Math.min(z1, pClo.fin + RESPIRATION_QUEUE));
+    let fin = arrondi(Math.min(z1, pClo.fin + RESPIRATION_QUEUE));
+
+    // ⚠️ BORNAGE DUR DE LA DURÉE — sans lui le recalage a produit un « short » de 69 s
+    // en production. `lireExtraits` borne la durée du candidat, mais le recalage
+    // travaille APRÈS et étend jusqu'aux frontières de phrase : rien ne le retenait.
+    // On raccourcit alors PAR PHRASES ENTIÈRES, jamais au milieu d'une — couper à la
+    // seconde ici défairait tout ce que ce module vient de calculer.
+    if (dureeMax && fin - debut > dureeMax) {
+      const dansLaFenetre = phrases.filter((p) => p.debut >= pOuv.debut && p.fin <= fin);
+      let derniere = null;
+      for (const p of dansLaFenetre) {
+        if (p.fin + RESPIRATION_QUEUE - debut <= dureeMax) derniere = p;
+        else break;
+      }
+      if (derniere) {
+        fin = arrondi(derniere.fin + RESPIRATION_QUEUE);
+        journal.log?.(`[short-bornes] durée ramenée à ${arrondi(fin - debut)} s (plafond ${dureeMax} s), sur une frontière de phrase`);
+      } else {
+        // Même la PREMIÈRE phrase dépasse le plafond : on ne peut pas la couper sans
+        // trahir le propos. On refuse plutôt que de livrer une phrase tronquée.
+        return {
+          granularite: 'mot', debut, fin, motif: null, mots: motsAbsolus, phrases,
+          refus: {
+            code: 'phrase_trop_longue',
+            detail: `la première phrase dure ${arrondi(phrases[ouv.index].fin - phrases[ouv.index].debut)} s, au-delà du plafond de ${dureeMax} s`,
+          },
+        };
+      }
+    }
     journal.log?.(
       `[short-bornes] ${fournisseur} · ${motsAbsolus.length} mots, ${phrases.length} phrases · `
       + `${zoneDebut}→${zoneFin} recalé en ${debut}→${fin} `

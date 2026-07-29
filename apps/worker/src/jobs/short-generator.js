@@ -69,7 +69,7 @@ import { S3Client, GetObjectCommand, PutObjectCommand, DeleteObjectCommand } fro
 // CHOIX DES MOMENTS — voir short-highlights.js. L'ancienne `detectHighlightMoments`
 // n'avait aucun critère d'accroche (96 % des segments passaient son test) : elle a été
 // SUPPRIMÉE, pas contournée.
-import { selectionnerMoments, MAX_EXTRAITS } from './short-highlights.js';
+import { selectionnerMoments, MAX_EXTRAITS, DUREE_MAX } from './short-highlights.js';
 // CADRAGE — où est le contenu dans l'image (marges mortes, vignette caméra,
 // gouttières entre colonnes). Voir short-cadrage.js : la détection y est mesurée,
 // la décision de recadrer est prise ici (geometrieVerticale).
@@ -1398,6 +1398,9 @@ async function processVideoForShorts(recordingId, tenantId, storageKey, videoUrl
         phraseCloture: e.phraseCloture,
         dureeSource: dureeReelle,
         glossaire: glo,
+        // Le recalage étend jusqu'aux frontières de phrase : sans ce plafond il a
+        // produit un « short » de 69 s en production.
+        dureeMax: DUREE_MAX,
         journal: console,
       });
       e.granulariteBornes = r.granularite;
