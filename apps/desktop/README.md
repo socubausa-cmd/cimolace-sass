@@ -60,8 +60,68 @@ le slug est figé à la compilation.
 
 ## Signature et distribution
 
-Non configurées à ce stade. macOS exigera un certificat Apple Developer pour
-éviter l'avertissement Gatekeeper au premier lancement ; Windows, un certificat
-de signature de code pour éviter l'écran SmartScreen. Sans eux, les binaires
-fonctionnent mais l'utilisateur doit confirmer une alerte à la première
-ouverture.
+Le **câblage est en place** (`hardenedRuntime` + entitlements + hook de
+notarisation `scripts/notarize.cjs`, tout gaté par variables d'env — **aucun
+secret dans le dépôt**). Il ne reste qu'à fournir les certificats : dès qu'ils
+sont posés en env, le même `npm run build:*` signe, notarise et agrafe.
+
+### macOS — signature « Developer ID » + notarisation
+
+Prérequis (une fois) :
+1. **Apple Developer Program** (99 $/an) → dans Xcode/Trousseau, un certificat
+   **« Developer ID Application »**. Exporte-le en `.p12` (avec mot de passe).
+2. **Mot de passe pour app** : [appleid.apple.com](https://appleid.apple.com) →
+   Connexion et sécurité → Mots de passe pour app.
+3. **Team ID** (10 caractères) : [developer.apple.com](https://developer.apple.com/account) → Membership.
+
+Puis, à chaque build de distribution :
+
+```bash
+export CSC_LINK="/chemin/DeveloperID.p12"      # ou base64 du .p12
+export CSC_KEY_PASSWORD="motdepasse-du-p12"
+export APPLE_ID="ton@appleid.com"
+export APPLE_APP_SPECIFIC_PASSWORD="xxxx-xxxx-xxxx-xxxx"
+export APPLE_TEAM_ID="XXXXXXXXXX"
+npm run build:mac        # signe (hardened runtime + entitlements) → notarise → agrafe
+```
+
+Vérifier :
+
+```bash
+codesign --verify --deep --strict --verbose=2 "release/mac-arm64/LIRI.app"
+spctl -a -vvv -t install "release/LIRI-1.0.0-arm64.dmg"   # → "accepted … Notarized Developer ID"
+xcrun stapler validate "release/mac-arm64/LIRI.app"
+```
+
+### Windows — signature de code
+
+Deux voies :
+- **Certificat OV/EV** (Sectigo, DigiCert…) en `.pfx` :
+  ```bash
+  export WIN_CSC_LINK="/chemin/cert.pfx"     # ou CSC_LINK
+  export WIN_CSC_KEY_PASSWORD="motdepasse"
+  npm run build:win
+  ```
+  La signature depuis macOS passe par `osslsigncode` (electron-builder le gère) ;
+  idéalement, builder/vérifier **sur une machine Windows**.
+- **Azure Trusted Signing** (moderne, aucun `.pfx` à stocker) : renseigner
+  `win.azureSignOptions` dans `package.json` (electron-builder 25). Recommandé si
+  tu n'as pas encore de certificat physique.
+
+Vérifier (sur Windows) : `signtool verify /pa /v "release\LIRI Setup 1.0.0.exe"`.
+
+⚠️ Le binaire Windows peut être **produit** depuis ce Mac mais pas **exécuté** ni
+vérifié ici : la validation réelle demande une machine Windows.
+
+### En attendant les certificats (intérim)
+
+Les binaires non signés **fonctionnent**, l'utilisateur doit juste confirmer une alerte :
+- **macOS** : clic droit sur l'app → *Ouvrir* → *Ouvrir* ; ou
+  `xattr -dr com.apple.quarantine "/Applications/LIRI.app"`.
+- **Windows** : sur l'écran SmartScreen → *Informations complémentaires* → *Exécuter quand même*.
+
+### Mise à jour automatique (plus tard)
+
+electron-builder génère déjà `latest-mac.yml` / `latest.yml`. Pour activer
+l'auto-update (`electron-updater`), définir un bloc `publish` (generic/S3/GitHub
+Releases) et héberger les artefacts + `.yml`. Hors périmètre à ce stade.
