@@ -32,7 +32,7 @@ const mmss = (sec) => {
  * que l'utilisateur va regarder un par un. On ne charge que la première image.
  */
 export default function ExtraitsCourtsModal({ videoId, titreReplay, onClose, onPublier }) {
-  const [etat, setEtat] = useState({ phase: 'chargement', clips: [], message: '' });
+  const [etat, setEtat] = useState({ phase: 'chargement', clips: [], refus: [], message: '' });
   // Un seul extrait joue à la fois : cinq bandes-son simultanées sont
   // inécoutables, et c'est exactement ce que fait un clic sur le deuxième
   // lecteur si personne ne met le premier en pause.
@@ -40,12 +40,16 @@ export default function ExtraitsCourtsModal({ videoId, titreReplay, onClose, onP
 
   useEffect(() => {
     let vivant = true;
-    setEtat({ phase: 'chargement', clips: [], message: '' });
+    setEtat({ phase: 'chargement', clips: [], refus: [], message: '' });
     videothequeApi.listShorts(videoId)
       .then((r) => {
         if (!vivant) return;
         const clips = Array.isArray(r?.clips) ? r.clips : [];
-        setEtat({ phase: clips.length ? 'pret' : 'vide', clips, message: '' });
+        const refus = Array.isArray(r?.refus) ? r.refus : [];
+        // ⚠️ « vide » ne veut pas dire « rien ne s'est passé ». Un replay peut n'avoir
+        // AUCUN extrait publiable et POURTANT des refus à montrer — c'est même le cas
+        // le plus instructif pour le créateur.
+        setEtat({ phase: clips.length || refus.length ? 'pret' : 'vide', clips, refus, message: '' });
       })
       .catch((e) => {
         if (!vivant) return;
@@ -53,6 +57,7 @@ export default function ExtraitsCourtsModal({ videoId, titreReplay, onClose, onP
         setEtat({
           phase: 'erreur',
           clips: [],
+          refus: [],
           message: /403|forbidden/i.test(msg)
             ? "Réservé aux enseignants et responsables de l'école."
             : msg || 'Extraits illisibles.',
@@ -116,6 +121,7 @@ export default function ExtraitsCourtsModal({ videoId, titreReplay, onClose, onP
                     donnait « verticalaux » à l'écran. On remplace la FIN du mot. */}
                 {etat.clips.length} extrait{etat.clips.length > 1 ? 's' : ''}{' '}
                 vertic{etat.clips.length > 1 ? 'aux' : 'al'} · format 1080×1920, sous-titres incrustés
+                {etat.refus.length ? ` · ${etat.refus.length} passage${etat.refus.length > 1 ? 's' : ''} écarté${etat.refus.length > 1 ? 's' : ''}` : ''}
               </p>
             ) : null}
           </div>
@@ -210,6 +216,64 @@ export default function ExtraitsCourtsModal({ videoId, titreReplay, onClose, onP
               ))}
             </div>
           )}
+
+          {/* ── CE QUI A ÉTÉ ÉCARTÉ, ET POURQUOI ────────────────────────────
+              ⭐ Un refus muet est un refus qu'on ne peut pas corriger. Le moteur
+              écarte désormais des passages plutôt que de livrer du bavardage de
+              fin de séance ou un titre que le clip ne tient pas ; sans cette
+              liste, le créateur verrait « 2 extraits » là où il en attendait 5,
+              sans savoir pourquoi ni pouvoir contester. */}
+          {etat.phase === 'pret' && etat.refus.length > 0 ? (
+            <div style={{ marginTop: etat.clips.length ? 28 : 0 }}>
+              <h3 style={{
+                fontSize: 12, fontWeight: 700, letterSpacing: '.04em', color: C.muted,
+                margin: '0 0 4px', textTransform: 'uppercase',
+              }}>
+                Écarté au contrôle de sortie
+              </h3>
+              <p style={{ color: C.faint, fontSize: 12, margin: '0 0 12px', maxWidth: 720 }}>
+                Ces passages ont été trouvés puis refusés : un mauvais extrait publié coûte
+                plus cher qu'un extrait retenu. Si tu n'es pas d'accord, le motif te dit
+                exactement quoi corriger — la fin du passage, le titre, ou le vocabulaire de l'école.
+              </p>
+              <ul style={{ listStyle: 'none', margin: 0, padding: 0, display: 'grid', gap: 8 }}>
+                {etat.refus.map((r, i) => (
+                  <li key={`${r.debut_sec}-${i}`} style={{
+                    border: `1px solid ${C.line}`, borderRadius: 12, padding: '11px 14px',
+                    background: 'rgba(255,255,255,.03)',
+                  }}>
+                    <div style={{ display: 'flex', alignItems: 'baseline', gap: 10, flexWrap: 'wrap' }}>
+                      <span style={{
+                        fontSize: 10.5, fontWeight: 700, letterSpacing: '.03em', color: '#f0c3ac',
+                        border: `1px solid ${C.coral}`, background: C.coralTint,
+                        padding: '2px 7px', borderRadius: 999,
+                      }}>
+                        {r.code}
+                      </span>
+                      <span style={{ fontSize: 13, color: C.ink, fontWeight: 600 }}>
+                        {r.titre || 'Sans titre'}
+                      </span>
+                      <span style={{ fontSize: 11.5, color: C.faint }}>
+                        à {mmss(r.debut_sec)} du replay
+                      </span>
+                    </div>
+                    <p style={{ fontSize: 12.5, color: C.muted, margin: '6px 0 0', lineHeight: 1.45 }}>
+                      {r.motif}
+                    </p>
+                    {r.extrait_texte ? (
+                      <p style={{
+                        fontSize: 11.5, color: C.faint, margin: '6px 0 0', lineHeight: 1.45,
+                        fontStyle: 'italic', display: '-webkit-box', WebkitLineClamp: 2,
+                        WebkitBoxOrient: 'vertical', overflow: 'hidden',
+                      }}>
+                        « {r.extrait_texte} »
+                      </p>
+                    ) : null}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ) : null}
         </div>
 
         {/* ── Pied : la publication reste un geste explicite ──────────────── */}

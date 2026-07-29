@@ -1016,6 +1016,8 @@ export const masterFactoryApi = {
   }) => apiV2.post<ApiEnvelope<any>>('/master-factory/publish/live-session', body).then(unwrap),
   renderPdf: (body: { sourceType?: MasterFactorySourceType; sourceId: string }) =>
     apiV2.post<ApiEnvelope<any>>('/master-factory/render/pdf', body).then(unwrap),
+  renderMasterclassProject: (body: { sourceType?: MasterFactorySourceType; sourceId: string }) =>
+    apiV2.post<ApiEnvelope<any>>('/master-factory/render/masterclass-project', body).then(unwrap),
 };
 
 // ── Vidéothèque : EXTRAITS COURTS (short_clips) d'un replay ──────────────────
@@ -1080,9 +1082,24 @@ export const videothequeApi = {
    * et savoir combien il y en a sont deux questions, et la seconde se pose en
    * boucle alors que la première ne se pose qu'à l'ouverture d'un panneau.
    */
-  listShorts: (videoId: string): Promise<{ clips: ReplayShortClip[] }> =>
-    apiV2.get<ApiEnvelope<{ clips: ReplayShortClip[] }>>(`/zoom-engine/shorts/${videoId}`).then(unwrap),
+  listShorts: (videoId: string): Promise<{ clips: ReplayShortClip[]; refus: ReplayShortRefus[] }> =>
+    apiV2.get<ApiEnvelope<{ clips: ReplayShortClip[]; refus: ReplayShortRefus[] }>>(`/zoom-engine/shorts/${videoId}`).then(unwrap),
 };
+
+/**
+ * Un passage ÉCARTÉ au contrôle de sortie, et son motif.
+ * Le moteur refuse plutôt que de livrer ; sans cette liste, le créateur verrait
+ * « 2 extraits » là où il en attendait 5, sans savoir pourquoi ni pouvoir contester.
+ */
+export interface ReplayShortRefus {
+  debut_sec: number;
+  fin_sec: number;
+  titre: string | null;
+  /** FIN_LOGISTIQUE · QUESTION_SANS_REPONSE · TITRE_NON_TENU · JURY · citation_introuvable */
+  code: string;
+  motif: string;
+  extrait_texte: string | null;
+}
 
 /** Un extrait court prêt à être regardé. `url` est nulle si la présignature a échoué. */
 export interface ReplayShortClip {

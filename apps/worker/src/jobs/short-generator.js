@@ -90,6 +90,7 @@ import {
   preparerTitre, srtDesUnites,
 } from './short-sous-titres.js';
 import { bornesAuMot } from './short-bornes.js';
+import { controlerSortie } from './short-jury.js';
 
 const supabase = createClient(
   process.env.SUPABASE_URL || '',
@@ -1384,6 +1385,9 @@ async function processVideoForShorts(recordingId, tenantId, storageKey, videoUrl
     // ⚠️ NON BLOQUANT, MAIS JAMAIS SILENCIEUX. Chaque extrait garde sa granularité
     // ('mot' ou 'cue') et, en cas de repli, le motif. Un moteur qui dégrade sans le
     // dire produit exactement le défaut qu'on vient de passer une session à traquer.
+    // Tout ce qui est ÉCARTÉ en chemin — au recalage puis au contrôle de sortie.
+    // Une seule liste : le créateur se moque de savoir quelle étape a dit non.
+    const refusOfferts = [];
     const refusesAuRecalage = [];
     for (const e of extraits) {
       const r = await bornesAuMot({
@@ -1402,6 +1406,10 @@ async function processVideoForShorts(recordingId, tenantId, storageKey, videoUrl
         // ⛔ Une citation absente de l'audio = une phrase que le modèle a écrite
         // lui-même. On ne fabrique pas : on note et on écarte.
         refusesAuRecalage.push({ start: e.start, end: e.end, titre: e.titre, ...r.refus });
+        refusOfferts.push({
+          start: e.start, end: e.end, titre: e.titre || null,
+          code: r.refus.code, detail: r.refus.detail, extrait_texte: null,
+        });
         e.ecarte = r.refus.code;
         continue;
       }
@@ -1578,6 +1586,44 @@ async function processVideoForShorts(recordingId, tenantId, storageKey, videoUrl
         );
       }
     }
+
+    // 5bis. CONTRÔLE DE SORTIE — refuser plutôt que livrer (short-jury.js).
+    //
+    // ⭐ ICI, ET PAS APRÈS L'ENCODAGE. Un extrait refusé après ffmpeg aurait coûté
+    // son encodage, son envoi sur R2 et sa ligne en base pour finir écarté. On juge
+    // sur ce qui sera RÉELLEMENT à l'écran — les cartons de sous-titre, déjà
+    // calculés — avant de dépenser quoi que ce soit.
+    //
+    // ⚠️ LE JURY NE PEUT QUE RETRANCHER. Il ne crée aucun extrait, n'en rallonge
+    // aucun, ne réécrit aucun titre. Un juge sans pouvoir d'addition ne peut pas
+    // faire naître un clip d'une hallucination.
+    const { gardes, refuses } = await controlerSortie({
+      extraits: highlights,
+      // Le juge par le sens n'est pas encore branché sur un fournisseur : seules
+      // les trois règles mesurées s'appliquent. `controlerSortie` traite l'absence
+      // de juge comme « ne refuse rien de plus », jamais comme un refus global.
+      appelModele: null,
+      journal: console,
+    });
+    for (const r of refuses) {
+      console.warn(`[short-gen] ⛔ Extrait écarté (${r.code}) @${r.start}s « ${r.titre || '—'} » : ${r.detail}`);
+    }
+    if (gardes.length === 0) {
+      // ⭐ ON LE DIT, ET ON NE FABRIQUE RIEN. Le coût d'un mauvais clip publié
+      // dépasse celui d'un clip écarté : il se voit, il circule, et il se juge
+      // sans appel.
+      throw new Error(
+        `Aucun extrait publiable dans ce replay : ${refuses.length} passage(s) écarté(s) au contrôle `
+        + `de sortie (${[...new Set(refuses.map((r) => r.code))].join(', ')}). Rien n'a été fabriqué.`,
+      );
+    }
+    if (refuses.length) {
+      console.log(`[short-gen] Contrôle de sortie : ${gardes.length} gardé(s), ${refuses.length} écarté(s) — on livre moins, mais on livre du publiable`);
+    }
+    // Archivés pour l'écriture finale : c'est ce qui sera affiché au créateur.
+    refusOfferts.push(...refuses);
+    highlights.length = 0;
+    highlights.push(...gardes);
 
     await mkdir(shortsDir, { recursive: true });
     const clips = [];
@@ -1810,6 +1856,11 @@ async function processVideoForShorts(recordingId, tenantId, storageKey, videoUrl
       const update = {
         shorts_status: 'done',
         shorts_error: null,
+        // ⭐ CE QUI A ÉTÉ ÉCARTÉ, ET POURQUOI. Sans cette trace, le créateur voit
+        // « 2 extraits » là où il en attendait 5, sans le moindre moyen de savoir
+        // pourquoi ni de contester. `null` plutôt qu'un tableau vide : la colonne
+        // distingue « aucun refus » de « fabrication antérieure au dispositif ».
+        shorts_refus: refusOfferts.length ? refusOfferts : null,
         updated_at: new Date().toISOString(),
       };
       // On n'écrit `transcript_text` que si on vient RÉELLEMENT de transcrire :

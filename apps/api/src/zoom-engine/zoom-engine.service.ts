@@ -607,7 +607,23 @@ export class ZoomEngineService {
         }),
       })),
     );
-    return { clips };
+    // ⭐ CE QUI A ÉTÉ ÉCARTÉ VOYAGE AVEC CE QUI A ÉTÉ GARDÉ. Le moteur refuse
+    // désormais des passages plutôt que de livrer du bavardage de fin de séance ou
+    // un titre que le clip ne tient pas. Renvoyer les extraits sans les refus
+    // laisserait le créateur devant « 2 extraits » là où il en attendait 5, sans
+    // aucun moyen de savoir pourquoi — ni de contester.
+    const refus = Array.isArray(rec?.shorts_refus) ? rec.shorts_refus : [];
+    return {
+      clips,
+      refus: refus.map((r: any) => ({
+        debut_sec: Number(r?.start) || 0,
+        fin_sec: Number(r?.end) || 0,
+        titre: r?.titre || null,
+        code: String(r?.code || 'INCONNU'),
+        motif: String(r?.detail || ''),
+        extrait_texte: r?.extrait_texte || null,
+      })),
+    };
   }
 
   /**
