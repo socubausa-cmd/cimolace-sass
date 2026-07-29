@@ -475,6 +475,16 @@ export function appliquerGlossaireAuxMots(mots, glossaire) {
  * `debut`/`fin` = bornes de l'extrait, en secondes absolues. Les unités rendues sont
  * en secondes RELATIVES à `debut`, comme celles de `decouperEnUnites`.
  */
+/**
+ * Silence au-delà duquel un carton de sous-titre se ferme, en secondes.
+ *
+ * 1,0 s et non `PAUSE_PHRASE` (0,45 s) : on ne cherche pas ici une frontière de
+ * PROPOS — c'est le travail de `short-bornes.js` — mais à empêcher un carton de
+ * rester à l'écran pendant un blanc. Un souffle de 0,5 s au milieu d'une phrase ne
+ * justifie pas de couper le sous-titre en deux ; une seconde de silence, si.
+ */
+const COUPURE_CARTON_SEC = 1.0;
+
 export function decouperEnUnitesDepuisMots(mots, debut, fin, opts = {}) {
   const maxCar = opts.maxCar || MAX_CAR_LIGNE;
   const maxLignes = opts.maxLignes || MAX_LIGNES_PAROLE;
@@ -503,8 +513,32 @@ export function decouperEnUnitesDepuisMots(mots, debut, fin, opts = {}) {
     return { ligne: l, mots: tranche };
   }).filter((x) => x.mots.length > 0);
 
-  for (let i = 0; i < lignesAvecMots.length; i += maxLignes) {
-    const groupe = lignesAvecMots.slice(i, i + maxLignes);
+  // ⭐ UN CARTON NE DOIT JAMAIS ENJAMBER UN SILENCE — et l'avoir oublié a produit,
+  // EN PRODUCTION, un carton de 18,96 s : pire que les 11,83 s de la voie estimée
+  // qu'on remplaçait. Grouper les lignes par NOMBRE seulement suffit tant que la
+  // parole est continue ; sur ce replay, le formateur psalmodie avec jusqu'à 21,7 s
+  // entre deux mots (le banc l'avait mesuré, je ne l'avais pas relié). Deux lignes
+  // consécutives DANS LE TEXTE peuvent donc être séparées par vingt secondes DANS
+  // LE SON, et le carton reste affiché tout du long.
+  // On coupe donc aussi sur le TEMPS : au-delà de `COUPURE_CARTON_SEC` entre la fin
+  // d'une ligne et le début de la suivante, le carton se ferme, quel que soit le
+  // nombre de lignes qu'il contient.
+  const groupes = [];
+  let enCours = [];
+  for (const l of lignesAvecMots) {
+    if (enCours.length > 0) {
+      const finPrec = enCours[enCours.length - 1].mots[enCours[enCours.length - 1].mots.length - 1].e;
+      const debutSuiv = l.mots[0].t;
+      if (enCours.length >= maxLignes || debutSuiv - finPrec >= COUPURE_CARTON_SEC) {
+        groupes.push(enCours);
+        enCours = [];
+      }
+    }
+    enCours.push(l);
+  }
+  if (enCours.length) groupes.push(enCours);
+
+  for (const groupe of groupes) {
     const motsCarton = groupe.flatMap((g) => g.mots);
     if (motsCarton.length === 0) continue;
     const d = Math.max(debut, motsCarton[0].t);
