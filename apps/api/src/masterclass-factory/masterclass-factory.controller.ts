@@ -144,6 +144,22 @@ export class MasterclassFactoryController {
     return this.courseJobs.request(t.id, (r as any).user?.id, String(d?.videoId ?? ''));
   }
 
+  /**
+   * PONT « Importer une vidéo » du Studio → pipeline post-production.
+   * Le fichier a déjà été téléversé dans le bucket public `videos` ; on le recopie
+   * sur R2 et on crée un VRAI `published_videos` (transcript vide → le worker
+   * Deepgram transcrit). Renvoie l'id réel à utiliser comme contentId côté Studio,
+   * à la place de l'UUID aléatoire qui ne référençait aucune ligne.
+   */
+  @Post('studio-import')
+  @Roles('owner', 'admin', 'teacher')
+  studioImport(
+    @Body() d: { storagePath?: string; title?: string; description?: string; durationSeconds?: number },
+    @CurrentTenant() t: TenantContext,
+  ) {
+    return this.courseJobs.importStudioFile(t.id, d ?? {});
+  }
+
   @Get('course-job/:id')
   courseJob(@Param('id') id: string, @CurrentTenant() t: TenantContext) {
     return this.courseJobs.get(t.id, id);

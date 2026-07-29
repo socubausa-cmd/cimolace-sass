@@ -969,6 +969,18 @@ export const masterclassApi = {
     apiV2.get<ApiEnvelope<any>>(`/masterclass-factory/course-job/${jobId}`).then(unwrap),
   courseJobByVideo: (videoId: string) =>
     apiV2.get<ApiEnvelope<any>>(`/masterclass-factory/course-job/by-video/${videoId}`).then(unwrap),
+  /**
+   * PONT « Importer une vidéo » du Studio → pipeline post-production. Le fichier a
+   * déjà été téléversé dans le bucket public `videos` (VideoUploadModal) ; ce call
+   * le recopie sur R2 et crée un VRAI `published_videos` (transcript vide → worker
+   * Deepgram). Renvoie `{ publishedVideoId, storageKey, transcribed }` : on utilise
+   * `publishedVideoId` comme contentId du Studio, à la place de l'UUID aléatoire —
+   * sans quoi transcript / segments / course-from-replay renvoient 404.
+   */
+  studioImport: (body: { storagePath: string; title?: string; description?: string; durationSeconds?: number }) =>
+    apiV2
+      .post<ApiEnvelope<any>>('/masterclass-factory/studio-import', body, { timeout: 300000 })
+      .then(unwrap),
   savePrecepteur: (body: Record<string, unknown>) =>
     apiV2.post<ApiEnvelope<any>>('/masterclass-factory/precepteur', body).then(unwrap),
 };
@@ -1020,6 +1032,10 @@ export const masterFactoryApi = {
     apiV2.post<ApiEnvelope<any>>('/master-factory/render/pdf', body).then(unwrap),
   renderMasterclassProject: (body: { sourceType?: MasterFactorySourceType; sourceId: string }) =>
     apiV2.post<ApiEnvelope<any>>('/master-factory/render/masterclass-project', body).then(unwrap),
+  enrichVisualPedagogy: (body: { sourceType?: MasterFactorySourceType; sourceId: string; force?: boolean }) =>
+    apiV2.post<ApiEnvelope<any>>('/master-factory/enrich/visual-pedagogy', body, { timeout: 240000 }).then(unwrap),
+  reviewVisualImage: (body: { sourceType?: MasterFactorySourceType; sourceId: string; chapterId: number; role: string; status: 'pending_review' | 'approved' | 'rejected'; imageUrl?: string; provider?: string; note?: string }) =>
+    apiV2.post<ApiEnvelope<any>>('/master-factory/review/visual-image', body).then(unwrap),
 };
 
 // ── Vidéothèque : EXTRAITS COURTS (short_clips) d'un replay ──────────────────

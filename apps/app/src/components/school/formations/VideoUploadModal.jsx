@@ -207,9 +207,11 @@ const VideoUploadModal = ({ isOpen, onClose, onSave }) => {
     setUploadProgress(0);
     setUploadDone(false);
     try {
-      const MAX_MB = 25;
+      // 300 Mo : l'import Studio recopie ensuite le fichier sur R2 côté serveur
+      // (studio-import, plafond 400 Mo). Au-delà, passer par le pipeline Zoom.
+      const MAX_MB = 300;
       if (file.size > MAX_MB * 1024 * 1024) {
-        throw new Error(`Vidéo trop grande (${(file.size / 1024 / 1024).toFixed(1)} MB). Limite : ${MAX_MB} MB. Utilise une vidéo plus courte.`);
+        throw new Error(`Fichier trop grand (${(file.size / 1024 / 1024).toFixed(1)} MB). Limite : ${MAX_MB} MB. Pour une session plus longue, passe par l'import Zoom.`);
       }
 
       const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
@@ -519,7 +521,7 @@ const VideoUploadModal = ({ isOpen, onClose, onSave }) => {
 
                   <TabsContent value="upload" className="space-y-4 mt-0">
                      <div className="border-2 border-dashed border-[rgba(245,244,238,0.14)] rounded-lg p-8 text-center bg-[#30302e] hover:bg-[rgba(245,244,238,0.06)] transition-colors cursor-pointer relative group">
-                        <input type="file" accept="video/mp4,video/webm,video/ogg" onChange={handleFileChange} className="absolute inset-0 opacity-0 cursor-pointer z-10" />
+                        <input type="file" accept="video/mp4,video/quicktime,video/webm,video/ogg,audio/mp4,audio/mpeg,audio/x-m4a,audio/aac" onChange={handleFileChange} className="absolute inset-0 opacity-0 cursor-pointer z-10" />
                         <Upload className="w-8 h-8 mx-auto text-[rgba(245,244,238,0.62)] mb-2 group-hover:text-[var(--school-accent)] transition-colors"/>
                         <p className="text-sm text-[rgba(245,244,238,0.62)]">Cliquez pour sélectionner un fichier (MP4, WebM)</p>
                         {(data.type === 'upload' || data.type === 'file') && <p className="text-[var(--school-accent)] mt-2 font-bold"><Check className="inline w-4 h-4 mr-1"/> {data.title}</p>}

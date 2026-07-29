@@ -18,6 +18,7 @@ import { PostProductionContextPanel } from '@/pages/studio-creator/studio/PostPr
 import VideoUploadModal from '@/components/school/formations/VideoUploadModal';
 import { useToast } from '@/components/ui/use-toast';
 import { useTenantBranding } from '@/hooks/useTenantBranding';
+import { masterclassApi } from '@/lib/api-v2';
 
 const VideoPostProductionPage = lazy(() => import('@/pages/VideoPostProductionPage'));
 
@@ -167,7 +168,7 @@ export default function DesignerPostProductionDock({
   const handleStudioSave = useCallback(
     (saved) => {
       const rawId = saved?.id;
-      const id = rawId && isUuid(String(rawId)) ? String(rawId) : newUuid();
+      const fallbackId = rawId && isUuid(String(rawId)) ? String(rawId) : newUuid();
       skipClearSyntheticOnParentIdRef.current = true;
       const durationSeconds =
         Number(saved?.duration_seconds) > 0
@@ -175,20 +176,60 @@ export default function DesignerPostProductionDock({
           : saved?.type === 'upload' && Number(saved?.duration) > 0
             ? Math.round(Number(saved.duration) * 60)
             : 0;
+      const title = String(saved?.title || '');
+      const description = String(saved?.description || '');
       setSyntheticVideoData({
         url: String(saved?.url || ''),
         storagePath: String(saved?.storagePath || ''),
-        title: String(saved?.title || ''),
-        description: String(saved?.description || ''),
+        title,
+        description,
         duration_seconds: durationSeconds,
       });
-      onContentIdChange(id);
+      // Ouverture immédiate en brouillon (lecture depuis l'URL publique).
+      onContentIdChange(fallbackId);
       setVideoStudioOpen(false);
-      toast({
-        title: 'Vidéo prête',
-        description:
-          "Post-production ouverte en brouillon. Enregistrez une formation pour persister le contenu en base et activer toute l'IA serveur.",
-      });
+
+      const storagePath = String(saved?.storagePath || '').trim();
+      if (storagePath) {
+        // PONT SERVEUR : le fichier téléversé devient un VRAI published_videos
+        // (copie R2 + transcription Deepgram en arrière-plan). On bascule alors le
+        // contentId sur son id réel → transcript / segments / cours cessent de 404.
+        toast({
+          title: 'Import en cours…',
+          description:
+            'Copie vers le datacenter puis transcription automatique. La post-production est déjà ouverte.',
+        });
+        masterclassApi
+          .studioImport({ storagePath, title, description, durationSeconds })
+          .then((r) => {
+            const realId = r?.publishedVideoId;
+            if (realId && isUuid(String(realId))) {
+              skipClearSyntheticOnParentIdRef.current = true;
+              onContentIdChange(String(realId));
+              toast({
+                title: 'Vidéo importée',
+                description: r?.transcribed
+                  ? 'Transcription prête : segments et cours disponibles.'
+                  : 'Transcription lancée en arrière-plan (Deepgram) — segments et cours prêts sous peu.',
+              });
+            }
+          })
+          .catch((e) => {
+            toast({
+              title: 'Import serveur indisponible',
+              description:
+                'La vidéo reste en brouillon local. ' +
+                String(e?.response?.data?.message || e?.message || ''),
+              variant: 'destructive',
+            });
+          });
+      } else {
+        toast({
+          title: 'Vidéo prête',
+          description:
+            "Post-production ouverte en brouillon. Enregistrez une formation pour persister le contenu en base et activer toute l'IA serveur.",
+        });
+      }
     },
     [onContentIdChange, toast],
   );

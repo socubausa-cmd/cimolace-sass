@@ -194,9 +194,9 @@ startPingJob();
   }
 })();
 
-// ── Transcription des replays SANS VTT (imports locaux → Whisper Groq, 180s) ──
-//    Réseau US du worker = Groq NON géo-bloqué (contrairement à la machine du
-//    fondateur en Chine). 1 vidéo/cycle, découpe 20 min, écrit cues + transcript.
+// ── Transcription des replays SANS VTT (imports locaux → Deepgram, 180s) ─────
+//    Deepgram nova-2 EN PRIORITÉ (1 requête/fichier, quota propre) ; Whisper
+//    Groq/OpenAI en secours. 1 vidéo/cycle, écrit transcript + cues + segments.
 (async () => {
   while (true) {
     try {

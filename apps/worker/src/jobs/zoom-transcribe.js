@@ -4,12 +4,16 @@
  * géo-bloqué, contrairement à la machine du fondateur en Chine).
  *
  * Par cycle (1 vidéo) : published_videos avec storage_key R2 + transcript_text null →
- * download R2 → ffmpeg audio opus mono 24k SEGMENTÉ 20 min (chaque tranche < 25 Mo pour
- * Whisper) → Groq whisper-large-v3 (verbose_json, offset par tranche) → cues {t,text}
- * fusionnées → update published_videos.transcript_text/transcript_cues + zoom_recordings.
+ * download R2 → transcription. DEUX moteurs, dans l'ordre :
+ *   1. Deepgram nova-2 (fr) EN PRIORITÉ — 1 seule requête pour tout le fichier (pas de
+ *      découpe), non géo-bloqué, quota propre (≠ la clé Groq partagée avec isna-api).
+ *      Ses `utterances` (début ET fin) donnent directement cues + segments fins.
+ *   2. Filet de secours : ffmpeg audio opus mono 24k SEGMENTÉ 20 min (< 25 Mo/tranche
+ *      pour Whisper) → Groq/OpenAI whisper-large-v3 (verbose_json, offset par tranche).
+ * → update published_videos.transcript_text/cues/segments + zoom_recordings.
  * Non-bloquant : tout échec est loggé sans planter la boucle.
  *
- * Env : SUPABASE_*, CF_R2_*, GROQ_API_KEY (ou OPENAI_API_KEY).
+ * Env : SUPABASE_*, CF_R2_*, DEEPGRAM_API_KEY (préféré), GROQ_API_KEY (ou OPENAI_API_KEY).
  */
 import { createClient } from '@supabase/supabase-js';
 import { S3Client, GetObjectCommand } from '@aws-sdk/client-s3';
@@ -34,6 +38,59 @@ function segmentAudio(mp4, prefix) {
     p.on('close', (c) => (c === 0 ? resolve() : reject(new Error(`ffmpeg ${c}: ${err.slice(-160)}`))));
     p.on('error', reject);
   });
+}
+
+// ── Deepgram (moteur prioritaire) ────────────────────────────────────────────
+// mp4 R2 → audio mono 16k mp3 (UN fichier, pas de découpe — Deepgram avale tout).
+function extractMp3(mp4, out) {
+  return new Promise((resolve, reject) => {
+    const p = spawn('ffmpeg', ['-y', '-i', mp4, '-vn', '-ac', '1', '-ar', '16000', '-c:a', 'libmp3lame', '-b:a', '48k', out], { stdio: ['ignore', 'ignore', 'pipe'] });
+    let err = ''; p.stderr.on('data', (d) => (err += d.toString()));
+    p.on('close', (c) => (c === 0 ? resolve() : reject(new Error(`ffmpeg mp3 ${c}: ${err.slice(-160)}`))));
+    p.on('error', reject);
+  });
+}
+
+// utterances Deepgram (début+fin par prise de parole) → cues {t,text} en paragraphes.
+function dgCues(utts) {
+  const cues = []; let cur = null;
+  for (const u of utts) {
+    const t = Math.round((Number(u.start) || 0) * 100) / 100; const text = String(u.transcript || '').trim(); if (!text) continue;
+    if (!cur) { cur = { t, text }; continue; }
+    cur.text = `${cur.text} ${text}`.trim();
+    if (/[.!?…»]$/.test(text) || cur.text.length > 200) { cues.push(cur); cur = null; }
+  }
+  if (cur) cues.push(cur);
+  return cues;
+}
+
+/** Transcrit tout le fichier via Deepgram nova-2. Renvoie {text,cues,segments} ou null. */
+async function deepgramWhole(mp4, id) {
+  const KEY = process.env.DEEPGRAM_API_KEY;
+  if (!KEY) return null;
+  const mp3 = join(tmpdir(), `dg_${id}.mp3`);
+  try {
+    await extractMp3(mp4, mp3);
+    const buf = await fsp.readFile(mp3);
+    const url = 'https://api.deepgram.com/v1/listen?model=nova-2&language=fr&punctuate=true&smart_format=true&utterances=true&paragraphs=true';
+    const ctl = new AbortController(); const to = setTimeout(() => ctl.abort(), 300_000);
+    let res;
+    try { res = await fetch(url, { method: 'POST', headers: { Authorization: `Token ${KEY}`, 'Content-Type': 'audio/mpeg' }, body: buf, signal: ctl.signal }); }
+    finally { clearTimeout(to); }
+    if (!res.ok) throw new Error(`Deepgram ${res.status} ${(await res.text()).slice(0, 120)}`);
+    const d = await res.json();
+    const alt = d?.results?.channels?.[0]?.alternatives?.[0] || {};
+    const text = String(alt.transcript || '').trim();
+    const utts = Array.isArray(d?.results?.utterances) ? d.results.utterances : [];
+    // ⭐ On garde la FIN (`e`) de chaque prise de parole : c'est elle qui permet aux
+    // extraits courts de couper au silence plutôt qu'au milieu d'une phrase.
+    const segments = utts
+      .map((u) => ({ t: Math.round((Number(u.start) || 0) * 100) / 100, e: Number.isFinite(Number(u.end)) ? Math.round(Number(u.end) * 100) / 100 : null, text: String(u.transcript || '').trim() }))
+      .filter((s) => s.text);
+    return { text, cues: dgCues(utts), segments };
+  } finally {
+    try { unlinkSync(mp3); } catch {}
+  }
 }
 
 async function whisperChunk(file) {
@@ -108,7 +165,7 @@ function toSegments(segments) {
 
 export async function pollZoomTranscribe() {
   if (!R2.acct || !process.env.SUPABASE_URL) return 0;
-  if (!process.env.GROQ_API_KEY && !process.env.OPENAI_API_KEY) return 0;
+  if (!process.env.DEEPGRAM_API_KEY && !process.env.GROQ_API_KEY && !process.env.OPENAI_API_KEY) return 0;
   // 1 vidéo par cycle : R2 présent, transcript absent (imports locaux sans VTT)
   const { data: rows } = await supabase
     .from('published_videos')
@@ -130,17 +187,28 @@ export async function pollZoomTranscribe() {
     // download R2 → mp4
     const obj = await r2().send(new GetObjectCommand({ Bucket: R2.bucket, Key: v.storage_key }));
     await pipeline(obj.Body, createWriteStream(mp4));
-    await segmentAudio(mp4, prefix);
-    const chunks = readdirSync(tmpdir()).filter((f) => f.startsWith(`zt_${v.id}_a_`) && f.endsWith('.ogg')).sort();
-    let allText = ''; const allCues = []; const allSegments = [];
-    for (let c = 0; c < chunks.length; c++) {
-      const cf = join(tmpdir(), chunks[c]);
-      const segs = (await whisperChunk(cf)).map((s) => ({ ...s, start: s.start + c * SEG }));
-      allText += (allText ? '\n' : '') + segs.map((s) => s.text).join(' ');
-      allCues.push(...toCues(segs));
-      allSegments.push(...toSegments(segs));
-      try { unlinkSync(cf); } catch {}
+
+    let allText = ''; let allCues = []; let allSegments = [];
+
+    // 1) Deepgram nova-2 EN PRIORITÉ — une requête pour tout le fichier.
+    const dg = await deepgramWhole(mp4, v.id).catch((e) => { log(`Deepgram indisponible → ${String(e.message).slice(0, 120)}`); return null; });
+    if (dg && dg.text) {
+      allText = dg.text; allCues = dg.cues; allSegments = dg.segments;
+      log(`   Deepgram → ${allCues.length} cues · ${allSegments.length} segments fins`);
+    } else {
+      // 2) Filet de secours : Whisper (Groq/OpenAI) sur des tranches de 20 min.
+      await segmentAudio(mp4, prefix);
+      const chunks = readdirSync(tmpdir()).filter((f) => f.startsWith(`zt_${v.id}_a_`) && f.endsWith('.ogg')).sort();
+      for (let c = 0; c < chunks.length; c++) {
+        const cf = join(tmpdir(), chunks[c]);
+        const segs = (await whisperChunk(cf)).map((s) => ({ ...s, start: s.start + c * SEG }));
+        allText += (allText ? '\n' : '') + segs.map((s) => s.text).join(' ');
+        allCues.push(...toCues(segs));
+        allSegments.push(...toSegments(segs));
+        try { unlinkSync(cf); } catch {}
+      }
     }
+    if (!allText) throw new Error('transcript vide (Deepgram + Whisper)');
     const upd = { transcript_text: allText || null, transcript_cues: allCues.length ? allCues : null, transcript_segments: allSegments.length ? allSegments : null };
     await supabase.from('published_videos').update(upd).eq('id', v.id);
     await supabase.from('zoom_recordings').update(upd).eq('tenant_id', v.tenant_id).eq('storage_key', v.storage_key);
