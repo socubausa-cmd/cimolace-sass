@@ -130,7 +130,7 @@ export default function StudioLivePreviewPage() {
        DANS la coque du portail, un fond navy y dessinait une couture froide sur tout le tour. */
     <div className="flex h-[100dvh] flex-col overflow-hidden bg-[#262624] text-white">
       {/* Header */}
-      <div className="flex shrink-0 items-center gap-3 border-b border-white/8 bg-[#1f1e1c] px-4 py-2">
+      <div className="flex shrink-0 items-center gap-3 border-b border-white/10 bg-[#1f1e1c] px-4 py-2">
         <Link to="/studio" className="flex items-center gap-1 rounded-md border border-white/10 px-2 py-1 text-[11px] text-white/60 hover:text-[var(--school-accent)]">
           <ChevronLeft className="h-3.5 w-3.5" />Studio
         </Link>
@@ -158,7 +158,13 @@ export default function StudioLivePreviewPage() {
         {viewMode === 'live' && (
           <div className="ml-auto flex items-center gap-2">
             {isLiveActive && (
-              <span className="flex items-center gap-1.5 text-[11px] text-emerald-400">
+              /* Famille `green-` et NON `emerald-` : cette page est montée sous
+                 .studio-warm-scope (StudioRouter), et studioWarm.css y remappe de force
+                 tout `text-emerald-*` vers #e0926a !important. En emerald, ce compteur
+                 sortait donc CORAIL, à un cheveu du bouton « Démarrer » (#d97757) juste
+                 à droite : le signal « le direct tourne » se confondait avec l'action.
+                 studioWarm.css exempte nommément green-/red- comme canaux succès/danger. */
+              <span className="flex items-center gap-1.5 text-[11px] text-green-400">
                 <Users className="h-3.5 w-3.5" />
                 {participantCount} participant(s)
               </span>
@@ -167,7 +173,7 @@ export default function StudioLivePreviewPage() {
               onClick={() => isLiveActive ? stopLive() : startLive(crypto.randomUUID().slice(0, 8))}
               className={cn(
                 'flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-[12px] font-semibold transition-colors',
-                isLiveActive ? 'bg-red-500/20 text-red-400 hover:bg-red-500/30' : 'bg-emerald-500/20 text-emerald-400 hover:bg-emerald-500/30',
+                isLiveActive ? 'bg-red-500/20 text-red-400 hover:bg-red-500/30' : 'bg-[#d97757] text-[#1f1e1c] hover:bg-[rgba(217,119,87,0.90)]',
               )}
             >
               {isLiveActive ? <><Square className="h-3.5 w-3.5" />Arrêter</> : <><Play className="h-3.5 w-3.5" />Démarrer</>}
@@ -178,7 +184,7 @@ export default function StudioLivePreviewPage() {
 
       <div className="flex min-h-0 flex-1">
         {/* Left filmstrip */}
-        <div className="flex w-48 shrink-0 flex-col gap-1 overflow-y-auto border-r border-white/8 p-2">
+        <div className="flex w-48 shrink-0 flex-col gap-1 overflow-y-auto border-r border-white/10 p-2">
           {slides.map((slide, i) => (
             <button
               key={slide.id}
@@ -187,7 +193,7 @@ export default function StudioLivePreviewPage() {
                 'flex flex-col gap-1 rounded-lg border p-2 text-left transition-colors',
                 slide.id === activeSlide?.id
                   ? 'border-[color-mix(in_srgb,var(--school-accent)_40%,transparent)] bg-[color-mix(in_srgb,var(--school-accent)_10%,transparent)]'
-                  : 'border-white/8 bg-white/[0.02] hover:border-white/15',
+                  : 'border-white/10 bg-white/[0.02] hover:border-white/15',
               )}
             >
               <div className="h-16 w-full rounded-md bg-[#262624]" />
@@ -208,7 +214,7 @@ export default function StudioLivePreviewPage() {
         </div>
 
         {/* Right controls */}
-        <div className="flex w-56 shrink-0 flex-col gap-4 overflow-y-auto border-l border-white/8 p-3">
+        <div className="flex w-56 shrink-0 flex-col gap-4 overflow-y-auto border-l border-white/10 p-3">
           {/* Step control */}
           <div className="flex flex-col gap-2">
             <p className="text-[11px] font-semibold uppercase tracking-wider text-white/40">Progression</p>

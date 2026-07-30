@@ -140,7 +140,13 @@ function WaitingRoomProgramRibbon({
       <p className="text-[11px] font-semibold uppercase tracking-wide text-[color-mix(in_srgb,var(--school-accent)_90%,transparent)]">Déroulé</p>
       <div className="mt-2 flex flex-wrap items-center gap-2">
         {sessionLive && startedAt && elapsedLabel ? (
-          <span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-500/30 bg-emerald-500/10 px-3 py-1 text-[11px] font-medium text-emerald-200/95">
+          /* Famille `green-` et NON `emerald-`. Cette page est rendue dans
+             <LiriPortalShell>, dont le <main> porte `studio-warm-scope` (LiriPortalShell.tsx
+             l. 269) — SANS condition sur `active`. studioWarm.css y remappe donc tout
+             `*-emerald-*` vers le corail en !important : cette puce « En direct » sortait
+             #e0926a, soit la teinte des 4 CTA de la page. Le témoin d'antenne se lisait
+             comme un bouton. green-/red- sont nommément exemptés du remap. */
+          <span className="inline-flex items-center gap-1.5 rounded-full border border-green-500/30 bg-green-500/10 px-3 py-1 text-[11px] font-medium text-green-200/95">
             <Radio className="h-3 w-3 shrink-0" />
             En direct depuis {elapsedLabel}
           </span>
@@ -206,7 +212,11 @@ export function Countdown({ scheduledAt }) {
 export function StatusBadge({ status }) {
   const map = {
     scheduled: { label: 'Planifié', color: 'text-[#ebca5e] bg-[#ebca5e]/10 border-[#ebca5e]/30' },
-    live:      { label: 'En cours', color: 'text-emerald-300 bg-emerald-500/15 border-emerald-500/30', pulse: true },
+    // `green-` et non `emerald-` : sous studio-warm-scope (posé par LiriPortalShell),
+    // emerald est forcé au corail #e0926a. L'échelle à 4 statuts s'effondrait alors —
+    // « En cours » (corail) ne se distinguait plus de « Planifié » (#ebca5e) ni de
+    // « En attente » (ambre #e6b878), trois chauds voisins. green- traverse le remap.
+    live:      { label: 'En cours', color: 'text-green-300 bg-green-500/15 border-green-500/30', pulse: true },
     ended:     { label: 'Terminé',  color: 'text-white/30 bg-white/5 border-white/10' },
     waiting:   { label: 'En attente', color: 'text-amber-300 bg-amber-500/15 border-amber-500/30', pulse: true },
   };
@@ -1065,14 +1075,18 @@ export default function LiveWaitingRoomPage() {
                 initial={{ opacity: 0, scale: 0.95 }}
                 animate={{ opacity: 1, scale: 1 }}
               >
-                <ProrasciencePublicCard className="border-emerald-500/35 bg-emerald-950/25">
+                {/* Vert de réussite en famille `green-` : sous studio-warm-scope (LiriPortalShell),
+                    `border-emerald-*` et `bg-emerald-*` étaient écrasés en !important par du corail
+                    — la coche « Accès accordé ! » s'affichait dans la couleur des ACTIONS, juste
+                    avant l'entrée en direct. green- est exempté du remap, le succès redevient vert. */}
+                <ProrasciencePublicCard className="border-green-500/35 bg-green-950/25">
                   <div className="flex items-center gap-4">
-                    <CheckCircle2 className="h-7 w-7 flex-shrink-0 text-emerald-400" />
+                    <CheckCircle2 className="h-7 w-7 flex-shrink-0 text-green-400" />
                     <div className="flex-1">
                       <p className="text-sm font-semibold text-white">Accès accordé !</p>
                       <p className="text-xs text-white/50">Redirection en cours…</p>
                     </div>
-                    <Loader2 className="h-4 w-4 animate-spin text-emerald-400" />
+                    <Loader2 className="h-4 w-4 animate-spin text-green-400" />
                   </div>
                 </ProrasciencePublicCard>
               </motion.div>
@@ -1091,7 +1105,7 @@ export default function LiveWaitingRoomPage() {
                     Rejoindre maintenant
                   </Button>
                 ) : (
-                  <ProrasciencePublicCard className="text-center">
+                  <ProrasciencePublicCard className="bg-white/[0.03] text-center">
                     <p className="text-sm text-white/50">
                       La session n&apos;a pas encore démarré. Revenez bientôt.
                     </p>
@@ -1103,7 +1117,7 @@ export default function LiveWaitingRoomPage() {
             {/* Mot de passe */}
             {!isHost && (!entry || entry.status === 'lobby') && (accessMode === 'password' || accessMode === 'double') && (
               <motion.div key="password" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-3">
-                <ProrasciencePublicCard className="border-[color-mix(in_srgb,var(--school-accent)_20%,transparent)]">
+                <ProrasciencePublicCard className="border-[color-mix(in_srgb,var(--school-accent)_20%,transparent)] bg-white/[0.03]">
                   <div className="mb-4 flex items-center gap-2">
                     <KeyRound className="h-4 w-4 text-[var(--school-accent)]" />
                     <p className="text-sm font-semibold text-white">Mot de passe requis</p>
@@ -1147,7 +1161,7 @@ export default function LiveWaitingRoomPage() {
             {!isHost && (!entry || entry.status === 'lobby') && (accessMode === 'manual' || (accessMode === 'double' && !password)) && accessMode !== 'password' && (
               <motion.div key="manual" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-3">
                 {sessionLive ? (
-                  <ProrasciencePublicCard className="border-[color-mix(in_srgb,var(--school-accent)_20%,transparent)]">
+                  <ProrasciencePublicCard className="border-[color-mix(in_srgb,var(--school-accent)_20%,transparent)] bg-white/[0.03]">
                     <div className="mb-4 flex items-center gap-3">
                       <div className="flex h-10 w-10 items-center justify-center rounded-full border border-[color-mix(in_srgb,var(--school-accent)_35%,transparent)] bg-[color-mix(in_srgb,var(--school-accent)_15%,transparent)]">
                         <Lock className="h-4 w-4 text-[var(--school-accent)]" />
@@ -1172,7 +1186,7 @@ export default function LiveWaitingRoomPage() {
                     </Button>
                   </ProrasciencePublicCard>
                 ) : (
-                  <ProrasciencePublicCard className="text-center">
+                  <ProrasciencePublicCard className="bg-white/[0.03] text-center">
                     <p className="text-sm text-white/50">La session n&apos;a pas encore démarré.</p>
                   </ProrasciencePublicCard>
                 )}

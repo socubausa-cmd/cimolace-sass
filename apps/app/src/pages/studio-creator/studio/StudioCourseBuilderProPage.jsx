@@ -152,7 +152,7 @@ function ValidationBar({ onSendToSmartboard }) {
     /* L'ancien fond 080a12 : navy froid écrit en dur (toujours appliqué, pas un repli).
        → #1f1e1c, le ton « bloc » de la charte : la barre reste plus sombre que le
        corps de page #262624, mais du côté chaud. */
-    <div className="flex shrink-0 items-center gap-3 border-t border-white/8 bg-[#1f1e1c] px-4 py-2.5">
+    <div className="flex shrink-0 items-center gap-3 border-t border-white/10 bg-[#1f1e1c] px-4 py-2.5">
       <button
         onClick={validateCourse}
         className="flex items-center gap-1.5 rounded-md border border-white/15 px-3 py-1.5 text-[11px] text-white/60 hover:border-white/25 hover:text-white"
@@ -225,7 +225,7 @@ export default function StudioCourseBuilderProPage() {
     >
       {/* Header */}
       <div
-        className="flex shrink-0 items-center gap-3 border-b border-white/8 px-4 py-2.5"
+        className="flex shrink-0 items-center gap-3 border-b border-white/10 px-4 py-2.5"
         style={{ background: shellTheme.topBarBackground }}
       >
         <Link
@@ -262,7 +262,7 @@ export default function StudioCourseBuilderProPage() {
       ) : (
         <div className="flex min-h-0 flex-1">
           {/* Left — tree */}
-          <div className="flex w-64 shrink-0 flex-col overflow-y-auto border-r border-white/8">
+          <div className="flex w-64 shrink-0 flex-col overflow-y-auto border-r border-white/10">
             <CourseTreePanel />
           </div>
 

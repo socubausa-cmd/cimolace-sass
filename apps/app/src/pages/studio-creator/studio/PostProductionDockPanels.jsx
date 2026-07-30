@@ -13,17 +13,22 @@ import { usePostProdNleStore } from '@/features/smartboard-konva-editor/store/us
 /** @typedef {'video'|'image'|'text'} PropertyKind */
 
 const ACCENT = {
-  amber:   { text: 'text-amber-400',   bg: 'bg-amber-500/12',   border: 'border-amber-500/28',   glow: 'shadow-[0_0_12px_rgba(245,158,11,0.2)]' },
+  /* /10 et /30 (et non /12 · /28) : Tailwind n'émet un modificateur d'opacité que sur les
+     crans de son échelle. Un suffixe `/28` sur une bordure ne produisait AUCUN CSS et
+     la bordure retombait sur
+     le gris clair du preflight (#e5e7eb) — visible sur l'outil ACTIF, fond sombre. Les trois
+     entrées repalettées ci-dessous étaient déjà en /10 · /30 : l'écart est ici corrigé. */
+  amber:   { text: 'text-amber-400',   bg: 'bg-amber-500/10',   border: 'border-amber-500/30',   glow: 'shadow-[0_0_12px_rgba(245,158,11,0.2)]' },
   violet:  { text: 'text-[#e08b6d]',   bg: 'bg-[#d97757]/10',   border: 'border-[#d97757]/30',   glow: 'shadow-[0_0_12px_rgba(236,174,144,0.2)]' },
   cyan:    { text: 'text-[#e3aa6b]',   bg: 'bg-[#e3aa6b]/10',   border: 'border-[#e3aa6b]/30',   glow: 'shadow-[0_0_12px_rgba(227,170,107,0.2)]' },
   emerald: { text: 'text-[#cf8059]',   bg: 'bg-[#cf8059]/10',   border: 'border-[#cf8059]/30',   glow: 'shadow-[0_0_12px_rgba(207,128,89,0.2)]' },
-  rose:    { text: 'text-rose-400',    bg: 'bg-rose-500/12',    border: 'border-rose-500/28',    glow: 'shadow-[0_0_12px_rgba(251,113,133,0.2)]' },
-  orange:  { text: 'text-orange-400',  bg: 'bg-orange-500/12',  border: 'border-orange-500/28', glow: 'shadow-[0_0_12px_rgba(251,146,60,0.2)]' },
+  rose:    { text: 'text-rose-400',    bg: 'bg-rose-500/10',    border: 'border-rose-500/30',    glow: 'shadow-[0_0_12px_rgba(251,113,133,0.2)]' },
+  orange:  { text: 'text-orange-400',  bg: 'bg-orange-500/10',  border: 'border-orange-500/30', glow: 'shadow-[0_0_12px_rgba(251,146,60,0.2)]' },
 };
 
 function SectionLabel({ children }) {
   return (
-    <p className="mb-1.5 text-[9px] font-bold uppercase tracking-widest text-white/58">{children}</p>
+    <p className="mb-1.5 text-[9px] font-bold uppercase tracking-widest text-white/60">{children}</p>
   );
 }
 
@@ -31,13 +36,13 @@ function DockHint({ title, children }) {
   return (
     <div className="rounded-lg border border-[#e3aa6b]/20 bg-[#e3aa6b]/[0.07] px-2 py-1.5">
       <p className="text-[10px] font-medium text-[#f0d3ab]">{title}</p>
-      <div className="mt-1 text-[9px] leading-relaxed text-white/62">{children}</div>
+      <div className="mt-1 text-[9px] leading-relaxed text-white/60">{children}</div>
     </div>
   );
 }
 
 function RoadmapNote({ children }) {
-  return <p className="text-[8px] leading-snug text-white/58">{children}</p>;
+  return <p className="text-[8px] leading-snug text-white/60">{children}</p>;
 }
 
 function NleDockControls() {
@@ -47,8 +52,8 @@ function NleDockControls() {
   const row = (key, label, min, max, step) => (
     <div className="space-y-1">
       <div className="flex justify-between gap-2">
-        <Label className="text-[9px] text-white/62">{label}</Label>
-        <span className="font-mono text-[9px] text-white/62">{Math.round(Number(grade[key]) || 0)}</span>
+        <Label className="text-[9px] text-white/60">{label}</Label>
+        <span className="font-mono text-[9px] text-white/60">{Math.round(Number(grade[key]) || 0)}</span>
       </div>
       <Slider
         value={[Number(grade[key]) || 0]}
@@ -75,7 +80,7 @@ function NleDockControls() {
           <RotateCcw className="h-3 w-3" />
         </Button>
       </div>
-      <p className="text-[8px] leading-snug text-white/58">
+      <p className="text-[8px] leading-snug text-white/60">
         Filtres CSS sur la preview — enregistrés dans <span className="font-mono text-white/75">data.nle</span> avec Valider.
       </p>
       {row('exposure', 'Luminosité', -100, 100, 1)}
@@ -151,7 +156,7 @@ export function PostProductionContextPanel({
     <div className="flex h-full min-h-0 w-[220px] flex-shrink-0 flex-col overflow-hidden border-r border-white/[0.06]" style={{ background: '#1f1e1c' }}>
       <div className="shrink-0 border-b border-white/[0.06] px-2.5 py-2">
         <p className="text-[10px] font-semibold text-white/70">Sous-outils</p>
-        <p className="text-[9px] text-white/58">Varie selon l'onglet actif</p>
+        <p className="text-[9px] text-white/60">Varie selon l'onglet actif</p>
       </div>
 
       <div className="min-h-0 flex-1 overflow-y-auto overflow-x-hidden px-2.5 py-2 [scrollbar-width:thin] [scrollbar-color:rgba(255,255,255,0.08)_transparent]">
@@ -168,7 +173,7 @@ export function PostProductionContextPanel({
         {activeTool === 'source' && (
           <div className="space-y-2">
             <SectionLabel>Source & import</SectionLabel>
-            <p className="text-[10px] leading-relaxed text-white/62">
+            <p className="text-[10px] leading-relaxed text-white/60">
               Identifiant du contenu vidéo (formation). Les données viennent de la même base que la page post-production
               dédiée.
             </p>
@@ -182,12 +187,12 @@ export function PostProductionContextPanel({
                 Capturer ou importer
               </button>
             ) : null}
-            <p className="text-[9px] leading-snug text-white/58">
+            <p className="text-[9px] leading-snug text-white/60">
               Webcam, téléphone (QR), écran, fichier — même flux que le constructeur de cours. Ensuite validation pour
               ouvrir la post-prod ici (brouillon si pas encore en base).
             </p>
             <div className="h-px bg-white/[0.06]" />
-            <p className="text-[9px] font-medium uppercase tracking-wide text-white/58">Ou coller un UUID existant</p>
+            <p className="text-[9px] font-medium uppercase tracking-wide text-white/60">Ou coller un UUID existant</p>
             <input
               value={draft}
               onChange={(e) => onDraftChange(e.target.value)}
@@ -202,7 +207,7 @@ export function PostProductionContextPanel({
               className={cn(
                 'w-full rounded-lg border py-1.5 text-[10px] font-semibold transition-colors',
                 draftValid
-                  ? 'border-amber-500/35 bg-amber-500/10 text-amber-200 hover:bg-amber-500/18'
+                  ? 'border-amber-500/35 bg-amber-500/10 text-amber-200 hover:bg-amber-500/20'
                   : 'cursor-not-allowed border-white/10 text-white/35',
               )}
             >
@@ -217,7 +222,7 @@ export function PostProductionContextPanel({
             </Link>
             <div className="h-px bg-white/[0.06]" />
             <SectionLabel>Live & NeuroRecall</SectionLabel>
-            <p className="flex items-start gap-1.5 text-[9px] leading-relaxed text-white/62">
+            <p className="flex items-start gap-1.5 text-[9px] leading-relaxed text-white/60">
               <Radio className="mt-0.5 h-3 w-3 shrink-0 text-rose-400/70" />
               Après un live avec NeuroRecall, un contenu post-prod peut être créé : récupérez l'UUID (
               <code className="rounded bg-[#262624] px-0.5 font-mono text-[8px] text-white/75">postproduction_content_id</code>
@@ -293,7 +298,7 @@ export function PostProductionContextPanel({
         {activeTool === 'properties' && (
           <div className="space-y-3">
             <SectionLabel>Propriétés & SmartBoard</SectionLabel>
-            <p className="text-[9px] text-white/62">
+            <p className="text-[9px] text-white/60">
               Ouvre la vue <strong className="text-white/85">SmartBoard</strong> (split vidéo + contenu). Les onglets
               vidéo / image / texte ci-dessous décrivent la roadmap ; le rendu utile est dans la zone centrale.
             </p>
@@ -331,7 +336,7 @@ export function PostProductionContextPanel({
       </div>
 
       <div className="shrink-0 border-t border-white/[0.06] px-2 py-1.5">
-        <p className="flex items-center gap-1 text-[8px] text-white/58">
+        <p className="flex items-center gap-1 text-[8px] text-white/60">
           <Sparkles className="h-2.5 w-2.5" />
           Dock relié à la zone centrale — onglets = vues + défilement
         </p>

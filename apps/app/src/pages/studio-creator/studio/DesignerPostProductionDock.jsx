@@ -268,8 +268,11 @@ export default function DesignerPostProductionDock({
         </span>
         <div className="min-w-0 flex-1">
           <p className="truncate text-[11px] font-semibold text-white/80">Post-production</p>
-          {/* white/30 → white/58 : même encre secondaire que l'enfant (« Varie selon l'onglet actif ») */}
-          <p className="truncate text-[9px] text-white/58">Outils · sous-panneaux · séquence de travail</p>
+          {/* white/30 → white/60 : même encre secondaire que l'enfant (« Varie selon l'onglet actif »).
+              /60 et non /58 : Tailwind n'émet les modificateurs d'opacité que sur les crans de
+              son échelle (…/55, /60, /65…). `/58` ne produisait AUCUN CSS et le texte retombait
+              sur la couleur héritée — l'encre secondaire ne se distinguait plus du titre. */}
+          <p className="truncate text-[9px] text-white/60">Outils · sous-panneaux · séquence de travail</p>
         </div>
         {returnToHref ? (
           <Link
@@ -336,10 +339,11 @@ export default function DesignerPostProductionDock({
                 <Clapperboard className="h-8 w-8" />
               </div>
 
-              {/* Titre + sous-titre — sous-titre remonté de white/35 (3,2:1) à white/62 */}
+              {/* Titre + sous-titre — sous-titre remonté de white/35 (3,2:1) à white/60
+                  (/62 n'est pas un cran de l'échelle Tailwind : aucun CSS émis). */}
               <div>
                 <p className="text-[13px] font-bold text-white/80">Post-production</p>
-                <p className="mt-1 text-[10px] leading-relaxed text-white/62">
+                <p className="mt-1 text-[10px] leading-relaxed text-white/60">
                   Importez ou liez une vidéo pour démarrer le studio.
                 </p>
               </div>
@@ -362,7 +366,7 @@ export default function DesignerPostProductionDock({
 
               {/* Ou UUID — était en white/25 (2,3:1) : illisible. La charte réserve
                   l'encre ≤ .40 au DÉCORATIF, jamais à une phrase. */}
-              <p className="text-[9px] text-white/58">ou collez un UUID dans l'onglet <span className="text-amber-400/90">Source ←</span></p>
+              <p className="text-[9px] text-white/60">ou collez un UUID dans l'onglet <span className="text-amber-400/90">Source ←</span></p>
 
               <div className="h-px w-full max-w-[160px] bg-white/[0.06]" />
 
@@ -408,8 +412,9 @@ export default function DesignerPostProductionDock({
               <div className="min-h-0 flex-1 overflow-auto">
                 <Suspense
                   fallback={
-                    /* Attente de chargement : base chaude #262624 (et non le navy #0F1419,
-                       banni par la charte) — ce carré occupe le dock, entouré de panneaux chauds. */
+                    /* Attente de chargement : base chaude #262624 (et non le bleu-noir
+                       d'origine, banni par la charte) — ce carré occupe le dock, entouré
+                       de panneaux chauds. */
                     <div className="flex min-h-[16rem] items-center justify-center bg-[#262624]">
                       <Loader2 className="h-6 w-6 animate-spin text-[var(--school-accent)]" />
                     </div>

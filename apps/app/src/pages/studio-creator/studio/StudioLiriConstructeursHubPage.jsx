@@ -13,14 +13,11 @@ import StudioDesignerLikeShell from '@/components/liri/liri-ecosystem/StudioDesi
 import { CONSTRUCTEURS_CATALOG, DESIGNER_HREF } from '@/lib/liriConstructeursCatalog';
 
 // ── Charte LIRI ────────────────────────────────────────────────────────────
-// Cette page était bâtie sur deux teintes FROIDES : cyan (sélections, CTA,
-// liens de pipeline, trait de liaison) et violet (badge de tête). Elles sont
-// remplacées à la SOURCE par la famille chaude, en gardant la même opposition
-// « une couleur pour le badge, une autre pour tout ce qui est actionnable » :
-//   corail #d97757 (encre #e08a5f / #e8a97f) → sélection + actions
-//   or     #d99a4e (encre #e6b878)           → badge, accent secondaire
+// Palette de la page, entièrement chaude. Deux rôles, jamais mélangés :
+//   corail #d97757 (encre claire #e08a5f / #e8a97f) → sélection + actions
+//   or     #e6cc92                                  → badge, repères non cliquables
 // Fonds : page (fournie par la coque) #262624 · panneau #30302e · bloc #1f1e1c.
-// Les anciens panneaux #0b1020 et #0a0f1d étaient des bleus nuit.
+// Encre #f5f4ee · filet #f5f4ee/10.
 //
 // Les ids ('assist' / 'manual' / 'hybrid') pilotent getStartRoute : ce sont des
 // identifiants, ils ne changent PAS. Seuls les libellés visibles sont corrigés.
@@ -106,9 +103,8 @@ export default function StudioLiriConstructeursHubPage() {
     <StudioDesignerLikeShell
       railActiveKey="constructeurs"
       pageLabel="Centre de pilotage"
-      // La coque expose des alias CHAUDS (coral/terre/or/ambre/brique/argile)
-      // en plus des anciennes clés froides conservées pour compatibilité :
-      // on passe par le nom chaud pour ne plus propager « violet ».
+      // La coque expose des alias CHAUDS (coral/terre/or/ambre/brique/argile) :
+      // l'accent de page passe toujours par l'un de ces noms chauds.
       pageAccent="coral"
       TitleIcon={Compass}
       titleLine="Nouveau hub logiciel"
@@ -127,9 +123,9 @@ export default function StudioLiriConstructeursHubPage() {
           animate={{ opacity: 1, y: 0 }}
           className="mb-5 rounded-2xl border border-[#f5f4ee]/10 bg-[#30302e] px-5 py-4"
         >
-          {/* Badge en OR : il gardait sa propre couleur (violet) face au cyan de
-              tout le reste — on conserve cette opposition en chaud. */}
-          <div className="mb-2 inline-flex items-center gap-2 rounded-full border border-[#d99a4e]/35 bg-[#d99a4e]/[0.14] px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.16em] text-[#e6b878]">
+          {/* Badge en OR : repère non cliquable. Il doit rester distinct du
+              corail, qui est réservé à ce qui est actionnable. */}
+          <div className="mb-2 inline-flex items-center gap-2 rounded-full border border-[#e6cc92]/35 bg-[#e6cc92]/[0.14] px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.16em] text-[#e6cc92]">
             <Sparkles className="h-3 w-3" />
             Interface logicielle de construction de cours
           </div>
@@ -183,8 +179,8 @@ export default function StudioLiriConstructeursHubPage() {
               </div>
               <div className="mt-3 flex flex-wrap gap-2">
                 {/* CTA principal : corail plein + encre sombre #1f1e1c (5,3:1).
-                    Le `text-black` d'origine sur cyan-500 tenait déjà, mais le
-                    cyan est banni ; on garde le principe encre-sombre-sur-plein. */}
+                    Sur un aplat corail l'encre DOIT être sombre — le blanc n'y
+                    donne que 2,8:1, sous le seuil de lisibilité. */}
                 <Link
                   to={startRoute}
                   className="inline-flex items-center gap-1.5 rounded-xl bg-[#d97757] px-4 py-2 text-[12px] font-semibold text-[#1f1e1c] transition hover:bg-[#e08a5f]"
@@ -210,8 +206,8 @@ export default function StudioLiriConstructeursHubPage() {
               <div className="grid gap-3 md:grid-cols-3">
                 {PIPELINE.map((step, idx) => (
                   <div key={step.id} className="relative rounded-xl border border-[#f5f4ee]/10 bg-[#f5f4ee]/[0.03] p-3">
-                    {/* « Étape N » est un repère de lecture : /35 valait 2,4:1. */}
-                    <p className="text-[10px] uppercase tracking-[0.14em] text-[#e6b878]">Étape {idx + 1}</p>
+                    {/* « Étape N » est un repère de lecture, pas une action : OR. */}
+                    <p className="text-[10px] uppercase tracking-[0.14em] text-[#e6cc92]">Étape {idx + 1}</p>
                     <p className="mt-1 text-[14px] font-semibold text-[#f5f4ee]">{step.title}</p>
                     <p className="mt-0.5 text-[11px] text-[#f5f4ee]/65">{step.subtitle}</p>
                     <div className="mt-2 space-y-1.5">

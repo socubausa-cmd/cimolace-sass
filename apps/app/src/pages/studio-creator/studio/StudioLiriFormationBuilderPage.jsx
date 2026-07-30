@@ -112,7 +112,7 @@ function TreeNode({ node, depth = 0, onSelect, selected }) {
         <span className={cn('truncate text-[12px]', isSelected ? 'text-[#e8a97f] font-medium' : depth === 0 ? 'text-white/80 font-medium' : 'text-white/50')}>
           {node.titre || node.label || node.id}
         </span>
-        {node.duree && <span className="ml-auto flex-shrink-0 text-[10px] text-white/22">{node.duree}</span>}
+        {node.duree && <span className="ml-auto flex-shrink-0 text-[10px] text-white/20">{node.duree}</span>}
       </button>
       {open && children.map(child => (
         <TreeNode key={child.id} node={child} depth={depth + 1} onSelect={onSelect} selected={selected} />
@@ -126,23 +126,23 @@ function DetailPanel({ node }) {
   if (!node) return null;
   return (
     <div className="flex flex-col gap-4">
-      {node.titre && <div><div className="text-[11px] uppercase tracking-[0.15em] text-white/28 mb-1">Titre</div><div className="text-[15px] font-semibold text-white">{node.titre}</div></div>}
-      {node.objectif && <div><div className="text-[11px] uppercase tracking-[0.15em] text-white/28 mb-1 flex items-center gap-1.5"><Target className="h-3 w-3" /> Objectif</div><p className="text-[13px] text-white/60 leading-relaxed">{node.objectif}</p></div>}
-      {(node.duree || node.duree_estimee) && <div><div className="text-[11px] uppercase tracking-[0.15em] text-white/28 mb-1 flex items-center gap-1.5"><Clock className="h-3 w-3" /> Durée</div><div className="text-[13px] text-white/60">{node.duree || node.duree_estimee}</div></div>}
+      {node.titre && <div><div className="text-[11px] uppercase tracking-[0.15em] text-white/30 mb-1">Titre</div><div className="text-[15px] font-semibold text-white">{node.titre}</div></div>}
+      {node.objectif && <div><div className="text-[11px] uppercase tracking-[0.15em] text-white/30 mb-1 flex items-center gap-1.5"><Target className="h-3 w-3" /> Objectif</div><p className="text-[13px] text-white/60 leading-relaxed">{node.objectif}</p></div>}
+      {(node.duree || node.duree_estimee) && <div><div className="text-[11px] uppercase tracking-[0.15em] text-white/30 mb-1 flex items-center gap-1.5"><Clock className="h-3 w-3" /> Durée</div><div className="text-[13px] text-white/60">{node.duree || node.duree_estimee}</div></div>}
       {node.tag_pedagogique && <span className="inline-flex rounded-full bg-[#d97757]/15 border border-[#d97757]/25 px-2.5 py-1 text-[11px] text-[#e8a97f]">{node.tag_pedagogique}</span>}
-      {node.idee_centrale && <div><div className="text-[11px] uppercase tracking-[0.15em] text-white/28 mb-1">Idée centrale</div><p className="text-[13px] text-white/60 leading-relaxed">{node.idee_centrale}</p></div>}
+      {node.idee_centrale && <div><div className="text-[11px] uppercase tracking-[0.15em] text-white/30 mb-1">Idée centrale</div><p className="text-[13px] text-white/60 leading-relaxed">{node.idee_centrale}</p></div>}
       {node.cours?.length > 0 && (
         <div>
-          <div className="text-[11px] uppercase tracking-[0.15em] text-white/28 mb-2">{node.cours.length} cours</div>
+          <div className="text-[11px] uppercase tracking-[0.15em] text-white/30 mb-2">{node.cours.length} cours</div>
           <div className="flex flex-col gap-1.5">
             {node.cours.map(c => (
-              <div key={c.id} className="flex items-center gap-2 rounded-lg border border-white/8 bg-white/[0.03] px-3 py-2">
+              <div key={c.id} className="flex items-center gap-2 rounded-lg border border-white/10 bg-white/[0.03] px-3 py-2">
                 <BookOpen className="h-3.5 w-3.5 flex-shrink-0 text-amber-400" />
                 <div className="min-w-0">
                   <div className="text-[12px] text-white/75 font-medium truncate">{c.titre}</div>
-                  {c.objectif && <div className="text-[10px] text-white/32 truncate">{c.objectif}</div>}
+                  {c.objectif && <div className="text-[10px] text-white/30 truncate">{c.objectif}</div>}
                 </div>
-                {c.duree_estimee && <span className="ml-auto flex-shrink-0 text-[10px] text-white/22">{c.duree_estimee}</span>}
+                {c.duree_estimee && <span className="ml-auto flex-shrink-0 text-[10px] text-white/20">{c.duree_estimee}</span>}
               </div>
             ))}
           </div>
@@ -156,8 +156,8 @@ function DetailPanel({ node }) {
 function CreationForm({ onResult, loading, setLoading, error, setError }) {
   const [form, setForm] = useState({ sujet: '', type_programme: 'one_month_program', niveau: 'intermédiaire', contexte: 'Prorascience', profil: 'auto' });
   const set = (k, v) => setForm(f => ({ ...f, [k]: v }));
-  const inputCls = 'w-full rounded-xl border border-white/10 bg-white/[0.04] px-3 py-2.5 text-[13px] text-white placeholder-white/28 outline-none transition-all focus:border-[#d97757]/50 focus:bg-white/[0.07]';
-  const labelCls = 'block text-[11px] font-medium uppercase tracking-[0.12em] text-white/38 mb-1.5';
+  const inputCls = 'w-full rounded-xl border border-white/10 bg-white/[0.04] px-3 py-2.5 text-[13px] text-white placeholder-white/30 outline-none transition-all focus:border-[#d97757]/50 focus:bg-white/[0.07]';
+  const labelCls = 'block text-[11px] font-medium uppercase tracking-[0.12em] text-white/40 mb-1.5';
 
   const handleSubmit = async e => {
     e.preventDefault();
@@ -231,13 +231,13 @@ function CreationForm({ onResult, loading, setLoading, error, setError }) {
         <select value={form.profil} onChange={e => set('profil', e.target.value)} className={cn(inputCls, 'cursor-pointer')}>
           {PROFIL_OPTIONS.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
         </select>
-        <p className="mt-1.5 text-[11px] text-white/32">Si le moteur choisi est indisponible (crédits, panne), LIRI bascule automatiquement sur le suivant.</p>
+        <p className="mt-1.5 text-[11px] text-white/30">Si le moteur choisi est indisponible (crédits, panne), LIRI bascule automatiquement sur le suivant.</p>
       </div>
       {error && <div className="flex items-start gap-2 rounded-xl border border-red-500/25 bg-red-500/10 px-3 py-2.5 text-[12px] text-red-300"><AlertCircle className="h-4 w-4 flex-shrink-0 mt-0.5" />{error}</div>}
       <button type="submit" disabled={loading || !form.sujet.trim()}
         className={cn('flex items-center justify-center gap-2 rounded-xl py-3 text-[13px] font-semibold transition-all',
           loading || !form.sujet.trim()
-            ? 'cursor-not-allowed border border-white/10 bg-white/5 text-white/28'
+            ? 'cursor-not-allowed border border-white/10 bg-white/5 text-white/30'
             : 'bg-[#c96544] text-white hover:bg-[#d97757] shadow-[0_0_20px_rgba(217,119,87,0.38)]')}>
         {loading ? <><Loader2 className="h-4 w-4 animate-spin" />Génération...</> : <><Sparkles className="h-4 w-4" />Générer la formation</>}
       </button>
@@ -390,7 +390,7 @@ export default function StudioLiriFormationBuilderPage() {
           <button type="button" onClick={() => navigate('/studio/liri/cours')} className="flex items-center gap-1.5 rounded-lg border border-amber-500/25 bg-amber-500/10 px-3 py-1.5 text-[11px] font-medium text-amber-400 transition-all hover:bg-amber-500/20">
             <Brain className="h-3.5 w-3.5" /> Course Builder
           </button>
-          <button type="button" onClick={() => navigate('/studio/smartboard-designer')} className="flex items-center gap-1.5 rounded-lg border border-white/12 bg-white/[0.04] px-3 py-1.5 text-[11px] font-medium text-white/70 transition-all hover:border-white/25 hover:text-white">
+          <button type="button" onClick={() => navigate('/studio/smartboard-designer')} className="flex items-center gap-1.5 rounded-lg border border-white/10 bg-white/[0.04] px-3 py-1.5 text-[11px] font-medium text-white/70 transition-all hover:border-white/25 hover:text-white">
             <Layers className="h-3.5 w-3.5" /> Designer
           </button>
           <button type="button" onClick={sendToProduction} disabled={producing} className="flex items-center gap-1.5 rounded-lg bg-[#c96544] px-3 py-1.5 text-[11px] font-semibold text-white transition-all hover:bg-[#d97757] shadow-[0_0_12px_rgba(217,119,87,0.35)] disabled:opacity-60">
@@ -409,17 +409,17 @@ export default function StudioLiriFormationBuilderPage() {
           </div>
           <div className="flex-1 overflow-y-auto p-2 flex flex-col gap-2 min-h-0">
             {!formation
-              ? <div className="flex flex-col items-center justify-center py-8 text-center"><GraduationCap className="h-8 w-8 text-white/12 mb-3" /><p className="text-[11px] text-white/22">Générez une formation<br />ou chargez un brouillon</p></div>
+              ? <div className="flex flex-col items-center justify-center py-8 text-center"><GraduationCap className="h-8 w-8 text-white/10 mb-3" /><p className="text-[11px] text-white/20">Générez une formation<br />ou chargez un brouillon</p></div>
               : <TreeNode node={formation} depth={0} onSelect={setSelectedNode} selected={selectedNode} />
             }
             {userId && isSupabaseConfigured ? (
               <div className="mt-auto border-t border-white/[0.07] pt-2">
-                <div className="flex items-center gap-1.5 px-1 mb-1.5 text-[10px] font-semibold uppercase tracking-[0.12em] text-white/32">
+                <div className="flex items-center gap-1.5 px-1 mb-1.5 text-[10px] font-semibold uppercase tracking-[0.12em] text-white/30">
                   <Cloud className="h-3 w-3" /> Brouillons
                 </div>
                 <div className="max-h-28 overflow-y-auto space-y-1 pr-0.5">
                   {drafts.length === 0 ? (
-                    <p className="text-[10px] text-white/22 px-1">Aucun</p>
+                    <p className="text-[10px] text-white/20 px-1">Aucun</p>
                   ) : (
                     drafts.map((d) => (
                       <div key={d.id} className="flex items-center gap-0.5 rounded-lg border border-white/[0.06] bg-white/[0.02] pr-0.5">
@@ -453,7 +453,7 @@ export default function StudioLiriFormationBuilderPage() {
                 <CheckCircle2 className="h-3.5 w-3.5 flex-shrink-0 text-[#7bb06a]" />
                 <div className="min-w-0">
                   <div className="text-[11px] font-medium text-[#9cc48a]">Formation générée</div>
-                  <div className="text-[10px] text-white/32 truncate">{result?.meta?.type_programme_label}</div>
+                  <div className="text-[10px] text-white/30 truncate">{result?.meta?.type_programme_label}</div>
                 </div>
               </div>
               <button
@@ -472,7 +472,7 @@ export default function StudioLiriFormationBuilderPage() {
                     type="button"
                     onClick={() => saveCloudDraft()}
                     disabled={draftBusy}
-                    className="flex w-full items-center justify-center gap-1.5 rounded-lg border border-[#d4924a]/30 bg-[#d4924a]/12 py-2 text-[11px] font-semibold text-[#ecc98f] hover:bg-[#d4924a]/20 disabled:opacity-40"
+                    className="flex w-full items-center justify-center gap-1.5 rounded-lg border border-[#d4924a]/30 bg-[#d4924a]/10 py-2 text-[11px] font-semibold text-[#ecc98f] hover:bg-[#d4924a]/20 disabled:opacity-40"
                   >
                     {draftBusy ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Save className="h-3.5 w-3.5" />}
                     {draftCloudId ? 'Mettre à jour le brouillon' : 'Sauvegarder dans le cloud'}
@@ -490,7 +490,7 @@ export default function StudioLiriFormationBuilderPage() {
             <div className="flex-1 overflow-y-auto">
               <div className="mx-auto max-w-2xl px-8 py-8">
                 <h2 className="text-[18px] font-bold text-white mb-1">Nouvelle formation</h2>
-                <p className="mb-6 text-[13px] text-white/38">
+                <p className="mb-6 text-[13px] text-white/40">
                   <span className="inline-flex items-end gap-1 align-baseline">
                     <LiriWordmark size="kicker" className="text-white/45" subtleGlow />
                     <span>génère le squelette (modules, semaines, cours) — puis envoyez-le au poste production pour le rendu image par image.</span>
@@ -517,7 +517,7 @@ export default function StudioLiriFormationBuilderPage() {
                   </button>
                 </div>
                 {result?.meta?.bascule && result?.meta?.message ? (
-                  <div className="mb-4 flex items-start gap-2 rounded-xl border border-[#d4924a]/25 bg-[#d4924a]/08 px-3 py-2.5 text-[11.5px] leading-relaxed text-[#ecc98f]/90">
+                  <div className="mb-4 flex items-start gap-2 rounded-xl border border-[#d4924a]/25 bg-[#d4924a]/10 px-3 py-2.5 text-[11.5px] leading-relaxed text-[#ecc98f]/90">
                     <RefreshCw className="mt-0.5 h-3.5 w-3.5 flex-shrink-0" />
                     <span>{result.meta.message}</span>
                   </div>

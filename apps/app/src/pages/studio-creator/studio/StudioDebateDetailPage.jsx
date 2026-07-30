@@ -450,7 +450,13 @@ export default function StudioDebateDetailPage() {
                               className="inline-flex items-center gap-1.5 h-8 px-2.5 rounded-lg border border-white/10 text-white/70 hover:bg-white/5 disabled:opacity-35"
                             >
                               {copiedId === inv.id ? (
-                                <Check className="w-3.5 h-3.5 text-emerald-400" />
+                                /* green- et non emerald- : cette page vit sous
+                                   .studio-warm-scope, où studioWarm.css force
+                                   `text-emerald-*` → #e0926a !important. La coche
+                                   « lien copié » sortait donc corail, couleur des
+                                   actions : impossible de lire si la copie avait
+                                   abouti. green-/red- sont exemptés du remap. */
+                                <Check className="w-3.5 h-3.5 text-green-400" />
                               ) : (
                                 <Copy className="w-3.5 h-3.5" />
                               )}
@@ -516,7 +522,10 @@ export default function StudioDebateDetailPage() {
                     {p.role}
                     {p.side ? ` · camp ${p.side}` : ''}
                   </span>
-                  <span className={cn(p.ready_status === 'ready' ? 'text-emerald-400/90' : 'text-white/35')}>
+                  {/* green- et non emerald- : sous .studio-warm-scope, emerald est
+                      remappé en #e0926a !important — le statut « Prêt » ressortait
+                      corail et la liste des débatteurs perdait sa lecture au coup d'œil. */}
+                  <span className={cn(p.ready_status === 'ready' ? 'text-green-400/90' : 'text-white/35')}>
                     {p.ready_status === 'ready' ? 'Prêt' : 'Pas prêt'}
                   </span>
                 </li>

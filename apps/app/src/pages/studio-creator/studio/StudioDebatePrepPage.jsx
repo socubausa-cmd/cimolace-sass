@@ -181,7 +181,7 @@ export default function StudioDebatePrepPage() {
               <p className="text-[10px] uppercase text-white/40">Programme des rounds</p>
               <ul className="space-y-3">
                 {prepRounds.map((rw) => (
-                  <li key={rw.round_number} className="rounded-lg border border-white/8 bg-black/20 px-3 py-2.5">
+                  <li key={rw.round_number} className="rounded-lg border border-white/10 bg-black/20 px-3 py-2.5">
                     <p className="text-xs font-medium text-white/85">
                       Round {rw.round_number}
                       {rw.round_label ? (
@@ -203,7 +203,11 @@ export default function StudioDebatePrepPage() {
             <div className="rounded-xl border border-white/10 bg-white/[0.02] p-4 flex items-center justify-between gap-4">
               <div className="flex items-center gap-3">
                 {ready ? (
-                  <CheckCircle2 className="w-8 h-8 text-emerald-400/85 shrink-0" />
+                  /* green- et non emerald- : page montée sous .studio-warm-scope, où
+                     studioWarm.css force `text-emerald-*` → #e0926a !important. En
+                     emerald cette coche sortait corail, donc indiscernable du bouton
+                     « Je suis prêt » voisin — exactement la confusion qu'elle doit éviter. */
+                  <CheckCircle2 className="w-8 h-8 text-green-400/85 shrink-0" />
                 ) : (
                   <Circle className="w-8 h-8 text-white/25 shrink-0" />
                 )}
@@ -218,7 +222,7 @@ export default function StudioDebatePrepPage() {
                 onClick={() => void toggleReady()}
                 className={cn(
                   'shrink-0 h-10 px-4 rounded-xl text-sm font-medium transition-colors disabled:opacity-45',
-                  ready ? 'border border-white/20 text-white/80 hover:bg-white/5' : 'bg-emerald-600/80 hover:bg-emerald-600 text-white'
+                  ready ? 'border border-white/20 text-white/80 hover:bg-white/5' : 'bg-[rgba(217,119,87,0.9)] hover:bg-[#d97757] text-[#1f1e1c]'
                 )}
               >
                 {toggleBusy ? '…' : ready ? 'Annuler' : 'Je suis prêt'}

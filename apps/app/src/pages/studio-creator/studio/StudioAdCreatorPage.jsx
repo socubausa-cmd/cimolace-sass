@@ -59,16 +59,20 @@ import useTenantBranding from '@/hooks/useTenantBranding';
 // ─── Constants ────────────────────────────────────────────────────────────────
 
 /**
- * ⚠️ Les couleurs des PLATEFORMES sont des COULEURS DE MARQUE TIERCE : le bleu
- * Facebook et le cyan TikTok IDENTIFIENT le réseau, ils ne décorent pas. On les
- * garde tels quels malgré la charte chaude — les réchauffer rendrait les six
- * cartes indistinctes. Seul « Multi-canal », qui n'appartient à aucune marque,
- * passe sur le corail LIRI.
+ * ⚠️ COULEURS DES PLATEFORMES — DÉCOR, pas information. Chaque carte porte DÉJÀ le
+ * glyphe de la marque (le « f » Facebook, la caméra Instagram…) ET son nom écrit en
+ * toutes lettres juste dessous : la teinte ne dit rien que le libellé ne dise mieux.
+ * Elle relève donc du « on distingue deux entrées de même rang par la couleur », que
+ * la charte bannit. Le bleu Facebook et le cyan TikTok repassent sur les deux ors de
+ * la charte ; rose, rouge et jaune ne figurent pas parmi les teintes froides bannies
+ * et restent tels quels. « Multi-canal », qui n'appartient à aucune marque, garde le
+ * corail LIRI.
+ * ⛔ Ne PAS y réintroduire de bleu/cyan/sky au motif « couleur de marque tierce ».
  */
 const PLATFORMS = [
-  { id: 'facebook', label: 'Facebook', icon: Facebook, color: 'text-blue-400', bg: 'bg-blue-500/15', border: 'border-blue-500/30', formats: ['feed', 'story', 'carousel', 'reel'] },
+  { id: 'facebook', label: 'Facebook', icon: Facebook, color: 'text-[#e3aa6b]', bg: 'bg-[#e3aa6b]/15', border: 'border-[#e3aa6b]/30', formats: ['feed', 'story', 'carousel', 'reel'] },
   { id: 'instagram', label: 'Instagram', icon: Instagram, color: 'text-pink-400', bg: 'bg-pink-500/15', border: 'border-pink-500/30', formats: ['feed', 'story', 'reel', 'carousel'] },
-  { id: 'tiktok', label: 'TikTok', icon: Film, color: 'text-cyan-400', bg: 'bg-cyan-500/15', border: 'border-cyan-500/30', formats: ['short', 'feed'] },
+  { id: 'tiktok', label: 'TikTok', icon: Film, color: 'text-[#e6cc92]', bg: 'bg-[#e6cc92]/15', border: 'border-[#e6cc92]/30', formats: ['short', 'feed'] },
   { id: 'youtube', label: 'YouTube', icon: Youtube, color: 'text-red-400', bg: 'bg-red-500/15', border: 'border-red-500/30', formats: ['short', 'banner', 'feed'] },
   { id: 'google', label: 'Google Ads', icon: Globe, color: 'text-yellow-400', bg: 'bg-yellow-500/15', border: 'border-yellow-500/30', formats: ['banner', 'search'] },
   { id: 'multi', label: 'Multi-canal', icon: Share2, color: 'text-[#e8a97f]', bg: 'bg-[#d97757]/15', border: 'border-[#d97757]/30', formats: ['feed', 'story', 'short'] },
@@ -104,17 +108,20 @@ const FORMAT_LABELS = { feed: 'Fil d\'actualité', story: 'Story (9:16)', reel: 
  * publicitaire n'est branchée côté serveur. Les remettre recréerait le formulaire
  * décoratif qui vient d'être retiré.
  *
- * Idem que PLATFORMS : bleu Meta et cyan TikTok = identité des réseaux, on ne les
- * réchauffe pas, ils servent à distinguer les marques.
+ * Idem que PLATFORMS : la pastille colorée est du DÉCOR. L'icône de la marque et le
+ * libellé complet (« Meta — Facebook & Instagram ») portent seuls l'identité du
+ * réseau ; bleu Meta, cyan TikTok et bleu LinkedIn repassent donc sur les ors de la
+ * charte. La teinte sert encore de surlignage « compte connecté » (cf. la carte),
+ * ce qui reste vrai en chaud.
  */
 const SOCIAL_CHANNELS = [
   {
     key: 'tiktok',
     label: 'TikTok',
     icon: Film,
-    color: 'text-cyan-400',
-    bg: 'bg-cyan-500/10',
-    border: 'border-cyan-500/25',
+    color: 'text-[#e6cc92]',
+    bg: 'bg-[#e6cc92]/10',
+    border: 'border-[#e6cc92]/25',
     desc: 'Publication de vidéos via la Content Posting API (la vidéo est tirée depuis le stockage de l\'école).',
     publishes: ['tiktok'],
   },
@@ -122,9 +129,9 @@ const SOCIAL_CHANNELS = [
     key: 'facebook',
     label: 'Meta — Facebook & Instagram',
     icon: Facebook,
-    color: 'text-blue-400',
-    bg: 'bg-blue-500/10',
-    border: 'border-blue-500/25',
+    color: 'text-[#e3aa6b]',
+    bg: 'bg-[#e3aa6b]/10',
+    border: 'border-[#e3aa6b]/25',
     desc: 'Une seule connexion couvre la Page Facebook et le compte Instagram Business qui lui est lié.',
     publishes: ['facebook', 'instagram'],
   },
@@ -132,11 +139,12 @@ const SOCIAL_CHANNELS = [
     key: 'linkedin',
     label: 'LinkedIn',
     icon: Linkedin,
-    // Bleu LinkedIn éclairci pour le fond sombre : couleur de MARQUE (même exception
-    // que Facebook/TikTok). Écrit en hex plutôt qu'en classe froide `sky-`, bannie.
-    color: 'text-[#5aa2e8]',
-    bg: 'bg-[#0A66C2]/15',
-    border: 'border-[#0A66C2]/35',
+    // Le bleu LinkedIn (#0A66C2 et son éclairci façon `sky-`) était la dernière teinte
+    // froide du fichier : écrite en hex, elle échappait au grep sur les classes Tailwind.
+    // Le « in » du logo suffit à nommer le réseau → or clair, comme la carte Meta.
+    color: 'text-[#e3aa6b]',
+    bg: 'bg-[#e3aa6b]/15',
+    border: 'border-[#e3aa6b]/35',
     desc: 'Publication au nom du membre connecté (la vidéo est envoyée en octets, LinkedIn ne tire pas d\'URL).',
     publishes: ['linkedin'],
   },

@@ -459,7 +459,7 @@ function DebateModeratorPanel({
         {open ? <ChevronDown className="w-3.5 h-3.5" /> : <ChevronUp className="w-3.5 h-3.5" />}
       </button>
       {open ? (
-        <div className="rounded-2xl border border-white/12 bg-black/82 backdrop-blur-xl p-3 space-y-2.5 pointer-events-auto shadow-xl">
+        <div className="rounded-2xl border border-white/10 bg-black/80 backdrop-blur-xl p-3 space-y-2.5 pointer-events-auto shadow-xl">
           <p className="text-[10px] uppercase tracking-wide text-white/40">Phase débat</p>
           <p className="text-[10px] text-white/45">
             Actuel :{' '}
@@ -484,7 +484,7 @@ function DebateModeratorPanel({
                   'h-7 px-2 rounded-lg text-[10px] font-medium border transition-colors disabled:opacity-40',
                   debate.status === ph.value
                     ? 'border-[#d97757]/50 bg-[#d97757]/20 text-[#f4c0aa]'
-                    : 'border-white/12 bg-white/[0.04] text-white/75 hover:bg-white/10',
+                    : 'border-white/10 bg-white/[0.04] text-white/75 hover:bg-white/10',
                 )}
               >
                 {ph.label}
@@ -501,7 +501,7 @@ function DebateModeratorPanel({
                 'h-7 px-2 rounded-lg text-[10px] font-medium border transition-colors disabled:opacity-40',
                 debate.neuronqEnabled !== false
                   ? 'border-[#d97757]/50 bg-[#d97757]/20 text-[#f4c0aa]'
-                  : 'border-white/12 bg-white/[0.04] text-white/75 hover:bg-white/10',
+                  : 'border-white/10 bg-white/[0.04] text-white/75 hover:bg-white/10',
               )}
             >
               Activé
@@ -514,7 +514,7 @@ function DebateModeratorPanel({
                 'h-7 px-2 rounded-lg text-[10px] font-medium border transition-colors disabled:opacity-40',
                 debate.neuronqEnabled === false
                   ? 'border-rose-400/40 bg-rose-500/15 text-rose-100'
-                  : 'border-white/12 bg-white/[0.04] text-white/75 hover:bg-white/10',
+                  : 'border-white/10 bg-white/[0.04] text-white/75 hover:bg-white/10',
               )}
             >
               Désactivé
@@ -530,7 +530,7 @@ function DebateModeratorPanel({
                 'h-7 px-2 rounded-lg text-[10px] font-medium border transition-colors disabled:opacity-40',
                 debate.aiJudgeEnabled
                   ? 'border-amber-400/50 bg-amber-500/20 text-amber-100'
-                  : 'border-white/12 bg-white/[0.04] text-white/75 hover:bg-white/10',
+                  : 'border-white/10 bg-white/[0.04] text-white/75 hover:bg-white/10',
               )}
             >
               Activé
@@ -543,7 +543,7 @@ function DebateModeratorPanel({
                 'h-7 px-2 rounded-lg text-[10px] font-medium border transition-colors disabled:opacity-40',
                 !debate.aiJudgeEnabled
                   ? 'border-rose-400/40 bg-rose-500/15 text-rose-100'
-                  : 'border-white/12 bg-white/[0.04] text-white/75 hover:bg-white/10',
+                  : 'border-white/10 bg-white/[0.04] text-white/75 hover:bg-white/10',
               )}
             >
               Désactivé
@@ -871,14 +871,14 @@ function PhaseScreen({ phase, error, sessionId, isHost, recoveryAsHost, joinCode
           <p className="text-white font-semibold text-lg">
             {phase === PHASE.LOADING ? 'Préparation du live…' : 'Connexion à la salle…'}
           </p>
-          <p className="mt-1 text-sm text-white/58">
+          <p className="mt-1 text-sm text-white/60">
             {phase === PHASE.LOADING
               ? 'Chargement de la session'
               : 'Initialisation de la connexion vidéo'}
           </p>
           {joinCode ? (
             <div className="mt-4 flex flex-col items-center gap-2 px-4">
-              <p className="text-[10px] uppercase tracking-[0.14em] text-white/58">Code mobile LIRI</p>
+              <p className="text-[10px] uppercase tracking-[0.14em] text-white/60">Code mobile LIRI</p>
               <button
                 type="button"
                 onClick={() => {
@@ -897,7 +897,7 @@ function PhaseScreen({ phase, error, sessionId, isHost, recoveryAsHost, joinCode
                 <Copy className="h-4 w-4 shrink-0 opacity-80" aria-hidden />
                 {formatJoinCodeDisplay(joinCode)}
               </button>
-              <p className="max-w-xs text-center text-[11px] text-white/58">
+              <p className="max-w-xs text-center text-[11px] text-white/60">
                 Les élèves peuvent saisir ce code dans l&apos;app LIRI (connexion → rejoindre avec un code).
               </p>
             </div>
@@ -984,10 +984,10 @@ function PhaseScreen({ phase, error, sessionId, isHost, recoveryAsHost, joinCode
             </div>
           )}
           {!isHost && (
-            <p className="text-white/58 text-xs mt-4">Redirection automatique vers les lives dans 10 s…</p>
+            <p className="text-white/60 text-xs mt-4">Redirection automatique vers les lives dans 10 s…</p>
           )}
           {isHost && (
-            <p className="text-white/58 text-xs mt-4">Redirection vers le récapitulatif…</p>
+            <p className="text-white/60 text-xs mt-4">Redirection vers le récapitulatif…</p>
           )}
         </div>
       </motion.div>
@@ -4699,7 +4699,7 @@ export default function LiveArenaPage() {
 
       {sbImageModal?.url && (isHost || !sbImageModalGuestDismissed) ? (
         <div
-          className="fixed inset-0 z-[6200] flex flex-col items-center justify-center gap-2 bg-black/88 p-4 backdrop-blur-md"
+          className="fixed inset-0 z-[6200] flex flex-col items-center justify-center gap-2 bg-black/90 p-4 backdrop-blur-md"
           role="dialog"
           aria-modal="true"
           aria-label="Image agrandie"
@@ -4789,7 +4789,7 @@ export default function LiveArenaPage() {
                         {entry.profiles?.name || 'Participant'}
                       </p>
                       {/* .40 donnait 3,8:1 sur le nouveau fond de panneau — .58 → 6,5:1. */}
-                      <p className="text-[10px] text-white/58 capitalize">
+                      <p className="text-[10px] text-white/60 capitalize">
                         {entry.invitation_type || 'individuel'}
                       </p>
                     </div>

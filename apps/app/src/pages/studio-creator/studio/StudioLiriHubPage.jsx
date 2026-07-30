@@ -41,7 +41,7 @@ const HUB_CARDS = [
   {
     id: 'reprendre', icon: Clock, title: 'Reprendre', subtitle: 'Continuer un projet existant',
     gradient: 'radial-gradient(circle at 20% 30%, rgba(207,122,82,0.26), transparent 55%), radial-gradient(circle at 80% 70%, rgba(176,83,47,0.15), transparent 50%)',
-    border: 'border-[#cf7a52]/22', glow: 'hover:shadow-[0_8px_40px_rgba(207,122,82,0.18)]',
+    border: 'border-[#cf7a52]/20', glow: 'hover:shadow-[0_8px_40px_rgba(207,122,82,0.18)]',
     accent: 'text-[#daa07a]', accentBg: 'bg-[#cf7a52]/15', iconGlow: 'shadow-[0_0_18px_rgba(207,122,82,0.40)]',
     actions: [
       { label: 'Formations en cours', href: '/studio/liri/formation', icon: GraduationCap, desc: 'Vos programmes actifs' },
@@ -65,7 +65,7 @@ const HUB_CARDS = [
   {
     id: 'diffuser', icon: Radio, title: 'Diffuser', subtitle: 'Live ou export final',
     gradient: 'radial-gradient(circle at 20% 30%, rgba(224,112,90,0.28), transparent 55%), radial-gradient(circle at 80% 70%, rgba(206,76,55,0.16), transparent 50%)',
-    border: 'border-[#e0705a]/22', glow: 'hover:shadow-[0_8px_40px_rgba(224,112,90,0.18)]',
+    border: 'border-[#e0705a]/20', glow: 'hover:shadow-[0_8px_40px_rgba(224,112,90,0.18)]',
     accent: 'text-[#ec8a72]', accentBg: 'bg-[#e0705a]/15', iconGlow: 'shadow-[0_0_18px_rgba(224,112,90,0.38)]',
     actions: [
       { label: 'Multilingue (live / vidéo)', href: '/studio/liri/multilang', icon: Languages, desc: 'Sessions traduction · projets export' },
@@ -113,7 +113,7 @@ function HubCard({ card, index }) {
       style={{ background: card.gradient }}
       onClick={() => setExpanded(v => !v)}
     >
-      <div className="absolute inset-0 bg-[#16120f]/64 backdrop-blur-sm" />
+      <div className="absolute inset-0 bg-[#16120f]/65 backdrop-blur-sm" />
       <div className="relative z-10 p-5">
         <div className="flex items-start justify-between mb-4">
           <div className={cn('flex h-10 w-10 items-center justify-center rounded-xl', card.accentBg, card.iconGlow)}>
@@ -129,11 +129,11 @@ function HubCard({ card, index }) {
               const AIcon = action.icon;
               return (
                 <Link key={action.label} to={action.href}
-                  className="flex items-center gap-3 rounded-xl border border-white/8 bg-white/[0.04] px-3 py-2.5 transition-all hover:bg-white/[0.09] hover:border-white/15">
+                  className="flex items-center gap-3 rounded-xl border border-white/10 bg-white/[0.04] px-3 py-2.5 transition-all hover:bg-white/[0.09] hover:border-white/15">
                   <AIcon className={cn('h-4 w-4 flex-shrink-0', card.accent)} />
                   <div className="min-w-0">
                     <div className="text-[12px] font-medium text-white/85 truncate">{action.label}</div>
-                    <div className="text-[10px] text-white/32 truncate">{action.desc}</div>
+                    <div className="text-[10px] text-white/30 truncate">{action.desc}</div>
                   </div>
                   <ArrowRight className="ml-auto h-3 w-3 flex-shrink-0 text-white/20" />
                 </Link>
@@ -226,7 +226,7 @@ export default function StudioLiriHubPage() {
                     </div>
                     <div>
                       <div className="text-[12px] font-semibold text-white/80">{p.label}</div>
-                      <div className="text-[10px] text-white/32 mt-0.5">{p.desc}</div>
+                      <div className="text-[10px] text-white/30 mt-0.5">{p.desc}</div>
                     </div>
                   </Link>
                 </motion.div>

@@ -46,7 +46,7 @@ function Badge({ ready, label }) {
   return (
     <span className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-semibold ${
       ready
-        ? 'border border-[#d97757]/30 bg-[#d97757]/12 text-[#e3aa6b]'
+        ? 'border border-[#d97757]/30 bg-[#d97757]/10 text-[#e3aa6b]'
         : 'border border-white/[0.12] bg-white/[0.04] text-white/60'
     }`}>
       {ready ? <CheckCircle2 className="h-3 w-3" /> : null}

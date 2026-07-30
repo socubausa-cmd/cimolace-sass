@@ -351,7 +351,7 @@ export default function StudioDebateBuilderPage() {
               <Loader2 className="w-6 h-6 text-[#ebca5e]/50 animate-spin" />
             </div>
           ) : debaterRows.length === 0 ? (
-            <p className="p-6 text-center text-sm text-white/38">
+            <p className="p-6 text-center text-sm text-white/40">
               Aucun débat pour le moment. Acceptez une invitation par lien pour apparaître ici.
             </p>
           ) : (
@@ -435,7 +435,7 @@ export default function StudioDebateBuilderPage() {
                       </Button>
                     </PopoverTrigger>
                     <PopoverContent
-                      className="w-auto max-w-[min(100vw-1.5rem,340px)] border-white/10 bg-[#151a22]/98 p-0 shadow-2xl"
+                      className="w-auto max-w-[min(100vw-1.5rem,340px)] border-white/10 bg-[#151a22]/100 p-0 shadow-2xl"
                       align="start"
                     >
                       <div className="p-2 pb-1 space-y-2">
@@ -450,7 +450,7 @@ export default function StudioDebateBuilderPage() {
                             >
                               <SelectTrigger
                                 aria-label="Mois"
-                                className="h-10 w-full rounded-lg border-white/12 bg-black/45 text-white text-sm"
+                                className="h-10 w-full rounded-lg border-white/10 bg-black/45 text-white text-sm"
                               >
                                 <SelectValue placeholder="Mois" />
                               </SelectTrigger>
@@ -473,7 +473,7 @@ export default function StudioDebateBuilderPage() {
                             >
                               <SelectTrigger
                                 aria-label="Année"
-                                className="h-10 w-full rounded-lg border-white/12 bg-black/45 text-white text-sm"
+                                className="h-10 w-full rounded-lg border-white/10 bg-black/45 text-white text-sm"
                               >
                                 <SelectValue placeholder="Année" />
                               </SelectTrigger>
@@ -504,7 +504,7 @@ export default function StudioDebateBuilderPage() {
                           <Select value={debateHour} onValueChange={setDebateHour}>
                             <SelectTrigger
                               aria-label="Heure"
-                              className="h-10 flex-1 rounded-lg border-white/12 bg-black/45 text-white text-sm"
+                              className="h-10 flex-1 rounded-lg border-white/10 bg-black/45 text-white text-sm"
                             >
                               <SelectValue placeholder="Heure" />
                             </SelectTrigger>
@@ -520,7 +520,7 @@ export default function StudioDebateBuilderPage() {
                           <Select value={debateMinute} onValueChange={setDebateMinute}>
                             <SelectTrigger
                               aria-label="Minutes"
-                              className="h-10 flex-1 rounded-lg border-white/12 bg-black/45 text-white text-sm"
+                              className="h-10 flex-1 rounded-lg border-white/10 bg-black/45 text-white text-sm"
                             >
                               <SelectValue placeholder="Min" />
                             </SelectTrigger>

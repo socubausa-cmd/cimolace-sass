@@ -33,7 +33,7 @@ export default function StudioLiriConstructeursGuidePage() {
       topBarCenter={(
         <Link
           to="/studio/liri/constructeurs"
-          className="inline-flex items-center gap-1 whitespace-nowrap rounded-lg border border-white/12 px-2.5 py-1 text-[11px] font-medium text-white/55 transition-all hover:bg-white/[0.06] hover:text-white/85"
+          className="inline-flex items-center gap-1 whitespace-nowrap rounded-lg border border-white/10 px-2.5 py-1 text-[11px] font-medium text-white/55 transition-all hover:bg-white/[0.06] hover:text-white/85"
         >
           <ArrowLeft className="h-3 w-3" />
           Choix rapide
@@ -51,7 +51,7 @@ export default function StudioLiriConstructeursGuidePage() {
 
         <div className="mb-8 rounded-2xl border border-[#d4924a]/20 bg-[#2e2016]/[0.12] px-5 py-5">
           <h2 className="text-[12px] font-semibold uppercase tracking-[0.14em] text-[#e0a458]/90">Pipeline type</h2>
-          <p className="mt-1 text-[12px] text-white/42">
+          <p className="mt-1 text-[12px] text-white/40">
             Les constructeurs ci-dessous préparent la structure et le contenu ; le{' '}
             <Link to={DESIGNER_HREF} className="text-[#e0a458]/90 underline-offset-2 hover:underline">
               SmartBoard Designer
@@ -60,7 +60,7 @@ export default function StudioLiriConstructeursGuidePage() {
           </p>
           <ol className="mt-4 space-y-3">
             {CONSTRUCTEUR_PIPELINE_STEPS.map((s) => (
-              <li key={s.step} className="flex gap-3 text-[12px] leading-relaxed text-white/52">
+              <li key={s.step} className="flex gap-3 text-[12px] leading-relaxed text-white/50">
                 <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-[#d4924a]/15 text-[11px] font-bold text-[#e6b566]">
                   {s.step}
                 </span>
@@ -95,7 +95,7 @@ export default function StudioLiriConstructeursGuidePage() {
                   </td>
                   <td className="px-3 py-2.5 text-white/45">{row.badge}</td>
                   <td className="px-3 py-2.5 text-white/40">{row.audience[0]}</td>
-                  <td className="px-3 py-2.5 text-white/38">{row.flowNext}</td>
+                  <td className="px-3 py-2.5 text-white/40">{row.flowNext}</td>
                 </tr>
               ))}
             </tbody>
@@ -123,11 +123,11 @@ export default function StudioLiriConstructeursGuidePage() {
             >
               <div className="mb-4 flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
                 <div>
-                  <h2 className="text-[17px] font-bold text-white/92">{c.title}</h2>
+                  <h2 className="text-[17px] font-bold text-white/90">{c.title}</h2>
                   <p className="mt-1 text-[13px] text-white/45">{c.subtitle}</p>
                   <div className="mt-2 flex flex-wrap gap-2">
                     {c.badge ? (
-                      <span className="rounded-md border border-white/12 bg-white/[0.05] px-2 py-0.5 text-[10px] font-medium uppercase tracking-wide text-white/50">
+                      <span className="rounded-md border border-white/10 bg-white/[0.05] px-2 py-0.5 text-[10px] font-medium uppercase tracking-wide text-white/50">
                         {c.badge}
                       </span>
                     ) : null}
@@ -154,10 +154,10 @@ export default function StudioLiriConstructeursGuidePage() {
 
               <div className="grid gap-5 lg:grid-cols-2">
                 <div>
-                  <h3 className="mb-2 text-[11px] font-semibold uppercase tracking-[0.12em] text-white/38">Ce qu'il configure</h3>
+                  <h3 className="mb-2 text-[11px] font-semibold uppercase tracking-[0.12em] text-white/40">Ce qu'il configure</h3>
                   <ul className="space-y-1.5">
                     {c.configures.map((line, i) => (
-                      <li key={i} className="flex gap-2 text-[13px] leading-relaxed text-white/52">
+                      <li key={i} className="flex gap-2 text-[13px] leading-relaxed text-white/50">
                         <span className="mt-2 h-1 w-1 shrink-0 rounded-full bg-[#d4924a]/55" />
                         {line}
                       </li>
@@ -165,10 +165,10 @@ export default function StudioLiriConstructeursGuidePage() {
                   </ul>
                 </div>
                 <div>
-                  <h3 className="mb-2 text-[11px] font-semibold uppercase tracking-[0.12em] text-white/38">À qui s'adresse-t-il</h3>
+                  <h3 className="mb-2 text-[11px] font-semibold uppercase tracking-[0.12em] text-white/40">À qui s'adresse-t-il</h3>
                   <ul className="space-y-1.5">
                     {c.audience.map((line, i) => (
-                      <li key={i} className="text-[13px] leading-relaxed text-white/52">
+                      <li key={i} className="text-[13px] leading-relaxed text-white/50">
                         {line}
                       </li>
                     ))}
@@ -207,7 +207,7 @@ export default function StudioLiriConstructeursGuidePage() {
 
               <div className="mt-5 rounded-xl border border-white/[0.07] bg-black/20 px-4 py-3">
                 <h3 className="mb-1 text-[11px] font-semibold uppercase tracking-[0.12em] text-white/35">Lien cahier des charges & vision produit</h3>
-                <p className="text-[13px] leading-relaxed text-white/48">{c.cahierDesCharges}</p>
+                <p className="text-[13px] leading-relaxed text-white/50">{c.cahierDesCharges}</p>
                 {c.flowNext ? (
                   <p className="mt-2 text-[12px] text-[#e0a458]/85">
                     Enchaînement typique : {c.flowNext}

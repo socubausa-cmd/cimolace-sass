@@ -748,10 +748,10 @@ function DesignerTopBar({
 
         {/* Undo / Redo */}
         <div className="flex items-center gap-0.5">
-          <button onClick={undo} title="Annuler (⌘Z)" className="flex h-7 w-7 items-center justify-center rounded-md text-white/35 hover:bg-white/8 hover:text-white/70 transition-all">
+          <button onClick={undo} title="Annuler (⌘Z)" className="flex h-7 w-7 items-center justify-center rounded-md text-white/35 hover:bg-white/10 hover:text-white/70 transition-all">
             <Undo2 className="h-3.5 w-3.5" />
           </button>
-          <button onClick={redo} title="Rétablir (⌘⇧Z)" className="flex h-7 w-7 items-center justify-center rounded-md text-white/35 hover:bg-white/8 hover:text-white/70 transition-all">
+          <button onClick={redo} title="Rétablir (⌘⇧Z)" className="flex h-7 w-7 items-center justify-center rounded-md text-white/35 hover:bg-white/10 hover:text-white/70 transition-all">
             <Redo2 className="h-3.5 w-3.5" />
           </button>
         </div>
@@ -769,13 +769,13 @@ function DesignerTopBar({
         <button
           onClick={onToggleFullscreen}
           title={fullscreen ? 'Quitter plein écran' : 'Plein écran'}
-          className="flex h-7 w-7 items-center justify-center rounded-md text-white/35 hover:bg-white/8 hover:text-white/70 transition-all"
+          className="flex h-7 w-7 items-center justify-center rounded-md text-white/35 hover:bg-white/10 hover:text-white/70 transition-all"
         >
           {fullscreen ? <Minimize2 className="h-3.5 w-3.5" /> : <Maximize2 className="h-3.5 w-3.5" />}
         </button>
 
         {/* Aide */}
-        <Link to="/studio/smartboard-aide" title="Aide" className="flex h-7 w-7 items-center justify-center rounded-md text-white/35 hover:bg-white/8 hover:text-white/70 transition-all">
+        <Link to="/studio/smartboard-aide" title="Aide" className="flex h-7 w-7 items-center justify-center rounded-md text-white/35 hover:bg-white/10 hover:text-white/70 transition-all">
           <HelpCircle className="h-3.5 w-3.5" />
         </Link>
 
@@ -795,7 +795,7 @@ function DesignerTopBar({
 
         <Bell className="h-4 w-4 text-white/25 cursor-pointer hover:text-white/50 transition-colors shrink-0" />
 
-        <Link to="/studio/liri" title="Hub" className="flex h-7 w-7 items-center justify-center rounded-md text-white/35 hover:bg-white/8 hover:text-white/60 transition-all shrink-0">
+        <Link to="/studio/liri" title="Hub" className="flex h-7 w-7 items-center justify-center rounded-md text-white/35 hover:bg-white/10 hover:text-white/60 transition-all shrink-0">
           <LogOut className="h-3.5 w-3.5" />
         </Link>
       </header>
@@ -1417,7 +1417,7 @@ function ElementPanel({ obj, onClose }) {
 
   /* ── micro-composants internes ── */
   const SecTitle = ({ children }) => (
-    <p className="px-3 pt-3 pb-1 text-[9px] font-bold uppercase tracking-widest text-white/22">{children}</p>
+    <p className="px-3 pt-3 pb-1 text-[9px] font-bold uppercase tracking-widest text-white/20">{children}</p>
   );
   const AiBtn = ({ label, sub }) => (
     <button type="button" className="flex w-full items-center gap-2.5 rounded-xl border border-[#d97757]/15 bg-[#d97757]/[0.06] px-2.5 py-2 text-left transition-all hover:border-[#d97757]/25">
@@ -1821,7 +1821,7 @@ function ElementPanel({ obj, onClose }) {
         {/* ────── OPACITÉ (tous types) ────── */}
         <div className="px-3 pb-4 pt-1">
           <div className="mb-1 flex items-center justify-between">
-            <span className="text-[9px] font-bold uppercase tracking-widest text-white/22">Opacité</span>
+            <span className="text-[9px] font-bold uppercase tracking-widest text-white/20">Opacité</span>
             <span className="text-[10px] text-white/30">{Math.round((obj.style?.opacity ?? 1) * 100)}%</span>
           </div>
           <input type="range" min={0} max={1} step={0.01}
@@ -2068,7 +2068,7 @@ function FormesVectorPanel({ onClose }) {
                   'flex w-full items-center gap-2 rounded-xl border px-2.5 py-2 transition-all',
                   isActive
                     ? 'border-[#d4924a]/35 bg-[#d4924a]/15 text-[#e6b566]'
-                    : 'border-white/[0.07] bg-white/[0.02] text-white/55 hover:bg-white/[0.05] hover:border-white/12',
+                    : 'border-white/[0.07] bg-white/[0.02] text-white/55 hover:bg-white/[0.05] hover:border-white/10',
                 )}>
                 <Icon className={cn('h-3.5 w-3.5 shrink-0', isActive ? 'text-[#e0a458]' : 'text-white/35')} />
                 <div className="min-w-0 flex-1">
@@ -2482,10 +2482,10 @@ function ContextualPanel({ tool, onClose }) {
 
       {tool === 'fond' && (
         <div className="flex-1 overflow-y-auto p-3 space-y-3">
-          <p className="text-[9px] font-bold uppercase tracking-widest text-white/22">Fond actuel</p>
+          <p className="text-[9px] font-bold uppercase tracking-widest text-white/20">Fond actuel</p>
           <div className="h-10 w-full rounded-xl border border-white/10 overflow-hidden"
             style={{ background: canvasBg === 'transparent' ? 'repeating-conic-gradient(#444 0% 25%, #222 0% 50%) 0 0/10px 10px' : canvasBg }} />
-          <p className="text-[9px] font-bold uppercase tracking-widest text-white/22 pt-1">Presets</p>
+          <p className="text-[9px] font-bold uppercase tracking-widest text-white/20 pt-1">Presets</p>
           <div className="grid grid-cols-4 gap-2">
             {BG_PRESETS.map(p => (
               <button key={p.id} onClick={() => setCanvasBackground(p.value)} title={p.label}
@@ -2534,7 +2534,7 @@ function ContextualPanel({ tool, onClose }) {
                 <select
                   value={iaImageSize}
                   onChange={(e) => setIaImageSize(e.target.value)}
-                  className="mt-1 w-full rounded-lg border border-white/12 bg-black/50 py-1.5 pl-2 pr-6 text-[10px] text-white/85"
+                  className="mt-1 w-full rounded-lg border border-white/10 bg-black/50 py-1.5 pl-2 pr-6 text-[10px] text-white/85"
                 >
                   {DESIGNER_IA_IMAGE_SIZES.map((s) => (
                     <option key={s.value} value={s.value}>
@@ -2548,7 +2548,7 @@ function ContextualPanel({ tool, onClose }) {
                 onChange={(e) => setIaImagePrompt(e.target.value)}
                 placeholder="Décrivez l'illustration…"
                 rows={4}
-                className="w-full resize-y rounded-xl border border-white/12 bg-black/45 px-2.5 py-2 text-[11px] text-white/85 placeholder:text-white/25 focus:border-[#d97757]/35 focus:outline-none"
+                className="w-full resize-y rounded-xl border border-white/10 bg-black/45 px-2.5 py-2 text-[11px] text-white/85 placeholder:text-white/25 focus:border-[#d97757]/35 focus:outline-none"
               />
               {iaImageErr ? (
                 <p className="text-[9px] leading-snug text-rose-400/90">{iaImageErr}</p>
@@ -2614,7 +2614,7 @@ function ContextualPanel({ tool, onClose }) {
                                 void refreshIaGallery();
                               })();
                             }}
-                            className="rounded border border-white/12 px-2 py-0.5 text-[9px] text-white/45 hover:bg-white/10"
+                            className="rounded border border-white/10 px-2 py-0.5 text-[9px] text-white/45 hover:bg-white/10"
                           >
                             Retirer
                           </button>
@@ -3070,7 +3070,7 @@ function AIHub({ docType = null, designerMode = 'design', onClose = () => {} }) 
               <button
                 type="button"
                 onClick={() => setAiHubTab('architect')}
-                className="mb-3 flex w-full items-center justify-center gap-1.5 rounded-xl border border-amber-500/30 bg-amber-500/10 px-2 py-2 text-[9px] font-semibold text-amber-100/95 transition-colors hover:bg-amber-500/16"
+                className="mb-3 flex w-full items-center justify-center gap-1.5 rounded-xl border border-amber-500/30 bg-amber-500/10 px-2 py-2 text-[9px] font-semibold text-amber-100/95 transition-colors hover:bg-amber-500/15"
               >
                 <Wand2 className="h-3 w-3 shrink-0" />
                 Coach documentaire (Architect) — ouvrir l'onglet
@@ -3373,7 +3373,7 @@ function AIHub({ docType = null, designerMode = 'design', onClose = () => {} }) 
                         'flex flex-col items-center justify-center gap-1.5 rounded-xl border py-2.5 px-1 transition-all hover:scale-[1.02] active:scale-[0.98]',
                         isActive
                           ? [aColor.border, aColor.bg, aColor.glow]
-                          : 'border-white/[0.07] bg-white/[0.02] hover:border-white/12 hover:bg-white/[0.05]',
+                          : 'border-white/[0.07] bg-white/[0.02] hover:border-white/10 hover:bg-white/[0.05]',
                       )}
                     >
                       <Icon className={cn('h-3.5 w-3.5', isActive ? aColor.text : 'text-white/35')} />
@@ -3448,7 +3448,7 @@ function AIHub({ docType = null, designerMode = 'design', onClose = () => {} }) 
                       'max-w-[92%] rounded-xl px-3 py-2 text-[11px] leading-relaxed',
                       msg.role === 'ai'
                         ? 'border border-white/[0.07] bg-white/[0.06] text-white/70'
-                        : 'border border-amber-500/20 bg-amber-500/12 text-amber-50/90',
+                        : 'border border-amber-500/20 bg-amber-500/10 text-amber-50/90',
                     )}
                   >
                     {msg.role === 'ai' ? (
@@ -3562,7 +3562,7 @@ function LongiaCompactDock({ rightOffsetPx = 0, onExpandHub }) {
                 'max-w-[94%] rounded-lg px-2 py-1.5 text-[10px] leading-relaxed',
                 msg.role === 'ai'
                   ? 'border border-white/[0.06] bg-white/[0.05] text-white/65'
-                  : 'border border-amber-500/18 bg-amber-500/10 text-amber-50/85',
+                  : 'border border-amber-500/20 bg-amber-500/10 text-amber-50/85',
               )}
             >
               {msg.role === 'ai' ? (
@@ -3671,7 +3671,7 @@ function PropertiesBar() {
   /* helpers */
   const Divider = () => <div className="mx-2 h-5 w-px bg-white/[0.07] shrink-0" />;
   const Lbl = ({ children }) => (
-    <span className="shrink-0 text-[9px] font-semibold uppercase tracking-widest text-white/22">{children}</span>
+    <span className="shrink-0 text-[9px] font-semibold uppercase tracking-widest text-white/20">{children}</span>
   );
   const IconBtn = ({ active, onClick, children, title, danger }) => (
     <button
@@ -3798,7 +3798,7 @@ function PropertiesBar() {
               'shrink-0 rounded-lg border px-2.5 py-1 text-[10px] font-medium transition-all',
               (obj.style?.filter ?? 'none') === lut.css
                 ? 'border-[#d4924a]/35 bg-[#d4924a]/15 text-[#e6b566]'
-                : 'border-white/[0.07] text-white/40 hover:border-white/18 hover:bg-white/[0.05] hover:text-white/70',
+                : 'border-white/[0.07] text-white/40 hover:border-white/20 hover:bg-white/[0.05] hover:text-white/70',
             )}>
             {lut.label}
           </button>
@@ -4028,7 +4028,7 @@ function NewDocumentScreen({ onCreate }) {
               <Sparkles className="h-4 w-4 text-white/80" />
             </div>
           </div>
-          <h2 className="text-[22px] font-bold tracking-tight text-white/88">Nouveau document</h2>
+          <h2 className="text-[22px] font-bold tracking-tight text-white/90">Nouveau document</h2>
           <p className="mt-1 text-[13px] text-white/35">Choisissez le type et les sorties de votre création</p>
         </div>
 
@@ -4048,7 +4048,7 @@ function NewDocumentScreen({ onCreate }) {
                     'group flex flex-col items-center gap-2.5 rounded-2xl border px-3 py-4 text-center transition-all duration-200 hover:scale-[1.02] active:scale-[0.99]',
                     selected
                       ? [a.bg, a.border, a.glow]
-                      : 'border-white/[0.07] bg-white/[0.025] hover:bg-white/[0.05] hover:border-white/14',
+                      : 'border-white/[0.07] bg-white/[0.025] hover:bg-white/[0.05] hover:border-white/15',
                   )}
                 >
                   <div className={cn(
@@ -4059,9 +4059,9 @@ function NewDocumentScreen({ onCreate }) {
                   </div>
                   <div>
                     <p className={cn('text-[12px] font-semibold transition-colors', selected ? a.text : 'text-white/70')}>{dt.label}</p>
-                    <p className="mt-0.5 text-[9px] text-white/28">{dt.sub}</p>
+                    <p className="mt-0.5 text-[9px] text-white/30">{dt.sub}</p>
                   </div>
-                  <p className="line-clamp-2 text-[9.5px] leading-relaxed text-white/38">{dt.desc}</p>
+                  <p className="line-clamp-2 text-[9.5px] leading-relaxed text-white/40">{dt.desc}</p>
                 </button>
               );
             })}
@@ -4080,7 +4080,7 @@ function NewDocumentScreen({ onCreate }) {
                     'group flex flex-col items-center gap-2.5 rounded-2xl border px-3 py-4 text-center transition-all duration-200 hover:scale-[1.02] active:scale-[0.99]',
                     selected
                       ? [a.bg, a.border, a.glow]
-                      : 'border-white/[0.07] bg-white/[0.025] hover:bg-white/[0.05] hover:border-white/14',
+                      : 'border-white/[0.07] bg-white/[0.025] hover:bg-white/[0.05] hover:border-white/15',
                   )}
                 >
                   <div className={cn(
@@ -4091,9 +4091,9 @@ function NewDocumentScreen({ onCreate }) {
                   </div>
                   <div>
                     <p className={cn('text-[12px] font-semibold transition-colors', selected ? a.text : 'text-white/70')}>{dt.label}</p>
-                    <p className="mt-0.5 text-[9px] text-white/28">{dt.sub}</p>
+                    <p className="mt-0.5 text-[9px] text-white/30">{dt.sub}</p>
                   </div>
-                  <p className="line-clamp-2 text-[9.5px] leading-relaxed text-white/38">{dt.desc}</p>
+                  <p className="line-clamp-2 text-[9.5px] leading-relaxed text-white/40">{dt.desc}</p>
                 </button>
               );
             })}
@@ -4102,7 +4102,7 @@ function NewDocumentScreen({ onCreate }) {
 
         {/* Sorties */}
         <div className="w-full">
-          <p className="mb-2.5 text-[9px] font-bold uppercase tracking-widest text-white/22">Sorties du document</p>
+          <p className="mb-2.5 text-[9px] font-bold uppercase tracking-widest text-white/20">Sorties du document</p>
           <div className="flex flex-wrap gap-2">
             {OUTPUT_TARGETS.map(t => {
               const Icon = t.icon;
@@ -4116,13 +4116,13 @@ function NewDocumentScreen({ onCreate }) {
                     active
                       ? 'border-[#d4924a]/35 bg-[#d4924a]/15 text-[#e6b566] shadow-[0_0_10px_rgba(227,170,107,0.12)]'
                       : t.optional
-                        ? 'border-dashed border-white/12 text-white/28 hover:border-white/28 hover:text-white/55'
-                        : 'border-white/[0.07] bg-white/[0.03] text-white/42 hover:bg-white/[0.07] hover:text-white/70',
+                        ? 'border-dashed border-white/10 text-white/30 hover:border-white/30 hover:text-white/55'
+                        : 'border-white/[0.07] bg-white/[0.03] text-white/40 hover:bg-white/[0.07] hover:text-white/70',
                   )}
                 >
                   <Icon className="h-3.5 w-3.5 shrink-0" />
                   <span>{t.label}</span>
-                  <span className="text-white/22 text-[9px]">{t.w}×{t.h}</span>
+                  <span className="text-white/20 text-[9px]">{t.w}×{t.h}</span>
                 </button>
               );
             })}
@@ -4523,7 +4523,14 @@ export default function StudioSmartboardKonvaPage() {
       presentation: `✦ Studio Présentation activé — outils diapositives disponibles : titres, médias, dispositions, animations.`,
       document:     `✦ Studio Document activé — canvas A4 (${dims?.w}×${dims?.h}px). Choisissez un mode de démarrage dans le lanceur.`,
       affiche:      `✦ Studio Affiche activé — format A4 impression (${dims?.w}×${dims?.h}px @300dpi). Idéal pour l'impression ou la diffusion numérique.`,
-      video:        `✦ Studio Vidéo activé — 1920×1080. Post-production et montage disponibles via l'outil Capture (barre gauche).`,
+      // ⚠️ CE MESSAGE ENVOYAIT CHERCHER UN OUTIL QUI N'EXISTE PAS. Il annonçait
+      // « l'outil Capture (barre gauche) » ; la barre gauche contient onze outils —
+      // Sélection, Texte, Formes, Icônes, Images, Fond, 3D, Animés, Modèles, Calques,
+      // Paramètres canvas — et aucun ne s'appelle Capture. Le vrai chemin passe par
+      // le bouton « Post-prod » de la barre du HAUT, puis « Capturer ou importer ».
+      // Un mode d'emploi faux coûte plus cher qu'une absence de mode d'emploi :
+      // l'utilisateur cherche là où on lui dit de chercher, puis conclut que c'est cassé.
+      video:        `✦ Studio Vidéo activé — 1920×1080. Pour filmer ou importer : bouton « Post-prod » en haut, puis « Capturer ou importer ».`,
     };
     const ctxMsg = ctxMsgs[docType] ?? `✦ Type "${dtMeta?.label ?? docType}" activé.`;
     _addLongiaMsgCtx({ role: 'ai', text: ctxMsg });

@@ -66,17 +66,17 @@ function PedaBloc({ bloc, value, onChange }) {
         </div>
         <span className={cn('flex-1 text-[12px] font-medium', open ? 'text-white/90' : 'text-white/50')}>{bloc.label}</span>
         {hasContent && <CheckCircle2 className="h-3.5 w-3.5 flex-shrink-0 text-[#7bb06a]" />}
-        <ChevronDown className={cn('h-3.5 w-3.5 flex-shrink-0 text-white/22 transition-transform', open && 'rotate-180')} />
+        <ChevronDown className={cn('h-3.5 w-3.5 flex-shrink-0 text-white/20 transition-transform', open && 'rotate-180')} />
       </button>
       {open && (
         <div className="bg-white/[0.01] px-4 py-3">
           {bloc.isArray
             ? (Array.isArray(value) ? value : ['', '', '']).map((line, i) => (
               <input key={i} value={line} onChange={e => { const a = Array.isArray(value) ? [...value] : ['', '', '']; a[i] = e.target.value; onChange(a); }}
-                placeholder={`Étape ${i + 1}...`} className="w-full mb-2 rounded-lg border border-white/10 bg-white/[0.04] px-3 py-2 text-[12px] text-white placeholder-white/22 outline-none focus:border-white/20" />
+                placeholder={`Étape ${i + 1}...`} className="w-full mb-2 rounded-lg border border-white/10 bg-white/[0.04] px-3 py-2 text-[12px] text-white placeholder-white/20 outline-none focus:border-white/20" />
             ))
             : <textarea value={value || ''} onChange={e => onChange(e.target.value)} placeholder={bloc.placeholder} rows={4}
-                className="w-full resize-none rounded-lg border border-white/10 bg-white/[0.04] px-3 py-2 text-[12px] text-white/80 placeholder-white/22 outline-none focus:border-white/20 leading-relaxed" />
+                className="w-full resize-none rounded-lg border border-white/10 bg-white/[0.04] px-3 py-2 text-[12px] text-white/80 placeholder-white/20 outline-none focus:border-white/20 leading-relaxed" />
           }
         </div>
       )}
@@ -89,7 +89,7 @@ function ModeBtn({ mode, setMode }) {
     <div className="flex items-center gap-1 rounded-xl border border-white/10 bg-white/[0.03] p-1">
       {[{ id: 'ia', label: 'IA', icon: Sparkles }, { id: 'manuel', label: 'Manuel', icon: FileText }].map(({ id, label, icon: Icon }) => (
         <button key={id} onClick={() => setMode(id)}
-          className={cn('flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-[12px] font-medium transition-all', mode === id ? 'bg-[#c96544] text-white shadow-[0_0_12px_rgba(217,119,87,0.35)]' : 'text-white/38 hover:text-white/70')}>
+          className={cn('flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-[12px] font-medium transition-all', mode === id ? 'bg-[#c96544] text-white shadow-[0_0_12px_rgba(217,119,87,0.35)]' : 'text-white/40 hover:text-white/70')}>
           <Icon className="h-3.5 w-3.5" />{label}
         </button>
       ))}
@@ -145,20 +145,20 @@ export default function StudioLiriCourseBuilderPage() {
                     return (
                       <button key={step.numero} onClick={() => setActiveStep(step.numero)}
                         className={cn('flex items-center gap-2.5 rounded-lg px-2.5 py-2 text-left w-full transition-all', isActive ? 'bg-amber-500/15 border border-amber-500/25' : 'hover:bg-white/5 border border-transparent')}>
-                        <span className={cn('flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-full text-[10px] font-bold', s === 100 ? 'bg-[#5a8f52]/25 text-[#9cc48a]' : s > 0 ? 'bg-amber-500/25 text-amber-300' : 'bg-white/10 text-white/28')}>
+                        <span className={cn('flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-full text-[10px] font-bold', s === 100 ? 'bg-[#5a8f52]/25 text-[#9cc48a]' : s > 0 ? 'bg-amber-500/25 text-amber-300' : 'bg-white/10 text-white/30')}>
                           {s === 100 ? '✓' : step.numero}
                         </span>
                         <div className="min-w-0">
                           <div className={cn('text-[11px] font-medium truncate', isActive ? 'text-amber-300' : 'text-white/50')}>{step.label}</div>
-                          <div className="text-[9px] text-white/22 truncate">{step.tag}</div>
+                          <div className="text-[9px] text-white/20 truncate">{step.tag}</div>
                         </div>
                       </button>
                     );
                   })}
                 </div>
               : <div className="flex flex-col items-center justify-center py-8 text-center">
-                  <Sparkles className="h-7 w-7 text-amber-400/28 mb-3" />
-                  <p className="text-[11px] text-white/22 leading-relaxed">Générez un cours avec LIRI pour voir les 10 étapes ici</p>
+                  <Sparkles className="h-7 w-7 text-amber-400/30 mb-3" />
+                  <p className="text-[11px] text-white/20 leading-relaxed">Générez un cours avec LIRI pour voir les 10 étapes ici</p>
                 </div>
             }
           </div>
@@ -176,9 +176,9 @@ export default function StudioLiriCourseBuilderPage() {
             </div>
           ) : activeStep === null ? (
             <div className="flex flex-col items-center justify-center h-full text-center px-8 py-16">
-              <Brain className="h-12 w-12 text-white/8 mb-4" />
+              <Brain className="h-12 w-12 text-white/10 mb-4" />
               <h3 className="text-[16px] font-semibold text-white/55 mb-2">Sélectionnez une étape</h3>
-              <p className="text-[13px] text-white/28 max-w-sm">Choisissez une des 10 étapes dans l'arbre à gauche pour remplir ses blocs pédagogiques.</p>
+              <p className="text-[13px] text-white/30 max-w-sm">Choisissez une des 10 étapes dans l'arbre à gauche pour remplir ses blocs pédagogiques.</p>
             </div>
           ) : (
             <div className="mx-auto max-w-2xl px-8 py-6">
@@ -192,7 +192,7 @@ export default function StudioLiriCourseBuilderPage() {
                   <div className="flex-1 h-1.5 rounded-full bg-white/10 overflow-hidden">
                     <div className="h-full rounded-full bg-gradient-to-r from-amber-500 to-[#5a8f52] transition-all duration-500" style={{ width: `${score(activeStep)}%` }} />
                   </div>
-                  <span className="text-[11px] text-white/32 flex-shrink-0">{score(activeStep)}%</span>
+                  <span className="text-[11px] text-white/30 flex-shrink-0">{score(activeStep)}%</span>
                 </div>
               </div>
               <div className="flex flex-col gap-3">
@@ -228,13 +228,13 @@ export default function StudioLiriCourseBuilderPage() {
               {['Jamais d\'affirmation sans structure','Toute connaissance = démonstration','Toute compétence = testable','1 segment = 1 idée centrale','Pas de progression sans checkpoint'].map((r, i) => (
                 <div key={i} className="flex items-start gap-1.5 mb-1">
                   <div className="mt-1 h-1.5 w-1.5 rounded-full bg-[#d97757]/55 flex-shrink-0" />
-                  <span className="text-[10px] text-white/32 leading-relaxed">{r}</span>
+                  <span className="text-[10px] text-white/30 leading-relaxed">{r}</span>
                 </div>
               ))}
             </div>
             <div className="rounded-xl border border-[#d4924a]/20 bg-[#d4924a]/5 p-3">
               <div className="flex items-center gap-2 mb-1.5"><LayoutGrid className="h-3.5 w-3.5 text-[#e0a458]" /><span className="text-[11px] font-semibold text-[#e0a458]">SmartBoard Ready</span></div>
-              <p className="text-[10px] text-white/32 leading-relaxed">1 sous-chapitre = 1 slide<br />1 segment = 1 étape progressive</p>
+              <p className="text-[10px] text-white/30 leading-relaxed">1 sous-chapitre = 1 slide<br />1 segment = 1 étape progressive</p>
             </div>
             <div className="rounded-xl border border-amber-500/20 bg-amber-500/5 p-3">
               <div className="text-[11px] font-semibold text-amber-400 mb-2">Formule LIRI</div>

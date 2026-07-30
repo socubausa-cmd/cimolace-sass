@@ -180,7 +180,7 @@ function SceneModal({ scene, onSave, onClose }) {
                 <button key={t.id} type="button"
                   onClick={() => setForm((f) => ({ ...f, scene_type: t.id }))}
                   className={cn('flex flex-col items-center gap-1.5 rounded-xl border p-3 text-center transition-all',
-                    form.scene_type === t.id ? t.bg + ' ' + t.color : 'border-white/8 bg-white/3 text-white/40 hover:border-white/15'
+                    form.scene_type === t.id ? t.bg + ' ' + t.color : 'border-white/10 bg-white/5 text-white/40 hover:border-white/15'
                   )}>
                   <Icon className="w-4 h-4" />
                   <span className="text-[10px] leading-tight">{t.label}</span>
@@ -1321,7 +1321,7 @@ export default function LivePreparationStudioPage() {
                               <p className="text-xs font-semibold text-white/80">{branch.label}</p>
                             </div>
                             {branch.key_points?.length ? (
-                              <p className="mt-1.5 pl-7 text-[10.5px] leading-relaxed text-white/42">{branch.key_points.join(' · ')}</p>
+                              <p className="mt-1.5 pl-7 text-[10.5px] leading-relaxed text-white/40">{branch.key_points.join(' · ')}</p>
                             ) : null}
                           </div>
                         ))}
@@ -1698,7 +1698,7 @@ export default function LivePreparationStudioPage() {
                                       liriPrepTargetIdxRef.current = i;
                                       liriPrepFileRef.current?.click();
                                     }}
-                                    className="inline-flex items-center justify-center gap-1 h-8 px-3 rounded-lg border border-white/12 text-xs text-white/70 hover:bg-white/5 disabled:opacity-50 shrink-0"
+                                    className="inline-flex items-center justify-center gap-1 h-8 px-3 rounded-lg border border-white/10 text-xs text-white/70 hover:bg-white/5 disabled:opacity-50 shrink-0"
                                   >
                                     {liriPrepUploading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Upload className="w-3.5 h-3.5" />}
                                     Fichier
@@ -1830,7 +1830,7 @@ export default function LivePreparationStudioPage() {
                         const ct = CONTENT_TYPES.find((x) => x.id === c.content_type) || CONTENT_TYPES[3];
                         const Icon = ct.icon;
                         return (
-                          <div key={c.id} className="flex items-center gap-3 rounded-xl border border-white/8 bg-white/3 px-3 py-2">
+                          <div key={c.id} className="flex items-center gap-3 rounded-xl border border-white/10 bg-white/5 px-3 py-2">
                             <Icon className="w-4 h-4 text-white/40 shrink-0" />
                             <span className="flex-1 text-sm text-white/70 truncate">{c.title || c.asset_url}</span>
                             {c.asset_url && (
@@ -2013,7 +2013,7 @@ export default function LivePreparationStudioPage() {
                         return (
                           <div
                             key={s.id}
-                            className="rounded-xl border border-white/8 bg-white/[0.025] overflow-hidden"
+                            className="rounded-xl border border-white/10 bg-white/[0.025] overflow-hidden"
                           >
                             {/* Header ligne */}
                             <button
@@ -2066,7 +2066,7 @@ export default function LivePreparationStudioPage() {
                                   transition={{ duration: 0.2 }}
                                   className="overflow-hidden"
                                 >
-                                  <div className="px-4 pb-4 space-y-3 border-t border-white/6 pt-3">
+                                  <div className="px-4 pb-4 space-y-3 border-t border-white/5 pt-3">
                                     {/* Résumé IA */}
                                     {s.ai_summary && (
                                       <div
@@ -2092,7 +2092,7 @@ export default function LivePreparationStudioPage() {
                                         </p>
                                         {s.key_points.map((pt, i) => (
                                           <div key={i} className="flex gap-2 items-start">
-                                            <span className="w-4 h-4 rounded-full bg-white/8 border border-white/12 text-[7px] text-white/40 flex items-center justify-center flex-shrink-0 mt-0.5">{i + 1}</span>
+                                            <span className="w-4 h-4 rounded-full bg-white/10 border border-white/10 text-[7px] text-white/40 flex items-center justify-center flex-shrink-0 mt-0.5">{i + 1}</span>
                                             <p className="text-[11px] text-white/60">{pt}</p>
                                           </div>
                                         ))}
@@ -2101,15 +2101,15 @@ export default function LivePreparationStudioPage() {
 
                                     {/* Stats */}
                                     <div className="grid grid-cols-3 gap-2">
-                                      <div className="rounded-lg bg-white/[0.03] border border-white/8 p-2 text-center">
+                                      <div className="rounded-lg bg-white/[0.03] border border-white/10 p-2 text-center">
                                         <p className="text-[8px] text-gray-500 uppercase tracking-wider">Diapos</p>
                                         <p className="text-sm font-bold text-white/80">{slidesCount}</p>
                                       </div>
-                                      <div className="rounded-lg bg-white/[0.03] border border-white/8 p-2 text-center">
+                                      <div className="rounded-lg bg-white/[0.03] border border-white/10 p-2 text-center">
                                         <p className="text-[8px] text-gray-500 uppercase tracking-wider">Répondues</p>
                                         <p className="text-sm font-bold text-[#9cc48a]">{s.questions_answered}</p>
                                       </div>
-                                      <div className="rounded-lg bg-white/[0.03] border border-white/8 p-2 text-center">
+                                      <div className="rounded-lg bg-white/[0.03] border border-white/10 p-2 text-center">
                                         <p className="text-[8px] text-gray-500 uppercase tracking-wider">Script</p>
                                         <p className="text-sm font-bold text-[#e8a97f]">{s.script_sections_total}</p>
                                       </div>

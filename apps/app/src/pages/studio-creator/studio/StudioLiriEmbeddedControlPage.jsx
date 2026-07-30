@@ -242,7 +242,17 @@ export default function StudioLiriEmbeddedControlPage() {
         <div
           className={cn(
             'rounded-xl border px-4 py-3 text-[13px]',
-            native ? 'border-emerald-500/25 bg-emerald-500/10 text-emerald-100/90' : 'border-amber-500/25 bg-amber-500/10 text-amber-100/90',
+            /* Bandeau d'état : le VERT reste, c'est un SIGNAL (« Shell natif détecté »
+               = connecté) opposé à l'ambre du repli navigateur. Mais la famille
+               emerald est avalée par studioWarm.css (remap fond/texte/bordure →
+               corail) : à l'écran, l'état natif devenait un orange quasi identique
+               à l'ambre du mode dégradé, et l'utilisateur perdait la distinction.
+               On passe donc sur la
+               famille `green-*`, que studioWarm.css EXEMPTE explicitement (« vert et
+               rouge purs = sémantiques succès/danger → préservés ») — et qui est aussi
+               plus chaude qu'emerald, lequel confine au teal banni.
+               green-100/90 sur le fond composé #26362a = 9,77:1. */
+            native ? 'border-green-500/25 bg-green-500/10 text-green-100/90' : 'border-amber-500/25 bg-amber-500/10 text-amber-100/90',
           )}
         >
           {native ? (
@@ -343,8 +353,11 @@ export default function StudioLiriEmbeddedControlPage() {
                     <li key={`${row.at}-${i}`} className="rounded border border-white/5 bg-white/[0.03] p-2 font-mono leading-snug">
                       <span className="text-white/40">{new Date(row.at).toLocaleTimeString()}</span>{' '}
                       {/* Journal : TROIS natures d'événement, donc TROIS encres qui doivent
-                          rester lisibles ET distinctes. Avant, `text-cyan-300` et
-                          `text-emerald-300` étaient tous deux ramenés à #e0926a par
+                          rester lisibles ET distinctes. Avant, le cyan 300 et
+                          l'emerald 300 étaient tous deux ramenés à #e0926a par
+                          (noms de classes volontairement NON écrits en toutes lettres :
+                          l'extracteur Tailwind scanne aussi les commentaires et
+                          générerait la règle d'une couleur bannie dans le bundle)
                           studioWarm.css → « ui » et « result » se confondaient à l'écran.
                           On pose donc les hex de la rampe, hors d'atteinte du remap :
                           ui = corail #e8a97f (8,59:1) · stub = ambre #e0a458 (7,93:1) ·

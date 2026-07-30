@@ -279,7 +279,7 @@ export default function DocumentCoachPanel() {
             </button>
           )}
         </div>
-        <p className="text-[9.5px] text-white/62 leading-relaxed">
+        <p className="text-[9.5px] text-white/60 leading-relaxed">
           {phase === 'idle' && 'Décrivez votre document ou choisissez un mode ci-dessous.'}
           {phase === 'detecting' && 'Précisez le type de document souhaité.'}
           {phase === 'questioning' && meta && `${meta.icon} ${meta.label} · Question ${currentQIdx + 1}/${guidedFlow.length}`}
@@ -321,7 +321,7 @@ export default function DocumentCoachPanel() {
                   'text-[10.5px] font-semibold',
                   assistanceLevel === lvl.level ? 'text-[#e3aa6b]' : 'text-white/65',
                 )}>{lvl.label}</p>
-                <p className="text-[9px] text-white/58">{lvl.desc}</p>
+                <p className="text-[9px] text-white/60">{lvl.desc}</p>
               </div>
               {assistanceLevel === lvl.level && (
                 <div className="h-1.5 w-1.5 rounded-full bg-[#e3aa6b] shrink-0" />
@@ -363,7 +363,7 @@ export default function DocumentCoachPanel() {
                     className="flex flex-col items-center gap-0.5 rounded-xl border border-white/[0.06] bg-white/[0.02] p-2 hover:bg-white/[0.05] hover:border-white/10 transition-all"
                   >
                     <span className="text-[13px]">{m.icon}</span>
-                    <span className="text-[8.5px] text-white/62">{m.label}</span>
+                    <span className="text-[8.5px] text-white/60">{m.label}</span>
                   </button>
                 );
               })}
@@ -466,7 +466,7 @@ export default function DocumentCoachPanel() {
                             'text-[10px] font-semibold truncate',
                             isSelected ? 'text-[#e0a07e]' : 'text-white/70',
                           )}>{tpl.name}</p>
-                          <p className="text-[8.5px] text-white/58">
+                          <p className="text-[8.5px] text-white/60">
                             {tpl.style_variants?.length ?? 1} style{tpl.style_variants?.length > 1 ? 's' : ''} · {tpl.zones?.length ?? 0} zones
                           </p>
                         </div>
@@ -485,7 +485,7 @@ export default function DocumentCoachPanel() {
                 onClick={() => {
                   buildDocumentPlan(documentPlan.answers ?? {});
                 }}
-                className="flex w-full items-center justify-center gap-2 rounded-xl border border-amber-500/25 bg-amber-500/[0.07] py-2 text-[10.5px] font-semibold text-amber-400 hover:bg-amber-500/12 transition-all"
+                className="flex w-full items-center justify-center gap-2 rounded-xl border border-amber-500/25 bg-amber-500/[0.07] py-2 text-[10.5px] font-semibold text-amber-400 hover:bg-amber-500/10 transition-all"
               >
                 <Wand2 className="h-3.5 w-3.5" />
                 Régénérer la structure
@@ -592,7 +592,7 @@ export default function DocumentCoachPanel() {
           )}
           <button
             type="button" onClick={resetFlow}
-            className="flex w-full items-center justify-center gap-1.5 rounded-xl border border-white/[0.07] bg-white/[0.03] py-2 text-[10px] text-white/62 hover:text-white/85 hover:bg-white/[0.05] transition-all"
+            className="flex w-full items-center justify-center gap-1.5 rounded-xl border border-white/[0.07] bg-white/[0.03] py-2 text-[10px] text-white/60 hover:text-white/85 hover:bg-white/[0.05] transition-all"
           >
             <RotateCcw className="h-3 w-3" /> Nouveau document
           </button>
