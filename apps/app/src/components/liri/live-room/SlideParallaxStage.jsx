@@ -37,7 +37,7 @@ import {
   computeDesignCanvasScaleCover,
   resolveProgressiveSlideDesignSize,
 } from '@/lib/smartboardDesignCanvas';
-import { AnimatePresence, motion } from 'framer-motion';
+import { AnimatePresence, motion, useReducedMotion } from 'framer-motion';
 import { getDocumentEmbedSrc } from '@/lib/liveSceneNormalize';
 import { useSmartboardCanvasSrc } from '@/lib/smartboardCanvasUrl';
 import {
@@ -1236,6 +1236,7 @@ export default function SlideParallaxStage({
   liveStageFillCover = false,
 }) {
   const tacticalViewOnly = tacticalSyncRole === 'viewer';
+  const prefersReducedMotion = useReducedMotion();
 
   const tacticalEmitTimerRef = useRef(null);
   const queueTacticalBroadcast = useCallback((payload) => {
@@ -1518,10 +1519,13 @@ export default function SlideParallaxStage({
         <AnimatePresence mode="wait">
           <motion.div
             key={slide.id}
-            initial={{ opacity: 0, y: 16, scale: 0.985 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: -14, scale: 0.99 }}
-            transition={{ duration: 0.45, ease: [0.22, 1, 0.36, 1] }}
+            // Garde-fou d'accessibilité du cahier des charges (§7) : sous
+            // `prefers-reduced-motion`, le tableau se contente d'un fondu — le
+            // contenu reste intégralement accessible, seul le mouvement disparaît.
+            initial={prefersReducedMotion ? { opacity: 0 } : { opacity: 0, y: 16, scale: 0.985 }}
+            animate={prefersReducedMotion ? { opacity: 1 } : { opacity: 1, y: 0, scale: 1 }}
+            exit={prefersReducedMotion ? { opacity: 0 } : { opacity: 0, y: -14, scale: 0.99 }}
+            transition={{ duration: prefersReducedMotion ? 0.2 : 0.45, ease: [0.22, 1, 0.36, 1] }}
             className="absolute inset-0"
           >
             <ProgressiveBuildSlide
@@ -1529,8 +1533,12 @@ export default function SlideParallaxStage({
               data={slide.ia_data}
               step={currentStep}
               onStepChange={handleStepChange}
-              spotlight={spotlight}
-              revealAll={!progressivePlayback}
+              // `render_mode` de la scène (choisi dans l'atelier) pilote le tableau :
+              // 'instant' montre tout d'un coup, 'spotlight' ajoute le halo à la
+              // révélation. Les réglages globaux de l'hôte restent PRIORITAIRES —
+              // il doit pouvoir forcer la lecture intégrale en pleine séance.
+              spotlight={spotlight || slide.render_mode === 'spotlight'}
+              revealAll={!progressivePlayback || slide.render_mode === 'instant'}
               onSmartboardImageExpand={onSmartboardImageExpand}
               tacticalViewOnly={tacticalViewOnly}
               iaRemoteApplyKey={iaRemoteApplyKey}

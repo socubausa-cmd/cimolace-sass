@@ -32,7 +32,12 @@ export function useLiveHostLiveScenesRealtime({
           const [{ data: rows }, { data: sessRow }] = await Promise.all([
             supabase
               .from('live_scenes')
-              .select('id, name, order_index, content_payload_json, is_active')
+              // `*` ASSUMÉ plutôt qu'une liste de colonnes : le tableau vivant a
+              // besoin de chapter_id/render_mode/audio_url, mais nommer une colonne
+              // absente (migration pas encore appliquée) ferait échouer TOUTE la
+              // requête — donc un direct sans aucune scène. Le coût d'un `*` sur
+              // les scènes d'une seule session est négligeable devant ce risque.
+              .select('*')
               .eq('live_session_id', sessionId)
               .order('order_index', { ascending: true }),
             supabase.from('live_sessions').select('config').eq('id', sessionId).maybeSingle(),

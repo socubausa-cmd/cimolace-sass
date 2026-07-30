@@ -42,6 +42,17 @@ export class MasterFactoryService {
     return this.supabase.client as any;
   }
 
+  /**
+   * Un pivot déterministe de génération `v0` est périmé : ses scènes ne portent ni
+   * le vocabulaire lu par le tableau vivant, ni `chapter_id`/`render_mode`, ni les
+   * `slide_hint`/`objectives` du conducteur. Le cache ne doit donc PAS le servir —
+   * sinon un cours déjà analysé resterait éternellement plat sans que personne ne
+   * pense à passer `force`. La régénération est gratuite (aucun appel IA).
+   */
+  private static isStalePivot(model: string | null | undefined) {
+    return /-v0$/.test(String(model || ''));
+  }
+
   /** Inventaire des sources prêtes ou à préparer pour l'atelier unifié. */
   listSources(tenantId: string, sourceType: SourceType) {
     return this.sources.listSources(tenantId, sourceType);
@@ -137,7 +148,9 @@ export class MasterFactoryService {
     const root = await this.requireComprehension(tenantId, sourceType, sourceId);
     if (!opts.force) {
       const existing = await this.findChildPivot(root.pivotId, 'master_script');
-      if (existing) return { pivotId: existing.id, masterScript: existing.payload, cached: true };
+      if (existing && !MasterFactoryService.isStalePivot(existing.model)) {
+        return { pivotId: existing.id, masterScript: existing.payload, cached: true };
+      }
     }
 
     const masterScript = this.makeMasterScript(root.comprehension, root.pivotId);
@@ -148,7 +161,7 @@ export class MasterFactoryService {
       parentId: root.pivotId,
       kind: 'master_script',
       payload: masterScript,
-      model: 'deterministic-master-script-v0',
+      model: 'deterministic-master-script-v1',
     });
     return { pivotId, masterScript, cached: false };
   }
@@ -164,7 +177,9 @@ export class MasterFactoryService {
     const masterPivotId = master.pivotId;
     if (!opts.force) {
       const existing = await this.findChildPivot(masterPivotId, 'smartboard_timeline');
-      if (existing) return { pivotId: existing.id, smartboardTimeline: existing.payload, cached: true };
+      if (existing && !MasterFactoryService.isStalePivot(existing.model)) {
+        return { pivotId: existing.id, smartboardTimeline: existing.payload, cached: true };
+      }
     }
 
     const smartboardTimeline = this.makeSmartboardTimeline(master.masterScript as MasterScriptPivot, masterPivotId);
@@ -175,7 +190,7 @@ export class MasterFactoryService {
       parentId: masterPivotId,
       kind: 'smartboard_timeline',
       payload: smartboardTimeline,
-      model: 'deterministic-smartboard-timeline-v0',
+      model: 'deterministic-smartboard-timeline-v1',
     });
     return { pivotId, smartboardTimeline, cached: false };
   }
@@ -336,7 +351,7 @@ export class MasterFactoryService {
       blueprint_score: null,
     };
 
-    const sceneRows = this.makeLiveSceneRows(liveSessionId, smartboard, liveScenario);
+    const sceneRows = this.makeLiveSceneRows(liveSessionId, smartboard, liveScenario, masterScript);
     const scriptRows = this.makeLiveScriptRows(liveSessionId, userId, masterScript);
 
     // Le prompteur de l'arène lit `config.smartboard_master_script_sections`
@@ -435,7 +450,8 @@ export class MasterFactoryService {
     // ERREUR Supabase — on prend la plus récente au lieu d'exploser.
     const { data, error } = await this.db
       .from('course_pivots')
-      .select('id, payload')
+      // `model` est indispensable : c'est lui qui révèle un pivot v0 périmé.
+      .select('id, payload, model')
       .eq('parent_id', parentId)
       .eq('kind', kind)
       .order('created_at', { ascending: false })
@@ -571,6 +587,19 @@ export class MasterFactoryService {
         ].filter(usableKeyPoint).map((point) => String(point).trim()).slice(0, 3),
         student_understanding: `L'élève doit pouvoir expliquer ${notion.titre} avec ses propres mots et l'appliquer dans un exemple.`,
         simple_version: notion.idee_centrale,
+        /**
+         * Contrat repris de l'ancien Academy (course-builder-pipeline-master-script) :
+         * le conducteur oral doit dire AU PROF ce que le tableau montre au même
+         * instant. Sans ce lien, le prompteur et le SmartBoard dérivent l'un de
+         * l'autre pendant le direct.
+         */
+        slide_hint: `Le tableau affiche « ${notion.titre} » : l'idée centrale, puis les ${Math.max(1, usableAppuis.length)} repère(s) à retenir.`,
+        objectives: [
+          `Expliquer ${notion.titre} avec ses propres mots.`,
+          notion.pourquoi ? `Savoir pourquoi ce point compte : ${notion.pourquoi}` : null,
+        ].filter((objective): objective is string => !!objective),
+        section_type:
+          index === 0 ? 'introduction' : index === notions.length - 1 ? 'conclusion' : 'development',
         transition:
           index < notions.length - 1
             ? `Ce point prépare ${notions[index + 1].titre}.`
@@ -588,7 +617,7 @@ export class MasterFactoryService {
         source_id: comprehension.meta.source_id,
         comprehension_pivot_id: comprehensionPivotId,
         generated_at: new Date().toISOString(),
-        model: 'deterministic-master-script-v0',
+        model: 'deterministic-master-script-v1',
         truncated_notions: truncatedNotions,
       },
     };
@@ -638,16 +667,37 @@ export class MasterFactoryService {
       title: `${masterScript.title} — Tableau vivant`,
       scenes: masterScript.moments.map((moment, index) => {
         const sceneId = `sb-${index + 1}`;
+        const keyPoints = (moment.key_points || []).slice(0, 3);
         return {
           id: sceneId,
           script_moment_id: moment.id,
+          chapter_id: index + 1,
           title: moment.title,
           visual_intent: `Faire respirer l'idée : ${moment.message_central}`,
           camera_zone: 'bottom-right',
+          render_mode: 'progressive',
+          /**
+           * ⚠️ FORME LUE PAR LE RENDU — ne pas confondre avec `blocks`.
+           * `ProgressiveBuildSlide` (apps/app/.../SlideParallaxStage.jsx) ne connaît
+           * que ce vocabulaire : title/subtitle/core_idea/development/slide_summary.
+           * Les `blocks` ci-dessous ont longtemps été publiés seuls — la scène
+           * s'affichait donc vide en direct. On produit désormais les deux :
+           * `gpt_slide` pour le tableau vivant, `blocks` pour les lecteurs legacy.
+           */
+          gpt_slide: {
+            title: moment.title,
+            subtitle: moment.intention || undefined,
+            core_idea: moment.message_central,
+            development: keyPoints.length
+              ? [{ label: 'À retenir', points: keyPoints }]
+              : [],
+            slide_summary: moment.simple_version || moment.message_central,
+            student_prompt: moment.interaction?.question,
+          },
           blocks: [
             { id: `${sceneId}-title`, type: 'title', text: moment.title },
             { id: `${sceneId}-idea`, type: 'key-idea', text: moment.message_central },
-            { id: `${sceneId}-retain`, type: 'retain', items: moment.key_points.slice(0, 3) },
+            { id: `${sceneId}-retain`, type: 'retain', items: keyPoints },
             { id: `${sceneId}-prompt`, type: 'paragraph', text: moment.interaction?.question },
           ],
           timeline: [
@@ -662,7 +712,7 @@ export class MasterFactoryService {
       meta: {
         master_script_pivot_id: masterScriptPivotId,
         generated_at: new Date().toISOString(),
-        model: 'deterministic-smartboard-timeline-v0',
+        model: 'deterministic-smartboard-timeline-v1',
       },
     };
   }
@@ -710,22 +760,50 @@ export class MasterFactoryService {
     liveSessionId: string,
     smartboard: SmartboardTimelinePivot,
     liveScenario: LiveScenarioPivot,
+    // Optionnel : sans conducteur, les scènes restent publiables — elles perdent
+    // seulement `slide_hint`/`objectives`. Une signature stricte ferait échouer
+    // toute la publication pour un enrichissement facultatif.
+    masterScript?: MasterScriptPivot,
   ) {
     return smartboard.scenes.map((scene, index) => {
       const liveScene = liveScenario.scenes.find((s) => s.smartboard_scene_id === scene.id);
+      const moment = (masterScript?.moments || []).find((m) => m.id === scene.script_moment_id);
+      const chapterId = scene.chapter_id ?? index + 1;
+      const renderMode = scene.render_mode ?? 'progressive';
       return {
         live_session_id: liveSessionId,
         name: scene.title || `Scène ${index + 1}`,
         scene_type: 'smartboard',
         order_index: index,
         is_active: index === 0,
+        chapter_id: chapterId,
+        render_mode: renderMode,
+        // Narration produite plus tard par SceneAudioService : une scène = un audio.
+        audio_url: null,
         content_payload_json: {
           source: 'master_factory',
           live_scenario_scene_id: liveScene?.id,
           script_moment_id: scene.script_moment_id,
+          chapter_id: chapterId,
+          render_mode: renderMode,
+          slide_hint: moment?.slide_hint,
+          objectives: moment?.objectives,
+          audio_url: null,
+          /**
+           * `ia_data` est ce que lit le tableau vivant : on y verse la slide au
+           * vocabulaire du rendu. Auparavant `core_idea` recevait `visual_intent`
+           * (une consigne de mise en scène, « Faire respirer l'idée… ») et le
+           * développement n'existait pas — d'où des scènes quasi vides en direct.
+           */
           ia_data: {
-            title: scene.title,
-            core_idea: scene.visual_intent,
+            ...(scene.gpt_slide ?? {
+              title: scene.title,
+              core_idea: scene.visual_intent,
+              development: [],
+            }),
+            scene_type: 'progressive_build',
+            render_mode: renderMode,
+            chapter_id: chapterId,
             camera_zone: scene.camera_zone,
             timeline: scene.timeline,
             blocks: scene.blocks,

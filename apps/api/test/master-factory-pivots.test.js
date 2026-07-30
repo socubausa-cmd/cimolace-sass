@@ -78,12 +78,40 @@ test('comprehension → master script → smartboard timeline → live scenario'
   assert.equal(live.replay_postprod_targets.includes('video_semaine'), true);
   assert.equal(live.replay_postprod_targets.includes('quiz'), true);
 
-  const liveSceneRows = svc.makeLiveSceneRows('live-session-1', smartboard, live);
+  const liveSceneRows = svc.makeLiveSceneRows('live-session-1', smartboard, live, master);
   assert.equal(liveSceneRows.length, 2);
   assert.equal(liveSceneRows[0].live_session_id, 'live-session-1');
   assert.equal(liveSceneRows[0].scene_type, 'smartboard');
   assert.equal(liveSceneRows[0].content_payload_json.source, 'master_factory');
   assert.equal(liveSceneRows[0].content_payload_json.ia_data.timeline.length > 0, true);
+
+  // ⛔ NON-RÉGRESSION « scène vide en direct » : le tableau vivant ne lit QUE
+  // core_idea/development — il a longtemps reçu `visual_intent` (une consigne de
+  // mise en scène) à la place de l'idée enseignée, et aucun développement.
+  assert.equal(
+    liveSceneRows[0].content_payload_json.ia_data.core_idea,
+    master.moments[0].message_central,
+    "core_idea doit porter l'idée enseignée, pas l'intention visuelle",
+  );
+  assert.ok(
+    Array.isArray(liveSceneRows[0].content_payload_json.ia_data.development)
+      && liveSceneRows[0].content_payload_json.ia_data.development.length > 0,
+    'la scène doit porter un développement révélable',
+  );
+  assert.equal(liveSceneRows[0].content_payload_json.ia_data.scene_type, 'progressive_build');
+
+  // Chapitre, mode de rendu et emplacement de narration : à plat ET dans le JSON.
+  assert.equal(liveSceneRows[0].chapter_id, 1);
+  assert.equal(liveSceneRows[1].chapter_id, 2);
+  assert.equal(liveSceneRows[0].render_mode, 'progressive');
+  assert.equal(liveSceneRows[0].audio_url, null);
+  assert.equal(typeof liveSceneRows[0].content_payload_json.slide_hint, 'string');
+  assert.ok(liveSceneRows[0].content_payload_json.slide_hint.length > 10);
+
+  // Publier sans conducteur reste possible (enrichissement facultatif).
+  const rowsSansScript = svc.makeLiveSceneRows('live-session-1', smartboard, live);
+  assert.equal(rowsSansScript.length, 2);
+  assert.equal(rowsSansScript[0].content_payload_json.slide_hint, undefined);
 
   const scriptRows = svc.makeLiveScriptRows('live-session-1', 'user-1', master);
   assert.equal(scriptRows.length, 2);

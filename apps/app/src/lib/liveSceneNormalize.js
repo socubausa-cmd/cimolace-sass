@@ -186,6 +186,19 @@ export function normalizeLiveSceneToSlide(scene) {
   // permet l'auto-projection de la scène active à l'ouverture de l'arène (issue #3).
   if (scene?.is_active === true) fe.is_active = true;
 
+  // Tableau vivant : chapitre, mode de rendu et narration de la scène. Ces trois
+  // informations sont lues soit sur la colonne (publication récente), soit dans
+  // le payload (scènes publiées avant la migration) — sans quoi une scène
+  // ancienne perdrait son mode et resterait muette.
+  const chapterId = scene?.chapter_id ?? payload.chapter_id ?? iaRaw?.chapter_id ?? null;
+  const renderMode = scene?.render_mode || payload.render_mode || iaRaw?.render_mode || null;
+  const audioUrl = scene?.audio_url || payload.audio_url || null;
+  if (chapterId != null) fe.chapter_id = Number(chapterId);
+  if (renderMode) fe.render_mode = renderMode;
+  if (audioUrl) fe.audio_url = audioUrl;
+  if (payload.slide_hint) fe.slide_hint = payload.slide_hint;
+  if (Array.isArray(payload.objectives) && payload.objectives.length) fe.objectives = payload.objectives;
+
   if (iaRaw && typeof iaRaw === 'object' && (iaRaw.title || iaRaw.subtitle || iaRaw.core_idea || (iaRaw.development && iaRaw.development.length))) {
     return {
       id,

@@ -7,6 +7,7 @@ import { CurrentTenant } from '../tenant/current-tenant.decorator';
 import { TenantGuard } from '../tenant/tenant.guard';
 import type { TenantContext } from '../tenant/tenant.types';
 import { MasterFactoryService } from './master-factory.service';
+import { SceneAudioService } from './scene-audio.service';
 import type { SourceType } from './pivot.types';
 
 /**
@@ -30,7 +31,45 @@ import type { SourceType } from './pivot.types';
 @Controller('master-factory')
 @UseGuards(JwtAuthGuard, TenantGuard, RolesGuard)
 export class MasterFactoryController {
-  constructor(private readonly factory: MasterFactoryService) {}
+  constructor(
+    private readonly factory: MasterFactoryService,
+    private readonly sceneAudio: SceneAudioService,
+  ) {}
+
+  /**
+   * Narration du tableau vivant : une scène = un audio (Lot 4 du cahier des
+   * charges). Traitement long — le front doit prévoir un timeout généreux.
+   */
+  @Post('scene-audio/generate')
+  @Roles('owner', 'admin', 'teacher')
+  generateSceneAudio(
+    @Body() body: { liveSessionId?: string; force?: boolean; languageCode?: string },
+    @CurrentTenant() tenant: TenantContext,
+    @Req() req: Request,
+  ) {
+    // Le jeton de l'appelant est repropagé tel quel : la fonction de synthèse
+    // vocale authentifie l'utilisateur et refuse la clé de service.
+    const bearer = String(req.headers?.authorization || '');
+    return this.sceneAudio.generateForSession(
+      tenant.id,
+      (req as any).user?.id,
+      String(body?.liveSessionId ?? ''),
+      {
+        force: body?.force === true,
+        languageCode: body?.languageCode,
+        accessToken: bearer.startsWith('Bearer ') ? bearer.slice(7) : '',
+      },
+    );
+  }
+
+  @Get('scene-audio/status/:liveSessionId')
+  @Roles('owner', 'admin', 'teacher')
+  sceneAudioStatus(
+    @Param('liveSessionId') liveSessionId: string,
+    @CurrentTenant() tenant: TenantContext,
+  ) {
+    return this.sceneAudio.status(tenant.id, liveSessionId);
+  }
 
   /** Sources disponibles pour le tenant, par type. */
   @Get('sources/:type')

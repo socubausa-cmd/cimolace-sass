@@ -1047,6 +1047,11 @@ export const masterFactoryApi = {
     apiV2.post<ApiEnvelope<any>>('/master-factory/enrich/visual-pedagogy', body, { timeout: 240000 }).then(unwrap),
   reviewVisualImage: (body: { sourceType?: MasterFactorySourceType; sourceId: string; chapterId: number; role: string; status: 'pending_review' | 'approved' | 'rejected'; imageUrl?: string; provider?: string; note?: string }) =>
     apiV2.post<ApiEnvelope<any>>('/master-factory/review/visual-image', body).then(unwrap),
+  /** Narration par scène (une scène = un audio) : synthèse longue, timeout large. */
+  generateSceneAudio: (body: { liveSessionId: string; force?: boolean; languageCode?: string }) =>
+    apiV2.post<ApiEnvelope<any>>('/master-factory/scene-audio/generate', body, { timeout: 900000 }).then(unwrap),
+  sceneAudioStatus: (liveSessionId: string) =>
+    apiV2.get<ApiEnvelope<any>>(`/master-factory/scene-audio/status/${liveSessionId}`).then(unwrap),
 };
 
 // ── Vidéothèque : EXTRAITS COURTS (short_clips) d'un replay ──────────────────

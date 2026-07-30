@@ -14,14 +14,15 @@ import { ComprehensionService } from './comprehension.service';
 import { RenderPivotService } from './render-pivot.service';
 import { MasterFactoryService } from './master-factory.service';
 import { VisualPedagogyService } from './visual-pedagogy.service';
+import { SceneAudioService } from './scene-audio.service';
 
 // ⚠️ Aucun import de module ajouté : ReplayChaptersService ne dépend que de
 // SupabaseService (déjà fourni par SupabaseModule) et de ConfigService (module
 // global). Une dépendance non résolvable ici fait CRASHER le boot NestJS entier.
 @Module({
   imports: [SupabaseModule, TenantModule, AiBillingModule],
-  providers: [MasterclassFactoryService, MasterFactoryService, TranscriptCourseService, CourseJobService, ReplayChaptersService, SourceAdaptersService, ComprehensionService, RenderPivotService, VisualPedagogyService],
+  providers: [MasterclassFactoryService, MasterFactoryService, TranscriptCourseService, CourseJobService, ReplayChaptersService, SourceAdaptersService, ComprehensionService, RenderPivotService, VisualPedagogyService, SceneAudioService],
   controllers: [MasterclassFactoryController, MasterFactoryController, PrecepteurLibraryController],
-  exports: [MasterclassFactoryService, MasterFactoryService, TranscriptCourseService, CourseJobService, ReplayChaptersService, SourceAdaptersService, ComprehensionService, RenderPivotService, VisualPedagogyService],
+  exports: [MasterclassFactoryService, MasterFactoryService, TranscriptCourseService, CourseJobService, ReplayChaptersService, SourceAdaptersService, ComprehensionService, RenderPivotService, VisualPedagogyService, SceneAudioService],
 })
 export class MasterclassFactoryModule {}

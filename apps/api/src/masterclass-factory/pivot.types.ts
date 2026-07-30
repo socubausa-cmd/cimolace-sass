@@ -176,6 +176,11 @@ export interface MasterScriptMoment {
   key_points: string[];
   student_understanding?: string;
   simple_version?: string;
+  /** Ce que le SmartBoard doit montrer PENDANT ce moment (lien discours ↔ diapo). */
+  slide_hint?: string;
+  /** Ce que l'élève doit savoir faire à la fin du moment — guide pédagogique du prof. */
+  objectives?: string[];
+  section_type?: 'introduction' | 'development' | 'example' | 'conclusion' | 'transition';
   transition?: string;
   duration_sec?: number;
   interaction?: {
@@ -256,12 +261,35 @@ export interface SmartboardTimelineAction {
   duration_sec?: number;
 }
 
+/**
+ * Forme de slide RÉELLEMENT interprétée par le tableau vivant
+ * (`ProgressiveBuildSlide` dans apps/app/src/components/liri/live-room/SlideParallaxStage.jsx).
+ * Le vocabulaire est imposé par ce rendu : tout autre nom de champ est ignoré
+ * silencieusement et la scène s'affiche vide en direct.
+ */
+export interface SmartboardGptSlide {
+  title: string;
+  subtitle?: string;
+  core_idea: string;
+  development: { label: string; points: string[] }[];
+  slide_summary?: string;
+  student_prompt?: string;
+  hero_visual?: string;
+  illustration?: string;
+}
+
+export type SmartboardRenderMode = 'progressive' | 'instant' | 'spotlight';
+
 export interface SmartboardTimelineScene {
   id: string;
   script_moment_id?: string;
+  /** Chapitre d'appartenance (1-based) : le regroupement était perdu à la publication. */
+  chapter_id?: number;
   title: string;
   visual_intent: string;
   camera_zone?: 'top-right' | 'bottom-right' | 'none';
+  render_mode?: SmartboardRenderMode;
+  gpt_slide?: SmartboardGptSlide;
   blocks: {
     id: string;
     type: 'title' | 'key-idea' | 'formula' | 'retain' | 'paragraph' | 'list' | 'diagram' | 'image';
