@@ -39,6 +39,7 @@ import {
 } from '@/lib/smartboardDesignCanvas';
 import { AnimatePresence, motion, useReducedMotion } from 'framer-motion';
 import { useSceneNarration } from '@/features/live/hooks/useSceneNarration';
+import { HandwritingInk, InkHighlight } from './HandwritingInk';
 import { getDocumentEmbedSrc } from '@/lib/liveSceneNormalize';
 import { useSmartboardCanvasSrc } from '@/lib/smartboardCanvasUrl';
 import {
@@ -498,6 +499,8 @@ function ProgressiveBuildSlide({
   step = 0,
   onStepChange,
   spotlight,
+  /** Garde-fou §7 : sous prefers-reduced-motion, on écrit sans cascade ni main. */
+  reduceMotion = false,
   revealAll = false,
   onSmartboardImageExpand,
   /** Invité live : pas d'édition tactique ; clic traverse vers avance progressive */
@@ -870,7 +873,15 @@ function ProgressiveBuildSlide({
                     'text-[2.375rem] text-[#F5F1E8]',
                   ].join(' ')}
                 >
-                  {data.title}
+                  {/* LOI 3 : le titre s'ÉCRIT, il n'apparaît pas d'un bloc. La main
+                      n'accompagne que le palier 0 — au-delà, le prof est passé à
+                      la suite et une main qui persiste deviendrait un parasite. */}
+                  <HandwritingInk
+                    text={data.title}
+                    perCharMs={26}
+                    writing={effectiveStep === 0}
+                    rm={reduceMotion}
+                  />
                 </h2>
 
                 {data.visual_description && !isHorizontal && (
@@ -931,8 +942,20 @@ function ProgressiveBuildSlide({
                 <p className="text-[10px] uppercase tracking-widest text-[color-mix(in_srgb,var(--school-accent)_65%,transparent)] mb-2 font-semibold">
                   Idée centrale
                 </p>
+                {/* LOIS 3 et 4 : l'idée centrale s'écrit, et reste SURLIGNÉE tant
+                    qu'elle est le propos courant (palier 1) — c'est le repère
+                    « où en est la voix » réclamé par le cahier des charges. */}
                 <p className="text-xl font-semibold text-[#F5F1E8] leading-snug">
-                  &ldquo;{data.core_idea}&rdquo;
+                  <InkHighlight active={effectiveStep === 1} rm={reduceMotion}>
+                    &ldquo;
+                    <HandwritingInk
+                      text={data.core_idea}
+                      perCharMs={18}
+                      writing={effectiveStep === 1}
+                      rm={reduceMotion}
+                    />
+                    &rdquo;
+                  </InkHighlight>
                 </p>
               </IaTacticalPanel>
             </motion.div>
@@ -983,12 +1006,29 @@ function ProgressiveBuildSlide({
                         className={`rounded-xl bg-white/[0.05] border ${accentBorder} backdrop-blur-md px-4 py-3`}
                       >
                         <p className="text-[11px] font-bold text-[var(--school-accent)] tracking-wide mb-2">{block.label}</p>
+                        {/* LOI 6 : au dernier palier, les « à retenir » passent en
+                            GROS PLAN — isolés et agrandis — pour qu'ils restent en
+                            mémoire, au lieu de rester une liste parmi d'autres. */}
                         <ul className="space-y-1.5">
                           {(block.points || []).slice(0, 3).map((pt, j) => (
-                            <li key={j} className="text-[15px] text-[#F5F1E8]/90 leading-snug flex gap-2">
+                            <motion.li
+                              key={j}
+                              className={cn(
+                                'leading-snug flex gap-2 text-[#F5F1E8]/90',
+                                effectiveStep >= maxStep ? 'text-[17px] font-medium' : 'text-[15px]',
+                              )}
+                              animate={reduceMotion
+                                ? undefined
+                                : { scale: effectiveStep >= maxStep ? 1.04 : 1, originX: 0 }}
+                              transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
+                              style={{ transformOrigin: 'left center' }}
+                            >
                               <span className="text-[color-mix(in_srgb,var(--school-accent)_80%,transparent)] flex-shrink-0">▸</span>
-                              <span>{pt}</span>
-                            </li>
+                              {/* LOI 4 : le point courant est surligné pendant qu'il est dit. */}
+                              <InkHighlight active={effectiveStep >= maxStep} rm={reduceMotion}>
+                                <span>{pt}</span>
+                              </InkHighlight>
+                            </motion.li>
                           ))}
                         </ul>
                       </motion.div>
@@ -1568,6 +1608,7 @@ export default function SlideParallaxStage({
               // il doit pouvoir forcer la lecture intégrale en pleine séance.
               spotlight={spotlight || slide.render_mode === 'spotlight'}
               revealAll={!progressivePlayback || slide.render_mode === 'instant'}
+              reduceMotion={prefersReducedMotion}
               onSmartboardImageExpand={onSmartboardImageExpand}
               tacticalViewOnly={tacticalViewOnly}
               iaRemoteApplyKey={iaRemoteApplyKey}
