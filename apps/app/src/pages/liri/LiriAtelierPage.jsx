@@ -69,6 +69,38 @@ export default function LiriAtelierPage() {
   const [precepteurCourse, setPrecepteurCourse] = useState(null);
   const [sourceDraft, setSourceDraft] = useState({ title: '', text: '', url: '', fileName: '', mimeType: '' });
 
+  // ── TRAITEMENT EN LOT ────────────────────────────────────────────────────
+  // Sans lui, 512 sources = 512 clics : le volume restait hors de portée du
+  // fondateur et retombait sur la ligne de commande. Les demandes partent une
+  // par une (l'API est idempotente : une source déjà traitée est ignorée), et
+  // la file du worker fait le reste — on n'attend pas ici.
+  const [picked, setPicked] = useState(() => new Set());
+  const [lot, setLot] = useState({ running: false, done: 0, total: 0 });
+
+  const togglePick = (id) => setPicked((prev) => {
+    const next = new Set(prev);
+    if (next.has(id)) next.delete(id); else next.add(id);
+    return next;
+  });
+
+  const runLot = async (action) => {
+    const ids = [...picked];
+    if (!ids.length) return;
+    setLot({ running: true, done: 0, total: ids.length });
+    let ok = 0;
+    for (const [i, id] of ids.entries()) {
+      try {
+        if (action === 'understand') await masterFactoryApi.understand({ sourceType: type, sourceId: id });
+        else await masterFactoryApi.produceCourse({ sourceType: type, sourceId: id });
+        ok += 1;
+      } catch { /* une source en échec ne doit pas arrêter le lot */ }
+      setLot({ running: true, done: i + 1, total: ids.length });
+    }
+    setLot({ running: false, done: ids.length, total: ids.length });
+    setPicked(new Set());
+    flash('ok', `${ok}/${ids.length} source(s) mise(s) en file — le travail se poursuit en arrière-plan.`);
+  };
+
   const load = useCallback(async (t, opts = {}) => {
     setSources(null);
     if (!opts.keepSelection) {
@@ -435,6 +467,21 @@ export default function LiriAtelierPage() {
                         color: C.ink, cursor: 'pointer',
                         boxShadow: on ? 'inset 3px 0 0 #d97757' : 'none',
                       }}>
+                      <span
+                        role="checkbox"
+                        aria-checked={picked.has(s.id)}
+                        tabIndex={0}
+                        onClick={(e) => { e.stopPropagation(); togglePick(s.id); }}
+                        onKeyDown={(e) => { if (e.key === ' ') { e.preventDefault(); e.stopPropagation(); togglePick(s.id); } }}
+                        title="Sélectionner pour un traitement en lot"
+                        style={{
+                          width: 15, height: 15, borderRadius: 4, flexShrink: 0, cursor: 'pointer',
+                          border: `1.5px solid ${picked.has(s.id) ? C.coral : 'rgba(245,244,238,.28)'}`,
+                          background: picked.has(s.id) ? C.coral : 'transparent',
+                          display: 'grid', placeItems: 'center',
+                        }}>
+                        {picked.has(s.id) && <Check size={10} color="#fff" />}
+                      </span>
                       <span style={{ flex: 1, minWidth: 0, fontSize: 13.5, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                         {s.title || <em style={{ color: C.faint }}>sans titre</em>}
                       </span>

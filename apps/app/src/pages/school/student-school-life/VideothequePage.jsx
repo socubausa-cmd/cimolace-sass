@@ -62,7 +62,6 @@ export default function VideothequePage() {
       .catch(() => { /* rôle inconnu → bouton masqué (le serveur reste seul juge) */ });
     return () => { alive = false; };
   }, []);
-  const [extract, setExtract] = useState({ state: 'idle', message: '' });
 
   // ── Chapitrage IA du replay (vraies ruptures de sujet) ───────────────────
   // Sans lui, le lecteur ne montre que des REPÈRES dérivés des silences. Les
@@ -85,7 +84,6 @@ export default function VideothequePage() {
   //     d'écrire l'état ; une réponse doublée par une plus récente est ignorée.
   //   - `activeIdRef` : identité de la vidéo ouverte, lue depuis la closure d'une
   //     requête longue (plusieurs minutes) — `active` y serait périmé.
-  // Même écriture que `buildPollRef` (polling de construction) juste en dessous.
   const chapTimerRef = useRef(null);
   const chapRunRef = useRef(0);
   const lotTimerRef = useRef(null);
@@ -110,50 +108,9 @@ export default function VideothequePage() {
   const [lot, setLot] = useState({ state: 'idle', fait: 0, total: 0, message: '' });
   const lotStop = useRef(false);
 
-  // ── Construction d'un COURS ENSEIGNABLE depuis le replay ──────────────────
-  // Traitement long (extraction → plan → leçons → publication) : l'API enregistre
-  // une demande, le worker travaille, on suit l'avancement ici.
-  const [build, setBuild] = useState({ state: 'idle', message: '', courseId: null });
-  const buildPollRef = useRef(null);
 
-  const followJob = useCallback((jobId) => {
-    clearInterval(buildPollRef.current);
-    buildPollRef.current = setInterval(async () => {
-      try {
-        const j = await masterclassApi.courseJob(jobId);
-        if (j?.status === 'done') {
-          clearInterval(buildPollRef.current);
-          setBuild({ state: 'done', message: 'Cours prêt au poste production.', courseId: j.course_id });
-        } else if (j?.status === 'failed') {
-          clearInterval(buildPollRef.current);
-          setBuild({ state: 'error', message: j.error_message || 'Construction impossible.', courseId: null });
-        } else {
-          setBuild({ state: 'working', message: j?.progress || 'Construction du cours…', courseId: null });
-        }
-      } catch { /* on retentera au prochain tour */ }
-    }, 5000);
-  }, []);
 
-  useEffect(() => () => clearInterval(buildPollRef.current), []);
 
-  async function handleBuildCourse(video) {
-    if (!video?.id) return;
-    setBuild({ state: 'working', message: 'Demande enregistrée…', courseId: null });
-    try {
-      const res = await masterclassApi.requestCourseFromReplay(video.id);
-      const job = res?.job || res;
-      if (!job?.id) throw new Error('Demande non enregistrée.');
-      followJob(job.id);
-    } catch (e) {
-      const msg = String(e?.message || '');
-      setBuild({
-        state: 'error',
-        courseId: null,
-        message: /403|forbidden/i.test(msg) ? "Réservé aux enseignants et responsables de l'école." : (msg || 'Construction impossible.'),
-      });
-      setTimeout(() => setBuild({ state: 'idle', message: '', courseId: null }), 9000);
-    }
-  }
 
   // ── EXTRAITS COURTS (short_clips) fabriqués DEPUIS CE REPLAY ──────────────
   //
@@ -371,32 +328,6 @@ export default function VideothequePage() {
     lotTimerRef.current = setTimeout(() => setLot({ state: 'idle', fait: 0, total: 0, message: '' }), 12000);
   }
 
-  async function handleExtractCourse(video) {
-    if (!video?.id) return;
-    setExtract({ state: 'working', message: 'Analyse de la transcription…' });
-    try {
-      const course = await masterclassApi.fromReplay(video.id);
-      if (!course?.modules?.length) throw new Error('Aucun contenu exploitable extrait.');
-      setExtract({ state: 'working', message: 'Mise en page du document…' });
-      // Nom RÉEL du tenant (repli neutre si le contexte n'a pas pu être lu) —
-      // jamais un tenant en dur : la Vidéothèque sert toutes les écoles.
-      await exportCoursePdf(course, { schoolName: tenantName || 'École' });
-      const nbL = course.modules.reduce((a, m) => a + (m.lessons?.length || 0), 0);
-      setExtract({ state: 'done', message: `Cours généré : ${course.modules.length} module(s), ${nbL} leçon(s).` });
-      setTimeout(() => setExtract({ state: 'idle', message: '' }), 6000);
-    } catch (e) {
-      const msg = String(e?.message || '');
-      setExtract({
-        state: 'error',
-        message: /403|forbidden/i.test(msg)
-          ? "Réservé aux enseignants et responsables de l'école."
-          : /transcription/i.test(msg)
-            ? msg
-            : msg || 'Extraction impossible.',
-      });
-      setTimeout(() => setExtract({ state: 'idle', message: '' }), 9000);
-    }
-  }
 
   // SONDAGE LENT de la fabrication en cours, uniquement pour le replay OUVERT et
   // uniquement tant qu'il y a quelque chose à attendre. 20 s : le travail se compte
@@ -555,65 +486,27 @@ export default function VideothequePage() {
           onExit={() => setActive(null)}
           headerAction={(
             <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8, flexWrap: 'wrap', justifyContent: 'flex-end' }}>
-              {/* Message d'état de l'extraction (analyse longue → on informe) */}
-              {extract.state !== 'idle' && (
-                <span style={{
-                  fontSize: 11.5, fontWeight: 600, whiteSpace: 'nowrap', padding: '6px 10px', borderRadius: 999,
-                  color: extract.state === 'error' ? '#f6b8ab' : extract.state === 'done' ? '#c9dcbf' : C.muted,
-                  background: extract.state === 'error' ? 'rgba(217,119,87,.14)' : extract.state === 'done' ? 'rgba(159,191,143,.14)' : 'rgba(255,255,255,.05)',
-                }}>
-                  {extract.message}
-                </span>
-              )}
+              {/* ── UN SEUL POINT D'ENTRÉE : l'Atelier ────────────────────────
+                  Il y avait ICI deux boutons concurrents — « Extraire le cours
+                  (PDF) » et « Construire le cours » — qui lisaient la MÊME
+                  transcription, appelaient le MÊME modèle, et ne différaient
+                  que par le format écrit à la fin. Personne ne pouvait deviner
+                  lequel choisir, et chacun repayait l'analyse de son côté.
+                  L'Atelier montre l'état réel (déjà compris ? cours prêt ?
+                  PDF gratuit ?) AVANT de dépenser. Cf.
+                  docs/ATELIER_COURS_UNIFIE_SPEC.md — lot 6. */}
               {canExtract && (
                 <button
                   type="button"
-                  onClick={() => handleExtractCourse(active)}
-                  disabled={extract.state === 'working'}
-                  title="Transformer la transcription de ce direct en document de cours structuré (PDF)"
-                  style={{
-                    display: 'inline-flex', alignItems: 'center', gap: 7, padding: '8px 14px', borderRadius: 999,
-                    border: `1px solid ${C.line}`, background: 'rgba(255,255,255,.05)', color: C.ink,
-                    cursor: extract.state === 'working' ? 'wait' : 'pointer', fontSize: 12.5, fontWeight: 700,
-                    whiteSpace: 'nowrap', opacity: extract.state === 'working' ? 0.7 : 1,
-                  }}
-                >
-                  {extract.state === 'working'
-                    ? <Loader2 size={14} className="animate-spin" />
-                    : <FileText size={14} />}
-                  {extract.state === 'working' ? 'Extraction…' : 'Extraire le cours (PDF)'}
-                </button>
-              )}
-              {/* Construction du cours enseignable (worker) + suivi d'avancement */}
-              {build.state !== 'idle' && (
-                <span style={{
-                  fontSize: 11.5, fontWeight: 600, whiteSpace: 'nowrap', padding: '6px 10px', borderRadius: 999,
-                  color: build.state === 'error' ? '#f6b8ab' : build.state === 'done' ? '#c9dcbf' : C.muted,
-                  background: build.state === 'error' ? 'rgba(217,119,87,.14)' : build.state === 'done' ? 'rgba(159,191,143,.14)' : 'rgba(255,255,255,.05)',
-                }}>
-                  {build.message}
-                </span>
-              )}
-              {build.state === 'done' && build.courseId ? (
-                <button type="button" onClick={() => navigate(`/studio/formation?editFormationId=${build.courseId}`)}
-                  style={{ display: 'inline-flex', alignItems: 'center', gap: 7, padding: '8px 14px', borderRadius: 999, border: `1px solid ${C.coral}`, background: C.coralTint, color: '#f0c3ac', cursor: 'pointer', fontSize: 12.5, fontWeight: 700, whiteSpace: 'nowrap' }}>
-                  <GraduationCap size={14} /> Ouvrir le cours
-                </button>
-              ) : canExtract && (
-                <button
-                  type="button"
-                  onClick={() => handleBuildCourse(active)}
-                  disabled={build.state === 'working'}
-                  title="Reconstruire cette séance en cours enseignable pour débutants (plan, leçons, schémas, quiz) — déposé en brouillon au poste production"
+                  onClick={() => navigate(`/liri/atelier?mfSourceType=replay&mfSourceId=${active.id}`)}
+                  title="Ouvrir cette séance dans l'Atelier : comprendre, produire le cours, le parcours, le PDF…"
                   style={{
                     display: 'inline-flex', alignItems: 'center', gap: 7, padding: '8px 14px', borderRadius: 999,
                     border: `1px solid ${C.coral}`, background: C.coralTint, color: '#f0c3ac',
-                    cursor: build.state === 'working' ? 'wait' : 'pointer', fontSize: 12.5, fontWeight: 700,
-                    whiteSpace: 'nowrap', opacity: build.state === 'working' ? 0.7 : 1,
+                    cursor: 'pointer', fontSize: 12.5, fontWeight: 700, whiteSpace: 'nowrap',
                   }}
                 >
-                  {build.state === 'working' ? <Loader2 size={14} className="animate-spin" /> : <Sparkles size={14} />}
-                  {build.state === 'working' ? 'Construction…' : 'Construire le cours'}
+                  <Sparkles size={14} /> Ouvrir dans l'Atelier
                 </button>
               )}
               {/* ── EXTRAITS COURTS depuis CE replay (créateurs) ─────────────────

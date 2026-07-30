@@ -45,4 +45,4 @@ COMMENT ON COLUMN public.live_scenes.chapter_id IS
 COMMENT ON COLUMN public.live_scenes.render_mode IS
   'Mode du tableau vivant : progressive (révélation séquentielle), instant (tout visible), spotlight (révélation + halo).';
 COMMENT ON COLUMN public.live_scenes.audio_url IS
-  'Narration de CETTE scène (Lot 4 du cahier des charges Tableau Vivant). Une scène = un audio ; la lecture pilote la révélation.';
+  'Narration de CETTE scène (Lot 4 du cahier des charges Tableau Vivant). ⚠️ ÉTAT AU 2026-07-31 : la piste est PRODUITE et stockée, mais AUCUN lecteur ne la joue encore en direct — le chemin de rendu ne monte pas d''élément audio. Ne pas laisser croire que la voix pilote déjà la révélation.';

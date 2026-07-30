@@ -8,9 +8,16 @@ import { SupabaseService } from '../supabase/supabase.service';
  *
  * La règle produit : UNE SCÈNE = UN AUDIO. Sans cela, le live n'est pas
  * scénarisé : le tableau se révèle au rythme des clics de l'hôte au lieu de
- * suivre la voix. Le Studio éditait déjà un `audioUrl` par scène et la régie
- * sait déjà naviguer sur un événement audio (`useLiveHostLiriAudioSync`) —
- * il ne manquait que le producteur. C'est ce service.
+ * suivre la voix.
+ *
+ * ⚠️ PÉRIMÈTRE RÉEL — ce service PRODUIT et STOCKE la piste, rien de plus.
+ * Le chemin de rendu du direct ne monte aujourd'hui AUCUN lecteur pour
+ * `live_scenes.audio_url` (vérifié : zéro occurrence dans
+ * apps/app/src/components/liri/live-room/). `useLiveHostLiriAudioSync` ne lit
+ * PAS ce champ : il consomme le système d'ambiance sonore `liri_audio_scenes`,
+ * qui est un autre mécanisme. Tant qu'un lecteur n'est pas branché et que le
+ * palier de révélation n'est pas diffusé aux invités, la loi 2 du cahier des
+ * charges (« synchronisé à la voix ») N'EST PAS satisfaite.
  *
  * Choix assumés :
  * - la synthèse passe par l'edge function `liri-tts` (déjà facturée et

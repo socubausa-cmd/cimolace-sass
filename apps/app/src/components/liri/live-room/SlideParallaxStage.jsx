@@ -1519,9 +1519,11 @@ export default function SlideParallaxStage({
         <AnimatePresence mode="wait">
           <motion.div
             key={slide.id}
-            // Garde-fou d'accessibilité du cahier des charges (§7) : sous
-            // `prefers-reduced-motion`, le tableau se contente d'un fondu — le
-            // contenu reste intégralement accessible, seul le mouvement disparaît.
+            // Accessibilité (§7 du cahier) : sous `prefers-reduced-motion`, la
+            // TRANSITION ENTRE SCÈNES se réduit à un fondu.
+            // ⚠️ Portée limitée : les animations INTERNES de révélation, dans
+            // ProgressiveBuildSlide, ne reçoivent pas encore ce drapeau — le
+            // garde-fou §7 n'est donc que partiellement satisfait.
             initial={prefersReducedMotion ? { opacity: 0 } : { opacity: 0, y: 16, scale: 0.985 }}
             animate={prefersReducedMotion ? { opacity: 1 } : { opacity: 1, y: 0, scale: 1 }}
             exit={prefersReducedMotion ? { opacity: 0 } : { opacity: 0, y: -14, scale: 0.99 }}
@@ -1533,7 +1535,11 @@ export default function SlideParallaxStage({
               data={slide.ia_data}
               step={currentStep}
               onStepChange={handleStepChange}
-              // `render_mode` de la scène (choisi dans l'atelier) pilote le tableau :
+              // `render_mode` de la scène pilote le tableau. ⚠️ Aucun écran ne
+              // permet ENCORE de choisir ce mode : le producteur publie toujours
+              // 'progressive' (master-factory.service.ts:678) et l'atelier se
+              // contente de l'afficher — 'instant' et 'spotlight' restent donc
+              // inatteignables pour un contenu Master Factory.
               // 'instant' montre tout d'un coup, 'spotlight' ajoute le halo à la
               // révélation. Les réglages globaux de l'hôte restent PRIORITAIRES —
               // il doit pouvoir forcer la lecture intégrale en pleine séance.
