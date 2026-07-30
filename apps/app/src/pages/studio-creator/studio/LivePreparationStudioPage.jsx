@@ -1515,9 +1515,6 @@ export default function LivePreparationStudioPage() {
                                 Chapitre {chapter}
                               </span>
                               <span className="h-px flex-1 bg-white/10" />
-                              {sc.render_mode && (
-                                <span className="text-[10px] text-white/35">{SCENE_RENDER_MODE_LABELS[sc.render_mode] || sc.render_mode}</span>
-                              )}
                               {sc.audio_url && <span className="text-[10px] text-emerald-400/70">narré</span>}
                             </div>
                           )}
@@ -1527,6 +1524,21 @@ export default function LivePreparationStudioPage() {
                             onDelete={handleDeleteScene}
                             onMove={handleMoveScene}
                           />
+                          {/* Mode du tableau vivant, par scène. Sans ce choix,
+                              'spotlight' et 'instant' restaient du code mort : le
+                              producteur publie toujours 'progressive'. */}
+                          <label className="flex items-center gap-2 pl-2 -mt-1 text-[11px] text-white/45">
+                            Tableau :
+                            <select
+                              value={sc.render_mode || 'progressive'}
+                              onChange={(e) => handleSaveScene({ ...sc, render_mode: e.target.value })}
+                              className="rounded-md border border-white/10 bg-black/40 px-2 py-1 text-[11px] text-white/75 outline-none focus:border-[color:var(--school-accent,#D4AF37)]"
+                            >
+                              {Object.entries(SCENE_RENDER_MODE_LABELS).map(([value, label]) => (
+                                <option key={value} value={value}>{label}</option>
+                              ))}
+                            </select>
+                          </label>
                         </Fragment>
                       );
                     })}

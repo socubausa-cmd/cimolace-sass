@@ -19,6 +19,13 @@ export async function upsertScene(liveSessionId, scene) {
     preset_name: scene.preset_name ?? null,
     is_active: scene.is_active ?? false,
   };
+  // ⛔ NE JAMAIS écraser ces trois colonnes par omission. Cette fonction
+  // reconstruit la ligne de zéro : renommer une scène suffisait donc à effacer
+  // sa narration (audio_url), son chapitre et son mode de rendu. On ne les
+  // transmet que lorsqu'ils sont EXPLICITEMENT fournis par l'appelant.
+  if (scene.chapter_id !== undefined) base.chapter_id = scene.chapter_id;
+  if (scene.render_mode !== undefined) base.render_mode = scene.render_mode;
+  if (scene.audio_url !== undefined) base.audio_url = scene.audio_url;
   if (scene.id) {
     return supabase.from('live_scenes').update(base).eq('id', scene.id).select().single();
   }
