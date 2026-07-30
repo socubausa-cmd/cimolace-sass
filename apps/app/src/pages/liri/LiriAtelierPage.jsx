@@ -512,36 +512,6 @@ export default function LiriAtelierPage() {
                 })}
               </div>
 
-              {/* ── Barre de lot ──────────────────────────────────────────────
-                  SOUS la liste, jamais au-dessus : cocher une case ne doit pas
-                  décaler les lignes suivantes, sinon le deuxième clic tombe sur
-                  la mauvaise source — vu en test, une case cochée sur trois. */}
-              {picked.size > 0 && (
-                <div style={{
-                  padding: '11px 14px', borderTop: `1px solid ${C.line}`,
-                  background: 'rgba(217,119,87,.12)',
-                  display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap',
-                }}>
-                  <span style={{ color: C.ink, fontSize: 12.5, fontWeight: 700, flex: 1, minWidth: 150 }}>
-                    {lot.running
-                      ? `Envoi en cours… ${lot.done}/${lot.total}`
-                      : `${picked.size} source(s) cochée(s)`}
-                  </span>
-                  <button type="button" onClick={() => runLot('course')} disabled={lot.running}
-                    style={{ ...btn(true), opacity: lot.running ? 0.5 : 1 }}>
-                    {lot.running ? <Loader2 size={14} className="animate-spin" /> : <BookOpen size={14} />} Produire les cours
-                  </button>
-                  <button type="button" onClick={() => runLot('understand')} disabled={lot.running}
-                    style={{ ...btn(false), opacity: lot.running ? 0.5 : 1 }}>
-                    <Sparkles size={14} /> Comprendre seulement
-                  </button>
-                  <p style={{ width: '100%', margin: 0, color: C.muted, fontSize: 11.5, lineHeight: 1.45 }}>
-                    « Produire les cours » met en file et rend la main tout de suite : le worker
-                    comprend puis rédige, même onglet fermé. « Comprendre seulement » travaille
-                    source par source et exige que cet onglet reste ouvert.
-                  </p>
-                </div>
-              )}
             </>
           )}
           </div>
@@ -729,6 +699,43 @@ export default function LiriAtelierPage() {
           )}
         </div>
       </div>
+
+      {/* ── Barre de lot ────────────────────────────────────────────────────
+          Ancrée en bas de l'écran, hors du flux : cocher une case ne décale
+          aucune ligne (le deuxième clic tombait sinon sur la mauvaise source,
+          vu en test) et l'action reste atteignable sans faire défiler 62 lignes.
+          Elle n'apparaît que si quelque chose est coché. */}
+      {picked.size > 0 && (
+        <div style={{
+          position: 'fixed', left: 0, right: 0, bottom: 0, zIndex: 40,
+          padding: '11px 18px', borderTop: '1px solid rgba(217,119,87,.35)',
+          background: '#33241d', boxShadow: '0 -12px 34px rgba(0,0,0,.4)',
+          display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap',
+        }}>
+          <span style={{ color: C.ink, fontSize: 13, fontWeight: 750, flex: 1, minWidth: 150 }}>
+            {lot.running
+              ? `Envoi en cours… ${lot.done}/${lot.total}`
+              : `${picked.size} source(s) cochée(s)`}
+          </span>
+          <span style={{ color: C.muted, fontSize: 11.5, lineHeight: 1.4, flex: '2 1 320px', minWidth: 220 }}>
+            « Produire les cours » met en file et rend la main tout de suite : le worker
+            comprend puis rédige, même onglet fermé. « Comprendre seulement » travaille
+            source par source et exige que cet onglet reste ouvert.
+          </span>
+          <button type="button" onClick={() => setPicked(new Set())} disabled={lot.running}
+            style={{ background: 'none', border: 'none', color: C.muted, fontSize: 12, cursor: 'pointer', textDecoration: 'underline' }}>
+            annuler
+          </button>
+          <button type="button" onClick={() => runLot('understand')} disabled={lot.running}
+            style={{ ...btn(false), opacity: lot.running ? 0.5 : 1 }}>
+            <Sparkles size={14} /> Comprendre seulement
+          </button>
+          <button type="button" onClick={() => runLot('course')} disabled={lot.running}
+            style={{ ...btn(true), opacity: lot.running ? 0.5 : 1 }}>
+            {lot.running ? <Loader2 size={14} className="animate-spin" /> : <BookOpen size={14} />} Produire les cours
+          </button>
+        </div>
+      )}
     </div>
   );
 }
