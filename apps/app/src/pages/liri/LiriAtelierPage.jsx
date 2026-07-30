@@ -461,35 +461,6 @@ export default function LiriAtelierPage() {
                 )}
               </div>
 
-              {/* ── Barre de lot ──────────────────────────────────────────────
-                  Elle n'apparaît que si quelque chose est coché : tant qu'on
-                  travaille source par source, l'écran reste celui d'avant. */}
-              {picked.size > 0 && (
-                <div style={{
-                  padding: '11px 14px', borderBottom: `1px solid ${C.line}`,
-                  background: 'rgba(217,119,87,.12)',
-                  display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap',
-                }}>
-                  <span style={{ color: C.ink, fontSize: 12.5, fontWeight: 700, flex: 1, minWidth: 150 }}>
-                    {lot.running
-                      ? `Envoi en cours… ${lot.done}/${lot.total}`
-                      : `${picked.size} source(s) cochée(s)`}
-                  </span>
-                  <button type="button" onClick={() => runLot('course')} disabled={lot.running}
-                    style={{ ...btn(true), opacity: lot.running ? 0.5 : 1 }}>
-                    {lot.running ? <Loader2 size={14} className="animate-spin" /> : <BookOpen size={14} />} Produire les cours
-                  </button>
-                  <button type="button" onClick={() => runLot('understand')} disabled={lot.running}
-                    style={{ ...btn(false), opacity: lot.running ? 0.5 : 1 }}>
-                    <Sparkles size={14} /> Comprendre seulement
-                  </button>
-                  <p style={{ width: '100%', margin: 0, color: C.muted, fontSize: 11.5, lineHeight: 1.45 }}>
-                    « Produire les cours » met en file et rend la main tout de suite : le worker
-                    comprend puis rédige, même onglet fermé. « Comprendre seulement » travaille
-                    source par source et exige que cet onglet reste ouvert.
-                  </p>
-                </div>
-              )}
               <div style={{ maxHeight: '62vh', overflowY: 'auto' }}>
                 {filtered.map((s) => {
                   const on = sel?.id === s.id;
@@ -540,6 +511,37 @@ export default function LiriAtelierPage() {
                   );
                 })}
               </div>
+
+              {/* ── Barre de lot ──────────────────────────────────────────────
+                  SOUS la liste, jamais au-dessus : cocher une case ne doit pas
+                  décaler les lignes suivantes, sinon le deuxième clic tombe sur
+                  la mauvaise source — vu en test, une case cochée sur trois. */}
+              {picked.size > 0 && (
+                <div style={{
+                  padding: '11px 14px', borderTop: `1px solid ${C.line}`,
+                  background: 'rgba(217,119,87,.12)',
+                  display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap',
+                }}>
+                  <span style={{ color: C.ink, fontSize: 12.5, fontWeight: 700, flex: 1, minWidth: 150 }}>
+                    {lot.running
+                      ? `Envoi en cours… ${lot.done}/${lot.total}`
+                      : `${picked.size} source(s) cochée(s)`}
+                  </span>
+                  <button type="button" onClick={() => runLot('course')} disabled={lot.running}
+                    style={{ ...btn(true), opacity: lot.running ? 0.5 : 1 }}>
+                    {lot.running ? <Loader2 size={14} className="animate-spin" /> : <BookOpen size={14} />} Produire les cours
+                  </button>
+                  <button type="button" onClick={() => runLot('understand')} disabled={lot.running}
+                    style={{ ...btn(false), opacity: lot.running ? 0.5 : 1 }}>
+                    <Sparkles size={14} /> Comprendre seulement
+                  </button>
+                  <p style={{ width: '100%', margin: 0, color: C.muted, fontSize: 11.5, lineHeight: 1.45 }}>
+                    « Produire les cours » met en file et rend la main tout de suite : le worker
+                    comprend puis rédige, même onglet fermé. « Comprendre seulement » travaille
+                    source par source et exige que cet onglet reste ouvert.
+                  </p>
+                </div>
+              )}
             </>
           )}
           </div>
