@@ -5384,6 +5384,9 @@ function ParallaxSlideSceneStack({
   immersiveEdgeDefault = true,
   /** LiveHost : remplissage cover + fond transparent (pas de cadre bleu Architect). */
   liveStageFillCover = false,
+  /** Palier de révélation intra-scène, partagé hôte ↔ invités. */
+  revealStep,
+  onRevealStepChange,
 }) {
   return (
     <div className="absolute inset-0 min-h-0">
@@ -5391,6 +5394,10 @@ function ParallaxSlideSceneStack({
         slide={slide}
         spotlight={spotlight}
         progressivePlayback={progressivePlayback}
+        // Palier de révélation piloté depuis la régie (et diffusé aux invités) :
+        // sans ces deux props, chaque spectateur révélait le tableau pour lui seul.
+        step={revealStep}
+        onStepChange={onRevealStepChange}
         onSmartboardImageExpand={onSmartboardImageExpand}
         tacticalSyncRole={tacticalSyncRole}
         remoteTacticalSync={remoteTacticalSync}

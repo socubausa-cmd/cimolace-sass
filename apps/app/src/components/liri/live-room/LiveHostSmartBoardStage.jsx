@@ -120,6 +120,15 @@ const LiveHostSmartBoardStage = forwardRef(function LiveHostSmartBoardStage(
   const sharedImageIdxRef = useRef(0);
   const sharedImageLoopRef = useRef(false);
   const progressivePlaybackRef = useRef(true);
+  /**
+   * Palier de révélation À L'INTÉRIEUR de la scène courante (loi 1 du cahier :
+   * les blocs apparaissent un par un). Il était jusqu'ici un état purement local
+   * à chaque spectateur : l'hôte révélait l'idée centrale et RIEN ne changeait
+   * chez les élèves. On le diffuse donc comme `revealStep`, à côté de
+   * `slideIndex` qui ne désigne, lui, que la scène affichée.
+   */
+  const [revealStep, setRevealStep] = useState(0);
+  const revealStepRef = useRef(0);
   const annotationStrokesRef = useRef([]);
   const whiteboardPagesRef = useRef([[]]);
   const whiteboardPageIndexRef = useRef(0);
@@ -147,6 +156,13 @@ const LiveHostSmartBoardStage = forwardRef(function LiveHostSmartBoardStage(
   useEffect(() => { sharedImageIdxRef.current = sharedImageIdx; }, [sharedImageIdx]);
   useEffect(() => { sharedImageLoopRef.current = sharedImageLoop; }, [sharedImageLoop]);
   useEffect(() => { progressivePlaybackRef.current = progressivePlayback; }, [progressivePlayback]);
+  useEffect(() => { revealStepRef.current = revealStep; }, [revealStep]);
+  // Changer de scène remet le tableau à blanc : sans cela, la scène suivante
+  // s'ouvrirait déjà révélée au palier de la précédente.
+  useEffect(() => {
+    revealStepRef.current = 0;
+    setRevealStep(0);
+  }, [slideIndex]);
 
   const scheduleHostToolsRailSync = useCallback(() => {
     if (typeof onHostWhiteboardToolsRailSync !== 'function') return;
@@ -837,6 +853,13 @@ const LiveHostSmartBoardStage = forwardRef(function LiveHostSmartBoardStage(
         slideIndexRef.current = c;
         setSlideIndex(c);
       }
+      // Palier de révélation intra-scène : c'est ce qui manquait pour que le
+      // geste du professeur (ou sa narration) atteigne réellement les élèves.
+      if (typeof payload.revealStep === 'number') {
+        const v = Math.max(0, Math.floor(payload.revealStep));
+        revealStepRef.current = v;
+        setRevealStep(v);
+      }
       if (typeof payload.sharedImageIdx === 'number') {
         const v = Math.floor(payload.sharedImageIdx);
         const max = Math.max(0, sharedImageGallery.length - 1);
@@ -1005,6 +1028,7 @@ const LiveHostSmartBoardStage = forwardRef(function LiveHostSmartBoardStage(
       sharedImageLoop: sharedImageLoopRef.current,
       activeScene: activeSceneRef.current,
       progressivePlayback: progressivePlaybackRef.current,
+      revealStep: revealStepRef.current,
       annotationStrokes: annotationStrokesRef.current,
       shopProducts: shopProductsRef.current,
       whiteboardPages: whiteboardPagesRef.current,
@@ -1055,6 +1079,14 @@ const LiveHostSmartBoardStage = forwardRef(function LiveHostSmartBoardStage(
         slide={parallaxSlide}
         spotlight={spotlight}
         progressivePlayback={progressivePlayback}
+        revealStep={revealStep}
+        onRevealStepChange={(next) => {
+          setRevealStep(next);
+          revealStepRef.current = next;
+          // Diffusion immédiate : un palier révélé chez l'hôte doit apparaître
+          // chez les élèves, pas au prochain événement de scène.
+          queueMicrotask(() => onBroadcast?.({ revealStep: next }));
+        }}
         onSmartboardImageExpand={openSmartboardImageModal}
         screenVideoRef={screenVideoRef}
         screenActive={sharingScreen || remoteScreenShareActive}

@@ -38,6 +38,7 @@ import {
   resolveProgressiveSlideDesignSize,
 } from '@/lib/smartboardDesignCanvas';
 import { AnimatePresence, motion, useReducedMotion } from 'framer-motion';
+import { useSceneNarration } from '@/features/live/hooks/useSceneNarration';
 import { getDocumentEmbedSrc } from '@/lib/liveSceneNormalize';
 import { useSmartboardCanvasSrc } from '@/lib/smartboardCanvasUrl';
 import {
@@ -1259,6 +1260,24 @@ export default function SlideParallaxStage({
 
   const [parallax, setParallax] = useState({ x: 0, y: 0 });
   const [internalStep, setInternalStep] = useState(0);
+
+  /**
+   * LOI 2 du cahier des charges — la voix pilote le tableau. La narration de la
+   * scène (produite par SceneAudioService) avance les paliers de révélation.
+   * Hôte et invités jouent la MÊME piste : la révélation reste donc alignée sans
+   * canal réseau supplémentaire. Un tableau affiché d'un coup ('instant' ou
+   * lecture intégrale forcée par l'hôte) n'a rien à révéler : narration coupée.
+   */
+  const narration = useSceneNarration({
+    audioUrl: slide?.audio_url,
+    sceneId: slide?.id,
+    maxStep: 3,
+    enabled: progressivePlayback && slide?.render_mode !== 'instant',
+    onStep: (next) => {
+      if (onStepChange) onStepChange(next);
+      else setInternalStep(next);
+    },
+  });
   const [legacyRevealIdx, setLegacyRevealIdx] = useState(0);
   const [legacyFocusId, setLegacyFocusId] = useState(null);
   const [legacyElAdjust, setLegacyElAdjust] = useState({});
@@ -1515,6 +1534,10 @@ export default function SlideParallaxStage({
           'relative h-full w-full overflow-hidden bg-transparent',
           liveStageFillCover ? 'rounded-none' : 'rounded-[26px]',
         )}
+        // Affordance de test : rend observable, sans ouvrir React, si la scène
+        // affichée porte une narration et à quel palier elle est révélée.
+        data-scene-narration={narration.available ? 'available' : 'none'}
+        data-scene-reveal-step={String(currentStep)}
       >
         <AnimatePresence mode="wait">
           <motion.div
@@ -1557,6 +1580,28 @@ export default function SlideParallaxStage({
               canvasScaleMode="contain"
               transparentStageBackground={liveStageFillCover}
             />
+            {/* Commande de narration, visible pour TOUS les spectateurs : chaque
+                client joue sa propre copie de la piste (cf. useSceneNarration),
+                donc l'élève doit pouvoir la lancer et l'entendre — la masquer
+                côté invité rendait la narration inaudible pour la classe. Le
+                navigateur interdit de démarrer un son sans geste utilisateur :
+                ce bouton EST ce geste. */}
+            {narration.available && (
+              <button
+                type="button"
+                onClick={(e) => { e.stopPropagation(); narration.toggle(); }}
+                title={narration.playing ? 'Mettre la narration en pause' : 'Lancer la narration de la scène'}
+                aria-label={narration.playing ? 'Mettre la narration en pause' : 'Lancer la narration de la scène'}
+                // Position : centre bas. Le coin bas-gauche est occupé par le FAB
+                // « IA — coach formateur » qui interceptait le clic, et le rail de
+                // régie tient la droite. z-[60] passe au-dessus du calque
+                // d'annotation (z-[25]) et de sa surface de dessin.
+                className="absolute bottom-4 left-1/2 -translate-x-1/2 z-[60] inline-flex items-center gap-2 rounded-full border border-white/15 bg-black/55 px-3 py-1.5 text-[11px] text-white/80 backdrop-blur hover:bg-black/70"
+              >
+                <span aria-hidden="true">{narration.playing ? '❙❙' : '▶'}</span>
+                {narration.playing ? 'Narration en cours' : 'Narrer la scène'}
+              </button>
+            )}
           </motion.div>
         </AnimatePresence>
       </div>

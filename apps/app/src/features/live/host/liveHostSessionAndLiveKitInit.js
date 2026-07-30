@@ -128,7 +128,7 @@ export async function runLiveHostSessionAndLiveKitInit(ctx) {
           .from('live_sessions')
           .select(`
             id, title, teacher_id, formation_id, status, config, started_at, session_type, debate_id, production_live_type,
-            slides:live_scenes(id, name, order_index, content_payload_json, is_active)
+            slides:live_scenes(id, name, order_index, content_payload_json, is_active, chapter_id, render_mode, audio_url)
           `)
           .eq('id', sessionId)
           .maybeSingle();
@@ -315,7 +315,11 @@ export async function runLiveHostSessionAndLiveKitInit(ctx) {
         if (sceneRows.length === 0) {
           const { data: directScenes } = await supabase
             .from('live_scenes')
-            .select('id, name, order_index, content_payload_json, is_active')
+            // `*` volontaire : le tableau vivant a besoin de chapter_id /
+            // render_mode / audio_url, et nommer une colonne absente (migration
+            // pas encore appliquée) ferait échouer la requête entière — donc une
+            // arène SANS aucune scène. Même arbitrage que le refetch realtime.
+            .select('*')
             .eq('live_session_id', sessionId)
             .order('order_index', { ascending: true });
           if (Array.isArray(directScenes) && directScenes.length > 0) sceneRows = directScenes;
