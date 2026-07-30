@@ -1,0 +1,16 @@
+{
+  "generatedAt": "2026-07-29T13:49:20.775Z",
+  "blockedPrivateNetworkStatus": 400,
+  "ingestStatus": 201,
+  "source": {
+    "id": "e92e6043-446d-4af1-a20d-7068c07a2afc",
+    "type": "url",
+    "title": "Pédagogie — source web E2E",
+    "status": "ready",
+    "ready": true,
+    "chars": 88208,
+    "createdAt": "2026-07-29T13:49:07.407+00:00",
+    "excerpt": "Pédagogie — Wikipédia Aller au contenu Menu principal Menu principal déplacer vers la barre latérale masquer Navigation Page d’accueil Portails thématiques Article au hasard Contact Contribuer Débuter sur Wikipédia Aide Communauté Pages spéciales Modifications récentes Rechercher Rechercher Apparence Faire un don Créer un compte Se connecter Outils personnels Faire un don Créer un compte Se connecter Sommaire déplacer vers la barre latérale masquer Début 1 Généralités Afficher / masquer la sous-"
+  },
+  "screenshotPath": "/Users/ngowazulu/Downloads/cimolace/artifacts/master-factory-course-review-20260729/38-url-extraction-real.png"
+}

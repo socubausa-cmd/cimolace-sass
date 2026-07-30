@@ -1,0 +1,14 @@
+{
+  "generatedAt": "2026-07-29T13:12:11.340Z",
+  "sourceId": "8719c02e-34bb-4008-8e94-3a179630bd7a",
+  "first": {
+    "status": 503,
+    "body": {
+      "error": {
+        "code": "SERVICE_UNAVAILABLE",
+        "message": "anthropic/claude-sonnet-4-6: Anthropic 400: {\"type\":\"error\",\"error\":{\"type\":\"invalid_request_error\",\"message\":\"Your credit balance is too low to access the Anthropic API. Please go to Plans & Billing to upgrade or purchase credits.\"},\"request_id\":\"req_011CdWQHoinU | groq/llama-3.3-70b-versatile: groq 429: {\"error\":{\"message\":\"Rate limit reached for model `llama-3.3-70b-versatile` in organization `org_01kkpmbjxxevaardxt2hhkk0hy` service tier `on_demand` on tokens per day (TPD): Limit 100000, Used 99348, Requested 11393. Pl | mistral/mistral-large-latest: The operation was aborted due to timeout | deepseek/deepseek-v4-pro: The operation was aborted due to timeout | openai/gpt-4o: openai 429: {\n    \"error\": {\n        \"message\": \"You exceeded your current quota, please check your plan and billing details. For more information on this error, read the docs: https://platform.openai.com/docs/guides/error-codes/api"
+      }
+    }
+  },
+  "second": null
+}

@@ -1,0 +1,34 @@
+{
+  "generatedAt": "2026-07-29T13:44:08.315Z",
+  "ingestStatus": 201,
+  "repeatedIngestStatus": 201,
+  "idempotent": true,
+  "listStatus": 200,
+  "sourceStatus": 200,
+  "crossTenantStatus": 404,
+  "source": {
+    "id": "4d913c93-f93f-4460-8468-60ff771dc470",
+    "type": "texte",
+    "title": "E2E — La transmission devient compétence",
+    "status": "ready",
+    "ready": true,
+    "chars": 1170,
+    "mimeType": "text/plain",
+    "createdAt": "2026-07-29T13:43:19.509486+00:00",
+    "excerpt": "Une information ne devient pas automatiquement une connaissance. L’élève doit pouvoir relier une idée à une situation observable, distinguer la règle de son contre-exemple, puis essayer la méthode dans un contexte nouveau. Le premier geste pédagogique consiste donc à rendre le problème visible. On part d’une situation familière, on nomme l’obstacle, puis on construit une représentation simple du mécanisme.\n\nUne bonne analogie ne remplace pas la définition. Elle crée un pont provisoire entre un d"
+  },
+  "listed": {
+    "id": "4d913c93-f93f-4460-8468-60ff771dc470",
+    "type": "texte",
+    "title": "E2E — La transmission devient compétence",
+    "status": "ready",
+    "ready": true,
+    "chars": 1170,
+    "mimeType": "text/plain",
+    "createdAt": "2026-07-29T13:43:19.509486+00:00"
+  },
+  "screenshots": [
+    "/Users/ngowazulu/Downloads/cimolace/artifacts/master-factory-course-review-20260729/36-registered-text-source-real.png",
+    "/Users/ngowazulu/Downloads/cimolace/artifacts/master-factory-course-review-20260729/37-registered-text-source-mobile.png"
+  ]
+}

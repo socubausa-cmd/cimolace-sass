@@ -1,13 +1,13 @@
 {
-  "generatedAt": "2026-07-29T18:50:05.872Z",
+  "generatedAt": "2026-07-30T05:10:07.502Z",
   "tenant": {
     "id": "4f6faaa8-43a0-46d6-b98a-99ea1154f9ea",
     "slug": "isna",
     "name": "Prorascience"
   },
   "testActor": {
-    "userId": "6d2cf9e1-0f10-4dd0-8ba6-5216198a47e2",
-    "email": "codex-replay-live-1785350954487@cimolace.test"
+    "userId": "c08f6dde-2f90-46eb-aeb8-96a5d3a0bfaa",
+    "email": "codex-replay-live-1785388156999@cimolace.test"
   },
   "source": {
     "id": "b11a419e-8508-4058-a42c-eda9cb3a5f2d",
@@ -16,7 +16,7 @@
     "libraryReady": true
   },
   "liveSession": {
-    "id": "4a6abaa9-304e-493c-9113-58a9d9666f7c",
+    "id": "4f7e3cf3-1a93-495c-b678-d1d6319d1f2a",
     "title": "Master Factory · La physique quantique décodée par l'Égypte antique",
     "status": "scheduled"
   },
@@ -45,7 +45,7 @@
   },
   "publication": {
     "ok": true,
-    "liveSessionId": "4a6abaa9-304e-493c-9113-58a9d9666f7c",
+    "liveSessionId": "4f7e3cf3-1a93-495c-b678-d1d6319d1f2a",
     "source": {
       "sourceType": "replay",
       "sourceId": "b11a419e-8508-4058-a42c-eda9cb3a5f2d"
@@ -101,12 +101,12 @@
       },
       {
         "kind": "master_script",
-        "model": "deterministic-master-script-v0",
+        "model": "deterministic-master-script-v1",
         "created_at": "2026-07-29T18:49:25.800783+00:00"
       },
       {
         "kind": "smartboard_timeline",
-        "model": "deterministic-smartboard-timeline-v0",
+        "model": "deterministic-smartboard-timeline-v1",
         "created_at": "2026-07-29T18:49:28.782355+00:00"
       },
       {
@@ -124,7 +124,7 @@
     "live_stack": {
       "master_script": true,
       "smartboard_timeline": true,
-      "live_scenario": false
+      "live_scenario": true
     }
   },
   "rls_readable": {
@@ -160,7 +160,7 @@
       "text": "LIRI\nLIRI\nLIVE\nÉcole\nPÉDAGOGIE\nmbolo\nBOUTIQUE\nStudio\nCRÉATION\nCréa\nCONTENU\nIS\nStudio\nRéglages\nIS\nMasterclass Factory\nAuto\nHistorique\nNouveau projet\nChargement du cours écrit depuis Master Factory…\nContenu brut\nAnalyse\nBlocs de sens\nChapitres\nPédagogie\n6\nSlides\n7\nScript\n8\nExport\nMASTERCLASS · ÉTAPE 6 SUR 8\nStoryboard SmartBoard\n\n0 scène · 0 chapitre — chaque intention pédagogique possède son écran.\n\nLancer la direction visuelle intelligente\n\nAucun slide. Relance la transformation.\n\nAucun slide à afficher.\n\nSCRIPT & DOCS\nPrécédent\nConnecté ·\nIsna\nLIRI v2.0"
     },
     "livePage": {
-      "url": "http://localhost:5173/studio/live-preparation/4a6abaa9-304e-493c-9113-58a9d9666f7c",
+      "url": "http://localhost:5173/studio/live-preparation/4f7e3cf3-1a93-495c-b678-d1d6319d1f2a",
       "title": "Prorascience",
       "text": "LIRI\nLIRI\nLIVE\nÉcole\nPÉDAGOGIE\nmbolo\nBOUTIQUE\nStudio\nCRÉATION\nCréa\nCONTENU\nIS\nTableau de bord\nStudio créateur\nAutres brouillons\nConnecté ·\nIsna\nLIRI v2.0"
     },
@@ -181,6 +181,12 @@
       ],
       "student_understanding": "L'élève doit pouvoir expliquer Les limites du critère de falsifiabilité avec ses propres mots et l'appliquer dans un exemple.",
       "simple_version": "Le critère de Popper, qui exige qu'une théorie scientifique soit réfutable par l'expérience, exclut des réalités humaines non mesurables en laboratoire.",
+      "slide_hint": "Le tableau affiche « Les limites du critère de falsifiabilité » : l'idée centrale, puis les 1 repère(s) à retenir.",
+      "objectives": [
+        "Expliquer Les limites du critère de falsifiabilité avec ses propres mots.",
+        "Savoir pourquoi ce point compte : Pour comprendre pourquoi la pro-rascience propose une méthode plus large, il faut d'abord saisir le problème qu'elle entend résoudre."
+      ],
+      "section_type": "introduction",
       "transition": "Ce point prépare La pro-rascience : une approche à trois piliers.",
       "duration_sec": 360,
       "interaction": {
@@ -194,9 +200,27 @@
     "firstSmartboardScene": {
       "id": "sb-1",
       "script_moment_id": "ms-1",
+      "chapter_id": 1,
       "title": "Les limites du critère de falsifiabilité",
       "visual_intent": "Faire respirer l'idée : Le critère de Popper, qui exige qu'une théorie scientifique soit réfutable par l'expérience, exclut des réalités humaines non mesurables en laboratoire.",
       "camera_zone": "bottom-right",
+      "render_mode": "progressive",
+      "gpt_slide": {
+        "title": "Les limites du critère de falsifiabilité",
+        "subtitle": "Pour comprendre pourquoi la pro-rascience propose une méthode plus large, il faut d'abord saisir le problème qu'elle entend résoudre.",
+        "core_idea": "Le critère de Popper, qui exige qu'une théorie scientifique soit réfutable par l'expérience, exclut des réalités humaines non mesurables en laboratoire.",
+        "development": [
+          {
+            "label": "À retenir",
+            "points": [
+              "Le critère de Popper, qui exige qu'une théorie scientifique soit réfutable par l'expérience, exclut des réalités humaines non mesurables en laboratoire.",
+              "Karl Popper (1934) ; 'dogme de la falsifiabilité' ; exclusion des réalités authentiques échappant aux instruments de mesure."
+            ]
+          }
+        ],
+        "slide_summary": "Le critère de Popper, qui exige qu'une théorie scientifique soit réfutable par l'expérience, exclut des réalités humaines non mesurables en laboratoire.",
+        "student_prompt": "Peux-tu reformuler l'idée principale de « Les limites du critère de falsifiabilité » ?"
+      },
       "blocks": [
         {
           "id": "sb-1-title",
@@ -261,7 +285,7 @@
       ]
     },
     "firstPersistedLiveScene": {
-      "id": "954fe37e-501a-4a4f-8a00-a4a5cfe979bc",
+      "id": "d43f0391-119a-4250-a0f9-d01b2a86db7d",
       "name": "Les limites du critère de falsifiabilité",
       "order_index": 0,
       "content_payload_json": {
@@ -293,6 +317,7 @@
               "type": "paragraph"
             }
           ],
+          "subtitle": "Pour comprendre pourquoi la pro-rascience propose une méthode plus large, il faut d'abord saisir le problème qu'elle entend résoudre.",
           "timeline": [
             {
               "id": "sb-1-a1",
@@ -330,9 +355,31 @@
               "duration_sec": 12
             }
           ],
-          "core_idea": "Faire respirer l'idée : Le critère de Popper, qui exige qu'une théorie scientifique soit réfutable par l'expérience, exclut des réalités humaines non mesurables en laboratoire.",
-          "camera_zone": "bottom-right"
+          "core_idea": "Le critère de Popper, qui exige qu'une théorie scientifique soit réfutable par l'expérience, exclut des réalités humaines non mesurables en laboratoire.",
+          "chapter_id": 1,
+          "scene_type": "progressive_build",
+          "camera_zone": "bottom-right",
+          "development": [
+            {
+              "label": "À retenir",
+              "points": [
+                "Le critère de Popper, qui exige qu'une théorie scientifique soit réfutable par l'expérience, exclut des réalités humaines non mesurables en laboratoire.",
+                "Karl Popper (1934) ; 'dogme de la falsifiabilité' ; exclusion des réalités authentiques échappant aux instruments de mesure."
+              ]
+            }
+          ],
+          "render_mode": "progressive",
+          "slide_summary": "Le critère de Popper, qui exige qu'une théorie scientifique soit réfutable par l'expérience, exclut des réalités humaines non mesurables en laboratoire.",
+          "student_prompt": "Peux-tu reformuler l'idée principale de « Les limites du critère de falsifiabilité » ?"
         },
+        "audio_url": null,
+        "chapter_id": 1,
+        "objectives": [
+          "Expliquer Les limites du critère de falsifiabilité avec ses propres mots.",
+          "Savoir pourquoi ce point compte : Pour comprendre pourquoi la pro-rascience propose une méthode plus large, il faut d'abord saisir le problème qu'elle entend résoudre."
+        ],
+        "slide_hint": "Le tableau affiche « Les limites du critère de falsifiabilité » : l'idée centrale, puis les 1 repère(s) à retenir.",
+        "render_mode": "progressive",
         "script_moment_id": "ms-1",
         "live_scenario_scene_id": "live-1",
         "smartboard_timeline_scene": {
@@ -400,14 +447,32 @@
               "duration_sec": 12
             }
           ],
+          "gpt_slide": {
+            "title": "Les limites du critère de falsifiabilité",
+            "subtitle": "Pour comprendre pourquoi la pro-rascience propose une méthode plus large, il faut d'abord saisir le problème qu'elle entend résoudre.",
+            "core_idea": "Le critère de Popper, qui exige qu'une théorie scientifique soit réfutable par l'expérience, exclut des réalités humaines non mesurables en laboratoire.",
+            "development": [
+              {
+                "label": "À retenir",
+                "points": [
+                  "Le critère de Popper, qui exige qu'une théorie scientifique soit réfutable par l'expérience, exclut des réalités humaines non mesurables en laboratoire.",
+                  "Karl Popper (1934) ; 'dogme de la falsifiabilité' ; exclusion des réalités authentiques échappant aux instruments de mesure."
+                ]
+              }
+            ],
+            "slide_summary": "Le critère de Popper, qui exige qu'une théorie scientifique soit réfutable par l'expérience, exclut des réalités humaines non mesurables en laboratoire.",
+            "student_prompt": "Peux-tu reformuler l'idée principale de « Les limites du critère de falsifiabilité » ?"
+          },
+          "chapter_id": 1,
           "camera_zone": "bottom-right",
+          "render_mode": "progressive",
           "visual_intent": "Faire respirer l'idée : Le critère de Popper, qui exige qu'une théorie scientifique soit réfutable par l'expérience, exclut des réalités humaines non mesurables en laboratoire.",
           "script_moment_id": "ms-1"
         }
       }
     },
     "firstPersistedScriptSection": {
-      "id": "756a95c4-bdcf-4db1-83d7-4322c38d6f99",
+      "id": "c445719b-aaff-414b-b665-ef733efa4e61",
       "title": "Les limites du critère de falsifiabilité",
       "order_index": 0,
       "content": "【Intention du slide】\nPour comprendre pourquoi la pro-rascience propose une méthode plus large, il faut d'abord saisir le problème qu'elle entend résoudre.\n\n【Message central】\nLe critère de Popper, qui exige qu'une théorie scientifique soit réfutable par l'expérience, exclut des réalités humaines non mesurables en laboratoire.\n\n【Discours du professeur】\nOn aborde maintenant Les limites du critère de falsifiabilité. Le critère de Popper, qui exige qu'une théorie scientifique soit réfutable par l'expérience, exclut des réalités humaines non mesurables en laboratoire. L'enjeu est simple : Pour comprendre pourquoi la pro-rascience propose une méthode plus large, il faut d'abord saisir le problème qu'elle entend résoudre. Dans la source, on s'appuie sur ce repère : « Karl Popper (1934) ; 'dogme de la falsifiabilité' ; exclusion des réalités authentiques échappant aux instruments de mesure. ».  Je vais le rendre concret, puis vérifier que le point est bien compris avant de continuer.\n\n【Grandes idées à insister】\n• Le critère de Popper, qui exige qu'une théorie scientifique soit réfutable par l'expérience, exclut des réalités humaines non mesurables en laboratoire.\n• Karl Popper (1934) ; 'dogme de la falsifiabilité' ; exclusion des réalités authentiques échappant aux instruments de mesure.\n\n【Ce que l'élève doit comprendre】\nL'élève doit pouvoir expliquer Les limites du critère de falsifiabilité avec ses propres mots et l'appliquer dans un exemple.\n\n【Transition】\nCe point prépare La pro-rascience : une approche à trois piliers.",
@@ -433,23 +498,23 @@
       }
     },
     "liveReadback": {
-      "id": "4a6abaa9-304e-493c-9113-58a9d9666f7c",
+      "id": "4f7e3cf3-1a93-495c-b678-d1d6319d1f2a",
       "tenant_id": "4f6faaa8-43a0-46d6-b98a-99ea1154f9ea",
-      "host_user_id": "6d2cf9e1-0f10-4dd0-8ba6-5216198a47e2",
+      "host_user_id": "c08f6dde-2f90-46eb-aeb8-96a5d3a0bfaa",
       "title": "Master Factory · La physique quantique décodée par l'Égypte antique",
       "description": "LIVE préparé de bout en bout depuis le replay b11a419e-8508-4058-a42c-eda9cb3a5f2d.",
-      "scheduled_at": "2026-07-29T18:49:33.261+00:00",
+      "scheduled_at": "2026-07-30T05:09:35.08+00:00",
       "price_cents": 0,
       "currency": "EUR",
       "capacity": null,
       "status": "scheduled",
       "livekit_room_name": null,
       "replay_enabled": true,
-      "created_at": "2026-07-29T18:49:34.435015+00:00",
-      "updated_at": "2026-07-29T18:49:38.968526+00:00",
+      "created_at": "2026-07-30T05:09:36.19938+00:00",
+      "updated_at": "2026-07-30T05:09:40.772753+00:00",
       "transcript": null,
       "summary": null,
-      "teacher_id": "6d2cf9e1-0f10-4dd0-8ba6-5216198a47e2",
+      "teacher_id": "c08f6dde-2f90-46eb-aeb8-96a5d3a0bfaa",
       "cover_image_url": null,
       "started_at": null,
       "ended_at": null,

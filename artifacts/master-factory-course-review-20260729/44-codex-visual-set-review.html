@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Master Factory — Revue visuelle</title>
+  <style>
+    :root { color-scheme: dark; --bg:#11100f; --panel:#1b1917; --line:#39332c; --gold:#e1b66e; --muted:#aaa198; }
+    * { box-sizing:border-box; }
+    body { margin:0; background:radial-gradient(circle at 50% -20%,#33271f 0,#11100f 42%); color:#f6f1ea; font:15px/1.45 Inter,system-ui,sans-serif; }
+    main { width:min(1420px,calc(100% - 64px)); margin:auto; padding:48px 0 64px; }
+    header { display:flex; justify-content:space-between; gap:32px; align-items:end; margin-bottom:30px; }
+    .eyebrow { color:var(--gold); text-transform:uppercase; letter-spacing:.18em; font-size:12px; }
+    h1 { margin:8px 0 4px; font:500 clamp(34px,4vw,62px)/1.02 Georgia,serif; }
+    header p { color:var(--muted); margin:0; max-width:680px; }
+    .status { border:1px solid #80683c; background:#241f16; color:#f0c77e; border-radius:999px; padding:10px 16px; white-space:nowrap; }
+    .grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:22px; }
+    article { overflow:hidden; border:1px solid var(--line); border-radius:22px; background:rgba(27,25,23,.92); box-shadow:0 24px 70px #0007; }
+    img { width:100%; aspect-ratio:16/9; object-fit:cover; display:block; border-bottom:1px solid var(--line); }
+    .body { padding:20px 22px 22px; }
+    .meta { display:flex; justify-content:space-between; gap:14px; align-items:center; }
+    h2 { margin:0; font:500 26px/1.1 Georgia,serif; }
+    .tag { border:1px solid var(--line); color:var(--muted); border-radius:999px; padding:5px 10px; font-size:12px; }
+    .body p { margin:13px 0 0; color:#c9c1b8; }
+    footer { display:flex; justify-content:space-between; align-items:center; gap:20px; margin-top:24px; padding:18px 22px; border:1px solid var(--line); border-radius:18px; background:#171513; color:var(--muted); }
+    footer strong { color:#f2ece4; }
+    @media(max-width:850px){ main{width:min(100% - 28px,700px);padding-top:28px}.grid{grid-template-columns:1fr}header{align-items:start;flex-direction:column}.status{white-space:normal} }
+  </style>
+</head>
+<body>
+<main>
+  <header>
+    <div><div class="eyebrow">Liri · Master Factory</div><h1>Transfert d'apprentissage</h1><p>Une narration visuelle en quatre temps. Chaque image porte un contrat pedagogique distinct et reste invisible pour l'apprenant jusqu'a sa validation.</p></div>
+    <div class="status">4 visuels · en attente de revue</div>
+  </header>
+  <section class="grid">
+    <article><img src="41-codex-imagegen-situation.png" alt="Mise en situation"><div class="body"><div class="meta"><h2>01 · Faire ressentir</h2><span class="tag">Situation</span></div><p>Installer l'obstacle cognitif avant toute explication : deux contextes proches peuvent exiger une decision differente.</p></div></article>
+    <article><img src="42-codex-imagegen-concept.png" alt="Concept invariant"><div class="body"><div class="meta"><h2>02 · Isoler l'invariant</h2><span class="tag">Concept</span></div><p>Rendre visible ce qui doit rester stable quand l'apparence de la situation change.</p></div></article>
+    <article><img src="40-codex-imagegen-learning-transfer.png" alt="Analogie du pont"><div class="body"><div class="meta"><h2>03 · Construire le pont</h2><span class="tag">Analogie</span></div><p>Relier la connaissance maitrisee au contexte nouveau pour demystifier le mecanisme du transfert.</p></div></article>
+    <article><img src="43-codex-imagegen-synthesis.png" alt="Synthese de la decision"><div class="body"><div class="meta"><h2>04 · Fixer la methode</h2><span class="tag">Synthese</span></div><p>Condenser la procedure mentale : reconnaitre les indices, choisir une action, puis la justifier.</p></div></article>
+  </section>
+  <footer><span><strong>Regle de publication :</strong> aucune generation automatique n'est publiee directement.</span><span>Codex built-in image generation · 1672 × 941</span></footer>
+</main>
+</body>
+</html>

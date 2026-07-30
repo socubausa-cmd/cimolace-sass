@@ -1,0 +1,37 @@
+{
+  "generated_at": "2026-07-29T14:03:00+01:00",
+  "provider": "codex-built-in-imagegen",
+  "status": "pending_review",
+  "asset_path": "/master-factory/generated/learning-transfer-bridge-v1.png",
+  "sha256": "d6ad04991bf8364d0608fc9e862333c1d37559404bd3b381ce2433342aab38cd",
+  "dimensions": {
+    "width": 1672,
+    "height": 941
+  },
+  "learning_job": "Rendre visible le transfert d’un acquis vers une situation nouvelle.",
+  "analogy": {
+    "familiar_domain": "Traverser un pont entre deux territoires",
+    "target_domain": "Réutiliser un mécanisme appris dans un nouveau contexte",
+    "shared_mechanism": "Passer d’un point de départ connu à une destination nouvelle grâce à des appuis ordonnés",
+    "mappings": [
+      "Territoire familier → situation déjà comprise",
+      "Trois dalles → reconnaître, agir, justifier",
+      "Territoire différent → situation de transfert"
+    ],
+    "limit": "La compréhension n’est pas un déplacement physique et peut nécessiter des retours, essais et reformulations."
+  },
+  "must_show": [
+    "Deux situations visuellement distinctes",
+    "Un mécanisme de passage central",
+    "Trois étapes différenciables",
+    "Un apprenant en action"
+  ],
+  "reject_if": [
+    "Le pont devient purement décoratif",
+    "Les trois étapes ne sont pas distinguables",
+    "L’image contient du texte illisible",
+    "La destination ressemble exactement au point de départ"
+  ],
+  "alt_text_fr": "Un apprenant quitte un espace familier et traverse trois dalles lumineuses vers une situation nouvelle, illustrant les étapes reconnaître, agir et justifier.",
+  "publication_rule": "Aucune exposition élève avant passage explicite à approved."
+}

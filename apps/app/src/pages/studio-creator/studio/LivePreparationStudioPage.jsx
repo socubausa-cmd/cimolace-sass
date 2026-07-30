@@ -2,7 +2,15 @@
  * Live Preparation Studio — wizard premium (phase 1 : données réelles + autosave)
  * N'altère pas le live messagerie (/studio/live-immersive).
  */
-import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import React, { Fragment, useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { masterFactoryApi } from '@/lib/api-v2';
+
+/** Vocabulaire du tableau vivant, aligné sur la contrainte SQL de live_scenes.render_mode. */
+const SCENE_RENDER_MODE_LABELS = {
+  progressive: 'révélation progressive',
+  instant: 'tout afficher',
+  spotlight: 'projecteur',
+};
 import { useNavigate, useParams, Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
@@ -362,6 +370,9 @@ export default function LivePreparationStudioPage() {
   const [scenes, setScenes] = useState([]);
   const [sceneModal, setSceneModal] = useState(null); // null | 'new' | scene object
   const [sceneBusy, setSceneBusy] = useState(false);
+  const [sceneAudioStatus, setSceneAudioStatus] = useState(null);
+  const [sceneAudioBusy, setSceneAudioBusy] = useState(false);
+  const [sceneAudioMessage, setSceneAudioMessage] = useState('');
   /** Brouillon constructeur (/studio/live) — smartboard_element_scenes pour import vers live_scenes */
   const [wizardDraftFromBuilder, setWizardDraftFromBuilder] = useState(null);
   const [draftImportBusy, setDraftImportBusy] = useState(false);
@@ -611,6 +622,45 @@ export default function LivePreparationStudioPage() {
       return [...prev, data];
     });
   };
+
+  /**
+   * Narration par scène. Volontairement TOLÉRANT à une API absente (déploiement
+   * en retard) : on affiche un message clair au lieu de casser la préparation.
+   */
+  const refreshSceneAudioStatus = useCallback(async () => {
+    if (!sessionId) return;
+    try {
+      const status = await masterFactoryApi.sceneAudioStatus(sessionId);
+      setSceneAudioStatus(status || null);
+    } catch {
+      setSceneAudioStatus(null);
+    }
+  }, [sessionId]);
+
+  const handleGenerateSceneAudio = useCallback(async () => {
+    if (!sessionId || sceneAudioBusy) return;
+    setSceneAudioBusy(true);
+    setSceneAudioMessage('Synthèse de la voix en cours…');
+    try {
+      const res = await masterFactoryApi.generateSceneAudio({ liveSessionId: sessionId, languageCode: 'fr' });
+      const failed = Array.isArray(res?.failed) ? res.failed : [];
+      // On n'annonce QUE ce qui est mesuré : générées, sautées, échouées.
+      setSceneAudioMessage(
+        [
+          `${res?.generated ?? 0} narration(s) générée(s)`,
+          res?.skipped ? `${res.skipped} déjà narrée(s)` : null,
+          failed.length ? `${failed.length} échec(s) : ${failed[0]?.reason || 'raison inconnue'}` : null,
+        ].filter(Boolean).join(' · '),
+      );
+      await Promise.all([refreshSceneAudioStatus(), load()]);
+    } catch (e) {
+      setSceneAudioMessage(`Narration impossible : ${e?.message || 'erreur inconnue'}`);
+    } finally {
+      setSceneAudioBusy(false);
+    }
+  }, [sessionId, sceneAudioBusy, refreshSceneAudioStatus, load]);
+
+  useEffect(() => { refreshSceneAudioStatus(); }, [refreshSceneAudioStatus]);
 
   const handleDeleteScene = async (sceneId) => {
     await deleteScene(sceneId);
@@ -1420,15 +1470,66 @@ export default function LivePreparationStudioPage() {
                     </div>
                   )}
 
+                  {/* Narration du tableau vivant : une scène = un audio (cahier des
+                      charges Tableau Vivant, Lot 4). L'état affiché est MESURÉ par
+                      l'API, jamais supposé. */}
+                  {scenes.length > 0 && (
+                    <div className="rounded-xl border border-white/10 bg-white/[0.03] p-3 space-y-2">
+                      <div className="flex flex-wrap items-center justify-between gap-2">
+                        <div>
+                          <p className="text-xs font-medium text-white/80">Narration des scènes</p>
+                          <p className="text-[11px] text-white/45">
+                            {sceneAudioStatus
+                              ? `${sceneAudioStatus.withAudio}/${sceneAudioStatus.total} scène(s) narrée(s)`
+                              : 'La voix pilote la révélation du tableau pendant le direct.'}
+                          </p>
+                        </div>
+                        <button
+                          type="button"
+                          disabled={sceneAudioBusy}
+                          onClick={handleGenerateSceneAudio}
+                          className="inline-flex items-center gap-2 h-8 px-3 rounded-lg border border-white/15 bg-white/5 text-xs text-white/75 hover:bg-white/10 disabled:opacity-50"
+                        >
+                          {sceneAudioBusy ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Play className="w-3.5 h-3.5" />}
+                          {sceneAudioBusy ? 'Génération…' : 'Générer la narration'}
+                        </button>
+                      </div>
+                      {sceneAudioMessage && (
+                        <p role="status" className="text-[11px] text-white/55">{sceneAudioMessage}</p>
+                      )}
+                    </div>
+                  )}
+
                   <AnimatePresence mode="popLayout">
-                    {scenes.map((sc, i) => (
-                      <SceneCard
-                        key={sc.id} scene={sc} index={i} total={scenes.length}
-                        onEdit={(s) => setSceneModal(s)}
-                        onDelete={handleDeleteScene}
-                        onMove={handleMoveScene}
-                      />
-                    ))}
+                    {scenes.map((sc, i) => {
+                      // En-tête de chapitre : le regroupement pédagogique existe dans
+                      // l'éditeur Masterclass mais était aplati à la publication.
+                      const chapter = sc?.chapter_id ?? null;
+                      const previousChapter = i > 0 ? (scenes[i - 1]?.chapter_id ?? null) : null;
+                      const showChapterHeader = chapter != null && chapter !== previousChapter;
+                      return (
+                        <Fragment key={sc.id}>
+                          {showChapterHeader && (
+                            <div className="flex items-center gap-2 pt-1">
+                              <span className="text-[10px] font-semibold uppercase tracking-wider text-[color:var(--school-accent,#D4AF37)]">
+                                Chapitre {chapter}
+                              </span>
+                              <span className="h-px flex-1 bg-white/10" />
+                              {sc.render_mode && (
+                                <span className="text-[10px] text-white/35">{SCENE_RENDER_MODE_LABELS[sc.render_mode] || sc.render_mode}</span>
+                              )}
+                              {sc.audio_url && <span className="text-[10px] text-emerald-400/70">narré</span>}
+                            </div>
+                          )}
+                          <SceneCard
+                            scene={sc} index={i} total={scenes.length}
+                            onEdit={(s) => setSceneModal(s)}
+                            onDelete={handleDeleteScene}
+                            onMove={handleMoveScene}
+                          />
+                        </Fragment>
+                      );
+                    })}
                   </AnimatePresence>
 
                   {sceneBusy && (

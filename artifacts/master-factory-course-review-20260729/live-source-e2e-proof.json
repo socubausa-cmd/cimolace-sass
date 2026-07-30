@@ -1,0 +1,20 @@
+{
+  "generatedAt": "2026-07-29T13:24:43.543Z",
+  "sourceStatus": 200,
+  "listStatus": 200,
+  "source": {
+    "id": "3dbfe3b6-d07d-4f3d-a4c3-a08563adfa9f",
+    "title": "E2E Master Factory — LIVE temporaire",
+    "durationSec": 1800,
+    "ready": true,
+    "chars": 216
+  },
+  "listed": {
+    "id": "3dbfe3b6-d07d-4f3d-a4c3-a08563adfa9f",
+    "title": "E2E Master Factory — LIVE temporaire",
+    "status": "pending_review",
+    "ready": true,
+    "chars": 216
+  },
+  "screenshotPath": "/Users/ngowazulu/Downloads/cimolace/artifacts/master-factory-course-review-20260729/35-live-source-atelier-real.png"
+}
