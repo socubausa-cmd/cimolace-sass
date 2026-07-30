@@ -447,9 +447,49 @@ export default function LiriAtelierPage() {
             <p style={{ padding: 22, color: C.muted, fontSize: 13 }}>Aucune source de ce type.</p>
           ) : (
             <>
-              <div style={{ padding: '10px 14px', fontSize: 12, color: C.faint, borderBottom: `1px solid ${C.line}` }}>
-                {filtered.length} source(s) · triées par richesse
+              <div style={{ padding: '10px 14px', fontSize: 12, color: C.faint, borderBottom: `1px solid ${C.line}`, display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
+                <span style={{ flex: 1, minWidth: 140 }}>{filtered.length} source(s) · triées par richesse</span>
+                <button type="button" onClick={() => setPicked(new Set(filtered.filter(pret).map((s) => s.id)))}
+                  style={{ background: 'none', border: 'none', color: C.muted, fontSize: 11.5, cursor: 'pointer', padding: 0, textDecoration: 'underline' }}>
+                  tout cocher
+                </button>
+                {picked.size > 0 && (
+                  <button type="button" onClick={() => setPicked(new Set())}
+                    style={{ background: 'none', border: 'none', color: C.muted, fontSize: 11.5, cursor: 'pointer', padding: 0, textDecoration: 'underline' }}>
+                    décocher
+                  </button>
+                )}
               </div>
+
+              {/* ── Barre de lot ──────────────────────────────────────────────
+                  Elle n'apparaît que si quelque chose est coché : tant qu'on
+                  travaille source par source, l'écran reste celui d'avant. */}
+              {picked.size > 0 && (
+                <div style={{
+                  padding: '11px 14px', borderBottom: `1px solid ${C.line}`,
+                  background: 'rgba(217,119,87,.12)',
+                  display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap',
+                }}>
+                  <span style={{ color: C.ink, fontSize: 12.5, fontWeight: 700, flex: 1, minWidth: 150 }}>
+                    {lot.running
+                      ? `Envoi en cours… ${lot.done}/${lot.total}`
+                      : `${picked.size} source(s) cochée(s)`}
+                  </span>
+                  <button type="button" onClick={() => runLot('course')} disabled={lot.running}
+                    style={{ ...btn(true), opacity: lot.running ? 0.5 : 1 }}>
+                    {lot.running ? <Loader2 size={14} className="animate-spin" /> : <BookOpen size={14} />} Produire les cours
+                  </button>
+                  <button type="button" onClick={() => runLot('understand')} disabled={lot.running}
+                    style={{ ...btn(false), opacity: lot.running ? 0.5 : 1 }}>
+                    <Sparkles size={14} /> Comprendre seulement
+                  </button>
+                  <p style={{ width: '100%', margin: 0, color: C.muted, fontSize: 11.5, lineHeight: 1.45 }}>
+                    « Produire les cours » met en file et rend la main tout de suite : le worker
+                    comprend puis rédige, même onglet fermé. « Comprendre seulement » travaille
+                    source par source et exige que cet onglet reste ouvert.
+                  </p>
+                </div>
+              )}
               <div style={{ maxHeight: '62vh', overflowY: 'auto' }}>
                 {filtered.map((s) => {
                   const on = sel?.id === s.id;
