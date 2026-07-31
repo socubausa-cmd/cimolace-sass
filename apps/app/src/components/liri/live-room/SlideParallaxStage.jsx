@@ -40,6 +40,9 @@ import {
 import { AnimatePresence, motion, useReducedMotion } from 'framer-motion';
 import { useSceneNarration } from '@/features/live/hooks/useSceneNarration';
 import { HandwritingInk, InkHighlight } from './HandwritingInk';
+// Le moteur de tracé existait déjà pour le Précepteur : on le réutilise au lieu
+// d'écrire un second dessinateur qui divergerait.
+import SketchRenderer from '@/components/school/course-builder/SketchRenderer';
 import { getDocumentEmbedSrc } from '@/lib/liveSceneNormalize';
 import { useSmartboardCanvasSrc } from '@/lib/smartboardCanvasUrl';
 import {
@@ -958,6 +961,25 @@ function ProgressiveBuildSlide({
                   </InkHighlight>
                 </p>
               </IaTacticalPanel>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        {/* LOI 5 : le schéma se DESSINE, trait par trait, comme un prof au
+            tableau. Le croquis n'est affiché qu'au palier du développement —
+            avant, l'élève n'a pas encore les repères qu'il relie. Il n'existe
+            que si le contenu en portait un : aucun schéma décoratif fabriqué. */}
+        <AnimatePresence>
+          {effectiveStep >= 2 && data.sketch?.elements?.length > 0 && (
+            <motion.div
+              key="sketch"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ duration: reduceMotion ? 0.15 : 0.45 }}
+              className="mt-3 h-[190px] w-full rounded-2xl border border-white/08 bg-black/25 p-3 backdrop-blur-sm"
+              data-scene-sketch="on"
+            >
+              <SketchRenderer sketch={data.sketch} play={!reduceMotion} />
             </motion.div>
           )}
         </AnimatePresence>

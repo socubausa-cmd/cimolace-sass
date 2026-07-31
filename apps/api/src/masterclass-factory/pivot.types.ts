@@ -267,6 +267,25 @@ export interface SmartboardTimelineAction {
  * Le vocabulaire est imposé par ce rendu : tout autre nom de champ est ignoré
  * silencieusement et la scène s'affiche vide en direct.
  */
+/**
+ * Croquis tracé à la main (loi 5). Vocabulaire FERMÉ, imposé par
+ * `apps/app/src/components/school/course-builder/SketchRenderer.jsx` : un `kind`
+ * inconnu n'est pas dessiné, silencieusement.
+ */
+export interface SmartboardSketch {
+  caption?: string;
+  elements: {
+    kind: 'vector' | 'arrow' | 'line' | 'curve' | 'point' | 'circle' | 'spiral' | 'axis' | 'label';
+    center?: [number, number];
+    from?: [number, number];
+    to?: [number, number];
+    radius?: number;
+    turns?: number;
+    color?: string;
+    label?: string;
+  }[];
+}
+
 export interface SmartboardGptSlide {
   title: string;
   subtitle?: string;
@@ -276,6 +295,7 @@ export interface SmartboardGptSlide {
   student_prompt?: string;
   hero_visual?: string;
   illustration?: string;
+  sketch?: SmartboardSketch;
 }
 
 export type SmartboardRenderMode = 'progressive' | 'instant' | 'spotlight';

@@ -7,6 +7,7 @@ import type {
   LiveScenarioPivot,
   MasterScriptPivot,
   RenderTarget,
+  SmartboardSketch,
   SmartboardTimelinePivot,
   SourceType,
 } from './pivot.types';
@@ -693,6 +694,30 @@ export class MasterFactoryService {
               : [],
             slide_summary: moment.simple_version || moment.message_central,
             student_prompt: moment.interaction?.question,
+            /**
+             * LOI 5 — le schéma se DESSINE au tableau. Le croquis est DÉRIVÉ du
+             * contenu (notion au centre, repères à retenir autour) : on ne
+             * fabrique pas d'illustration décorative, on rend visible la
+             * structure réelle du moment. Sans point à retenir, pas de croquis —
+             * un schéma vide serait pire que pas de schéma.
+             * Vocabulaire imposé par SketchRenderer : circle | point | arrow | label.
+             */
+            sketch: keyPoints.length
+              ? {
+                  caption: 'Structure du moment',
+                  elements: [
+                    { kind: 'circle', center: [50, 45], radius: 16, color: 'amber', label: moment.title },
+                    ...keyPoints.map((point, i): SmartboardSketch['elements'][number] => {
+                      // Répartition régulière autour du centre, en évitant le haut
+                      // occupé par l'étiquette du cercle.
+                      const angle = (Math.PI / 2) + ((i + 1) / (keyPoints.length + 1)) * Math.PI * 1.6;
+                      const x = Math.round(50 + Math.cos(angle) * 34);
+                      const y = Math.round(45 + Math.sin(angle) * 30);
+                      return { kind: 'point', center: [x, y], color: 'blue', label: point.slice(0, 48) };
+                    }),
+                  ],
+                }
+              : undefined,
           },
           blocks: [
             { id: `${sceneId}-title`, type: 'title', text: moment.title },
