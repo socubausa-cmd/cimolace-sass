@@ -53,14 +53,14 @@ export default function LiriMobileMeshControlShell({
             role="dialog"
             aria-modal
             aria-labelledby="liri-mesh-mobile-title"
-            className="fixed inset-x-0 bottom-0 z-[150] flex max-h-[min(72vh,560px)] flex-col rounded-t-[1.35rem] border border-white/12 bg-[#07080c] shadow-[0_-20px_60px_rgba(0,0,0,.65)]"
+            className="fixed inset-x-0 bottom-0 z-[150] flex max-h-[min(72vh,560px)] flex-col rounded-t-[1.35rem] border border-white/[0.12] bg-[#07080c] shadow-[0_-20px_60px_rgba(0,0,0,.65)]"
             style={{ paddingBottom: 'max(1rem, env(safe-area-inset-bottom, 0px))' }}
             initial={{ y: '100%' }}
             animate={{ y: 0 }}
             exit={{ y: '100%' }}
             transition={{ type: 'spring', damping: 28, stiffness: 320 }}
           >
-            <div className="mx-auto mt-2 h-1 w-10 shrink-0 rounded-full bg-white/18" aria-hidden />
+            <div className="mx-auto mt-2 h-1 w-10 shrink-0 rounded-full bg-white/[0.18]" aria-hidden />
             <div className="flex items-start justify-between gap-2 border-b border-white/[0.07] px-4 pb-3 pt-3">
               <div className="flex min-w-0 items-center gap-2.5">
                 <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-2xl bg-amber-500/15 text-amber-200">
@@ -81,7 +81,7 @@ export default function LiriMobileMeshControlShell({
               <button
                 type="button"
                 onClick={() => onOpenChange(false)}
-                className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-white/10 bg-white/[0.04] text-white/55 transition hover:border-white/18 hover:text-white/85"
+                className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-white/10 bg-white/[0.04] text-white/55 transition hover:border-white/[0.18] hover:text-white/85"
                 aria-label="Fermer"
               >
                 <X className="h-4 w-4" strokeWidth={2} />
@@ -91,7 +91,7 @@ export default function LiriMobileMeshControlShell({
             <div className="min-h-0 flex-1 overflow-y-auto px-4 py-3">
               {grantLabel ? (
                 <div
-                  className="mb-3 rounded-xl border border-amber-500/25 bg-amber-500/8 px-3 py-2.5 text-center"
+                  className="mb-3 rounded-xl border border-amber-500/25 bg-amber-500/[0.08] px-3 py-2.5 text-center"
                   data-testid="liri-mesh-grant-active"
                 >
                   <p className="text-[10px] font-bold uppercase tracking-wider text-amber-300/95">
@@ -106,7 +106,7 @@ export default function LiriMobileMeshControlShell({
               ) : null}
 
               {statusLine ? (
-                <p className="mb-3 text-center text-[9px] leading-relaxed text-white/38">{statusLine}</p>
+                <p className="mb-3 text-center text-[9px] leading-relaxed text-white/[0.38]">{statusLine}</p>
               ) : null}
 
               <div className="flex flex-col gap-2.5">
@@ -121,8 +121,8 @@ export default function LiriMobileMeshControlShell({
                   className={cn(
                     'flex w-full items-center justify-center gap-2 rounded-2xl border px-4 py-3.5 text-[13px] font-bold transition',
                     canUseJoyKit
-                      ? 'border-amber-500/40 bg-amber-500/12 text-amber-100 active:scale-[0.99] hover:bg-amber-500/18'
-                      : 'cursor-not-allowed border-white/6 bg-white/[0.02] text-white/25',
+                      ? 'border-amber-500/40 bg-amber-500/[0.12] text-amber-100 active:scale-[0.99] hover:bg-amber-500/[0.18]'
+                      : 'cursor-not-allowed border-white/[0.06] bg-white/[0.02] text-white/25',
                   )}
                 >
                   Demander le contrôle
@@ -138,14 +138,14 @@ export default function LiriMobileMeshControlShell({
                   className={cn(
                     'flex w-full items-center justify-center gap-2 rounded-2xl border px-4 py-3.5 text-[13px] font-bold transition',
                     canUseJoyKit
-                      ? 'border-amber-500/40 bg-amber-500/12 text-amber-100 active:scale-[0.99] hover:bg-amber-500/18'
-                      : 'cursor-not-allowed border-white/6 bg-white/[0.02] text-white/25',
+                      ? 'border-amber-500/40 bg-amber-500/[0.12] text-amber-100 active:scale-[0.99] hover:bg-amber-500/[0.18]'
+                      : 'cursor-not-allowed border-white/[0.06] bg-white/[0.02] text-white/25',
                   )}
                 >
                   Demander JoyKit
                 </button>
               </div>
-              <p className="mt-3 text-center text-[8px] leading-relaxed text-white/32">
+              <p className="mt-3 text-center text-[8px] leading-relaxed text-white/[0.32]">
                 Les demandes sont visibles côté formateur. Sans accord JoyKit, le Mesh peut être refusé.
               </p>
             </div>

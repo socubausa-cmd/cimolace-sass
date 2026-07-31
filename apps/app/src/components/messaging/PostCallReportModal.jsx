@@ -84,7 +84,7 @@ export default function PostCallReportModal({
                 </p>
 
                 <div className="space-y-2 mb-5">
-                  <label className="flex items-center gap-3 p-3 rounded-xl border border-white/8 bg-white/3 cursor-pointer hover:border-white/15 transition-colors">
+                  <label className="flex items-center gap-3 p-3 rounded-xl border border-white/[0.08] bg-white/[0.03] cursor-pointer hover:border-white/15 transition-colors">
                     <input
                       type="checkbox"
                       checked={sendInbox}
@@ -97,7 +97,7 @@ export default function PostCallReportModal({
                     </div>
                   </label>
 
-                  <label className="flex items-center gap-3 p-3 rounded-xl border border-white/8 bg-white/3 cursor-pointer hover:border-white/15 transition-colors">
+                  <label className="flex items-center gap-3 p-3 rounded-xl border border-white/[0.08] bg-white/[0.03] cursor-pointer hover:border-white/15 transition-colors">
                     <input
                       type="checkbox"
                       checked={sendEmail}

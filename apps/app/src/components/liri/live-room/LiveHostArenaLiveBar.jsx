@@ -295,7 +295,7 @@ export default function LiveHostArenaLiveBar({
                     <ChevronDown size={12} aria-hidden />
                   </button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent side="top" align="start" className="w-56 border-[rgba(212,163,106,0.28)] bg-[#171310]/97">
+                <DropdownMenuContent side="top" align="start" className="w-56 border-[rgba(212,163,106,0.28)] bg-[#171310]/[0.97]">
                   <DropdownMenuLabel className="text-[10px] font-bold uppercase tracking-[0.14em] text-[#e3c79a]/70">
                     Mode d'affichage
                   </DropdownMenuLabel>
@@ -677,7 +677,7 @@ export default function LiveHostArenaLiveBar({
             <DropdownMenuContent
               side="top"
               align="end"
-              className="w-60 border-[rgba(212,163,106,0.28)] bg-[#171310]/97"
+              className="w-60 border-[rgba(212,163,106,0.28)] bg-[#171310]/[0.97]"
             >
               <DropdownMenuLabel className="text-[10px] font-bold uppercase tracking-[0.14em] text-[#e3c79a]/70">
                 Outils du live

@@ -530,9 +530,9 @@ export default function CoursePipelineView({
   return (
     <div className="flex h-full bg-[#262624] overflow-hidden">
       {/* ── Left: step list ── */}
-      <div className="w-72 flex-shrink-0 flex flex-col bg-[#1f1e1c] border-r border-white/8">
+      <div className="w-72 flex-shrink-0 flex flex-col bg-[#1f1e1c] border-r border-white/[0.08]">
         {/* Header */}
-        <div className="px-4 py-4 border-b border-white/8">
+        <div className="px-4 py-4 border-b border-white/[0.08]">
           <div className="flex items-center justify-between mb-3">
             <div>
               <p className="text-[10px] uppercase tracking-widest text-[var(--coral)] font-semibold">Pipeline</p>
@@ -541,7 +541,7 @@ export default function CoursePipelineView({
             <span className="text-xs font-mono text-[var(--coral)]">{pipelineProgress}%</span>
           </div>
           {/* Progress bar */}
-          <div className="h-1.5 bg-white/8 rounded-full overflow-hidden">
+          <div className="h-1.5 bg-white/[0.08] rounded-full overflow-hidden">
             <motion.div
               className="h-full bg-gradient-to-r from-[var(--coral)] to-[#c2683f] rounded-full"
               animate={{ width: `${pipelineProgress}%` }}
@@ -552,7 +552,7 @@ export default function CoursePipelineView({
         </div>
 
         {/* Run All / Stop */}
-        <div className="px-4 py-3 border-b border-white/8">
+        <div className="px-4 py-3 border-b border-white/[0.08]">
           {autoRunning ? (
             <Button
               size="sm"
@@ -587,11 +587,11 @@ export default function CoursePipelineView({
                 key={step.id}
                 type="button"
                 onClick={() => setActiveStep(step.id)}
-                className={`w-full flex items-center gap-3 px-4 py-3 transition-colors text-left ${isActive ? 'bg-white/5 border-r-2 border-[var(--coral)]' : 'hover:bg-white/3'}`}
+                className={`w-full flex items-center gap-3 px-4 py-3 transition-colors text-left ${isActive ? 'bg-white/5 border-r-2 border-[var(--coral)]' : 'hover:bg-white/[0.03]'}`}
               >
                 {/* Line connector */}
                 <div className="relative flex flex-col items-center flex-shrink-0">
-                  <div className={`w-8 h-8 rounded-xl ring-1 flex items-center justify-center flex-shrink-0 ${status === 'completed' ? 'bg-[#7a9b6c]/20 ring-[#7a9b6c]/40' : status === 'error' ? 'bg-red-500/20 ring-red-500/40' : status === 'running' ? `${ringCls}` : 'bg-white/4 ring-white/10'}`}>
+                  <div className={`w-8 h-8 rounded-xl ring-1 flex items-center justify-center flex-shrink-0 ${status === 'completed' ? 'bg-[#7a9b6c]/20 ring-[#7a9b6c]/40' : status === 'error' ? 'bg-red-500/20 ring-red-500/40' : status === 'running' ? `${ringCls}` : 'bg-white/[0.04] ring-white/10'}`}>
                     {status === 'running' ? (
                       <Loader2 className="w-4 h-4 text-[#d97757] animate-spin" />
                     ) : status === 'completed' ? (
@@ -603,7 +603,7 @@ export default function CoursePipelineView({
                     )}
                   </div>
                   {idx < STEPS.length - 1 && (
-                    <div className={`w-px h-3 mt-0.5 ${status === 'completed' ? 'bg-[#7a9b6c]/30' : 'bg-white/8'}`} />
+                    <div className={`w-px h-3 mt-0.5 ${status === 'completed' ? 'bg-[#7a9b6c]/30' : 'bg-white/[0.08]'}`} />
                   )}
                 </div>
                 <div className="flex-1 min-w-0">
@@ -633,7 +633,7 @@ export default function CoursePipelineView({
               className="flex-1 flex flex-col overflow-hidden"
             >
               {/* Step header */}
-              <div className="px-6 py-5 border-b border-white/8 bg-[#1f1e1c]">
+              <div className="px-6 py-5 border-b border-white/[0.08] bg-[#1f1e1c]">
                 <div className="flex items-start justify-between gap-4">
                   <div className="flex items-center gap-4">
                     <div className={`w-10 h-10 rounded-xl ring-1 flex items-center justify-center ${COLOR_RING[activeStepDef.color]}`}>
@@ -646,7 +646,7 @@ export default function CoursePipelineView({
                           activeStatus === 'completed' ? 'bg-[#7a9b6c]/20 text-[#9fbf8f]' :
                           activeStatus === 'error' ? 'bg-red-500/20 text-red-400' :
                           activeStatus === 'running' ? 'bg-[#c2683f]/20 text-[#d97757]' :
-                          'bg-white/8 text-[#82807a]'
+                          'bg-white/[0.08] text-[#82807a]'
                         }`}>
                           {activeStatus === 'completed' ? '✓ Terminé' : activeStatus === 'error' ? '✗ Erreur' : activeStatus === 'running' ? '⟳ En cours' : activeStatus === 'skipped' ? '→ Ignoré' : '○ En attente'}
                         </span>
@@ -659,7 +659,7 @@ export default function CoursePipelineView({
                       <Button
                         size="sm"
                         variant="outline"
-                        className="border-white/10 text-white hover:bg-white/8 text-xs"
+                        className="border-white/10 text-white hover:bg-white/[0.08] text-xs"
                         onClick={() => runStep(activeStep)}
                         disabled={autoRunning}
                       >
@@ -685,7 +685,7 @@ export default function CoursePipelineView({
 
                 {/* Logs */}
                 {activeLogs.length > 0 && (
-                  <div className="rounded-2xl border border-white/8 bg-[#1f1e1c] p-4">
+                  <div className="rounded-2xl border border-white/[0.08] bg-[#1f1e1c] p-4">
                     <p className="text-[10px] uppercase tracking-widest text-[#82807a] font-semibold mb-3">Journal</p>
                     <div className="space-y-1 font-mono text-xs">
                       {activeLogs.map((log, i) => (
@@ -774,7 +774,7 @@ function StepOutputRenderer({ stepId, output, scriptText }) {
         <p className="text-sm text-white">{output.segmentCount} chapitres • script compilé</p>
         {scriptText && (
           <>
-            <pre className="text-xs text-[#b0ada3] bg-[#262624] rounded-xl p-4 overflow-x-auto max-h-64 border border-white/8 whitespace-pre-wrap">
+            <pre className="text-xs text-[#b0ada3] bg-[#262624] rounded-xl p-4 overflow-x-auto max-h-64 border border-white/[0.08] whitespace-pre-wrap">
               {scriptText.slice(0, 1200)}{scriptText.length > 1200 ? '\n…(tronqué)' : ''}
             </pre>
             <Button

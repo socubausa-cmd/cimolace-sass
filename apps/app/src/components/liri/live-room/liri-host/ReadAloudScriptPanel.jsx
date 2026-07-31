@@ -41,7 +41,7 @@ export function ReadAloudScriptPanel({
   return (
     <div
       className={cn(
-        'flex min-h-0 flex-1 flex-col rounded-xl border border-white/[0.09] bg-black/22 p-2 backdrop-blur-md',
+        'flex min-h-0 flex-1 flex-col rounded-xl border border-white/[0.09] bg-black/[0.22] p-2 backdrop-blur-md',
         className,
       )}
     >

@@ -1399,11 +1399,11 @@ const SmartboardKonvaEditorV1 = forwardRef(function SmartboardKonvaEditorV1({
             Live
           </button>
           <button type="button" onClick={() => undo()}
-            className="flex h-7 w-7 items-center justify-center rounded-md border border-white/12 bg-white/[0.04] text-white/60 hover:bg-white/10"
+            className="flex h-7 w-7 items-center justify-center rounded-md border border-white/[0.12] bg-white/[0.04] text-white/60 hover:bg-white/10"
             title="Annuler"
           ><Undo2 className="h-3 w-3" /></button>
           <button type="button" onClick={() => redo()}
-            className="flex h-7 w-7 items-center justify-center rounded-md border border-white/12 bg-white/[0.04] text-white/60 hover:bg-white/10"
+            className="flex h-7 w-7 items-center justify-center rounded-md border border-white/[0.12] bg-white/[0.04] text-white/60 hover:bg-white/10"
             title="Retablir"
           ><Redo2 className="h-3 w-3" /></button>
           <div className="flex items-center gap-0.5 rounded-md border border-white/10 bg-black/30 text-[11px] text-[color-mix(in_srgb,var(--school-accent)_80%,transparent)]">
@@ -1428,7 +1428,7 @@ const SmartboardKonvaEditorV1 = forwardRef(function SmartboardKonvaEditorV1({
           {leftTool === 'texte' && (
             <div className="hidden items-center gap-1 lg:flex">
               {['Police', 'Taille', 'Gras', 'Couleur', 'Preset IA'].map((p) => (
-                <span key={p} className="rounded-lg border border-white/12 bg-white/[0.04] px-2 py-1 text-[11px] text-white/50">{p}</span>
+                <span key={p} className="rounded-lg border border-white/[0.12] bg-white/[0.04] px-2 py-1 text-[11px] text-white/50">{p}</span>
               ))}
             </div>
           )}
@@ -1436,7 +1436,7 @@ const SmartboardKonvaEditorV1 = forwardRef(function SmartboardKonvaEditorV1({
             type="button"
             onClick={() => setIsFullscreen((v) => !v)}
             title={isFullscreen ? 'Quitter plein ecran (F)' : 'Plein ecran (F)'}
-            className="flex h-7 w-7 items-center justify-center rounded-md border border-white/12 bg-white/[0.04] text-white/60 hover:bg-white/10"
+            className="flex h-7 w-7 items-center justify-center rounded-md border border-white/[0.12] bg-white/[0.04] text-white/60 hover:bg-white/10"
           >
             {isFullscreen
               ? <svg viewBox="0 0 16 16" className="h-3.5 w-3.5" fill="currentColor"><path d="M5.5 0v5.5H0v1h6.5V0h-1zm5 0v1H16V0h-5.5zm0 16h1v-5.5H16v-1H10.5V16zM0 10.5v1h5.5V16h1v-6.5H0z"/></svg>
@@ -1520,7 +1520,7 @@ const SmartboardKonvaEditorV1 = forwardRef(function SmartboardKonvaEditorV1({
                   updateObject(id, { content: { ...o.content, text: e.target.value } });
                 }}
                 disabled={textSelectedIds.length !== 1}
-                className="h-7 w-44 rounded-lg border border-white/12 bg-black/40 px-2 text-xs text-white disabled:opacity-50"
+                className="h-7 w-44 rounded-lg border border-white/[0.12] bg-black/40 px-2 text-xs text-white disabled:opacity-50"
               />
             </label>
             <label className="flex items-center gap-1 text-[12px] text-white/50">
@@ -1531,7 +1531,7 @@ const SmartboardKonvaEditorV1 = forwardRef(function SmartboardKonvaEditorV1({
                     : FONT_OPTIONS[0].value
                 }
                 onChange={(e) => applyFontToSelectedTexts({ fontFamily: e.target.value })}
-                className="h-7 max-w-[120px] rounded-lg border border-white/12 bg-black/40 px-1 text-[12px] text-white"
+                className="h-7 max-w-[120px] rounded-lg border border-white/[0.12] bg-black/40 px-1 text-[12px] text-white"
               >
                 {FONT_OPTIONS.map((f) => (
                   <option key={f.value} value={f.value}>{f.label}</option>
@@ -1545,14 +1545,14 @@ const SmartboardKonvaEditorV1 = forwardRef(function SmartboardKonvaEditorV1({
                 max={120}
                 value={Number(primaryTextObj?.style?.fontSize ?? 24)}
                 onChange={(e) => applyFontToSelectedTexts({ fontSize: Number(e.target.value) || 24 })}
-                className="h-7 w-12 rounded-lg border border-white/12 bg-black/40 px-1 text-xs"
+                className="h-7 w-12 rounded-lg border border-white/[0.12] bg-black/40 px-1 text-xs"
               />
             </label>
             <input
               type="color"
               value={typeof primaryTextObj?.style?.fill === 'string' ? primaryTextObj.style.fill : '#F7F2E8'}
               onChange={(e) => applyFontToSelectedTexts({ fill: e.target.value })}
-              className="h-7 w-9 cursor-pointer rounded border border-white/12 bg-transparent"
+              className="h-7 w-9 cursor-pointer rounded border border-white/[0.12] bg-transparent"
             />
             {textSelectedIds.length > 1 ? (
               <span className="text-[11px] text-[color-mix(in_srgb,var(--school-accent)_70%,transparent)]">{textSelectedIds.length} textes</span>
@@ -1911,7 +1911,7 @@ const SmartboardKonvaEditorV1 = forwardRef(function SmartboardKonvaEditorV1({
                 })}
               </div>
               {maxStep === 0 && (
-                <div className="mx-auto mt-6 max-w-sm rounded-2xl border border-dashed border-white/12 p-5 text-center">
+                <div className="mx-auto mt-6 max-w-sm rounded-2xl border border-dashed border-white/[0.12] p-5 text-center">
                   <Eye className="mx-auto mb-2 h-8 w-8 text-white/15" />
                   <p className="text-[12px] text-white/35">Selectionnez un bloc dans le mode Edition, puis dans Proprietes assignez-lui un numero d&apos;etape (1, 2, 3...) pour creer une revelation progressive.</p>
                 </div>
@@ -2117,7 +2117,7 @@ const SmartboardKonvaEditorV1 = forwardRef(function SmartboardKonvaEditorV1({
                       type="button"
                       disabled={aiBusy}
                       onClick={() => runAiImprove(v.id)}
-                      className="flex flex-col items-start rounded-xl border border-violet-400/22 bg-violet-900/25 px-2.5 py-2 text-left transition-all hover:bg-violet-800/35 disabled:opacity-50"
+                      className="flex flex-col items-start rounded-xl border border-violet-400/[0.22] bg-violet-900/25 px-2.5 py-2 text-left transition-all hover:bg-violet-800/35 disabled:opacity-50"
                     >
                       <span className="flex items-center gap-1 text-[12px] font-semibold text-violet-100">
                         {aiBusy ? <Loader2 className="h-3 w-3 animate-spin" /> : <Sparkles className="h-3 w-3" />}
@@ -2363,7 +2363,7 @@ const SmartboardKonvaEditorV1 = forwardRef(function SmartboardKonvaEditorV1({
         {course?.slides?.length ? (
           <div className="flex min-w-0 flex-1 items-center gap-1.5 overflow-x-auto px-3 py-2 [scrollbar-width:thin]">
             <button type="button" onClick={() => prevSlide()} disabled={activeSlideIndex <= 0}
-              className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-white/12 text-white/60 hover:bg-white/[0.06] disabled:opacity-30">
+              className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-white/[0.12] text-white/60 hover:bg-white/[0.06] disabled:opacity-30">
               <ChevronLeft className="h-4 w-4" />
             </button>
             {course.slides.map((s, i) => (
@@ -2375,7 +2375,7 @@ const SmartboardKonvaEditorV1 = forwardRef(function SmartboardKonvaEditorV1({
                   'flex shrink-0 flex-col items-start gap-0.5 rounded-xl border px-3 py-2 text-left transition-all',
                   i === activeSlideIndex
                     ? 'border-[color-mix(in_srgb,var(--school-accent)_45%,transparent)] bg-[#1a1420] shadow-[0_0_16px_rgba(212,175,55,0.12)]'
-                    : 'border-white/8 bg-white/[0.03] hover:border-white/18',
+                    : 'border-white/[0.08] bg-white/[0.03] hover:border-white/[0.18]',
                 )}
                 style={{ minWidth: '110px', maxWidth: '170px' }}
               >
@@ -2386,7 +2386,7 @@ const SmartboardKonvaEditorV1 = forwardRef(function SmartboardKonvaEditorV1({
               </button>
             ))}
             <button type="button" onClick={() => nextSlide()} disabled={activeSlideIndex >= course.slides.length - 1}
-              className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-white/12 text-white/60 hover:bg-white/[0.06] disabled:opacity-30">
+              className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-white/[0.12] text-white/60 hover:bg-white/[0.06] disabled:opacity-30">
               <ChevronRight className="h-4 w-4" />
             </button>
           </div>
@@ -2421,7 +2421,7 @@ const SmartboardKonvaEditorV1 = forwardRef(function SmartboardKonvaEditorV1({
                   'group flex shrink-0 cursor-grab items-center overflow-hidden rounded-xl border transition-colors active:cursor-grabbing',
                   isActive
                     ? 'border-[color-mix(in_srgb,var(--school-accent)_45%,transparent)] bg-[color-mix(in_srgb,var(--school-accent)_10%,transparent)]'
-                    : 'border-white/8 bg-white/[0.025] hover:border-white/18',
+                    : 'border-white/[0.08] bg-white/[0.025] hover:border-white/[0.18]',
                   dragSceneIdx === si && 'opacity-50 ring-1 ring-[color-mix(in_srgb,var(--school-accent)_40%,transparent)]',
                 )}
               >
@@ -2471,7 +2471,7 @@ const SmartboardKonvaEditorV1 = forwardRef(function SmartboardKonvaEditorV1({
                     className="h-5 w-7 rounded border-0 bg-transparent text-center text-[11px] text-white/40 outline-none focus:text-white/80 [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
                     title="Duree en minutes"
                   />
-                  <span className="text-[11px] text-white/22">min</span>
+                  <span className="text-[11px] text-white/[0.22]">min</span>
                 </div>
                 {project.scenes.length > 1 && (
                   <button
@@ -2487,7 +2487,7 @@ const SmartboardKonvaEditorV1 = forwardRef(function SmartboardKonvaEditorV1({
             );
           })}
           <button type="button" onClick={() => addScene()}
-            className="shrink-0 rounded-xl border border-dashed border-white/16 px-2.5 py-1.5 text-[12px] text-white/45 transition-all hover:border-[color-mix(in_srgb,var(--school-accent)_40%,transparent)] hover:text-[var(--school-accent)]">
+            className="shrink-0 rounded-xl border border-dashed border-white/[0.16] px-2.5 py-1.5 text-[12px] text-white/45 transition-all hover:border-[color-mix(in_srgb,var(--school-accent)_40%,transparent)] hover:text-[var(--school-accent)]">
             + Scene
           </button>
           <button type="button" onClick={() => duplicateActiveScene()}

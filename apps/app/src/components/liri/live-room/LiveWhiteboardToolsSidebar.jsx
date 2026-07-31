@@ -29,7 +29,7 @@ const BOARD_COLORS = [
 ];
 
 const RAIL_TITLE =
-  'font-serif text-[13px] font-semibold text-white/92 tracking-tight uppercase tracking-wide text-white/70 text-[11px]';
+  'font-serif text-[13px] font-semibold text-white/[0.92] tracking-tight uppercase tracking-wide text-white/70 text-[11px]';
 
 const TOOLS = [
   { id: 'select', label: 'Sélection', Icon: MousePointer2 },
@@ -156,8 +156,8 @@ export default function LiveWhiteboardToolsSidebar({
           className={cn(
             'flex items-center gap-1 rounded-lg px-2.5 py-1.5 text-[9px] font-semibold border flex-1 justify-center transition-colors',
             sidebarTab === 'outils'
-              ? 'border-amber-500/45 bg-amber-500/14 text-amber-100'
-              : 'border-white/10 bg-white/4 text-white/50 hover:text-white/70',
+              ? 'border-amber-500/45 bg-amber-500/[0.14] text-amber-100'
+              : 'border-white/10 bg-white/[0.04] text-white/50 hover:text-white/70',
           )}
         >
           <Pencil className="h-3 w-3" /> Outils
@@ -168,8 +168,8 @@ export default function LiveWhiteboardToolsSidebar({
           className={cn(
             'flex items-center gap-1 rounded-lg px-2.5 py-1.5 text-[9px] font-semibold border flex-1 justify-center transition-colors',
             sidebarTab === 'scolaire'
-              ? 'border-amber-500/55 bg-amber-500/16 text-amber-100'
-              : 'border-white/10 bg-white/4 text-white/50 hover:text-white/70',
+              ? 'border-amber-500/55 bg-amber-500/[0.16] text-amber-100'
+              : 'border-white/10 bg-white/[0.04] text-white/50 hover:text-white/70',
           )}
         >
           <BookOpen className="h-3 w-3" /> Scolaire
@@ -179,7 +179,7 @@ export default function LiveWhiteboardToolsSidebar({
       {sidebarTab === 'scolaire' ? (
         <LiveWhiteboardSchoolTab className="space-y-1" />
       ) : (<>
-      <p data-wb-guide className={cn(designerShellMicroLabel, 'mb-2 text-white/38')}>
+      <p data-wb-guide className={cn(designerShellMicroLabel, 'mb-2 text-white/[0.38]')}>
         {hideNeuroInk
           ? 'Outils et couleurs — NeuroInk sur le cadre SmartBoard'
           : 'Outils, couleurs et NeuroInk — même logique que le designer'}
@@ -205,7 +205,7 @@ export default function LiveWhiteboardToolsSidebar({
       {whiteboardPaging ? (
         <div className={cn(designerShellCardInset, 'mb-2 space-y-1.5')}>
           <p className={designerShellMicroLabel}>Écrans tableau</p>
-          <p data-wb-guide className="text-[8px] leading-snug text-white/38">
+          <p data-wb-guide className="text-[8px] leading-snug text-white/[0.38]">
             Plusieurs pages plein écran : passez d'un écran à l\'autre pendant le cours.
           </p>
           <div className="flex items-center justify-between gap-1">
@@ -286,7 +286,7 @@ export default function LiveWhiteboardToolsSidebar({
             className={cn(
               designerShellChipGhost,
               'flex-1 py-1.5 text-[9px]',
-              boardSurface === 'dark' && 'border-amber-500/40 bg-amber-500/12 text-amber-100',
+              boardSurface === 'dark' && 'border-amber-500/40 bg-amber-500/[0.12] text-amber-100',
             )}
           >
             Sombre
@@ -303,7 +303,7 @@ export default function LiveWhiteboardToolsSidebar({
             className={cn(
               designerShellChipGhost,
               'flex-1 py-1.5 text-[9px]',
-              boardSurface === 'chalkboard' && 'border-amber-500/40 bg-amber-500/12 text-amber-100',
+              boardSurface === 'chalkboard' && 'border-amber-500/40 bg-amber-500/[0.12] text-amber-100',
             )}
           >
             Tableau vert
@@ -315,7 +315,7 @@ export default function LiveWhiteboardToolsSidebar({
             className={cn(
               designerShellChipGhost,
               'flex-1 py-1.5 text-[9px]',
-              boardSurface === 'geoplan' && 'border-amber-500/40 bg-amber-500/12 text-amber-100',
+              boardSurface === 'geoplan' && 'border-amber-500/40 bg-amber-500/[0.12] text-amber-100',
             )}
           >
             Géoplan
@@ -349,7 +349,7 @@ export default function LiveWhiteboardToolsSidebar({
                   'flex h-9 flex-col items-center justify-center gap-0.5 rounded-lg border text-[8px] font-medium transition-colors',
                   active
                     ? 'border-amber-500/45 bg-amber-500/[0.14] text-amber-50'
-                    : 'border-white/[0.08] bg-[#1f1e1c]/80 text-white/50 hover:border-white/14 hover:text-white/80',
+                    : 'border-white/[0.08] bg-[#1f1e1c]/80 text-white/50 hover:border-white/[0.14] hover:text-white/80',
                 )}
               >
                 <Icon className="h-3.5 w-3.5" strokeWidth={2} />
@@ -390,7 +390,7 @@ export default function LiveWhiteboardToolsSidebar({
           onClick={() => setSnapToGrid(!snapToGrid)}
           className={cn(
             designerShellChipGhost, 'w-full py-1.5 text-[9px] flex items-center justify-center gap-1.5',
-            snapToGrid && 'border-amber-500/45 bg-amber-500/12 text-amber-100',
+            snapToGrid && 'border-amber-500/45 bg-amber-500/[0.12] text-amber-100',
           )}
           title="Aligner les tracés sur la grille (24px)"
         >
@@ -414,7 +414,7 @@ export default function LiveWhiteboardToolsSidebar({
           <button type="button" title={wbTimer.running ? 'Pause' : 'Démarrer'}
             onClick={() => setWbTimer({ running: !wbTimer.running, visible: true })}
             className={cn(designerShellChipGhost, 'h-8 w-8 p-0 shrink-0',
-              wbTimer.running && 'border-amber-500/40 bg-amber-500/12 text-amber-100')}>
+              wbTimer.running && 'border-amber-500/40 bg-amber-500/[0.12] text-amber-100')}>
             {wbTimer.running ? '⏸' : '▶'}
           </button>
           <button type="button" title="Réinitialiser"
@@ -436,7 +436,7 @@ export default function LiveWhiteboardToolsSidebar({
         <button type="button"
           onClick={() => setWbTimer({ visible: !wbTimer.visible })}
           className={cn(designerShellChipGhost, 'w-full py-1 text-[9px]',
-            wbTimer.visible && 'border-amber-500/35 bg-amber-500/8 text-amber-200/80')}>
+            wbTimer.visible && 'border-amber-500/35 bg-amber-500/[0.08] text-amber-200/80')}>
           {wbTimer.visible ? '👁 Visible sur le tableau' : '🙈 Masqué du tableau'}
         </button>
       </div>
@@ -450,7 +450,7 @@ export default function LiveWhiteboardToolsSidebar({
           className={cn(
             designerShellChipGhost,
             'w-full flex items-center justify-center gap-1.5 py-1.5 text-[9px]',
-            tool === 'image-place' && 'border-amber-500/45 bg-amber-500/12 text-amber-100',
+            tool === 'image-place' && 'border-amber-500/45 bg-amber-500/[0.12] text-amber-100',
           )}
         >
           <ImageIcon className="h-3 w-3 shrink-0" />
@@ -458,7 +458,7 @@ export default function LiveWhiteboardToolsSidebar({
         </button>
         {imageDialogOpen && (
           <div className="fixed inset-0 z-[300] flex items-center justify-center bg-black/60 backdrop-blur-sm">
-            <div className="w-[min(92vw,420px)] rounded-2xl border border-white/[0.1] bg-[#14131c]/98 p-5 shadow-[0_24px_80px_-20px_rgba(0,0,0,.9)] space-y-3">
+            <div className="w-[min(92vw,420px)] rounded-2xl border border-white/[0.1] bg-[#14131c]/[0.98] p-5 shadow-[0_24px_80px_-20px_rgba(0,0,0,.9)] space-y-3">
               <div className="flex items-center justify-between">
                 <p className="text-[13px] font-bold text-white/90">Insérer une image</p>
                 <button type="button" onClick={() => setImageDialogOpen(false)} className="text-white/40 hover:text-white/75 text-lg">
@@ -487,8 +487,8 @@ export default function LiveWhiteboardToolsSidebar({
                   className={cn(
                     'w-full rounded-xl border py-2 text-[11px] font-bold transition-colors',
                     imageUrl.trim()
-                      ? 'border-amber-500/45 bg-amber-500/16 text-amber-100 hover:bg-amber-500/24'
-                      : 'border-white/10 bg-white/4 text-white/30 pointer-events-none',
+                      ? 'border-amber-500/45 bg-amber-500/[0.16] text-amber-100 hover:bg-amber-500/[0.24]'
+                      : 'border-white/10 bg-white/[0.04] text-white/30 pointer-events-none',
                   )}
                 >
                   ✓ Placer depuis URL
@@ -510,7 +510,7 @@ export default function LiveWhiteboardToolsSidebar({
                 <button
                   type="button"
                   onClick={() => fileInputRef.current?.click()}
-                  className="w-full rounded-xl border border-white/12 bg-white/4 py-2 text-[11px] text-white/60 hover:text-white/80 hover:border-white/20 transition-colors"
+                  className="w-full rounded-xl border border-white/[0.12] bg-white/[0.04] py-2 text-[11px] text-white/60 hover:text-white/80 hover:border-white/20 transition-colors"
                 >
                   📂 Choisir un fichier image
                 </button>
@@ -600,7 +600,7 @@ export default function LiveWhiteboardToolsSidebar({
 
       <div className={cn(designerShellCardInset, 'mb-2 space-y-1.5')}>
         <p className={designerShellMicroLabel}>Sélection & groupes</p>
-        <p data-wb-guide className="text-[8px] leading-snug text-white/38">
+        <p data-wb-guide className="text-[8px] leading-snug text-white/[0.38]">
           Clic sur un trait, Maj+clic pour cumuler. Grouper, couper, copier, coller — style calque vectoriel.
         </p>
         <div className="flex flex-wrap gap-1">
@@ -730,8 +730,8 @@ export default function LiveWhiteboardToolsSidebar({
               onClick={() => setBoardFillColorEnabled(!boardFillColorEnabled)}
               className={cn('text-[8px] px-2 py-0.5 rounded-lg border transition-colors',
                 boardFillColorEnabled
-                  ? 'border-amber-500/40 bg-amber-500/12 text-amber-200'
-                  : 'border-white/10 bg-white/4 text-white/40')}>
+                  ? 'border-amber-500/40 bg-amber-500/[0.12] text-amber-200'
+                  : 'border-white/10 bg-white/[0.04] text-white/40')}>
               {boardFillColorEnabled ? 'Activé' : 'Désactivé'}
             </button>
           </div>
@@ -802,7 +802,7 @@ export default function LiveWhiteboardToolsSidebar({
                     className={cn(
                       designerShellChipGhost,
                       'px-2 py-1 text-[8px] font-semibold',
-                      textPreset === id && 'border-amber-500/45 bg-amber-500/12 text-amber-50',
+                      textPreset === id && 'border-amber-500/45 bg-amber-500/[0.12] text-amber-50',
                     )}
                   >
                     {label}
@@ -950,7 +950,7 @@ export function LiveWhiteboardGuestPageIndicator({ className, pageIndex = 0, pag
       <p className={cn(RAIL_TITLE, 'mb-1.5')}>Tableau blanc</p>
       <div className={cn(designerShellCardInset, 'py-2')}>
         <p className={designerShellMicroLabel}>Suivi hôte</p>
-        <p className="mt-1.5 text-center text-[12px] font-medium tabular-nums text-white/88">
+        <p className="mt-1.5 text-center text-[12px] font-medium tabular-nums text-white/[0.88]">
           Écran {pi + 1} / {pc}
         </p>
         <p className="mt-1 px-0.5 text-center text-[8px] leading-snug text-white/40">

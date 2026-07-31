@@ -272,7 +272,7 @@ export default function SplitScreenCoursePreview({
                   className={`relative shrink-0 rounded-xl border px-3 py-2.5 text-left transition-all min-w-[140px] max-w-[200px] ${
                     isActive
                       ? 'border-[color-mix(in_srgb,var(--school-accent)_50%,transparent)] bg-[color-mix(in_srgb,var(--school-accent)_10%,transparent)] shadow-[0_0_16px_rgba(212,175,55,0.15)]'
-                      : 'border-white/10 bg-white/5 hover:border-white/20 hover:bg-white/8'
+                      : 'border-white/10 bg-white/5 hover:border-white/20 hover:bg-white/[0.08]'
                   }`}
                 >
                   {/* Chapter number */}

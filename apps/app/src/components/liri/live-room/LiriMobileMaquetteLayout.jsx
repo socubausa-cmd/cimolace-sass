@@ -215,7 +215,7 @@ export default function LiriMobileMaquetteLayout({
         )}
       >
         <div
-          className="pointer-events-none absolute inset-y-0 left-0 w-1.5 border-r border-[#c9a962]/12 bg-gradient-to-b from-[#c9a962]/10 via-transparent to-[#c9a962]/6"
+          className="pointer-events-none absolute inset-y-0 left-0 w-1.5 border-r border-[#c9a962]/[0.12] bg-gradient-to-b from-[#c9a962]/10 via-transparent to-[#c9a962]/[0.06]"
           aria-hidden
         />
         <motion.div
@@ -265,7 +265,7 @@ export default function LiriMobileMaquetteLayout({
         }}
       />
       <div
-        className="pointer-events-none absolute inset-y-0 left-0 w-2 border-r border-[#c9a962]/15 bg-gradient-to-b from-[#c9a962]/12 via-transparent to-[#c9a962]/8"
+        className="pointer-events-none absolute inset-y-0 left-0 w-2 border-r border-[#c9a962]/15 bg-gradient-to-b from-[#c9a962]/[0.12] via-transparent to-[#c9a962]/[0.08]"
         aria-hidden
       />
       <div
@@ -380,11 +380,11 @@ export default function LiriMobileMaquetteLayout({
                       &ldquo;{quoteLine}&rdquo;
                     </p>
                   ) : null}
-                  <ol className="mt-1 space-y-2.5 text-[13px] leading-relaxed text-[#d8c9a8]/92">
+                  <ol className="mt-1 space-y-2.5 text-[13px] leading-relaxed text-[#d8c9a8]/[0.92]">
                     {numberedBlocks.map((block, idx) => (
                       <li key={idx} className="list-decimal pl-1 marker:text-[#c9a962]/80">
                         <span className="font-semibold text-[#f0e6cc]">{block.title}</span>
-                        <span className="block pt-0.5 font-normal text-[#d8c9a8]/88 whitespace-pre-wrap">
+                        <span className="block pt-0.5 font-normal text-[#d8c9a8]/[0.88] whitespace-pre-wrap">
                           {block.body.length > 280 ? `${block.body.slice(0, 277)}…` : block.body}
                         </span>
                       </li>
@@ -457,7 +457,7 @@ export default function LiriMobileMaquetteLayout({
           </div>
           {messageDrawer}
           {hostNotificationsRail ? (
-            <div className="max-h-[min(36vh,320px)] min-h-0 shrink-0 overflow-y-auto overflow-x-hidden rounded-xl border border-[#c9a962]/28 bg-black/40 px-1.5 py-1.5 [scrollbar-width:thin]">
+            <div className="max-h-[min(36vh,320px)] min-h-0 shrink-0 overflow-y-auto overflow-x-hidden rounded-xl border border-[#c9a962]/[0.28] bg-black/40 px-1.5 py-1.5 [scrollbar-width:thin]">
               {hostNotificationsRail}
             </div>
           ) : null}

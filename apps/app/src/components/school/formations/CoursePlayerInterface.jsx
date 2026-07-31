@@ -1426,7 +1426,7 @@ const SupabaseCoursePlayerContent = ({ formationId, onExit }) => {
                 </header>
 
                 <section className="relative z-[18] px-4 md:px-6 pb-3">
-                  <div className="rounded-[26px] border border-[rgba(245,244,238,0.09)] bg-[#1f1e1c]/72 p-3 shadow-[0_18px_70px_rgba(0,0,0,.32)] backdrop-blur-xl">
+                  <div className="rounded-[26px] border border-[rgba(245,244,238,0.09)] bg-[#1f1e1c]/[0.72] p-3 shadow-[0_18px_70px_rgba(0,0,0,.32)] backdrop-blur-xl">
                     <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
                       <div className="min-w-0">
                         <div className="inline-flex items-center gap-2 rounded-full border border-[var(--school-accent,#d97757)]/25 bg-[var(--school-accent,#d97757)]/10 px-3 py-1 text-[10px] font-black uppercase tracking-[0.22em] text-[var(--school-accent,#d97757)]">
@@ -1448,12 +1448,12 @@ const SupabaseCoursePlayerContent = ({ formationId, onExit }) => {
                             }}
                             className={`group min-h-[78px] rounded-2xl border p-3 text-left transition ${
                               done
-                                ? 'border-[var(--school-accent,#d97757)]/35 bg-[var(--school-accent,#d97757)]/12'
+                                ? 'border-[var(--school-accent,#d97757)]/35 bg-[var(--school-accent,#d97757)]/[0.12]'
                                 : 'border-white/[0.08] bg-white/[0.035] hover:bg-white/[0.055]'
                             }`}
                           >
                             <div className="flex items-center justify-between gap-2">
-                              <span className="text-[10px] font-black uppercase tracking-[0.18em] text-white/38">0{idx + 1}</span>
+                              <span className="text-[10px] font-black uppercase tracking-[0.18em] text-white/[0.38]">0{idx + 1}</span>
                               {done ? <CheckCircle className="h-3.5 w-3.5 text-green-300" /> : <Icon className="h-3.5 w-3.5 text-white/45 group-hover:text-[var(--school-accent,#d97757)]" />}
                             </div>
                             <div className="mt-2 text-[13px] font-black text-white">{label}</div>

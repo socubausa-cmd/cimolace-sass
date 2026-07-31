@@ -106,7 +106,7 @@ export default function HostMiniPreview({
     ? immersiveGlass
       ? cn(
           'relative z-20 mx-auto aspect-[3/4] w-full max-h-[min(48vh,560px)] overflow-hidden rounded-[28px]',
-          'border border-white/22 bg-white/[0.04] shadow-[0_24px_80px_-40px_rgba(212,175,55,0.3)] backdrop-blur-md',
+          'border border-white/[0.22] bg-white/[0.04] shadow-[0_24px_80px_-40px_rgba(212,175,55,0.3)] backdrop-blur-md',
         )
       : 'relative z-20 mx-auto aspect-[3/4] w-full max-h-[min(48vh,560px)] overflow-hidden rounded-[28px] border border-white/[0.18] shadow-[0_26px_80px_-45px_rgba(255,175,96,0.68)]'
     : embedded
@@ -215,7 +215,7 @@ export default function HostMiniPreview({
         </div>
       ) : null}
       {heroMediaControls && embedded && embeddedSize === 'hero' ? (
-        <div className="pointer-events-auto absolute inset-x-0 bottom-0 z-[7] bg-gradient-to-t from-black/88 via-black/45 to-transparent px-2 pb-2 pt-8">
+        <div className="pointer-events-auto absolute inset-x-0 bottom-0 z-[7] bg-gradient-to-t from-black/[0.88] via-black/45 to-transparent px-2 pb-2 pt-8">
           <div className="mb-1 flex items-center justify-center gap-2">
             {onHeroToggleMuted ? (
               <button
@@ -286,7 +286,7 @@ export default function HostMiniPreview({
             ) : null}
           </div>
           <div className="flex items-center justify-center gap-1">
-            <p className="truncate text-center text-[9px] font-medium text-white/88 drop-shadow-sm">{name}</p>
+            <p className="truncate text-center text-[9px] font-medium text-white/[0.88] drop-shadow-sm">{name}</p>
             {privileged ? (
               <span className="flex-shrink-0 text-[7px] font-bold text-[var(--school-accent)]">★</span>
             ) : null}

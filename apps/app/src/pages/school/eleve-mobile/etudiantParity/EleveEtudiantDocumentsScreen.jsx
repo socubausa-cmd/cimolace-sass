@@ -154,7 +154,7 @@ export default function EleveEtudiantDocumentsScreen() {
                           <button
                             type="button"
                             onClick={() => onDownload(d)}
-                            className="inline-flex items-center gap-1 rounded-lg border border-white/12 bg-white/[0.05] px-2.5 py-1.5 text-[11px] font-bold text-white/90"
+                            className="inline-flex items-center gap-1 rounded-lg border border-white/[0.12] bg-white/[0.05] px-2.5 py-1.5 text-[11px] font-bold text-white/90"
                           >
                             <Download className="h-3.5 w-3.5" />
                             Télécharger

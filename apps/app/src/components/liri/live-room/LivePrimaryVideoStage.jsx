@@ -93,7 +93,7 @@ export default function LivePrimaryVideoStage({
   const shellClass = immersiveGlass
     ? cn(
         'relative w-full aspect-[3/4] overflow-hidden rounded-[28px]',
-        'border border-white/22 bg-white/[0.04] shadow-[0_24px_80px_-40px_rgba(212,175,55,0.35)]',
+        'border border-white/[0.22] bg-white/[0.04] shadow-[0_24px_80px_-40px_rgba(212,175,55,0.35)]',
         'backdrop-blur-md supports-[backdrop-filter]:bg-white/[0.03]',
       )
     : 'relative w-full aspect-[3/4] rounded-[28px] overflow-hidden bg-black/45 shadow-[0_26px_80px_-45px_rgba(255,175,96,0.68)]';
@@ -149,7 +149,7 @@ export default function LivePrimaryVideoStage({
         <>
           <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_46%_43%,rgba(255,206,157,0.24),transparent_42%)]" style={{ zIndex: 3 }} />
           <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_50%_90%,rgba(0,0,0,0.34),transparent_42%)]" style={{ zIndex: 3 }} />
-          <div className="absolute inset-0 bg-gradient-to-t from-black/38 via-transparent to-black/8" style={{ zIndex: 4 }} />
+          <div className="absolute inset-0 bg-gradient-to-t from-black/[0.38] via-transparent to-black/[0.08]" style={{ zIndex: 4 }} />
         </>
       )}
       {immersiveGlass && (

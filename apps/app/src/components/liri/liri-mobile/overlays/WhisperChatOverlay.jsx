@@ -36,7 +36,7 @@ export function WhisperChatOverlay({ whisperMessages = [], sendWhisper, currentU
       animate={{ x: 0 }}
       exit={{ x: '105%' }}
       transition={{ type: 'spring', damping: 32, stiffness: 360 }}
-      className="fixed inset-y-0 right-0 z-[220] flex w-[min(100%,400px)] flex-col border-l border-[color-mix(in_srgb,var(--school-accent)_35%,transparent)] bg-[#0a0908]/98 shadow-[0_0_40px_-10px_rgba(212,175,55,0.25)] backdrop-blur-2xl"
+      className="fixed inset-y-0 right-0 z-[220] flex w-[min(100%,400px)] flex-col border-l border-[color-mix(in_srgb,var(--school-accent)_35%,transparent)] bg-[#0a0908]/[0.98] shadow-[0_0_40px_-10px_rgba(212,175,55,0.25)] backdrop-blur-2xl"
       data-liri-no-doubletap
     >
       <div className="flex items-center gap-2 border-b border-[color-mix(in_srgb,var(--school-accent)_20%,transparent)] px-3 py-3">

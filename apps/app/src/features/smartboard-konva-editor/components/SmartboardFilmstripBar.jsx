@@ -15,7 +15,7 @@ function miniScoreChipClass(band) {
     case 'excellent':
       return 'border-[color-mix(in_srgb,var(--school-accent)_40%,transparent)] bg-[#1a1810] text-[#f5dd8a]';
     default:
-      return 'border-white/12 bg-white/[0.06] text-white/45';
+      return 'border-white/[0.12] bg-white/[0.06] text-white/45';
   }
 }
 
@@ -68,18 +68,18 @@ export default function SmartboardFilmstripBar({
             <p className="text-[9px] font-semibold uppercase tracking-[0.22em] text-amber-200/75">
               Navigation des slides
             </p>
-            <p className="mt-0.5 truncate text-[12px] font-semibold text-white/92">
+            <p className="mt-0.5 truncate text-[12px] font-semibold text-white/[0.92]">
               <span className="font-mono text-[#e9bf72]/95">
                 {activeSlideIndex + 1} / {total}
               </span>
               <span className="mx-2 text-white/25">—</span>
-              <span className="text-white/88">{title}</span>
+              <span className="text-white/[0.88]">{title}</span>
             </p>
           </div>
         </div>
         <div className="flex shrink-0 flex-wrap items-center gap-2">
           {typeof onSlideTimingChange === 'function' ? (
-            <label className="flex items-center gap-1.5 rounded-lg border border-white/12 bg-black/30 px-2 py-1.5 text-[10px] text-white/80">
+            <label className="flex items-center gap-1.5 rounded-lg border border-white/[0.12] bg-black/30 px-2 py-1.5 text-[10px] text-white/80">
               <Clock className="h-3.5 w-3.5 shrink-0 text-[color-mix(in_srgb,var(--school-accent)_85%,transparent)]" strokeWidth={2} />
               <span className="text-white/45">Fiche</span>
               <input
@@ -89,7 +89,7 @@ export default function SmartboardFilmstripBar({
                 step={0.5}
                 value={activeMin ?? ''}
                 onChange={(e) => onSlideTimingChange(activeSlideIndex, e.target.value)}
-                className="w-14 rounded border border-white/15 bg-[#0a0c14] px-1 py-0.5 font-mono text-[11px] text-white/92"
+                className="w-14 rounded border border-white/15 bg-[#0a0c14] px-1 py-0.5 font-mono text-[11px] text-white/[0.92]"
                 title="Durée prévue pour cette fiche (minutes)"
               />
               <span className="text-white/45">min</span>
@@ -99,7 +99,7 @@ export default function SmartboardFilmstripBar({
             type="button"
             onClick={onPrev}
             disabled={activeSlideIndex <= 0}
-            className="inline-flex items-center gap-1 rounded-lg border border-white/14 bg-white/[0.05] px-3 py-2 text-[11px] font-medium text-white/80 transition-colors hover:bg-white/[0.08] disabled:cursor-not-allowed disabled:opacity-35"
+            className="inline-flex items-center gap-1 rounded-lg border border-white/[0.14] bg-white/[0.05] px-3 py-2 text-[11px] font-medium text-white/80 transition-colors hover:bg-white/[0.08] disabled:cursor-not-allowed disabled:opacity-35"
             aria-label="Slide précédent"
           >
             <ChevronLeft className="h-4 w-4" />
@@ -168,7 +168,7 @@ export default function SmartboardFilmstripBar({
           </button>
         ) : null}
       </div>
-      <p className="text-[9px] text-white/32">
+      <p className="text-[9px] text-white/[0.32]">
         {typeof onSlideTimingChange === 'function' ? (
           <>
             Σ durées plan :{' '}

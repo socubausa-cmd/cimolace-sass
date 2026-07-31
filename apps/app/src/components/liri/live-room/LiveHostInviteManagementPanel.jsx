@@ -200,7 +200,7 @@ export default function LiveHostInviteManagementPanel({
           <input
             readOnly
             value={inviteUrl || '—'}
-            className="min-w-0 flex-1 truncate rounded-2xl border border-white/[0.08] bg-black/40 px-3 py-2.5 font-mono text-[10px] leading-snug text-white/88 shadow-inner"
+            className="min-w-0 flex-1 truncate rounded-2xl border border-white/[0.08] bg-black/40 px-3 py-2.5 font-mono text-[10px] leading-snug text-white/[0.88] shadow-inner"
             title={inviteUrl || undefined}
           />
           <PurpleButton disabled={!canShare} onClick={copyLink} className="min-w-[88px] px-3">
@@ -231,7 +231,7 @@ export default function LiveHostInviteManagementPanel({
             className={cn(
               'flex flex-col items-center justify-center gap-0.5 rounded-2xl border px-2 py-2 text-center text-[9px] font-semibold transition-colors',
               canShare
-                ? 'border-amber-400/30 bg-amber-500/12 text-amber-50 hover:bg-amber-500/20'
+                ? 'border-amber-400/30 bg-amber-500/[0.12] text-amber-50 hover:bg-amber-500/20'
                 : 'cursor-not-allowed border-white/10 text-white/35',
             )}
           >
@@ -260,7 +260,7 @@ export default function LiveHostInviteManagementPanel({
             className={cn(
               'flex flex-col items-center justify-center gap-0.5 rounded-2xl border px-2 py-2 text-center text-[9px] font-semibold transition-colors',
               canShare
-                ? 'border-white/14 bg-white/[0.06] text-white/92 hover:bg-white/[0.1]'
+                ? 'border-white/[0.14] bg-white/[0.06] text-white/[0.92] hover:bg-white/[0.1]'
                 : 'cursor-not-allowed text-white/35',
             )}
           >
@@ -282,7 +282,7 @@ export default function LiveHostInviteManagementPanel({
             placeholder="email@exemple.com"
             value={emailDraft}
             onChange={(e) => setEmailDraft(e.target.value)}
-            className="min-w-0 flex-1 rounded-2xl border border-white/[0.08] bg-black/35 px-3 py-2.5 text-[12px] text-white placeholder:text-white/28 shadow-inner"
+            className="min-w-0 flex-1 rounded-2xl border border-white/[0.08] bg-black/35 px-3 py-2.5 text-[12px] text-white placeholder:text-white/[0.28] shadow-inner"
           />
           <PurpleButton
             disabled={!emailDraft.trim() || !canShare}
@@ -329,7 +329,7 @@ export default function LiveHostInviteManagementPanel({
       </section>
 
       {/* File d'attente */}
-      <section className={cn(cardClass, 'border-amber-500/25 bg-amber-950/12 p-3')}>
+      <section className={cn(cardClass, 'border-amber-500/25 bg-amber-950/[0.12] p-3')}>
         <div className="mb-2 flex items-center justify-between gap-2">
           <div className="flex min-w-0 items-center gap-2">
             <Hourglass className="h-3.5 w-3.5 shrink-0 text-amber-400/85" strokeWidth={1.75} aria-hidden />
@@ -361,7 +361,7 @@ export default function LiveHostInviteManagementPanel({
                     type="button"
                     title="Accepter"
                     onClick={() => onApproveWaiting?.(e.id)}
-                    className="shrink-0 rounded-xl border border-amber-500/45 bg-amber-500/18 px-2 py-1 text-[10px] font-bold text-amber-400"
+                    className="shrink-0 rounded-xl border border-amber-500/45 bg-amber-500/[0.18] px-2 py-1 text-[10px] font-bold text-amber-400"
                   >
                     ✓
                   </button>
@@ -369,7 +369,7 @@ export default function LiveHostInviteManagementPanel({
                     type="button"
                     title="Refuser"
                     onClick={() => onRejectWaiting?.(e.id)}
-                    className="shrink-0 rounded-xl border border-red-500/40 bg-red-500/12 px-2 py-1 text-[10px] font-bold text-red-400"
+                    className="shrink-0 rounded-xl border border-red-500/40 bg-red-500/[0.12] px-2 py-1 text-[10px] font-bold text-red-400"
                   >
                     ✕
                   </button>
@@ -383,7 +383,7 @@ export default function LiveHostInviteManagementPanel({
           <button
             type="button"
             onClick={onOpenLongiaWaiting}
-            className="mt-3 flex w-full items-center justify-between gap-2 rounded-2xl border border-white/[0.08] bg-white/[0.04] px-2.5 py-2 text-left text-[10px] font-semibold text-white/78 transition-colors hover:bg-white/[0.07]"
+            className="mt-3 flex w-full items-center justify-between gap-2 rounded-2xl border border-white/[0.08] bg-white/[0.04] px-2.5 py-2 text-left text-[10px] font-semibold text-white/[0.78] transition-colors hover:bg-white/[0.07]"
           >
             <span>Gestion complète (LONGIA)</span>
             <ChevronRight className="h-3.5 w-3.5 shrink-0 text-white/40" strokeWidth={1.75} aria-hidden />
@@ -407,7 +407,7 @@ export default function LiveHostInviteManagementPanel({
                 <ChevronRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-0.5" aria-hidden />
               </button>
             </div>
-            <p className="mt-2 text-[10px] leading-relaxed text-white/48">
+            <p className="mt-2 text-[10px] leading-relaxed text-white/[0.48]">
               Partage le lien ou invite par email pour faire rejoindre des participants.
             </p>
           </div>

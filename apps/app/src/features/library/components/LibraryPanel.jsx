@@ -76,7 +76,7 @@ export default function LibraryPanel({
   return (
     <div className={cn('flex flex-col bg-[#07090f]', className)}>
       {/* Header */}
-      <div className="flex shrink-0 items-center gap-2 border-b border-white/8 px-3 py-2">
+      <div className="flex shrink-0 items-center gap-2 border-b border-white/[0.08] px-3 py-2">
         <BookMarked className="h-4 w-4 text-[var(--school-accent)]" />
         <span className="text-[12px] font-semibold text-white">Bibliothèque</span>
         <div className="ml-auto flex items-center gap-1.5">
@@ -97,7 +97,7 @@ export default function LibraryPanel({
       </div>
 
       {/* Source tabs */}
-      <div className="flex shrink-0 border-b border-white/8">
+      <div className="flex shrink-0 border-b border-white/[0.08]">
         {[
           { id: 'all', label: 'Tout', icon: BookMarked },
           { id: 'personal', label: 'Personnel', icon: User },
@@ -164,7 +164,7 @@ export default function LibraryPanel({
                   'flex items-center gap-3 rounded-lg border p-2.5 text-left transition-colors',
                   selectedItemId === item.id
                     ? 'border-[color-mix(in_srgb,var(--school-accent)_40%,transparent)] bg-[color-mix(in_srgb,var(--school-accent)_8%,transparent)]'
-                    : 'border-white/6 hover:border-white/15',
+                    : 'border-white/[0.06] hover:border-white/15',
                 )}
               >
                 {item.preview ? (

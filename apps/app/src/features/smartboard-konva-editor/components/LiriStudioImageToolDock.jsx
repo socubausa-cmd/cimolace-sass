@@ -316,7 +316,7 @@ export default function LiriStudioImageToolDock({ className }) {
             Réinit. crop
           </button>
         ) : null}
-        <p className="ml-auto hidden max-w-[min(52vw,440px)] text-[10px] leading-snug text-white/32 xl:block">
+        <p className="ml-auto hidden max-w-[min(52vw,440px)] text-[10px] leading-snug text-white/[0.32] xl:block">
           1–5 outils · ⌘/Ctrl+Z annuler · ⌘/Ctrl+⇧+flèche aligner · voir clavier · Lasso · Distrib. 3+ · Échap : annuler
         </p>
       </div>
@@ -364,62 +364,62 @@ export default function LiriStudioImageToolDock({ className }) {
             <p className="mt-4 text-[11px] font-semibold uppercase tracking-wider text-white/35">Historique</p>
             <ul className="mt-2 space-y-1.5 text-[12px] text-white/65">
               <li>
-                <kbd className="mr-1 rounded border border-white/12 bg-white/[0.05] px-1 font-mono text-[10px]">Ctrl</kbd>
+                <kbd className="mr-1 rounded border border-white/[0.12] bg-white/[0.05] px-1 font-mono text-[10px]">Ctrl</kbd>
                 <span className="text-white/35"> / </span>
-                <kbd className="mr-2 rounded border border-white/12 bg-white/[0.05] px-1 font-mono text-[10px]">Cmd</kbd>
-                + <kbd className="mx-0.5 rounded border border-white/12 bg-white/[0.05] px-1 font-mono text-[10px]">Z</kbd>
+                <kbd className="mr-2 rounded border border-white/[0.12] bg-white/[0.05] px-1 font-mono text-[10px]">Cmd</kbd>
+                + <kbd className="mx-0.5 rounded border border-white/[0.12] bg-white/[0.05] px-1 font-mono text-[10px]">Z</kbd>
                 Annuler
               </li>
               <li>
-                <kbd className="mr-1 rounded border border-white/12 bg-white/[0.05] px-1 font-mono text-[10px]">Ctrl</kbd>
+                <kbd className="mr-1 rounded border border-white/[0.12] bg-white/[0.05] px-1 font-mono text-[10px]">Ctrl</kbd>
                 <span className="text-white/35"> / </span>
-                <kbd className="mr-1 rounded border border-white/12 bg-white/[0.05] px-1 font-mono text-[10px]">Cmd</kbd>
-                + <kbd className="mx-0.5 rounded border border-white/12 bg-white/[0.05] px-1 font-mono text-[10px]">Maj</kbd>
-                + <kbd className="mx-0.5 rounded border border-white/12 bg-white/[0.05] px-1 font-mono text-[10px]">Z</kbd>
-                Refaire (ou <kbd className="mx-0.5 rounded border border-white/12 bg-white/[0.05] px-1 font-mono text-[10px]">Ctrl</kbd>
-                +<kbd className="mx-0.5 rounded border border-white/12 bg-white/[0.05] px-1 font-mono text-[10px]">Y</kbd> sous Windows)
+                <kbd className="mr-1 rounded border border-white/[0.12] bg-white/[0.05] px-1 font-mono text-[10px]">Cmd</kbd>
+                + <kbd className="mx-0.5 rounded border border-white/[0.12] bg-white/[0.05] px-1 font-mono text-[10px]">Maj</kbd>
+                + <kbd className="mx-0.5 rounded border border-white/[0.12] bg-white/[0.05] px-1 font-mono text-[10px]">Z</kbd>
+                Refaire (ou <kbd className="mx-0.5 rounded border border-white/[0.12] bg-white/[0.05] px-1 font-mono text-[10px]">Ctrl</kbd>
+                +<kbd className="mx-0.5 rounded border border-white/[0.12] bg-white/[0.05] px-1 font-mono text-[10px]">Y</kbd> sous Windows)
               </li>
             </ul>
             <p className="mt-4 text-[11px] font-semibold uppercase tracking-wider text-white/35">Aligner (sélection requise)</p>
             <ul className="mt-2 space-y-1.5 text-[12px] text-white/65">
               <li>
-                <kbd className="mr-1 rounded border border-white/12 bg-white/[0.05] px-1 font-mono text-[10px]">Ctrl</kbd>
-                / <kbd className="mr-1 rounded border border-white/12 bg-white/[0.05] px-1 font-mono text-[10px]">Cmd</kbd>
-                + <kbd className="mx-0.5 rounded border border-white/12 bg-white/[0.05] px-1 font-mono text-[10px]">Maj</kbd>
+                <kbd className="mr-1 rounded border border-white/[0.12] bg-white/[0.05] px-1 font-mono text-[10px]">Ctrl</kbd>
+                / <kbd className="mr-1 rounded border border-white/[0.12] bg-white/[0.05] px-1 font-mono text-[10px]">Cmd</kbd>
+                + <kbd className="mx-0.5 rounded border border-white/[0.12] bg-white/[0.05] px-1 font-mono text-[10px]">Maj</kbd>
                 + flèches : gauche / droite / haut / bas
               </li>
               <li className="text-white/50">
-                + <kbd className="mx-0.5 rounded border border-white/12 bg-white/[0.05] px-1 font-mono text-[10px]">Alt</kbd>
+                + <kbd className="mx-0.5 rounded border border-white/[0.12] bg-white/[0.05] px-1 font-mono text-[10px]">Alt</kbd>
                 en même temps : aligner sur le canvas (plusieurs objets), comme Alt+clic sur la barre
               </li>
               <li>
-                … + <kbd className="mx-0.5 rounded border border-white/12 bg-white/[0.05] px-1 font-mono text-[10px]">[</kbd>
+                … + <kbd className="mx-0.5 rounded border border-white/[0.12] bg-white/[0.05] px-1 font-mono text-[10px]">[</kbd>
                 {' / '}
-                <kbd className="mx-0.5 rounded border border-white/12 bg-white/[0.05] px-1 font-mono text-[10px]">]</kbd>
+                <kbd className="mx-0.5 rounded border border-white/[0.12] bg-white/[0.05] px-1 font-mono text-[10px]">]</kbd>
                 (touches crochets) : centrer verticalement / horizontalement
               </li>
               <li>
-                … + <kbd className="mx-0.5 rounded border border-white/12 bg-white/[0.05] px-1 font-mono text-[10px]">G</kbd>
+                … + <kbd className="mx-0.5 rounded border border-white/[0.12] bg-white/[0.05] px-1 font-mono text-[10px]">G</kbd>
                 : centrer le groupe (ou l'objet) sur le plan
               </li>
             </ul>
             <p className="mt-4 text-[11px] font-semibold uppercase tracking-wider text-white/35">Autres</p>
             <ul className="mt-2 space-y-1.5 text-[12px] text-white/65">
               <li>
-                <kbd className="mr-2 rounded border border-white/12 bg-white/[0.05] px-1 font-mono text-[10px]">Échap</kbd>
+                <kbd className="mr-2 rounded border border-white/[0.12] bg-white/[0.05] px-1 font-mono text-[10px]">Échap</kbd>
                 Annuler tracé région / crop en cours, quitter mode région ou recadrage
               </li>
               <li>
-                <kbd className="mr-2 rounded border border-white/12 bg-white/[0.05] px-1 font-mono text-[10px]">Maj</kbd>
+                <kbd className="mr-2 rounded border border-white/[0.12] bg-white/[0.05] px-1 font-mono text-[10px]">Maj</kbd>
                 + déplacer : axe verrouillé · + poignées transformer : proportions
               </li>
               <li>
-                <kbd className="mr-2 rounded border border-white/12 bg-white/[0.05] px-1 font-mono text-[10px]">Alt</kbd>
+                <kbd className="mr-2 rounded border border-white/[0.12] bg-white/[0.05] px-1 font-mono text-[10px]">Alt</kbd>
                 + clic aligner : forcer le canvas (plusieurs objets)
               </li>
               <li>
-                <kbd className="mr-2 rounded border border-white/12 bg-white/[0.05] px-1 font-mono text-[10px]">Maj</kbd>
-                / <kbd className="mx-0.5 rounded border border-white/12 bg-white/[0.05] px-1 font-mono text-[10px]">Alt</kbd>
+                <kbd className="mr-2 rounded border border-white/[0.12] bg-white/[0.05] px-1 font-mono text-[10px]">Maj</kbd>
+                / <kbd className="mx-0.5 rounded border border-white/[0.12] bg-white/[0.05] px-1 font-mono text-[10px]">Alt</kbd>
                 en fin de sélection région : union / soustraction
               </li>
             </ul>

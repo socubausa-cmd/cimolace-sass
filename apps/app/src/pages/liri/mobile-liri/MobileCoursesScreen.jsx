@@ -46,7 +46,7 @@ export default function MobileCoursesScreen() {
           <LiriWordmark size="kicker" className="text-current" />
         </LiriSectionLabel>
         <h1 className="mt-1 font-serif text-xl text-[#faf3e6] tracking-tight">Cours</h1>
-        <p className="mt-1 text-sm text-white/48">Smartboard, contenu et progression.</p>
+        <p className="mt-1 text-sm text-white/[0.48]">Smartboard, contenu et progression.</p>
       </div>
 
       <ul className="flex flex-col gap-3">

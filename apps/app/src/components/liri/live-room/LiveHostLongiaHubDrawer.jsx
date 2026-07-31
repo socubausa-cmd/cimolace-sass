@@ -193,7 +193,7 @@ export default function LiveHostLongiaHubDrawer({
                   'flex h-8 w-8 items-center justify-center rounded-lg border p-0 transition-colors',
                   layoutPreviewHubActive
                     ? 'border-amber-400/45 bg-amber-500/15 text-amber-100'
-                    : 'border-white/12 text-white/65 hover:border-amber-400/35 hover:bg-amber-500/10 hover:text-amber-100',
+                    : 'border-white/[0.12] text-white/65 hover:border-amber-400/35 hover:bg-amber-500/10 hover:text-amber-100',
                 )}
               >
                 <ExternalLink className="h-4 w-4" strokeWidth={2} aria-hidden />
@@ -204,7 +204,7 @@ export default function LiveHostLongiaHubDrawer({
               onClick={onClose}
               title="Fermer le hub LONGIA"
               aria-label="Fermer le hub LONGIA"
-              className="flex h-8 w-8 items-center justify-center rounded-lg border border-white/12 text-white/55 transition-colors hover:border-red-500/30 hover:bg-red-950/30 hover:text-red-200"
+              className="flex h-8 w-8 items-center justify-center rounded-lg border border-white/[0.12] text-white/55 transition-colors hover:border-red-500/30 hover:bg-red-950/30 hover:text-red-200"
             >
               <X className="h-4 w-4" strokeWidth={2} aria-hidden />
             </button>

@@ -51,7 +51,7 @@ export default function MobileClientHubScreen() {
       <div className="pt-2 pb-3">
         <LiriSectionLabel>Espace membre</LiriSectionLabel>
         <h1 className="mt-1 font-serif text-xl text-[#faf3e6] tracking-tight">Espace client</h1>
-        <p className="mt-1 text-sm text-white/48">Commandes, abonnements, RDV et profil.</p>
+        <p className="mt-1 text-sm text-white/[0.48]">Commandes, abonnements, RDV et profil.</p>
       </div>
 
       <div className="flex gap-2 overflow-x-auto pb-3 -mx-1 px-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
@@ -63,7 +63,7 @@ export default function MobileClientHubScreen() {
             className={cn(
               'shrink-0 rounded-full border px-3 py-1.5 text-[11px] font-semibold transition-all duration-200',
               validTab === item.id
-                ? 'border-[color-mix(in_srgb,var(--school-accent)_55%,transparent)] bg-gradient-to-r from-[color-mix(in_srgb,var(--school-accent)_22%,transparent)] to-[#8a7018]/12 text-[#fff4dc] shadow-[0_0_16px_-6px_rgba(212,175,55,0.35)]'
+                ? 'border-[color-mix(in_srgb,var(--school-accent)_55%,transparent)] bg-gradient-to-r from-[color-mix(in_srgb,var(--school-accent)_22%,transparent)] to-[#8a7018]/[0.12] text-[#fff4dc] shadow-[0_0_16px_-6px_rgba(212,175,55,0.35)]'
                 : 'border-white/[0.1] bg-black/40 text-white/50',
             )}
           >

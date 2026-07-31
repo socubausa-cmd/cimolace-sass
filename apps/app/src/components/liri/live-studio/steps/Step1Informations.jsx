@@ -73,7 +73,7 @@ export function Step1Informations({ draft, updateDraft, isStaff, teachers, selec
   return (
     <div className="space-y-6">
       <div className="flex gap-3 sm:gap-4">
-        <span className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-[#d97757] bg-[#d97757]/12 text-[#d97757] shadow-[0_0_16px_-6px_rgba(217,119,87,0.35)]">
+        <span className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-[#d97757] bg-[#d97757]/[0.12] text-[#d97757] shadow-[0_0_16px_-6px_rgba(217,119,87,0.35)]">
           <Info className="h-4 w-4 stroke-[2.5]" />
         </span>
         <div className="min-w-0 pt-0.5">
@@ -175,7 +175,7 @@ export function Step1Informations({ draft, updateDraft, isStaff, teachers, selec
           <Select value={draft.session_type} onValueChange={(v) => updateDraft({ session_type: v })}>
             <SelectTrigger className="h-12 rounded-lg border-[#2D3139] bg-[#0a0c10] px-3 text-white">
               <div className="flex items-center gap-2">
-                <span className="inline-flex h-8 w-8 items-center justify-center rounded-lg bg-[#d97757]/28 text-[#B8A3FF]">
+                <span className="inline-flex h-8 w-8 items-center justify-center rounded-lg bg-[#d97757]/[0.28] text-[#B8A3FF]">
                   {draft.medos_mode ? <Stethoscope className="h-4 w-4" /> : <Video className="h-4 w-4" />}
                 </span>
                 <SelectValue />
@@ -203,7 +203,7 @@ export function Step1Informations({ draft, updateDraft, isStaff, teachers, selec
           <Select value={draft.category} onValueChange={(v) => updateDraft({ category: v })}>
             <SelectTrigger className="h-12 rounded-lg border-[#2D3139] bg-[#0a0c10] px-3 text-white">
               <div className="flex items-center gap-2">
-                <span className="inline-flex h-8 w-8 items-center justify-center rounded-lg bg-[#cf7a52]/24 text-[#e8c3a0]">
+                <span className="inline-flex h-8 w-8 items-center justify-center rounded-lg bg-[#cf7a52]/[0.24] text-[#e8c3a0]">
                   {draft.medos_mode ? <Stethoscope className="h-4 w-4" /> : <GraduationCap className="h-4 w-4" />}
                 </span>
                 <SelectValue />

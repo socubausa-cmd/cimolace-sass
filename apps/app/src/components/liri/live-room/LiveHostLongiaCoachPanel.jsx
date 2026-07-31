@@ -521,7 +521,7 @@ export default function LiveHostLongiaCoachPanel({
     <div
       className={cn(
         'live-studio-premium flex min-h-0 min-w-0 h-full w-full max-w-full flex-1 flex-col overflow-hidden',
-        'rounded-2xl border border-[#3a342d] bg-[#262624]/92 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]',
+        'rounded-2xl border border-[#3a342d] bg-[#262624]/[0.92] shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]',
       )}
     >
       <div className="flex min-h-0 min-w-0 flex-1 flex-col gap-1.5 overflow-hidden px-3 pb-2 pt-2">
@@ -543,7 +543,7 @@ export default function LiveHostLongiaCoachPanel({
                 s.urgent ? 'border-amber-400/35 bg-amber-500/[0.1]' : 'border-amber-400/20 bg-amber-500/[0.06]',
               )}
             >
-              <p className="m-0 text-[11px] leading-snug text-white/88">{s.text}</p>
+              <p className="m-0 text-[11px] leading-snug text-white/[0.88]">{s.text}</p>
               <div className="mt-2 flex gap-1.5">
                 <button
                   type="button"
@@ -556,7 +556,7 @@ export default function LiveHostLongiaCoachPanel({
                 <button
                   type="button"
                   onClick={() => onDismissSuggestion?.(s.key)}
-                  className="rounded-lg border border-white/12 px-2.5 py-1 text-[10px] font-medium text-white/55 transition hover:bg-white/[0.06]"
+                  className="rounded-lg border border-white/[0.12] px-2.5 py-1 text-[10px] font-medium text-white/55 transition hover:bg-white/[0.06]"
                 >
                   Ignorer
                 </button>
@@ -571,7 +571,7 @@ export default function LiveHostLongiaCoachPanel({
         <div
           ref={scrollRef}
           className={cn(
-            'lh-sy relative flex min-h-[72px] min-w-0 flex-1 flex-col overflow-y-auto overscroll-y-contain rounded-xl border border-[#3a342d] bg-black/25 px-2 py-2 text-[11px] leading-snug text-white/88',
+            'lh-sy relative flex min-h-[72px] min-w-0 flex-1 flex-col overflow-y-auto overscroll-y-contain rounded-xl border border-[#3a342d] bg-black/25 px-2 py-2 text-[11px] leading-snug text-white/[0.88]',
             '[scrollbar-width:thin] [scrollbar-color:rgba(255,189,123,0.22)_transparent]',
           )}
         >
@@ -585,7 +585,7 @@ export default function LiveHostLongiaCoachPanel({
         ) : null}
         <div className="flex min-h-full min-w-0 flex-col justify-end gap-1.5">
         {messages.length === 0 && !loading ? (
-          <p className="flex min-h-[4rem] items-center justify-center px-2 text-center text-[11px] leading-relaxed text-white/32">
+          <p className="flex min-h-[4rem] items-center justify-center px-2 text-center text-[11px] leading-relaxed text-white/[0.32]">
             Écris une question ou choisis une puce — LONGIA te répond avec des pistes et des mini-rendus.
           </p>
         ) : null}
@@ -605,7 +605,7 @@ export default function LiveHostLongiaCoachPanel({
           <div
             className={cn(
               'mb-1.5 mr-auto flex max-w-[min(100%,28rem)] items-center gap-1.5 rounded-xl border border-white/[0.08] bg-[#1f1d1a]/80 px-2.5 py-2',
-              'text-[10px] text-white/48 shadow-[inset_0_1px_0_rgba(255,255,255,0.03)]',
+              'text-[10px] text-white/[0.48] shadow-[inset_0_1px_0_rgba(255,255,255,0.03)]',
             )}
           >
             <Loader2 className="h-3.5 w-3.5 shrink-0 animate-spin text-amber-200/60" aria-hidden />
@@ -640,19 +640,19 @@ export default function LiveHostLongiaCoachPanel({
             ) : null}
           </div>
           {lastCard.summary ? (
-            <div className="rounded-xl border border-amber-400/22 bg-amber-500/[0.09] px-2.5 py-2 text-[10px] text-white/86 shadow-[inset_0_1px_0_rgba(255,255,255,0.03)] backdrop-blur-[4px]">
+            <div className="rounded-xl border border-amber-400/[0.22] bg-amber-500/[0.09] px-2.5 py-2 text-[10px] text-white/[0.86] shadow-[inset_0_1px_0_rgba(255,255,255,0.03)] backdrop-blur-[4px]">
               <span className="font-semibold text-amber-100/95">Rendu — à retenir</span>
               <p className="mt-0.5 mb-0 whitespace-pre-wrap leading-snug">{lastCard.summary}</p>
             </div>
           ) : null}
           {lastCard.explanation ? (
-            <div className="rounded-xl border border-amber-400/20 bg-amber-500/[0.08] px-2.5 py-2 text-[10px] text-white/84 shadow-[inset_0_1px_0_rgba(255,255,255,0.03)] backdrop-blur-[4px]">
+            <div className="rounded-xl border border-amber-400/20 bg-amber-500/[0.08] px-2.5 py-2 text-[10px] text-white/[0.84] shadow-[inset_0_1px_0_rgba(255,255,255,0.03)] backdrop-blur-[4px]">
               <span className="font-semibold text-amber-100/90">Rendu — reformulation</span>
               <p className="mt-0.5 mb-0 whitespace-pre-wrap leading-snug">{lastCard.explanation}</p>
             </div>
           ) : null}
           {lastCard.example ? (
-            <div className="rounded-xl border border-amber-400/22 bg-amber-500/[0.09] px-2.5 py-2 text-[10px] text-white/84 shadow-[inset_0_1px_0_rgba(255,255,255,0.03)] backdrop-blur-[4px]">
+            <div className="rounded-xl border border-amber-400/[0.22] bg-amber-500/[0.09] px-2.5 py-2 text-[10px] text-white/[0.84] shadow-[inset_0_1px_0_rgba(255,255,255,0.03)] backdrop-blur-[4px]">
               <span className="font-semibold text-amber-100/90">Rendu — exemple</span>
               <p className="mt-0.5 mb-0 whitespace-pre-wrap leading-snug">{lastCard.example}</p>
             </div>
@@ -676,7 +676,7 @@ export default function LiveHostLongiaCoachPanel({
               type="button"
               disabled={loading || !threadHydrated}
               onClick={() => onChip(a.action)}
-              className="inline-flex w-full min-w-0 items-center justify-start gap-2 rounded-2xl border border-white/14 bg-white/[0.06] px-3 py-2.5 text-left text-[11px] font-semibold leading-snug text-white/85 transition hover:border-amber-400/40 hover:bg-amber-500/12 hover:text-amber-50 disabled:opacity-40 [overflow-wrap:anywhere]"
+              className="inline-flex w-full min-w-0 items-center justify-start gap-2 rounded-2xl border border-white/[0.14] bg-white/[0.06] px-3 py-2.5 text-left text-[11px] font-semibold leading-snug text-white/85 transition hover:border-amber-400/40 hover:bg-amber-500/[0.12] hover:text-amber-50 disabled:opacity-40 [overflow-wrap:anywhere]"
             >
               <CoachQuickActionIcon action={a.action} />
               <span>{a.label}</span>
@@ -686,7 +686,7 @@ export default function LiveHostLongiaCoachPanel({
             type="button"
             disabled={loading || !threadHydrated}
             onClick={() => void runTurn('', '[Actualiser] Reprends le fil du chat salle et la séance.')}
-            className="inline-flex w-full min-w-0 items-center justify-start gap-2 rounded-2xl border border-white/12 px-3 py-2.5 text-left text-[11px] font-medium leading-snug text-white/60 hover:bg-white/[0.07] hover:text-white/78 disabled:opacity-40 [overflow-wrap:anywhere]"
+            className="inline-flex w-full min-w-0 items-center justify-start gap-2 rounded-2xl border border-white/[0.12] px-3 py-2.5 text-left text-[11px] font-medium leading-snug text-white/60 hover:bg-white/[0.07] hover:text-white/[0.78] disabled:opacity-40 [overflow-wrap:anywhere]"
           >
             <Plus className="h-4 w-4 shrink-0 text-amber-400/85" strokeWidth={2} aria-hidden />
             <span>Contexte chat</span>
@@ -702,7 +702,7 @@ export default function LiveHostLongiaCoachPanel({
             {attachments.map((a) => (
               <span
                 key={a.id}
-                className="inline-flex max-w-full items-center gap-1.5 rounded-lg border border-white/12 bg-white/[0.05] py-1 pl-1.5 pr-1 text-[10px] text-white/85"
+                className="inline-flex max-w-full items-center gap-1.5 rounded-lg border border-white/[0.12] bg-white/[0.05] py-1 pl-1.5 pr-1 text-[10px] text-white/85"
               >
                 {a.kind === 'image' && a.dataUrl ? (
                   <img
@@ -762,7 +762,7 @@ export default function LiveHostLongiaCoachPanel({
             }}
             rows={2}
             placeholder="Message au coach (privé)…"
-            className="min-h-[36px] min-w-0 flex-1 resize-none bg-transparent py-1 pl-1 pr-0 text-[11px] leading-relaxed text-white/92 outline-none ring-0 placeholder:text-white/32 focus:outline-none focus:ring-0 [field-sizing:content] sm:min-h-[34px]"
+            className="min-h-[36px] min-w-0 flex-1 resize-none bg-transparent py-1 pl-1 pr-0 text-[11px] leading-relaxed text-white/[0.92] outline-none ring-0 placeholder:text-white/[0.32] focus:outline-none focus:ring-0 [field-sizing:content] sm:min-h-[34px]"
             style={{ maxHeight: '8.5rem' }}
           />
           <div className="flex shrink-0 flex-col items-center justify-end gap-0.5 pb-0.5">
@@ -796,7 +796,7 @@ export default function LiveHostLongiaCoachPanel({
                   id="coach-insert-hub"
                   role="dialog"
                   aria-label="Insérer dans le message coach"
-                  className="absolute right-0 bottom-full z-[120] mb-1.5 w-[min(94vw,280px)] overflow-hidden rounded-xl border border-white/12 bg-[#221f1a] shadow-[0_12px_40px_rgba(0,0,0,.55)]"
+                  className="absolute right-0 bottom-full z-[120] mb-1.5 w-[min(94vw,280px)] overflow-hidden rounded-xl border border-white/[0.12] bg-[#221f1a] shadow-[0_12px_40px_rgba(0,0,0,.55)]"
                 >
                   <div className="border-b border-white/[0.06] px-2.5 py-1.5">
                     <p className={cn(designerShellMicroLabel, 'm-0 text-[9px] font-semibold tracking-wide text-white/55')}>
@@ -808,11 +808,11 @@ export default function LiveHostLongiaCoachPanel({
                       type="button"
                       disabled={loading || !threadHydrated}
                       onClick={() => imageFileRef.current?.click()}
-                      className="flex w-full items-center gap-2 rounded-lg px-2 py-2 text-left text-[10px] text-white/88 transition hover:bg-white/[0.07] disabled:opacity-40"
+                      className="flex w-full items-center gap-2 rounded-lg px-2 py-2 text-left text-[10px] text-white/[0.88] transition hover:bg-white/[0.07] disabled:opacity-40"
                     >
                       <ImagePlus className="h-3.5 w-3.5 shrink-0 text-amber-200/80" strokeWidth={2} aria-hidden />
                       <span>
-                        <span className="font-semibold text-white/92">Image (fichier)</span>
+                        <span className="font-semibold text-white/[0.92]">Image (fichier)</span>
                         <span className="mt-0.5 block text-[9px] font-normal text-white/45">Puis décrivez le visuel dans le texte</span>
                       </span>
                     </button>
@@ -822,7 +822,7 @@ export default function LiveHostLongiaCoachPanel({
                       onClick={() => setMemberSectionExpanded((e) => !e)}
                       className={cn(
                         'flex w-full items-center gap-2 rounded-lg px-2 py-2 text-left text-[10px] transition hover:bg-white/[0.07] disabled:opacity-40',
-                        memberSectionExpanded ? 'bg-amber-500/12 text-amber-100' : 'text-white/88',
+                        memberSectionExpanded ? 'bg-amber-500/[0.12] text-amber-100' : 'text-white/[0.88]',
                       )}
                     >
                       <Users className="h-3.5 w-3.5 shrink-0 text-amber-200/80" strokeWidth={2} aria-hidden />
@@ -859,7 +859,7 @@ export default function LiveHostLongiaCoachPanel({
                       type="button"
                       disabled={loading || !threadHydrated}
                       onClick={insertStepContext}
-                      className="flex w-full items-center gap-2 rounded-lg px-2 py-2 text-left text-[10px] text-white/88 transition hover:bg-white/[0.07] disabled:opacity-40"
+                      className="flex w-full items-center gap-2 rounded-lg px-2 py-2 text-left text-[10px] text-white/[0.88] transition hover:bg-white/[0.07] disabled:opacity-40"
                     >
                       <Bookmark className="h-3.5 w-3.5 shrink-0 text-amber-200/75" strokeWidth={2} aria-hidden />
                       <span>
@@ -871,7 +871,7 @@ export default function LiveHostLongiaCoachPanel({
                       type="button"
                       disabled={loading || !threadHydrated}
                       onClick={insertChatExcerpt}
-                      className="flex w-full items-center gap-2 rounded-lg px-2 py-2 text-left text-[10px] text-white/88 transition hover:bg-white/[0.07] disabled:opacity-40"
+                      className="flex w-full items-center gap-2 rounded-lg px-2 py-2 text-left text-[10px] text-white/[0.88] transition hover:bg-white/[0.07] disabled:opacity-40"
                     >
                       <MessagesSquare className="h-3.5 w-3.5 shrink-0 text-amber-200/80" strokeWidth={2} aria-hidden />
                       <span>
@@ -883,7 +883,7 @@ export default function LiveHostLongiaCoachPanel({
                       type="button"
                       disabled={loading || !threadHydrated}
                       onClick={insertTimestamp}
-                      className="flex w-full items-center gap-2 rounded-lg px-2 py-2 text-left text-[10px] text-white/88 transition hover:bg-white/[0.07] disabled:opacity-40"
+                      className="flex w-full items-center gap-2 rounded-lg px-2 py-2 text-left text-[10px] text-white/[0.88] transition hover:bg-white/[0.07] disabled:opacity-40"
                     >
                       <Clock className="h-3.5 w-3.5 shrink-0 text-white/55" strokeWidth={2} aria-hidden />
                       <span>
@@ -892,7 +892,7 @@ export default function LiveHostLongiaCoachPanel({
                       </span>
                     </button>
                   </div>
-                  <p className={cn(designerShellMicroLabel, 'm-0 border-t border-white/[0.06] px-2.5 py-2 text-[8px] leading-snug text-white/38')}>
+                  <p className={cn(designerShellMicroLabel, 'm-0 border-t border-white/[0.06] px-2.5 py-2 text-[8px] leading-snug text-white/[0.38]')}>
                     Astuce : collez une image dans le champ (Ctrl+V / ⌘V) sans ouvrir ce menu.
                   </p>
                 </div>
@@ -905,7 +905,7 @@ export default function LiveHostLongiaCoachPanel({
               className={cn(
                 'flex h-8 w-8 shrink-0 items-center justify-center rounded-lg transition disabled:opacity-30',
                 (draft.trim() || attachments.length > 0) && threadHydrated && !loading
-                  ? 'bg-amber-500/22 text-amber-50 hover:bg-amber-500/30'
+                  ? 'bg-amber-500/[0.22] text-amber-50 hover:bg-amber-500/30'
                   : 'text-white/35 hover:bg-white/[0.06] hover:text-white/55',
               )}
               title="Envoyer (Entrée)"
@@ -914,7 +914,7 @@ export default function LiveHostLongiaCoachPanel({
             </button>
           </div>
         </div>
-        <p className={cn(designerShellMicroLabel, 'm-0 px-0.5 text-[8px] font-medium tracking-[0.04em] text-white/28')}>
+        <p className={cn(designerShellMicroLabel, 'm-0 px-0.5 text-[8px] font-medium tracking-[0.04em] text-white/[0.28]')}>
           Entrée envoie · Maj+Entrée ligne suivante
         </p>
       </div>

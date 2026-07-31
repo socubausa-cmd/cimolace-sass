@@ -112,7 +112,7 @@ export default function LiveGuestNeuronqPanel({
                 </div>
                 <div className="min-w-0">
                   <p className="text-[12px] font-semibold tracking-wide text-white/95">NeuronQ — question au formateur</p>
-                  <p className="mt-1 max-w-[360px] text-[10px] leading-relaxed text-white/38">
+                  <p className="mt-1 max-w-[360px] text-[10px] leading-relaxed text-white/[0.38]">
                     Chaque bloc est un « volet » de votre question.{' '}
                     <span className="text-amber-200/80">Ctrl+Entrée</span> (ou <span className="text-amber-200/80">⌘+Entrée</span>) ajoute un
                     volet suivant. Envoyez quand tout est prêt.
@@ -190,7 +190,7 @@ export default function LiveGuestNeuronqPanel({
                     type="button"
                     disabled={!canAct || neuronqReformulating}
                     onClick={() => onReformulate()}
-                    className="rounded-xl border border-amber-500/35 bg-amber-500/10 px-4 py-2.5 text-[12px] font-semibold text-amber-100/95 transition-colors hover:bg-amber-500/16 disabled:cursor-not-allowed disabled:opacity-40"
+                    className="rounded-xl border border-amber-500/35 bg-amber-500/10 px-4 py-2.5 text-[12px] font-semibold text-amber-100/95 transition-colors hover:bg-amber-500/[0.16] disabled:cursor-not-allowed disabled:opacity-40"
                   >
                     {neuronqReformulating ? '…' : 'Reformuler (IA)'}
                   </button>

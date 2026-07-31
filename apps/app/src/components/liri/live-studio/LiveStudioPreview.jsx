@@ -153,7 +153,7 @@ export function LiveStudioPreview({ draft, onGoToDateStep, embedded = false }) {
         {/* Content */}
         <div className="p-5 space-y-4">
           <div>
-            <span className="rounded px-2 py-0.5 text-xs font-medium bg-[#d97757]/18 text-[#d97757]">
+            <span className="rounded px-2 py-0.5 text-xs font-medium bg-[#d97757]/[0.18] text-[#d97757]">
               {SESSION_TYPES[session_type] || session_type}
             </span>
             <h4 className="text-lg font-semibold text-white mt-2">
@@ -246,7 +246,7 @@ export function LiveStudioPreview({ draft, onGoToDateStep, embedded = false }) {
                 {accessInfo.label}
               </span>
               {waiting_room !== false && (
-                <span className="inline-flex items-center rounded-lg border border-white/12 bg-white/[0.06] px-2.5 py-1 text-[11px] text-gray-400">
+                <span className="inline-flex items-center rounded-lg border border-white/[0.12] bg-white/[0.06] px-2.5 py-1 text-[11px] text-gray-400">
                   Salle d&apos;attente{waiting_room_audio_enabled ? ' + Audio' : ''}
                 </span>
               )}
@@ -263,25 +263,25 @@ export function LiveStudioPreview({ draft, onGoToDateStep, embedded = false }) {
                 </span>
               )}
               {totalInvited > 0 && (
-                <span className="inline-flex items-center gap-1 rounded-md border border-[#d97757]/25 bg-[#d97757]/8 px-2 py-1 text-[11px] text-[#d97757]">
+                <span className="inline-flex items-center gap-1 rounded-md border border-[#d97757]/25 bg-[#d97757]/[0.08] px-2 py-1 text-[11px] text-[#d97757]">
                   <Users className="w-3 h-3" />
                   {totalInvited} individuel(s)
                 </span>
               )}
               {(invited_classes || []).map((c, i) => (
-                <span key={i} className="inline-flex items-center gap-1 px-2 py-1 rounded-md text-[11px] border border-emerald-400/20 bg-emerald-400/8 text-emerald-300">
+                <span key={i} className="inline-flex items-center gap-1 px-2 py-1 rounded-md text-[11px] border border-emerald-400/20 bg-emerald-400/[0.08] text-emerald-300">
                   <UserCheck className="w-3 h-3" />
                   {c.name || c}
                 </span>
               ))}
               {(invited_modules || []).map((m, i) => (
-                <span key={i} className="inline-flex items-center gap-1 px-2 py-1 rounded-md text-[11px] border border-purple-400/20 bg-purple-400/8 text-purple-300">
+                <span key={i} className="inline-flex items-center gap-1 px-2 py-1 rounded-md text-[11px] border border-purple-400/20 bg-purple-400/[0.08] text-purple-300">
                   <Sparkles className="w-3 h-3" />
                   {m.name || m}
                 </span>
               ))}
               {(invited_roles || []).map((r, i) => (
-                <span key={i} className="inline-flex items-center gap-1 px-2 py-1 rounded-md text-[11px] border border-violet-400/20 bg-violet-400/8 text-violet-300 capitalize">
+                <span key={i} className="inline-flex items-center gap-1 px-2 py-1 rounded-md text-[11px] border border-violet-400/20 bg-violet-400/[0.08] text-violet-300 capitalize">
                   <Shield className="w-3 h-3" />
                   {r}
                 </span>
@@ -362,7 +362,7 @@ export function LiveStudioPreview({ draft, onGoToDateStep, embedded = false }) {
           </div>
           <button
             type="button"
-            className="ml-auto inline-flex shrink-0 items-center gap-0.5 rounded-md border border-[#d97757]/40 bg-[#d97757]/14 px-2 py-1 text-[10px] font-semibold text-[#d97757]"
+            className="ml-auto inline-flex shrink-0 items-center gap-0.5 rounded-md border border-[#d97757]/40 bg-[#d97757]/[0.14] px-2 py-1 text-[10px] font-semibold text-[#d97757]"
           >
             Post-live
             <ChevronDown className="h-3 w-3 opacity-80" />
@@ -373,7 +373,7 @@ export function LiveStudioPreview({ draft, onGoToDateStep, embedded = false }) {
       {!embedded && (
         <button
           type="button"
-          className="inline-flex w-full items-center justify-center gap-2 rounded-xl border border-[#d97757]/35 bg-[#d97757]/10 px-3 py-2.5 text-sm font-medium text-[#f0b89a] transition-all hover:scale-[1.01] hover:bg-[#d97757]/16"
+          className="inline-flex w-full items-center justify-center gap-2 rounded-xl border border-[#d97757]/35 bg-[#d97757]/10 px-3 py-2.5 text-sm font-medium text-[#f0b89a] transition-all hover:scale-[1.01] hover:bg-[#d97757]/[0.16]"
         >
           <Eye className="h-4 w-4" />
           Voir comme participant

@@ -69,7 +69,7 @@ export function LiriGoldCard({ children, className, variant = 'default' }) {
         variant === 'hero' &&
           'border border-[color-mix(in_srgb,var(--school-accent)_50%,transparent)] bg-gradient-to-br from-[#1c1814]/95 via-black/55 to-[#0a0806]/90 shadow-[0_0_48px_-12px_rgba(212,175,55,0.32),inset_0_1px_0_rgba(255,220,150,0.12)]',
         variant === 'default' &&
-          'border border-[color-mix(in_srgb,var(--school-accent)_32%,transparent)] bg-black/38 shadow-[0_0_36px_-10px_rgba(212,175,55,0.22)]',
+          'border border-[color-mix(in_srgb,var(--school-accent)_32%,transparent)] bg-black/[0.38] shadow-[0_0_36px_-10px_rgba(212,175,55,0.22)]',
         variant === 'subtle' &&
           'border border-white/[0.09] bg-white/[0.035] shadow-[inset_0_1px_0_rgba(212,175,55,0.06)]',
         className,

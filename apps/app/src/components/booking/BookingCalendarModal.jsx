@@ -985,9 +985,9 @@ export function BookingCalendarModal({
                         key={step.key}
                         className={cn(
                           'rounded-lg border px-2 py-1.5 text-[11px] font-medium',
-                          isDone && 'border-emerald-500/35 bg-emerald-500/12 text-emerald-200',
+                          isDone && 'border-emerald-500/35 bg-emerald-500/[0.12] text-emerald-200',
                           isActive && 'border-[color-mix(in_srgb,var(--school-accent)_45%,transparent)] bg-[color-mix(in_srgb,var(--school-accent)_14%,transparent)] text-[var(--school-accent)]',
-                          !isDone && !isActive && 'border-white/12 bg-white/[0.02] text-gray-500',
+                          !isDone && !isActive && 'border-white/[0.12] bg-white/[0.02] text-gray-500',
                         )}
                       >
                         <span className="block text-[9px] uppercase tracking-[0.08em] opacity-75">Étape {idx + 1}</span>
@@ -1042,7 +1042,7 @@ export function BookingCalendarModal({
       </div>
 
       <div
-        className="relative z-10 shrink-0 space-y-2 border-t border-[color-mix(in_srgb,var(--school-accent)_15%,transparent)] bg-[#0a0908]/96 px-4 py-3 shadow-[0_-16px_48px_rgba(0,0,0,0.5)] backdrop-blur-xl md:px-6 md:py-4"
+        className="relative z-10 shrink-0 space-y-2 border-t border-[color-mix(in_srgb,var(--school-accent)_15%,transparent)] bg-[#0a0908]/[0.96] px-4 py-3 shadow-[0_-16px_48px_rgba(0,0,0,0.5)] backdrop-blur-xl md:px-6 md:py-4"
         style={{ paddingBottom: 'max(0.75rem, env(safe-area-inset-bottom, 0px))' }}
       >
         <div className="mb-1 rounded-xl border border-violet-500/25 bg-violet-500/5 px-3 py-2.5">
@@ -1204,7 +1204,7 @@ export function BookingCalendarModal({
         </div>
       </div>
       <div
-        className="shrink-0 space-y-2 border-t border-[color-mix(in_srgb,var(--school-accent)_15%,transparent)] bg-[#0a0908]/96 px-4 py-3 shadow-[0_-16px_48px_rgba(0,0,0,0.5)] backdrop-blur-xl md:px-6"
+        className="shrink-0 space-y-2 border-t border-[color-mix(in_srgb,var(--school-accent)_15%,transparent)] bg-[#0a0908]/[0.96] px-4 py-3 shadow-[0_-16px_48px_rgba(0,0,0,0.5)] backdrop-blur-xl md:px-6"
         style={{ paddingBottom: 'max(0.75rem, env(safe-area-inset-bottom, 0px))' }}
       >
         <Button
@@ -1767,7 +1767,7 @@ export function BookingCalendarModal({
                                 </PopoverTrigger>
                                 <PopoverContent
                                   align="start"
-                                  className="w-auto border-[color-mix(in_srgb,var(--school-accent)_25%,transparent)] bg-[#0a0908]/98 p-2 backdrop-blur-xl"
+                                  className="w-auto border-[color-mix(in_srgb,var(--school-accent)_25%,transparent)] bg-[#0a0908]/[0.98] p-2 backdrop-blur-xl"
                                 >
                                   <DayPickerCalendar
                                     mode="single"

@@ -235,7 +235,7 @@ export default function LiveWaitingRoomMaquettePage() {
             style={{ backgroundImage: `url(${liveSession.cover_image_url})` }}
           />
         ) : null}
-        <div className="pointer-events-none fixed inset-0 z-[1] bg-gradient-to-b from-[#070b12]/50 via-[#070b12]/82 to-[#070b12]" />
+        <div className="pointer-events-none fixed inset-0 z-[1] bg-gradient-to-b from-[#070b12]/50 via-[#070b12]/[0.82] to-[#070b12]" />
 
         <div className="pointer-events-none fixed inset-0 z-[36]">
           <AmbientAudioLayer
@@ -257,7 +257,7 @@ export default function LiveWaitingRoomMaquettePage() {
             <select
               value={scenario}
               onChange={(e) => setScenario(e.target.value)}
-              className="w-full rounded-xl border border-white/12 bg-black/40 px-3 py-2.5 text-sm text-white outline-none transition-colors focus:border-[color-mix(in_srgb,var(--school-accent)_45%,transparent)] focus:ring-1 focus:ring-[color-mix(in_srgb,var(--school-accent)_25%,transparent)]"
+              className="w-full rounded-xl border border-white/[0.12] bg-black/40 px-3 py-2.5 text-sm text-white outline-none transition-colors focus:border-[color-mix(in_srgb,var(--school-accent)_45%,transparent)] focus:ring-1 focus:ring-[color-mix(in_srgb,var(--school-accent)_25%,transparent)]"
             >
               {SCENARIOS.map((s) => (
                 <option key={s.id} value={s.id}>
@@ -438,7 +438,7 @@ export default function LiveWaitingRoomMaquettePage() {
                           value={password}
                           onChange={(e) => setPassword(e.target.value)}
                           placeholder="Mot de passe du live"
-                          className="h-10 w-full rounded-xl border border-white/12 bg-black/45 px-4 pr-10 text-sm text-white placeholder:text-white/25 outline-none transition-colors focus:border-[color-mix(in_srgb,var(--school-accent)_45%,transparent)]"
+                          className="h-10 w-full rounded-xl border border-white/[0.12] bg-black/45 px-4 pr-10 text-sm text-white placeholder:text-white/25 outline-none transition-colors focus:border-[color-mix(in_srgb,var(--school-accent)_45%,transparent)]"
                         />
                         <button
                           type="button"
@@ -508,7 +508,7 @@ export default function LiveWaitingRoomMaquettePage() {
             </motion.div>
 
             <aside className="order-1 space-y-4 lg:sticky lg:top-24 lg:order-2 lg:self-start">
-              <ProrasciencePublicCard className="overflow-hidden border-white/12 bg-black/40 p-0">
+              <ProrasciencePublicCard className="overflow-hidden border-white/[0.12] bg-black/40 p-0">
                 {liveSession.cover_image_url ? (
                   <div className="aspect-video w-full bg-black/50">
                     <img
@@ -583,7 +583,7 @@ export default function LiveWaitingRoomMaquettePage() {
                     ) : null}
                     <Link
                       to="/messages"
-                      className="inline-flex items-center gap-2 rounded-lg border border-white/12 bg-white/[0.04] px-3 py-2 text-xs font-medium text-white/75 transition-colors hover:border-white/20 hover:bg-white/[0.07]"
+                      className="inline-flex items-center gap-2 rounded-lg border border-white/[0.12] bg-white/[0.04] px-3 py-2 text-xs font-medium text-white/75 transition-colors hover:border-white/20 hover:bg-white/[0.07]"
                     >
                       Messagerie (profil)
                     </Link>

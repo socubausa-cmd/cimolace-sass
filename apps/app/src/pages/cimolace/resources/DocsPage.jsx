@@ -184,7 +184,7 @@ export default function CimolaceDocsPage() {
       <section className="relative px-6 py-24 lg:py-32">
         <div className="absolute inset-0 pointer-events-none">
           <div className="absolute -top-32 left-1/2 -translate-x-1/2 w-[900px] h-[900px] rounded-full bg-violet-600/10 blur-[170px]" />
-          <div className="absolute top-1/3 right-0 w-[500px] h-[500px] rounded-full bg-cyan-500/8 blur-[140px]" />
+          <div className="absolute top-1/3 right-0 w-[500px] h-[500px] rounded-full bg-cyan-500/[0.08] blur-[140px]" />
         </div>
 
         <div className="relative max-w-7xl mx-auto">

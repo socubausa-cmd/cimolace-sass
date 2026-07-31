@@ -579,7 +579,7 @@ export default function SlideAnnotationOverlay({
         </button>
 
         {annotateOpen && (
-          <div className="rounded-xl border border-white/12 bg-black/75 backdrop-blur-xl p-2 shadow-xl flex flex-col gap-2 w-full">
+          <div className="rounded-xl border border-white/[0.12] bg-black/75 backdrop-blur-xl p-2 shadow-xl flex flex-col gap-2 w-full">
             <p className="text-[10px] text-white/45 px-0.5 leading-snug">
               Dessin visible par les participants (même proportions sur tous les écrans). Fermez pour cliquer sur la slide ou le PDF.
             </p>

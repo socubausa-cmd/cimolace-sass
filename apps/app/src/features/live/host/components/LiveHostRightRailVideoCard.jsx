@@ -100,7 +100,7 @@ export const LiveHostRightRailVideoCard = ({
                 type="button"
                 onClick={() => setHostRightRailLocalVideoOpen(false)}
                 title="Masquer la vidéo ici — vignette dans le bandeau uniquement (plus de place pour mindmap et MasterScript)"
-                className="shrink-0 rounded-lg border border-amber-400/35 bg-amber-500/10 px-2 py-0.5 text-[9px] font-bold uppercase tracking-wide text-amber-100/95 transition hover:border-amber-400/55 hover:bg-amber-500/18"
+                className="shrink-0 rounded-lg border border-amber-400/35 bg-amber-500/10 px-2 py-0.5 text-[9px] font-bold uppercase tracking-wide text-amber-100/95 transition hover:border-amber-400/55 hover:bg-amber-500/[0.18]"
               >
                 Bandeau
               </button>
@@ -112,7 +112,7 @@ export const LiveHostRightRailVideoCard = ({
                   setLiveRightRailOpen(true);
                 }}
                 title="Afficher votre caméra dans ce panneau (la vignette disparaît du bandeau)"
-                className="shrink-0 rounded-lg border border-amber-400/35 bg-amber-500/10 px-2 py-0.5 text-[9px] font-bold uppercase tracking-wide text-amber-100/95 transition hover:border-amber-400/55 hover:bg-amber-500/18"
+                className="shrink-0 rounded-lg border border-amber-400/35 bg-amber-500/10 px-2 py-0.5 text-[9px] font-bold uppercase tracking-wide text-amber-100/95 transition hover:border-amber-400/55 hover:bg-amber-500/[0.18]"
               >
                 Ici
               </button>
@@ -123,7 +123,7 @@ export const LiveHostRightRailVideoCard = ({
               type="button"
               onClick={() => setLiveRightRailOpen(false)}
               title="Fermer le panneau droit"
-              className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg border border-white/12 bg-white/[0.05] text-white/65 transition hover:border-white/20 hover:bg-white/[0.08] hover:text-white/90"
+              className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg border border-white/[0.12] bg-white/[0.05] text-white/65 transition hover:border-white/20 hover:bg-white/[0.08] hover:text-white/90"
               aria-label="Fermer le panneau droit"
             >
               <ChevronRight className="h-3.5 w-3.5" aria-hidden />

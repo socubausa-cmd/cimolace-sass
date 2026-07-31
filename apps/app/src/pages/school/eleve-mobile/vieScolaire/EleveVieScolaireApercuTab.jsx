@@ -214,14 +214,14 @@ export default function EleveVieScolaireApercuTab() {
               </Link>
               <Link
                 to={ELEVE_MOBILE.bibliotheque}
-                className="inline-flex h-10 items-center gap-1 rounded-full border border-white/18 bg-white/[0.07] px-3 text-[11.5px] font-bold text-white/92 backdrop-blur-sm"
+                className="inline-flex h-10 items-center gap-1 rounded-full border border-white/[0.18] bg-white/[0.07] px-3 text-[11.5px] font-bold text-white/[0.92] backdrop-blur-sm"
               >
                 Cours
                 <ChevronRight className="h-3.5 w-3.5 opacity-55" />
               </Link>
               <Link
                 to={ELEVE_MOBILE.classe}
-                className="inline-flex h-10 items-center gap-1 rounded-full border border-white/18 bg-white/[0.07] px-3 text-[11.5px] font-bold text-white/92 backdrop-blur-sm"
+                className="inline-flex h-10 items-center gap-1 rounded-full border border-white/[0.18] bg-white/[0.07] px-3 text-[11.5px] font-bold text-white/[0.92] backdrop-blur-sm"
               >
                 <User className="h-3.5 w-3.5" />
                 Classe

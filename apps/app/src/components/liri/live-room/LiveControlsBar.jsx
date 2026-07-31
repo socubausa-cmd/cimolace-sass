@@ -190,7 +190,7 @@ export default function LiveControlsBar({
           onClick={() => setShortcutsOpen(false)}
         >
           <div
-            className="max-w-md w-full rounded-2xl border border-white/15 bg-[#0c1225]/96 p-5 shadow-2xl"
+            className="max-w-md w-full rounded-2xl border border-white/15 bg-[#0c1225]/[0.96] p-5 shadow-2xl"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex justify-between items-center gap-3 mb-4">
@@ -256,7 +256,7 @@ export default function LiveControlsBar({
               <button
                 type="button"
                 onClick={onToggleMuted}
-                className={cn('h-9 w-9 rounded-full transition-colors', muted ? 'bg-red-500/30 text-red-100' : 'text-white/88 hover:bg-white/10')}
+                className={cn('h-9 w-9 rounded-full transition-colors', muted ? 'bg-red-500/30 text-red-100' : 'text-white/[0.88] hover:bg-white/10')}
                 title={muted ? 'Réactiver micro' : 'Couper micro'}
                 aria-pressed={muted}
               >
@@ -265,7 +265,7 @@ export default function LiveControlsBar({
               <button
                 type="button"
                 onClick={onToggleCamera}
-                className={cn('h-9 w-9 rounded-full transition-colors', cameraOff ? 'bg-red-500/30 text-red-100' : 'text-white/88 hover:bg-white/10')}
+                className={cn('h-9 w-9 rounded-full transition-colors', cameraOff ? 'bg-red-500/30 text-red-100' : 'text-white/[0.88] hover:bg-white/10')}
                 title={cameraOff ? 'Réactiver caméra' : 'Couper caméra'}
                 aria-pressed={cameraOff}
               >
@@ -274,7 +274,7 @@ export default function LiveControlsBar({
               <button
                 type="button"
                 onClick={onOpenSettings}
-                className="h-9 w-9 rounded-full text-white/88 transition-colors hover:bg-white/10"
+                className="h-9 w-9 rounded-full text-white/[0.88] transition-colors hover:bg-white/10"
                 title="Paramètres caméra / micro"
               >
                 <Settings2 className="mx-auto h-4 w-4" />
@@ -284,7 +284,7 @@ export default function LiveControlsBar({
                 onClick={() => { onToggleParticipants?.(); setHostDockMoreOpen(false); }}
                 className={cn(
                   'h-9 w-9 rounded-full transition-colors',
-                  participantsOpen ? 'bg-amber-500/25 text-amber-100' : 'text-white/88 hover:bg-white/10',
+                  participantsOpen ? 'bg-amber-500/25 text-amber-100' : 'text-white/[0.88] hover:bg-white/10',
                 )}
                 title={participantsOpen ? 'Revenir au pilotage cours' : 'Membres & sièges'}
                 aria-pressed={Boolean(participantsOpen)}
@@ -295,7 +295,7 @@ export default function LiveControlsBar({
                 <button
                   type="button"
                   onClick={() => { onHostDockRefresh(); setHostDockMoreOpen(false); }}
-                  className="h-9 w-9 rounded-full text-white/88 transition-colors hover:bg-white/10"
+                  className="h-9 w-9 rounded-full text-white/[0.88] transition-colors hover:bg-white/10"
                   title="Actualiser"
                 >
                   <RefreshCw className="mx-auto h-4 w-4" />
@@ -305,7 +305,7 @@ export default function LiveControlsBar({
                 <button
                   type="button"
                   onClick={() => { onOpenLayoutPreview(); setHostDockMoreOpen(false); }}
-                  className="h-9 w-9 rounded-full text-white/88 transition-colors hover:bg-white/10"
+                  className="h-9 w-9 rounded-full text-white/[0.88] transition-colors hover:bg-white/10"
                   title="Aperçu vue mobile et projecteur"
                 >
                   <Eye className="mx-auto h-4 w-4" />
@@ -317,14 +317,14 @@ export default function LiveControlsBar({
                   onClick={() => setHostDockMoreOpen((v) => !v)}
                   className={cn(
                     'h-9 w-9 rounded-full transition-colors',
-                    hostDockMoreOpen ? 'bg-[color-mix(in_srgb,var(--school-accent)_20%,transparent)] text-[#f5dd8a]' : 'text-white/88 hover:bg-white/10',
+                    hostDockMoreOpen ? 'bg-[color-mix(in_srgb,var(--school-accent)_20%,transparent)] text-[#f5dd8a]' : 'text-white/[0.88] hover:bg-white/10',
                   )}
                   title="Plus d'actions"
                 >
                   <MoreHorizontal className="mx-auto h-4 w-4" />
                 </button>
                 {hostDockMoreOpen ? (
-                  <div className="absolute bottom-full left-0 z-[60] mb-2 w-52 overflow-hidden rounded-2xl border border-white/12 bg-[#0c1018]/96 py-1 shadow-2xl backdrop-blur-xl">
+                  <div className="absolute bottom-full left-0 z-[60] mb-2 w-52 overflow-hidden rounded-2xl border border-white/[0.12] bg-[#0c1018]/[0.96] py-1 shadow-2xl backdrop-blur-xl">
                     <button
                       type="button"
                       onClick={() => { onToggleShare(); setHostDockMoreOpen(false); }}
@@ -446,7 +446,7 @@ export default function LiveControlsBar({
           </div>
         ) : (
         <div className="flex w-full max-w-[min(98vw,1180px)] flex-col items-stretch gap-1">
-        <div className="mx-auto h-12 max-w-[96vw] overflow-x-auto px-2.5 rounded-full border border-white/20 bg-[#11183a]/72 backdrop-blur-xl inline-flex items-center gap-1.5 shadow-[0_15px_46px_-30px_rgba(255,171,88,0.95)]">
+        <div className="mx-auto h-12 max-w-[96vw] overflow-x-auto px-2.5 rounded-full border border-white/20 bg-[#11183a]/[0.72] backdrop-blur-xl inline-flex items-center gap-1.5 shadow-[0_15px_46px_-30px_rgba(255,171,88,0.95)]">
 
           {/* ── Commun : Micro + Caméra + Settings ── */}
           <button

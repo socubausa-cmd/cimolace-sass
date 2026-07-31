@@ -76,7 +76,7 @@ const TwoFASetupPage = () => {
 
                  {step === 4 && (
                     <div className="space-y-6 text-center py-4">
-                       <div className="w-20 h-20 bg-emerald-500/12 rounded-full flex items-center justify-center mx-auto text-emerald-600">
+                       <div className="w-20 h-20 bg-emerald-500/[0.12] rounded-full flex items-center justify-center mx-auto text-emerald-600">
                           <CheckCircle className="w-10 h-10" />
                        </div>
                        <div>

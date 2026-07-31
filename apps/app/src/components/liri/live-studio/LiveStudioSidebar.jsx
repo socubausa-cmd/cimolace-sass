@@ -50,7 +50,7 @@ export function LiveStudioSidebar({ steps, currentStep, onStepClick, stepStates 
                       'relative z-10 mt-1 flex shrink-0 items-center justify-center rounded-full text-[11px] font-bold tabular-nums transition-all duration-200',
                       nodeSize,
                       isActive &&
-                        'bg-[#d97757] text-white ring-4 ring-[#d97757]/18 shadow-[0_0_18px_-3px_rgba(217,119,87,0.6)]',
+                        'bg-[#d97757] text-white ring-4 ring-[#d97757]/[0.18] shadow-[0_0_18px_-3px_rgba(217,119,87,0.6)]',
                       isCompleted && !isActive && !hasError && 'bg-[#d4a36a] text-[#1a1a1a]',
                       hasError && !isActive && 'bg-red-500/85 text-white',
                       !isActive && !isCompleted && !hasError &&

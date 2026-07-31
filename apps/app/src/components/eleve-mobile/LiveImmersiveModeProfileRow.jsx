@@ -63,7 +63,7 @@ export function LiveImmersiveModeProfileRow() {
       <Sheet open={open} onOpenChange={setOpen}>
         <SheetContent
           side="bottom"
-          className="z-[1002] max-h-[min(90dvh,520px)] overflow-y-auto rounded-t-2xl border-white/10 bg-[#110d0b]/98 px-4 pb-8 pt-2 text-white"
+          className="z-[1002] max-h-[min(90dvh,520px)] overflow-y-auto rounded-t-2xl border-white/10 bg-[#110d0b]/[0.98] px-4 pb-8 pt-2 text-white"
         >
           <SheetHeader className="text-left">
             <SheetTitle className="text-lg font-bold text-white">Mode d'affichage</SheetTitle>

@@ -57,7 +57,7 @@ export function LiveGuestLeftRail({
             onClick={onOpen}
             title="Agrandir le panneau gauche"
             aria-label="Agrandir le panneau gauche"
-            className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-white/14 bg-white/[0.06] text-amber-100/90 transition hover:border-amber-400/35 hover:bg-white/[0.1]"
+            className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-white/[0.14] bg-white/[0.06] text-amber-100/90 transition hover:border-amber-400/35 hover:bg-white/[0.1]"
           >
             <ChevronRight className="h-4 w-4" strokeWidth={2} aria-hidden />
           </button>
@@ -92,7 +92,7 @@ export function LiveGuestLeftRail({
                 type="button"
                 onClick={onClose}
                 title="Fermer le panneau gauche"
-                className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-white/12 bg-white/[0.04] text-white/65 transition hover:border-white/20 hover:bg-white/[0.07] hover:text-white/90"
+                className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-white/[0.12] bg-white/[0.04] text-white/65 transition hover:border-white/20 hover:bg-white/[0.07] hover:text-white/90"
                 aria-label="Fermer le panneau gauche"
               >
                 <ChevronLeft className="h-4 w-4" aria-hidden />

@@ -199,7 +199,7 @@ export default function SmartboardEditorPanel({
                   key={preset.id}
                   type="button"
                   onClick={() => {/* future: apply typo to selected text block */}}
-                  className="w-full text-left rounded-xl border border-white/8 bg-[#0d1525] p-3 hover:border-[color-mix(in_srgb,var(--school-accent)_40%,transparent)] transition-colors group"
+                  className="w-full text-left rounded-xl border border-white/[0.08] bg-[#0d1525] p-3 hover:border-[color-mix(in_srgb,var(--school-accent)_40%,transparent)] transition-colors group"
                 >
                   <div className="flex items-baseline justify-between mb-1">
                     <span style={preset.previewStyle} className="text-white">{preset.preview}</span>
@@ -217,7 +217,7 @@ export default function SmartboardEditorPanel({
           <div className="space-y-3">
             <SectionHead label="Bibliothèque d'icônes" />
             {Object.entries(SB_ICON_LIBRARY).map(([catKey, cat]) => (
-              <div key={catKey} className="rounded-xl border border-white/8 overflow-hidden">
+              <div key={catKey} className="rounded-xl border border-white/[0.08] overflow-hidden">
                 <button
                   type="button"
                   onClick={() => setExpandedIconCat(expandedIconCat === catKey ? null : catKey)}
@@ -310,7 +310,7 @@ export default function SmartboardEditorPanel({
               const items = SB_DECORATORS.filter((d) => d.category === cat);
               const catLabel = { bullet: 'Puces personnalisées', divider: 'Séparateurs', frame: 'Encadrements' }[cat];
               return (
-                <div key={cat} className="rounded-xl border border-white/8 overflow-hidden">
+                <div key={cat} className="rounded-xl border border-white/[0.08] overflow-hidden">
                   <button
                     type="button"
                     onClick={() => setExpandedDecCat(expandedDecCat === cat ? null : cat)}
@@ -337,7 +337,7 @@ export default function SmartboardEditorPanel({
                               className={`w-full text-left flex items-center justify-between rounded-lg px-3 py-2 text-xs transition-colors border ${
                                 bulletStyle === dec.element
                                   ? 'border-[color-mix(in_srgb,var(--school-accent)_50%,transparent)] bg-[color-mix(in_srgb,var(--school-accent)_10%,transparent)] text-[var(--school-accent)]'
-                                  : 'border-white/5 bg-white/2 text-gray-300 hover:border-white/20 hover:bg-white/5'
+                                  : 'border-white/5 bg-white/[0.02] text-gray-300 hover:border-white/20 hover:bg-white/5'
                               }`}
                             >
                               <span className="font-medium">{dec.label}</span>
@@ -408,7 +408,7 @@ export default function SmartboardEditorPanel({
                   className={`w-full text-left flex items-center gap-3 rounded-xl border px-4 py-3 transition-colors ${
                     layout === lp.id.replace('layout_', '')
                       ? 'border-[color-mix(in_srgb,var(--school-accent)_50%,transparent)] bg-[color-mix(in_srgb,var(--school-accent)_10%,transparent)] text-[var(--school-accent)]'
-                      : 'border-white/8 bg-[#0d1525] text-gray-300 hover:border-white/25'
+                      : 'border-white/[0.08] bg-[#0d1525] text-gray-300 hover:border-white/25'
                   }`}
                 >
                   <span className="text-xl w-7 text-center flex-shrink-0">{lp.icon}</span>
@@ -422,7 +422,7 @@ export default function SmartboardEditorPanel({
             </div>
 
             {/* Contenu du slide — édition directe */}
-            <div className="space-y-3 pt-2 border-t border-white/8">
+            <div className="space-y-3 pt-2 border-t border-white/[0.08]">
               <p className="text-[10px] uppercase tracking-widest text-gray-500">Contenu du slide</p>
               <div>
                 <label className="text-[10px] text-gray-400 mb-1 block">Titre</label>
@@ -445,7 +445,7 @@ export default function SmartboardEditorPanel({
                         next[i] = e.target.value;
                         onPointsChange?.(next);
                       }}
-                      className="flex-1 bg-[#0d1525] border border-white/8 rounded-md px-2 py-1.5 text-xs text-white outline-none focus:border-[color-mix(in_srgb,var(--school-accent)_40%,transparent)] transition-colors"
+                      className="flex-1 bg-[#0d1525] border border-white/[0.08] rounded-md px-2 py-1.5 text-xs text-white outline-none focus:border-[color-mix(in_srgb,var(--school-accent)_40%,transparent)] transition-colors"
                       placeholder={`Point ${i + 1}`}
                     />
                     <button
@@ -467,7 +467,7 @@ export default function SmartboardEditorPanel({
               </div>
 
               {/* Progressive Build Canvas */}
-              <div className="space-y-2 pt-2 border-t border-white/8">
+              <div className="space-y-2 pt-2 border-t border-white/[0.08]">
                 <div className="flex items-center justify-between">
                   <p className="text-[10px] uppercase tracking-widest text-gray-500">
                     Progressive Build Canvas
@@ -511,7 +511,7 @@ export default function SmartboardEditorPanel({
                               next[i] = e.target.value;
                               onProgressiveStepsChange?.(next);
                             }}
-                            className="flex-1 bg-[#0d1525] border border-white/8 rounded-md px-2 py-1.5 text-xs text-white outline-none focus:border-indigo-400/40 transition-colors"
+                            className="flex-1 bg-[#0d1525] border border-white/[0.08] rounded-md px-2 py-1.5 text-xs text-white outline-none focus:border-indigo-400/40 transition-colors"
                             placeholder={`Étape ${i + 1}`}
                           />
                           <button

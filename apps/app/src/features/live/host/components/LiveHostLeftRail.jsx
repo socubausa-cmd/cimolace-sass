@@ -703,7 +703,7 @@ export const LiveHostLeftRail = React.forwardRef(function LiveHostLeftRail(
             onClick={() => setLiveLeftRailOpen(true)}
             title="Agrandir le panneau gauche"
             aria-label="Agrandir le panneau gauche"
-            className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-white/22 bg-white/[0.02] text-white/90 shadow-[inset_0_1px_0_rgba(255,255,255,.08)] transition hover:border-amber-400/45 hover:bg-white/[0.02] hover:text-white"
+            className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-white/[0.22] bg-white/[0.02] text-white/90 shadow-[inset_0_1px_0_rgba(255,255,255,.08)] transition hover:border-amber-400/45 hover:bg-white/[0.02] hover:text-white"
           >
             <ChevronRight className="h-[18px] w-[18px]" strokeWidth={2} aria-hidden />
           </button>

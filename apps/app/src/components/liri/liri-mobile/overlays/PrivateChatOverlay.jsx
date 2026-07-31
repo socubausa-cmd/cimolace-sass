@@ -27,7 +27,7 @@ export function PrivateChatOverlay({ onSend, sending = false }) {
       animate={{ x: 0 }}
       exit={{ x: '105%' }}
       transition={{ type: 'spring', damping: 30, stiffness: 340 }}
-      className="fixed inset-y-0 right-0 z-[220] flex w-[min(100%,400px)] flex-col border-l border-white/12 bg-[#080c14]/98 shadow-2xl backdrop-blur-2xl"
+      className="fixed inset-y-0 right-0 z-[220] flex w-[min(100%,400px)] flex-col border-l border-white/[0.12] bg-[#080c14]/[0.98] shadow-2xl backdrop-blur-2xl"
       data-liri-no-doubletap
     >
       <div className="flex items-center gap-2 border-b border-white/10 px-3 py-3">
@@ -67,7 +67,7 @@ export function PrivateChatOverlay({ onSend, sending = false }) {
             }
           }}
           placeholder="Écrire…"
-          className="min-w-0 flex-1 rounded-xl border border-white/12 bg-white/[0.05] px-3 py-2 text-sm text-white outline-none placeholder:text-white/35"
+          className="min-w-0 flex-1 rounded-xl border border-white/[0.12] bg-white/[0.05] px-3 py-2 text-sm text-white outline-none placeholder:text-white/35"
         />
         <button
           type="button"

@@ -109,7 +109,7 @@ export default function LivesLibraryContent({ variant = 'default' }) {
         <div className="space-y-2 pb-1">
           <LiriWordmark size="kicker" className="text-[color-mix(in_srgb,var(--school-accent)_80%,transparent)]" />
           <h2 className="font-serif text-lg text-[#faf3e6] tracking-tight">Lives & replays</h2>
-          <p className="text-xs text-white/42">
+          <p className="text-xs text-white/[0.42]">
             En invité : accès aux directs et rediffusions. Un lien reçu ? Collez-le dans « Connexion » →{' '}
             <Link to={`${ELEVE_MOBILE.connexion}/lien`} className="text-[color-mix(in_srgb,var(--school-accent)_85%,white)] underline-offset-2 hover:underline">
               Rejoindre avec un lien

@@ -210,11 +210,11 @@ export default function LiveHostDomMirror({
           )}
         </div>
         <div
-          className="absolute bottom-1.5 left-1/2 h-0.5 w-10 -translate-x-1/2 rounded-full bg-white/12"
+          className="absolute bottom-1.5 left-1/2 h-0.5 w-10 -translate-x-1/2 rounded-full bg-white/[0.12]"
           aria-hidden
         />
       </div>
-      <p className="mt-1.5 text-center text-[9px] leading-snug text-white/32">
+      <p className="mt-1.5 text-center text-[9px] leading-snug text-white/[0.32]">
         Miroir live (même contenu que la grille). Double connexion inutile — lecture seule.
       </p>
     </div>

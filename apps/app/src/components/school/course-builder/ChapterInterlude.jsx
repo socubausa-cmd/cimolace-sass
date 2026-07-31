@@ -44,7 +44,7 @@ export default function ChapterInterlude({
     <AnimatePresence>
       {open ? (
         <motion.div
-          className="fixed inset-0 z-[90] flex items-center justify-center bg-[#0b0f17]/96 p-4 backdrop-blur-sm md:p-8"
+          className="fixed inset-0 z-[90] flex items-center justify-center bg-[#0b0f17]/[0.96] p-4 backdrop-blur-sm md:p-8"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}

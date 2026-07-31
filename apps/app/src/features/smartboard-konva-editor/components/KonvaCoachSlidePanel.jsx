@@ -160,7 +160,7 @@ export default function KonvaCoachSlidePanel({ className, contextExtra = '' }) {
         <button
           type="button"
           onClick={fillCoachFromScene}
-          className="flex-1 rounded border border-white/12 bg-black/30 py-1 text-[9px] text-white/70 hover:bg-white/10"
+          className="flex-1 rounded border border-white/[0.12] bg-black/30 py-1 text-[9px] text-white/70 hover:bg-white/10"
         >
           Depuis la scène
         </button>
@@ -192,7 +192,7 @@ export default function KonvaCoachSlidePanel({ className, contextExtra = '' }) {
               ) : null}
             </div>
           ) : null}
-          <pre className="max-h-40 overflow-y-auto whitespace-pre-wrap break-words rounded border border-white/8 bg-black/40 p-2 text-[9px] leading-snug text-white/75 [scrollbar-width:thin]">
+          <pre className="max-h-40 overflow-y-auto whitespace-pre-wrap break-words rounded border border-white/[0.08] bg-black/40 p-2 text-[9px] leading-snug text-white/75 [scrollbar-width:thin]">
             {coachResult}
           </pre>
           <div className="flex flex-col gap-1">
@@ -246,7 +246,7 @@ export default function KonvaCoachSlidePanel({ className, contextExtra = '' }) {
           onChange={(e) =>
             setArchitectDepth(/** @type {'auto' | 'light' | 'medium' | 'deep' | 'full'} */ (e.target.value))
           }
-          className="w-full rounded border border-white/12 bg-black/40 px-1.5 py-1 text-[9px] text-white"
+          className="w-full rounded border border-white/[0.12] bg-black/40 px-1.5 py-1 text-[9px] text-white"
         >
           <option value="auto">Auto (selon score Coach)</option>
           <option value="light">Forcer : léger</option>

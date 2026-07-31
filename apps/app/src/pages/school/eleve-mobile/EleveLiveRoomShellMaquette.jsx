@@ -487,7 +487,7 @@ function GuestActionFooter() {
           <SmallFooterBtn Icon={Hand} label="Lever la main" />
           <SmallFooterBtn Icon={LogOut} label="Quitter" danger />
         </div>
-        <div className="mx-auto mt-1.5 h-1 w-[28%] min-w-[100px] max-w-[120px] rounded-full bg-white/2" style={{ background: 'rgba(255,255,255,0.2)' }} aria-hidden />
+        <div className="mx-auto mt-1.5 h-1 w-[28%] min-w-[100px] max-w-[120px] rounded-full bg-white/[0.02]" style={{ background: 'rgba(255,255,255,0.2)' }} aria-hidden />
       </div>
     </footer>
   );

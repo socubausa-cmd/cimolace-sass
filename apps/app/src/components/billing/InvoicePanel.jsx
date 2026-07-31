@@ -106,7 +106,7 @@ export default function InvoicePanel() {
       )}
 
       {!loading && !error && invoices.length === 0 && (
-        <div className="rounded-xl border border-white/10 bg-white/3 px-5 py-8 text-center">
+        <div className="rounded-xl border border-white/10 bg-white/[0.03] px-5 py-8 text-center">
           <FileText className="w-8 h-8 text-gray-600 mx-auto mb-3" />
           <p className="text-sm text-gray-400">Aucune facture pour l&apos;instant</p>
           <p className="text-xs text-gray-600 mt-1">Vos factures apparaîtront ici après chaque paiement confirmé.</p>
@@ -118,7 +118,7 @@ export default function InvoicePanel() {
           {invoices.map((inv, idx) => (
             <div
               key={inv.paymentId}
-              className={`flex items-center gap-4 px-4 py-3.5 ${idx < invoices.length - 1 ? 'border-b border-white/8' : ''} hover:bg-white/3 transition-colors`}
+              className={`flex items-center gap-4 px-4 py-3.5 ${idx < invoices.length - 1 ? 'border-b border-white/[0.08]' : ''} hover:bg-white/[0.03] transition-colors`}
             >
               {/* Icon */}
               <div className="w-9 h-9 rounded-lg bg-emerald-500/10 flex items-center justify-center flex-shrink-0">
@@ -129,7 +129,7 @@ export default function InvoicePanel() {
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2 flex-wrap">
                   <span className="text-xs font-mono text-[var(--school-accent)] font-semibold">{inv.invoiceNumber}</span>
-                  <span className="text-[10px] bg-white/8 text-gray-400 px-1.5 py-0.5 rounded-full">
+                  <span className="text-[10px] bg-white/[0.08] text-gray-400 px-1.5 py-0.5 rounded-full">
                     {typeLabel(inv.purchaseType)}
                   </span>
                 </div>

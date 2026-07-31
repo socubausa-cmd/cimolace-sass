@@ -71,7 +71,7 @@ export default function DesignerLayersPanel({
                     ? 'bg-[color-mix(in_srgb,var(--school-accent)_15%,transparent)] text-[#f5dd8a] ring-1 ring-[color-mix(in_srgb,var(--school-accent)_35%,transparent)]'
                     : o.hidden
                       ? 'text-white/25 hover:bg-white/[0.04]'
-                      : 'text-white/72 hover:bg-white/[0.06]',
+                      : 'text-white/[0.72] hover:bg-white/[0.06]',
                 )}
               >
                 <button

@@ -563,7 +563,7 @@ export default function CimolaceSolutionStoryPage() {
             {[900, 650, 420].map((size, i) => (
               <motion.div key={i} animate={{ rotate: i % 2 === 0 ? 360 : -360 }} transition={{ duration: 30 + i * 15, repeat: Infinity, ease: 'linear' }} className="absolute rounded-full border border-white/[0.04]" style={{ width: size, height: size }} />
             ))}
-            <div className="absolute w-96 h-96 rounded-full bg-gradient-radial from-violet-500/8 to-transparent blur-2xl" />
+            <div className="absolute w-96 h-96 rounded-full bg-gradient-radial from-violet-500/[0.08] to-transparent blur-2xl" />
           </div>
           <div className="relative z-10 max-w-[900px] mx-auto px-8 text-center">
             <Line delay={0}><span className="text-[10px] tracking-[0.35em] uppercase text-violet-400/60 mb-10 block">{story.vision.title}</span></Line>
@@ -657,7 +657,7 @@ export default function CimolaceSolutionStoryPage() {
         {/* ══ CTA ══ */}
         <section className="py-32 px-8 relative overflow-hidden">
           <motion.div animate={{ rotate: [0, 360] }} transition={{ duration: 30, repeat: Infinity, ease: 'linear' }} className="absolute inset-0 pointer-events-none" style={{ background: 'conic-gradient(from 0deg at 50% 50%, #7c3aed08, #06b6d408, #7c3aed08)' }} />
-          <motion.div animate={{ scale: [1, 1.3, 1] }} transition={{ duration: 8, repeat: Infinity }} className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] rounded-full bg-gradient-radial from-violet-600/12 to-transparent blur-3xl pointer-events-none" />
+          <motion.div animate={{ scale: [1, 1.3, 1] }} transition={{ duration: 8, repeat: Infinity }} className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] rounded-full bg-gradient-radial from-violet-600/[0.12] to-transparent blur-3xl pointer-events-none" />
 
           <div className="relative z-10 max-w-[900px] mx-auto text-center">
             <Line delay={0}><span className="text-[10px] tracking-[0.35em] uppercase text-violet-400/60 mb-10 block">Prêt à commencer ?</span></Line>

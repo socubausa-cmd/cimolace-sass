@@ -79,21 +79,21 @@ const TILES = [
     to: `${ELEVE_MOBILE.classe}#membres`,
     icon: Users,
     label: 'Membres',
-    iconRing: 'border-amber-500/30 bg-amber-500/12',
+    iconRing: 'border-amber-500/30 bg-amber-500/[0.12]',
     iconColor: 'text-amber-200',
   },
   {
     to: ELEVE_MOBILE.bibliotheque,
     icon: Folder,
     label: 'Documents',
-    iconRing: 'border-amber-500/30 bg-amber-500/12',
+    iconRing: 'border-amber-500/30 bg-amber-500/[0.12]',
     iconColor: 'text-amber-200',
   },
   {
     to: `${ELEVE_MOBILE.classe}#sondages`,
     icon: BarChart2,
     label: 'Sondages',
-    iconRing: 'border-emerald-500/30 bg-emerald-500/12',
+    iconRing: 'border-emerald-500/30 bg-emerald-500/[0.12]',
     iconColor: 'text-emerald-200',
   },
 ];
@@ -113,7 +113,7 @@ const AVATAR_GRADIENTS = [
 /** Mappe un tone d'annonce vers les classes CSS Tailwind */
 function toneToTagC(tone) {
   if (tone === 'violet')
-    return { bg: 'bg-orange-500/18', t: 'text-orange-200', border: 'border border-orange-500/30' };
+    return { bg: 'bg-orange-500/[0.18]', t: 'text-orange-200', border: 'border border-orange-500/30' };
   return { bg: 'bg-amber-500/15', t: 'text-amber-200', border: 'border border-amber-500/25' };
 }
 

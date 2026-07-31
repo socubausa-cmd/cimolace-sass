@@ -35,7 +35,7 @@ function formatDurationShort(seconds) {
 // ── Carte statistique ──────────────────────────────────────────────────────────
 function StatCard({ icon: Icon, label, value, color = 'text-white/80', bg = 'bg-white/[0.04]' }) {
   return (
-    <div className={cn('rounded-xl border border-white/8 p-3 flex flex-col gap-1', bg)}>
+    <div className={cn('rounded-xl border border-white/[0.08] p-3 flex flex-col gap-1', bg)}>
       <div className="flex items-center gap-1.5">
         <Icon className={cn('w-3.5 h-3.5', color)} />
         <span className="text-[9px] uppercase tracking-wider text-gray-500">{label}</span>
@@ -53,7 +53,7 @@ function SlideBar({ slide, maxDuration }) {
       <span className="w-14 text-right text-[9px] text-gray-500 flex-shrink-0">
         Diapo #{slide.index + 1}
       </span>
-      <div className="flex-1 h-1.5 rounded-full bg-white/8 overflow-hidden">
+      <div className="flex-1 h-1.5 rounded-full bg-white/[0.08] overflow-hidden">
         <motion.div
           initial={{ width: 0 }}
           animate={{ width: `${pct}%` }}
@@ -135,7 +135,7 @@ export default function PostLiveSummaryModal({
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 32, scale: 0.96 }}
             transition={{ type: 'spring', damping: 26, stiffness: 320 }}
-            className="relative w-full max-w-lg max-h-[90vh] overflow-y-auto rounded-2xl border border-white/12 bg-[#0D1117] shadow-[0_40px_100px_-25px_rgba(0,0,0,0.9)]"
+            className="relative w-full max-w-lg max-h-[90vh] overflow-y-auto rounded-2xl border border-white/[0.12] bg-[#0D1117] shadow-[0_40px_100px_-25px_rgba(0,0,0,0.9)]"
           >
             {/* Gradient de fond */}
             <div className="absolute inset-0 pointer-events-none rounded-2xl overflow-hidden">
@@ -143,7 +143,7 @@ export default function PostLiveSummaryModal({
             </div>
 
             {/* Header */}
-            <div className="relative flex items-start justify-between p-5 pb-4 border-b border-white/8">
+            <div className="relative flex items-start justify-between p-5 pb-4 border-b border-white/[0.08]">
               <div className="flex items-center gap-3">
                 <div className="w-9 h-9 rounded-xl bg-[color-mix(in_srgb,var(--school-accent)_12%,transparent)] border border-[color-mix(in_srgb,var(--school-accent)_25%,transparent)] flex items-center justify-center flex-shrink-0">
                   <Award className="w-4.5 h-4.5 text-[var(--school-accent)]" />
@@ -180,7 +180,7 @@ export default function PostLiveSummaryModal({
 
               {/* Error state */}
               {error && !generating && (
-                <div className="rounded-xl border border-red-500/20 bg-red-500/8 p-4 text-center">
+                <div className="rounded-xl border border-red-500/20 bg-red-500/[0.08] p-4 text-center">
                   <p className="text-xs text-red-300">{error}</p>
                 </div>
               )}
@@ -244,7 +244,7 @@ export default function PostLiveSummaryModal({
                             initial={{ opacity: 0, x: -8 }}
                             animate={{ opacity: 1, x: 0 }}
                             transition={{ delay: i * 0.06 }}
-                            className="flex items-start gap-2 rounded-lg bg-white/[0.03] border border-white/8 px-3 py-2"
+                            className="flex items-start gap-2 rounded-lg bg-white/[0.03] border border-white/[0.08] px-3 py-2"
                           >
                             <span className="w-4 h-4 rounded-full bg-[color-mix(in_srgb,var(--school-accent)_15%,transparent)] border border-[color-mix(in_srgb,var(--school-accent)_25%,transparent)] text-[8px] font-bold text-[var(--school-accent)] flex items-center justify-center flex-shrink-0 mt-0.5">
                               {i + 1}
@@ -282,7 +282,7 @@ export default function PostLiveSummaryModal({
 
                   {/* Questions breakdown */}
                   {summary.questionsTotal > 0 && (
-                    <div className="rounded-xl border border-white/8 bg-white/[0.02] p-3 space-y-2">
+                    <div className="rounded-xl border border-white/[0.08] bg-white/[0.02] p-3 space-y-2">
                       <p className="text-[9px] uppercase tracking-wider text-gray-500 font-semibold flex items-center gap-1.5">
                         <HelpCircle className="w-3 h-3" /> Questions NEURON-Q
                       </p>
@@ -314,7 +314,7 @@ export default function PostLiveSummaryModal({
                   type="button"
                   onClick={handleCopy}
                   disabled={!summary}
-                  className="flex items-center gap-1.5 h-9 px-3 rounded-xl bg-white/[0.05] border border-white/10 text-xs text-gray-400 hover:text-white hover:bg-white/8 disabled:opacity-40 transition-all"
+                  className="flex items-center gap-1.5 h-9 px-3 rounded-xl bg-white/[0.05] border border-white/10 text-xs text-gray-400 hover:text-white hover:bg-white/[0.08] disabled:opacity-40 transition-all"
                 >
                   {copied ? <Check className="w-3.5 h-3.5 text-amber-400" /> : <Copy className="w-3.5 h-3.5" />}
                   {copied ? 'Copié !' : 'Copier'}
@@ -335,7 +335,7 @@ export default function PostLiveSummaryModal({
                 )}
 
                 {reportSent && (
-                  <div className="flex-1 h-9 rounded-xl bg-amber-500/12 border border-amber-400/22 flex items-center justify-center gap-1.5">
+                  <div className="flex-1 h-9 rounded-xl bg-amber-500/[0.12] border border-amber-400/[0.22] flex items-center justify-center gap-1.5">
                     <CheckCircle2 className="w-3.5 h-3.5 text-amber-400" />
                     <span className="text-xs text-amber-300">Rapport envoyé</span>
                   </div>
@@ -344,7 +344,7 @@ export default function PostLiveSummaryModal({
                 <button
                   type="button"
                   onClick={onClose}
-                  className="h-9 px-3 rounded-xl bg-white/[0.04] border border-white/8 text-xs text-gray-500 hover:text-white transition-colors"
+                  className="h-9 px-3 rounded-xl bg-white/[0.04] border border-white/[0.08] text-xs text-gray-500 hover:text-white transition-colors"
                 >
                   Fermer
                 </button>

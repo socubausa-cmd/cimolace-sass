@@ -62,7 +62,7 @@ export function WaitingRoomPanel({
             entries.map((entry) => (
               <div
                 key={entry.id}
-                className="space-y-2 rounded-lg border border-amber-400/18 bg-amber-500/[0.06] p-2"
+                className="space-y-2 rounded-lg border border-amber-400/[0.18] bg-amber-500/[0.06] p-2"
               >
                 <div className="flex items-center gap-2">
                   {entry.profiles?.avatar_url ? (
@@ -110,7 +110,7 @@ export function WaitingRoomPanel({
                     <button
                       type="button"
                       onClick={() => onReject(entry.id)}
-                      className="h-7 rounded-lg border border-red-500/25 bg-red-500/10 px-2 text-[9px] text-red-400 hover:bg-red-500/18"
+                      className="h-7 rounded-lg border border-red-500/25 bg-red-500/10 px-2 text-[9px] text-red-400 hover:bg-red-500/[0.18]"
                     >
                       Refuser
                     </button>

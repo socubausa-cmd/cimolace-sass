@@ -176,7 +176,7 @@ export default function ProrascienceAppleStoryV3() {
             <div className="mt-12 grid gap-6 lg:grid-cols-2">
               <motion.div className="rounded-[1.8rem] border border-white/10 bg-[#0b0d15] p-7" {...reveal}>
                 <p className="text-xs uppercase tracking-[0.26em] text-white/40">Avant</p>
-                <ul className="mt-6 space-y-4 text-lg text-white/72">
+                <ul className="mt-6 space-y-4 text-lg text-white/[0.72]">
                   <li>Quitter l'Europe</li>
                   <li>Retourner au village</li>
                   <li>Chercher un initié</li>
@@ -226,9 +226,9 @@ export default function ProrascienceAppleStoryV3() {
             {timeline.map((step, index) => (
               <motion.article key={step.title} {...reveal} className="grid gap-6 rounded-[2rem] border border-white/10 bg-white/[0.03] p-5 md:p-7 lg:grid-cols-[0.9fr_1.1fr]">
                 <div className={index % 2 === 1 ? 'lg:order-2' : ''}>
-                  <p className="text-xs uppercase tracking-[0.26em] text-white/42">{step.label}</p>
+                  <p className="text-xs uppercase tracking-[0.26em] text-white/[0.42]">{step.label}</p>
                   <h3 className="mt-3 text-3xl font-semibold tracking-tight">{step.title}</h3>
-                  <p className="mt-4 text-lg leading-8 text-white/72">{step.body}</p>
+                  <p className="mt-4 text-lg leading-8 text-white/[0.72]">{step.body}</p>
                 </div>
                 <div className="overflow-hidden rounded-[1.5rem] border border-white/10">
                   <img src={step.img} alt={step.title} className="h-72 w-full object-cover sm:h-80" />
@@ -243,7 +243,7 @@ export default function ProrascienceAppleStoryV3() {
             <motion.div {...reveal} className="rounded-[1.8rem] border border-white/10 bg-white/[0.03] p-7">
               <p className="text-sm uppercase tracking-[0.3em] text-white/45">Architect · moteur visuel IA</p>
               <h2 className="mt-4 text-4xl font-semibold tracking-tight">Générer. Styliser. Insérer.</h2>
-              <p className="mt-5 text-lg leading-8 text-white/72">
+              <p className="mt-5 text-lg leading-8 text-white/[0.72]">
                 Un clic transforme une notion, un rite ou un concept en visuel pédagogique, mystique ou cinématique, directement intégré dans Smartboard Designer.
               </p>
               <div className="mt-6 flex flex-wrap gap-2 text-sm text-white/75">
@@ -268,7 +268,7 @@ export default function ProrascienceAppleStoryV3() {
               <motion.div key={item.before} whileHover={{ y: -5 }} className="rounded-[1.4rem] border border-white/10 bg-gradient-to-br from-white/[0.06] to-white/[0.02] p-5">
                 <p className="text-xs uppercase tracking-[0.24em] text-white/45">Avant</p>
                 <p className="mt-2 text-2xl text-white/75">{item.before}</p>
-                <div className="my-4 h-px bg-white/12" />
+                <div className="my-4 h-px bg-white/[0.12]" />
                 <p className="text-xs uppercase tracking-[0.24em] text-white/45">Après</p>
                 <p className="mt-2 text-2xl font-semibold">{item.after}</p>
               </motion.div>
@@ -290,7 +290,7 @@ export default function ProrascienceAppleStoryV3() {
                 <Link to="/signup" className="rounded-full bg-white px-7 py-3 text-sm font-medium text-black transition hover:-translate-y-0.5 hover:bg-white/90">
                   Entrer dans l'école
                 </Link>
-                <Link to="/ecoles/prorascience" className="rounded-full border border-white/25 px-7 py-3 text-sm font-medium text-white transition hover:bg-white/12">
+                <Link to="/ecoles/prorascience" className="rounded-full border border-white/25 px-7 py-3 text-sm font-medium text-white transition hover:bg-white/[0.12]">
                   Voir la démonstration
                 </Link>
               </div>

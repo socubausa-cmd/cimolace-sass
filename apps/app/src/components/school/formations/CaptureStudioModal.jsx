@@ -1082,7 +1082,7 @@ export default function CaptureStudioModal({ open, onClose, onVideoReady, initia
                     </div>
                     <div className="space-y-3 max-h-[340px] overflow-y-auto pr-1">
                       {segments.map((seg, si) => (
-                        <div key={seg.id} className="rounded-xl border border-white/8 bg-[#0F1827] p-3 space-y-2">
+                        <div key={seg.id} className="rounded-xl border border-white/[0.08] bg-[#0F1827] p-3 space-y-2">
                           <div className="flex items-center gap-2">
                             <span className="w-5 h-5 rounded-full bg-[color-mix(in_srgb,var(--school-accent)_20%,transparent)] text-[var(--school-accent)] text-[10px] font-bold flex items-center justify-center flex-shrink-0">{si + 1}</span>
                             <Input
@@ -1104,7 +1104,7 @@ export default function CaptureStudioModal({ open, onClose, onVideoReady, initia
                                 <Input
                                   value={pt}
                                   onChange={(e) => updatePoint(seg.id, pi, e.target.value)}
-                                  className="bg-[#0a111d] border-white/8 h-7 text-xs flex-1"
+                                  className="bg-[#0a111d] border-white/[0.08] h-7 text-xs flex-1"
                                   placeholder="Point à aborder..."
                                 />
                                 {seg.points.length > 1 && (
@@ -1147,7 +1147,7 @@ export default function CaptureStudioModal({ open, onClose, onVideoReady, initia
                         <div className="absolute inset-[5%] border border-dashed border-white/20 rounded-lg pointer-events-none" />
                       )}
                       {etatCamera.phase !== 'ok' && (
-                        <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 px-6 text-center bg-[#1f1e1c]/92">
+                        <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 px-6 text-center bg-[#1f1e1c]/[0.92]">
                           {etatCamera.phase === 'demande' ? (
                             <>
                               <Loader2 className="w-6 h-6 animate-spin text-[var(--school-accent)]" />
@@ -1674,7 +1674,7 @@ export default function CaptureStudioModal({ open, onClose, onVideoReady, initia
                   <div className="p-4 space-y-2">
                     <p className="text-[10px] uppercase tracking-widest text-gray-500 mb-2">Édite le plan — le SmartBoard se met à jour en direct</p>
                     {segments.map((seg, si) => (
-                      <div key={seg.id} className={`rounded-xl border p-3 transition-colors ${si === activeSegmentIdx ? 'border-[color-mix(in_srgb,var(--school-accent)_50%,transparent)] bg-[color-mix(in_srgb,var(--school-accent)_5%,transparent)]' : 'border-white/8 bg-white/[0.02]'}`}>
+                      <div key={seg.id} className={`rounded-xl border p-3 transition-colors ${si === activeSegmentIdx ? 'border-[color-mix(in_srgb,var(--school-accent)_50%,transparent)] bg-[color-mix(in_srgb,var(--school-accent)_5%,transparent)]' : 'border-white/[0.08] bg-white/[0.02]'}`}>
                         <div className="flex items-center gap-2">
                           <button type="button" onClick={() => { setActiveSegmentIdx(si); setActivePointIdx(0); }}
                             className={`w-5 h-5 rounded-full text-[10px] font-bold flex items-center justify-center flex-shrink-0 ${si === activeSegmentIdx ? 'bg-[var(--school-accent)] text-black' : 'bg-white/10 text-gray-400'}`}>{si + 1}</button>
@@ -1696,7 +1696,7 @@ export default function CaptureStudioModal({ open, onClose, onVideoReady, initia
                                   <Input
                                     value={pt}
                                     onChange={(e) => updatePoint(seg.id, pi, e.target.value)}
-                                    className={`bg-transparent border-white/8 h-6 text-[11px] flex-1 ${done ? 'text-gray-500 line-through' : 'text-gray-200'}`}
+                                    className={`bg-transparent border-white/[0.08] h-6 text-[11px] flex-1 ${done ? 'text-gray-500 line-through' : 'text-gray-200'}`}
                                   />
                                   {seg.points.length > 1 && (
                                     <button type="button" onClick={() => removePoint(seg.id, pi)} className="text-gray-700 hover:text-red-400"><X className="w-3 h-3" /></button>
@@ -1737,7 +1737,7 @@ export default function CaptureStudioModal({ open, onClose, onVideoReady, initia
                           {activeSeg.points.filter(Boolean).map((pt, pi) => {
                             const done = completedPoints.has(`${activeSegmentIdx}-${pi}`);
                             return (
-                              <div key={pi} className={`rounded-lg p-2.5 border text-xs transition-all cursor-pointer ${pi === activePointIdx ? 'border-[color-mix(in_srgb,var(--school-accent)_40%,transparent)] bg-[color-mix(in_srgb,var(--school-accent)_8%,transparent)] text-white font-medium' : done ? 'border-white/5 bg-white/2 text-gray-500 line-through' : 'border-white/8 bg-white/3 text-gray-300'}`} onClick={() => setActivePointIdx(pi)}>
+                              <div key={pi} className={`rounded-lg p-2.5 border text-xs transition-all cursor-pointer ${pi === activePointIdx ? 'border-[color-mix(in_srgb,var(--school-accent)_40%,transparent)] bg-[color-mix(in_srgb,var(--school-accent)_8%,transparent)] text-white font-medium' : done ? 'border-white/5 bg-white/[0.02] text-gray-500 line-through' : 'border-white/[0.08] bg-white/[0.03] text-gray-300'}`} onClick={() => setActivePointIdx(pi)}>
                                 <span className="mr-2 text-[var(--school-accent)]">→</span>{pt}
                               </div>
                             );

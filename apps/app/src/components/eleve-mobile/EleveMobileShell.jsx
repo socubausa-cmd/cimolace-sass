@@ -168,7 +168,7 @@ export function EleveMobileShell({
               <button
                 type="button"
                 onClick={onAvatarClick}
-                className="relative h-10 w-10 shrink-0 overflow-hidden rounded-full border-2 border-white/12 ring-1 ring-white/5 transition-transform active:scale-95"
+                className="relative h-10 w-10 shrink-0 overflow-hidden rounded-full border-2 border-white/[0.12] ring-1 ring-white/5 transition-transform active:scale-95"
                 aria-label="Mon profil"
               >
                 <AvatarContent user={user} initials={initials} />
@@ -179,7 +179,7 @@ export function EleveMobileShell({
             ) : (
               <Link
                 to={ELEVE_MOBILE.profile}
-                className="relative h-10 w-10 shrink-0 overflow-hidden rounded-full border-2 border-white/12 ring-1 ring-white/5 transition-transform active:scale-95"
+                className="relative h-10 w-10 shrink-0 overflow-hidden rounded-full border-2 border-white/[0.12] ring-1 ring-white/5 transition-transform active:scale-95"
                 aria-label="Mon profil"
               >
                 <AvatarContent user={user} initials={initials} />
@@ -578,7 +578,7 @@ export function EleveEmptyState({ icon: Icon, title, description, primary, secon
       }}
     >
       {Icon ? (
-        <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-2xl border border-orange-400/20 bg-gradient-to-br from-amber-500/20 to-orange-600/18 shadow-[0_4px_16px_-4px_rgba(217, 119, 87,0.35),inset_0_1px_0_rgba(255,255,255,0.1)]">
+        <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-2xl border border-orange-400/20 bg-gradient-to-br from-amber-500/20 to-orange-600/[0.18] shadow-[0_4px_16px_-4px_rgba(217, 119, 87,0.35),inset_0_1px_0_rgba(255,255,255,0.1)]">
           <Icon className="h-6 w-6 text-orange-200" strokeWidth={2} />
         </div>
       ) : null}
@@ -652,7 +652,7 @@ export function EleveSurface({ variant = 'plate', className, children, ...rest }
 
 export function EleveBadge({ children, tone = 'violet', className }) {
   const tones = {
-    violet: 'border-orange-400/35 bg-orange-500/12 text-orange-200 shadow-[0_0_0_1px_rgba(217, 119, 87,0.2)]',
+    violet: 'border-orange-400/35 bg-orange-500/[0.12] text-orange-200 shadow-[0_0_0_1px_rgba(217, 119, 87,0.2)]',
   };
   return (
     <span

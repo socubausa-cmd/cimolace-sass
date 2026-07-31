@@ -44,12 +44,12 @@ function BlendModeRow({ st, updateStyle, hint }) {
     <label className="flex flex-col gap-0.5">
       <span className="text-[13px] text-white/35">Mode de fusion (calque)</span>
       {hint ? (
-        <p className="mb-1 text-[10px] leading-snug text-white/28">{hint}</p>
+        <p className="mb-1 text-[10px] leading-snug text-white/[0.28]">{hint}</p>
       ) : null}
       <select
         value={v}
         onChange={(e) => updateStyle({ globalCompositeOperation: e.target.value })}
-        className="h-8 w-full rounded-md border border-white/12 bg-black/50 px-2 text-[12px] text-white"
+        className="h-8 w-full rounded-md border border-white/[0.12] bg-black/50 px-2 text-[12px] text-white"
       >
         {BLEND_MODE_OPTIONS.map((o) => (
           <option key={o.value} value={o.value}>
@@ -89,7 +89,7 @@ function IconBtn({ onClick, title, className, children, active }) {
         'flex h-7 w-7 items-center justify-center rounded-md border text-white/70 transition-colors',
         active
           ? 'border-[color-mix(in_srgb,var(--school-accent)_60%,transparent)] bg-[color-mix(in_srgb,var(--school-accent)_20%,transparent)] text-[#f5dd8a]'
-          : 'border-white/12 bg-white/[0.04] hover:border-[color-mix(in_srgb,var(--school-accent)_35%,transparent)] hover:bg-white/10',
+          : 'border-white/[0.12] bg-white/[0.04] hover:border-[color-mix(in_srgb,var(--school-accent)_35%,transparent)] hover:bg-white/10',
         className,
       )}
     >
@@ -260,7 +260,7 @@ export default function CanvaPropertiesPanel({
             type="number"
             value={selectedObj.layer ?? 0}
             onChange={(e) => updateObject(selectedObj.id, { layer: Number(e.target.value) || 0 })}
-            className="h-6 w-16 rounded-md border border-white/12 bg-black/45 px-1.5 text-[12px] text-white"
+            className="h-6 w-16 rounded-md border border-white/[0.12] bg-black/45 px-1.5 text-[12px] text-white"
           />
         </div>
       </div>
@@ -281,7 +281,7 @@ export default function CanvaPropertiesPanel({
                 type="number"
                 value={Math.round(selectedObj[key] ?? 0)}
                 onChange={(e) => updateObject(selectedObj.id, { [key]: Number(e.target.value) || 0 })}
-                className="h-7 rounded-md border border-white/12 bg-black/45 px-2 text-[12px] text-white"
+                className="h-7 rounded-md border border-white/[0.12] bg-black/45 px-2 text-[12px] text-white"
               />
             </label>
           ))}
@@ -292,7 +292,7 @@ export default function CanvaPropertiesPanel({
             type="number"
             value={Math.round(selectedObj.rotation || 0)}
             onChange={(e) => updateObject(selectedObj.id, { rotation: Number(e.target.value) || 0 })}
-            className="h-7 rounded-md border border-white/12 bg-black/45 px-2 text-[12px] text-white"
+            className="h-7 rounded-md border border-white/[0.12] bg-black/45 px-2 text-[12px] text-white"
           />
         </label>
       </div>
@@ -366,7 +366,7 @@ export default function CanvaPropertiesPanel({
                   style: { ...st, ...src.style },
                 });
               }}
-              className="h-8 w-full rounded-md border border-white/12 bg-black/50 px-2 text-[11px] text-white"
+              className="h-8 w-full rounded-md border border-white/[0.12] bg-black/50 px-2 text-[11px] text-white"
             >
               <option value="">Choisir un style…</option>
               {LIRI_TEXT_DESIGN_STYLES.map((s) => (
@@ -383,7 +383,7 @@ export default function CanvaPropertiesPanel({
               <select
                 value={FONT_OPTIONS.some((f) => f.value === st.fontFamily) ? st.fontFamily : FONT_OPTIONS[0].value}
                 onChange={(e) => updateStyle({ fontFamily: e.target.value })}
-                className="h-7 w-full rounded-md border border-white/12 bg-black/45 px-1.5 text-[12px] text-white"
+                className="h-7 w-full rounded-md border border-white/[0.12] bg-black/45 px-1.5 text-[12px] text-white"
               >
                 {FONT_OPTIONS.map((f) => (
                   <option key={f.value} value={f.value}>{f.label}</option>
@@ -400,7 +400,7 @@ export default function CanvaPropertiesPanel({
                   max={200}
                   value={Number(st.fontSize ?? 24)}
                   onChange={(e) => updateStyle({ fontSize: Number(e.target.value) || 24 })}
-                  className="h-7 w-full rounded-md border border-white/12 bg-black/45 px-2 text-[12px] text-white"
+                  className="h-7 w-full rounded-md border border-white/[0.12] bg-black/45 px-2 text-[12px] text-white"
                 />
               </div>
               <div>
@@ -409,7 +409,7 @@ export default function CanvaPropertiesPanel({
                   type="color"
                   value={typeof st.fill === 'string' && st.fill.startsWith('#') ? st.fill : '#F7F2E8'}
                   onChange={(e) => updateStyle({ fill: e.target.value })}
-                  className="h-7 w-full cursor-pointer rounded-md border border-white/12 bg-transparent"
+                  className="h-7 w-full cursor-pointer rounded-md border border-white/[0.12] bg-transparent"
                 />
               </div>
             </div>
@@ -486,7 +486,7 @@ export default function CanvaPropertiesPanel({
                     type="color"
                     value={st.shadowColor && st.shadowColor.startsWith('#') ? st.shadowColor : '#000000'}
                     onChange={(e) => updateStyle({ shadowColor: e.target.value })}
-                    className="h-7 w-full cursor-pointer rounded border border-white/12 bg-transparent"
+                    className="h-7 w-full cursor-pointer rounded border border-white/[0.12] bg-transparent"
                   />
                 </label>
                 <label className="flex flex-col gap-0.5">
@@ -497,7 +497,7 @@ export default function CanvaPropertiesPanel({
                     max={40}
                     value={st.shadowBlur || 0}
                     onChange={(e) => updateStyle({ shadowBlur: Number(e.target.value) })}
-                    className="h-7 rounded border border-white/12 bg-black/45 px-1.5 text-[12px] text-white"
+                    className="h-7 rounded border border-white/[0.12] bg-black/45 px-1.5 text-[12px] text-white"
                   />
                 </label>
               </div>
@@ -523,7 +523,7 @@ export default function CanvaPropertiesPanel({
                   type="color"
                   value={st.fill && st.fill.startsWith('#') ? st.fill : '#333333'}
                   onChange={(e) => updateStyle({ fill: e.target.value })}
-                  className="h-8 w-full cursor-pointer rounded-md border border-white/12 bg-transparent"
+                  className="h-8 w-full cursor-pointer rounded-md border border-white/[0.12] bg-transparent"
                 />
               </div>
               <div>
@@ -532,7 +532,7 @@ export default function CanvaPropertiesPanel({
                   type="color"
                   value={st.stroke && st.stroke.startsWith('#') ? st.stroke : '#D4AF37'}
                   onChange={(e) => updateStyle({ stroke: e.target.value })}
-                  className="h-8 w-full cursor-pointer rounded-md border border-white/12 bg-transparent"
+                  className="h-8 w-full cursor-pointer rounded-md border border-white/[0.12] bg-transparent"
                 />
               </div>
             </div>
@@ -564,7 +564,7 @@ export default function CanvaPropertiesPanel({
                   onChange={(e) => updateStyle({ cornerRadius: Number(e.target.value) })}
                   className="h-1.5 w-full cursor-pointer appearance-none rounded-full accent-[var(--school-accent)]"
                 />
-                <p className="mt-1.5 text-[10px] leading-snug text-white/28">
+                <p className="mt-1.5 text-[10px] leading-snug text-white/[0.28]">
                   Astuce : barre d'outils du canvas — « Grille 8px » pour un repère type Photoshop ; « Snap 8px » pour magnétiser déplacement et redimensionnement sur la grille.
                 </p>
               </div>
@@ -626,7 +626,7 @@ export default function CanvaPropertiesPanel({
                   content: { ...selectedObj.content, glyph: e.target.value.slice(0, 4) || '★' },
                 })
               }
-              className="h-8 w-full rounded-md border border-white/12 bg-black/45 px-2 text-[14px] text-white"
+              className="h-8 w-full rounded-md border border-white/[0.12] bg-black/45 px-2 text-[14px] text-white"
             />
           </label>
           <div className="grid grid-cols-2 gap-1.5">
@@ -636,7 +636,7 @@ export default function CanvaPropertiesPanel({
                 type="color"
                 value={st.fill && st.fill.startsWith('#') ? st.fill : '#D4AF37'}
                 onChange={(e) => updateStyle({ fill: e.target.value })}
-                className="h-8 w-full cursor-pointer rounded-md border border-white/12 bg-transparent"
+                className="h-8 w-full cursor-pointer rounded-md border border-white/[0.12] bg-transparent"
               />
             </div>
             <div>
@@ -647,7 +647,7 @@ export default function CanvaPropertiesPanel({
                 max={400}
                 value={Math.round(Number(st.fontSize ?? Math.min(selectedObj.width, selectedObj.height) * 0.75))}
                 onChange={(e) => updateStyle({ fontSize: Number(e.target.value) || 24 })}
-                className="h-8 w-full rounded-md border border-white/12 bg-black/45 px-2 text-[12px] text-white"
+                className="h-8 w-full rounded-md border border-white/[0.12] bg-black/45 px-2 text-[12px] text-white"
               />
             </div>
           </div>
@@ -684,19 +684,19 @@ export default function CanvaPropertiesPanel({
             <div className="grid grid-cols-2 gap-1.5">
               <label className="flex flex-col gap-0.5">
                 <span className="text-[11px] text-white/35">X</span>
-                <input ref={cropXRef} type="number" min={0} step={1} className="h-7 rounded border border-white/12 bg-black/45 px-1.5 text-[12px] text-white" />
+                <input ref={cropXRef} type="number" min={0} step={1} className="h-7 rounded border border-white/[0.12] bg-black/45 px-1.5 text-[12px] text-white" />
               </label>
               <label className="flex flex-col gap-0.5">
                 <span className="text-[11px] text-white/35">Y</span>
-                <input ref={cropYRef} type="number" min={0} step={1} className="h-7 rounded border border-white/12 bg-black/45 px-1.5 text-[12px] text-white" />
+                <input ref={cropYRef} type="number" min={0} step={1} className="h-7 rounded border border-white/[0.12] bg-black/45 px-1.5 text-[12px] text-white" />
               </label>
               <label className="flex flex-col gap-0.5">
                 <span className="text-[11px] text-white/35">Largeur</span>
-                <input ref={cropWRef} type="number" min={1} step={1} className="h-7 rounded border border-white/12 bg-black/45 px-1.5 text-[12px] text-white" />
+                <input ref={cropWRef} type="number" min={1} step={1} className="h-7 rounded border border-white/[0.12] bg-black/45 px-1.5 text-[12px] text-white" />
               </label>
               <label className="flex flex-col gap-0.5">
                 <span className="text-[11px] text-white/35">Hauteur</span>
-                <input ref={cropHRef} type="number" min={1} step={1} className="h-7 rounded border border-white/12 bg-black/45 px-1.5 text-[12px] text-white" />
+                <input ref={cropHRef} type="number" min={1} step={1} className="h-7 rounded border border-white/[0.12] bg-black/45 px-1.5 text-[12px] text-white" />
               </label>
             </div>
             <div className="flex gap-1.5">
@@ -744,19 +744,19 @@ export default function CanvaPropertiesPanel({
             <div className="grid grid-cols-2 gap-1.5">
               <label className="flex flex-col gap-0.5">
                 <span className="text-[11px] text-white/35">X</span>
-                <input ref={maskXRef} type="number" min={0} step={1} className="h-7 rounded border border-white/12 bg-black/45 px-1.5 text-[12px] text-white" />
+                <input ref={maskXRef} type="number" min={0} step={1} className="h-7 rounded border border-white/[0.12] bg-black/45 px-1.5 text-[12px] text-white" />
               </label>
               <label className="flex flex-col gap-0.5">
                 <span className="text-[11px] text-white/35">Y</span>
-                <input ref={maskYRef} type="number" min={0} step={1} className="h-7 rounded border border-white/12 bg-black/45 px-1.5 text-[12px] text-white" />
+                <input ref={maskYRef} type="number" min={0} step={1} className="h-7 rounded border border-white/[0.12] bg-black/45 px-1.5 text-[12px] text-white" />
               </label>
               <label className="flex flex-col gap-0.5">
                 <span className="text-[11px] text-white/35">Largeur</span>
-                <input ref={maskWRef} type="number" min={1} step={1} className="h-7 rounded border border-white/12 bg-black/45 px-1.5 text-[12px] text-white" />
+                <input ref={maskWRef} type="number" min={1} step={1} className="h-7 rounded border border-white/[0.12] bg-black/45 px-1.5 text-[12px] text-white" />
               </label>
               <label className="flex flex-col gap-0.5">
                 <span className="text-[11px] text-white/35">Hauteur</span>
-                <input ref={maskHRef} type="number" min={1} step={1} className="h-7 rounded border border-white/12 bg-black/45 px-1.5 text-[12px] text-white" />
+                <input ref={maskHRef} type="number" min={1} step={1} className="h-7 rounded border border-white/[0.12] bg-black/45 px-1.5 text-[12px] text-white" />
               </label>
             </div>
             <div className="flex gap-1.5">
@@ -1092,7 +1092,7 @@ export default function CanvaPropertiesPanel({
             <select
               value={selectedObj.visibleFor || 'both'}
               onChange={(e) => updateObject(selectedObj.id, { visibleFor: e.target.value })}
-              className="mt-0.5 h-7 w-full rounded-md border border-white/12 bg-black/45 px-1.5 text-[12px] text-white"
+              className="mt-0.5 h-7 w-full rounded-md border border-white/[0.12] bg-black/45 px-1.5 text-[12px] text-white"
             >
               <option value="both">Les deux</option>
               <option value="student">Élève seulement</option>
@@ -1106,7 +1106,7 @@ export default function CanvaPropertiesPanel({
               min={0}
               value={selectedObj.step ?? 0}
               onChange={(e) => updateObject(selectedObj.id, { step: Number(e.target.value) || 0 })}
-              className="mt-0.5 h-7 w-full rounded-md border border-white/12 bg-black/45 px-1.5 text-[12px] text-white"
+              className="mt-0.5 h-7 w-full rounded-md border border-white/[0.12] bg-black/45 px-1.5 text-[12px] text-white"
             />
           </label>
         </div>

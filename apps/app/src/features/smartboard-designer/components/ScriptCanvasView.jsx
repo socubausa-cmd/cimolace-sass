@@ -9,7 +9,7 @@ function ScriptBlock({ icon: Icon, title, content, accent = false }) {
   if (!content) return null;
   return (
     <div
-      className={`rounded-xl border p-4 ${accent ? '' : 'border-white/8 bg-white/[0.02]'}`}
+      className={`rounded-xl border p-4 ${accent ? '' : 'border-white/[0.08] bg-white/[0.02]'}`}
       style={accent ? {
         backgroundColor: 'color-mix(in srgb, var(--school-accent, #D4AF37) 5%, transparent)',
         borderColor: 'color-mix(in srgb, var(--school-accent, #D4AF37) 25%, transparent)',
@@ -46,7 +46,7 @@ export default function ScriptCanvasView({ segment }) {
 
       {/* Key points */}
       {keyPoints.length > 0 && (
-        <div className="rounded-xl border border-white/8 bg-white/[0.02] p-4">
+        <div className="rounded-xl border border-white/[0.08] bg-white/[0.02] p-4">
           <div className="mb-3 flex items-center gap-2">
             <Lightbulb className="h-3.5 w-3.5 text-white/40" />
             <span className="text-[11px] font-semibold uppercase tracking-wider text-white/50">Points clés</span>

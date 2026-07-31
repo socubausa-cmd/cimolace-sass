@@ -141,7 +141,7 @@ export function ImmersiveMessage({
             'px-3.5 py-2.5 text-sm leading-relaxed border shadow-sm',
             isOwn
               ? 'bg-[color-mix(in_srgb,var(--school-accent)_16%,transparent)] border-[color-mix(in_srgb,var(--school-accent)_30%,transparent)] text-[#f4ead0]'
-              : 'bg-white/[0.04] border-white/12 text-gray-100',
+              : 'bg-white/[0.04] border-white/[0.12] text-gray-100',
             groupPosition === 'single' && 'rounded-2xl',
             groupPosition === 'start' && (isOwn ? 'rounded-t-2xl rounded-bl-2xl rounded-br-md' : 'rounded-t-2xl rounded-br-2xl rounded-bl-md'),
             groupPosition === 'middle' && (isOwn ? 'rounded-l-2xl rounded-r-md' : 'rounded-r-2xl rounded-l-md'),

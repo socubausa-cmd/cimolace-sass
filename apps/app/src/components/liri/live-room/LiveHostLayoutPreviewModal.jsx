@@ -25,7 +25,7 @@ export default function LiveHostLayoutPreviewModal({
 }) {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-h-[min(92vh,880px)] max-w-2xl overflow-y-auto border border-white/[0.1] bg-[#0c0e14]/97 text-white shadow-2xl sm:max-w-2xl">
+      <DialogContent className="max-h-[min(92vh,880px)] max-w-2xl overflow-y-auto border border-white/[0.1] bg-[#0c0e14]/[0.97] text-white shadow-2xl sm:max-w-2xl">
         <DialogHeader>
           <DialogTitle className="font-serif text-lg text-white/95">Aperçu des vues</DialogTitle>
           <DialogDescription className="text-[12px] leading-relaxed text-white/45">

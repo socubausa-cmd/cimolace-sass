@@ -64,7 +64,7 @@ export function SmartboardFullOverlay({ plan = null, sceneCaption = '' }) {
           onClick={closeOverlay}
           title="Toucher pour réduire la vue cours"
           aria-label="Réduire l'écran intelligent — revenir à la vue cours"
-          className="pointer-events-auto flex min-w-0 max-w-[min(100%,calc(100vw-5.5rem))] items-center gap-2 rounded-full border border-[#c9a962]/35 bg-[#0a0806]/88 px-3 py-1.5 text-left font-serif text-[11px] text-[#e8d4a8]/95 shadow-[0_0_24px_-8px_rgba(201,169,98,0.35)] backdrop-blur-md transition-transform active:scale-[0.98]"
+          className="pointer-events-auto flex min-w-0 max-w-[min(100%,calc(100vw-5.5rem))] items-center gap-2 rounded-full border border-[#c9a962]/35 bg-[#0a0806]/[0.88] px-3 py-1.5 text-left font-serif text-[11px] text-[#e8d4a8]/95 shadow-[0_0_24px_-8px_rgba(201,169,98,0.35)] backdrop-blur-md transition-transform active:scale-[0.98]"
           data-liri-no-doubletap
         >
           <Maximize2 className="h-3.5 w-3.5 shrink-0 text-[#c9a962]" aria-hidden />
@@ -73,7 +73,7 @@ export function SmartboardFullOverlay({ plan = null, sceneCaption = '' }) {
         <button
           type="button"
           onClick={closeOverlay}
-          className="pointer-events-auto z-[2] flex h-10 w-10 items-center justify-center rounded-full border border-[#c9a962]/30 bg-[#0a0806]/88 text-[#e8d4a8] shadow-[0_0_20px_-10px_rgba(201,169,98,0.25)] backdrop-blur-md"
+          className="pointer-events-auto z-[2] flex h-10 w-10 items-center justify-center rounded-full border border-[#c9a962]/30 bg-[#0a0806]/[0.88] text-[#e8d4a8] shadow-[0_0_20px_-10px_rgba(201,169,98,0.25)] backdrop-blur-md"
           aria-label="Quitter le plein écran"
           data-liri-no-doubletap
         >
@@ -89,7 +89,7 @@ export function SmartboardFullOverlay({ plan = null, sceneCaption = '' }) {
             title="Toucher pour réduire la vue cours"
             aria-label={`Réduire — ${fullTitle}`}
             className={cn(
-              'pointer-events-auto max-w-[min(100%,440px)] truncate rounded-full border border-[#c9a962]/28 bg-[#0a0806]/92 px-3 py-1.5 text-center font-serif text-[10px] leading-snug text-[#c9a962]/90 shadow-[0_0_20px_-10px_rgba(0,0,0,0.6)] backdrop-blur-md transition-transform active:scale-[0.98]',
+              'pointer-events-auto max-w-[min(100%,440px)] truncate rounded-full border border-[#c9a962]/[0.28] bg-[#0a0806]/[0.92] px-3 py-1.5 text-center font-serif text-[10px] leading-snug text-[#c9a962]/90 shadow-[0_0_20px_-10px_rgba(0,0,0,0.6)] backdrop-blur-md transition-transform active:scale-[0.98]',
               plan.empty && 'text-[#c9a962]/75',
             )}
             data-liri-no-doubletap
@@ -100,7 +100,7 @@ export function SmartboardFullOverlay({ plan = null, sceneCaption = '' }) {
             {caption ? (
               <>
                 <span className="mx-1 text-[#c9a962]/40">·</span>
-                <span className="text-[#e8d4a8]/88">{caption}</span>
+                <span className="text-[#e8d4a8]/[0.88]">{caption}</span>
               </>
             ) : null}
           </button>

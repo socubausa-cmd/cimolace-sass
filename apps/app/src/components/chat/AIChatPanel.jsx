@@ -21,7 +21,7 @@ function Message({ msg }) {
       </div>
       <div className={cn(
         'max-w-[80%] rounded-xl px-3 py-2 text-[12px] leading-relaxed',
-        isUser ? 'bg-white/8 text-white/80' : 'bg-[color-mix(in_srgb,var(--school-accent)_10%,transparent)] text-white/85',
+        isUser ? 'bg-white/[0.08] text-white/80' : 'bg-[color-mix(in_srgb,var(--school-accent)_10%,transparent)] text-white/85',
       )}>
         {msg.content}
       </div>
@@ -85,7 +85,7 @@ export default function AIChatPanel({ className }) {
   return (
     <div className={cn('flex flex-col bg-[#07090f]', className)}>
       {/* Header */}
-      <div className="flex shrink-0 items-center gap-2 border-b border-white/8 px-3 py-2">
+      <div className="flex shrink-0 items-center gap-2 border-b border-white/[0.08] px-3 py-2">
         <Bot className="h-4 w-4 text-[var(--school-accent)]" />
         <span className="text-[12px] font-semibold text-white">Coach LIRI</span>
         {coachFeedback && (
@@ -132,7 +132,7 @@ export default function AIChatPanel({ className }) {
       </div>
 
       {/* Input */}
-      <div className="flex shrink-0 gap-2 border-t border-white/8 p-2">
+      <div className="flex shrink-0 gap-2 border-t border-white/[0.08] p-2">
         <textarea
           value={input}
           onChange={(e) => setInput(e.target.value)}

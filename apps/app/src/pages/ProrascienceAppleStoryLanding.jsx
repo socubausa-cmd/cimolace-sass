@@ -459,7 +459,7 @@ export default function ProrascienceAppleStoryLanding() {
               className={`absolute inset-0 h-full w-full object-cover object-[52%_center] opacity-35 ${reduce ? '' : 'apple-cine-img'}`}
               aria-hidden
             />
-            <div className="absolute inset-0 bg-gradient-to-r from-slate-950/92 via-slate-950/78 to-slate-900/70" aria-hidden />
+            <div className="absolute inset-0 bg-gradient-to-r from-slate-950/[0.92] via-slate-950/[0.78] to-slate-900/70" aria-hidden />
             <div className="grid gap-10 lg:grid-cols-[0.9fr_1.1fr] lg:items-center">
               <div className="relative">
                 <div className="text-sm font-medium uppercase tracking-[0.24em] text-white/40">La rupture historique</div>

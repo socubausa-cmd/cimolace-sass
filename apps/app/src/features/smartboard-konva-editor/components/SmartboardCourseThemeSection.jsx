@@ -40,7 +40,7 @@ export default function SmartboardCourseThemeSection({
 
       <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
         <div>
-          <label className="mb-0.5 block text-[8px] text-white/38">Palette</label>
+          <label className="mb-0.5 block text-[8px] text-white/[0.38]">Palette</label>
           <select
             value={courseTheme.paletteId}
             onChange={(e) => {
@@ -48,7 +48,7 @@ export default function SmartboardCourseThemeSection({
               setCourseTheme({ paletteId: id });
               onApplyPalette?.(id);
             }}
-            className="w-full rounded border border-white/12 bg-black/45 py-1 pl-1.5 text-[9px] text-white"
+            className="w-full rounded border border-white/[0.12] bg-black/45 py-1 pl-1.5 text-[9px] text-white"
           >
             {COURSE_THEME_PALETTES.map((p) => (
               <option key={p.id} value={p.id}>
@@ -58,7 +58,7 @@ export default function SmartboardCourseThemeSection({
           </select>
         </div>
         <div>
-          <label className="mb-0.5 block text-[8px] text-white/38">Typographie</label>
+          <label className="mb-0.5 block text-[8px] text-white/[0.38]">Typographie</label>
           <select
             value={courseTheme.typographyPreset}
             onChange={(e) => {
@@ -66,7 +66,7 @@ export default function SmartboardCourseThemeSection({
               setCourseTheme({ typographyPreset: v });
               onApplyTypography?.(v);
             }}
-            className="w-full rounded border border-white/12 bg-black/45 py-1 pl-1.5 text-[9px] text-white"
+            className="w-full rounded border border-white/[0.12] bg-black/45 py-1 pl-1.5 text-[9px] text-white"
           >
             {COURSE_TYPO_PRESETS.map((p) => (
               <option key={p.id} value={p.id}>
@@ -78,11 +78,11 @@ export default function SmartboardCourseThemeSection({
       </div>
 
       <div>
-        <label className="mb-0.5 block text-[8px] text-white/38">Type d'images privilégié</label>
+        <label className="mb-0.5 block text-[8px] text-white/[0.38]">Type d'images privilégié</label>
         <select
           value={courseTheme.imageStyle}
           onChange={(e) => setCourseTheme({ imageStyle: normalizeImageStyle(e.target.value) })}
-          className="w-full rounded border border-white/12 bg-black/45 py-1 pl-1.5 text-[9px] text-white"
+          className="w-full rounded border border-white/[0.12] bg-black/45 py-1 pl-1.5 text-[9px] text-white"
         >
           {(['photo', 'illustration', 'diagram', 'mixed']).map((k) => (
             <option key={k} value={k}>
@@ -92,7 +92,7 @@ export default function SmartboardCourseThemeSection({
         </select>
       </div>
 
-      <p className="text-[8px] leading-relaxed text-white/32">
+      <p className="text-[8px] leading-relaxed text-white/[0.32]">
         La <span className="text-white/45">palette</span> met à jour le fond du canvas Konva. Le préréglage{' '}
         <span className="text-white/45">typographie</span> s'applique aux blocs texte de toutes les scènes.
       </p>

@@ -137,9 +137,9 @@ const PREMIUM_CARD =
 
 const TONE_HALO = {
   gold: {
-    spread: 'from-amber-300/30 via-orange-500/24 to-transparent',
-    border: 'border-amber-400/38',
-    iconBg: 'bg-gradient-to-br from-amber-500/20 to-orange-800/18 ring-1 ring-amber-400/25',
+    spread: 'from-amber-300/30 via-orange-500/[0.24] to-transparent',
+    border: 'border-amber-400/[0.38]',
+    iconBg: 'bg-gradient-to-br from-amber-500/20 to-orange-800/[0.18] ring-1 ring-amber-400/25',
   },
   blue: {
     spread: 'from-amber-300/30 via-orange-500/25 to-transparent',
@@ -147,14 +147,14 @@ const TONE_HALO = {
     iconBg: 'bg-gradient-to-br from-amber-500/20 to-orange-800/20 ring-1 ring-amber-400/25',
   },
   violet: {
-    spread: 'from-orange-300/25 via-rose-500/22 to-transparent',
-    border: 'border-orange-400/38',
-    iconBg: 'bg-gradient-to-br from-orange-500/20 to-rose-900/15 ring-1 ring-orange-400/22',
+    spread: 'from-orange-300/25 via-rose-500/[0.22] to-transparent',
+    border: 'border-orange-400/[0.38]',
+    iconBg: 'bg-gradient-to-br from-orange-500/20 to-rose-900/15 ring-1 ring-orange-400/[0.22]',
   },
   amber: {
-    spread: 'from-amber-300/25 via-orange-500/22 to-transparent',
+    spread: 'from-amber-300/25 via-orange-500/[0.22] to-transparent',
     border: 'border-amber-400/35',
-    iconBg: 'bg-gradient-to-br from-amber-500/18 to-orange-800/15 ring-1 ring-amber-400/22',
+    iconBg: 'bg-gradient-to-br from-amber-500/[0.18] to-orange-800/15 ring-1 ring-amber-400/[0.22]',
   },
 };
 
@@ -361,7 +361,7 @@ export default function EleveProrascienceVitrineScreen() {
                   />
                   <div className="absolute inset-0 flex items-start justify-center pt-12 sm:pt-14">
                     <motion.div
-                      className="flex h-20 w-20 items-center justify-center overflow-hidden rounded-full border border-amber-400/40 bg-black/18 ring-1 ring-amber-400/25 will-change-transform"
+                      className="flex h-20 w-20 items-center justify-center overflow-hidden rounded-full border border-amber-400/40 bg-black/[0.18] ring-1 ring-amber-400/25 will-change-transform"
                       initial={prefersReducedMotion ? false : { opacity: 0, scale: 0.88 }}
                       animate={
                         prefersReducedMotion
@@ -553,9 +553,9 @@ export default function EleveProrascienceVitrineScreen() {
                 {VISION_MISSION_FONDATEUR.map((b, idx) => {
                   const IconB = b.icon;
                   const halos = [
-                    'from-amber-400/18 via-orange-500/12 to-slate-900/0',
-                    'from-amber-400/20 via-orange-500/12 to-orange-500/8',
-                    'from-orange-400/18 via-amber-500/10 to-orange-500/5',
+                    'from-amber-400/[0.18] via-orange-500/[0.12] to-slate-900/0',
+                    'from-amber-400/20 via-orange-500/[0.12] to-orange-500/[0.08]',
+                    'from-orange-400/[0.18] via-amber-500/10 to-orange-500/5',
                   ];
                   return (
                     <motion.div key={b.key} className="relative" variants={itemV}>
@@ -592,7 +592,7 @@ export default function EleveProrascienceVitrineScreen() {
               <div className="mt-3 flex flex-wrap gap-2">
                 <Link
                   to={`${ELEVE_MOBILE.prorascience}/fondateur`}
-                  className="inline-flex items-center gap-1 rounded-xl border border-white/12 bg-white/[0.04] px-3 py-2 text-[12px] font-semibold text-white/90"
+                  className="inline-flex items-center gap-1 rounded-xl border border-white/[0.12] bg-white/[0.04] px-3 py-2 text-[12px] font-semibold text-white/90"
                 >
                   Biographie &amp; mandat
                   <ArrowRight className="h-3.5 w-3.5 text-amber-400/90" />
@@ -615,7 +615,7 @@ export default function EleveProrascienceVitrineScreen() {
               transition={{ duration: prefersReducedMotion ? 0 : 0.6, ease: EASE_PREMIUM }}
             >
               <div
-                className="pointer-events-none absolute -inset-1 rounded-[24px] bg-gradient-to-b from-amber-500/20 via-amber-500/12 to-amber-600/10 opacity-80 blur-3xl"
+                className="pointer-events-none absolute -inset-1 rounded-[24px] bg-gradient-to-b from-amber-500/20 via-amber-500/[0.12] to-amber-600/10 opacity-80 blur-3xl"
                 aria-hidden
               />
               <div className="relative overflow-hidden rounded-[22px] border border-amber-400/25">

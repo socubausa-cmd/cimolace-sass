@@ -107,7 +107,7 @@ export default function ArchitectPanel({ className }) {
   return (
     <div className={cn('flex flex-col', className)}>
       {/* Header */}
-      <div className="flex shrink-0 items-center gap-2 border-b border-white/8 px-3 py-2">
+      <div className="flex shrink-0 items-center gap-2 border-b border-white/[0.08] px-3 py-2">
         <Wand2 className="h-4 w-4 text-[var(--school-accent)]" />
         <span className="text-[12px] font-semibold text-white">Architect</span>
         {highCount > 0 && (

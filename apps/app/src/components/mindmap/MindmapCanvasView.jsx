@@ -114,7 +114,7 @@ export default function MindmapCanvasView({ mindmap, onUpdate, readOnly = false 
       </svg>
 
       {/* Legend */}
-      <div className="absolute bottom-3 right-3 rounded-lg border border-white/8 bg-black/50 px-3 py-2 text-[10px] text-white/30 backdrop-blur-sm">
+      <div className="absolute bottom-3 right-3 rounded-lg border border-white/[0.08] bg-black/50 px-3 py-2 text-[10px] text-white/30 backdrop-blur-sm">
         Mindmap — {[...positions.size].length > 0 ? positions.size : '?'} noeuds
       </div>
     </div>

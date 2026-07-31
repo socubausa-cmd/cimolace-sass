@@ -325,7 +325,7 @@ export default function IsnaProPage() {
               L'initiation n\'est plus un lieu. C\'est un accès.
             </motion.h1>
             <motion.p
-              className="mx-auto mt-6 max-w-2xl text-pretty text-base leading-relaxed text-white/72 sm:text-lg lg:text-xl"
+              className="mx-auto mt-6 max-w-2xl text-pretty text-base leading-relaxed text-white/[0.72] sm:text-lg lg:text-xl"
               initial={{ opacity: 0, y: 16 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
@@ -348,7 +348,7 @@ export default function IsnaProPage() {
               </Link>
               <a
                 href="#pedagogie"
-                className="rounded-full border border-white/18 px-7 py-3 text-sm font-medium text-white/90 transition hover:bg-white/10"
+                className="rounded-full border border-white/[0.18] px-7 py-3 text-sm font-medium text-white/90 transition hover:bg-white/10"
               >
                 Découvrir la pédagogie
               </a>
@@ -402,7 +402,7 @@ export default function IsnaProPage() {
                 transition={{ duration: 0.65, delay: i * 0.1 }}
               >
                 <motion.div
-                  className={`mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl border border-white/12 bg-gradient-to-br ${pillar.iconGlow} text-2xl md:mx-0`}
+                  className={`mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl border border-white/[0.12] bg-gradient-to-br ${pillar.iconGlow} text-2xl md:mx-0`}
                   animate={reduce ? {} : { y: [0, -6, 0], scale: [1, 1.04, 1] }}
                   transition={{ duration: 3 + i * 0.4, repeat: Infinity, ease: 'easeInOut', delay: i * 0.2 }}
                   aria-hidden
@@ -453,7 +453,7 @@ export default function IsnaProPage() {
                 transition={{ duration: 0.7 }}
               >
                 <div className={reduce ? '' : 'isna-founder-float'}>
-                  <div className="relative overflow-hidden rounded-[1.75rem] border border-white/18 bg-zinc-900/40 shadow-[0_36px_90px_rgba(0,0,0,.72)] ring-1 ring-white/10">
+                  <div className="relative overflow-hidden rounded-[1.75rem] border border-white/[0.18] bg-zinc-900/40 shadow-[0_36px_90px_rgba(0,0,0,.72)] ring-1 ring-white/10">
                     {founderImageSrc ? (
                       <>
                         <div className="relative aspect-[3/4] w-full overflow-hidden">
@@ -494,7 +494,7 @@ export default function IsnaProPage() {
                 viewport={{ once: true, amount: 0.25 }}
                 transition={{ duration: 0.7, delay: 0.06 }}
               >
-                <p className="text-pretty text-base leading-relaxed text-white/72 sm:text-lg">
+                <p className="text-pretty text-base leading-relaxed text-white/[0.72] sm:text-lg">
                   {`Derrière ${isnaTenantConfig.branding.name} et LIRI, une même exigence : rendre l'initiation structurée, intelligible et transmissible — sans diluer sa profondeur. Découvrez le parcours, la vision et le mandat du fondateur.`}
                 </p>
                 <Link
@@ -541,7 +541,7 @@ export default function IsnaProPage() {
             </div>
 
             <div className="relative z-[3] min-h-[22rem] p-6 sm:min-h-[24rem] sm:p-8 lg:min-h-[26rem] lg:p-10">
-              <div className="max-w-2xl rounded-2xl border border-white/10 bg-black/38 p-4 backdrop-blur-[1px] sm:p-6 lg:pb-7">
+              <div className="max-w-2xl rounded-2xl border border-white/10 bg-black/[0.38] p-4 backdrop-blur-[1px] sm:p-6 lg:pb-7">
                 <p className="text-sm uppercase tracking-[0.3em] text-white/65">Une histoire</p>
                 <div className="mt-4 space-y-2 text-lg text-amber-100/90 sm:text-2xl">
                   <p>👁️ Recevez les yeux pour voir</p>
@@ -554,7 +554,7 @@ export default function IsnaProPage() {
                   <br />
                   ce que vous faisiez ?
                 </h2>
-                <p className="mt-6 max-w-lg text-pretty text-lg leading-relaxed text-white/88">
+                <p className="mt-6 max-w-lg text-pretty text-lg leading-relaxed text-white/[0.88]">
                   Ce que vous avez appris sans explication, nous vous l&apos;enseignons avec méthode.
                 </p>
                 <div className="mt-8 flex flex-wrap items-center gap-4">

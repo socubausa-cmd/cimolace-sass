@@ -43,7 +43,7 @@ export default function LibraryCard({ item, onUse, onLike, onSelect, selected })
         'group relative flex flex-col overflow-hidden rounded-xl border bg-[#0d1020] transition-all cursor-pointer',
         selected
           ? 'border-[color-mix(in_srgb,var(--school-accent)_50%,transparent)] ring-1 ring-[color-mix(in_srgb,var(--school-accent)_30%,transparent)]'
-          : 'border-white/8 hover:border-white/20',
+          : 'border-white/[0.08] hover:border-white/20',
       )}
       onClick={() => onSelect?.(item)}
     >

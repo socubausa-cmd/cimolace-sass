@@ -70,12 +70,12 @@ export default function StudioExportCenterPage() {
     // #0a0a14 (navy quasi noir, banni) → #262624, le fond de page de la charte
     <div className="flex flex-col min-h-screen bg-[#262624] text-[#f5f4ee]">
       <header className="flex items-center gap-4 px-6 py-4 border-b border-white/[0.09]">
-        <Link to="/studio/liri" className="text-white/58 hover:text-white/85">
+        <Link to="/studio/liri" className="text-white/[0.58] hover:text-white/85">
           <ArrowLeft className="h-5 w-5" />
         </Link>
         <div>
           <h1 className="text-lg font-bold text-[#f5f4ee]">Centre d'export</h1>
-          <p className="text-[11px] text-white/62">Export multi-formats</p>
+          <p className="text-[11px] text-white/[0.62]">Export multi-formats</p>
         </div>
       </header>
       <div className="flex-1 overflow-y-auto p-6 max-w-2xl mx-auto w-full">
@@ -99,7 +99,7 @@ export default function StudioExportCenterPage() {
                 <div className="flex-1">
                   <div className="text-[13px] font-medium text-[#f5f4ee]">{f.label}</div>
                   {/* white/30 (2,7:1) → white/62 : c'est une phrase, pas un ornement */}
-                  <div className="text-[11px] text-white/62">{f.desc}</div>
+                  <div className="text-[11px] text-white/[0.62]">{f.desc}</div>
                 </div>
                 {exporting === f.id ? (
                   <Loader2 className="h-5 w-5 animate-spin text-[#e08a5f]" />

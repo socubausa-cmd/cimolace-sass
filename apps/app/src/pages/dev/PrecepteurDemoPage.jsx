@@ -595,7 +595,7 @@ export function PrecepteurPlayer({ course, embedded = false, onScene, studentNam
         {started && !done ? (
           <div className="mb-5 flex items-center justify-center gap-1.5">
             {scenes.map((_, i) => (
-              <span key={i} className={`h-1 rounded-full transition-all ${i === idx ? 'w-7 bg-[var(--school-accent)]' : i < idx ? 'w-3 bg-white/35' : 'w-3 bg-white/12'}`} />
+              <span key={i} className={`h-1 rounded-full transition-all ${i === idx ? 'w-7 bg-[var(--school-accent)]' : i < idx ? 'w-3 bg-white/35' : 'w-3 bg-white/[0.12]'}`} />
             ))}
           </div>
         ) : null}

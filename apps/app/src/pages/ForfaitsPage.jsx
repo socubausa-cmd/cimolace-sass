@@ -397,7 +397,7 @@ const ForfaitsPage = ({ embedded = false }) => {
           <Tabs value={activeCycle?.key || ''} onValueChange={setActiveCycleKey} className="space-y-0">
             <div
               id="forfaits-cycles"
-              className="sticky top-0 z-40 -mx-4 border-b border-white/10 bg-[#1d1916]/92 px-4 pb-4 pt-16 shadow-[0_8px_32px_rgba(0,0,0,0.35)] backdrop-blur-md sm:-mx-6 sm:px-6 md:pt-20 lg:-mx-8 lg:px-8"
+              className="sticky top-0 z-40 -mx-4 border-b border-white/10 bg-[#1d1916]/[0.92] px-4 pb-4 pt-16 shadow-[0_8px_32px_rgba(0,0,0,0.35)] backdrop-blur-md sm:-mx-6 sm:px-6 md:pt-20 lg:-mx-8 lg:px-8"
             >
               <p className="mb-1 text-[11px] font-semibold uppercase tracking-[0.2em] text-[color-mix(in_srgb,#d97757_90%,transparent)]">
                 {INITIATION_PRODUCT_NAME}
@@ -512,7 +512,7 @@ const ForfaitsPage = ({ embedded = false }) => {
                       transition: { duration: 0.75, delay: 0.2, ease: easePremium },
                     },
                   }}
-                  className="mt-6 max-w-xl text-base leading-relaxed text-white/78 md:text-lg"
+                  className="mt-6 max-w-xl text-base leading-relaxed text-white/[0.78] md:text-lg"
                 >
                   {heroContent.pitch.split('LIRI').map((part, i, arr) => (
                     <React.Fragment key={`${activeCycle?.key}-p-${i}`}>
@@ -528,7 +528,7 @@ const ForfaitsPage = ({ embedded = false }) => {
                     hidden: { opacity: 0, y: 14 },
                     visible: { opacity: 1, y: 0, transition: { duration: 0.55, delay: 0.28, ease: easePremium } },
                   }}
-                  className="mt-6 max-w-xl space-y-2.5 text-sm text-white/82 md:text-[15px]"
+                  className="mt-6 max-w-xl space-y-2.5 text-sm text-white/[0.82] md:text-[15px]"
                 >
                   {(heroContent.includes || []).slice(0, 4).map((line) => (
                     <li key={line} className="flex gap-2.5">
@@ -623,7 +623,7 @@ const ForfaitsPage = ({ embedded = false }) => {
                       loading="eager"
                     />
                     <div className="absolute inset-0 bg-gradient-to-t from-[#1d1916] via-[#1d1916]/15 to-[#1d1916]/30" />
-                    <div className="absolute bottom-4 left-4 right-4 flex flex-wrap items-center gap-2 rounded-xl border border-white/15 bg-black/50 px-4 py-3 text-xs text-white/88 backdrop-blur-md">
+                    <div className="absolute bottom-4 left-4 right-4 flex flex-wrap items-center gap-2 rounded-xl border border-white/15 bg-black/50 px-4 py-3 text-xs text-white/[0.88] backdrop-blur-md">
                       <Globe2 className="h-4 w-4 shrink-0 text-[#d97757]" />
                       <span className="inline-flex flex-wrap items-baseline gap-x-1.5 gap-y-1">
                         <span className="font-semibold tracking-wide text-[#c2683f]">LIRI</span>
@@ -636,7 +636,7 @@ const ForfaitsPage = ({ embedded = false }) => {
                   </div>
                 </div>
 
-                <div className="relative z-[1] -mt-8 mx-3 rounded-2xl border border-white/12 bg-[#221f1b]/90 p-4 shadow-xl backdrop-blur-lg md:mx-6 md:p-5">
+                <div className="relative z-[1] -mt-8 mx-3 rounded-2xl border border-white/[0.12] bg-[#221f1b]/90 p-4 shadow-xl backdrop-blur-lg md:mx-6 md:p-5">
                   <div className="mb-3 flex items-center justify-between gap-2 border-b border-white/10 pb-3">
                     <span className="flex items-center gap-2 text-xs font-medium uppercase tracking-wider text-white/55">
                       <span className="relative flex h-2 w-2 shrink-0">
@@ -752,7 +752,7 @@ const ForfaitsPage = ({ embedded = false }) => {
                           {content.tagline}
                         </p>
                         <p className="mt-2 text-sm text-[color-mix(in_srgb,#d97757_85%,transparent)]">{content.positioning}</p>
-                        <p className="mt-4 line-clamp-4 text-sm leading-relaxed text-white/68">{content.pitch}</p>
+                        <p className="mt-4 line-clamp-4 text-sm leading-relaxed text-white/[0.68]">{content.pitch}</p>
                       </div>
                       <div className="flex flex-col gap-4 border-t border-white/10 pt-5 sm:flex-row sm:items-center sm:justify-between">
                         <div className="flex items-center gap-3">
@@ -917,7 +917,7 @@ const ForfaitsPage = ({ embedded = false }) => {
                                   <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl border border-[color-mix(in_srgb,#d97757_30%,transparent)] bg-[color-mix(in_srgb,#d97757_10%,transparent)]">
                                     <ExpIcon className="h-6 w-6 text-[#d97757]" aria-hidden />
                                   </div>
-                                  <p className="text-sm leading-snug text-white/88">{item}</p>
+                                  <p className="text-sm leading-snug text-white/[0.88]">{item}</p>
                                 </div>
                               );
                             })}
@@ -953,7 +953,7 @@ const ForfaitsPage = ({ embedded = false }) => {
 
                   {/* 03 · Profil + contrats */}
                   <div className="grid gap-4 lg:grid-cols-5 lg:gap-6">
-                    <div className="rounded-3xl border border-white/10 bg-[#2a2621]/92 p-6 lg:col-span-3">
+                    <div className="rounded-3xl border border-white/10 bg-[#2a2621]/[0.92] p-6 lg:col-span-3">
                       <div className="mb-5 flex items-start gap-4 border-b border-white/10 pb-4">
                         <span className="text-4xl font-black leading-none text-[color-mix(in_srgb,#d97757_20%,transparent)] tabular-nums">03</span>
                         <div>
@@ -975,7 +975,7 @@ const ForfaitsPage = ({ embedded = false }) => {
                               <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-[color-mix(in_srgb,#d97757_12%,transparent)]">
                                 <Deco className="h-5 w-5 text-[#d97757]" aria-hidden />
                               </div>
-                              <p className="text-sm leading-snug text-white/88">{item}</p>
+                              <p className="text-sm leading-snug text-white/[0.88]">{item}</p>
                             </div>
                           );
                         })}

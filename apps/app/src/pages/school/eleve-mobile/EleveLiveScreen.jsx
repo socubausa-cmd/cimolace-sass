@@ -230,7 +230,7 @@ export default function EleveLiveScreen() {
               {/* Sessions suivantes */}
               {otherSessions.length > 0 && (
                 <section>
-                  <p className="mb-3 text-[11px] font-extrabold uppercase tracking-[0.18em] text-white/42">
+                  <p className="mb-3 text-[11px] font-extrabold uppercase tracking-[0.18em] text-white/[0.42]">
                     Plus tard
                   </p>
                   <div className="space-y-3">

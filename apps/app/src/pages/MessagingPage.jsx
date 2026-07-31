@@ -1228,7 +1228,7 @@ function DockItem({
           : !disabled && active
             ? 'bg-[color-mix(in_srgb,var(--school-accent)_18%,transparent)] border-[color-mix(in_srgb,var(--school-accent)_35%,transparent)] text-[var(--school-accent)] shadow-[0_10px_24px_-12px_rgba(212,175,55,0.8)]'
             : !disabled
-              ? 'bg-white/[0.05] border-white/12 text-white/75 hover:bg-white/10'
+              ? 'bg-white/[0.05] border-white/[0.12] text-white/75 hover:bg-white/10'
               : 'border-white/10 bg-white/[0.04] text-white/40'
       )}
       title={tip}
@@ -1718,7 +1718,7 @@ function LiveSummaryPanel({ open, data, onClose }) {
           exit={{ opacity: 0, y: 24, scale: 0.96 }}
           transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
           onClick={(e) => e.stopPropagation()}
-          className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[min(92vw,760px)] rounded-3xl border border-white/10 bg-[#0c1118]/92 backdrop-blur-2xl p-5 md:p-7 shadow-2xl"
+          className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[min(92vw,760px)] rounded-3xl border border-white/10 bg-[#0c1118]/[0.92] backdrop-blur-2xl p-5 md:p-7 shadow-2xl"
         >
           <div className="flex items-start justify-between gap-4">
             <div>
@@ -1812,7 +1812,7 @@ function LiveInvitePrompt({
         initial={{ opacity: 0, y: 16, scale: 0.97 }}
         animate={{ opacity: 1, y: 0, scale: 1 }}
         exit={{ opacity: 0, y: 12, scale: 0.97 }}
-        className="fixed bottom-24 right-4 md:right-8 z-[85] w-[min(92vw,420px)] rounded-2xl border border-white/10 bg-[#0c1118]/93 backdrop-blur-2xl p-4 shadow-2xl"
+        className="fixed bottom-24 right-4 md:right-8 z-[85] w-[min(92vw,420px)] rounded-2xl border border-white/10 bg-[#0c1118]/[0.93] backdrop-blur-2xl p-4 shadow-2xl"
       >
         <div className="flex items-start gap-3">
           <div className="mt-0.5 w-9 h-9 rounded-xl bg-[color-mix(in_srgb,var(--school-accent)_15%,transparent)] text-[var(--school-accent)] flex items-center justify-center">
@@ -1875,7 +1875,7 @@ function LiveAgendaPanel({ open, invites, currentUserId, profiles, onJoin, onSch
         initial={{ opacity: 0, y: 16, scale: 0.98 }}
         animate={{ opacity: 1, y: 0, scale: 1 }}
         exit={{ opacity: 0, y: 12, scale: 0.98 }}
-        className="fixed top-24 right-4 md:right-8 z-[86] w-[min(94vw,420px)] max-h-[70vh] overflow-y-auto rounded-2xl border border-white/10 bg-[#0c1118]/93 backdrop-blur-2xl p-3"
+        className="fixed top-24 right-4 md:right-8 z-[86] w-[min(94vw,420px)] max-h-[70vh] overflow-y-auto rounded-2xl border border-white/10 bg-[#0c1118]/[0.93] backdrop-blur-2xl p-3"
       >
         <div className="flex items-center justify-between mb-2 px-1">
           <p className="text-[11px] uppercase tracking-wider text-gray-500">Agenda Live Chat</p>
@@ -1977,7 +1977,7 @@ function TopicBanner({ topic, onToggleStatus, onClose, busy = false }) {
               className={cn(
                 'inline-flex shrink-0 items-center gap-1 rounded-full border px-2 py-0.5 text-[10px] font-medium',
                 closed
-                  ? 'border-white/12 bg-white/[0.04] text-gray-400'
+                  ? 'border-white/[0.12] bg-white/[0.04] text-gray-400'
                   : 'border-emerald-400/30 bg-emerald-500/10 text-emerald-300',
               )}
             >
@@ -2000,7 +2000,7 @@ function TopicBanner({ topic, onToggleStatus, onClose, busy = false }) {
             'inline-flex h-8 items-center gap-1.5 rounded-lg border px-2.5 text-[11px] font-medium transition-colors disabled:opacity-50',
             closed
               ? 'border-emerald-400/30 bg-emerald-500/10 text-emerald-300 hover:bg-emerald-500/20'
-              : 'border-white/12 bg-white/[0.04] text-gray-300 hover:bg-white/10 hover:text-white',
+              : 'border-white/[0.12] bg-white/[0.04] text-gray-300 hover:bg-white/10 hover:text-white',
           )}
           title={closed ? 'Rouvrir le sujet' : 'Clôturer le sujet'}
         >
@@ -2061,7 +2061,7 @@ function CreateTopicModal({ open, onClose, onCreate }) {
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 16, scale: 0.97 }}
             transition={{ duration: 0.22, ease: [0.22, 1, 0.36, 1] }}
-            className="fixed left-1/2 top-1/2 z-[121] w-[min(92vw,440px)] -translate-x-1/2 -translate-y-1/2 rounded-2xl border border-white/10 bg-[#0c1118]/97 p-5 backdrop-blur-2xl shadow-[0_30px_80px_-30px_rgba(0,0,0,0.9)]"
+            className="fixed left-1/2 top-1/2 z-[121] w-[min(92vw,440px)] -translate-x-1/2 -translate-y-1/2 rounded-2xl border border-white/10 bg-[#0c1118]/[0.97] p-5 backdrop-blur-2xl shadow-[0_30px_80px_-30px_rgba(0,0,0,0.9)]"
           >
             <div className="mb-4 flex items-start justify-between gap-3">
               <div className="flex items-center gap-2.5">
@@ -2086,7 +2086,7 @@ function CreateTopicModal({ open, onClose, onCreate }) {
               onKeyDown={(e) => { if (e.key === 'Enter') void submit(); }}
               placeholder="Ex. Préparation du live de jeudi"
               maxLength={140}
-              className="mb-4 w-full rounded-xl border border-white/12 bg-black/25 px-3.5 py-2.5 text-sm text-white outline-none placeholder:text-gray-600 focus:border-[color-mix(in_srgb,var(--school-accent)_45%,transparent)]"
+              className="mb-4 w-full rounded-xl border border-white/[0.12] bg-black/25 px-3.5 py-2.5 text-sm text-white outline-none placeholder:text-gray-600 focus:border-[color-mix(in_srgb,var(--school-accent)_45%,transparent)]"
             />
 
             <label className="mb-1.5 block text-[11px] uppercase tracking-wider text-gray-500">Visibilité</label>
@@ -5499,7 +5499,7 @@ const MessagingPage = ({ embedded = false }) => {
             </Link>
           ) : null}
           {pendingInviteCount > 0 ? (
-            <div className="inline-flex items-center gap-1.5 h-7 px-2 rounded-full border border-red-500/30 bg-red-500/12 text-red-200">
+            <div className="inline-flex items-center gap-1.5 h-7 px-2 rounded-full border border-red-500/30 bg-red-500/[0.12] text-red-200">
               <span className="w-2 h-2 rounded-full bg-red-400 animate-pulse" />
               <span className="text-[10px] font-medium">Live en attente</span>
             </div>
@@ -5591,7 +5591,7 @@ const MessagingPage = ({ embedded = false }) => {
                 animate={{ opacity: 1, x: 0 }}
                 exit={{ opacity: 0, x: 20 }}
                 transition={{ duration: 0.22 }}
-                className="absolute top-4 right-4 z-30 w-[320px] max-h-[55vh] overflow-y-auto rounded-2xl border border-white/10 bg-[#0c1118]/92 backdrop-blur-xl p-2"
+                className="absolute top-4 right-4 z-30 w-[320px] max-h-[55vh] overflow-y-auto rounded-2xl border border-white/10 bg-[#0c1118]/[0.92] backdrop-blur-xl p-2"
               >
                 <div className="flex items-center justify-between px-2 py-1.5">
                   <p className="text-[11px] uppercase tracking-wider text-gray-500">Conversations</p>
@@ -5692,7 +5692,7 @@ const MessagingPage = ({ embedded = false }) => {
                               className={cn(
                                 'flex w-full items-start gap-2 rounded-lg border px-2 py-2 text-left transition-colors',
                                 n.read_at
-                                  ? 'border-white/8 bg-white/[0.02] text-gray-400'
+                                  ? 'border-white/[0.08] bg-white/[0.02] text-gray-400'
                                   : 'border-emerald-500/30 bg-emerald-500/10 text-white',
                               )}
                             >

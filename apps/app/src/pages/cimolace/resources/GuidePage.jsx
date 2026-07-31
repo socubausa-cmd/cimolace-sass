@@ -127,7 +127,7 @@ export default function CimolaceGuidePage() {
       <section className="relative px-6 pb-24 pt-36 lg:pb-32 lg:pt-44">
         <div className="absolute inset-0 pointer-events-none">
           <div className="absolute -top-32 left-1/2 -translate-x-1/2 w-[850px] h-[850px] rounded-full bg-violet-600/10 blur-[170px]" />
-          <div className="absolute top-1/3 right-0 w-[500px] h-[500px] rounded-full bg-cyan-500/8 blur-[140px]" />
+          <div className="absolute top-1/3 right-0 w-[500px] h-[500px] rounded-full bg-cyan-500/[0.08] blur-[140px]" />
         </div>
 
         <div className="relative max-w-7xl mx-auto">
@@ -188,7 +188,7 @@ export default function CimolaceGuidePage() {
             </div>
           </div>
 
-          <div className="rounded-3xl border border-white/[0.08] bg-gradient-to-br from-violet-600/12 to-cyan-500/8 p-7">
+          <div className="rounded-3xl border border-white/[0.08] bg-gradient-to-br from-violet-600/[0.12] to-cyan-500/[0.08] p-7">
             <p className="text-xs uppercase tracking-[0.3em] text-violet-300/80 mb-3">Règles de composition</p>
             <h3 className="text-2xl lg:text-3xl font-black text-white mb-6">Pourquoi un outil entre dans la gamme</h3>
             <div className="space-y-3">

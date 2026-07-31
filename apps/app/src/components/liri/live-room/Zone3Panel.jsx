@@ -65,7 +65,7 @@ function MembresTab({ members, privilegedSeats, onGrantSeat, isHost, currentUser
 
             {/* Name + role */}
             <div className="flex-1 min-w-0">
-              <p className="text-[11px] font-medium text-white/88 truncate flex items-center gap-1">
+              <p className="text-[11px] font-medium text-white/[0.88] truncate flex items-center gap-1">
                 {m.name}
                 {isSelf && <span className="text-[9px] text-gray-500 font-normal">(vous)</span>}
               </p>
@@ -157,7 +157,7 @@ function SallePrivilegieeTab({ seats, members, onGrantSeat, onRevokeSeat, isHost
                     <button
                       type="button"
                       onClick={(e) => { e.stopPropagation(); onRevokeSeat?.(seat.userId); }}
-                      className="absolute top-1.5 right-1.5 h-5 w-5 rounded-full bg-red-500/12 border border-red-400/22 text-red-400 flex items-center justify-center hover:bg-red-500/22 transition-colors"
+                      className="absolute top-1.5 right-1.5 h-5 w-5 rounded-full bg-red-500/[0.12] border border-red-400/[0.22] text-red-400 flex items-center justify-center hover:bg-red-500/[0.22] transition-colors"
                       title="Retirer"
                     >
                       <X className="w-2.5 h-2.5" />
@@ -166,12 +166,12 @@ function SallePrivilegieeTab({ seats, members, onGrantSeat, onRevokeSeat, isHost
                 </>
               ) : (
                 <>
-                  <div className="w-9 h-9 rounded-full border border-dashed border-white/12 flex items-center justify-center mt-1">
+                  <div className="w-9 h-9 rounded-full border border-dashed border-white/[0.12] flex items-center justify-center mt-1">
                     {isHost
-                      ? <UserPlus className="w-4 h-4 text-white/18" />
-                      : <span className="text-white/12 text-base font-light">+</span>}
+                      ? <UserPlus className="w-4 h-4 text-white/[0.18]" />
+                      : <span className="text-white/[0.12] text-base font-light">+</span>}
                   </div>
-                  <p className="text-[8px] text-white/22 text-center">
+                  <p className="text-[8px] text-white/[0.22] text-center">
                     {isHost ? 'Cliquer pour inviter' : 'Place libre'}
                   </p>
                 </>
@@ -190,10 +190,10 @@ function SallePrivilegieeTab({ seats, members, onGrantSeat, onRevokeSeat, isHost
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: 6 }}
             transition={{ duration: 0.18, ease: [0.22, 1, 0.36, 1] }}
-            className="min-h-0 overflow-hidden rounded-xl border border-[color-mix(in_srgb,var(--school-accent)_28%,transparent)] bg-[#0a0c12]/98 shadow-[inset_0_1px_0_rgba(212,175,55,0.08)] ring-1 ring-[color-mix(in_srgb,var(--school-accent)_10%,transparent)]"
+            className="min-h-0 overflow-hidden rounded-xl border border-[color-mix(in_srgb,var(--school-accent)_28%,transparent)] bg-[#0a0c12]/[0.98] shadow-[inset_0_1px_0_rgba(212,175,55,0.08)] ring-1 ring-[color-mix(in_srgb,var(--school-accent)_10%,transparent)]"
           >
             <div className="flex items-center justify-between gap-2 border-b border-white/10 px-3 py-2.5">
-              <p className="text-[11px] font-semibold text-white/88">
+              <p className="text-[11px] font-semibold text-white/[0.88]">
                 Inviter en place <span className="text-[var(--school-accent)]">#{pickingForPos}</span>
               </p>
               <button
@@ -223,7 +223,7 @@ function SallePrivilegieeTab({ seats, members, onGrantSeat, onRevokeSeat, isHost
                       {initials}
                     </div>
                     <div className="min-w-0 flex-1">
-                      <p className="truncate text-[11px] font-medium text-white/88">{m.name}</p>
+                      <p className="truncate text-[11px] font-medium text-white/[0.88]">{m.name}</p>
                       <p className="text-[9px] capitalize text-gray-500">{m.role || 'membre'}</p>
                     </div>
                   </button>
@@ -265,13 +265,13 @@ function MainsLeveesTab({ raisedHands, onLowerHand, onGrantSeat, isHost, privile
         return (
           <div
             key={h.userId}
-            className="flex items-center gap-2.5 p-2 rounded-xl bg-amber-500/7 border border-amber-400/14"
+            className="flex items-center gap-2.5 p-2 rounded-xl bg-amber-500/[0.07] border border-amber-400/[0.14]"
           >
-            <div className="w-7 h-7 rounded-full bg-gradient-to-br from-amber-500/28 to-[#1a2540] flex items-center justify-center text-[10px] font-bold text-amber-300 flex-shrink-0">
+            <div className="w-7 h-7 rounded-full bg-gradient-to-br from-amber-500/[0.28] to-[#1a2540] flex items-center justify-center text-[10px] font-bold text-amber-300 flex-shrink-0">
               {initials}
             </div>
             <div className="flex-1 min-w-0">
-              <p className="text-[11px] font-medium text-white/88 truncate">{h.name}</p>
+              <p className="text-[11px] font-medium text-white/[0.88] truncate">{h.name}</p>
               <p className="text-[9px] text-amber-400/55">✋ Il y a {elapsedStr}</p>
             </div>
             <div className="flex gap-1 flex-shrink-0">
@@ -442,7 +442,7 @@ export default function Zone3Panel({
                             ? 'border-[var(--school-accent)] bg-[var(--school-accent)] text-black'
                             : tab.alert
                               ? 'border-amber-500 bg-amber-500 text-black'
-                              : 'border-white/10 bg-white/18 text-white/75',
+                              : 'border-white/10 bg-white/[0.18] text-white/75',
                         )}
                       >
                         {tab.count}

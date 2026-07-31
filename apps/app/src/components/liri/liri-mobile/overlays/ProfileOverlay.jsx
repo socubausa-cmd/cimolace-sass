@@ -15,7 +15,7 @@ export function ProfileOverlay() {
       animate={{ opacity: 1, scale: 1 }}
       exit={{ opacity: 0, scale: 0.96 }}
       transition={{ duration: 0.26, ease: [0.22, 1, 0.36, 1] }}
-      className="fixed left-1/2 top-1/2 z-[220] w-[min(92vw,360px)] -translate-x-1/2 -translate-y-1/2 rounded-[24px] border border-[color-mix(in_srgb,var(--school-accent)_35%,transparent)] bg-[#0a0908]/96 p-5 shadow-[0_0_40px_-10px_rgba(212,175,55,0.3)] backdrop-blur-2xl"
+      className="fixed left-1/2 top-1/2 z-[220] w-[min(92vw,360px)] -translate-x-1/2 -translate-y-1/2 rounded-[24px] border border-[color-mix(in_srgb,var(--school-accent)_35%,transparent)] bg-[#0a0908]/[0.96] p-5 shadow-[0_0_40px_-10px_rgba(212,175,55,0.3)] backdrop-blur-2xl"
       data-liri-no-doubletap
     >
       <button

@@ -136,7 +136,7 @@ export function LiveSummaryPanel({ open, data, onClose }) {
           exit={{ opacity: 0, y: 24, scale: 0.96 }}
           transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
           onClick={(e) => e.stopPropagation()}
-          className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[min(92vw,760px)] rounded-3xl border border-white/10 bg-[#0c1118]/92 backdrop-blur-2xl p-5 md:p-7 shadow-2xl"
+          className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[min(92vw,760px)] rounded-3xl border border-white/10 bg-[#0c1118]/[0.92] backdrop-blur-2xl p-5 md:p-7 shadow-2xl"
         >
           <div className="flex items-start justify-between gap-4">
             <div>
@@ -230,7 +230,7 @@ export function LiveInvitePrompt({
         initial={{ opacity: 0, y: 16, scale: 0.97 }}
         animate={{ opacity: 1, y: 0, scale: 1 }}
         exit={{ opacity: 0, y: 12, scale: 0.97 }}
-        className="fixed bottom-24 right-4 md:right-8 z-[85] w-[min(92vw,420px)] rounded-2xl border border-white/10 bg-[#0c1118]/93 backdrop-blur-2xl p-4 shadow-2xl"
+        className="fixed bottom-24 right-4 md:right-8 z-[85] w-[min(92vw,420px)] rounded-2xl border border-white/10 bg-[#0c1118]/[0.93] backdrop-blur-2xl p-4 shadow-2xl"
       >
         <div className="flex items-start gap-3">
           <div className="mt-0.5 w-9 h-9 rounded-xl bg-[color-mix(in_srgb,var(--school-accent)_15%,transparent)] text-[var(--school-accent)] flex items-center justify-center">
@@ -297,7 +297,7 @@ export function LiveAgendaPanel({ open, invites, currentUserId, profiles, onJoin
         initial={{ opacity: 0, y: 16, scale: 0.98 }}
         animate={{ opacity: 1, y: 0, scale: 1 }}
         exit={{ opacity: 0, y: 12, scale: 0.98 }}
-        className="fixed top-24 right-4 md:right-8 z-[86] w-[min(94vw,420px)] max-h-[70vh] overflow-y-auto rounded-2xl border border-white/10 bg-[#0c1118]/93 backdrop-blur-2xl p-3"
+        className="fixed top-24 right-4 md:right-8 z-[86] w-[min(94vw,420px)] max-h-[70vh] overflow-y-auto rounded-2xl border border-white/10 bg-[#0c1118]/[0.93] backdrop-blur-2xl p-3"
       >
         <div className="flex items-center justify-between mb-2 px-1">
           <p className="text-[11px] uppercase tracking-wider text-gray-500">Agenda Live Chat</p>

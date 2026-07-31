@@ -126,7 +126,7 @@ function PlanSection({ plan }) {
               {plan.map((item, idx) => {
                 const meta = DEFAULT_PLAN_STEPS.find(s => s.step === item.step) || {};
                 return (
-                  <div key={idx} className="flex gap-3 items-start bg-white/5 rounded-xl px-4 py-3 border border-white/8">
+                  <div key={idx} className="flex gap-3 items-start bg-white/5 rounded-xl px-4 py-3 border border-white/[0.08]">
                     <span className="text-lg leading-none mt-0.5">{meta.icon || '•'}</span>
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2">
@@ -168,7 +168,7 @@ function SmartRoomPreview({ roomType }) {
           <div key={f.id} className={`flex flex-col items-center gap-2 rounded-xl border px-3 py-4 text-center transition-all ${
             f.active
               ? 'border-[color-mix(in_srgb,var(--school-accent)_30%,transparent)] bg-[color-mix(in_srgb,var(--school-accent)_8%,transparent)] text-[var(--school-accent)]'
-              : 'border-white/8 bg-white/3 text-gray-600'
+              : 'border-white/[0.08] bg-white/[0.03] text-gray-600'
           }`}>
             <f.icon className="w-5 h-5" />
             <span className="text-[11px] font-medium leading-tight">{f.label}</span>
@@ -248,7 +248,7 @@ const PreparationModule = React.memo(function PreparationModule({ appointmentId,
 
         {/* Note personnelle — uniquement si connecté */}
         {userId && (
-          <div className="space-y-2 pt-2 border-t border-white/8">
+          <div className="space-y-2 pt-2 border-t border-white/[0.08]">
             <label className="text-xs text-gray-500 uppercase tracking-wider flex items-center gap-1.5">
               <Edit3 className="w-3 h-3" /> Votre note pour la séance
             </label>
@@ -660,7 +660,7 @@ const ImmersiveWaitingRoomPage = () => {
     return (
       <PageShell>
         <div className="flex min-h-screen flex-col">
-          <header className="sticky top-0 z-20 flex items-center justify-between border-b border-white/8 bg-[#262624]/80 px-6 py-4 backdrop-blur-xl">
+          <header className="sticky top-0 z-20 flex items-center justify-between border-b border-white/[0.08] bg-[#262624]/80 px-6 py-4 backdrop-blur-xl">
             <Link to="/" className="flex items-center gap-2 text-sm font-semibold tracking-wide text-white/90">
               <span className="inline-flex h-8 w-8 items-center justify-center rounded-lg bg-[var(--school-accent)] text-black font-bold shadow-[0_0_18px_rgba(212,175,55,0.3)]">I</span>
               ISNA · PRORASCIENCE
@@ -699,7 +699,7 @@ const ImmersiveWaitingRoomPage = () => {
 
         {/* ══ Header ══ */}
         <header
-          className="sticky top-0 z-20 flex items-center justify-between border-b border-white/8 bg-[#262624]/80 px-4 py-3.5 backdrop-blur-xl sm:px-6"
+          className="sticky top-0 z-20 flex items-center justify-between border-b border-white/[0.08] bg-[#262624]/80 px-4 py-3.5 backdrop-blur-xl sm:px-6"
           style={{ paddingTop: 'max(0.875rem, env(safe-area-inset-top, 0px))' }}
         >
           {/* Logo */}
@@ -852,7 +852,7 @@ const ImmersiveWaitingRoomPage = () => {
                 {/* Info grid */}
                 <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                   {scheduledAt && (
-                    <div className="flex items-start gap-3 rounded-2xl border border-white/8 bg-white/[0.03] px-4 py-3 hover:border-[color-mix(in_srgb,var(--school-accent)_20%,transparent)] transition-colors">
+                    <div className="flex items-start gap-3 rounded-2xl border border-white/[0.08] bg-white/[0.03] px-4 py-3 hover:border-[color-mix(in_srgb,var(--school-accent)_20%,transparent)] transition-colors">
                       <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-[color-mix(in_srgb,var(--school-accent)_10%,transparent)] border border-[color-mix(in_srgb,var(--school-accent)_20%,transparent)]">
                         <CalendarClock className="h-4.5 w-4.5 text-[var(--school-accent)]" />
                       </div>
@@ -862,7 +862,7 @@ const ImmersiveWaitingRoomPage = () => {
                       </div>
                     </div>
                   )}
-                  <div className="flex items-start gap-3 rounded-2xl border border-white/8 bg-white/[0.03] px-4 py-3 hover:border-[color-mix(in_srgb,var(--school-accent)_20%,transparent)] transition-colors">
+                  <div className="flex items-start gap-3 rounded-2xl border border-white/[0.08] bg-white/[0.03] px-4 py-3 hover:border-[color-mix(in_srgb,var(--school-accent)_20%,transparent)] transition-colors">
                     <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-[color-mix(in_srgb,var(--school-accent)_10%,transparent)] border border-[color-mix(in_srgb,var(--school-accent)_20%,transparent)]">
                       <Globe className="h-4.5 w-4.5 text-[var(--school-accent)]" />
                     </div>
@@ -872,7 +872,7 @@ const ImmersiveWaitingRoomPage = () => {
                     </div>
                   </div>
                   {data?.secretary && (
-                    <div className="flex items-start gap-3 rounded-2xl border border-white/8 bg-white/[0.03] px-4 py-3 hover:border-[color-mix(in_srgb,var(--school-accent)_20%,transparent)] transition-colors">
+                    <div className="flex items-start gap-3 rounded-2xl border border-white/[0.08] bg-white/[0.03] px-4 py-3 hover:border-[color-mix(in_srgb,var(--school-accent)_20%,transparent)] transition-colors">
                       <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-[color-mix(in_srgb,var(--school-accent)_10%,transparent)] border border-[color-mix(in_srgb,var(--school-accent)_20%,transparent)]">
                         <User className="h-4.5 w-4.5 text-[var(--school-accent)]" />
                       </div>
@@ -887,7 +887,7 @@ const ImmersiveWaitingRoomPage = () => {
                     </div>
                   )}
                   {scheduledAt && countdown && !countdown.isPast && (
-                    <div className="flex items-start gap-3 rounded-2xl border border-white/8 bg-white/[0.03] px-4 py-3 hover:border-[color-mix(in_srgb,var(--school-accent)_20%,transparent)] transition-colors">
+                    <div className="flex items-start gap-3 rounded-2xl border border-white/[0.08] bg-white/[0.03] px-4 py-3 hover:border-[color-mix(in_srgb,var(--school-accent)_20%,transparent)] transition-colors">
                       <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-[color-mix(in_srgb,var(--school-accent)_10%,transparent)] border border-[color-mix(in_srgb,var(--school-accent)_20%,transparent)]">
                         <Clock className="h-4.5 w-4.5 text-[var(--school-accent)]" />
                       </div>
@@ -931,11 +931,11 @@ const ImmersiveWaitingRoomPage = () => {
                     {status === 'pending' ? 'En attente de confirmation' : status === 'preparing' ? 'Séance en préparation…' : 'Disponible le jour J'}
                   </Button>
                 )}
-                <Button asChild variant="outline" className="h-auto rounded-xl border-white/12 px-5 py-3.5 text-sm text-white hover:bg-white/5">
+                <Button asChild variant="outline" className="h-auto rounded-xl border-white/[0.12] px-5 py-3.5 text-sm text-white hover:bg-white/5">
                   <Link to="/"><Star className="mr-2 h-4 w-4" /> Explorer le site</Link>
                 </Button>
                 {['pending','confirmed','scheduled','preparing'].includes(status) && (
-                  <Button asChild variant="outline" className="h-auto rounded-xl border-white/8 px-5 py-3.5 text-sm text-gray-400 hover:bg-white/5">
+                  <Button asChild variant="outline" className="h-auto rounded-xl border-white/[0.08] px-5 py-3.5 text-sm text-gray-400 hover:bg-white/5">
                     <Link to="/appointment/request"><CalendarClock className="mr-2 h-4 w-4" /> Reprogrammer</Link>
                   </Button>
                 )}
@@ -943,7 +943,7 @@ const ImmersiveWaitingRoomPage = () => {
               )}
 
               {/* ── Parcours de session ── */}
-              <div className="space-y-3 rounded-2xl border border-white/8 bg-white/[0.03] p-3.5">
+              <div className="space-y-3 rounded-2xl border border-white/[0.08] bg-white/[0.03] p-3.5">
                 <p className="text-center text-[11px] font-semibold uppercase tracking-[0.18em] text-gray-500">Parcours de session</p>
                 <div className="rounded-xl border border-[color-mix(in_srgb,var(--school-accent)_20%,transparent)] bg-[color-mix(in_srgb,var(--school-accent)_5%,transparent)] p-3">
                   <div className="mb-2 flex items-center justify-between">
@@ -983,7 +983,7 @@ const ImmersiveWaitingRoomPage = () => {
 
               {/* ── Rappels ── */}
               {scheduledAt && countdown && !isCancelled && (
-                <div className="space-y-3 rounded-2xl border border-white/8 bg-white/[0.03] p-3.5">
+                <div className="space-y-3 rounded-2xl border border-white/[0.08] bg-white/[0.03] p-3.5">
                 <p className="text-center text-[11px] font-semibold uppercase tracking-[0.18em] text-gray-500">Rappels automatiques</p>
                 <div className="grid grid-cols-1 gap-3">
                   {[
@@ -991,7 +991,7 @@ const ImmersiveWaitingRoomPage = () => {
                     { label: 'Rappel 1h avant', active: countdown.days === 0 && countdown.hours === 0 && !countdown.isPast },
                     { label: 'Session prête',   active: countdown.isNow || ['ready','in_progress'].includes(status) },
                   ].map(({ label, active }) => (
-                    <div key={label} className={`flex items-center gap-2 rounded-xl border px-3 py-3 text-xs font-medium transition-all ${active ? 'border-[color-mix(in_srgb,var(--school-accent)_40%,transparent)] bg-[color-mix(in_srgb,var(--school-accent)_10%,transparent)] text-[var(--school-accent)]' : 'border-white/8 bg-white/[0.03] text-gray-500'}`}>
+                    <div key={label} className={`flex items-center gap-2 rounded-xl border px-3 py-3 text-xs font-medium transition-all ${active ? 'border-[color-mix(in_srgb,var(--school-accent)_40%,transparent)] bg-[color-mix(in_srgb,var(--school-accent)_10%,transparent)] text-[var(--school-accent)]' : 'border-white/[0.08] bg-white/[0.03] text-gray-500'}`}>
                       {active ? <CheckCircle2 className="h-3.5 w-3.5 shrink-0" /> : <Circle className="h-3.5 w-3.5 shrink-0" />}
                       {label}
                     </div>

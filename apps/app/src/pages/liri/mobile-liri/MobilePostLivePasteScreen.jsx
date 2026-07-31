@@ -30,7 +30,7 @@ export default function MobilePostLivePasteScreen() {
           </span>
         </LiriSectionLabel>
         <h1 className="mt-1 font-serif text-xl text-[#faf3e6] tracking-tight">Fiche post-live</h1>
-        <p className="mt-1 text-sm text-white/48">
+        <p className="mt-1 text-sm text-white/[0.48]">
           Replay, résumé IA, NeuronQ archivées, NeuroRecall (flashcards, rapports). Collez l'ID de session ou l\'URL du
           live.
         </p>
@@ -60,7 +60,7 @@ export default function MobilePostLivePasteScreen() {
           onChange={(e) => setPaste(e.target.value)}
           placeholder="https://…/live/xxxxxxxx-… ou UUID"
           rows={3}
-          className="mt-3 w-full resize-none rounded-xl border border-white/12 bg-black/50 px-3 py-2 text-sm text-white/90 placeholder:text-white/25 focus:border-[color-mix(in_srgb,var(--school-accent)_45%,transparent)] focus:outline-none focus:ring-1 focus:ring-[color-mix(in_srgb,var(--school-accent)_30%,transparent)]"
+          className="mt-3 w-full resize-none rounded-xl border border-white/[0.12] bg-black/50 px-3 py-2 text-sm text-white/90 placeholder:text-white/25 focus:border-[color-mix(in_srgb,var(--school-accent)_45%,transparent)] focus:outline-none focus:ring-1 focus:ring-[color-mix(in_srgb,var(--school-accent)_30%,transparent)]"
         />
         <button
           type="button"

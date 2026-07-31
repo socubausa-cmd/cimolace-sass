@@ -68,11 +68,11 @@ export default function LibraryImportModal({ open, onClose }) {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm" onClick={onClose}>
       <div
-        className="relative w-full max-w-lg rounded-2xl border border-white/12 bg-[#0d1020] shadow-2xl"
+        className="relative w-full max-w-lg rounded-2xl border border-white/[0.12] bg-[#0d1020] shadow-2xl"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
-        <div className="flex items-center gap-3 border-b border-white/8 px-5 py-4">
+        <div className="flex items-center gap-3 border-b border-white/[0.08] px-5 py-4">
           <Upload className="h-5 w-5 text-[var(--school-accent)]" />
           <h2 className="text-[15px] font-bold text-white">Importer un asset</h2>
           <button onClick={onClose} className="ml-auto text-white/30 hover:text-white/70">
@@ -183,7 +183,7 @@ export default function LibraryImportModal({ open, onClose }) {
         </div>
 
         {/* Footer */}
-        <div className="flex items-center justify-end gap-2 border-t border-white/8 px-5 py-3">
+        <div className="flex items-center justify-end gap-2 border-t border-white/[0.08] px-5 py-3">
           {!isDone ? (
             <button onClick={cancelImport} className="rounded-lg border border-white/15 px-4 py-2 text-[12px] text-white/60 hover:border-white/25 hover:text-white">
               Annuler

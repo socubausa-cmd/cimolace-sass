@@ -99,7 +99,7 @@ export function LiriAudioSceneOverlay({
       role="status"
       aria-live="polite"
       className={cn(
-        'pointer-events-auto absolute left-1/2 top-[min(18vh,140px)] z-[44] w-[min(92vw,520px)] -translate-x-1/2 rounded-2xl border border-[color-mix(in_srgb,var(--school-accent)_35%,transparent)] bg-[#070a10]/92 p-4 text-white shadow-[0_28px_80px_-24px_rgba(0,0,0,0.9)] backdrop-blur-xl',
+        'pointer-events-auto absolute left-1/2 top-[min(18vh,140px)] z-[44] w-[min(92vw,520px)] -translate-x-1/2 rounded-2xl border border-[color-mix(in_srgb,var(--school-accent)_35%,transparent)] bg-[#070a10]/[0.92] p-4 text-white shadow-[0_28px_80px_-24px_rgba(0,0,0,0.9)] backdrop-blur-xl',
         className,
       )}
     >

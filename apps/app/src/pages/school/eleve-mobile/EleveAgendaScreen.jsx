@@ -34,13 +34,13 @@ import {
 } from '@/pages/school/eleve-mobile/eleveMobileScreensShared';
 
 const TYPE_STYLES = {
-  live: 'bg-red-500/18 text-red-100 border-red-500/30',
-  formation_live: 'bg-amber-500/12 text-amber-100 border-amber-500/28',
-  appointment: 'bg-emerald-500/12 text-emerald-100 border-emerald-500/28',
+  live: 'bg-red-500/[0.18] text-red-100 border-red-500/30',
+  formation_live: 'bg-amber-500/[0.12] text-amber-100 border-amber-500/[0.28]',
+  appointment: 'bg-emerald-500/[0.12] text-emerald-100 border-emerald-500/[0.28]',
   exam: 'bg-orange-500/15 text-orange-100 border-orange-500/30',
-  school: 'bg-amber-500/12 text-amber-100 border-amber-500/25',
+  school: 'bg-amber-500/[0.12] text-amber-100 border-amber-500/25',
   calendar: 'bg-[rgba(217, 119, 87,0.2)] text-orange-100 border-orange-500/35',
-  course_video: 'bg-amber-500/14 text-amber-100 border-amber-500/30',
+  course_video: 'bg-amber-500/[0.14] text-amber-100 border-amber-500/30',
 };
 
 /** Halos (lun–ven, idx 0–4) : bleu → indigo → violet — se détachent du fond noir. */
@@ -232,7 +232,7 @@ export default function EleveAgendaScreen() {
                           today
                             ? 'text-orange-200/65'
                             : isWeekday
-                              ? 'text-amber-200/48'
+                              ? 'text-amber-200/[0.48]'
                               : 'text-white/30',
                         )}
                       >
@@ -241,7 +241,7 @@ export default function EleveAgendaScreen() {
                       <div
                         className={cn(
                           'text-xs font-bold leading-tight',
-                          today ? 'text-orange-200' : isWeekday ? 'text-white/92' : 'text-white/88',
+                          today ? 'text-orange-200' : isWeekday ? 'text-white/[0.92]' : 'text-white/[0.88]',
                         )}
                       >
                         {safeFmt(day, 'd')}

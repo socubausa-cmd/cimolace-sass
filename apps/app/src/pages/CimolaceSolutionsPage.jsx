@@ -472,7 +472,7 @@ export default function CimolaceSolutionsPage() {
         <section className="relative min-h-screen flex items-center justify-center overflow-hidden">
           <div className="absolute inset-0 opacity-[0.03]" style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E")` }} />
           <motion.div animate={{ scale: [1, 1.15, 1], x: [0, 30, 0] }} transition={{ duration: 12, repeat: Infinity, ease: 'easeInOut' }} className="absolute top-[15%] left-[10%] w-[500px] h-[500px] rounded-full bg-violet-600/10 blur-[120px] pointer-events-none" />
-          <motion.div animate={{ scale: [1, 1.2, 1], x: [0, -25, 0] }} transition={{ duration: 15, repeat: Infinity, ease: 'easeInOut', delay: 2 }} className="absolute bottom-[10%] right-[5%] w-[600px] h-[600px] rounded-full bg-cyan-600/8 blur-[140px] pointer-events-none" />
+          <motion.div animate={{ scale: [1, 1.2, 1], x: [0, -25, 0] }} transition={{ duration: 15, repeat: Infinity, ease: 'easeInOut', delay: 2 }} className="absolute bottom-[10%] right-[5%] w-[600px] h-[600px] rounded-full bg-cyan-600/[0.08] blur-[140px] pointer-events-none" />
 
           <div className="relative z-10 max-w-[1100px] mx-auto px-8 pt-28 pb-20 text-center">
             <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }} className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-violet-500/10 border border-violet-500/20 mb-10 text-xs text-violet-300 tracking-widest uppercase">
@@ -640,7 +640,7 @@ export default function CimolaceSolutionsPage() {
         {/* ══ ARCHITECTURE — How they connect ══ */}
         <section className="py-32 px-6 lg:px-12 relative overflow-hidden">
           <div className="absolute inset-0 pointer-events-none">
-            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] rounded-full bg-gradient-radial from-violet-600/6 to-transparent blur-3xl" />
+            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] rounded-full bg-gradient-radial from-violet-600/[0.06] to-transparent blur-3xl" />
           </div>
           <div className="relative max-w-5xl mx-auto text-center">
             <Line><span className="text-[10px] tracking-[0.35em] uppercase text-cyan-400/60 mb-6 block">Architecture</span></Line>
@@ -755,7 +755,7 @@ export default function CimolaceSolutionsPage() {
         {/* ══ CTA ══ */}
         <section className="relative py-40 overflow-hidden">
           <motion.div animate={{ rotate: [0, 360] }} transition={{ duration: 30, repeat: Infinity, ease: 'linear' }} className="absolute inset-0 pointer-events-none" style={{ background: 'conic-gradient(from 0deg at 50% 50%, #7c3aed08, #06b6d408, #7c3aed08)' }} />
-          <motion.div animate={{ scale: [1, 1.3, 1] }} transition={{ duration: 8, repeat: Infinity }} className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] rounded-full bg-gradient-radial from-violet-600/12 to-transparent blur-3xl pointer-events-none" />
+          <motion.div animate={{ scale: [1, 1.3, 1] }} transition={{ duration: 8, repeat: Infinity }} className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] rounded-full bg-gradient-radial from-violet-600/[0.12] to-transparent blur-3xl pointer-events-none" />
 
           <div className="relative z-10 max-w-[900px] mx-auto px-8 text-center">
             <Line><span className="text-[10px] tracking-[0.35em] uppercase text-violet-400/60 mb-10 block">Choisir votre porte d'entrée</span></Line>

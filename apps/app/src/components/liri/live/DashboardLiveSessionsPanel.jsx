@@ -96,7 +96,7 @@ export default function DashboardLiveSessionsPanel({ className, sessions: contro
             badgeLabel = 'Messagerie';
           } else if (replayReady) {
             badgeClass = replayDraft
-              ? 'bg-violet-500/12 text-violet-200 border-violet-400/28'
+              ? 'bg-violet-500/[0.12] text-violet-200 border-violet-400/[0.28]'
               : 'bg-cyan-500/15 text-cyan-200 border-cyan-400/30';
             badgeLabel = replayDraft ? 'Brouillon replay' : 'Replay formation';
           } else if (isStaleHostRow) {

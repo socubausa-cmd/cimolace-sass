@@ -657,7 +657,7 @@ export default function CanvaDesignPanel({
                 value={imageUrlDraft}
                 onChange={(e) => setImageUrlDraft(e.target.value)}
                 placeholder="https://… ou téléverser ci-dessous"
-                className="w-full rounded-lg border border-white/12 bg-black/40 px-2 py-1.5 text-[12px] text-white placeholder-white/25"
+                className="w-full rounded-lg border border-white/[0.12] bg-black/40 px-2 py-1.5 text-[12px] text-white placeholder-white/25"
               />
               <input
                 ref={imageFileInputRef}
@@ -670,7 +670,7 @@ export default function CanvaDesignPanel({
                 type="button"
                 disabled={imageUploadBusy}
                 onClick={() => imageFileInputRef.current?.click()}
-                className="flex w-full items-center justify-center gap-1.5 rounded-lg border border-white/12 bg-white/[0.04] py-1.5 text-[13px] text-white/70 hover:border-cyan-500/30 hover:text-cyan-100 disabled:opacity-50"
+                className="flex w-full items-center justify-center gap-1.5 rounded-lg border border-white/[0.12] bg-white/[0.04] py-1.5 text-[13px] text-white/70 hover:border-cyan-500/30 hover:text-cyan-100 disabled:opacity-50"
               >
                 {imageUploadBusy ? <Loader2 className="h-3 w-3 animate-spin" /> : <Upload className="h-3 w-3" />}
                 Téléverser une image
@@ -697,14 +697,14 @@ export default function CanvaDesignPanel({
                 value={aiImagePrompt}
                 onChange={(e) => setAiImagePrompt(e.target.value)}
                 placeholder="Ex: diagramme pedagogique pyramide doree..."
-                className="w-full rounded-lg border border-white/12 bg-black/40 px-2 py-1.5 text-[12px] text-white placeholder-white/25"
+                className="w-full rounded-lg border border-white/[0.12] bg-black/40 px-2 py-1.5 text-[12px] text-white placeholder-white/25"
               />
               <label className="block text-[11px] text-white/45">
                 Format
                 <select
                   value={aiImageSize}
                   onChange={(e) => setAiImageSize(e.target.value)}
-                  className="mt-0.5 w-full rounded-lg border border-white/12 bg-black/50 py-1 text-[12px] text-white/85"
+                  className="mt-0.5 w-full rounded-lg border border-white/[0.12] bg-black/50 py-1 text-[12px] text-white/85"
                 >
                   {DESIGNER_IA_IMAGE_SIZES.map((s) => (
                     <option key={s.value} value={s.value}>
@@ -718,7 +718,7 @@ export default function CanvaDesignPanel({
                 <select
                   value={aiImageProvider}
                   onChange={(e) => setAiImageProvider(e.target.value)}
-                  className="mt-0.5 w-full rounded-lg border border-white/12 bg-black/50 py-1 text-[12px] text-white/85"
+                  className="mt-0.5 w-full rounded-lg border border-white/[0.12] bg-black/50 py-1 text-[12px] text-white/85"
                 >
                   <option value="auto">Auto</option>
                   <option value="gemini">Google Imagen (GEMINI_API_KEY)</option>

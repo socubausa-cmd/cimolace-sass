@@ -74,7 +74,7 @@ export default function SchoolLifeLiveNotice() {
               ? 'bg-violet-500/20'
               : 'bg-cyan-500/20'
             : staleHost
-              ? 'bg-amber-500/18'
+              ? 'bg-amber-500/[0.18]'
               : 'bg-emerald-500/20';
 
         const hint = isImmersive
@@ -95,10 +95,10 @@ export default function SchoolLifeLiveNotice() {
           ? 'border-amber-500/40 bg-amber-500/15 text-amber-200 hover:bg-amber-500/25'
           : replayReady
             ? replayDraft
-              ? 'border-violet-500/40 bg-violet-500/12 text-violet-100 hover:bg-violet-500/22'
-              : 'border-cyan-500/40 bg-cyan-500/15 text-cyan-100 hover:bg-cyan-500/22'
+              ? 'border-violet-500/40 bg-violet-500/[0.12] text-violet-100 hover:bg-violet-500/[0.22]'
+              : 'border-cyan-500/40 bg-cyan-500/15 text-cyan-100 hover:bg-cyan-500/[0.22]'
             : staleHost
-              ? 'border-amber-500/40 bg-amber-500/12 text-amber-100 hover:bg-amber-500/22'
+              ? 'border-amber-500/40 bg-amber-500/[0.12] text-amber-100 hover:bg-amber-500/[0.22]'
               : 'border-emerald-500/40 bg-emerald-500/15 text-emerald-200 hover:bg-emerald-500/25';
 
         return (

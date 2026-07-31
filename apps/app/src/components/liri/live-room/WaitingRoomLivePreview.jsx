@@ -191,7 +191,7 @@ export default function WaitingRoomLivePreview({
   return (
     <div
       className={cn(
-        'overflow-hidden rounded-2xl border border-white/12 bg-black/50 shadow-[0_16px_45px_rgba(0,0,0,0.35)]',
+        'overflow-hidden rounded-2xl border border-white/[0.12] bg-black/50 shadow-[0_16px_45px_rgba(0,0,0,0.35)]',
         className,
       )}
     >

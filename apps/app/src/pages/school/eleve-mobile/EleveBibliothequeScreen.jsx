@@ -511,7 +511,7 @@ function LongiaHelpRow() {
       className="mb-2 flex items-center gap-3 rounded-2xl px-3.5 py-3.5 transition-transform active:scale-[0.99]"
       style={{ borderRadius: EV_R.lg, ...longiaRowSurface() }}
     >
-      <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-orange-500/25 bg-orange-500/12 text-orange-200 shadow-[0_0_20px_-4px_rgba(217, 119, 87,0.4)]">
+      <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-orange-500/25 bg-orange-500/[0.12] text-orange-200 shadow-[0_0_20px_-4px_rgba(217, 119, 87,0.4)]">
         <Sparkles className="h-5 w-5" strokeWidth={2} />
       </span>
       <div className="min-w-0 flex-1">
@@ -618,7 +618,7 @@ export default function EleveBibliothequeScreen() {
                   className="mb-2 flex items-center gap-3 rounded-2xl px-3.5 py-4 transition-transform active:scale-[0.99]"
                   style={{ borderRadius: EV_R.lg, ...courseInProgressSurface(0) }}
                 >
-                  <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-orange-500/25 bg-orange-500/12 text-orange-200">
+                  <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-orange-500/25 bg-orange-500/[0.12] text-orange-200">
                     <BookOpen className="h-5 w-5" strokeWidth={2} />
                   </span>
                   <div className="min-w-0 flex-1">

@@ -15,7 +15,7 @@ import { useMobileLiriStore } from '@/stores/mobileLiriStore';
 import { cn } from '@/lib/utils';
 
 const panelClass =
-  'fixed inset-y-0 right-0 z-[210] flex w-[min(100%,380px)] flex-col border-l border-[color-mix(in_srgb,var(--school-accent)_35%,transparent)] bg-[#0a0908]/98 shadow-[0_0_48px_-12px_rgba(212,175,55,0.22)] backdrop-blur-2xl';
+  'fixed inset-y-0 right-0 z-[210] flex w-[min(100%,380px)] flex-col border-l border-[color-mix(in_srgb,var(--school-accent)_35%,transparent)] bg-[#0a0908]/[0.98] shadow-[0_0_48px_-12px_rgba(212,175,55,0.22)] backdrop-blur-2xl';
 
 const goldNoise =
   'bg-[linear-gradient(180deg,rgba(212,175,55,0.04)_0%,transparent_40%),radial-gradient(ellipse_at_20%_0%,rgba(212,175,55,0.07)_0%,transparent_50%)]';

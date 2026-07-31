@@ -4154,7 +4154,7 @@ function WhiteboardScene({
                 className={cn(
                   designerShellChipGhost,
                   'h-8 w-8 p-0',
-                  textBold && 'border-amber-500/45 bg-amber-500/12 text-amber-100',
+                  textBold && 'border-amber-500/45 bg-amber-500/[0.12] text-amber-100',
                 )}
               >
                 <Bold className="mx-auto h-3.5 w-3.5" strokeWidth={2.2} />
@@ -4166,7 +4166,7 @@ function WhiteboardScene({
                 className={cn(
                   designerShellChipGhost,
                   'h-8 w-8 p-0',
-                  textItalic && 'border-amber-500/45 bg-amber-500/12 text-amber-100',
+                  textItalic && 'border-amber-500/45 bg-amber-500/[0.12] text-amber-100',
                 )}
               >
                 <Italic className="mx-auto h-3.5 w-3.5" strokeWidth={2.2} />
@@ -4184,7 +4184,7 @@ function WhiteboardScene({
                   className={cn(
                     designerShellChipGhost,
                     'h-8 w-8 p-0',
-                    textAlign === id && 'border-amber-500/45 bg-amber-500/12 text-amber-100',
+                    textAlign === id && 'border-amber-500/45 bg-amber-500/[0.12] text-amber-100',
                   )}
                 >
                   <Icon className="mx-auto h-3.5 w-3.5" strokeWidth={2} />
@@ -4222,7 +4222,7 @@ function WhiteboardScene({
                 className={cn(
                   designerShellChipGhost,
                   'h-8 w-8 p-0',
-                  textUnderline && 'border-amber-500/45 bg-amber-500/12 text-amber-100',
+                  textUnderline && 'border-amber-500/45 bg-amber-500/[0.12] text-amber-100',
                 )}
               >
                 <Underline className="mx-auto h-3.5 w-3.5" strokeWidth={2.2} />
@@ -4234,7 +4234,7 @@ function WhiteboardScene({
                 className={cn(
                   designerShellChipGhost,
                   'h-8 w-8 p-0',
-                  textHighlight && 'border-amber-500/45 bg-amber-500/12 text-amber-100',
+                  textHighlight && 'border-amber-500/45 bg-amber-500/[0.12] text-amber-100',
                 )}
               >
                 <Highlighter className="mx-auto h-3.5 w-3.5" strokeWidth={2.2} />
@@ -4246,7 +4246,7 @@ function WhiteboardScene({
                 className={cn(
                   designerShellChipGhost,
                   'h-8 w-8 p-0',
-                  textBorder && 'border-amber-500/45 bg-amber-500/12 text-amber-100',
+                  textBorder && 'border-amber-500/45 bg-amber-500/[0.12] text-amber-100',
                 )}
               >
                 <Square className="mx-auto h-3.5 w-3.5" strokeWidth={2.2} />
@@ -4289,7 +4289,7 @@ function WhiteboardScene({
                   designerShellChipGhost,
                   'flex items-center px-2.5 py-1 text-[11px] font-semibold leading-none',
                   composerToolsOpen
-                    ? 'border-amber-500/40 bg-amber-500/12 text-amber-100'
+                    ? 'border-amber-500/40 bg-amber-500/[0.12] text-amber-100'
                     : 'text-white/70',
                 )}
               >
@@ -4644,8 +4644,8 @@ function IntegratedUrlFrame({
           <div className="absolute inset-0 flex flex-col items-center justify-center gap-5 px-6 text-center">
             <div className={cn(designerShellEmbedPanel, 'max-w-md px-5 py-6')}>
               <FrameIcon className="mx-auto mb-3 h-10 w-10 text-amber-400/35" />
-              <p className="mb-2 text-center text-sm font-semibold text-white/88">{cfg.emptyLead}</p>
-              <p className="text-[12px] leading-relaxed text-white/42">{cfg.emptyHint}</p>
+              <p className="mb-2 text-center text-sm font-semibold text-white/[0.88]">{cfg.emptyLead}</p>
+              <p className="text-[12px] leading-relaxed text-white/[0.42]">{cfg.emptyHint}</p>
             </div>
             {cfg.showSuggestions && (
               <div className="flex flex-wrap items-center justify-center gap-2">
@@ -4682,7 +4682,7 @@ function IntegratedUrlFrame({
           <div className={cn('absolute inset-0 z-10 flex flex-col items-center justify-center gap-4 px-6 text-center', SCENE_STAGE_GRID)}>
             <div className={cn(designerShellEmbedPanel, 'max-w-md px-5 py-5')}>
               <AlertCircle className="mx-auto mb-3 h-9 w-9 text-amber-400/70" />
-              <p className="mb-1 text-[13px] font-semibold text-white/88">Affichage intégré impossible</p>
+              <p className="mb-1 text-[13px] font-semibold text-white/[0.88]">Affichage intégré impossible</p>
               {denyMessage ? (
                 <p className="mb-2 text-[12px] leading-relaxed text-amber-200/90">{denyMessage}</p>
               ) : null}
@@ -4751,7 +4751,7 @@ function ScreenShareSceneLayer({ active }) {
         <div className={cn(designerShellEmbedPanel, 'max-w-sm px-5 py-6 text-center')}>
           <MonitorPlay className="mx-auto mb-3 h-10 w-10 text-amber-400/40" />
           <p className="text-sm font-semibold text-white/80">Aucun écran partagé</p>
-          <p className="mt-2 text-[11px] leading-relaxed text-white/42">
+          <p className="mt-2 text-[11px] leading-relaxed text-white/[0.42]">
             Utilisez « Partager l&apos;écran » dans la barre du live — le flux s&apos;affiche ici.
           </p>
         </div>
@@ -4813,7 +4813,7 @@ function Camera2SourcePickerBody({
             <Smartphone className="h-3 w-3" />
             Téléphone / tablette
           </p>
-          <p className="text-[10px] leading-snug text-white/42">
+          <p className="text-[10px] leading-snug text-white/[0.42]">
             QR « QR tel. » sur le dock : l&apos;appareil rejoint la salle comme{' '}
             <strong className="text-white/60">Téléphone (QR)</strong>. Sinon : selfie, caméra arrière ou écran via le navigateur.
           </p>
@@ -4823,14 +4823,14 @@ function Camera2SourcePickerBody({
                 <button
                   type="button"
                   onClick={() => onPickLocalFacing('user')}
-                  className="h-9 w-full rounded-xl border border-amber-500/35 bg-amber-500/12 text-xs font-medium text-amber-50/95 transition-colors hover:bg-amber-500/18"
+                  className="h-9 w-full rounded-xl border border-amber-500/35 bg-amber-500/[0.12] text-xs font-medium text-amber-50/95 transition-colors hover:bg-amber-500/[0.18]"
                 >
                   Selfie (caméra avant)
                 </button>
                 <button
                   type="button"
                   onClick={() => onPickLocalFacing('environment')}
-                  className="h-9 w-full rounded-xl border border-amber-500/28 bg-amber-500/10 text-xs font-medium text-amber-100/90 transition-colors hover:bg-amber-500/16"
+                  className="h-9 w-full rounded-xl border border-amber-500/[0.28] bg-amber-500/10 text-xs font-medium text-amber-100/90 transition-colors hover:bg-amber-500/[0.16]"
                 >
                   Caméra arrière (document ou pièce)
                 </button>
@@ -4840,7 +4840,7 @@ function Camera2SourcePickerBody({
               <button
                 type="button"
                 onClick={() => void onPickLocalDisplay()}
-                className="h-9 w-full rounded-xl border border-white/12 bg-white/[0.06] text-xs font-medium text-white/88 transition-colors hover:border-white/18 hover:bg-white/[0.1]"
+                className="h-9 w-full rounded-xl border border-white/[0.12] bg-white/[0.06] text-xs font-medium text-white/[0.88] transition-colors hover:border-white/[0.18] hover:bg-white/[0.1]"
               >
                 Écran de l&apos;appareil (temps réel)
               </button>
@@ -4850,14 +4850,14 @@ function Camera2SourcePickerBody({
       )}
 
       <div className={cn(designerShellCardInset, 'w-full max-w-xs space-y-2')}>
-        <p className={cn(designerShellMicroLabel, 'flex items-center gap-1.5 text-white/48')}>
+        <p className={cn(designerShellMicroLabel, 'flex items-center gap-1.5 text-white/[0.48]')}>
           <UserSquare2 className="h-3 w-3" />
           Flux de la salle
         </p>
         {fluxParticipants.length > 0 ? (
           <>
             {fluxParticipants.length === 2 ? (
-              <p className="text-[9px] leading-snug text-white/38">Une pression affiche le flux sur Caméra 2.</p>
+              <p className="text-[9px] leading-snug text-white/[0.38]">Une pression affiche le flux sur Caméra 2.</p>
             ) : null}
             {fluxParticipants.length === 2 ? (
               <div className={designerShellSegmentedRail}>
@@ -4888,7 +4888,7 @@ function Camera2SourcePickerBody({
                     )}
                   >
                     <UserSquare2 className="mt-0.5 h-3.5 w-3.5 shrink-0 text-amber-300/75" />
-                    <span className="min-w-0 flex-1 text-left text-xs font-medium text-white/82">
+                    <span className="min-w-0 flex-1 text-left text-xs font-medium text-white/[0.82]">
                       {fluxParticipantLabel(p)}
                     </span>
                     <span className="shrink-0 self-center text-[9px] font-semibold uppercase tracking-wide text-amber-200/80">
@@ -4909,7 +4909,7 @@ function Camera2SourcePickerBody({
         {devices.length > 0 ? (
           <>
             {devices.length === 2 ? (
-              <p className="text-[9px] leading-snug text-white/38">Deux sources : basculez d&apos;un clic.</p>
+              <p className="text-[9px] leading-snug text-white/[0.38]">Deux sources : basculez d&apos;un clic.</p>
             ) : null}
             {devices.length === 2 ? (
               <div className={designerShellSegmentedRail}>
@@ -4937,7 +4937,7 @@ function Camera2SourcePickerBody({
                     className={cn(designerShellDeviceRow(false), 'items-center py-2')}
                   >
                     <Camera className="h-3.5 w-3.5 shrink-0 text-amber-200/65" />
-                    <span className="min-w-0 flex-1 truncate text-left text-xs font-medium text-white/82">
+                    <span className="min-w-0 flex-1 truncate text-left text-xs font-medium text-white/[0.82]">
                       {usbVideoLabel(d, i)}
                     </span>
                     <span className="shrink-0 text-[9px] font-semibold uppercase tracking-wide text-amber-200/75">
@@ -5042,7 +5042,7 @@ function Camera2Scene({
     return (
       <div className={cn('absolute inset-0 flex flex-col items-center justify-center gap-3 px-6', SCENE_STAGE_GRID)}>
         <div className="h-9 w-9 animate-spin rounded-full border-2 border-amber-500/35 border-t-amber-400" />
-        <p className="text-center text-xs text-white/48">Connexion à la vidéo du participant…</p>
+        <p className="text-center text-xs text-white/[0.48]">Connexion à la vidéo du participant…</p>
       </div>
     );
   }
@@ -5060,7 +5060,7 @@ function Camera2Scene({
             <button
               type="button"
               onClick={() => setSourcePickerOpen(true)}
-              className="pointer-events-auto absolute right-3 top-3 z-[21] flex h-7 items-center gap-1.5 rounded-xl border border-white/12 bg-black/75 px-2.5 text-[10px] font-medium text-white/88 backdrop-blur-sm transition-colors hover:border-amber-500/35 hover:bg-black/88"
+              className="pointer-events-auto absolute right-3 top-3 z-[21] flex h-7 items-center gap-1.5 rounded-xl border border-white/[0.12] bg-black/75 px-2.5 text-[10px] font-medium text-white/[0.88] backdrop-blur-sm transition-colors hover:border-amber-500/35 hover:bg-black/[0.88]"
             >
               <RefreshCw className="h-3 w-3 text-amber-200/85" />
               Changer la source
@@ -5079,7 +5079,7 @@ function Camera2Scene({
                 onClick={(e) => e.stopPropagation()}
               >
                 <div className="flex items-center justify-between gap-2 border-b border-white/[0.08] px-4 pb-3">
-                  <p className="text-sm font-semibold text-white/92">Source Caméra 2</p>
+                  <p className="text-sm font-semibold text-white/[0.92]">Source Caméra 2</p>
                   <button
                     type="button"
                     onClick={() => setSourcePickerOpen(false)}
@@ -5114,7 +5114,7 @@ function Camera2Scene({
           <div className={cn(designerShellEmbedPanel, 'w-full px-4 py-5 text-center')}>
             <Camera className="mx-auto mb-3 h-10 w-10 text-amber-400/40" />
             <p className="text-[13px] font-semibold text-white/80">Caméra 2</p>
-            <p className="mt-1 text-[11px] leading-relaxed text-white/42">
+            <p className="mt-1 text-[11px] leading-relaxed text-white/[0.42]">
               Téléphone, écran de l&apos;appareil, autre webcam ou flux d&apos;un participant.
             </p>
           </div>
@@ -5217,7 +5217,7 @@ function ShopScene({ products = [], onProductClick }) {
                       </span>
                     </div>
                     {product.interval && (
-                      <span className="mt-1 block text-[9px] text-white/32">
+                      <span className="mt-1 block text-[9px] text-white/[0.32]">
                         {product.interval === 'one_time' ? 'Paiement unique' : product.interval === 'monthly' ? '/ mois' : product.interval === 'yearly' ? '/ an' : `/ ${product.interval}`}
                       </span>
                     )}
@@ -5243,8 +5243,8 @@ function SceneNavTooltip({ scene, premiumArenaHostTray, children }) {
         className={cn(
           'max-w-[min(92vw,268px)] border px-3 py-2.5 text-left shadow-[0_14px_44px_-14px_rgba(0,0,0,0.82)]',
           premiumArenaHostTray
-            ? 'border-amber-400/35 bg-[#1f1e1c]/97 text-amber-50'
-            : 'border-amber-400/32 bg-[#0f0e0a]/97 text-amber-50',
+            ? 'border-amber-400/35 bg-[#1f1e1c]/[0.97] text-amber-50'
+            : 'border-amber-400/[0.32] bg-[#0f0e0a]/[0.97] text-amber-50',
         )}
       >
         <p
@@ -5270,11 +5270,11 @@ function DockChromeTooltip({ label, description, children }) {
       <TooltipContent
         side="left"
         sideOffset={11}
-        className="max-w-[240px] border border-white/14 bg-[#0c0f16]/97 px-3 py-2 text-left shadow-[0_14px_40px_-12px_rgba(0,0,0,0.8)]"
+        className="max-w-[240px] border border-white/[0.14] bg-[#0c0f16]/[0.97] px-3 py-2 text-left shadow-[0_14px_40px_-12px_rgba(0,0,0,0.8)]"
       >
         <p className="text-[11px] font-bold uppercase tracking-[0.06em] text-amber-100/95">{label}</p>
         {description ? (
-          <p className="mt-1 text-[10px] font-medium leading-relaxed text-white/48">{description}</p>
+          <p className="mt-1 text-[10px] font-medium leading-relaxed text-white/[0.48]">{description}</p>
         ) : null}
       </TooltipContent>
     </Tooltip>
@@ -5285,11 +5285,11 @@ function DockChromeTooltip({ label, description, children }) {
 function dockChromeBtnClass(premiumArenaHostTray) {
   return cn(
     'flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl border transition-all duration-200 ease-out',
-    'border-white/[0.08] bg-[#1f1e1c]/95 text-white/52',
+    'border-white/[0.08] bg-[#1f1e1c]/95 text-white/[0.52]',
     'shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]',
     premiumArenaHostTray
       ? 'hover:border-amber-400/35 hover:bg-[#2a2723] hover:text-amber-100 hover:shadow-[0_0_28px_-10px_rgba(212,163,106,0.28)]'
-      : 'hover:border-amber-400/32 hover:bg-[#1a1814] hover:text-amber-100/95 hover:shadow-[0_0_28px_-10px_rgba(251,191,36,0.22)]',
+      : 'hover:border-amber-400/[0.32] hover:bg-[#1a1814] hover:text-amber-100/95 hover:shadow-[0_0_28px_-10px_rgba(251,191,36,0.22)]',
     'active:scale-[0.96] disabled:pointer-events-none disabled:opacity-[0.22]',
   );
 }
@@ -5303,15 +5303,15 @@ const SceneThumbnail = forwardRef(function SceneThumbnail(
     'relative flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl border transition-all duration-200 ease-out',
     active
       ? premiumArenaHostTray
-        ? 'border-amber-400/45 bg-gradient-to-b from-amber-500/22 to-[#1a1512] text-amber-50 shadow-[inset_0_1px_0_rgba(255,255,255,0.1),0_0_20px_-12px_rgba(212,163,106,0.45)]'
-        : 'border-amber-400/42 bg-gradient-to-b from-amber-500/18 to-[#14100c] text-amber-50 shadow-[inset_0_1px_0_rgba(255,255,255,0.08),0_0_20px_-12px_rgba(245,158,11,0.3)]'
+        ? 'border-amber-400/45 bg-gradient-to-b from-amber-500/[0.22] to-[#1a1512] text-amber-50 shadow-[inset_0_1px_0_rgba(255,255,255,0.1),0_0_20px_-12px_rgba(212,163,106,0.45)]'
+        : 'border-amber-400/[0.42] bg-gradient-to-b from-amber-500/[0.18] to-[#14100c] text-amber-50 shadow-[inset_0_1px_0_rgba(255,255,255,0.08),0_0_20px_-12px_rgba(245,158,11,0.3)]'
       : cn(
-          'border-white/[0.07] bg-[#1f1e1c]/90 text-white/48',
+          'border-white/[0.07] bg-[#1f1e1c]/90 text-white/[0.48]',
           'shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]',
           !readOnly &&
             (premiumArenaHostTray
-              ? 'hover:border-amber-400/28 hover:bg-[#2a2723] hover:text-amber-100/90'
-              : 'hover:border-amber-400/26 hover:bg-[#1c1a16] hover:text-amber-100/90'),
+              ? 'hover:border-amber-400/[0.28] hover:bg-[#2a2723] hover:text-amber-100/90'
+              : 'hover:border-amber-400/[0.26] hover:bg-[#1c1a16] hover:text-amber-100/90'),
         ),
     readOnly ? 'cursor-default opacity-[0.96]' : 'cursor-pointer',
   );
@@ -5943,7 +5943,7 @@ export default function SmartBoardCompositor({
                           'absolute bottom-14 left-1/2 z-20 flex -translate-x-1/2 flex-wrap items-center justify-center gap-2 px-3 py-2',
                         )}
                       >
-                        <span className="text-[10px] tabular-nums text-white/48">
+                        <span className="text-[10px] tabular-nums text-white/[0.48]">
                           {sharedGalleryLength > 1 ? `${sharedImageIndex + 1} / ${sharedGalleryLength}` : '1 image'}
                         </span>
                         {sharedGalleryLength > 1 && (
@@ -5981,7 +5981,7 @@ export default function SmartBoardCompositor({
                 ) : (
                   <div className={cn(designerShellEmbedPanel, 'max-w-md px-6 py-8 text-center')}>
                     <p className="text-sm font-semibold text-white/55">Aucune image dans la galerie</p>
-                    <p className="mt-2 text-[11px] leading-relaxed text-white/38">
+                    <p className="mt-2 text-[11px] leading-relaxed text-white/[0.38]">
                       Ajoutez des visuels (Gamma, exports, photos) dans le studio live — section « Images partagées ».
                     </p>
                   </div>
@@ -6027,9 +6027,9 @@ export default function SmartBoardCompositor({
             {showEmbeddedWhiteboardToolsRail ? (
               <div
                 className={cn(
-                  'pointer-events-auto absolute left-1.5 top-1/2 z-[51] w-[min(13.5rem,42vw)] max-h-[min(78vh,520px)] -translate-y-1/2 overflow-y-auto overflow-x-hidden rounded-2xl border border-white/[0.09] bg-[#1f1e1c]/94 p-2 shadow-[inset_0_1px_0_rgba(255,255,255,0.05),0_16px_48px_-16px_rgba(0,0,0,0.65)] backdrop-blur-xl ring-1 ring-inset ring-white/[0.03] sm:left-2',
+                  'pointer-events-auto absolute left-1.5 top-1/2 z-[51] w-[min(13.5rem,42vw)] max-h-[min(78vh,520px)] -translate-y-1/2 overflow-y-auto overflow-x-hidden rounded-2xl border border-white/[0.09] bg-[#1f1e1c]/[0.94] p-2 shadow-[inset_0_1px_0_rgba(255,255,255,0.05),0_16px_48px_-16px_rgba(0,0,0,0.65)] backdrop-blur-xl ring-1 ring-inset ring-white/[0.03] sm:left-2',
                   premiumArenaHostTray &&
-                    'border-amber-500/20 bg-[#1f1e1c]/96 shadow-[inset_0_1px_0_rgba(212,163,106,0.08),0_16px_44px_-14px_rgba(212,163,106,0.12)]',
+                    'border-amber-500/20 bg-[#1f1e1c]/[0.96] shadow-[inset_0_1px_0_rgba(212,163,106,0.08),0_16px_44px_-14px_rgba(212,163,106,0.12)]',
                 )}
               >
                 <LiveWhiteboardToolsSidebar
@@ -6042,7 +6042,7 @@ export default function SmartBoardCompositor({
 
             {currentScene === 'board' && readOnlySceneNavigator && whiteboardPageCount > 1 ? (
               <div
-                className="pointer-events-none absolute left-3 top-12 z-[42] max-w-[min(14rem,calc(100%-5rem))] rounded-xl border border-white/12 bg-black/70 px-2.5 py-1.5 shadow-lg backdrop-blur-sm"
+                className="pointer-events-none absolute left-3 top-12 z-[42] max-w-[min(14rem,calc(100%-5rem))] rounded-xl border border-white/[0.12] bg-black/70 px-2.5 py-1.5 shadow-lg backdrop-blur-sm"
                 role="status"
                 aria-live="polite"
               >
@@ -6125,9 +6125,9 @@ export default function SmartBoardCompositor({
           <div
             className={cn(
               'pointer-events-auto absolute right-1.5 top-1/2 z-50 flex h-[min(78vh,520px)] w-[58px] -translate-y-1/2 flex-col items-center gap-2 overflow-hidden rounded-2xl px-2 py-2.5 sm:right-2.5 sm:w-[62px] sm:gap-2.5 sm:px-2.5 sm:py-3',
-              'border border-white/[0.09] bg-[#1f1e1c]/94 shadow-[inset_0_1px_0_rgba(255,255,255,0.05),0_16px_48px_-16px_rgba(0,0,0,0.65)] backdrop-blur-xl ring-1 ring-inset ring-white/[0.03]',
+              'border border-white/[0.09] bg-[#1f1e1c]/[0.94] shadow-[inset_0_1px_0_rgba(255,255,255,0.05),0_16px_48px_-16px_rgba(0,0,0,0.65)] backdrop-blur-xl ring-1 ring-inset ring-white/[0.03]',
               premiumArenaHostTray &&
-                'border-amber-500/22 bg-[#1f1e1c]/96 shadow-[inset_0_1px_0_rgba(251,191,36,0.06),0_16px_44px_-14px_rgba(251,191,36,0.1)]',
+                'border-amber-500/[0.22] bg-[#1f1e1c]/[0.96] shadow-[inset_0_1px_0_rgba(251,191,36,0.06),0_16px_44px_-14px_rgba(251,191,36,0.1)]',
             )}
             {...(dockMagnificationEnabled
               ? { onMouseMove: handleSceneDockMove, onMouseLeave: handleSceneDockLeave }
@@ -6200,7 +6200,7 @@ export default function SmartBoardCompositor({
                       pipEnabled &&
                         (premiumArenaHostTray
                           ? 'border-amber-400/40 bg-gradient-to-b from-amber-500/20 to-[#1a1512] text-amber-50 shadow-[0_0_18px_-8px_rgba(212,163,106,0.35)]'
-                          : 'border-amber-400/40 bg-gradient-to-b from-amber-500/16 to-[#14100c] text-amber-50 shadow-[0_0_18px_-8px_rgba(251,191,36,0.28)]'),
+                          : 'border-amber-400/40 bg-gradient-to-b from-amber-500/[0.16] to-[#14100c] text-amber-50 shadow-[0_0_18px_-8px_rgba(251,191,36,0.28)]'),
                     )}
                   >
                     <UserSquare2 className="h-5 w-5 shrink-0" strokeWidth={1.45} />
@@ -6218,7 +6218,7 @@ export default function SmartBoardCompositor({
                         dockChromeBtnClass(premiumArenaHostTray),
                         pipEditMode &&
                           (premiumArenaHostTray
-                            ? 'border-amber-400/48 bg-gradient-to-b from-amber-500/24 to-[#1a1512] text-amber-50 shadow-[0_0_20px_-8px_rgba(212,163,106,0.4)]'
+                            ? 'border-amber-400/[0.48] bg-gradient-to-b from-amber-500/[0.24] to-[#1a1512] text-amber-50 shadow-[0_0_20px_-8px_rgba(212,163,106,0.4)]'
                             : 'border-amber-400/45 bg-gradient-to-b from-amber-500/20 to-[#14100c] text-amber-50 shadow-[0_0_20px_-8px_rgba(251,191,36,0.32)]'),
                       )}
                     >
@@ -6234,9 +6234,9 @@ export default function SmartBoardCompositor({
         <TooltipProvider delayDuration={200} skipDelayDuration={100}>
           <div
             className={cn(
-              'pointer-events-auto absolute right-1.5 top-1/2 z-50 flex w-[58px] -translate-y-1/2 flex-col items-center gap-2 overflow-hidden rounded-2xl border border-white/[0.09] bg-[#1f1e1c]/94 px-2 py-2.5 shadow-[inset_0_1px_0_rgba(255,255,255,0.05),0_16px_48px_-16px_rgba(0,0,0,0.65)] backdrop-blur-xl ring-1 ring-inset ring-white/[0.03] sm:right-2.5 sm:w-[62px] sm:py-3',
+              'pointer-events-auto absolute right-1.5 top-1/2 z-50 flex w-[58px] -translate-y-1/2 flex-col items-center gap-2 overflow-hidden rounded-2xl border border-white/[0.09] bg-[#1f1e1c]/[0.94] px-2 py-2.5 shadow-[inset_0_1px_0_rgba(255,255,255,0.05),0_16px_48px_-16px_rgba(0,0,0,0.65)] backdrop-blur-xl ring-1 ring-inset ring-white/[0.03] sm:right-2.5 sm:w-[62px] sm:py-3',
               premiumArenaHostTray &&
-                'border-amber-500/22 bg-[#1f1e1c]/96 shadow-[inset_0_1px_0_rgba(251,191,36,0.06),0_16px_44px_-14px_rgba(251,191,36,0.1)]',
+                'border-amber-500/[0.22] bg-[#1f1e1c]/[0.96] shadow-[inset_0_1px_0_rgba(251,191,36,0.06),0_16px_44px_-14px_rgba(251,191,36,0.1)]',
             )}
             role="toolbar"
             aria-label="PiP vidéo SmartBoard"
@@ -6256,7 +6256,7 @@ export default function SmartBoardCompositor({
                   pipEnabled &&
                     (premiumArenaHostTray
                       ? 'border-amber-400/40 bg-gradient-to-b from-amber-500/20 to-[#1a1512] text-amber-50 shadow-[0_0_18px_-8px_rgba(212,163,106,0.35)]'
-                      : 'border-amber-400/40 bg-gradient-to-b from-amber-500/16 to-[#14100c] text-amber-50 shadow-[0_0_18px_-8px_rgba(251,191,36,0.28)]'),
+                      : 'border-amber-400/40 bg-gradient-to-b from-amber-500/[0.16] to-[#14100c] text-amber-50 shadow-[0_0_18px_-8px_rgba(251,191,36,0.28)]'),
                 )}
               >
                 <UserSquare2 className="h-5 w-5 shrink-0" strokeWidth={1.45} />
@@ -6274,7 +6274,7 @@ export default function SmartBoardCompositor({
                     dockChromeBtnClass(premiumArenaHostTray),
                     pipEditMode &&
                       (premiumArenaHostTray
-                        ? 'border-amber-400/48 bg-gradient-to-b from-amber-500/24 to-[#1a1512] text-amber-50 shadow-[0_0_20px_-8px_rgba(212,163,106,0.4)]'
+                        ? 'border-amber-400/[0.48] bg-gradient-to-b from-amber-500/[0.24] to-[#1a1512] text-amber-50 shadow-[0_0_20px_-8px_rgba(212,163,106,0.4)]'
                         : 'border-amber-400/45 bg-gradient-to-b from-amber-500/20 to-[#14100c] text-amber-50 shadow-[0_0_20px_-8px_rgba(251,191,36,0.32)]'),
                   )}
                 >
@@ -6289,10 +6289,10 @@ export default function SmartBoardCompositor({
       {(useFooterSceneDock || (showNeuroInk && neuroInkOpen)) && currentScene === 'board' && !readOnlySceneNavigator ? (
         <div
           className={cn(
-            'pointer-events-auto absolute top-1/2 z-[52] w-[min(13.5rem,38vw)] max-h-[min(78vh,520px)] -translate-y-1/2 overflow-y-auto overflow-x-hidden rounded-2xl border border-white/[0.09] bg-[#1f1e1c]/94 p-2 shadow-[inset_0_1px_0_rgba(255,255,255,0.05),0_16px_48px_-16px_rgba(0,0,0,0.65)] backdrop-blur-xl ring-1 ring-inset ring-white/[0.03]',
+            'pointer-events-auto absolute top-1/2 z-[52] w-[min(13.5rem,38vw)] max-h-[min(78vh,520px)] -translate-y-1/2 overflow-y-auto overflow-x-hidden rounded-2xl border border-white/[0.09] bg-[#1f1e1c]/[0.94] p-2 shadow-[inset_0_1px_0_rgba(255,255,255,0.05),0_16px_48px_-16px_rgba(0,0,0,0.65)] backdrop-blur-xl ring-1 ring-inset ring-white/[0.03]',
             footerNeuroInkRight,
             premiumArenaHostTray &&
-              'border-amber-500/20 bg-[#1f1e1c]/96 shadow-[inset_0_1px_0_rgba(212,163,106,0.08),0_16px_44px_-14px_rgba(212,163,106,0.12)]',
+              'border-amber-500/20 bg-[#1f1e1c]/[0.96] shadow-[inset_0_1px_0_rgba(212,163,106,0.08),0_16px_44px_-14px_rgba(212,163,106,0.12)]',
           )}
         >
           <p className="mb-1.5 font-serif text-[11px] font-semibold uppercase tracking-wide text-white/55">

@@ -158,7 +158,7 @@ export function MemberSchoolLifeInlinePanel({ studentId, studentName, onBack, em
               'px-3 py-1.5 rounded-lg text-[11px] font-medium border transition-colors',
               tab === t.id
                 ? 'border-[color-mix(in_srgb,var(--school-accent)_45%,transparent)] bg-[color-mix(in_srgb,var(--school-accent)_15%,transparent)] text-[#f5dd8a]'
-                : 'border-white/12 bg-white/[0.04] text-white/65 hover:bg-white/[0.07]',
+                : 'border-white/[0.12] bg-white/[0.04] text-white/65 hover:bg-white/[0.07]',
             )}
           >
             {t.label}

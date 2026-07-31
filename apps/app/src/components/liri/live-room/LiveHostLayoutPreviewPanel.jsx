@@ -50,7 +50,7 @@ export default function LiveHostLayoutPreviewPanel({
           </div>
           <div className="min-w-0 flex-1">
             <p className="text-[13px] font-semibold text-white/90">Vue mobile</p>
-            <p className="mt-1 text-[11px] leading-snug text-white/42">
+            <p className="mt-1 text-[11px] leading-snug text-white/[0.42]">
               Idée de ce que voient les participants sur téléphone — <span className="text-white/55">sans recharger
               ni modifier votre pilotage</span>.
             </p>
@@ -110,9 +110,9 @@ export default function LiveHostLayoutPreviewPanel({
           </div>
 
           <div className="min-w-0 flex-1 space-y-1 text-[9.5px] leading-snug text-white/40">
-            <p className="text-[8px] font-bold uppercase tracking-wider text-white/28">Densité SmartBoard (repère invité)</p>
+            <p className="text-[8px] font-bold uppercase tracking-wider text-white/[0.28]">Densité SmartBoard (repère invité)</p>
             <p className={cn('font-medium', readStyle)}>{mobileRead.hint}</p>
-            <p className="text-white/32">
+            <p className="text-white/[0.32]">
               Zone scène ≈ {mobileRead.availableStage.width}×{mobileRead.availableStage.height} px, échelle ≈{' '}
               {mobileRead.scaleContainPercent} %.
             </p>
@@ -134,7 +134,7 @@ export default function LiveHostLayoutPreviewPanel({
           </div>
           <div className="min-w-0 flex-1">
             <p className="text-[13px] font-semibold text-white/90">Vue projecteur</p>
-            <p className="mt-1 text-[11px] leading-snug text-white/42">
+            <p className="mt-1 text-[11px] leading-snug text-white/[0.42]">
               Zone centrale seule (comme le mode cinéma), sans passer en plein écran navigateur. Pour le vrai plein
               écran, utilisez « Mode cinéma » dans le menu.
             </p>
@@ -162,7 +162,7 @@ export default function LiveHostLayoutPreviewPanel({
                 disabled={!projectorPreviewActive || cinemaModeReal}
                 onClick={() => setProjector(false)}
                 className={cn(
-                  'rounded-lg border border-white/12 px-3 py-1.5 text-[11px] font-medium transition-colors',
+                  'rounded-lg border border-white/[0.12] px-3 py-1.5 text-[11px] font-medium transition-colors',
                   !projectorPreviewActive || cinemaModeReal
                     ? 'cursor-default text-white/25'
                     : 'text-white/70 hover:bg-white/[0.06]',
@@ -183,7 +183,7 @@ export default function LiveHostLayoutPreviewPanel({
             </div>
             <div className="min-w-0 flex-1">
               <p className="text-[13px] font-semibold text-white/90">Vue invité</p>
-              <p className="mt-1 text-[11px] leading-snug text-white/42">
+              <p className="mt-1 text-[11px] leading-snug text-white/[0.42]">
                 Même lien que les participants : disposition spectateur, sans pilotage plateau. Ouvrez un nouvel onglet
                 pour comparer à votre vue hôte.
               </p>
@@ -197,7 +197,7 @@ export default function LiveHostLayoutPreviewPanel({
                       /* ignore */
                     }
                   }}
-                  className="inline-flex items-center gap-1.5 rounded-lg bg-amber-500/22 px-3 py-1.5 text-[11px] font-semibold text-amber-100 transition-colors hover:bg-amber-500/32"
+                  className="inline-flex items-center gap-1.5 rounded-lg bg-amber-500/[0.22] px-3 py-1.5 text-[11px] font-semibold text-amber-100 transition-colors hover:bg-amber-500/[0.32]"
                 >
                   <ExternalLink className="h-3.5 w-3.5" strokeWidth={2} />
                   Ouvrir vue invité

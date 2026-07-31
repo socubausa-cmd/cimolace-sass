@@ -42,7 +42,7 @@ function Input({ value, onChange, placeholder }) {
 function Section({ title, icon: Icon, children, defaultOpen = true }) {
   const [open, setOpen] = useState(defaultOpen);
   return (
-    <div className="rounded-lg border border-white/8 bg-white/[0.02]">
+    <div className="rounded-lg border border-white/[0.08] bg-white/[0.02]">
       <button
         className="flex w-full items-center gap-2 px-3 py-2.5 text-[12px] font-medium text-white/60 hover:text-white/80"
         onClick={() => setOpen((v) => !v)}
@@ -51,7 +51,7 @@ function Section({ title, icon: Icon, children, defaultOpen = true }) {
         <span className="flex-1 text-left">{title}</span>
         {open ? <ChevronUp className="h-3.5 w-3.5" /> : <ChevronDown className="h-3.5 w-3.5" />}
       </button>
-      {open && <div className="flex flex-col gap-3 border-t border-white/8 px-3 py-3">{children}</div>}
+      {open && <div className="flex flex-col gap-3 border-t border-white/[0.08] px-3 py-3">{children}</div>}
     </div>
   );
 }

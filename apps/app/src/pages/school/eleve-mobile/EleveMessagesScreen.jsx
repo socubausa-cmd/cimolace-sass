@@ -259,7 +259,7 @@ export default function EleveMessagesScreen() {
                         className="h-12 w-12 shrink-0 rounded-full object-cover ring-1 ring-white/10"
                       />
                     ) : (
-                      <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-amber-600 to-orange-700 ring-1 ring-white/12">
+                      <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-amber-600 to-orange-700 ring-1 ring-white/[0.12]">
                         <User className="h-5 w-5 text-white/90" />
                       </div>
                     )}

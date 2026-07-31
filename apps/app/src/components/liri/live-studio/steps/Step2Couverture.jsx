@@ -592,7 +592,7 @@ export function Step2Couverture({ draft, updateDraft }) {
                   <select
                     value={architectEngine}
                     onChange={(e) => setArchitectEngine(e.target.value)}
-                    className="mt-1.5 w-full rounded-xl border border-white/12 bg-black/40 py-2 px-3 text-sm text-white outline-none focus-visible:ring-2 focus-visible:ring-[#d97757]/45"
+                    className="mt-1.5 w-full rounded-xl border border-white/[0.12] bg-black/40 py-2 px-3 text-sm text-white outline-none focus-visible:ring-2 focus-visible:ring-[#d97757]/45"
                   >
                     {ENGINE_OPTIONS.map((o) => (
                       <option key={o.value} value={o.value}>
@@ -734,7 +734,7 @@ export function Step2Couverture({ draft, updateDraft }) {
                           'rounded-xl border px-3 py-1.5 text-left text-[11px] transition-colors',
                           selectedImageVariant === tab.id
                             ? 'border-[#d97757]/55 bg-[#d97757]/15 text-white'
-                            : 'border-white/12 bg-black/25 text-gray-400 hover:border-[#d97757]/35 hover:text-gray-200',
+                            : 'border-white/[0.12] bg-black/25 text-gray-400 hover:border-[#d97757]/35 hover:text-gray-200',
                         )}
                       >
                         <span className="block font-medium">{tab.label}</span>

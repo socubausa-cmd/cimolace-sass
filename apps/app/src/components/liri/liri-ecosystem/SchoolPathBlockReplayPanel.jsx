@@ -266,7 +266,7 @@ export default function SchoolPathBlockReplayPanel({ blockId, blockLabel, inputC
   return (
     <div className="rounded-2xl border border-fuchsia-500/25 bg-gradient-to-br from-fuchsia-950/25 via-[#0a0908] to-transparent p-4 md:p-5">
       <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
-        <div className="flex items-center gap-2 text-[13px] font-semibold text-white/88">
+        <div className="flex items-center gap-2 text-[13px] font-semibold text-white/[0.88]">
           <Film className="h-4 w-4 text-fuchsia-400" />
           Replay & post-prod
           {blockLabel ? <span className="font-normal text-white/45">— {blockLabel}</span> : null}
@@ -285,7 +285,7 @@ export default function SchoolPathBlockReplayPanel({ blockId, blockLabel, inputC
             {busy ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Save className="h-3.5 w-3.5" />}
             Enregistrer
           </button>
-          <button type="button" onClick={onClose} className="rounded-lg border border-white/12 p-1.5 text-white/45 hover:bg-white/[0.06]" aria-label="Fermer">
+          <button type="button" onClick={onClose} className="rounded-lg border border-white/[0.12] p-1.5 text-white/45 hover:bg-white/[0.06]" aria-label="Fermer">
             <X className="h-4 w-4" />
           </button>
         </div>

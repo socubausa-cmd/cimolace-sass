@@ -55,8 +55,8 @@ const RUBRIQUES = [
 ];
 
 const accentRing = {
-  amber: 'bg-amber-500/12 text-amber-200 ring-amber-400/25',
-  violet: 'bg-orange-500/12 text-orange-200 ring-orange-400/25',
+  amber: 'bg-amber-500/[0.12] text-amber-200 ring-amber-400/25',
+  violet: 'bg-orange-500/[0.12] text-orange-200 ring-orange-400/25',
   default: 'bg-white/[0.06] text-white/80 ring-white/10',
 };
 

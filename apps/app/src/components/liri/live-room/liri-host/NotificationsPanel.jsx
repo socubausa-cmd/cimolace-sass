@@ -82,7 +82,7 @@ export function NotificationsPanel({
               onClear();
               onFilterChange?.('all');
             }}
-            className="my-1.5 mr-1.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-white/12 bg-white/[0.04] text-white/55 hover:border-red-400/35 hover:bg-red-500/10 hover:text-red-300"
+            className="my-1.5 mr-1.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-white/[0.12] bg-white/[0.04] text-white/55 hover:border-red-400/35 hover:bg-red-500/10 hover:text-red-300"
             title="Vider le journal"
             aria-label="Vider le journal des notifications"
           >
@@ -138,7 +138,7 @@ export function NotificationsPanel({
             ) : (
               chronological.map((item) => (
                 <div key={item.id} className="rounded-lg border border-white/10 bg-white/[0.03] px-2 py-1.5">
-                  <p className="text-[10px] leading-snug text-white/88">{formatArenaNotificationLine(item)}</p>
+                  <p className="text-[10px] leading-snug text-white/[0.88]">{formatArenaNotificationLine(item)}</p>
                   <p className="mt-0.5 text-[8px] tabular-nums text-white/35">
                     {typeof item.at === 'number'
                       ? new Date(item.at).toLocaleTimeString('fr-FR', {

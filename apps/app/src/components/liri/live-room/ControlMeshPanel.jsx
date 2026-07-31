@@ -59,7 +59,7 @@ export default function ControlMeshPanel({
   const [acceptDurationMs, setAcceptDurationMs] = useState(DEFAULT_MESH_GRANT_MS);
 
   const selectClass =
-    'min-w-[6.25rem] rounded-lg border border-white/12 bg-[var(--lh-stage-bg)] px-2 py-1.5 text-[10px] leading-tight text-amber-100/95 outline-none focus:border-amber-500/35 focus:ring-1 focus:ring-amber-500/15';
+    'min-w-[6.25rem] rounded-lg border border-white/[0.12] bg-[var(--lh-stage-bg)] px-2 py-1.5 text-[10px] leading-tight text-amber-100/95 outline-none focus:border-amber-500/35 focus:ring-1 focus:ring-amber-500/15';
 
   const bodyGap = compact ? 'gap-3' : 'gap-3.5';
   const bodyPad = compact ? 'px-3 pb-3 pt-2' : 'px-4 pb-4 pt-2';
@@ -86,10 +86,10 @@ export default function ControlMeshPanel({
             <div className="text-[11px] font-extrabold uppercase tracking-[0.1em] text-amber-200/95">
               {PRODUCT_NAMES.controlMesh}
             </div>
-            <p className="text-[8px] leading-snug text-white/38">Outil d'orchestration</p>
+            <p className="text-[8px] leading-snug text-white/[0.38]">Outil d'orchestration</p>
           </div>
           <label className="flex shrink-0 flex-col items-end gap-1">
-            <span className="text-[7px] font-semibold uppercase tracking-[0.12em] text-white/38">
+            <span className="text-[7px] font-semibold uppercase tracking-[0.12em] text-white/[0.38]">
               Durée si OK
             </span>
             <select
@@ -120,7 +120,7 @@ export default function ControlMeshPanel({
       <div className={cn(designerShellCardInset, 'shrink-0 p-2.5')}>
         <div className={designerShellMicroLabel}>Demandes</div>
         {pendingRequests.length === 0 ? (
-          <div className="mt-1.5 text-[11px] leading-relaxed italic text-white/32">
+          <div className="mt-1.5 text-[11px] leading-relaxed italic text-white/[0.32]">
             Aucune demande en attente.
           </div>
         ) : (
@@ -171,7 +171,7 @@ export default function ControlMeshPanel({
           )}
         >
           {participants.length === 0 ? (
-            <div className="flex min-h-[4.5rem] items-center justify-center px-2 text-center text-[11px] leading-relaxed text-white/32">
+            <div className="flex min-h-[4.5rem] items-center justify-center px-2 text-center text-[11px] leading-relaxed text-white/[0.32]">
               Aucun participant sur scène pour l'instant.
             </div>
           ) : (
@@ -248,7 +248,7 @@ export default function ControlMeshPanel({
         ))}
       </div>
 
-      <div className="flex flex-wrap items-center gap-1.5 text-[9px] leading-snug text-white/42">
+      <div className="flex flex-wrap items-center gap-1.5 text-[9px] leading-snug text-white/[0.42]">
         <span>{SHARED_CONTROL_LABELS.coControlMode.fr}</span>
         <span className="text-white/25">·</span>
         <span>{PRODUCT_NAMES.splitSmartboard}</span>
@@ -278,7 +278,7 @@ export default function ControlMeshPanel({
       ) : null}
 
       <p
-        className="shrink-0 border-t border-white/[0.06] pt-2.5 text-[7px] leading-snug text-white/28"
+        className="shrink-0 border-t border-white/[0.06] pt-2.5 text-[7px] leading-snug text-white/[0.28]"
         title="Persistance temps réel et Transfer Engine — prochaine étape (sans changer la durée d'accès ci-dessus)."
       >
         Persistance temps réel · Transfer Engine — à brancher (aperçu produit).

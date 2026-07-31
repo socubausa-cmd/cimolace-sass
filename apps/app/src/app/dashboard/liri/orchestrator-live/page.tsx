@@ -65,7 +65,7 @@ export default function OrchestratorLivePage() {
     <main className="h-[100dvh] overflow-hidden bg-[#1a1815] text-white">
       <div className="h-[100dvh] overflow-hidden bg-[radial-gradient(60%_40%_at_50%_0%,rgba(217,119,87,0.28),transparent_70%),radial-gradient(30%_35%_at_90%_80%,rgba(217,146,74,0.14),transparent_75%),linear-gradient(180deg,#1c1a16,#040812)] p-3">
         <div className="flex h-[calc(100dvh-24px)] overflow-hidden rounded-[22px] border border-white/10 bg-[#050914]/60 shadow-[0_24px_80px_-40px_rgba(0,0,0,0.95)]">
-          <aside className="flex h-full w-[230px] flex-col border-r border-white/10 bg-[#050a16]/92 p-3.5 backdrop-blur-xl">
+          <aside className="flex h-full w-[230px] flex-col border-r border-white/10 bg-[#050a16]/[0.92] p-3.5 backdrop-blur-xl">
             <div className="mb-6 flex items-center gap-2.5 px-1">
               <div className="rounded-lg bg-[#d97757]/20 p-2 text-[#f0c4b3] shadow-[0_0_20px_-8px_rgba(224,138,95,0.9)]">
                 <Sparkles size={14} />
@@ -108,7 +108,7 @@ export default function OrchestratorLivePage() {
                 <p className="mt-1 text-[12px] text-white/55">Orchestration temps réel des agents IA</p>
               </div>
               <div className="flex items-center gap-2.5">
-                <span className="rounded-full border border-[#7bb06a]/30 bg-[#5a8f52]/12 px-3 py-1 text-[11px] text-[#bcd9a4]">● Système actif</span>
+                <span className="rounded-full border border-[#7bb06a]/30 bg-[#5a8f52]/[0.12] px-3 py-1 text-[11px] text-[#bcd9a4]">● Système actif</span>
                 <div className="rounded-xl border border-white/10 bg-white/5 px-3 py-1.5 text-sm">{now}</div>
                 <button className="rounded-lg border border-white/10 bg-white/5 p-2"><Bell size={14} /></button>
                 <button className="rounded-lg border border-white/10 bg-white/5 p-2"><Gauge size={14} /></button>
@@ -125,7 +125,7 @@ export default function OrchestratorLivePage() {
                       <p className="text-[11px] text-white/50">{agent.role}</p>
                     </div>
                     <div className="flex items-center gap-2">
-                      <span className={`rounded-full px-2 py-0.5 text-[10px] ${agent.state === 'RUNNING' ? 'bg-[#5a8f52]/18 text-[#bcd9a4]' : 'bg-white/10 text-white/60'}`}>{agent.state}</span>
+                      <span className={`rounded-full px-2 py-0.5 text-[10px] ${agent.state === 'RUNNING' ? 'bg-[#5a8f52]/[0.18] text-[#bcd9a4]' : 'bg-white/10 text-white/60'}`}>{agent.state}</span>
                       <MoreVertical size={13} className="text-white/45" />
                     </div>
                   </div>
@@ -152,7 +152,7 @@ export default function OrchestratorLivePage() {
                   <div className="grid grid-cols-7 gap-1.5">
                     {pipeline.map(([label, Icon, tag], idx) => (
                       <div key={String(label)} className="text-center">
-                        <div className={`mx-auto mb-1.5 flex h-11 w-11 items-center justify-center rounded-full border ${idx <= 4 ? 'border-[#e08a5f]/35 bg-[#d97757]/12 text-[#f0c4b3]' : 'border-white/20 bg-white/5 text-white/50'}`}>
+                        <div className={`mx-auto mb-1.5 flex h-11 w-11 items-center justify-center rounded-full border ${idx <= 4 ? 'border-[#e08a5f]/35 bg-[#d97757]/[0.12] text-[#f0c4b3]' : 'border-white/20 bg-white/5 text-white/50'}`}>
                           <Icon size={16} />
                         </div>
                         <p className="text-[10px] font-medium">{String(label)}</p>

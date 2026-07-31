@@ -39,14 +39,14 @@ export function MasterScriptBlocksPanel({
         <Icon className="h-3 w-3 text-[color-mix(in_srgb,var(--school-accent)_75%,transparent)]" />
         {label}
       </p>
-      <div className="text-[11px] leading-relaxed text-white/88">{children}</div>
+      <div className="text-[11px] leading-relaxed text-white/[0.88]">{children}</div>
     </div>
   );
 
   return (
     <div
       className={cn(
-        'flex min-h-0 flex-col rounded-xl border border-white/[0.09] bg-black/22 p-2 backdrop-blur-md',
+        'flex min-h-0 flex-col rounded-xl border border-white/[0.09] bg-black/[0.22] p-2 backdrop-blur-md',
         className,
       )}
     >

@@ -31,7 +31,7 @@ export default function NeuroInkPanel({
     ? cn(designerShellInput, 'py-1.5 text-[11px]')
     : 'rounded-lg border border-white/15 bg-black/50 px-2 py-1 text-white/85 outline-none focus:border-[color-mix(in_srgb,var(--school-accent)_40%,transparent)]';
   const labelMuted = rail ? designerShellMicroLabel : 'text-white/45';
-  const blockGap = rail ? 'gap-1.5 text-[10px] text-white/68' : 'gap-2 text-[10px] text-white/70';
+  const blockGap = rail ? 'gap-1.5 text-[10px] text-white/[0.68]' : 'gap-2 text-[10px] text-white/70';
 
   return (
     <div className={cn(className)}>
@@ -145,11 +145,11 @@ export default function NeuroInkPanel({
             />
           </label>
           {footerHint ? (
-            <p className={cn('leading-snug', rail ? 'text-[8px] text-white/32' : 'text-[9px] text-white/35')}>
+            <p className={cn('leading-snug', rail ? 'text-[8px] text-white/[0.32]' : 'text-[9px] text-white/35')}>
               {footerHint}
             </p>
           ) : null}
-          <p className={cn('leading-snug', rail ? 'text-[7px] text-white/28' : 'text-[8px] text-white/30')}>
+          <p className={cn('leading-snug', rail ? 'text-[7px] text-white/[0.28]' : 'text-[8px] text-white/30')}>
             Le mode Écriture / Croquis au-dessus impose la détection de formes (évite O vs cercle).
           </p>
         </div>
@@ -287,7 +287,7 @@ function NeuroInkAiSection({ ai }) {
           {comprehension?.description ? (
             <div className="rounded-lg border border-white/[0.08] bg-black/30 px-2 py-1.5">
               <p className="mb-0.5 text-[8px] font-semibold uppercase tracking-wide text-amber-200/60">Lecture IA</p>
-              <p className="m-0 max-h-24 overflow-y-auto text-[9px] leading-snug text-white/72">{comprehension.description}</p>
+              <p className="m-0 max-h-24 overflow-y-auto text-[9px] leading-snug text-white/[0.72]">{comprehension.description}</p>
             </div>
           ) : null}
 
@@ -309,7 +309,7 @@ function NeuroInkAiSection({ ai }) {
                     <button
                       type="button"
                       onClick={() => ai.dismissSuggestion?.(s.key)}
-                      className="rounded-md border border-white/12 px-1.5 py-0.5 text-[9px] text-white/50 transition hover:text-white/75"
+                      className="rounded-md border border-white/[0.12] px-1.5 py-0.5 text-[9px] text-white/50 transition hover:text-white/75"
                     >
                       Ignorer
                     </button>

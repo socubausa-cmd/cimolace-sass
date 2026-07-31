@@ -100,7 +100,7 @@ export function AudioScenePanel({
 
       {!collapsed && (
         <>
-          <div className="mb-3 max-h-[min(28vh,200px)] space-y-1 overflow-y-auto rounded-xl border border-white/8 bg-black/25 p-2">
+          <div className="mb-3 max-h-[min(28vh,200px)] space-y-1 overflow-y-auto rounded-xl border border-white/[0.08] bg-black/25 p-2">
             <div className="px-1 text-[9px] font-semibold uppercase tracking-wider text-white/40">Scènes</div>
             {scenes.map((s, i) => (
               <button
@@ -139,7 +139,7 @@ export function AudioScenePanel({
           <div className="mb-3 flex flex-wrap gap-2">
             <button
               type="button"
-              className="inline-flex h-9 items-center gap-1 rounded-xl border border-white/12 bg-white/[0.06] px-3 text-[11px] hover:bg-white/10"
+              className="inline-flex h-9 items-center gap-1 rounded-xl border border-white/[0.12] bg-white/[0.06] px-3 text-[11px] hover:bg-white/10"
               onClick={() => void previous()}
             >
               <ChevronLeft className="h-3.5 w-3.5" /> Préc.
@@ -155,7 +155,7 @@ export function AudioScenePanel({
             <button
               type="button"
               disabled={engineState !== 'playing'}
-              className="inline-flex h-9 items-center gap-1 rounded-xl border border-white/12 bg-white/[0.06] px-3 text-[11px] hover:bg-white/10 disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-white/[0.06]"
+              className="inline-flex h-9 items-center gap-1 rounded-xl border border-white/[0.12] bg-white/[0.06] px-3 text-[11px] hover:bg-white/10 disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-white/[0.06]"
               onClick={() => pause()}
             >
               <Pause className="h-3.5 w-3.5" /> Pause
@@ -163,7 +163,7 @@ export function AudioScenePanel({
             <button
               type="button"
               disabled={engineState !== 'paused'}
-              className="inline-flex h-9 items-center gap-1 rounded-xl border border-white/12 bg-white/[0.06] px-3 text-[11px] hover:bg-white/10 disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-white/[0.06]"
+              className="inline-flex h-9 items-center gap-1 rounded-xl border border-white/[0.12] bg-white/[0.06] px-3 text-[11px] hover:bg-white/10 disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-white/[0.06]"
               onClick={() => void resume()}
             >
               Reprendre
@@ -171,14 +171,14 @@ export function AudioScenePanel({
             <button
               type="button"
               disabled={engineState !== 'playing' && engineState !== 'paused'}
-              className="inline-flex h-9 items-center gap-1 rounded-xl border border-white/12 bg-white/[0.06] px-3 text-[11px] hover:bg-white/10 disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-white/[0.06]"
+              className="inline-flex h-9 items-center gap-1 rounded-xl border border-white/[0.12] bg-white/[0.06] px-3 text-[11px] hover:bg-white/10 disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-white/[0.06]"
               onClick={() => stop()}
             >
               <Square className="h-3.5 w-3.5" /> Stop
             </button>
             <button
               type="button"
-              className="inline-flex h-9 items-center gap-1 rounded-xl border border-white/12 bg-white/[0.06] px-3 text-[11px] hover:bg-white/10"
+              className="inline-flex h-9 items-center gap-1 rounded-xl border border-white/[0.12] bg-white/[0.06] px-3 text-[11px] hover:bg-white/10"
               onClick={() => void next()}
             >
               Suiv. <ChevronRight className="h-3.5 w-3.5" />
@@ -195,7 +195,7 @@ export function AudioScenePanel({
             </button>
             <button
               type="button"
-              className="rounded-xl border border-white/12 bg-white/[0.06] px-3 py-2 text-[11px] hover:bg-white/10"
+              className="rounded-xl border border-white/[0.12] bg-white/[0.06] px-3 py-2 text-[11px] hover:bg-white/10"
               onClick={() => restore()}
             >
               Restaurer volume scène

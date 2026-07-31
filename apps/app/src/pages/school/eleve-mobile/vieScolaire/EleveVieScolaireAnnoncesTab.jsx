@@ -61,7 +61,7 @@ export default function EleveVieScolaireAnnoncesTab() {
             >
               <Bell className="mt-0.5 h-3.5 w-3.5 shrink-0 text-orange-300" />
               <div className="min-w-0">
-                <p className="line-clamp-3 text-[12px] leading-snug text-white/92">{n.line}</p>
+                <p className="line-clamp-3 text-[12px] leading-snug text-white/[0.92]">{n.line}</p>
                 <p className="mt-0.5 text-[9.5px] font-medium" style={{ color: EV_MUTED }}>
                   {safeFormat(n.at, "d MMM, HH:mm")}
                 </p>

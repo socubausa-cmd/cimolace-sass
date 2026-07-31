@@ -69,7 +69,7 @@ export default function LibraryFilters({ filters, onFilter, onReset, stats }) {
     filters.search !== '';
 
   return (
-    <div className="flex flex-col gap-3 border-b border-white/8 p-3">
+    <div className="flex flex-col gap-3 border-b border-white/[0.08] p-3">
       {/* Search */}
       <div className="relative">
         <Search className="absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-white/30" />

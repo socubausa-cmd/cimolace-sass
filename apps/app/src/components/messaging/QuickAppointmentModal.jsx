@@ -101,7 +101,7 @@ export default function QuickAppointmentModal({
             className={cn(
               'relative w-full max-w-md overflow-hidden shadow-2xl',
               'max-h-[min(94dvh,900px)] sm:max-h-none',
-              'rounded-t-[1.35rem] border border-[color-mix(in_srgb,var(--school-accent)_20%,transparent)] border-b-0 bg-[#0a0908]/98 sm:rounded-2xl sm:border sm:border-white/10 sm:border-b sm:bg-[#0D1117]',
+              'rounded-t-[1.35rem] border border-[color-mix(in_srgb,var(--school-accent)_20%,transparent)] border-b-0 bg-[#0a0908]/[0.98] sm:rounded-2xl sm:border sm:border-white/10 sm:border-b sm:bg-[#0D1117]',
             )}
             onClick={(e) => e.stopPropagation()}
           >
@@ -161,7 +161,7 @@ export default function QuickAppointmentModal({
                 <button
                   type="button"
                   onClick={() => setStep('request')}
-                  className="group flex w-full items-center gap-4 rounded-xl border border-white/12 bg-white/[0.04] p-4 text-left transition-all hover:border-white/22 hover:bg-white/[0.07] active:scale-[0.99]"
+                  className="group flex w-full items-center gap-4 rounded-xl border border-white/[0.12] bg-white/[0.04] p-4 text-left transition-all hover:border-white/[0.22] hover:bg-white/[0.07] active:scale-[0.99]"
                 >
                   <div className="w-10 h-10 rounded-xl bg-white/5 flex items-center justify-center shrink-0">
                     <HelpCircle className="w-5 h-5 text-white/40" />
@@ -204,7 +204,7 @@ export default function QuickAppointmentModal({
                           className={`w-full flex items-center justify-between px-4 py-2.5 rounded-xl border text-sm transition-all ${
                             active
                               ? 'border-[color-mix(in_srgb,var(--school-accent)_50%,transparent)] bg-[color-mix(in_srgb,var(--school-accent)_10%,transparent)] text-[var(--school-accent)]'
-                              : 'border-white/10 bg-white/3 text-white/60 hover:border-white/20'
+                              : 'border-white/10 bg-white/[0.03] text-white/60 hover:border-white/20'
                           }`}
                         >
                           <span>{label}</span>
@@ -279,7 +279,7 @@ export default function QuickAppointmentModal({
                   />
                 </div>
 
-                <div className="rounded-xl border border-white/8 bg-white/3 p-4">
+                <div className="rounded-xl border border-white/[0.08] bg-white/[0.03] p-4">
                   <p className="text-white/50 text-sm">
                     {recipientName || 'Votre interlocuteur'} recevra une demande de disponibilité.
                     Dès qu'il proposera un créneau, vous le verrez dans votre tableau de bord.
@@ -294,7 +294,7 @@ export default function QuickAppointmentModal({
                     type="button"
                     onClick={handleRequest}
                     disabled={busy || !subject.trim()}
-                    className="flex min-h-[3rem] flex-1 items-center justify-center gap-2 rounded-xl border border-white/18 bg-white/10 text-sm font-semibold text-white transition-colors hover:bg-white/14 disabled:opacity-40"
+                    className="flex min-h-[3rem] flex-1 items-center justify-center gap-2 rounded-xl border border-white/[0.18] bg-white/10 text-sm font-semibold text-white transition-colors hover:bg-white/[0.14] disabled:opacity-40"
                   >
                     <Send className="w-4 h-4" />
                     {busy ? 'Envoi...' : 'Demander les disponibilités'}

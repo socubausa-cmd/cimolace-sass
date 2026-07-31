@@ -18,6 +18,7 @@
  *   onStepChange — callback (newStep) quand l'utilisateur clique pour avancer
  *   progressivePlayback — false = slide entière visible (toggle live)
  *   onSmartboardImageExpand — hôte : { url, label } → modale synchronisée (Arena)
+ *   sceneList  — (optionnel) scènes ordonnées de la séance ; sans elle, pas d'interlude de fin de chapitre
  *
  * Mode tactique : focus, flou, ⌃/⌘+molette = zoom sur l'élément, ⌃/⌘+glisser (gauche) = déplacer,
  * ⌃/⌘+clic gauche = masquer, ⌃/⌘+clic droit = afficher, Alt = mini, Shift = pousser,
@@ -39,6 +40,8 @@ import {
 } from '@/lib/smartboardDesignCanvas';
 import { AnimatePresence, motion, useReducedMotion } from 'framer-motion';
 import { useSceneNarration } from '@/features/live/hooks/useSceneNarration';
+import { useChapterInterlude } from '@/features/live/hooks/useChapterInterlude';
+import ChapterInterlude from './ChapterInterlude';
 import { HandwritingInk, InkHighlight } from './HandwritingInk';
 // Le moteur de tracé existait déjà pour le Précepteur : on le réutilise au lieu
 // d'écrire un second dessinateur qui divergerait.
@@ -307,7 +310,7 @@ function LegacyFreeTextBlock({ el }) {
           e.stopPropagation();
           setOpen((o) => !o);
         }}
-        className="mb-1 shrink-0 rounded-md border border-white/12 bg-black/45 px-2 py-1 text-left text-[11px] font-medium text-[color-mix(in_srgb,var(--school-accent)_95%,transparent)] hover:bg-black/60"
+        className="mb-1 shrink-0 rounded-md border border-white/[0.12] bg-black/45 px-2 py-1 text-left text-[11px] font-medium text-[color-mix(in_srgb,var(--school-accent)_95%,transparent)] hover:bg-black/60"
       >
         <span className="tabular-nums opacity-80">{open ? '▼' : '▶'}</span>{' '}
         {String(el.sectionLabel || 'Texte').slice(0, 120)}
@@ -779,7 +782,7 @@ function ProgressiveBuildSlide({
     : 'bg-[radial-gradient(ellipse_at_20%_10%,rgba(255,203,151,0.18),transparent_50%),radial-gradient(ellipse_at_80%_85%,rgba(212,175,55,0.12),transparent_50%)]';
 
   const accentBorder = isCosmic ? 'border-[#C9D3F2]/25' : 'border-[color-mix(in_srgb,var(--school-accent)_30%,transparent)]';
-  const accentBg = isCosmic ? 'bg-[#C9D3F2]/08' : 'bg-[color-mix(in_srgb,var(--school-accent)_08%,transparent)]';
+  const accentBg = isCosmic ? 'bg-[#C9D3F2]/[0.08]' : 'bg-[color-mix(in_srgb,var(--school-accent)_08%,transparent)]';
 
   return (
     <div
@@ -894,7 +897,7 @@ function ProgressiveBuildSlide({
                 )}
 
                 {!isHorizontal && illUrl && (
-                  <div className="mt-3 max-w-lg self-start rounded-xl overflow-hidden border border-white/12 shadow-lg">
+                  <div className="mt-3 max-w-lg self-start rounded-xl overflow-hidden border border-white/[0.12] shadow-lg">
                     <ExpandableHostImage
                       src={illUrl}
                       alt={data.title || 'Visuel'}
@@ -906,7 +909,7 @@ function ProgressiveBuildSlide({
                 {!isHorizontal && data.slide_summary && (
                   <div className="mt-3 rounded-xl border border-[color-mix(in_srgb,var(--school-accent)_20%,transparent)] bg-[color-mix(in_srgb,var(--school-accent)_06%,transparent)] px-4 py-3 max-w-2xl">
                     <p className="text-[10px] uppercase tracking-widest text-[color-mix(in_srgb,var(--school-accent)_55%,transparent)] font-semibold mb-1.5">Résumé</p>
-                    <p className="text-sm md:text-[15px] text-white/88 leading-relaxed font-serif">{data.slide_summary}</p>
+                    <p className="text-sm md:text-[15px] text-white/[0.88] leading-relaxed font-serif">{data.slide_summary}</p>
                   </div>
                 )}
                 {isHorizontal && data.slide_summary && effectiveStep >= 2 && (
@@ -976,7 +979,7 @@ function ProgressiveBuildSlide({
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ duration: reduceMotion ? 0.15 : 0.45 }}
-              className="mt-3 h-[190px] w-full rounded-2xl border border-white/08 bg-black/25 p-3 backdrop-blur-sm"
+              className="mt-3 h-[190px] w-full rounded-2xl border border-white/[0.08] bg-black/25 p-3 backdrop-blur-sm"
               data-scene-sketch="on"
             >
               <SketchRenderer sketch={data.sketch} play={!reduceMotion} />
@@ -1091,7 +1094,7 @@ function ProgressiveBuildSlide({
                       </div>
                     )}
                     {illUrl && (
-                      <div className="rounded-xl overflow-hidden border border-white/12 shadow-lg">
+                      <div className="rounded-xl overflow-hidden border border-white/[0.12] shadow-lg">
                         <ExpandableHostImage
                           src={illUrl}
                           alt={data.title || 'Illustration'}
@@ -1122,7 +1125,7 @@ function ProgressiveBuildSlide({
                       initial={{ opacity: 0, x: -12 }}
                       animate={{ opacity: 1, x: 0 }}
                       transition={{ delay: i * 0.08, duration: 0.35 }}
-                      className="flex items-start gap-3 rounded-xl bg-white/[0.04] border border-white/08 px-4 py-2.5"
+                      className="flex items-start gap-3 rounded-xl bg-white/[0.04] border border-white/[0.08] px-4 py-2.5"
                     >
                       <span className="flex-shrink-0 w-5 h-5 rounded-full bg-white/10 border border-white/15 flex items-center justify-center text-[9px] text-white/50 font-bold mt-0.5">
                         {i + 1}
@@ -1143,7 +1146,7 @@ function ProgressiveBuildSlide({
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
               transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
-              className={`rounded-2xl overflow-hidden border ${isHorizontal ? 'border-[color-mix(in_srgb,var(--school-accent)_25%,transparent)]' : 'border-amber-500/20'} ${isHorizontal ? 'bg-black/30 backdrop-blur-md' : 'bg-gradient-to-br from-amber-500/08 to-amber-500/06'}`}
+              className={`rounded-2xl overflow-hidden border ${isHorizontal ? 'border-[color-mix(in_srgb,var(--school-accent)_25%,transparent)]' : 'border-amber-500/20'} ${isHorizontal ? 'bg-black/30 backdrop-blur-md' : 'bg-gradient-to-br from-amber-500/[0.08] to-amber-500/[0.06]'}`}
             >
               <IaTacticalPanel
                 panelId="ia-footer"
@@ -1158,7 +1161,7 @@ function ProgressiveBuildSlide({
                 viewOnly={tacticalViewOnly}
                 className=""
               >
-                <div className="px-4 py-2 border-b border-white/06 flex items-center gap-2">
+                <div className="px-4 py-2 border-b border-white/[0.06] flex items-center gap-2">
                   <span className={`text-[10px] uppercase tracking-widest font-semibold ${isHorizontal ? 'text-[color-mix(in_srgb,var(--school-accent)_70%,transparent)]' : 'text-amber-300/60'}`}>
                     {isHorizontal ? 'Insight & formule' : 'Illustration'}
                   </span>
@@ -1169,7 +1172,7 @@ function ProgressiveBuildSlide({
                       src={illUrl}
                       alt={data.title || 'Illustration'}
                       onExpand={onSmartboardImageExpand}
-                      imgClassName="block w-full max-h-52 object-cover rounded-xl border border-white/12 shadow-lg"
+                      imgClassName="block w-full max-h-52 object-cover rounded-xl border border-white/[0.12] shadow-lg"
                     />
                   )}
                   {!isHorizontal && data.illustration?.scene && (
@@ -1205,7 +1208,7 @@ function ProgressiveBuildSlide({
       </div>
 
       {/* ── Barre de progression et bouton avancer ── */}
-      <div className="relative flex-shrink-0 flex flex-col gap-1 px-5 py-2.5 border-t border-white/08 bg-black/20 backdrop-blur-sm">
+      <div className="relative flex-shrink-0 flex flex-col gap-1 px-5 py-2.5 border-t border-white/[0.08] bg-black/20 backdrop-blur-sm">
         <div className="flex items-center gap-3">
         {/* Dots de progression */}
         <div className="flex items-center gap-1.5">
@@ -1239,7 +1242,7 @@ function ProgressiveBuildSlide({
 
         {/* Bouton avancer */}
         {revealAll ? (
-          <span className="h-7 px-3 rounded-xl bg-white/08 border border-white/12 text-white/45 text-[11px] font-medium flex items-center gap-1">
+          <span className="h-7 px-3 rounded-xl bg-white/[0.08] border border-white/[0.12] text-white/45 text-[11px] font-medium flex items-center gap-1">
             Vue complète
           </span>
         ) : canAdvance ? (
@@ -1258,7 +1261,7 @@ function ProgressiveBuildSlide({
           </span>
         )}
         </div>
-        <p className="text-center text-[9px] leading-snug text-white/28">
+        <p className="text-center text-[9px] leading-snug text-white/[0.28]">
           Zones tactiques · clic = focus · ⌃+molette = zoom · ⌃+glisser = déplacer · ⌃+clic gauche = masquer ·
           ⌃+clic droit = afficher · barre / coin si focus · Alt mini · Shift pousser · ⌃1–9 · Échap / ⌃0
         </p>
@@ -1297,6 +1300,16 @@ export default function SlideParallaxStage({
    * décoratif bleu est retiré pour s'intégrer au plateau (grille shell).
    */
   liveStageFillCover = false,
+  /**
+   * Liste ORDONNÉE des scènes de la séance (format `normalizeLiveSceneToSlide`),
+   * nécessaire à l'interlude de reformulation : la fin d'un chapitre se déduit du
+   * `chapter_id` de la scène SUIVANTE, que la scène courante ignore.
+   * ⚠️ ÉTAT RÉEL : aucun appelant ne passe encore cette liste (ni SmartBoardCompositor
+   * ni les aperçus Studio). L'interlude est donc CÂBLÉ mais DORMANT en production
+   * tant que la régie ne transmet pas ses scènes — d'où le défaut `null`, qui garantit
+   * le comportement strictement inchangé.
+   */
+  sceneList = null,
 }) {
   const tacticalViewOnly = tacticalSyncRole === 'viewer';
   const prefersReducedMotion = useReducedMotion();
@@ -1340,6 +1353,21 @@ export default function SlideParallaxStage({
       else setInternalStep(next);
     },
   });
+
+  /**
+   * §3.2 — INTERLUDE DE REFORMULATION. Le tableau récapitule le chapitre écoulé
+   * une fois la dernière scène de ce chapitre entièrement révélée (palier 3).
+   * Un tableau montré d'un coup n'a pas de « fin de révélation » à guetter :
+   * dans ce cas l'interlude reste au repos.
+   */
+  const interlude = useChapterInterlude({
+    scenes: sceneList,
+    currentSceneId: slide?.id,
+    revealStep: step !== undefined ? step : internalStep,
+    maxStep: 3,
+    enabled: progressivePlayback && slide?.render_mode !== 'instant',
+  });
+
   const [legacyRevealIdx, setLegacyRevealIdx] = useState(0);
   const [legacyFocusId, setLegacyFocusId] = useState(null);
   const [legacyElAdjust, setLegacyElAdjust] = useState({});
@@ -1667,6 +1695,20 @@ export default function SlideParallaxStage({
             )}
           </motion.div>
         </AnimatePresence>
+
+        {/* §3.2 : le récapitulatif passe AU PREMIER PLAN, par-dessus la scène,
+            jusqu'à ce que le prof demande la suite. */}
+        <AnimatePresence>
+          {interlude.pending && (
+            <ChapterInterlude
+              key={`interlude-${interlude.chapterId}`}
+              chapterId={interlude.chapterId}
+              points={interlude.summary}
+              reduceMotion={prefersReducedMotion}
+              onContinue={interlude.dismiss}
+            />
+          )}
+        </AnimatePresence>
       </div>
     );
   }
@@ -1919,7 +1961,7 @@ export default function SlideParallaxStage({
         </motion.div>
       </AnimatePresence>
       {!legacyPresentationMode && !fullBleedDocumentOnly && legacyEls.length > 0 ? (
-        <div className="relative z-[30] flex shrink-0 flex-col gap-0.5 border-t border-white/08 bg-black/40 px-2 py-1.5 backdrop-blur-sm">
+        <div className="relative z-[30] flex shrink-0 flex-col gap-0.5 border-t border-white/[0.08] bg-black/40 px-2 py-1.5 backdrop-blur-sm">
           <p className="text-center text-[9px] leading-snug text-white/35">
             Mode tactique · Clic = focus · <span className="text-white/45">⌃</span>+molette = zoom ·{' '}
             <span className="text-white/45">⌃</span>+glisser = déplacer · <span className="text-white/45">⌃</span>+clic gauche = masquer ·{' '}
@@ -1935,7 +1977,7 @@ export default function SlideParallaxStage({
           ) : null}
         </div>
       ) : !legacyPresentationMode && legacyProgressive ? (
-        <div className="relative z-10 flex shrink-0 items-center justify-center gap-2 border-t border-white/08 bg-black/30 px-3 py-2 backdrop-blur-sm">
+        <div className="relative z-10 flex shrink-0 items-center justify-center gap-2 border-t border-white/[0.08] bg-black/30 px-3 py-2 backdrop-blur-sm">
           <span className="text-[10px] text-white/45 tabular-nums">
             Bloc {legacyRevealIdx + 1} / {legacyEls.length}
             <span className="text-white/25"> · clic sur la slide pour révéler le suivant</span>

@@ -152,15 +152,15 @@ export default function EleveModulesScreen() {
             </div>
 
             <div className="mt-4 grid grid-cols-3 gap-2">
-              <div className="rounded-2xl border border-white/8 bg-black/20 px-2 py-2 text-center">
+              <div className="rounded-2xl border border-white/[0.08] bg-black/20 px-2 py-2 text-center">
                 <p className="text-[15px] font-extrabold text-white">4</p>
                 <p className="mt-0.5 text-[9px] uppercase tracking-[0.12em] text-white/35">cycles</p>
               </div>
-              <div className="rounded-2xl border border-white/8 bg-black/20 px-2 py-2 text-center">
+              <div className="rounded-2xl border border-white/[0.08] bg-black/20 px-2 py-2 text-center">
                 <p className="text-[15px] font-extrabold text-[var(--school-accent)]">1</p>
                 <p className="mt-0.5 text-[9px] uppercase tracking-[0.12em] text-white/35">mois</p>
               </div>
-              <div className="rounded-2xl border border-white/8 bg-black/20 px-2 py-2 text-center">
+              <div className="rounded-2xl border border-white/[0.08] bg-black/20 px-2 py-2 text-center">
                 <p className="text-[15px] font-extrabold text-emerald-300">
                   {formationsLoading ? '...' : availableCount}
                 </p>

@@ -42,7 +42,7 @@ function SectionCard({
         'rounded-xl border transition-all',
         isCurrent
           ? 'bg-[color-mix(in_srgb,var(--school-accent)_10%,transparent)] border-[color-mix(in_srgb,var(--school-accent)_30%,transparent)] shadow-[0_0_16px_rgba(212,175,55,0.12)]'
-          : 'bg-white/[0.03] border-white/10 hover:border-white/18'
+          : 'bg-white/[0.03] border-white/10 hover:border-white/[0.18]'
       )}
     >
       {/* Header */}
@@ -52,12 +52,12 @@ function SectionCard({
             Diapo #{section.slide_index + 1}
           </span>
         ) : (
-          <span className="h-4 px-1.5 rounded bg-white/8 border border-white/12 text-[8px] text-gray-500">
+          <span className="h-4 px-1.5 rounded bg-white/[0.08] border border-white/[0.12] text-[8px] text-gray-500">
             Général
           </span>
         )}
         {isCurrent && (
-          <span className="flex items-center gap-0.5 h-4 px-1.5 rounded bg-amber-500/12 border border-amber-400/22 text-[8px] text-amber-300 font-semibold">
+          <span className="flex items-center gap-0.5 h-4 px-1.5 rounded bg-amber-500/[0.12] border border-amber-400/[0.22] text-[8px] text-amber-300 font-semibold">
             ▶ En cours
           </span>
         )}
@@ -127,7 +127,7 @@ function SectionCard({
               <button
                 type="button"
                 onClick={() => onApplyAi(section.id)}
-                className="h-5 px-2 rounded bg-amber-500/12 border border-amber-400/22 text-[8px] text-amber-300 hover:bg-amber-500/20"
+                className="h-5 px-2 rounded bg-amber-500/[0.12] border border-amber-400/[0.22] text-[8px] text-amber-300 hover:bg-amber-500/20"
               >
                 Appliquer
               </button>
@@ -158,14 +158,14 @@ function SectionEditForm({ initial, totalSlides, onSave, onCancel }) {
         onChange={(e) => setContent(e.target.value)}
         placeholder="Saisissez votre texte de script…"
         rows={4}
-        className="w-full bg-black/20 border border-white/12 rounded-xl px-3 py-2 text-xs text-white placeholder:text-gray-500 outline-none focus:border-[color-mix(in_srgb,var(--school-accent)_40%,transparent)] resize-none"
+        className="w-full bg-black/20 border border-white/[0.12] rounded-xl px-3 py-2 text-xs text-white placeholder:text-gray-500 outline-none focus:border-[color-mix(in_srgb,var(--school-accent)_40%,transparent)] resize-none"
       />
       <div className="flex items-center gap-2">
         <label className="text-[9px] text-gray-400 flex-shrink-0">Diapo associée :</label>
         <select
           value={slideIndex}
           onChange={(e) => setSlideIndex(e.target.value === '' ? '' : Number(e.target.value))}
-          className="flex-1 h-7 rounded-lg bg-black/20 border border-white/12 text-[10px] text-white px-2 outline-none"
+          className="flex-1 h-7 rounded-lg bg-black/20 border border-white/[0.12] text-[10px] text-white px-2 outline-none"
         >
           <option value="">Aucune (général)</option>
           {Array.from({ length: Math.max(totalSlides, 1) }, (_, i) => (
@@ -223,10 +223,10 @@ function PrompterOverlay({ sections, currentSection, onClose }) {
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
-      className="absolute inset-0 z-50 flex flex-col bg-[#050a12]/97 backdrop-blur-xl"
+      className="absolute inset-0 z-50 flex flex-col bg-[#050a12]/[0.97] backdrop-blur-xl"
     >
       {/* Controls */}
-      <div className="flex items-center justify-between px-6 py-3 border-b border-white/8 flex-shrink-0">
+      <div className="flex items-center justify-between px-6 py-3 border-b border-white/[0.08] flex-shrink-0">
         <div className="flex items-center gap-2">
           <BookOpen className="w-4 h-4 text-[var(--school-accent)]" />
           <span className="text-xs font-semibold text-white/80">Mode Prompteur</span>
@@ -248,7 +248,7 @@ function PrompterOverlay({ sections, currentSection, onClose }) {
               'h-7 px-3 rounded-xl text-xs font-semibold border transition-all',
               autoScroll
                 ? 'bg-[color-mix(in_srgb,var(--school-accent)_20%,transparent)] border-[color-mix(in_srgb,var(--school-accent)_35%,transparent)] text-[var(--school-accent)]'
-                : 'bg-white/[0.06] border-white/12 text-white/60 hover:text-white'
+                : 'bg-white/[0.06] border-white/[0.12] text-white/60 hover:text-white'
             )}
           >
             {autoScroll ? '⏸ Pause' : '▶ Défilement auto'}
@@ -256,7 +256,7 @@ function PrompterOverlay({ sections, currentSection, onClose }) {
           <button
             type="button"
             onClick={onClose}
-            className="h-7 w-7 rounded-full bg-white/8 border border-white/12 text-gray-400 flex items-center justify-center hover:text-white"
+            className="h-7 w-7 rounded-full bg-white/[0.08] border border-white/[0.12] text-gray-400 flex items-center justify-center hover:text-white"
           >
             <Minimize2 className="w-3.5 h-3.5" />
           </button>
@@ -343,7 +343,7 @@ export default function MasterScriptPanel({
             type="button"
             onClick={() => setPrompterOpen(true)}
             disabled={sections.length === 0}
-            className="flex items-center gap-1 h-6 px-2 rounded-lg bg-white/[0.05] border border-white/10 text-[9px] text-gray-400 hover:text-white hover:bg-white/8 disabled:opacity-30 transition-colors"
+            className="flex items-center gap-1 h-6 px-2 rounded-lg bg-white/[0.05] border border-white/10 text-[9px] text-gray-400 hover:text-white hover:bg-white/[0.08] disabled:opacity-30 transition-colors"
           >
             <Maximize2 className="w-2.5 h-2.5" /> Prompteur
           </button>

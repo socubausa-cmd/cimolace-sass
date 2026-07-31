@@ -183,7 +183,7 @@ export default function SegmentAIEditorPanel({
             </div>
           </div>
         ) : (
-          <div className="aspect-video rounded-lg border border-dashed border-white/10 flex flex-col items-center justify-center gap-2 bg-white/2">
+          <div className="aspect-video rounded-lg border border-dashed border-white/10 flex flex-col items-center justify-center gap-2 bg-white/[0.02]">
             <Image className="w-8 h-8 text-[#82807a]" />
             <p className="text-xs text-[#82807a] text-center max-w-[200px]">
               {contentId ? 'Génère le segment IA pour obtenir une illustration automatique' : 'Sélectionne un segment'}

@@ -62,7 +62,7 @@ function Toggle({ label, description, checked, onChange, color = '#D4AF37', data
         'w-full flex items-center gap-3 p-3 rounded-xl border transition-all text-left',
         checked
           ? 'border-[color-mix(in_srgb,var(--school-accent)_30%,transparent)] bg-[color-mix(in_srgb,var(--school-accent)_8%,transparent)]'
-          : 'border-white/8 bg-white/[0.03] hover:border-white/15',
+          : 'border-white/[0.08] bg-white/[0.03] hover:border-white/15',
         disabled && 'cursor-not-allowed opacity-45'
       )}
     >
@@ -95,7 +95,7 @@ function StudioPanelSection({ title, subtitle, icon: Icon, children, className }
           {Icon ? <Icon className="h-3.5 w-3.5 shrink-0 text-[#e9bf72]" /> : null}
           <span className="text-[11px] font-bold uppercase tracking-[0.1em] text-[#e9bf72]">{title}</span>
         </div>
-        {subtitle ? <p className="mt-1.5 text-[10px] leading-relaxed text-white/38">{subtitle}</p> : null}
+        {subtitle ? <p className="mt-1.5 text-[10px] leading-relaxed text-white/[0.38]">{subtitle}</p> : null}
       </div>
       {children}
     </div>
@@ -355,7 +355,7 @@ export default function LiveStudioSettingsPanel({
                 exit={{ opacity: 0 }}
                 transition={{ duration: 0.2 }}
                 className={cn(
-                  'fixed z-[205] flex flex-col bg-[#100d0a]/94 backdrop-blur-[18px]',
+                  'fixed z-[205] flex flex-col bg-[#100d0a]/[0.94] backdrop-blur-[18px]',
                   'inset-0 min-[920px]:inset-y-0 min-[920px]:left-0 min-[920px]:right-[min(460px,100vw)] min-[920px]:w-auto min-[920px]:h-full',
                 )}
               >
@@ -369,7 +369,7 @@ export default function LiveStudioSettingsPanel({
                   <button
                     type="button"
                     onClick={() => setVideoPreviewExpanded(false)}
-                    className="inline-flex shrink-0 items-center gap-2 rounded-xl border border-white/12 bg-white/[0.06] px-3 py-2 text-[11px] font-semibold text-white/80 transition-colors hover:bg-white/[0.1]"
+                    className="inline-flex shrink-0 items-center gap-2 rounded-xl border border-white/[0.12] bg-white/[0.06] px-3 py-2 text-[11px] font-semibold text-white/80 transition-colors hover:bg-white/[0.1]"
                   >
                     <Minimize2 className="h-3.5 w-3.5 opacity-80" />
                     Réduire
@@ -452,7 +452,7 @@ export default function LiveStudioSettingsPanel({
                             <button
                               type="button"
                               onClick={() => setVideoPreviewExpanded(true)}
-                              className="w-full rounded-xl border border-[#C8960C]/35 bg-[#C8960C]/10 py-2.5 text-[11px] font-semibold text-[#e9bf72] transition-colors hover:bg-[#C8960C]/18"
+                              className="w-full rounded-xl border border-[#C8960C]/35 bg-[#C8960C]/10 py-2.5 text-[11px] font-semibold text-[#e9bf72] transition-colors hover:bg-[#C8960C]/[0.18]"
                             >
                               Agrandir l'aperçu (plein écran)
                             </button>
@@ -492,7 +492,7 @@ export default function LiveStudioSettingsPanel({
                       checked={beauty}
                       onChange={onBeautyChange}
                     />
-                    <div className="my-3 h-px bg-white/8" />
+                    <div className="my-3 h-px bg-white/[0.08]" />
                     <div className="mb-2 flex items-center gap-2">
                       <Scissors className="h-3.5 w-3.5 text-white/45" />
                       <span className="text-[10px] font-semibold uppercase tracking-wide text-white/45">Chroma Key</span>
@@ -578,7 +578,7 @@ export default function LiveStudioSettingsPanel({
                               'relative h-16 overflow-hidden rounded-xl border-2 transition-all',
                               isSelected
                                 ? 'scale-[1.02] border-[#C8960C] shadow-[0_0_12px_rgba(200,150,12,0.35)]'
-                                : 'border-white/10 hover:border-white/28',
+                                : 'border-white/10 hover:border-white/[0.28]',
                             )}
                             style={{ background: preset.color || '#111' }}
                           >
@@ -608,7 +608,7 @@ export default function LiveStudioSettingsPanel({
                       })}
                     </div>
                     <div
-                      className="mt-3 flex cursor-pointer flex-col items-center gap-2 rounded-xl border border-dashed border-white/18 bg-white/[0.03] p-4 transition-all hover:border-[#C8960C]/35 hover:bg-[#C8960C]/5"
+                      className="mt-3 flex cursor-pointer flex-col items-center gap-2 rounded-xl border border-dashed border-white/[0.18] bg-white/[0.03] p-4 transition-all hover:border-[#C8960C]/35 hover:bg-[#C8960C]/5"
                       onClick={() => customBgRef.current?.click()}
                     >
                       <Upload className="h-5 w-5 text-white/30" />
@@ -643,7 +643,7 @@ export default function LiveStudioSettingsPanel({
                       <button
                         type="button"
                         onClick={handleResetGrading}
-                        className="flex items-center gap-1 text-[10px] text-white/38 transition-colors hover:text-white/65"
+                        className="flex items-center gap-1 text-[10px] text-white/[0.38] transition-colors hover:text-white/65"
                       >
                         <RefreshCw className="h-3 w-3" />
                         Reset
@@ -699,7 +699,7 @@ export default function LiveStudioSettingsPanel({
                       unit="%"
                       color="#d4a36a"
                     />
-                    <div className="my-3 h-px bg-white/8" />
+                    <div className="my-3 h-px bg-white/[0.08]" />
                     <div className="mb-2 flex items-center gap-2">
                       <Waves className="h-3.5 w-3.5 text-amber-400/85" />
                       <span className="text-[10px] font-semibold uppercase tracking-wide text-white/45">Réduction du bruit</span>
@@ -743,7 +743,7 @@ export default function LiveStudioSettingsPanel({
                             unit="%"
                             color="#d4a36a"
                           />
-                          <ul className="mt-2 space-y-1 border-t border-white/8 pt-2">
+                          <ul className="mt-2 space-y-1 border-t border-white/[0.08] pt-2">
                             {ambientTracks
                               .filter((t) => t?.url)
                               .map((t, i) => (
@@ -754,7 +754,7 @@ export default function LiveStudioSettingsPanel({
                           </ul>
                         </>
                       ) : (
-                        <p className="text-[10px] leading-relaxed text-white/38">
+                        <p className="text-[10px] leading-relaxed text-white/[0.38]">
                           Aucune piste d'ambiance configurée pour cette session. Ajoutez des MP3 dans la configuration studio (étapes
                           création) ou le bandeau d'ambiance hôte.
                         </p>
@@ -913,7 +913,7 @@ export default function LiveStudioSettingsPanel({
                             /* ignore */
                           }
                         }}
-                        className="shrink-0 rounded-lg border border-[#C8960C]/40 bg-[#C8960C]/12 px-3 py-2 text-[10px] font-bold text-[#e9bf72] transition-colors hover:bg-[#C8960C]/20"
+                        className="shrink-0 rounded-lg border border-[#C8960C]/40 bg-[#C8960C]/[0.12] px-3 py-2 text-[10px] font-bold text-[#e9bf72] transition-colors hover:bg-[#C8960C]/20"
                       >
                         Copier
                       </button>
@@ -960,7 +960,7 @@ export default function LiveStudioSettingsPanel({
                           type="button"
                           onClick={() => sessionQuickSettings.proctorCameraHistory.onRefresh?.()}
                           disabled={sessionQuickSettings.proctorCameraHistory.loading}
-                          className="inline-flex items-center gap-1.5 rounded-lg border border-white/12 bg-white/[0.04] px-2.5 py-1.5 text-[10px] font-semibold text-white/70 transition-colors hover:bg-white/[0.08] disabled:opacity-45"
+                          className="inline-flex items-center gap-1.5 rounded-lg border border-white/[0.12] bg-white/[0.04] px-2.5 py-1.5 text-[10px] font-semibold text-white/70 transition-colors hover:bg-white/[0.08] disabled:opacity-45"
                         >
                           <RefreshCw
                             className={cn(
@@ -999,7 +999,7 @@ export default function LiveStudioSettingsPanel({
                             >
                               <div className="flex flex-wrap items-baseline justify-between gap-1">
                                 <span className="font-semibold text-[#e9bf72]/95">{label}</span>
-                                <span className="text-white/38">{rel}</span>
+                                <span className="text-white/[0.38]">{rel}</span>
                               </div>
                               <p className="mt-0.5 text-white/55">
                                 Élève : <span className="text-white/80">{who}</span>
@@ -1046,7 +1046,7 @@ export default function LiveStudioSettingsPanel({
                     <button
                       type="button"
                       onClick={() => sessionQuickSettings.onOpenJoyKit?.()}
-                      className="flex w-full items-center justify-between rounded-lg border border-[#C8960C]/38 bg-[#C8960C]/10 px-3 py-3 text-left text-[12px] font-semibold text-[#e9bf72] transition-colors hover:bg-[#C8960C]/18"
+                      className="flex w-full items-center justify-between rounded-lg border border-[#C8960C]/[0.38] bg-[#C8960C]/10 px-3 py-3 text-left text-[12px] font-semibold text-[#e9bf72] transition-colors hover:bg-[#C8960C]/[0.18]"
                     >
                       Ouvrir le panneau JoyKit
                       <ChevronRight className="h-3.5 w-3.5 shrink-0 opacity-80" />

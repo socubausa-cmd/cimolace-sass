@@ -257,7 +257,7 @@ function PlanCard({ plan, selected, onSelect }) {
                 {plan.excludes.map((item) => (
                   <div
                     key={item}
-                    className="flex items-start gap-2 text-xs leading-5 text-white/48"
+                    className="flex items-start gap-2 text-xs leading-5 text-white/[0.48]"
                   >
                     <X className="mt-0.5 h-3.5 w-3.5 shrink-0 text-white/30" />
                     <span>{item}</span>

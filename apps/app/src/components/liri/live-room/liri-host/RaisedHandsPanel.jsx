@@ -86,7 +86,7 @@ export function RaisedHandsPanel({
                   <button
                     type="button"
                     onClick={() => onIgnore?.(h.userId)}
-                    className="h-8 min-w-0 flex-1 rounded-lg border border-white/12 bg-white/[0.06] text-[10px] font-medium text-white/75 hover:bg-white/10"
+                    className="h-8 min-w-0 flex-1 rounded-lg border border-white/[0.12] bg-white/[0.06] text-[10px] font-medium text-white/75 hover:bg-white/10"
                   >
                     Ignorer
                   </button>

@@ -43,7 +43,7 @@ export function LiriHostMembersColumn({
           <button
             type="button"
             onClick={onBackToCourse}
-            className="flex h-8 shrink-0 items-center gap-1 rounded-lg border border-white/12 bg-black/35 px-2 text-[10px] text-white/80 hover:bg-white/10"
+            className="flex h-8 shrink-0 items-center gap-1 rounded-lg border border-white/[0.12] bg-black/35 px-2 text-[10px] text-white/80 hover:bg-white/10"
             title="Revenir au plan de cours et au script"
           >
             <BookOpen className="h-3.5 w-3.5 text-[var(--school-accent)]" />
@@ -97,7 +97,7 @@ export function LiriHostMembersColumn({
               <button
                 type="button"
                 onClick={onOpenMembersOverview}
-                className="flex h-7 items-center gap-1 rounded-lg border border-white/12 bg-white/[0.04] px-2 text-[9px] text-white/75 hover:border-[color-mix(in_srgb,var(--school-accent)_30%,transparent)] hover:bg-[color-mix(in_srgb,var(--school-accent)_10%,transparent)]"
+                className="flex h-7 items-center gap-1 rounded-lg border border-white/[0.12] bg-white/[0.04] px-2 text-[9px] text-white/75 hover:border-[color-mix(in_srgb,var(--school-accent)_30%,transparent)] hover:bg-[color-mix(in_srgb,var(--school-accent)_10%,transparent)]"
                 title="Vue grille complète"
               >
                 <Users className="h-3 w-3 text-[var(--school-accent)]" />

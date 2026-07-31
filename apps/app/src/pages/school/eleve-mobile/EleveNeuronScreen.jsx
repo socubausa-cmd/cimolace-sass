@@ -189,7 +189,7 @@ export default function EleveNeuronScreen() {
               style={{ borderColor: EV_LINE, background: 'rgba(255,255,255,0.05)' }}
               aria-label="Ouvrir le carnet Neuron"
             >
-              <Menu className="h-5 w-5 text-white/88" strokeWidth={2} />
+              <Menu className="h-5 w-5 text-white/[0.88]" strokeWidth={2} />
             </Link>
           </div>
 

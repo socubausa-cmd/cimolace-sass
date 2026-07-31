@@ -354,7 +354,7 @@ export function Step8Validation({ draft, updateDraft, onSubmit, creating, user, 
 
       <div
         id="studio-validation-actions"
-        className="sticky bottom-0 z-10 -mx-1 mt-8 border-t border-[#d97757]/20 bg-[#0a0908]/95 px-1 py-4 backdrop-blur-md supports-[backdrop-filter]:bg-[#0a0908]/88"
+        className="sticky bottom-0 z-10 -mx-1 mt-8 border-t border-[#d97757]/20 bg-[#0a0908]/95 px-1 py-4 backdrop-blur-md supports-[backdrop-filter]:bg-[#0a0908]/[0.88]"
       >
         <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap">
         <Button

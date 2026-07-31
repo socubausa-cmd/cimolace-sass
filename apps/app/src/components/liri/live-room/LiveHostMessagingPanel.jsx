@@ -286,7 +286,7 @@ export default function LiveHostMessagingPanel({
                   <p className="text-[12px] font-semibold tracking-wide text-white/95">
                     {forumTarget ? `Message privé — ${forumTarget.name}` : 'LONGIA — Messagerie'}
                   </p>
-                  <p className="mt-1 max-w-[340px] text-[10px] leading-relaxed text-white/38">
+                  <p className="mt-1 max-w-[340px] text-[10px] leading-relaxed text-white/[0.38]">
                     {forumTarget
                       ? LIVE_COMM_COPY[LIVE_COMM_LAYER.PRIVATE_DM]
                       : collectiveLocked
@@ -350,7 +350,7 @@ export default function LiveHostMessagingPanel({
                         });
                       }
                     }}
-                    className="shrink-0 rounded-lg border border-[#C8960C]/40 bg-[#C8960C]/12 px-2.5 py-1.5 text-[10px] font-bold text-[#e9bf72] transition-colors hover:bg-[#C8960C]/20"
+                    className="shrink-0 rounded-lg border border-[#C8960C]/40 bg-[#C8960C]/[0.12] px-2.5 py-1.5 text-[10px] font-bold text-[#e9bf72] transition-colors hover:bg-[#C8960C]/20"
                   >
                     Copier
                   </button>
@@ -608,7 +608,7 @@ export default function LiveHostMessagingPanel({
                     className={cn(
                       'flex h-[72px] w-full flex-col items-center justify-center gap-1 rounded-xl border px-1 py-2 transition-all',
                       !forumTarget && !collectiveLocked
-                        ? 'border-amber-400/45 bg-amber-500/12 text-amber-100 shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]'
+                        ? 'border-amber-400/45 bg-amber-500/[0.12] text-amber-100 shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]'
                         : 'border-white/[0.1] bg-white/[0.03] text-white/55 hover:border-white/[0.16] hover:bg-white/[0.06]',
                       collectiveLocked && 'cursor-not-allowed opacity-40',
                     )}
@@ -692,7 +692,7 @@ export default function LiveHostMessagingPanel({
               <div className="flex min-h-0 min-w-0 flex-1 flex-col">
                 <div ref={scrollRef} className={designerShellMainScroll}>
                   {msgs.length === 0 ? (
-                    <p className="py-12 text-center text-[11px] text-white/32">
+                    <p className="py-12 text-center text-[11px] text-white/[0.32]">
                       Aucun message — le fil apparaît ici.
                     </p>
                   ) : (
@@ -707,7 +707,7 @@ export default function LiveHostMessagingPanel({
                           >
                             {m.from}
                           </span>
-                          <span className="text-[9px] tabular-nums text-white/28">{m.time}</span>
+                          <span className="text-[9px] tabular-nums text-white/[0.28]">{m.time}</span>
                         </div>
                         <p className="text-[12px] leading-relaxed text-white/[0.88]">{m.msg}</p>
                       </div>

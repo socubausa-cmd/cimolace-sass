@@ -23,7 +23,7 @@ function qualityChipClass(band) {
     case 'excellent':
       return 'border-[color-mix(in_srgb,var(--school-accent)_40%,transparent)] bg-[#1a1810] text-[#f5dd8a]';
     default:
-      return 'border-white/8 bg-white/[0.03] text-white/38';
+      return 'border-white/[0.08] bg-white/[0.03] text-white/[0.38]';
   }
 }
 
@@ -109,7 +109,7 @@ export default function SmartboardProjectDashboardStrip({ className, quality = n
           {slideCount} fiche{slideCount > 1 ? 's' : ''} (plan)
         </span>
         <span
-          className="rounded-lg border border-cyan-500/22 bg-cyan-950/25 px-2.5 py-1 text-[10px] text-cyan-100/90"
+          className="rounded-lg border border-cyan-500/[0.22] bg-cyan-950/25 px-2.5 py-1 text-[10px] text-cyan-100/90"
           title="Position dans le parcours Copilot"
         >
           {slideCount === 0 ? 'Parcours : —' : `Actif ${pos}/${slideCount}`}
@@ -146,7 +146,7 @@ export default function SmartboardProjectDashboardStrip({ className, quality = n
           </span>
         ) : (
           <span
-            className="rounded-lg border border-white/8 bg-white/[0.03] px-2.5 py-1 text-[10px] text-white/38"
+            className="rounded-lg border border-white/[0.08] bg-white/[0.03] px-2.5 py-1 text-[10px] text-white/[0.38]"
             title="Score indisponible"
           >
             Qualité : —

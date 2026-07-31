@@ -21,7 +21,7 @@ export default function MobileNeuronHubScreen() {
           </span>
         </LiriSectionLabel>
         <h1 className="mt-1 font-serif text-xl text-[#faf3e6] tracking-tight">NeuronQ &amp; NeuroRecall</h1>
-        <p className="mt-1 text-sm text-white/48">
+        <p className="mt-1 text-sm text-white/[0.48]">
           Questions pendant le direct, puis mémoire et révision après la session.
         </p>
       </div>

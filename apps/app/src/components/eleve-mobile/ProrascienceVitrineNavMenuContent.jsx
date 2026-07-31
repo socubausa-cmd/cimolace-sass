@@ -15,7 +15,7 @@ function iconPillClass(sectionId) {
     case 'institution':
       return 'border-amber-500/40 bg-amber-500/20 text-amber-300';
     case 'communaute':
-      return 'border-amber-500/40 bg-amber-500/18 text-amber-300';
+      return 'border-amber-500/40 bg-amber-500/[0.18] text-amber-300';
     default:
       return 'border-amber-500/35 bg-amber-500/15 text-amber-200';
   }

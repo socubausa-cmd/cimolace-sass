@@ -7,7 +7,7 @@ const GridBackground = () => (
   <div className="absolute inset-0 overflow-hidden pointer-events-none">
     <div className="absolute inset-0 bg-[linear-gradient(to_right,#4f4f4f12_1px,transparent_1px),linear-gradient(to_bottom,#4f4f4f12_1px,transparent_1px)] bg-[size:48px_48px]" />
     <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[500px] bg-violet-600/10 rounded-full blur-[140px]" />
-    <div className="absolute bottom-0 right-0 w-[400px] h-[400px] bg-cyan-500/6 rounded-full blur-[120px]" />
+    <div className="absolute bottom-0 right-0 w-[400px] h-[400px] bg-cyan-500/[0.06] rounded-full blur-[120px]" />
   </div>
 );
 

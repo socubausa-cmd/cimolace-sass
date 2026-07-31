@@ -31,7 +31,7 @@ const statusTheme = (s, liri = false) => {
   }
   if (st === 'partially_paid') {
     if (liri) {
-      return { label: 'Partiellement payé', cls: 'bg-fuchsia-500/12 text-fuchsia-200 border-fuchsia-500/25' };
+      return { label: 'Partiellement payé', cls: 'bg-fuchsia-500/[0.12] text-fuchsia-200 border-fuchsia-500/25' };
     }
     return { label: 'Partiellement payé', cls: 'bg-cyan-500/15 text-cyan-200 border-cyan-500/25' };
   }

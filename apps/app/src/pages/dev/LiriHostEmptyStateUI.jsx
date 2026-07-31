@@ -60,7 +60,7 @@ function LeftPanel({ title, count, icon, heading, body }) {
       <div className="mb-5 flex items-center justify-between">
         <div className="flex items-center gap-2 text-[28px] font-medium tracking-wide text-white">
           <span className="text-[34px] leading-none">{title}</span>
-          <span className="rounded-full bg-white/8 px-2.5 py-0.5 text-base text-white/70">{count}</span>
+          <span className="rounded-full bg-white/[0.08] px-2.5 py-0.5 text-base text-white/70">{count}</span>
         </div>
         <button
           type="button"
@@ -95,7 +95,7 @@ function ToolButton({ icon, label, active = false }) {
         'flex h-24 w-[106px] flex-shrink-0 flex-col items-center justify-center gap-3 rounded-2xl border transition',
         active
           ? 'border-violet-300/30 bg-violet-500/15 text-white shadow-[0_0_20px_rgba(139,92,246,.16)]'
-          : 'border-white/10 bg-[linear-gradient(180deg,rgba(18,20,45,.9),rgba(10,12,28,.95))] text-white/92 hover:bg-white/[0.04]',
+          : 'border-white/10 bg-[linear-gradient(180deg,rgba(18,20,45,.9),rgba(10,12,28,.95))] text-white/[0.92] hover:bg-white/[0.04]',
       )}
     >
       <div className="text-violet-100">{icon}</div>
@@ -143,7 +143,7 @@ export default function LiriHostEmptyStateUI() {
       <div className="min-h-screen bg-[radial-gradient(circle_at_50%_75%,rgba(251,191,36,.12),transparent_22%),radial-gradient(circle_at_67%_33%,rgba(168,85,247,.13),transparent_25%),linear-gradient(180deg,#050816_0%,#060818_40%,#07091b_100%)] p-4 md:p-5">
         <div className="grid min-h-[calc(100vh-2rem)] grid-cols-1 grid-rows-[auto_minmax(0,1fr)_auto] gap-4 lg:grid-cols-[270px_minmax(0,1fr)_240px] lg:grid-rows-[140px_minmax(0,1fr)_86px]">
           <aside className="rounded-[28px] border border-white/10 bg-[linear-gradient(180deg,rgba(8,10,24,.95),rgba(5,7,19,.98))] p-5 shadow-[0_0_45px_rgba(0,0,0,.35)] lg:row-span-3">
-            <div className="mb-6 rounded-[24px] border border-white/6 bg-[linear-gradient(180deg,rgba(18,20,45,.65),rgba(10,12,28,.2))] p-4">
+            <div className="mb-6 rounded-[24px] border border-white/[0.06] bg-[linear-gradient(180deg,rgba(18,20,45,.65),rgba(10,12,28,.2))] p-4">
               <div className="mb-3 flex items-center gap-3">
                 <div className="relative h-16 w-16 rounded-full border border-violet-300/20 bg-[radial-gradient(circle_at_35%_35%,rgba(255,255,255,.4),transparent_8%),radial-gradient(circle_at_50%_50%,rgba(109,40,217,.35),transparent_55%),linear-gradient(135deg,#21315e,#0d1127)]">
                   <div className="absolute inset-2 rounded-full border border-amber-300/20" />
@@ -191,8 +191,8 @@ export default function LiriHostEmptyStateUI() {
           </div>
 
           <main className="rounded-[30px] border border-amber-400/20 bg-[linear-gradient(180deg,rgba(10,11,28,.98),rgba(7,9,22,.98))] p-2 shadow-[0_0_45px_rgba(0,0,0,.35)] lg:col-start-2 lg:row-start-2 lg:min-h-0">
-            <div className="flex h-full min-h-[280px] flex-col overflow-hidden rounded-[26px] border border-white/6 bg-[linear-gradient(180deg,rgba(12,14,35,.96),rgba(7,9,22,.96))] lg:min-h-0">
-              <div className="flex flex-wrap items-center justify-center gap-4 border-b border-white/6 py-4">
+            <div className="flex h-full min-h-[280px] flex-col overflow-hidden rounded-[26px] border border-white/[0.06] bg-[linear-gradient(180deg,rgba(12,14,35,.96),rgba(7,9,22,.96))] lg:min-h-0">
+              <div className="flex flex-wrap items-center justify-center gap-4 border-b border-white/[0.06] py-4">
                 <div className="h-10 w-10 rounded-full bg-[radial-gradient(circle_at_30%_30%,rgba(255,255,255,.35),transparent_10%),linear-gradient(135deg,#f5d67f,#8b5cf6,#38bdf8)] shadow-[0_0_20px_rgba(251,191,36,.2)]" />
                 <LiriWordmark size="stage" className="text-[#e5c47a]" />
                 <div className="text-[clamp(1rem,2.5vw,26px)] tracking-[0.35em] text-white/80">COGNITIVE ENGINE</div>
@@ -201,7 +201,7 @@ export default function LiriHostEmptyStateUI() {
 
               <div className="min-h-[120px] flex-1 bg-[radial-gradient(circle_at_30%_30%,rgba(94,64,255,.06),transparent_20%),radial-gradient(circle_at_78%_55%,rgba(255,147,87,.16),transparent_25%),linear-gradient(180deg,#101327_0%,#0b0f22_100%)] lg:min-h-0" />
 
-              <div className="border-t border-white/6 p-3">
+              <div className="border-t border-white/[0.06] p-3">
                 <div className="no-scrollbar flex items-center gap-3 overflow-x-auto">
                   <ToolButton active icon={<LayoutGrid className="h-8 w-8" />} label="SmartBoard" />
                   <ToolButton icon={<Monitor className="h-8 w-8" />} label="Diapo" />
@@ -230,7 +230,7 @@ export default function LiriHostEmptyStateUI() {
                 <div className="text-[20px] font-medium tracking-[0.04em] text-[#e9bf72]">HÔTE EN DIRECT</div>
                 <span className="rounded-lg bg-red-500/80 px-2 py-1 text-sm font-medium text-white">LIVE</span>
               </div>
-              <div className="h-52 rounded-[18px] border border-white/8 bg-[radial-gradient(circle_at_70%_20%,rgba(255,201,148,.22),transparent_20%),linear-gradient(135deg,#262f5b,#151830)]" />
+              <div className="h-52 rounded-[18px] border border-white/[0.08] bg-[radial-gradient(circle_at_70%_20%,rgba(255,201,148,.22),transparent_20%),linear-gradient(135deg,#262f5b,#151830)]" />
               <div className="mt-3 flex gap-2">
                 <button type="button" className="rounded-xl border border-white/10 bg-white/[0.03] p-3 text-white/90">
                   <Mic className="h-5 w-5" />
@@ -245,7 +245,7 @@ export default function LiriHostEmptyStateUI() {
             </div>
 
             <RightCard title="Mindmap">
-              <div className="rounded-2xl border border-white/8 bg-white/[0.03] p-4">
+              <div className="rounded-2xl border border-white/[0.08] bg-white/[0.03] p-4">
                 <div className="mx-auto mb-4 w-fit rounded-xl border border-white/10 bg-white/[0.04] px-5 py-2 text-base text-white/90">IDÉE CENTRALE</div>
                 <div className="mx-auto mb-3 w-fit rounded-xl border border-white/10 bg-white/[0.04] px-5 py-2 text-base text-white/90">Chapitre 1</div>
                 <div className="flex flex-wrap items-center justify-center gap-6 text-base text-white/90 sm:gap-10">
@@ -262,13 +262,13 @@ export default function LiriHostEmptyStateUI() {
             </RightCard>
 
             <RightCard title="Masterscript">
-              <div className="rounded-2xl border border-white/8 bg-white/[0.03] p-4 text-[19px] text-white/72">
+              <div className="rounded-2xl border border-white/[0.08] bg-white/[0.03] p-4 text-[19px] text-white/[0.72]">
                 Aucune recommandation
               </div>
             </RightCard>
 
             <RightCard title="Script à dire">
-              <div className="rounded-2xl border border-white/8 bg-white/[0.03] p-4 text-[19px] text-white/72">
+              <div className="rounded-2xl border border-white/[0.08] bg-white/[0.03] p-4 text-[19px] text-white/[0.72]">
                 Aucun script de cours généré
               </div>
             </RightCard>

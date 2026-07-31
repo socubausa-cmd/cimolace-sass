@@ -132,7 +132,7 @@ export default function LiriHostLeftLiveAssistantRail() {
                   connecté
                 </span>
               </div>
-              <p className="mt-1 text-[8px] leading-relaxed text-white/42">
+              <p className="mt-1 text-[8px] leading-relaxed text-white/[0.42]">
                 Vision active · flux IA aligné sur votre saisie tableau
                 {micListening ? ' · micro à l\'écoute des mots d\'appel' : ''}
               </p>
@@ -188,7 +188,7 @@ export default function LiriHostLeftLiveAssistantRail() {
               Saisie · {previewLen} c.
             </span>
           ) : (
-            <span className="text-white/28">Brouillon texte : en attente sur le SmartBoard</span>
+            <span className="text-white/[0.28]">Brouillon texte : en attente sur le SmartBoard</span>
           )}
         </div>
       </div>
@@ -198,7 +198,7 @@ export default function LiriHostLeftLiveAssistantRail() {
         className="min-h-0 flex-1 space-y-2 overflow-y-auto pr-0.5 [scrollbar-width:thin]"
       >
         {items.length === 0 && !boardTextDraftActive ? (
-          <p className="select-none text-[10px] leading-relaxed text-white/32">
+          <p className="select-none text-[10px] leading-relaxed text-white/[0.32]">
             Le fil affichera des corrections et des repères — sans cliquer ici. Activez le micro pour les phrases
             d'appel.
           </p>
@@ -222,7 +222,7 @@ export default function LiriHostLeftLiveAssistantRail() {
               {it.provider ? <span className="shrink-0 text-[7px] text-white/30">{it.provider}</span> : null}
             </div>
             {it.source ? (
-              <p className="mb-0.5 border-b border-white/[0.06] pb-0.5 text-[8px] leading-snug text-white/32 line-clamp-2">
+              <p className="mb-0.5 border-b border-white/[0.06] pb-0.5 text-[8px] leading-snug text-white/[0.32] line-clamp-2">
                 {it.source}
               </p>
             ) : null}

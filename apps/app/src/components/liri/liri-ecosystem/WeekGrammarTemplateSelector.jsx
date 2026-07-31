@@ -109,7 +109,7 @@ function TemplateCard({ templateKey, template, onApply, applying, applied }) {
           'flex w-full items-center justify-center gap-2 rounded-lg border px-3 py-2 text-[12px] font-semibold transition-all',
           applied
             ? 'border-teal-500/30 bg-teal-500/15 text-teal-300/90 cursor-default'
-            : 'border-white/12 bg-white/[0.06] text-white/80 hover:border-teal-500/40 hover:bg-teal-500/10 hover:text-teal-200 disabled:opacity-40',
+            : 'border-white/[0.12] bg-white/[0.06] text-white/80 hover:border-teal-500/40 hover:bg-teal-500/10 hover:text-teal-200 disabled:opacity-40',
         )}
       >
         {applying ? (
@@ -222,7 +222,7 @@ export default function WeekGrammarTemplateSelector({ weekId, onApplied }) {
 
   if (error) {
     return (
-      <div className="flex items-start gap-2 rounded-xl border border-red-500/25 bg-red-500/8 px-4 py-3 text-[12px] text-red-300/80">
+      <div className="flex items-start gap-2 rounded-xl border border-red-500/25 bg-red-500/[0.08] px-4 py-3 text-[12px] text-red-300/80">
         <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
         <span>{error}</span>
       </div>
@@ -241,7 +241,7 @@ export default function WeekGrammarTemplateSelector({ weekId, onApplied }) {
 
   return (
     <div className="space-y-3">
-      <p className="text-[11px] text-white/38">
+      <p className="text-[11px] text-white/[0.38]">
         Choisissez un template pour pré-remplir la semaine sélectionnée avec des jours et des blocs.
       </p>
       <div className="grid gap-4 sm:grid-cols-3">

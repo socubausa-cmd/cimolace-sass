@@ -148,7 +148,7 @@ const HOW_IT_WORKS_STEPS = [
     Icon: ListOrdered,
     border: 'border-amber-400/45',
     iconClass: 'text-amber-100',
-    halo: 'from-amber-400/50 via-amber-500/18 to-transparent',
+    halo: 'from-amber-400/50 via-amber-500/[0.18] to-transparent',
     glow: 'shadow-[0_0_24px_-6px_rgba(217,119,87,0.38),inset_0_1px_0_rgba(255,255,255,0.12)]',
     glass: 'from-white/[0.12] to-amber-950/25',
   },
@@ -158,19 +158,19 @@ const HOW_IT_WORKS_STEPS = [
     Icon: LayoutGrid,
     border: 'border-[#9fbf8f]/45',
     iconClass: 'text-[#9fbf8f]',
-    halo: 'from-[#9fbf8f]/40 via-green-500/18 to-transparent',
+    halo: 'from-[#9fbf8f]/40 via-green-500/[0.18] to-transparent',
     glow: 'shadow-[0_0_22px_-6px_rgba(122,155,108,0.42),inset_0_1px_0_rgba(255,255,255,0.1)]',
-    glass: 'from-white/[0.1] to-[#7a9b6c]/28',
+    glass: 'from-white/[0.1] to-[#7a9b6c]/[0.28]',
   },
   {
     label: 'Slides & Docs',
     sub: 'Supports prêts',
     Icon: Monitor,
-    border: 'border-[#d97757]/42',
+    border: 'border-[#d97757]/[0.42]',
     iconClass: 'text-[#e8b6a3]',
-    halo: 'from-[#d97757]/40 via-[#d97757]/14 to-transparent',
+    halo: 'from-[#d97757]/40 via-[#d97757]/[0.14] to-transparent',
     glow: 'shadow-[0_0_24px_-6px_rgba(217,119,87,0.4),inset_0_1px_0_rgba(255,255,255,0.11)]',
-    glass: 'from-white/[0.11] to-[#1f1e1c]/32',
+    glass: 'from-white/[0.11] to-[#1f1e1c]/[0.32]',
   },
   {
     label: 'Export',
@@ -178,9 +178,9 @@ const HOW_IT_WORKS_STEPS = [
     Icon: Upload,
     border: 'border-[#d97757]/45',
     iconClass: 'text-[#e8b6a3]',
-    halo: 'from-[#d97757]/40 via-[#d97757]/22 to-transparent',
+    halo: 'from-[#d97757]/40 via-[#d97757]/[0.22] to-transparent',
     glow: 'shadow-[0_0_26px_-6px_rgba(217,119,87,0.48),inset_0_1px_0_rgba(255,255,255,0.11)]',
-    glass: 'from-white/[0.12] to-[#1f1e1c]/32',
+    glass: 'from-white/[0.12] to-[#1f1e1c]/[0.32]',
   },
 ];
 
@@ -336,7 +336,7 @@ function FactoryHeader({ onReset, isRealBrain }) {
     <header className="mb-2.5 flex shrink-0 items-center justify-between gap-3 px-1">
       <div className="flex min-w-0 items-center gap-2">
         <span className="truncate text-[12.5px] font-semibold tracking-tight text-white/80">Masterclass Factory</span>
-        <span className="inline-flex shrink-0 items-center gap-1.5 rounded-full border border-[#d97757]/35 bg-[#d97757]/12 px-2 py-0.5 text-[10px] font-semibold text-[#e8b6a3]">
+        <span className="inline-flex shrink-0 items-center gap-1.5 rounded-full border border-[#d97757]/35 bg-[#d97757]/[0.12] px-2 py-0.5 text-[10px] font-semibold text-[#e8b6a3]">
           <span className="inline-block h-1.5 w-1.5 rounded-full bg-[#d97757]" />
           Auto
         </span>
@@ -394,7 +394,7 @@ function FactoryProgress({ active, onJump, status, maxReachable = active }) {
                     ? 'bg-[#7a9b6c]/25 text-[#9fbf8f]'
                     : current
                     ? 'bg-[#d97757] text-white shadow-[0_0_14px_-3px_rgba(217,119,87,0.85)]'
-                    : 'bg-white/8 text-white/45'
+                    : 'bg-white/[0.08] text-white/45'
                 }`}
               >
                 {done ? <Check size={11} strokeWidth={3} /> : index + 1}
@@ -520,7 +520,7 @@ function StatCard({ value, label }) {
 function StatPreviewMini({ icon: Icon, value, label }) {
   return (
     <div className="rounded-xl border border-white/10 bg-[#30302e] px-2 py-2.5 text-center shadow-inner shadow-black/30">
-      <div className="mx-auto mb-1 flex h-7 w-7 items-center justify-center rounded-lg bg-[#d97757]/12 text-[#d97757] ring-1 ring-[#d97757]/25">
+      <div className="mx-auto mb-1 flex h-7 w-7 items-center justify-center rounded-lg bg-[#d97757]/[0.12] text-[#d97757] ring-1 ring-[#d97757]/25">
         <Icon className="h-4 w-4" strokeWidth={1.85} />
       </div>
       <p className="text-[18px] font-bold tabular-nums leading-none text-white">{value}</p>
@@ -659,7 +659,7 @@ function Step1Raw({ rawText, setRawText, onReplaySource, onLaunch, status, onLoa
 
         {/* En-tête épuré */}
         <div className="mb-6 text-center">
-          <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-2xl bg-[#d97757]/14 ring-1 ring-[#d97757]/30">
+          <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-2xl bg-[#d97757]/[0.14] ring-1 ring-[#d97757]/30">
             <FileText className="h-6 w-6 text-[#d97757]" strokeWidth={1.7} />
           </div>
           {showReplays && <ReplayPicker onPick={handlePickReplay} onClose={() => setShowReplays(false)} />}
@@ -688,7 +688,7 @@ function Step1Raw({ rawText, setRawText, onReplaySource, onLaunch, status, onLoa
                 type="button"
                 onClick={() => fileInputRef.current?.click()}
                 disabled={importing}
-                className="inline-flex items-center gap-1.5 rounded-lg border border-white/12 bg-white/[0.04] px-2.5 py-1 text-[11.5px] font-medium text-white/70 transition hover:border-white/25 hover:text-white disabled:opacity-50"
+                className="inline-flex items-center gap-1.5 rounded-lg border border-white/[0.12] bg-white/[0.04] px-2.5 py-1 text-[11.5px] font-medium text-white/70 transition hover:border-white/25 hover:text-white disabled:opacity-50"
               >
                 {importing ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Upload className="h-3.5 w-3.5" />}
                 {importing ? 'Extraction…' : 'Importer (PDF, Word, texte)'}
@@ -696,7 +696,7 @@ function Step1Raw({ rawText, setRawText, onReplaySource, onLaunch, status, onLoa
               <button
                 type="button"
                 onClick={() => setShowReplays(true)}
-                className="inline-flex items-center gap-1.5 rounded-lg border border-[#d97757]/35 bg-[#d97757]/12 px-2.5 py-1 text-[11.5px] font-medium text-[#d97757] transition hover:bg-[#d97757]/20"
+                className="inline-flex items-center gap-1.5 rounded-lg border border-[#d97757]/35 bg-[#d97757]/[0.12] px-2.5 py-1 text-[11.5px] font-medium text-[#d97757] transition hover:bg-[#d97757]/20"
               >
                 <Film className="h-3.5 w-3.5" /> Importer depuis un replay
               </button>
@@ -922,7 +922,7 @@ function Step2Analysis({ analysis, status, pipelineStage, onContinue, onRetry, s
 
         {/* En-tête épuré */}
         <div className="mb-6 text-center">
-          <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-2xl bg-[#d97757]/14 ring-1 ring-[#d97757]/30">
+          <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-2xl bg-[#d97757]/[0.14] ring-1 ring-[#d97757]/30">
             {running ? (
               <Loader2 className="h-6 w-6 animate-spin text-[#d97757]" strokeWidth={1.7} />
             ) : (
@@ -947,7 +947,7 @@ function Step2Analysis({ analysis, status, pipelineStage, onContinue, onRetry, s
               <div key={label} className="flex items-center gap-2.5 text-[12.5px]">
                 <span
                   className={`flex h-5 w-5 items-center justify-center rounded-full ${
-                    done ? 'bg-[#9fbf8f]/18 text-[#9fbf8f]' : 'bg-white/5 text-white/30'
+                    done ? 'bg-[#9fbf8f]/[0.18] text-[#9fbf8f]' : 'bg-white/5 text-white/30'
                   }`}
                 >
                   {done ? <Check size={12} /> : '•'}
@@ -1052,7 +1052,7 @@ function Step2Analysis({ analysis, status, pipelineStage, onContinue, onRetry, s
               <div className="space-y-1.5">
                 {themes.map((title, index) => (
                   <div key={`${title}-${index}`} className="flex items-center gap-2.5 text-[12.5px] text-white/75">
-                    <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-lg bg-[#d97757]/18 text-[11px] font-semibold text-[#d97757]">
+                    <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-lg bg-[#d97757]/[0.18] text-[11px] font-semibold text-[#d97757]">
                       {index + 1}
                     </span>
                     <span className="leading-snug">{title}</span>
@@ -1215,7 +1215,7 @@ function Step3Blocks({ blocks, onContinue, onPrev, stats }) {
 
         {/* En-tête épuré */}
         <div className="mb-6 text-center">
-          <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-2xl bg-[#d97757]/14 ring-1 ring-[#d97757]/30">
+          <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-2xl bg-[#d97757]/[0.14] ring-1 ring-[#d97757]/30">
             <Layers className="h-6 w-6 text-[#d97757]" strokeWidth={1.7} />
           </div>
           <div className="text-[10px] font-bold uppercase tracking-[0.16em] text-[#d97757]">Masterclass · Étape 3 sur 8</div>
@@ -1263,7 +1263,7 @@ function Step3Blocks({ blocks, onContinue, onPrev, stats }) {
                 ) : null}
                 {b.subject_label ? (
                   <span
-                    className="max-w-[180px] truncate rounded-lg bg-[#d97757]/12 px-2 py-0.5 text-[11px] text-[#d97757]"
+                    className="max-w-[180px] truncate rounded-lg bg-[#d97757]/[0.12] px-2 py-0.5 text-[11px] text-[#d97757]"
                     title={b.subject_label}
                   >
                     {b.subject_label}
@@ -1348,7 +1348,7 @@ function Step4Chapters({ chapters, onContinue, onPrev, stats }) {
 
         {/* En-tête épuré */}
         <div className="mb-6 text-center">
-          <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-2xl bg-[#d97757]/14 ring-1 ring-[#d97757]/30">
+          <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-2xl bg-[#d97757]/[0.14] ring-1 ring-[#d97757]/30">
             <ListOrdered className="h-6 w-6 text-[#d97757]" strokeWidth={1.7} />
           </div>
           <div className="text-[10px] font-bold uppercase tracking-[0.16em] text-[#d97757]">Masterclass · Étape 4 sur 8</div>
@@ -1389,7 +1389,7 @@ function Step4Chapters({ chapters, onContinue, onPrev, stats }) {
                     onClick={() => setActiveId(id)}
                     className={`flex w-full items-center gap-2.5 rounded-2xl border px-3 py-2.5 text-left transition ${
                       on
-                        ? 'border-[#d97757]/40 bg-[#d97757]/12'
+                        ? 'border-[#d97757]/40 bg-[#d97757]/[0.12]'
                         : 'border-white/[0.07] bg-white/[0.02] hover:border-white/15'
                     }`}
                   >
@@ -1533,7 +1533,7 @@ function Step5Pedagogy({ chapters, onContinue, onPrev }) {
 
         {/* En-tête épuré */}
         <div className="mb-6 text-center">
-          <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-2xl bg-[#d97757]/14 ring-1 ring-[#d97757]/30">
+          <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-2xl bg-[#d97757]/[0.14] ring-1 ring-[#d97757]/30">
             <GraduationCap className="h-6 w-6 text-[#d97757]" strokeWidth={1.7} />
           </div>
           <div className="text-[10px] font-bold uppercase tracking-[0.16em] text-[#d97757]">Masterclass · Étape 5 sur 8</div>
@@ -1717,7 +1717,7 @@ function AnalogyMechanism({ analogy }) {
       <div className="divide-y divide-white/[0.06]">
         {mappings.map((mapping, index) => (
           <div key={`${mapping.familiar}-${index}`} className="grid grid-cols-[1fr_34px_1fr] items-center gap-2 px-4 py-3">
-            <p className="text-[11px] leading-snug text-white/72">{mapping.familiar}</p>
+            <p className="text-[11px] leading-snug text-white/[0.72]">{mapping.familiar}</p>
             <div className="flex h-7 w-7 items-center justify-center rounded-full border border-[#d97757]/30 bg-[#d97757]/10">
               <ArrowRight size={13} className="text-[#e58a69]" />
             </div>
@@ -1779,7 +1779,7 @@ function Step6Slides({
 
         {/* En-tête épuré */}
         <div className="mb-6 text-center">
-          <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-2xl bg-[#d97757]/14 ring-1 ring-[#d97757]/30">
+          <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-2xl bg-[#d97757]/[0.14] ring-1 ring-[#d97757]/30">
             <Monitor className="h-6 w-6 text-[#d97757]" strokeWidth={1.7} />
           </div>
           <div className="text-[10px] font-bold uppercase tracking-[0.16em] text-[#d97757]">Masterclass · Étape 6 sur 8</div>
@@ -1859,7 +1859,7 @@ function Step6Slides({
                   onClick={() => setActiveSlideId(slideKey)}
                   className={`flex w-full items-center justify-between rounded-2xl border px-3 py-2.5 text-left text-xs transition ${
                     selected
-                      ? 'border-[#d97757]/50 bg-[#d97757]/12 text-white'
+                      ? 'border-[#d97757]/50 bg-[#d97757]/[0.12] text-white'
                       : 'border-white/[0.07] bg-white/[0.02] text-white/60 hover:bg-white/[0.04]'
                   }`}
                 >
@@ -2060,7 +2060,7 @@ function Step7Script({ scripts, chapters, onContinue, onPrev, onDownloadScript }
 
         {/* En-tête épuré */}
         <div className="mb-6 text-center">
-          <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-2xl bg-[#d97757]/14 ring-1 ring-[#d97757]/30">
+          <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-2xl bg-[#d97757]/[0.14] ring-1 ring-[#d97757]/30">
             <MessageCircle className="h-6 w-6 text-[#d97757]" strokeWidth={1.7} />
           </div>
           <div className="text-[10px] font-bold uppercase tracking-[0.16em] text-[#d97757]">Masterclass · Étape 7 sur 8</div>
@@ -2203,7 +2203,7 @@ function Step8Export({ stats, project, onPrev, onReset, onDownloadJson, onDownlo
 
         {/* En-tête épuré — célébration */}
         <div className="mb-6 text-center">
-          <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-2xl bg-[#d97757]/14 ring-1 ring-[#d97757]/30">
+          <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-2xl bg-[#d97757]/[0.14] ring-1 ring-[#d97757]/30">
             <Trophy className="h-6 w-6 text-[#d97757]" strokeWidth={1.7} />
           </div>
           <div className="text-[10px] font-bold uppercase tracking-[0.16em] text-[#d97757]">Masterclass · Étape 8 sur 8</div>

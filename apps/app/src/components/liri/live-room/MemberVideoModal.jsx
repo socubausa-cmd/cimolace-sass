@@ -252,7 +252,7 @@ export function MemberVideoModal({
             type="button"
             onClick={onClose}
             className={cn(
-              'absolute h-10 w-10 rounded-full bg-white/8 border border-white/12 text-gray-300 flex items-center justify-center hover:text-white z-[60]',
+              'absolute h-10 w-10 rounded-full bg-white/[0.08] border border-white/[0.12] text-gray-300 flex items-center justify-center hover:text-white z-[60]',
               isViewport
                 ? 'top-[max(0.5rem,env(safe-area-inset-top))] right-[max(0.5rem,env(safe-area-inset-right))]'
                 : 'top-4 right-4 h-9 w-9',
@@ -306,7 +306,7 @@ export function MemberVideoModal({
               <h2 className="text-lg font-semibold text-white">{name}</h2>
               <div className="flex flex-wrap items-center justify-center gap-2 text-[11px] text-white/60">
                 {presenceMeta?.role ? (
-                  <span className="px-2 py-0.5 rounded-full border border-white/12 bg-white/[0.04]">
+                  <span className="px-2 py-0.5 rounded-full border border-white/[0.12] bg-white/[0.04]">
                     {presenceMeta.role}
                   </span>
                 ) : null}
@@ -378,7 +378,7 @@ export function MemberVideoModal({
                   <Button
                     type="button"
                     variant="outline"
-                    className="border-amber-400/35 text-amber-100/95 hover:bg-amber-500/12"
+                    className="border-amber-400/35 text-amber-100/95 hover:bg-amber-500/[0.12]"
                     onClick={() => onHostRemoteCamera(true)}
                   >
                     Allumer la caméra (élève)
@@ -386,7 +386,7 @@ export function MemberVideoModal({
                   <Button
                     type="button"
                     variant="outline"
-                    className="border-slate-400/35 text-slate-100/90 hover:bg-slate-500/12"
+                    className="border-slate-400/35 text-slate-100/90 hover:bg-slate-500/[0.12]"
                     onClick={() => onHostRemoteCamera(false)}
                   >
                     Couper la caméra (élève)
@@ -404,7 +404,7 @@ export function MemberVideoModal({
                   Vie scolaire (aperçu)
                 </Button>
               ) : !isHost ? (
-                <p className="text-[10px] text-white/38 max-w-xs text-center px-2 leading-snug">
+                <p className="text-[10px] text-white/[0.38] max-w-xs text-center px-2 leading-snug">
                   Vue détaillée vie scolaire : désactivée pour les invités (réglage sécurité de la salle).
                 </p>
               ) : null}
@@ -427,7 +427,7 @@ export function MemberVideoModal({
                       />
                     ) : null}
                   </p>
-                  <div className="h-9 rounded-xl border border-white/12 bg-black/30 px-2.5 flex items-center gap-2">
+                  <div className="h-9 rounded-xl border border-white/[0.12] bg-black/30 px-2.5 flex items-center gap-2">
                     <Search className="w-3.5 h-3.5 text-white/35 shrink-0" />
                     <input
                       value={memberSearch}
@@ -489,7 +489,7 @@ export function MemberVideoModal({
                                 'max-w-[92%] rounded-lg px-2.5 py-1.5 text-[11px] leading-snug',
                                 mine
                                   ? 'ml-auto bg-[color-mix(in_srgb,var(--school-accent)_22%,transparent)] border border-[color-mix(in_srgb,var(--school-accent)_30%,transparent)] text-white/95'
-                                  : 'mr-auto bg-white/[0.06] border border-white/10 text-white/88',
+                                  : 'mr-auto bg-white/[0.06] border border-white/10 text-white/[0.88]',
                               )}
                             >
                               {m.text}
@@ -509,7 +509,7 @@ export function MemberVideoModal({
                           }
                         }}
                         placeholder="Écrire…"
-                        className="flex-1 h-10 rounded-xl border border-white/12 bg-black/40 px-3 text-xs text-white outline-none placeholder:text-white/35"
+                        className="flex-1 h-10 rounded-xl border border-white/[0.12] bg-black/40 px-3 text-xs text-white outline-none placeholder:text-white/35"
                       />
                       <Button
                         type="button"
@@ -533,7 +533,7 @@ export function MemberVideoModal({
           {schoolLifeOpen ? (
             <div
               className={cn(
-                'absolute inset-0 z-[50] flex flex-col min-h-0 bg-gradient-to-b from-[#100d0a]/97 to-black/95 backdrop-blur-xl px-3 sm:px-5',
+                'absolute inset-0 z-[50] flex flex-col min-h-0 bg-gradient-to-b from-[#100d0a]/[0.97] to-black/95 backdrop-blur-xl px-3 sm:px-5',
                 isViewport
                   ? 'pt-[max(3.5rem,env(safe-area-inset-top)+2.5rem)] pb-[max(1rem,env(safe-area-inset-bottom))]'
                   : 'pt-14 pb-4',

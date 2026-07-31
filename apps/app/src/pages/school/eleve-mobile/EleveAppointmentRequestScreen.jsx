@@ -537,7 +537,7 @@ export default function EleveAppointmentRequestScreen() {
           </AnimatePresence>
         </main>
 
-        <footer className="fixed inset-x-0 bottom-0 z-40 border-t border-white/[0.08] bg-[#0b0b0a]/92 px-4 pb-[max(1rem,env(safe-area-inset-bottom))] pt-3 backdrop-blur-xl">
+        <footer className="fixed inset-x-0 bottom-0 z-40 border-t border-white/[0.08] bg-[#0b0b0a]/[0.92] px-4 pb-[max(1rem,env(safe-area-inset-bottom))] pt-3 backdrop-blur-xl">
           <button
             type="button"
             disabled={booking}

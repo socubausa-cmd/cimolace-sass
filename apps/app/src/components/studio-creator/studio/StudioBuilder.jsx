@@ -325,7 +325,7 @@ export function StudioBuilder({
                           ? 'border-red-400/25 bg-red-500/[0.08]'
                           : saveStatus === 'saving'
                             ? 'border-[#d4924a]/25 bg-[#d4924a]/[0.10]'
-                            : 'border-white/18 bg-transparent text-[#9cc48a]',
+                            : 'border-white/[0.18] bg-transparent text-[#9cc48a]',
                       )}
                     >
                       <saveStateLabel.icon
@@ -682,7 +682,7 @@ export function StudioBuilder({
                     variant="outline"
                     onClick={goPrev}
                     disabled={!canGoPrev}
-                    className="font-display border-white/12 text-white/80 hover:bg-white/5"
+                    className="font-display border-white/[0.12] text-white/80 hover:bg-white/5"
                   >
                     <ChevronLeft className="mr-2 h-4 w-4" /> Précédent
                   </Button>

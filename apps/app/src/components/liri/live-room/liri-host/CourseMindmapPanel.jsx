@@ -63,7 +63,7 @@ export function CourseMindmapPanel({
   }, [coursePlanSplit, slides, slideIndex, activeScene, onPickCoursePlanSlide, onGoToSlide, readOnly]);
 
   return (
-    <div className="flex min-h-0 flex-col rounded-xl border border-white/[0.09] bg-black/22 p-2 backdrop-blur-md">
+    <div className="flex min-h-0 flex-col rounded-xl border border-white/[0.09] bg-black/[0.22] p-2 backdrop-blur-md">
       <div className="mb-2 flex items-center gap-2 px-0.5">
         <GitBranch className="h-3.5 w-3.5 text-[color-mix(in_srgb,var(--school-accent)_80%,transparent)]" />
         <p className={cn(railTitleClass, 'text-[10px] font-semibold uppercase tracking-[0.14em] text-white/55')}>

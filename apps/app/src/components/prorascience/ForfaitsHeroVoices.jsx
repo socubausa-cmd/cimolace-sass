@@ -74,7 +74,7 @@ export function ForfaitsHeroVoices({ profiles = [], cycleKey, prefersReducedMoti
             exit={prefersReducedMotion ? undefined : { opacity: 0, y: -6 }}
             transition={{ duration: 0.35, ease: easePremium }}
           >
-            <p className="text-sm leading-relaxed text-white/88 md:text-[15px]">
+            <p className="text-sm leading-relaxed text-white/[0.88] md:text-[15px]">
               &ldquo;{current.quote}&rdquo;
             </p>
             <p className="mt-2 text-xs text-white/55">

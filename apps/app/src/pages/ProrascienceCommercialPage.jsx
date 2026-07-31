@@ -832,7 +832,7 @@ function TestimonialProfileCard({ t, index, reduce, marqueeLayout }) {
             <Star key={s} className="h-3.5 w-3.5 fill-current md:h-4 md:w-4" />
           ))}
         </div>
-        <p className="text-sm leading-relaxed text-white/82">{t.quote}</p>
+        <p className="text-sm leading-relaxed text-white/[0.82]">{t.quote}</p>
         <div className="mt-5 w-full border-t border-white/10 pt-4">
           <p className="text-sm font-semibold text-white">{t.name}</p>
           <p className="text-xs text-white/60">{t.role}</p>
@@ -890,12 +890,12 @@ function ProduitBentoCard({ item, variant = 'light', ctaLabel, href, children, c
       } ${
         dark
           ? 'border-[color-mix(in_srgb,var(--school-accent)_28%,transparent)] bg-[#060a11] shadow-[inset_0_1px_0_rgba(212,175,55,0.14)]'
-          : 'border-white/10 bg-[#131b2d]/98 shadow-[0_20px_60px_rgba(0,0,0,0.35)]'
+          : 'border-white/10 bg-[#131b2d]/[0.98] shadow-[0_20px_60px_rgba(0,0,0,0.35)]'
       }`}
     >
       <div
         className={`mb-3 inline-flex h-11 w-11 items-center justify-center rounded-xl md:mb-4 md:h-12 md:w-12 ${
-          dark ? 'bg-[color-mix(in_srgb,var(--school-accent)_14%,transparent)] text-[var(--school-accent)]' : 'bg-[#6f4cff]/14 text-[#b8a9ff]'
+          dark ? 'bg-[color-mix(in_srgb,var(--school-accent)_14%,transparent)] text-[var(--school-accent)]' : 'bg-[#6f4cff]/[0.14] text-[#b8a9ff]'
         }`}
       >
         <Icon className={`h-5 w-5 ${compact ? '' : 'md:h-6 md:w-6'}`} />
@@ -909,7 +909,7 @@ function ProduitBentoCard({ item, variant = 'light', ctaLabel, href, children, c
       </h3>
       <p
         className={`mt-2 flex-1 leading-relaxed ${compact ? 'text-xs md:text-[13px]' : 'text-sm'} ${
-          dark ? 'text-white/62' : 'text-white/68'
+          dark ? 'text-white/[0.62]' : 'text-white/[0.68]'
         }`}
       >
         {item.description}
@@ -999,7 +999,7 @@ function ProduitBentoGrid({ prefersReducedMotion: reduce }) {
           viewport={{ once: true, amount: 0.12 }}
         >
           <motion.div
-            className="overflow-hidden rounded-2xl border border-white/12 bg-[#0e1524] shadow-[0_32px_100px_rgba(0,0,0,0.45)] md:rounded-3xl"
+            className="overflow-hidden rounded-2xl border border-white/[0.12] bg-[#0e1524] shadow-[0_32px_100px_rgba(0,0,0,0.45)] md:rounded-3xl"
             style={{
               rotateX: reduce ? 0 : rotateX,
               rotateY: reduce ? 0 : rotateY,
@@ -1050,7 +1050,7 @@ function ProduitBentoGrid({ prefersReducedMotion: reduce }) {
               <p className="mt-2 text-sm leading-relaxed text-white/65">
                 21 sciences, 4 cycles, une progression initiatique claire — du fondement à la maîtrise.
               </p>
-              <ul className="mt-5 space-y-2.5 text-sm text-white/78">
+              <ul className="mt-5 space-y-2.5 text-sm text-white/[0.78]">
                 <li className="flex gap-2">
                   <span className="mt-1.5 h-1 w-1 shrink-0 rounded-full bg-[var(--school-accent)]" />
                   Curriculum structuré : fondations → sciences invisibles → maîtrise.
@@ -1745,7 +1745,7 @@ const ProrascienceCommercialPage = () => {
       <div className="relative z-[2]">
       <motion.header
         className={`sticky top-0 z-[60] border-b backdrop-blur-md transition-[background-color,box-shadow,border-color] duration-500 ${
-          navSolid ? 'prs-nav-solid border-white/12' : 'border-white/8 bg-[#070b12]/58'
+          navSolid ? 'prs-nav-solid border-white/[0.12]' : 'border-white/[0.08] bg-[#070b12]/[0.58]'
         }`}
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -1949,7 +1949,7 @@ const ProrascienceCommercialPage = () => {
                 />
               </div>
 
-              <div className="relative z-[1] -mt-8 mx-3 rounded-2xl border border-white/12 bg-[#0c111d]/90 p-4 shadow-xl backdrop-blur-lg md:mx-6 md:p-5">
+              <div className="relative z-[1] -mt-8 mx-3 rounded-2xl border border-white/[0.12] bg-[#0c111d]/90 p-4 shadow-xl backdrop-blur-lg md:mx-6 md:p-5">
                 <div className="mb-3 flex items-center justify-between gap-2 border-b border-white/10 pb-3">
                   <span className="flex items-center gap-2 text-xs font-medium uppercase tracking-wider text-white/55">
                     <span className="relative flex h-2 w-2 shrink-0">
@@ -2014,13 +2014,13 @@ const ProrascienceCommercialPage = () => {
                 Le fondateur de&nbsp;
                 <span className="text-[var(--school-accent)]">{SCHOOL_FULL}</span>
               </h2>
-              <p className="mt-5 text-base leading-relaxed text-white/78 md:text-lg">
-                Le <strong className="font-semibold text-white/92">5ᵉ Manikongo</strong> — Badika Jel David, connu dans
-                le réseau sous le nom de <strong className="font-semibold text-white/92">Ngowazulu</strong> — porte la
+              <p className="mt-5 text-base leading-relaxed text-white/[0.78] md:text-lg">
+                Le <strong className="font-semibold text-white/[0.92]">5ᵉ Manikongo</strong> — Badika Jel David, connu dans
+                le réseau sous le nom de <strong className="font-semibold text-white/[0.92]">Ngowazulu</strong> — porte la
                 charge spirituelle et doctrinale de l&apos;école : faire de la connaissance africaine une science
                 articulée de la réalité, du visible à l&apos;invisible.
               </p>
-              <p className="mt-4 text-sm leading-relaxed text-white/68 md:text-base">
+              <p className="mt-4 text-sm leading-relaxed text-white/[0.68] md:text-base">
                 Son mandat n&apos;est pas une revendication politique sur la royauté historique du Kongo : c&apos;est une
                 responsabilité de <em>garde du savoir</em> et de transmission pour cette génération — le fil conducteur
                 entre l&apos;Ordre mystique des Manikongo et le pôle école ISNA tels qu&apos;ils sont présentés sur le
@@ -2081,7 +2081,7 @@ const ProrascienceCommercialPage = () => {
               aria-hidden
             />
             <div className="relative">
-              <div className="absolute left-3 top-3 z-10 flex items-center gap-2 rounded-full border border-white/12 bg-black/55 px-3 py-1.5 text-[10px] font-semibold uppercase tracking-[0.14em] text-white/90 backdrop-blur-md">
+              <div className="absolute left-3 top-3 z-10 flex items-center gap-2 rounded-full border border-white/[0.12] bg-black/55 px-3 py-1.5 text-[10px] font-semibold uppercase tracking-[0.14em] text-white/90 backdrop-blur-md">
                 <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-red-500 prs-live-dot" />
                 Studio live
               </div>
@@ -2143,7 +2143,7 @@ const ProrascienceCommercialPage = () => {
                 <div className={index % 2 === 1 ? 'lg:order-2' : ''}>
                   <p className="text-xs uppercase tracking-[0.22em] text-[color-mix(in_srgb,var(--school-accent)_80%,transparent)]">{item.eyebrow}</p>
                   <h3 className="mt-3 text-2xl font-bold leading-tight text-white md:text-4xl">{item.title}</h3>
-                  <p className="mt-4 max-w-2xl text-sm leading-relaxed text-white/72 md:text-base">{item.body}</p>
+                  <p className="mt-4 max-w-2xl text-sm leading-relaxed text-white/[0.72] md:text-base">{item.body}</p>
                 </div>
                 <div className="overflow-hidden rounded-[1.35rem] border border-white/10 bg-black/30">
                   <img

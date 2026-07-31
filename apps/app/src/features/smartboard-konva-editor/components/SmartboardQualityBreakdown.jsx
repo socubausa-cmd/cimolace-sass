@@ -53,13 +53,13 @@ export default function SmartboardQualityBreakdown({ quality, className }) {
         </div>
       ))}
       {quality.hints?.length ? (
-        <ul className="mt-2 space-y-1 border-t border-white/[0.07] pt-2 text-[8px] leading-relaxed text-white/42">
+        <ul className="mt-2 space-y-1 border-t border-white/[0.07] pt-2 text-[8px] leading-relaxed text-white/[0.42]">
           {quality.hints.map((h, i) => (
             <li key={i}>· {h}</li>
           ))}
         </ul>
       ) : null}
-      <p className="text-[8px] text-white/28">
+      <p className="text-[8px] text-white/[0.28]">
         Canvas : {quality.elementCount} objet(s), {quality.textChars} car. texte — score partagé entre les fiches
         (sauf mémorisation / cohérence par script).
       </p>

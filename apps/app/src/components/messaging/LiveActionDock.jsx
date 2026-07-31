@@ -68,7 +68,7 @@ function DockItem({
           : !disabled && active
             ? 'bg-[color-mix(in_srgb,var(--school-accent)_18%,transparent)] border-[color-mix(in_srgb,var(--school-accent)_35%,transparent)] text-[var(--school-accent)] shadow-[0_10px_24px_-12px_rgba(212,175,55,0.8)]'
             : !disabled
-              ? 'bg-white/[0.05] border-white/12 text-white/75 hover:bg-white/10'
+              ? 'bg-white/[0.05] border-white/[0.12] text-white/75 hover:bg-white/10'
               : 'border-white/10 bg-white/[0.04] text-white/40'
       )}
       title={tip}

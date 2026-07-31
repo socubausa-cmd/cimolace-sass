@@ -15,7 +15,7 @@ import { Button } from '@/components/ui/button';
 export default function NgowazuluConfigFeesModal({ open, onOpenChange }) {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-lg border-amber-500/25 bg-[#121A25]/98">
+      <DialogContent className="max-w-lg border-amber-500/25 bg-[#121A25]/[0.98]">
         <DialogHeader>
           <DialogTitle className="text-xl font-serif text-white pr-6">
             Frais de configuration — <span className="text-[var(--school-accent)]">premier achat</span>

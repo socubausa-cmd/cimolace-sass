@@ -50,7 +50,7 @@ export const LiveGuestProctorHistoryFloating = ({
       </button>
       {open ? (
         <div
-          className="mt-2 max-h-[min(38vh,240px)] overflow-y-auto rounded-xl border border-white/12 bg-[rgba(26,24,21,.92)] p-2.5 shadow-xl backdrop-blur-md"
+          className="mt-2 max-h-[min(38vh,240px)] overflow-y-auto rounded-xl border border-white/[0.12] bg-[rgba(26,24,21,.92)] p-2.5 shadow-xl backdrop-blur-md"
           style={{ boxShadow: '0 12px 40px rgba(0,0,0,.45)' }}
         >
           <p className="mb-2 text-[9px] font-semibold uppercase tracking-wider text-white/45">

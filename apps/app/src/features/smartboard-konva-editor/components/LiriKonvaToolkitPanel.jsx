@@ -190,7 +190,7 @@ export default function LiriKonvaToolkitPanel({ addObjects, className, quickFilt
           </p>
           <Link
             to="/studio/smartboard-designer"
-            className="mt-2 inline-flex items-center gap-1 rounded-lg border border-white/12 bg-white/[0.04] px-2 py-1 text-[10px] text-[#93c5fd] hover:bg-white/[0.08]"
+            className="mt-2 inline-flex items-center gap-1 rounded-lg border border-white/[0.12] bg-white/[0.04] px-2 py-1 text-[10px] text-[#93c5fd] hover:bg-white/[0.08]"
           >
             Ouvrir le Designer →
           </Link>
@@ -205,7 +205,7 @@ export default function LiriKonvaToolkitPanel({ addObjects, className, quickFilt
         <select
           value={library}
           onChange={(e) => setLibrary(/** @type {'pro' | 'science'} */ (e.target.value))}
-          className="w-full rounded-lg border border-white/12 bg-black/40 px-1.5 py-1 text-[10px] text-white"
+          className="w-full rounded-lg border border-white/[0.12] bg-black/40 px-1.5 py-1 text-[10px] text-white"
         >
           <option value="pro">Pro premium (V1)</option>
           <option value="science">Science complet</option>
@@ -217,7 +217,7 @@ export default function LiriKonvaToolkitPanel({ addObjects, className, quickFilt
             onChange={(e) =>
               setScienceKind(/** @type {'preset' | 'element' | 'layout'} */ (e.target.value))
             }
-            className="w-full rounded-lg border border-white/12 bg-black/40 px-1.5 py-1 text-[10px] text-white"
+            className="w-full rounded-lg border border-white/[0.12] bg-black/40 px-1.5 py-1 text-[10px] text-white"
           >
             <option value="preset">Presets par discipline</option>
             <option value="element">Éléments</option>
@@ -229,7 +229,7 @@ export default function LiriKonvaToolkitPanel({ addObjects, className, quickFilt
             onChange={(e) =>
               setProKind(/** @type {'text' | 'element' | 'layout'} */ (e.target.value))
             }
-            className="w-full rounded-lg border border-white/12 bg-black/40 px-1.5 py-1 text-[10px] text-white"
+            className="w-full rounded-lg border border-white/[0.12] bg-black/40 px-1.5 py-1 text-[10px] text-white"
           >
             <option value="text">Texte</option>
             <option value="element">Éléments</option>
@@ -241,7 +241,7 @@ export default function LiriKonvaToolkitPanel({ addObjects, className, quickFilt
           <select
             value={scienceDiscipline}
             onChange={(e) => setScienceDiscipline(e.target.value)}
-            className="w-full rounded-lg border border-white/12 bg-black/40 px-1.5 py-1 text-[10px] text-white"
+            className="w-full rounded-lg border border-white/[0.12] bg-black/40 px-1.5 py-1 text-[10px] text-white"
           >
             {LIRI_KONVA_SCIENCE_DISCIPLINES.map((d) => (
               <option key={d.id} value={d.id}>
@@ -255,7 +255,7 @@ export default function LiriKonvaToolkitPanel({ addObjects, className, quickFilt
           <select
             value={scienceElementCategory}
             onChange={(e) => setScienceElementCategory(e.target.value)}
-            className="w-full rounded-lg border border-white/12 bg-black/40 px-1.5 py-1 text-[10px] text-white"
+            className="w-full rounded-lg border border-white/[0.12] bg-black/40 px-1.5 py-1 text-[10px] text-white"
           >
             {scienceCategories.map((c) => (
               <option key={c} value={c}>
@@ -268,7 +268,7 @@ export default function LiriKonvaToolkitPanel({ addObjects, className, quickFilt
         <select
           value={pickId}
           onChange={(e) => setPickId(e.target.value)}
-          className="max-h-36 w-full rounded-lg border border-white/12 bg-black/40 px-1.5 py-1 text-[10px] text-white"
+          className="max-h-36 w-full rounded-lg border border-white/[0.12] bg-black/40 px-1.5 py-1 text-[10px] text-white"
         >
           {filteredPickOptions.map((o) => (
             <option key={o.id} value={o.id}>
@@ -303,7 +303,7 @@ export default function LiriKonvaToolkitPanel({ addObjects, className, quickFilt
         <select
           value={liriStyleId}
           onChange={(e) => setLiriStyleId(e.target.value)}
-          className="w-full rounded-lg border border-white/12 bg-black/40 px-1.5 py-1 text-[10px] text-white"
+          className="w-full rounded-lg border border-white/[0.12] bg-black/40 px-1.5 py-1 text-[10px] text-white"
         >
           {filteredLiriTextStyles.map((s) => (
             <option key={s.id} value={s.id}>
@@ -377,7 +377,7 @@ export default function LiriKonvaToolkitPanel({ addObjects, className, quickFilt
           type="button"
           disabled={!snippetLinesFiltered.length}
           onClick={insertSnippet}
-          className="flex w-full items-center justify-center rounded-lg border border-white/12 bg-white/[0.06] py-1 text-[9px] text-white/85 hover:bg-white/10 disabled:cursor-not-allowed disabled:opacity-40"
+          className="flex w-full items-center justify-center rounded-lg border border-white/[0.12] bg-white/[0.06] py-1 text-[9px] text-white/85 hover:bg-white/10 disabled:cursor-not-allowed disabled:opacity-40"
         >
           Insérer la phrase
         </button>

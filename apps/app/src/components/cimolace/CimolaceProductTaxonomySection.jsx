@@ -103,7 +103,7 @@ const CimolaceProductTaxonomySection = () => {
   return (
     <section className="relative bg-[#07070f] py-28 px-6 overflow-hidden">
       <div className="absolute inset-0 pointer-events-none">
-        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[700px] h-[700px] rounded-full bg-violet-600/8 blur-[150px]" />
+        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[700px] h-[700px] rounded-full bg-violet-600/[0.08] blur-[150px]" />
       </div>
 
       <div className="relative max-w-7xl mx-auto">

@@ -49,7 +49,7 @@ const AnnouncementItem = ({ title, content, date, priority }) => {
   const colorMap = { urgent: 'border-l-red-500', high: 'border-l-orange-500', normal: 'border-l-yellow-500', low: 'border-l-blue-500' };
   const barColor = colorMap[priority] || colorMap.normal;
   return (
-    <div className={cn('bg-white/5 border border-white/8 border-l-4 rounded-r-xl p-4 hover:bg-white/8 transition-all', barColor)}>
+    <div className={cn('bg-white/5 border border-white/[0.08] border-l-4 rounded-r-xl p-4 hover:bg-white/[0.08] transition-all', barColor)}>
       <div className="flex justify-between items-start mb-1">
         <span className="text-xs text-yellow-500 font-medium">{date}</span>
         {priority === 'urgent' && (
@@ -661,12 +661,12 @@ const ReceptionPage = () => {
           style={{ x: parallaxXInverse, y: parallaxYInverse }}
           className="absolute bottom-0 right-0 w-80 h-80 rounded-full bg-[color-mix(in_srgb,var(--school-accent)_8%,transparent)] blur-[110px]"
         />
-        <div className="absolute top-[20%] right-[22%] w-48 h-48 rounded-full bg-violet-500/8 blur-[95px]" />
+        <div className="absolute top-[20%] right-[22%] w-48 h-48 rounded-full bg-violet-500/[0.08] blur-[95px]" />
       </motion.div>
 
       {/* ── Top navigation bar ─────────────────────────────────────────────── */}
       <div className="absolute top-0 left-0 right-0 z-30 flex items-center justify-between px-4 sm:px-8 py-4">
-        <div className="inline-flex items-center gap-2 rounded-full border border-white/12 bg-black/25 backdrop-blur-xl px-3 py-1.5 text-xs text-gray-200">
+        <div className="inline-flex items-center gap-2 rounded-full border border-white/[0.12] bg-black/25 backdrop-blur-xl px-3 py-1.5 text-xs text-gray-200">
           <Sparkles className="w-3.5 h-3.5 text-[var(--school-accent)]" />
           <span className="hidden sm:inline">{SITE_NAME}</span>
           <span className="sm:hidden">{SCHOOL}</span>
@@ -685,7 +685,7 @@ const ReceptionPage = () => {
             <>
               <Link
                 to="/login"
-                className="inline-flex items-center gap-1.5 rounded-full border border-white/12 bg-white/5 px-3 py-1.5 text-xs text-gray-200 hover:bg-white/10 transition-all backdrop-blur-xl"
+                className="inline-flex items-center gap-1.5 rounded-full border border-white/[0.12] bg-white/5 px-3 py-1.5 text-xs text-gray-200 hover:bg-white/10 transition-all backdrop-blur-xl"
               >
                 <LogIn className="w-3.5 h-3.5" />
                 <span className="hidden sm:inline">Connexion</span>

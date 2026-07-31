@@ -100,7 +100,7 @@ export default function MobileEventsCalendarScreen() {
         <div className="flex items-center justify-between gap-2 mb-3">
           <button
             type="button"
-            className="rounded-lg border border-white/12 p-1.5 text-white/70 hover:bg-white/10"
+            className="rounded-lg border border-white/[0.12] p-1.5 text-white/70 hover:bg-white/10"
             onClick={() => setWeekAnchor((w) => addWeeks(w, -1))}
             aria-label="Semaine précédente"
           >
@@ -117,7 +117,7 @@ export default function MobileEventsCalendarScreen() {
           </div>
           <button
             type="button"
-            className="rounded-lg border border-white/12 p-1.5 text-white/70 hover:bg-white/10"
+            className="rounded-lg border border-white/[0.12] p-1.5 text-white/70 hover:bg-white/10"
             onClick={() => setWeekAnchor((w) => addWeeks(w, 1))}
             aria-label="Semaine suivante"
           >
@@ -137,7 +137,7 @@ export default function MobileEventsCalendarScreen() {
                 key={idx}
                 className={cn(
                   'min-h-[72px] rounded-lg border p-1 flex flex-col',
-                  today ? 'border-[color-mix(in_srgb,var(--school-accent)_50%,transparent)] bg-[color-mix(in_srgb,var(--school-accent)_8%,transparent)]' : 'border-white/8 bg-black/25',
+                  today ? 'border-[color-mix(in_srgb,var(--school-accent)_50%,transparent)] bg-[color-mix(in_srgb,var(--school-accent)_8%,transparent)]' : 'border-white/[0.08] bg-black/25',
                 )}
               >
                 <div className="text-center mb-1">
@@ -254,7 +254,7 @@ export default function MobileEventsCalendarScreen() {
 
       <Link
         to={LIRI_MOBILE.home}
-        className="flex items-center justify-center rounded-2xl border border-white/12 py-2.5 text-xs text-white/55 hover:bg-white/5"
+        className="flex items-center justify-center rounded-2xl border border-white/[0.12] py-2.5 text-xs text-white/55 hover:bg-white/5"
       >
         Retour à l'accueil LIRI
       </Link>

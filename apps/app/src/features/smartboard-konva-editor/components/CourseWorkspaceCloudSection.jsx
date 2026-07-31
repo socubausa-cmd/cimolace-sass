@@ -618,7 +618,7 @@ export default function CourseWorkspaceCloudSection({
               onChange={(e) => setTitleDraft(e.target.value)}
               disabled={!canEditCloud && !!cloudId}
               placeholder={inferDefaultTitle()}
-              className="mt-0.5 w-full rounded border border-white/12 bg-black/40 px-1.5 py-1 text-[10px] text-white disabled:opacity-50"
+              className="mt-0.5 w-full rounded border border-white/[0.12] bg-black/40 px-1.5 py-1 text-[10px] text-white disabled:opacity-50"
             />
           </label>
           {canEditCloud || !cloudId ? (
@@ -629,7 +629,7 @@ export default function CourseWorkspaceCloudSection({
                 onChange={(e) =>
                   setLifecycleStatus(normalizeLifecycleStatus(e.target.value))
                 }
-                className="mt-0.5 w-full rounded border border-white/12 bg-black/40 py-1 text-[10px] text-white"
+                className="mt-0.5 w-full rounded border border-white/[0.12] bg-black/40 py-1 text-[10px] text-white"
               >
                 {LIRI_WORKSPACE_LIFECYCLE_STATUSES.map((s) => (
                   <option key={s} value={s}>
@@ -639,7 +639,7 @@ export default function CourseWorkspaceCloudSection({
               </select>
             </label>
           ) : cloudId ? (
-            <p className="rounded border border-white/8 bg-black/25 px-2 py-1 text-[9px] text-white/50">
+            <p className="rounded border border-white/[0.08] bg-black/25 px-2 py-1 text-[9px] text-white/50">
               Statut :{' '}
               <span className="text-cyan-200/90">{labelLifecycleStatusFr(lifecycleStatus)}</span>
             </p>
@@ -689,7 +689,7 @@ export default function CourseWorkspaceCloudSection({
               onClick={() => void handleSaveAsCopy()}
               title="Enregistrer une copie (nouvelle fiche cloud)"
               aria-label="Enregistrer une copie sur le cloud"
-              className="rounded-lg border border-white/12 px-2 py-1.5 text-[9px] text-white/70 hover:bg-white/5"
+              className="rounded-lg border border-white/[0.12] px-2 py-1.5 text-[9px] text-white/70 hover:bg-white/5"
             >
               <Copy className="mx-auto h-3.5 w-3.5" />
             </button>
@@ -697,7 +697,7 @@ export default function CourseWorkspaceCloudSection({
               type="button"
               disabled={busy}
               onClick={startNewCloud}
-              className="rounded-lg border border-white/12 px-2 py-1.5 text-[9px] text-white/55 hover:bg-white/5"
+              className="rounded-lg border border-white/[0.12] px-2 py-1.5 text-[9px] text-white/55 hover:bg-white/5"
             >
               Nouveau
             </button>
@@ -706,7 +706,7 @@ export default function CourseWorkspaceCloudSection({
               disabled={listLoading}
               onClick={() => void refreshList()}
               title="Rafraîchir la liste"
-              className="rounded-lg border border-white/12 p-1.5 text-white/50 hover:bg-white/5"
+              className="rounded-lg border border-white/[0.12] p-1.5 text-white/50 hover:bg-white/5"
             >
               <RefreshCw className={cn('h-3.5 w-3.5', listLoading && 'animate-spin')} />
             </button>
@@ -732,7 +732,7 @@ export default function CourseWorkspaceCloudSection({
                 if (v) void handleLoadSelected(v);
                 e.target.value = '';
               }}
-              className="w-full rounded border border-white/12 bg-black/50 py-1.5 pl-1 text-[10px] text-white"
+              className="w-full rounded border border-white/[0.12] bg-black/50 py-1.5 pl-1 text-[10px] text-white"
             >
               <option value="">
                 {list.length === 0 ? '— Aucun brouillon —' : '— Choisir un brouillon —'}
@@ -762,7 +762,7 @@ export default function CourseWorkspaceCloudSection({
                   Historique (30 dernières — rétention serveur identique)
                 </span>
               </summary>
-              <div className="space-y-2 border-t border-white/8 p-2">
+              <div className="space-y-2 border-t border-white/[0.08] p-2">
                 {canEditCloud ? (
                   <button
                     type="button"
@@ -793,7 +793,7 @@ export default function CourseWorkspaceCloudSection({
                       versions.map((v) => (
                         <li
                           key={v.id}
-                          className="flex items-center justify-between gap-1 rounded border border-white/8 bg-black/30 px-1.5 py-1 text-[8px]"
+                          className="flex items-center justify-between gap-1 rounded border border-white/[0.08] bg-black/30 px-1.5 py-1 text-[8px]"
                         >
                           <span className="min-w-0 truncate text-white/55">
                             {(v.title_snapshot || 'Sans titre').slice(0, 28)} ·{' '}
@@ -854,7 +854,7 @@ export default function CourseWorkspaceCloudSection({
                   Comparer deux versions
                 </span>
               </summary>
-              <div className="space-y-2 border-t border-white/8 p-2">
+              <div className="space-y-2 border-t border-white/[0.08] p-2">
                 <p className="text-[8px] leading-relaxed text-white/40">
                   Indicateurs pédagogiques et tailles (pas un diff texte intégral des JSON).
                 </p>
@@ -865,7 +865,7 @@ export default function CourseWorkspaceCloudSection({
                       setCompareLeftId(e.target.value);
                       setCompareResult(null);
                     }}
-                    className="min-w-0 flex-1 rounded border border-white/12 bg-black/40 py-1 text-[8px] text-white"
+                    className="min-w-0 flex-1 rounded border border-white/[0.12] bg-black/40 py-1 text-[8px] text-white"
                   >
                     <option value="">Version A</option>
                     {versions.map((v) => (
@@ -884,7 +884,7 @@ export default function CourseWorkspaceCloudSection({
                       setCompareRightId(e.target.value);
                       setCompareResult(null);
                     }}
-                    className="min-w-0 flex-1 rounded border border-white/12 bg-black/40 py-1 text-[8px] text-white"
+                    className="min-w-0 flex-1 rounded border border-white/[0.12] bg-black/40 py-1 text-[8px] text-white"
                   >
                     <option value="">Version B</option>
                     {versions.map((v) => (
@@ -907,7 +907,7 @@ export default function CourseWorkspaceCloudSection({
                   {compareBusy ? <Loader2 className="mx-auto h-3.5 w-3.5 animate-spin" /> : 'Comparer'}
                 </button>
                 {compareResult ? (
-                  <ul className="rounded border border-white/8 bg-black/35 p-2 text-[8px] leading-relaxed text-white/65">
+                  <ul className="rounded border border-white/[0.08] bg-black/35 p-2 text-[8px] leading-relaxed text-white/65">
                     {compareResult.lines.map((line, i) => (
                       <li key={i}>{line}</li>
                     ))}
@@ -925,7 +925,7 @@ export default function CourseWorkspaceCloudSection({
                   Partager (UUID du compte)
                 </span>
               </summary>
-              <div className="space-y-2 border-t border-white/8 p-2">
+              <div className="space-y-2 border-t border-white/[0.08] p-2">
                 <p className="text-[8px] leading-relaxed text-white/40">
                   Collez l'UUID du compte du collaborateur (même valeur que dans Supabase Auth / profil). Lecteur :
                   ouverture seule ; éditeur : enregistrement et versions.
@@ -944,12 +944,12 @@ export default function CourseWorkspaceCloudSection({
                   value={granteeDraft}
                   onChange={(e) => setGranteeDraft(e.target.value)}
                   placeholder="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
-                  className="w-full rounded border border-white/12 bg-black/40 px-1.5 py-1 font-mono text-[9px] text-white"
+                  className="w-full rounded border border-white/[0.12] bg-black/40 px-1.5 py-1 font-mono text-[9px] text-white"
                 />
                 <select
                   value={shareRolePick}
                   onChange={(e) => setShareRolePick(/** @type {'viewer'|'editor'} */ (e.target.value))}
-                  className="w-full rounded border border-white/12 bg-black/40 py-1 text-[10px] text-white"
+                  className="w-full rounded border border-white/[0.12] bg-black/40 py-1 text-[10px] text-white"
                 >
                   <option value="viewer">Lecture seule</option>
                   <option value="editor">Co-édition</option>
@@ -992,7 +992,7 @@ export default function CourseWorkspaceCloudSection({
                   Lien d'invitation (sans UUID)
                 </span>
               </summary>
-              <div className="space-y-2 border-t border-white/8 p-2">
+              <div className="space-y-2 border-t border-white/[0.08] p-2">
                 <p className="text-[8px] leading-relaxed text-white/40">
                   Génère une URL à envoyer par message. Le destinataire ouvre le lien connecté : accès ajouté une fois par
                   lien (usage unique).
@@ -1000,7 +1000,7 @@ export default function CourseWorkspaceCloudSection({
                 <select
                   value={inviteRolePick}
                   onChange={(e) => setInviteRolePick(/** @type {'viewer'|'editor'} */ (e.target.value))}
-                  className="w-full rounded border border-white/12 bg-black/40 py-1 text-[10px] text-white"
+                  className="w-full rounded border border-white/[0.12] bg-black/40 py-1 text-[10px] text-white"
                 >
                   <option value="viewer">Lecture seule</option>
                   <option value="editor">Co-édition</option>
@@ -1013,7 +1013,7 @@ export default function CourseWorkspaceCloudSection({
                     max={90}
                     value={inviteTtlDays}
                     onChange={(e) => setInviteTtlDays(Math.min(90, Math.max(1, Number(e.target.value) || 14)))}
-                    className="mt-0.5 w-full rounded border border-white/12 bg-black/40 px-1.5 py-1 text-[10px] text-white"
+                    className="mt-0.5 w-full rounded border border-white/[0.12] bg-black/40 px-1.5 py-1 text-[10px] text-white"
                   />
                 </label>
                 <button

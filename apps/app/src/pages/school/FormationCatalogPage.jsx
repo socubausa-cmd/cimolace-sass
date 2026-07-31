@@ -611,7 +611,7 @@ const FormationCatalogPage = () => {
                 <Menu className="h-6 w-6" />
               </button>
             </SheetTrigger>
-            <SheetContent side="right" className="w-[min(100%,20rem)] border-white/10 bg-[#0b0f14]/98">
+            <SheetContent side="right" className="w-[min(100%,20rem)] border-white/10 bg-[#0b0f14]/[0.98]">
               <SheetHeader>
                 <SheetTitle className="text-left text-white">Navigation</SheetTitle>
               </SheetHeader>

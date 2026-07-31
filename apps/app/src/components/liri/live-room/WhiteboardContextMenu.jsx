@@ -20,8 +20,8 @@ function MenuBtn({ children, disabled, onClick }) {
       className={cn(
         'w-full rounded-md px-2.5 py-1.5 text-left text-[12px] transition-colors',
         disabled
-          ? 'cursor-not-allowed text-white/28'
-          : 'text-white/88 hover:bg-white/[0.08] active:bg-white/[0.12]',
+          ? 'cursor-not-allowed text-white/[0.28]'
+          : 'text-white/[0.88] hover:bg-white/[0.08] active:bg-white/[0.12]',
       )}
     >
       {children}
@@ -119,7 +119,7 @@ export default function WhiteboardContextMenu({
     <div
       ref={ref}
       role="menu"
-      className="fixed z-[6100] min-w-[200px] max-w-[260px] rounded-xl border border-white/[0.1] bg-[#0c1018]/98 py-1.5 shadow-2xl shadow-black/55 ring-1 ring-white/[0.06] backdrop-blur-md"
+      className="fixed z-[6100] min-w-[200px] max-w-[260px] rounded-xl border border-white/[0.1] bg-[#0c1018]/[0.98] py-1.5 shadow-2xl shadow-black/55 ring-1 ring-white/[0.06] backdrop-blur-md"
       style={{ left, top }}
       onContextMenu={(e) => e.preventDefault()}
     >

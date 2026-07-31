@@ -194,7 +194,7 @@ export default function KonvaParityFeatureRoot({ className, editorRef }) {
               'rounded-lg border px-2.5 py-1 text-[10px] font-medium transition-colors',
               designerPreviewMode === m
                 ? 'border-[color-mix(in_srgb,var(--school-accent)_45%,transparent)] bg-[rgba(212,175,55,0.14)] text-[#f5dd8a]'
-                : 'border-white/12 bg-white/[0.04] text-white/65 hover:bg-white/[0.08]',
+                : 'border-white/[0.12] bg-white/[0.04] text-white/65 hover:bg-white/[0.08]',
             )}
           >
             {labelDesignerPreviewModeFr(m)}
@@ -229,7 +229,7 @@ export default function KonvaParityFeatureRoot({ className, editorRef }) {
               key={k}
               type="button"
               onClick={() => runExport(k)}
-              className="inline-flex items-center gap-1 rounded-lg border border-white/12 bg-white/[0.05] px-2 py-1 text-[10px] text-white/80 hover:bg-white/[0.09]"
+              className="inline-flex items-center gap-1 rounded-lg border border-white/[0.12] bg-white/[0.05] px-2 py-1 text-[10px] text-white/80 hover:bg-white/[0.09]"
             >
               <FileText className="h-3 w-3 opacity-80" />
               {labels[k]}

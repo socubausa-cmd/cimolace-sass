@@ -216,7 +216,7 @@ export function DiscoveryChat() {
               style={{ maxHeight: 'min(560px, 80vh)' }}
             >
               {/* Header */}
-              <div className="flex items-center justify-between px-4 py-3 border-b border-white/8 bg-gradient-to-r from-[#172437]/80 to-[#090D14]/80 shrink-0">
+              <div className="flex items-center justify-between px-4 py-3 border-b border-white/[0.08] bg-gradient-to-r from-[#172437]/80 to-[#090D14]/80 shrink-0">
                 <div className="flex items-center gap-2.5">
                   <div className="w-8 h-8 rounded-full bg-[color-mix(in_srgb,var(--school-accent)_15%,transparent)] border border-[color-mix(in_srgb,var(--school-accent)_30%,transparent)] flex items-center justify-center">
                     <Sparkles className="w-4 h-4 text-[var(--school-accent)]" />
@@ -258,7 +258,7 @@ export function DiscoveryChat() {
               </div>
 
               {/* Input */}
-              <div className="px-3 py-3 border-t border-white/8 bg-[#0a0e14]/60 shrink-0">
+              <div className="px-3 py-3 border-t border-white/[0.08] bg-[#0a0e14]/60 shrink-0">
                 <div className="flex gap-2 items-end">
                   <textarea
                     ref={inputRef}

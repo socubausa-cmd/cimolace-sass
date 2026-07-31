@@ -128,7 +128,7 @@ export default function LiriWritePanel({ className }) {
 
       {/* Footer hint */}
       <div className="shrink-0 border-t border-white/[0.05] px-2.5 py-1">
-        <p className="text-[8px] text-white/22">Sauvegarde automatique en local</p>
+        <p className="text-[8px] text-white/[0.22]">Sauvegarde automatique en local</p>
       </div>
     </div>
   );

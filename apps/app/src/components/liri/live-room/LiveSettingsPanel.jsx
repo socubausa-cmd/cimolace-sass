@@ -289,7 +289,7 @@ function AudioTab({ audioDevices, selectedMic, onSelectMic, noiseCancel, onToggl
         <button
           type="button"
           onClick={() => audioFileRef.current?.click()}
-          className="w-full h-9 rounded-xl bg-white/[0.04] border border-white/12 hover:border-[color-mix(in_srgb,var(--school-accent)_35%,transparent)] text-[11px] text-white/60 hover:text-[var(--school-accent)] flex items-center justify-center gap-2 transition-colors mb-2"
+          className="w-full h-9 rounded-xl bg-white/[0.04] border border-white/[0.12] hover:border-[color-mix(in_srgb,var(--school-accent)_35%,transparent)] text-[11px] text-white/60 hover:text-[var(--school-accent)] flex items-center justify-center gap-2 transition-colors mb-2"
         >
           <Upload className="w-3.5 h-3.5" />
           Téléverser un fichier audio
@@ -300,7 +300,7 @@ function AudioTab({ audioDevices, selectedMic, onSelectMic, noiseCancel, onToggl
         <button
           type="button"
           onClick={onCaptureSystemAudio}
-          className="w-full h-9 rounded-xl bg-white/[0.04] border border-white/12 hover:border-[color-mix(in_srgb,var(--school-accent)_35%,transparent)] text-[11px] text-white/60 hover:text-[var(--school-accent)] flex items-center justify-center gap-2 transition-colors"
+          className="w-full h-9 rounded-xl bg-white/[0.04] border border-white/[0.12] hover:border-[color-mix(in_srgb,var(--school-accent)_35%,transparent)] text-[11px] text-white/60 hover:text-[var(--school-accent)] flex items-center justify-center gap-2 transition-colors"
         >
           <Headphones className="w-3.5 h-3.5" />
           Partager le son de l'ordinateur
@@ -584,7 +584,7 @@ export default function LiveSettingsPanel({
           animate={{ opacity: 1, y: 0, scale: 1 }}
           exit={{ opacity: 0, y: 12, scale: 0.97 }}
           transition={{ duration: 0.22, ease: [0.22, 1, 0.36, 1] }}
-          className="absolute bottom-full mb-2 left-1/2 -translate-x-1/2 z-50 w-[min(98vw,520px)] rounded-[24px] border border-white/20 bg-[#0c1425]/94 backdrop-blur-2xl shadow-[0_30px_80px_-30px_rgba(0,0,0,0.97)] overflow-hidden"
+          className="absolute bottom-full mb-2 left-1/2 -translate-x-1/2 z-50 w-[min(98vw,520px)] rounded-[24px] border border-white/20 bg-[#0c1425]/[0.94] backdrop-blur-2xl shadow-[0_30px_80px_-30px_rgba(0,0,0,0.97)] overflow-hidden"
         >
           {/* Header */}
           <div className="flex items-center justify-between px-4 pt-4 pb-2">

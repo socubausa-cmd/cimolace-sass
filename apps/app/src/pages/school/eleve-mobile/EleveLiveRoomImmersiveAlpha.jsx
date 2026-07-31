@@ -363,7 +363,7 @@ function MembresBlock() {
           <div key={m.n} className="w-[32px] shrink-0 text-center min-[400px]:w-10">
             <div className="relative mx-auto w-7 min-[400px]:w-8">
               {m.prof ? (
-                <div className="h-7 w-7 overflow-hidden rounded-full border border-white/12 min-[400px]:h-8 min-[400px]:w-8">
+                <div className="h-7 w-7 overflow-hidden rounded-full border border-white/[0.12] min-[400px]:h-8 min-[400px]:w-8">
                   <img
                     src={REF_AVATAR_HOST}
                     alt=""
@@ -389,7 +389,7 @@ function MembresBlock() {
                 style={{ background: GREEN, borderColor: BG }}
               />
             </div>
-            <p className="mt-1 line-clamp-1 text-center text-[6px] text-white/42 min-[400px]:text-[6.5px]">{m.n}</p>
+            <p className="mt-1 line-clamp-1 text-center text-[6px] text-white/[0.42] min-[400px]:text-[6.5px]">{m.n}</p>
           </div>
         ))}
         <div className="w-[32px] shrink-0 text-center min-[400px]:w-10">

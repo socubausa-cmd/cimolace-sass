@@ -495,7 +495,7 @@ export function Step6SalleVirtuelle({
   return (
     <div className="space-y-6">
       <div className="flex gap-3 sm:gap-4">
-        <span className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-[#d97757] bg-[#d97757]/12 text-[#d97757] shadow-[0_0_16px_-6px_rgba(217,119,87,0.35)]">
+        <span className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-[#d97757] bg-[#d97757]/[0.12] text-[#d97757] shadow-[0_0_16px_-6px_rgba(217,119,87,0.35)]">
           <MonitorPlay className="h-4 w-4 stroke-[2.5]" />
         </span>
         <div className="min-w-0 pt-0.5">
@@ -2624,7 +2624,7 @@ function SmartboardProgramStudioSection({ draft, updateDraft, user, selectedTeac
                   {previewSlide ? (
                     <div className="w-full h-full min-h-[280px] max-h-[min(72vh,calc(100vh-14rem))] flex items-center justify-center">
                       <div
-                        className="relative w-full max-w-[min(100%,56rem)] aspect-[1037/750] max-h-full rounded-2xl overflow-hidden border border-white/12 shadow-[0_20px_60px_rgba(0,0,0,0.5)] ring-1 ring-[#d97757]/10"
+                        className="relative w-full max-w-[min(100%,56rem)] aspect-[1037/750] max-h-full rounded-2xl overflow-hidden border border-white/[0.12] shadow-[0_20px_60px_rgba(0,0,0,0.5)] ring-1 ring-[#d97757]/10"
                       >
                         <SlideParallaxStage key={previewSlide.id} slide={previewSlide} />
                       </div>
@@ -3259,7 +3259,7 @@ function ShopProductsConfig({ draft, updateDraft }) {
                       'w-full flex items-center justify-between rounded-xl border px-3 py-2 text-left transition-colors',
                       added
                         ? 'border-[#d97757]/30 bg-[#d97757]/5 cursor-default'
-                        : 'border-white/8 bg-black/20 hover:border-white/20 hover:bg-white/5'
+                        : 'border-white/[0.08] bg-black/20 hover:border-white/20 hover:bg-white/5'
                     )}
                   >
                     <div className="flex-1 min-w-0">
@@ -3347,7 +3347,7 @@ function ShopProductsConfig({ draft, updateDraft }) {
           <div className="space-y-2">
             <p className="text-[10px] text-gray-500">Produits configurés ({products.length})</p>
             {products.map((p, i) => (
-              <div key={p.id || i} className="flex items-center gap-3 rounded-xl border border-white/8 bg-black/20 px-3 py-2">
+              <div key={p.id || i} className="flex items-center gap-3 rounded-xl border border-white/[0.08] bg-black/20 px-3 py-2">
                 <ShoppingCart className="w-3.5 h-3.5 text-[#d97757]/60 flex-shrink-0" />
                 <div className="flex-1 min-w-0">
                   <p className="text-xs text-white truncate">{p.name}</p>

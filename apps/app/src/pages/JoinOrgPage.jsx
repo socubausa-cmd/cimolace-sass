@@ -174,7 +174,7 @@ export default function JoinOrgPage() {
               Identifiant de l'organisation
             </label>
             <div className="relative">
-              <Building2 className="pointer-events-none absolute left-3.5 top-1/2 h-[16px] w-[16px] -translate-y-1/2 text-white/28" />
+              <Building2 className="pointer-events-none absolute left-3.5 top-1/2 h-[16px] w-[16px] -translate-y-1/2 text-white/[0.28]" />
               <input
                 id="org-slug"
                 value={slugInput}
@@ -239,7 +239,7 @@ export default function JoinOrgPage() {
           )}
         </div>
 
-        <p className="mt-6 text-center text-[13px] text-white/38">
+        <p className="mt-6 text-center text-[13px] text-white/[0.38]">
           Vous voulez plutôt lancer votre espace ?{' '}
           <Link to="/creer-organisation" className="font-semibold hover:underline" style={{ color: ACCENT }}>
             Créer une organisation

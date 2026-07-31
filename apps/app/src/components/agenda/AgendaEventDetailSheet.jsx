@@ -131,7 +131,7 @@ export default function AgendaEventDetailSheet({
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent side="right" className="w-full sm:max-w-md overflow-y-auto border-l border-white/10 bg-[#0c1018]/98 text-white">
+      <SheetContent side="right" className="w-full sm:max-w-md overflow-y-auto border-l border-white/10 bg-[#0c1018]/[0.98] text-white">
         <SheetHeader className="text-left space-y-1">
           <SheetTitle className="text-xl font-serif text-white pr-8">{event.title}</SheetTitle>
           <SheetDescription className="text-gray-400 text-sm">

@@ -96,7 +96,7 @@ export function MembersOverlay({ members = [], currentUserId }) {
       animate={{ y: 0 }}
       exit={{ y: '100%' }}
       transition={{ type: 'spring', damping: 28, stiffness: 320 }}
-      className="fixed inset-x-0 bottom-0 z-[210] flex max-h-[min(88dvh,780px)] flex-col rounded-t-[28px] border border-[color-mix(in_srgb,var(--school-accent)_35%,transparent)] bg-[#0a0908]/98 shadow-[0_-24px_64px_rgba(0,0,0,0.65),0_0_40px_-12px_rgba(212,175,55,0.18)] backdrop-blur-2xl"
+      className="fixed inset-x-0 bottom-0 z-[210] flex max-h-[min(88dvh,780px)] flex-col rounded-t-[28px] border border-[color-mix(in_srgb,var(--school-accent)_35%,transparent)] bg-[#0a0908]/[0.98] shadow-[0_-24px_64px_rgba(0,0,0,0.65),0_0_40px_-12px_rgba(212,175,55,0.18)] backdrop-blur-2xl"
       data-liri-no-doubletap
     >
       <div className="mx-auto mt-2.5 h-1 w-11 rounded-full bg-[color-mix(in_srgb,var(--school-accent)_35%,transparent)]" />

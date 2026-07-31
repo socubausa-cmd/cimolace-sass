@@ -138,7 +138,7 @@ export function LiveStudioWizard({ draft, updateDraft, lastSavedAt, onClose, onS
               <div className="min-w-0">
                 <p className="text-xs text-gray-500">Configuration étape par étape</p>
                 {lastSavedAt != null && (
-                  <span className="mt-2 inline-flex items-center gap-1.5 rounded-full border border-white/18 bg-transparent px-2.5 py-1 text-[11px] font-medium text-emerald-400">
+                  <span className="mt-2 inline-flex items-center gap-1.5 rounded-full border border-white/[0.18] bg-transparent px-2.5 py-1 text-[11px] font-medium text-emerald-400">
                     <CheckCircle2 className="h-3.5 w-3.5 shrink-0 text-emerald-400" strokeWidth={2.25} />
                     Brouillon enregistré
                   </span>
@@ -220,7 +220,7 @@ export function LiveStudioWizard({ draft, updateDraft, lastSavedAt, onClose, onS
         <aside className="live-studio-pane-right hidden w-[min(100%,320px)] shrink-0 flex-col lg:flex">
           <div className="live-studio-pane-head">
             <p className="flex items-center gap-2 text-[11px] font-bold uppercase tracking-[0.14em] text-white">
-              <span className="inline-flex h-7 w-7 items-center justify-center rounded-lg bg-[#d97757]/12 text-[#d97757]">
+              <span className="inline-flex h-7 w-7 items-center justify-center rounded-lg bg-[#d97757]/[0.12] text-[#d97757]">
                 <Eye className="h-4 w-4" strokeWidth={2.25} />
               </span>
               APERÇU VISUEL

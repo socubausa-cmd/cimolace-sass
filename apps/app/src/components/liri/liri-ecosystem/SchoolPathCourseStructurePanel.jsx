@@ -224,7 +224,7 @@ export default function SchoolPathCourseStructurePanel({ courseId, courseTitle, 
                       <div
                         className={cn(
                           'flex items-center gap-1 px-1.5 py-1.5 text-[11px]',
-                          selModuleId === m.id ? 'bg-cyan-500/12' : '',
+                          selModuleId === m.id ? 'bg-cyan-500/[0.12]' : '',
                         )}
                       >
                         <button type="button" className="min-w-0 flex-1 truncate text-left text-white/75" onClick={() => setSelModuleId(m.id)}>
@@ -348,7 +348,7 @@ export default function SchoolPathCourseStructurePanel({ courseId, courseTitle, 
                           <div
                             className={cn(
                               'flex items-center gap-1 px-1.5 py-1.5 text-[11px]',
-                              selWeekId === w.id ? 'bg-amber-500/12' : '',
+                              selWeekId === w.id ? 'bg-amber-500/[0.12]' : '',
                             )}
                           >
                             <button type="button" className="min-w-0 flex-1 truncate text-left text-white/75" onClick={() => { setSelWeekId(w.id); if (typeof onWeekClick === 'function') onWeekClick(w.id, w); }}>
@@ -512,7 +512,7 @@ export default function SchoolPathCourseStructurePanel({ courseId, courseTitle, 
                           <div
                             className={cn(
                               'flex items-center gap-1 px-1.5 py-1.5 text-[11px]',
-                              selDayId === d.id ? 'bg-violet-500/12' : '',
+                              selDayId === d.id ? 'bg-violet-500/[0.12]' : '',
                             )}
                           >
                             <button type="button" className="min-w-0 flex-1 truncate text-left text-white/75" onClick={() => setSelDayId(d.id)}>
@@ -654,8 +654,8 @@ export default function SchoolPathCourseStructurePanel({ courseId, courseTitle, 
                         <SortableSchoolRow id={b.id} disabled={busy}>
                           <div className="flex items-start gap-0.5 px-1.5 py-1.5 text-[11px]">
                             <div className="min-w-0 flex-1">
-                              <div className="truncate font-medium text-white/78">{BLOCK_TYPE_OPTIONS.find((x) => x.value === b.type)?.label || b.type}</div>
-                              {b.title ? <div className="truncate text-[10px] text-white/38">{b.title}</div> : null}
+                              <div className="truncate font-medium text-white/[0.78]">{BLOCK_TYPE_OPTIONS.find((x) => x.value === b.type)?.label || b.type}</div>
+                              {b.title ? <div className="truncate text-[10px] text-white/[0.38]">{b.title}</div> : null}
                             </div>
                             <button
                               type="button"

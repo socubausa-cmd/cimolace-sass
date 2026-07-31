@@ -139,7 +139,7 @@ export function ProrascienceHomeHeroCarousel({ prefersReducedMotion, onOpenVideo
             />
           ))}
         </div>
-        <div className="flex items-center justify-center gap-2 rounded-xl border border-white/15 bg-black/45 px-3 py-2 text-center text-[11px] font-medium leading-snug text-white/88 backdrop-blur-md sm:text-xs">
+        <div className="flex items-center justify-center gap-2 rounded-xl border border-white/15 bg-black/45 px-3 py-2 text-center text-[11px] font-medium leading-snug text-white/[0.88] backdrop-blur-md sm:text-xs">
           <Globe2 className="h-3.5 w-3.5 shrink-0 text-[var(--school-accent)]" aria-hidden />
           <span>{active.footer}</span>
         </div>

@@ -16,7 +16,7 @@ import {
 import { useLiveWhiteboardStore } from './useLiveWhiteboardStore';
 
 /* ── constantes ─────────────────────────────────────────────────────────── */
-const RAIL_TITLE = 'font-serif text-[13px] font-semibold text-white/92 tracking-tight uppercase tracking-wide text-white/70 text-[11px]';
+const RAIL_TITLE = 'font-serif text-[13px] font-semibold text-white/[0.92] tracking-tight uppercase tracking-wide text-white/70 text-[11px]';
 
 const SUBJECT_TABS = [
   { id: 'compas', label: 'Compas', Icon: Compass },
@@ -42,7 +42,7 @@ function ToolBtn({ id, label, Icon, active, onClick, title }) {
       className={cn(
         designerShellChipGhost,
         'flex flex-col items-center justify-center gap-0.5 py-1.5 px-1 text-[9px] font-medium min-w-0',
-        active && 'border-amber-500/50 bg-amber-500/14 text-amber-100',
+        active && 'border-amber-500/50 bg-amber-500/[0.14] text-amber-100',
       )}
     >
       {Icon && <Icon className="h-3.5 w-3.5 shrink-0" />}
@@ -66,7 +66,7 @@ function NumPicker({ value, options, onChange }) {
           className={cn(
             designerShellChipGhost,
             'min-w-[26px] py-0.5 text-[9px]',
-            value === v && 'border-amber-500/50 bg-amber-500/14 text-amber-100',
+            value === v && 'border-amber-500/50 bg-amber-500/[0.14] text-amber-100',
           )}
         >
           {v}
@@ -159,7 +159,7 @@ function CompassTab() {
           className={cn(
             designerShellChipGhost,
             'flex flex-col items-center gap-1 py-2.5 text-[9px] font-semibold',
-            tool === 'compass' && !cfg.arcMode && 'border-amber-500/55 bg-amber-500/16 text-amber-100',
+            tool === 'compass' && !cfg.arcMode && 'border-amber-500/55 bg-amber-500/[0.16] text-amber-100',
           )}
           title="Cliquez pour placer le pivot, glissez pour le rayon → cercle complet"
         >
@@ -172,7 +172,7 @@ function CompassTab() {
           className={cn(
             designerShellChipGhost,
             'flex flex-col items-center gap-1 py-2.5 text-[9px] font-semibold',
-            tool === 'compass' && cfg.arcMode && 'border-amber-500/55 bg-amber-500/16 text-amber-100',
+            tool === 'compass' && cfg.arcMode && 'border-amber-500/55 bg-amber-500/[0.16] text-amber-100',
           )}
           title="1er clic = centre, glisser = rayon, 2e clic = début arc, glisser = fin arc"
         >
@@ -189,7 +189,7 @@ function CompassTab() {
               <p>① <strong className="text-white/80">Cliquez</strong> pour poser le pivot (aiguille).</p>
               <p>② <strong className="text-white/80">Glissez</strong> pour régler le rayon — le compas s'ouvre en temps réel.</p>
               <p>③ <strong className="text-white/80">Relâchez</strong> → cercle tracé.</p>
-              <p className="text-white/38 text-[8px] mt-1">Appuyez Échap pour annuler.</p>
+              <p className="text-white/[0.38] text-[8px] mt-1">Appuyez Échap pour annuler.</p>
             </>
           ) : (
             <>
@@ -216,8 +216,8 @@ function CompassTab() {
               className={cn(
                 'w-full text-left rounded-lg px-2.5 py-2 text-[10px] font-semibold border transition-colors flex items-center justify-between gap-2',
                 activeGuide === c.id
-                  ? 'border-white/18 bg-white/6 text-white/90'
-                  : 'border-white/8 bg-white/3 text-white/55 hover:border-white/15 hover:text-white/80',
+                  ? 'border-white/[0.18] bg-white/[0.06] text-white/90'
+                  : 'border-white/[0.08] bg-white/[0.03] text-white/55 hover:border-white/15 hover:text-white/80',
               )}
             >
               <span style={{ color: c.color }}>●</span>
@@ -254,7 +254,7 @@ function CompassTab() {
           className={cn(
             designerShellChipGhost,
             'flex flex-col items-center gap-1 py-2 text-[9px] font-semibold',
-            tool === 'angle' && 'border-amber-500/55 bg-amber-500/16 text-amber-100',
+            tool === 'angle' && 'border-amber-500/55 bg-amber-500/[0.16] text-amber-100',
           )}
           title="3 clics : sommet → point sur 1er côté → point sur 2e côté"
         >
@@ -267,7 +267,7 @@ function CompassTab() {
           className={cn(
             designerShellChipGhost,
             'flex flex-col items-center gap-1 py-2 text-[9px] font-semibold',
-            tool === 'right-angle' && 'border-amber-500/55 bg-amber-500/16 text-amber-100',
+            tool === 'right-angle' && 'border-amber-500/55 bg-amber-500/[0.16] text-amber-100',
           )}
           title="2 clics : sommet → direction du 1er côté (90° automatique)"
         >
@@ -289,14 +289,14 @@ function CompassTab() {
               <p className="text-amber-300/80 font-semibold">Angle droit (90°)</p>
               <p>① <strong className="text-white/80">Clic 1</strong> — sommet de l'angle droit.</p>
               <p>② <strong className="text-white/80">Clic 2</strong> — direction du 1er côté (l'autre côté est automatiquement perpendiculaire).</p>
-              <p className="text-white/38 text-[8px]">Le petit carré ⊾ est dessiné au sommet.</p>
+              <p className="text-white/[0.38] text-[8px]">Le petit carré ⊾ est dessiné au sommet.</p>
             </>
           )}
           <p className="text-white/35 text-[8px] pt-0.5">Double-clic ou Échap pour annuler.</p>
         </div>
       )}
 
-      <div className={cn(designerShellCardInset, 'mt-3 text-[9px] text-white/38 leading-relaxed')}>
+      <div className={cn(designerShellCardInset, 'mt-3 text-[9px] text-white/[0.38] leading-relaxed')}>
         <Ruler className="inline h-3 w-3 mr-1 opacity-60" />
         Combinez compas + <strong className="text-white/55">Règle</strong> (onglet Mathématiques) + <strong className="text-white/55">Outil Ligne</strong> pour toutes les constructions géométriques.
       </div>
@@ -322,7 +322,7 @@ function GeoTab() {
         className={cn(
           designerShellChipGhost,
           'w-full flex items-center gap-2 py-2 text-[9px] font-semibold',
-          tool === 'segment' && 'border-amber-500/55 bg-amber-500/16 text-amber-100',
+          tool === 'segment' && 'border-amber-500/55 bg-amber-500/[0.16] text-amber-100',
         )}
         title="Glissez pour tracer un segment nommé [AB]"
       >
@@ -336,13 +336,13 @@ function GeoTab() {
               <span className={designerShellMicroLabel}>Point A</span>
               <input type="text" maxLength={3} value={cfg.segmentLabelA ?? 'A'}
                 onChange={(e) => setCfg({ segmentLabelA: e.target.value })}
-                className="w-full rounded px-2 py-1 text-[11px] bg-white/6 border border-white/12 text-white font-bold" />
+                className="w-full rounded px-2 py-1 text-[11px] bg-white/[0.06] border border-white/[0.12] text-white font-bold" />
             </label>
             <label className="flex flex-col gap-0.5 flex-1">
               <span className={designerShellMicroLabel}>Point B</span>
               <input type="text" maxLength={3} value={cfg.segmentLabelB ?? 'B'}
                 onChange={(e) => setCfg({ segmentLabelB: e.target.value })}
-                className="w-full rounded px-2 py-1 text-[11px] bg-white/6 border border-white/12 text-white font-bold" />
+                className="w-full rounded px-2 py-1 text-[11px] bg-white/[0.06] border border-white/[0.12] text-white font-bold" />
             </label>
           </div>
           <p className={designerShellMicroLabel}>Style</p>
@@ -355,7 +355,7 @@ function GeoTab() {
             ].map(({ id, label }) => (
               <button key={id} type="button" onClick={() => setCfg({ segmentStyle: id })}
                 className={cn(designerShellChipGhost, 'flex-1 py-1 text-[9px] font-mono',
-                  (cfg.segmentStyle || 'segment') === id && 'border-amber-500/45 bg-amber-500/14 text-amber-100')}>
+                  (cfg.segmentStyle || 'segment') === id && 'border-amber-500/45 bg-amber-500/[0.14] text-amber-100')}>
                 {label}
               </button>
             ))}
@@ -381,7 +381,7 @@ function GeoTab() {
         className={cn(
           designerShellChipGhost,
           'w-full flex items-center gap-2 py-2 text-[9px] font-semibold',
-          tool === 'symmetry' && 'border-amber-500/55 bg-amber-500/16 text-amber-100',
+          tool === 'symmetry' && 'border-amber-500/55 bg-amber-500/[0.16] text-amber-100',
         )}
         title="Sélectionnez d'abord des objets, puis glissez pour définir l'axe"
       >
@@ -405,7 +405,7 @@ function GeoTab() {
         className={cn(
           designerShellChipGhost,
           'w-full flex items-center gap-2 py-2 text-[9px] font-semibold',
-          tool === 'measure' && 'border-amber-500/55 bg-amber-500/16 text-amber-100',
+          tool === 'measure' && 'border-amber-500/55 bg-amber-500/[0.16] text-amber-100',
         )}
         title="2 clics → affiche la distance AB"
       >
@@ -422,7 +422,7 @@ function GeoTab() {
             <input type="text" value={cfg.measureLabel || ''}
               onChange={(e) => setCfg({ measureLabel: e.target.value })}
               placeholder="ex: AB = 5 cm"
-              className="w-full rounded px-2 py-1 text-[10px] bg-white/6 border border-white/12 text-white" />
+              className="w-full rounded px-2 py-1 text-[10px] bg-white/[0.06] border border-white/[0.12] text-white" />
           </label>
         </div>
       )}
@@ -470,7 +470,7 @@ function GeoTab() {
           type="button"
           onClick={() => setTool('angle')}
           title="Angle — 3 clics"
-          className={cn(designerShellChipGhost, 'flex flex-col items-center gap-0.5 py-1.5 text-[9px] font-semibold', tool === 'angle' && 'border-amber-500/50 bg-amber-500/14 text-amber-100')}
+          className={cn(designerShellChipGhost, 'flex flex-col items-center gap-0.5 py-1.5 text-[9px] font-semibold', tool === 'angle' && 'border-amber-500/50 bg-amber-500/[0.14] text-amber-100')}
         >
           <span className="text-[14px] leading-none">∠</span>Angle
         </button>
@@ -478,7 +478,7 @@ function GeoTab() {
           type="button"
           onClick={() => setTool('right-angle')}
           title="Angle droit 90° — 2 clics"
-          className={cn(designerShellChipGhost, 'flex flex-col items-center gap-0.5 py-1.5 text-[9px] font-semibold', tool === 'right-angle' && 'border-amber-500/50 bg-amber-500/14 text-amber-100')}
+          className={cn(designerShellChipGhost, 'flex flex-col items-center gap-0.5 py-1.5 text-[9px] font-semibold', tool === 'right-angle' && 'border-amber-500/50 bg-amber-500/[0.14] text-amber-100')}
         >
           <span className="text-[14px] leading-none">⊾</span>Angle droit
         </button>
@@ -495,7 +495,7 @@ function GeoTab() {
           className={cn(
             designerShellChipGhost,
             'flex flex-col items-center gap-1 py-2 text-[9px] font-semibold',
-            tool === 'rotation' && 'border-amber-500/55 bg-amber-500/16 text-amber-100',
+            tool === 'rotation' && 'border-amber-500/55 bg-amber-500/[0.16] text-amber-100',
           )}
           title="Rotation autour d'un point — sélectionnez des objets, cliquez le centre, glissez l'angle"
         >
@@ -508,7 +508,7 @@ function GeoTab() {
           className={cn(
             designerShellChipGhost,
             'flex flex-col items-center gap-1 py-2 text-[9px] font-semibold',
-            tool === 'translation' && 'border-amber-500/55 bg-amber-500/16 text-amber-100',
+            tool === 'translation' && 'border-amber-500/55 bg-amber-500/[0.16] text-amber-100',
           )}
           title="Translation selon un vecteur — sélectionnez des objets, glissez le vecteur"
         >
@@ -521,7 +521,7 @@ function GeoTab() {
           className={cn(
             designerShellChipGhost,
             'flex flex-col items-center gap-1 py-2 text-[9px] font-semibold col-span-2',
-            tool === 'homothetie' && 'border-amber-500/55 bg-amber-500/16 text-amber-100',
+            tool === 'homothetie' && 'border-amber-500/55 bg-amber-500/[0.16] text-amber-100',
           )}
           title="Homothétie — sélectionnez des objets, cliquez le centre, ratio k configuré ci-dessous"
         >
@@ -535,13 +535,13 @@ function GeoTab() {
             <span className={designerShellMicroLabel}>Rapport k</span>
             <input type="number" value={cfg.homothetieRatio ?? 2} step={0.1}
               onChange={(e) => setCfg({ homothetieRatio: parseFloat(e.target.value) || 2 })}
-              className="w-full rounded px-2 py-1 text-[11px] bg-white/6 border border-white/12 text-white font-mono" />
+              className="w-full rounded px-2 py-1 text-[11px] bg-white/[0.06] border border-white/[0.12] text-white font-mono" />
           </label>
           <div className="flex flex-wrap gap-1">
             {[0.25, 0.5, 2, 3, -1].map((k) => (
               <button key={k} type="button" onClick={() => setCfg({ homothetieRatio: k })}
                 className={cn(designerShellChipGhost, 'px-2 py-0.5 text-[9px]',
-                  cfg.homothetieRatio === k && 'border-amber-500/45 bg-amber-500/14 text-amber-100')}>
+                  cfg.homothetieRatio === k && 'border-amber-500/45 bg-amber-500/[0.14] text-amber-100')}>
                 k={k}
               </button>
             ))}
@@ -577,7 +577,7 @@ function GeoTab() {
         className={cn(
           designerShellChipGhost,
           'w-full flex items-center gap-2 py-2 text-[9px] font-semibold',
-          tool === 'vector' && 'border-amber-500/55 bg-amber-500/16 text-amber-100',
+          tool === 'vector' && 'border-amber-500/55 bg-amber-500/[0.16] text-amber-100',
         )}
         title="Glissez pour tracer un vecteur nommé (notation ⃗F)"
       >
@@ -592,10 +592,10 @@ function GeoTab() {
             maxLength={4}
             value={cfg.vectorLabel ?? 'F'}
             onChange={(e) => setCfg({ vectorLabel: e.target.value })}
-            className="w-full rounded px-2 py-1 text-[11px] bg-white/6 border border-white/12 text-white font-bold italic"
+            className="w-full rounded px-2 py-1 text-[11px] bg-white/[0.06] border border-white/[0.12] text-white font-bold italic"
             placeholder="F, v, a, u..."
           />
-          <p className="text-[8px] text-white/38">Glissez queue → pointe. La lettre apparaît avec ⃗ au-dessus.</p>
+          <p className="text-[8px] text-white/[0.38]">Glissez queue → pointe. La lettre apparaît avec ⃗ au-dessus.</p>
         </div>
       )}
 
@@ -611,7 +611,7 @@ function GeoTab() {
         className={cn(
           designerShellChipGhost,
           'w-full py-1.5 text-[9px]',
-          shapeFill && 'border-amber-500/40 bg-amber-500/14 text-amber-100',
+          shapeFill && 'border-amber-500/40 bg-amber-500/[0.14] text-amber-100',
         )}
       >
         {shapeFill ? '⬛ Remplissage activé' : '⬜ Remplissage désactivé'}
@@ -643,7 +643,7 @@ function MathTab({ onLatexRequest }) {
               type="number"
               value={cfg.numberlineMin}
               onChange={(e) => setCfg({ numberlineMin: Number(e.target.value) })}
-              className="w-14 rounded px-1.5 py-0.5 text-[10px] bg-white/6 border border-white/12 text-white"
+              className="w-14 rounded px-1.5 py-0.5 text-[10px] bg-white/[0.06] border border-white/[0.12] text-white"
               step={1}
             />
             <span className="text-white/40 text-[10px]">→</span>
@@ -651,7 +651,7 @@ function MathTab({ onLatexRequest }) {
               type="number"
               value={cfg.numberlineMax}
               onChange={(e) => setCfg({ numberlineMax: Number(e.target.value) })}
-              className="w-14 rounded px-1.5 py-0.5 text-[10px] bg-white/6 border border-white/12 text-white"
+              className="w-14 rounded px-1.5 py-0.5 text-[10px] bg-white/[0.06] border border-white/[0.12] text-white"
               step={1}
             />
             <span className="text-white/40 text-[10px]">pas</span>
@@ -659,7 +659,7 @@ function MathTab({ onLatexRequest }) {
               type="number"
               value={cfg.numberlineStep}
               onChange={(e) => setCfg({ numberlineStep: Number(e.target.value) || 1 })}
-              className="w-12 rounded px-1.5 py-0.5 text-[10px] bg-white/6 border border-white/12 text-white"
+              className="w-12 rounded px-1.5 py-0.5 text-[10px] bg-white/[0.06] border border-white/[0.12] text-white"
               step={0.1}
               min={0.01}
             />
@@ -674,7 +674,7 @@ function MathTab({ onLatexRequest }) {
         className={cn(
           designerShellChipGhost,
           'w-full flex items-center gap-2 py-2 text-[9px] font-semibold',
-          tool === 'coord-point' && 'border-amber-500/55 bg-amber-500/16 text-amber-100',
+          tool === 'coord-point' && 'border-amber-500/55 bg-amber-500/[0.16] text-amber-100',
         )}
         title="Cliquez sur le tableau pour placer un point A(x;y) — se cale automatiquement sur un repère proche"
       >
@@ -717,7 +717,7 @@ function MathTab({ onLatexRequest }) {
         className={cn(
           designerShellChipGhost,
           'w-full flex items-center gap-2 py-2 text-[9px] font-semibold',
-          tool === 'function-plot' && 'border-amber-500/55 bg-amber-500/16 text-amber-100',
+          tool === 'function-plot' && 'border-amber-500/55 bg-amber-500/[0.16] text-amber-100',
         )}
         title="Glissez pour définir l'échelle, place la courbe y = f(x)"
       >
@@ -731,7 +731,7 @@ function MathTab({ onLatexRequest }) {
             type="text"
             value={cfg.fnExpr ?? 'x'}
             onChange={(e) => setCfg({ fnExpr: e.target.value })}
-            className="w-full rounded px-2 py-1 text-[11px] bg-white/6 border border-white/12 text-white font-mono"
+            className="w-full rounded px-2 py-1 text-[11px] bg-white/[0.06] border border-white/[0.12] text-white font-mono"
             placeholder="sin(x), x^2, 2*x+1..."
             spellCheck={false}
           />
@@ -741,7 +741,7 @@ function MathTab({ onLatexRequest }) {
               type="number"
               value={cfg.fnXMin ?? -5}
               onChange={(e) => setCfg({ fnXMin: Number(e.target.value) })}
-              className="w-16 rounded px-1.5 py-0.5 text-[10px] bg-white/6 border border-white/12 text-white"
+              className="w-16 rounded px-1.5 py-0.5 text-[10px] bg-white/[0.06] border border-white/[0.12] text-white"
               step={1}
             />
             <span className="text-white/40 text-[10px]">→</span>
@@ -749,11 +749,11 @@ function MathTab({ onLatexRequest }) {
               type="number"
               value={cfg.fnXMax ?? 5}
               onChange={(e) => setCfg({ fnXMax: Number(e.target.value) })}
-              className="w-16 rounded px-1.5 py-0.5 text-[10px] bg-white/6 border border-white/12 text-white"
+              className="w-16 rounded px-1.5 py-0.5 text-[10px] bg-white/[0.06] border border-white/[0.12] text-white"
               step={1}
             />
           </div>
-          <p className="text-[8px] text-white/38 leading-relaxed">
+          <p className="text-[8px] text-white/[0.38] leading-relaxed">
             Glissez sur le tableau. La distance = l'échelle (px/unité). Fonctions : sin, cos, tan, sqrt, abs, log, exp, PI…
           </p>
           <div className="flex flex-wrap gap-1 mt-0.5">
@@ -774,7 +774,7 @@ function MathTab({ onLatexRequest }) {
                 className={cn(
                   designerShellChipGhost,
                   'text-[8px] px-1.5 py-0.5',
-                  cfg.fnExpr === f && 'border-amber-500/45 bg-amber-500/14 text-amber-100',
+                  cfg.fnExpr === f && 'border-amber-500/45 bg-amber-500/[0.14] text-amber-100',
                 )}
               >
                 {label}
@@ -791,7 +791,7 @@ function MathTab({ onLatexRequest }) {
         className={cn(
           designerShellChipGhost,
           'w-full flex items-center gap-2 py-2 text-[9px] font-semibold',
-          tool === 'fraction' && 'border-amber-500/55 bg-amber-500/16 text-amber-100',
+          tool === 'fraction' && 'border-amber-500/55 bg-amber-500/[0.16] text-amber-100',
         )}
         title="Cliquez pour placer une fraction visuelle"
       >
@@ -809,7 +809,7 @@ function MathTab({ onLatexRequest }) {
                 max={cfg.fracDenominator ?? 4}
                 value={cfg.fracNumerator ?? 1}
                 onChange={(e) => setCfg({ fracNumerator: Math.max(0, Math.min(Number(e.target.value), cfg.fracDenominator ?? 4)) })}
-                className="w-full rounded px-2 py-1 text-[11px] bg-white/6 border border-white/12 text-white"
+                className="w-full rounded px-2 py-1 text-[11px] bg-white/[0.06] border border-white/[0.12] text-white"
               />
             </label>
             <span className="text-white/50 text-lg pb-1">/</span>
@@ -821,7 +821,7 @@ function MathTab({ onLatexRequest }) {
                 max={20}
                 value={cfg.fracDenominator ?? 4}
                 onChange={(e) => setCfg({ fracDenominator: Math.max(1, Number(e.target.value)) })}
-                className="w-full rounded px-2 py-1 text-[11px] bg-white/6 border border-white/12 text-white"
+                className="w-full rounded px-2 py-1 text-[11px] bg-white/[0.06] border border-white/[0.12] text-white"
               />
             </label>
           </div>
@@ -835,7 +835,7 @@ function MathTab({ onLatexRequest }) {
                 className={cn(
                   designerShellChipGhost,
                   'flex-1 py-1 text-[9px]',
-                  (cfg.fracStyle || 'bar') === id && 'border-amber-500/45 bg-amber-500/14 text-amber-100',
+                  (cfg.fracStyle || 'bar') === id && 'border-amber-500/45 bg-amber-500/[0.14] text-amber-100',
                 )}
               >
                 {label}
@@ -848,7 +848,7 @@ function MathTab({ onLatexRequest }) {
             options={[20, 24, 28, 32, 40, 48]}
             onChange={(v) => setCfg({ fracCellSize: v })}
           />
-          <p className="text-[8px] text-white/38">Cliquez sur le tableau pour placer.</p>
+          <p className="text-[8px] text-white/[0.38]">Cliquez sur le tableau pour placer.</p>
         </div>
       )}
 
@@ -859,7 +859,7 @@ function MathTab({ onLatexRequest }) {
         className={cn(
           designerShellChipGhost,
           'w-full flex items-center gap-2 py-2 text-[9px] font-semibold',
-          tool === 'value-table' && 'border-amber-500/55 bg-amber-500/16 text-amber-100',
+          tool === 'value-table' && 'border-amber-500/55 bg-amber-500/[0.16] text-amber-100',
         )}
         title="Cliquez pour placer un tableau de valeurs automatique"
       >
@@ -871,21 +871,21 @@ function MathTab({ onLatexRequest }) {
           <p className={designerShellMicroLabel}>Expression</p>
           <input type="text" value={cfg.vtExpr ?? 'x'}
             onChange={(e) => setCfg({ vtExpr: e.target.value })}
-            className="w-full rounded px-2 py-1 text-[11px] bg-white/6 border border-white/12 text-white font-mono"
+            className="w-full rounded px-2 py-1 text-[11px] bg-white/[0.06] border border-white/[0.12] text-white font-mono"
             placeholder="x^2, sin(x)..."
             spellCheck={false} />
           <div className="flex gap-1 items-center">
             <input type="number" value={cfg.vtXMin ?? -3}
               onChange={(e) => setCfg({ vtXMin: Number(e.target.value) })}
-              className="w-14 rounded px-1.5 py-0.5 text-[10px] bg-white/6 border border-white/12 text-white" step={1} />
+              className="w-14 rounded px-1.5 py-0.5 text-[10px] bg-white/[0.06] border border-white/[0.12] text-white" step={1} />
             <span className="text-white/40 text-[10px]">→</span>
             <input type="number" value={cfg.vtXMax ?? 3}
               onChange={(e) => setCfg({ vtXMax: Number(e.target.value) })}
-              className="w-14 rounded px-1.5 py-0.5 text-[10px] bg-white/6 border border-white/12 text-white" step={1} />
+              className="w-14 rounded px-1.5 py-0.5 text-[10px] bg-white/[0.06] border border-white/[0.12] text-white" step={1} />
             <span className="text-white/40 text-[10px]">pas</span>
             <input type="number" value={cfg.vtXStep ?? 1}
               onChange={(e) => setCfg({ vtXStep: Math.max(0.01, Number(e.target.value)) })}
-              className="w-12 rounded px-1.5 py-0.5 text-[10px] bg-white/6 border border-white/12 text-white" step={0.5} min={0.01} />
+              className="w-12 rounded px-1.5 py-0.5 text-[10px] bg-white/[0.06] border border-white/[0.12] text-white" step={0.5} min={0.01} />
           </div>
           <p className="text-[8px] text-white/35">Cliquez sur le tableau pour placer.</p>
         </div>
@@ -898,7 +898,7 @@ function MathTab({ onLatexRequest }) {
         className={cn(
           designerShellChipGhost,
           'w-full flex items-center gap-2 py-2 text-[9px] font-semibold',
-          tool === 'variation-table' && 'border-amber-500/55 bg-amber-500/16 text-amber-100',
+          tool === 'variation-table' && 'border-amber-500/55 bg-amber-500/[0.16] text-amber-100',
         )}
         title="Cliquez pour placer un tableau de variations f'/f"
       >
@@ -912,20 +912,20 @@ function MathTab({ onLatexRequest }) {
               <span className={designerShellMicroLabel}>Fonction</span>
               <input type="text" maxLength={4} value={cfg.vtFnName ?? 'f'}
                 onChange={(e) => setCfg({ vtFnName: e.target.value })}
-                className="w-full rounded px-2 py-1 text-[11px] bg-white/6 border border-white/12 text-white font-bold italic" />
+                className="w-full rounded px-2 py-1 text-[11px] bg-white/[0.06] border border-white/[0.12] text-white font-bold italic" />
             </label>
           </div>
           <label className="flex flex-col gap-0.5">
             <span className={designerShellMicroLabel}>Valeurs de x (virgule)</span>
             <input type="text" value={cfg.vtXVals ?? '-∞, 1, +∞'}
               onChange={(e) => setCfg({ vtXVals: e.target.value })}
-              className="w-full rounded px-2 py-1 text-[10px] bg-white/6 border border-white/12 text-white font-mono" />
+              className="w-full rounded px-2 py-1 text-[10px] bg-white/[0.06] border border-white/[0.12] text-white font-mono" />
           </label>
           <label className="flex flex-col gap-0.5">
             <span className={designerShellMicroLabel}>Signes de f&apos; (intervalles)</span>
             <input type="text" value={cfg.vtDerivSigns ?? '+, -'}
               onChange={(e) => setCfg({ vtDerivSigns: e.target.value })}
-              className="w-full rounded px-2 py-1 text-[10px] bg-white/6 border border-white/12 text-white font-mono"
+              className="w-full rounded px-2 py-1 text-[10px] bg-white/[0.06] border border-white/[0.12] text-white font-mono"
               placeholder="+, -, +" />
           </label>
           <div className="flex gap-2">
@@ -933,14 +933,14 @@ function MathTab({ onLatexRequest }) {
               <span className={designerShellMicroLabel}>f aux pts critiques</span>
               <input type="text" value={cfg.vtCritFVals ?? '3'}
                 onChange={(e) => setCfg({ vtCritFVals: e.target.value })}
-                className="w-full rounded px-2 py-1 text-[10px] bg-white/6 border border-white/12 text-white font-mono"
+                className="w-full rounded px-2 py-1 text-[10px] bg-white/[0.06] border border-white/[0.12] text-white font-mono"
                 placeholder="3, -1" />
             </label>
             <label className="flex flex-col gap-0.5 flex-1">
               <span className={designerShellMicroLabel}>f aux frontières</span>
               <input type="text" value={cfg.vtBoundaryFVals ?? ', '}
                 onChange={(e) => setCfg({ vtBoundaryFVals: e.target.value })}
-                className="w-full rounded px-2 py-1 text-[10px] bg-white/6 border border-white/12 text-white font-mono"
+                className="w-full rounded px-2 py-1 text-[10px] bg-white/[0.06] border border-white/[0.12] text-white font-mono"
                 placeholder=", (vide = ±∞)" />
             </label>
           </div>
@@ -948,7 +948,7 @@ function MathTab({ onLatexRequest }) {
             <span className={designerShellMicroLabel}>Sens (true=↗ false=↘)</span>
             <input type="text" value={cfg.vtIncreasing ?? 'true, false'}
               onChange={(e) => setCfg({ vtIncreasing: e.target.value })}
-              className="w-full rounded px-2 py-1 text-[10px] bg-white/6 border border-white/12 text-white font-mono" />
+              className="w-full rounded px-2 py-1 text-[10px] bg-white/[0.06] border border-white/[0.12] text-white font-mono" />
           </label>
           <p className="text-[8px] text-white/35 leading-relaxed">
             Cliquez sur le tableau pour placer. Ex : 3 valeurs de x = 2 intervalles.
@@ -963,7 +963,7 @@ function MathTab({ onLatexRequest }) {
         className={cn(
           designerShellChipGhost,
           'w-full flex items-center gap-2 py-2 text-[9px] font-semibold',
-          tool === 'sign-table' && 'border-amber-500/55 bg-amber-500/16 text-amber-100',
+          tool === 'sign-table' && 'border-amber-500/55 bg-amber-500/[0.16] text-amber-100',
         )}
         title="Cliquez pour placer un tableau de signes"
       >
@@ -976,13 +976,13 @@ function MathTab({ onLatexRequest }) {
             <span className={designerShellMicroLabel}>Valeurs de x (virgule)</span>
             <input type="text" value={cfg.signXVals ?? '-∞, -1, 0, 2, +∞'}
               onChange={(e) => setCfg({ signXVals: e.target.value })}
-              className="w-full rounded px-2 py-1 text-[10px] bg-white/6 border border-white/12 text-white font-mono" />
+              className="w-full rounded px-2 py-1 text-[10px] bg-white/[0.06] border border-white/[0.12] text-white font-mono" />
           </label>
           <label className="flex flex-col gap-0.5">
             <span className={designerShellMicroLabel}>Lignes (label: s1, s2, s3…)</span>
             <textarea rows={4} value={cfg.signRows ?? '(x+1): -, 0, +, +, +, +, +\nx: -, -, -, 0, +, +, +\nProduit: +, 0, -, 0, +, 0, -'}
               onChange={(e) => setCfg({ signRows: e.target.value })}
-              className="w-full rounded px-2 py-1 text-[10px] bg-white/6 border border-white/12 text-white font-mono resize-none"
+              className="w-full rounded px-2 py-1 text-[10px] bg-white/[0.06] border border-white/[0.12] text-white font-mono resize-none"
               spellCheck={false} />
           </label>
           <p className="text-[8px] text-white/35 leading-relaxed">
@@ -1000,7 +1000,7 @@ function MathTab({ onLatexRequest }) {
         className={cn(
           designerShellChipGhost,
           'w-full flex items-center gap-2 py-2 text-[9px] font-semibold',
-          tool === 'histogram' && 'border-amber-500/55 bg-amber-500/16 text-amber-100',
+          tool === 'histogram' && 'border-amber-500/55 bg-amber-500/[0.16] text-amber-100',
         )}
         title="Glissez pour créer un histogramme"
       >
@@ -1013,21 +1013,21 @@ function MathTab({ onLatexRequest }) {
             <span className={designerShellMicroLabel}>Étiquettes (virgule)</span>
             <input type="text" value={cfg.histLabels ?? 'Lun, Mar, Mer, Jeu, Ven'}
               onChange={(e) => setCfg({ histLabels: e.target.value })}
-              className="w-full rounded px-2 py-1 text-[10px] bg-white/6 border border-white/12 text-white"
+              className="w-full rounded px-2 py-1 text-[10px] bg-white/[0.06] border border-white/[0.12] text-white"
               placeholder="A, B, C, D" />
           </label>
           <label className="flex flex-col gap-0.5">
             <span className={designerShellMicroLabel}>Valeurs (virgule)</span>
             <input type="text" value={cfg.histValues ?? '4, 7, 3, 8, 5'}
               onChange={(e) => setCfg({ histValues: e.target.value })}
-              className="w-full rounded px-2 py-1 text-[10px] bg-white/6 border border-white/12 text-white font-mono"
+              className="w-full rounded px-2 py-1 text-[10px] bg-white/[0.06] border border-white/[0.12] text-white font-mono"
               placeholder="4, 7, 3, 8, 5" />
           </label>
           <label className="flex flex-col gap-0.5">
             <span className={designerShellMicroLabel}>Titre (optionnel)</span>
             <input type="text" value={cfg.histTitle ?? ''}
               onChange={(e) => setCfg({ histTitle: e.target.value })}
-              className="w-full rounded px-2 py-1 text-[10px] bg-white/6 border border-white/12 text-white"
+              className="w-full rounded px-2 py-1 text-[10px] bg-white/[0.06] border border-white/[0.12] text-white"
               placeholder="Ex: Températures moyennes" />
           </label>
           <p className="text-[8px] text-white/35">Glissez pour définir la taille du graphique.</p>
@@ -1041,7 +1041,7 @@ function MathTab({ onLatexRequest }) {
         className={cn(
           designerShellChipGhost,
           'w-full flex items-center gap-2 py-2 text-[9px] font-semibold',
-          tool === 'pie-chart' && 'border-amber-500/55 bg-amber-500/16 text-amber-100',
+          tool === 'pie-chart' && 'border-amber-500/55 bg-amber-500/[0.16] text-amber-100',
         )}
         title="Glissez pour définir le rayon"
       >
@@ -1054,19 +1054,19 @@ function MathTab({ onLatexRequest }) {
             <span className={designerShellMicroLabel}>Étiquettes (virgule)</span>
             <input type="text" value={cfg.pieLabels ?? 'Rouge, Bleu, Vert'}
               onChange={(e) => setCfg({ pieLabels: e.target.value })}
-              className="w-full rounded px-2 py-1 text-[10px] bg-white/6 border border-white/12 text-white" />
+              className="w-full rounded px-2 py-1 text-[10px] bg-white/[0.06] border border-white/[0.12] text-white" />
           </label>
           <label className="flex flex-col gap-0.5">
             <span className={designerShellMicroLabel}>Valeurs</span>
             <input type="text" value={cfg.pieValues ?? '30, 25, 45'}
               onChange={(e) => setCfg({ pieValues: e.target.value })}
-              className="w-full rounded px-2 py-1 text-[10px] bg-white/6 border border-white/12 text-white font-mono" />
+              className="w-full rounded px-2 py-1 text-[10px] bg-white/[0.06] border border-white/[0.12] text-white font-mono" />
           </label>
           <label className="flex flex-col gap-0.5">
             <span className={designerShellMicroLabel}>Titre</span>
             <input type="text" value={cfg.pieTitle ?? ''}
               onChange={(e) => setCfg({ pieTitle: e.target.value })}
-              className="w-full rounded px-2 py-1 text-[10px] bg-white/6 border border-white/12 text-white"
+              className="w-full rounded px-2 py-1 text-[10px] bg-white/[0.06] border border-white/[0.12] text-white"
               placeholder="Ex: Couleurs préférées" />
           </label>
           <p className="text-[8px] text-white/35">Glissez depuis le centre pour définir le rayon.</p>
@@ -1080,7 +1080,7 @@ function MathTab({ onLatexRequest }) {
         className={cn(
           designerShellChipGhost,
           'w-full flex items-center gap-2 py-2 text-[9px] font-semibold',
-          tool === 'scatter-plot' && 'border-amber-500/55 bg-amber-500/16 text-amber-100',
+          tool === 'scatter-plot' && 'border-amber-500/55 bg-amber-500/[0.16] text-amber-100',
         )}
         title="Glissez pour placer un nuage de points"
       >
@@ -1094,7 +1094,7 @@ function MathTab({ onLatexRequest }) {
             value={cfg.scatterData ?? '1,2; 3,4; 5,1; 7,6'}
             onChange={(e) => setCfg({ scatterData: e.target.value })}
             rows={3}
-            className="w-full rounded px-2 py-1 text-[10px] bg-white/6 border border-white/12 text-white font-mono resize-none"
+            className="w-full rounded px-2 py-1 text-[10px] bg-white/[0.06] border border-white/[0.12] text-white font-mono resize-none"
             placeholder="1,2; 3,4; 5,1; 7,6; 2,5"
             spellCheck={false}
           />
@@ -1103,7 +1103,7 @@ function MathTab({ onLatexRequest }) {
             <span className={designerShellMicroLabel}>Titre</span>
             <input type="text" value={cfg.scatterTitle ?? ''}
               onChange={(e) => setCfg({ scatterTitle: e.target.value })}
-              className="w-full rounded px-2 py-1 text-[10px] bg-white/6 border border-white/12 text-white" />
+              className="w-full rounded px-2 py-1 text-[10px] bg-white/[0.06] border border-white/[0.12] text-white" />
           </label>
           <label className="flex items-center gap-2 cursor-pointer text-[9px] text-white/60">
             <input type="checkbox" checked={cfg.scatterConnect || false}
@@ -1122,7 +1122,7 @@ function MathTab({ onLatexRequest }) {
         className={cn(
           designerShellChipGhost,
           'w-full py-2 text-[10px] flex items-center justify-center gap-2',
-          tool === 'latex' && 'border-amber-500/50 bg-amber-500/14 text-amber-100',
+          tool === 'latex' && 'border-amber-500/50 bg-amber-500/[0.14] text-amber-100',
         )}
       >
         <Pi className="h-3.5 w-3.5" />
@@ -1229,7 +1229,7 @@ function SciencesTab() {
         className={cn(
           designerShellChipGhost,
           'w-full py-1.5 text-[9px] font-semibold mb-1',
-          tool === 'electric-component' && 'border-amber-500/55 bg-amber-500/16 text-amber-100',
+          tool === 'electric-component' && 'border-amber-500/55 bg-amber-500/[0.16] text-amber-100',
         )}
       >
         {tool === 'electric-component' ? `▸ Cliquer pour placer : ${cfg.electricComp}` : 'Activer le placement'}
@@ -1243,7 +1243,7 @@ function SciencesTab() {
             className={cn(
               designerShellChipGhost,
               'py-1 text-[8px] text-center',
-              cfg.electricComp === id && tool === 'electric-component' && 'border-amber-500/45 bg-amber-500/14 text-amber-100',
+              cfg.electricComp === id && tool === 'electric-component' && 'border-amber-500/45 bg-amber-500/[0.14] text-amber-100',
             )}
           >
             {label}
@@ -1268,7 +1268,7 @@ function SciencesTab() {
             <span className={designerShellMicroLabel}>Étiquette</span>
             <input type="text" value={cfg.electricLabel ?? ''}
               onChange={(e) => setCfg({ electricLabel: e.target.value })}
-              className="w-full rounded px-2 py-1 text-[10px] bg-white/6 border border-white/12 text-white"
+              className="w-full rounded px-2 py-1 text-[10px] bg-white/[0.06] border border-white/[0.12] text-white"
               placeholder="R1, L1, U..." />
           </label>
         </div>
@@ -1281,7 +1281,7 @@ function SciencesTab() {
         className={cn(
           designerShellChipGhost,
           'w-full flex items-center gap-2 py-2 text-[9px] font-semibold',
-          tool === 'prob-tree' && 'border-amber-500/55 bg-amber-500/16 text-amber-100',
+          tool === 'prob-tree' && 'border-amber-500/55 bg-amber-500/[0.16] text-amber-100',
         )}
         title="Cliquez pour placer un arbre de probabilités"
       >
@@ -1294,14 +1294,14 @@ function SciencesTab() {
             <span className={designerShellMicroLabel}>Niveau 1 (label:proba, …)</span>
             <input type="text" value={cfg.probL1 ?? 'A:0.3, Ā:0.7'}
               onChange={(e) => setCfg({ probL1: e.target.value })}
-              className="w-full rounded px-2 py-1 text-[10px] bg-white/6 border border-white/12 text-white font-mono" />
+              className="w-full rounded px-2 py-1 text-[10px] bg-white/[0.06] border border-white/[0.12] text-white font-mono" />
           </label>
           {['probL2A', 'probL2B', 'probL2C', 'probL2D'].slice(0, (cfg.probL1 || '').split(',').length).map((key, i) => (
             <label key={key} className="flex flex-col gap-0.5">
               <span className={designerShellMicroLabel}>Niveau 2 depuis branche {i + 1}</span>
               <input type="text" value={cfg[key] ?? (i === 0 ? 'B:0.4, B̄:0.6' : 'B:0.2, B̄:0.8')}
                 onChange={(e) => setCfg({ [key]: e.target.value })}
-                className="w-full rounded px-2 py-1 text-[10px] bg-white/6 border border-white/12 text-white font-mono" />
+                className="w-full rounded px-2 py-1 text-[10px] bg-white/[0.06] border border-white/[0.12] text-white font-mono" />
             </label>
           ))}
           <label className="flex items-center gap-2 cursor-pointer text-[9px] text-white/60">
@@ -1314,7 +1314,7 @@ function SciencesTab() {
         </div>
       )}
 
-      <div className={cn(designerShellCardInset, 'mt-2 text-[9px] text-white/38 leading-relaxed')}>
+      <div className={cn(designerShellCardInset, 'mt-2 text-[9px] text-white/[0.38] leading-relaxed')}>
         <BookOpen className="inline h-3 w-3 mr-1 opacity-60" />
         Activez un outil puis tracez sur le tableau. Couleur et épaisseur depuis le rail principal.
       </div>
@@ -1427,7 +1427,7 @@ function ArrangeTab() {
         </div>
       </div>
 
-      <div className={cn(designerShellCardInset, 'mt-2 text-[9px] text-white/38 leading-relaxed')}>
+      <div className={cn(designerShellCardInset, 'mt-2 text-[9px] text-white/[0.38] leading-relaxed')}>
         <LayoutGrid className="inline h-3 w-3 mr-1 opacity-60" />
         Créez un <strong className="text-white/60">Cadre</strong> (onglet Géométrie) pour regrouper visuellement des éléments. Glissez ensuite les éléments dans le cadre pour les organiser.
       </div>
@@ -1461,7 +1461,7 @@ function LatexDialog({ onClose, onInsert }) {
 
   return (
     <div className="fixed inset-0 z-[200] flex items-center justify-center bg-black/55 backdrop-blur-sm">
-      <div className="w-[min(92vw,540px)] rounded-2xl border border-white/[0.11] bg-[#14131c]/98 p-5 shadow-[0_24px_80px_-20px_rgba(0,0,0,.8)] space-y-3">
+      <div className="w-[min(92vw,540px)] rounded-2xl border border-white/[0.11] bg-[#14131c]/[0.98] p-5 shadow-[0_24px_80px_-20px_rgba(0,0,0,.8)] space-y-3">
         <div className="flex items-center justify-between">
           <p className="text-[13px] font-bold text-white/90 tracking-tight">Formule LaTeX / KaTeX</p>
           <button type="button" onClick={onClose} className="text-white/40 hover:text-white/75 text-lg leading-none">✕</button>
@@ -1482,8 +1482,8 @@ function LatexDialog({ onClose, onInsert }) {
             className={cn(
               'text-[9px] px-2.5 py-1 rounded-lg border',
               displayMode
-                ? 'border-amber-500/40 bg-amber-500/12 text-amber-200'
-                : 'border-white/12 bg-white/4 text-white/50',
+                ? 'border-amber-500/40 bg-amber-500/[0.12] text-amber-200'
+                : 'border-white/[0.12] bg-white/[0.04] text-white/50',
             )}
           >
             {displayMode ? 'Mode display (centré)' : 'Mode inline'}
@@ -1498,7 +1498,7 @@ function LatexDialog({ onClose, onInsert }) {
                 key={label}
                 type="button"
                 onClick={() => setFormula(f)}
-                className="text-[9px] px-2 py-0.5 rounded-lg border border-white/10 bg-white/4 text-white/55 hover:border-amber-500/35 hover:text-amber-100 transition-colors"
+                className="text-[9px] px-2 py-0.5 rounded-lg border border-white/10 bg-white/[0.04] text-white/55 hover:border-amber-500/35 hover:text-amber-100 transition-colors"
               >
                 {label}
               </button>
@@ -1510,11 +1510,11 @@ function LatexDialog({ onClose, onInsert }) {
           <button
             type="button"
             onClick={() => formula.trim() && onInsert(formula.trim(), displayMode)}
-            className="flex-1 rounded-xl border border-amber-500/45 bg-amber-500/16 py-2 text-[11px] font-bold text-amber-100 hover:bg-amber-500/24 transition-colors"
+            className="flex-1 rounded-xl border border-amber-500/45 bg-amber-500/[0.16] py-2 text-[11px] font-bold text-amber-100 hover:bg-amber-500/[0.24] transition-colors"
           >
             ✓ Placer sur le tableau
           </button>
-          <button type="button" onClick={onClose} className="px-4 rounded-xl border border-white/12 bg-white/4 text-[11px] text-white/55">
+          <button type="button" onClick={onClose} className="px-4 rounded-xl border border-white/[0.12] bg-white/[0.04] text-[11px] text-white/55">
             Annuler
           </button>
         </div>
@@ -1542,7 +1542,7 @@ function EnseignantTab() {
         className={cn(
           designerShellChipGhost,
           'w-full flex items-center gap-2 py-2.5 text-[9px] font-semibold',
-          tool === 'curtain' && 'border-amber-500/55 bg-amber-500/16 text-amber-100',
+          tool === 'curtain' && 'border-amber-500/55 bg-amber-500/[0.16] text-amber-100',
         )}
         title="Glissez pour couvrir une zone — déplacez/redimensionnez pour révéler"
       >
@@ -1572,7 +1572,7 @@ function EnseignantTab() {
             className={cn(
               designerShellChipGhost,
               'py-1.5 text-[9px]',
-              boardSurface === id && `border-${color}-500/45 bg-${color}-500/14 text-${color}-100`,
+              boardSurface === id && `border-${color}-500/45 bg-${color}-500/[0.14] text-${color}-100`,
             )}
           >
             {label}
@@ -1592,8 +1592,8 @@ function EnseignantTab() {
           <button key={id} type="button" onClick={() => setTplCat(id)}
             className={cn('rounded-lg px-2 py-1 text-[8px] font-semibold border transition-colors',
               tplCat === id
-                ? 'border-amber-500/45 bg-amber-500/14 text-amber-100'
-                : 'border-white/10 bg-white/4 text-white/45 hover:text-white/70')}>
+                ? 'border-amber-500/45 bg-amber-500/[0.14] text-amber-100'
+                : 'border-white/10 bg-white/[0.04] text-white/45 hover:text-white/70')}>
             {label}
           </button>
         ))}
@@ -1610,8 +1610,8 @@ function EnseignantTab() {
             className={cn(
               'w-full text-left rounded-xl border px-3 py-2 transition-colors',
               tool === 'template-place' && pendingTemplate?.id === tpl.id
-                ? 'border-amber-500/55 bg-amber-500/14 text-amber-100'
-                : 'border-white/8 bg-white/3 text-white/60 hover:border-white/18 hover:text-white/85',
+                ? 'border-amber-500/55 bg-amber-500/[0.14] text-amber-100'
+                : 'border-white/[0.08] bg-white/[0.03] text-white/60 hover:border-white/[0.18] hover:text-white/85',
             )}
           >
             <span className="font-mono text-[14px] mr-2">{tpl.icon}</span>
@@ -1672,8 +1672,8 @@ export default function LiveWhiteboardSchoolTab({ className, onLatexInsertReques
             className={cn(
               'flex items-center gap-1 rounded-lg px-2 py-1 text-[9px] font-semibold border transition-colors',
               subTab === id
-                ? 'border-amber-500/45 bg-amber-500/14 text-amber-100'
-                : 'border-white/10 bg-white/4 text-white/50 hover:border-white/20 hover:text-white/70',
+                ? 'border-amber-500/45 bg-amber-500/[0.14] text-amber-100'
+                : 'border-white/10 bg-white/[0.04] text-white/50 hover:border-white/20 hover:text-white/70',
             )}
           >
             <Icon className="h-3 w-3" />

@@ -278,7 +278,7 @@ export default function KnowledgeBaseManager() {
 
         {/* ── Add form (collapsible) ── */}
         {showForm && (
-          <div className="rounded-2xl border border-[color-mix(in_srgb,var(--school-accent)_30%,transparent)] bg-white/3 p-6 space-y-4">
+          <div className="rounded-2xl border border-[color-mix(in_srgb,var(--school-accent)_30%,transparent)] bg-white/[0.03] p-6 space-y-4">
             <div className="flex items-center justify-between">
               <div className="text-sm font-semibold text-[var(--school-accent)] uppercase tracking-wider">Nouveau document</div>
               <button type="button" onClick={() => setShowForm(false)} className="text-gray-500 hover:text-white"><X className="w-4 h-4" /></button>
@@ -361,7 +361,7 @@ export default function KnowledgeBaseManager() {
               <div
                 key={entry.id}
                 onClick={() => openEntry(entry)}
-                className={`rounded-xl border p-4 flex items-start gap-3 cursor-pointer transition-all group ${selected?.id === entry.id ? 'border-[color-mix(in_srgb,var(--school-accent)_50%,transparent)] bg-[color-mix(in_srgb,var(--school-accent)_5%,transparent)]' : 'border-white/10 bg-white/3 hover:border-white/20 hover:bg-white/5'}`}
+                className={`rounded-xl border p-4 flex items-start gap-3 cursor-pointer transition-all group ${selected?.id === entry.id ? 'border-[color-mix(in_srgb,var(--school-accent)_50%,transparent)] bg-[color-mix(in_srgb,var(--school-accent)_5%,transparent)]' : 'border-white/10 bg-white/[0.03] hover:border-white/20 hover:bg-white/5'}`}
               >
                 <div className="flex-1 min-w-0 space-y-1">
                   <div className="flex items-center gap-2 flex-wrap">

@@ -54,7 +54,7 @@ export default function AiHubSuggestionCard({
           <button
             type="button"
             onClick={onApply}
-            className="inline-flex items-center gap-1 rounded-lg border border-emerald-500/35 bg-emerald-500/12 px-2 py-1 text-[9px] font-semibold text-emerald-200/95 transition-colors hover:bg-emerald-500/20"
+            className="inline-flex items-center gap-1 rounded-lg border border-emerald-500/35 bg-emerald-500/[0.12] px-2 py-1 text-[9px] font-semibold text-emerald-200/95 transition-colors hover:bg-emerald-500/20"
           >
             <CheckCircle2 className="h-3 w-3" />
             Appliquer
@@ -74,7 +74,7 @@ export default function AiHubSuggestionCard({
           <button
             type="button"
             onClick={onExplain}
-            className="inline-flex items-center gap-1 rounded-lg border border-amber-500/25 bg-amber-500/10 px-2 py-1 text-[9px] font-medium text-amber-200/90 transition-colors hover:bg-amber-500/16"
+            className="inline-flex items-center gap-1 rounded-lg border border-amber-500/25 bg-amber-500/10 px-2 py-1 text-[9px] font-medium text-amber-200/90 transition-colors hover:bg-amber-500/[0.16]"
           >
             Expliquer
           </button>

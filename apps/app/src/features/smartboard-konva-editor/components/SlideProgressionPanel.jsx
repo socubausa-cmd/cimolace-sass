@@ -61,7 +61,7 @@ export default function SlideProgressionPanel({
             )
           ) : (
             <span
-              className="shrink-0 rounded-full border border-white/12 bg-white/[0.04] px-2 py-0.5 text-[9px] font-medium uppercase tracking-wide text-white/40"
+              className="shrink-0 rounded-full border border-white/[0.12] bg-white/[0.04] px-2 py-0.5 text-[9px] font-medium uppercase tracking-wide text-white/40"
               title="Enregistrez une base avant une démo live pour pouvoir rétablir le canvas."
             >
               Pas de base

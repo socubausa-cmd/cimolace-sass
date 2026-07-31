@@ -139,7 +139,7 @@ function SessionAlert({ session, onDismiss }) {
         ? 'bg-violet-500/20 border-violet-500/35 text-violet-200 hover:bg-violet-500/30'
         : 'bg-cyan-500/20 border-cyan-500/35 text-cyan-200 hover:bg-cyan-500/30'
       : staleHost
-        ? 'bg-amber-500/20 border-amber-500/30 text-amber-200 hover:bg-amber-500/28'
+        ? 'bg-amber-500/20 border-amber-500/30 text-amber-200 hover:bg-amber-500/[0.28]'
         : joinArena || immersiveActive || immersivePending
           ? 'bg-emerald-500/20 border-emerald-500/30 text-emerald-300 hover:bg-emerald-500/30'
           : 'bg-[color-mix(in_srgb,var(--school-accent)_15%,transparent)] border-[color-mix(in_srgb,var(--school-accent)_30%,transparent)] text-[var(--school-accent)] hover:bg-[color-mix(in_srgb,var(--school-accent)_25%,transparent)]';

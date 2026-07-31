@@ -42,10 +42,10 @@ const neuronQIconWrap =
   'flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-amber-500/25 bg-amber-500/[0.1] text-amber-200 shadow-[0_0_20px_-8px_rgba(245,158,11,0.35)]';
 
 const neuronQPrimaryBtn =
-  'flex min-h-11 items-center justify-center gap-2 rounded-xl border border-amber-500/35 bg-amber-500/10 px-4 py-2.5 text-[12px] font-semibold text-amber-100/95 transition-colors hover:bg-amber-500/16 disabled:cursor-not-allowed disabled:opacity-40 sm:min-h-8';
+  'flex min-h-11 items-center justify-center gap-2 rounded-xl border border-amber-500/35 bg-amber-500/10 px-4 py-2.5 text-[12px] font-semibold text-amber-100/95 transition-colors hover:bg-amber-500/[0.16] disabled:cursor-not-allowed disabled:opacity-40 sm:min-h-8';
 
 const neuronQSecondaryBtn =
-  'flex min-h-11 flex-1 items-center justify-center rounded-xl border border-white/10 bg-white/[0.04] px-3 py-2 text-[12px] text-white/55 transition-colors hover:border-white/14 hover:bg-white/[0.07] hover:text-white/88 sm:min-h-8 sm:text-xs';
+  'flex min-h-11 flex-1 items-center justify-center rounded-xl border border-white/10 bg-white/[0.04] px-3 py-2 text-[12px] text-white/55 transition-colors hover:border-white/[0.14] hover:bg-white/[0.07] hover:text-white/[0.88] sm:min-h-8 sm:text-xs';
 
 // ── Modal question élève ───────────────────────────────────────────────────────
 export function NeuronQStudentModal({
@@ -100,7 +100,7 @@ export function NeuronQStudentModal({
           <HelpCircle className="h-4 w-4" strokeWidth={1.75} aria-hidden />
         </div>
         <div className="min-w-0">
-          <p className="text-[11px] font-semibold tracking-wide text-white/92">NeuronQ</p>
+          <p className="text-[11px] font-semibold tracking-wide text-white/[0.92]">NeuronQ</p>
           <p className={cn(designerShellMicroLabel, 'mt-0.5 normal-case tracking-normal text-white/45')}>
             Poser une question au formateur
           </p>
@@ -126,7 +126,7 @@ export function NeuronQStudentModal({
     >
       {step === 'write' ? (
         <>
-          <p className="text-[11px] leading-relaxed text-white/48">
+          <p className="text-[11px] leading-relaxed text-white/[0.48]">
             Posez votre question simplement — l&apos;IA la reformule pour le formateur.
           </p>
           <textarea
@@ -173,16 +173,16 @@ export function NeuronQStudentModal({
         </>
       ) : (
         <>
-          <p className="text-[11px] leading-relaxed text-white/48">
+          <p className="text-[11px] leading-relaxed text-white/[0.48]">
             Voici comment votre question sera transmise au formateur :
           </p>
-          <div className={cn(designerShellCardInset, 'border-amber-500/18 bg-amber-500/[0.06]')}>
+          <div className={cn(designerShellCardInset, 'border-amber-500/[0.18] bg-amber-500/[0.06]')}>
             <div className="flex items-start gap-2.5">
               <Sparkles className="mt-0.5 h-3.5 w-3.5 shrink-0 text-amber-300/90" />
-              <p className="text-[13px] leading-relaxed text-white/92">{reformulated}</p>
+              <p className="text-[13px] leading-relaxed text-white/[0.92]">{reformulated}</p>
             </div>
           </div>
-          <p className="text-[9px] text-white/38">
+          <p className="text-[9px] text-white/[0.38]">
             Question originale :{' '}
             <span className="text-white/55 italic">&ldquo;{rawText}&rdquo;</span>
           </p>
@@ -236,7 +236,7 @@ export function NeuronQStudentModal({
               )}
             >
               <div className="flex flex-shrink-0 justify-center pb-1 pt-2" aria-hidden>
-                <div className="h-1 w-10 rounded-full bg-white/14" />
+                <div className="h-1 w-10 rounded-full bg-white/[0.14]" />
               </div>
               <span id="neuronq-sheet-title" className="sr-only">
                 NeuronQ — poser une question
@@ -275,7 +275,7 @@ export function NeuronQButton({ onClick, pendingOwnCount = 0, className }) {
       type="button"
       onClick={onClick}
       className={cn(
-        'relative flex min-h-11 items-center justify-center gap-2 rounded-full border border-amber-500/35 bg-[#14131c]/90 px-5 text-[11px] font-semibold text-amber-100/95 shadow-[0_4px_24px_-8px_rgba(245,158,11,0.35)] backdrop-blur-md transition-all hover:border-amber-500/45 hover:bg-amber-500/12 sm:min-h-9 sm:px-4',
+        'relative flex min-h-11 items-center justify-center gap-2 rounded-full border border-amber-500/35 bg-[#14131c]/90 px-5 text-[11px] font-semibold text-amber-100/95 shadow-[0_4px_24px_-8px_rgba(245,158,11,0.35)] backdrop-blur-md transition-all hover:border-amber-500/45 hover:bg-amber-500/[0.12] sm:min-h-9 sm:px-4',
         className,
       )}
     >
@@ -303,8 +303,8 @@ export function NeuronQHostTab({ questions, onMarkAnswered, onMarkSkipped, qaMod
         className={cn(
           'flex min-h-11 w-full items-center gap-2 rounded-xl border px-3 text-[11px] font-semibold transition-all sm:min-h-9',
           qaMode
-            ? 'border-amber-500/35 bg-amber-500/12 text-amber-100 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]'
-            : 'border-white/[0.08] bg-[#1f1e1c]/80 text-white/60 hover:border-white/14 hover:bg-white/[0.04] hover:text-white/88',
+            ? 'border-amber-500/35 bg-amber-500/[0.12] text-amber-100 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]'
+            : 'border-white/[0.08] bg-[#1f1e1c]/80 text-white/60 hover:border-white/[0.14] hover:bg-white/[0.04] hover:text-white/[0.88]',
         )}
       >
         {qaMode ? <Pause className="h-3.5 w-3.5 shrink-0" /> : <Play className="h-3.5 w-3.5 shrink-0" />}
@@ -318,7 +318,7 @@ export function NeuronQHostTab({ questions, onMarkAnswered, onMarkSkipped, qaMod
             'flex h-28 flex-col items-center justify-center gap-2 border-dashed border-white/[0.06] bg-[#1f1e1c]/50',
           )}
         >
-          <HelpCircle className="h-6 w-6 text-white/22" strokeWidth={1.25} />
+          <HelpCircle className="h-6 w-6 text-white/[0.22]" strokeWidth={1.25} />
           <p className="text-[11px] text-white/40">Aucune question en attente</p>
         </div>
       ) : (
@@ -337,7 +337,7 @@ export function NeuronQHostTab({ questions, onMarkAnswered, onMarkSkipped, qaMod
                 </div>
                 <p className="truncate text-[10px] text-white/45">{q.user_name}</p>
               </div>
-              <p className="text-[11px] leading-relaxed text-white/88">
+              <p className="text-[11px] leading-relaxed text-white/[0.88]">
                 {q.reformulated_text || q.raw_text}
               </p>
               <div className="flex gap-1.5">
@@ -369,7 +369,7 @@ export function NeuronQHostTab({ questions, onMarkAnswered, onMarkSkipped, qaMod
 
       {answered.length > 0 && (
         <div className="space-y-1">
-          <p className={cn(designerShellMicroLabel, 'text-white/32')}>
+          <p className={cn(designerShellMicroLabel, 'text-white/[0.32]')}>
             {answered.length} répondu{answered.length > 1 ? 's' : ''}
           </p>
           {answered.map((q) => (
@@ -381,7 +381,7 @@ export function NeuronQHostTab({ questions, onMarkAnswered, onMarkSkipped, qaMod
               )}
             >
               <Check className="mt-0.5 h-3 w-3 shrink-0 text-amber-400/90" />
-              <p className="line-clamp-2 text-[10px] leading-relaxed text-white/48">
+              <p className="line-clamp-2 text-[10px] leading-relaxed text-white/[0.48]">
                 {q.reformulated_text || q.raw_text}
               </p>
             </div>
@@ -403,7 +403,7 @@ export function QAModeOverlay({ questions, onMarkAnswered, onMarkSkipped, onClos
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
-      className="fixed inset-0 z-[58] flex flex-col items-center justify-center bg-[#080910]/78 px-3 pt-[max(3rem,env(safe-area-inset-top))] pb-[max(1.5rem,env(safe-area-inset-bottom))] backdrop-blur-[10px] sm:absolute"
+      className="fixed inset-0 z-[58] flex flex-col items-center justify-center bg-[#080910]/[0.78] px-3 pt-[max(3rem,env(safe-area-inset-top))] pb-[max(1.5rem,env(safe-area-inset-bottom))] backdrop-blur-[10px] sm:absolute"
     >
       <div
         className={cn(
@@ -442,7 +442,7 @@ export function QAModeOverlay({ questions, onMarkAnswered, onMarkSkipped, onClos
               onClick={() => setIdx(i)}
               className={cn(
                 'h-2 w-2 rounded-full transition-all',
-                i === idx ? 'scale-125 bg-amber-400' : 'bg-white/18 hover:bg-white/35',
+                i === idx ? 'scale-125 bg-amber-400' : 'bg-white/[0.18] hover:bg-white/35',
               )}
             />
           ))}
@@ -454,7 +454,7 @@ export function QAModeOverlay({ questions, onMarkAnswered, onMarkSkipped, onClos
         <div className="w-full max-w-2xl space-y-5 px-4 text-center sm:space-y-6 sm:px-8">
           <div className="space-y-1 sm:space-y-2">
             <p className={cn(designerShellMicroLabel, 'text-amber-200/45')}>Question de</p>
-            <p className="text-sm font-semibold text-white/82">{current.user_name}</p>
+            <p className="text-sm font-semibold text-white/[0.82]">{current.user_name}</p>
           </div>
           <motion.p
             key={current.id}
@@ -486,7 +486,7 @@ export function QAModeOverlay({ questions, onMarkAnswered, onMarkSkipped, onClos
               }}
               className={cn(
                 designerShellChipGhost,
-                'flex min-h-12 cursor-pointer items-center justify-center gap-2 border-white/[0.1] px-5 py-3 text-sm text-white/60 sm:min-h-9 sm:py-2 hover:text-white/88',
+                'flex min-h-12 cursor-pointer items-center justify-center gap-2 border-white/[0.1] px-5 py-3 text-sm text-white/60 sm:min-h-9 sm:py-2 hover:text-white/[0.88]',
               )}
             >
               <SkipForward className="h-4 w-4" /> Passer
@@ -496,7 +496,7 @@ export function QAModeOverlay({ questions, onMarkAnswered, onMarkSkipped, onClos
       ) : (
         <div className="space-y-2 text-center">
           <Check className="mx-auto h-10 w-10 text-amber-400/90" />
-          <p className="text-lg font-semibold text-white/82">Toutes les questions ont été traitées</p>
+          <p className="text-lg font-semibold text-white/[0.82]">Toutes les questions ont été traitées</p>
           <button
             type="button"
             onClick={onClose}

@@ -24,7 +24,7 @@ export const LiveHostLongiaSubDrawerHeader = ({ longiaSignalSubDrawer, onBack })
         onClick={onBack}
         className={cn(
           designerShellChipGhost,
-          '!rounded-xl !px-3 !py-2 !text-[10px] !font-semibold !uppercase !tracking-[0.1em] !text-white/80 hover:!border-white/18 hover:!bg-white/[0.07] hover:!text-white/95',
+          '!rounded-xl !px-3 !py-2 !text-[10px] !font-semibold !uppercase !tracking-[0.1em] !text-white/80 hover:!border-white/[0.18] hover:!bg-white/[0.07] hover:!text-white/95',
         )}
       >
         ← Retour

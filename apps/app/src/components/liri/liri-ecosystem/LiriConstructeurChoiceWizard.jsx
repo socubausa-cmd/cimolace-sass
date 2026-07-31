@@ -112,7 +112,7 @@ export default function LiriConstructeurChoiceWizard({ className }) {
           <button
             type="button"
             onClick={reset}
-            className="inline-flex items-center gap-1.5 self-start rounded-lg border border-white/12 px-2.5 py-1 text-[11px] text-white/45 transition-colors hover:bg-white/[0.06] hover:text-white/75"
+            className="inline-flex items-center gap-1.5 self-start rounded-lg border border-white/[0.12] px-2.5 py-1 text-[11px] text-white/45 transition-colors hover:bg-white/[0.06] hover:text-white/75"
           >
             <RotateCcw className="h-3 w-3" />
             Recommencer
@@ -130,7 +130,7 @@ export default function LiriConstructeurChoiceWizard({ className }) {
               className="rounded-2xl border border-white/[0.08] bg-white/[0.03] px-4 py-3 text-left transition-all hover:border-cyan-400/35 hover:bg-cyan-500/[0.07]"
             >
               <span className="text-[13px] font-semibold text-white/90">{p.label}</span>
-              <span className="mt-1 block text-[11px] text-white/42">{p.hint}</span>
+              <span className="mt-1 block text-[11px] text-white/[0.42]">{p.hint}</span>
             </button>
           ))}
         </div>
@@ -148,7 +148,7 @@ export default function LiriConstructeurChoiceWizard({ className }) {
                 className="rounded-2xl border border-white/[0.08] bg-white/[0.03] px-4 py-3 text-left transition-all hover:border-cyan-400/30 hover:bg-cyan-500/[0.06]"
               >
                 <span className="text-[13px] font-semibold text-white/90">{c.label}</span>
-                <span className="mt-1 block text-[11px] text-white/42">{c.sub}</span>
+                <span className="mt-1 block text-[11px] text-white/[0.42]">{c.sub}</span>
               </button>
             ))}
           </div>
@@ -190,7 +190,7 @@ export default function LiriConstructeurChoiceWizard({ className }) {
             </div>
           </div>
           {primary?.altId && primary.resultId === 'liri-formation' ? (
-            <p className="text-[11px] text-white/38">
+            <p className="text-[11px] text-white/[0.38]">
               {primary.altLabel} :{' '}
               <Link to={getConstructeurById(primary.altId)?.href ?? '#'} className="text-teal-400/90 underline-offset-2 hover:underline">
                 {getConstructeurById(primary.altId)?.title}
@@ -198,7 +198,7 @@ export default function LiriConstructeurChoiceWizard({ className }) {
             </p>
           ) : null}
           {methodEntry?.altId ? (
-            <p className="text-[11px] text-white/38">
+            <p className="text-[11px] text-white/[0.38]">
               {methodEntry.altLabel}{' '}
               <Link to={getConstructeurById(methodEntry.altId)?.href ?? '#'} className="text-cyan-400/90 underline-offset-2 hover:underline">
                 {getConstructeurById(methodEntry.altId)?.title}

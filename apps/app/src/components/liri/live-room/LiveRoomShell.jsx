@@ -73,7 +73,7 @@ function immersiveInitials(name) {
 
 /** Panneau « arène » bordure or / halo (mockup premium) */
 const immersiveArenaPanelClass =
-  'rounded-2xl border border-[color-mix(in_srgb,var(--school-accent)_40%,transparent)] bg-[#070a10]/92 shadow-[0_0_42px_-14px_rgba(212,175,55,0.28),inset_0_1px_0_0_rgba(212,175,55,0.12)] backdrop-blur-md';
+  'rounded-2xl border border-[color-mix(in_srgb,var(--school-accent)_40%,transparent)] bg-[#070a10]/[0.92] shadow-[0_0_42px_-14px_rgba(212,175,55,0.28),inset_0_1px_0_0_rgba(212,175,55,0.12)] backdrop-blur-md';
 
 // ─── Inline member panel (top-right) ou feuille basse (mobile étroit) ─────────
 function MembersPanel({ open, participants, activeId, onPromote, onClose, readOnly, sheetLayout = false }) {
@@ -151,7 +151,7 @@ function MembersPanel({ open, participants, activeId, onPromote, onClose, readOn
             <motion.div
               {...liveDrawerSheetBottom}
               onClick={(e) => e.stopPropagation()}
-              className="fixed inset-x-0 bottom-0 top-[14vh] z-[45] flex flex-col rounded-t-[22px] border border-white/[0.12] bg-[#0c1425]/96 backdrop-blur-xl p-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] shadow-[0_-24px_60px_-20px_rgba(0,0,0,0.85)]"
+              className="fixed inset-x-0 bottom-0 top-[14vh] z-[45] flex flex-col rounded-t-[22px] border border-white/[0.12] bg-[#0c1425]/[0.96] backdrop-blur-xl p-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] shadow-[0_-24px_60px_-20px_rgba(0,0,0,0.85)]"
             >
               <div className="flex-shrink-0 flex justify-center pb-2" aria-hidden>
                 <div className="h-1 w-9 rounded-full bg-white/20" />
@@ -163,7 +163,7 @@ function MembersPanel({ open, participants, activeId, onPromote, onClose, readOn
           <motion.div
             {...liveDrawerFloatPanel}
             style={{ ...liveDrawerFloatPanel.style, transformOrigin: '100% 0%' }}
-            className="absolute top-[132px] right-4 z-40 w-[min(92vw,320px)] rounded-[22px] border border-white/[0.07] bg-[#0c1425]/88 p-3 shadow-[0_24px_60px_-30px_rgba(0,0,0,0.75)]"
+            className="absolute top-[132px] right-4 z-40 w-[min(92vw,320px)] rounded-[22px] border border-white/[0.07] bg-[#0c1425]/[0.88] p-3 shadow-[0_24px_60px_-30px_rgba(0,0,0,0.75)]"
           >
             {inner}
           </motion.div>
@@ -207,7 +207,7 @@ function CoursePlanRailBlock({
                 <div className="text-[10px] font-medium text-white/50">
                   {highlightScene === 'smartboard' ? 'Slide IA' : 'Diapo'} {idx + 1}
                 </div>
-                <div className="font-serif text-sm text-white/92 truncate leading-snug">
+                <div className="font-serif text-sm text-white/[0.92] truncate leading-snug">
                   {s?.title || s?.label || s?.name || `Point ${idx + 1}`}
                 </div>
               </>
@@ -989,16 +989,16 @@ export default function LiveRoomShell({
   /** Plein écran immersif : un seul fond, pas de flou ni cadres visibles (studio créateur) */
   const glassPanel = 'rounded-2xl border border-transparent bg-transparent shadow-none';
   const glassSub =
-    'rounded-xl border border-white/[0.09] bg-black/22 backdrop-blur-xl shadow-[0_22px_56px_-32px_rgba(0,0,0,0.88),inset_0_1px_0_0_rgba(255,255,255,0.05),0_0_0_1px_rgba(212,175,55,0.05)]';
-  const railColumn = 'h-full pt-9 px-1 sm:px-1.5 pb-2 flex flex-col gap-1.5 overflow-y-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden text-[15px] leading-relaxed text-white/88 antialiased';
-  const railTitle = 'font-serif text-[13px] font-semibold text-white/92 tracking-tight';
+    'rounded-xl border border-white/[0.09] bg-black/[0.22] backdrop-blur-xl shadow-[0_22px_56px_-32px_rgba(0,0,0,0.88),inset_0_1px_0_0_rgba(255,255,255,0.05),0_0_0_1px_rgba(212,175,55,0.05)]';
+  const railColumn = 'h-full pt-9 px-1 sm:px-1.5 pb-2 flex flex-col gap-1.5 overflow-y-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden text-[15px] leading-relaxed text-white/[0.88] antialiased';
+  const railTitle = 'font-serif text-[13px] font-semibold text-white/[0.92] tracking-tight';
   /** Maquette LIRI invité : repères colorés zone 1 / 2 / 3 (hôte inchangé). */
   const liriGuestLayout = !isHost;
   const zone1Shell = liriGuestLayout
     ? 'rounded-2xl border border-red-500/25 bg-black/[0.07] shadow-[inset_0_1px_0_0_rgba(248,113,113,0.14)]'
     : glassPanel;
   const zone2Shell = liriGuestLayout
-    ? 'rounded-2xl border border-amber-400/22 bg-black/[0.05] shadow-[inset_0_1px_0_0_rgba(248,152,56,0.12)]'
+    ? 'rounded-2xl border border-amber-400/[0.22] bg-black/[0.05] shadow-[inset_0_1px_0_0_rgba(248,152,56,0.12)]'
     : glassPanel;
   const zone3Shell = liriGuestLayout
     ? 'rounded-2xl border border-[color-mix(in_srgb,var(--school-accent)_28%,transparent)] bg-black/[0.06] shadow-[inset_0_1px_0_0_rgba(212,175,55,0.12)]'
@@ -1144,7 +1144,7 @@ export default function LiveRoomShell({
                   onArenaHostActivityFeedClear();
                   setArenaNotifFilter('all');
                 }}
-                className="flex h-7 w-7 items-center justify-center rounded-lg border border-white/12 bg-white/[0.04] text-white/55 transition-colors hover:border-red-400/35 hover:bg-red-500/10 hover:text-red-300"
+                className="flex h-7 w-7 items-center justify-center rounded-lg border border-white/[0.12] bg-white/[0.04] text-white/55 transition-colors hover:border-red-400/35 hover:bg-red-500/10 hover:text-red-300"
                 title="Vider le journal"
                 aria-label="Vider le journal des notifications"
               >
@@ -1166,7 +1166,7 @@ export default function LiveRoomShell({
                     'shrink-0 rounded-lg border px-2 py-0.5 text-[8px] font-medium transition-colors',
                     active
                       ? 'border-[color-mix(in_srgb,var(--school-accent)_45%,transparent)] bg-[color-mix(in_srgb,var(--school-accent)_12%,transparent)] text-[#f5dd8a]'
-                      : 'border-white/10 bg-white/[0.03] text-white/50 hover:border-white/18 hover:text-white/75',
+                      : 'border-white/10 bg-white/[0.03] text-white/50 hover:border-white/[0.18] hover:text-white/75',
                   )}
                 >
                   {opt.label}
@@ -1177,9 +1177,9 @@ export default function LiveRoomShell({
         ) : null}
         <div className="max-h-[min(28vh,240px)] min-h-[5rem] space-y-1.5 overflow-y-auto overflow-x-hidden pr-0.5 [scrollbar-width:thin]">
           {!isHost ? (
-            <div className="rounded-lg border border-dashed border-white/12 bg-black/20 px-2 py-5 text-center">
+            <div className="rounded-lg border border-dashed border-white/[0.12] bg-black/20 px-2 py-5 text-center">
               <p className="text-[10px] text-white/40">Fil d&apos;événements réservé à l&apos;hôte</p>
-              <p className="mt-1 text-[9px] text-white/28">0 notification</p>
+              <p className="mt-1 text-[9px] text-white/[0.28]">0 notification</p>
             </div>
           ) : arenaHostActivityFeed.length === 0 ? (
             <div className="rounded-lg border border-dashed border-[color-mix(in_srgb,var(--school-accent)_22%,transparent)] bg-black/25 px-2 py-5 text-center">
@@ -1187,7 +1187,7 @@ export default function LiveRoomShell({
               <p className="mt-1 text-[9px] text-white/35">Aucun événement récent</p>
             </div>
           ) : arenaNotifFiltered.length === 0 ? (
-            <div className="rounded-lg border border-dashed border-white/14 bg-black/20 px-2 py-5 text-center">
+            <div className="rounded-lg border border-dashed border-white/[0.14] bg-black/20 px-2 py-5 text-center">
               <p className="text-[10px] text-white/50">Aucun événement pour ce filtre</p>
               <button
                 type="button"
@@ -1203,7 +1203,7 @@ export default function LiveRoomShell({
                 key={item.id}
                 className="rounded-lg border border-white/10 bg-white/[0.03] px-2 py-1.5"
               >
-                <p className="text-[10px] leading-snug text-white/88">{item.text}</p>
+                <p className="text-[10px] leading-snug text-white/[0.88]">{item.text}</p>
                 <p className="mt-0.5 text-[8px] tabular-nums text-white/35">
                   {typeof item.at === 'number'
                     ? new Date(item.at).toLocaleTimeString('fr-FR', {
@@ -1484,9 +1484,9 @@ export default function LiveRoomShell({
             </div>
             <div className="max-h-[min(28vh,240px)] min-h-[5rem] space-y-1.5 overflow-y-auto overflow-x-hidden pr-0.5 [scrollbar-width:thin]">
               {!isHost ? (
-                <div className="rounded-lg border border-dashed border-white/12 bg-black/20 px-2 py-5 text-center">
+                <div className="rounded-lg border border-dashed border-white/[0.12] bg-black/20 px-2 py-5 text-center">
                   <p className="text-[10px] text-white/40">Réservé à l&apos;hôte</p>
-                  <p className="mt-1 text-[9px] text-white/28">0 personne en attente</p>
+                  <p className="mt-1 text-[9px] text-white/[0.28]">0 personne en attente</p>
                 </div>
               ) : arenaWaitingEntries.length === 0 ? (
                 <div className="rounded-lg border border-dashed border-[color-mix(in_srgb,var(--school-accent)_22%,transparent)] bg-black/25 px-2 py-5 text-center">
@@ -1497,7 +1497,7 @@ export default function LiveRoomShell({
                 arenaWaitingEntries.map((entry) => (
                   <div
                     key={entry.id}
-                    className="space-y-1.5 rounded-lg border border-amber-400/18 bg-amber-500/[0.06] p-2"
+                    className="space-y-1.5 rounded-lg border border-amber-400/[0.18] bg-amber-500/[0.06] p-2"
                   >
                     <div className="flex items-center gap-2">
                       {entry.profiles?.avatar_url ? (
@@ -1548,7 +1548,7 @@ export default function LiveRoomShell({
                         <button
                           type="button"
                           onClick={() => onArenaRejectWaiting(entry.id)}
-                          className="h-7 rounded-lg border border-red-500/25 bg-red-500/10 px-2 text-[9px] text-red-400 hover:bg-red-500/18"
+                          className="h-7 rounded-lg border border-red-500/25 bg-red-500/10 px-2 text-[9px] text-red-400 hover:bg-red-500/[0.18]"
                         >
                           Refuser
                         </button>
@@ -1642,7 +1642,7 @@ export default function LiveRoomShell({
             </div>
             <div className="max-h-[min(24vh,200px)] min-h-[4rem] space-y-1.5 overflow-y-auto overflow-x-hidden pr-0.5 [scrollbar-width:thin]">
               {raisedHandsOnly.length === 0 ? (
-                <div className="rounded-lg border border-dashed border-white/12 bg-black/20 px-2 py-4 text-center">
+                <div className="rounded-lg border border-dashed border-white/[0.12] bg-black/20 px-2 py-4 text-center">
                   <p className="text-[10px] text-white/45">Aucune main levée</p>
                   <p className="mt-1 text-[9px] text-white/30">0 main levée</p>
                 </div>
@@ -1969,7 +1969,7 @@ export default function LiveRoomShell({
             className={cn(
               'flex-shrink-0 border-b px-3 py-1.5',
               liriArenaDesktopChrome
-                ? 'border-amber-400/12 bg-[#0a0612]/40'
+                ? 'border-amber-400/[0.12] bg-[#0a0612]/40'
                 : 'border-amber-400/10 bg-amber-500/[0.04]',
             )}
           >
@@ -2230,7 +2230,7 @@ export default function LiveRoomShell({
                 const row = (
                   <>
                     <div className="text-[10px] font-medium text-white/50">Diapositive {idx + 1}</div>
-                    <div className="font-serif text-sm text-white/92 truncate leading-snug">{s?.title || s?.label || `Chapitre ${idx + 1}`}</div>
+                    <div className="font-serif text-sm text-white/[0.92] truncate leading-snug">{s?.title || s?.label || `Chapitre ${idx + 1}`}</div>
                   </>
                 );
                 if (!isHost) {
@@ -2306,7 +2306,7 @@ export default function LiveRoomShell({
                       <span className="text-[8px] font-normal text-amber-300/80">· ouvrir sur l&apos;écran</span>
                     ) : null}
                   </p>
-                  <p className="font-serif text-sm leading-relaxed text-white/88 whitespace-pre-wrap line-clamp-[10]">
+                  <p className="font-serif text-sm leading-relaxed text-white/[0.88] whitespace-pre-wrap line-clamp-[10]">
                     {sec.content || sec.script || sec.objective || sec.description || sec.title || sec.name || '—'}
                   </p>
                 </>
@@ -2321,7 +2321,7 @@ export default function LiveRoomShell({
                       'w-full rounded-lg border p-2.5 transition-colors text-left',
                       scriptCurrentSection?.id === sec.id
                         ? 'border-[color-mix(in_srgb,var(--school-accent)_40%,transparent)] bg-[color-mix(in_srgb,var(--school-accent)_8%,transparent)] hover:bg-[color-mix(in_srgb,var(--school-accent)_12%,transparent)]'
-                        : 'border-white/10 bg-white/[0.03] hover:border-amber-500/30 hover:bg-amber-500/08',
+                        : 'border-white/10 bg-white/[0.03] hover:border-amber-500/30 hover:bg-amber-500/[0.08]',
                     )}
                   >
                     {inner}
@@ -2371,7 +2371,7 @@ export default function LiveRoomShell({
           <button
             type="button"
             onClick={() => setMembersOverviewOpen(true)}
-            className="h-7 px-2 rounded-lg border border-white/12 bg-white/[0.04] hover:bg-[color-mix(in_srgb,var(--school-accent)_12%,transparent)] hover:border-[color-mix(in_srgb,var(--school-accent)_30%,transparent)] text-[9px] text-white/75 flex items-center gap-1 flex-shrink-0"
+            className="h-7 px-2 rounded-lg border border-white/[0.12] bg-white/[0.04] hover:bg-[color-mix(in_srgb,var(--school-accent)_12%,transparent)] hover:border-[color-mix(in_srgb,var(--school-accent)_30%,transparent)] text-[9px] text-white/75 flex items-center gap-1 flex-shrink-0"
             title="Vue grille des membres"
           >
             <Users className="w-3 h-3 text-[color-mix(in_srgb,var(--school-accent)_90%,transparent)]" />
@@ -2469,7 +2469,7 @@ export default function LiveRoomShell({
               'h-6 px-2.5 rounded-full border text-[10px] font-semibold flex items-center gap-1.5',
               isReconnecting
                 ? 'bg-amber-500/30 border-amber-400/45 text-amber-200'
-                : 'bg-black/60 border-white/12 text-white/70'
+                : 'bg-black/60 border-white/[0.12] text-white/70'
             )}>
               <span className={cn('w-1.5 h-1.5 rounded-full flex-shrink-0', isReconnecting ? 'bg-amber-400 animate-pulse' : 'bg-amber-400 animate-pulse')} />
               {isReconnecting ? 'Reconnexion…' : 'LIRI Live'}
@@ -2481,7 +2481,7 @@ export default function LiveRoomShell({
                 onClick={() => setZone3Open((v) => !v)}
                 className={cn(
                   'h-6 w-6 rounded-full border flex items-center justify-center transition-colors',
-                  zone3Open ? 'border-[color-mix(in_srgb,var(--school-accent)_45%,transparent)] bg-[color-mix(in_srgb,var(--school-accent)_14%,transparent)] text-[#f5dd8a]' : 'border-white/12 bg-black/55 text-white/60 hover:text-white'
+                  zone3Open ? 'border-[color-mix(in_srgb,var(--school-accent)_45%,transparent)] bg-[color-mix(in_srgb,var(--school-accent)_14%,transparent)] text-[#f5dd8a]' : 'border-white/[0.12] bg-black/55 text-white/60 hover:text-white'
                 )}
                 title="Panneau interactif"
               >
@@ -2509,9 +2509,9 @@ export default function LiveRoomShell({
                 className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[min(94vw,900px)] max-h-[82vh] rounded-3xl border border-white/[0.12] bg-[#0c1018]/95 shadow-[0_40px_120px_-36px_rgba(0,0,0,0.9)] overflow-hidden"
                 onClick={(e) => e.stopPropagation()}
               >
-                <div className="h-14 px-5 border-b border-white/14 bg-white/[0.05] flex items-center justify-between">
+                <div className="h-14 px-5 border-b border-white/[0.14] bg-white/[0.05] flex items-center justify-between">
                   <div>
-                    <p className="text-sm text-white/92 font-semibold">
+                    <p className="text-sm text-white/[0.92] font-semibold">
                       {DEV_CONFIG[devModal.key]?.title || 'Component'}
                     </p>
                     <p className="text-[11px] text-white/55">{DEV_CONFIG[devModal.key]?.desc || 'Preview etat developpement'}</p>
@@ -2537,22 +2537,22 @@ export default function LiveRoomShell({
                   <div className="rounded-2xl border border-white/15 bg-white/[0.05] p-4">
                     <p className="text-[11px] uppercase tracking-wide text-white/55 mb-3">Contenu et ergonomie</p>
                     <div className="space-y-2">
-                      <div className="rounded-xl border border-white/12 bg-white/[0.04] p-3">
+                      <div className="rounded-xl border border-white/[0.12] bg-white/[0.04] p-3">
                         <p className="text-[12px] text-white/85 mb-1">Objectif UX</p>
                         <p className="text-[11px] text-white/65">Lecture immediate, controle premium, interaction fluide.</p>
                       </div>
-                      <div className="rounded-xl border border-white/12 bg-white/[0.04] p-3">
+                      <div className="rounded-xl border border-white/[0.12] bg-white/[0.04] p-3">
                         <p className="text-[12px] text-white/85 mb-1">Animation</p>
                         <p className="text-[11px] text-white/65">Transition scene/slide spring + fade, feedback audio subtil.</p>
                       </div>
-                      <div className="rounded-xl border border-white/12 bg-white/[0.04] p-3">
+                      <div className="rounded-xl border border-white/[0.12] bg-white/[0.04] p-3">
                         <p className="text-[12px] text-white/85 mb-1">Actions dev</p>
                         <p className="text-[11px] text-white/65">Double-clic panneaux, presets layout, resize, drag & swap.</p>
                       </div>
                     </div>
                   </div>
                   <div className="md:col-span-2 rounded-2xl border border-[color-mix(in_srgb,var(--school-accent)_28%,transparent)] bg-[color-mix(in_srgb,var(--school-accent)_10%,transparent)] p-4 flex items-center justify-between">
-                    <div className="text-[11px] text-white/82">
+                    <div className="text-[11px] text-white/[0.82]">
                       Mode immersion: composant isole en modal avec arriere-plan floute, pour revue detaillee en developpement.
                     </div>
                     <button type="button" onClick={closeDevModal} className="h-9 px-3 rounded-xl border border-[color-mix(in_srgb,var(--school-accent)_35%,transparent)] bg-[color-mix(in_srgb,var(--school-accent)_16%,transparent)] text-[#f5dd8a] text-[11px] flex items-center gap-1.5">

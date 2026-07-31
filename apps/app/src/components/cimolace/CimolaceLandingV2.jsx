@@ -266,7 +266,7 @@ function ControlPlaneScene() {
           <h2 className="text-5xl font-black leading-[0.94] tracking-tight md:text-7xl">
             Voir, activer, piloter.
           </h2>
-          <p className="mt-7 max-w-xl text-xl font-semibold leading-relaxed text-white/58">
+          <p className="mt-7 max-w-xl text-xl font-semibold leading-relaxed text-white/[0.58]">
             Cimolace doit montrer l'etat reel d\'un tenant : moteurs actifs, API connectees, statut live, facturation, maintenance et incidents.
           </p>
           <div className="mt-10 grid gap-3 sm:grid-cols-2">
@@ -302,7 +302,7 @@ function ControlPlaneScene() {
                     whileInView={{ opacity: 1, y: 0 }}
                     viewport={{ once: true }}
                     transition={{ duration: 0.55, delay: index * 0.05, ease }}
-                    className="rounded-[1.5rem] border border-white/8 bg-white/[0.06] p-4"
+                    className="rounded-[1.5rem] border border-white/[0.08] bg-white/[0.06] p-4"
                   >
                     <div className="flex items-start justify-between gap-4">
                       <div>
@@ -451,7 +451,7 @@ function SchoolStorySection() {
           <h2 className="text-5xl font-black leading-[0.96] tracking-tight md:text-7xl">
             ISNA / Prorascience montre la voie.
           </h2>
-          <p className="mt-7 max-w-xl text-xl font-semibold leading-relaxed text-white/58">
+          <p className="mt-7 max-w-xl text-xl font-semibold leading-relaxed text-white/[0.58]">
             Le modele ecole devient une infrastructure reutilisable: live, SmartBoard, cours, replay, marketing, calendrier et branding tenant.
           </p>
           <Link to="/cimolace/contact" className="mt-10 inline-flex items-center gap-2 rounded-full bg-white px-7 py-3 text-sm font-black text-[#15151a]">
@@ -546,7 +546,7 @@ function FinalCta() {
         <h2 className="mt-5 text-5xl font-black leading-[0.96] tracking-tight md:text-7xl">
           Votre plateforme peut commencer par un seul tenant.
         </h2>
-        <p className="mx-auto mt-7 max-w-2xl text-xl font-semibold leading-relaxed text-white/58">
+        <p className="mx-auto mt-7 max-w-2xl text-xl font-semibold leading-relaxed text-white/[0.58]">
           Lancez une ecole, un commerce, un studio ou une infrastructure sur mesure. Les moteurs sont deja la.
         </p>
         <div className="mt-10 flex flex-col items-center justify-center gap-3 sm:flex-row">

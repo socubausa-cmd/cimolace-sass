@@ -257,7 +257,7 @@ export default function OnboardingOrgPage() {
                     >
                       <Icon className="h-[14px] w-[14px]" style={{ color: ACCENT }} strokeWidth={2.1} />
                     </span>
-                    <span className="text-[13px] font-medium text-white/72">{title}</span>
+                    <span className="text-[13px] font-medium text-white/[0.72]">{title}</span>
                   </li>
                 ))}
               </ul>
@@ -280,7 +280,7 @@ export default function OnboardingOrgPage() {
                 />
               ))}
             </div>
-            <p className="text-[12.5px] text-white/38">
+            <p className="text-[12.5px] text-white/[0.38]">
               Des centaines d'organisations déjà actives
             </p>
           </motion.div>
@@ -327,7 +327,7 @@ export default function OnboardingOrgPage() {
               <div className="space-y-1.5">
                 <Label htmlFor="org" className={labelCls}>Nom de l'organisation</Label>
                 <div className="relative">
-                  <Building2 className="pointer-events-none absolute left-3.5 top-1/2 h-[16px] w-[16px] -translate-y-1/2 text-white/28" />
+                  <Building2 className="pointer-events-none absolute left-3.5 top-1/2 h-[16px] w-[16px] -translate-y-1/2 text-white/[0.28]" />
                   <Input
                     id="org" value={orgName}
                     onChange={(e) => { setOrgName(e.target.value); if (!slugEdited) checkSlug(e.target.value); }}
@@ -346,7 +346,7 @@ export default function OnboardingOrgPage() {
               {/* Slug */}
               <div className="space-y-1.5">
                 <Label htmlFor="slug" className={labelCls}>
-                  Identifiant <span className="text-white/28">(modifiable)</span>
+                  Identifiant <span className="text-white/[0.28]">(modifiable)</span>
                 </Label>
                 <Input
                   id="slug" value={slugEdited || slug}
@@ -359,10 +359,10 @@ export default function OnboardingOrgPage() {
               {/* Email */}
               <div className="space-y-1.5">
                 <Label htmlFor="email" className={labelCls}>
-                  E-mail <span className="text-white/28">(compte propriétaire)</span>
+                  E-mail <span className="text-white/[0.28]">(compte propriétaire)</span>
                 </Label>
                 <div className="relative">
-                  <Mail className="pointer-events-none absolute left-3.5 top-1/2 h-[16px] w-[16px] -translate-y-1/2 text-white/28" />
+                  <Mail className="pointer-events-none absolute left-3.5 top-1/2 h-[16px] w-[16px] -translate-y-1/2 text-white/[0.28]" />
                   <Input
                     id="email" type="email" autoComplete="email" value={email}
                     onChange={(e) => setEmail(e.target.value)} placeholder="vous@exemple.com"
@@ -374,10 +374,10 @@ export default function OnboardingOrgPage() {
               {/* Mot de passe */}
               <div className="space-y-1.5">
                 <Label htmlFor="password" className={labelCls}>
-                  Mot de passe <span className="text-white/28">(8 car. min.)</span>
+                  Mot de passe <span className="text-white/[0.28]">(8 car. min.)</span>
                 </Label>
                 <div className="relative">
-                  <Lock className="pointer-events-none absolute left-3.5 top-1/2 h-[16px] w-[16px] -translate-y-1/2 text-white/28" />
+                  <Lock className="pointer-events-none absolute left-3.5 top-1/2 h-[16px] w-[16px] -translate-y-1/2 text-white/[0.28]" />
                   <Input
                     id="password" type="password" autoComplete="new-password" value={password}
                     onChange={(e) => setPassword(e.target.value)} placeholder="••••••••"
@@ -420,7 +420,7 @@ export default function OnboardingOrgPage() {
               <span className="text-[13.5px]">Continuer avec Google</span>
             </button>
 
-            <p className="mt-4 text-center text-[13px] text-white/38">
+            <p className="mt-4 text-center text-[13px] text-white/[0.38]">
               Déjà une organisation ?{' '}
               <Link to="/login" className="font-semibold hover:underline" style={{ color: ACCENT }}>
                 Se connecter
@@ -429,7 +429,7 @@ export default function OnboardingOrgPage() {
           </div>
 
           {/* Mention légale sous la carte */}
-          <p className="mt-5 text-center text-[11px] leading-relaxed text-white/22">
+          <p className="mt-5 text-center text-[11px] leading-relaxed text-white/[0.22]">
             En créant votre espace, vous acceptez les{' '}
             <Link to="/conditions-utilisation" className="hover:text-white/40 transition-colors">Conditions d'utilisation</Link>
             {' '}et la{' '}

@@ -69,12 +69,12 @@ export function LongiaUnifiedReply({
   const labelDetails = 'Détails';
 
   const chipClassPrimary = isCompact
-    ? 'rounded-md border border-amber-500/30 bg-amber-500/12 px-1.5 py-0.5 text-[9px] font-semibold text-amber-100/90 hover:bg-amber-500/22'
+    ? 'rounded-md border border-amber-500/30 bg-amber-500/[0.12] px-1.5 py-0.5 text-[9px] font-semibold text-amber-100/90 hover:bg-amber-500/[0.22]'
     : 'rounded-lg border border-amber-500/35 bg-amber-500/15 px-2.5 py-1 text-[10px] font-semibold text-amber-100/95 shadow-sm transition-colors hover:border-amber-400/50 hover:bg-amber-500/25';
 
   const chipClassSecondary = isCompact
-    ? 'rounded-md border border-violet-500/25 bg-violet-500/10 px-1.5 py-0.5 text-[9px] font-semibold text-violet-100/90 hover:bg-violet-500/18'
-    : 'rounded-lg border border-violet-500/30 bg-violet-500/12 px-2.5 py-1 text-[10px] font-semibold text-violet-100/90 transition-colors hover:border-violet-400/45 hover:bg-violet-500/20';
+    ? 'rounded-md border border-violet-500/25 bg-violet-500/10 px-1.5 py-0.5 text-[9px] font-semibold text-violet-100/90 hover:bg-violet-500/[0.18]'
+    : 'rounded-lg border border-violet-500/30 bg-violet-500/[0.12] px-2.5 py-1 text-[10px] font-semibold text-violet-100/90 transition-colors hover:border-violet-400/45 hover:bg-violet-500/20';
 
   const chipClassGhost = isCompact
     ? 'rounded-md border border-white/[0.1] bg-white/[0.04] px-1.5 py-0.5 text-[9px] font-medium text-white/45 hover:bg-white/[0.07]'

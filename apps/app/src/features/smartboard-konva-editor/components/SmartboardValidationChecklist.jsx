@@ -25,7 +25,7 @@ export default function SmartboardValidationChecklist({ className }) {
         {(/** @type {(keyof typeof DEFAULT_VALIDATION_CHECKLIST)[]} */ (Object.keys(DEFAULT_VALIDATION_CHECKLIST))).map(
           (key) => (
             <li key={key}>
-              <label className="flex cursor-pointer items-start gap-2 text-[9px] text-white/72">
+              <label className="flex cursor-pointer items-start gap-2 text-[9px] text-white/[0.72]">
                 <input
                   type="checkbox"
                   checked={validationChecklist[key]}

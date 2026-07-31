@@ -281,7 +281,7 @@ export default function SchoolPathsParcoursPanel({ userId, onWeekClick }) {
               <Loader2 className="h-6 w-6 animate-spin" />
             </div>
           ) : paths.length === 0 ? (
-            <p className="py-6 text-center text-[12px] text-white/32">Aucun parcours — créez-en un ci-dessus.</p>
+            <p className="py-6 text-center text-[12px] text-white/[0.32]">Aucun parcours — créez-en un ci-dessus.</p>
           ) : (
             paths.map((p) => {
               const sel = selectedPathId === p.id;
@@ -292,7 +292,7 @@ export default function SchoolPathsParcoursPanel({ userId, onWeekClick }) {
                   onClick={() => selectPath(p)}
                   className={cn(
                     'flex w-full items-center gap-2 rounded-lg border px-2.5 py-2 text-left transition-all',
-                    sel ? 'border-teal-500/40 bg-teal-500/10' : 'border-white/[0.06] bg-white/[0.02] hover:border-white/12',
+                    sel ? 'border-teal-500/40 bg-teal-500/10' : 'border-white/[0.06] bg-white/[0.02] hover:border-white/[0.12]',
                   )}
                 >
                   {sel ? <ChevronDown className="h-3.5 w-3.5 shrink-0 text-teal-400" /> : <ChevronRight className="h-3.5 w-3.5 shrink-0 text-white/25" />}
@@ -309,7 +309,7 @@ export default function SchoolPathsParcoursPanel({ userId, onWeekClick }) {
 
       <div className="rounded-xl border border-white/[0.08] bg-white/[0.03] p-4">
         {!selectedPathId ? (
-          <p className="py-12 text-center text-[12px] text-white/32">Sélectionnez un parcours pour éditer le détail et les cours.</p>
+          <p className="py-12 text-center text-[12px] text-white/[0.32]">Sélectionnez un parcours pour éditer le détail et les cours.</p>
         ) : (
           <div className="space-y-4">
             <div>
@@ -334,7 +334,7 @@ export default function SchoolPathsParcoursPanel({ userId, onWeekClick }) {
                 value={editPath.startsOn}
                 onChange={(e) => setEditPath((x) => ({ ...x, startsOn: e.target.value }))}
               />
-              <p className="mt-1 text-[10px] text-white/32">Ancre les <code className="rounded bg-white/[0.06] px-0.5">week_days</code> sur une timeline (tous les cours du parcours, ordre modules → semaines).</p>
+              <p className="mt-1 text-[10px] text-white/[0.32]">Ancre les <code className="rounded bg-white/[0.06] px-0.5">week_days</code> sur une timeline (tous les cours du parcours, ordre modules → semaines).</p>
               <div className="mt-2 flex flex-wrap gap-2">
                 <button
                   type="button"
@@ -384,7 +384,7 @@ export default function SchoolPathsParcoursPanel({ userId, onWeekClick }) {
                 <button
                   type="submit"
                   disabled={busy || !newCourse.title.trim()}
-                  className="flex w-full items-center justify-center gap-1 rounded-lg border border-amber-500/35 bg-amber-500/10 py-1.5 text-[11px] font-semibold text-amber-200 hover:bg-amber-500/18 disabled:opacity-35"
+                  className="flex w-full items-center justify-center gap-1 rounded-lg border border-amber-500/35 bg-amber-500/10 py-1.5 text-[11px] font-semibold text-amber-200 hover:bg-amber-500/[0.18] disabled:opacity-35"
                 >
                   <Plus className="h-3 w-3" /> Ajouter un cours
                 </button>
@@ -412,9 +412,9 @@ export default function SchoolPathsParcoursPanel({ userId, onWeekClick }) {
                         <div className="flex flex-col gap-2">
                           <div className="flex items-start gap-2">
                             <div className="min-w-0 flex-1">
-                              <div className="text-[12px] font-medium text-white/82">{c.title}</div>
+                              <div className="text-[12px] font-medium text-white/[0.82]">{c.title}</div>
                               {c.level ? <div className="text-[10px] text-white/35">{c.level}</div> : null}
-                              {c.description ? <div className="mt-1 text-[11px] text-white/38">{c.description}</div> : null}
+                              {c.description ? <div className="mt-1 text-[11px] text-white/[0.38]">{c.description}</div> : null}
                             </div>
                             <button type="button" onClick={() => startEditCourse(c)} className="rounded p-1 text-white/35 hover:bg-white/[0.06] hover:text-white/70" aria-label="Modifier">
                               <Pencil className="h-3.5 w-3.5" />
@@ -426,7 +426,7 @@ export default function SchoolPathsParcoursPanel({ userId, onWeekClick }) {
                           <button
                             type="button"
                             onClick={() => setStructureCourse({ id: c.id, title: c.title })}
-                            className="flex items-center justify-center gap-1.5 rounded-lg border border-teal-500/30 bg-teal-500/10 py-1.5 text-[11px] font-medium text-teal-200/80 hover:bg-teal-500/18"
+                            className="flex items-center justify-center gap-1.5 rounded-lg border border-teal-500/30 bg-teal-500/10 py-1.5 text-[11px] font-medium text-teal-200/80 hover:bg-teal-500/[0.18]"
                           >
                             <Network className="h-3 w-3" />
                             Modules, semaines, jours, blocs
@@ -456,7 +456,7 @@ export default function SchoolPathsParcoursPanel({ userId, onWeekClick }) {
         <button
           type="button"
           onClick={() => setStructureCourse(null)}
-          className="mb-4 inline-flex items-center gap-1.5 rounded-lg border border-white/12 px-3 py-1.5 text-[11px] font-medium text-white/55 hover:bg-white/[0.06] hover:text-white/85"
+          className="mb-4 inline-flex items-center gap-1.5 rounded-lg border border-white/[0.12] px-3 py-1.5 text-[11px] font-medium text-white/55 hover:bg-white/[0.06] hover:text-white/85"
         >
           <ChevronRight className="h-3 w-3 rotate-180" />
           Retour aux cours du parcours

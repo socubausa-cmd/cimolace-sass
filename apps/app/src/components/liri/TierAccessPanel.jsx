@@ -378,7 +378,7 @@ export default function TierAccessPanel() {
               ? 'border-rose-400/25 bg-rose-500/[0.08]'
               : billingNotice.tone === 'soon'
                 ? 'border-[#d97757]/35 bg-[#d97757]/[0.08]'
-                : 'border-emerald-400/18 bg-emerald-500/[0.045]'
+                : 'border-emerald-400/[0.18] bg-emerald-500/[0.045]'
           }`}
         >
           <div className="flex items-start gap-3">
@@ -396,7 +396,7 @@ export default function TierAccessPanel() {
           </div>
           <a
             href="/liri/compte?section=facturation"
-            className="inline-flex shrink-0 items-center justify-center rounded-2xl border border-white/14 px-3.5 py-2 text-[12px] font-semibold text-white/75 transition-colors hover:bg-white/[0.06]"
+            className="inline-flex shrink-0 items-center justify-center rounded-2xl border border-white/[0.14] px-3.5 py-2 text-[12px] font-semibold text-white/75 transition-colors hover:bg-white/[0.06]"
           >
             {billingNotice.cta}
           </a>
@@ -419,7 +419,7 @@ export default function TierAccessPanel() {
               className={`group relative min-h-[116px] rounded-[1.35rem] border px-4 py-4 text-left transition-all duration-200 ${
                 active
                   ? 'border-[#d97757]/80 bg-[radial-gradient(circle_at_top_left,rgba(217,119,87,0.2),rgba(42,39,36,0.78)_45%,rgba(28,27,25,0.9))] shadow-[0_24px_70px_-42px_rgba(217,119,87,0.9)]'
-                  : 'border-white/8 bg-white/[0.035] hover:border-white/18 hover:bg-white/[0.055]'
+                  : 'border-white/[0.08] bg-white/[0.035] hover:border-white/[0.18] hover:bg-white/[0.055]'
               }`}
             >
               {key === RECOMMENDED && (
@@ -463,12 +463,12 @@ export default function TierAccessPanel() {
                 <h2 className="mt-1 text-3xl font-black leading-tight text-white">{CYCLE_LABEL[sel]}</h2>
               </div>
             </div>
-            <p className="mt-5 max-w-2xl text-[17px] font-medium leading-relaxed text-white/88">{d.tagline}</p>
-            <div className="mt-6 flex items-start gap-3 rounded-3xl border border-white/8 bg-black/15 p-4">
+            <p className="mt-5 max-w-2xl text-[17px] font-medium leading-relaxed text-white/[0.88]">{d.tagline}</p>
+            <div className="mt-6 flex items-start gap-3 rounded-3xl border border-white/[0.08] bg-black/15 p-4">
               <Target className="mt-0.5 h-5 w-5 shrink-0 text-[#e58a5f]" />
               <div>
                 <p className="text-[11px] font-bold uppercase tracking-wider text-white/40">Pour qui</p>
-                <p className="mt-1 text-[14px] leading-relaxed text-white/72">{d.forWhom}</p>
+                <p className="mt-1 text-[14px] leading-relaxed text-white/[0.72]">{d.forWhom}</p>
               </div>
             </div>
 
@@ -476,18 +476,18 @@ export default function TierAccessPanel() {
               {accessHighlights.map((a) => {
                 const Ico = a.icon || Check;
                 return (
-                  <div key={a.text} className="flex items-start gap-3 rounded-2xl border border-white/8 bg-white/[0.025] p-3.5">
+                  <div key={a.text} className="flex items-start gap-3 rounded-2xl border border-white/[0.08] bg-white/[0.025] p-3.5">
                     <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-[#d97757]/10 text-[#e58a5f]">
                       <Ico className="h-4 w-4" />
                     </span>
-                    <span className="text-[13px] leading-snug text-white/78">{a.text}</span>
+                    <span className="text-[13px] leading-snug text-white/[0.78]">{a.text}</span>
                   </div>
                 );
               })}
             </div>
           </div>
 
-          <aside className="relative rounded-[1.75rem] border border-white/10 bg-black/18 p-5 lg:p-6">
+          <aside className="relative rounded-[1.75rem] border border-white/10 bg-black/[0.18] p-5 lg:p-6">
             <div className="flex items-start justify-between gap-3 lg:block">
               <div>
                 <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-white/35">Abonnement</p>
@@ -504,7 +504,7 @@ export default function TierAccessPanel() {
               </span>
             </div>
             <div className="my-5 h-px bg-white/10" />
-            <div className="space-y-2.5 text-[13px] text-white/68">
+            <div className="space-y-2.5 text-[13px] text-white/[0.68]">
               {d.avantages.slice(0, 2).map((t) => (
                 <p key={t} className="flex items-start gap-2">
                   <Check className="mt-0.5 h-3.5 w-3.5 shrink-0 text-emerald-400" /> {t}
@@ -519,7 +519,7 @@ export default function TierAccessPanel() {
                 </span>
                 <a
                   href="/liri/services"
-                  className="inline-flex items-center justify-center gap-2 rounded-2xl border border-white/14 px-5 py-3 text-sm font-semibold text-white/75 transition-colors hover:bg-white/[0.06]"
+                  className="inline-flex items-center justify-center gap-2 rounded-2xl border border-white/[0.14] px-5 py-3 text-sm font-semibold text-white/75 transition-colors hover:bg-white/[0.06]"
                 >
                   <Settings2 className="h-4 w-4 text-[#d97757]" /> Gérer les tarifs
                 </a>
@@ -541,7 +541,7 @@ export default function TierAccessPanel() {
                 ) : null}
                 <a
                   href={RDV_URL}
-                  className="inline-flex items-center justify-center gap-2 rounded-2xl border border-white/14 px-5 py-3 text-sm font-semibold text-white/75 transition-colors hover:bg-white/[0.06]"
+                  className="inline-flex items-center justify-center gap-2 rounded-2xl border border-white/[0.14] px-5 py-3 text-sm font-semibold text-white/75 transition-colors hover:bg-white/[0.06]"
                 >
                   <PhoneCall className="h-4 w-4 text-[#d97757]" /> Rendez-vous
                 </a>
@@ -556,7 +556,7 @@ export default function TierAccessPanel() {
             <button
               type="button"
               onClick={() => setDetailsOpen((v) => !v)}
-              className="flex w-full items-center justify-between rounded-2xl border border-white/8 bg-white/[0.025] px-4 py-3 text-left text-sm font-semibold text-white/72 transition-colors hover:bg-white/[0.05]"
+              className="flex w-full items-center justify-between rounded-2xl border border-white/[0.08] bg-white/[0.025] px-4 py-3 text-left text-sm font-semibold text-white/[0.72] transition-colors hover:bg-white/[0.05]"
             >
               Voir le détail complet du forfait
               <ChevronDown className={`h-4 w-4 text-[#e58a5f] transition-transform ${detailsOpen ? 'rotate-180' : ''}`} />
@@ -565,15 +565,15 @@ export default function TierAccessPanel() {
             {detailsOpen && (
               <div className="mt-4 grid gap-4 lg:grid-cols-[1fr_1fr]">
                 {accessRest.length > 0 && (
-                  <div className="rounded-3xl border border-white/8 bg-black/12 p-4">
-                    <p className="mb-3 flex items-center gap-2 text-[11px] font-bold uppercase tracking-[0.16em] text-white/42">
+                  <div className="rounded-3xl border border-white/[0.08] bg-black/[0.12] p-4">
+                    <p className="mb-3 flex items-center gap-2 text-[11px] font-bold uppercase tracking-[0.16em] text-white/[0.42]">
                       <Sparkles className="h-4 w-4 text-[#d97757]" /> Accès complémentaires
                     </p>
                     <div className="space-y-2">
                       {accessRest.map((a) => {
                         const Ico = a.icon || Check;
                         return (
-                          <p key={a.text} className="flex items-start gap-2 text-[13px] leading-snug text-white/68">
+                          <p key={a.text} className="flex items-start gap-2 text-[13px] leading-snug text-white/[0.68]">
                             <Ico className="mt-0.5 h-3.5 w-3.5 shrink-0 text-[#e58a5f]" /> {a.text}
                           </p>
                         );
@@ -581,8 +581,8 @@ export default function TierAccessPanel() {
                     </div>
                   </div>
                 )}
-                <div className="rounded-3xl border border-white/8 bg-black/12 p-4">
-                  <p className="mb-3 text-[11px] font-bold uppercase tracking-[0.16em] text-white/42">À retenir</p>
+                <div className="rounded-3xl border border-white/[0.08] bg-black/[0.12] p-4">
+                  <p className="mb-3 text-[11px] font-bold uppercase tracking-[0.16em] text-white/[0.42]">À retenir</p>
                   <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-1">
                     <ul className="space-y-2">
                       {d.avantages.map((t) => (
@@ -591,7 +591,7 @@ export default function TierAccessPanel() {
                         </li>
                       ))}
                     </ul>
-                    <ul className="space-y-2 border-t border-white/8 pt-4 sm:border-l sm:border-t-0 sm:pl-4 sm:pt-0 lg:border-l-0 lg:border-t lg:pl-0 lg:pt-4">
+                    <ul className="space-y-2 border-t border-white/[0.08] pt-4 sm:border-l sm:border-t-0 sm:pl-4 sm:pt-0 lg:border-l-0 lg:border-t lg:pl-0 lg:pt-4">
                       {d.limites.map((t) => (
                         <li key={t} className="flex items-start gap-2 text-[13px] leading-snug text-white/50">
                           <MinusCircle className="mt-0.5 h-3.5 w-3.5 shrink-0 text-rose-300/70" />{t}
@@ -608,7 +608,7 @@ export default function TierAccessPanel() {
 
       {checkoutState.open && (
         <div className="fixed inset-0 z-[160] flex items-center justify-center bg-black/70 px-4 py-6 backdrop-blur-md" role="dialog" aria-modal="true">
-          <div className="relative max-h-[92vh] w-full max-w-xl overflow-y-auto rounded-3xl border border-white/12 bg-[#221f1c] p-5 shadow-2xl shadow-black/50 sm:p-6">
+          <div className="relative max-h-[92vh] w-full max-w-xl overflow-y-auto rounded-3xl border border-white/[0.12] bg-[#221f1c] p-5 shadow-2xl shadow-black/50 sm:p-6">
             <button
               type="button"
               onClick={closeCheckout}
@@ -657,7 +657,7 @@ export default function TierAccessPanel() {
       )}
 
       {/* COURS PAR MODULE — boutique + événements + grille de réductions */}
-      <div className="mt-6 rounded-[2rem] border border-white/8 bg-white/[0.025] p-5 sm:p-6">
+      <div className="mt-6 rounded-[2rem] border border-white/[0.08] bg-white/[0.025] p-5 sm:p-6">
         <div className="flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
           <div className="flex items-start gap-3">
             <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl border border-[#d97757]/25 bg-[#d97757]/10 text-[#d97757]">
@@ -665,7 +665,7 @@ export default function TierAccessPanel() {
             </span>
             <div>
               <h3 className="text-base font-bold text-white">Modules à la carte</h3>
-              <p className="mt-1 max-w-2xl text-[13px] leading-relaxed text-white/52">
+              <p className="mt-1 max-w-2xl text-[13px] leading-relaxed text-white/[0.52]">
                 Des compétences précises, en complément du forfait. Votre réduction actuelle :
                 <span className="font-bold text-[#e58a5f]"> −{DISCOUNTS[sel]} %</span>.
               </p>
@@ -673,7 +673,7 @@ export default function TierAccessPanel() {
                 {MODULE_EXAMPLES.map((m) => {
                   const Ico = m.icon;
                   return (
-                    <span key={m.text} className="inline-flex items-center gap-1.5 rounded-full border border-white/10 bg-black/15 px-3 py-1.5 text-[12px] text-white/68">
+                    <span key={m.text} className="inline-flex items-center gap-1.5 rounded-full border border-white/10 bg-black/15 px-3 py-1.5 text-[12px] text-white/[0.68]">
                       <Ico className="h-3.5 w-3.5 text-[#d97757]" /> {m.text}
                     </span>
                   );
@@ -684,7 +684,7 @@ export default function TierAccessPanel() {
 
           <a
             href={isStaff ? '/liri/mbolo/produits' : BOUTIQUE_URL}
-            className="inline-flex shrink-0 items-center justify-center gap-2 rounded-2xl border border-white/14 px-4 py-2.5 text-sm font-semibold text-white/75 transition-colors hover:bg-white/[0.06]"
+            className="inline-flex shrink-0 items-center justify-center gap-2 rounded-2xl border border-white/[0.14] px-4 py-2.5 text-sm font-semibold text-white/75 transition-colors hover:bg-white/[0.06]"
           >
             {isStaff ? 'Gérer les modules' : 'Explorer la boutique'}
             <ArrowRight className="h-4 w-4 text-[#d97757]" />

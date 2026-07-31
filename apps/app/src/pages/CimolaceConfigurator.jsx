@@ -300,7 +300,7 @@ export default function CimolaceConfigurator() {
       {/* ── Hero ── */}
       <div className="relative overflow-hidden">
         <div className="absolute inset-0 pointer-events-none">
-          <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[900px] h-[400px] bg-violet-600/8 rounded-full blur-[160px]" />
+          <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[900px] h-[400px] bg-violet-600/[0.08] rounded-full blur-[160px]" />
         </div>
         <div className="relative z-10 text-center pt-16 pb-10 px-4">
           <motion.div

@@ -42,7 +42,7 @@ export default function LiveMemberVideoPreviewModal({
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          className="fixed inset-0 z-[320] flex items-center justify-center bg-[#100d0a]/82 p-3 backdrop-blur-md sm:p-4"
+          className="fixed inset-0 z-[320] flex items-center justify-center bg-[#100d0a]/[0.82] p-3 backdrop-blur-md sm:p-4"
           onClick={onClose}
         >
           <motion.div
@@ -63,7 +63,7 @@ export default function LiveMemberVideoPreviewModal({
             </button>
 
             {/* En-tête — identité du membre */}
-            <div className="flex shrink-0 items-center gap-3 border-b border-white/[0.09] bg-[#1f1e1c]/98 px-4 py-3 pr-14">
+            <div className="flex shrink-0 items-center gap-3 border-b border-white/[0.09] bg-[#1f1e1c]/[0.98] px-4 py-3 pr-14">
               {avatar ? (
                 <img
                   src={avatar}
@@ -121,7 +121,7 @@ export default function LiveMemberVideoPreviewModal({
 
             {/* Vie scolaire — sous la vidéo (fond chaud, plus de navy #080910). */}
             {memberSchoolLifeEnabled ? (
-              <div className="flex min-h-0 flex-1 flex-col overflow-hidden border-t border-white/[0.1] bg-[#1f1e1c]/98">
+              <div className="flex min-h-0 flex-1 flex-col overflow-hidden border-t border-white/[0.1] bg-[#1f1e1c]/[0.98]">
                 <div className="shrink-0 border-b border-white/[0.06] px-3 py-2">
                   <p className="text-[9px] font-bold uppercase tracking-[0.14em] text-[#e3c79a]/70">Vie scolaire</p>
                   <p className="text-[9px] text-white/35">Résumé, présences, événements</p>

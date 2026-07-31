@@ -187,7 +187,7 @@ export default function CourseStructureColumn({
             type="button"
             disabled={docImportBusy}
             onClick={() => docFileRef.current?.click()}
-            className="inline-flex flex-1 items-center justify-center gap-1.5 rounded-xl border border-white/12 bg-white/[0.05] px-2 py-2 text-[10px] text-white/85 hover:border-violet-400/35 disabled:opacity-50"
+            className="inline-flex flex-1 items-center justify-center gap-1.5 rounded-xl border border-white/[0.12] bg-white/[0.05] px-2 py-2 text-[10px] text-white/85 hover:border-violet-400/35 disabled:opacity-50"
           >
             {docImportBusy ? (
               <Loader2 className="h-3.5 w-3.5 animate-spin" />
@@ -237,7 +237,7 @@ export default function CourseStructureColumn({
       </CopilotCard>
 
       {!course ? (
-        <div className="rounded-2xl border border-dashed border-white/12 bg-black/25 p-3 text-[10px] leading-relaxed text-white/50">
+        <div className="rounded-2xl border border-dashed border-white/[0.12] bg-black/25 p-3 text-[10px] leading-relaxed text-white/50">
           Lancez une analyse pour obtenir chapitres, mindmap et feuille de route slide par slide.
         </div>
       ) : null}

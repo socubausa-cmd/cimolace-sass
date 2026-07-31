@@ -180,7 +180,7 @@ function VitrineForfaitCyclePremiumCard({ children, className }) {
         aria-hidden
       />
       <div
-        className="pointer-events-none absolute -right-10 -top-10 h-40 w-40 rounded-full bg-amber-500/12 blur-3xl"
+        className="pointer-events-none absolute -right-10 -top-10 h-40 w-40 rounded-full bg-amber-500/[0.12] blur-3xl"
         aria-hidden
       />
       <div className="h-0.5 w-full bg-gradient-to-r from-amber-600/80 via-amber-400/50 to-amber-700/30" aria-hidden />
@@ -279,8 +279,8 @@ export function VitrineForfaitsMobileScreen() {
                       className={cn(
                         'shrink-0 rounded-2xl border px-3 py-2.5 text-left transition-colors',
                         on
-                          ? 'border-amber-400/55 bg-amber-500/18 text-amber-50 shadow-[0_0_0_1px_rgba(230, 160, 110,0.28)]'
-                          : 'border-white/10 bg-slate-950/60 text-slate-400 hover:border-white/18 hover:text-slate-200',
+                          ? 'border-amber-400/55 bg-amber-500/[0.18] text-amber-50 shadow-[0_0_0_1px_rgba(230, 160, 110,0.28)]'
+                          : 'border-white/10 bg-slate-950/60 text-slate-400 hover:border-white/[0.18] hover:text-slate-200',
                       )}
                     >
                       <span className="block text-[12px] font-bold leading-tight">

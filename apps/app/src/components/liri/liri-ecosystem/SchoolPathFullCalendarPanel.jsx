@@ -78,7 +78,7 @@ export default function SchoolPathFullCalendarPanel({ pathId, startsOnDraft, ref
           <Loader2 className="h-8 w-8 animate-spin text-white/20" />
         </div>
       ) : (
-        <div className="min-h-[420px] text-white/90 [&_.fc]:text-[11px] [&_.fc-toolbar-title]:text-sm [&_.fc-toolbar-title]:text-white/88 [&_.fc-col-header-cell]:text-white/45 [&_.fc-daygrid-day-number]:text-white/65">
+        <div className="min-h-[420px] text-white/90 [&_.fc]:text-[11px] [&_.fc-toolbar-title]:text-sm [&_.fc-toolbar-title]:text-white/[0.88] [&_.fc-col-header-cell]:text-white/45 [&_.fc-daygrid-day-number]:text-white/65">
           <FullCalendar
             plugins={[dayGridPlugin, listPlugin]}
             initialView="dayGridMonth"

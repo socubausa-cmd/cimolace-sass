@@ -109,7 +109,7 @@ export default function DesignerIaStudioGenerateBlock({ addObject, className }) 
           <select
             value={engine}
             onChange={(e) => setEngine(e.target.value)}
-            className="mt-0.5 w-full rounded-lg border border-white/12 bg-black/50 py-1 text-[12px] text-white/85"
+            className="mt-0.5 w-full rounded-lg border border-white/[0.12] bg-black/50 py-1 text-[12px] text-white/85"
           >
             {ENGINE_OPTIONS.map((o) => (
               <option key={o.value} value={o.value}>
@@ -122,14 +122,14 @@ export default function DesignerIaStudioGenerateBlock({ addObject, className }) 
           value={prompt}
           onChange={(e) => setPrompt(e.target.value)}
           placeholder="Ex. illustration pédagogique, schéma doré sur fond sombre…"
-          className="w-full rounded-lg border border-white/12 bg-black/40 px-2 py-1.5 text-[12px] text-white placeholder-white/25"
+          className="w-full rounded-lg border border-white/[0.12] bg-black/40 px-2 py-1.5 text-[12px] text-white placeholder-white/25"
         />
         <label className="block text-[11px] text-white/45">
           Format
           <select
             value={size}
             onChange={(e) => setSize(e.target.value)}
-            className="mt-0.5 w-full rounded-lg border border-white/12 bg-black/50 py-1 text-[12px] text-white/85"
+            className="mt-0.5 w-full rounded-lg border border-white/[0.12] bg-black/50 py-1 text-[12px] text-white/85"
           >
             {DESIGNER_IA_IMAGE_SIZES.map((s) => (
               <option key={s.value} value={s.value}>

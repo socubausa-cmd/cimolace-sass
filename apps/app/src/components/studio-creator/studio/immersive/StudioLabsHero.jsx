@@ -174,7 +174,7 @@ export function StudioLabsHero({ isActive, index, total, onEnterView }) {
           initial={{ opacity: 0, y: 12 }}
           animate={isActive ? { opacity: 1, y: 0 } : { opacity: 0.55, y: 8 }}
           transition={{ duration: 0.45, delay: 0.05 }}
-          className="mt-10 md:mt-12 max-w-3xl mx-auto rounded-2xl border border-white/12 bg-black/35 backdrop-blur-xl px-5 py-4 md:px-6 md:py-5"
+          className="mt-10 md:mt-12 max-w-3xl mx-auto rounded-2xl border border-white/[0.12] bg-black/35 backdrop-blur-xl px-5 py-4 md:px-6 md:py-5"
         >
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <div className="flex items-start gap-3 text-left">

@@ -67,7 +67,7 @@ function Step7SubstepIndicator({ activeIndex, trackCount, liriCount }) {
                 'flex gap-2.5 rounded-lg border px-3 py-2.5 text-left transition-colors',
                 current && 'border-[#d97757]/50 bg-[#d97757]/10 shadow-[0_0_0_1px_rgba(217,119,87,0.12)]',
                 done && !current && 'border-emerald-500/25 bg-emerald-500/5',
-                locked && 'border-white/8 bg-black/25 opacity-60',
+                locked && 'border-white/[0.08] bg-black/25 opacity-60',
               )}
             >
               <div
@@ -492,7 +492,7 @@ export function Step7Interactions({ draft, updateDraft, interactionsSubStepIndex
                 <div className="space-y-2">
                   <p className="text-[11px] text-gray-500">Playlist de session ({tracks.length} piste{tracks.length > 1 ? 's' : ''})</p>
                   {tracks.map((track, i) => (
-                    <div key={i} className="flex items-center gap-3 rounded-lg border border-white/8 bg-black/20 px-3 py-2">
+                    <div key={i} className="flex items-center gap-3 rounded-lg border border-white/[0.08] bg-black/20 px-3 py-2">
                       <button
                         type="button"
                         title="Préécouter"

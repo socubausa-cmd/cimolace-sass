@@ -185,7 +185,7 @@ export default function WhiteboardObjectEditPanel({ stroke, onApply, onClose }) 
 
   return (
     <div className="fixed inset-0 z-[250] flex items-center justify-center bg-black/60 backdrop-blur-sm">
-      <div className="w-[min(94vw,520px)] max-h-[85vh] overflow-y-auto rounded-2xl border border-white/[0.11] bg-[#14131c]/98 p-5 shadow-[0_24px_80px_-20px_rgba(0,0,0,.9)] space-y-3">
+      <div className="w-[min(94vw,520px)] max-h-[85vh] overflow-y-auto rounded-2xl border border-white/[0.11] bg-[#14131c]/[0.98] p-5 shadow-[0_24px_80px_-20px_rgba(0,0,0,.9)] space-y-3">
         <div className="flex items-center justify-between">
           <p className="text-[13px] font-bold text-white/90">Modifier — {label}</p>
           <button type="button" onClick={onClose} className="text-white/40 hover:text-white/75 transition-colors">
@@ -413,11 +413,11 @@ export default function WhiteboardObjectEditPanel({ stroke, onApply, onClose }) 
 
         <div className="flex gap-2 pt-2">
           <button type="button" onClick={handleApply}
-            className="flex-1 rounded-xl border border-amber-500/45 bg-amber-500/16 py-2 text-[11px] font-bold text-amber-100 hover:bg-amber-500/24 transition-colors">
+            className="flex-1 rounded-xl border border-amber-500/45 bg-amber-500/[0.16] py-2 text-[11px] font-bold text-amber-100 hover:bg-amber-500/[0.24] transition-colors">
             ✓ Appliquer
           </button>
           <button type="button" onClick={onClose}
-            className="px-5 rounded-xl border border-white/12 bg-white/4 text-[11px] text-white/55 hover:text-white/75 transition-colors">
+            className="px-5 rounded-xl border border-white/[0.12] bg-white/[0.04] text-[11px] text-white/55 hover:text-white/75 transition-colors">
             Annuler
           </button>
         </div>

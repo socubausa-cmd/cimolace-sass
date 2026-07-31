@@ -204,7 +204,7 @@ function NarrativePanel({ step, reduce, viewState = 'form' }) {
             {copy.titleGold}
           </span>
         </h1>
-        <p className="max-w-xl text-base leading-relaxed text-white/72 md:text-lg">{copy.body}</p>
+        <p className="max-w-xl text-base leading-relaxed text-white/[0.72] md:text-lg">{copy.body}</p>
         <ul className="max-w-xl space-y-3 text-sm text-white/60">
           {copy.bullets.map((line) => (
             <li key={line} className="flex gap-3">

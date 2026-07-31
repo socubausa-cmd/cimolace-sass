@@ -61,7 +61,7 @@ export default function LiveInviteNotification({
                 ? 'border-amber-500/30 bg-amber-500/10'
                 : 'border-amber-300 bg-amber-50'
               : isDarkTheme
-                ? 'border-[color-mix(in_srgb,var(--school-accent)_25%,transparent)] bg-[#111827]/88'
+                ? 'border-[color-mix(in_srgb,var(--school-accent)_25%,transparent)] bg-[#111827]/[0.88]'
                 : 'border-[#e6ca71] bg-white',
             className
           )}
@@ -170,7 +170,7 @@ export default function LiveInviteNotification({
                 ? 'border-amber-400/30 bg-amber-500/10'
                 : 'border-amber-300 bg-amber-50'
               : isDarkTheme
-                ? 'border-white/10 bg-[#111827]/88'
+                ? 'border-white/10 bg-[#111827]/[0.88]'
                 : 'border-gray-300 bg-white',
             className
           )}

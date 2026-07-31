@@ -62,7 +62,7 @@ export default function ActivateAccountPage() {
 
   const SERIF = "'Fraunces','Cinzel','Playfair Display',Georgia,serif";
   const inputCls =
-    'w-full rounded-lg border border-white/12 bg-white/[0.04] px-4 py-2.5 text-[15px] text-white placeholder-white/30 transition-colors focus:border-[#d97757] focus:bg-white/[0.06] focus:outline-none focus:ring-1 focus:ring-[#d97757]/40';
+    'w-full rounded-lg border border-white/[0.12] bg-white/[0.04] px-4 py-2.5 text-[15px] text-white placeholder-white/30 transition-colors focus:border-[#d97757] focus:bg-white/[0.06] focus:outline-none focus:ring-1 focus:ring-[#d97757]/40';
 
   return (
     <div
