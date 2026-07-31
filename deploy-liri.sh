@@ -49,6 +49,20 @@ if ! git merge-base --is-ancestor origin/main HEAD; then
 fi
 echo "✅ anti-régression OK : HEAD ⊇ origin/main (rien ne sera perdu)"
 
+# --- 1bis) classes d'opacité mortes -----------------------------------------
+# Tailwind n'émet le modificateur d'opacité que pour les clés de son échelle
+# (0, 5, 10 … 95, 100). `border-white/12` ne produit AUCUNE règle CSS : la bordure
+# retombe sur le gris clair du preflight. Le bogue est invisible à la relecture — la
+# classe a l'air normale — et le build reste vert. Relevé une fois : 1141 occurrences
+# dans 199 fichiers, dont 137 dans le seul tableau blanc de la salle de classe.
+# On refuse de déployer plutôt que de laisser la 1142e passer.
+echo "🎨 contrôle des opacités Tailwind…"
+if ! node "$(git rev-parse --show-toplevel)/scripts/check-tailwind-opacites.mjs" apps/app/src; then
+  echo "⛔ Déploiement interrompu : des classes d'opacité ne produiraient aucun style."
+  echo "   Correction : node scripts/check-tailwind-opacites.mjs --corriger"
+  exit 1
+fi
+
 # --- 2) mémoriser le déploiement prod ACTUEL (rollback de secours) -----------
 # `vercel ls` écrit le tableau sur STDERR (→ 2>&1, sinon vide) ; cwd neutre car le
 # lien .vercel racine est neutralisé ; `|| true` : PREV_URL vide ne doit pas tuer le script.
