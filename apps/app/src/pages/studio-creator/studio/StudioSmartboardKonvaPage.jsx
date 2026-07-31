@@ -4711,8 +4711,19 @@ export default function StudioSmartboardKonvaPage() {
     if (p && isFormationContentUuid(p)) {
       setPostProdContentId(p);
       setPostProdOpen(true);
+      // ⚠️ SANS CETTE LIGNE, LE VOILE « NOUVEAU DOCUMENT » RECOUVRE TOUT.
+      // Il s'affiche dès que `docType` est vide (`{!docType && …}`), et arriver par
+      // `?pp=` ne le renseignait jamais : la post-production s'ouvrait bien, avec son
+      // contenu chargé, PUIS disparaissait sous un écran qui demande « quel type de
+      // document veux-tu créer ? ». Question absurde quand on vient justement
+      // travailler sur une vidéo existante — et le dock devenait inatteignable.
+      // Le même défaut avait déjà été corrigé pour l'import Agent LIRI (voir plus
+      // haut, « Éviter l'overlay Nouveau document ») ; ce chemin-ci avait été oublié.
+      // 'video' est le type juste : `?pp=` désigne un contenu vidéo de formation.
+      setDocType('video');
+      setOutputFormats(['screen']);
     }
-  }, [searchParams]);
+  }, [searchParams, setDocType, setOutputFormats]);
 
   /** À l'ouverture avec `?pp=`, refermer LONGIA une fois pour éviter canvas + dock + hub trop étroit. */
   useEffect(() => {
