@@ -228,14 +228,15 @@ export class MasterFactoryController {
   @Post('produce/smartboard-ai')
   @Roles('owner', 'admin', 'teacher')
   produceSmartboardAi(
-    @Body() body: { sourceType?: SourceType; sourceId?: string; force?: boolean },
+    @Body() body: { sourceType?: SourceType; sourceId?: string; force?: boolean; expand?: boolean },
     @CurrentTenant() tenant: TenantContext,
   ) {
     return this.factory.buildSmartboardTimeline(
       tenant.id,
       body?.sourceType ?? 'replay',
       String(body?.sourceId ?? ''),
-      { force: body?.force === true, ai: true },
+      // `expand` déroule chaque chapitre en plusieurs écrans (opt-in).
+      { force: body?.force === true, ai: true, expand: body?.expand === true },
     );
   }
 

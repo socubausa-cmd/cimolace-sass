@@ -200,7 +200,7 @@ export class MasterFactoryService {
     tenantId: string,
     sourceType: SourceType,
     sourceId: string,
-    opts: { force?: boolean; ai?: boolean } = {},
+    opts: { force?: boolean; ai?: boolean; templateOnly?: boolean; expand?: boolean } = {},
   ) {
     const master = await this.buildMasterScript(tenantId, sourceType, sourceId, { force: false });
     const masterPivotId = master.pivotId;
@@ -218,15 +218,18 @@ export class MasterFactoryService {
         return { pivotId: existing.id, smartboardTimeline: existing.payload, cached: true, ai: null };
       }
     }
-    // ⚠️ PIÈGE CONNU, NON CORRIGÉ ICI : une régénération `force` SANS `ai`
-    // (buildLiveStack, publication) réécrit un tableau IA en gabarit. On ne
-    // relance pas l'IA d'office — ce serait des appels payants non demandés au
-    // milieu d'une publication — mais la perte est TRACÉE : il faut repasser
-    // par /master-factory/produce/smartboard-ai après un tel force.
-    if (!wantsAi && existing?.model === PedagogyAiService.MODEL_TAG) {
-      this.log.warn(
-        `[master-factory] ${sourceType}/${sourceId} : tableau IA remplacé par le gabarit (force sans ai)`,
+    /**
+     * ⛔ Un `force` ORDINAIRE NE DOIT PAS RÉTROGRADER UN TABLEAU IA.
+     * Chaque publication passe par `buildLiveStack(force)` : sans cette garde,
+     * publier un cours suffisait à remplacer par le gabarit un contenu payé et
+     * relu — silencieusement. On rend donc le pivot IA tel quel. Le gabarit
+     * reste joignable en le demandant explicitement (`templateOnly`).
+     */
+    if (!wantsAi && !opts.templateOnly && existing?.model === PedagogyAiService.MODEL_TAG) {
+      this.log.log(
+        `[master-factory] ${sourceType}/${sourceId} : tableau IA CONSERVÉ malgré force (pas de rétrogradation)`,
       );
+      return { pivotId: existing.id, smartboardTimeline: existing.payload, cached: true, ai: null };
     }
 
     let enrichment: PedagogyEnrichment | null = null;
@@ -241,11 +244,20 @@ export class MasterFactoryService {
       );
     }
 
-    const smartboardTimeline = this.makeSmartboardTimeline(
+    const built = this.makeSmartboardTimeline(
       master.masterScript as MasterScriptPivot,
       masterPivotId,
       enrichment,
     );
+    /**
+     * `expand` déroule chaque chapitre en plusieurs écrans. Opt-in tant que la
+     * preuve E2E compare encore `scenes.length` à `moments.length` : l'activer
+     * par défaut ferait échouer une assertion qui n'a rien de faux, juste
+     * devenue obsolète. À basculer en défaut une fois cette preuve mise à jour.
+     */
+    const smartboardTimeline = opts.expand === true
+      ? this.expandScenesByChapter(built)
+      : built;
     const pivotId = await this.replaceChildPivot({
       tenantId,
       sourceType,
@@ -854,6 +866,69 @@ export class MasterFactoryService {
       }),
       meta,
     };
+  }
+
+  /**
+   * ÉCLATEMENT D'UN CHAPITRE EN PLUSIEURS ÉCRANS.
+   *
+   * Le tunnel publiait UNE scène par chapitre : le chapitre et l'écran étaient
+   * confondus, alors que l'éditeur Masterclass déroule chaque chapitre en une
+   * vingtaine de segments. Conséquences concrètes : le tableau devait tout dire
+   * d'un coup, et l'interlude de reformulation n'avait jamais rien à récapituler.
+   *
+   * On déroule donc chaque moment selon la progression d'un professeur — poser
+   * l'idée, la mettre en repères, vérifier — SANS inventer une ligne : chaque
+   * écran ne reprend qu'une part de ce que le moment contient déjà. Un écran
+   * dont la matière est absente n'est pas créé.
+   *
+   * ⚠️ LIMITE CONNUE : le prompteur reste à UNE section par moment (12 sections
+   * pour 36 écrans). L'appariement scène↔section se fait par `order_index`, donc
+   * seuls les premiers écrans retrouvent leur section ; les suivants narrent à
+   * partir de leur propre contenu. À traiter en découpant aussi le Master Script.
+   */
+  private expandScenesByChapter(pivot: SmartboardTimelinePivot): SmartboardTimelinePivot {
+    const scenes = pivot.scenes.flatMap((scene) => {
+      const gpt = scene.gpt_slide;
+      const points = gpt?.development?.flatMap((group) => group.points) ?? [];
+      const parts: SmartboardTimelinePivot['scenes'] = [];
+      const base = (suffix: string, over: Partial<SmartboardTimelinePivot['scenes'][number]>) => ({
+        ...scene,
+        ...over,
+        id: `${scene.id}-${suffix}`,
+      });
+
+      // 1 — L'idée est posée, seule. C'est le moment où la voix explique.
+      parts.push(base('idee', {
+        gpt_slide: gpt ? { ...gpt, development: [], sketch: undefined } : undefined,
+        // Le croquis n'a pas encore de sens : les repères ne sont pas donnés.
+        blocks: scene.blocks.filter((b) => b.type === 'title' || b.type === 'key-idea'),
+      }));
+
+      // 2 — Les repères à retenir, avec le croquis qui les relie.
+      if (points.length) {
+        parts.push(base('reperes', {
+          title: `${scene.title} — à retenir`,
+          gpt_slide: gpt ? { ...gpt, student_prompt: undefined } : undefined,
+          blocks: scene.blocks.filter((b) => b.type !== 'paragraph'),
+        }));
+      }
+
+      // 3 — La vérification : on ne passe pas au suivant sans s'assurer.
+      const prompt = gpt?.student_prompt;
+      if (prompt) {
+        parts.push(base('verification', {
+          title: `${scene.title} — vérification`,
+          gpt_slide: gpt ? { ...gpt, development: [], sketch: undefined, core_idea: prompt } : undefined,
+          blocks: scene.blocks.filter((b) => b.type === 'title' || b.type === 'paragraph'),
+        }));
+      }
+
+      // Un moment trop maigre pour être déroulé reste tel quel : mieux vaut un
+      // seul écran honnête que trois écrans vides.
+      return parts.length > 1 ? parts : [scene];
+    });
+
+    return { ...pivot, scenes, meta: { ...(pivot.meta ?? {}), expanded_scenes: scenes.length } as any };
   }
 
   private makeLiveScenario(
