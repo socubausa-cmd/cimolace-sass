@@ -1079,6 +1079,10 @@ const LiveHostSmartBoardStage = forwardRef(function LiveHostSmartBoardStage(
         slide={parallaxSlide}
         spotlight={spotlight}
         progressivePlayback={progressivePlayback}
+        // Scènes du chapitre courant : la fin d'un chapitre se déduit du
+        // chapter_id de la scène SUIVANTE, que la scène affichée ignore.
+        // `nativeSlides` est la liste ordonnée réellement projetée en régie.
+        sceneList={nativeSlides}
         revealStep={revealStep}
         onRevealStepChange={(next) => {
           setRevealStep(next);

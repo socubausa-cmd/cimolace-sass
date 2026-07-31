@@ -21,6 +21,7 @@ import type { SourceType } from './pivot.types';
  *   /master-factory/produce/course
  *   /master-factory/produce/master-script
  *   /master-factory/produce/smartboard
+ *   /master-factory/produce/smartboard-ai
  *   /master-factory/produce/live-scenario
  *   /master-factory/produce/live-stack
  *   /master-factory/publish/live-session
@@ -215,6 +216,26 @@ export class MasterFactoryController {
       body?.sourceType ?? 'replay',
       String(body?.sourceId ?? ''),
       { force: body?.force === true },
+    );
+  }
+
+  /**
+   * Même tableau, mais dont le CONTENU est écrit par l'IA au lieu du gabarit.
+   * Traitement long : un appel de modèle par moment (par lots de 4).
+   * La réponse porte `ai.{ai_moments, template_moments, rejected_moments}` :
+   * un moment en gabarit n'est pas un échec silencieux, il est compté.
+   */
+  @Post('produce/smartboard-ai')
+  @Roles('owner', 'admin', 'teacher')
+  produceSmartboardAi(
+    @Body() body: { sourceType?: SourceType; sourceId?: string; force?: boolean },
+    @CurrentTenant() tenant: TenantContext,
+  ) {
+    return this.factory.buildSmartboardTimeline(
+      tenant.id,
+      body?.sourceType ?? 'replay',
+      String(body?.sourceId ?? ''),
+      { force: body?.force === true, ai: true },
     );
   }
 

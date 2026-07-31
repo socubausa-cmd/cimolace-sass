@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useMemo, useRef, useState } from 'react';
 
 /**
  * INTERLUDE DE REFORMULATION — §3.2 du cahier des charges « Tableau Vivant » :
@@ -53,11 +53,18 @@ export function useChapterInterlude({
   enabled = true,
 } = {}) {
   const list = Array.isArray(scenes) ? scenes : null;
-  const [openChapter, setOpenChapter] = useState(null);
-  // Un chapitre récapitulé puis fermé ne doit pas se rouvrir tant qu'on n'a pas
-  // changé de scène : sinon le moindre re-rendu relancerait le panneau à la
-  // figure de l'hôte en plein direct.
-  const dismissedRef = useRef(new Set());
+
+  // L'ouverture est DÉRIVÉE du palier de révélation, pas synchronisée par un
+  // effet : un effet aurait rouvert le panneau au moindre re-rendu de la scène
+  // (parallaxe, régie, narration) après une fermeture par le prof.
+  const [, forceRender] = useState(0);
+  const localRef = useRef({ sceneKey: null, dismissed: new Set(), forced: null });
+  const sceneKey = currentSceneId == null ? null : String(currentSceneId);
+  if (localRef.current.sceneKey !== sceneKey) {
+    // Changer de scène remet le compteur à zéro : l'interlude appartient à la
+    // scène qui vient de se terminer, il ne survit pas à la suivante.
+    localRef.current = { sceneKey, dismissed: new Set(), forced: null };
+  }
 
   const index = useMemo(() => {
     if (!list || currentSceneId == null) return -1;
@@ -90,45 +97,47 @@ export function useChapterInterlude({
     return points;
   }, [list, chapterId, isChapterEnd]);
 
-  const eligible = Boolean(enabled) && isChapterEnd && summary.length > 0;
+  /**
+   * Un chapitre d'UNE SEULE scène n'a rien à récapituler : l'interlude
+   * réafficherait, en plein écran, la phrase que l'élève vient de lire. Le
+   * cahier des charges demande une reformulation de ce qui a été PARCOURU, pas
+   * un doublon. C'est le cas courant du tunnel Master Factory, qui publie
+   * aujourd'hui une scène par chapitre — sans cette garde, un interlude
+   * s'interposerait après CHAQUE scène du direct.
+   */
+  const chapterSceneCount = useMemo(() => {
+    if (!list || chapterId == null) return 0;
+    return list.filter((scene) => chapterOf(scene) === chapterId).length;
+  }, [list, chapterId]);
 
-  // Changer de scène remet le compteur à zéro : l'interlude appartient à la
-  // scène qui vient de se terminer, il ne survit pas à la suivante.
-  useEffect(() => {
-    dismissedRef.current = new Set();
-    setOpenChapter(null);
-  }, [currentSceneId]);
-
-  useEffect(() => {
-    if (!eligible) {
-      setOpenChapter(null);
-      return;
-    }
-    if (revealStep == null) return;
-    if (Number(revealStep) < Number(maxStep)) return;
-    if (dismissedRef.current.has(chapterId)) return;
-    setOpenChapter(chapterId);
-  }, [eligible, revealStep, maxStep, chapterId]);
+  const eligible = Boolean(enabled)
+    && isChapterEnd
+    && chapterSceneCount >= 2
+    && summary.length > 0;
 
   const dismiss = useCallback(() => {
-    if (chapterId != null) dismissedRef.current.add(chapterId);
-    setOpenChapter(null);
+    if (chapterId != null) localRef.current.dismissed.add(chapterId);
+    localRef.current.forced = null;
+    forceRender((n) => n + 1);
   }, [chapterId]);
 
-  /** Ouverture manuelle (le prof veut récapituler tout de suite). Sans matière : sans effet. */
+  /** Ouverture manuelle (le prof récapitule tout de suite). Sans matière : sans effet. */
   const start = useCallback(() => {
     if (!eligible || chapterId == null) return;
-    dismissedRef.current.delete(chapterId);
-    setOpenChapter(chapterId);
+    localRef.current.dismissed.delete(chapterId);
+    localRef.current.forced = chapterId;
+    forceRender((n) => n + 1);
   }, [eligible, chapterId]);
 
-  return {
-    pending: openChapter != null && openChapter === chapterId && summary.length > 0,
-    chapterId,
-    summary,
-    dismiss,
-    start,
-  };
+  // Le tableau doit être ALLÉ AU BOUT avant d'être récapitulé : on n'interrompt
+  // pas une scène en cours de révélation. Un tableau montré d'un coup n'atteint
+  // jamais ce palier — d'où l'ouverture manuelle `start`.
+  const reachedEnd = revealStep != null && Number(revealStep) >= Number(maxStep);
+  const pending = eligible
+    && !localRef.current.dismissed.has(chapterId)
+    && (localRef.current.forced === chapterId || reachedEnd);
+
+  return { pending, chapterId, summary, dismiss, start };
 }
 
 export default useChapterInterlude;

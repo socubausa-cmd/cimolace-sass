@@ -1,4 +1,4 @@
-import { BadRequestException, Injectable, NotFoundException, ServiceUnavailableException } from '@nestjs/common';
+import { BadRequestException, Injectable, Logger, NotFoundException, ServiceUnavailableException } from '@nestjs/common';
 import { SupabaseService } from '../supabase/supabase.service';
 import type {
   Comprehension,
@@ -16,6 +16,20 @@ import { CourseJobService } from './course-job.service';
 import { RenderPivotService } from './render-pivot.service';
 import { SourceAdaptersService } from './source-adapters.service';
 import { VisualPedagogyService } from './visual-pedagogy.service';
+import { PedagogyAiService } from './pedagogy-ai.service';
+import type { PedagogyEnrichment } from './pedagogy-ai.service';
+
+/**
+ * Compteurs IA/gabarit du tableau. Ils ne figurent PAS dans le contrat partagé
+ * `pivot.types.ts` : l'extension reste locale tant que ce contrat n'est pas
+ * repris. Un lecteur qui n'attend que `model` continue donc de fonctionner.
+ */
+type SmartboardTimelineMeta = NonNullable<SmartboardTimelinePivot['meta']> & {
+  ai_moments?: number;
+  template_moments?: number;
+  rejected_moments?: number;
+  failed_moments?: number;
+};
 
 /**
  * MASTER FACTORY — façade d'orchestration.
@@ -30,6 +44,8 @@ import { VisualPedagogyService } from './visual-pedagogy.service';
  */
 @Injectable()
 export class MasterFactoryService {
+  private readonly log = new Logger(MasterFactoryService.name);
+
   constructor(
     private readonly supabase: SupabaseService,
     private readonly sources: SourceAdaptersService,
@@ -37,6 +53,7 @@ export class MasterFactoryService {
     private readonly courseJobs: CourseJobService,
     private readonly renderPivot: RenderPivotService,
     private readonly visualPedagogy: VisualPedagogyService,
+    private readonly pedagogyAi: PedagogyAiService,
   ) {}
 
   private get db(): any {
@@ -49,6 +66,10 @@ export class MasterFactoryService {
    * `slide_hint`/`objectives` du conducteur. Le cache ne doit donc PAS le servir —
    * sinon un cours déjà analysé resterait éternellement plat sans que personne ne
    * pense à passer `force`. La régénération est gratuite (aucun appel IA).
+   *
+   * ⚠️ La règle ne porte QUE sur le suffixe `-v0`. Un pivot produit par l'IA
+   * (`pedagogy-ai-v1`) n'est donc PAS considéré comme périmé : il ne serait
+   * sinon jeté et repayé à chaque lecture.
    */
   private static isStalePivot(model: string | null | undefined) {
     return /-v0$/.test(String(model || ''));
@@ -167,23 +188,64 @@ export class MasterFactoryService {
     return { pivotId, masterScript, cached: false };
   }
 
-  /** Étape 2-C : transformer le Master Script en timeline de tableau vivant. */
+  /**
+   * Étape 2-C : transformer le Master Script en timeline de tableau vivant.
+   *
+   * `ai: true` fait écrire le CONTENU des scènes par `PedagogyAiService` au lieu
+   * du gabarit. Sans cette option, le comportement est strictement inchangé —
+   * et si l'IA ne produit rien d'exploitable, le gabarit reprend la main moment
+   * par moment (le tableau sort toujours).
+   */
   async buildSmartboardTimeline(
     tenantId: string,
     sourceType: SourceType,
     sourceId: string,
-    opts: { force?: boolean } = {},
+    opts: { force?: boolean; ai?: boolean } = {},
   ) {
     const master = await this.buildMasterScript(tenantId, sourceType, sourceId, { force: false });
     const masterPivotId = master.pivotId;
+    const wantsAi = opts.ai === true;
+    const existing = await this.findChildPivot(masterPivotId, 'smartboard_timeline');
     if (!opts.force) {
-      const existing = await this.findChildPivot(masterPivotId, 'smartboard_timeline');
-      if (existing && !MasterFactoryService.isStalePivot(existing.model)) {
-        return { pivotId: existing.id, smartboardTimeline: existing.payload, cached: true };
+      // Un pivot GABARIT ne satisfait pas une demande IA : sans ce test, la
+      // première production déterministe figerait le tableau pour toujours.
+      // L'inverse est permis — un pivot IA sert aussi une demande ordinaire.
+      const usable =
+        existing &&
+        !MasterFactoryService.isStalePivot(existing.model) &&
+        (!wantsAi || existing.model === PedagogyAiService.MODEL_TAG);
+      if (usable) {
+        return { pivotId: existing.id, smartboardTimeline: existing.payload, cached: true, ai: null };
       }
     }
+    // ⚠️ PIÈGE CONNU, NON CORRIGÉ ICI : une régénération `force` SANS `ai`
+    // (buildLiveStack, publication) réécrit un tableau IA en gabarit. On ne
+    // relance pas l'IA d'office — ce serait des appels payants non demandés au
+    // milieu d'une publication — mais la perte est TRACÉE : il faut repasser
+    // par /master-factory/produce/smartboard-ai après un tel force.
+    if (!wantsAi && existing?.model === PedagogyAiService.MODEL_TAG) {
+      this.log.warn(
+        `[master-factory] ${sourceType}/${sourceId} : tableau IA remplacé par le gabarit (force sans ai)`,
+      );
+    }
 
-    const smartboardTimeline = this.makeSmartboardTimeline(master.masterScript as MasterScriptPivot, masterPivotId);
+    let enrichment: PedagogyEnrichment | null = null;
+    if (wantsAi) {
+      // La matière factuelle autorisée vit dans la compréhension (appuis) :
+      // le Master Script seul ne suffit pas à nourrir la garde anti-invention.
+      const root = await this.requireComprehension(tenantId, sourceType, sourceId);
+      enrichment = await this.pedagogyAi.enrichScenes(
+        tenantId,
+        root.comprehension,
+        (master.masterScript as MasterScriptPivot).moments,
+      );
+    }
+
+    const smartboardTimeline = this.makeSmartboardTimeline(
+      master.masterScript as MasterScriptPivot,
+      masterPivotId,
+      enrichment,
+    );
     const pivotId = await this.replaceChildPivot({
       tenantId,
       sourceType,
@@ -191,9 +253,25 @@ export class MasterFactoryService {
       parentId: masterPivotId,
       kind: 'smartboard_timeline',
       payload: smartboardTimeline,
-      model: 'deterministic-smartboard-timeline-v1',
+      // `enrichment.model` vaut null quand AUCUN moment n'a été produit par
+      // l'IA : le pivot reste alors étiqueté gabarit, pour ne pas faire passer
+      // un repli complet pour une production IA.
+      model: enrichment?.model ?? 'deterministic-smartboard-timeline-v1',
     });
-    return { pivotId, smartboardTimeline, cached: false };
+    return {
+      pivotId,
+      smartboardTimeline,
+      cached: false,
+      ai: enrichment
+        ? {
+            ai_moments: enrichment.ai_moments,
+            template_moments: enrichment.template_moments,
+            rejected_moments: enrichment.rejected_moments,
+            failed_moments: enrichment.failed_moments,
+            model: enrichment.model,
+          }
+        : null,
+    };
   }
 
   /**
@@ -661,14 +739,45 @@ export class MasterFactoryService {
     };
   }
 
-  private makeSmartboardTimeline(masterScript: MasterScriptPivot, masterScriptPivotId: string): SmartboardTimelinePivot {
+  /**
+   * `enrichment` (facultatif) porte le contenu écrit par l'IA, moment par
+   * moment. Un moment absent de `enrichment.slides` garde EXACTEMENT le gabarit
+   * déterministe : c'est le repli, il ne doit jamais changer.
+   */
+  private makeSmartboardTimeline(
+    masterScript: MasterScriptPivot,
+    masterScriptPivotId: string,
+    enrichment?: PedagogyEnrichment | null,
+  ): SmartboardTimelinePivot {
+    const meta: SmartboardTimelineMeta = {
+      master_script_pivot_id: masterScriptPivotId,
+      generated_at: new Date().toISOString(),
+      model: enrichment?.model ?? 'deterministic-smartboard-timeline-v1',
+      ...(enrichment
+        ? {
+            ai_moments: enrichment.ai_moments,
+            template_moments: enrichment.template_moments,
+            rejected_moments: enrichment.rejected_moments,
+            failed_moments: enrichment.failed_moments,
+          }
+        : {}),
+    };
     return {
       schema_version: 1,
       kind: 'smartboard_timeline',
       title: `${masterScript.title} — Tableau vivant`,
       scenes: masterScript.moments.map((moment, index) => {
         const sceneId = `sb-${index + 1}`;
-        const keyPoints = (moment.key_points || []).slice(0, 3);
+        const slide = enrichment?.slides?.[moment.id];
+        /**
+         * Le croquis et les `blocks` legacy suivent CE QUI EST RÉELLEMENT ÉCRIT
+         * au tableau : les points de l'IA quand elle a produit, ceux du gabarit
+         * sinon. Une slide IA volontairement sans développement (matière trop
+         * maigre) laisse donc le croquis vide — on ne le regonfle pas.
+         */
+        const keyPoints = slide
+          ? slide.development.flatMap((group) => group.points).slice(0, 3)
+          : (moment.key_points || []).slice(0, 3);
         return {
           id: sceneId,
           script_moment_id: moment.id,
@@ -686,14 +795,19 @@ export class MasterFactoryService {
            * `gpt_slide` pour le tableau vivant, `blocks` pour les lecteurs legacy.
            */
           gpt_slide: {
-            title: moment.title,
-            subtitle: moment.intention || undefined,
-            core_idea: moment.message_central,
-            development: keyPoints.length
-              ? [{ label: 'À retenir', points: keyPoints }]
-              : [],
-            slide_summary: moment.simple_version || moment.message_central,
-            student_prompt: moment.interaction?.question,
+            // ⚠️ Le titre AFFICHÉ peut être celui de l'IA (formulé comme une
+            // idée) ; `scene.title` ci-dessus reste le titre court du moment,
+            // car c'est lui qui nomme la scène dans la régie.
+            title: slide?.title || moment.title,
+            subtitle: slide?.subtitle || moment.intention || undefined,
+            core_idea: slide?.core_idea || moment.message_central,
+            development: slide
+              ? slide.development
+              : keyPoints.length
+                ? [{ label: 'À retenir', points: keyPoints }]
+                : [],
+            slide_summary: slide?.slide_summary || moment.simple_version || moment.message_central,
+            student_prompt: slide?.student_prompt || moment.interaction?.question,
             /**
              * LOI 5 — le schéma se DESSINE au tableau. Le croquis est DÉRIVÉ du
              * contenu (notion au centre, repères à retenir autour) : on ne
@@ -720,10 +834,14 @@ export class MasterFactoryService {
               : undefined,
           },
           blocks: [
-            { id: `${sceneId}-title`, type: 'title', text: moment.title },
-            { id: `${sceneId}-idea`, type: 'key-idea', text: moment.message_central },
+            { id: `${sceneId}-title`, type: 'title', text: slide?.title || moment.title },
+            { id: `${sceneId}-idea`, type: 'key-idea', text: slide?.core_idea || moment.message_central },
             { id: `${sceneId}-retain`, type: 'retain', items: keyPoints },
-            { id: `${sceneId}-prompt`, type: 'paragraph', text: moment.interaction?.question },
+            {
+              id: `${sceneId}-prompt`,
+              type: 'paragraph',
+              text: slide?.student_prompt || moment.interaction?.question,
+            },
           ],
           timeline: [
             { id: `${sceneId}-a1`, at_sec: 0, type: 'write', target_id: `${sceneId}-title`, duration_sec: 4 },
@@ -734,11 +852,7 @@ export class MasterFactoryService {
           ],
         };
       }),
-      meta: {
-        master_script_pivot_id: masterScriptPivotId,
-        generated_at: new Date().toISOString(),
-        model: 'deterministic-smartboard-timeline-v1',
-      },
+      meta,
     };
   }
 

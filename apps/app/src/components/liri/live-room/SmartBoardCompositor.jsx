@@ -5387,6 +5387,8 @@ function ParallaxSlideSceneStack({
   /** Palier de révélation intra-scène, partagé hôte ↔ invités. */
   revealStep,
   onRevealStepChange,
+  /** Scènes ordonnées de la séance — nécessaires à l'interlude de fin de chapitre. */
+  sceneList = null,
 }) {
   return (
     <div className="absolute inset-0 min-h-0">
@@ -5398,6 +5400,7 @@ function ParallaxSlideSceneStack({
         // sans ces deux props, chaque spectateur révélait le tableau pour lui seul.
         step={revealStep}
         onStepChange={onRevealStepChange}
+        sceneList={sceneList}
         onSmartboardImageExpand={onSmartboardImageExpand}
         tacticalSyncRole={tacticalSyncRole}
         remoteTacticalSync={remoteTacticalSync}
@@ -5421,6 +5424,16 @@ export default function SmartBoardCompositor({
   // SmartBoard natif et diaporama importé : deux scènes distinctes (joker) — slide doit correspondre à la scène active (résolu côté shell).
   slide,
   spotlight,
+  /**
+   * ⚠️ Ces trois props DOIVENT être relayées jusqu'à `ParallaxSlideSceneStack`.
+   * Les déclarer sur le seul composant interne ne suffit pas : c'est CE
+   * composant-ci que la régie instancie, et une prop non déclarée ici est
+   * silencieusement perdue — le palier diffusé n'atteignait pas le tableau et
+   * l'interlude de chapitre restait sans scènes, sans la moindre erreur.
+   */
+  revealStep,
+  onRevealStepChange,
+  sceneList = null,
   /** false = slide entière visible (sync hôte → invités via LiveArena) */
   progressivePlayback = true,
   /** Hôte : clic sur une image SmartBoard → diffusion modale salle */
@@ -5852,6 +5865,9 @@ export default function SmartBoardCompositor({
                 slide={slide}
                 spotlight={spotlight}
                 progressivePlayback={progressivePlayback}
+                revealStep={revealStep}
+                onRevealStepChange={onRevealStepChange}
+                sceneList={sceneList}
                 onSmartboardImageExpand={onSmartboardImageExpand}
                 tacticalSyncRole={tacticalSyncRole}
                 remoteTacticalSync={remoteTacticalSync}
@@ -5869,6 +5885,9 @@ export default function SmartBoardCompositor({
                 slide={slide}
                 spotlight={spotlight}
                 progressivePlayback={progressivePlayback}
+                revealStep={revealStep}
+                onRevealStepChange={onRevealStepChange}
+                sceneList={sceneList}
                 onSmartboardImageExpand={onSmartboardImageExpand}
                 tacticalSyncRole={tacticalSyncRole}
                 remoteTacticalSync={remoteTacticalSync}

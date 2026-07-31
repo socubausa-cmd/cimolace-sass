@@ -1304,10 +1304,9 @@ export default function SlideParallaxStage({
    * Liste ORDONNÉE des scènes de la séance (format `normalizeLiveSceneToSlide`),
    * nécessaire à l'interlude de reformulation : la fin d'un chapitre se déduit du
    * `chapter_id` de la scène SUIVANTE, que la scène courante ignore.
-   * ⚠️ ÉTAT RÉEL : aucun appelant ne passe encore cette liste (ni SmartBoardCompositor
-   * ni les aperçus Studio). L'interlude est donc CÂBLÉ mais DORMANT en production
-   * tant que la régie ne transmet pas ses scènes — d'où le défaut `null`, qui garantit
-   * le comportement strictement inchangé.
+   * La régie transmet ses scènes (LiveHostSmartBoardStage → SmartBoardCompositor).
+   * Le défaut `null` garde les autres appelants (aperçus Studio) strictement
+   * inchangés : sans liste, aucun interlude.
    */
   sceneList = null,
 }) {
@@ -1360,11 +1359,28 @@ export default function SlideParallaxStage({
    * Un tableau montré d'un coup n'a pas de « fin de révélation » à guetter :
    * dans ce cas l'interlude reste au repos.
    */
+  /**
+   * ⚠️ Le palier maximum n'est PAS constant : `ProgressiveBuildSlide` le calcule
+   * à 2 pour une mise en page structurée sans pied de page, à 3 sinon (cf. la
+   * ligne `const maxStep = …` de ce fichier). Le figer à 3 rendait l'interlude
+   * INATTEIGNABLE sur toutes les scènes Master Factory, dont le développement
+   * est justement structuré : la fin de révélation n'arrivait jamais.
+   */
+  const slideMaxStep = (() => {
+    const ia = slide?.ia_data;
+    if (!ia) return 3;
+    const horizontal = ia.layout_mode === 'smartboard_horizontal'
+      || ia.format?.mode === 'smartboard_horizontal'
+      || isStructuredDevelopment(ia.development);
+    const footer = !!(ia.illustration?.insight || ia.illustration?.formula || ia.illustration?.advice);
+    return horizontal && !footer ? 2 : 3;
+  })();
+
   const interlude = useChapterInterlude({
     scenes: sceneList,
     currentSceneId: slide?.id,
     revealStep: step !== undefined ? step : internalStep,
-    maxStep: 3,
+    maxStep: slideMaxStep,
     enabled: progressivePlayback && slide?.render_mode !== 'instant',
   });
 
@@ -1628,6 +1644,12 @@ export default function SlideParallaxStage({
         // affichée porte une narration et à quel palier elle est révélée.
         data-scene-narration={narration.available ? 'available' : 'none'}
         data-scene-reveal-step={String(currentStep)}
+        // Entrées de la décision d'interlude, observables sans ouvrir React :
+        // sans elles, un interlude qui ne s'ouvre pas est indiagnosticable.
+        data-interlude-scenes={String(sceneList?.length ?? 0)}
+        data-interlude-chapter={String(interlude.chapterId ?? '')}
+        data-interlude-max-step={String(slideMaxStep)}
+        data-interlude-pending={interlude.pending ? '1' : '0'}
       >
         <AnimatePresence mode="wait">
           <motion.div

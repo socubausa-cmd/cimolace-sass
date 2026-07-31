@@ -83,7 +83,9 @@ function r2Client() {
 // P0 #6). On stocke la CLÉ R2 (même convention que replay-postprod / short-generator) ;
 // le bucket est privé → la lecture se fait par URL présignée côté API/front (presign-
 // on-read du rendered course = suivi, comme replay.service.generatePlaybackUrl).
-async function uploadToR2(filePath, key) {
+// `export` : réutilisé tel quel par courseVideoExport.js (même bucket, même convention
+// de clé privée). Aucun changement de comportement pour l'appelant historique.
+export async function uploadToR2(filePath, key) {
   if (!r2Configured()) return null;
   const body = await readFile(filePath);
   await r2Client().send(new PutObjectCommand({
@@ -157,7 +159,7 @@ function storagePathFromValue(value, bucket) {
  * @param {string} defaultBucket bucket supposé quand l'entrée ne le précise pas
  * @returns {Promise<string>}
  */
-async function resolveAssetUrl(asset, defaultBucket) {
+export async function resolveAssetUrl(asset, defaultBucket) {
   const entry = typeof asset === 'string' ? { url: asset } : (asset || {});
   const url = String(entry.url || '');
   if (url.startsWith('data:')) return url;
@@ -179,7 +181,7 @@ async function resolveAssetUrl(asset, defaultBucket) {
 }
 
 // Récupère un asset (http(s) OU data: URL) vers un fichier local.
-async function materialize(url, destPath) {
+export async function materialize(url, destPath) {
   const u = String(url || '');
   if (u.startsWith('data:')) {
     await writeFile(destPath, Buffer.from(u.slice(u.indexOf(',') + 1), 'base64'));
@@ -190,7 +192,7 @@ async function materialize(url, destPath) {
   await writeFile(destPath, Buffer.from(await res.arrayBuffer()));
 }
 
-function runFfmpeg(args) {
+export function runFfmpeg(args) {
   return new Promise((resolve, reject) => {
     const proc = spawn('ffmpeg', args, { stdio: ['ignore', 'pipe', 'pipe'] });
     let stderr = '';
@@ -200,7 +202,7 @@ function runFfmpeg(args) {
   });
 }
 
-function runFfprobe(args) {
+export function runFfprobe(args) {
   return new Promise((resolve, reject) => {
     const proc = spawn('ffprobe', args, { stdio: ['ignore', 'pipe', 'pipe'] });
     let stdout = '';

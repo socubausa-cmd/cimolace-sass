@@ -107,7 +107,9 @@ export default function ChapterInterlude({
       transition={{ duration: rm ? 0.15 : 0.4, ease: [0.22, 1, 0.36, 1] }}
       // z-[70] : au-dessus du calque d'annotation (z-[25]) et du bouton de
       // narration (z-[60]) — le récapitulatif est au PREMIER plan (§3.2).
-      className="absolute inset-0 z-[70] flex items-center justify-center bg-black/78 backdrop-blur-md px-4 py-6"
+      // ⚠️ Opacité hors échelle Tailwind (78) : notée en valeur arbitraire, sinon
+      // la classe ne produit AUCUN style et le fond reste transparent.
+      className="absolute inset-0 z-[70] flex items-center justify-center bg-black/[0.78] backdrop-blur-md px-4 py-6"
       onClick={(e) => e.stopPropagation()}
     >
       <div className="w-full max-w-3xl max-h-full overflow-y-auto rounded-[26px] border border-[color-mix(in_srgb,var(--school-accent)_28%,transparent)] bg-[#101014]/85 px-6 py-7 md:px-9 md:py-9 shadow-[0_30px_90px_rgba(0,0,0,0.55)]">
@@ -137,7 +139,7 @@ export default function ChapterInterlude({
                 >
                   {i + 1}
                 </span>
-                <p className="font-serif text-[15px] md:text-[17px] leading-relaxed text-white/88">
+                <p className="font-serif text-[15px] md:text-[17px] leading-relaxed text-white/[0.88]">
                   {/* Loi 4 : seul le point EN COURS d'écriture est surligné. */}
                   <InkHighlight active={i === revealed - 1 && revealed < total} rm={rm}>
                     <HandwritingInk
