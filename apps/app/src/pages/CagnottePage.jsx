@@ -22,7 +22,8 @@ const CFA_COUNTRIES = [
   { code: 'TCD', name: 'Tchad', cur: 'XAF' },
 ];
 const CFA_PEG = 655.957;
-const PRESETS = [10, 25, 50, 100, 250];
+const PRESETS_EU = [10, 25, 50, 100, 250];          // en euros
+const PRESETS_CFA = [1000, 2500, 5000, 10000, 25000]; // en francs CFA
 
 const eur = (cents) => `${(Math.round(cents) / 100).toLocaleString('fr-FR', { minimumFractionDigits: 0, maximumFractionDigits: 0 })} €`;
 
@@ -81,10 +82,13 @@ export default function CagnottePage() {
   const [banner, setBanner] = useState(/** @type {null|{kind:'merci'|'annule'|'attente',text:string}} */ (null));
   const pollRef = useRef(null);
 
+  // Montant canonique en CENTIMES EUR (objectif + total en €). En Afrique, la saisie
+  // est en CFA → on reconvertit en € via le peg pour l'API + le total.
   const amountCents = useMemo(() => {
     const raw = customEur !== '' ? Number(customEur) : amountEur;
-    return Math.round((Number(raw) || 0) * 100);
-  }, [amountEur, customEur]);
+    const n = Number(raw) || 0;
+    return region === 'eu' ? Math.round(n * 100) : Math.round((n / CFA_PEG) * 100);
+  }, [amountEur, customEur, region]);
 
   const load = useCallback(async () => {
     try { setCampaign(await cagnotteApi.campaign(SLUG)); } catch { /* garde le fallback */ }
@@ -125,7 +129,14 @@ export default function CagnottePage() {
   useEffect(() => () => { if (pollRef.current) clearInterval(pollRef.current); }, []);
 
   const selectedCountry = CFA_COUNTRIES.find((c) => c.code === country) || CFA_COUNTRIES[0];
-  const mmAmount = Math.round((amountCents / 100) * CFA_PEG);
+  const cur = region === 'eu' ? 'EUR' : selectedCountry.cur; // devise affichée (XAF/XOF en Afrique)
+  const presets = region === 'eu' ? PRESETS_EU : PRESETS_CFA;
+  const fmtMoney = (v) => (region === 'eu' ? `${v} €` : `${Number(v).toLocaleString('fr-FR')} ${cur}`);
+  // Montant Mobile Money EXACT : en Afrique le donateur choisit directement en CFA.
+  const rawAmount = customEur !== '' ? Number(customEur) : amountEur;
+  const mmAmount = region === 'afrique'
+    ? Math.round(Number(rawAmount) || 0)
+    : Math.round((amountCents / 100) * CFA_PEG);
 
   const goal = campaign?.goalCents ?? 170000;
   const raised = campaign?.raisedCents ?? 0;
@@ -153,7 +164,7 @@ export default function CagnottePage() {
     setBusy(true);
     try {
       const r = await cagnotteApi.pawapay(SLUG, {
-        amountCents, phoneNumber: phone, provider, country,
+        amountCents, mobileMoneyAmount: mmAmount, phoneNumber: phone, provider, country,
         donorName: donorName || undefined, donorMessage: donorMessage || undefined,
       });
       setBanner({ kind: 'attente', text: `Validez le paiement de ${mmAmount.toLocaleString('fr-FR')} ${selectedCountry.cur} sur votre téléphone…` });
@@ -407,7 +418,7 @@ export default function CagnottePage() {
                   { id: 'eu', label: 'Europe', sub: 'Carte', icon: CreditCard },
                   { id: 'afrique', label: 'Afrique', sub: 'Mobile Money', icon: Smartphone },
                 ].map(({ id, label, sub, icon: Icon }) => (
-                  <button key={id} type="button" onClick={() => { setRegion(id); setError(''); }}
+                  <button key={id} type="button" onClick={() => { setRegion(id); setError(''); setAmountEur(id === 'eu' ? 50 : 2500); setCustomEur(''); }}
                     className={`flex flex-col items-center gap-0.5 rounded-lg py-2.5 text-sm font-semibold transition-colors ${
                       region === id ? 'bg-[#d97757] text-[#1c1a18]' : 'text-[#f5f4ee]/70 hover:bg-white/5'}`}>
                     <span className="flex items-center gap-1.5"><Icon className="h-4 w-4" /> {label}</span>
@@ -420,24 +431,24 @@ export default function CagnottePage() {
               <div className="mt-4">
                 <p className="mb-2 text-[12px] font-semibold uppercase tracking-wide text-[#f5f4ee]/50">Montant</p>
                 <div className="grid grid-cols-3 gap-2">
-                  {PRESETS.map((v) => (
+                  {presets.map((v) => (
                     <button key={v} type="button" onClick={() => { setAmountEur(v); setCustomEur(''); }}
-                      className={`rounded-lg border py-2 text-sm font-bold transition-colors ${
+                      className={`rounded-lg border py-2 text-[12.5px] font-bold transition-colors ${
                         customEur === '' && amountEur === v
                           ? 'border-[#d97757] bg-[#d97757]/15 text-[#e8a184]'
                           : 'border-white/10 text-[#f5f4ee]/75 hover:border-white/25'}`}>
-                      {v} €
+                      {fmtMoney(v)}
                     </button>
                   ))}
                   <div className={`col-span-1 flex items-center rounded-lg border px-2 ${customEur !== '' ? 'border-[#d97757] bg-[#d97757]/10' : 'border-white/10'}`}>
                     <input type="number" min="1" inputMode="numeric" placeholder="Autre" value={customEur}
                       onChange={(e) => setCustomEur(e.target.value.replace(/[^0-9]/g, ''))}
-                      className="w-full bg-transparent py-2 text-sm font-bold text-[#f5f4ee] outline-none placeholder:text-[#f5f4ee]/35" />
-                    <span className="text-sm font-bold text-[#f5f4ee]/50">€</span>
+                      className="w-full min-w-0 bg-transparent py-2 text-[12.5px] font-bold text-[#f5f4ee] outline-none placeholder:text-[#f5f4ee]/35" />
+                    <span className="shrink-0 text-[12.5px] font-bold text-[#f5f4ee]/50">{region === 'eu' ? '€' : cur}</span>
                   </div>
                 </div>
                 {region === 'afrique' && validAmount && (
-                  <p className="mt-2 text-[12px] text-[#f5f4ee]/55">≈ <strong className="text-[#e8a184]">{mmAmount.toLocaleString('fr-FR')} {selectedCountry.cur}</strong> en Mobile Money</p>
+                  <p className="mt-2 text-[12px] text-[#f5f4ee]/55">soit ≈ <strong className="text-[#e8a184]">{eur(amountCents)}</strong> vers l’objectif</p>
                 )}
               </div>
 
@@ -487,7 +498,7 @@ export default function CagnottePage() {
                 {busy ? 'Traitement…'
                   : region === 'eu'
                     ? `Donner ${validAmount ? eur(amountCents) : ''} par carte`
-                    : `Donner ${validAmount ? eur(amountCents) : ''} par Mobile Money`}
+                    : `Donner ${validAmount ? `${mmAmount.toLocaleString('fr-FR')} ${cur}` : ''} par Mobile Money`}
                 {!busy && <ArrowRight className="h-4 w-4" />}
               </button>
 

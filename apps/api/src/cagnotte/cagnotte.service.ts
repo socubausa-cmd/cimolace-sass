@@ -245,7 +245,7 @@ export class CagnotteService {
 
   /** Afrique — pawaPay (Mobile Money). Initie un dépôt ; le donateur confirme sur son tél. */
   async createPawapay(slug: string, dto: {
-    amountCents?: number; phoneNumber?: string; provider?: string;
+    amountCents?: number; mobileMoneyAmount?: number; phoneNumber?: string; provider?: string;
     country?: string; donorName?: string; donorMessage?: string;
   }) {
     const campaign = await this.loadActiveCampaign(slug);
@@ -257,7 +257,11 @@ export class CagnotteService {
     if (!provider) throw new BadRequestException('Opérateur Mobile Money requis.');
 
     const currency = CagnotteService.XOF_COUNTRIES.has(country) ? 'XOF' : 'XAF';
-    const mmAmount = Math.round((amountCents / 100) * CagnotteService.CFA_PEG);
+    // Montant Mobile Money EXACT si fourni (le front affiche + fait payer en CFA) ;
+    // sinon conversion depuis les centimes EUR.
+    const mmAmount = Number.isFinite(Number(dto.mobileMoneyAmount)) && Number(dto.mobileMoneyAmount) > 0
+      ? Math.round(Number(dto.mobileMoneyAmount))
+      : Math.round((amountCents / 100) * CagnotteService.CFA_PEG);
 
     const { data: don, error: insErr } = await this.db
       .from('cagnotte_donations')

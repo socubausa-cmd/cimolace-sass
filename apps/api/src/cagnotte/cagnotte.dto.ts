@@ -17,6 +17,10 @@ export class CreateCagnottePawapayDto {
   @IsInt() @Min(100) @Max(500000)
   amountCents: number;
 
+  /** Montant EXACT en Mobile Money (XAF/XOF) choisi côté front (affichage CFA). */
+  @IsOptional() @IsInt() @Min(1) @Max(50000000)
+  mobileMoneyAmount?: number;
+
   /** Numéro Mobile Money (E.164 ou local ; nettoyé côté serveur). */
   @IsString() @Matches(/^\+?[0-9 ]{7,20}$/, { message: 'Numéro Mobile Money invalide.' })
   phoneNumber: string;

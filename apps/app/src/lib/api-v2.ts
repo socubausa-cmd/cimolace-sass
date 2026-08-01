@@ -1001,7 +1001,7 @@ export const cagnotteApi = {
     apiV2.post<ApiEnvelope<any>>(`/cagnotte/${slug}/stripe/confirm`, { sessionId }).then(unwrap),
   pawapay: (
     slug: string,
-    body: { amountCents: number; phoneNumber: string; provider: string; country: string; donorName?: string; donorMessage?: string },
+    body: { amountCents: number; mobileMoneyAmount?: number; phoneNumber: string; provider: string; country: string; donorName?: string; donorMessage?: string },
   ) => apiV2.post<ApiEnvelope<any>>(`/cagnotte/${slug}/pawapay`, body).then(unwrap),
   pawapayStatus: (slug: string, depositId: string) =>
     apiV2.get<ApiEnvelope<any>>(`/cagnotte/${slug}/pawapay/${depositId}`).then(unwrap),
