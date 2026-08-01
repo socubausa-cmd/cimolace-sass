@@ -35,6 +35,21 @@
         "EXPO_PUBLIC_PORTAL_URL": "https://app.prorascience.org"
       }
     },
+    "device": {
+      "distribution": "internal",
+      "android": {
+        "buildType": "apk"
+      },
+      "ios": {
+        "simulator": false
+      },
+      "env": {
+        "EXPO_PUBLIC_API_URL": "https://api.cimolace.space",
+        "EXPO_PUBLIC_TENANT_SLUG": "isna",
+        "EXPO_PUBLIC_LIVEKIT_URL": "wss://cimolace-yis8vna7.livekit.cloud",
+        "EXPO_PUBLIC_PORTAL_URL": "https://app.prorascience.org"
+      }
+    },
     "production": {
       "autoIncrement": true,
       "android": {
@@ -45,6 +60,9 @@
         "EXPO_PUBLIC_TENANT_SLUG": "isna",
         "EXPO_PUBLIC_LIVEKIT_URL": "wss://cimolace-yis8vna7.livekit.cloud",
         "EXPO_PUBLIC_PORTAL_URL": "https://app.prorascience.org"
+      },
+      "ios": {
+        "simulator": false
       }
     }
   },
@@ -53,6 +71,9 @@
       "android": {
         "track": "internal",
         "releaseStatus": "draft"
+      },
+      "ios": {
+        "language": "fr-FR"
       }
     }
   }

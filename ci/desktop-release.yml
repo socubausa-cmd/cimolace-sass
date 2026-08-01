@@ -1,0 +1,94 @@
+# Publication des applications de bureau LIRI — macOS signé/notarisé + Windows signé.
+#
+# À copier dans `.github/workflows/` puis déclencher par un tag `desktop-v*`.
+#
+# POURQUOI UNE CI : la signature Windows passe par PowerShell + le module
+# TrustedSigning + signtool — elle s'exécute SOUS WINDOWS. Depuis un Mac, on ne
+# peut produire qu'un binaire non signé. Un runner Windows lève ce blocage sans
+# acheter de machine.
+#
+# Secrets à déclarer dans le dépôt (Settings → Secrets and variables → Actions) :
+#   Apple    : CSC_LINK (base64 du .p12), CSC_KEY_PASSWORD, APPLE_ID,
+#              APPLE_APP_SPECIFIC_PASSWORD, APPLE_TEAM_ID
+#   Azure    : AZURE_TENANT_ID, AZURE_CLIENT_ID, AZURE_CLIENT_SECRET
+#   Azure (non secret, en `vars`) : AZURE_TS_ENDPOINT, AZURE_TS_ACCOUNT,
+#              AZURE_TS_CERT_PROFILE, WIN_PUBLISHER_NAME
+#
+# Sans ces valeurs, les deux jobs produisent quand même des binaires — non
+# signés. Rien ne casse, l'utilisateur devra confirmer une alerte au lancement.
+
+name: Applications de bureau LIRI
+
+on:
+  push:
+    tags: ['desktop-v*']
+  workflow_dispatch:
+
+jobs:
+  macos:
+    name: macOS (signé + notarisé)
+    runs-on: macos-14
+    defaults:
+      run:
+        working-directory: apps/desktop
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: npm ci || npm install
+      - name: Construire, signer, notariser
+        env:
+          CSC_LINK: ${{ secrets.CSC_LINK }}
+          CSC_KEY_PASSWORD: ${{ secrets.CSC_KEY_PASSWORD }}
+          APPLE_ID: ${{ secrets.APPLE_ID }}
+          APPLE_APP_SPECIFIC_PASSWORD: ${{ secrets.APPLE_APP_SPECIFIC_PASSWORD }}
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+        run: npm run build:mac
+      - name: Vérifier la signature et l'agrafage
+        # Informatif : sans certificat ces commandes échouent, ce qui ne doit pas
+        # faire tomber le job — on veut quand même récupérer les artefacts.
+        continue-on-error: true
+        run: |
+          codesign --verify --deep --strict --verbose=2 "release/mac-arm64/LIRI.app"
+          xcrun stapler validate "release/mac-arm64/LIRI.app"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: liri-macos
+          path: |
+            apps/desktop/release/*.dmg
+            apps/desktop/release/*.zip
+            apps/desktop/release/latest-mac.yml
+
+  windows:
+    name: Windows (signé via Azure Trusted Signing)
+    runs-on: windows-latest
+    defaults:
+      run:
+        working-directory: apps/desktop
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: npm ci || npm install
+      - name: Construire et signer
+        env:
+          AZURE_TS_ENDPOINT: ${{ vars.AZURE_TS_ENDPOINT }}
+          AZURE_TS_ACCOUNT: ${{ vars.AZURE_TS_ACCOUNT }}
+          AZURE_TS_CERT_PROFILE: ${{ vars.AZURE_TS_CERT_PROFILE }}
+          WIN_PUBLISHER_NAME: ${{ vars.WIN_PUBLISHER_NAME }}
+          AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
+          AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
+          AZURE_CLIENT_SECRET: ${{ secrets.AZURE_CLIENT_SECRET }}
+        run: npm run build:win:azure
+      - name: Vérifier la signature
+        continue-on-error: true
+        shell: pwsh
+        run: signtool verify /pa /v "release\LIRI Setup 1.0.0.exe"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: liri-windows
+          path: |
+            apps/desktop/release/*.exe
+            apps/desktop/release/latest.yml

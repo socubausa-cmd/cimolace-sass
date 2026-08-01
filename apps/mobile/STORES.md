@@ -24,11 +24,13 @@ sur les deux plateformes.
 | Profil | Android | iOS | Usage |
 |---|---|---|---|
 | `development` | APK dev client | simulateur | debug avec Metro |
-| `preview` | APK | simulateur | test interne, **aucun compte Apple requis** |
-| `production` | AAB | *(à compléter)* | envoi en boutique |
+| `preview` | APK | simulateur | vérification rapide, **aucun compte Apple requis** |
+| `device` | APK | **iPhone réel** (ad hoc) | test sur appareil, compte Apple requis |
+| `production` | AAB | build boutique | envoi en boutique |
 
 ```bash
 npx eas-cli build --platform android --profile preview   # APK testable tout de suite
+npx eas-cli build --platform ios --profile device        # iPhone réel (compte Apple)
 ```
 
 ## Android — Google Play
@@ -58,18 +60,29 @@ manuellement dans la console.
 
 ## iOS — App Store
 
-**Bloqué tant qu'il n'y a pas de compte Apple Developer** (99 $/an). Sans lui,
-la seule cible iOS possible est le **simulateur** (profil `preview`) : impossible
-d'installer sur un vrai iPhone, impossible d'utiliser TestFlight.
+**Le compte Apple Developer existe** (contrat signé le 27 juillet 2026, identifiant
+`manikongo5@icloud.com`). L'iPhone réel et TestFlight sont donc débloqués.
 
-Une fois le compte ouvert :
+⚠️ Toutes les étapes ci-dessous demandent de **s'authentifier auprès d'Apple** :
+c'est à toi de les lancer, je ne saisis pas d'identifiants.
 
-1. Créer l'app dans App Store Connect avec le bundle `org.prorascience.liri`,
-   noter l'**ascAppId**.
-2. Ajouter à `eas.json` un bloc `submit.production.ios` avec `appleId`,
-   `ascAppId` et `appleTeamId`.
-3. Retirer `"ios": { "simulator": true }` du profil `preview` pour produire des
-   builds installables sur appareil.
+### Installer sur ton iPhone
+
+```bash
+npx eas-cli device:create        # enregistre l'appareil (QR code à scanner)
+npx eas-cli build --platform ios --profile device
+```
+
+### TestFlight puis App Store
+
+1. Créer l'app dans App Store Connect avec le bundle `org.prorascience.liri`.
+2. `npx eas-cli build --platform ios --profile production`
+3. `npx eas-cli submit --platform ios --latest`
+
+`eas submit` demande l'identifiant Apple, le Team ID et l'ascAppId à la
+première exécution puis les mémorise. Ils ne sont **pas** écrits dans le
+dépôt.
+
 
 ```bash
 npx eas-cli build --platform ios --profile production
