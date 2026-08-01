@@ -2,7 +2,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { Helmet } from 'react-helmet';
 import { motion } from 'framer-motion';
-import { Loader2, Users, ArrowRight, AlertCircle, Building2, Check } from 'lucide-react';
+import { Loader2, ArrowRight, AlertCircle, Building2, Check } from 'lucide-react';
 import { joinApi } from '@/lib/api-v2';
 import { useAuth } from '@/hooks/useAuth';
 import { authStore } from '@/lib/auth-store';
@@ -173,9 +173,12 @@ export default function JoinOrgPage() {
         className="relative z-10 w-full max-w-[420px]"
       >
         <div className="mb-7 flex justify-center">
-          <span className="flex h-14 w-14 items-center justify-center rounded-2xl" style={{ background: 'rgba(217,119,87,0.14)' }}>
-            <Users className="h-7 w-7" style={{ color: ACCENT }} strokeWidth={2.1} />
-          </span>
+          <img
+            src="/liri-mark.png"
+            alt="LIRI"
+            className="h-14 w-auto select-none drop-shadow-[0_8px_24px_rgba(217,119,87,0.35)]"
+            draggable={false}
+          />
         </div>
 
         <div
