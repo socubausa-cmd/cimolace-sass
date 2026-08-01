@@ -1,0 +1,52 @@
+import { Body, Controller, Get, Param, Post, Query } from '@nestjs/common';
+import { CagnotteService } from './cagnotte.service';
+import {
+  CreateCagnotteStripeDto,
+  CreateCagnottePawapayDto,
+  ConfirmStripeDto,
+} from './cagnotte.dto';
+
+/**
+ * Cagnotte PUBLIQUE — AUCUN guard : les dons viennent de visiteurs anonymes de
+ * prorascience.org. Europe → Stripe (carte) ; Afrique → pawaPay (Mobile Money).
+ */
+@Controller('cagnotte')
+export class CagnotteController {
+  constructor(private readonly svc: CagnotteService) {}
+
+  /** Campagne + total collecté (barre de progression). */
+  @Get(':slug')
+  campaign(@Param('slug') slug: string) {
+    return this.svc.getCampaign(slug);
+  }
+
+  /** Opérateurs Mobile Money actifs (sélecteur pawaPay). */
+  @Get(':slug/providers')
+  providers(@Param('slug') _slug: string, @Query('country') country?: string) {
+    return this.svc.getProviders(country);
+  }
+
+  /** Don par carte (Stripe Checkout) → { checkoutUrl } à ouvrir côté client. */
+  @Post(':slug/stripe')
+  stripe(@Param('slug') slug: string, @Body() dto: CreateCagnotteStripeDto) {
+    return this.svc.createStripe(slug, dto);
+  }
+
+  /** Confirmation au retour Stripe (success_url) → marque « complété » si payé. */
+  @Post(':slug/stripe/confirm')
+  confirm(@Param('slug') _slug: string, @Body() dto: ConfirmStripeDto) {
+    return this.svc.confirmStripe(dto.sessionId);
+  }
+
+  /** Don Mobile Money (pawaPay) → { depositId, status } ; le donateur confirme sur son tél. */
+  @Post(':slug/pawapay')
+  pawapay(@Param('slug') slug: string, @Body() dto: CreateCagnottePawapayDto) {
+    return this.svc.createPawapay(slug, dto);
+  }
+
+  /** Poll de l'état d'un dépôt pawaPay (le front interroge jusqu'à COMPLETED/FAILED). */
+  @Get(':slug/pawapay/:depositId')
+  pawapayStatus(@Param('slug') _slug: string, @Param('depositId') depositId: string) {
+    return this.svc.pollPawapay(depositId);
+  }
+}

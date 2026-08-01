@@ -985,6 +985,26 @@ export const masterclassApi = {
     apiV2.post<ApiEnvelope<any>>('/masterclass-factory/precepteur', body).then(unwrap),
 };
 
+// ── Cagnotte PUBLIQUE (dons anonymes) — Europe: Stripe · Afrique: pawaPay ──────
+export const cagnotteApi = {
+  campaign: (slug: string) =>
+    apiV2.get<ApiEnvelope<any>>(`/cagnotte/${slug}`).then(unwrap),
+  providers: (slug: string, country?: string) =>
+    apiV2
+      .get<ApiEnvelope<any>>(`/cagnotte/${slug}/providers${country ? `?country=${encodeURIComponent(country)}` : ''}`)
+      .then(unwrap),
+  stripe: (slug: string, body: { amountCents: number; donorName?: string; donorMessage?: string }) =>
+    apiV2.post<ApiEnvelope<any>>(`/cagnotte/${slug}/stripe`, body).then(unwrap),
+  confirmStripe: (slug: string, sessionId: string) =>
+    apiV2.post<ApiEnvelope<any>>(`/cagnotte/${slug}/stripe/confirm`, { sessionId }).then(unwrap),
+  pawapay: (
+    slug: string,
+    body: { amountCents: number; phoneNumber: string; provider: string; country: string; donorName?: string; donorMessage?: string },
+  ) => apiV2.post<ApiEnvelope<any>>(`/cagnotte/${slug}/pawapay`, body).then(unwrap),
+  pawapayStatus: (slug: string, depositId: string) =>
+    apiV2.get<ApiEnvelope<any>>(`/cagnotte/${slug}/pawapay/${depositId}`).then(unwrap),
+};
+
 // ── Master Factory officiel ─────────────────────────────────────────────────
 //
 // Nouveau point d'entrée Liri : un seul cerveau, plusieurs sorties.

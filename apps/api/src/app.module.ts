@@ -11,6 +11,7 @@ import { CimolaceBackofficeModule } from './cimolace-backoffice/cimolace-backoff
 import { CimolaceCatalogModule } from './cimolace-catalog/cimolace-catalog.module';
 import { BillingModule } from './billing/billing.module';
 import { CheckoutModule } from './checkout/checkout.module';
+import { CagnotteModule } from './cagnotte/cagnotte.module';
 import { StudentInviteModule } from './student-invite/student-invite.module';
 import { LiveJoinModule } from './live-join/live-join.module';
 import { LiveModule } from './live/live.module';
@@ -85,6 +86,7 @@ import { UsageModule } from './usage/usage.module';
     CimolaceCatalogModule, // ← FIX : catalogue plans
     BillingModule,
     CheckoutModule,
+    CagnotteModule,
     StudentInviteModule,
     LiveJoinModule,
     LiveModule,
