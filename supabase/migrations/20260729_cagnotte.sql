@@ -64,3 +64,6 @@ update public.cagnotte_campaigns
   set booking_url = coalesce(booking_url, '/liri/rendez-vous'),
       booking_label = coalesce(booking_label, 'Réserver ma séance de prière (choisir un créneau)')
   where slug = 'smartforme-culte';
+
+-- Visuel produit (photo du téléphone). Éditable par SQL ; défaut null → illustration.
+alter table public.cagnotte_campaigns add column if not exists image_url text;

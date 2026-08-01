@@ -41,6 +41,29 @@ function extractProviders(config, country) {
     .filter((p) => p.code);
 }
 
+// Illustration par défaut (dos de flagship type Galaxy Ultra) tant qu'aucune photo
+// réelle n'est posée dans cagnotte_campaigns.image_url.
+function PhoneArt() {
+  return (
+    <svg viewBox="0 0 240 380" className="mx-auto h-auto w-[140px]" role="img" aria-label="Illustration du téléphone">
+      <defs>
+        <linearGradient id="body" x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0" stopColor="#2a2724" /><stop offset="1" stopColor="#161513" />
+        </linearGradient>
+      </defs>
+      <rect x="22" y="10" width="196" height="360" rx="30" fill="url(#body)" stroke="#3a3835" strokeWidth="2" />
+      <g stroke="#4a4744" strokeWidth="2" fill="#0a0908">
+        <circle cx="58" cy="54" r="14" /><circle cx="58" cy="94" r="14" /><circle cx="58" cy="132" r="11" />
+      </g>
+      <circle cx="58" cy="54" r="5" fill="#e8a184" opacity="0.55" />
+      <circle cx="58" cy="94" r="5" fill="#e8a184" opacity="0.35" />
+      <rect x="94" y="48" width="11" height="11" rx="3" fill="#4a4744" />
+      <text x="120" y="332" textAnchor="middle" fill="#6a655f" fontSize="13" fontWeight="700" letterSpacing="2" fontFamily="Inter, sans-serif">ULTRA</text>
+      <rect x="205" y="132" width="7" height="168" rx="3.5" fill="#d97757" />
+    </svg>
+  );
+}
+
 export default function CagnottePage() {
   const [campaign, setCampaign] = useState(null);
   const [region, setRegion] = useState(/** @type {'eu'|'afrique'} */ ('eu'));
@@ -216,6 +239,27 @@ export default function CagnottePage() {
         <div className="grid gap-8 lg:grid-cols-[1.05fr_0.95fr] lg:items-start">
           {/* ── Colonne gauche : le POURQUOI ── */}
           <section className="space-y-8">
+            {/* Visuel produit — photo réelle si campaign.imageUrl, sinon illustration. */}
+            <div className="flex items-center gap-4 rounded-2xl border border-white/10 bg-gradient-to-br from-white/[0.05] to-transparent p-5">
+              <div className="shrink-0">
+                {campaign?.imageUrl ? (
+                  <img
+                    src={campaign.imageUrl}
+                    alt={device}
+                    className="h-32 w-auto max-w-[140px] rounded-xl object-contain"
+                    loading="lazy"
+                  />
+                ) : (
+                  <PhoneArt />
+                )}
+              </div>
+              <div>
+                <p className="text-[11px] font-semibold uppercase tracking-wide text-[#e8a184]">L’appareil de la cagnotte</p>
+                <p className="mt-1 text-lg font-bold leading-tight text-[#f5f4ee]">{device}</p>
+                <p className="mt-1 text-[13px] text-[#f5f4ee]/60">Vidéo pro · 1 To de stockage · un seul outil pour tout filmer.</p>
+              </div>
+            </div>
+
             {/* Progression */}
             <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-5">
               <div className="flex items-end justify-between gap-3">
