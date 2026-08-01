@@ -2879,6 +2879,11 @@ export default function CimolaceCreationAgent({ tenantSlug: tenantSlugProp = nul
   // le guide parle à GAUCHE, la zone d'action (qui s'étire) à DROITE.
   const showSplitAction = isTenantRealm && !!(contactForm || bookingForm || signupForm || authForm || plansPanel);
   const tunnelMode = plansPanel ? 'plans' : signupForm ? 'signup' : authForm ? 'login' : bookingForm ? 'booking' : contactForm ? 'contact' : null;
+  // Écran ALLÉGÉ pour l'accès au compte : un membre qui vient par un lien d'invitation veut
+  // SEULEMENT se connecter (ou s'inscrire). On retire alors tout le panneau « guide » marketing
+  // de gauche (titre, étapes, forfaits, garanties) et on ne montre que le formulaire, centré.
+  // Le bascule connexion↔inscription reste possible via les liens en pied de formulaire.
+  const leanAuth = tunnelMode === 'login' || tunnelMode === 'signup';
   const tunnelCopy = {
     plans: {
       eyebrow: 'Tunnel de vente',
@@ -3377,7 +3382,7 @@ export default function CimolaceCreationAgent({ tenantSlug: tenantSlugProp = nul
 
       {/* ACTION ENGINE — ÉCRAN SCINDÉ : le guide parle à GAUCHE, la ZONE D'ACTION (s'étire) à DROITE */}
       {showSplitAction && (
-        <div className="cca-in cca-actionsplit cca-tunnel" onClick={(e) => e.stopPropagation()}>
+        <div className={`cca-in cca-actionsplit cca-tunnel${leanAuth ? ' cca-tunnel--lean' : ''}`} onClick={(e) => e.stopPropagation()}>
           <style>{`
             .cca-tunnel{position:relative;z-index:6;width:min(1120px,calc(100vw - 44px));margin:18px auto 0;display:grid;grid-template-columns:minmax(310px,.9fr) minmax(0,1.1fr);gap:28px;align-items:center}
             .cca-tunnel-guide{position:relative;min-height:520px;border:1px solid rgba(230,204,146,.13);border-radius:30px;padding:30px;overflow:hidden;background:linear-gradient(145deg,rgba(244,239,230,.06),rgba(244,239,230,.018));box-shadow:0 34px 110px rgba(0,0,0,.22);display:flex;flex-direction:column}
@@ -3409,9 +3414,13 @@ export default function CimolaceCreationAgent({ tenantSlug: tenantSlugProp = nul
             .cca-plan-badge{position:absolute;right:13px;top:-8px;border-radius:999px;background:#e6cc92;color:#26170d;padding:3px 9px;font:850 9px/1 'Bricolage Grotesque',system-ui,sans-serif;letter-spacing:.06em;text-transform:uppercase}
             @media(max-width:900px){.cca-tunnel{grid-template-columns:1fr;align-items:start;margin-top:82px}.cca-tunnel-guide{min-height:auto;padding:22px;border-radius:24px}.cca-tunnel-proof{margin-top:22px;padding-top:0}.cca-actionzone{min-height:auto;max-height:none;border-radius:24px;padding:20px}.cca-tunnel-switch{grid-template-columns:1fr}.cca-tunnel-switch button{padding:11px 13px}}
             @media(max-width:560px){.cca-tunnel{width:min(100vw - 24px,520px);gap:14px}.cca-tunnel-proof{grid-template-columns:1fr}.cca-tunnel-title{font-size:32px}.cca-action-head{align-items:center}.cca-tunnel-guide{padding:18px}.cca-actionzone{padding:16px}}
+            /* ALLÉGÉ (connexion / inscription) : une seule colonne centrée, juste le formulaire */
+            .cca-tunnel--lean{grid-template-columns:1fr;width:min(440px,calc(100vw - 32px));margin-top:6px}
+            .cca-tunnel--lean .cca-actionzone{min-height:auto;max-height:none}
           `}</style>
 
-          {/* GAUCHE — la voix du guide */}
+          {/* GAUCHE — la voix du guide (masquée en mode connexion/inscription allégé) */}
+          {!leanAuth && (
           <div className="cca-tunnel-guide">
             <div className="cca-tunnel-eyebrow">{tunnelCopy?.eyebrow || 'Action'}</div>
             <h2 className="cca-tunnel-title">{tunnelCopy?.title || 'Passons à l’étape suivante.'}</h2>
@@ -3441,6 +3450,7 @@ export default function CimolaceCreationAgent({ tenantSlug: tenantSlugProp = nul
               <span><b>Continu</b>Retour direct vers LIRI.</span>
             </div>
           </div>
+          )}
 
           {/* DROITE — zone d'action bordée, hauteur dynamique selon le contenu */}
           <div className="cca-actionzone">
