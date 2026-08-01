@@ -53,7 +53,7 @@ export class CagnotteService {
   async getCampaign(slug: string) {
     const { data: campaign } = await this.db
       .from('cagnotte_campaigns')
-      .select('slug, title, device_name, goal_cents, currency, is_active')
+      .select('slug, title, device_name, goal_cents, currency, is_active, booking_url, booking_label')
       .eq('slug', slug)
       .maybeSingle();
     if (!campaign) throw new NotFoundException('Cagnotte introuvable.');
@@ -75,6 +75,8 @@ export class CagnotteService {
       raisedCents,
       donorCount: list.length,
       active: campaign.is_active,
+      bookingUrl: campaign.booking_url || null,
+      bookingLabel: campaign.booking_label || null,
     };
   }
 

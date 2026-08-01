@@ -52,3 +52,11 @@ on conflict (slug) do update
       device_name = excluded.device_name,
       goal_cents = excluded.goal_cents,
       updated_at = now();
+
+-- Offre post-don : séance de prière gratuite (RDV) en remerciement de l'offrande.
+alter table public.cagnotte_campaigns add column if not exists booking_url text;
+alter table public.cagnotte_campaigns add column if not exists booking_label text;
+update public.cagnotte_campaigns
+  set booking_url = coalesce(booking_url, '/temple-ngowazulu'),
+      booking_label = coalesce(booking_label, 'Réserver une séance de prière gratuite')
+  where slug = 'smartforme-culte';

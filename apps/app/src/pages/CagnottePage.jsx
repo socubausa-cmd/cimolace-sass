@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   Camera, Video, HardDrive, Radio, Heart, ShieldCheck, Loader2,
-  CreditCard, Smartphone, Check, ArrowRight, Users,
+  CreditCard, Smartphone, Check, ArrowRight, Users, Sparkles,
 } from 'lucide-react';
 import { cagnotteApi } from '@/lib/api-v2';
 
@@ -190,6 +190,29 @@ export default function CagnottePage() {
       </header>
 
       <main className="mx-auto max-w-5xl px-5 pb-24">
+        {/* Offre POST-DON : séance de prière gratuite (RDV) en remerciement de l'offrande.
+            Apparaît une fois le paiement confirmé (retour Stripe / pawaPay complété). */}
+        {banner?.kind === 'merci' && campaign?.bookingUrl && (
+          <div className="mb-8 rounded-2xl border border-[#d97757]/45 bg-[#d97757]/[0.10] p-6 text-center sm:p-8">
+            <span className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-[#d97757]/20 text-[#e8a184]">
+              <Sparkles className="h-6 w-6" />
+            </span>
+            <h2 className="text-xl font-bold sm:text-2xl">Merci pour votre offrande 🙏</h2>
+            <p className="mx-auto mt-2 max-w-xl text-[14px] leading-relaxed text-[#f5f4ee]/75">
+              En reconnaissance de votre don, nous vous offrons une{' '}
+              <strong className="text-[#f5f4ee]">séance de prière gratuite</strong> — un moment pour
+              déposer votre requête et être porté dans la prière.
+            </p>
+            <a
+              href={`${campaign.bookingUrl}${campaign.bookingUrl.includes('?') ? '&' : '?'}src=cagnotte`}
+              className="mt-5 inline-flex items-center justify-center gap-2 rounded-xl bg-[#d97757] px-6 py-3.5 text-[15px] font-bold text-[#1c1a18] shadow-[0_10px_30px_rgba(217,119,87,0.3)] transition-all hover:bg-[#e08b6d]"
+            >
+              {campaign.bookingLabel || 'Réserver une séance de prière gratuite'}
+              <ArrowRight className="h-4 w-4" />
+            </a>
+          </div>
+        )}
+
         <div className="grid gap-8 lg:grid-cols-[1.05fr_0.95fr] lg:items-start">
           {/* ── Colonne gauche : le POURQUOI ── */}
           <section className="space-y-8">
