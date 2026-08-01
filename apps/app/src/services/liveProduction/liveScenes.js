@@ -32,6 +32,58 @@ export async function upsertScene(liveSessionId, scene) {
   return supabase.from('live_scenes').insert(base).select().single();
 }
 
+/**
+ * Colonnes réellement patchables de `live_scenes`. Fail-closed : une clé hors de
+ * cette liste part en erreur explicite au lieu d'un 400 PostgREST illisible.
+ * ⚠️ `ia_data` n'est PAS une colonne (elle vit dans `content_payload_json`) — un
+ * patch de brouillon wizard ne doit donc jamais arriver ici.
+ */
+const PATCHABLE_SCENE_COLUMNS = new Set([
+  'name',
+  'scene_type',
+  'order_index',
+  'content_payload_json',
+  'is_preset',
+  'preset_name',
+  'is_active',
+  'chapter_id',
+  'render_mode',
+  'audio_url',
+]);
+
+/**
+ * Applique un patch PARTIEL à une scène : seules les clés fournies sont écrites.
+ *
+ * ⛔ Contrairement à `upsertScene`, cette fonction ne reconstruit RIEN. Les colonnes
+ * absentes du patch ne sont pas transmises, donc `audio_url` (narration), `chapter_id`
+ * et `render_mode` survivent à une écriture qui ne les concerne pas — c'est la panne
+ * qui a effacé cinq fois des données dans ce dépôt.
+ *
+ * @param {string} sceneId
+ * @param {object} patch clés = colonnes de live_scenes uniquement
+ * @returns {Promise<{data: object|null, error: object|null}>} même forme qu'une requête supabase
+ */
+export async function patchScene(sceneId, patch) {
+  if (!sceneId) {
+    return { data: null, error: { message: 'patchScene: identifiant de scène manquant' } };
+  }
+
+  const update = {};
+  for (const [key, value] of Object.entries(patch || {})) {
+    // `undefined` = « non concerné » ; `null` reste une valeur écrite volontairement.
+    if (value === undefined) continue;
+    if (!PATCHABLE_SCENE_COLUMNS.has(key)) {
+      return { data: null, error: { message: `patchScene: « ${key} » n'est pas une colonne de live_scenes` } };
+    }
+    update[key] = value;
+  }
+
+  // Un UPDATE sans colonne toucherait `updated_at` pour rien (et PostgREST le rejette).
+  if (Object.keys(update).length === 0) return { data: null, error: null };
+
+  return supabase.from('live_scenes').update(update).eq('id', sceneId).select().single();
+}
+
 export async function deleteScene(sceneId) {
   return supabase.from('live_scenes').delete().eq('id', sceneId);
 }

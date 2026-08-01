@@ -119,6 +119,9 @@ function DevSmartboardPreview() {
   return <div className="flex h-screen flex-col overflow-hidden bg-[#080a0f]"><SmartboardKonvaEditorV1 className="min-h-0 flex-1" /></div>;
 }
 const StudioSmartboardKonvaPageLazy = lazy(() => import('@/pages/studio-creator/studio/StudioSmartboardKonvaPage'));
+// Retouche manuelle d'une scène DÉJÀ publiée (live_scenes) dans le designer Konva.
+// Route de PRODUCTION, contrairement à /dev/smartboard-designer qui n'ouvre qu'un canevas vierge.
+const LiveSceneDesignerPage = lazy(() => import('@/pages/studio-creator/studio/LiveSceneDesignerPage'));
 
 // Tenant routing — défaut tenant CENTRALISÉ (config/platform, VITE_DEFAULT_TENANT_SLUG).
 // Cimolace est multi-tenant ; isna n'est qu'un tenant. Voir docs/CIMOLACE_ARCHITECTURE.md §7.
@@ -325,6 +328,8 @@ const ProspectInterviewLoungePage = lazy(() => import('@/pages/ProspectInterview
 const FormationsPage = lazy(() => import('@/pages/school/FormationsPage')); // New Page
 const HomePage = lazy(() => import('@/pages/HomePage'));
 const LandingPage = lazy(() => import('@/pages/LandingPage'));
+const CagnottePage = lazy(() => import('@/pages/CagnottePage'));
+const PublicPrayerBookingPage = lazy(() => import('@/pages/PublicPrayerBookingPage'));
 const MaquetteHero04 = lazy(() => import('@/pages/MaquetteHero04'));
 const MaquetteCosmos = lazy(() => import('@/pages/MaquetteCosmos'));
 const MaquetteFondateur = lazy(() => import('@/pages/MaquetteFondateur'));
@@ -1388,6 +1393,9 @@ const AppContent = () => {
 
   const hideHeaderRoutes = [
     '/login',
+    '/cagnotte',        // Cagnotte publique = page de don autonome plein écran (à partager par lien),
+                        // JAMAIS le header portail/vitrine par-dessus (chrome incohérent avant de payer).
+    '/rendez-vous-priere', // Prise de RDV séance de prière PUBLIQUE (sans login) = page autonome.
     '/onboarding/eleve', // Dossier KYC élève = page autonome chaude (StudentEnrollmentOnboardingPage),
                          // JAMAIS l'ancienne navbar Academy (Header.jsx). Non-bloquant : l'élève y accède
                          // via la bannière du portail LIRI, pas par une garde qui bloque l'accès.
@@ -1441,6 +1449,10 @@ const AppContent = () => {
   const isLiveArenaRoute =
     location.pathname.startsWith('/studio/live-arena') ||
     location.pathname.startsWith('/live/') ||
+    // Le designer Konva occupe tout l'écran (canevas + panneaux latéraux) et porte sa
+    // propre chrome, comme /dev/smartboard-designer. Sans cette ligne, l'entête globale
+    // se poserait par-dessus et rognerait le canevas.
+    location.pathname.startsWith('/studio/live-scene-designer') ||
 isLiriHostDevPreviewRoute;
 
   /**
@@ -1776,6 +1788,18 @@ isLiriHostDevPreviewRoute;
                 <StudioSmartboardKonvaPageLazy />
               </React.Suspense>
             } />
+          {/* Retouche d'une scène publiée dans le designer Konva.
+              Déclarée ICI et pas dans StudioRouter : le designer est plein écran et
+              monte sa propre chrome — passer par le splat /studio/* poserait la coque
+              du portail par-dessus (2e bandeau), même arbitrage que /studio/live-arena.
+              Plus spécifique que /studio/* → React Router v6 la classe en premier. */}
+          <Route path="/studio/live-scene-designer/:sessionId/:sceneId" element={
+            <ProtectedLiriRoute allowedRoles={['teacher', 'admin', 'owner', 'secretariat', 'practitioner', 'clinic_admin']} allowTenantRole>
+              <React.Suspense fallback={<div className="flex h-screen items-center justify-center bg-[#262624] text-white/50 text-sm">Chargement Designer…</div>}>
+                <LiveSceneDesignerPage />
+              </React.Suspense>
+            </ProtectedLiriRoute>
+          } />
           {import.meta.env.DEV && (
             <Route
               path="/dev/masterclass-factory"
@@ -1914,6 +1938,8 @@ isLiriHostDevPreviewRoute;
           <Route path="/app" element={<AppMemberAccessPage />} />
           <Route path="/home" element={<Navigate to="/app" replace />} />
           <Route path="/landing" element={<LandingPage />} />
+          <Route path="/cagnotte" element={<CagnottePage />} />
+          <Route path="/rendez-vous-priere" element={<PublicPrayerBookingPage />} />
           {/* Maquettes portées en production : voir /t/isna et /t/isna/{ecole,temple,programme,mission,fondateur,doctrine} */}
           <Route path="/isna" element={<Navigate to={TENANT_ADMIN_PATH} replace />} /> {/* Legacy ISNA route - redirects to tenant system */}
           <Route path="/temple-ngowazulu" element={<PublicNgowazuluPage />} />

@@ -1524,21 +1524,37 @@ export default function LivePreparationStudioPage() {
                             onDelete={handleDeleteScene}
                             onMove={handleMoveScene}
                           />
-                          {/* Mode du tableau vivant, par scène. Sans ce choix,
-                              'spotlight' et 'instant' restaient du code mort : le
-                              producteur publie toujours 'progressive'. */}
-                          <label className="flex items-center gap-2 pl-2 -mt-1 text-[11px] text-white/45">
-                            Tableau :
-                            <select
-                              value={sc.render_mode || 'progressive'}
-                              onChange={(e) => handleSaveScene({ ...sc, render_mode: e.target.value })}
-                              className="rounded-md border border-white/10 bg-black/40 px-2 py-1 text-[11px] text-white/75 outline-none focus:border-[color:var(--school-accent,#D4AF37)]"
+                          <div className="flex flex-wrap items-center gap-x-3 gap-y-1 pl-2 -mt-1">
+                            {/* Mode du tableau vivant, par scène. Sans ce choix,
+                                'spotlight' et 'instant' restaient du code mort : le
+                                producteur publie toujours 'progressive'. */}
+                            <label className="flex items-center gap-2 text-[11px] text-white/45">
+                              Tableau :
+                              <select
+                                value={sc.render_mode || 'progressive'}
+                                onChange={(e) => handleSaveScene({ ...sc, render_mode: e.target.value })}
+                                className="rounded-md border border-white/10 bg-black/40 px-2 py-1 text-[11px] text-white/75 outline-none focus:border-[color:var(--school-accent,#D4AF37)]"
+                              >
+                                {Object.entries(SCENE_RENDER_MODE_LABELS).map(([value, label]) => (
+                                  <option key={value} value={value}>{label}</option>
+                                ))}
+                              </select>
+                            </label>
+                            {/* Ouvre la scène PUBLIÉE dans le designer Konva. NAVIGATION SEULE :
+                                aucune écriture ici — la retouche et son enregistrement vivent
+                                dans la page cible. Une écriture depuis cet atelier écraserait
+                                audio_url / chapter_id / ia_data de la scène. */}
+                            <button
+                              type="button"
+                              disabled={!sessionId || !sc.id}
+                              onClick={() => navigate(`/studio/live-scene-designer/${sessionId}/${sc.id}`)}
+                              title="Ouvrir cette scène dans le designer de tableau"
+                              className="inline-flex items-center gap-1.5 h-7 px-2.5 rounded-lg border border-white/10 bg-white/5 text-[11px] text-white/60 hover:text-white hover:bg-white/10 hover:border-white/20 transition-colors disabled:opacity-30 disabled:pointer-events-none"
                             >
-                              {Object.entries(SCENE_RENDER_MODE_LABELS).map(([value, label]) => (
-                                <option key={value} value={value}>{label}</option>
-                              ))}
-                            </select>
-                          </label>
+                              <PenTool className="w-3 h-3" />
+                              Retoucher au tableau
+                            </button>
+                          </div>
                         </Fragment>
                       );
                     })}
