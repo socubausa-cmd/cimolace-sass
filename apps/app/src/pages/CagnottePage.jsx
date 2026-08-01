@@ -182,6 +182,44 @@ export default function CagnottePage() {
     }
   };
 
+  // ── Écran de REMERCIEMENT plein page (don confirmé) ─────────────────────────
+  //    Mobile Money : le donateur reste sur la page → sans ça, l'offre de prière
+  //    restait invisible en bas. Ici elle prend tout l'écran, impossible à rater.
+  if (banner?.kind === 'merci') {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-[#262624] px-5 text-[#f5f4ee]" style={{ fontFamily: 'Inter, system-ui, sans-serif' }}>
+        <div className="w-full max-w-lg text-center">
+          <span className="mx-auto mb-5 flex h-16 w-16 items-center justify-center rounded-full bg-[#d97757]/20 text-[#e8a184]">
+            <Check className="h-8 w-8" />
+          </span>
+          <h1 className="text-3xl font-extrabold sm:text-4xl">
+            Merci{donorName.trim() ? ` ${donorName.trim()}` : ''} ! 🙏
+          </h1>
+          <p className="mx-auto mt-3 max-w-md text-[15px] leading-relaxed text-[#f5f4ee]/75">
+            Votre don est confirmé — il rapproche la communauté de son objectif. En reconnaissance de votre
+            offrande, réservez une <strong className="text-[#f5f4ee]">séance de prière gratuite</strong> pour
+            déposer votre requête et être porté dans la prière.
+          </p>
+          {campaign?.bookingUrl ? (
+            <a
+              href={`${campaign.bookingUrl}${campaign.bookingUrl.includes('?') ? '&' : '?'}src=cagnotte`}
+              className="mt-6 inline-flex items-center justify-center gap-2 rounded-xl bg-[#d97757] px-6 py-3.5 text-[15px] font-bold text-[#1c1a18] shadow-[0_10px_30px_rgba(217,119,87,0.3)] transition-all hover:bg-[#e08b6d]"
+            >
+              <Sparkles className="h-5 w-5" />
+              {campaign.bookingLabel || 'Réserver ma séance de prière gratuite'}
+              <ArrowRight className="h-4 w-4" />
+            </a>
+          ) : null}
+          <div className="mt-5">
+            <a href="/cagnotte" className="text-[13px] font-semibold text-[#e8a184] hover:underline">
+              ← Retour à la cagnotte
+            </a>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-[#262624] text-[#f5f4ee]" style={{ fontFamily: 'Inter, system-ui, sans-serif' }}>
       {/* ── Bannière retour paiement ── */}
