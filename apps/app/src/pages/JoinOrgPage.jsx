@@ -10,6 +10,22 @@ import { authStore } from '@/lib/auth-store';
 const ACCENT = '#d97757'; // terracotta LIRI
 const PENDING_JOIN_KEY = 'liri_pending_join_org';
 
+// Host « plateforme LIRI » neutre — miroir FRONT de `isPlatformOrigin` (apps/api tenant.service).
+// Un tenant EMBARQUÉ n'y est ni révélé ni joignable (liri.cimolace.space & co). Mais sur SON propre
+// domaine (prorascience.org, domaine custom d'un tenant), il reste résoluble/joignable — c'est là
+// que ses membres « se connectent » au portail. Le serveur applique déjà la même règle au join.
+function isPlatformHost(hostname) {
+  const h = String(
+    hostname || (typeof window !== 'undefined' ? window.location.hostname : ''),
+  ).toLowerCase();
+  return (
+    /(^|\.)cimolace\.space$/.test(h) ||
+    h.endsWith('-cimolace.vercel.app') ||
+    /(^|\.)localhost$/.test(h) ||
+    /127\.0\.0\.1/.test(h)
+  );
+}
+
 function normalizeSlug(value) {
   return String(value || '')
     .toLowerCase()
@@ -62,6 +78,10 @@ export default function JoinOrgPage() {
 
   const slug = normalizeSlug(slugInput);
 
+  // Sommes-nous sur le host neutre plateforme ? Sur le domaine propre d'un tenant, un embarqué
+  // (ex. ISNA sur prorascience.org) reste résoluble/joignable ; sur *.cimolace.space, il est caché.
+  const onPlatformHost = useMemo(() => isPlatformHost(), []);
+
   // Résolution de l'org (nom+logo) — debounce léger.
   useEffect(() => {
     if (slug.length < 2) {
@@ -94,7 +114,7 @@ export default function JoinOrgPage() {
       setError("Saisissez le code ou l'identifiant de votre organisation.");
       return;
     }
-    if (org?.embedded) {
+    if (org?.embedded && onPlatformHost) {
       // Embarqué : injoignable depuis le host neutre LIRI (on passe par son domaine).
       setError('Aucune organisation ne correspond à cet identifiant.');
       return;
@@ -114,7 +134,10 @@ export default function JoinOrgPage() {
     try {
       await joinApi.joinTenant(slug, inviteCode || undefined); // { ok, joined, role } — joined=false = déjà membre, on route quand même
       authStore.setTenantSlug(slug);
-      navigate('/dashboard', { replace: true });
+      // Direction LE PORTAIL LIRI (LiriPortalPage trie par rôle : owner/staff → portail,
+      // élève → /student-school-life). C'est là que « le membre se connecte », pas le vieux
+      // shell /dashboard (Academy) d'où un élève rebondissait de toute façon.
+      navigate('/liri', { replace: true });
     } catch (err) {
       setError(err?.message || "Cette organisation est introuvable ou inactive.");
       setJoining(false);
@@ -122,10 +145,12 @@ export default function JoinOrgPage() {
   };
 
   const orgName = org?.name?.trim();
-  // Séparation dure : un tenant EMBARQUÉ (site propre) est traité comme INTROUVABLE
-  // sur le host neutre LIRI — on ne révèle ni ne rejoint ISNA & co via liri.cimolace.space.
+  // Séparation dure : un tenant EMBARQUÉ (site propre) est traité comme INTROUVABLE sur le host
+  // neutre LIRI (liri.cimolace.space) — on ne révèle ni ne rejoint ISNA & co là. Mais sur SON
+  // propre domaine (prorascience.org), il est bien résoluble/joignable (idem serveur).
   const isEmbedded = org?.embedded === true;
-  const notFound = resolved && !resolving && slug.length >= 2 && (!org || isEmbedded);
+  const notFound =
+    resolved && !resolving && slug.length >= 2 && (!org || (isEmbedded && onPlatformHost));
 
   return (
     <div
