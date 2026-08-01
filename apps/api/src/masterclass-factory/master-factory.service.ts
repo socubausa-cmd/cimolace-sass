@@ -225,7 +225,7 @@ export class MasterFactoryService {
      * relu — silencieusement. On rend donc le pivot IA tel quel. Le gabarit
      * reste joignable en le demandant explicitement (`templateOnly`).
      */
-    if (!wantsAi && !opts.templateOnly && existing?.model === PedagogyAiService.MODEL_TAG) {
+    if (!wantsAi && !opts.templateOnly && PedagogyAiService.isAiModel(existing?.model)) {
       this.log.log(
         `[master-factory] ${sourceType}/${sourceId} : tableau IA CONSERVÉ malgré force (pas de rétrogradation)`,
       );
@@ -904,28 +904,49 @@ export class MasterFactoryService {
         id: `${scene.id}-${suffix}`,
       });
 
-      // 1 — L'idée est posée, seule. C'est le moment où la voix explique.
+      /**
+       * ⚠️ Chaque écran ne garde QUE ce qu'il doit montrer. Copier la slide
+       * entière dans les trois écrans — l'erreur initiale — donnait trois fois
+       * la même bannière, la même phrase à retenir répétée (le gros plan final
+       * ne révélait donc rien) et la question affichée en double sur l'écran de
+       * vérification. Relecture pédagogique du 2026-08-01.
+       */
+
+      // 1 — L'idée est posée, seule. Rien à retenir : on vient de la donner.
       parts.push(base('idee', {
-        gpt_slide: gpt ? { ...gpt, development: [], sketch: undefined } : undefined,
+        gpt_slide: gpt
+          ? { ...gpt, development: [], sketch: undefined, slide_summary: undefined, student_prompt: undefined }
+          : undefined,
         // Le croquis n'a pas encore de sens : les repères ne sont pas donnés.
         blocks: scene.blocks.filter((b) => b.type === 'title' || b.type === 'key-idea'),
       }));
 
-      // 2 — Les repères à retenir, avec le croquis qui les relie.
+      // 2 — Les repères, le croquis, et LÀ seulement la phrase à retenir :
+      //     c'est le rôle de cet écran, et ce qui fait mordre le gros plan final.
       if (points.length) {
         parts.push(base('reperes', {
-          title: `${scene.title} — à retenir`,
+          title: `${scene.title} — les repères`,
           gpt_slide: gpt ? { ...gpt, student_prompt: undefined } : undefined,
           blocks: scene.blocks.filter((b) => b.type !== 'paragraph'),
         }));
       }
 
-      // 3 — La vérification : on ne passe pas au suivant sans s'assurer.
+      // 3 — La vérification : la question SEULE, sans la redire en idée centrale.
       const prompt = gpt?.student_prompt;
       if (prompt) {
         parts.push(base('verification', {
-          title: `${scene.title} — vérification`,
-          gpt_slide: gpt ? { ...gpt, development: [], sketch: undefined, core_idea: prompt } : undefined,
+          title: `${scene.title} — vérifions`,
+          gpt_slide: gpt
+            ? {
+                ...gpt,
+                development: [],
+                sketch: undefined,
+                slide_summary: undefined,
+                // `core_idea` vidée : le rendu affiche déjà la question via le
+                // bloc dédié, la recopier ici la doublait à l'écran.
+                core_idea: '',
+              }
+            : undefined,
           blocks: scene.blocks.filter((b) => b.type === 'title' || b.type === 'paragraph'),
         }));
       }

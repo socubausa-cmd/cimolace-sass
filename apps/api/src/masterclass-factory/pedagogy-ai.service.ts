@@ -43,7 +43,24 @@ export class PedagogyAiService {
   private readonly log = new Logger(PedagogyAiService.name);
 
   /** Étiquette écrite dans `course_pivots.model` quand l'IA a réellement servi. */
-  static readonly MODEL_TAG = 'pedagogy-ai-v1';
+  /**
+   * v2 (2026-08-01) : le prompt exige désormais une SITUATION OBSERVABLE quand
+   * la matière en contient une — la relecture pédagogique avait montré un
+   * développement purement descriptif. Le contenu déjà produit en v1 reste
+   * servi tel quel : il n'est ni périmé ni rétrogradé (cf. `isAiModel`), seule
+   * une demande IA explicite le régénère.
+   */
+  static readonly MODEL_TAG = 'pedagogy-ai-v2';
+
+  /**
+   * Reconnaît TOUT tableau écrit par l'IA, quelle que soit la version du prompt.
+   * ⛔ Ne pas comparer à `MODEL_TAG` pour protéger un pivot : le jour où la
+   * version change, la garde anti-rétrogradation cesserait de voir les anciens
+   * et une publication les écraserait par le gabarit.
+   */
+  static isAiModel(model: string | null | undefined) {
+    return /^pedagogy-ai-/.test(String(model || ''));
+  }
 
   /** Lots de moments traités en parallèle (même ménagement du fournisseur que ComprehensionService). */
   private static readonly BATCH = 4;
@@ -182,6 +199,8 @@ RÈGLES ABSOLUES :
 - SUBTITLE : ce que ce moment ajoute à ce qui précède. Une ligne, ou rien.
 - CORE_IDEA : UNE phrase, la thèse du moment, avec les mots de la notion.
 - DEVELOPMENT : 1 à 3 groupes, 2 à 4 points chacun. Un point = une affirmation courte tirée de la matière, PAS un titre de rubrique.
+- ⭐ SITUATION OBSERVABLE : quand la matière le permet, l'UN des groupes doit ancrer l'idée dans un cas CONCRET que l'élève peut se représenter — une situation, un cas réel, un contre-exemple, une conséquence visible — plutôt que de rester descriptif. Nomme ce groupe d'après ce qu'il montre (« Un cas concret », « Ce qu'on observe », « Le contre-exemple »…), pas « Exemples ».
+  ⛔ Le cas doit être TIRÉ de la matière fournie : si elle n'en contient aucun, n'en invente PAS — reste descriptif. Un cours honnête vaut mieux qu'un exemple fabriqué.
 - SLIDE_SUMMARY : une phrase mémorisable de MOINS DE 15 MOTS.
 - STUDENT_PROMPT : une question qui oblige l'élève à reformuler ou à appliquer. Jamais une question fermée par oui/non.
 - Si la matière est trop maigre, rends "development": [] — un tableau honnête vaut mieux qu'un tableau gonflé.
