@@ -443,7 +443,14 @@ export class MasterFactoryService {
     };
 
     const sceneRows = this.makeLiveSceneRows(liveSessionId, smartboard, liveScenario, masterScript);
-    const scriptRows = this.makeLiveScriptRows(liveSessionId, userId, masterScript);
+    /**
+     * Le prompteur suit les écrans dès que le tableau en compte plus que le
+     * conducteur : sinon l'appariement par `order_index` — celui du prompteur
+     * comme celui de la narration — désigne la mauvaise scène.
+     */
+    const scriptRows = smartboard.scenes.length > masterScript.moments.length
+      ? this.makeLiveScriptRowsForScenes(liveSessionId, userId, masterScript, smartboard)
+      : this.makeLiveScriptRows(liveSessionId, userId, masterScript);
 
     // Le prompteur de l'arène lit `config.smartboard_master_script_sections`
     // (apps/app — liveHostSessionAndLiveKitInit / normalizeScriptSections) :
@@ -881,10 +888,9 @@ export class MasterFactoryService {
    * écran ne reprend qu'une part de ce que le moment contient déjà. Un écran
    * dont la matière est absente n'est pas créé.
    *
-   * ⚠️ LIMITE CONNUE : le prompteur reste à UNE section par moment (12 sections
-   * pour 36 écrans). L'appariement scène↔section se fait par `order_index`, donc
-   * seuls les premiers écrans retrouvent leur section ; les suivants narrent à
-   * partir de leur propre contenu. À traiter en découpant aussi le Master Script.
+   * Le prompteur suit : `makeLiveScriptRowsForScenes` produit une section PAR
+   * ÉCRAN dès que le tableau en compte plus que le conducteur, de sorte que
+   * l'appariement par `order_index` (prompteur ET narration) reste juste.
    */
   private expandScenesByChapter(pivot: SmartboardTimelinePivot): SmartboardTimelinePivot {
     const scenes = pivot.scenes.flatMap((scene) => {
@@ -1023,6 +1029,86 @@ export class MasterFactoryService {
             blocks: scene.blocks,
           },
           smartboard_timeline_scene: scene,
+        },
+      };
+    });
+  }
+
+  /**
+   * Le prompteur doit suivre les ÉCRANS, pas les moments : dès qu'un chapitre est
+   * déroulé en plusieurs scènes, une section par moment laisse l'enseignant sur
+   * le mauvais texte pendant les deux tiers du direct — et l'appariement par
+   * `order_index` (utilisé aussi par la narration) désigne la mauvaise scène.
+   * On produit donc une section PAR SCÈNE, en découpant le discours du moment
+   * selon le rôle de l'écran. Aucune phrase inventée : chaque section reprend la
+   * part du conducteur qui correspond à ce que le tableau montre à cet instant.
+   */
+  private makeLiveScriptRowsForScenes(
+    liveSessionId: string,
+    userId: string,
+    masterScript: MasterScriptPivot,
+    smartboard: SmartboardTimelinePivot,
+  ) {
+    const byMoment = new Map(masterScript.moments.map((m) => [m.id, m]));
+    return smartboard.scenes.map((scene, index) => {
+      const moment = byMoment.get(String(scene.script_moment_id ?? ''));
+      if (!moment) {
+        // Scène sans conducteur : on n'invente pas de discours, on l'annonce.
+        return {
+          session_id: liveSessionId,
+          created_by: userId,
+          slide_index: index,
+          order_index: index,
+          title: scene.title,
+          content: `【Écran】\n${scene.title}\n\n(Aucun conducteur rattaché à cet écran.)`,
+          master_agent: { slide_title: scene.title, smartboard_scene_id: scene.id },
+        };
+      }
+      // Le suffixe d'identifiant porte le rôle de l'écran (cf. expandScenesByChapter).
+      const role = /-reperes$/.test(scene.id) ? 'reperes'
+        : /-verification$/.test(scene.id) ? 'verification'
+        : 'idee';
+      const parts = role === 'reperes'
+        ? [
+            `【Ce que le tableau montre】\n${scene.title}`,
+            moment.key_points.length
+              ? `【Grandes idées à insister】\n${moment.key_points.map((k) => `• ${k}`).join('\n')}`
+              : null,
+            moment.student_understanding ? `【Ce que l'élève doit comprendre】\n${moment.student_understanding}` : null,
+          ]
+        : role === 'verification'
+          ? [
+              moment.interaction?.question ? `【Question à poser】\n${moment.interaction.question}` : null,
+              moment.interaction?.expected_answers?.length
+                ? `【Réponses attendues】\n${moment.interaction.expected_answers.map((a) => `• ${a}`).join('\n')}`
+                : null,
+              moment.interaction?.remediation ? `【Si l'élève bloque】\n${moment.interaction.remediation}` : null,
+              moment.transition ? `【Transition】\n${moment.transition}` : null,
+            ]
+          : [
+              `【Intention du slide】\n${moment.intention}`,
+              `【Message central】\n${moment.message_central}`,
+              `【Discours du professeur】\n${moment.teacher_script}`,
+            ];
+      return {
+        session_id: liveSessionId,
+        created_by: userId,
+        slide_index: index,
+        order_index: index,
+        title: scene.title,
+        content: parts.filter(Boolean).join('\n\n'),
+        master_agent: {
+          slide_title: scene.title,
+          smartboard_scene_id: scene.id,
+          scene_role: role,
+          intention: moment.intention,
+          message_central: moment.message_central,
+          teacher_script: moment.teacher_script,
+          key_points: moment.key_points,
+          student_understanding: moment.student_understanding,
+          transition: moment.transition,
+          simple_version: moment.simple_version,
+          interaction: moment.interaction,
         },
       };
     });
