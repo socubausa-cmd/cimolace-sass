@@ -204,12 +204,18 @@ try {
     rls_professor_reads_scenes: rlsReadable.live_scenes === true,
     rls_professor_reads_scripts: rlsReadable.live_script_sections === true,
     mindmap_aligned: mm?.branches?.length === ms?.moments?.length && mm?.edges?.length === mm?.branches?.length,
-    smartboard_aligned: sb?.scenes?.length === ms?.moments?.length,
+    // Un chapitre peut être déroulé en PLUSIEURS écrans (`expand`) : ce qui doit
+    // rester vrai n'est pas l'égalité des comptes, mais que chaque écran soit
+    // rattaché à un moment et que tous les moments soient couverts.
+    smartboard_aligned:
+      (sb?.scenes?.length ?? 0) >= (ms?.moments?.length ?? 0)
+      && new Set((sb?.scenes || []).map((s) => s.script_moment_id)).size === (ms?.moments?.length ?? 0),
     live_scenario_aligned: stack?.liveScenario?.scenes?.length === ms?.moments?.length,
     live_created_for_tenant: sessionRow.data?.tenant_id === tenant.id,
     blueprint_contains_mindmap: blueprintMindmap?.branches?.length === mm?.branches?.length,
     scenes_persisted: sceneRows.data?.length === sb?.scenes?.length,
-    scripts_persisted: scriptRows.data?.length === ms?.moments?.length,
+    // Le prompteur suit les ÉCRANS : une section par scène publiée.
+    scripts_persisted: scriptRows.data?.length === sb?.scenes?.length,
     mindmap_enabled_in_live: sessionRow.data?.config?.ai_mindmap_enabled === true,
     source_trace_in_live: sessionRow.data?.config?.master_factory?.source_id === sourceId,
   };

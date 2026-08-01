@@ -250,14 +250,15 @@ export class MasterFactoryService {
       enrichment,
     );
     /**
-     * `expand` déroule chaque chapitre en plusieurs écrans. Opt-in tant que la
-     * preuve E2E compare encore `scenes.length` à `moments.length` : l'activer
-     * par défaut ferait échouer une assertion qui n'a rien de faux, juste
-     * devenue obsolète. À basculer en défaut une fois cette preuve mise à jour.
+     * Chaque chapitre est déroulé en plusieurs écrans PAR DÉFAUT : c'est la
+     * structure attendue d'un cours (le chapitre n'est pas un écran), et c'est
+     * ce qui donne sa matière à l'interlude de reformulation. `expand: false`
+     * conserve l'ancien tableau à un écran par moment pour les appelants qui en
+     * dépendent encore.
      */
-    const smartboardTimeline = opts.expand === true
-      ? this.expandScenesByChapter(built)
-      : built;
+    const smartboardTimeline = opts.expand === false
+      ? built
+      : this.expandScenesByChapter(built);
     const pivotId = await this.replaceChildPivot({
       tenantId,
       sourceType,

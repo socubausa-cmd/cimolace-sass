@@ -235,8 +235,8 @@ export class MasterFactoryController {
       tenant.id,
       body?.sourceType ?? 'replay',
       String(body?.sourceId ?? ''),
-      // `expand` déroule chaque chapitre en plusieurs écrans (opt-in).
-      { force: body?.force === true, ai: true, expand: body?.expand === true },
+      // L'éclatement par chapitre est le défaut ; `expand: false` le désactive.
+      { force: body?.force === true, ai: true, expand: body?.expand !== false },
     );
   }
 
