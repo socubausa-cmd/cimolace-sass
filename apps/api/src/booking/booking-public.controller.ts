@@ -1,6 +1,7 @@
-import { Body, Controller, Get, NotFoundException, Param, Post, Query } from '@nestjs/common';
+import { Body, Controller, Get, NotFoundException, Param, Post, Query, UseGuards } from '@nestjs/common';
 import { BookingService } from './booking.service';
 import { SupabaseService } from '../supabase/supabase.service';
+import { PublicRateLimitGuard } from '../common/public-rate-limit.guard';
 import type { TenantContext } from '../tenant/tenant.types';
 
 /**
@@ -53,6 +54,7 @@ export class BookingPublicController {
 
   /** Demande de RDV anonyme (crée le booking_slot si un créneau est choisi + le RDV). */
   @Post(':slug/appointment-request')
+  @UseGuards(PublicRateLimitGuard)
   async request(
     @Param('slug') slug: string,
     @Body()

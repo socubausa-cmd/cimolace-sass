@@ -1,4 +1,5 @@
-import { Body, Controller, Get, Param, Post, Query } from '@nestjs/common';
+import { Body, Controller, Get, Param, Post, Query, UseGuards } from '@nestjs/common';
+import { PublicRateLimitGuard } from '../common/public-rate-limit.guard';
 import { CagnotteService } from './cagnotte.service';
 import {
   CreateCagnotteStripeDto,
@@ -28,6 +29,7 @@ export class CagnotteController {
 
   /** Don par carte (Stripe Checkout) → { checkoutUrl } à ouvrir côté client. */
   @Post(':slug/stripe')
+  @UseGuards(PublicRateLimitGuard)
   stripe(@Param('slug') slug: string, @Body() dto: CreateCagnotteStripeDto) {
     return this.svc.createStripe(slug, dto);
   }
@@ -40,6 +42,7 @@ export class CagnotteController {
 
   /** Don Mobile Money (pawaPay) → { depositId, status } ; le donateur confirme sur son tél. */
   @Post(':slug/pawapay')
+  @UseGuards(PublicRateLimitGuard)
   pawapay(@Param('slug') slug: string, @Body() dto: CreateCagnottePawapayDto) {
     return this.svc.createPawapay(slug, dto);
   }
