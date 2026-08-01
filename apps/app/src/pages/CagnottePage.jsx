@@ -327,8 +327,8 @@ export default function CagnottePage() {
             </div>
           </section>
 
-          {/* ── Colonne droite : le DON ── */}
-          <aside className="lg:sticky lg:top-6">
+          {/* ── Colonne droite : le DON ── (mobile : remontée en 1er, avant le « pourquoi ») */}
+          <aside className="order-first lg:order-none lg:sticky lg:top-6">
             <div className="rounded-2xl border border-white/10 bg-[#2f2d2a] p-5 shadow-[0_20px_60px_rgba(0,0,0,0.35)]">
               <h2 className="text-lg font-bold">Faire un don</h2>
 
