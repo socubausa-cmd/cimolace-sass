@@ -76,6 +76,12 @@ export class CagnotteService {
       .maybeSingle();
     if (!campaign) throw new NotFoundException('Cagnotte introuvable.');
 
+    // Réconciliation paresseuse : re-vérifie les dons « pending » récents auprès de
+    // Stripe/PawaPay et les passe « completed » s'ils sont payés. Le total progresse
+    // ainsi même si le donateur a quitté la page avant la confirmation (pas besoin
+    // de webhook). Borné (récents + limité) pour rester rapide.
+    await this.reconcilePending(slug).catch(() => {});
+
     const { data: dons } = await this.db
       .from('cagnotte_donations')
       .select('amount_cents')
@@ -97,6 +103,48 @@ export class CagnotteService {
       bookingLabel: campaign.booking_label || null,
       imageUrl: campaign.image_url || null,
     };
+  }
+
+  /** Re-vérifie les dons « pending » récents (Stripe/PawaPay) et confirme les payés. */
+  private async reconcilePending(slug: string) {
+    const cutoff = new Date(Date.now() - 3 * 3600_000).toISOString();
+    const { data: pend } = await this.db
+      .from('cagnotte_donations')
+      .select('provider, provider_ref')
+      .eq('campaign_slug', slug)
+      .eq('status', 'pending')
+      .gte('created_at', cutoff)
+      .not('provider_ref', 'is', null)
+      .order('created_at', { ascending: false })
+      .limit(5);
+    for (const d of pend || []) {
+      try {
+        if (d.provider === 'stripe') await this.confirmStripe(d.provider_ref);
+        else if (d.provider === 'pawapay') await this.pollPawapay(d.provider_ref);
+      } catch {
+        /* un don pas encore payé reste « pending » — on réessaiera au prochain chargement */
+      }
+    }
+  }
+
+  /** Liste publique des donateurs (dons confirmés) — « mur des donateurs ». */
+  async listDonors(slug: string) {
+    const { data } = await this.db
+      .from('cagnotte_donations')
+      .select('donor_name, donor_message, amount_cents, display_amount, display_currency, provider, completed_at, created_at')
+      .eq('campaign_slug', slug)
+      .eq('status', 'completed')
+      .order('completed_at', { ascending: false, nullsFirst: false })
+      .limit(50);
+    return (data || []).map((d: any) => ({
+      name: String(d.donor_name || '').trim() || 'Anonyme',
+      message: d.donor_message || null,
+      amountCents: d.amount_cents,
+      displayAmount: d.display_amount,
+      displayCurrency: d.display_currency,
+      provider: d.provider,
+      at: d.completed_at || d.created_at,
+    }));
   }
 
   /** Liste des opérateurs Mobile Money actifs (pour le sélecteur front). */

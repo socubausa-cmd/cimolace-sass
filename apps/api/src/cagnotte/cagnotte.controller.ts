@@ -21,6 +21,12 @@ export class CagnotteController {
     return this.svc.getCampaign(slug);
   }
 
+  /** Mur des donateurs (dons confirmés) — public. */
+  @Get(':slug/donors')
+  donors(@Param('slug') slug: string) {
+    return this.svc.listDonors(slug);
+  }
+
   /** Opérateurs Mobile Money actifs (sélecteur pawaPay). */
   @Get(':slug/providers')
   providers(@Param('slug') _slug: string, @Query('country') country?: string) {

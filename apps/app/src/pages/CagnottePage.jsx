@@ -66,6 +66,7 @@ function PhoneArt() {
 
 export default function CagnottePage() {
   const [campaign, setCampaign] = useState(null);
+  const [donors, setDonors] = useState(/** @type {Array<any>} */ ([]));
   const [region, setRegion] = useState(/** @type {'eu'|'afrique'} */ ('eu'));
   const [amountEur, setAmountEur] = useState(50);
   const [customEur, setCustomEur] = useState('');
@@ -87,6 +88,7 @@ export default function CagnottePage() {
 
   const load = useCallback(async () => {
     try { setCampaign(await cagnotteApi.campaign(SLUG)); } catch { /* garde le fallback */ }
+    try { const list = await cagnotteApi.donors(SLUG); if (Array.isArray(list)) setDonors(list); } catch { /* pas de mur */ }
   }, []);
 
   useEffect(() => { load(); }, [load]);
@@ -324,6 +326,35 @@ export default function CagnottePage() {
                   </li>
                 ))}
               </ul>
+            </div>
+
+            {/* Mur des donateurs (dons confirmés) */}
+            <div>
+              <h2 className="text-xl font-bold">Ils soutiennent le projet</h2>
+              {donors.length === 0 ? (
+                <p className="mt-3 text-[13.5px] leading-relaxed text-[#f5f4ee]/60">
+                  Soyez le premier à donner — votre nom apparaîtra ici (sauf si vous le laissez vide).
+                </p>
+              ) : (
+                <ul className="mt-4 space-y-2">
+                  {donors.map((d, i) => (
+                    <li key={i} className="flex items-start gap-3 rounded-xl border border-white/[0.06] bg-white/[0.02] p-3">
+                      <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#d97757]/15 text-[13px] font-bold uppercase text-[#e8a184]">
+                        {String(d.name || '?').trim().charAt(0) || '?'}
+                      </span>
+                      <div className="min-w-0 flex-1">
+                        <div className="flex items-baseline justify-between gap-2">
+                          <p className="truncate font-semibold text-[#f5f4ee]">{d.name || 'Anonyme'}</p>
+                          <p className="shrink-0 text-[13px] font-bold text-[#e8a184]">{eur(d.amountCents)}</p>
+                        </div>
+                        {d.message ? (
+                          <p className="mt-0.5 text-[12.5px] leading-snug text-[#f5f4ee]/60">« {d.message} »</p>
+                        ) : null}
+                      </div>
+                    </li>
+                  ))}
+                </ul>
+              )}
             </div>
           </section>
 

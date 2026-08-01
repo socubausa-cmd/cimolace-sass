@@ -989,6 +989,8 @@ export const masterclassApi = {
 export const cagnotteApi = {
   campaign: (slug: string) =>
     apiV2.get<ApiEnvelope<any>>(`/cagnotte/${slug}`).then(unwrap),
+  donors: (slug: string) =>
+    apiV2.get<ApiEnvelope<any[]>>(`/cagnotte/${slug}/donors`).then(unwrap),
   providers: (slug: string, country?: string) =>
     apiV2
       .get<ApiEnvelope<any>>(`/cagnotte/${slug}/providers${country ? `?country=${encodeURIComponent(country)}` : ''}`)
