@@ -6,13 +6,14 @@ import { LiveModule } from '../live/live.module';
 import { NotificationsModule } from '../notifications/notifications.module';
 import { BookingController } from './booking.controller';
 import { BookingService } from './booking.service';
+import { BookingPublicController } from './booking-public.controller';
 import { BookingAdvancedController } from './booking-advanced.controller';
 import { BookingAdvancedService } from './booking-advanced.service';
 
 @Module({
   imports: [SupabaseModule, TenantModule, AuthModule, LiveModule, NotificationsModule],
   providers: [BookingService, BookingAdvancedService],
-  controllers: [BookingController, BookingAdvancedController],
+  controllers: [BookingController, BookingPublicController, BookingAdvancedController],
   exports: [BookingService, BookingAdvancedService],
 })
 export class BookingModule {}

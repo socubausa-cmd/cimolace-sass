@@ -1005,6 +1005,24 @@ export const cagnotteApi = {
     apiV2.get<ApiEnvelope<any>>(`/cagnotte/${slug}/pawapay/${depositId}`).then(unwrap),
 };
 
+// ── Prise de RDV PUBLIQUE (sans login) — moteur booking LIRI ouvert au public ──
+export const bookingPublicApi = {
+  availability: (
+    slug: string,
+    p: { timezone?: string; windowStart: string; windowEnd: string; country?: string },
+  ) =>
+    apiV2
+      .get<ApiEnvelope<any>>(
+        `/booking-public/${slug}/availability?windowStart=${encodeURIComponent(p.windowStart)}&windowEnd=${encodeURIComponent(p.windowEnd)}` +
+          `${p.timezone ? `&timezone=${encodeURIComponent(p.timezone)}` : ''}${p.country ? `&country=${encodeURIComponent(p.country)}` : ''}`,
+      )
+      .then(unwrap),
+  request: (
+    slug: string,
+    body: { subject?: string; description?: string; email: string; whatsapp: string; preferredIso?: string },
+  ) => apiV2.post<ApiEnvelope<any>>(`/booking-public/${slug}/appointment-request`, body).then(unwrap),
+};
+
 // ── Master Factory officiel ─────────────────────────────────────────────────
 //
 // Nouveau point d'entrée Liri : un seul cerveau, plusieurs sorties.
