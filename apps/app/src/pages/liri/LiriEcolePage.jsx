@@ -252,8 +252,33 @@ function EcoleBody() {
   }
 
   return (
-    <div className="flex h-full min-h-0" style={ECOLE_THEME_VARS}>
+    <div className="flex h-full min-h-0 flex-col md:flex-row" style={ECOLE_THEME_VARS}>
       <style>{ECOLE_WARM_CSS}</style>
+
+      {/* Repli MOBILE (< md) — même source `menuGroups` (aplatie) + même handler `selectItem`
+          que le sous-rail desktop. Barre horizontale scrollable → aucune section perdue au doigt. */}
+      <nav className="flex md:hidden shrink-0 items-center gap-2 overflow-x-auto no-scrollbar border-b lp-line px-3 py-2">
+        {allItems.map((item) => {
+          const Icon = item.icon;
+          const isActive = !item.href && item.id === activeTab;
+          return (
+            <button
+              key={item.id}
+              type="button"
+              onClick={() => selectItem(item)}
+              className={`inline-flex min-h-[40px] shrink-0 items-center gap-1.5 rounded-lg px-3 text-[12px] whitespace-nowrap transition-colors ${
+                isActive
+                  ? 'font-semibold text-[var(--school-accent)]'
+                  : 'text-stone-300 hover:text-white'
+              }`}
+              style={isActive ? { background: 'color-mix(in srgb, var(--school-accent) 16%, transparent)' } : undefined}
+            >
+              <Icon size={15} className="shrink-0" />
+              <span>{item.label}</span>
+            </button>
+          );
+        })}
+      </nav>
 
       {/* Sous-rail École — les 6 familles (source unique partagée avec le back-office) */}
       <aside className="hidden md:flex w-[212px] shrink-0 flex-col overflow-y-auto border-r lp-line py-3">

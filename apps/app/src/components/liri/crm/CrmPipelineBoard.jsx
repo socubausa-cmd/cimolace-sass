@@ -230,7 +230,7 @@ function DealCard({ deal, stages, onAction, onOpen }) {
               aria-expanded={menuOpen}
               onClick={(e) => { e.stopPropagation(); menuOpen ? close() : openMenu(); }}
               className={`grid h-7 w-7 shrink-0 cursor-pointer place-items-center rounded-lg lp-muted lp-railbtn lp-tr ${
-                menuOpen ? 'opacity-100' : 'opacity-0 focus:opacity-100 group-hover:opacity-100'
+                menuOpen ? 'opacity-100' : 'opacity-100 sm:opacity-0 sm:focus:opacity-100 sm:group-hover:opacity-100'
               }`}
             >
               <MoreVertical size={15} />

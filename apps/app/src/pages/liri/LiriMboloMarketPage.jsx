@@ -30,7 +30,7 @@ export default function LiriMboloMarketPage() {
               </p>
               <a
                 href="/liri/mbolo/produits"
-                className="inline-flex shrink-0 items-center gap-1.5 rounded-lg border border-white/20 px-3 py-1.5 text-[13px] font-semibold text-white/85 transition-colors hover:bg-white/[0.06]"
+                className="inline-flex min-h-[44px] shrink-0 items-center gap-1.5 rounded-lg border border-white/20 px-3 py-1.5 text-[13px] font-semibold text-white/85 transition-colors hover:bg-white/[0.06]"
               >
                 <Settings2 className="h-3.5 w-3.5 text-[#d97757]" /> Gérer les produits
               </a>

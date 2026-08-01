@@ -45,7 +45,7 @@ function CaseTimeline({ caseId }) {
       <button
         type="button"
         onClick={() => setOpen((v) => !v)}
-        className="flex items-center gap-1.5 text-[11px] text-[var(--school-accent)] hover:text-amber-300 transition-colors"
+        className="flex items-center gap-1.5 py-1.5 text-[11px] text-[var(--school-accent)] hover:text-amber-300 transition-colors"
       >
         {open ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
         {open ? 'Masquer la timeline' : 'Voir la timeline'}
@@ -510,7 +510,7 @@ export default function NgowazuluTemplePage({ embedded = false, basePath = '/ngo
                                 type="button"
                                 onClick={() => registerTravel(row.id)}
                                 disabled={isLoading}
-                                className="h-7 px-3 rounded-full bg-[color-mix(in_srgb,var(--school-accent)_15%,transparent)] border border-[color-mix(in_srgb,var(--school-accent)_30%,transparent)] text-[var(--school-accent)] text-[11px] font-semibold hover:bg-[color-mix(in_srgb,var(--school-accent)_25%,transparent)] transition-colors disabled:opacity-50 flex items-center gap-1"
+                                className="h-7 min-h-[40px] px-3 rounded-full bg-[color-mix(in_srgb,var(--school-accent)_15%,transparent)] border border-[color-mix(in_srgb,var(--school-accent)_30%,transparent)] text-[var(--school-accent)] text-[11px] font-semibold hover:bg-[color-mix(in_srgb,var(--school-accent)_25%,transparent)] transition-colors disabled:opacity-50 flex items-center gap-1"
                               >
                                 {isLoading ? <Loader2 className="w-3 h-3 animate-spin" /> : null}
                                 S'inscrire
@@ -521,7 +521,7 @@ export default function NgowazuluTemplePage({ embedded = false, basePath = '/ngo
                                 type="button"
                                 onClick={() => cancelTravelRegistration(row.id)}
                                 disabled={isLoading}
-                                className="h-6 px-2.5 rounded-full bg-white/5 border border-white/10 text-white/40 text-[10px] hover:bg-white/10 transition-colors disabled:opacity-50"
+                                className="h-6 min-h-[40px] px-2.5 rounded-full bg-white/5 border border-white/10 text-white/40 text-[10px] hover:bg-white/10 transition-colors disabled:opacity-50"
                               >
                                 {isLoading ? <Loader2 className="w-2.5 h-2.5 animate-spin inline" /> : 'Annuler'}
                               </button>

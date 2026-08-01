@@ -65,7 +65,7 @@
   padding-bottom:max(.375rem, env(safe-area-inset-bottom));
 }
 @media (max-width: 380px) {
-  .lp-mobile-nav .lp-nl { font-size:8px; }
+  .lp-mobile-nav .lp-nl { font-size:9px; }
   .lp-mobile-nav button { min-width:56px; }
 }
 

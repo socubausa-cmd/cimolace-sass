@@ -311,7 +311,7 @@ export function LiriPortalPage() {
       {/* ───── TOPBAR ───── */}
       <header className="z-30 flex min-h-14 items-center justify-between gap-2 lp-rail-bg border-b lp-line px-2.5 py-2 sm:gap-3 sm:px-4">
         <div className="flex min-w-0 shrink-0 items-center gap-2 sm:gap-2.5">
-          <button className="grid h-8 w-8 place-items-center rounded-xl lp-muted lp-railbtn lp-tr" aria-label="Menu"><Menu size={17} /></button>
+          <button className="grid h-11 w-11 sm:h-8 sm:w-8 place-items-center rounded-xl lp-muted lp-railbtn lp-tr" aria-label="Menu"><Menu size={17} /></button>
           <span className="flex min-w-0 items-center gap-2">
             {PORTAL_IS_TENANT
               ? (PORTAL_LOGO ? <img src={PORTAL_LOGO} alt={PORTAL_BRAND} className="h-9 w-9 rounded-lg object-contain" /> : null)
@@ -330,7 +330,7 @@ export function LiriPortalPage() {
           {/* ── Avatar → menu compte / organisation ── */}
           <div className="relative" ref={menuRef}>
             <button onClick={openMenu} aria-label="Compte et organisation" aria-haspopup="menu" aria-expanded={menuOpen}
-              className="ml-1 grid h-8 w-8 place-items-center rounded-full text-[12px] font-semibold text-white lp-ember lp-tr lp-railbtn">
+              className="ml-1 grid h-11 w-11 sm:h-8 sm:w-8 place-items-center rounded-full text-[12px] font-semibold text-white lp-ember lp-tr lp-railbtn">
               {orgName.slice(0, 2).toUpperCase()}
             </button>
 
@@ -483,7 +483,7 @@ export function LiriPortalPage() {
                         <span className={`grid h-8 w-8 shrink-0 place-items-center rounded-lg ${tintCls}`}><Icon size={16} /></span>
                         <div className="min-w-0 flex-1"><p className="truncate text-[13.5px] font-medium">{it.title}</p><p className="text-[12px] lp-faint">{it.sub}</p></div>
                         <span className="text-[11px] lp-faint">{it.when}</span>
-                        {it.action && <button onClick={() => it.to && nav(it.to)} className="ml-1 rounded-lg px-2.5 py-1 text-[12px] font-medium lp-coral lp-railbtn lp-tr">{it.action}</button>}
+                        {it.action && <button onClick={() => it.to && nav(it.to)} className="ml-1 min-h-[36px] rounded-lg px-2.5 py-1 text-[12px] font-medium lp-coral lp-railbtn lp-tr">{it.action}</button>}
                       </div>
                     );
                   })}
@@ -634,7 +634,7 @@ export function LiriPortalPage() {
                     <span className="absolute -right-1.5 -top-1.5 h-2 w-2 rounded-full" style={{ background: 'var(--live)', boxShadow: '0 0 0 2px var(--rail)' }} />
                   )}
                 </span>
-                <span className="lp-nl text-center text-[9px] font-medium leading-none">{it.label}</span>
+                <span className="lp-nl text-center text-[10px] font-medium leading-none">{it.label}</span>
               </button>
             );
           })}

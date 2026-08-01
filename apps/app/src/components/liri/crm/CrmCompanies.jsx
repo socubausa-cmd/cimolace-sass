@@ -337,12 +337,12 @@ export default function CrmCompanies() {
                 className="group relative flex cursor-pointer flex-col rounded-2xl border lp-line lp-panel70 p-4 lp-tr lp-lift"
               >
                 {/* Actions révélées au survol */}
-                <div className="absolute right-3 top-3 flex items-center gap-1 opacity-0 lp-tr group-hover:opacity-100 focus-within:opacity-100">
+                <div className="absolute right-3 top-3 flex items-center gap-1 opacity-100 lp-tr sm:opacity-0 sm:group-hover:opacity-100 sm:focus-within:opacity-100">
                   <button
                     type="button"
                     onClick={(e) => { e.stopPropagation(); openEdit(c); }}
                     aria-label={`Éditer ${c?.name || 'la société'}`}
-                    className="grid h-7 w-7 cursor-pointer place-items-center rounded-lg lp-muted lp-railbtn lp-tr"
+                    className="grid h-9 w-9 sm:h-7 sm:w-7 cursor-pointer place-items-center rounded-lg lp-muted lp-railbtn lp-tr"
                   >
                     <Pencil size={13} />
                   </button>
@@ -350,7 +350,7 @@ export default function CrmCompanies() {
                     type="button"
                     onClick={(e) => { e.stopPropagation(); setDeleteTarget(c); }}
                     aria-label={`Supprimer ${c?.name || 'la société'}`}
-                    className="grid h-7 w-7 cursor-pointer place-items-center rounded-lg lp-railbtn lp-tr"
+                    className="grid h-9 w-9 sm:h-7 sm:w-7 cursor-pointer place-items-center rounded-lg lp-railbtn lp-tr"
                     style={{ color: 'var(--crm-accent-2, #e0a48f)' }}
                   >
                     <Trash2 size={13} />

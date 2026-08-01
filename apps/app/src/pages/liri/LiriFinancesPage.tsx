@@ -78,7 +78,7 @@ export default function LiriFinancesPage() {
 
       <div className="relative z-10 mx-auto w-full max-w-3xl px-4 py-6 sm:px-6">
         <div className="mb-5 flex items-center gap-3">
-          <button onClick={() => nav('/liri')} className="grid h-9 w-9 place-items-center rounded-xl lp-muted lp-railbtn lp-tr" aria-label="Retour au portail"><ChevronLeft size={18} /></button>
+          <button onClick={() => nav('/liri')} className="grid h-11 w-11 sm:h-9 sm:w-9 place-items-center rounded-xl lp-muted lp-railbtn lp-tr" aria-label="Retour au portail"><ChevronLeft size={18} /></button>
           <h1 className="lp-serif text-[22px] font-medium">Mes finances</h1>
         </div>
 
@@ -150,11 +150,11 @@ export default function LiriFinancesPage() {
                   <span className="min-w-0 flex-1">
                     <span className="block truncate text-[13px] font-medium lp-ink">{p.recipient_name || p.phone_number} <span className="lp-faint">· {p.mno}</span></span>
                     <span className="block truncate text-[11.5px] lp-faint">{p.reason || '—'} · {new Date(p.created_at).toLocaleString('fr-FR')}</span>
-                    {p.failure_message && <span className="block truncate text-[11px]" style={{ color: '#ef6a52' }}>{p.failure_message}</span>}
+                    {p.failure_message && <span className="block truncate text-[13px] sm:text-[11px]" style={{ color: '#ef6a52' }}>{p.failure_message}</span>}
                   </span>
                   <span className="shrink-0 text-right">
                     <span className="block text-[13px] font-semibold lp-ink">{money(p.amount_cents, p.currency)}</span>
-                    <span className="text-[11px] font-medium capitalize" style={{ color: statusColor(p.status) }}>{p.status}</span>
+                    <span className="text-[13px] sm:text-[11px] font-medium capitalize" style={{ color: statusColor(p.status) }}>{p.status}</span>
                   </span>
                 </div>
               ))}

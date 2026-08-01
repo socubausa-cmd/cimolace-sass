@@ -194,7 +194,7 @@ function renderMessageContent(content) {
       <img
         src={src}
         alt="Image partagée"
-        className="max-h-[380px] w-auto mx-auto rounded-2xl border border-white/10 shadow-xl"
+        className="max-h-[380px] max-w-full h-auto w-auto mx-auto rounded-2xl border border-white/10 shadow-xl"
       />
     );
   }
@@ -1052,7 +1052,7 @@ function ImmersiveComposer({
         <button
           type="button"
           onClick={onOpenPicker}
-          className="flex-shrink-0 w-8 h-8 rounded-xl flex items-center justify-center text-gray-400 hover:text-[var(--school-accent)] hover:bg-white/5 transition-all"
+          className="flex-shrink-0 w-10 h-10 md:w-8 md:h-8 rounded-xl flex items-center justify-center text-gray-400 hover:text-[var(--school-accent)] hover:bg-white/5 transition-all"
           aria-label="Membres"
           title="Sélectionner un membre"
         >
@@ -1079,7 +1079,7 @@ function ImmersiveComposer({
         <button
           type="button"
           onClick={() => fileInputRef.current?.click()}
-          className="flex-shrink-0 w-8 h-8 rounded-xl flex items-center justify-center text-gray-500 hover:text-gray-300 hover:bg-white/5 transition-all"
+          className="flex-shrink-0 w-10 h-10 md:w-8 md:h-8 rounded-xl flex items-center justify-center text-gray-500 hover:text-gray-300 hover:bg-white/5 transition-all"
           aria-label="Partager une image"
           title="Envoyer une image"
         >
@@ -1089,7 +1089,7 @@ function ImmersiveComposer({
           type="button"
           onClick={toggleAudioRecording}
           className={cn(
-            'flex-shrink-0 w-8 h-8 rounded-xl flex items-center justify-center transition-all',
+            'flex-shrink-0 w-10 h-10 md:w-8 md:h-8 rounded-xl flex items-center justify-center transition-all',
             recording ? 'bg-red-500/15 text-red-300' : 'text-gray-500 hover:text-gray-300 hover:bg-white/5'
           )}
           aria-label="Message audio"
@@ -1102,7 +1102,7 @@ function ImmersiveComposer({
           onClick={() => { if (!liveEnabled) return; onToggleVideo?.(); }}
           disabled={!liveEnabled}
           className={cn(
-            'flex-shrink-0 w-8 h-8 rounded-xl flex items-center justify-center transition-all',
+            'flex-shrink-0 w-10 h-10 md:w-8 md:h-8 rounded-xl flex items-center justify-center transition-all',
             !liveEnabled
               ? 'bg-white/[0.03] text-gray-700 cursor-not-allowed'
               : liveActive
@@ -1119,7 +1119,7 @@ function ImmersiveComposer({
           onClick={() => onScheduleCall?.()}
           disabled={!selectedRecipient}
           className={cn(
-            'flex-shrink-0 w-8 h-8 rounded-xl flex items-center justify-center transition-all',
+            'flex-shrink-0 w-10 h-10 md:w-8 md:h-8 rounded-xl flex items-center justify-center transition-all',
             !selectedRecipient
               ? 'bg-white/[0.03] text-gray-700 cursor-not-allowed'
               : 'text-gray-500 hover:text-gray-300 hover:bg-white/5'
@@ -1134,7 +1134,7 @@ function ImmersiveComposer({
             type="button"
             onClick={onToggleLiveSettings}
             className={cn(
-              'flex-shrink-0 w-8 h-8 rounded-xl flex items-center justify-center transition-all',
+              'flex-shrink-0 w-10 h-10 md:w-8 md:h-8 rounded-xl flex items-center justify-center transition-all',
               liveSettingsOpen
                 ? 'bg-[color-mix(in_srgb,var(--school-accent)_20%,transparent)] text-[var(--school-accent)] ring-1 ring-[color-mix(in_srgb,var(--school-accent)_35%,transparent)]'
                 : 'text-gray-400 hover:text-[var(--school-accent)] hover:bg-white/5'
@@ -1150,8 +1150,8 @@ function ImmersiveComposer({
           onClick={() => void handleSend()}
           disabled={!canSend}
           className={cn(
-            'flex h-8 w-8 flex-shrink-0 items-center justify-center transition-all',
-            immersiveLiveComposerChrome ? 'h-9 w-9 rounded-full' : 'rounded-xl',
+            'flex flex-shrink-0 items-center justify-center transition-all',
+            immersiveLiveComposerChrome ? 'h-10 w-10 md:h-9 md:w-9 rounded-full' : 'h-10 w-10 md:h-8 md:w-8 rounded-xl',
             canSend
               ? immersiveLiveComposerChrome
                 ? 'bg-[var(--school-accent)] text-black shadow-[0_0_22px_-6px_rgba(212,175,55,0.85)] hover:bg-[#e5c04a]'
@@ -1402,7 +1402,7 @@ function MemberPickerPanel({ open, onClose, users, currentUserId, conversations,
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 16, scale: 0.95 }}
             transition={{ duration: 0.28, ease: [0.22, 1, 0.36, 1] }}
-            className="fixed bottom-20 right-4 md:right-8 z-50 w-[340px] max-h-[520px] rounded-2xl border border-white/10 bg-[#0c1118]/90 backdrop-blur-2xl shadow-2xl shadow-black/40 flex flex-col overflow-hidden"
+            className="fixed bottom-20 right-4 md:right-8 z-50 w-[min(340px,calc(100vw-2rem))] max-h-[520px] rounded-2xl border border-white/10 bg-[#0c1118]/90 backdrop-blur-2xl shadow-2xl shadow-black/40 flex flex-col overflow-hidden"
           >
             <div className="px-4 pt-4 pb-2 flex items-center justify-between">
               <div className="flex items-center gap-2">
@@ -1623,7 +1623,7 @@ function DeleteMessagePrompt({ open, message, onCancel, onConfirm, loading }) {
             animate={{ opacity: 1, x: 0, y: 0, scale: 1 }}
             exit={{ opacity: 0, x: 20, y: 10, scale: 0.96 }}
             transition={{ duration: 0.22, ease: [0.22, 1, 0.36, 1] }}
-            className="fixed bottom-6 right-4 md:right-8 z-[61] w-[320px] rounded-2xl border border-white/10 bg-[#0c1118]/95 backdrop-blur-2xl shadow-2xl shadow-black/50 p-4"
+            className="fixed bottom-6 right-4 md:right-8 z-[61] w-[min(320px,calc(100vw-2rem))] rounded-2xl border border-white/10 bg-[#0c1118]/95 backdrop-blur-2xl shadow-2xl shadow-black/50 p-4"
           >
             <p className="text-sm font-semibold text-white">Supprimer ce message ?</p>
             <p className="text-xs text-gray-400 mt-2 line-clamp-2">
@@ -1670,7 +1670,7 @@ function PublicProfilePanel({ open, profile, onClose }) {
             animate={{ opacity: 1, y: 0, x: 0, scale: 1 }}
             exit={{ opacity: 0, y: 10, x: 8, scale: 0.98 }}
             transition={{ duration: 0.2 }}
-            className="fixed top-24 right-4 md:right-8 z-[59] w-[320px] rounded-2xl border border-white/10 bg-[#0c1118]/95 backdrop-blur-xl p-4 shadow-2xl shadow-black/40"
+            className="fixed top-24 right-4 md:right-8 z-[59] w-[min(320px,calc(100vw-2rem))] rounded-2xl border border-white/10 bg-[#0c1118]/95 backdrop-blur-xl p-4 shadow-2xl shadow-black/40"
           >
             <div className="flex items-start gap-3">
               <UserAvatar user={profile} size="lg" />
@@ -5473,14 +5473,15 @@ const MessagingPage = ({ embedded = false }) => {
           )}
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex min-w-0 items-center gap-2 overflow-x-auto">
           {selectedRecipient ? (
             <button
               type="button"
               onClick={handleClearRecipient}
-              className="h-8 px-2.5 rounded-lg border border-white/10 bg-white/[0.03] text-gray-300 hover:text-white hover:bg-white/5 text-[11px]"
+              className="inline-flex items-center gap-1.5 h-8 px-2.5 rounded-lg border border-white/10 bg-white/[0.03] text-gray-300 hover:text-white hover:bg-white/5 text-[11px]"
             >
-              Quitter conversation
+              <X className="h-4 w-4 shrink-0" />
+              <span className="hidden sm:inline">Quitter conversation</span>
             </button>
           ) : null}
           {liveActive && (
@@ -5591,7 +5592,7 @@ const MessagingPage = ({ embedded = false }) => {
                 animate={{ opacity: 1, x: 0 }}
                 exit={{ opacity: 0, x: 20 }}
                 transition={{ duration: 0.22 }}
-                className="absolute top-4 right-4 z-30 w-[320px] max-h-[55vh] overflow-y-auto rounded-2xl border border-white/10 bg-[#0c1118]/[0.92] backdrop-blur-xl p-2"
+                className="absolute top-4 right-4 z-30 w-[min(320px,calc(100vw-2rem))] max-h-[55vh] overflow-y-auto rounded-2xl border border-white/10 bg-[#0c1118]/[0.92] backdrop-blur-xl p-2"
               >
                 <div className="flex items-center justify-between px-2 py-1.5">
                   <p className="text-[11px] uppercase tracking-wider text-gray-500">Conversations</p>

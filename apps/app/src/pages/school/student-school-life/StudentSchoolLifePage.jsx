@@ -151,7 +151,7 @@ const StudentSchoolLifePage = () => {
           style={{ flex: 1, overflowX: 'hidden', minHeight: '100dvh' }}
           className={collapsed ? 'lg:pl-[92px]' : 'lg:pl-[250px]'}
         >
-          <div style={{ maxWidth: isForum ? 1480 : 1280, margin: '0 auto', padding: '28px 24px 48px' }}>
+          <div className="pt-16 lg:pt-7" style={{ maxWidth: isForum ? 1480 : 1280, margin: '0 auto', paddingLeft: 24, paddingRight: 24, paddingBottom: 48 }}>
             <Routes>
             <Route index element={<Navigate to="dashboard" replace />} />
             <Route path="dashboard" element={<StudentDashboardPage />} />

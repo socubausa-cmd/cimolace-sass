@@ -117,7 +117,7 @@ export default function LiriServicesPage() {
           <div className="mt-5"><MonetizationStudio /></div>
 
           {items.length > 0 && (
-            <p className="mt-3 text-[12px] lp-faint">{items.length} service{items.length > 1 ? 's' : ''} · {activeCount} actif{activeCount > 1 ? 's' : ''}</p>
+            <p className="mt-3 text-[13px] lp-faint">{items.length} service{items.length > 1 ? 's' : ''} · {activeCount} actif{activeCount > 1 ? 's' : ''}</p>
           )}
           {err && <div className="mt-4 rounded-xl border px-3.5 py-2.5 text-[13px]" style={{ borderColor: 'rgba(226,85,63,.3)', background: 'rgba(226,85,63,.08)', color: '#e7a07f' }}>{err}</div>}
 
@@ -138,15 +138,15 @@ export default function LiriServicesPage() {
                   <div className="flex items-start justify-between gap-2">
                     <span className="inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[11px] font-medium lp-coral" style={{ background: 'rgba(217,119,87,.12)' }}><Tag size={12} /> {catLabel(s.category)}</span>
                     <div className="flex items-center gap-1">
-                      <button onClick={() => openEdit(s)} aria-label="Modifier" className="grid h-8 w-8 place-items-center rounded-lg lp-muted lp-railbtn lp-tr"><Pencil size={15} /></button>
-                      <button onClick={() => setConfirmDel(s)} aria-label="Supprimer" className="grid h-8 w-8 place-items-center rounded-lg lp-muted lp-railbtn lp-tr"><Trash2 size={15} /></button>
+                      <button onClick={() => openEdit(s)} aria-label="Modifier" className="grid h-11 w-11 sm:h-8 sm:w-8 place-items-center rounded-lg lp-muted lp-railbtn lp-tr"><Pencil size={15} /></button>
+                      <button onClick={() => setConfirmDel(s)} aria-label="Supprimer" className="grid h-11 w-11 sm:h-8 sm:w-8 place-items-center rounded-lg lp-muted lp-railbtn lp-tr"><Trash2 size={15} /></button>
                     </div>
                   </div>
                   <p className="mt-2.5 text-[15px] font-semibold lp-ink">{s.label}</p>
-                  {s.tagline && <p className="mt-0.5 text-[12.5px] lp-muted">{s.tagline}</p>}
+                  {s.tagline && <p className="mt-0.5 text-[13px] lp-muted">{s.tagline}</p>}
                   <div className="mt-auto flex items-center justify-between pt-3.5">
-                    <span className="text-[15px] font-semibold lp-ink">{fmtPrice(s.priceCents, s.currency)}<span className="text-[12px] font-normal lp-faint"> {cycleLabel(s.billingCycle)}</span></span>
-                    <button onClick={() => toggleActive(s)} className="inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[11.5px] font-medium lp-tr" style={s.isActive !== false ? { background: 'rgba(91,122,82,.2)', color: '#9ec08f' } : { background: 'rgba(245,244,238,.06)', color: 'var(--faint)' }}>
+                    <span className="text-[15px] font-semibold lp-ink">{fmtPrice(s.priceCents, s.currency)}<span className="text-[13px] font-normal lp-faint"> {cycleLabel(s.billingCycle)}</span></span>
+                    <button onClick={() => toggleActive(s)} className="inline-flex items-center gap-1.5 rounded-full px-2.5 py-2 min-h-[40px] text-[11.5px] font-medium lp-tr" style={s.isActive !== false ? { background: 'rgba(91,122,82,.2)', color: '#9ec08f' } : { background: 'rgba(245,244,238,.06)', color: 'var(--faint)' }}>
                       <span className="h-1.5 w-1.5 rounded-full" style={{ background: s.isActive !== false ? '#7bbf6a' : 'var(--faint)' }} />
                       {s.isActive !== false ? 'Actif' : 'Masqué'}
                     </button>
@@ -164,7 +164,7 @@ export default function LiriServicesPage() {
           <div className="max-h-[92vh] w-full max-w-lg overflow-y-auto rounded-t-3xl border lp-line p-5 sm:rounded-3xl" style={{ background: '#221f1b' }} onClick={(e) => e.stopPropagation()}>
             <div className="flex items-center justify-between">
               <h2 className="text-[17px] font-semibold lp-ink">{editing.key ? 'Modifier le service' : 'Nouveau service'}</h2>
-              <button onClick={() => !saving && setEditing(null)} className="grid h-8 w-8 place-items-center rounded-lg lp-muted lp-railbtn"><X size={17} /></button>
+              <button onClick={() => !saving && setEditing(null)} className="grid h-11 w-11 sm:h-8 sm:w-8 place-items-center rounded-lg lp-muted lp-railbtn"><X size={17} /></button>
             </div>
             <div className="mt-4 space-y-3.5">
               <Field label="Nom du service">

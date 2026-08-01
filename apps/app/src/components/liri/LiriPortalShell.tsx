@@ -45,7 +45,7 @@ function HeaderTabs() {
     const isActive = t.value === tabs!.active;
     return (
       <button key={t.value} onClick={() => tabs!.onChange(t.value)}
-        className={`relative shrink-0 whitespace-nowrap px-3 py-1.5 text-[13px] lp-tr ${isActive ? 'lp-ink font-medium' : 'lp-muted hover:lp-ink'}`}>
+        className={`relative inline-flex min-h-[44px] items-center md:min-h-0 shrink-0 whitespace-nowrap px-3 py-1.5 text-[13px] lp-tr ${isActive ? 'lp-ink font-medium' : 'lp-muted hover:lp-ink'}`}>
         {t.label}
         {isActive && <span className="absolute inset-x-3 -bottom-0.5 h-0.5 rounded-full" style={{ background: 'var(--coral)' }} />}
       </button>
@@ -202,7 +202,7 @@ function LiriPortalShellInner({
       {/* topbar : [menu · logo · fil d'Ariane]  —  [sous-vues]  —  [icônes] */}
       <header className="z-30 flex min-h-14 items-center gap-2 lp-rail-bg border-b lp-line px-2.5 py-2 sm:gap-3 sm:px-4">
         <div className="flex min-w-0 shrink-0 items-center gap-2 sm:gap-2.5">
-          <button onClick={() => nav('/liri')} className="grid h-8 w-8 place-items-center rounded-xl lp-muted lp-railbtn lp-tr" aria-label="Retour au portail"><Menu size={17} /></button>
+          <button onClick={() => nav('/liri')} className="grid h-11 w-11 sm:h-8 sm:w-8 place-items-center rounded-xl lp-muted lp-railbtn lp-tr" aria-label="Retour au portail"><Menu size={17} /></button>
           <button onClick={() => nav('/liri')} className="flex min-w-0 items-center gap-2 lp-tr" aria-label="Portail LIRI">
             {_shellIsTenant
               ? (_tenantLogo
@@ -288,7 +288,7 @@ function LiriPortalShellInner({
                       <span className="absolute -right-1.5 -top-1.5 h-2 w-2 rounded-full" style={{ background: 'var(--live)', boxShadow: '0 0 0 2px var(--rail)' }} />
                     )}
                   </span>
-                  <span className="lp-nl text-center text-[9px] font-medium leading-none">{it.label}</span>
+                  <span className="lp-nl text-center text-[10px] font-medium leading-none">{it.label}</span>
                 </button>
               );
             })}

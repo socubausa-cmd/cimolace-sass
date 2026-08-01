@@ -16,12 +16,12 @@ function money(amount, currency = 'EUR') {
 
 function Kpi({ icon: Icon, label, value, sub }) {
   return (
-    <div className="rounded-2xl border lp-line lp-panel70 p-4">
+    <div className="min-w-0 rounded-2xl border lp-line lp-panel70 p-4">
       <div className="flex items-center gap-2">
         <Icon size={15} className="lp-coral" />
         <span className="text-[11px] font-semibold uppercase tracking-[.09em] lp-muted">{label}</span>
       </div>
-      <div className="mt-2 text-[26px] font-semibold leading-none lp-ink" style={{ fontVariantNumeric: 'tabular-nums' }}>{value}</div>
+      <div className="mt-2 truncate text-[26px] font-semibold leading-none lp-ink" style={{ fontVariantNumeric: 'tabular-nums' }}>{value}</div>
       {sub && <div className="mt-1.5 text-[12px] lp-faint">{sub}</div>}
     </div>
   );

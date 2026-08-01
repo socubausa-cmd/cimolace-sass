@@ -90,7 +90,7 @@ const TeacherPortalPage = () => {
       {/* Main Content Area — lg:pl-[250px] offsets content past the fixed sidebar */}
       <main
         style={{ flex: 1, overflowX: 'hidden', minHeight: '100dvh' }}
-        className="lg:pl-[250px]"
+        className="lg:pl-[250px] pt-14 lg:pt-0"
       >
         <div style={{ maxWidth: 1280, margin: '0 auto', padding: '28px 24px 48px' }}>
           <Routes>

@@ -31,7 +31,7 @@ export default function CommunicationShell({ forumBasePath = '/student-school-li
         aria-pressed={active}
         style={{
           display: 'inline-flex', alignItems: 'center', gap: 8,
-          padding: '9px 18px', borderRadius: 11, cursor: 'pointer',
+          padding: '12px 18px', borderRadius: 11, cursor: 'pointer',
           fontSize: 13.5, fontWeight: 700, letterSpacing: '-0.01em',
           color: active ? '#2a1c14' : '#d97757',
           background: active ? '#cc8068' : 'rgba(217,119,87,0.10)',
@@ -45,7 +45,7 @@ export default function CommunicationShell({ forumBasePath = '/student-school-li
   };
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', height: 'calc(100dvh - 96px)', minHeight: 520 }}>
+    <div style={{ display: 'flex', flexDirection: 'column', height: '100%', minHeight: 520 }}>
       {/* Sélecteur d'onglet (Forum / Messagerie) */}
       <div style={{ display: 'flex', gap: 10, padding: '2px 0 14px', flexShrink: 0 }}>
         <TabButton value="forum" label="Forum" Icon={MessageCircle} />

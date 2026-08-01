@@ -901,7 +901,7 @@ export default function LiriAccountPage() {
       {/* modale suppression */}
       {delOpen && (
         <div className="fixed inset-0 z-[60] grid place-items-center p-4" style={{ background: 'rgba(0,0,0,.6)' }} onMouseDown={(e) => { if (e.target === e.currentTarget && !delLoading) { setDelOpen(false); setDelDone(false); setDelReason(''); } }}>
-          <div className="w-full max-w-[440px] overflow-hidden rounded-2xl border lp-line" style={{ background: '#221f1b', boxShadow: '0 40px 90px -20px rgba(0,0,0,.8)' }}>
+          <div className="w-full max-w-[440px] max-h-[90dvh] overflow-y-auto rounded-2xl border lp-line" style={{ background: '#221f1b', boxShadow: '0 40px 90px -20px rgba(0,0,0,.8)' }}>
             <div className="flex items-center justify-between border-b lp-line px-5 py-4">
               <span className="flex items-center gap-2 text-[15px] font-semibold lp-ink"><Trash2 size={17} style={{ color: '#ef6a52' }} /> Supprimer l’organisation</span>
               <button onClick={() => { if (!delLoading) { setDelOpen(false); setDelDone(false); setDelReason(''); } }} className="grid h-7 w-7 place-items-center rounded-lg lp-faint lp-railbtn lp-tr" aria-label="Fermer"><X size={16} /></button>

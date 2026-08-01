@@ -119,7 +119,7 @@ const NavItem = ({ item, isActive, onClick, index, collapsed = false }) => {
         background: isActive ? T.goldDim : hov ? T.surface2 : 'none',
         border: `1px solid ${isActive ? T.goldMid : 'transparent'}`,
         color: isActive ? T.gold : hov ? T.t1 : T.t2,
-        fontWeight: isActive ? 600 : 400, fontSize: 12.5,
+        fontWeight: isActive ? 600 : 400, fontSize: 13, minHeight: 44,
         textAlign: 'left', cursor: 'pointer',
         transition: 'all 150ms cubic-bezier(0.4,0,0.2,1)',
         position: 'relative',
@@ -194,7 +194,7 @@ const SidebarContent = ({ onNavClick, collapsed = false }) => {
               <div style={{ fontWeight: 600, fontSize: 13, color: T.t1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                 {fullName}
               </div>
-              <div style={{ fontFamily: T.mono, fontSize: 8, color: T.cyan, letterSpacing: '0.1em', fontWeight: 600 }}>
+              <div style={{ fontFamily: T.mono, fontSize: 11, color: T.cyan, letterSpacing: '0.1em', fontWeight: 600 }}>
                 ESPACE DÉCOUVERTE
               </div>
             </div>
@@ -202,7 +202,7 @@ const SidebarContent = ({ onNavClick, collapsed = false }) => {
         </div>
         {!collapsed && (
           <div style={{
-            marginTop: 8, fontFamily: T.mono, fontSize: 8,
+            marginTop: 8, fontFamily: T.mono, fontSize: 11,
             color: T.t3, letterSpacing: '0.10em',
             background: T.surface2, border: `1px solid ${T.border}`,
             borderRadius: 4, padding: '2px 6px', display: 'inline-block',
@@ -219,7 +219,7 @@ const SidebarContent = ({ onNavClick, collapsed = false }) => {
               gi > 0 && <div style={{ height: 1, background: T.border, margin: '8px 6px' }}/>
             ) : (
               <div style={{
-                padding: '2px 10px 5px', fontFamily: T.mono, fontSize: 9,
+                padding: '2px 10px 5px', fontFamily: T.mono, fontSize: 11,
                 letterSpacing: '0.11em', textTransform: 'uppercase',
                 color: T.t2, fontWeight: 700,
               }}>{group.section}</div>
@@ -248,7 +248,7 @@ const SidebarContent = ({ onNavClick, collapsed = false }) => {
             justifyContent: collapsed ? 'center' : 'flex-start',
             padding: collapsed ? '9px 0' : '7px 10px', borderRadius: 8,
             background: 'none', border: '1px solid transparent',
-            color: T.danger, fontSize: 12.5, fontWeight: 500,
+            color: T.danger, fontSize: 12.5, fontWeight: 500, minHeight: 44,
             textAlign: 'left', cursor: 'pointer', transition: 'all 150ms ease',
           }}
           onMouseEnter={e => e.currentTarget.style.background = 'rgba(239,68,68,0.08)'}
@@ -407,7 +407,7 @@ const StudentSchoolLifeSidebar = ({ collapsed = false, onToggle }) => {
                 <span style={{ fontFamily: T.mono, fontSize: 9, color: T.t3, marginLeft: 4 }}>{getActiveTenantBranding().name.toUpperCase()}</span>
               </div>
               <button onClick={() => setMobileOpen(false)}
-                style={{ background: 'none', border: 'none', color: T.t3, cursor: 'pointer', padding: 4 }}>
+                style={{ background: 'none', border: 'none', color: T.t3, cursor: 'pointer', width: 40, height: 40, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                 <IconClose/>
               </button>
             </div>

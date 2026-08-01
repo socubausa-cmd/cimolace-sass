@@ -288,7 +288,7 @@ export default function CrmCompanyDetail({ company, onClose }) {
               {/* Écosystème agrégé */}
               <section>
                 <SectionHead icon={Sparkles} title="Écosystème" count={counts.members} />
-                <div className="grid grid-cols-5 gap-1.5">
+                <div className="grid grid-cols-3 gap-1.5 sm:grid-cols-5">
                   <StatCell icon={UserCheck} label="Membres" value={counts.members} />
                   <StatCell icon={ShoppingBag} label="Cmd" value={counts.orders} />
                   <StatCell icon={CalendarCheck} label="RDV" value={counts.appointments} />

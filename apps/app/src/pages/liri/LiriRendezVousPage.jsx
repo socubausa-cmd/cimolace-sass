@@ -193,7 +193,7 @@ export default function LiriRendezVousPage() {
             <div style={{ display: 'flex', alignItems: 'center', gap: 11 }}>
               <span style={{ display: 'grid', placeItems: 'center', width: 34, height: 34, borderRadius: 11, background: 'rgba(224,138,95,0.16)', border: `1px solid ${C.userLine}` }}><Sparkles size={16} color={C.coral} /></span>
               <div style={{ flex: 1, minWidth: 0 }}>
-                <div style={{ fontSize: 9.5, fontWeight: 800, letterSpacing: '0.14em', textTransform: 'uppercase', color: C.coral }}>Assistant rendez-vous</div>
+                <div style={{ fontSize: 11, fontWeight: 800, letterSpacing: '0.14em', textTransform: 'uppercase', color: C.coral }}>Assistant rendez-vous</div>
                 <div style={{ fontSize: 13.5, fontWeight: 700, color: C.ink }}>{step >= SLOT_STEP ? 'Choisis ton créneau' : 'Une question à la fois'}</div>
               </div>
               <span style={{ fontSize: 11, fontFamily: "'JetBrains Mono',monospace", color: C.faint }}>{Math.min(step, STEPS.length)} / {STEPS.length}</span>
@@ -268,7 +268,7 @@ export default function LiriRendezVousPage() {
                     <div style={{ marginTop: 18, display: 'flex', gap: 8, overflowX: 'auto', paddingBottom: 4 }}>
                       {days.map((d, i) => (
                         <button key={d.dayIso} onClick={() => setActiveDay(i)} style={{
-                          flexShrink: 0, padding: '9px 14px', borderRadius: 11, cursor: 'pointer', fontSize: 13, fontWeight: 600, whiteSpace: 'nowrap',
+                          flexShrink: 0, padding: '12px 14px', borderRadius: 11, cursor: 'pointer', fontSize: 13, fontWeight: 600, whiteSpace: 'nowrap',
                           background: i === activeDay ? 'rgba(224,138,95,0.16)' : C.surface,
                           border: `1px solid ${i === activeDay ? C.userLine : C.line}`, color: i === activeDay ? C.coral : C.muted,
                         }}>{d.day}</button>
@@ -286,7 +286,7 @@ export default function LiriRendezVousPage() {
                             border: `1px solid ${active ? 'transparent' : C.line}`, color: active ? '#1c140e' : C.ink,
                           }}>
                             <Clock size={13} style={{ opacity: 0.7 }} /> {t.time}
-                            {t.recommended && !active && <span style={{ position: 'absolute', top: -7, right: -6, fontSize: 8.5, fontWeight: 800, background: C.coral, color: '#1c140e', padding: '2px 5px', borderRadius: 6 }}>Reco</span>}
+                            {t.recommended && !active && <span style={{ position: 'absolute', top: -7, right: -6, fontSize: 11, fontWeight: 800, background: C.coral, color: '#1c140e', padding: '2px 5px', borderRadius: 6 }}>Reco</span>}
                           </button>
                         );
                       })}

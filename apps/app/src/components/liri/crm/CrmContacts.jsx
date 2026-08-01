@@ -289,7 +289,7 @@ export default function CrmContacts() {
             className={`${inputCls} pl-9`}
           />
         </div>
-        <div className="flex shrink-0 items-center gap-2">
+        <div className="flex flex-wrap justify-end shrink-0 items-center gap-2">
           <button
             type="button"
             onClick={exportCsv}
