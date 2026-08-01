@@ -149,8 +149,11 @@ export default function JoinOrgPage() {
   // neutre LIRI (liri.cimolace.space) — on ne révèle ni ne rejoint ISNA & co là. Mais sur SON
   // propre domaine (prorascience.org), il est bien résoluble/joignable (idem serveur).
   const isEmbedded = org?.embedded === true;
+  // Un embarqué n'est masqué (introuvable + carte cachée) que sur le host neutre plateforme.
+  // Sur son domaine propre (prorascience.org), il s'affiche et se rejoint normalement.
+  const hiddenEmbedded = isEmbedded && onPlatformHost;
   const notFound =
-    resolved && !resolving && slug.length >= 2 && (!org || (isEmbedded && onPlatformHost));
+    resolved && !resolving && slug.length >= 2 && (!org || hiddenEmbedded);
 
   return (
     <div
@@ -214,14 +217,14 @@ export default function JoinOrgPage() {
               {resolving && (
                 <Loader2 className="absolute right-3.5 top-1/2 h-4 w-4 -translate-y-1/2 animate-spin text-white/35" />
               )}
-              {!resolving && org && !isEmbedded && (
+              {!resolving && org && !hiddenEmbedded && (
                 <Check className="absolute right-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-emerald-400" />
               )}
             </div>
           </div>
 
-          {/* Carte org résolue (jamais pour un embarqué → séparation dure) */}
-          {orgName && !isEmbedded && (
+          {/* Carte org résolue (masquée pour un embarqué UNIQUEMENT sur le host neutre plateforme) */}
+          {orgName && !hiddenEmbedded && (
             <div className="mt-4 flex items-center gap-3 rounded-xl border border-white/[0.08] bg-white/[0.03] p-3.5">
               {org?.logo_url ? (
                 <img src={org.logo_url} alt="" className="h-10 w-10 shrink-0 rounded-lg object-cover" />
