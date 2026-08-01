@@ -35,6 +35,24 @@ export class CagnotteService {
   private static readonly XOF_COUNTRIES = new Set([
     'BEN', 'BFA', 'CIV', 'GNB', 'MLI', 'NER', 'SEN', 'TGO',
   ]);
+  /** Indicatif téléphonique par pays (zone CFA) — PawaPay exige un MSISDN
+   *  international SANS « + » ni « 0 » initial (ex. Gabon 077… → 24177…). */
+  private static readonly DIAL_CODES: Record<string, string> = {
+    CMR: '237', GAB: '241', COG: '242', TCD: '235', CAF: '236', GNQ: '240',
+    CIV: '225', SEN: '221', BEN: '229', BFA: '226', MLI: '223', NER: '227', TGO: '228', GNB: '245',
+  };
+
+  /** Numéro Mobile Money → MSISDN international (chiffres seuls, 0 initial retiré,
+   *  indicatif pays préfixé s'il manque). Sinon PawaPay renvoie INVALID_PAYER_FORMAT. */
+  private normalizeMsisdn(raw: unknown, country: string): string {
+    let p = String(raw ?? '').replace(/\D/g, '');
+    const dial = CagnotteService.DIAL_CODES[country];
+    if (dial) {
+      p = p.replace(/^0+/, '');
+      if (!p.startsWith(dial)) p = dial + p;
+    }
+    return p;
+  }
 
   constructor(
     private readonly supabaseSvc: SupabaseService,
@@ -184,10 +202,10 @@ export class CagnotteService {
   }) {
     const campaign = await this.loadActiveCampaign(slug);
     const amountCents = this.clampEurCents(dto.amountCents);
-    const phone = String(dto.phoneNumber ?? '').replace(/[^0-9]/g, '');
     const provider = String(dto.provider ?? '').trim();
     const country = String(dto.country ?? '').trim().toUpperCase();
-    if (phone.length < 7) throw new BadRequestException('Numéro Mobile Money invalide.');
+    const phone = this.normalizeMsisdn(dto.phoneNumber, country);
+    if (phone.length < 8) throw new BadRequestException('Numéro Mobile Money invalide.');
     if (!provider) throw new BadRequestException('Opérateur Mobile Money requis.');
 
     const currency = CagnotteService.XOF_COUNTRIES.has(country) ? 'XOF' : 'XAF';

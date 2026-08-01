@@ -81,7 +81,7 @@ export default function PublicPrayerBookingPage() {
         preferredIso: chosenIso || undefined,
       });
       setDone(true);
-    } catch (e) { setError(e?.response?.data?.message || 'Envoi impossible pour le moment. Réessayez.'); }
+    } catch (e) { setError(e?.response?.data?.error?.message || e?.response?.data?.message || 'Envoi impossible pour le moment. Réessayez.'); }
     finally { setSubmitting(false); }
   };
 

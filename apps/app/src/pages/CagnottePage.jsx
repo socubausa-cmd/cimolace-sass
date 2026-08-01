@@ -139,7 +139,7 @@ export default function CagnottePage() {
       const r = await cagnotteApi.stripe(SLUG, { amountCents, donorName: donorName || undefined, donorMessage: donorMessage || undefined });
       if (r?.checkoutUrl) window.location.href = r.checkoutUrl;
       else setError('Impossible d’ouvrir le paiement. Réessayez.');
-    } catch (e) { setError(e?.response?.data?.message || 'Paiement indisponible pour le moment.'); }
+    } catch (e) { setError(e?.response?.data?.error?.message || e?.response?.data?.message || 'Paiement indisponible pour le moment.'); }
     finally { setBusy(false); }
   };
 
@@ -175,7 +175,7 @@ export default function CagnottePage() {
         if (tries > 40) { clearInterval(pollRef.current); setBusy(false); }
       }, 3000);
     } catch (e) {
-      setError(e?.response?.data?.message || 'Paiement Mobile Money indisponible.');
+      setError(e?.response?.data?.error?.message || e?.response?.data?.message || 'Paiement Mobile Money indisponible.');
       setBusy(false);
     }
   };
