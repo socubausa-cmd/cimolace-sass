@@ -241,10 +241,22 @@ export default function CagnottePage() {
                 <p className="font-semibold">Transparence</p>
               </div>
               <p className="mt-2 text-[13.5px] leading-relaxed text-[#f5f4ee]/72">
-                L’intégralité des dons sert à l’achat du <strong className="text-[#f5f4ee]">{device}</strong>.
-                Si l’objectif est dépassé, le surplus ira aux accessoires de captation
-                (micro-cravate, trépied, cartes de stockage) pour améliorer encore la qualité.
+                L’objectif couvre le <strong className="text-[#f5f4ee]">pack de captation complet</strong> —
+                chaque euro va à ce matériel, rien d’autre :
               </p>
+              <ul className="mt-3 space-y-1.5 text-[13px] text-[#f5f4ee]/72">
+                {[
+                  ['Samsung Galaxy S26 Ultra — 1 To', 'filmer en qualité pro, tout stocker'],
+                  ['Coque renforcée magnétique', 'protéger l’appareil pendant les cultes'],
+                  ['Chargeur 60W USB-C', 'filmer longtemps, sans coupure'],
+                  ['Galaxy Buds4 Pro', 'son clair et suivi audio à l’enregistrement'],
+                ].map(([t, d]) => (
+                  <li key={t} className="flex gap-2">
+                    <Check className="mt-0.5 h-3.5 w-3.5 shrink-0 text-[#e8a184]" />
+                    <span><strong className="text-[#f5f4ee]/90">{t}</strong> — {d}</span>
+                  </li>
+                ))}
+              </ul>
             </div>
           </section>
 
