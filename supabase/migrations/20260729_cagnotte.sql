@@ -56,7 +56,11 @@ on conflict (slug) do update
 -- Offre post-don : séance de prière gratuite (RDV) en remerciement de l'offrande.
 alter table public.cagnotte_campaigns add column if not exists booking_url text;
 alter table public.cagnotte_campaigns add column if not exists booking_label text;
+-- booking_url = MOTEUR de RDV LIRI (conversationnel + sélecteur de créneau, API
+-- booking → booking_slot + RDV). ⚠️ /liri/rendez-vous exige un membre connecté ;
+-- pour un donateur anonyme sans compte, viser plutôt la prise de RDV INVITÉ
+-- publique `/t/isna/reserver?service=<clé>` (med/guest-booking, ApiKeyGuard).
 update public.cagnotte_campaigns
-  set booking_url = coalesce(booking_url, '/temple-ngowazulu'),
-      booking_label = coalesce(booking_label, 'Réserver une séance de prière gratuite')
+  set booking_url = coalesce(booking_url, '/liri/rendez-vous'),
+      booking_label = coalesce(booking_label, 'Réserver ma séance de prière (choisir un créneau)')
   where slug = 'smartforme-culte';
