@@ -410,7 +410,8 @@ export class CagnotteService {
         `<div style="max-width:600px;margin:0 auto;font-family:'Helvetica Neue',Arial,sans-serif;">` +
           // COUVERTURE — bandeau sombre + œil Prorascience (blanc transparent → visible sur fond sombre)
           `<div style="background:#262624;padding:30px 24px;text-align:center;border-radius:14px 14px 0 0;">` +
-            `<img src="${this.frontBase}/logos/isna-logo.png" alt="ISNA Prorascience" width="240" style="width:240px;max-width:82%;height:auto;display:inline-block;" />` +
+            `<img src="${this.frontBase}/ngowazulu-logo.png" alt="Ngowazulu" width="64" style="width:64px;height:auto;display:inline-block;" />` +
+            `<div style="color:#f5f4ee;font-family:Georgia,'Times New Roman',serif;font-size:20px;letter-spacing:3px;margin-top:8px;">NGOWAZULU</div>` +
             `<div style="color:#d97757;font-size:11px;letter-spacing:2px;margin-top:5px;text-transform:uppercase;">Cagnotte solidaire</div>` +
           `</div>` +
           // CORPS
