@@ -61,7 +61,10 @@ export default function CrmContacts() {
   const [loading, setLoading] = useState(true);
   const [errored, setErrored] = useState(false);
 
-  const [search, setSearch] = useState('');
+  // Pré-remplissage depuis l'URL (?q=) : deep-link depuis la cagnotte « ouvrir ce donateur ».
+  const [search, setSearch] = useState(() => {
+    try { return new URLSearchParams(window.location.search).get('q') || ''; } catch { return ''; }
+  });
   const firstRun = useRef(true);
   const reqRef = useRef(0);
 

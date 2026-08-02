@@ -4,8 +4,22 @@ import {
   CreditCard, Smartphone, Check, ArrowRight, Users, Sparkles,
 } from 'lucide-react';
 import { cagnotteApi } from '@/lib/api-v2';
+import { authStore } from '@/lib/auth-store';
 
 const SLUG = 'smartforme-culte';
+
+// Détecte une session PROPRIÉTAIRE (LIRI) — pour n'activer le lien vers le CRM QUE pour l'owner
+// connecté (le mur reste une vitrine publique sans donnée perso pour les visiteurs anonymes).
+const OWNER_ROLES = new Set(['owner', 'admin', 'secretariat']);
+function ownerRoleFromToken() {
+  try {
+    const tok = authStore.getToken?.() || '';
+    const part = tok.split('.')[1];
+    if (!part) return '';
+    const json = JSON.parse(decodeURIComponent(escape(atob(part.replace(/-/g, '+').replace(/_/g, '/')))));
+    return String(json?.app_metadata?.tenant_role || json?.tenant_role || '').toLowerCase();
+  } catch { return ''; }
+}
 
 // Pays de la zone franc CFA (Mobile Money via pawaPay ; XAF=CEMAC, XOF=UEMOA).
 const CFA_COUNTRIES = [
@@ -81,6 +95,8 @@ export default function CagnottePage() {
   const [donorName, setDonorName] = useState('');
   const [donorMessage, setDonorMessage] = useState('');
   const [donorEmail, setDonorEmail] = useState('');
+  // Propriétaire connecté ? → le mur des donateurs devient cliquable vers le CRM (owner only).
+  const isOwner = useMemo(() => OWNER_ROLES.has(ownerRoleFromToken()), []);
   const [country, setCountry] = useState('CMR');
   const [providers, setProviders] = useState([]);
   const [provider, setProvider] = useState('');
@@ -262,8 +278,12 @@ export default function CagnottePage() {
         <div className="absolute inset-0 opacity-[0.18]"
           style={{ background: 'radial-gradient(1200px 500px at 70% -10%, #d97757 0%, transparent 60%), radial-gradient(900px 500px at 10% 10%, #b5642f 0%, transparent 55%)' }} />
         <div className="relative mx-auto max-w-5xl px-5 pt-16 pb-10 sm:pt-24">
+          <div className="mb-4 flex items-center gap-2.5">
+            <img src="/prorascience-eye.png" alt="" className="h-8 w-8 object-contain opacity-90" draggable={false} />
+            <span className="text-2xl font-bold tracking-tight text-[#f5f4ee]" style={{ fontFamily: "Georgia, 'Times New Roman', serif" }}>Ngowazulu</span>
+          </div>
           <span className="inline-flex items-center gap-2 rounded-full border border-[#d97757]/40 bg-[#d97757]/10 px-3 py-1 text-[11px] font-semibold uppercase tracking-wide text-[#e8a184]">
-            <Heart className="h-3.5 w-3.5" /> Cagnotte solidaire · Prorascience
+            <Heart className="h-3.5 w-3.5" /> Cagnotte solidaire · Les métiers Ngowazulu
           </span>
           <h1 className="mt-5 max-w-3xl text-4xl font-extrabold leading-[1.05] tracking-tight sm:text-6xl" style={{ textWrap: 'balance' }}>
             Aidez-nous à <span className="text-[#e8a184]">filmer et enregistrer</span> chaque culte, en haute qualité.
@@ -393,28 +413,54 @@ export default function CagnottePage() {
             {/* Mur des donateurs (dons confirmés) */}
             <div>
               <h2 className="text-xl font-bold">Ils soutiennent le projet</h2>
+              {isOwner && (
+                <a href="/liri/crm?view=contacts" className="mt-1.5 inline-flex items-center gap-1.5 text-[12.5px] font-semibold text-[#e8a184] hover:underline">
+                  Gérer les donateurs dans le CRM <ArrowRight className="h-3.5 w-3.5" />
+                </a>
+              )}
               {donors.length === 0 ? (
                 <p className="mt-3 text-[13.5px] leading-relaxed text-[#f5f4ee]/60">
                   Soyez le premier à donner — votre nom apparaîtra ici (sauf si vous le laissez vide).
                 </p>
               ) : (
                 <ul className="mt-4 space-y-2">
-                  {donors.map((d, i) => (
-                    <li key={i} className="flex items-start gap-3 rounded-xl border border-white/[0.06] bg-white/[0.02] p-3">
-                      <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#d97757]/15 text-[13px] font-bold uppercase text-[#e8a184]">
-                        {String(d.name || '?').trim().charAt(0) || '?'}
-                      </span>
-                      <div className="min-w-0 flex-1">
-                        <div className="flex items-baseline justify-between gap-2">
-                          <p className="truncate font-semibold text-[#f5f4ee]">{d.name || 'Anonyme'}</p>
-                          <p className="shrink-0 text-[13px] font-bold text-[#e8a184]">{eur(d.amountCents)}</p>
+                  {donors.map((d, i) => {
+                    const inner = (
+                      <>
+                        <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#d97757]/15 text-[13px] font-bold uppercase text-[#e8a184]">
+                          {String(d.name || '?').trim().charAt(0) || '?'}
+                        </span>
+                        <div className="min-w-0 flex-1">
+                          <div className="flex items-baseline justify-between gap-2">
+                            <p className="truncate font-semibold text-[#f5f4ee]">{d.name || 'Anonyme'}</p>
+                            <p className="shrink-0 text-[13px] font-bold text-[#e8a184]">{eur(d.amountCents)}</p>
+                          </div>
+                          {d.message ? (
+                            <p className="mt-0.5 text-[12.5px] leading-snug text-[#f5f4ee]/60">« {d.message} »</p>
+                          ) : null}
                         </div>
-                        {d.message ? (
-                          <p className="mt-0.5 text-[12.5px] leading-snug text-[#f5f4ee]/60">« {d.message} »</p>
-                        ) : null}
-                      </div>
-                    </li>
-                  ))}
+                      </>
+                    );
+                    // Owner connecté → carte cliquable vers le CRM (recherche par nom) ; public → carte simple.
+                    return (
+                      <li key={i}>
+                        {isOwner ? (
+                          <a
+                            href={`/liri/crm?view=contacts&q=${encodeURIComponent(d.name || '')}`}
+                            title="Ouvrir dans le CRM pour contacter ce donateur"
+                            className="group flex items-start gap-3 rounded-xl border border-white/[0.06] bg-white/[0.02] p-3 transition-colors hover:border-[#d97757]/40 hover:bg-[#d97757]/[0.06]"
+                          >
+                            {inner}
+                            <ArrowRight className="mt-1 h-4 w-4 shrink-0 text-[#e8a184] opacity-0 transition-opacity group-hover:opacity-100" />
+                          </a>
+                        ) : (
+                          <div className="flex items-start gap-3 rounded-xl border border-white/[0.06] bg-white/[0.02] p-3">
+                            {inner}
+                          </div>
+                        )}
+                      </li>
+                    );
+                  })}
                 </ul>
               )}
             </div>

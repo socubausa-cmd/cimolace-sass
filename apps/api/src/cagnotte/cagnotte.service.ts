@@ -411,7 +411,7 @@ export class CagnotteService {
           // COUVERTURE — bandeau sombre + œil Prorascience (blanc transparent → visible sur fond sombre)
           `<div style="background:#262624;padding:30px 24px;text-align:center;border-radius:14px 14px 0 0;">` +
             `<img src="${this.frontBase}/prorascience-eye.png" alt="Prorascience" width="58" style="width:58px;height:auto;display:inline-block;" />` +
-            `<div style="color:#f5f4ee;font-family:Georgia,'Times New Roman',serif;font-size:19px;letter-spacing:3px;margin-top:10px;">PRORASCIENCE</div>` +
+            `<div style="color:#f5f4ee;font-family:Georgia,'Times New Roman',serif;font-size:20px;letter-spacing:3px;margin-top:10px;">NGOWAZULU</div>` +
             `<div style="color:#d97757;font-size:11px;letter-spacing:2px;margin-top:5px;text-transform:uppercase;">Cagnotte solidaire</div>` +
           `</div>` +
           // CORPS
