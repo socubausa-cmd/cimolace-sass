@@ -285,27 +285,69 @@ export class BookingService {
     return data;
   }
 
-  /** Notifie l'ÉLÈVE quand le secrétariat confirme/annule son RDV. Best-effort. */
+  /**
+   * Notifie à la décision (confirmé/annulé) sur DEUX canaux, chacun best-effort/isolé :
+   *  (1) le titulaire interne du RDV (`student_id`) — in-app + email ;
+   *  (2) le DEMANDEUR EXTERNE si son e-mail est dans les notes. Les RDV publics (séance de
+   *      prière de la cagnotte) sont rattachés au OWNER → la notif interne va au owner, pas au
+   *      demandeur. On lui envoie donc un vrai e-mail via `email_queue` (worker → Resend, sender du tenant).
+   */
   private async notifyAppointmentDecision(tenantId: string, appt: any): Promise<void> {
+    const confirmed = appt?.status === 'confirmed';
+    const startAt = appt?.booking_slots?.start_at;
+    const whenTxt = startAt
+      ? ` — ${new Intl.DateTimeFormat('fr-FR', { dateStyle: 'full', timeStyle: 'short', timeZone: 'Europe/Paris' }).format(new Date(startAt))}`
+      : '';
+
+    // (1) Notif interne (titulaire du RDV = student_id).
     try {
       const studentId = appt?.student_id;
-      if (!studentId) return;
-      const startAt = appt?.booking_slots?.start_at;
-      const whenTxt = startAt
-        ? ` — ${new Intl.DateTimeFormat('fr-FR', { dateStyle: 'full', timeStyle: 'short', timeZone: 'Europe/Paris' }).format(new Date(startAt))}`
-        : '';
-      const confirmed = appt?.status === 'confirmed';
-      await this.notifications.send(tenantId, studentId, {
-        title: confirmed ? 'Rendez-vous confirmé ✓' : 'Rendez-vous annulé',
-        body: confirmed
-          ? `Ton rendez-vous est confirmé${whenTxt}. À bientôt !`
-          : `Ton rendez-vous${whenTxt} a été annulé par le secrétariat. Tu peux refaire une demande quand tu veux.`,
-        type: confirmed ? 'success' : 'info',
-        email: true,
-        actionUrl: '/liri/rendez-vous',
+      if (studentId) {
+        await this.notifications.send(tenantId, studentId, {
+          title: confirmed ? 'Rendez-vous confirmé ✓' : 'Rendez-vous annulé',
+          body: confirmed
+            ? `Ton rendez-vous est confirmé${whenTxt}. À bientôt !`
+            : `Ton rendez-vous${whenTxt} a été annulé par le secrétariat. Tu peux refaire une demande quand tu veux.`,
+          type: confirmed ? 'success' : 'info',
+          email: true,
+          actionUrl: '/liri/rendez-vous',
+        });
+      }
+    } catch (e) {
+      this.logger.warn(`RDV decision notif (interne): ${(e as Error).message}`);
+    }
+
+    // (2) E-mail au DEMANDEUR EXTERNE (e-mail parsé dans les notes du RDV).
+    try {
+      const notes = String(appt?.notes || '');
+      const email = (notes.match(/E-?mail\s*:\s*([^\s]+@[^\s]+)/i)?.[1] || '').trim();
+      if (!email) return;
+      const esc = (s: string) => String(s || '')
+        .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+      const sujet = esc((notes.match(/Sujet\s*:\s*([\s\S]*?)(?:\s*Description\s*:|$)/i)?.[1] || 'votre rendez-vous').trim());
+      const { data: ns } = await (this.supabase.client as any)
+        .from('tenant_notification_settings')
+        .select('email_from, email_from_name')
+        .eq('tenant_id', tenantId)
+        .maybeSingle();
+      await (this.supabase.client as any).from('email_queue').insert({
+        tenant_id: tenantId,
+        to: email,
+        from: (ns as any)?.email_from ?? null,
+        from_name: (ns as any)?.email_from_name ?? null,
+        subject: confirmed ? 'Votre rendez-vous est confirmé ✓' : 'Votre demande de rendez-vous',
+        html_body: confirmed
+          ? `<h2>Votre rendez-vous est confirmé 🙏</h2>`
+            + `<p>Bonjour,</p>`
+            + `<p>Votre demande « <strong>${sujet}</strong> »${whenTxt} est <strong>confirmée</strong>. Nous vous attendons.</p>`
+            + `<p style="color:#777;font-size:13px;">Avec toute notre gratitude,<br/>Ngowazulu — Prorascience</p>`
+          : `<h2>Votre demande de rendez-vous</h2>`
+            + `<p>Bonjour,</p>`
+            + `<p>Votre demande « <strong>${sujet}</strong> »${whenTxt} n'a pas pu être retenue pour ce créneau. N'hésitez pas à en refaire une autre quand vous le souhaitez.</p>`
+            + `<p style="color:#777;font-size:13px;">Prorascience</p>`,
       });
     } catch (e) {
-      this.logger.warn(`RDV decision notif: ${(e as Error).message}`);
+      this.logger.warn(`RDV decision notif (externe): ${(e as Error).message}`);
     }
   }
 
