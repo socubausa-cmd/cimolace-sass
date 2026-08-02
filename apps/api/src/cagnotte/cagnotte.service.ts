@@ -410,7 +410,7 @@ export class CagnotteService {
         `<div style="max-width:600px;margin:0 auto;font-family:'Helvetica Neue',Arial,sans-serif;">` +
           // COUVERTURE — bandeau sombre + œil Prorascience (blanc transparent → visible sur fond sombre)
           `<div style="background:#262624;padding:30px 24px;text-align:center;border-radius:14px 14px 0 0;">` +
-            `<img src="${this.frontBase}/ngowazulu-logo.png" alt="Ngowazulu" width="64" style="width:64px;height:auto;display:inline-block;" />` +
+            `<img src="${this.frontBase}/ngowazulu-logo.png" alt="Ngowazulu" width="96" style="width:96px;height:auto;display:inline-block;" />` +
             `<div style="color:#f5f4ee;font-family:Georgia,'Times New Roman',serif;font-size:20px;letter-spacing:3px;margin-top:8px;">NGOWAZULU</div>` +
             `<div style="color:#d97757;font-size:11px;letter-spacing:2px;margin-top:5px;text-transform:uppercase;">Cagnotte solidaire</div>` +
           `</div>` +
@@ -426,8 +426,8 @@ export class CagnotteService {
             // SIGNATURE
             `<div style="border-top:1px solid #e6e1d8;padding-top:18px;">` +
               `<p style="font-size:14px;line-height:1.5;margin:0;">Avec toute notre gratitude,</p>` +
-              `<p style="font-size:15px;font-weight:700;margin:6px 0 0;color:#1c1a18;">L'équipe Prorascience</p>` +
-              `<p style="font-size:12.5px;color:#8a857e;margin:3px 0 0;">L'unification de la Science et de la Spiritualité</p>` +
+              `<p style="font-size:16px;font-weight:700;margin:6px 0 0;color:#1c1a18;">Ngowazulu</p>` +
+              `<p style="font-size:12.5px;color:#8a857e;margin:3px 0 0;">Prorascience — L'unification de la Science et de la Spiritualité</p>` +
               `<p style="font-size:12.5px;margin:10px 0 0;"><a href="${this.frontBase}" style="color:#d97757;text-decoration:none;">prorascience.org</a></p>` +
             `</div>` +
           `</div>` +
