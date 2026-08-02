@@ -9,18 +9,25 @@ const SLUG = 'smartforme-culte';
 
 // Pays de la zone franc CFA (Mobile Money via pawaPay ; XAF=CEMAC, XOF=UEMOA).
 const CFA_COUNTRIES = [
-  { code: 'CMR', name: 'Cameroun', cur: 'XAF' },
-  { code: 'CIV', name: "Côte d'Ivoire", cur: 'XOF' },
-  { code: 'SEN', name: 'Sénégal', cur: 'XOF' },
-  { code: 'GAB', name: 'Gabon', cur: 'XAF' },
-  { code: 'COG', name: 'Congo', cur: 'XAF' },
-  { code: 'BEN', name: 'Bénin', cur: 'XOF' },
-  { code: 'BFA', name: 'Burkina Faso', cur: 'XOF' },
-  { code: 'TGO', name: 'Togo', cur: 'XOF' },
-  { code: 'MLI', name: 'Mali', cur: 'XOF' },
-  { code: 'NER', name: 'Niger', cur: 'XOF' },
-  { code: 'TCD', name: 'Tchad', cur: 'XAF' },
+  { code: 'CMR', name: 'Cameroun', cur: 'XAF', dial: '237' },
+  { code: 'CIV', name: "Côte d'Ivoire", cur: 'XOF', dial: '225' },
+  { code: 'SEN', name: 'Sénégal', cur: 'XOF', dial: '221' },
+  { code: 'GAB', name: 'Gabon', cur: 'XAF', dial: '241' },
+  { code: 'COG', name: 'Congo', cur: 'XAF', dial: '242' },
+  { code: 'BEN', name: 'Bénin', cur: 'XOF', dial: '229' },
+  { code: 'BFA', name: 'Burkina Faso', cur: 'XOF', dial: '226' },
+  { code: 'TGO', name: 'Togo', cur: 'XOF', dial: '228' },
+  { code: 'MLI', name: 'Mali', cur: 'XOF', dial: '223' },
+  { code: 'NER', name: 'Niger', cur: 'XOF', dial: '227' },
+  { code: 'TCD', name: 'Tchad', cur: 'XAF', dial: '235' },
 ];
+
+// Extrait le VRAI message d'erreur de l'API (les erreurs de validation NestJS arrivent en tableau).
+function pickApiError(e) {
+  const d = e?.response?.data;
+  const m = d?.error?.message ?? d?.message;
+  return Array.isArray(m) ? m.join(' ') : (typeof m === 'string' ? m : null);
+}
 const CFA_PEG = 655.957;
 const PRESETS_EU = [10, 25, 50, 100, 250];          // en euros
 const PRESETS_CFA = [1000, 2500, 5000, 10000, 25000]; // en francs CFA
@@ -152,7 +159,7 @@ export default function CagnottePage() {
       const r = await cagnotteApi.stripe(SLUG, { amountCents, donorName: donorName || undefined, donorMessage: donorMessage || undefined });
       if (r?.checkoutUrl) window.location.href = r.checkoutUrl;
       else setError('Impossible d’ouvrir le paiement. Réessayez.');
-    } catch (e) { setError(e?.response?.data?.error?.message || e?.response?.data?.message || 'Paiement indisponible pour le moment.'); }
+    } catch (e) { setError(pickApiError(e) || 'Paiement indisponible pour le moment.'); }
     finally { setBusy(false); }
   };
 
@@ -160,11 +167,15 @@ export default function CagnottePage() {
     setError('');
     if (!validAmount) { setError('Choisissez un montant.'); return; }
     if (!provider) { setError('Choisissez votre opérateur Mobile Money.'); return; }
-    if (phone.replace(/[^0-9]/g, '').length < 7) { setError('Entrez votre numéro Mobile Money.'); return; }
+    // Indicatif géré ici : on garde SEULEMENT les chiffres du numéro local (retire lettres/espaces
+    // et le 0 initial), puis on préfixe l'indicatif du pays → MSISDN international complet pour PawaPay.
+    const localDigits = phone.replace(/\D/g, '').replace(/^0+/, '');
+    if (localDigits.length < 6) { setError('Entrez votre numéro Mobile Money (sans l’indicatif).'); return; }
+    const fullNumber = `${selectedCountry.dial}${localDigits}`;
     setBusy(true);
     try {
       const r = await cagnotteApi.pawapay(SLUG, {
-        amountCents, mobileMoneyAmount: mmAmount, phoneNumber: phone, provider, country,
+        amountCents, mobileMoneyAmount: mmAmount, phoneNumber: fullNumber, provider, country,
         donorName: donorName || undefined, donorMessage: donorMessage || undefined,
       });
       setBanner({ kind: 'attente', text: `Validez le paiement de ${mmAmount.toLocaleString('fr-FR')} ${selectedCountry.cur} sur votre téléphone…` });
@@ -188,7 +199,7 @@ export default function CagnottePage() {
         if (tries > 40) { clearInterval(pollRef.current); setBusy(false); }
       }, 3000);
     } catch (e) {
-      setError(e?.response?.data?.error?.message || e?.response?.data?.message || 'Paiement Mobile Money indisponible.');
+      setError(pickApiError(e) || 'Paiement Mobile Money indisponible.');
       setBusy(false);
     }
   };
@@ -474,9 +485,13 @@ export default function CagnottePage() {
                   </div>
                   <label className="block">
                     <span className="mb-1 block text-[11px] font-semibold uppercase tracking-wide text-[#f5f4ee]/50">Numéro Mobile Money</span>
-                    <input type="tel" inputMode="tel" placeholder="Ex : 6 12 34 56 78" value={phone}
-                      onChange={(e) => setPhone(e.target.value)}
-                      className="w-full rounded-lg border border-white/10 bg-[#262624] px-3 py-2 text-sm text-[#f5f4ee] outline-none placeholder:text-[#f5f4ee]/35 focus:border-[#d97757]" />
+                    <div className="flex items-stretch overflow-hidden rounded-lg border border-white/10 bg-[#262624] focus-within:border-[#d97757]">
+                      <span className="flex shrink-0 select-none items-center border-r border-white/10 bg-white/[0.04] px-3 text-sm font-semibold text-[#f5f4ee]/75">+{selectedCountry.dial}</span>
+                      <input type="tel" inputMode="numeric" placeholder="Ex : 6 12 34 56 78" value={phone}
+                        onChange={(e) => setPhone(e.target.value.replace(/[^0-9\s]/g, ''))}
+                        className="w-full bg-transparent px-3 py-2 text-sm text-[#f5f4ee] outline-none placeholder:text-[#f5f4ee]/35" />
+                    </div>
+                    <span className="mt-1 block text-[11px] text-[#f5f4ee]/40">Entrez votre numéro local, sans l’indicatif (+{selectedCountry.dial} ajouté automatiquement).</span>
                   </label>
                 </div>
               )}
