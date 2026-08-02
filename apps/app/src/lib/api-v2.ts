@@ -453,6 +453,8 @@ export const bookingApi = {
     apiV2.get<ApiEnvelope<any>>(`/booking/appointments/${id}`).then(unwrap),
   updateAppointment: (id: string, body: Record<string, unknown>) =>
     apiV2.patch<ApiEnvelope<any>>(`/booking/appointments/${id}`, body).then(unwrap),
+  startLive: (id: string) =>
+    apiV2.post<ApiEnvelope<any>>(`/booking/appointments/${id}/start-live`, {}).then(unwrap),
   submitFeedback: (body: Record<string, unknown>) =>
     apiV2.post<ApiEnvelope<any>>('/booking/feedback', body).then(unwrap),
   getFeedback: (appointmentId: string) =>

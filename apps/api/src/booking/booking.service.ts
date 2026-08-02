@@ -264,9 +264,33 @@ export class BookingService {
     tenantId: string,
     dto: UpdateAppointmentDto,
   ) {
+    // Reprogrammation : déplace le créneau lié (booking_slot) au nouveau début, durée conservée.
+    let rescheduled = false;
+    if (dto.newStartAt) {
+      const { data: cur } = await (this.supabase.client as any)
+        .from('appointments').select('slot_id').eq('id', appointmentId).eq('tenant_id', tenantId).maybeSingle();
+      const slotId = (cur as any)?.slot_id;
+      if (slotId) {
+        const { data: slot } = await (this.supabase.client as any)
+          .from('booking_slots').select('start_at, end_at').eq('id', slotId).maybeSingle();
+        const s0 = (slot as any)?.start_at ? new Date((slot as any).start_at).getTime() : 0;
+        const e0 = (slot as any)?.end_at ? new Date((slot as any).end_at).getTime() : 0;
+        const durMs = s0 && e0 && e0 > s0 ? e0 - s0 : 45 * 60 * 1000;
+        const start = new Date(dto.newStartAt);
+        const end = new Date(start.getTime() + durMs);
+        await (this.supabase.client as any)
+          .from('booking_slots')
+          .update({ start_at: start.toISOString(), end_at: end.toISOString() })
+          .eq('id', slotId).eq('tenant_id', tenantId);
+        rescheduled = true;
+      }
+    }
+
     const patch: Record<string, unknown> = {};
     if (dto.status) patch.status = dto.status;
+    else if (rescheduled) patch.status = 'confirmed'; // reprogrammé = re-confirmé au nouveau créneau
     if (dto.notes !== undefined) patch.notes = dto.notes;
+    if (Object.keys(patch).length === 0) patch.updated_at = new Date().toISOString();
 
     const { data, error } = await (this.supabase.client as any)
       .from('appointments')
@@ -278,9 +302,11 @@ export class BookingService {
 
     if (error || !data) throw new NotFoundException('Rendez-vous introuvable');
 
-    // Boucle du parcours : le secrétariat confirme/annule → l'élève est notifié (in-app + email).
-    if (dto.status === 'confirmed' || dto.status === 'cancelled') {
-      void this.notifyAppointmentDecision(tenantId, data);
+    // Notification (interne + demandeur externe) : reprogrammation, confirmation ou annulation.
+    if (rescheduled) {
+      void this.notifyAppointmentDecision(tenantId, data, { rescheduled: true, reason: dto.reason });
+    } else if (dto.status === 'confirmed' || dto.status === 'cancelled') {
+      void this.notifyAppointmentDecision(tenantId, data, { reason: dto.reason });
     }
     return data;
   }
@@ -292,8 +318,14 @@ export class BookingService {
    *      prière de la cagnotte) sont rattachés au OWNER → la notif interne va au owner, pas au
    *      demandeur. On lui envoie donc un vrai e-mail via `email_queue` (worker → Resend, sender du tenant).
    */
-  private async notifyAppointmentDecision(tenantId: string, appt: any): Promise<void> {
-    const confirmed = appt?.status === 'confirmed';
+  private async notifyAppointmentDecision(
+    tenantId: string,
+    appt: any,
+    opts: { rescheduled?: boolean; reason?: string } = {},
+  ): Promise<void> {
+    const rescheduled = !!opts.rescheduled;
+    const confirmed = !rescheduled && appt?.status === 'confirmed';
+    const reasonTxt = opts.reason ? String(opts.reason).trim() : '';
     const startAt = appt?.booking_slots?.start_at;
     const whenTxt = startAt
       ? ` — ${new Intl.DateTimeFormat('fr-FR', { dateStyle: 'full', timeStyle: 'short', timeZone: 'Europe/Paris' }).format(new Date(startAt))}`
@@ -304,11 +336,13 @@ export class BookingService {
       const studentId = appt?.student_id;
       if (studentId) {
         await this.notifications.send(tenantId, studentId, {
-          title: confirmed ? 'Rendez-vous confirmé ✓' : 'Rendez-vous annulé',
-          body: confirmed
-            ? `Ton rendez-vous est confirmé${whenTxt}. À bientôt !`
-            : `Ton rendez-vous${whenTxt} a été annulé par le secrétariat. Tu peux refaire une demande quand tu veux.`,
-          type: confirmed ? 'success' : 'info',
+          title: rescheduled ? 'Rendez-vous reprogrammé 📅' : confirmed ? 'Rendez-vous confirmé ✓' : 'Rendez-vous annulé',
+          body: rescheduled
+            ? `Le rendez-vous est reprogrammé${whenTxt}.${reasonTxt ? ` (${reasonTxt})` : ''}`
+            : confirmed
+              ? `Ton rendez-vous est confirmé${whenTxt}. À bientôt !`
+              : `Ton rendez-vous${whenTxt} a été annulé.${reasonTxt ? ` Motif : ${reasonTxt}.` : ' Tu peux refaire une demande quand tu veux.'}`,
+          type: rescheduled || confirmed ? 'success' : 'info',
           email: true,
           actionUrl: '/liri/rendez-vous',
         });
@@ -325,26 +359,37 @@ export class BookingService {
       const esc = (s: string) => String(s || '')
         .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
       const sujet = esc((notes.match(/Sujet\s*:\s*([\s\S]*?)(?:\s*Description\s*:|$)/i)?.[1] || 'votre rendez-vous').trim());
+      const reasonEsc = esc(reasonTxt);
+      const whenClean = esc(whenTxt.replace(/^ — /, ''));
+      const sign = `<p style="color:#777;font-size:13px;">Avec toute notre gratitude,<br/>Ngowazulu — Prorascience</p>`;
       const { data: ns } = await (this.supabase.client as any)
         .from('tenant_notification_settings')
         .select('email_from, email_from_name')
         .eq('tenant_id', tenantId)
         .maybeSingle();
+      const subject = rescheduled
+        ? 'Votre rendez-vous a été reprogrammé 📅'
+        : confirmed ? 'Votre rendez-vous est confirmé ✓' : 'Votre demande de rendez-vous';
+      const html = rescheduled
+        ? `<h2>Votre rendez-vous a été reprogrammé 📅</h2><p>Bonjour,</p>`
+          + `<p>Votre rendez-vous « <strong>${sujet}</strong> » est reprogrammé pour le <strong>${whenClean}</strong>.</p>`
+          + (reasonEsc ? `<p>${reasonEsc}</p>` : '')
+          + sign
+        : confirmed
+          ? `<h2>Votre rendez-vous est confirmé 🙏</h2><p>Bonjour,</p>`
+            + `<p>Votre demande « <strong>${sujet}</strong> »${whenTxt} est <strong>confirmée</strong>. Nous vous attendons.</p>`
+            + sign
+          : `<h2>Votre demande de rendez-vous</h2><p>Bonjour,</p>`
+            + `<p>Votre demande « <strong>${sujet}</strong> »${whenTxt} n'a pas pu être retenue.</p>`
+            + (reasonEsc ? `<p>${reasonEsc}</p>` : `<p>N'hésitez pas à en refaire une autre quand vous le souhaitez.</p>`)
+            + `<p style="color:#777;font-size:13px;">Prorascience</p>`;
       await (this.supabase.client as any).from('email_queue').insert({
         tenant_id: tenantId,
         to: email,
         from: (ns as any)?.email_from ?? null,
         from_name: (ns as any)?.email_from_name ?? null,
-        subject: confirmed ? 'Votre rendez-vous est confirmé ✓' : 'Votre demande de rendez-vous',
-        html_body: confirmed
-          ? `<h2>Votre rendez-vous est confirmé 🙏</h2>`
-            + `<p>Bonjour,</p>`
-            + `<p>Votre demande « <strong>${sujet}</strong> »${whenTxt} est <strong>confirmée</strong>. Nous vous attendons.</p>`
-            + `<p style="color:#777;font-size:13px;">Avec toute notre gratitude,<br/>Ngowazulu — Prorascience</p>`
-          : `<h2>Votre demande de rendez-vous</h2>`
-            + `<p>Bonjour,</p>`
-            + `<p>Votre demande « <strong>${sujet}</strong> »${whenTxt} n'a pas pu être retenue pour ce créneau. N'hésitez pas à en refaire une autre quand vous le souhaitez.</p>`
-            + `<p style="color:#777;font-size:13px;">Prorascience</p>`,
+        subject,
+        html_body: html,
       });
     } catch (e) {
       this.logger.warn(`RDV decision notif (externe): ${(e as Error).message}`);

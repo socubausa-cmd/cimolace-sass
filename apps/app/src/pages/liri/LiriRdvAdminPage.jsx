@@ -3,6 +3,7 @@ import { LiriPortalShell } from '@/components/liri/LiriPortalShell';
 import { bookingApi } from '@/lib/api-v2';
 import {
   CalendarClock, Check, X, Mail, Phone, Loader2, RefreshCw, Inbox, MessageSquareText,
+  CalendarPlus, Radio,
 } from 'lucide-react';
 
 const TZ = 'Europe/Paris';
@@ -15,8 +16,15 @@ function fmtWhen(iso) {
     return new Intl.DateTimeFormat('fr-FR', { dateStyle: 'full', timeStyle: 'short', timeZone: TZ }).format(d);
   } catch { return d.toISOString(); }
 }
+/** ISO → valeur pour <input type="datetime-local"> (heure locale du navigateur). */
+function toLocalInput(iso) {
+  const d = iso ? new Date(iso) : new Date(Date.now() + 24 * 3600 * 1000);
+  if (Number.isNaN(d.getTime())) return '';
+  const p = (n) => String(n).padStart(2, '0');
+  return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}T${p(d.getHours())}:${p(d.getMinutes())}`;
+}
 
-/** Les demandes publiques encodent le contact du demandeur dans les NOTES (texte libre). On l'extrait. */
+/** Le contact du demandeur (RDV public sans compte) est encodé dans les NOTES. On l'extrait. */
 function parseNotes(notes) {
   const s = String(notes || '');
   const grab = (re) => { const m = s.match(re); return m ? m[1].trim() : ''; };
@@ -27,9 +35,10 @@ function parseNotes(notes) {
     whatsapp: grab(/WhatsApp\s*:\s*([+\d][\d\s]{5,})/i),
   };
 }
-function waHref(num) {
+function waHref(num, text) {
   const d = String(num || '').replace(/\D/g, '');
-  return d.length >= 6 ? `https://wa.me/${d}` : null;
+  if (d.length < 6) return null;
+  return `https://wa.me/${d}${text ? `?text=${encodeURIComponent(text)}` : ''}`;
 }
 
 const STATUS = {
@@ -52,6 +61,9 @@ function RdvBody() {
   const [err, setErr] = useState('');
   const [filter, setFilter] = useState('requested'); // requested | confirmed | all
   const [busyId, setBusyId] = useState(null);
+  const [rescheduleId, setRescheduleId] = useState(null);
+  const [rStart, setRStart] = useState('');
+  const [rReason, setRReason] = useState('');
 
   const load = useCallback(async () => {
     setLoading(true); setErr('');
@@ -64,15 +76,40 @@ function RdvBody() {
   }, []);
   useEffect(() => { load(); }, [load]);
 
-  const decide = async (id, status) => {
-    setBusyId(id);
+  const act = async (id, body) => {
+    setBusyId(id); setErr('');
+    try { await bookingApi.updateAppointment(id, body); setRescheduleId(null); await load(); }
+    catch (e) { setErr(e?.response?.data?.error?.message || 'Action impossible.'); }
+    finally { setBusyId(null); }
+  };
+  const confirm = (id) => act(id, { status: 'confirmed' });
+  const cancel = (id) => {
+    const reason = window.prompt('Motif du refus / annulation (optionnel) — il sera envoyé au demandeur :') || undefined;
+    act(id, { status: 'cancelled', reason });
+  };
+  const openReschedule = (a) => {
+    setRescheduleId(a.id);
+    setRStart(toLocalInput(a?.booking_slots?.start_at));
+    setRReason('');
     setErr('');
+  };
+  const submitReschedule = (id) => {
+    if (!rStart) { setErr('Choisissez une nouvelle date/heure.'); return; }
+    let iso;
+    try { iso = new Date(rStart).toISOString(); } catch { setErr('Date invalide.'); return; }
+    act(id, { newStartAt: iso, reason: rReason.trim() || undefined });
+  };
+  const startLive = async (id) => {
+    setBusyId(id); setErr('');
     try {
-      await bookingApi.updateAppointment(id, { status });
-      await load();
+      const r = await bookingApi.startLive(id);
+      const sid = r?.liveSessionId;
+      if (sid) window.location.assign(`/live/host/${sid}`);
+      else setErr('Séance live indisponible.');
     } catch (e) {
-      setErr(e?.response?.data?.error?.message || 'Action impossible.');
-    } finally { setBusyId(null); }
+      setErr(e?.response?.data?.error?.message || 'Impossible d’ouvrir le studio.');
+      setBusyId(null);
+    }
   };
 
   const counts = useMemo(() => ({
@@ -80,12 +117,10 @@ function RdvBody() {
     confirmed: items.filter((a) => a.status === 'confirmed').length,
     all: items.length,
   }), [items]);
-
   const shown = useMemo(
     () => (filter === 'all' ? items : items.filter((a) => a.status === filter)),
     [items, filter],
   );
-
   const TABS = [
     { key: 'requested', label: 'À confirmer', n: counts.requested },
     { key: 'confirmed', label: 'Confirmés', n: counts.confirmed },
@@ -102,27 +137,22 @@ function RdvBody() {
             </span>
             <div>
               <h1 className="text-xl font-bold text-[#f5f4ee]">Rendez-vous</h1>
-              <p className="text-[12.5px] text-[#f5f4ee]/50">Demandes de séances de prière & consultations — à confirmer.</p>
+              <p className="text-[12.5px] text-[#f5f4ee]/50">Confirmer · reporter · annuler · préparer/démarrer le live.</p>
             </div>
           </div>
-          <button
-            type="button" onClick={load} disabled={loading}
+          <button type="button" onClick={load} disabled={loading}
             className="grid h-9 w-9 place-items-center rounded-xl border border-white/10 text-[#f5f4ee]/60 transition-colors hover:text-[#f5f4ee] disabled:opacity-50"
-            title="Rafraîchir"
-          >
+            title="Rafraîchir">
             <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
           </button>
         </div>
 
-        {/* Onglets */}
         <div className="mt-5 flex gap-1.5">
           {TABS.map((t) => (
-            <button
-              key={t.key} type="button" onClick={() => setFilter(t.key)}
+            <button key={t.key} type="button" onClick={() => setFilter(t.key)}
               className={`inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-[13px] font-medium transition-colors ${
                 filter === t.key ? 'bg-[#d97757] text-[#1c1a18]' : 'border border-white/10 text-[#f5f4ee]/65 hover:text-[#f5f4ee]'
-              }`}
-            >
+              }`}>
               {t.label}
               <span className={`rounded-full px-1.5 text-[11px] ${filter === t.key ? 'bg-black/15' : 'bg-white/10'}`}>{t.n}</span>
             </button>
@@ -146,16 +176,17 @@ function RdvBody() {
               const st = STATUS[a.status] || { label: a.status, dot: '#888', chip: 'border-white/15 bg-white/5 text-[#f5f4ee]/60' };
               const when = fmtWhen(a?.booking_slots?.start_at);
               const info = parseNotes(a.notes);
-              const wa = waHref(info.whatsapp);
+              const waMsg = `Bonjour, au sujet de votre rendez-vous « ${info.sujet || 'séance'} »${when ? ` du ${when}` : ''} — `;
+              const wa = waHref(info.whatsapp, waMsg);
               const isBusy = busyId === a.id;
+              const isResched = rescheduleId === a.id;
               return (
                 <li key={a.id} className="rounded-2xl border border-white/[0.08] bg-white/[0.02] p-4">
                   <div className="flex flex-wrap items-start justify-between gap-2">
                     <div className="min-w-0">
                       <p className="font-semibold text-[#f5f4ee]">{info.sujet || a?.booking_slots?.title || 'Rendez-vous'}</p>
                       <p className="mt-0.5 flex items-center gap-1.5 text-[13px] text-[#e8a184]">
-                        <CalendarClock className="h-3.5 w-3.5" />
-                        {when || 'Créneau non précisé'}
+                        <CalendarClock className="h-3.5 w-3.5" /> {when || 'Créneau non précisé'}
                       </p>
                     </div>
                     <span className={`inline-flex shrink-0 items-center gap-1.5 rounded-full border px-2.5 py-1 text-[11.5px] font-semibold ${st.chip}`}>
@@ -170,7 +201,6 @@ function RdvBody() {
                     </p>
                   )}
 
-                  {/* Contact du demandeur (externe) — joignable directement */}
                   <div className="mt-3 flex flex-wrap items-center gap-2">
                     {info.email && (
                       <a href={`mailto:${info.email}`}
@@ -190,30 +220,52 @@ function RdvBody() {
                     ) : null}
                   </div>
 
-                  {/* Actions de confirmation */}
-                  {a.status === 'requested' && (
-                    <div className="mt-3 flex gap-2 border-t border-white/[0.06] pt-3">
-                      <button
-                        type="button" disabled={isBusy} onClick={() => decide(a.id, 'confirmed')}
-                        className="inline-flex min-h-[40px] flex-1 items-center justify-center gap-1.5 rounded-xl bg-[#d97757] px-4 text-[13.5px] font-bold text-[#1c1a18] transition-colors hover:bg-[#e08b6d] disabled:opacity-60"
-                      >
-                        {isBusy ? <Loader2 className="h-4 w-4 animate-spin" /> : <Check className="h-4 w-4" />} Confirmer
-                      </button>
-                      <button
-                        type="button" disabled={isBusy} onClick={() => decide(a.id, 'cancelled')}
-                        className="inline-flex min-h-[40px] items-center justify-center gap-1.5 rounded-xl border border-white/12 px-4 text-[13.5px] font-semibold text-[#f5f4ee]/70 transition-colors hover:border-red-500/40 hover:text-red-300 disabled:opacity-60"
-                      >
-                        <X className="h-4 w-4" /> Refuser
-                      </button>
+                  {/* Formulaire de report (inline) */}
+                  {isResched && (
+                    <div className="mt-3 rounded-xl border border-[#d97757]/25 bg-[#d97757]/[0.06] p-3">
+                      <p className="mb-2 text-[12.5px] font-semibold text-[#e8a184]">Reporter à</p>
+                      <div className="flex flex-col gap-2 sm:flex-row">
+                        <input type="datetime-local" value={rStart} onChange={(e) => setRStart(e.target.value)}
+                          className="h-10 rounded-lg border border-white/10 bg-[#262624] px-3 text-sm text-[#f5f4ee] outline-none focus:border-[#d97757] [color-scheme:dark]" />
+                        <input type="text" value={rReason} onChange={(e) => setRReason(e.target.value)}
+                          placeholder="Explication envoyée au demandeur (optionnel)"
+                          className="h-10 flex-1 rounded-lg border border-white/10 bg-[#262624] px-3 text-sm text-[#f5f4ee] outline-none placeholder:text-[#f5f4ee]/35 focus:border-[#d97757]" />
+                      </div>
+                      <div className="mt-2 flex gap-2">
+                        <button type="button" disabled={isBusy} onClick={() => submitReschedule(a.id)}
+                          className="inline-flex min-h-[38px] items-center justify-center gap-1.5 rounded-lg bg-[#d97757] px-4 text-[13px] font-bold text-[#1c1a18] hover:bg-[#e08b6d] disabled:opacity-60">
+                          {isBusy ? <Loader2 className="h-4 w-4 animate-spin" /> : <CalendarPlus className="h-4 w-4" />} Valider le report
+                        </button>
+                        <button type="button" onClick={() => setRescheduleId(null)}
+                          className="inline-flex min-h-[38px] items-center rounded-lg border border-white/12 px-3 text-[13px] text-[#f5f4ee]/60 hover:text-[#f5f4ee]">
+                          Annuler
+                        </button>
+                      </div>
                     </div>
                   )}
-                  {a.status === 'confirmed' && (
-                    <div className="mt-3 border-t border-white/[0.06] pt-3">
-                      <button
-                        type="button" disabled={isBusy} onClick={() => decide(a.id, 'cancelled')}
-                        className="inline-flex min-h-[36px] items-center gap-1.5 rounded-lg px-2 text-[12.5px] text-[#f5f4ee]/50 transition-colors hover:text-red-300"
-                      >
-                        {isBusy ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <X className="h-3.5 w-3.5" />} Annuler ce rendez-vous
+
+                  {/* Actions */}
+                  {a.status !== 'cancelled' && (
+                    <div className="mt-3 flex flex-wrap gap-2 border-t border-white/[0.06] pt-3">
+                      {a.status === 'requested' && (
+                        <button type="button" disabled={isBusy} onClick={() => confirm(a.id)}
+                          className="inline-flex min-h-[40px] flex-1 items-center justify-center gap-1.5 rounded-xl bg-[#d97757] px-4 text-[13.5px] font-bold text-[#1c1a18] hover:bg-[#e08b6d] disabled:opacity-60">
+                          {isBusy ? <Loader2 className="h-4 w-4 animate-spin" /> : <Check className="h-4 w-4" />} Confirmer
+                        </button>
+                      )}
+                      {a.status === 'confirmed' && (
+                        <button type="button" disabled={isBusy} onClick={() => startLive(a.id)}
+                          className="inline-flex min-h-[40px] flex-1 items-center justify-center gap-1.5 rounded-xl bg-[#e2553f] px-4 text-[13.5px] font-bold text-white hover:bg-[#ef6a52] disabled:opacity-60">
+                          {isBusy ? <Loader2 className="h-4 w-4 animate-spin" /> : <Radio className="h-4 w-4" />} Démarrer / préparer le live
+                        </button>
+                      )}
+                      <button type="button" disabled={isBusy} onClick={() => (isResched ? setRescheduleId(null) : openReschedule(a))}
+                        className="inline-flex min-h-[40px] items-center justify-center gap-1.5 rounded-xl border border-white/12 px-4 text-[13.5px] font-semibold text-[#f5f4ee]/80 transition-colors hover:border-[#d97757]/40 hover:text-[#f5f4ee]">
+                        <CalendarPlus className="h-4 w-4" /> Reporter
+                      </button>
+                      <button type="button" disabled={isBusy} onClick={() => cancel(a.id)}
+                        className="inline-flex min-h-[40px] items-center justify-center gap-1.5 rounded-xl border border-white/12 px-4 text-[13.5px] font-semibold text-[#f5f4ee]/70 transition-colors hover:border-red-500/40 hover:text-red-300">
+                        <X className="h-4 w-4" /> {a.status === 'requested' ? 'Refuser' : 'Annuler'}
                       </button>
                     </div>
                   )}

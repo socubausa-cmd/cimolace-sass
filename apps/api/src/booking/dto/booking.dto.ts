@@ -50,6 +50,17 @@ export class UpdateAppointmentDto {
   @IsString()
   @MaxLength(2000)
   notes?: string;
+
+  /** Reprogrammation : nouveau début du créneau (ISO). Déplace le booking_slot lié. */
+  @IsOptional()
+  @IsISO8601()
+  newStartAt?: string;
+
+  /** Motif/explication joint à la notification (confirmation, report, annulation). */
+  @IsOptional()
+  @IsString()
+  @MaxLength(500)
+  reason?: string;
 }
 
 export class CreateSlotDto {
