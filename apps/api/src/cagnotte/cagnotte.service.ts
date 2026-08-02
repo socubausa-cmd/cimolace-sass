@@ -182,7 +182,7 @@ export class CagnotteService {
 
   /** Europe — Stripe Checkout (carte, EUR). Renvoie l'URL de paiement hébergée. */
   async createStripe(slug: string, dto: {
-    amountCents?: number; donorName?: string; donorMessage?: string;
+    amountCents?: number; donorName?: string; donorMessage?: string; donorEmail?: string;
   }) {
     const campaign = await this.loadActiveCampaign(slug);
     if (!isStripeConfigured()) {
@@ -200,6 +200,7 @@ export class CagnotteService {
         campaign_slug: slug, provider: 'stripe', amount_cents: amountCents,
         display_amount: amountCents, display_currency: 'EUR',
         status: 'pending', donor_name: donorName, donor_message: donorMessage,
+        donor_email: this.sanitize(dto.donorEmail, 200),
       })
       .select('id')
       .single();
@@ -246,7 +247,7 @@ export class CagnotteService {
   /** Afrique — pawaPay (Mobile Money). Initie un dépôt ; le donateur confirme sur son tél. */
   async createPawapay(slug: string, dto: {
     amountCents?: number; mobileMoneyAmount?: number; phoneNumber?: string; provider?: string;
-    country?: string; donorName?: string; donorMessage?: string;
+    country?: string; donorName?: string; donorMessage?: string; donorEmail?: string;
   }) {
     const campaign = await this.loadActiveCampaign(slug);
     const amountCents = this.clampEurCents(dto.amountCents);
@@ -270,6 +271,7 @@ export class CagnotteService {
         display_amount: mmAmount, display_currency: currency, country: country || null,
         status: 'pending', donor_name: this.sanitize(dto.donorName, 80),
         donor_message: this.sanitize(dto.donorMessage, 300),
+        donor_email: this.sanitize(dto.donorEmail, 200),
       })
       .select('id')
       .single();
@@ -318,13 +320,88 @@ export class CagnotteService {
     return { status: 'pending' };
   }
 
-  /** Idempotent : passe un don `pending` → `completed` (unique index provider+ref). */
+  /** Idempotent : passe un don `pending` → `completed` (unique index provider+ref).
+   *  `.select()` après l'update ne renvoie une ligne QUE sur la transition RÉELLE
+   *  pending→completed → le remerciement part une seule fois (pas à chaque poll/réconcile). */
   private async markCompleted(provider: string, providerRef: string) {
-    await this.db
+    const { data: updated } = await this.db
       .from('cagnotte_donations')
       .update({ status: 'completed', completed_at: new Date().toISOString() })
       .eq('provider', provider)
       .eq('provider_ref', providerRef)
-      .eq('status', 'pending');
+      .eq('status', 'pending')
+      .select('id, campaign_slug, donor_email, donor_name, display_amount, display_currency');
+    const row = (updated as any[])?.[0];
+    if (row?.donor_email) {
+      void this.sendThankYou(row).catch((e) =>
+        this.logger.warn(`Cagnotte remerciement KO: ${(e as Error).message}`));
+    }
+  }
+
+  /**
+   * Remerciement au donateur (best-effort) : email via `email_queue` (worker isna-worker
+   * → Resend, expéditeur du tenant) avec le lien de la séance de prière (RDV public).
+   * Envoyé UNE fois, à la confirmation réelle du paiement (voir markCompleted).
+   */
+  private async sendThankYou(row: {
+    campaign_slug: string; donor_email: string; donor_name?: string | null;
+    display_amount?: number | null; display_currency?: string | null;
+  }): Promise<void> {
+    const email = String(row.donor_email || '').trim();
+    if (!email) return;
+
+    const { data: camp } = await this.db
+      .from('cagnotte_campaigns')
+      .select('title, tenant_slug, booking_url, booking_label')
+      .eq('slug', row.campaign_slug)
+      .maybeSingle();
+    const c = camp as any;
+    const bookingPath = c?.booking_url || '/rendez-vous-priere';
+    const bookingUrl = /^https?:\/\//i.test(bookingPath)
+      ? bookingPath
+      : `${this.frontBase}${bookingPath}`;
+    const bookingLabel = c?.booking_label || 'Réserver ma séance de prière';
+    const tenantSlug = c?.tenant_slug || 'isna';
+
+    // Tenant → expéditeur (email_from) que le worker utilisera ; sinon expéditeur plateforme.
+    const { data: t } = await this.db.from('tenants').select('id').eq('slug', tenantSlug).maybeSingle();
+    const tenantId = (t as any)?.id || null;
+    let from: string | null = null;
+    let fromName: string | null = null;
+    if (tenantId) {
+      const { data: ns } = await this.db
+        .from('tenant_notification_settings')
+        .select('email_from, email_from_name')
+        .eq('tenant_id', tenantId)
+        .maybeSingle();
+      from = (ns as any)?.email_from ?? null;
+      fromName = (ns as any)?.email_from_name ?? null;
+    }
+
+    const name = String(row.donor_name || '').trim();
+    const cur = row.display_currency || '';
+    // display_amount = CENTIMES pour EUR (Stripe), unités entières pour XAF/XOF (PawaPay).
+    const amt = row.display_amount == null
+      ? ''
+      : cur === 'EUR'
+        ? `${(Number(row.display_amount) / 100).toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} €`
+        : `${Number(row.display_amount).toLocaleString('fr-FR')} ${cur}`.trim();
+    const hello = name ? `Merci ${name}` : 'Merci du fond du cœur';
+
+    await this.db.from('email_queue').insert({
+      tenant_id: tenantId,
+      to: email,
+      from,
+      from_name: fromName,
+      subject: 'Merci pour votre don 🙏 — réservez votre séance de prière',
+      html_body:
+        `<h2>${hello} !</h2>` +
+        `<p>Votre don${amt ? ` de <strong>${amt}</strong>` : ''} à la cagnotte Prorascience est bien reçu. ` +
+        `Grâce à vous, nous nous rapprochons du matériel pour filmer et enregistrer chaque culte en haute qualité.</p>` +
+        `<p>En remerciement, nous vous offrons une <strong>séance de prière</strong> pour l'intention de votre choix. Choisissez votre créneau :</p>` +
+        `<p><a href="${bookingUrl}" style="display:inline-block;padding:12px 24px;background:#d97757;color:#fff;border-radius:8px;text-decoration:none;font-weight:600;">${bookingLabel}</a></p>` +
+        `<p style="color:#777;font-size:13px;">Si le bouton ne fonctionne pas, ouvrez ce lien : <a href="${bookingUrl}">${bookingUrl}</a></p>` +
+        `<p style="color:#777;font-size:13px;">Avec toute notre gratitude,<br/>L'équipe Prorascience</p>`,
+    });
   }
 }

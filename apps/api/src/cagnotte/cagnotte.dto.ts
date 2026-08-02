@@ -1,5 +1,5 @@
 import {
-  IsInt, IsOptional, IsString, Length, Min, Max, Matches, IsISO31661Alpha3,
+  IsInt, IsOptional, IsString, Length, Min, Max, Matches, IsISO31661Alpha3, IsEmail, MaxLength,
 } from 'class-validator';
 
 export class CreateCagnotteStripeDto {
@@ -11,6 +11,10 @@ export class CreateCagnotteStripeDto {
 
   @IsOptional() @IsString() @Length(1, 300)
   donorMessage?: string;
+
+  /** Email du donateur (facultatif) — pour le remerciement + le lien de séance de prière. */
+  @IsOptional() @IsEmail() @MaxLength(200)
+  donorEmail?: string;
 }
 
 export class CreateCagnottePawapayDto {

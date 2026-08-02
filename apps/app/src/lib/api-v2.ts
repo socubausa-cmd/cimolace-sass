@@ -995,13 +995,13 @@ export const cagnotteApi = {
     apiV2
       .get<ApiEnvelope<any>>(`/cagnotte/${slug}/providers${country ? `?country=${encodeURIComponent(country)}` : ''}`)
       .then(unwrap),
-  stripe: (slug: string, body: { amountCents: number; donorName?: string; donorMessage?: string }) =>
+  stripe: (slug: string, body: { amountCents: number; donorName?: string; donorMessage?: string; donorEmail?: string }) =>
     apiV2.post<ApiEnvelope<any>>(`/cagnotte/${slug}/stripe`, body).then(unwrap),
   confirmStripe: (slug: string, sessionId: string) =>
     apiV2.post<ApiEnvelope<any>>(`/cagnotte/${slug}/stripe/confirm`, { sessionId }).then(unwrap),
   pawapay: (
     slug: string,
-    body: { amountCents: number; mobileMoneyAmount?: number; phoneNumber: string; provider: string; country: string; donorName?: string; donorMessage?: string },
+    body: { amountCents: number; mobileMoneyAmount?: number; phoneNumber: string; provider: string; country: string; donorName?: string; donorMessage?: string; donorEmail?: string },
   ) => apiV2.post<ApiEnvelope<any>>(`/cagnotte/${slug}/pawapay`, body).then(unwrap),
   pawapayStatus: (slug: string, depositId: string) =>
     apiV2.get<ApiEnvelope<any>>(`/cagnotte/${slug}/pawapay/${depositId}`).then(unwrap),

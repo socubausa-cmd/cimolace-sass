@@ -80,6 +80,7 @@ export default function CagnottePage() {
   const [customEur, setCustomEur] = useState('');
   const [donorName, setDonorName] = useState('');
   const [donorMessage, setDonorMessage] = useState('');
+  const [donorEmail, setDonorEmail] = useState('');
   const [country, setCountry] = useState('CMR');
   const [providers, setProviders] = useState([]);
   const [provider, setProvider] = useState('');
@@ -156,7 +157,7 @@ export default function CagnottePage() {
     setError(''); if (!validAmount) { setError('Choisissez un montant (1 € – 5 000 €).'); return; }
     setBusy(true);
     try {
-      const r = await cagnotteApi.stripe(SLUG, { amountCents, donorName: donorName || undefined, donorMessage: donorMessage || undefined });
+      const r = await cagnotteApi.stripe(SLUG, { amountCents, donorName: donorName || undefined, donorMessage: donorMessage || undefined, donorEmail: donorEmail.trim() || undefined });
       if (r?.checkoutUrl) window.location.href = r.checkoutUrl;
       else setError('Impossible d’ouvrir le paiement. Réessayez.');
     } catch (e) { setError(pickApiError(e) || 'Paiement indisponible pour le moment.'); }
@@ -177,6 +178,7 @@ export default function CagnottePage() {
       const r = await cagnotteApi.pawapay(SLUG, {
         amountCents, mobileMoneyAmount: mmAmount, phoneNumber: fullNumber, provider, country,
         donorName: donorName || undefined, donorMessage: donorMessage || undefined,
+        donorEmail: donorEmail.trim() || undefined,
       });
       setBanner({ kind: 'attente', text: `Validez le paiement de ${mmAmount.toLocaleString('fr-FR')} ${selectedCountry.cur} sur votre téléphone…` });
       // Poll de l'état (le donateur confirme sur son mobile).
@@ -500,6 +502,10 @@ export default function CagnottePage() {
               <div className="mt-3 space-y-2">
                 <input type="text" placeholder="Votre nom (optionnel)" value={donorName} maxLength={80}
                   onChange={(e) => setDonorName(e.target.value)}
+                  className="w-full rounded-lg border border-white/10 bg-[#262624] px-3 py-2 text-sm text-[#f5f4ee] outline-none placeholder:text-[#f5f4ee]/35 focus:border-[#d97757]" />
+                <input type="email" inputMode="email" autoComplete="email" maxLength={200}
+                  placeholder="Votre email — reçu + invitation à la séance de prière" value={donorEmail}
+                  onChange={(e) => setDonorEmail(e.target.value)}
                   className="w-full rounded-lg border border-white/10 bg-[#262624] px-3 py-2 text-sm text-[#f5f4ee] outline-none placeholder:text-[#f5f4ee]/35 focus:border-[#d97757]" />
               </div>
 
