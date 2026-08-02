@@ -16,6 +16,7 @@ import {
 import { detectVisitorContext } from './engine/timezone-routing';
 import { buildAvailability } from './engine/availability';
 import { NotificationsService } from '../notifications/notifications.service';
+import { isWhatsAppConfigured, sendWhatsAppTemplate } from '../common/whatsapp.util';
 import type { TenantContext } from '../tenant/tenant.types';
 import type { CreateAppointmentDto, CreateSlotDto, SetPreparationDto, SubmitFeedbackDto, UpdateAppointmentDto } from './dto/booking.dto';
 
@@ -351,7 +352,33 @@ export class BookingService {
       this.logger.warn(`RDV decision notif (interne): ${(e as Error).message}`);
     }
 
-    // (2) E-mail au DEMANDEUR EXTERNE (e-mail parsé dans les notes du RDV).
+    // (2) WhatsApp au DEMANDEUR EXTERNE (si configuré + numéro présent). Gabarit Meta requis
+    //     (cf. whatsapp.util). Inerte tant que l'env n'est pas posé → 0 risque avant activation.
+    try {
+      const notes = String(appt?.notes || '');
+      const wa = (notes.match(/WhatsApp\s*:\s*([+\d][\d\s]{5,})/i)?.[1] || '').trim();
+      if (isWhatsAppConfigured() && wa) {
+        const sujet = (notes.match(/Sujet\s*:\s*([\s\S]*?)(?:\s*Description\s*:|$)/i)?.[1] || 'votre rendez-vous').trim();
+        const when = startAt
+          ? new Intl.DateTimeFormat('fr-FR', { dateStyle: 'long', timeStyle: 'short', timeZone: 'Europe/Paris' }).format(new Date(startAt))
+          : '';
+        const statusPhrase = rescheduled
+          ? `reprogrammé pour le ${when}${reasonTxt ? ` (${reasonTxt})` : ''}`
+          : confirmed
+            ? `confirmé pour le ${when}`
+            : `n'a pas pu être retenu${reasonTxt ? ` : ${reasonTxt}` : ''}`;
+        const r = await sendWhatsAppTemplate(wa, {
+          template: process.env.WHATSAPP_TEMPLATE_RDV || 'rdv_notification',
+          lang: process.env.WHATSAPP_TEMPLATE_LANG || 'fr',
+          bodyParams: [sujet, statusPhrase],
+        });
+        if (!r.ok) this.logger.warn(`WhatsApp RDV KO: ${r.error}`);
+      }
+    } catch (e) {
+      this.logger.warn(`RDV decision notif (WhatsApp): ${(e as Error).message}`);
+    }
+
+    // (3) E-mail au DEMANDEUR EXTERNE (e-mail parsé dans les notes du RDV).
     try {
       const notes = String(appt?.notes || '');
       const email = (notes.match(/E-?mail\s*:\s*([^\s]+@[^\s]+)/i)?.[1] || '').trim();
