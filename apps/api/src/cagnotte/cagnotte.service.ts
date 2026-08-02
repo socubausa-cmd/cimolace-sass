@@ -272,6 +272,7 @@ export class CagnotteService {
         status: 'pending', donor_name: this.sanitize(dto.donorName, 80),
         donor_message: this.sanitize(dto.donorMessage, 300),
         donor_email: this.sanitize(dto.donorEmail, 200),
+        donor_phone: phone,
       })
       .select('id')
       .single();
@@ -330,12 +331,26 @@ export class CagnotteService {
       .eq('provider', provider)
       .eq('provider_ref', providerRef)
       .eq('status', 'pending')
-      .select('id, campaign_slug, donor_email, donor_name, display_amount, display_currency');
+      .select('id, campaign_slug, donor_email, donor_name, donor_phone, display_amount, display_currency, amount_cents, provider');
     const row = (updated as any[])?.[0];
-    if (row?.donor_email) {
-      void this.sendThankYou(row).catch((e) =>
+    if (!row) return;
+    // Tenant de la campagne résolu UNE fois, partagé par les 2 réactions (email + CRM).
+    const tenantId = await this.resolveCampaignTenantId(row.campaign_slug);
+    if (row.donor_email) {
+      void this.sendThankYou(row, tenantId).catch((e) =>
         this.logger.warn(`Cagnotte remerciement KO: ${(e as Error).message}`));
     }
+    void this.ingestDonorToCrm(row, tenantId).catch((e) =>
+      this.logger.warn(`Cagnotte→CRM KO: ${(e as Error).message}`));
+  }
+
+  /** Slug de campagne → tenant_id (via cagnotte_campaigns.tenant_slug, défaut 'isna'). */
+  private async resolveCampaignTenantId(campaignSlug: string): Promise<string | null> {
+    const { data: camp } = await this.db
+      .from('cagnotte_campaigns').select('tenant_slug').eq('slug', campaignSlug).maybeSingle();
+    const tenantSlug = (camp as any)?.tenant_slug || 'isna';
+    const { data: t } = await this.db.from('tenants').select('id').eq('slug', tenantSlug).maybeSingle();
+    return (t as any)?.id || null;
   }
 
   /**
@@ -346,13 +361,13 @@ export class CagnotteService {
   private async sendThankYou(row: {
     campaign_slug: string; donor_email: string; donor_name?: string | null;
     display_amount?: number | null; display_currency?: string | null;
-  }): Promise<void> {
+  }, tenantId: string | null): Promise<void> {
     const email = String(row.donor_email || '').trim();
     if (!email) return;
 
     const { data: camp } = await this.db
       .from('cagnotte_campaigns')
-      .select('title, tenant_slug, booking_url, booking_label')
+      .select('title, booking_url, booking_label')
       .eq('slug', row.campaign_slug)
       .maybeSingle();
     const c = camp as any;
@@ -361,11 +376,8 @@ export class CagnotteService {
       ? bookingPath
       : `${this.frontBase}${bookingPath}`;
     const bookingLabel = c?.booking_label || 'Réserver ma séance de prière';
-    const tenantSlug = c?.tenant_slug || 'isna';
 
-    // Tenant → expéditeur (email_from) que le worker utilisera ; sinon expéditeur plateforme.
-    const { data: t } = await this.db.from('tenants').select('id').eq('slug', tenantSlug).maybeSingle();
-    const tenantId = (t as any)?.id || null;
+    // Expéditeur (email_from) que le worker utilisera ; sinon expéditeur plateforme.
     let from: string | null = null;
     let fromName: string | null = null;
     if (tenantId) {
@@ -395,13 +407,93 @@ export class CagnotteService {
       from_name: fromName,
       subject: 'Merci pour votre don 🙏 — réservez votre séance de prière',
       html_body:
-        `<h2>${hello} !</h2>` +
-        `<p>Votre don${amt ? ` de <strong>${amt}</strong>` : ''} à la cagnotte Prorascience est bien reçu. ` +
-        `Grâce à vous, nous nous rapprochons du matériel pour filmer et enregistrer chaque culte en haute qualité.</p>` +
-        `<p>En remerciement, nous vous offrons une <strong>séance de prière</strong> pour l'intention de votre choix. Choisissez votre créneau :</p>` +
-        `<p><a href="${bookingUrl}" style="display:inline-block;padding:12px 24px;background:#d97757;color:#fff;border-radius:8px;text-decoration:none;font-weight:600;">${bookingLabel}</a></p>` +
-        `<p style="color:#777;font-size:13px;">Si le bouton ne fonctionne pas, ouvrez ce lien : <a href="${bookingUrl}">${bookingUrl}</a></p>` +
-        `<p style="color:#777;font-size:13px;">Avec toute notre gratitude,<br/>L'équipe Prorascience</p>`,
+        `<div style="max-width:600px;margin:0 auto;font-family:'Helvetica Neue',Arial,sans-serif;">` +
+          // COUVERTURE — bandeau sombre + œil Prorascience (blanc transparent → visible sur fond sombre)
+          `<div style="background:#262624;padding:30px 24px;text-align:center;border-radius:14px 14px 0 0;">` +
+            `<img src="${this.frontBase}/prorascience-eye.png" alt="Prorascience" width="58" style="width:58px;height:auto;display:inline-block;" />` +
+            `<div style="color:#f5f4ee;font-family:Georgia,'Times New Roman',serif;font-size:19px;letter-spacing:3px;margin-top:10px;">PRORASCIENCE</div>` +
+            `<div style="color:#d97757;font-size:11px;letter-spacing:2px;margin-top:5px;text-transform:uppercase;">Cagnotte solidaire</div>` +
+          `</div>` +
+          // CORPS
+          `<div style="background:#faf8f4;padding:32px 28px;color:#2b2926;border-radius:0 0 14px 14px;">` +
+            `<h2 style="margin:0 0 14px;font-size:22px;color:#1c1a18;">${hello} !</h2>` +
+            `<p style="font-size:15px;line-height:1.65;margin:0 0 14px;">Votre don${amt ? ` de <strong>${amt}</strong>` : ''} à la cagnotte Prorascience est bien reçu. Grâce à vous, nous nous rapprochons du matériel pour filmer et enregistrer chaque culte en haute qualité.</p>` +
+            `<p style="font-size:15px;line-height:1.65;margin:0 0 8px;">En remerciement, nous vous offrons une <strong>séance de prière</strong> pour l'intention de votre choix.</p>` +
+            `<div style="text-align:center;margin:26px 0;">` +
+              `<a href="${bookingUrl}" style="display:inline-block;padding:14px 30px;background:#d97757;color:#ffffff;border-radius:10px;text-decoration:none;font-weight:700;font-size:15px;">${bookingLabel}</a>` +
+            `</div>` +
+            `<p style="color:#8a857e;font-size:12.5px;line-height:1.5;margin:0 0 26px;">Si le bouton ne fonctionne pas, ouvrez ce lien : <a href="${bookingUrl}" style="color:#d97757;">${bookingUrl}</a></p>` +
+            // SIGNATURE
+            `<div style="border-top:1px solid #e6e1d8;padding-top:18px;">` +
+              `<p style="font-size:14px;line-height:1.5;margin:0;">Avec toute notre gratitude,</p>` +
+              `<p style="font-size:15px;font-weight:700;margin:6px 0 0;color:#1c1a18;">L'équipe Prorascience</p>` +
+              `<p style="font-size:12.5px;color:#8a857e;margin:3px 0 0;">L'unification de la Science et de la Spiritualité</p>` +
+              `<p style="font-size:12.5px;margin:10px 0 0;"><a href="${this.frontBase}" style="color:#d97757;text-decoration:none;">prorascience.org</a></p>` +
+            `</div>` +
+          `</div>` +
+        `</div>`,
+    });
+  }
+
+  /**
+   * Ingestion CRM (best-effort) : chaque donateur confirmé devient un contact CRM
+   * (dédup par email — index unique tenant+email — sinon par téléphone), source 'cagnotte',
+   * + une activité journalisant le montant. → le propriétaire le contacte/appelle depuis /liri/crm.
+   */
+  private async ingestDonorToCrm(row: {
+    campaign_slug: string; donor_email?: string | null; donor_name?: string | null;
+    donor_phone?: string | null; display_amount?: number | null; display_currency?: string | null;
+    amount_cents?: number | null; provider?: string | null;
+  }, tenantId: string | null): Promise<void> {
+    if (!tenantId) return;
+    const email = String(row.donor_email || '').trim().toLowerCase();
+    const phone = String(row.donor_phone || '').trim();
+    if (!email && !phone) return; // rien pour identifier/joindre le donateur
+    const name = String(row.donor_name || '').trim();
+
+    // Dédup : email (unique tenant+email) puis téléphone.
+    let contactId: string | null = null;
+    if (email) {
+      const { data: ex } = await this.db
+        .from('crm_contacts').select('id').eq('tenant_id', tenantId).ilike('email', email).limit(1).maybeSingle();
+      contactId = (ex as any)?.id ?? null;
+    }
+    if (!contactId && phone) {
+      const { data: ex } = await this.db
+        .from('crm_contacts').select('id').eq('tenant_id', tenantId).eq('phone', phone).limit(1).maybeSingle();
+      contactId = (ex as any)?.id ?? null;
+    }
+    if (!contactId) {
+      const { data: created, error } = await this.db
+        .from('crm_contacts')
+        .insert({ tenant_id: tenantId, first_name: name || 'Donateur', email: email || null, phone: phone || null, source: 'cagnotte' })
+        .select('id').single();
+      if (error) {
+        // Course : conflit unique (tenant,email) → re-sélectionne le contact existant.
+        if (email) {
+          const { data: ex } = await this.db
+            .from('crm_contacts').select('id').eq('tenant_id', tenantId).ilike('email', email).limit(1).maybeSingle();
+          contactId = (ex as any)?.id ?? null;
+        }
+        if (!contactId) throw new Error(error.message);
+      } else {
+        contactId = (created as any).id;
+      }
+    }
+
+    const cur = row.display_currency || '';
+    const amt = row.display_amount == null
+      ? ''
+      : cur === 'EUR'
+        ? `${(Number(row.display_amount) / 100).toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} €`
+        : `${Number(row.display_amount).toLocaleString('fr-FR')} ${cur}`.trim();
+    await this.db.from('crm_activities').insert({
+      tenant_id: tenantId,
+      entity_type: 'contact',
+      entity_id: contactId,
+      type: 'cagnotte_donation',
+      title: `Don cagnotte${amt ? ` : ${amt}` : ''}`,
+      meta: { campaign: row.campaign_slug, amount_cents: row.amount_cents ?? null, currency: cur, provider: row.provider ?? null },
     });
   }
 }
