@@ -118,9 +118,10 @@ const SmartboardKonvaEditorV1 = lazy(() => import('@/features/smartboard-konva-e
 function DevSmartboardPreview() {
   return <div className="flex h-screen flex-col overflow-hidden bg-[#080a0f]"><SmartboardKonvaEditorV1 className="min-h-0 flex-1" /></div>;
 }
-const StudioSmartboardKonvaPageLazy = lazy(() => import('@/pages/studio-creator/studio/StudioSmartboardKonvaPage'));
 // Retouche manuelle d'une scène DÉJÀ publiée (live_scenes) dans le designer Konva.
-// Route de PRODUCTION, contrairement à /dev/smartboard-designer qui n'ouvre qu'un canevas vierge.
+// Route de PRODUCTION gardée par rôle, comme /studio/smartboard-designer (StudioRouter).
+// ⛔ Le Designer complet ne doit JAMAIS être monté hors d'une route gardée : il ouvre les
+// workspaces cloud, LONGIA et la génération d'images IA (facturées au tenant).
 const LiveSceneDesignerPage = lazy(() => import('@/pages/studio-creator/studio/LiveSceneDesignerPage'));
 
 // Tenant routing — défaut tenant CENTRALISÉ (config/platform, VITE_DEFAULT_TENANT_SLUG).
@@ -754,6 +755,7 @@ const CommunityListPage = lazy(() => import('@/pages/CommunityListPage'));
 const CommunityChatPage = lazy(() => import('@/pages/CommunityChatPage'));
 const RequestAppointmentPage = lazy(() => import('@/pages/RequestAppointmentPage'));
 const LiriRendezVousPage = lazy(() => import('@/pages/liri/LiriRendezVousPage'));
+const LiriRdvAdminPage = lazy(() => import('@/pages/liri/LiriRdvAdminPage'));
 const ImmersiveWaitingRoomPage = lazy(() => import('@/pages/ImmersiveWaitingRoomPage'));
 const SatisfactionPage = lazy(() => import('@/pages/SatisfactionPage'));
 const ModuleCatalogPageNew = lazy(() => import('@/pages/modules/ModuleCatalogPage'));
@@ -1243,7 +1245,6 @@ const AppContent = () => {
     location.pathname === '/dev'
     || location.pathname.startsWith('/dev/liri-host')
     || location.pathname.startsWith('/dev/liri')
-    || location.pathname.startsWith('/dev/smartboard-designer')
     || location.pathname.startsWith('/dev/owner-shell')
     || location.pathname.startsWith('/dev/masterclass-factory');
 
@@ -1450,8 +1451,8 @@ const AppContent = () => {
     location.pathname.startsWith('/studio/live-arena') ||
     location.pathname.startsWith('/live/') ||
     // Le designer Konva occupe tout l'écran (canevas + panneaux latéraux) et porte sa
-    // propre chrome, comme /dev/smartboard-designer. Sans cette ligne, l'entête globale
-    // se poserait par-dessus et rognerait le canevas.
+    // propre chrome. Sans cette ligne, l'entête globale se poserait par-dessus et
+    // rognerait le canevas.
     location.pathname.startsWith('/studio/live-scene-designer') ||
 isLiriHostDevPreviewRoute;
 
@@ -1783,11 +1784,11 @@ isLiriHostDevPreviewRoute;
               </React.Suspense>
             } />
           )}
-<Route path="/dev/smartboard-designer" element={
-              <React.Suspense fallback={<div className="flex h-screen items-center justify-center bg-[#262624] text-white/50 text-sm">Chargement Designer…</div>}>
-                <StudioSmartboardKonvaPageLazy />
-              </React.Suspense>
-            } />
+{/* Ancienne URL du Designer : conservée UNIQUEMENT comme redirection (signets, hub LIRI).
+              Elle montait la page complète SANS garde ni bloc `import.meta.env.DEV` → n'importe qui,
+              déconnecté, ouvrait le studio et déclenchait ses appels Supabase/edge facturés.
+              La seule route du Designer est désormais /studio/smartboard-designer (ProtectedLiriRoute). */}
+          <Route path="/dev/smartboard-designer" element={<Navigate to="/studio/smartboard-designer" replace />} />
           {/* Retouche d'une scène publiée dans le designer Konva.
               Déclarée ICI et pas dans StudioRouter : le designer est plein écran et
               monte sa propre chrome — passer par le splat /studio/* poserait la coque
@@ -1812,12 +1813,27 @@ isLiriHostDevPreviewRoute;
           {import.meta.env.DEV && (
             <Route path="/dev/liri/smartboard-stream" element={<SmartboardStreamingPage />} />
           )}
-          {/* ── LIRI Studio V2 — Hub + interfaces redesignées (accessibles en prod) ── */}
-          <Route path="/dev/liri/studio"          element={<ErrorBoundary logTag="LiriStudioHub"         showDetailsInDev><LiriStudioHub /></ErrorBoundary>} />
-          <Route path="/dev/liri/masterclass-v2"  element={<ErrorBoundary logTag="MasterclassFactoryV2"  showDetailsInDev><MasterclassFactoryV2 /></ErrorBoundary>} />
-          <Route path="/dev/liri/orchestrator-v2" element={<ErrorBoundary logTag="OrchestratorLiveV2"    showDetailsInDev><OrchestratorLiveV2 /></ErrorBoundary>} />
-          <Route path="/dev/liri/streaming-v2"    element={<ErrorBoundary logTag="SmartboardStreamingV2" showDetailsInDev><SmartboardStreamingV2 /></ErrorBoundary>} />
-          <Route path="/dev/liri-admin-shell" element={<ErrorBoundary logTag="LiriAdminShellDemo" showDetailsInDev><LiriAdminShellDemo /></ErrorBoundary>} />
+          {/* ── LIRI Studio V2 — Hub + maquettes redesignées ──
+              ⛔ NE PAS remettre ces routes hors du bloc DEV : ce sont des MAQUETTES sans garde
+              (aucun ProtectedRoute) qui étaient servies en production à n'importe quel visiteur.
+              Aucun écran de production ne pointe vers elles — elles ne se lient qu'entre elles. */}
+          {import.meta.env.DEV && (
+            <Route path="/dev/liri/studio"          element={<ErrorBoundary logTag="LiriStudioHub"         showDetailsInDev><LiriStudioHub /></ErrorBoundary>} />
+          )}
+          {import.meta.env.DEV && (
+            <Route path="/dev/liri/masterclass-v2"  element={<ErrorBoundary logTag="MasterclassFactoryV2"  showDetailsInDev><MasterclassFactoryV2 /></ErrorBoundary>} />
+          )}
+          {import.meta.env.DEV && (
+            <Route path="/dev/liri/orchestrator-v2" element={<ErrorBoundary logTag="OrchestratorLiveV2"    showDetailsInDev><OrchestratorLiveV2 /></ErrorBoundary>} />
+          )}
+          {import.meta.env.DEV && (
+            <Route path="/dev/liri/streaming-v2"    element={<ErrorBoundary logTag="SmartboardStreamingV2" showDetailsInDev><SmartboardStreamingV2 /></ErrorBoundary>} />
+          )}
+          {import.meta.env.DEV && (
+            <Route path="/dev/liri-admin-shell" element={<ErrorBoundary logTag="LiriAdminShellDemo" showDetailsInDev><LiriAdminShellDemo /></ErrorBoundary>} />
+          )}
+          {/* Catch-all /dev/* — DevLiriHostEntry applique lui-même la garde `import.meta.env.DEV`
+              sur CHAQUE maquette (dont /dev/liri-host-live et ses 7 participants fictifs). */}
           <Route path="/dev/*" element={<DevLiriHostEntry />} />
           {/* LIRI mobile — UI dédiée, mêmes routes métier en cible */}
           {/* === App mobile « Élève » LIRI (sans Studio) — ErrorBoundary via layout */}
@@ -2196,6 +2212,7 @@ isLiriHostDevPreviewRoute;
           <Route path="/liri/agenda" element={<ProtectedLiriRoute allowedRoles={['owner', 'admin', 'teacher', 'secretariat', 'student', 'practitioner', 'clinic_admin']} allowTenantRole><LiriSchoolShell active="agenda"><StudentAgendaPage /></LiriSchoolShell></ProtectedLiriRoute>} />
           {/* Prise de rendez-vous EMBARQUÉE dans LIRI (anti-fuite : la version standalone /appointment/request est une page ISNA pleine). */}
           <Route path="/liri/rendez-vous" element={<ProtectedLiriRoute allowedRoles={['owner', 'admin', 'teacher', 'secretariat', 'student', 'practitioner', 'clinic_admin']} allowTenantRole><LiriRendezVousPage /></ProtectedLiriRoute>} />
+          <Route path="/liri/rdv" element={<ProtectedLiriRoute allowedRoles={['owner', 'admin', 'teacher', 'secretariat']} allowTenantRole><LiriRdvAdminPage /></ProtectedLiriRoute>} />
           <Route path="/liri/notes" element={<ProtectedLiriRoute allowedRoles={['owner', 'admin', 'teacher', 'secretariat', 'student', 'practitioner', 'clinic_admin']} allowTenantRole><LiriSchoolShell active="notes"><StudentNotesHubPage /></LiriSchoolShell></ProtectedLiriRoute>} />
           <Route path="/liri/evaluations" element={<ProtectedLiriRoute allowedRoles={['owner', 'admin', 'teacher', 'secretariat', 'student', 'practitioner', 'clinic_admin']} allowTenantRole><LiriSchoolShell active="evaluations"><StudentEvaluationsPage /></LiriSchoolShell></ProtectedLiriRoute>} />
           <Route path="/liri/absences" element={<ProtectedLiriRoute allowedRoles={['owner', 'admin', 'teacher', 'secretariat', 'student', 'practitioner', 'clinic_admin']} allowTenantRole><LiriSchoolShell active="absences"><StudentAbsencesPage /></LiriSchoolShell></ProtectedLiriRoute>} />

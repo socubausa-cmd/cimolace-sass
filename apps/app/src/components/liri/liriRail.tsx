@@ -26,7 +26,7 @@ import { prefetchLiriPath } from '@/lib/prefetchLiriRoutes';
 export type EngineKey = 'liri' | 'ecole' | 'mbolo' | 'medos' | 'studio' | 'crea';
 
 export type RailKey =
-  | 'accueil' | 'forfaits' | 'semaine' | 'formations'
+  | 'accueil' | 'forfaits' | 'rdv' | 'semaine' | 'formations'
   | 'vie-scolaire' | 'agenda' | 'notes' | 'evaluations' | 'absences' | 'videotheque' | 'atelier'
   | 'lives' | 'forum' | 'messages'
   | 'biblio-eleve' | 'documents'
@@ -52,6 +52,7 @@ export const ENGINES: EngineDef[] = [
       ] },
       { section: 'Espace', items: [
         { key: 'temple', label: 'Temple', icon: Flame, to: '/liri/temple' },
+        { key: 'rdv', label: 'Rendez-vous', icon: CalendarDays, to: '/liri/rdv', creator: true },
         { key: 'forfaits', label: 'Forfaits', icon: CreditCard, to: '/liri/forfaits' },
         // Intégrations & canaux : clés OAuth des réseaux sociaux, paiements, e-mail.
         // ⚠️ CRÉATEUR SEUL — cet écran porte des secrets d'application.
