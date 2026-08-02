@@ -278,9 +278,8 @@ export default function CagnottePage() {
         <div className="absolute inset-0 opacity-[0.18]"
           style={{ background: 'radial-gradient(1200px 500px at 70% -10%, #d97757 0%, transparent 60%), radial-gradient(900px 500px at 10% 10%, #b5642f 0%, transparent 55%)' }} />
         <div className="relative mx-auto max-w-5xl px-5 pt-16 pb-10 sm:pt-24">
-          <div className="mb-4 flex items-center gap-2.5">
-            <img src="/prorascience-eye.png" alt="" className="h-8 w-8 object-contain opacity-90" draggable={false} />
-            <span className="text-2xl font-bold tracking-tight text-[#f5f4ee]" style={{ fontFamily: "Georgia, 'Times New Roman', serif" }}>Ngowazulu</span>
+          <div className="mb-4">
+            <img src="/logos/isna-logo.png" alt="ISNA · Prorascience" className="h-14 w-auto max-w-[75vw] object-contain" draggable={false} />
           </div>
           <span className="inline-flex items-center gap-2 rounded-full border border-[#d97757]/40 bg-[#d97757]/10 px-3 py-1 text-[11px] font-semibold uppercase tracking-wide text-[#e8a184]">
             <Heart className="h-3.5 w-3.5" /> Cagnotte solidaire · Les métiers Ngowazulu
