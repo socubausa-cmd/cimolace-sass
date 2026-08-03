@@ -89,6 +89,17 @@ export class BookingController {
     return this.booking.availableSecretaries(tenant, { timezone, country, when });
   }
 
+  // ── Calendrier MAÎTRE (vue globale multi-services sur une semaine) ─────────
+  @Get('master-calendar')
+  @UseGuards(RolesGuard)
+  @Roles('owner', 'admin', 'teacher', 'secretariat')
+  masterCalendar(
+    @CurrentTenant() tenant: TenantContext,
+    @Query('weekStart') weekStart?: string,
+  ) {
+    return this.booking.masterCalendar(tenant, weekStart);
+  }
+
   // ── Prof → séance live avec un élève (depuis le profil élève) ────────────
   @Post('students/:studentId/schedule-live')
   @UseGuards(RolesGuard)

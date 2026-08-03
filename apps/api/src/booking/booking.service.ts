@@ -929,6 +929,89 @@ export class BookingService {
     };
   }
 
+  // ── Calendrier MAÎTRE (vue globale multi-services sur une semaine) ─────────
+  // Agrège pour la semaine : RDV (appointments+booking_slots) + téléconsult MedOS
+  // (med_appointments, best-effort) + activités fixes récurrentes du propriétaire
+  // (tenants.metadata.weekly_activities : masterclass, live, enseignement, repos, occupé).
+  async masterCalendar(tenant: TenantContext, weekStartIso?: string) {
+    const client = this.supabase.client as any;
+    const OFFSET_MS = 60 * 60 * 1000; // Gabon = UTC+1 (pas de DST)
+    const base = weekStartIso && !Number.isNaN(new Date(weekStartIso).getTime())
+      ? new Date(weekStartIso) : new Date();
+    const shifted = new Date(base.getTime() + OFFSET_MS); // heure murale Gabon via méthodes UTC
+    const daysFromMonday = (shifted.getUTCDay() + 6) % 7;
+    const monday = new Date(Date.UTC(shifted.getUTCFullYear(), shifted.getUTCMonth(), shifted.getUTCDate() - daysFromMonday));
+    const dates: Array<{ ymd: string; jsDow: number }> = [];
+    for (let i = 0; i < 7; i++) {
+      const d = new Date(monday.getTime() + i * 24 * 3600 * 1000);
+      const ymd = `${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(2, '0')}-${String(d.getUTCDate()).padStart(2, '0')}`;
+      dates.push({ ymd, jsDow: d.getUTCDay() });
+    }
+    const weekStartUtc = new Date(`${dates[0].ymd}T00:00:00+01:00`).toISOString();
+    const weekEndUtc = new Date(`${dates[6].ymd}T23:59:59+01:00`).toISOString();
+    const wsMs = new Date(weekStartUtc).getTime();
+    const weMs = new Date(weekEndUtc).getTime();
+    const events: any[] = [];
+
+    // 1) RDV
+    try {
+      const { data: appts } = await client
+        .from('appointments')
+        .select('id, status, notes, booking_slots(start_at, end_at, title)')
+        .eq('tenant_id', tenant.id);
+      for (const a of appts ?? []) {
+        const s = (a as any).booking_slots;
+        if (!s?.start_at || (a as any).status === 'cancelled') continue;
+        const stMs = new Date(s.start_at).getTime();
+        if (stMs < wsMs || stMs > weMs) continue;
+        const notes = String((a as any).notes || '');
+        const sujet = (notes.match(/Sujet\s*:\s*([\s\S]*?)(?:\s*Description\s*:|$)/i)?.[1] || s.title || 'Rendez-vous').trim();
+        events.push({ kind: 'rdv', title: sujet, start: s.start_at, end: s.end_at || null, status: (a as any).status, id: (a as any).id });
+      }
+    } catch (e) { this.logger.warn(`master-cal RDV: ${(e as Error).message}`); }
+
+    // 2) Téléconsultations MedOS (best-effort — table peut ne pas exister pour ce tenant)
+    try {
+      const { data: meds } = await client
+        .from('med_appointments')
+        .select('id, appointment_type, status, scheduled_at, duration_minutes')
+        .eq('tenant_id', tenant.id)
+        .gte('scheduled_at', weekStartUtc)
+        .lte('scheduled_at', weekEndUtc);
+      for (const m of meds ?? []) {
+        if (!(m as any).scheduled_at) continue;
+        const dur = Number((m as any).duration_minutes || 30);
+        events.push({
+          kind: 'teleconsult',
+          title: `Téléconsultation (${(m as any).appointment_type || 'santé'})`,
+          start: (m as any).scheduled_at,
+          end: new Date(new Date((m as any).scheduled_at).getTime() + dur * 60000).toISOString(),
+          status: (m as any).status,
+          id: (m as any).id,
+        });
+      }
+    } catch { /* MedOS non utilisé pour ce tenant */ }
+
+    // 3) Activités fixes récurrentes
+    try {
+      const { data: t } = await client.from('tenants').select('metadata').eq('id', tenant.id).maybeSingle();
+      const acts = (t as any)?.metadata?.weekly_activities;
+      if (Array.isArray(acts)) {
+        for (const { ymd, jsDow } of dates) {
+          for (const act of acts) {
+            if (Number(act?.dow) !== jsDow) continue;
+            const start = new Date(`${ymd}T${act.start || '00:00'}:00+01:00`).toISOString();
+            const end = new Date(`${ymd}T${act.end || act.start || '00:00'}:00+01:00`).toISOString();
+            events.push({ kind: String(act.kind || 'activite'), title: String(act.label || act.kind || 'Activité'), start, end, recurring: true });
+          }
+        }
+      }
+    } catch (e) { this.logger.warn(`master-cal activites: ${(e as Error).message}`); }
+
+    events.sort((a, b) => new Date(a.start).getTime() - new Date(b.start).getTime());
+    return { weekStart: weekStartUtc, weekEnd: weekEndUtc, timezone: 'Africa/Libreville', days: dates.map((d) => d.ymd), events };
+  }
+
   // ── Préparation d'entretien (secrétariat) ────────────────────────────────
   // Porté d'ISNA v1 (booking-set-preparation). Remplace l'appel Netlify v1.
   async getAppointmentPreparation(tenant: TenantContext, appointmentId: string) {

@@ -457,6 +457,8 @@ export const bookingApi = {
     apiV2.post<ApiEnvelope<any>>(`/booking/appointments/${id}/start-live`, {}).then(unwrap),
   sendRescheduleLink: (id: string, reason?: string) =>
     apiV2.post<ApiEnvelope<any>>(`/booking/appointments/${id}/reschedule-link`, { reason }).then(unwrap),
+  masterCalendar: (weekStart?: string) =>
+    apiV2.get<ApiEnvelope<any>>('/booking/master-calendar' + (weekStart ? `?weekStart=${encodeURIComponent(weekStart)}` : '')).then(unwrap),
   submitFeedback: (body: Record<string, unknown>) =>
     apiV2.post<ApiEnvelope<any>>('/booking/feedback', body).then(unwrap),
   getFeedback: (appointmentId: string) =>
