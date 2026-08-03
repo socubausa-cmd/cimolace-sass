@@ -24,15 +24,34 @@ import HandoffPage from '@/pages/HandoffPage';
 // KILL-SWITCH instantané = `?os=0` / `?os=off` → maquettes, SANS redéploiement. Rollback total =
 // repasser OS_DEFAULT_ON à false + redéployer. `?os=isna` / `?os=1` = forçage explicite. Le flag env
 // `VITE_PRORASCIENCE_OS==='0'` désactive aussi (si un jour injecté). N'affecte QUE le host prorascience.org.
-const OS_DEFAULT_ON = true; // ← rollback total : mettre à false + redéployer
+// 2026-08-02 — DÉCISION FONDATEUR : le SITE est redevenu le défaut sur prorascience.org.
+// L'agent immersif n'est plus imposé à l'arrivée ; il se déclenche par un bouton
+// (« Navigation immersive »), et le choix SUIT le visiteur de page en page.
+const OS_DEFAULT_ON = false; // ← l'OS n'est plus le défaut ; il s'active à la demande
+const OS_PREF_KEY = 'prorascience-os-mode'; // '1' = immersif, '0' = site classique
+
+/** Mémorise le choix du visiteur : sans cela, l'immersif retomberait au site à chaque clic. */
+function setProrascienceOsPreference(on) {
+  try {
+    if (on) window.localStorage.setItem(OS_PREF_KEY, '1');
+    else window.localStorage.removeItem(OS_PREF_KEY);
+  } catch { /* stockage indisponible (navigation privée) : le paramètre d'URL reste le secours */ }
+}
+
 function prorascienceOsEnabled() {
   if (typeof window === 'undefined') return false;
   try {
     const q = new URLSearchParams(window.location.search).get('os');
-    if (q === '0' || q === 'off') return false;       // kill-switch instantané → maquettes
-    if (q === 'isna' || q === '1') return true;        // forçage explicite → OS
+    // L'URL reste PRIORITAIRE et mémorise : un lien partagé impose son mode, et le
+    // visiteur qui l'ouvre garde ce mode en naviguant.
+    if (q === '0' || q === 'off') { setProrascienceOsPreference(false); return false; }
+    if (q === 'isna' || q === '1') { setProrascienceOsPreference(true); return true; }
   } catch { /* noop */ }
   if (import.meta.env.VITE_PRORASCIENCE_OS === '0') return false; // kill par env (si dispo)
+  try {
+    const pref = window.localStorage.getItem(OS_PREF_KEY);
+    if (pref === '1') return true;
+  } catch { /* noop */ }
   return OS_DEFAULT_ON;
 }
 
@@ -94,11 +113,23 @@ function RootRedirect() {
   if (hash.includes('access_token')) return <Navigate to="/auth/callback" replace />;
   // ⛔ SOURCE UNIQUE — chaque adresse va à SON portail (jamais de mélange). Cf. HOST_PORTAL / resolveHostPortal.
   switch (resolveHostPortal(host)) {
-    case 'prorascience':
-      // Realm du fondateur (tenant isna) : l'OS par défaut ; ?os=0 → maquettes figées du fondateur.
-      return prorascienceOsEnabled()
-        ? <CimolaceCreationAgent tenantSlug={DEFAULT_TENANT_SLUG} />
-        : <TenantVitrineHome slug={DEFAULT_TENANT_SLUG} />;
+    case 'prorascience': {
+      // Realm du fondateur (tenant isna) : le SITE par défaut ; l'agent immersif
+      // s'active par le bouton « Navigation immersive » (ou ?os=1 pour un lien direct).
+      // La bascule est posée ICI, au-dessus des deux modes : ni la maquette ni
+      // l'agent n'ont à la connaître, et elle reste au même endroit dans les deux.
+      const immersif = prorascienceOsEnabled();
+      return (
+        <>
+          {immersif
+            ? <CimolaceCreationAgent tenantSlug={DEFAULT_TENANT_SLUG} />
+            : <TenantVitrineHome slug={DEFAULT_TENANT_SLUG} />}
+          <div className="fixed bottom-5 left-1/2 z-[2147480000] -translate-x-1/2">
+            <ImmersiveModeToggle active={immersif} />
+          </div>
+        </>
+      );
+    }
     case 'liri':
       // Portail LIRI hébergé (« 2 portes » Créer / Rejoindre + Se connecter).
       return <LiriLandingPage />;
@@ -378,6 +409,9 @@ function TenantVitrinePage({ slug: slugProp, page: pageProp } = {}) {
 }
 const PublicHomePage = lazy(() => import('@/pages/PublicHomePage'));
 import { ELEVE_MOBILE } from '@/lib/eleveMobileRoutes';
+// Bascule site ↔ immersif : import DIRECT (pas lazy) — un bouton qui arrive après
+// coup laisserait le visiteur sans porte de sortie pendant le chargement.
+import ImmersiveModeToggle from '@/components/prorascience/ImmersiveModeToggle';
 const PublicIsnaPage = lazy(() => import('@/pages/PublicIsnaPage'));
 const PublicNgowazuluPage = lazy(() => import('@/pages/PublicNgowazuluPage'));
 const AppMemberAccessPage = lazy(() => import('@/pages/AppMemberAccessPage'));
