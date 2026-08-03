@@ -124,6 +124,75 @@ export function buildWorkspacePayload(canvasProject, copilot, designerStudio = n
 }
 
 /**
+ * @param {unknown} project
+ * @returns {boolean} vrai si l'objet porte au moins une page Polotno
+ */
+function hasPolotnoPages(project) {
+  return Boolean(
+    project
+      && typeof project === 'object'
+      && Array.isArray(/** @type {{ pages?: unknown[] }} */ (project).pages)
+      && /** @type {{ pages: unknown[] }} */ (project).pages.length > 0,
+  );
+}
+
+/**
+ * Fiche héritée « Polotno seul » : le Designer Konva ne sait PAS la rendre (aucun convertisseur
+ * n'est branché) — il ne doit donc ni prétendre l'avoir chargée, ni écrire son canevas dessus.
+ * @param {unknown} data
+ * @returns {boolean}
+ */
+export function isLegacyPolotnoOnlyPayload(data) {
+  if (!data || typeof data !== 'object') return false;
+  const d = /** @type {Record<string, unknown>} */ (data);
+  if (!hasPolotnoPages(d.polotnoProject)) return false;
+  const kp = d.konvaProject;
+  const scenes =
+    kp && typeof kp === 'object' && Array.isArray(/** @type {{ scenes?: unknown[] }} */ (kp).scenes)
+      ? /** @type {{ scenes: any[] }} */ (kp).scenes
+      : [];
+  // Un canevas « vide mais présent » compte comme absent : après une première sauvegarde, la
+  // fiche héritée porte une scène Konva vierge à côté de ses pages Polotno — l'avertissement
+  // doit rester affiché tant que rien n'a été réellement dessiné.
+  const hasDrawnObject = scenes.some(
+    (sc) => sc && typeof sc === 'object' && Array.isArray(sc.objects) && sc.objects.length > 0,
+  );
+  return !hasDrawnObject;
+}
+
+/**
+ * Fusionne le payload RECONSTRUIT par les stores par-dessus celui lu en base.
+ *
+ * ⛔ `buildWorkspacePayload` ne sait produire que ce que les stores portent : il pose
+ * systématiquement `polotnoProject: null` dès que le canevas est un projet Konva. Écrit tel
+ * quel sur une fiche héritée v2, il DÉTRUIT ses pages Polotno (le Designer ne sait pas les
+ * charger, donc il ne peut pas les régénérer). On repart donc de la ligne existante et on
+ * n'écrase que ce qu'on a réellement produit.
+ *
+ * @param {Record<string, unknown> | null | undefined} basePayload charge utile lue en base
+ * @param {Record<string, unknown>} nextPayload charge utile reconstruite par les stores
+ * @returns {Record<string, unknown>}
+ */
+export function mergeWorkspacePayloadOverBase(basePayload, nextPayload) {
+  if (!basePayload || typeof basePayload !== 'object') return nextPayload;
+  if (!nextPayload || typeof nextPayload !== 'object') return /** @type {any} */ (basePayload);
+
+  // Le spread préserve AUSSI les clés inconnues de cette version du code (champs ajoutés
+  // par une autre branche / un futur module) : on ne supprime jamais ce qu'on ne sait pas lire.
+  const merged = { ...basePayload, ...nextPayload };
+
+  const baseHasPages = hasPolotnoPages(basePayload.polotnoProject);
+  const nextHasPages = hasPolotnoPages(nextPayload.polotnoProject);
+  if (baseHasPages && !nextHasPages) {
+    merged.polotnoProject = basePayload.polotnoProject;
+    // v2 accepte `polotnoProject.pages` OU `konvaProject.scenes` (cf. assertWorkspacePayload) :
+    // la fiche reste relisible avec les deux contenus côte à côte.
+    merged.version = 2;
+  }
+  return merged;
+}
+
+/**
  * Valide un objet workspace (fichier ou ligne Supabase jsonb).
  * v2 : `polotnoProject.pages` (historique) ou `konvaProject.scenes`
  * v1 : `konvaProject.scenes`
@@ -166,6 +235,21 @@ export function parseWorkspaceImport(jsonString) {
 }
 
 export const LIRI_COURSE_WORKSPACE_LOCAL_KEY = 'liri_course_workspace_v1_draft';
+
+/**
+ * Clé de brouillon local PAR DOCUMENT.
+ *
+ * ⛔ Une clé unique servait à tous les documents : ouvrir un second cours (ou simplement le
+ * designer de scène live, qui monte le même éditeur) écrasait en 2 s le brouillon du premier.
+ * Toute écriture de brouillon doit passer par ici.
+ *
+ * @param {string | null | undefined} scopeId identifiant du document (id de fiche cloud, id de scène…)
+ * @returns {string}
+ */
+export function liriCourseWorkspaceLocalKey(scopeId) {
+  const suffix = String(scopeId ?? '').trim();
+  return suffix ? `${LIRI_COURSE_WORKSPACE_LOCAL_KEY}:${suffix}` : LIRI_COURSE_WORKSPACE_LOCAL_KEY;
+}
 
 /**
  * Résumé pédagogique / taille pour comparaison de versions (sans diff texte intégral).

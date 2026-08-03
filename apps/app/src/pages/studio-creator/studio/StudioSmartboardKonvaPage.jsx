@@ -29,7 +29,6 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 
 import SmartboardKonvaEditorV1 from '@/features/smartboard-konva-editor/SmartboardKonvaEditorV1';
 import CinemaPedagogyBar from '@/features/smartboard-konva-editor/components/CinemaPedagogyBar';
-import KonvaParityFeatureRoot from '@/features/smartboard-konva-editor/konva-parity/KonvaParityFeatureRoot';
 import { supabase } from '@/lib/customSupabaseClient';
 import {
   redeemWorkspaceInvite,
@@ -39,8 +38,10 @@ import {
 import { normalizeLifecycleStatus } from '@/features/smartboard-konva-editor/lib/liriWorkspaceLifecycle';
 import {
   assertWorkspacePayload,
-  LIRI_COURSE_WORKSPACE_LOCAL_KEY,
+  isLegacyPolotnoOnlyPayload,
+  liriCourseWorkspaceLocalKey,
 } from '@/features/smartboard-konva-editor/lib/courseWorkspaceBundle';
+import { clearWorkspaceBaseline } from '@/features/smartboard-konva-editor/lib/liriWorkspaceBaseline';
 import {
   buildWorkspacePayloadFromStores,
   hydrateWorkspaceIntoKonvaEditor,
@@ -75,7 +76,7 @@ import { buildLocalLongiaRichReply } from '@/lib/longiaLocalFallback';
 import { LongiaUnifiedReply } from '@/features/smartboard-konva-editor/components/LongiaUnifiedReply';
 import { enrichLocalLongiaForStore, mergeApiLongiaForStore } from '@/features/smartboard-konva-editor/lib/longiaCoreUnified';
 import { runLongiaHubChipAction } from '@/features/smartboard-konva-editor/lib/longiaHubChipActions';
-import { mkTextObject, mkRectObject, mkImageObject } from '@/features/smartboard-konva-editor/model/sceneModel';
+import { createEmptyProject, mkTextObject, mkRectObject, mkImageObject } from '@/features/smartboard-konva-editor/model/sceneModel';
 import {
   clearDesignerImageGallery,
   deleteDesignerImageEntry,
@@ -109,8 +110,13 @@ import { proColors, proRadii, proType, proSize } from '@/components/studio-creat
 /* ─── Constantes ─────────────────────────────────────────────────── */
 const LOCAL_AUTOSAVE_MS = 45_000;
 const LEGACY_POLOTNO_NOTICE =
-  'Ancien workspace Polotno : le plan Copilot est chargé. Réimportez un export JSON Konva ou reconstruisez les slides.';
+  'Ancien workspace Polotno : seul le plan Copilot est chargé, le canevas Konva démarre vide. '
+  + 'Ses pages d\'origine restent intactes en base (l\'enregistrement les préserve), mais le Designer ne sait pas les afficher — '
+  + 'réimportez un export JSON Konva ou reconstruisez les slides.';
 const ISNA_PHASE3_HANDOFF_KEY = 'isna_phase3_handoff_v1';
+/** Marqueur obligatoire des réponses de repli local (aucun appel IA n'a abouti). */
+const LONGIA_LOCAL_REPLY_PREFIX =
+  '⚠︎ Réponse LOCALE — le moteur LONGIA n\'a rien renvoyé (crédits, réseau ou session).\n\n';
 
 const DesignerPostProductionDock = lazy(() => import('@/pages/studio-creator/studio/DesignerPostProductionDock'));
 const DocumentStudioLauncher     = lazy(() => import('@/pages/studio-creator/studio/DocumentStudioLauncher'));
@@ -191,21 +197,17 @@ const DESIGNER_MODES = [
 ];
 
 /* ─── AI Hub — mode rapide (icône seulement, pas d'onglets) ─────── */
+/**
+ * ⛔ « Vision » (œil) et « Audio » (micro) sont RETIRÉS : ils ne déclenchaient aucun traitement.
+ * Seul `architect` change quoi que ce soit dans l'appel LONGIA (`llmMode`) ; les deux autres
+ * rendaient exactement le même coach texte, sans jamais solliciter caméra ni micro. Les modules
+ * qui les implémenteraient (callLiriSmartboardVisionDescribe / …VisionSegment / grabVisionFrame /
+ * uploadLiriVisionSegment) existent mais n'ont aucun importeur — à rebrancher AVANT de remettre
+ * ces deux boutons.
+ */
 const AI_QUICK_MODES = [
   { id: 'analyse',    icon: Sparkles,        label: 'Analyse',      color: 'text-amber-400',   dot: 'bg-amber-400'   },
-  { id: 'vision',     icon: Eye,             label: 'Vision',       color: 'text-[#e0a458]',    dot: 'bg-[#e0a458]'    },
-  { id: 'audio',      icon: Mic,             label: 'Audio',        color: 'text-[#e0a458]',    dot: 'bg-[#e0a458]'    },
   { id: 'architect',  icon: Cpu,             label: 'Architect',    color: 'text-[#e08a5f]',  dot: 'bg-[#e08a5f]'  },
-];
-
-/* ─── Outils pédagogiques ────────────────────────────────────────── */
-const PEDAGOGIC_TOOLS = [
-  { id: 'progression', icon: LayoutGrid,    label: 'Progression\nA/B/C', color: 'amber'   },
-  { id: 'eleve',       icon: GraduationCap, label: 'Vue Élève',           color: 'cyan'    },
-  { id: 'script-prof', icon: ScrollText,    label: 'Script Prof',         color: 'violet'  },
-  { id: 'minuteur',    icon: Timer,         label: 'Minuteur',            color: 'orange'  },
-  { id: 'annotation',  icon: PenLine,       label: 'Annotation',          color: 'emerald' },
-  { id: 'export-pdf',  icon: FileOutput,    label: 'Export PDF',          color: 'blue'    },
 ];
 
 /* ─── Types de document (Studio Unifié) ─────────────────────────── */
@@ -391,12 +393,14 @@ function QuickLauncherPanel({ isOpen, onClose, onCreate, onImportFile }) {
                       <p className="text-[11px] font-medium text-white/45">Glisser un fichier ici</p>
                       <p className="mt-0.5 text-[9px] text-white/25">ou cliquer pour sélectionner</p>
                     </div>
-                    <p className="text-[9px] text-white/20">JSON Konva · Image · PDF · Vidéo</p>
+                    {/* ⛔ N'annoncer que ce que handleImportFile sait traiter. PDF et Vidéo étaient
+                        proposés puis refusés, avec un renvoi vers un panneau inexistant. */}
+                    <p className="text-[9px] text-white/20">JSON Konva · Image</p>
                   </button>
                   <input
                     ref={fileInputRef}
                     type="file"
-                    accept=".json,image/*,.pdf,video/*"
+                    accept=".json,image/*"
                     className="hidden"
                     onChange={e => {
                       const file = e.target.files?.[0];
@@ -404,12 +408,17 @@ function QuickLauncherPanel({ isOpen, onClose, onCreate, onImportFile }) {
                       e.target.value = '';
                     }}
                   />
-                  <div className="grid grid-cols-4 gap-2">
+                  <p className="text-center text-[9px] leading-relaxed text-white/25">
+                    PDF, .docx et .pptx : passez par{' '}
+                    <Link to="/studio/liri/import" className="text-[#d4924a] underline underline-offset-2" onClick={onClose}>
+                      Studio LIRI → Import
+                    </Link>
+                    .
+                  </p>
+                  <div className="grid grid-cols-2 gap-2">
                     {[
                       { label: 'JSON Konva', accept: '.json',   color: 'cyan',    icon: Code      },
                       { label: 'Image',      accept: 'image/*', color: 'emerald', icon: ImageIcon },
-                      { label: 'PDF',        accept: '.pdf',    color: 'pink',    icon: FileImage },
-                      { label: 'Vidéo',      accept: 'video/*', color: 'amber',   icon: Film      },
                     ].map(ft => {
                       const FtIcon = ft.icon;
                       const a = ACCENT[ft.color] ?? ACCENT.cyan;
@@ -483,7 +492,11 @@ function DesignerCloudToolbar() {
         id: cloudId,
         title: t.slice(0, 200),
         payload,
-        lifecycleStatus: normalizeLifecycleStatus('draft'),
+        // ⛔ Ne PAS écrire lifecycle_status ici : cette barre ne pilote pas le cycle de vie.
+        // Elle le forçait à « draft » à chaque clic, ce qui annulait silencieusement un
+        // « Validé » / « Prêt pour le live » posé dans le panneau Cloud. Le statut n'est
+        // envoyé qu'à la CRÉATION, où il n'écrase rien.
+        ...(cloudId ? {} : { lifecycleStatus: normalizeLifecycleStatus('draft') }),
       });
       if (error) {
         setHint(error.message);
@@ -2157,6 +2170,37 @@ const DESIGNER_STOCK_IMAGE_URL = {
   'tpl-iso': '/image-pro/aprendre-a-distance.png',
 };
 
+/** Familles d'outils dont `handleAdd` sait produire un objet sans condition d'identifiant. */
+const CATALOG_TOOLS_WITH_INSERT = new Set([
+  'texte', 'formes', 'doc-titre', 'doc-para', 'doc-liste', 'slide-titre', 'slide-forme',
+]);
+/** Modèles réellement construits par `handleAdd` (les autres ids n'ont aucune branche). */
+const CATALOG_TEMPLATE_IDS = new Set(['intro', 'timeline', 'compare', 'mindmap', 'quiz']);
+
+/**
+ * Un item du catalogue produit-il vraiment quelque chose ?
+ *
+ * ⛔ Miroir OBLIGATOIRE de `handleAdd`. Des dizaines d'entrées (icônes, fonds, tableau,
+ * minuteur, laser, et les 11 items « IA » en corail) s'affichaient comme des boutons
+ * ordinaires et ne faisaient RIEN au clic — ni objet, ni message, ni erreur. Tant qu'une
+ * famille n'a pas sa branche dans `handleAdd`, elle ne doit pas s'afficher.
+ * Toute branche ajoutée à `handleAdd` doit être déclarée ici, sinon elle restera invisible.
+ *
+ * @param {string | null | undefined} tool
+ * @param {{ id?: string; ai?: boolean } | null | undefined} item
+ */
+function isInsertableCatalogItem(tool, item) {
+  if (!item) return false;
+  // Aucun item marqué `ai` n'est branché (ni `ai`, ni `ai-gen`, ni les variantes par onglet).
+  if (item.ai || item.id === 'ai' || item.id === 'ai-gen') return false;
+  if (tool === 'images') {
+    return item.id === 'upload' || item.id === 'library' || Boolean(DESIGNER_STOCK_IMAGE_URL[item.id]);
+  }
+  if (tool === 'animes') return item.id === 'html';
+  if (tool === 'modeles') return CATALOG_TEMPLATE_IDS.has(item.id);
+  return CATALOG_TOOLS_WITH_INSERT.has(tool);
+}
+
 /**
  * Prompts d'amorce du générateur d'images. Ils dictaient « bleu nuit » et
  * « or et bleu » : les visuels fabriqués depuis le studio arrivaient donc froids
@@ -2282,7 +2326,9 @@ function ContextualPanel({ tool, onClose }) {
       addObject(mkImageObject(stockUrl, { x: 72, y: 120, width: 560, height: 320, layer: 2 }));
       return;
     }
-    if (item.id === 'ai') return; // IA items non-fonctionnels pour l'instant
+    // Garde-fou : la vraie barrière est le filtre d'affichage (isInsertableCatalogItem),
+    // qui ne laisse plus apparaître un item sans branche d'insertion.
+    if (!isInsertableCatalogItem(tool, item)) return;
     if (tool === 'texte') {
       // Utiliser le preset enrichi (textPreset) ou fallback minimal
       const preset = item.textPreset;
@@ -2641,8 +2687,15 @@ function ContextualPanel({ tool, onClose }) {
             </div>
           ) : (
             <>
+          {content.items.filter((item) => isInsertableCatalogItem(tool, item)).length === 0 && (
+            <p className="px-2 py-6 text-center text-[10px] leading-relaxed text-white/30">
+              Ces éléments ne sont pas encore disponibles dans le Designer.
+              <br />
+              Utilisez Texte, Formes, Modèles ou Images.
+            </p>
+          )}
           {content.items
-            .filter((item) => !(tool === 'images' && activeTab === 0 && item.id === 'ai'))
+            .filter((item) => isInsertableCatalogItem(tool, item))
             .map(item => {
             const Icon = item.icon;
 
@@ -2751,7 +2804,6 @@ function AIHub({ docType = null, designerMode = 'design', onClose = () => {} }) 
   const selectedIds = useSmartboardKonvaStore(s => s.selectedIds);
   const addLongiaMessage = useSmartboardKonvaStore(s => s.addLongiaMessage);
   const isDocumentMode = useDocumentCoachStore(s => s.isDocumentMode);
-  const [activePedaTool, setActivePedaTool] = useState(/** @type {string|null} */ (null));
   const [activeQuickMode, setActiveQuickMode] = useState('analyse');
   const [aiHubTab, setAiHubTab] = useState(/** @type {string} */ ('suggest'));
   const [hubPanelOpen, setHubPanelOpen] = useState(true);
@@ -3077,10 +3129,19 @@ function AIHub({ docType = null, designerMode = 'design', onClose = () => {} }) 
               </button>
             ) : null}
 
-            {/* Lecture instantanée : clarté + fil coach (un seul bloc) */}
+            {/* ⛔ Indicateur HEURISTIQUE LOCAL, pas une évaluation IA : addition en dur sur le nombre
+                d'objets, la présence d'un plan et d'un objectif (computeLongiaClarityScore, base 38,
+                plafond 96). Le libellé disait « Lecture instantanée » avec un pourcentage, et
+                l'enseignant lisait « 38 % » sur un canevas vide comme une note pédagogique.
+                Le vrai score de slide vient du Coach LIRI+ (edge `liri-coach-slide`), rail gauche. */}
             <div className="mb-3 rounded-xl border border-amber-500/20 bg-amber-500/[0.07] px-3 py-2.5">
               <div className="flex items-center justify-between gap-2 border-b border-amber-500/15 pb-2">
-                <span className="text-[10px] font-semibold text-amber-100/90">Lecture instantanée</span>
+                <span
+                  className="text-[10px] font-semibold text-amber-100/90"
+                  title="Mesure locale du remplissage de la scène — ce n'est pas le score du Coach IA."
+                >
+                  Complétude de la scène
+                </span>
                 <div className="flex items-center gap-2">
                   <span className="text-[13px] font-bold text-amber-300">{clarityScore}%</span>
                   <div className="h-1 w-16 rounded-full bg-black/30">
@@ -3355,41 +3416,10 @@ function AIHub({ docType = null, designerMode = 'design', onClose = () => {} }) 
                 <p className="py-2 text-center text-[10px] text-white/20">Aucun script — Course Builder.</p>
               )}
             </div>
-            <div>
-              <div className="mb-1.5">
-                <span className="text-[9px] font-bold uppercase tracking-widest text-white/25">Outils pédagogiques</span>
-              </div>
-              <div className="grid grid-cols-3 gap-1.5">
-                {PEDAGOGIC_TOOLS.map((tool) => {
-                  const Icon = tool.icon;
-                  const isActive = activePedaTool === tool.id;
-                  const aColor = ACCENT[tool.color];
-                  return (
-                    <button
-                      key={tool.id}
-                      type="button"
-                      onClick={() => setActivePedaTool(isActive ? null : tool.id)}
-                      className={cn(
-                        'flex flex-col items-center justify-center gap-1.5 rounded-xl border py-2.5 px-1 transition-all hover:scale-[1.02] active:scale-[0.98]',
-                        isActive
-                          ? [aColor.border, aColor.bg, aColor.glow]
-                          : 'border-white/[0.07] bg-white/[0.02] hover:border-white/10 hover:bg-white/[0.05]',
-                      )}
-                    >
-                      <Icon className={cn('h-3.5 w-3.5', isActive ? aColor.text : 'text-white/35')} />
-                      <span
-                        className={cn(
-                          'whitespace-pre-line text-center text-[9px] font-medium leading-tight',
-                          isActive ? aColor.text : 'text-white/40',
-                        )}
-                      >
-                        {tool.label}
-                      </span>
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
+            {/* ⛔ Bloc « Outils pédagogiques » retiré : ses 6 boutons (Progression A/B/C, Vue Élève,
+                Script Prof, Minuteur, Annotation, Export PDF) ne pilotaient QUE leur propre
+                surbrillance — `activePedaTool` n'avait aucun autre lecteur dans le fichier.
+                Ne pas les remettre sans une action réelle derrière chacun. */}
           </div>
         </details>
         ) : null}
@@ -4275,7 +4305,9 @@ function BottomBar({
         : enrichLocalLongiaForStore(localRich);
       addLongiaMessage({
         role: 'ai',
-        text: payload.text,
+        // ⛔ Le repli local parle à la première personne et était indiscernable d'une vraie
+        // réponse IA : un tenant sans crédits « discutait avec LONGIA » sans le savoir.
+        text: hasCloud ? payload.text : `${LONGIA_LOCAL_REPLY_PREFIX}${payload.text}`,
         suggestions: payload.suggestions,
         longiaUnified: payload.longiaUnified,
         longiaComposed: payload.longiaComposed,
@@ -4287,14 +4319,17 @@ function BottomBar({
       if (hasCloud && data?.routing && typeof data.routing === 'object') {
         useAiHubStore.getState().setLastLongiaRouting(data.routing);
       }
-    } catch {
+    } catch (err) {
       const localRich = buildLocalLongiaRichReply(msg, scene, selectedIds, {
         getLabel: (t) => ELEMENT_META[t]?.label ?? 'élément',
       });
       const payload = enrichLocalLongiaForStore(localRich);
+      const reason = err?.message ? ` Détail : ${String(err.message).slice(0, 200)}` : '';
       addLongiaMessage({
         role: 'ai',
-        text: payload.text,
+        // L'erreur réelle était AVALÉE : ni l'utilisateur ni l'équipe ne pouvaient savoir
+        // si le moteur IA était vivant pendant un incident.
+        text: `${LONGIA_LOCAL_REPLY_PREFIX}${reason}\n\n${payload.text}`,
         suggestions: payload.suggestions,
         longiaUnified: payload.longiaUnified,
         longiaComposed: payload.longiaComposed,
@@ -4603,8 +4638,11 @@ export default function StudioSmartboardKonvaPage() {
           setFormatNotice(`Le fichier JSON « ${name} » n'a pas la structure attendue (scenes/projet).`);
         }
       } else {
+        // Le message renvoyait vers un « panneau Import » qui n'existe pas dans le Designer :
+        // le seul import documentaire du produit est Studio LIRI → Import (/studio/liri/import).
         setFormatNotice(
-          `Format « ${t || name.split('.').pop() || 'inconnu'} » non encore pris en charge par l'import rapide. Utilisez le panneau Import pour PDF / .docx / .pptx.`,
+          `Format « ${t || name.split('.').pop() || 'inconnu'} » non pris en charge ici : l'import rapide accepte une image ou un JSON Konva. `
+          + 'Pour un PDF, un .docx ou un .pptx, passez par Studio LIRI → Import (/studio/liri/import).',
         );
       }
     } catch (e) {
@@ -4705,6 +4743,36 @@ export default function StudioSmartboardKonvaPage() {
   }, [setSearchParams]);
 
   const onCloudBootstrapConsumed = useCallback(() => setCloudBootstrap(null), []);
+
+  /**
+   * « Nouveau document » — coupure COMPLÈTE avec la fiche précédente.
+   *
+   * ⛔ Avant, seuls le shell et le coach étaient réinitialisés : le canevas Konva et le plan
+   * Copilot restaient à l'écran, l'URL gardait `?workspace=`, et l'autosauvegarde 2 min du
+   * panneau Cloud continuait d'écrire le NOUVEAU contenu dans l'ANCIENNE fiche, sans clic ni
+   * message. Tout ce qui identifie le document précédent doit tomber ici, empreinte comprise.
+   */
+  const handleNewDocument = useCallback(() => {
+    useDesignerShellStore.getState().resetForNewDocument();
+    useDocumentCoachStore.getState().deactivateDocumentMode();
+    useCourseCopilotStore.getState().resetCourse();
+    useSmartboardKonvaStore.getState().loadProject(createEmptyProject());
+    clearWorkspaceBaseline();
+    setCloudBootstrap(null);
+    setFormatNotice('');
+    setInviteBanner('');
+    workspaceUrlLoadedRef.current = null;
+    setSearchParams(
+      (prev) => {
+        const n = new URLSearchParams(prev);
+        n.delete('workspace');
+        n.delete('cw');
+        n.delete('cw_invite');
+        return n;
+      },
+      { replace: true },
+    );
+  }, [setSearchParams]);
 
   useEffect(() => {
     const p = searchParams.get('pp');
@@ -4838,8 +4906,14 @@ export default function StudioSmartboardKonvaPage() {
   useEffect(() => {
     const persist = () => {
       try {
+        // Même clé PAR DOCUMENT que l'éditeur (qui dérive son scope de `cloudBootstrap`),
+        // sinon les deux écrivains se marchent dessus et un second document écrase le premier.
+        const cloudId = useDesignerShellStore.getState().cloudWorkspaceId;
         const payload = buildWorkspacePayloadFromStores();
-        localStorage.setItem(LIRI_COURSE_WORKSPACE_LOCAL_KEY, JSON.stringify(payload));
+        localStorage.setItem(
+          liriCourseWorkspaceLocalKey(cloudId ? `ws-${cloudId}` : 'local-konva'),
+          JSON.stringify(payload),
+        );
       } catch { /* quota */ }
     };
     const id = window.setInterval(persist, LOCAL_AUTOSAVE_MS);
@@ -4861,7 +4935,16 @@ export default function StudioSmartboardKonvaPage() {
     (async () => {
       setFormatNotice('');
       const { data } = await supabase.auth.getSession();
-      if (!data.session) return;
+      if (!data.session) {
+        // Sortie MUETTE auparavant : l'enseignant dont la session avait expiré voyait un
+        // designer vide et pouvait croire son document perdu — puis en créer un doublon.
+        if (!cancelled) {
+          setFormatNotice(
+            "Connectez-vous d'abord pour ouvrir ce workspace — le paramètre URL est conservé.",
+          );
+        }
+        return;
+      }
       const { row, error } = await fetchLiriCourseWorkspaceById(workspaceUrlId);
       if (cancelled) return;
       if (error || !row) {
@@ -4885,12 +4968,7 @@ export default function StudioSmartboardKonvaPage() {
       });
       useDesignerShellStore.getState().setCloudMeta({ id: row.id, title: row.title || '' });
       setInitialKonvaProject(null);
-      const pp = payload.polotnoProject;
-      if (!payload.konvaProject?.scenes?.length && pp?.pages?.length) {
-        setFormatNotice(LEGACY_POLOTNO_NOTICE);
-      } else {
-        setFormatNotice('');
-      }
+      setFormatNotice(isLegacyPolotnoOnlyPayload(payload) ? LEGACY_POLOTNO_NOTICE : '');
     })();
     return () => { cancelled = true; };
   }, [workspaceUrlId]);
@@ -4922,10 +5000,7 @@ export default function StudioSmartboardKonvaPage() {
       catch (e) { setInviteBanner(e instanceof Error ? e.message : 'Données workspace invalides.'); clearInviteQuery(); return; }
       hydrateWorkspaceIntoKonvaEditor(payload);
       setInitialKonvaProject(null);
-      const kp = payload.konvaProject;
-      const pp = payload.polotnoProject;
-      if (!kp?.scenes?.length && pp?.pages?.length) setFormatNotice(LEGACY_POLOTNO_NOTICE);
-      else setFormatNotice('');
+      setFormatNotice(isLegacyPolotnoOnlyPayload(payload) ? LEGACY_POLOTNO_NOTICE : '');
       useDesignerShellStore.getState().setCloudMeta({ id: row.id, title: row.title || '' });
       setCloudBootstrap({ workspaceId: row.id, title: row.title || '', accessRole: result.role === 'editor' ? 'editor' : 'viewer' });
       setInviteBanner('Invitation acceptée — workspace chargé.');
@@ -4969,10 +5044,7 @@ export default function StudioSmartboardKonvaPage() {
               onClearIsnaImport={() => setIsnaImportSummary(null)}
               docType={docType}
               outputFormats={outputFormats}
-              onNewDoc={() => {
-                useDesignerShellStore.getState().resetForNewDocument();
-                useDocumentCoachStore.getState().deactivateDocumentMode();
-              }}
+              onNewDoc={handleNewDocument}
               designerMode={designerMode}
               setDesignerMode={setDesignerMode}
               cinemaPedagogy={isCinemaPedagogy}
@@ -5080,10 +5152,13 @@ export default function StudioSmartboardKonvaPage() {
             )}
           </AnimatePresence>
 
-          {/* Feature root (parity) — masqué visuellement, garde ses effets */}
-          <div className="hidden">
-            <KonvaParityFeatureRoot editorRef={konvaEditorRef} />
-          </div>
+          {/* ⛔ KonvaParityFeatureRoot était monté ici dans un `<div className="hidden">` avec le
+              commentaire « masqué visuellement, garde ses effets ». C'ÉTAIT FAUX : ce composant
+              n'a aucun useEffect, uniquement du JSX et des handlers. Onze commandes (export PDF,
+              script prof, support élève, quiz, flashcards, export workspace JSON, palette,
+              typographie, blocs pédagogiques) étaient donc chargées, invisibles et inutilisables.
+              Le mount est retiré plutôt que laissé en leurre ; le composant reste disponible pour
+              être posé dans un panneau RÉEL — voir le rapport d'audit du Studio Konva. */}
 
           {/* ── Écran de création de document ── */}
           <AnimatePresence>

@@ -32,11 +32,16 @@ export default function VersionHistoryPanel({ historyPast, historyTimestamps, on
       >
         <History className="h-3.5 w-3.5 shrink-0 text-[color-mix(in_srgb,var(--school-accent)_70%,transparent)]" />
         <div className="min-w-0 flex-1 text-left">
+          {/* ⛔ Ce panneau N'EST PAS un historique de versions : il affiche la pile d'annulation
+              en mémoire (historyPast du store Konva), perdue au rechargement et vidée à chaque
+              chargement de workspace. Il annonçait « N versions sauvegardées » — un filet de
+              sécurité qui n'existait pas. Les vraies versions vivent dans
+              `liri_course_workspace_versions` (panneau Cloud → Historique). */}
           <p className="text-[9px] font-semibold uppercase tracking-[0.18em] text-white/40">
-            Historique
+            Annulations (session)
           </p>
           <p className="text-[10px] font-semibold text-white/70">
-            {count === 0 ? 'Aucune version' : count + ' version' + (count > 1 ? 's' : '') + ' sauvegardee' + (count > 1 ? 's' : '')}
+            {count === 0 ? 'Aucune étape' : count + ' étape' + (count > 1 ? 's' : '') + ' annulable' + (count > 1 ? 's' : '')}
           </p>
         </div>
         {expanded ? (
@@ -50,7 +55,7 @@ export default function VersionHistoryPanel({ historyPast, historyTimestamps, on
         <div className="border-t border-white/[0.07] px-2 pb-2 pt-1">
           {count === 0 ? (
             <p className="py-2 text-center text-[9px] text-white/30">
-              Aucune action effectuee - modifiez le canvas pour creer un historique
+              Aucune action effectuée — ces étapes vivent le temps de la session. Versions durables : panneau Cloud → Historique.
             </p>
           ) : (
             <div className="max-h-48 space-y-0.5 overflow-y-auto [scrollbar-width:thin]">

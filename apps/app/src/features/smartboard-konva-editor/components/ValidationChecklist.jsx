@@ -4,6 +4,7 @@
 import React, { useState, useMemo } from 'react';
 import { CheckSquare, Square, ChevronDown, ChevronUp, AlertCircle, CheckCircle2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { useCourseCopilotStore } from '../store/useCourseCopilotStore';
 
 const CHECKLIST_ITEMS = [
   { id: 'objectives',  category: 'Pedagogie', label: 'Objectifs pedagogiques definis', critical: true },
@@ -32,23 +33,17 @@ const CHECKLIST_ITEMS = [
 const CATEGORIES = ['Pedagogie', 'Design', 'Contenu', 'Diffusion'];
 
 export default function ValidationChecklist({ projectQuality, className }) {
-  const [checked, setChecked] = useState(() => {
-    try {
-      const saved = localStorage.getItem('sb_validation_checklist');
-      return saved ? JSON.parse(saved) : {};
-    } catch {
-      return {};
-    }
-  });
+  /**
+   * ⛔ Source de vérité = le store Copilot, dont `validationChecklist` est déjà persisté dans le
+   * payload du workspace. Avant, les 19 cases vivaient dans une clé localStorage GLOBALE :
+   * partagées entre TOUS les cours, jamais envoyées au cloud, perdues au changement de poste.
+   * Ne jamais réintroduire de stockage local ici.
+   */
+  const checked = useCourseCopilotStore((s) => s.validationChecklist);
+  const setChecklistItem = useCourseCopilotStore((s) => s.setValidationChecklistItem);
   const [expanded, setExpanded] = useState(true);
 
-  const toggle = (id) => {
-    setChecked((prev) => {
-      const next = { ...prev, [id]: !prev[id] };
-      try { localStorage.setItem('sb_validation_checklist', JSON.stringify(next)); } catch {}
-      return next;
-    });
-  };
+  const toggle = (id) => setChecklistItem(id, !checked[id]);
 
   const total = CHECKLIST_ITEMS.length;
   const done = CHECKLIST_ITEMS.filter((i) => checked[i.id]).length;
@@ -164,10 +159,7 @@ export default function ValidationChecklist({ projectQuality, className }) {
           <button
             type="button"
             onClick={() => {
-              const all = {};
-              CHECKLIST_ITEMS.forEach((i) => { all[i.id] = false; });
-              setChecked(all);
-              try { localStorage.setItem('sb_validation_checklist', JSON.stringify(all)); } catch {}
+              CHECKLIST_ITEMS.forEach((i) => setChecklistItem(i.id, false));
             }}
             className="mt-2 w-full rounded-lg border border-white/10 py-1 text-[8px] text-white/35 hover:bg-white/[0.04]"
           >

@@ -10,8 +10,9 @@ import {
   assertWorkspacePayload,
   LIRI_COURSE_WORKSPACE_FORMAT,
   LIRI_COURSE_WORKSPACE_LOCAL_KEY,
+  liriCourseWorkspaceLocalKey,
 } from '../lib/courseWorkspaceBundle';
-import { parseProjectJson } from '../model/sceneModel';
+import { createEmptyProject, parseProjectJson } from '../model/sceneModel';
 import { useCourseCopilotStore } from './useCourseCopilotStore';
 import { useSmartboardKonvaStore } from './useSmartboardKonvaStore';
 import { useDesignerShellStore } from './useDesignerShellStore';
@@ -24,6 +25,7 @@ export {
   assertWorkspacePayload,
   LIRI_COURSE_WORKSPACE_FORMAT,
   LIRI_COURSE_WORKSPACE_LOCAL_KEY,
+  liriCourseWorkspaceLocalKey,
 };
 
 /**
@@ -138,13 +140,21 @@ export function hydrateWorkspaceCopilotOnly(data) {
 
 /**
  * Import workspace dans l'éditeur Konva : charge le projet puis le plan Copilot (ordre aligné sur l'existant).
- * Ignore `konvaProject` absent ou vide (ex. brouillon Polotno-only).
+ *
+ * ⛔ Quand `konvaProject` est absent ou vide (brouillon Polotno hérité), le canevas est REMIS À
+ * BLANC. Auparavant il était simplement laissé en place : le document PRÉCÉDENT restait à
+ * l'écran alors que la fiche ouverte était une autre, et le premier « Enregistrer » écrivait ce
+ * canevas étranger dans la fiche. Un canevas vide dit la vérité — cette fiche n'a pas de scène
+ * Konva — et la fusion côté sauvegarde préserve ses pages Polotno.
+ *
  * @param {ReturnType<typeof buildWorkspacePayload>} data
  */
 export function hydrateWorkspaceIntoKonvaEditor(data) {
   const kp = data.konvaProject;
   if (kp && typeof kp === 'object' && Array.isArray(kp.scenes) && kp.scenes.length) {
     useSmartboardKonvaStore.getState().loadProject(parseProjectJson(JSON.stringify(kp)));
+  } else {
+    useSmartboardKonvaStore.getState().loadProject(createEmptyProject());
   }
   useCourseCopilotStore.getState().hydrateFromExport(data);
   hydrateDesignerStudioFromPayload(data);

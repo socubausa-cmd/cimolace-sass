@@ -1,5 +1,16 @@
 import { supabase } from '@/lib/customSupabaseClient';
 import { normalizeLifecycleStatus } from './liriWorkspaceLifecycle';
+import { mergeWorkspacePayloadOverBase, isLegacyPolotnoOnlyPayload } from './courseWorkspaceBundle';
+import {
+  clearWorkspaceBaseline,
+  getWorkspaceBaselineFor,
+  noteWorkspaceSaved,
+  setWorkspaceBaseline,
+} from './liriWorkspaceBaseline';
+
+export const LIRI_WORKSPACE_CONFLICT_MESSAGE =
+  'Conflit : cette fiche a changé en base depuis son ouverture (autre onglet, autre poste ou co-éditeur). '
+  + 'Rien n\'a été écrit. Rechargez-la, ou utilisez « Enregistrer une copie » pour ne rien perdre.';
 
 /**
  * @param {string | { message?: string } | null | undefined} raw
@@ -129,8 +140,17 @@ export async function fetchLiriCourseWorkspaceList() {
 }
 
 /**
+ * Enregistrement cloud d'un workspace.
+ *
+ * ⛔ Sur une MISE À JOUR, deux protections non contournables (elles vivent ici et pas dans les
+ * appelants : quatre écrans écrivent sur cette table, un seul oubli suffisait à détruire une fiche) :
+ *  - fusion avec la charge utile lue à l'ouverture (préserve `polotnoProject` et toute clé
+ *    que les stores ne savent pas reproduire) ;
+ *  - concurrence optimiste sur `updated_at` (trigger `set_updated_at`, migration 202604302290) :
+ *    si la ligne a bougé, l'UPDATE ne touche 0 ligne et on REFUSE au lieu d'écraser.
+ *
  * @param {{ id?: string | null; title: string; payload: object; lifecycleStatus?: import('./liriWorkspaceLifecycle').LiriWorkspaceLifecycleStatus }} args
- * @returns {Promise<{ id: string | null; error: Error | null }>}
+ * @returns {Promise<{ id: string | null; error: Error | null; conflict?: boolean }>}
  */
 export async function saveLiriCourseWorkspace({ id, title, payload, lifecycleStatus }) {
   const { session } = await getSupabaseSession();
@@ -140,21 +160,34 @@ export async function saveLiriCourseWorkspace({ id, title, payload, lifecycleSta
   const safeTitle = (title || 'Sans titre').slice(0, 200);
 
   if (id) {
+    const baseline = getWorkspaceBaselineFor(id);
+    const mergedPayload = baseline?.payload
+      ? mergeWorkspacePayloadOverBase(baseline.payload, /** @type {any} */ (payload))
+      : payload;
+
     /** @type {{ title: string; payload: object; lifecycle_status?: string }} */
-    const patch = { title: safeTitle, payload };
+    const patch = { title: safeTitle, payload: mergedPayload };
     if (lifecycleStatus !== undefined) {
       patch.lifecycle_status = normalizeLifecycleStatus(lifecycleStatus);
     }
-    const { data, error } = await supabase
-      .from('liri_course_workspaces')
-      .update(patch)
-      .eq('id', id)
-      .select('id')
-      .maybeSingle();
+    let query = supabase.from('liri_course_workspaces').update(patch).eq('id', id);
+    if (baseline?.updatedAt) {
+      query = query.eq('updated_at', baseline.updatedAt);
+    }
+    const { data, error } = await query.select('id, updated_at').maybeSingle();
     if (error) {
       return { id: null, error: new Error(mapLiriWorkspaceError(error)) };
     }
-    return { id: data?.id ?? id, error: null };
+    if (!data) {
+      if (baseline?.updatedAt) {
+        return { id: null, error: new Error(LIRI_WORKSPACE_CONFLICT_MESSAGE), conflict: true };
+      }
+      // Sans jeton de version, une ligne non retournée reste indiscernable d'un refus RLS :
+      // on ne prétend PAS que l'écriture a eu lieu.
+      return { id: null, error: new Error('Enregistrement refusé (fiche introuvable ou accès insuffisant).') };
+    }
+    noteWorkspaceSaved({ id, payload: mergedPayload, updatedAt: data.updated_at });
+    return { id: data.id ?? id, error: null };
   }
 
   const { data, error } = await supabase
@@ -165,30 +198,50 @@ export async function saveLiriCourseWorkspace({ id, title, payload, lifecycleSta
       payload,
       lifecycle_status: normalizeLifecycleStatus(lifecycleStatus),
     })
-    .select('id')
+    .select('id, updated_at')
     .single();
   if (error) {
     return { id: null, error: new Error(mapLiriWorkspaceError(error)) };
+  }
+  if (data?.id) {
+    noteWorkspaceSaved({ id: data.id, payload, updatedAt: data.updated_at });
   }
   return { id: data?.id ?? null, error: null };
 }
 
 /**
+ * Lecture d'une fiche. ⛔ Pose AUSSI l'empreinte anti-écrasement : c'est le seul chemin
+ * d'ouverture d'un workspace, donc le seul endroit où l'on est certain de ne rater aucun
+ * appelant (URL `?workspace=`, invitation, sélecteur cloud).
+ * ⛔ `trackBaseline: false` pour toute lecture qui n'est PAS une ouverture (ex. point de
+ * restauration pris juste avant un enregistrement) : rafraîchir l'empreinte à ce moment-là
+ * remettrait le jeton `updated_at` à jour et annulerait le verrou de concurrence.
+ *
  * @param {string} workspaceId
- * @returns {Promise<{ row: { id: string; title: string; payload: unknown; user_id: string; lifecycle_status?: string } | null; error: Error | null }>}
+ * @param {{ trackBaseline?: boolean }} [options]
+ * @returns {Promise<{ row: { id: string; title: string; payload: unknown; user_id: string; updated_at?: string; lifecycle_status?: string } | null; error: Error | null }>}
  */
-export async function fetchLiriCourseWorkspaceById(workspaceId) {
+export async function fetchLiriCourseWorkspaceById(workspaceId, { trackBaseline = true } = {}) {
   const { session } = await getSupabaseSession();
   if (!session) {
     return { row: null, error: new Error('Non connecté') };
   }
   const { data, error } = await supabase
     .from('liri_course_workspaces')
-    .select('id, title, payload, user_id, lifecycle_status')
+    .select('id, title, payload, user_id, updated_at, lifecycle_status')
     .eq('id', workspaceId)
     .maybeSingle();
   if (error) {
     return { row: null, error: new Error(mapLiriWorkspaceError(error)) };
+  }
+  if (data?.id && trackBaseline) {
+    setWorkspaceBaseline({
+      id: data.id,
+      payload: data.payload,
+      updatedAt: data.updated_at ?? null,
+      canvasHydrated: !isLegacyPolotnoOnlyPayload(data.payload),
+      legacyPolotnoOnly: isLegacyPolotnoOnlyPayload(data.payload),
+    });
   }
   return { row: data, error: null };
 }
@@ -206,6 +259,7 @@ export async function deleteLiriCourseWorkspace(workspaceId) {
   if (error) {
     return { error: new Error(mapLiriWorkspaceError(error)) };
   }
+  if (getWorkspaceBaselineFor(workspaceId)) clearWorkspaceBaseline();
   return { error: null };
 }
 

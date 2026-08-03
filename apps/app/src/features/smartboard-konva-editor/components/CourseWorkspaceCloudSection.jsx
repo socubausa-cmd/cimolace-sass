@@ -16,8 +16,11 @@ import { cn } from '@/lib/utils';
 import {
   assertWorkspacePayload,
   compareWorkspacePayloadsForUi,
+  isLegacyPolotnoOnlyPayload,
 } from '../lib/courseWorkspaceBundle';
 import { buildWorkspacePayloadFromStores } from '../store/smartboardWorkspaceApi';
+import { useDesignerShellStore } from '../store/useDesignerShellStore';
+import { clearWorkspaceBaseline } from '../lib/liriWorkspaceBaseline';
 import {
   labelLifecycleStatusFr,
   LIRI_WORKSPACE_LIFECYCLE_STATUSES,
@@ -104,6 +107,15 @@ export default function CourseWorkspaceCloudSection({
   const [compareResult, setCompareResult] = useState(/** @type {{ identical: boolean; lines: string[] } | null} */ (null));
   const [compareBusy, setCompareBusy] = useState(false);
 
+  /**
+   * ⛔ UNE seule fiche cloud active dans tout le Designer. Ce panneau et la barre du haut
+   * (DesignerCloudToolbar, via useDesignerShellStore.cloudWorkspaceId) tenaient chacun SON id :
+   * ouvrir la fiche B ici puis enregistrer là-haut écrivait le contenu de B dans la fiche A.
+   * Toute mutation d'`cloudId` doit donc passer par `syncCloudId`.
+   */
+  const setShellCloudMeta = useDesignerShellStore((s) => s.setCloudMeta);
+  const shellCloudId = useDesignerShellStore((s) => s.cloudWorkspaceId);
+
   const cloudIdRef = useRef(cloudId);
   const titleDraftRef = useRef(titleDraft);
   const accessRoleRef = useRef(accessRole);
@@ -120,6 +132,29 @@ export default function CourseWorkspaceCloudSection({
   useEffect(() => {
     lifecycleStatusRef.current = lifecycleStatus;
   }, [lifecycleStatus]);
+
+  /** Pose l'id de fiche ICI **et** dans le shell — jamais l'un sans l'autre. */
+  const syncCloudId = useCallback(
+    (id, title) => {
+      setCloudId(id ?? null);
+      setShellCloudMeta({ id: id ?? null, title: title ?? (id ? undefined : '') });
+    },
+    [setShellCloudMeta],
+  );
+
+  /**
+   * Le shell a coupé le lien cloud (« Nouveau document ») : ce panneau doit lâcher SA fiche,
+   * sinon son autosauvegarde 2 min continue d'écrire dans le cours précédent.
+   */
+  useEffect(() => {
+    if (shellCloudId !== null || !cloudIdRef.current) return;
+    setCloudId(null);
+    setTitleDraft('');
+    setAccessRole(null);
+    setWorkspaceOwnerId(null);
+    setShareRows([]);
+    setVersions([]);
+  }, [shellCloudId]);
 
   useEffect(() => {
     try {
@@ -199,7 +234,8 @@ export default function CourseWorkspaceCloudSection({
       if (session) void refreshList();
       else {
         setList([]);
-        setCloudId(null);
+        clearWorkspaceBaseline();
+        syncCloudId(null, '');
         setAccessRole(null);
         setWorkspaceOwnerId(null);
       }
@@ -209,7 +245,7 @@ export default function CourseWorkspaceCloudSection({
       if (data.session) void refreshList();
     });
     return () => sub.subscription.unsubscribe();
-  }, [refreshList]);
+  }, [refreshList, syncCloudId]);
 
   const buildPayloadNow = useCallback(() => buildWorkspacePayloadFromStores(), []);
 
@@ -234,9 +270,29 @@ export default function CourseWorkspaceCloudSection({
     setBusy(true);
     setStatus('');
     const wasNew = !cloudId;
+    let versionWarning = '';
     try {
       const payload = buildPayloadNow();
       const title = titleDraft.trim() || inferDefaultTitle();
+
+      // ⛔ Le point de version doit être pris AVANT l'écrasement : une version insérée après
+      // photographie le nouvel état et n'a jamais permis de récupérer ce qu'on venait de détruire.
+      if (!wasNew && cloudId) {
+        const { row: current, error: readErr } = await fetchLiriCourseWorkspaceById(cloudId, {
+          trackBaseline: false,
+        });
+        if (readErr) {
+          versionWarning = ` — point de restauration non pris : ${readErr.message}`;
+        } else if (current?.payload) {
+          const { error: verErr } = await insertWorkspaceVersion(
+            cloudId,
+            current.payload,
+            current.title || title,
+          );
+          if (verErr) versionWarning = ` — point de restauration non pris : ${verErr.message}`;
+        }
+      }
+
       const { id, error } = await saveLiriCourseWorkspace({
         id: cloudId,
         title,
@@ -247,21 +303,22 @@ export default function CourseWorkspaceCloudSection({
         setStatus(error.message);
         return;
       }
-      if (id) setCloudId(id);
+      if (id) syncCloudId(id, title);
       setTitleDraft(title);
       if (wasNew) {
         setAccessRole('owner');
         setWorkspaceOwnerId(user?.id ?? null);
       }
-      setStatus('Enregistré sur le cloud.');
+      setStatus(`Enregistré sur le cloud.${versionWarning}`);
       await refreshList();
       const savedId = id ?? cloudId;
-      if (versionOnSave && !wasNew && savedId) {
+      if (versionOnSave && savedId) {
         const { error: verErr } = await insertWorkspaceVersion(savedId, payload, title);
         if (verErr) {
           setStatus(`Enregistré — historique : ${verErr.message}`);
         }
       }
+      await loadVersions();
     } finally {
       setBusy(false);
     }
@@ -284,7 +341,7 @@ export default function CourseWorkspaceCloudSection({
         setStatus(error.message);
         return;
       }
-      if (id) setCloudId(id);
+      if (id) syncCloudId(id, title);
       setTitleDraft(title);
       setLifecycleStatus('draft');
       setAccessRole('owner');
@@ -374,7 +431,7 @@ export default function CourseWorkspaceCloudSection({
         setStatus(saveErr?.message || 'Échec de la création de fiche');
         return;
       }
-      setCloudId(id);
+      syncCloudId(id, title);
       setTitleDraft(title);
       setLifecycleStatus('draft');
       setAccessRole('owner');
@@ -458,7 +515,7 @@ export default function CourseWorkspaceCloudSection({
         return;
       }
       const payload = assertWorkspacePayload(row.payload);
-      setCloudId(row.id);
+      syncCloudId(row.id, row.title || '');
       setTitleDraft(row.title || '');
       setLifecycleStatus(normalizeLifecycleStatus(row.lifecycle_status));
       setWorkspaceOwnerId(row.user_id);
@@ -470,7 +527,14 @@ export default function CourseWorkspaceCloudSection({
         setAccessRole('viewer');
       }
       onWorkspaceLoaded(payload);
-      setStatus('Workspace chargé.');
+      // Ce chemin d'ouverture n'affichait RIEN : l'utilisateur voyait un canevas vide sur une
+      // fiche Polotno héritée, croyait à un bug, et retouchait par-dessus.
+      setStatus(
+        isLegacyPolotnoOnlyPayload(payload)
+          ? 'Ancien workspace Polotno : seul le plan Copilot est chargé, le canevas Konva est vide. '
+            + 'Ses pages d\'origine sont préservées à l\'enregistrement, mais le Designer ne sait pas les afficher.'
+          : 'Workspace chargé.',
+      );
     } finally {
       setBusy(false);
     }
@@ -487,7 +551,7 @@ export default function CourseWorkspaceCloudSection({
         return;
       }
       if (cloudId === id) {
-        setCloudId(null);
+        syncCloudId(null, '');
         setTitleDraft('');
         setAccessRole(null);
         setWorkspaceOwnerId(null);
@@ -500,7 +564,10 @@ export default function CourseWorkspaceCloudSection({
   };
 
   const startNewCloud = () => {
-    setCloudId(null);
+    // Aucune fiche ouverte → aucune empreinte à conserver (sinon une sauvegarde future
+    // fusionnerait avec le payload d'un autre document).
+    clearWorkspaceBaseline();
+    syncCloudId(null, '');
     setTitleDraft(inferDefaultTitle());
     setLifecycleStatus('draft');
     setAccessRole(null);
@@ -603,7 +670,7 @@ export default function CourseWorkspaceCloudSection({
                 {accessRole === 'owner'
                   ? 'Propriétaire'
                   : accessRole === 'editor'
-                    ? 'Co-édition'
+                    ? 'Édition (chacun son tour)'
                     : 'Lecture seule'}
               </span>
               {workspaceOwnerId && workspaceOwnerId !== user?.id ? (
@@ -952,7 +1019,7 @@ export default function CourseWorkspaceCloudSection({
                   className="w-full rounded border border-white/[0.12] bg-black/40 py-1 text-[10px] text-white"
                 >
                   <option value="viewer">Lecture seule</option>
-                  <option value="editor">Co-édition</option>
+                  <option value="editor">Édition (chacun son tour)</option>
                 </select>
                 <button
                   type="button"
@@ -1003,7 +1070,7 @@ export default function CourseWorkspaceCloudSection({
                   className="w-full rounded border border-white/[0.12] bg-black/40 py-1 text-[10px] text-white"
                 >
                   <option value="viewer">Lecture seule</option>
-                  <option value="editor">Co-édition</option>
+                  <option value="editor">Édition (chacun son tour)</option>
                 </select>
                 <label className="block text-[8px] text-white/45">
                   Expire dans (jours, max. 90)

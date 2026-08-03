@@ -54,7 +54,7 @@ import {
   buildWorkspacePayloadFromStores,
   hydrateWorkspaceIntoKonvaEditor,
   parseWorkspaceImport,
-  LIRI_COURSE_WORKSPACE_LOCAL_KEY,
+  liriCourseWorkspaceLocalKey,
 } from './store/smartboardWorkspaceApi';
 import { uploadSmartboardCanvasImage } from '@/lib/uploadSmartboardCanvasImage';
 import { saveRenderSlideFramesToFormationContent } from '@/lib/saveRenderSlideFrames';
@@ -150,9 +150,18 @@ const SmartboardKonvaEditorV1 = forwardRef(function SmartboardKonvaEditorV1({
   const editorRef = useRef(null);
   /** Collaboration Realtime */
   const [collabEnabled, setCollabEnabled] = useState(false);
-  const [collabRoomId] = useState(() => {
+  /**
+   * Salon de présence. Quand une fiche cloud est ouverte, il est DÉRIVÉ de son id : sinon
+   * deux collègues invités sur la même fiche ne se voyaient pas (chacun tirait un id aléatoire
+   * de son propre localStorage et devait se l'échanger à la main).
+   * ⚠️ Présence et curseurs uniquement — le contenu n'est pas synchronisé (useSmartboardCollab).
+   */
+  const [collabFallbackRoomId] = useState(() => {
     try { return localStorage.getItem('liri_collab_room') || crypto.randomUUID().slice(0, 8); } catch { return crypto.randomUUID().slice(0, 8); }
   });
+  const collabRoomId = cloudBootstrap?.workspaceId
+    ? `ws-${cloudBootstrap.workspaceId}`
+    : collabFallbackRoomId;
   const [inlineTextId, setInlineTextId] = useState(null);
   const [inlineDraft, setInlineDraft] = useState('');
   const [inlineBox, setInlineBox] = useState(null);
@@ -186,6 +195,14 @@ const SmartboardKonvaEditorV1 = forwardRef(function SmartboardKonvaEditorV1({
   const longiaThreadScopeId =
     longiaThreadScopeIdProp ||
     (cloudBootstrap?.workspaceId ? `ws-${cloudBootstrap.workspaceId}` : 'local-konva');
+
+  /**
+   * Clé du brouillon local, PAR DOCUMENT.
+   * ⛔ La clé était globale : le designer de scène live (même composant, autre document) écrasait
+   * le brouillon du Designer en 2 s, et réciproquement. Le scope reprend celui du fil LONGIA,
+   * déjà distinct par scène live et par fiche cloud.
+   */
+  const localDraftKey = liriCourseWorkspaceLocalKey(longiaThreadScopeId);
 
   const project = useSmartboardKonvaStore((s) => s.project);
   const selectedIds = useSmartboardKonvaStore((s) => s.selectedIds);
@@ -585,15 +602,15 @@ const SmartboardKonvaEditorV1 = forwardRef(function SmartboardKonvaEditorV1({
   const onSaveLocalDraft = useCallback(() => {
     const payload = buildWorkspacePayloadFromStores();
     try {
-      localStorage.setItem(LIRI_COURSE_WORKSPACE_LOCAL_KEY, JSON.stringify(payload));
+      localStorage.setItem(localDraftKey, JSON.stringify(payload));
     } catch {
       /* quota */
     }
-  }, []);
+  }, [localDraftKey]);
 
   const onLoadLocalDraft = useCallback(() => {
     try {
-      const raw = localStorage.getItem(LIRI_COURSE_WORKSPACE_LOCAL_KEY);
+      const raw = localStorage.getItem(localDraftKey);
       if (!raw) return;
       const data = parseWorkspaceImport(raw);
       skipEnsureNextCourseEffectRef.current = true;
@@ -601,7 +618,7 @@ const SmartboardKonvaEditorV1 = forwardRef(function SmartboardKonvaEditorV1({
     } catch {
       /* ignore */
     }
-  }, []);
+  }, [localDraftKey]);
 
   const onPickImageUpload = async (e) => {
     const f = e.target.files?.[0];
@@ -1234,11 +1251,11 @@ const SmartboardKonvaEditorV1 = forwardRef(function SmartboardKonvaEditorV1({
     autoSaveTimerRef.current = setTimeout(() => {
       try {
         const payload = buildWorkspacePayloadFromStores();
-        localStorage.setItem(LIRI_COURSE_WORKSPACE_LOCAL_KEY, JSON.stringify(payload));
+        localStorage.setItem(localDraftKey, JSON.stringify(payload));
       } catch { /* quota */ }
     }, 2000);
     return () => { if (autoSaveTimerRef.current) clearTimeout(autoSaveTimerRef.current); };
-  }, [project]);
+  }, [project, localDraftKey]);
 
   const runAiImprove = async (intent = 'balance') => {
     const exp = buildSceneExport(project);
@@ -1620,6 +1637,10 @@ const SmartboardKonvaEditorV1 = forwardRef(function SmartboardKonvaEditorV1({
                   { t: 'icones',       Icon: Star,        label: 'Icones' },
                   { t: 'blocs',        Icon: BookOpen,    label: 'Blocs pedagogiques' },
                   { t: 'fonds',        Icon: Layers,      label: 'Fonds' },
+                  // LIRI+ : Coach Slide (score + critique, edge `liri-coach-slide`), packs Pro et
+                  // Science, bibliothèque de phrases. L'onglet existait dans CanvaDesignPanel mais
+                  // AUCUN bouton ne le sélectionnait — le cœur du cahier des charges était injoignable.
+                  { t: 'liri',         Icon: Atom,        label: 'LIRI+ · Coach slide' },
                   { t: 'theme',        Icon: Palette,     label: 'Theme' },
                   { t: 'bibliotheque', Icon: BookMarked,  label: 'Bibliothèque' },
                   { t: 'fichier',      Icon: FolderOpen,  label: 'Import / Export' },
@@ -1650,7 +1671,9 @@ const SmartboardKonvaEditorV1 = forwardRef(function SmartboardKonvaEditorV1({
                   </div>
                 )}
 
-                {['templates','texte','elements','icones','blocs','fonds','theme','fichier'].includes(leftTool) && (
+                {/* ⛔ Toute entrée ajoutée à la liste ci-dessus doit AUSSI figurer ici, sinon le
+                    bouton s'allume et aucun panneau ne s'ouvre (cas vécu par l'onglet 'liri'). */}
+                {['templates','texte','elements','icones','blocs','fonds','liri','theme','fichier'].includes(leftTool) && (
                   <div className="mt-2 min-h-0 flex-1 overflow-hidden rounded-xl border border-white/[0.07]">
                     <CanvaDesignPanel
                       activeTab={leftTool}
@@ -2308,8 +2331,15 @@ const SmartboardKonvaEditorV1 = forwardRef(function SmartboardKonvaEditorV1({
             </div>
           )}
 
-          {/* Collab — barre presence en bas du panneau droit */}
+          {/* Présence — barre en bas du panneau droit.
+              ⛔ NE PAS l'appeler « co-édition » : rien du contenu n'est synchronisé. */}
           <div className="shrink-0 border-t border-white/[0.06] bg-[#090b12] px-2.5 py-2">
+            {collabEnabled ? (
+              <p className="mb-1 text-[9px] leading-snug text-amber-300/70">
+                Présence et curseurs uniquement — le canevas n&apos;est pas synchronisé.
+                Enregistrez chacun votre tour.
+              </p>
+            ) : null}
             <div className="flex items-center justify-between gap-2">
               <div className="flex items-center gap-1.5">
                 {collabEnabled ? (
@@ -2330,7 +2360,7 @@ const SmartboardKonvaEditorV1 = forwardRef(function SmartboardKonvaEditorV1({
                     )}
                   </>
                 ) : (
-                  <span className="text-[11px] text-white/30">Collab desactivee</span>
+                  <span className="text-[11px] text-white/30">Présence désactivée</span>
                 )}
               </div>
               <button

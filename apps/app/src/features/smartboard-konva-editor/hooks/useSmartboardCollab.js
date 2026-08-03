@@ -14,7 +14,15 @@ function colorForUser(userId) {
 }
 
 /**
- * Collaboration temps reel sur le SmartBoard Designer.
+ * PRÉSENCE temps réel sur le SmartBoard Designer — PAS de co-édition.
+ *
+ * ⛔ Ce canal ne transporte QUE des curseurs et de la présence : aucune mutation du projet
+ * n'est diffusée ni fusionnée. Deux personnes qui « travaillent ensemble » travaillent en
+ * réalité chacune sur sa copie mémoire, et le dernier qui enregistre gagne (le verrou
+ * optimiste `updated_at` de saveLiriCourseWorkspace refuse désormais l'écrasement muet et
+ * affiche un conflit). Ne pas présenter cet écran comme de la co-édition tant que les
+ * mutations ne sont pas diffusées.
+ *
  * - Canal Supabase Realtime Broadcast : `smartboard-collab-{roomId}`
  * - Presence : liste des utilisateurs connectes
  * - Curseurs : positions relayees entre participants

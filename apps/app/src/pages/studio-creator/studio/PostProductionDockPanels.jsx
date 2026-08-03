@@ -80,8 +80,13 @@ function NleDockControls() {
           <RotateCcw className="h-3 w-3" />
         </Button>
       </div>
-      <p className="text-[8px] leading-snug text-white/60">
-        Filtres CSS sur la preview — enregistrés dans <span className="font-mono text-white/75">data.nle</span> avec Valider.
+      {/* ⛔ Ce dock n'écrit RIEN : le store d'étalonnage est purement mémoire et ce fichier
+          n'importe pas supabase. La phrase annonçait un enregistrement dans `data.nle` « avec
+          Valider » — bouton qui n'existe pas ici. La persistance réelle se fait dans la page
+          Post-production vidéo. */}
+      <p className="text-[8px] leading-snug text-amber-300/70">
+        Aperçu seulement : ces filtres ne sont pas enregistrés et repartent à zéro au rechargement.
+        Pour un étalonnage persistant, passez par la Post-production vidéo.
       </p>
       {row('exposure', 'Luminosité', -100, 100, 1)}
       {row('contrast', 'Contraste %', 0, 200, 1)}
