@@ -4,9 +4,18 @@ import { ArrowRight, ArrowUpRight, BookOpen, Landmark, Globe, Map, Star, Sun, Mo
 
 // Maquette ACCUEIL — récit "Deux univers" (École ISNA ⟷ Temple Ngowazulu).
 // Thème Tangerine (Inter + Source Serif 4) + accent OR. Bi-mode clair/sombre via variables CSS.
+// ⚠️ Variante NON ROUTÉE : l'accueil servi est MaquetteHero04 (registre TENANT_VITRINES, App.jsx).
+// Aucun import ailleurs dans apps/app/src — si elle est remise en service, revérifier ses liens.
 const TEMPLE = (n) => `/ngowazulu/temple-${String(n).padStart(2, '0')}.jpg`;
 const HERO_IMG = '/ngowazulu/hero-liberation.png';
 const EASE = [0.22, 1, 0.36, 1];
+
+// ⛔ Les URL « propres » /ecole, /temple, /doctrine sont redirigées vers l'accueil par App.jsx
+// (domaine custom prorascience.org). Les pages narratives ne répondent réellement que sous
+// /t/isna/:page (registre TENANT_VITRINES) — viser autre chose = reconstruire un lien mort.
+const CHEMIN_ECOLE = '/t/isna/ecole';
+const CHEMIN_TEMPLE = '/t/isna/temple';
+const CHEMIN_DOCTRINE = '/t/isna/doctrine';
 
 const METRICS = [
   { icon: Globe, value: '2500+', label: 'INITIÉS' },
@@ -235,7 +244,7 @@ export default function MaquetteAccueil() {
         {/* École */}
         <a
           id="ecole"
-          href="#"
+          href={CHEMIN_ECOLE}
           className="group relative flex min-h-[70vh] flex-col justify-end overflow-hidden p-10 md:border-r"
           style={{ background: 'var(--panel)', borderColor: 'var(--border)' }}
         >
@@ -257,7 +266,7 @@ export default function MaquetteAccueil() {
         </a>
 
         {/* Temple */}
-        <a id="temple" href="#" className="group relative flex min-h-[70vh] flex-col justify-end overflow-hidden p-10">
+        <a id="temple" href={CHEMIN_TEMPLE} className="group relative flex min-h-[70vh] flex-col justify-end overflow-hidden p-10">
           <img src={TEMPLE(1)} alt="Temple Ngowazulu" className="absolute inset-0 h-full w-full object-cover transition duration-700 group-hover:scale-105" />
           <div className="absolute inset-0 bg-gradient-to-t from-[#190f07]/90 via-[#190f07]/55 to-[#190f07]/10" />
           <div className="absolute inset-0 bg-[radial-gradient(circle_at_70%_25%,rgba(191,154,79,0.28),transparent_55%)]" />
@@ -316,7 +325,7 @@ export default function MaquetteAccueil() {
 
           <div className="mt-12 flex justify-center">
             <a
-              href="#"
+              href={CHEMIN_DOCTRINE}
               className="rounded-full border px-7 py-3 text-sm font-semibold transition hover:bg-[var(--gold)] hover:text-[#0d0b09]"
               style={{ borderColor: 'var(--gold)', color: 'var(--gold)' }}
             >

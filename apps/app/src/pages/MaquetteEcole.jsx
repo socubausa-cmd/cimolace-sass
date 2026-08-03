@@ -4,6 +4,9 @@ import { MAQ_THEME } from '@/components/maquette/maqTheme';
 import { MaqNav } from '@/components/maquette/MaqNav';
 import { MaqFooter } from '@/components/maquette/MaqFooter';
 import { TempleServices as ImageGrid, TempleFeatured as FeaturedBlock } from '@/components/ui/feature-sections';
+import ProrascienceCyclesEcole from '@/components/prorascience/ProrascienceCyclesEcole';
+import ProrascienceFaq from '@/components/prorascience/ProrascienceFaq';
+import ProrascienceContactBloc from '@/components/prorascience/ProrascienceContactBloc';
 
 const TECH = (id) => `https://images.unsplash.com/photo-${id}?auto=format&fit=crop&w=700&q=80`;
 const gold = { color: 'var(--gold)' };
@@ -38,10 +41,12 @@ export default function MaquetteEcole() {
             vous êtes ici pour comprendre, maîtriser, puis évoluer.
           </p>
           <div className="mt-9 flex flex-wrap items-center justify-center gap-3">
-            <a href="/programme" className="inline-flex items-center gap-2 rounded-full px-7 py-3 text-sm font-semibold transition hover:brightness-110" style={{ background: 'var(--gold)', color: '#0d0b09' }}>
-              Le plan du cours <ArrowRight className="h-4 w-4" />
+            {/* Le prix n'était visible qu'APRÈS création de compte : le premier bouton mène
+                désormais aux cycles et à leurs tarifs, rendus plus bas dans cette page. */}
+            <a href="#cycles" className="inline-flex min-h-[48px] items-center gap-2 rounded-full px-7 py-3 text-sm font-semibold transition hover:brightness-110" style={{ background: 'var(--gold)', color: '#0d0b09' }}>
+              Voir les cycles et les tarifs <ArrowRight className="h-4 w-4" />
             </a>
-            <a href="/signup" className="rounded-full border px-7 py-3 text-sm font-semibold transition hover:bg-[var(--gold)] hover:text-[#0d0b09]" style={{ borderColor: 'var(--gold)', color: 'var(--gold)' }}>
+            <a href="/signup" className="inline-flex min-h-[48px] items-center rounded-full border px-7 py-3 text-sm font-semibold transition hover:bg-[var(--gold)] hover:text-[#0d0b09]" style={{ borderColor: 'var(--gold)', color: 'var(--gold)' }}>
               Créer un compte
             </a>
           </div>
@@ -85,6 +90,19 @@ export default function MaquetteEcole() {
         text="Échanges en direct, suivi contextuel, expérience vivante — comme en présentiel."
         ctaLabel="Découvrir le plan du cours"
         ctaHref="/programme"
+      />
+
+      {/* ===== Les cycles et leurs tarifs (lus dans billing_plans) ===== */}
+      <ProrascienceCyclesEcole />
+
+      {/* ===== Objections d'entrée ===== */}
+      <ProrascienceFaq />
+
+      {/* ===== Contact ===== */}
+      <ProrascienceContactBloc
+        eyebrow="Avant de vous inscrire"
+        titre="Un doute sur le cycle qui vous correspond ?"
+        texte="Dites-nous où vous en êtes : le secrétariat vous oriente vers le cycle adapté, sans vous vendre plus que nécessaire."
       />
 
       <MaqFooter />

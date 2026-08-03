@@ -6,7 +6,10 @@ import { MaqFooter } from '@/components/maquette/MaqFooter';
 
 const gold = { color: 'var(--gold)' };
 
-const PILIERS = [
+// ⚠️ NOMENCLATURE : « les 3 piliers » désignent Raison / Science / Savoirs africains (accueil + OS).
+// Cette triade-ci décrit les 3 DOMAINES que la doctrine embrasse — deux listes différentes ne
+// peuvent pas porter le même nom sur le même site.
+const DOMAINES = [
   {
     n: '01',
     icon: Eye,
@@ -113,11 +116,11 @@ export default function MaquetteCosmos() {
         <div className="mx-auto max-w-7xl px-6">
           <div className="text-center">
             <p className="text-[11px] font-semibold uppercase tracking-[0.4em]" style={gold}>Fondements</p>
-            <h2 className="mq-display mt-4 text-4xl font-semibold sm:text-5xl">Les 3 piliers de la doctrine.</h2>
+            <h2 className="mq-display mt-4 text-4xl font-semibold sm:text-5xl">Les 3 domaines de la doctrine.</h2>
           </div>
           <div className="mt-16 grid grid-cols-1 gap-px overflow-hidden rounded-2xl border md:grid-cols-3"
             style={{ borderColor: 'var(--border)', background: 'var(--border)' }}>
-            {PILIERS.map((p) => {
+            {DOMAINES.map((p) => {
               const Icon = p.icon;
               return (
                 <div key={p.n} className="flex flex-col p-10" style={{ background: 'var(--bg)' }}>

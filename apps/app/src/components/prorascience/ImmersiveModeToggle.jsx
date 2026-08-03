@@ -1,4 +1,5 @@
 import React from 'react';
+import { createPortal } from 'react-dom';
 
 /**
  * BASCULE SITE ↔ NAVIGATION IMMERSIVE (prorascience.org).
@@ -14,8 +15,14 @@ import React from 'react';
  *
  * Le paramètre d'URL sert de secours quand le stockage local est indisponible
  * (navigation privée) : il suffit à imposer le mode au chargement suivant.
+ *
+ * ⚠️ POSITION : la pastille se rend par PORTAIL dans <body>, ancrée en BAS À DROITE. Elle était
+ * auparavant centrée en bas (conteneur fixe d'App.jsx) — pile sur l'axe des boutons d'achat, qui
+ * sont en pleine largeur sous 1024 px : un tap manqué rechargeait la page dans l'agent et faisait
+ * perdre le tunnel. Le portail est nécessaire car le conteneur d'appel porte un `translate`, qui
+ * crée un bloc conteneur pour tout enfant `position: fixed`.
  */
-export default function ImmersiveModeToggle({ active = false, className = '' }) {
+export default function ImmersiveModeToggle({ active = false, className = '', flottant = true }) {
   const basculer = () => {
     try {
       const url = new URL(window.location.href);
@@ -26,7 +33,7 @@ export default function ImmersiveModeToggle({ active = false, className = '' }) 
     }
   };
 
-  return (
+  const bouton = (
     <button
       type="button"
       onClick={basculer}
@@ -35,7 +42,7 @@ export default function ImmersiveModeToggle({ active = false, className = '' }) 
         : 'Explorer le site guidé par l’agent, en plein écran'}
       aria-pressed={active}
       className={[
-        'inline-flex items-center gap-2 rounded-full border px-4 py-2 text-[13px] font-medium',
+        'inline-flex min-h-[44px] items-center gap-2 rounded-full border px-4 py-2 text-[14px] font-medium',
         'transition-colors backdrop-blur',
         active
           ? 'border-white/20 bg-black/50 text-white/80 hover:bg-black/70'
@@ -46,5 +53,12 @@ export default function ImmersiveModeToggle({ active = false, className = '' }) 
       <span aria-hidden="true">{active ? '↩' : '✦'}</span>
       {active ? 'Revenir au site' : 'Navigation immersive'}
     </button>
+  );
+
+  if (!flottant || typeof document === 'undefined') return bouton;
+
+  return createPortal(
+    <div className="fixed bottom-4 right-4 z-[2147480000]">{bouton}</div>,
+    document.body,
   );
 }

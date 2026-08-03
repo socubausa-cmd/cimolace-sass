@@ -10,6 +10,19 @@ import { CTAQuestionsMarquee } from '@/components/ui/cta-with-text-marquee';
 import { FeaturesAtouts } from '@/components/ui/features-8';
 import { TempleServices } from '@/components/ui/feature-sections';
 import DeuxUnivers from '@/components/ui/spatial-product-showcase';
+import ProrascienceCyclesEcole from '@/components/prorascience/ProrascienceCyclesEcole';
+import ProrascienceFaq from '@/components/prorascience/ProrascienceFaq';
+import ProrascienceContactBloc from '@/components/prorascience/ProrascienceContactBloc';
+import {
+  CHEMIN_BOUTIQUE,
+  CHEMIN_CONSULTATION,
+  CHEMIN_CONTACT,
+  CHEMIN_SERVICES_TEMPLE,
+  OFFRES_MENTORAT,
+  cheminPaiement,
+} from '@/components/prorascience/prorascienceOffres';
+import { isLaunchTrialActive, LAUNCH_TRIAL_ENDS_AT } from '@/lib/liri/memberTier';
+import { PRORASCIENCE_KNOWLEDGE } from '@/lib/agent/prorascienceKnowledge';
 
 // Variante B — hero éditorial/brutaliste (d'après hero-04), adapté PRORASCIENCE + charte Tangerine (Fraunces/or, sombre).
 const TEMPLE = (n) => `/ngowazulu/temple-${String(n).padStart(2, '0')}.jpg`;
@@ -32,48 +45,47 @@ const TESTIMONIALS = [
 const TEMPLE_NUMS = [1, 2, 3, 4, 5, 6, 7, 8, 9];
 const TEMPLE_GALLERY = [...TEMPLE_NUMS, ...TEMPLE_NUMS].map(TEMPLE);
 
-// Offres Ngowazulu — consultation + mentorat (paliers réels), thème or.
+// Bénéfices propres au site pour chaque palier de mentorat. ⛔ Le NOM, le SOUS-TITRE, la FRÉQUENCE
+// et le PRIX ne sont plus recopiés ici : ils viennent de `ngowazuluMentoratOffers` (via
+// OFFRES_MENTORAT) — une copie littérale de moins à maintenir.
+const BENEFICES_MENTORAT = {
+  'ngowazulu-mentorat-1x-month': ['Suivi de fond espacé', 'Accès cours & lives LIRI', 'Stabilisation, budget maîtrisé'],
+  'ngowazulu-mentorat-1x-week': ['Suivi continu personnalisé', 'Accès cours & lives LIRI', 'Communauté encadrée'],
+  'ngowazulu-mentorat-2x-week': ['Lecture fine (songes, aura)', 'Dynamiques lourdes & transitions', 'Accompagnement rapproché'],
+  'ngowazulu-mentorat-urgent-3x-week': ['Priorité & urgences', 'Interventions dédiées', 'Accompagnement total'],
+};
+const MENTORAT_MIS_EN_AVANT = 'ngowazulu-mentorat-1x-week';
+
+// Gamme TEMPLE (consultation + mentorats). La gamme ÉCOLE (les 4 cycles) est rendue à part par
+// <ProrascienceCyclesEcole>, avec ses prix lus en base — les deux familles sont désormais
+// affichées côte à côte, comme dans la navigation immersive.
 const OFFRES = [
   {
     planName: 'Consultation',
     description: 'Diagnostic & orientation',
+    // ⚠️ 50 € = le prix public affiché partout dans le dépôt (ServicesSpirituelsPage, catalogue
+    // du Temple). La page de paiement, elle, laisse aujourd'hui le montant LIBRE pour ce slug tant
+    // que la ligne billing_plans `ngowazulu-consultation-90min` (category='consultation',
+    // price_cents=5000) n'existe pas. À créer en base — sinon l'affiché et l'encaissé divergent.
     price: '50', priceSuffix: '/90 min', currency: '€',
     features: ['Lecture des blocages', "Plan d'action personnalisé", 'Séance de 90 minutes', 'Compte-rendu & suivi'],
     buttonText: 'Réserver une séance', buttonVariant: 'secondary',
-    onCtaClick: () => { window.location.href = '/paiement?plan=ngowazulu-consultation-90min'; },
+    onCtaClick: () => { window.location.href = CHEMIN_CONSULTATION; },
   },
-  {
-    planName: 'Mentorat Essentiel',
-    description: 'Rythme patrimonial',
-    price: '55', priceSuffix: '/mois', currency: '€',
-    features: ['1 rencontre / mois', 'Suivi de fond espacé', 'Accès cours & lives LIRI', 'Stabilisation, budget maîtrisé'],
-    buttonText: 'Choisir ce parcours', buttonVariant: 'secondary',
-    onCtaClick: () => { window.location.href = '/paiement?plan=ngowazulu-mentorat-1x-month'; },
-  },
-  {
-    planName: 'Mentorat Confort',
-    description: 'Accompagnement régulier',
-    price: '180', priceSuffix: '/mois', currency: '€', isPopular: true,
-    features: ['1 rencontre / semaine', 'Suivi continu personnalisé', 'Accès cours & lives LIRI', 'Communauté encadrée'],
-    buttonText: 'Choisir ce parcours', buttonVariant: 'primary',
-    onCtaClick: () => { window.location.href = '/paiement?plan=ngowazulu-mentorat-1x-week'; },
-  },
-  {
-    planName: 'Mentorat Intensif',
-    description: 'Veille renforcée',
-    price: '300', priceSuffix: '/mois', currency: '€',
-    features: ['2 rencontres / semaine', 'Lecture fine (songes, aura)', 'Dynamiques lourdes & transitions', 'Accompagnement rapproché'],
-    buttonText: 'Choisir ce parcours', buttonVariant: 'secondary',
-    onCtaClick: () => { window.location.href = '/paiement?plan=ngowazulu-mentorat-2x-week'; },
-  },
-  {
-    planName: 'Mentorat Souverain',
-    description: 'Transformation intensive',
-    price: '500', priceSuffix: '/mois', currency: '€',
-    features: ["Jusqu'à 3 rencontres / semaine", 'Priorité & urgences', 'Interventions dédiées', 'Accompagnement total'],
-    buttonText: 'Choisir ce parcours', buttonVariant: 'secondary',
-    onCtaClick: () => { window.location.href = '/paiement?plan=ngowazulu-mentorat-urgent-3x-week'; },
-  },
+  ...OFFRES_MENTORAT.map((o) => ({
+    planName: o.nom,
+    description: o.sousTitre,
+    price: o.prix, priceSuffix: '/mois', currency: '€',
+    isPopular: o.slug === MENTORAT_MIS_EN_AVANT,
+    features: [o.frequence, ...(BENEFICES_MENTORAT[o.slug] || [])],
+    buttonText: 'Choisir ce parcours',
+    buttonVariant: o.slug === MENTORAT_MIS_EN_AVANT ? 'primary' : 'secondary',
+    onCtaClick: () => {
+      window.location.href = cheminPaiement({
+        plan: o.slug, type: 'subscription', label: o.nom, priceLabel: `${o.prix} € / mois`,
+      });
+    },
+  })),
 ];
 
 const THEME = `
@@ -91,6 +103,10 @@ const THEME = `
 
 export default function MaquetteHero04() {
   const gold = { color: 'var(--gold)' };
+  // « Gratuit pour commencer » n'est vrai que pendant l'essai de lancement : la phrase est donc
+  // liée à la SOURCE UNIQUE (memberTier), jamais à une date réécrite dans la maquette.
+  const essaiOuvert = isLaunchTrialActive();
+  const finEssai = new Date(LAUNCH_TRIAL_ENDS_AT).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long' });
   return (
     <div className="mq2 fixed inset-0 z-[100] overflow-y-auto" style={{ background: 'var(--bg)', color: 'var(--fg)' }}>
       <style>{THEME}</style>
@@ -114,7 +130,9 @@ export default function MaquetteHero04() {
             <p className="absolute -top-2 left-4 text-xs font-semibold tracking-[0.3em] sm:left-16" style={gold}>
               SCIENCE AFRICAINE TOTALE
             </p>
-            <h1 className="mq-display relative z-20 text-center font-semibold leading-[0.9] tracking-tight text-[clamp(2.25rem,11vw,3.875rem)] sm:text-8xl xl:text-[9.5rem]">
+            {/* Un SEUL clamp continu : la variante sm: faisait bondir le titre de 62 à 96 px pile à
+                640 px de large et débordait entre 640 et ~800 px (iPad Mini, fenêtres réduites). */}
+            <h1 className="mq-display relative z-20 text-center font-semibold leading-[0.9] tracking-tight text-[clamp(2.25rem,9.5vw,9.5rem)]">
               PROR<span style={gold}>A</span>SCIENCE
             </h1>
             <p className="absolute -bottom-9 right-6 hidden text-3xl font-light tracking-[0.18em] xl:block" style={{ color: 'var(--muted)' }}>
@@ -133,24 +151,39 @@ export default function MaquetteHero04() {
                 <p className="mt-2 text-sm leading-snug" style={{ color: 'var(--fg)' }}>
                   Sciences africaines en ligne&nbsp;: cours, lives en groupe et accompagnement personnalisé.
                 </p>
-                <form onSubmit={(e) => { e.preventDefault(); window.location.href = '/signup'; }} className="mt-4">
+                {/* L'adresse saisie est TRANSMISE à /signup (?email=…) : exiger une adresse valide
+                    puis la jeter obligeait le visiteur à la retaper au premier pas du tunnel. */}
+                <form
+                  onSubmit={(e) => {
+                    e.preventDefault();
+                    const email = String(new FormData(e.currentTarget).get('email') || '').trim();
+                    window.location.href = email ? `/signup?email=${encodeURIComponent(email)}` : '/signup';
+                  }}
+                  className="mt-4"
+                >
                   <div className="relative grid grid-cols-[1fr_auto] items-center gap-1.5 rounded-2xl border p-1.5" style={{ borderColor: 'var(--border)', background: 'var(--bg)' }}>
                     <div className="relative">
                       <Mail className="pointer-events-none absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2" style={{ color: 'var(--muted2)' }} />
-                      <input type="email" required placeholder="Votre adresse e-mail" aria-label="Adresse e-mail" className="h-12 w-full bg-transparent pl-12 pr-2 text-sm outline-none" style={{ color: 'var(--fg)' }} />
+                      <input type="email" name="email" required placeholder="Votre adresse e-mail" aria-label="Adresse e-mail" className="h-12 w-full bg-transparent pl-12 pr-2 text-sm outline-none" style={{ color: 'var(--fg)' }} />
                     </div>
-                    <button type="submit" className="inline-flex h-12 items-center gap-2 rounded-xl px-5 text-sm font-semibold transition hover:brightness-110" style={{ background: 'var(--gold)', color: '#0d0b09' }}>
+                    <button type="submit" aria-label="Créer mon compte" className="inline-flex h-12 items-center gap-2 rounded-xl px-4 text-sm font-semibold transition hover:brightness-110 sm:px-5" style={{ background: 'var(--gold)', color: '#0d0b09' }}>
+                      {/* Le libellé reste visible en mobile : une flèche seule ne dit pas ce qui va se passer. */}
+                      <span className="sm:hidden">Créer</span>
                       <span className="hidden sm:block">Créer mon compte</span>
                       <ArrowRight className="hidden h-4 w-4 sm:block" />
                       <SendHorizonal className="h-5 w-5 sm:hidden" />
                     </button>
                   </div>
                 </form>
-                <p className="mt-2.5 text-xs" style={{ color: 'var(--muted2)' }}>
-                  Gratuit pour commencer · sans engagement.
+                <p className="mt-2.5 text-sm" style={{ color: 'var(--muted2)' }}>
+                  {essaiOuvert
+                    ? `Accès complet offert jusqu’au ${finEssai} · sans engagement.`
+                    : 'Création de compte gratuite · vous choisissez ensuite votre cycle.'}
                 </p>
                 <div className="mt-4 text-sm">
-                  <a href="/ecole" className="inline-flex items-center gap-1 font-medium transition hover:text-[var(--gold)]" style={{ color: 'var(--muted)' }}>
+                  {/* ⚠️ Les sous-pages (/ecole, /temple…) sont AUJOURD'HUI redirigées vers l'accueil
+                      par App.jsx : on vise donc les sections de cette page, qui, elles, répondent. */}
+                  <a href="#ecole" className="inline-flex items-center gap-1 font-medium transition hover:text-[var(--gold)]" style={{ color: 'var(--muted)' }}>
                     Découvrir l&apos;École et le Temple <ArrowRight className="h-4 w-4" />
                   </a>
                 </div>
@@ -186,11 +219,11 @@ export default function MaquetteHero04() {
           </p>
           <div className="mt-7 flex justify-center">
             <a
-              href="/temple"
-              className="inline-flex items-center gap-1.5 text-sm font-medium underline-offset-4 transition hover:underline"
+              href={CHEMIN_CONTACT}
+              className="inline-flex min-h-[44px] items-center gap-1.5 text-sm font-medium underline-offset-4 transition hover:underline"
               style={{ color: 'var(--muted)' }}
             >
-              Besoin d&apos;un accompagnement&nbsp;? Prendre rendez-vous
+              Besoin d&apos;un accompagnement&nbsp;? Écrivez-nous
               <ArrowRight className="h-4 w-4" />
             </a>
           </div>
@@ -238,10 +271,10 @@ export default function MaquetteHero04() {
               Deux chemins, un même socle&nbsp;: l&apos;École pour comprendre, le Temple pour traverser. Choisissez par où entrer.
             </p>
             <div className="mt-1 flex flex-col gap-3 sm:flex-row">
-              <a href="/ecole" className="inline-flex items-center justify-center gap-2 rounded-full px-7 py-3 text-sm font-semibold transition hover:brightness-110" style={{ background: 'var(--gold)', color: '#0d0b09' }}>
+              <a href="#cycles" className="inline-flex min-h-[48px] items-center justify-center gap-2 rounded-full px-7 py-3 text-sm font-semibold transition hover:brightness-110" style={{ background: 'var(--gold)', color: '#0d0b09' }}>
                 Entrer à l&apos;École <ArrowRight className="h-4 w-4" />
               </a>
-              <a href="/temple" className="inline-flex items-center justify-center gap-2 rounded-full border px-7 py-3 text-sm font-semibold transition hover:bg-[var(--gold)] hover:text-[#0d0b09]" style={{ borderColor: 'var(--gold)', color: 'var(--gold)' }}>
+              <a href="#offres" className="inline-flex min-h-[48px] items-center justify-center gap-2 rounded-full border px-7 py-3 text-sm font-semibold transition hover:bg-[var(--gold)] hover:text-[#0d0b09]" style={{ borderColor: 'var(--gold)', color: 'var(--gold)' }}>
                 Entrer au Temple <ArrowRight className="h-4 w-4" />
               </a>
             </div>
@@ -271,8 +304,8 @@ export default function MaquetteHero04() {
               </>
             }
             subheading="De « je reproduis des gestes » à « je comprends, j'explique, je transmets ». Pédagogie immersive, outils high-tech et certification progressive."
-            ctaLabel="Découvrir l'École"
-            ctaHref="/ecole"
+            ctaLabel="Voir les cycles de l'École"
+            ctaHref="#cycles"
             items={ECOLE_ITEMS}
           />
         </div>
@@ -297,8 +330,8 @@ export default function MaquetteHero04() {
               ))}
             </ul>
             <div className="mt-9">
-              <a href="/temple" className="inline-flex items-center gap-2 rounded-full px-7 py-3 text-sm font-semibold transition hover:brightness-110" style={{ background: 'var(--gold)', color: '#0d0b09' }}>
-                Entrer au Temple <ArrowRight className="h-4 w-4" />
+              <a href="#offres" className="inline-flex min-h-[48px] items-center gap-2 rounded-full px-7 py-3 text-sm font-semibold transition hover:brightness-110" style={{ background: 'var(--gold)', color: '#0d0b09' }}>
+                Voir les offres du Temple <ArrowRight className="h-4 w-4" />
               </a>
             </div>
           </div>
@@ -313,10 +346,12 @@ export default function MaquetteHero04() {
       <TempleServices
         eyebrow="Au Temple · Ngowazulu"
         heading="Les services du Temple."
+        // Chaque carte mène désormais à un chemin QUI RÉPOND (checkout, page du service, contact) —
+        // elles pointaient toutes vers /temple, redirigé vers l'accueil.
         items={[
-          { title: 'Consultation', desc: 'Diagnostic des blocages & orientation. 50 € · 1h30.', img: TEMPLE(2), href: '/temple' },
-          { title: 'Culte & communion', desc: 'Le rythme communautaire en live. Dès 15 €/mois.', img: TEMPLE(6), href: '/temple' },
-          { title: 'Interventions', desc: 'Exorcisme, rééquilibrage, hospitalisation spirituelle.', img: TEMPLE(3), href: '/temple' },
+          { title: 'Consultation', desc: 'Diagnostic des blocages & orientation. 50 € · 1h30.', img: TEMPLE(2), href: CHEMIN_CONSULTATION },
+          { title: 'Culte & communion', desc: 'Le rythme communautaire en live : on ouvre le mois le 1er dimanche, on le ferme le dernier vendredi.', img: TEMPLE(6), href: CHEMIN_SERVICES_TEMPLE },
+          { title: 'Boutique sacrée', desc: 'Le pack des 9 instruments sacrés : 700 €, activation et suivi 3 mois inclus.', img: TEMPLE(3), href: CHEMIN_BOUTIQUE },
         ]}
       />
 
@@ -341,15 +376,20 @@ export default function MaquetteHero04() {
             className="mx-auto mt-14 grid max-w-4xl grid-cols-1 gap-px overflow-hidden rounded-2xl border text-left sm:grid-cols-3"
             style={{ borderColor: 'var(--border)', background: 'var(--border)' }}
           >
-            {[
-              { n: '01', t: 'La Raison', d: 'Logique, pensée critique, rejet du dogme aveugle.' },
-              { n: '02', t: 'La Science', d: 'Observation, méthode, vérification, modèles.' },
-              { n: '03', t: 'Savoirs africains', d: 'Sagesse ancestrale, cosmogonie, technologies spirituelles.' },
-            ].map((p) => (
-              <div key={p.n} className="p-8" style={{ background: 'var(--bg)' }}>
-                <div className="text-sm font-bold" style={gold}>{p.n}</div>
-                <div className="mq-display mt-2 text-2xl font-semibold">{p.t}</div>
-                <p className="mt-2 text-sm" style={{ color: 'var(--muted2)' }}>{p.d}</p>
+            {/* Les 3 piliers + leur détail viennent de la MÊME source que l'agent immersif
+                (prorascienceKnowledge.vision.pillars) : plus de triade divergente entre les pages. */}
+            {PRORASCIENCE_KNOWLEDGE.vision.pillars.map((p, i) => (
+              <div key={p.title} className="p-8" style={{ background: 'var(--bg)' }}>
+                <div className="text-sm font-bold" style={gold}>{String(i + 1).padStart(2, '0')}</div>
+                <div className="mq-display mt-2 text-2xl font-semibold">{p.title}</div>
+                <ul className="mt-3 space-y-1.5 text-sm" style={{ color: 'var(--muted)' }}>
+                  {p.points.map((pt) => (
+                    <li key={pt} className="flex items-start gap-2">
+                      <span className="mt-1.5 inline-block h-1.5 w-1.5 flex-shrink-0 rounded-full" style={{ background: 'var(--gold)' }} />
+                      {pt}
+                    </li>
+                  ))}
+                </ul>
               </div>
             ))}
           </div>
@@ -384,14 +424,34 @@ export default function MaquetteHero04() {
         </div>
       </section>
 
-      {/* ===== Offres & accompagnement — pricing or ===== */}
+      {/* ===== Famille 1 — les cycles de l'École (prix lus dans billing_plans) ===== */}
+      <ProrascienceCyclesEcole />
+
+      {/* ===== Famille 2 — les offres du Temple (consultation + mentorats) ===== */}
+      {/* ⛔ Le sous-titre ne cite plus « communion mensuelle à 15 € » : aucune offre à 15 € n'est
+          achetable dans cette grille. La communion est présentée à sa vraie place, sur la page
+          des services du Temple (/services-spirituels), qui la décrit. */}
       <section id="offres" className="relative border-t py-12" style={{ borderColor: 'var(--border)', background: 'var(--bg)' }}>
         <ModernPricingPage
-          title="Offres & accompagnement"
-          subtitle="De la première consultation au mentorat souverain — un chemin gradué vers la maîtrise. Communion mensuelle à 15 €."
+          title="Le Temple · accompagnement personnel"
+          subtitle="L'École enseigne, le Temple accompagne. De la première consultation au mentorat souverain — un chemin gradué, au rythme que vous choisissez."
           plans={OFFRES}
         />
+        <div className="mx-auto mt-8 max-w-3xl px-5 text-center sm:px-6">
+          <p className="text-sm leading-relaxed" style={{ color: 'var(--muted2)' }}>
+            Vous cherchez la communion mensuelle, la boutique sacrée ou un voyage initiatique&nbsp;?{' '}
+            <a href={CHEMIN_SERVICES_TEMPLE} className="font-semibold underline underline-offset-4" style={gold}>
+              Voir tous les services du Temple
+            </a>.
+          </p>
+        </div>
       </section>
+
+      {/* ===== FAQ — mêmes réponses que l'agent immersif ===== */}
+      <ProrascienceFaq />
+
+      {/* ===== Contact & rendez-vous — le site n'avait aucun canal entrant ===== */}
+      <ProrascienceContactBloc />
 
       {/* ===== Les grandes questions — CTA + marquee vertical ===== */}
       <CTAQuestionsMarquee />
@@ -413,24 +473,32 @@ export default function MaquetteHero04() {
             Recevez les yeux pour <span style={{ color: 'var(--gold)', fontStyle: 'italic' }}>voir</span>.
           </h2>
           <div className="mt-9 flex flex-wrap items-center justify-center gap-3">
-            <a href="#" className="rounded-full px-7 py-3 text-sm font-semibold transition hover:brightness-110" style={{ background: 'var(--gold)', color: '#0d0b09' }}>
-              Prendre rendez-vous
+            {/* ⛔ C'était un href="#" : le dernier bouton de la page ne faisait littéralement rien.
+                Il mène désormais au seul chemin de prise de contact qui fonctionne (ContactPage). */}
+            <a href={CHEMIN_CONTACT} className="inline-flex min-h-[48px] items-center rounded-full px-7 py-3 text-sm font-semibold transition hover:brightness-110" style={{ background: 'var(--gold)', color: '#0d0b09' }}>
+              Demander un rendez-vous
             </a>
-            <a href="/app" className="rounded-full border px-7 py-3 text-sm font-semibold transition hover:bg-[var(--gold)] hover:text-[#0d0b09]" style={{ borderColor: 'var(--gold)', color: 'var(--gold)' }}>
+            <a href="/login" className="inline-flex min-h-[48px] items-center rounded-full border px-7 py-3 text-sm font-semibold transition hover:bg-[var(--gold)] hover:text-[#0d0b09]" style={{ borderColor: 'var(--gold)', color: 'var(--gold)' }}>
               Accès membre
             </a>
           </div>
-          <nav className="mt-12 flex flex-wrap items-center justify-center gap-x-7 gap-y-3 text-[12px] font-medium uppercase tracking-[0.2em]" style={{ color: 'var(--muted)' }}>
+          <nav className="mt-12 flex flex-wrap items-center justify-center gap-x-7 gap-y-1 text-[13px] font-medium uppercase tracking-[0.2em]" style={{ color: 'var(--muted)' }}>
             {[
-              { l: 'École', h: '#ecole' },
-              { l: 'Temple', h: '#temple' },
+              { l: 'École', h: '#cycles' },
+              { l: 'Temple', h: '#offres' },
               { l: 'Doctrine', h: '#doctrine' },
-              { l: 'Offres', h: '#offres' },
+              { l: 'Questions', h: '#faq' },
               { l: 'Témoignages', h: '#temoignages' },
-              { l: 'Contact', h: '#acces' },
+              { l: 'Contact', h: CHEMIN_CONTACT },
             ].map(({ l, h }) => (
-              <a key={l} href={h} className="transition hover:text-[var(--gold)]">{l}</a>
+              <a key={l} href={h} className="inline-flex min-h-[44px] items-center px-1 transition hover:text-[var(--gold)]">{l}</a>
             ))}
+          </nav>
+          {/* Vente à distance : les informations précontractuelles doivent être atteignables
+              depuis le tunnel. Les deux pages existaient déjà, orphelines. */}
+          <nav className="mt-4 flex flex-wrap items-center justify-center gap-x-6 gap-y-1 text-[13px]" style={{ color: 'var(--muted2)' }}>
+            <a href="/mentions-legales" className="inline-flex min-h-[44px] items-center px-1 underline-offset-4 transition hover:text-[var(--gold)] hover:underline">Mentions légales</a>
+            <a href="/politique-confidentialite" className="inline-flex min-h-[44px] items-center px-1 underline-offset-4 transition hover:text-[var(--gold)] hover:underline">Confidentialité</a>
           </nav>
           <div className="mt-12 flex flex-col items-center justify-between gap-4 border-t pt-8 text-[11px] tracking-widest sm:flex-row" style={{ borderColor: 'var(--border)', color: 'var(--muted2)' }}>
             <div>© 2026 PROR<span style={gold}>A</span>SCIENCE · ISNA × NGOWAZULU</div>

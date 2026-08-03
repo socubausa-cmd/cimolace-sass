@@ -4,15 +4,22 @@ import { MAQ_THEME } from '@/components/maquette/maqTheme';
 import { MaqNav } from '@/components/maquette/MaqNav';
 import { MaqFooter } from '@/components/maquette/MaqFooter';
 import { FeaturesAtouts } from '@/components/ui/features-8';
+import { PRORASCIENCE_KNOWLEDGE } from '@/lib/agent/prorascienceKnowledge';
+import Prorascience21Sciences from '@/components/prorascience/Prorascience21Sciences';
+import ProrascienceGlossaire from '@/components/prorascience/ProrascienceGlossaire';
+import ProrascienceCyclesEcole from '@/components/prorascience/ProrascienceCyclesEcole';
 
 const gold = { color: 'var(--gold)' };
 
+// La QUALIFICATION de chaque phase (`foot` : à qui c'est ouvert, à quel rythme) était retirée du
+// site alors qu'elle existe dans la mémoire partagée avec l'agent — le visiteur ne savait pas si
+// « Exercer » lui était ouvert. On la relit à la source, par position dans la méthode.
 const PHASES = [
   { n: '01', t: 'Comprendre', s: 'Cursus', d: 'Lois invisibles, métaphysique, énergie, structure des rituels.' },
   { n: '02', t: 'Pratiquer', s: 'Modules', d: 'Libation, talisman, protection, guérison.' },
   { n: '03', t: 'Exercer', s: 'Coaching', d: 'Apprendre le métier, accompagner, diagnostiquer.' },
   { n: '04', t: 'Évoluer', s: 'Spécial', d: 'Techniques avancées, secrets spirituels, cas complexes.' },
-];
+].map((p, i) => ({ ...p, f: PRORASCIENCE_KNOWLEDGE.method[i]?.foot || '' }));
 
 const OUTILS = [
   { t: 'LIRI Live Immersion', d: 'Cours à distance en immersion, interaction directe, suivi contextuel.' },
@@ -65,11 +72,19 @@ export default function MaquetteProgramme() {
                 <div className="mq-display mt-2 text-2xl font-semibold">{p.t}</div>
                 <div className="mt-1 text-[11px] font-semibold uppercase tracking-[0.2em]" style={{ color: 'var(--muted2)' }}>{p.s}</div>
                 <p className="mt-3 text-sm leading-relaxed" style={{ color: 'var(--muted2)' }}>{p.d}</p>
+                {p.f && (
+                  <p className="mt-4 inline-block rounded-full border px-3 py-1 text-[12px] font-medium" style={{ borderColor: 'var(--border)', color: 'var(--gold)' }}>
+                    {p.f}
+                  </p>
+                )}
               </div>
             ))}
           </div>
         </div>
       </section>
+
+      {/* ===== Les 21 sciences — ce que l'élève va réellement apprendre ===== */}
+      <Prorascience21Sciences />
 
       {/* ===== Les outils ===== */}
       <section className="relative border-b py-24" style={{ borderColor: 'var(--border)' }}>
@@ -91,6 +106,15 @@ export default function MaquetteProgramme() {
 
       {/* ===== Atouts de la plateforme ===== */}
       <FeaturesAtouts eyebrow="La plateforme" title="Conçu pour la maîtrise." />
+
+      {/* ===== Le vocabulaire employé, défini ===== */}
+      <ProrascienceGlossaire />
+
+      {/* ===== Les cycles et leurs tarifs (billing_plans) ===== */}
+      <ProrascienceCyclesEcole
+        eyebrow="Choisir son cycle"
+        titre="À quel niveau voulez-vous entrer ?"
+      />
 
       {/* ===== Accès aux cours — connexion requise ===== */}
       <section className="relative overflow-hidden border-b py-28" style={{ borderColor: 'var(--border)', background: 'var(--panel)' }}>
