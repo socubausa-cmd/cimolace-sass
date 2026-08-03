@@ -363,6 +363,7 @@ const LandingPage = lazy(() => import('@/pages/LandingPage'));
 const CagnottePage = lazy(() => import('@/pages/CagnottePage'));
 const PublicPrayerBookingPage = lazy(() => import('@/pages/PublicPrayerBookingPage'));
 const PublicReschedulePage = lazy(() => import('@/pages/PublicReschedulePage'));
+const PublicReservationPage = lazy(() => import('@/pages/PublicReservationPage'));
 const MaquetteHero04 = lazy(() => import('@/pages/MaquetteHero04'));
 const MaquetteCosmos = lazy(() => import('@/pages/MaquetteCosmos'));
 const MaquetteFondateur = lazy(() => import('@/pages/MaquetteFondateur'));
@@ -1434,6 +1435,7 @@ const AppContent = () => {
                         // JAMAIS le header portail/vitrine par-dessus (chrome incohérent avant de payer).
     '/rendez-vous-priere', // Prise de RDV séance de prière PUBLIQUE (sans login) = page autonome.
     '/replanifier',        // Re-planification self-service par lien (token) = page publique autonome.
+    '/reserver',           // Réservation multi-services PUBLIQUE (sans login) = page autonome.
     '/onboarding/eleve', // Dossier KYC élève = page autonome chaude (StudentEnrollmentOnboardingPage),
                          // JAMAIS l'ancienne navbar Academy (Header.jsx). Non-bloquant : l'élève y accède
                          // via la bannière du portail LIRI, pas par une garde qui bloque l'accès.
@@ -1994,6 +1996,7 @@ isLiriHostDevPreviewRoute;
           <Route path="/cagnotte" element={<CagnottePage />} />
           <Route path="/rendez-vous-priere" element={<PublicPrayerBookingPage />} />
           <Route path="/replanifier/:token" element={<PublicReschedulePage />} />
+          <Route path="/reserver" element={<PublicReservationPage />} />
           {/* Maquettes portées en production : voir /t/isna et /t/isna/{ecole,temple,programme,mission,fondateur,doctrine} */}
           <Route path="/isna" element={<Navigate to={TENANT_ADMIN_PATH} replace />} /> {/* Legacy ISNA route - redirects to tenant system */}
           <Route path="/temple-ngowazulu" element={<PublicNgowazuluPage />} />

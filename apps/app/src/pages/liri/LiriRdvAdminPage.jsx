@@ -29,6 +29,7 @@ function parseNotes(notes) {
   const s = String(notes || '');
   const grab = (re) => { const m = s.match(re); return m ? m[1].trim() : ''; };
   return {
+    service: grab(/Service\s*:\s*([\s\S]*?)(?:\s*Sujet\s*:|$)/i),
     sujet: grab(/Sujet\s*:\s*([\s\S]*?)(?:\s*Description\s*:|$)/i),
     description: grab(/Description\s*:\s*([\s\S]*?)(?:\s*E-?mail\s*:|$)/i),
     email: grab(/E-?mail\s*:\s*([^\s]+@[^\s]+)/i),
@@ -207,6 +208,7 @@ function RdvBody() {
                 <li key={a.id} className="rounded-2xl border border-white/[0.08] bg-white/[0.02] p-4">
                   <div className="flex flex-wrap items-start justify-between gap-2">
                     <div className="min-w-0">
+                      {info.service && <span className="mb-1 inline-block rounded-full border border-[#d97757]/30 bg-[#d97757]/10 px-2 py-0.5 text-[10.5px] font-semibold text-[#e8a184]">{info.service}</span>}
                       <p className="font-semibold text-[#f5f4ee]">{info.sujet || a?.booking_slots?.title || 'Rendez-vous'}</p>
                       <p className="mt-0.5 flex items-center gap-1.5 text-[13px] text-[#e8a184]">
                         <CalendarClock className="h-3.5 w-3.5" /> {when || 'Créneau non précisé'}

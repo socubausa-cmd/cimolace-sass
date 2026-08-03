@@ -146,6 +146,7 @@ export class BookingService {
       email?: string;
       whatsapp?: string;
       preferredIso?: string; // créneau choisi par l'élève (grille de dispo) — optionnel
+      serviceKey?: string; // type de séance (prière / téléconsult / formation) — optionnel
     },
   ) {
     const subject = String(dto?.subject || '').trim();
@@ -165,22 +166,29 @@ export class BookingService {
       if (!Number.isNaN(d.getTime()) && d.getTime() > Date.now() - 60_000) chosenStart = d;
     }
 
-    // Garde : si le tenant a des règles de dispo, le créneau choisi DOIT y être conforme
-    // (bon jour, dans une plage, aligné, non blackout) → empêche de réserver un jour fermé.
+    // Métadonnées tenant : règles de dispo + catalogue de services.
+    let tenantMeta: any = null;
+    try {
+      const { data: t } = await client.from('tenants').select('metadata').eq('id', tenantId).maybeSingle();
+      tenantMeta = (t as any)?.metadata || null;
+    } catch { /* best-effort */ }
+
+    // Garde : créneau choisi conforme aux règles de dispo (jour ouvert, plage, aligné, non blackout).
     if (chosenStart) {
-      try {
-        const { data: t } = await client.from('tenants').select('metadata').eq('id', tenantId).maybeSingle();
-        const rules = (t as any)?.metadata?.booking_availability;
-        if (rules?.weekly && !isSlotWithinRules(chosenStart, rules)) {
-          throw new BadRequestException('Ce créneau n’est pas disponible. Merci d’en choisir un autre.');
-        }
-      } catch (e) {
-        if (e instanceof BadRequestException) throw e;
-        /* lecture métadonnées échouée → on n’empêche pas la demande */
+      const rules = tenantMeta?.booking_availability;
+      if (rules?.weekly && !isSlotWithinRules(chosenStart, rules)) {
+        throw new BadRequestException('Ce créneau n’est pas disponible. Merci d’en choisir un autre.');
       }
     }
 
+    // Service choisi (validé contre le catalogue tenant → sinon 'consultation').
+    const services: any[] = Array.isArray(tenantMeta?.booking_services) ? tenantMeta.booking_services : [];
+    const svc = services.find((x) => x?.key === String(dto?.serviceKey || '')) || null;
+    const serviceType = svc?.key || 'consultation';
+    const serviceLabel = svc?.label || '';
+
     const notes = [
+      serviceLabel ? `Service : ${serviceLabel}` : null,
       `Sujet : ${subject}`,
       `Description : ${String(dto?.description || '').trim() || '—'}`,
       `E-mail : ${email}`,
@@ -200,7 +208,7 @@ export class BookingService {
           start_at: chosenStart.toISOString(),
           end_at: end.toISOString(),
           title: subject.slice(0, 120),
-          type: 'consultation',
+          type: serviceType,
           status: 'booked', // directement réservé par cette demande
         })
         .select('id, start_at')
@@ -953,11 +961,12 @@ export class BookingService {
     const weMs = new Date(weekEndUtc).getTime();
     const events: any[] = [];
 
-    // 1) RDV
+    // 1) RDV (type de service → couleur : téléconsult / formation / prière)
+    const KIND_BY_TYPE: Record<string, string> = { teleconsult: 'teleconsult', formation: 'formation', priere: 'rdv', consultation: 'rdv' };
     try {
       const { data: appts } = await client
         .from('appointments')
-        .select('id, status, notes, booking_slots(start_at, end_at, title)')
+        .select('id, status, notes, booking_slots(start_at, end_at, title, type)')
         .eq('tenant_id', tenant.id);
       for (const a of appts ?? []) {
         const s = (a as any).booking_slots;
@@ -966,7 +975,8 @@ export class BookingService {
         if (stMs < wsMs || stMs > weMs) continue;
         const notes = String((a as any).notes || '');
         const sujet = (notes.match(/Sujet\s*:\s*([\s\S]*?)(?:\s*Description\s*:|$)/i)?.[1] || s.title || 'Rendez-vous').trim();
-        events.push({ kind: 'rdv', title: sujet, start: s.start_at, end: s.end_at || null, status: (a as any).status, id: (a as any).id });
+        const kind = KIND_BY_TYPE[String(s.type || '')] || 'rdv';
+        events.push({ kind, title: sujet, start: s.start_at, end: s.end_at || null, status: (a as any).status, id: (a as any).id, service: s.type || null });
       }
     } catch (e) { this.logger.warn(`master-cal RDV: ${(e as Error).message}`); }
 
@@ -1010,6 +1020,17 @@ export class BookingService {
 
     events.sort((a, b) => new Date(a.start).getTime() - new Date(b.start).getTime());
     return { weekStart: weekStartUtc, weekEnd: weekEndUtc, timezone: 'Africa/Libreville', days: dates.map((d) => d.ymd), events };
+  }
+
+  /** Catalogue public des services réservables (tenants.metadata.booking_services). */
+  async listBookingServices(tenantId: string) {
+    try {
+      const { data: t } = await (this.supabase.client as any).from('tenants').select('metadata').eq('id', tenantId).maybeSingle();
+      const s = (t as any)?.metadata?.booking_services;
+      return { services: Array.isArray(s) ? s : [] };
+    } catch {
+      return { services: [] };
+    }
   }
 
   // ── Préparation d'entretien (secrétariat) ────────────────────────────────

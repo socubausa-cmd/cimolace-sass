@@ -1025,9 +1025,11 @@ export const bookingPublicApi = {
           `${p.timezone ? `&timezone=${encodeURIComponent(p.timezone)}` : ''}${p.country ? `&country=${encodeURIComponent(p.country)}` : ''}`,
       )
       .then(unwrap),
+  services: (slug: string) =>
+    apiV2.get<ApiEnvelope<any>>(`/booking-public/${slug}/services`).then(unwrap),
   request: (
     slug: string,
-    body: { subject?: string; description?: string; email: string; whatsapp: string; preferredIso?: string },
+    body: { subject?: string; description?: string; email: string; whatsapp: string; preferredIso?: string; serviceKey?: string },
   ) => apiV2.post<ApiEnvelope<any>>(`/booking-public/${slug}/appointment-request`, body).then(unwrap),
   // Report self-service (lien/token) — sans login.
   rescheduleContext: (token: string) =>

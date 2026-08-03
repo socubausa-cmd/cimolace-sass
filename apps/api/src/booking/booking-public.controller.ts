@@ -64,6 +64,13 @@ export class BookingPublicController {
     return this.booking.requestAppointmentNoSlot(id, owner, dto ?? {});
   }
 
+  /** Catalogue des services réservables — public. */
+  @Get(':slug/services')
+  async services(@Param('slug') slug: string) {
+    const { id } = await this.tenantBySlug(slug);
+    return this.booking.listBookingServices(id);
+  }
+
   /** Contexte d'un report self-service (token) — public, sans login. */
   @Get('reschedule/:token')
   rescheduleContext(@Param('token') token: string) {
