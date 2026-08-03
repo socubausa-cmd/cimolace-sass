@@ -63,4 +63,17 @@ export class BookingPublicController {
     const { id, owner } = await this.tenantBySlug(slug);
     return this.booking.requestAppointmentNoSlot(id, owner, dto ?? {});
   }
+
+  /** Contexte d'un report self-service (token) — public, sans login. */
+  @Get('reschedule/:token')
+  rescheduleContext(@Param('token') token: string) {
+    return this.booking.getRescheduleContext(token);
+  }
+
+  /** Applique le nouveau créneau choisi par le demandeur (token) — public. */
+  @Post('reschedule/:token')
+  @UseGuards(PublicRateLimitGuard)
+  applyReschedule(@Param('token') token: string, @Body() dto: { preferredIso?: string }) {
+    return this.booking.applyReschedule(token, String(dto?.preferredIso || ''));
+  }
 }

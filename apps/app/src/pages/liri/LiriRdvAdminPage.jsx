@@ -3,7 +3,7 @@ import { LiriPortalShell } from '@/components/liri/LiriPortalShell';
 import { bookingApi } from '@/lib/api-v2';
 import {
   CalendarClock, Check, X, Mail, Phone, Loader2, RefreshCw, Inbox, MessageSquareText,
-  CalendarPlus, Radio,
+  CalendarPlus, Radio, Send,
 } from 'lucide-react';
 
 const TZ = 'Europe/Paris';
@@ -64,6 +64,7 @@ function RdvBody() {
   const [rescheduleId, setRescheduleId] = useState(null);
   const [rStart, setRStart] = useState('');
   const [rReason, setRReason] = useState('');
+  const [msg, setMsg] = useState('');
 
   const load = useCallback(async () => {
     setLoading(true); setErr('');
@@ -110,6 +111,27 @@ function RdvBody() {
       setErr(e?.response?.data?.error?.message || 'Impossible d’ouvrir le studio.');
       setBusyId(null);
     }
+  };
+  // Envoie au demandeur un LIEN de re-planification (email + WhatsApp) : il choisit lui-même
+  // un nouveau créneau parmi les disponibilités. C'est le flux « report par message + lien ».
+  const sendLink = async (id) => {
+    const reason = window.prompt(
+      'Explication (optionnelle) envoyée au demandeur avec le lien pour choisir un nouveau créneau :',
+    );
+    if (reason === null) return; // annulé
+    setBusyId(id); setErr(''); setMsg('');
+    try {
+      const r = await bookingApi.sendRescheduleLink(id, reason.trim() || undefined);
+      const chans = [];
+      if (r?.sentEmail) chans.push('email');
+      if (r?.sentWhatsApp) chans.push('WhatsApp');
+      if (chans.length) setMsg(`Lien de report envoyé par ${chans.join(' + ')}. 📨`);
+      else if (r?.hasEmail || r?.hasWhatsApp) setMsg('Lien généré, envoi en file (email).');
+      else setMsg('Lien généré, mais aucun contact (email/WhatsApp) trouvé sur ce RDV.');
+      await load();
+    } catch (e) {
+      setErr(e?.response?.data?.error?.message || 'Envoi du lien impossible.');
+    } finally { setBusyId(null); }
   };
 
   const counts = useMemo(() => ({
@@ -160,6 +182,7 @@ function RdvBody() {
         </div>
 
         {err && <p className="mt-4 rounded-lg bg-red-500/10 px-3 py-2 text-[13px] text-red-300">{err}</p>}
+        {msg && <p className="mt-4 rounded-lg bg-emerald-500/10 px-3 py-2 text-[13px] text-emerald-300">{msg}</p>}
 
         {loading ? (
           <div className="mt-10 flex items-center justify-center gap-2 text-[#f5f4ee]/50">
@@ -237,7 +260,7 @@ function RdvBody() {
                           {isBusy ? <Loader2 className="h-4 w-4 animate-spin" /> : <CalendarPlus className="h-4 w-4" />} Valider le report
                         </button>
                         <button type="button" onClick={() => setRescheduleId(null)}
-                          className="inline-flex min-h-[38px] items-center rounded-lg border border-white/12 px-3 text-[13px] text-[#f5f4ee]/60 hover:text-[#f5f4ee]">
+                          className="inline-flex min-h-[38px] items-center rounded-lg border border-white/[0.12] px-3 text-[13px] text-[#f5f4ee]/60 hover:text-[#f5f4ee]">
                           Annuler
                         </button>
                       </div>
@@ -259,12 +282,18 @@ function RdvBody() {
                           {isBusy ? <Loader2 className="h-4 w-4 animate-spin" /> : <Radio className="h-4 w-4" />} Démarrer / préparer le live
                         </button>
                       )}
+                      <button type="button" disabled={isBusy} onClick={() => sendLink(a.id)}
+                        className="inline-flex min-h-[40px] items-center justify-center gap-1.5 rounded-xl border border-[#d97757]/40 bg-[#d97757]/10 px-4 text-[13.5px] font-semibold text-[#e8a184] transition-colors hover:bg-[#d97757]/20 disabled:opacity-60"
+                        title="Envoie au demandeur un lien pour choisir lui-même un nouveau créneau (email + WhatsApp)">
+                        {isBusy ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />} Lien de report
+                      </button>
                       <button type="button" disabled={isBusy} onClick={() => (isResched ? setRescheduleId(null) : openReschedule(a))}
-                        className="inline-flex min-h-[40px] items-center justify-center gap-1.5 rounded-xl border border-white/12 px-4 text-[13.5px] font-semibold text-[#f5f4ee]/80 transition-colors hover:border-[#d97757]/40 hover:text-[#f5f4ee]">
-                        <CalendarPlus className="h-4 w-4" /> Reporter
+                        className="inline-flex min-h-[40px] items-center justify-center gap-1.5 rounded-xl border border-white/[0.12] px-4 text-[13.5px] font-semibold text-[#f5f4ee]/70 transition-colors hover:border-[#d97757]/40 hover:text-[#f5f4ee]"
+                        title="Fixer toi-même la nouvelle date/heure">
+                        <CalendarPlus className="h-4 w-4" /> Manuel
                       </button>
                       <button type="button" disabled={isBusy} onClick={() => cancel(a.id)}
-                        className="inline-flex min-h-[40px] items-center justify-center gap-1.5 rounded-xl border border-white/12 px-4 text-[13.5px] font-semibold text-[#f5f4ee]/70 transition-colors hover:border-red-500/40 hover:text-red-300">
+                        className="inline-flex min-h-[40px] items-center justify-center gap-1.5 rounded-xl border border-white/[0.12] px-4 text-[13.5px] font-semibold text-[#f5f4ee]/70 transition-colors hover:border-red-500/40 hover:text-red-300">
                         <X className="h-4 w-4" /> {a.status === 'requested' ? 'Refuser' : 'Annuler'}
                       </button>
                     </div>

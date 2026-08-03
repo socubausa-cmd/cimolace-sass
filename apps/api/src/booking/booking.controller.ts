@@ -178,6 +178,18 @@ export class BookingController {
     return this.booking.updateAppointment(id, tenant.id, dto);
   }
 
+  // Report par LIEN : génère + envoie au demandeur un lien pour choisir lui-même un nouveau créneau.
+  @Post('appointments/:id/reschedule-link')
+  @UseGuards(RolesGuard)
+  @Roles('owner', 'admin', 'teacher', 'secretariat')
+  sendRescheduleLink(
+    @Param('id') id: string,
+    @Body() body: { reason?: string },
+    @CurrentTenant() tenant: TenantContext,
+  ) {
+    return this.booking.sendRescheduleLink(id, tenant.id, { reason: body?.reason });
+  }
+
   // Annulation par le propriétaire (élève/visiteur) — pas de rôle staff,
   // la propriété du RDV est vérifiée dans le service.
   @Post('appointments/:id/cancel')

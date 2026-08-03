@@ -455,6 +455,8 @@ export const bookingApi = {
     apiV2.patch<ApiEnvelope<any>>(`/booking/appointments/${id}`, body).then(unwrap),
   startLive: (id: string) =>
     apiV2.post<ApiEnvelope<any>>(`/booking/appointments/${id}/start-live`, {}).then(unwrap),
+  sendRescheduleLink: (id: string, reason?: string) =>
+    apiV2.post<ApiEnvelope<any>>(`/booking/appointments/${id}/reschedule-link`, { reason }).then(unwrap),
   submitFeedback: (body: Record<string, unknown>) =>
     apiV2.post<ApiEnvelope<any>>('/booking/feedback', body).then(unwrap),
   getFeedback: (appointmentId: string) =>
@@ -1025,6 +1027,11 @@ export const bookingPublicApi = {
     slug: string,
     body: { subject?: string; description?: string; email: string; whatsapp: string; preferredIso?: string },
   ) => apiV2.post<ApiEnvelope<any>>(`/booking-public/${slug}/appointment-request`, body).then(unwrap),
+  // Report self-service (lien/token) — sans login.
+  rescheduleContext: (token: string) =>
+    apiV2.get<ApiEnvelope<any>>(`/booking-public/reschedule/${encodeURIComponent(token)}`).then(unwrap),
+  applyReschedule: (token: string, preferredIso: string) =>
+    apiV2.post<ApiEnvelope<any>>(`/booking-public/reschedule/${encodeURIComponent(token)}`, { preferredIso }).then(unwrap),
 };
 
 // ── Master Factory officiel ─────────────────────────────────────────────────

@@ -28,6 +28,57 @@ function slotLabel(date: Date, timezone: string): string {
   }).format(date);
 }
 
+/**
+ * Règles de disponibilité par propriétaire/tenant (source : tenants.metadata.booking_availability).
+ * Quand fournies, elles PILOTENT la grille (au lieu des heures région par défaut) :
+ *  - `weekly` : par jour de semaine (0=dimanche..6=samedi) → fenêtres [début,fin] en minutes locales.
+ *  - créneaux espacés de `slotMinutes + bufferMinutes` (ex. RDV 30 min + 30 min de battement = 1/h).
+ *  - `blackoutDates` : dates 'YYYY-MM-DD' (fuseau `timezone`) totalement fermées.
+ */
+export interface ScheduleRules {
+  timezone: string;
+  weekly: Record<string, Array<[number, number]>>;
+  slotMinutes: number;
+  bufferMinutes?: number;
+  blackoutDates?: string[];
+}
+
+/** Jour de semaine (0=dim..6=sam), minutes locales (0..1439) et date 'YYYY-MM-DD' dans un fuseau. */
+function zonedDayInfo(date: Date, timezone: string): { dow: number; minutes: number; ymd: string } {
+  const parts = new Intl.DateTimeFormat('en-US', {
+    timeZone: timezone,
+    weekday: 'short',
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: false,
+  }).formatToParts(date);
+  const get = (t: string) => parts.find((p) => p.type === t)?.value || '';
+  const DOW: Record<string, number> = { Sun: 0, Mon: 1, Tue: 2, Wed: 3, Thu: 4, Fri: 5, Sat: 6 };
+  const dow = DOW[get('weekday')] ?? 0;
+  let hour = Number(get('hour') || 0);
+  if (hour === 24) hour = 0; // en-US rend parfois '24' à minuit
+  const minute = Number(get('minute') || 0);
+  return { dow, minutes: hour * 60 + minute, ymd: `${get('year')}-${get('month')}-${get('day')}` };
+}
+
+/** Un créneau (Date) est-il conforme aux règles de dispo (bon jour, dans une plage, aligné, non blackout) ? */
+export function isSlotWithinRules(date: Date, rules: ScheduleRules): boolean {
+  if (!rules?.weekly) return true;
+  const zi = zonedDayInfo(date, rules.timezone);
+  if (rules.blackoutDates?.includes(zi.ymd)) return false;
+  const slotMin = Number(rules.slotMinutes) || 30;
+  const step = slotMin + (Number(rules.bufferMinutes) || 0);
+  const windows = rules.weekly?.[String(zi.dow)] || [];
+  return windows.some((w) => {
+    const ws = Number(w?.[0]);
+    const we = Number(w?.[1]);
+    return zi.minutes >= ws && zi.minutes + slotMin <= we && (zi.minutes - ws) % step === 0;
+  });
+}
+
 export interface ReservedRow {
   assigned_teacher_id?: string | null;
   scheduled_at?: string | null;
@@ -63,6 +114,7 @@ export function buildAvailability({
   visitorTimezone,
   windowStart,
   windowEnd,
+  scheduleRules,
 }: {
   secretaries: Secretary[];
   reservedRows: ReservedRow[];
@@ -71,9 +123,12 @@ export function buildAvailability({
   visitorTimezone: string;
   windowStart: Date;
   windowEnd: Date;
+  scheduleRules?: ScheduleRules | null;
 }): AvailabilityResult {
   const reservedMap = new Map<string, boolean>();
+  const reservedMinuteSet = new Set<string>();
   for (const row of reservedRows || []) {
+    if (row?.scheduled_at) reservedMinuteSet.add(minuteKey(row.scheduled_at));
     if (!row?.assigned_teacher_id || !row?.scheduled_at) continue;
     reservedMap.set(`${row.assigned_teacher_id}:${minuteKey(row.scheduled_at)}`, true);
   }
@@ -102,6 +157,48 @@ export function buildAvailability({
 
     if (slotUtc.getTime() < nowMs - 5 * 60 * 1000) {
       slotGrid.push({ slotUtc: slotUtc.toISOString(), slotLabel: slotLabel(slotUtc, visitorTimezone), state: 'past' });
+      cursor.setMinutes(cursor.getMinutes() + 30);
+      continue;
+    }
+
+    // ── Règles de dispo par tenant : la config PILOTE la grille (jours/heures/durée+battement). ──
+    if (scheduleRules) {
+      const zi = zonedDayInfo(slotUtc, scheduleRules.timezone);
+      const slotMin = Number(scheduleRules.slotMinutes) || 30;
+      const step = slotMin + (Number(scheduleRules.bufferMinutes) || 0);
+      const windows = scheduleRules.weekly?.[String(zi.dow)] || [];
+      const blackout = !!scheduleRules.blackoutDates?.includes(zi.ymd);
+      let inWindow = false;
+      if (!blackout) {
+        for (const w of windows) {
+          const ws = Number(w?.[0]);
+          const we = Number(w?.[1]);
+          if (zi.minutes >= ws && zi.minutes + slotMin <= we && (zi.minutes - ws) % step === 0) {
+            inWindow = true;
+            break;
+          }
+        }
+      }
+      if (!inWindow) {
+        slotGrid.push({ slotUtc: slotUtc.toISOString(), slotLabel: slotLabel(slotUtc, visitorTimezone), state: 'outside_hours' });
+        cursor.setMinutes(cursor.getMinutes() + 30);
+        continue;
+      }
+      const taken = reservedMinuteSet.has(minuteKey(slotUtc));
+      slotGrid.push({ slotUtc: slotUtc.toISOString(), slotLabel: slotLabel(slotUtc, visitorTimezone), state: taken ? 'taken' : 'available' });
+      if (!taken && secretaries.length) {
+        const sec = secretaries[0];
+        slots.push({
+          slotUtc: slotUtc.toISOString(),
+          slotLabel: slotLabel(slotUtc, visitorTimezone),
+          secretariatId: sec.id,
+          secretariatName: sec.name,
+          secretariatTimezone: sec.timezone,
+          secretariatRegion: sec.region,
+          queueEstimate: queueBySecretary[sec.id] || 0,
+          isPrimeHour: false,
+        });
+      }
       cursor.setMinutes(cursor.getMinutes() + 30);
       continue;
     }

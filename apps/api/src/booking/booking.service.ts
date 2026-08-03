@@ -14,7 +14,8 @@ import {
   regionStatus,
 } from './engine/secretary-matching';
 import { detectVisitorContext } from './engine/timezone-routing';
-import { buildAvailability } from './engine/availability';
+import { buildAvailability, isSlotWithinRules } from './engine/availability';
+import { randomBytes } from 'crypto';
 import { NotificationsService } from '../notifications/notifications.service';
 import { isWhatsAppConfigured, sendWhatsAppTemplate } from '../common/whatsapp.util';
 import type { TenantContext } from '../tenant/tenant.types';
@@ -162,6 +163,21 @@ export class BookingService {
     if (dto?.preferredIso) {
       const d = new Date(dto.preferredIso);
       if (!Number.isNaN(d.getTime()) && d.getTime() > Date.now() - 60_000) chosenStart = d;
+    }
+
+    // Garde : si le tenant a des règles de dispo, le créneau choisi DOIT y être conforme
+    // (bon jour, dans une plage, aligné, non blackout) → empêche de réserver un jour fermé.
+    if (chosenStart) {
+      try {
+        const { data: t } = await client.from('tenants').select('metadata').eq('id', tenantId).maybeSingle();
+        const rules = (t as any)?.metadata?.booking_availability;
+        if (rules?.weekly && !isSlotWithinRules(chosenStart, rules)) {
+          throw new BadRequestException('Ce créneau n’est pas disponible. Merci d’en choisir un autre.');
+        }
+      } catch (e) {
+        if (e instanceof BadRequestException) throw e;
+        /* lecture métadonnées échouée → on n’empêche pas la demande */
+      }
     }
 
     const notes = [
@@ -421,6 +437,196 @@ export class BookingService {
     } catch (e) {
       this.logger.warn(`RDV decision notif (externe): ${(e as Error).message}`);
     }
+  }
+
+  // ── Report par LIEN (self-service) ────────────────────────────────────────
+  // Le staff envoie au demandeur un lien public ; le demandeur choisit lui-même un nouveau
+  // créneau parmi les dispos du propriétaire. Token stocké dans booking_invitations.
+  private rescheduleBase(): string {
+    return (process.env.SCHOOL_FRONTEND_URL || 'https://prorascience.org').replace(/\/+$/, '');
+  }
+
+  private async ownerOf(tenantId: string): Promise<string | null> {
+    const { data } = await (this.supabase.client as any)
+      .from('tenants').select('owner_user_id').eq('id', tenantId).maybeSingle();
+    return (data as any)?.owner_user_id || null;
+  }
+
+  /** Staff → génère un lien de report + l'envoie au demandeur (email + WhatsApp best-effort). */
+  async sendRescheduleLink(appointmentId: string, tenantId: string, opts: { reason?: string } = {}) {
+    const client = this.supabase.client as any;
+    const { data: appt } = await client
+      .from('appointments')
+      .select('id, notes, booking_slots(start_at)')
+      .eq('id', appointmentId)
+      .eq('tenant_id', tenantId)
+      .maybeSingle();
+    if (!appt) throw new NotFoundException('Rendez-vous introuvable');
+
+    const notes = String((appt as any).notes || '');
+    const email = (notes.match(/E-?mail\s*:\s*([^\s]+@[^\s]+)/i)?.[1] || '').trim();
+    const wa = (notes.match(/WhatsApp\s*:\s*([+\d][\d\s]{5,})/i)?.[1] || '').trim();
+    const sujet = (notes.match(/Sujet\s*:\s*([\s\S]*?)(?:\s*Description\s*:|$)/i)?.[1] || 'votre rendez-vous').trim();
+    const reason = String(opts.reason || '').trim();
+
+    const token = randomBytes(24).toString('hex');
+    const expires = new Date(Date.now() + 21 * 24 * 60 * 60 * 1000).toISOString(); // 21 jours
+    await client.from('booking_invitations').insert({
+      tenant_id: tenantId,
+      appointment_id: appointmentId,
+      invited_email: email || null,
+      token,
+      expires_at: expires,
+      status: 'sent',
+      metadata: { purpose: 'self_reschedule', reason: reason || null },
+    });
+
+    const link = `${this.rescheduleBase()}/replanifier/${token}`;
+    const esc = (s: string) => String(s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+
+    // (1) Email — canal fiable (worker → Resend, sender du tenant).
+    let sentEmail = false;
+    if (email) {
+      try {
+        const { data: ns } = await client
+          .from('tenant_notification_settings')
+          .select('email_from, email_from_name')
+          .eq('tenant_id', tenantId)
+          .maybeSingle();
+        const html = `<h2>Reprogrammons votre rendez-vous 📅</h2><p>Bonjour,</p>`
+          + `<p>Concernant votre rendez-vous « <strong>${esc(sujet)}</strong> », nous devons vous proposer un nouveau créneau.</p>`
+          + (reason ? `<p>${esc(reason)}</p>` : '')
+          + `<p style="margin:22px 0;"><a href="${link}" style="display:inline-block;background:#E86A5B;color:#fff;padding:13px 26px;border-radius:10px;text-decoration:none;font-weight:700;">Choisir un nouveau créneau</a></p>`
+          + `<p style="color:#777;font-size:12px;">Ou copiez ce lien : <br/>${link}</p>`
+          + `<p style="color:#777;font-size:13px;">Avec toute notre gratitude,<br/>Ngowazulu — Prorascience</p>`;
+        await client.from('email_queue').insert({
+          tenant_id: tenantId,
+          to: email,
+          from: (ns as any)?.email_from ?? null,
+          from_name: (ns as any)?.email_from_name ?? null,
+          subject: 'Reprogrammons votre rendez-vous 📅',
+          html_body: html,
+        });
+        sentEmail = true;
+      } catch (e) {
+        this.logger.warn(`Reschedule link email KO: ${(e as Error).message}`);
+      }
+    }
+
+    // (2) WhatsApp — best-effort (gabarit Meta requis, inerte si non configuré). Lien dans {{2}}.
+    let sentWhatsApp = false;
+    if (isWhatsAppConfigured() && wa) {
+      try {
+        const phrase = `un report vous est proposé${reason ? ` (${reason})` : ''}. Choisissez votre nouveau créneau ici : ${link}`;
+        const r = await sendWhatsAppTemplate(wa, {
+          template: process.env.WHATSAPP_TEMPLATE_RDV || 'rdv_notification',
+          lang: process.env.WHATSAPP_TEMPLATE_LANG || 'fr',
+          bodyParams: [sujet, phrase],
+        });
+        sentWhatsApp = r.ok;
+        if (!r.ok) this.logger.warn(`Reschedule link WhatsApp KO: ${r.error}`);
+      } catch (e) {
+        this.logger.warn(`Reschedule link WhatsApp KO: ${(e as Error).message}`);
+      }
+    }
+
+    return { ok: true, link, token, hasEmail: !!email, hasWhatsApp: !!wa, sentEmail, sentWhatsApp };
+  }
+
+  /** Valide un token de report (booking_invitations) — lève si invalide/expiré/déjà utilisé. */
+  private async findRescheduleInvite(token: string) {
+    const { data: inv } = await (this.supabase.client as any)
+      .from('booking_invitations')
+      .select('id, tenant_id, appointment_id, status, expires_at, metadata')
+      .eq('token', String(token || '').trim())
+      .maybeSingle();
+    if (!inv) throw new NotFoundException('Lien invalide.');
+    if ((inv as any).status && !['sent', 'pending'].includes(String((inv as any).status))) {
+      throw new BadRequestException('Ce lien a déjà été utilisé.');
+    }
+    if ((inv as any).expires_at && new Date((inv as any).expires_at).getTime() < Date.now()) {
+      throw new BadRequestException('Ce lien a expiré.');
+    }
+    return inv as any;
+  }
+
+  /** Public (token) → contexte de report : sujet, créneau actuel, slug pour charger la grille. */
+  async getRescheduleContext(token: string) {
+    const inv = await this.findRescheduleInvite(token);
+    const client = this.supabase.client as any;
+    const { data: appt } = await client
+      .from('appointments').select('id, notes, booking_slots(start_at)').eq('id', inv.appointment_id).maybeSingle();
+    const { data: t } = await client.from('tenants').select('slug, name').eq('id', inv.tenant_id).maybeSingle();
+    const notes = String((appt as any)?.notes || '');
+    const sujet = (notes.match(/Sujet\s*:\s*([\s\S]*?)(?:\s*Description\s*:|$)/i)?.[1] || 'votre rendez-vous').trim();
+    return {
+      ok: true,
+      subject: sujet,
+      currentStart: (appt as any)?.booking_slots?.start_at || null,
+      slug: (t as any)?.slug || 'isna',
+      orgName: (t as any)?.name || 'Prorascience',
+      reason: inv.metadata?.reason || null,
+    };
+  }
+
+  /** Public (token) → applique le nouveau créneau choisi par le demandeur. */
+  async applyReschedule(token: string, preferredIso: string) {
+    const inv = await this.findRescheduleInvite(token);
+    const client = this.supabase.client as any;
+    const tenantId = inv.tenant_id as string;
+
+    const start = new Date(preferredIso);
+    if (Number.isNaN(start.getTime()) || start.getTime() < Date.now() - 60_000) {
+      throw new BadRequestException('Créneau invalide.');
+    }
+    // Garde règles de dispo (bon jour/heure).
+    try {
+      const { data: tt } = await client.from('tenants').select('metadata').eq('id', tenantId).maybeSingle();
+      const rules = (tt as any)?.metadata?.booking_availability;
+      if (rules?.weekly && !isSlotWithinRules(start, rules)) {
+        throw new BadRequestException('Ce créneau n’est pas disponible. Merci d’en choisir un autre.');
+      }
+    } catch (e) {
+      if (e instanceof BadRequestException) throw e;
+    }
+
+    const { data: appt } = await client
+      .from('appointments').select('id, slot_id').eq('id', inv.appointment_id).eq('tenant_id', tenantId).maybeSingle();
+    if (!appt) throw new NotFoundException('Rendez-vous introuvable.');
+
+    const end = new Date(start.getTime() + 30 * 60_000);
+    let slotId = (appt as any).slot_id as string | null;
+    if (slotId) {
+      await client.from('booking_slots')
+        .update({ start_at: start.toISOString(), end_at: end.toISOString(), status: 'booked' })
+        .eq('id', slotId).eq('tenant_id', tenantId);
+    } else {
+      const createdBy = await this.ownerOf(tenantId);
+      const { data: slot } = await client.from('booking_slots').insert({
+        tenant_id: tenantId,
+        created_by: createdBy,
+        start_at: start.toISOString(),
+        end_at: end.toISOString(),
+        title: 'Rendez-vous',
+        type: 'consultation',
+        status: 'booked',
+      }).select('id').maybeSingle();
+      slotId = (slot as any)?.id || null;
+    }
+
+    const { data: updated } = await client
+      .from('appointments')
+      .update({ slot_id: slotId, status: 'confirmed', updated_at: new Date().toISOString() })
+      .eq('id', inv.appointment_id).eq('tenant_id', tenantId)
+      .select('*, booking_slots(start_at)').single();
+
+    await client.from('booking_invitations')
+      .update({ status: 'accepted', accepted_at: new Date().toISOString() }).eq('id', inv.id);
+
+    // Notifie la reprogrammation (email + WhatsApp au demandeur + notif interne). Best-effort.
+    void this.notifyAppointmentDecision(tenantId, updated, { rescheduled: true });
+
+    return { ok: true, newStart: start.toISOString() };
   }
 
   async listAppointments(
@@ -687,6 +893,21 @@ export class BookingService {
       .map((s: any) => ({ assigned_teacher_id: s.created_by, scheduled_at: s.start_at, status: 'booked' }));
     const queueRows: Array<{ assigned_teacher_id: string }> = [];
 
+    // Règles de dispo propriétaire (tenants.metadata.booking_availability) → pilotent la grille
+    // (jours ouverts, plages horaires, durée + battement). Absentes → heures région par défaut.
+    let scheduleRules: any = null;
+    try {
+      const { data: t } = await (this.supabase.client as any)
+        .from('tenants')
+        .select('metadata')
+        .eq('id', tenant.id)
+        .maybeSingle();
+      const r = (t as any)?.metadata?.booking_availability;
+      if (r && r.weekly && typeof r.weekly === 'object') scheduleRules = r;
+    } catch {
+      /* pas de config → comportement région par défaut */
+    }
+
     const av = buildAvailability({
       secretaries,
       reservedRows,
@@ -695,6 +916,7 @@ export class BookingService {
       visitorTimezone: context.timezone,
       windowStart,
       windowEnd,
+      scheduleRules,
     });
     const schoolOpen = av.regionStatuses.find((r) => r.region === context.region)?.schoolOpen || false;
     return {
