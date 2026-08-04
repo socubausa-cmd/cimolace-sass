@@ -1033,6 +1033,88 @@ export class BookingService {
     }
   }
 
+  // ── Réglages agenda (éditeur no-code : dispo + services + activités fixes) ──
+  async getBookingSettings(tenantId: string) {
+    const { data: t } = await (this.supabase.client as any).from('tenants').select('metadata').eq('id', tenantId).maybeSingle();
+    const m = (t as any)?.metadata || {};
+    return {
+      availability: m.booking_availability || { timezone: 'Africa/Libreville', slotMinutes: 30, bufferMinutes: 30, weekly: {}, blackoutDates: [] },
+      services: Array.isArray(m.booking_services) ? m.booking_services : [],
+      activities: Array.isArray(m.weekly_activities) ? m.weekly_activities : [],
+    };
+  }
+
+  async updateBookingSettings(
+    tenantId: string,
+    dto: { availability?: any; services?: any; activities?: any },
+  ) {
+    const client = this.supabase.client as any;
+    const { data: t } = await client.from('tenants').select('metadata').eq('id', tenantId).maybeSingle();
+    const m = { ...((t as any)?.metadata || {}) };
+    if (dto.availability !== undefined) m.booking_availability = this.sanitizeAvailability(dto.availability);
+    if (dto.services !== undefined) m.booking_services = this.sanitizeServices(dto.services);
+    if (dto.activities !== undefined) m.weekly_activities = this.sanitizeActivities(dto.activities);
+    const { error } = await client.from('tenants').update({ metadata: m }).eq('id', tenantId);
+    if (error) throw new BadRequestException(error.message);
+    return this.getBookingSettings(tenantId);
+  }
+
+  private sanitizeAvailability(a: any) {
+    if (!a || typeof a !== 'object') return { timezone: 'Africa/Libreville', slotMinutes: 30, bufferMinutes: 30, weekly: {}, blackoutDates: [] };
+    const weekly: Record<string, Array<[number, number]>> = {};
+    const w = a.weekly && typeof a.weekly === 'object' ? a.weekly : {};
+    for (const k of Object.keys(w)) {
+      if (!/^[0-6]$/.test(String(k))) continue;
+      const out: Array<[number, number]> = [];
+      for (const win of Array.isArray(w[k]) ? w[k] : []) {
+        const s = Math.max(0, Math.min(1439, Number(win?.[0])));
+        const e = Math.max(0, Math.min(1440, Number(win?.[1])));
+        if (Number.isFinite(s) && Number.isFinite(e) && e > s) out.push([s, e]);
+      }
+      if (out.length) weekly[String(k)] = out;
+    }
+    return {
+      timezone: String(a.timezone || 'Africa/Libreville'),
+      slotMinutes: Math.max(5, Math.min(240, Number(a.slotMinutes) || 30)),
+      bufferMinutes: Math.max(0, Math.min(240, Number(a.bufferMinutes) || 0)),
+      weekly,
+      blackoutDates: Array.isArray(a.blackoutDates) ? a.blackoutDates.filter((d: any) => /^\d{4}-\d{2}-\d{2}$/.test(String(d))).slice(0, 60) : [],
+    };
+  }
+
+  private sanitizeServices(arr: any) {
+    if (!Array.isArray(arr)) return [];
+    return arr.slice(0, 20).map((s: any) => {
+      const label = String(s?.label || '').trim().slice(0, 60);
+      if (!label) return null;
+      const key = (String(s?.key || '').trim() || label.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '')).slice(0, 40) || 'service';
+      return {
+        key,
+        label,
+        kind: ['priere', 'teleconsult', 'formation', 'consultation'].includes(String(s?.kind)) ? s.kind : 'consultation',
+        durationMin: Math.max(10, Math.min(240, Number(s?.durationMin) || 30)),
+        desc: String(s?.desc || '').trim().slice(0, 200),
+      };
+    }).filter(Boolean);
+  }
+
+  private sanitizeActivities(arr: any) {
+    if (!Array.isArray(arr)) return [];
+    const HHMM = /^([01]\d|2[0-3]):[0-5]\d$/;
+    return arr.slice(0, 40).map((a: any) => {
+      const label = String(a?.label || '').trim().slice(0, 60);
+      const dow = Number(a?.dow);
+      if (!label || !(dow >= 0 && dow <= 6)) return null;
+      return {
+        kind: ['busy', 'masterclass', 'live', 'enseignement', 'repos', 'rdv', 'teleconsult', 'formation'].includes(String(a?.kind)) ? a.kind : 'busy',
+        label,
+        dow,
+        start: HHMM.test(String(a?.start)) ? a.start : '08:00',
+        end: HHMM.test(String(a?.end)) ? a.end : '09:00',
+      };
+    }).filter(Boolean);
+  }
+
   // ── Préparation d'entretien (secrétariat) ────────────────────────────────
   // Porté d'ISNA v1 (booking-set-preparation). Remplace l'appel Netlify v1.
   async getAppointmentPreparation(tenant: TenantContext, appointmentId: string) {

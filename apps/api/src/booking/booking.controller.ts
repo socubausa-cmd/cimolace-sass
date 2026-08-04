@@ -6,6 +6,7 @@ import {
   Param,
   Patch,
   Post,
+  Put,
   Query,
   Req,
   UseGuards,
@@ -98,6 +99,24 @@ export class BookingController {
     @Query('weekStart') weekStart?: string,
   ) {
     return this.booking.masterCalendar(tenant, weekStart);
+  }
+
+  // ── Réglages agenda (éditeur no-code : dispo + services + activités) ───────
+  @Get('settings')
+  @UseGuards(RolesGuard)
+  @Roles('owner', 'admin', 'secretariat')
+  getBookingSettings(@CurrentTenant() tenant: TenantContext) {
+    return this.booking.getBookingSettings(tenant.id);
+  }
+
+  @Put('settings')
+  @UseGuards(RolesGuard)
+  @Roles('owner', 'admin', 'secretariat')
+  updateBookingSettings(
+    @Body() dto: { availability?: unknown; services?: unknown; activities?: unknown },
+    @CurrentTenant() tenant: TenantContext,
+  ) {
+    return this.booking.updateBookingSettings(tenant.id, dto || {});
   }
 
   // ── Prof → séance live avec un élève (depuis le profil élève) ────────────

@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { LiriPortalShell } from '@/components/liri/LiriPortalShell';
 import { bookingApi } from '@/lib/api-v2';
-import { CalendarRange, ChevronLeft, ChevronRight, Loader2, RefreshCw } from 'lucide-react';
+import { CalendarRange, ChevronLeft, ChevronRight, Loader2, RefreshCw, Settings2 } from 'lucide-react';
 
 const TZ = 'Africa/Libreville';
 const HOUR_START = 8;
@@ -97,6 +97,7 @@ function CalBody() {
           <button type="button" onClick={() => setWeekStart(null)} className="rounded-xl border border-white/10 px-3 py-2 text-[12.5px] font-semibold text-[#f5f4ee]/70 hover:text-[#f5f4ee]">Cette semaine</button>
           <button type="button" onClick={() => shiftWeek(7)} className="grid h-9 w-9 place-items-center rounded-xl border border-white/10 text-[#f5f4ee]/60 hover:text-[#f5f4ee]" title="Semaine suivante"><ChevronRight className="h-4 w-4" /></button>
           <button type="button" onClick={() => load(weekStart)} disabled={loading} className="grid h-9 w-9 place-items-center rounded-xl border border-white/10 text-[#f5f4ee]/60 hover:text-[#f5f4ee] disabled:opacity-50" title="Rafraîchir"><RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} /></button>
+          <a href="/liri/calendrier/reglages" className="grid h-9 w-9 place-items-center rounded-xl border border-white/10 text-[#f5f4ee]/60 hover:text-[#f5f4ee]" title="Réglages de l'agenda"><Settings2 className="h-4 w-4" /></a>
         </div>
       </div>
 

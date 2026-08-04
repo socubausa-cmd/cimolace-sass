@@ -793,6 +793,7 @@ const RequestAppointmentPage = lazy(() => import('@/pages/RequestAppointmentPage
 const LiriRendezVousPage = lazy(() => import('@/pages/liri/LiriRendezVousPage'));
 const LiriRdvAdminPage = lazy(() => import('@/pages/liri/LiriRdvAdminPage'));
 const LiriCalendrierPage = lazy(() => import('@/pages/liri/LiriCalendrierPage'));
+const LiriAgendaReglagesPage = lazy(() => import('@/pages/liri/LiriAgendaReglagesPage'));
 const ImmersiveWaitingRoomPage = lazy(() => import('@/pages/ImmersiveWaitingRoomPage'));
 const SatisfactionPage = lazy(() => import('@/pages/SatisfactionPage'));
 const ModuleCatalogPageNew = lazy(() => import('@/pages/modules/ModuleCatalogPage'));
@@ -2255,6 +2256,7 @@ isLiriHostDevPreviewRoute;
           <Route path="/liri/rendez-vous" element={<ProtectedLiriRoute allowedRoles={['owner', 'admin', 'teacher', 'secretariat', 'student', 'practitioner', 'clinic_admin']} allowTenantRole><LiriRendezVousPage /></ProtectedLiriRoute>} />
           <Route path="/liri/rdv" element={<ProtectedLiriRoute allowedRoles={['owner', 'admin', 'teacher', 'secretariat']} allowTenantRole><LiriRdvAdminPage /></ProtectedLiriRoute>} />
           <Route path="/liri/calendrier" element={<ProtectedLiriRoute allowedRoles={['owner', 'admin', 'teacher', 'secretariat']} allowTenantRole><LiriCalendrierPage /></ProtectedLiriRoute>} />
+          <Route path="/liri/calendrier/reglages" element={<ProtectedLiriRoute allowedRoles={['owner', 'admin', 'secretariat']} allowTenantRole><LiriAgendaReglagesPage /></ProtectedLiriRoute>} />
           <Route path="/liri/notes" element={<ProtectedLiriRoute allowedRoles={['owner', 'admin', 'teacher', 'secretariat', 'student', 'practitioner', 'clinic_admin']} allowTenantRole><LiriSchoolShell active="notes"><StudentNotesHubPage /></LiriSchoolShell></ProtectedLiriRoute>} />
           <Route path="/liri/evaluations" element={<ProtectedLiriRoute allowedRoles={['owner', 'admin', 'teacher', 'secretariat', 'student', 'practitioner', 'clinic_admin']} allowTenantRole><LiriSchoolShell active="evaluations"><StudentEvaluationsPage /></LiriSchoolShell></ProtectedLiriRoute>} />
           <Route path="/liri/absences" element={<ProtectedLiriRoute allowedRoles={['owner', 'admin', 'teacher', 'secretariat', 'student', 'practitioner', 'clinic_admin']} allowTenantRole><LiriSchoolShell active="absences"><StudentAbsencesPage /></LiriSchoolShell></ProtectedLiriRoute>} />
