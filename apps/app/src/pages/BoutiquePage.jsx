@@ -48,7 +48,7 @@ const BoutiquePage = ({ embedded = false }) => {
       <div className="flex min-h-[100dvh] items-center justify-center bg-[#0B0B0F] text-white">
         <div className="flex flex-col items-center gap-3 text-white/60">
           <LiriWordmark size="compact" className="text-[color-mix(in_srgb,var(--school-accent)_90%,transparent)]" />
-          <p className="text-[12px]">Ouverture de la Boutique Sacrée…</p>
+          <p className="text-[12px]">Ouverture du matériel initiatique…</p>
         </div>
       </div>
     );
@@ -59,8 +59,11 @@ const BoutiquePage = ({ embedded = false }) => {
       ? 'relative text-white font-sans pb-16'
       : 'min-h-screen bg-[#0F1419] text-white pt-20 font-sans pb-16'}>
       <Helmet>
-        <title>Boutique | PRORASCIENCE</title>
-        <meta name="description" content="Boutique Sacrée NGOWAZULU — Temple du Feu, de la Lumière et de la Purification Ancestrale" />
+        {/* ⚠️ Ce n'est PAS une boutique. C'est le matériel initiatique remis à celui
+            qui entre en initiation : un pack indivisible, jamais un catalogue. Le
+            vocabulaire compte — « boutique » laissait croire qu'on y choisit ses objets. */}
+        <title>Matériel initiatique | PRORASCIENCE</title>
+        <meta name="description" content="Le matériel initiatique NGOWAZULU — les 9 instruments sacrés remis à celui qui entre en initiation. Temple du Feu, de la Lumière et de la Purification Ancestrale." />
       </Helmet>
 
       <section className="relative overflow-hidden border-b border-white/5">
@@ -73,7 +76,7 @@ const BoutiquePage = ({ embedded = false }) => {
           <div className="max-w-4xl">
             <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/5 border border-white/10 text-sm text-gray-300">
               <Flame className="w-4 h-4 text-[var(--school-accent)]" />
-              🕯️ BOUTIQUE SACRÉE NGOWAZULU
+              🕯️ MATÉRIEL INITIATIQUE · NGOWAZULU
             </div>
 
             <h1 className="mt-6 text-4xl md:text-6xl font-serif font-bold leading-tight">
@@ -110,7 +113,10 @@ const BoutiquePage = ({ embedded = false }) => {
             <h2 className="text-3xl md:text-4xl font-serif font-bold">⚜️ Présentation Générale</h2>
             <div className="mt-6 space-y-5 text-gray-300 leading-relaxed">
               <p>
-                La Boutique Sacrée NGOWAZULU n'est pas une boutique ordinaire. Elle est un sanctuaire spirituel où chaque objet possède une âme et une mission sacrée.
+                Ceci n&apos;est pas une boutique. C&apos;est le matériel initiatique de NGOWAZULU :
+                le nécessaire remis à celui qui entre en initiation. Les neuf instruments
+                forment un ensemble indivisible — on ne choisit pas ses objets, on reçoit
+                ce que le chemin demande.
               </p>
               <p>
                 Chaque article ici n'est pas un simple objet, mais un instrument rituel activé, consacré par le 5ᵉ Manikongo lui-même sous le sacerdoce du Génie Kimbangu.

@@ -30,7 +30,10 @@ export const TEMPLE_SERVICES = [
   { title: 'Interventions', desc: 'Exorcisme, rééquilibrage, hospitalisation spirituelle — selon la gravité du cas. Le tarif se fixe après le diagnostic.', img: TEMPLE(3), href: CHEMIN_CONTACT },
   { title: 'Voyages initiatiques', desc: 'Rites de passage, sortie des anciens pactes, progression de conscience. Sur dossier, après entretien.', img: TEMPLE(8), href: CHEMIN_CONTACT },
   { title: 'Mentorat spirituel', desc: `Un Moniteur dédié : protection, guérison, élévation. De ${MENTORAT_MIN} à ${MENTORAT_MAX} €/mois.`, img: TEMPLE(5), href: '/#offres' },
-  { title: 'NZO-WA-NKISI', desc: 'La maison des remèdes : le pack des 9 instruments sacrés, 700 € — activation et suivi de 3 mois inclus.', img: TEMPLE(7), href: CHEMIN_BOUTIQUE },
+  // ⚠️ NZO-WA-NKISI n'est pas un commerce : c'est la maison qui remet le matériel
+  // à celui qui entre en initiation. Le pack est indivisible — on ne choisit pas
+  // ses objets, on reçoit le nécessaire du chemin.
+  { title: 'NZO-WA-NKISI', desc: 'La maison des remèdes : le matériel initiatique remis à celui qui entre en initiation — 9 instruments sacrés, indivisibles. 700 €, activation et suivi de 3 mois inclus.', img: TEMPLE(7), href: CHEMIN_BOUTIQUE },
 ];
 
 const PARCOURS = [

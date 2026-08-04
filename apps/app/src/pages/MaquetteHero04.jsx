@@ -351,7 +351,9 @@ export default function MaquetteHero04() {
         items={[
           { title: 'Consultation', desc: 'Diagnostic des blocages & orientation. 50 € · 1h30.', img: TEMPLE(2), href: CHEMIN_CONSULTATION },
           { title: 'Culte & communion', desc: 'Le rythme communautaire en live : on ouvre le mois le 1er dimanche, on le ferme le dernier vendredi.', img: TEMPLE(6), href: CHEMIN_SERVICES_TEMPLE },
-          { title: 'Boutique sacrée', desc: 'Le pack des 9 instruments sacrés : 700 €, activation et suivi 3 mois inclus.', img: TEMPLE(3), href: CHEMIN_BOUTIQUE },
+          // ⚠️ Ce n'est PAS une boutique : c'est le MATÉRIEL requis pour entrer en
+          // initiation. Un pack indivisible, pas un catalogue où l'on pioche.
+          { title: 'Matériel initiatique', desc: 'Le nécessaire de celui qui entre en initiation : 9 instruments sacrés, indivisibles. 700 €, activation et suivi 3 mois inclus.', img: TEMPLE(3), href: CHEMIN_BOUTIQUE },
         ]}
       />
 
@@ -439,7 +441,7 @@ export default function MaquetteHero04() {
         />
         <div className="mx-auto mt-8 max-w-3xl px-5 text-center sm:px-6">
           <p className="text-sm leading-relaxed" style={{ color: 'var(--muted2)' }}>
-            Vous cherchez la communion mensuelle, la boutique sacrée ou un voyage initiatique&nbsp;?{' '}
+            Vous cherchez la communion mensuelle, le matériel initiatique ou un voyage initiatique&nbsp;?{' '}
             <a href={CHEMIN_SERVICES_TEMPLE} className="font-semibold underline underline-offset-4" style={gold}>
               Voir tous les services du Temple
             </a>.

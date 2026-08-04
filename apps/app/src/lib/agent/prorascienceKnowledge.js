@@ -154,7 +154,9 @@ export const PRORASCIENCE_KNOWLEDGE = {
       { name: "Mentorat Confort", price: "180 €", suffix: "/mois · 1 rencontre/semaine" },
       { name: "Mentorat Intensif", price: "300 €", suffix: "/mois · 2 rencontres/semaine" },
       { name: "Mentorat Souverain", price: "500 €", suffix: "/mois · jusqu'à 3 rencontres/semaine" },
-      { name: "Boutique Sacrée (pack)", price: "700 €", suffix: "· 9 objets rituels, activation + suivi 3 mois" },
+      // ⚠️ Pas un commerce : le matériel REQUIS pour entrer en initiation. Les 9
+      // objets forment un ensemble indivisible — on ne les vend jamais séparément.
+      { name: "Matériel initiatique", price: "700 €", suffix: "· les 9 instruments sacrés, indivisibles — activation + suivi 3 mois" },
     ],
     boutique: ["Savon NVOURIMPARA", "Huile BUMBALOWAH", "Poudre MPEVELO", "Poudre ZAZI", "Bougie IMBONGA", "Cloche Sacrée", "Séguelebélé", "Saquet et Manadrome", "Poudre de Souhaits"],
     policy: "Entrée encadrée : paiement d'ouverture + formulaire + serment de confidentialité et disclaimer médical + 3 pièces (photo, identité, preuve d'habitation). Gouvernance : le secrétariat qualifie et suit l'administratif ; le maître donne l'orientation et le protocole spirituel. Confidentialité stricte.",
