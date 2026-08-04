@@ -119,6 +119,18 @@ const LoginPage = () => {
     const h = window.location.hostname.toLowerCase();
     if (h !== 'prorascience.org' && h !== 'www.prorascience.org') return;
     if (spLogin.get('legacy') === '1') return;
+    // ⚠️ Ne rediriger vers l'OS immersif (`/?auth=login`) QUE s'il est réellement ACTIF. Depuis que
+    // le SITE (vitrine) est redevenu le défaut sur prorascience.org (2026-08-02), le site n'ouvre
+    // AUCUN formulaire pour `?auth=login` → rediriger là bloquait l'utilisateur sur la vitrine sans
+    // jamais voir la page de connexion. En mode SITE, on rend donc le vrai formulaire directement.
+    let osActive = false;
+    try {
+      const os = spLogin.get('os');
+      if (os === '1' || os === 'isna') osActive = true;
+      else if (os === '0' || os === 'off') osActive = false;
+      else osActive = window.localStorage.getItem('prorascience-os-mode') === '1';
+    } catch { osActive = false; }
+    if (!osActive) return; // SITE par défaut → afficher le formulaire de connexion
     const back = redirectParam || location.state?.from?.pathname || '';
     navigate(`/?auth=login${back ? `&redirect=${encodeURIComponent(back)}` : ''}`, { replace: true });
     // eslint-disable-next-line react-hooks/exhaustive-deps
