@@ -163,7 +163,7 @@ export const LIVE_MODES = {
     shortLabel: 'Culte',
     category: 'culte',
     medical: false,
-    creatable: false, // ⚠️ nécessite migration additive du CHECK avant activation à la création
+    creatable: true, // migration additive du CHECK session_type passée (2026-08-05)
     arenaLayout: ARENA_LAYOUT.HOST_CAMERA, // officiant à l'antenne, assemblée en écoute
     epureAuto: false,
     vocab: {

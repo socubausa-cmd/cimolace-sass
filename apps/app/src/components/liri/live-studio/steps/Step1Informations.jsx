@@ -3,7 +3,7 @@ import { motion } from 'framer-motion';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { Sparkles, GraduationCap, Video, Presentation, Info, Swords, Stethoscope } from 'lucide-react';
+import { Sparkles, GraduationCap, Video, Presentation, Info, Swords, Stethoscope, Church } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import {
   Select,
@@ -15,16 +15,15 @@ import {
 import { supabase } from '@/lib/customSupabaseClient';
 import { labelForLiveMode } from '@/lib/liveModeConfig';
 
-// Type de live → pilote l'affichage par défaut en salle (cf. arenaLayoutForSessionType) :
-// Formation → SmartBoard · Conférence → grille membres · Débat → panel débatteurs.
-// Libellés issus du socle canonique liveModeConfig (source unique).
-// `medical: true` = réservé au Live santé (MEDOS) ; grisé hors mode MEDOS (et
-// inversement, les types non-médicaux sont grisés EN mode MEDOS).
-const SESSION_TYPES = [
-  { value: 'teleconsult', label: labelForLiveMode('teleconsult'), icon: Stethoscope, medical: true },
-  { value: 'classe', label: labelForLiveMode('classe'), icon: GraduationCap }, // → mappé 'class' à la création
-  { value: 'conference', label: labelForLiveMode('conference'), icon: Sparkles },
-  { value: 'debate', label: labelForLiveMode('debate'), icon: Swords },
+// SÉLECTEUR DE MODE (socle « un moteur, N configs ») — UN clic pose `session_type` +
+// `medos_mode` + `category` d'un coup. Libellés issus du socle canonique liveModeConfig.
+// Téléconsultation → medos:true (cockpit clinique) ; les autres → medos:false.
+const MODE_CARDS = [
+  { value: 'teleconsult', medos: true, category: 'teleconsultation', icon: Stethoscope, label: labelForLiveMode('teleconsult'), desc: 'Praticien → patient · cockpit clinique' },
+  { value: 'classe', medos: false, category: 'formation', icon: GraduationCap, label: labelForLiveMode('classe'), desc: 'Formateur → élèves · SmartBoard' }, // → mappé 'class' à la création
+  { value: 'conference', medos: false, category: 'conference', icon: Sparkles, label: labelForLiveMode('conference'), desc: 'Intervenant → participants' },
+  { value: 'debate', medos: false, category: 'autre', icon: Swords, label: labelForLiveMode('debate'), desc: 'Modérateur → intervenants · vote' },
+  { value: 'culte', medos: false, category: 'autre', icon: Church, label: labelForLiveMode('culte'), desc: 'Officiant → fidèles · assemblée' },
 ];
 
 const CATEGORIES = [
@@ -171,106 +170,53 @@ export function Step1Informations({ draft, updateDraft, isStaff, teachers, selec
         </div>
       </div>
 
-      <div className="grid grid-cols-1 gap-4 border-t border-[#2D3139]/70 pt-5 md:grid-cols-2">
-        <div className="space-y-2">
+      {/* SÉLECTEUR DE MODE — un clic configure tout le moteur (socle liveModeConfig).
+          Remplace les anciens menus Type + Catégorie et le toggle MEDOS séparé. */}
+      <div className="space-y-3 border-t border-[#2D3139]/70 pt-5">
+        <div className="space-y-1">
           <Label className="text-white/90">Type de live</Label>
-          <Select value={draft.session_type} onValueChange={(v) => updateDraft({ session_type: v })}>
-            <SelectTrigger className="h-12 rounded-lg border-[#2D3139] bg-[#0a0c10] px-3 text-white">
-              <div className="flex items-center gap-2">
-                <span className="inline-flex h-8 w-8 items-center justify-center rounded-lg bg-[#d97757]/[0.28] text-[#B8A3FF]">
-                  {draft.medos_mode ? <Stethoscope className="h-4 w-4" /> : <Video className="h-4 w-4" />}
-                </span>
-                <SelectValue />
-              </div>
-            </SelectTrigger>
-            <SelectContent className="rounded-xl border-[#2D3139] bg-[#151a21]">
-              {SESSION_TYPES.map((t) => {
-                const Icon = t.icon;
-                // Grisé : type médical hors MEDOS, ou type non-médical en mode MEDOS.
-                const disabled = draft.medos_mode ? !t.medical : !!t.medical;
-                return (
-                  <SelectItem key={t.value} value={t.value} disabled={disabled} className="rounded-lg focus:bg-[#d97757]/10 focus:text-[#d97757]">
-                    <span className="inline-flex items-center gap-2">
-                      <Icon className="h-3.5 w-3.5" />
-                      {t.label}
-                    </span>
-                  </SelectItem>
-                );
-              })}
-            </SelectContent>
-          </Select>
+          <p className="text-[12px] text-gray-400">
+            Un seul choix configure le moteur : vocabulaire, mise en page, cockpit et capacités.
+          </p>
         </div>
-        <div className="space-y-2">
-          <Label className="text-white/90">Catégorie</Label>
-          <Select value={draft.category} onValueChange={(v) => updateDraft({ category: v })}>
-            <SelectTrigger className="h-12 rounded-lg border-[#2D3139] bg-[#0a0c10] px-3 text-white">
-              <div className="flex items-center gap-2">
-                <span className="inline-flex h-8 w-8 items-center justify-center rounded-lg bg-[#cf7a52]/[0.24] text-[#e8c3a0]">
-                  {draft.medos_mode ? <Stethoscope className="h-4 w-4" /> : <GraduationCap className="h-4 w-4" />}
+        <div className="grid grid-cols-2 gap-3 lg:grid-cols-3">
+          {MODE_CARDS.map((m) => {
+            const Icon = m.icon;
+            const selected = draft.session_type === m.value;
+            return (
+              <button
+                key={m.value}
+                type="button"
+                aria-pressed={selected}
+                onClick={() => updateDraft({ session_type: m.value, medos_mode: m.medos, category: m.category })}
+                className={cn(
+                  'flex flex-col items-start gap-2 rounded-xl border p-3.5 text-left transition-colors',
+                  selected
+                    ? 'border-[#d97757]/60 bg-[#d97757]/[0.1] shadow-[0_0_0_1px_rgba(217,119,87,0.35)]'
+                    : 'border-[#2D3139] bg-[#0a0c10]/60 hover:border-[#d97757]/35',
+                )}
+              >
+                <span
+                  className={cn(
+                    'inline-flex h-9 w-9 items-center justify-center rounded-lg transition-colors',
+                    selected ? 'bg-[#d97757] text-white' : 'bg-[#d97757]/[0.18] text-[#d97757]',
+                  )}
+                >
+                  <Icon className="h-4 w-4" />
                 </span>
-                <SelectValue />
-              </div>
-            </SelectTrigger>
-            <SelectContent className="rounded-xl border-[#2D3139] bg-[#151a21]">
-              {CATEGORIES.map((c) => {
-                const Icon = c.icon;
-                // Grisé : catégorie médicale hors MEDOS, ou catégorie non-médicale en mode MEDOS.
-                const disabled = draft.medos_mode ? !c.medical : !!c.medical;
-                return (
-                  <SelectItem key={c.value} value={c.value} disabled={disabled} className="rounded-lg focus:bg-[#d97757]/10 focus:text-[#d97757]">
-                    <span className="inline-flex items-center gap-2">
-                      <Icon className="h-3.5 w-3.5" />
-                      {c.label}
-                    </span>
-                  </SelectItem>
-                );
-              })}
-            </SelectContent>
-          </Select>
+                <span className="text-[13.5px] font-semibold text-white">{m.label}</span>
+                <span className="text-[11.5px] leading-snug text-gray-400">{m.desc}</span>
+              </button>
+            );
+          })}
         </div>
+        {draft.medos_mode ? (
+          <p className="flex items-center gap-1.5 text-[12px] text-[#e8c3a0]">
+            <Stethoscope className="h-3.5 w-3.5 shrink-0" />
+            Cockpit clinique MEDOS activé : jumeau 3D, roue de transformation, bilans et note SOAP.
+          </p>
+        ) : null}
       </div>
-
-      {/* Live santé (MEDOS) : active le cockpit clinique embarqué (jumeau 3D / roue / bilans / SOAP). */}
-      <button
-        type="button"
-        onClick={() => updateDraft({ medos_mode: !draft.medos_mode })}
-        className={cn(
-          'flex w-full items-center justify-between gap-3 rounded-xl border p-4 text-left transition-colors',
-          draft.medos_mode
-            ? 'border-[#d97757]/45 bg-[#d97757]/[0.08]'
-            : 'border-[#2D3139] bg-[#0a0c10]/60 hover:border-[#d97757]/30',
-        )}
-      >
-        <div className="flex min-w-0 items-center gap-3">
-          <span
-            className={cn(
-              'inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-lg',
-              draft.medos_mode ? 'bg-[#d97757] text-white' : 'bg-[#d97757]/20 text-[#d97757]',
-            )}
-          >
-            <Stethoscope className="h-4 w-4" />
-          </span>
-          <div className="min-w-0">
-            <p className="text-[14px] font-semibold text-white">Live santé (MEDOS)</p>
-            <p className="text-[12px] leading-snug text-gray-400">
-              Cockpit clinique embarqué : jumeau 3D, roue de transformation, bilans et note SOAP à partager au patient.
-            </p>
-          </div>
-        </div>
-        <span
-          className={cn(
-            'relative h-6 w-11 shrink-0 rounded-full transition-colors',
-            draft.medos_mode ? 'bg-[#d97757]' : 'bg-white/15',
-          )}
-        >
-          <span
-            className={cn(
-              'absolute top-0.5 h-5 w-5 rounded-full bg-white shadow transition-transform',
-              draft.medos_mode ? 'translate-x-[22px]' : 'translate-x-0.5',
-            )}
-          />
-        </span>
-      </button>
 
       {draft.session_type === 'debate' ? (
         <div className="grid grid-cols-1 gap-4 rounded-lg border border-[#d97757]/30 bg-[#d97757]/[0.06] p-4 md:grid-cols-2">
