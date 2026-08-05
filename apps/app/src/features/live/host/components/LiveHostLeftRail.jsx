@@ -18,6 +18,7 @@ import activeTenantConfig from '@/lib/tenant/activeTenantConfig';
 import { designerShellCloseBtn } from '@/lib/liriDesignerShellClasses';
 import LiriHostLeftLiveAssistantRail from '@/components/liri/live-room/LiriHostLeftLiveAssistantRail';
 import LiveHostInviteManagementPanel from '@/components/liri/live-room/LiveHostInviteManagementPanel';
+import LiveInviteManagePanel from '@/features/live/host/components/LiveInviteManagePanel';
 import { PHASE } from '@/features/live/host/liveHostConstants';
 import { useLivePublicInviteUrl } from '@/features/live/hooks/useLivePublicInviteUrl';
 
@@ -461,6 +462,18 @@ export const LiveHostLeftRail = React.forwardRef(function LiveHostLeftRail(
                 <Share2 size={13} aria-hidden /> Partager le lien
               </button>
             </div>
+
+            {/* Invitations nominatives (par personne) — socle commun multi-modes,
+                remonté ici (overlay Salle) pour être à portée de clic. */}
+            {sessionId ? (
+              <div style={{ marginBottom: 14 }}>
+                <LiveInviteManagePanel
+                  sessionId={sessionId}
+                  sessionType={sessionType}
+                  groupInviteUrl={inviteUrl}
+                />
+              </div>
+            ) : null}
 
             {/* Salle */}
             <div style={{ marginBottom: 14 }}>
