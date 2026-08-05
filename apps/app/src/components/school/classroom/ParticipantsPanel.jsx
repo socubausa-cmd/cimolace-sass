@@ -52,10 +52,10 @@ const ParticipantsPanel = () => {
                             participant.status === 'online' ? 'bg-green-500' : 'bg-yellow-500'
                          }`}></span>
                       </div>
-                      <div>
-                         <p className="text-sm font-medium text-white flex items-center gap-2">
-                            {participant.name}
-                            {participant.role === 'instructor' && <Badge className="h-4 px-1 text-[9px] bg-[var(--school-accent)] text-black hover:bg-[var(--school-accent)]">Hôte</Badge>}
+                      <div className="min-w-0 flex-1">
+                         <p className="text-sm font-medium text-white flex items-center gap-2 min-w-0">
+                            <span className="truncate">{participant.name}</span>
+                            {participant.role === 'instructor' && <Badge className="h-4 px-1 text-[9px] bg-[var(--school-accent)] text-black hover:bg-[var(--school-accent)] shrink-0">Hôte</Badge>}
                          </p>
                          <p className="text-[10px] text-gray-500 capitalize">{participant.status}</p>
                       </div>

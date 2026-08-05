@@ -6,7 +6,7 @@ import { createLiveRoom } from '@/services/livekitApi';
 import { 
   Mic, MicOff, Video as VideoIcon, VideoOff, Monitor, Hand,
   MessageSquare, Users, FileText, Settings, BarChart2, MoreHorizontal,
-  Send, Smile
+  Send, Smile, X
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -73,6 +73,7 @@ const LiveClassroomPage = () => {
   const [isMuted, setIsMuted] = useState(false);
   const [isVideoOff, setIsVideoOff] = useState(false);
   const [activeSidebarTab, setActiveSidebarTab] = useState('chat');
+  const [sidebarOpen, setSidebarOpen] = useState(false); // tiroir chat/participants sur mobile
 
   useEffect(() => {
     if (!liveSessionId) return;
@@ -237,16 +238,26 @@ const LiveClassroomPage = () => {
                    </Button>
                    <div className="w-px h-8 bg-white/10 mx-2"></div>
                    <div className="flex lg:hidden gap-2">
-                      <Button variant="ghost" size="icon" className="text-gray-400 hover:text-[var(--school-accent)] rounded-full" onClick={() => setActiveSidebarTab('chat')}>
+                      <Button variant="ghost" size="icon" className="text-gray-400 hover:text-[var(--school-accent)] rounded-full" onClick={() => { setActiveSidebarTab('chat'); setSidebarOpen(true); }} aria-label="Ouvrir le chat et les participants">
                          <MessageSquare className="w-5 h-5" />
+                      </Button>
+                      <Button variant="ghost" size="icon" className="text-gray-400 hover:text-[var(--school-accent)] rounded-full" onClick={() => { setActiveSidebarTab('participants'); setSidebarOpen(true); }} aria-label="Ouvrir les participants">
+                         <Users className="w-5 h-5" />
                       </Button>
                    </div>
                 </TooltipProvider>
              </div>
           </div>
 
-          {/* Sidebar (30%) */}
-          <div className={`hidden lg:flex w-96 flex-col bg-[#192734] border-l border-white/10`}>
+          {/* Fond du tiroir (mobile) */}
+          {sidebarOpen && (
+            <div className="fixed inset-0 z-40 bg-black/60 lg:hidden" onClick={() => setSidebarOpen(false)} aria-hidden="true" />
+          )}
+          {/* Sidebar — colonne fixe sur desktop, tiroir plein écran sur mobile */}
+          <div className={`${sidebarOpen ? 'flex' : 'hidden'} lg:flex fixed inset-y-0 right-0 z-50 w-full max-w-sm flex-col bg-[#192734] border-l border-white/10 lg:static lg:z-auto lg:w-96 lg:max-w-none`}>
+             <button type="button" onClick={() => setSidebarOpen(false)} className="lg:hidden absolute top-2 right-2 z-10 grid h-9 w-9 place-items-center rounded-full text-gray-300 hover:bg-white/10 hover:text-white" aria-label="Fermer">
+                <X className="w-5 h-5" />
+             </button>
              <Tabs value={activeSidebarTab} onValueChange={setActiveSidebarTab} className="flex-1 flex flex-col">
                 <div className="p-2 border-b border-white/10 bg-[#0F1419]">
                   <PremiumSegmentedSelector
