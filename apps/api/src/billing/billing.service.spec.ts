@@ -235,4 +235,65 @@ describe('BillingService', () => {
       expect(updateEq).toHaveBeenCalled();
     });
   });
+
+  /**
+   * RÉGRESSION RÉELLE — Stripe a déplacé deux champs hors de la racine à partir de
+   * l'API `2025-03-31.basil`. Le compte de production tourne en `2026-02-25.clover`
+   * et l'endpoint webhook n'épingle aucune version : les anciennes lectures racine
+   * renvoyaient `undefined`, `onInvoicePaid`/`onInvoiceFailed` sortaient aussitôt, et
+   * les renouvellements comme les ÉCHECS de paiement passaient inaperçus.
+   * Les charges utiles ci-dessous sont copiées de la forme réellement renvoyée par
+   * `GET /v1/invoices` sur le compte live.
+   */
+  describe('champs Stripe déplacés (basil/clover)', () => {
+    const idFacture = (inv: unknown) =>
+      (BillingService as any).invoiceSubscriptionId(inv);
+    const periode = (sub: unknown) =>
+      (BillingService as any).subscriptionPeriod(sub);
+
+    it('trouve l’abonnement dans une facture clover (parent.subscription_details)', () => {
+      expect(
+        idFacture({
+          id: 'in_1',
+          parent: { subscription_details: { subscription: 'sub_clover' } },
+        }),
+      ).toBe('sub_clover');
+    });
+
+    it('trouve encore l’abonnement dans une facture legacy (racine)', () => {
+      expect(idFacture({ id: 'in_1', subscription: 'sub_legacy' })).toBe('sub_legacy');
+    });
+
+    it('se rabat sur la ligne de facture', () => {
+      expect(
+        idFacture({ id: 'in_1', lines: { data: [{ subscription: 'sub_ligne' }] } }),
+      ).toBe('sub_ligne');
+    });
+
+    it('renvoie null quand aucun abonnement n’est présent (facture ponctuelle)', () => {
+      expect(idFacture({ id: 'in_1', lines: { data: [] } })).toBeNull();
+    });
+
+    it('lit la période sur items.data[0] quand la racine ne l’a plus', () => {
+      expect(
+        periode({
+          items: { data: [{ current_period_start: 1000, current_period_end: 2000 }] },
+        }),
+      ).toEqual({ start: 1000, end: 2000 });
+    });
+
+    it('préfère la racine quand elle existe (compte resté en version ancienne)', () => {
+      expect(
+        periode({
+          current_period_start: 10,
+          current_period_end: 20,
+          items: { data: [{ current_period_start: 1000, current_period_end: 2000 }] },
+        }),
+      ).toEqual({ start: 10, end: 20 });
+    });
+
+    it('ne casse pas sur un abonnement absent (fetch Stripe en échec)', () => {
+      expect(periode(null)).toEqual({ start: null, end: null });
+    });
+  });
 });

@@ -1556,6 +1556,52 @@ export class BillingService implements OnApplicationBootstrap {
     return unix ? new Date(unix * 1000).toISOString() : null;
   }
 
+  /**
+   * ID d'abonnement Stripe porté par une facture — TOUTES VERSIONS D'API.
+   *
+   * ⚠️ DÉFAUT SILENCIEUX CORRIGÉ ICI. `invoice.subscription` a été RETIRÉ de la racine
+   * de l'objet Invoice à partir de l'API `2025-03-31.basil` (déplacé sous
+   * `parent.subscription_details.subscription`). Ce compte tourne en `2026-02-25.clover`
+   * et l'endpoint webhook n'épingle AUCUNE version : les factures reçues n'ont donc plus
+   * le champ racine. `onInvoicePaid` / `onInvoiceFailed` sortaient alors sur leur
+   * `if (!subId) return` DÈS LE 2e MOIS — la carte du client était bien débitée par
+   * Stripe, mais la plateforme n'en savait RIEN : échéance jamais prolongée, facture
+   * jamais marquée payée, et surtout un ÉCHEC de paiement jamais vu (aucun past_due,
+   * aucune relance, service rendu gratuitement pour toujours).
+   *
+   * Vérifié sur le compte réel : `GET /v1/invoices` → `subscription` absent de la racine,
+   * présent en `parent.subscription_details.subscription`.
+   *
+   * Même ordre de repli que checkout/subscription-renewal.service.ts:887-893, qui avait
+   * déjà été durci ; la facturation des forfaits, elle, ne l'avait pas été.
+   */
+  private static invoiceSubscriptionId(invoice: any): string | null {
+    const line0 = invoice?.lines?.data?.[0] ?? {};
+    return (
+      invoice?.subscription ??
+      invoice?.parent?.subscription_details?.subscription ??
+      line0?.parent?.subscription_item_details?.subscription ??
+      line0?.subscription ??
+      null
+    );
+  }
+
+  /**
+   * Bornes de période d'un abonnement Stripe — TOUTES VERSIONS D'API.
+   * Même migration Basil : `current_period_start/end` a quitté la racine de Subscription
+   * pour `items.data[].current_period_*`. Sans ce repli, `current_period_end` restait NULL
+   * en base après paiement — ce qui ne coupait rien (le garde traite NULL comme « sans
+   * échéance ») mais rendait toute la facturation aveugle : ni date de renouvellement
+   * affichable, ni relance possible.
+   */
+  private static subscriptionPeriod(sub: any): { start: number | null; end: number | null } {
+    const item0 = sub?.items?.data?.[0] ?? {};
+    return {
+      start: sub?.current_period_start ?? item0?.current_period_start ?? null,
+      end: sub?.current_period_end ?? item0?.current_period_end ?? null,
+    };
+  }
+
   /** Mappe le statut Stripe vers l'enum billing_subscriptions. */
   private mapStripeStatus(s?: string): string {
     switch (s) {
@@ -1676,8 +1722,9 @@ export class BillingService implements OnApplicationBootstrap {
     if (stripeSubId) patch.provider_subscription_id = stripeSubId;
     const customer = session.customer ?? sub?.customer ?? null;
     if (customer) patch.provider_customer_id = customer;
-    if (sub?.current_period_start) patch.current_period_start = this.unixToIso(sub.current_period_start);
-    if (sub?.current_period_end) patch.current_period_end = this.unixToIso(sub.current_period_end);
+    const periode = BillingService.subscriptionPeriod(sub);
+    if (periode.start) patch.current_period_start = this.unixToIso(periode.start);
+    if (periode.end) patch.current_period_end = this.unixToIso(periode.end);
 
     const matchCol = rowId ? "id" : "provider_checkout_id";
     const matchVal = rowId || session.id;
@@ -1724,11 +1771,17 @@ export class BillingService implements OnApplicationBootstrap {
 
   /** invoice.paid / payment_succeeded → renouvellement : prolonge la période + active. */
   private async onInvoicePaid(invoice: any) {
-    const subId = invoice.subscription;
-    if (!subId) return;
+    const subId = BillingService.invoiceSubscriptionId(invoice);
+    if (!subId) {
+      this.logger.warn(
+        `[billing webhook] invoice.paid sans id d'abonnement (facture=${invoice?.id ?? "?"}) — renouvellement NON enregistré`,
+      );
+      return;
+    }
     const sub = await this.fetchStripeSubscription(subId);
     const patch: any = { status: "active", updated_at: new Date().toISOString() };
-    if (sub?.current_period_end) patch.current_period_end = this.unixToIso(sub.current_period_end);
+    const fin = BillingService.subscriptionPeriod(sub).end;
+    if (fin) patch.current_period_end = this.unixToIso(fin);
     else if (invoice?.lines?.data?.[0]?.period?.end)
       patch.current_period_end = this.unixToIso(invoice.lines.data[0].period.end);
     await this.supabase.from("billing_subscriptions").update(patch).eq("provider_subscription_id", subId);
@@ -1758,8 +1811,13 @@ export class BillingService implements OnApplicationBootstrap {
 
   /** invoice.payment_failed → past_due (déclenche la relance / fenêtre de grâce). */
   private async onInvoiceFailed(invoice: any) {
-    const subId = invoice.subscription;
-    if (!subId) return;
+    const subId = BillingService.invoiceSubscriptionId(invoice);
+    if (!subId) {
+      this.logger.warn(
+        `[billing webhook] invoice.payment_failed sans id d'abonnement (facture=${invoice?.id ?? "?"}) — impayé NON enregistré`,
+      );
+      return;
+    }
     await this.supabase
       .from("billing_subscriptions")
       .update({ status: "past_due", updated_at: new Date().toISOString() })
@@ -1781,7 +1839,8 @@ export class BillingService implements OnApplicationBootstrap {
   /** customer.subscription.updated → resynchronise statut + période. */
   private async onSubscriptionUpdated(sub: any) {
     const patch: any = { status: this.mapStripeStatus(sub.status), updated_at: new Date().toISOString() };
-    if (sub?.current_period_end) patch.current_period_end = this.unixToIso(sub.current_period_end);
+    const finPeriode = BillingService.subscriptionPeriod(sub).end;
+    if (finPeriode) patch.current_period_end = this.unixToIso(finPeriode);
     if (sub?.canceled_at) patch.canceled_at = this.unixToIso(sub.canceled_at);
     await this.supabase.from("billing_subscriptions").update(patch).eq("provider_subscription_id", sub.id);
   }
