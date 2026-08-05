@@ -976,6 +976,71 @@ export class LiveService {
   }
 
   /**
+   * PUBLIC — métadonnées de session pour l'ÉCRAN DE CONNEXION invité (salle d'attente
+   * brandée), SANS générer de token LiveKit ni toucher à la room / aux caps forfait.
+   * Valide le même access_pass que `generateGuestLiveToken`. Renvoie seulement des
+   * champs sûrs à exposer (titre, mode, statut, horaire, cover, nom de l'hôte, tenant).
+   * Fonctionnalité COMMUNE à tous les modes du moteur (formation / consultation / culte /
+   * débat) : c'est la config du mode côté front qui décline le vocabulaire.
+   */
+  async getPublicGuestInfo(sessionId: string, inviteId: string, tenantSlug?: string) {
+    const { data: pass } = await (this.supabase as any)
+      .from("access_passes")
+      .select("id, tenant_id, resource_type, resource_id, status")
+      .eq("id", inviteId)
+      .maybeSingle();
+    if (
+      !pass ||
+      (pass as any).resource_type !== "live_session" ||
+      (pass as any).resource_id !== sessionId ||
+      (pass as any).status !== "active"
+    ) {
+      throw new ForbiddenException("Lien d'accès invalide ou expiré.");
+    }
+    const { data: session } = await (this.supabase as any)
+      .from("live_sessions")
+      .select(
+        "id, tenant_id, title, description, session_type, status, scheduled_at, started_at, cover_image_url, host_user_id, tenants(slug, name)",
+      )
+      .eq("id", sessionId)
+      .single();
+    if (!session) throw new NotFoundException("Session introuvable");
+    if ((session as any).tenant_id !== (pass as any).tenant_id) {
+      throw new ForbiddenException("Accès refusé.");
+    }
+    // Nom de l'hôte — best-effort, ne bloque jamais l'écran de connexion.
+    let hostName: string | null = null;
+    if ((session as any).host_user_id) {
+      try {
+        const { data: prof } = await (this.supabase as any)
+          .from("profiles")
+          .select("display_name, full_name")
+          .eq("id", (session as any).host_user_id)
+          .maybeSingle();
+        hostName =
+          (prof as any)?.display_name || (prof as any)?.full_name || null;
+      } catch {
+        hostName = null;
+      }
+    }
+    return {
+      id: (session as any).id,
+      title: (session as any).title ?? null,
+      description: (session as any).description ?? null,
+      session_type: (session as any).session_type ?? null,
+      status: (session as any).status ?? null,
+      scheduled_at: (session as any).scheduled_at ?? null,
+      started_at: (session as any).started_at ?? null,
+      cover_image_url: (session as any).cover_image_url ?? null,
+      host_name: hostName,
+      tenant: {
+        slug: tenantSlug ?? (session as any)?.tenants?.slug ?? null,
+        name: (session as any)?.tenants?.name ?? null,
+      },
+    };
+  }
+
+  /**
    * Démarre l'egress UNE fois pour la session. Best-effort (avale les erreurs), NO-OP si
    * R2 non configuré (CF_R2_BUCKET absent) ou si un enregistrement a déjà été lancé.
    * Appelé par le WEBHOOK quand l'HÔTE rejoint la room (room ACTIVE → l'egress démarre).

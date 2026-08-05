@@ -21,4 +21,17 @@ export class LiveGuestPublicController {
   ) {
     return this.svc.generateGuestLiveToken(id, String(body?.invite_id || ""), body?.tenant);
   }
+
+  /**
+   * Métadonnées publiques de la session pour l'ÉCRAN DE CONNEXION invité (salle d'attente
+   * brandée) — SANS token LiveKit, SANS effet de bord room/forfait. Valide le même
+   * access_pass. Le `invite_id` passe dans le CORPS (jamais en query string).
+   */
+  @Post(":id/info")
+  async guestInfo(
+    @Param("id") id: string,
+    @Body() body: { invite_id?: string; tenant?: string },
+  ) {
+    return this.svc.getPublicGuestInfo(id, String(body?.invite_id || ""), body?.tenant);
+  }
 }
