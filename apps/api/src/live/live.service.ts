@@ -909,27 +909,49 @@ export class LiveService {
     return { passId: (created as any)?.id ?? null };
   }
 
-  async generateGuestLiveToken(sessionId: string, inviteId: string, tenantSlug?: string) {
+  /**
+   * Valide un jeton d'accès invité (public) : SOIT un `access_pass` `live_session` actif
+   * (lien de partage UNIQUE), SOIT une ligne `live_session_invites` non révoquée
+   * (invitation NOMINATIVE). Fonctionnalité COMMUNE du moteur — le même `/live/:id/invite/:id`
+   * dessert les deux. Renvoie le tenant + le user porteur, ou jette.
+   */
+  private async resolveGuestInvite(
+    sessionId: string,
+    inviteId: string,
+  ): Promise<{ tenantId: string; userId: string | null; source: "pass" | "invite" }> {
     const { data: pass } = await (this.supabase as any)
       .from("access_passes")
       .select("id, user_id, tenant_id, resource_type, resource_id, status")
       .eq("id", inviteId)
       .maybeSingle();
     if (
-      !pass ||
-      (pass as any).resource_type !== "live_session" ||
-      (pass as any).resource_id !== sessionId ||
-      (pass as any).status !== "active"
+      pass &&
+      (pass as any).resource_type === "live_session" &&
+      (pass as any).resource_id === sessionId &&
+      (pass as any).status === "active"
     ) {
-      throw new ForbiddenException("Lien d'accès invalide ou expiré.");
+      return { tenantId: (pass as any).tenant_id, userId: (pass as any).user_id ?? null, source: "pass" };
     }
+    const { data: inv } = await (this.supabase as any)
+      .from("live_session_invites")
+      .select("id, tenant_id, session_id, status, created_by")
+      .eq("id", inviteId)
+      .maybeSingle();
+    if (inv && (inv as any).session_id === sessionId && (inv as any).status !== "revoked") {
+      return { tenantId: (inv as any).tenant_id, userId: (inv as any).created_by ?? null, source: "invite" };
+    }
+    throw new ForbiddenException("Lien d'accès invalide ou expiré.");
+  }
+
+  async generateGuestLiveToken(sessionId: string, inviteId: string, tenantSlug?: string) {
+    const invite = await this.resolveGuestInvite(sessionId, inviteId);
     const { data: session } = await this.supabase
       .from("live_sessions")
       .select("tenant_id, status, started_at, tenants(slug)")
       .eq("id", sessionId)
       .single();
     if (!session) throw new NotFoundException("Session introuvable");
-    if ((session as any).tenant_id !== (pass as any).tenant_id) {
+    if ((session as any).tenant_id !== invite.tenantId) {
       throw new ForbiddenException("Accès refusé.");
     }
     const slug = tenantSlug ?? (session as any)?.tenants?.slug ?? sessionId;
@@ -965,7 +987,7 @@ export class LiveService {
       }
     }
 
-    await this.liveKit.ensureRoom(roomName, sessionId, (pass as any).user_id);
+    await this.liveKit.ensureRoom(roomName, sessionId, (invite.userId ?? undefined) as any);
     const token = await this.liveKit.generateParticipantToken(
       roomName,
       identity,
@@ -984,19 +1006,7 @@ export class LiveService {
    * débat) : c'est la config du mode côté front qui décline le vocabulaire.
    */
   async getPublicGuestInfo(sessionId: string, inviteId: string, tenantSlug?: string) {
-    const { data: pass } = await (this.supabase as any)
-      .from("access_passes")
-      .select("id, tenant_id, resource_type, resource_id, status")
-      .eq("id", inviteId)
-      .maybeSingle();
-    if (
-      !pass ||
-      (pass as any).resource_type !== "live_session" ||
-      (pass as any).resource_id !== sessionId ||
-      (pass as any).status !== "active"
-    ) {
-      throw new ForbiddenException("Lien d'accès invalide ou expiré.");
-    }
+    const invite = await this.resolveGuestInvite(sessionId, inviteId);
     const { data: session } = await (this.supabase as any)
       .from("live_sessions")
       .select(
@@ -1005,7 +1015,7 @@ export class LiveService {
       .eq("id", sessionId)
       .single();
     if (!session) throw new NotFoundException("Session introuvable");
-    if ((session as any).tenant_id !== (pass as any).tenant_id) {
+    if ((session as any).tenant_id !== invite.tenantId) {
       throw new ForbiddenException("Accès refusé.");
     }
     // Nom de l'hôte — best-effort, ne bloque jamais l'écran de connexion.
@@ -1038,6 +1048,166 @@ export class LiveService {
         name: (session as any)?.tenants?.name ?? null,
       },
     };
+  }
+
+  // ── Invitations NOMINATIVES (fonctionnalité COMMUNE — tous les modes) ─────────
+  // Équivalent générique du InviteProcheModal de la téléconsultation : l'hôte invite
+  // une personne (nom/email) OU un membre du tenant, suit son statut, l'admet/révoque.
+  // Le lien nominatif = `/live/:sessionId/invite/:inviteRowId` (résolu par resolveGuestInvite).
+
+  async createLiveSessionInvite(
+    tenantId: string,
+    hostId: string,
+    sessionId: string,
+    dto: {
+      display_name?: string;
+      email?: string;
+      relationship?: string;
+      invited_user_id?: string;
+      kind?: "guest" | "member";
+    },
+  ) {
+    const { data: session } = await (this.supabase as any)
+      .from("live_sessions")
+      .select("id, tenant_id, title, session_type, tenants(slug, name)")
+      .eq("id", sessionId)
+      .single();
+    if (!session || (session as any).tenant_id !== tenantId) {
+      throw new NotFoundException("Session introuvable");
+    }
+
+    const isMember = dto.kind === "member" || !!dto.invited_user_id;
+    let displayName = String(dto.display_name || "").trim();
+    let email = String(dto.email || "").trim().toLowerCase();
+
+    // Membre du tenant : compléter nom + email depuis le compte auth si absents.
+    if (isMember && dto.invited_user_id) {
+      try {
+        const { data: u } = await (this.supabase as any).auth.admin.getUserById(dto.invited_user_id);
+        const meta = u?.user?.user_metadata || {};
+        if (!displayName) displayName = String(meta.full_name || meta.name || u?.user?.email || "Membre");
+        if (!email) email = String(u?.user?.email || "").toLowerCase();
+      } catch {
+        /* best-effort */
+      }
+    }
+    if (!displayName) displayName = isMember ? "Membre" : "Invité";
+
+    const { data, error } = await (this.supabase as any)
+      .from("live_session_invites")
+      .insert({
+        tenant_id: tenantId,
+        session_id: sessionId,
+        display_name: displayName,
+        relationship: String(dto.relationship || "").trim() || null,
+        invited_email: email || null,
+        invited_user_id: isMember ? dto.invited_user_id || null : null,
+        kind: isMember ? "member" : "guest",
+        status: isMember ? "admitted" : "invited",
+        created_by: hostId,
+      })
+      .select("*")
+      .single();
+    if (error || !data) {
+      throw new BadRequestException(error?.message || "Création de l'invitation impossible");
+    }
+
+    const emailStatus = await this.sendLiveInviteEmail(tenantId, data, session);
+    try {
+      await (this.supabase as any)
+        .from("live_session_invites")
+        .update({ email_status: emailStatus })
+        .eq("id", (data as any).id);
+    } catch {
+      /* trace best-effort */
+    }
+    return { ...data, email_status: emailStatus };
+  }
+
+  async listLiveSessionInvites(tenantId: string, sessionId: string) {
+    const { data: session } = await (this.supabase as any)
+      .from("live_sessions")
+      .select("id, tenant_id")
+      .eq("id", sessionId)
+      .single();
+    if (!session || (session as any).tenant_id !== tenantId) {
+      throw new NotFoundException("Session introuvable");
+    }
+    const { data } = await (this.supabase as any)
+      .from("live_session_invites")
+      .select("*")
+      .eq("session_id", sessionId)
+      .order("created_at", { ascending: true });
+    return Array.isArray(data) ? data : [];
+  }
+
+  private async updateLiveInviteStatus(
+    tenantId: string,
+    sessionId: string,
+    inviteId: string,
+    status: "admitted" | "revoked",
+  ) {
+    const { data: row } = await (this.supabase as any)
+      .from("live_session_invites")
+      .select("id, tenant_id, session_id")
+      .eq("id", inviteId)
+      .maybeSingle();
+    if (!row || (row as any).tenant_id !== tenantId || (row as any).session_id !== sessionId) {
+      throw new NotFoundException("Invitation introuvable");
+    }
+    const { data, error } = await (this.supabase as any)
+      .from("live_session_invites")
+      .update({ status, updated_at: new Date().toISOString() })
+      .eq("id", inviteId)
+      .select("*")
+      .single();
+    if (error) throw new BadRequestException(error.message);
+    return data;
+  }
+
+  async admitLiveSessionInvite(tenantId: string, sessionId: string, inviteId: string) {
+    return this.updateLiveInviteStatus(tenantId, sessionId, inviteId, "admitted");
+  }
+
+  async revokeLiveSessionInvite(tenantId: string, sessionId: string, inviteId: string) {
+    return this.updateLiveInviteStatus(tenantId, sessionId, inviteId, "revoked");
+  }
+
+  /**
+   * Envoie le lien nominatif par email (best-effort via email_queue) — expéditeur =
+   * domaine du tenant si configuré. Ne jette jamais : renvoie sent/failed/skipped.
+   */
+  private async sendLiveInviteEmail(tenantId: string, invite: any, session: any): Promise<string> {
+    const to = String(invite?.invited_email || "").trim();
+    if (!to) return "skipped";
+    try {
+      const { data: ns } = await (this.supabase as any)
+        .from("tenant_notification_settings")
+        .select("email_from, email_from_name")
+        .eq("tenant_id", tenantId)
+        .maybeSingle();
+      const slug = session?.tenants?.slug || "";
+      const orgName = session?.tenants?.name || "l'organisateur";
+      const base = process.env.SCHOOL_FRONTEND_URL || process.env.APP_URL || "https://prorascience.org";
+      const link = `${base}/live/${invite.session_id}/invite/${invite.id}${slug ? `?tenant=${encodeURIComponent(slug)}` : ""}`;
+      const title = session?.title || "un direct";
+      await (this.supabase as any).from("email_queue").insert({
+        tenant_id: tenantId,
+        to,
+        from: (ns as any)?.email_from ?? null,
+        from_name: (ns as any)?.email_from_name ?? null,
+        subject: `Invitation — ${title}`,
+        html_body:
+          `<h2>Vous êtes invité·e</h2>` +
+          `<p>${String(invite.display_name || "Bonjour")}, ${orgName} vous invite à rejoindre « ${title} ».</p>` +
+          `<p><a href="${link}" style="display:inline-block;background:#d97757;color:#000;padding:12px 22px;border-radius:6px;text-decoration:none;font-weight:700;">Rejoindre</a></p>` +
+          `<p style="color:#888;font-size:12px;">Aucun compte requis. Si vous n'êtes pas concerné·e, ignorez cet email.</p>`,
+        status: "pending",
+      });
+      return "sent";
+    } catch {
+      return "failed";
+    }
   }
 
   /**

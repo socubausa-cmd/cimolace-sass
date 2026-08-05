@@ -1473,7 +1473,7 @@ export default function LiveHostPage({ forceGuestRoute = false, joyKitSignalGran
     refreshDebateRounds, rejectMeshRequest, rejectWaiting, resolveHandRaise, resolveHostJoyKitSignal,
     resolveHostPermissionSignal, revokeMeshParticipant, rightColRef, rightRailShowsLocalHost, roomRef,
     sbActiveScene, searchQuery, searchResults, sendChatMessage, sendWhisper,
-    sessionCommFlags, sessionFormationId, sessionGuestPermissions, sessionId, sessionQuickIaFlags,
+    sessionCommFlags, sessionFormationId, sessionGuestPermissions, sessionId, sessionType, sessionQuickIaFlags,
     sessionTitle, setAmbientMasterVolume, setAntennaSoloMode, setArenaHostAlertSoundOn, setDebateVoteBusy,
     setForumInput, setForumTarget, setGuestLivekitInterpreterVolume, setGuestMultilangBrowserTtsOnPersist, setGuestMultilangEdgeTtsOnPersist,
     setGuestMultilangViewLang, setGuestNeuronqPanelOpen, setGuestNeuronqReformulated, setGuestNeuronqVolets, setGuestProctorHistoryOpen,

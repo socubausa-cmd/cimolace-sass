@@ -225,6 +225,15 @@ export const livesApi = {
   // Lien PUBLIC sans compte (viewer) : crée/réutilise un access_pass → { passId }.
   publicLink: (id: string) =>
     apiV2.post<ApiEnvelope<{ passId: string | null }>>(`/lives/${id}/public-link`, {}).then(unwrap),
+  // Invitations NOMINATIVES (fonctionnalité commune multi-modes) — lien /live/:id/invite/:inviteId
+  listInvites: (id: string): Promise<any[]> =>
+    apiV2.get<ApiEnvelope<any[]>>(`/lives/${id}/invites`).then(unwrap).then((r: any) => (Array.isArray(r) ? r : [])),
+  createInvite: (id: string, body: Record<string, unknown>) =>
+    apiV2.post<ApiEnvelope<any>>(`/lives/${id}/invites`, body).then(unwrap),
+  admitInvite: (id: string, inviteId: string) =>
+    apiV2.post<ApiEnvelope<any>>(`/lives/${id}/invites/${inviteId}/admit`, {}).then(unwrap),
+  revokeInvite: (id: string, inviteId: string) =>
+    apiV2.post<ApiEnvelope<any>>(`/lives/${id}/invites/${inviteId}/revoke`, {}).then(unwrap),
   // Chat
   sendChat: (id: string, content: string) =>
     apiV2.post<ApiEnvelope<any>>(`/lives/${id}/chat`, { content }).then(unwrap),

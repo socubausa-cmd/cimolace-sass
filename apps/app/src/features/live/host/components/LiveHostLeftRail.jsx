@@ -41,6 +41,7 @@ export const LiveHostLeftRail = React.forwardRef(function LiveHostLeftRail(
     longiaSignalSubDrawer,
     lhStageFocusLayout,
     sessionId,
+    sessionType,
     sessionTitle,
     user,
     onlineMemberCount,
@@ -774,6 +775,8 @@ export const LiveHostLeftRail = React.forwardRef(function LiveHostLeftRail(
               <>
                 <LiveHostInviteManagementPanel
                   inviteUrl={inviteUrl}
+                  sessionId={sessionId}
+                  sessionType={sessionType}
                   sessionTitle={sessionTitle}
                   hostDisplayName={user?.full_name || user?.email || 'Formateur'}
                   participantOnlineCount={Math.max(1, onlineMemberCount)}

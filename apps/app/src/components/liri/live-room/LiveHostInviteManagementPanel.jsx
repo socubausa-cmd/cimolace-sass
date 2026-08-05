@@ -27,6 +27,7 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { cn } from '@/lib/utils';
+import LiveInviteManagePanel from '@/features/live/host/components/LiveInviteManagePanel';
 
 function shareBody(sessionTitle, inviteUrl) {
   const t = sessionTitle?.trim();
@@ -67,6 +68,9 @@ export default function LiveHostInviteManagementPanel({
   onOpenLongiaWaiting,
   /** Guide produit (optionnel) */
   onOpenGuide,
+  /** Socle « un moteur, N configs » — invitations nominatives par mode */
+  sessionId = '',
+  sessionType = 'class',
 }) {
   const { toast } = useToast();
   const [qrOpen, setQrOpen] = useState(false);
@@ -269,6 +273,17 @@ export default function LiveHostInviteManagementPanel({
           </button>
         </div>
       </section>
+
+      {/* Invitations nominatives (par personne) — fonctionnalité commune multi-modes */}
+      {sessionId ? (
+        <section className={cn(cardClass, 'p-3')}>
+          <LiveInviteManagePanel
+            sessionId={sessionId}
+            sessionType={sessionType}
+            groupInviteUrl={inviteUrl}
+          />
+        </section>
+      ) : null}
 
       {/* Inviter par e-mail */}
       <section className={cn(cardClass, 'p-3')}>

@@ -31,6 +31,7 @@ export const LiveHostLiveGridShell = forwardRef(function LiveHostLiveGridShell(p
     longiaSignalSubDrawer,
     lhStageFocusLayout,
     sessionId,
+    sessionType,
     sessionTitle,
     user,
     onlineMemberCount,
@@ -179,6 +180,7 @@ export const LiveHostLiveGridShell = forwardRef(function LiveHostLiveGridShell(p
           longiaSignalSubDrawer={longiaSignalSubDrawer}
           lhStageFocusLayout={lhStageFocusLayout}
           sessionId={sessionId}
+          sessionType={sessionType}
           sessionTitle={sessionTitle}
           user={user}
           onlineMemberCount={onlineMemberCount}

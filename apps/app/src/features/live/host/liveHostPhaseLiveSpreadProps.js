@@ -103,6 +103,7 @@ const LIVE_HOST_GRID_SHELL_SPREAD_KEYS = [
   'longiaSignalSubDrawer',
   'lhStageFocusLayout',
   'sessionId',
+  'sessionType',
   'sessionTitle',
   'user',
   'onlineMemberCount',

@@ -24,6 +24,12 @@ export class LiveController {
   @Post(":id/token") async token(@Req() req: any, @Param("id") id: string, @Body() b: any) { return { data: await this.svc.generateToken(id, req.user.id, b?.role, req.tenant) }; }
   // Lien PUBLIC sans compte (viewer) : crée/réutilise un access_pass → URL /live/:id/invite/:pass.
   @Post(":id/public-link") @Roles("owner", "admin", "teacher") async publicLink(@Req() req: any, @Param("id") id: string) { return { data: await this.svc.createPublicGuestPass(req.tenant.id, id, req.user.id) }; }
+
+  // ── Invitations NOMINATIVES (fonctionnalité commune multi-modes) ──
+  @Post(":id/invites") @Roles("owner", "admin", "teacher") async createInvite(@Req() req: any, @Param("id") id: string, @Body() b: any) { return { data: await this.svc.createLiveSessionInvite(req.tenant.id, req.user.id, id, b || {}) }; }
+  @Get(":id/invites") @Roles("owner", "admin", "teacher") async listInvites(@Req() req: any, @Param("id") id: string) { return { data: await this.svc.listLiveSessionInvites(req.tenant.id, id) }; }
+  @Post(":id/invites/:inviteId/admit") @Roles("owner", "admin", "teacher") async admitInvite(@Req() req: any, @Param("id") id: string, @Param("inviteId") inviteId: string) { return { data: await this.svc.admitLiveSessionInvite(req.tenant.id, id, inviteId) }; }
+  @Post(":id/invites/:inviteId/revoke") @Roles("owner", "admin", "teacher") async revokeInvite(@Req() req: any, @Param("id") id: string, @Param("inviteId") inviteId: string) { return { data: await this.svc.revokeLiveSessionInvite(req.tenant.id, id, inviteId) }; }
   @Post(":id/start") @Roles("owner", "admin", "teacher") async start(@Req() req: any, @Param("id") id: string) { return { data: await this.svc.startSession(req.tenant.id, id) }; }
   @Post(":id/end") @Roles("owner", "admin", "teacher") async end(@Req() req: any, @Param("id") id: string) { return { data: await this.svc.endSession(req.tenant.id, id) }; }
   @Post(":id/recording/start") @Roles("owner", "admin", "teacher") async recStart(@Req() req: any, @Param("id") id: string) { return { data: await this.svc.startRecording(req.tenant.id, id) }; }
