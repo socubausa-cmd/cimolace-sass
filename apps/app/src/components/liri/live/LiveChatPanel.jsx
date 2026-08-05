@@ -76,7 +76,7 @@ export function LiveChatPanel({ liveSessionId, userId, userName }) {
   };
 
   return (
-    <div className="flex flex-col h-full bg-[#0F1419] border-l border-white/10 w-80 shrink-0">
+    <div className="flex flex-col h-full bg-[#0F1419] border-l border-white/10 w-full max-w-full sm:w-80 sm:shrink-0">
       <div className="p-2 border-b border-white/10 text-sm font-medium text-white">Chat</div>
       <ScrollArea className="flex-1 p-2">
         <div className="space-y-2">

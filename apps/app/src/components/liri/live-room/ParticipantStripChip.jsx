@@ -149,16 +149,16 @@ export default function ParticipantStripChip({
         {seatRole === 'host' ? (
           <span className="flex items-center justify-center gap-1">
             <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-amber-400 shadow-[0_0_6px_rgba(212,163,106,0.8)]" />
-            <span className="truncate text-[8px] font-medium text-white/95">{displayName || 'Hôte'}</span>
+            <span className="truncate text-[11px] font-medium text-white/95">{displayName || 'Hôte'}</span>
           </span>
         ) : (
-          <span className="block text-[9px] text-white/95 truncate text-center leading-tight font-medium">
+          <span className="block text-[11px] text-white/95 truncate text-center leading-tight font-medium">
             {displayName || 'Membre'}
           </span>
         )}
       </div>
       {seatRole === 'host' && !isPromoted ? (
-        <span className="absolute top-1 left-1 z-[4] rounded bg-amber-600/[0.92] px-1 py-0.5 text-[6px] font-bold uppercase tracking-wider text-white shadow-sm ring-1 ring-amber-300/40">
+        <span className="absolute top-1 left-1 z-[4] rounded bg-amber-600/[0.92] px-1 py-0.5 text-[10px] font-bold uppercase tracking-wider text-white shadow-sm ring-1 ring-amber-300/40">
           HÔTE
         </span>
       ) : null}

@@ -368,7 +368,7 @@ export const LiveArenaLayoutOverlays = ({
                       right: 0,
                       bottom: 0,
                       padding: '4px 6px',
-                      fontSize: '9px',
+                      fontSize: 'clamp(11px, 3vw, 13px)',
                       fontWeight: 700,
                       color: '#fff',
                       background: 'linear-gradient(transparent, rgba(0,0,0,.75))',

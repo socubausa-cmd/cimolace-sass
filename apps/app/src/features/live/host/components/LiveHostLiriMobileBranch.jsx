@@ -240,10 +240,15 @@ export const LiveHostLiriMobileBranch = ({
                 minWidth: 0,
                 display: 'flex',
                 alignItems: 'center',
-                justifyContent: 'center',
+                // `safe center` : centré si la barre tient, mais aligné à gauche + scrollable si
+                // elle déborde (sinon micro/cam/main levée étaient coupés des DEUX côtés sur mobile).
+                justifyContent: 'safe center',
                 gap: '6px',
                 flexWrap: 'nowrap',
-                overflow: 'hidden',
+                overflowX: 'auto',
+                overflowY: 'hidden',
+                scrollbarWidth: 'none',
+                WebkitOverflowScrolling: 'touch',
                 background: guestFooterBarBg,
                 borderRadius: '4px',
                 border: '1px solid rgba(255,255,255,.09)',

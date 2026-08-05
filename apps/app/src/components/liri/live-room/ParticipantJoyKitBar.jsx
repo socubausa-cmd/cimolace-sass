@@ -21,8 +21,8 @@ export default function ParticipantJoyKitBar({
         borderRadius: '4px',
         border: '1px solid rgba(248,152,56,.28)',
         background: 'rgba(248,152,56,.08)',
-        padding: '6px 8px',
-        fontSize: '9px',
+        padding: '10px 10px',
+        fontSize: '12px',
         fontWeight: 600,
         color: '#7dd3fc',
         cursor: disabled ? 'default' : 'pointer',
@@ -56,7 +56,7 @@ export default function ParticipantJoyKitBar({
         {btn(REQUEST_LABELS.requestJoyKit.fr, onRequestJoyKit)}
         {btn(REQUEST_LABELS.requestMediaLane.fr, onRequestMediaLane)}
       </div>
-      <div style={{ fontSize: '8px', color: 'rgba(255,255,255,.35)', lineHeight: 1.4 }}>
+      <div style={{ fontSize: '11px', color: 'rgba(255,255,255,.35)', lineHeight: 1.4 }}>
         L'hôte reçoit la demande et peut accepter, refuser ou limiter la durée.
       </div>
     </div>
