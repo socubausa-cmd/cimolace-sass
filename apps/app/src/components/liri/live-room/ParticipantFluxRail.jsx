@@ -44,7 +44,7 @@ export default function ParticipantFluxRail({
         <button
           type="button"
           onClick={() => nudge(-220)}
-          className="flex-shrink-0 h-10 w-10 rounded-xl border border-white/15 bg-black/30 text-white/80 hover:bg-white/10"
+          className="flex-shrink-0 h-10 w-10 rounded-xl border border-white/15 bg-black/30 text-white/80 hover:bg-white/10 max-md:hidden"
           title="Voir les flux précédents"
         >
           <ChevronLeft className="w-4 h-4 mx-auto" />
@@ -70,7 +70,7 @@ export default function ParticipantFluxRail({
         <button
           type="button"
           onClick={() => nudge(220)}
-          className="flex-shrink-0 h-10 w-10 rounded-xl border border-white/15 bg-black/30 text-white/80 hover:bg-white/10"
+          className="flex-shrink-0 h-10 w-10 rounded-xl border border-white/15 bg-black/30 text-white/80 hover:bg-white/10 max-md:hidden"
           title="Voir les flux suivants"
         >
           <ChevronRight className="w-4 h-4 mx-auto" />

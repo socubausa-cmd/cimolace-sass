@@ -446,7 +446,7 @@ export default function LiveControlsBar({
           </div>
         ) : (
         <div className="flex w-full max-w-[min(98vw,1180px)] flex-col items-stretch gap-1">
-        <div className="mx-auto h-12 max-w-[96vw] overflow-x-auto px-2.5 rounded-full border border-white/20 bg-[#11183a]/[0.72] backdrop-blur-xl inline-flex items-center gap-1.5 shadow-[0_15px_46px_-30px_rgba(255,171,88,0.95)]">
+        <div className="mx-auto max-w-[96vw] px-2.5 py-1.5 rounded-3xl border border-white/20 bg-[#11183a]/[0.72] backdrop-blur-xl flex flex-wrap items-center justify-center gap-1.5 shadow-[0_15px_46px_-30px_rgba(255,171,88,0.95)] sm:h-12 sm:py-0 sm:flex-nowrap sm:overflow-x-auto sm:rounded-full">
 
           {/* ── Commun : Micro + Caméra + Settings ── */}
           <button

@@ -32,11 +32,11 @@ export default function ParticipantFluxCard({ participant, active, depth = 1, on
           {initials}
         </div>
       )}
-      <div className="absolute inset-x-0 bottom-0 px-2 py-1 bg-gradient-to-t from-black/70 to-transparent text-[10px] text-left text-white truncate">
+      <div className="absolute inset-x-0 bottom-0 px-2 py-1 bg-gradient-to-t from-black/70 to-transparent text-[11px] text-left text-white truncate">
         {participant?.name || 'Participant'}
       </div>
       {participant?.isHost ? (
-        <span className="absolute top-1 left-1 h-4 px-1.5 rounded-full bg-black/60 border border-white/20 text-[9px] text-white/90">
+        <span className="absolute top-1 left-1 h-4 px-1.5 rounded-full bg-black/60 border border-white/20 text-[10px] text-white/90">
           HOST
         </span>
       ) : null}

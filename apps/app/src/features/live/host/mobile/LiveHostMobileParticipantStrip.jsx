@@ -145,7 +145,7 @@ export function LiveHostMobileParticipantStrip({
               {/* Name */}
               <span style={{
                 color: isSelf ? '#fff' : 'rgba(255,255,255,0.72)',
-                fontSize: 10,
+                fontSize: 11,
                 fontWeight: isSelf ? 700 : 500,
                 maxWidth: 52,
                 overflow: 'hidden',
