@@ -226,14 +226,19 @@ export const livesApi = {
   publicLink: (id: string) =>
     apiV2.post<ApiEnvelope<{ passId: string | null }>>(`/lives/${id}/public-link`, {}).then(unwrap),
   // Invitations NOMINATIVES (fonctionnalité commune multi-modes) — lien /live/:id/invite/:inviteId
+  // ⚠️ Réponses DOUBLE-enveloppées {data:{data:…}} (controller + interceptor global) :
+  // unwrap n'ôte qu'une couche → on extrait l'INTÉRIEUR (comme `list` plus haut), sinon
+  // la liste retombe à [] et l'objet créé arrive sous {data:…} (id/status perdus).
   listInvites: (id: string): Promise<any[]> =>
-    apiV2.get<ApiEnvelope<any[]>>(`/lives/${id}/invites`).then(unwrap).then((r: any) => (Array.isArray(r) ? r : [])),
+    apiV2.get<ApiEnvelope<{ data?: any[] } | any[]>>(`/lives/${id}/invites`)
+      .then(unwrap)
+      .then((r: any) => (Array.isArray(r) ? r : (r?.data ?? []))),
   createInvite: (id: string, body: Record<string, unknown>) =>
-    apiV2.post<ApiEnvelope<any>>(`/lives/${id}/invites`, body).then(unwrap),
+    apiV2.post<ApiEnvelope<any>>(`/lives/${id}/invites`, body).then(unwrap).then((r: any) => r?.data ?? r),
   admitInvite: (id: string, inviteId: string) =>
-    apiV2.post<ApiEnvelope<any>>(`/lives/${id}/invites/${inviteId}/admit`, {}).then(unwrap),
+    apiV2.post<ApiEnvelope<any>>(`/lives/${id}/invites/${inviteId}/admit`, {}).then(unwrap).then((r: any) => r?.data ?? r),
   revokeInvite: (id: string, inviteId: string) =>
-    apiV2.post<ApiEnvelope<any>>(`/lives/${id}/invites/${inviteId}/revoke`, {}).then(unwrap),
+    apiV2.post<ApiEnvelope<any>>(`/lives/${id}/invites/${inviteId}/revoke`, {}).then(unwrap).then((r: any) => r?.data ?? r),
   // Chat
   sendChat: (id: string, content: string) =>
     apiV2.post<ApiEnvelope<any>>(`/lives/${id}/chat`, { content }).then(unwrap),
