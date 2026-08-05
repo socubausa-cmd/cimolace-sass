@@ -1,5 +1,7 @@
 /** Libellés et règles métier — agenda enseignant / cycle de vie événement */
 
+import { labelForLiveMode } from '@/lib/liveModeConfig';
+
 export const APPOINTMENT_TYPE_LABELS = {
   entretien: 'Entretien / consultation',
   coaching: 'Coaching',
@@ -8,18 +10,14 @@ export const APPOINTMENT_TYPE_LABELS = {
   conference: 'Conférence',
 };
 
-export const SESSION_TYPE_LABELS = {
-  entretien: 'Entretien',
-  classe: 'Cours / classe',
-  conference: 'Conférence',
-};
-
 export function labelForAppointmentType(type) {
   return APPOINTMENT_TYPE_LABELS[String(type || '').toLowerCase()] || type || 'Rendez-vous';
 }
 
+/** Libellé d'un type de session live — délègue au socle canonique liveModeConfig
+ *  (source unique : remplace l'ancien dico SESSION_TYPE_LABELS local). */
 export function labelForSessionType(st) {
-  return SESSION_TYPE_LABELS[String(st || '').toLowerCase()] || st || 'Live';
+  return labelForLiveMode(st);
 }
 
 /** Types de RDV pour lesquels une préparation studio est recommandée (live riche). */

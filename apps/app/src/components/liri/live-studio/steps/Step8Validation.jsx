@@ -7,8 +7,7 @@ import { Save, Calendar, Zap, Loader2 } from 'lucide-react';
 import { useToast } from '@/components/ui/use-toast';
 import { useSearchParams } from 'react-router-dom';
 import { buildLiriAudioConfigPatch } from '@/lib/liriAudioScene';
-
-const SESSION_TYPES = { classe: 'Classe virtuelle', entretien: 'Entretien privé', conference: 'Conférence' };
+import { labelForLiveMode } from '@/lib/liveModeConfig';
 
 /** Step3 peut stocker `scheduled_at` en ISO complète ; éviter `…T14:00` concaténé → date invalide. */
 function scheduledAtIsoFromDraft(draft) {
@@ -232,7 +231,7 @@ export function Step8Validation({ draft, updateDraft, onSubmit, creating, user, 
           </div>
           <div className="rounded-xl border border-white/10 bg-black/20 p-3">
             <p className="text-xs text-gray-500">Type</p>
-            <p className="text-sm text-[#d97757] mt-1">{SESSION_TYPES[draft.session_type] || draft.session_type}</p>
+            <p className="text-sm text-[#d97757] mt-1">{labelForLiveMode(draft.session_type)}</p>
           </div>
           <div className="rounded-xl border border-white/10 bg-black/20 p-3">
             <p className="text-xs text-gray-500">Date</p>

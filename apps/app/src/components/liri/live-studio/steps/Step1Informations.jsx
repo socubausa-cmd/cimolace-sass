@@ -13,16 +13,18 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { supabase } from '@/lib/customSupabaseClient';
+import { labelForLiveMode } from '@/lib/liveModeConfig';
 
 // Type de live → pilote l'affichage par défaut en salle (cf. arenaLayoutForSessionType) :
 // Formation → SmartBoard · Conférence → grille membres · Débat → panel débatteurs.
+// Libellés issus du socle canonique liveModeConfig (source unique).
 // `medical: true` = réservé au Live santé (MEDOS) ; grisé hors mode MEDOS (et
 // inversement, les types non-médicaux sont grisés EN mode MEDOS).
 const SESSION_TYPES = [
-  { value: 'teleconsult', label: 'Téléconsultation', icon: Stethoscope, medical: true },
-  { value: 'classe', label: 'Formation', icon: GraduationCap }, // → mappé 'class' à la création
-  { value: 'conference', label: 'Conférence', icon: Sparkles },
-  { value: 'debate', label: 'Débat', icon: Swords },
+  { value: 'teleconsult', label: labelForLiveMode('teleconsult'), icon: Stethoscope, medical: true },
+  { value: 'classe', label: labelForLiveMode('classe'), icon: GraduationCap }, // → mappé 'class' à la création
+  { value: 'conference', label: labelForLiveMode('conference'), icon: Sparkles },
+  { value: 'debate', label: labelForLiveMode('debate'), icon: Swords },
 ];
 
 const CATEGORIES = [

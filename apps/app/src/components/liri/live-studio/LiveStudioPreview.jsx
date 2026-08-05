@@ -15,6 +15,7 @@ import {
   Expand,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { labelForLiveMode } from '@/lib/liveModeConfig';
 import {
   Dialog,
   DialogContent,
@@ -22,12 +23,6 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
-
-const SESSION_TYPES = {
-  classe: 'Classe virtuelle',
-  entretien: 'Entretien privé',
-  conference: 'Conférence',
-};
 
 const ACCESS_LABELS = {
   free:     { label: 'Accès libre',        color: 'text-emerald-300',  bg: 'bg-emerald-400/10 border-emerald-400/20' },
@@ -154,7 +149,7 @@ export function LiveStudioPreview({ draft, onGoToDateStep, embedded = false }) {
         <div className="p-5 space-y-4">
           <div>
             <span className="rounded px-2 py-0.5 text-xs font-medium bg-[#d97757]/[0.18] text-[#d97757]">
-              {SESSION_TYPES[session_type] || session_type}
+              {labelForLiveMode(session_type)}
             </span>
             <h4 className="text-lg font-semibold text-white mt-2">
               {hasTitle ? title : 'Titre du live'}
