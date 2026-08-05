@@ -880,6 +880,35 @@ export class LiveService {
    * generateToken. L'invité est un simple participant (canSubscribe only). La barrière
    * SERVEUR = l'existence d'un pass ACTIF pour CETTE session (le pass = preuve d'achat).
    */
+  /**
+   * Host/staff : crée (ou réutilise) un access_pass PUBLIC « live_session » pour la session →
+   * permet un LIEN INVITÉ SANS COMPTE (viewer). Idempotent : réutilise un pass actif existant.
+   */
+  async createPublicGuestPass(tenantId: string, sessionId: string, userId: string) {
+    const db = this.supabase as any;
+    const { data: session } = await db
+      .from("live_sessions").select("id, tenant_id").eq("id", sessionId).maybeSingle();
+    if (!session || (session as any).tenant_id !== tenantId) {
+      throw new NotFoundException("Session introuvable");
+    }
+    const { data: existing } = await db
+      .from("access_passes")
+      .select("id")
+      .eq("resource_type", "live_session")
+      .eq("resource_id", sessionId)
+      .eq("status", "active")
+      .limit(1)
+      .maybeSingle();
+    if ((existing as any)?.id) return { passId: (existing as any).id as string };
+    const { data: created, error } = await db
+      .from("access_passes")
+      .insert({ user_id: userId, tenant_id: tenantId, resource_type: "live_session", resource_id: sessionId, status: "active" })
+      .select("id")
+      .maybeSingle();
+    if (error) throw new BadRequestException(error.message);
+    return { passId: (created as any)?.id ?? null };
+  }
+
   async generateGuestLiveToken(sessionId: string, inviteId: string, tenantSlug?: string) {
     const { data: pass } = await (this.supabase as any)
       .from("access_passes")

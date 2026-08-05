@@ -4,6 +4,7 @@ import LiveMemberVideoPreviewModal from '@/components/liri/live-room/LiveMemberV
 import { LIVE_STRIP_DOCK_MIN_MEMBER_SLOTS } from '@/lib/liveCommLayers';
 import { PHASE } from '@/features/live/host/liveHostConstants';
 import { useMessagingTopics } from '@/hooks/useMessagingTopics';
+import { useLivePublicInviteUrl } from '@/features/live/hooks/useLivePublicInviteUrl';
 
 /**
  * Slot wrap autour de `LiveHostMessagingPanel` (drawer messages forum/whisper)
@@ -186,11 +187,9 @@ export const LiveHostMessagingPanelSlot = ({
       }
     : null;
 
-  const inviteUrl = !isGuestUi && phase === PHASE.LIVE && sessionId
-    ? typeof window !== 'undefined'
-      ? `${window.location.origin}/live/${sessionId}`
-      : `/live/${sessionId}`
-    : null;
+  // Lien de PARTAGE = lien invité PUBLIC (sans compte, viewer) au lieu du lien membre (login requis).
+  const publicInviteUrl = useLivePublicInviteUrl(sessionId, !isGuestUi && phase === PHASE.LIVE);
+  const inviteUrl = !isGuestUi && phase === PHASE.LIVE && sessionId ? publicInviteUrl : null;
 
   const hostAsideMonitor = phase === PHASE.LIVE && isHostUser && !isGuestUi
     ? {

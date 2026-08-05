@@ -222,6 +222,9 @@ export const livesApi = {
     apiV2.post<ApiEnvelope<any>>('/lives', body).then(unwrap),
   getToken: (id: string) =>
     apiV2.get<ApiEnvelope<{ token: string; roomName: string }>>(`/lives/${id}/token`).then(unwrap),
+  // Lien PUBLIC sans compte (viewer) : crée/réutilise un access_pass → { passId }.
+  publicLink: (id: string) =>
+    apiV2.post<ApiEnvelope<{ passId: string | null }>>(`/lives/${id}/public-link`, {}).then(unwrap),
   // Chat
   sendChat: (id: string, content: string) =>
     apiV2.post<ApiEnvelope<any>>(`/lives/${id}/chat`, { content }).then(unwrap),

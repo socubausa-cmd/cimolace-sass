@@ -22,6 +22,8 @@ export class LiveController {
   // student) est tranché côté serveur dans generateToken à partir de l'identité
   // (host_user_id de la session + rôle tenant). On passe req.tenant pour ça.
   @Post(":id/token") async token(@Req() req: any, @Param("id") id: string, @Body() b: any) { return { data: await this.svc.generateToken(id, req.user.id, b?.role, req.tenant) }; }
+  // Lien PUBLIC sans compte (viewer) : crée/réutilise un access_pass → URL /live/:id/invite/:pass.
+  @Post(":id/public-link") @Roles("owner", "admin", "teacher") async publicLink(@Req() req: any, @Param("id") id: string) { return { data: await this.svc.createPublicGuestPass(req.tenant.id, id, req.user.id) }; }
   @Post(":id/start") @Roles("owner", "admin", "teacher") async start(@Req() req: any, @Param("id") id: string) { return { data: await this.svc.startSession(req.tenant.id, id) }; }
   @Post(":id/end") @Roles("owner", "admin", "teacher") async end(@Req() req: any, @Param("id") id: string) { return { data: await this.svc.endSession(req.tenant.id, id) }; }
   @Post(":id/recording/start") @Roles("owner", "admin", "teacher") async recStart(@Req() req: any, @Param("id") id: string) { return { data: await this.svc.startRecording(req.tenant.id, id) }; }

@@ -19,6 +19,7 @@ import { designerShellCloseBtn } from '@/lib/liriDesignerShellClasses';
 import LiriHostLeftLiveAssistantRail from '@/components/liri/live-room/LiriHostLeftLiveAssistantRail';
 import LiveHostInviteManagementPanel from '@/components/liri/live-room/LiveHostInviteManagementPanel';
 import { PHASE } from '@/features/live/host/liveHostConstants';
+import { useLivePublicInviteUrl } from '@/features/live/hooks/useLivePublicInviteUrl';
 
 export const LiveHostLeftRail = React.forwardRef(function LiveHostLeftRail(
   {
@@ -140,13 +141,9 @@ export const LiveHostLeftRail = React.forwardRef(function LiveHostLeftRail(
     };
   }, [hostHoverMode]);
 
-  const inviteUrl = React.useMemo(() => {
-    if (!sessionId) return '';
-    if (typeof window === 'undefined') return `/live/${sessionId}`;
-    // Propage le tenant de la salle (?tenant=…) pour que l'invité voie le bon branding.
-    const t = new URLSearchParams(window.location.search).get('tenant');
-    return `${window.location.origin}/live/${sessionId}${t ? `?tenant=${encodeURIComponent(t)}` : ''}`;
-  }, [sessionId]);
+  // Lien de PARTAGE = lien invité PUBLIC (sans compte, viewer) au lieu du lien membre qui exige un
+  // login. Fallback automatique sur le lien membre tant que le pass public n'est pas prêt.
+  const inviteUrl = useLivePublicInviteUrl(sessionId, phase === PHASE.LIVE);
 
   const copyInvite = React.useCallback(() => {
     if (!inviteUrl) return;
