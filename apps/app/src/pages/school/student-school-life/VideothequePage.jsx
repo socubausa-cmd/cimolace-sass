@@ -4,6 +4,7 @@ import { Play, Search, Film, GraduationCap, FileText, Loader2, Sparkles, ListTre
 import { apiV2, masterclassApi, tenantsApi, videothequeApi } from '@/lib/api-v2';
 import { exportCoursePdf } from '@/lib/exportCoursePdf';
 import ImmersiveVideoPlayer from '@/components/school/formations/ImmersiveVideoPlayer';
+import { useEcran, taillePointage } from '@/hooks/useEcran';
 import ExtraitsCourtsModal from '@/components/school/formations/ExtraitsCourtsModal';
 
 // Palette LIRI (alignée sur /liri).
@@ -28,6 +29,8 @@ const fmtDur = (sec) => {
  */
 export default function VideothequePage() {
   const navigate = useNavigate();
+  // Seuil 768 = celui du portail (le hook partagé), pas un chiffre réinventé ici.
+  const { etroit, tactile } = useEcran();
   const [videos, setVideos] = useState(null); // null = chargement
   const [error, setError] = useState('');
   const [q, setQ] = useState('');
@@ -596,7 +599,12 @@ export default function VideothequePage() {
         />
       )}
 
-      <div style={{ maxWidth: 1120, margin: '0 auto' }}>
+      {/* Dégagement bas : le bouton flottant du portail (56 px, ancré en bas à
+          droite) recouvrait le coin de la DERNIÈRE carte — il ne restait que 48 px
+          sous elle. On réserve sa hauteur + son ancrage, et la marge d'accueil
+          iPhone par-dessus. Un bouton flottant n'a le droit de flotter que
+          au-dessus du vide qu'on lui a réservé. */}
+      <div style={{ maxWidth: 1120, margin: '0 auto', paddingBottom: 'calc(96px + env(safe-area-inset-bottom, 0px))' }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16, flexWrap: 'wrap', marginBottom: 20 }}>
           <div>
             <h1 style={{ fontFamily: SERIF, fontSize: 'clamp(24px,3vw,32px)', fontWeight: 600, margin: 0 }}>Vidéothèque</h1>
@@ -633,8 +641,13 @@ export default function VideothequePage() {
             )}
             <div style={{ position: 'relative' }}>
               <Search size={15} style={{ position: 'absolute', left: 12, top: 11, color: C.faint }} />
+              {/* Largeur fixe 240 px → le champ ne s'élargissait jamais, quelle que
+                  soit la place. Hauteur 38 → sous le plancher tactile de 44 px, et
+                  fontSize < 16 px déclenche le ZOOM AUTOMATIQUE d'iOS à la saisie :
+                  la page saute d'échelle et l'élève doit repincer pour revenir.
+                  D'où 16 px au doigt, la valeur d'origine à la souris. */}
               <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Rechercher…"
-                style={{ paddingLeft: 34, paddingRight: 14, height: 38, borderRadius: 12, border: `1px solid ${C.line}`, background: C.panel, color: C.ink, fontSize: 13.5, outline: 'none', width: 240 }} />
+                style={{ paddingLeft: 34, paddingRight: 14, height: taillePointage(38, tactile), borderRadius: 12, border: `1px solid ${C.line}`, background: C.panel, color: C.ink, fontSize: tactile ? 16 : 13.5, outline: 'none', width: etroit ? '100%' : 240 }} />
             </div>
           </div>
         </div>

@@ -1,5 +1,6 @@
 import React, { forwardRef, useCallback, useEffect, useImperativeHandle, useMemo, useRef, useState } from 'react';
 import { ArrowLeft, Play, Pause, Volume2, VolumeX, Maximize2, Rewind, FastForward, ListTree, AlignLeft, X, Sparkles, Loader2 } from 'lucide-react';
+import { useEcran, taillePointage } from '@/hooks/useEcran';
 
 /**
  * ImmersiveVideoPlayer — rend une VRAIE vidéo (replay Zoom, rendu post-prod) dans la
@@ -190,13 +191,28 @@ function ImmersiveVideoPlayer({ src, poster, title, description, crumb, cues, tr
   const [rate, setRate] = useState(1);
   const [ready, setReady] = useState(false);
   const [tab, setTab] = useState('transcript');
-  const [narrow, setNarrow] = useState(typeof window !== 'undefined' && window.innerWidth < 900);
   const [railOpen, setRailOpen] = useState(false);
 
-  useEffect(() => {
-    const onR = () => setNarrow(window.innerWidth < 900);
-    window.addEventListener('resize', onR); return () => window.removeEventListener('resize', onR);
-  }, []);
+  // 900 px = point de rupture DICTÉ PAR LE CONTENU : c'est la largeur sous
+  // laquelle le rail de transcription (clamp(300px,27vw,384px)) ne cohabite plus
+  // avec une vidéo lisible. Rien à voir avec une taille de téléphone.
+  // `tactile` est mesuré séparément : la largeur ne dit pas si on vise au doigt.
+  const { etroit: narrow, tactile } = useEcran(900);
+  // ⚠️ DEUX seuils DISTINCTS, et le piège qu'ils évitent : `narrow` (<900) décide
+  // si le rail est en colonne ou en tiroir — donc son DÉCLENCHEUR doit exister sur
+  // toute cette plage. `etroit` (<768) ne décide que de la COMPACITÉ de l'en-tête.
+  // Les confondre rouvrait le défaut d'origine entre 768 et 900 px : rail en
+  // tiroir, mais plus aucun bouton pour l'ouvrir.
+  const { etroit } = useEcran(768);
+  // Second seuil, lui aussi dicté par le contenu : la rangée de contrôles réclame
+  // ~420 px (6 cibles + le chrono + les écarts). Elle casse donc bien plus bas que
+  // le rail. Deux contenus, deux ruptures — pas un seuil unique plaqué partout.
+  const { etroit: etroitCtl } = useEcran(560);
+  const cible = taillePointage(40, tactile);
+  const cyclerVitesse = useCallback(
+    () => setRate((r) => VITESSES[(VITESSES.indexOf(r) + 1) % VITESSES.length] ?? 1),
+    [],
+  );
 
   const reduce = typeof window !== 'undefined' && window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
   // Chapitrage IA (persisté) s'il existe, sinon repères dérivés localement. On
@@ -356,33 +372,85 @@ function ImmersiveVideoPlayer({ src, poster, title, description, crumb, cues, tr
 
       {/* En-tête (masqué en mode intégré : l'OS fournit son propre en-tête) */}
       {!embedded && (
-      <header style={{ position: 'relative', display: 'flex', alignItems: 'center', gap: 16, padding: '14px 22px', borderBottom: `1px solid ${T.line}`, flexShrink: 0 }}>
-        <button type="button" onClick={onExit} className="ivp-ctl" style={{ display: 'inline-flex', alignItems: 'center', gap: 7, background: 'none', border: 'none', color: T.muted, cursor: 'pointer', fontSize: 13.5, fontWeight: 600, fontFamily: T.grotesque }}>
-          <ArrowLeft size={17} /> Vidéothèque
+      /* ⭐ EN-TÊTE — LA RÈGLE ICI : « ne jamais rendre une fonction inatteignable
+         sur mobile ». Cette rangée était un `display:flex` SANS `flexWrap` portant
+         QUATRE éléments de largeur intrinsèque (retour, titre, action, rail). À
+         375 px elle débordait de 159 px, et le parent étant en `overflow:hidden`,
+         le bouton « Transcription » se retrouvait à 85 px HORS ÉCRAN, sans même
+         un défilement pour aller le chercher : l'élève ne pouvait plus ouvrir ni
+         la transcription ni les chapitres. Tout le chapitrage sémantique — mis en
+         avant dans la vidéothèque par un badge « 14 chapitres » — devenait mort
+         au doigt.
+
+         La correction n'est pas un `flexWrap` posé par-dessus (il aurait produit
+         une rangée en escalier) : c'est une STRUCTURE par contexte.
+           • large  → une rangée, comme avant, rien ne bouge ;
+           • étroit → rangée 1 = retour (icône seule) + titre + rail (icône seule,
+             cible tactile pleine) ; rangée 2 = l'action principale, pleine largeur,
+             en bas de portée du pouce.
+         `paddingTop` respecte l'encoche : ce lecteur est en `position:fixed` et
+         collerait sinon à la barre d'état de l'iPhone. */
+      <header style={{
+        position: 'relative', display: 'flex', flexWrap: 'wrap', alignItems: 'center',
+        gap: etroit ? 10 : 16,
+        padding: etroit ? '10px 14px' : '14px 22px',
+        paddingTop: `calc(${etroit ? 10 : 14}px + env(safe-area-inset-top, 0px))`,
+        borderBottom: `1px solid ${T.line}`, flexShrink: 0,
+      }}>
+        <button type="button" onClick={onExit} className="ivp-ctl"
+          aria-label="Retour à la vidéothèque"
+          style={{
+            display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 7,
+            background: 'none', border: 'none', color: T.muted, cursor: 'pointer',
+            fontSize: 13.5, fontWeight: 600, fontFamily: T.grotesque, flexShrink: 0,
+            // Au doigt : carré de 44 px, libellé retiré (l'icône flèche suffit,
+            // c'est la convention de tous les lecteurs mobiles). À la souris :
+            // libellé conservé, il coûte zéro place sur grand écran.
+            ...(etroit ? { width: cible, height: cible, padding: 0 } : {}),
+          }}>
+          <ArrowLeft size={etroit ? 20 : 17} />{etroit ? null : ' Vidéothèque'}
         </button>
-        <div style={{ width: 1, height: 22, background: T.line }} />
+        {!etroit && <div style={{ width: 1, height: 22, background: T.line }} />}
         <div style={{ minWidth: 0, flex: 1 }}>
           {crumb && (crumb.module || crumb.semaine || crumb.jour) ? (
             <div style={{ fontFamily: T.grotesque, fontSize: 11, letterSpacing: '.14em', textTransform: 'uppercase', color: T.terra, marginBottom: 2, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
               {[crumb.module, crumb.semaine, crumb.jour].filter(Boolean).join('  ·  ')}
             </div>
           ) : null}
-          <h1 style={{ margin: 0, fontFamily: T.serif, fontWeight: 600, fontSize: 'clamp(18px,2vw,26px)', lineHeight: 1.08, letterSpacing: '.005em', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+          {/* Registre produit : échelle de type FIXE, pas fluide. `clamp(…,2vw,…)`
+              faisait maigrir le titre selon la fenêtre alors qu'il est déjà tronqué
+              par ellipse — deux mécanismes pour un seul problème. */}
+          <h1 style={{ margin: 0, fontFamily: T.serif, fontWeight: 600, fontSize: etroit ? 17 : 24, lineHeight: 1.15, letterSpacing: '.005em', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
             {title || 'Session enregistrée'}
           </h1>
         </div>
-        {headerAction}
+        {/* Déclencheur du rail : présent sur TOUTE la plage où le rail est en
+            tiroir (<900), icône seule seulement quand la place manque (<768). */}
         {narrow && hasRail && (
-          <button type="button" onClick={() => setRailOpen(true)} className="ivp-ctl" style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '7px 11px', borderRadius: 10, border: `1px solid ${T.line}`, background: 'rgba(244,239,230,0.05)', color: T.ink, cursor: 'pointer', fontFamily: T.grotesque, fontSize: 12, fontWeight: 700 }}>
-            <AlignLeft size={14} /> Transcription
+          <button type="button" onClick={() => setRailOpen(true)} className="ivp-ctl"
+            aria-label="Ouvrir la transcription et les chapitres"
+            style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 6, flexShrink: 0, height: cible, width: etroit ? cible : 'auto', padding: etroit ? 0 : '0 13px', borderRadius: 12, border: `1px solid ${T.line}`, background: 'rgba(244,239,230,0.05)', color: T.ink, cursor: 'pointer', fontFamily: T.grotesque, fontSize: 12.5, fontWeight: 700 }}>
+            <AlignLeft size={etroit ? 19 : 15} />{etroit ? null : 'Transcription'}
           </button>
         )}
+        {/* En étroit l'action principale prend sa propre ligne, pleine largeur :
+            c'est elle qu'on vise le plus souvent, et le bas de l'en-tête est ce
+            que le pouce atteint le mieux. En large elle reste dans la rangée.
+            (Aucun déclencheur de rail ici en large : le rail y est déjà affiché
+            en colonne, cf. plus bas.) */}
+        {headerAction ? (
+          <div style={etroit ? { flexBasis: '100%', display: 'flex' } : undefined}>{headerAction}</div>
+        ) : null}
       </header>
       )}
 
       {/* Corps */}
       <div style={{ position: 'relative', flex: embedded ? 'none' : 1, minHeight: 0, display: 'flex' }}>
-        <main style={{ flex: embedded ? 'none' : '1 1 auto', width: embedded ? '100%' : undefined, minWidth: 0, display: 'flex', flexDirection: 'column', padding: embedded ? 0 : 'clamp(14px,2.2vw,32px)', overflow: 'hidden' }}>
+        {/* Le lecteur est en `position:fixed` : sans marge de sécurité basse, les
+            contrôles passent sous la barre d'accueil de l'iPhone, qui avale le
+            geste. `env()` vaut 0 partout ailleurs — aucun coût sur les autres
+            appareils. (Nécessite `viewport-fit=cover` dans index.html.) */}
+        <main style={{ flex: embedded ? 'none' : '1 1 auto', width: embedded ? '100%' : undefined, minWidth: 0, display: 'flex', flexDirection: 'column', padding: embedded ? 0 : 'clamp(14px,2.2vw,32px)', paddingBottom: embedded ? 0 : 'calc(clamp(14px,2.2vw,32px) + env(safe-area-inset-bottom, 0px))', overflow: 'hidden' }}>
           <div style={{ position: 'relative', ...(embedded ? { width: '100%', aspectRatio: '16 / 9' } : { flex: 1, minHeight: 0 }), borderRadius: embedded ? 12 : 20, overflow: 'hidden', background: '#000',
             border: '1px solid rgba(217,119,87,0.26)', boxShadow: embedded ? '0 0 90px -40px rgba(217,119,87,0.4)' : '0 34px 100px -34px rgba(0,0,0,0.85), 0 0 130px -42px rgba(217,119,87,0.4)' }}>
             <video ref={vref} src={src} poster={poster} playsInline preload="metadata" onClick={toggle}
@@ -412,7 +480,11 @@ function ImmersiveVideoPlayer({ src, poster, title, description, crumb, cues, tr
           <div style={{ marginTop: 13, flexShrink: 0 }}>
             <div role="slider" tabIndex={0} aria-label="Progression"
               onClick={(e) => { const r = e.currentTarget.getBoundingClientRect(); seek(((e.clientX - r.left) / r.width) * dur); }}
-              style={{ position: 'relative', height: 16, display: 'flex', alignItems: 'center', cursor: 'pointer' }}>
+              // La barre VISIBLE reste fine (4 px) ; c'est la zone SAISISSABLE qui
+              // grandit au doigt. Viser un rail de 16 px de haut en marchant est
+              // le geste le plus raté d'un lecteur mobile — et il coûte une
+              // reprise de lecture au mauvais endroit, pas juste un clic perdu.
+              style={{ position: 'relative', height: tactile ? 30 : 16, display: 'flex', alignItems: 'center', cursor: 'pointer', touchAction: 'none' }}>
               <div style={{ position: 'absolute', left: 0, right: 0, height: 4, borderRadius: 4, background: 'rgba(244,239,230,0.14)' }} />
               <div style={{ position: 'absolute', left: 0, width: `${pct}%`, height: 4, borderRadius: 4, background: `linear-gradient(90deg, ${T.terra}, ${T.gold})`, transition: reduce ? 'none' : 'width .12s linear' }} />
               {chaps.map((c, i) => dur ? (
@@ -420,20 +492,57 @@ function ImmersiveVideoPlayer({ src, poster, title, description, crumb, cues, tr
               ) : null)}
               <span style={{ position: 'absolute', left: `${pct}%`, width: 13, height: 13, borderRadius: '50%', background: T.ink, boxShadow: `0 0 0 3px ${T.terra}`, transform: 'translateX(-6px)' }} />
             </div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginTop: 8, flexWrap: 'wrap' }}>
-              <button type="button" onClick={toggle} className="ivp-ctl" aria-label={playing ? 'Pause' : 'Lire'} style={ctl(true)}>
-                {playing ? <Pause size={18} fill={T.bg} color={T.bg} /> : <Play size={18} fill={T.bg} color={T.bg} style={{ marginLeft: 2 }} />}
-              </button>
-              <button type="button" onClick={() => seek(cur - 10)} className="ivp-ctl" aria-label="-10s" style={ctl(false)}><Rewind size={17} /></button>
-              <button type="button" onClick={() => seek(cur + 10)} className="ivp-ctl" aria-label="+10s" style={ctl(false)}><FastForward size={17} /></button>
-              <div style={{ fontFamily: T.grotesque, fontSize: 12.5, color: T.muted, fontVariantNumeric: 'tabular-nums', minWidth: 92 }}>{fmt(cur)} <span style={{ color: T.faint }}>/ {fmt(dur)}</span></div>
-              <div style={{ flex: 1 }} />
-              {[1, 1.25, 1.5, 2].map((r) => (
-                <button key={r} type="button" onClick={() => setRate(r)} className="ivp-ctl" style={{ background: 'none', border: 'none', cursor: 'pointer', color: rate === r ? T.gold : T.faint, fontFamily: T.grotesque, fontSize: 12.5, fontWeight: 700, padding: '2px 3px' }}>{r}×</button>
-              ))}
-              <button type="button" onClick={() => { const v = vref.current; if (v) { v.muted = !v.muted; setMuted(v.muted); } }} className="ivp-ctl" aria-label="Son" style={ctl(false)}>{muted ? <VolumeX size={17} /> : <Volume2 size={17} />}</button>
-              <button type="button" onClick={() => vref.current?.requestFullscreen?.()} className="ivp-ctl" aria-label="Plein écran" style={ctl(false)}><Maximize2 size={16} /></button>
-            </div>
+            {/* ⭐ CONTRÔLES — deux mises en page, pas un enroulement subi.
+                Cette rangée unique en `flexWrap:'wrap'` portait 9 contrôles : à
+                375 px elle retombait sur TROIS lignes en escalier (151 px de haut
+                mesurés), les vitesses coupées en « 1× 1.25× » puis « 1.5× 2× ».
+                Un `wrap` n'est pas une mise en page mobile, c'est l'absence de
+                décision. On en prend une :
+                  • large  → la rangée unique d'origine, inchangée ;
+                  • étroit → rangée d'UTILITAIRES (temps + vitesse + son + plein
+                    écran) puis rangée de TRANSPORT centrée et large, là où le
+                    pouce tombe. Les quatre boutons de vitesse deviennent UN
+                    bouton qui cycle — le geste standard des lecteurs mobiles,
+                    et trois cibles de moins à rater. */}
+            {etroitCtl ? (
+              <>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 10 }}>
+                  <div style={{ fontFamily: T.grotesque, fontSize: 13, color: T.muted, fontVariantNumeric: 'tabular-nums' }}>
+                    {fmt(cur)} <span style={{ color: T.faint }}>/ {fmt(dur)}</span>
+                  </div>
+                  <div style={{ flex: 1 }} />
+                  <button type="button" onClick={cyclerVitesse} className="ivp-ctl"
+                    aria-label={`Vitesse de lecture : ${rate}×. Toucher pour changer.`}
+                    style={{ ...ctl(false, cible), width: 'auto', minWidth: cible, padding: '0 12px', borderRadius: cible / 2, color: rate === 1 ? T.ink : T.gold, fontFamily: T.grotesque, fontSize: 13.5, fontWeight: 700 }}>
+                    {rate}×
+                  </button>
+                  <button type="button" onClick={() => { const v = vref.current; if (v) { v.muted = !v.muted; setMuted(v.muted); } }} className="ivp-ctl" aria-label={muted ? 'Rétablir le son' : 'Couper le son'} style={ctl(false, cible)}>{muted ? <VolumeX size={18} /> : <Volume2 size={18} />}</button>
+                  <button type="button" onClick={() => vref.current?.requestFullscreen?.()} className="ivp-ctl" aria-label="Plein écran" style={ctl(false, cible)}><Maximize2 size={17} /></button>
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 26, marginTop: 12 }}>
+                  <button type="button" onClick={() => seek(cur - 10)} className="ivp-ctl" aria-label="Reculer de 10 secondes" style={ctl(false, cible)}><Rewind size={20} /></button>
+                  <button type="button" onClick={toggle} className="ivp-ctl" aria-label={playing ? 'Pause' : 'Lire'} style={ctl(true, Math.max(cible + 12, 56))}>
+                    {playing ? <Pause size={22} fill={T.bg} color={T.bg} /> : <Play size={22} fill={T.bg} color={T.bg} style={{ marginLeft: 2 }} />}
+                  </button>
+                  <button type="button" onClick={() => seek(cur + 10)} className="ivp-ctl" aria-label="Avancer de 10 secondes" style={ctl(false, cible)}><FastForward size={20} /></button>
+                </div>
+              </>
+            ) : (
+              <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginTop: 8, flexWrap: 'wrap' }}>
+                <button type="button" onClick={toggle} className="ivp-ctl" aria-label={playing ? 'Pause' : 'Lire'} style={ctl(true)}>
+                  {playing ? <Pause size={18} fill={T.bg} color={T.bg} /> : <Play size={18} fill={T.bg} color={T.bg} style={{ marginLeft: 2 }} />}
+                </button>
+                <button type="button" onClick={() => seek(cur - 10)} className="ivp-ctl" aria-label="-10s" style={ctl(false)}><Rewind size={17} /></button>
+                <button type="button" onClick={() => seek(cur + 10)} className="ivp-ctl" aria-label="+10s" style={ctl(false)}><FastForward size={17} /></button>
+                <div style={{ fontFamily: T.grotesque, fontSize: 12.5, color: T.muted, fontVariantNumeric: 'tabular-nums', minWidth: 92 }}>{fmt(cur)} <span style={{ color: T.faint }}>/ {fmt(dur)}</span></div>
+                <div style={{ flex: 1 }} />
+                {VITESSES.map((r) => (
+                  <button key={r} type="button" onClick={() => setRate(r)} className="ivp-ctl" style={{ background: 'none', border: 'none', cursor: 'pointer', color: rate === r ? T.gold : T.faint, fontFamily: T.grotesque, fontSize: 12.5, fontWeight: 700, padding: '2px 3px' }}>{r}×</button>
+                ))}
+                <button type="button" onClick={() => { const v = vref.current; if (v) { v.muted = !v.muted; setMuted(v.muted); } }} className="ivp-ctl" aria-label="Son" style={ctl(false)}>{muted ? <VolumeX size={17} /> : <Volume2 size={17} />}</button>
+                <button type="button" onClick={() => vref.current?.requestFullscreen?.()} className="ivp-ctl" aria-label="Plein écran" style={ctl(false)}><Maximize2 size={16} /></button>
+              </div>
+            )}
             {description ? <p style={{ color: T.muted, fontSize: 14.5, lineHeight: 1.6, margin: '14px 2px 0', maxWidth: '72ch' }}>{description}</p> : null}
           </div>
         </main>
@@ -453,8 +562,17 @@ function ImmersiveVideoPlayer({ src, poster, title, description, crumb, cues, tr
 
 export default forwardRef(ImmersiveVideoPlayer);
 
-function ctl(primary) {
+/** Liste unique des vitesses : la rangée large les affiche toutes, l'étroite les cycle. */
+const VITESSES = [1, 1.25, 1.5, 2];
+
+/**
+ * `taille` surcharge le diamètre historique (42 primaire / 36 secondaire) : au
+ * doigt on remonte à 44 px minimum, à la souris on garde la densité d'origine.
+ * Les 36 px d'avant se rataient une fois sur trois sur un écran tactile.
+ */
+function ctl(primary, taille) {
+  const d = taille ?? (primary ? 42 : 36);
   return primary
-    ? { width: 42, height: 42, borderRadius: '50%', background: '#f4efe6', border: 'none', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }
-    : { width: 36, height: 36, borderRadius: '50%', background: 'rgba(244,239,230,0.06)', border: '1px solid rgba(244,239,230,0.12)', color: '#f4efe6', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 };
+    ? { width: d, height: d, borderRadius: '50%', background: '#f4efe6', border: 'none', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }
+    : { width: d, height: d, borderRadius: '50%', background: 'rgba(244,239,230,0.06)', border: '1px solid rgba(244,239,230,0.12)', color: '#f4efe6', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 };
 }

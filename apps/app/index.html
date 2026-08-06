@@ -2,7 +2,10 @@
 <html lang="fr">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <!-- viewport-fit=cover : sans lui, `env(safe-area-inset-*)` vaut TOUJOURS 0 et
+         les surfaces plein écran (lecteur vidéo, salle de live) passent sous
+         l'encoche et sous la barre d'accueil de l'iPhone, qui avale le geste. -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
     <title>LIRI</title>
     <link rel="icon" type="image/png" href="/liri-mark.png" />
     <link rel="apple-touch-icon" href="/liri-mark.png" />

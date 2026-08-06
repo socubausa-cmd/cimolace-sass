@@ -606,7 +606,10 @@ const Header = () => {
                 asChild
                 variant="outline"
                 size="icon"
-                className="border-[color-mix(in_srgb,var(--school-accent)_50%,transparent)] bg-[color-mix(in_srgb,var(--school-accent)_12%,transparent)] text-[var(--school-accent)] hover:bg-[color-mix(in_srgb,var(--school-accent)_25%,transparent)] shrink-0 h-10 w-10"
+                /* h-11 w-11 = 44 px : plancher commun Apple HIG / WCAG 2.5.5. À
+                   40 px (h-10) cette cible se ratait au pouce — mesuré sur le
+                   portail mobile. Le `sm:` la ramène à 40 dès qu'on a de la place. */
+                className="border-[color-mix(in_srgb,var(--school-accent)_50%,transparent)] bg-[color-mix(in_srgb,var(--school-accent)_12%,transparent)] text-[var(--school-accent)] hover:bg-[color-mix(in_srgb,var(--school-accent)_25%,transparent)] shrink-0 h-11 w-11 sm:h-10 sm:w-10"
                 title="Prendre rendez-vous"
               >
                 <Link to="/appointment/request" aria-label="Ouvrir le calendrier de réservation">
