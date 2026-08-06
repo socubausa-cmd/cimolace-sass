@@ -38,6 +38,10 @@ const normalizeFormationForUI = (row) => {
     title: row.title || '',
     description: row.description || '',
     status: row.status || 'draft',
+    // Dates transmises telles quelles : la vue liste s'en sert pour distinguer
+    // les brouillons homonymes — sans elles, deux copies sont indiscernables.
+    created_at: row.created_at || null,
+    updated_at: row.updated_at || null,
     cycle: row.cycle || null,
     year: mapCycleToYear(row.cycle) || row.year || '',
     duration: row.duration_weeks ? `${row.duration_weeks} semaines` : row.duration || '',

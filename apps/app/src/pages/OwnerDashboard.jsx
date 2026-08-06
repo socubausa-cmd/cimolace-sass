@@ -2,7 +2,6 @@ import React, { useEffect, useState } from 'react';
 import OwnerDashboardLayout from '@/components/owner/OwnerDashboardLayout';
 import OwnerDashboardOverview from '@/components/owner/OwnerDashboardOverview';
 import { ResourcesTab, SchoolInfoTab } from '@/components/owner/OwnerTabComponents2';
-import { useSchoolYear } from '@/hooks/useSchoolYear';
 import { useLocation, useNavigate, useSearchParams } from 'react-router-dom';
 
 // Core Components
@@ -72,12 +71,13 @@ const OwnerForumPanel = ({ basePath = '/owner-dashboard' }) => {
  * internes ('/owner-dashboard' par défaut ; le portail passe '/liri/ecole').
  */
 export const OwnerDashboardBody = ({ activeTab, basePath = '/owner-dashboard' }) => {
-  const { currentYear, setSchoolYear } = useSchoolYear();
   const [searchParams] = useSearchParams();
 
   const renderContent = () => {
     switch(activeTab) {
-      case 'dashboard': return <OwnerDashboardOverview />;
+      // Le sélecteur d'année scolaire vit DANS l'en-tête de la vue d'ensemble (Overview) :
+      // en bloc séparé ici, il flottait seul à droite et créait ~150 px de vide au-dessus du contenu.
+      case 'dashboard': return <OwnerDashboardOverview basePath={basePath} />;
       case 'notifications': return <NotificationCenter />;
       case 'reports': return <ReportsPage />;
       case 'certificates': return <OwnerCertificatesManagement />;
@@ -122,34 +122,7 @@ export const OwnerDashboardBody = ({ activeTab, basePath = '/owner-dashboard' })
     }
   };
 
-  return (
-    <>
-      {activeTab === 'dashboard' && (
-         <div className="mb-6 flex justify-end">
-            <div
-              className="px-3 py-3 rounded-[14px] min-w-[280px]"
-              style={{ background: 'var(--lt-card-bg)', border: '1px solid var(--lt-card-border)', boxShadow: 'var(--lt-card-shadow)' }}
-            >
-              <p className="text-[10px] font-bold uppercase tracking-wider mb-2" style={{ color: 'var(--lt-muted)' }}>Année scolaire</p>
-              <PremiumSegmentedSelector
-                value={currentYear}
-                onChange={setSchoolYear}
-                options={[
-                  { value: '2024-2025', label: '2024-2025' },
-                  { value: '2023-2024', label: '2023-2024' },
-                ]}
-                layoutId="owner-dashboard-school-year-segment-pill"
-                compact
-                showChevron={false}
-                railClassName="!bg-[var(--lt-inner-bg)] !border-[var(--lt-border)]"
-                optionClassName="!text-zinc-500 [&.text-white]:!text-zinc-900 hover:!bg-black/[0.03]"
-              />
-            </div>
-         </div>
-      )}
-      {renderContent()}
-    </>
-  );
+  return renderContent();
 };
 
 const OwnerDashboard = () => {

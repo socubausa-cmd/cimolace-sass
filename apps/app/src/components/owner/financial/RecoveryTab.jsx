@@ -130,7 +130,7 @@ const RecoveryTab = () => {
            <h2 className="text-2xl font-bold flex items-center gap-2" style={{ color: LT_TEXT }}>
              <FileText style={{ color: LT_GOLD_INK }} /> Recouvrement
            </h2>
-           <p className="text-sm" style={{ color: LT_SUB }}>Source: paiements et factures provider (Supabase)</p>
+           <p className="text-sm" style={{ color: LT_SUB }}>Source: paiements et factures provider (base de donnees)</p>
         </div>
         <div className="flex gap-2">
            <Button

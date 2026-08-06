@@ -156,7 +156,7 @@ const PaymentsTab = () => {
              <CreditCard style={{ color: LT_GOLD_INK }} /> Paiements
            </h2>
            <p className="text-sm" style={{ color: LT_SUB }}>
-             Source: transactions Supabase en temps reel
+             Source: transactions de la base en temps reel
              {lastSyncAt ? ` • Sync ${lastSyncAt.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit', second: '2-digit' })}` : ''}
            </p>
         </div>

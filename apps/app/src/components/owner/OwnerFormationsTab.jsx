@@ -8,7 +8,7 @@ import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Plus, Trash, Search, BookOpen, Layers, AlertTriangle, MoreVertical, Copy, Archive, Image as ImageIcon, Sparkles } from 'lucide-react';
+import { Plus, Trash, Search, BookOpen, Layers, AlertTriangle, MoreVertical, Copy, Archive, Sparkles, LayoutGrid, List } from 'lucide-react';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { useToast } from '@/components/ui/use-toast';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -17,6 +17,31 @@ import { motion, AnimatePresence } from 'framer-motion';
 import FormationDetailsPageView from '@/components/school/formations/FormationDetailsPageView';
 import OwnerFormationBuilder from '@/components/school/formations/OwnerFormationBuilder';
 import { SupabaseCoursePlayerContent } from '@/components/school/formations/CoursePlayerInterface';
+
+// Couverture générée quand la formation n'a pas de visuel : aplat CHAUD dérivé du titre
+// (stable d'un rendu à l'autre) + initiales — jamais d'icône d'image cassée ni de titre
+// affiché deux fois. Tons volontairement sombres pour garder l'encre claire lisible
+// (≥ 4,5:1) quel que soit le thème de la coque hôte.
+const COVER_TONES = ['#7a4a33', '#84502e', '#6d4a3a', '#8a4630', '#5f4a35', '#75402f'];
+const coverToneFor = (title) => {
+  let h = 0;
+  for (const ch of String(title || '')) h = ((h * 31) + ch.charCodeAt(0)) >>> 0;
+  return COVER_TONES[h % COVER_TONES.length];
+};
+const coverInitialsFor = (title) => {
+  const words = String(title || '')
+    .split(/[^\p{L}\p{N}]+/u)
+    .filter((w) => w.length >= 3);
+  const letters = (words.length ? words : [String(title || '?')]).slice(0, 2).map((w) => w[0]);
+  return letters.join('').toUpperCase() || '?';
+};
+
+const formatDateFr = (iso) => {
+  if (!iso) return null;
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return null;
+  return d.toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', year: 'numeric' });
+};
 
 const OwnerFormationsTab = () => {
   const navigate = useNavigate();
@@ -30,6 +55,19 @@ const OwnerFormationsTab = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [filterStatus, setFilterStatus] = useState('all');
   const [filterYear, setFilterYear] = useState('all');
+  // Bascule grille/liste mémorisée : avec 33 brouillons, la liste compacte (titre,
+  // statut, prix, date) est le seul moyen de distinguer les copies homonymes.
+  const [displayMode, setDisplayMode] = useState(() => {
+    try {
+      return localStorage.getItem('owner-formations-display') === 'list' ? 'list' : 'grid';
+    } catch {
+      return 'grid';
+    }
+  });
+  const setDisplayModePersist = (mode) => {
+    setDisplayMode(mode);
+    try { localStorage.setItem('owner-formations-display', mode); } catch { /* stockage indisponible : la bascule reste en mémoire */ }
+  };
   const [alertConfig, setAlertConfig] = useState({ open: false, type: '', data: null });
   const { toast } = useToast();
   const [slowLoad, setSlowLoad] = useState(false);
@@ -148,6 +186,14 @@ const OwnerFormationsTab = () => {
     return { total, published, draft, archived };
   }, [formations]);
 
+  // Le chip « Archivées » disparaît quand il n'y a plus rien à filtrer : on ne doit
+  // pas laisser l'utilisateur bloqué sur un filtre devenu invisible.
+  useEffect(() => {
+    if (filterStatus === 'archived' && !loading && formationStats.archived === 0) {
+      setFilterStatus('all');
+    }
+  }, [filterStatus, loading, formationStats.archived]);
+
   const handleSaveFormation = async (formationData) => {
     try {
       if (viewMode === 'create') {
@@ -253,6 +299,16 @@ const OwnerFormationsTab = () => {
     return 'Gratuit';
   };
 
+  // Colonne « Prix » de la vue liste : le montant réel quand il existe, sinon le mode
+  // d'accès — on n'invente aucun chiffre.
+  const getPriceLabel = (formation) => {
+    const mode = formation?.access_mode || formation?.meta?.access_mode || formation?.meta?.access?.mode || 'free';
+    if (mode === 'one_time' && formation?.standalone_price != null) {
+      return `${Number(formation.standalone_price).toLocaleString('fr-FR')} ${formation?.standalone_currency || 'XAF'}`;
+    }
+    return getAccessLabel(formation);
+  };
+
   const withTimeout = async (promise, ms, label) => {
     let t;
     try {
@@ -317,6 +373,65 @@ const OwnerFormationsTab = () => {
     }
   };
 
+  // Menu d'actions PARTAGÉ entre la carte (grille) et la ligne (liste) : une seule
+  // définition, sinon les deux vues divergent à la première évolution.
+  const renderActionsMenu = (formation) => (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <Button
+          variant="ghost"
+          size="icon"
+          title="Actions sur la formation"
+          aria-label="Actions sur la formation"
+          className="text-zinc-500 hover:text-[var(--lt-text)] hover:bg-[color-mix(in_srgb,var(--school-accent)_10%,transparent)]"
+          disabled={structureLoading && structureLoadingId === formation.id}
+          onClick={(e) => e.stopPropagation()}
+        >
+          <MoreVertical className="w-4 h-4" />
+        </Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end" className="bg-[var(--lt-card-bg)] border-[var(--lt-border)] text-zinc-700">
+        {formation.status !== 'published' ? (
+          <DropdownMenuItem onClick={() => handleSetStatus(formation, 'published')}>
+            <BookOpen className="w-4 h-4 mr-2" /> Publier
+          </DropdownMenuItem>
+        ) : (
+          <DropdownMenuItem onClick={() => handleSetStatus(formation, 'draft')}>
+            <BookOpen className="w-4 h-4 mr-2" /> Mettre en brouillon
+          </DropdownMenuItem>
+        )}
+        <DropdownMenuItem onClick={() => handleDuplicate(formation)}>
+          <Copy className="w-4 h-4 mr-2" /> Dupliquer
+        </DropdownMenuItem>
+        <DropdownMenuItem onClick={() => navigate(`/studio/formation?editFormationId=${formation.id}`)}>
+          <Sparkles className="w-4 h-4 mr-2" /> Éditer dans Studio
+        </DropdownMenuItem>
+        <DropdownMenuItem onClick={() => handleArchive(formation)}>
+          <Archive className="w-4 h-4 mr-2" /> {formation.status === 'archived' ? 'Désarchiver' : 'Archiver'}
+        </DropdownMenuItem>
+        <DropdownMenuItem
+          onClick={() => setAlertConfig({ open: true, type: 'delete', data: formation })}
+          className="text-red-400 focus:text-red-400"
+        >
+          <Trash className="w-4 h-4 mr-2" /> Supprimer
+        </DropdownMenuItem>
+      </DropdownMenuContent>
+    </DropdownMenu>
+  );
+
+  // Couverture générée (aplat chaud + initiales) partagée entre les deux vues.
+  const renderGeneratedCover = (formation, sizeClass, textClass) => (
+    <div
+      aria-hidden="true"
+      className={`${sizeClass} flex items-center justify-center shrink-0`}
+      style={{ background: `linear-gradient(135deg, ${coverToneFor(formation.title)}, color-mix(in srgb, ${coverToneFor(formation.title)} 82%, black))` }}
+    >
+      <span className={`${textClass} font-serif font-bold text-[#f5f4ee]/90 select-none`}>
+        {coverInitialsFor(formation.title)}
+      </span>
+    </div>
+  );
+
   if (viewMode === 'create' || viewMode === 'edit') {
     return (
       <OwnerFormationBuilder 
@@ -378,7 +493,8 @@ const OwnerFormationsTab = () => {
       {/* Ambient background (clair, très discret) */}
       <div className="fixed inset-0 pointer-events-none -z-10">
         <div className="absolute top-1/4 left-1/2 -translate-x-1/2 w-[500px] h-[300px] bg-[color-mix(in_srgb,var(--school-accent)_6%,transparent)] rounded-full blur-[100px]" />
-        <div className="absolute bottom-1/4 right-1/4 w-[250px] h-[250px] bg-violet-500/[0.04] rounded-full blur-[80px]" />
+        {/* Charte : halos uniquement dans la famille chaude (le violet est banni). */}
+        <div className="absolute bottom-1/4 right-1/4 w-[250px] h-[250px] bg-[color-mix(in_srgb,var(--school-accent)_4%,transparent)] rounded-full blur-[80px]" />
       </div>
 
       <div className="space-y-6 relative">
@@ -404,13 +520,10 @@ const OwnerFormationsTab = () => {
             <h2 className="text-2xl md:text-3xl font-serif font-bold tracking-tight" style={{ color: 'var(--lt-text)' }}>
               Mes Formations
             </h2>
-            <Badge variant="outline" className="mt-1 border-[color-mix(in_srgb,var(--school-accent)_35%,transparent)] bg-[color-mix(in_srgb,var(--school-accent)_12%,transparent)]" style={{ color: 'var(--lt-gold-ink)' }}>
-              {formations.length} Total
-            </Badge>
           </div>
         </div>
 
-        <div className="flex flex-wrap gap-3 w-full xl:w-auto flex-1 justify-end">
+        <div className="flex flex-wrap items-end gap-3 w-full xl:w-auto flex-1 justify-end">
           <motion.div
             initial={{ opacity: 0, x: 20 }}
             animate={{ opacity: 1, x: 0 }}
@@ -419,34 +532,53 @@ const OwnerFormationsTab = () => {
           >
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-zinc-400" />
             <Input
-              placeholder="Rechercher..."
+              placeholder="Rechercher une formation…"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="pl-9 bg-[var(--lt-card-bg)] border-[var(--lt-border)] text-[var(--lt-text)] placeholder:text-zinc-400"
             />
           </motion.div>
-          <Select value={filterYear} onValueChange={setFilterYear}>
-            <SelectTrigger className="w-[140px] bg-[var(--lt-card-bg)] border-[var(--lt-border)] text-[var(--lt-text)]">
-              <SelectValue placeholder="Année" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">Toutes Années</SelectItem>
-              <SelectItem value="1ère année">1ère année</SelectItem>
-              <SelectItem value="2ème année">2ème année</SelectItem>
-              <SelectItem value="3ème année">3ème année</SelectItem>
-            </SelectContent>
-          </Select>
-          <Select value={filterStatus} onValueChange={setFilterStatus}>
-            <SelectTrigger className="w-[120px] bg-[var(--lt-card-bg)] border-[var(--lt-border)] text-[var(--lt-text)]">
-              <SelectValue placeholder="Statut" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">Tous</SelectItem>
-              <SelectItem value="published">Publié</SelectItem>
-              <SelectItem value="draft">Brouillon</SelectItem>
-              <SelectItem value="archived">Archivé</SelectItem>
-            </SelectContent>
-          </Select>
+          <div className="flex flex-col gap-1">
+            <span className="text-[11px] uppercase tracking-wide text-zinc-500" id="formations-filter-year-label">Année scolaire</span>
+            <Select value={filterYear} onValueChange={setFilterYear}>
+              <SelectTrigger
+                aria-labelledby="formations-filter-year-label"
+                className="w-[190px] bg-[var(--lt-card-bg)] border-[var(--lt-border)] text-[var(--lt-text)]"
+              >
+                <SelectValue placeholder="Toutes les années" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Toutes les années</SelectItem>
+                <SelectItem value="1ère année">1ère année</SelectItem>
+                <SelectItem value="2ème année">2ème année</SelectItem>
+                <SelectItem value="3ème année">3ème année</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          <div
+            className="flex items-center rounded-lg border border-[var(--lt-border)] bg-[var(--lt-card-bg)] p-0.5"
+            role="group"
+            aria-label="Affichage du catalogue"
+          >
+            <button
+              type="button"
+              title="Affichage en grille"
+              aria-pressed={displayMode === 'grid'}
+              onClick={() => setDisplayModePersist('grid')}
+              className={`p-2 rounded-md transition-colors ${displayMode === 'grid' ? 'bg-[color-mix(in_srgb,var(--school-accent)_18%,transparent)] text-[var(--school-accent)]' : 'text-zinc-500 hover:text-[var(--lt-text)] hover:bg-[color-mix(in_srgb,var(--school-accent)_8%,transparent)]'}`}
+            >
+              <LayoutGrid className="w-4 h-4" />
+            </button>
+            <button
+              type="button"
+              title="Affichage en liste"
+              aria-pressed={displayMode === 'list'}
+              onClick={() => setDisplayModePersist('list')}
+              className={`p-2 rounded-md transition-colors ${displayMode === 'list' ? 'bg-[color-mix(in_srgb,var(--school-accent)_18%,transparent)] text-[var(--school-accent)]' : 'text-zinc-500 hover:text-[var(--lt-text)] hover:bg-[color-mix(in_srgb,var(--school-accent)_8%,transparent)]'}`}
+            >
+              <List className="w-4 h-4" />
+            </button>
+          </div>
           <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
             <Button
               onClick={() => navigate('/studio')}
@@ -467,39 +599,62 @@ const OwnerFormationsTab = () => {
         </div>
       </motion.div>
 
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+      {/* Les compteurs SONT les filtres de statut (comme les chips du Calendrier) :
+          un clic filtre la liste, l'état actif est corail. « Archivées » n'apparaît
+          que s'il y a quelque chose à filtrer — un zéro permanent n'est pas une info. */}
+      <div className="flex flex-wrap items-center gap-2" role="group" aria-label="Filtrer par statut">
         {[
-          { label: 'Total formations', value: formationStats.total, color: 'text-[var(--lt-text)]' },
-          { label: 'Publiees', value: formationStats.published, color: 'text-emerald-600' },
-          { label: 'Brouillons', value: formationStats.draft, color: 'text-amber-600' },
-          { label: 'Archivees', value: formationStats.archived, color: 'text-zinc-500' },
-        ].map((item, index) => (
-          <motion.div
-            key={item.label}
-            initial={{ opacity: 0, y: 12 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: index * 0.06 }}
-            whileHover={{ y: -2 }}
-          >
-            <Card className="border-0" style={{ background: 'var(--lt-card-bg)', border: '1px solid var(--lt-card-border)', boxShadow: 'var(--lt-card-shadow)' }}>
-              <CardContent className="p-4">
-                <p className="text-[10px] font-bold uppercase tracking-wider text-zinc-500">{item.label}</p>
-                <p className={`text-2xl font-bold tabular-nums mt-1 ${item.color}`}>{item.value}</p>
-              </CardContent>
-            </Card>
-          </motion.div>
-        ))}
+          { key: 'all', label: 'Toutes', value: formationStats.total },
+          { key: 'published', label: 'Publiées', value: formationStats.published },
+          { key: 'draft', label: 'Brouillons', value: formationStats.draft },
+          ...(formationStats.archived > 0 ? [{ key: 'archived', label: 'Archivées', value: formationStats.archived }] : []),
+        ].map((item) => {
+          const active = filterStatus === item.key;
+          return (
+            <button
+              key={item.key}
+              type="button"
+              aria-pressed={active}
+              onClick={() => setFilterStatus(item.key)}
+              className={`inline-flex items-center gap-2 px-3.5 py-2 rounded-full border text-sm transition-colors ${
+                active
+                  ? 'border-[color-mix(in_srgb,var(--school-accent)_55%,transparent)] bg-[color-mix(in_srgb,var(--school-accent)_16%,transparent)] text-[var(--school-accent)] font-semibold'
+                  : 'border-[var(--lt-border)] bg-[var(--lt-card-bg)] text-zinc-500 hover:text-[var(--lt-text)] hover:border-[color-mix(in_srgb,var(--school-accent)_35%,transparent)]'
+              }`}
+            >
+              <span>{item.label}</span>
+              <span className={`tabular-nums text-xs px-1.5 py-0.5 rounded-full ${active ? 'bg-[color-mix(in_srgb,var(--school-accent)_22%,transparent)]' : 'bg-[color-mix(in_srgb,var(--lt-text)_8%,transparent)]'}`}>
+                {item.value}
+              </span>
+            </button>
+          );
+        })}
       </div>
 
-      {/* Grid View */}
+      {/* Contenu : grille de cartes OU liste compacte, mêmes données et mêmes actions. */}
       <AnimatePresence mode="wait">
         <motion.div
+          key={displayMode}
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ duration: 0.4 }}
-          className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6"
+          className={displayMode === 'grid'
+            ? 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6'
+            : 'flex flex-col gap-2'}
         >
-          {loading ? (
+          {loading && displayMode === 'list' ? (
+            <>
+              {[1, 2, 3, 4, 5, 6].map((i) => (
+                <div key={i} className="h-14 rounded-[12px] border border-[var(--lt-border)] bg-[var(--lt-card-bg)] animate-pulse" />
+              ))}
+              {slowLoad && (
+                <p className="text-center text-amber-600 text-sm pt-2 pb-4">
+                  Chargement toujours en cours (latence réseau ou serveur), merci de patienter…
+                </p>
+              )}
+            </>
+          ) : null}
+          {loading && displayMode === 'grid' ? (
             <>
               {[1, 2, 3, 4].map((i) => (
                 <motion.div
@@ -509,15 +664,10 @@ const OwnerFormationsTab = () => {
                   transition={{ delay: i * 0.08 }}
                   className="rounded-[14px] overflow-hidden border border-[var(--lt-border)] bg-[var(--lt-card-bg)] animate-pulse"
                 >
-                  <div className="h-48 bg-black/[0.05]" />
+                  <div className="h-44 bg-black/[0.05]" />
                   <div className="p-5 space-y-3">
                     <div className="h-4 bg-black/[0.08] rounded w-3/4" />
                     <div className="h-3 bg-black/[0.05] rounded w-1/2" />
-                    <div className="flex gap-2 pt-4">
-                      <div className="h-8 bg-black/[0.05] rounded flex-1" />
-                      <div className="h-8 bg-black/[0.05] rounded flex-1" />
-                      <div className="h-8 bg-black/[0.05] rounded flex-1" />
-                    </div>
                   </div>
                 </motion.div>
               ))}
@@ -541,7 +691,7 @@ const OwnerFormationsTab = () => {
               <AlertTriangle className="w-12 h-12 text-red-500" />
               <div className="text-red-700 font-semibold text-sm max-w-sm">
                 {String(error?.message || error) === 'formations_load_timeout'
-                  ? 'Délai dépassé en attendant Supabase. Ton projet peut être actif : causes fréquentes = connexion instable, antivirus/VPN (HTTPS), ou variables VITE_SUPABASE_* différentes entre build et le projet visé. Regarde l\'onglet Réseau (F12) sur les requêtes vers supabase.co, puis réessaie.'
+                  ? 'Délai dépassé en attendant la base de données. Causes fréquentes : connexion instable, antivirus/VPN (HTTPS), ou configuration du build différente du projet visé. Regarde l\'onglet Réseau (F12) pour les requêtes en échec, puis réessaie.'
                   : String(error?.message || error)}
               </div>
               <Button
@@ -570,120 +720,151 @@ const OwnerFormationsTab = () => {
               </Button>
             </motion.div>
           ) : null}
+          {!loading && !error && displayMode === 'list' && filteredFormations.length > 0 ? (
+            <div className="hidden sm:flex items-center gap-3 px-3 pb-1 text-[11px] uppercase tracking-wide text-zinc-500" aria-hidden="true">
+              <span className="w-12 shrink-0" />
+              <span className="flex-1">Formation</span>
+              <span className="w-20 text-left">Statut</span>
+              <span className="w-24 text-right hidden md:block">Prix</span>
+              <span className="w-28 text-right">Mise à jour</span>
+              <span className="w-10 shrink-0" />
+            </div>
+          ) : null}
           {!loading &&
-            filteredFormations.map((formation, index) => (
-              <motion.div
-                key={formation.id}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.4, delay: index * 0.05 }}
-                whileHover={{ y: -4, scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
-              >
-                <Card
-                  className="rounded-[14px] overflow-hidden border border-[var(--lt-border)] bg-[var(--lt-card-bg)] hover:border-[color-mix(in_srgb,var(--school-accent)_45%,transparent)] hover:shadow-[0_8px_24px_-12px_rgba(0,0,0,0.18)] transition-all group cursor-pointer"
-                  style={{ boxShadow: 'var(--lt-card-shadow)' }}
-                  onClick={() => openDetails(formation)}
+            filteredFormations.map((formation, index) => {
+              const updatedLabel = formatDateFr(formation.updated_at || formation.created_at);
+              const isOpening = structureLoading && structureLoadingId === formation.id;
+              const statusBadge = (
+                <Badge
+                  className={
+                    formation.status === 'published'
+                      ? 'bg-emerald-500/90 text-black'
+                      : formation.status === 'draft'
+                        ? 'bg-amber-500/90 text-black'
+                        : 'bg-gray-500/90 text-white'
+                  }
                 >
-                  {/* Thumbnail Image */}
-                  <div className="h-48 bg-[var(--lt-inner-bg)] relative overflow-hidden">
-                    {formation.thumbnail ? (
-                      <motion.img
-                        src={formation.thumbnail}
-                        alt={formation.title}
-                        className="w-full h-full object-cover"
-                        whileHover={{ scale: 1.08 }}
-                        transition={{ duration: 0.5 }}
-                      />
-                    ) : (
-                      <div className="w-full h-full flex flex-col items-center justify-center text-zinc-400 bg-[var(--lt-inner-bg)]">
-                        <ImageIcon className="w-12 h-12 mb-2 opacity-60" />
-                        <span className="text-xs">{formation.title}</span>
-                      </div>
-                    )}
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/35 via-transparent to-transparent" />
-                    <div className="absolute top-3 right-3 flex gap-2">
-                      <Badge className="bg-black/50 text-white backdrop-blur-xl border border-white/10">
-                        {formation.year}
-                      </Badge>
-                      <Badge className="bg-black/50 text-[var(--school-accent)] backdrop-blur-xl border border-[color-mix(in_srgb,var(--school-accent)_30%,transparent)]">
-                        {getAccessLabel(formation)}
-                      </Badge>
-                    </div>
-                    <div className="absolute bottom-3 left-3">
-                      <Badge
-                        className={
-                          formation.status === 'published'
-                            ? 'bg-emerald-500/90 text-black'
-                            : formation.status === 'draft'
-                              ? 'bg-amber-500/90 text-black'
-                              : 'bg-gray-500/90 text-white'
+                  {formation.status === 'published' ? 'Publié' : formation.status === 'draft' ? 'Brouillon' : 'Archivé'}
+                </Badge>
+              );
+
+              if (displayMode === 'list') {
+                return (
+                  <motion.div
+                    key={formation.id}
+                    initial={{ opacity: 0, y: 8 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.25, delay: Math.min(index * 0.02, 0.4) }}
+                  >
+                    <div
+                      role="button"
+                      tabIndex={0}
+                      onClick={() => openDetails(formation)}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter' || e.key === ' ') {
+                          e.preventDefault();
+                          openDetails(formation);
                         }
-                      >
-                        {formation.status === 'published' ? 'Publié' : formation.status === 'draft' ? 'Brouillon' : 'Archivé'}
-                      </Badge>
-                    </div>
-                  </div>
-
-                  <CardContent className="p-5">
-                    <h3 className="text-lg font-bold mb-2 line-clamp-1 transition-colors group-hover:text-[var(--lt-gold-ink)]" style={{ color: 'var(--lt-text)' }} title={formation.title}>
-                      {formation.title}
-                    </h3>
-                    <div className="flex items-center justify-between gap-3 text-sm text-zinc-500 mb-4">
-                      <div className="flex items-center gap-2">
-                        <Layers className="w-4 h-4" />
-                        <span className="text-xs">Structure</span>
+                      }}
+                      title={isOpening ? 'Ouverture…' : `Ouvrir « ${formation.title} »`}
+                      className="flex items-center gap-3 px-3 py-2 rounded-[12px] border border-[var(--lt-border)] bg-[var(--lt-card-bg)] hover:border-[color-mix(in_srgb,var(--school-accent)_45%,transparent)] hover:bg-[color-mix(in_srgb,var(--school-accent)_5%,var(--lt-card-bg))] cursor-pointer transition-colors"
+                    >
+                      {formation.thumbnail ? (
+                        <img src={formation.thumbnail} alt="" className="w-12 h-9 rounded-md object-cover shrink-0" />
+                      ) : (
+                        renderGeneratedCover(formation, 'w-12 h-9 rounded-md', 'text-xs')
+                      )}
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-semibold truncate" style={{ color: 'var(--lt-text)' }} title={formation.title}>
+                          {formation.title}
+                        </p>
+                        {formation.year ? <p className="text-[11px] text-zinc-500">{formation.year}</p> : null}
                       </div>
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="text-zinc-500 hover:opacity-80"
-                            disabled={structureLoading && structureLoadingId === formation.id}
-                            onClick={(e) => e.stopPropagation()}
-                          >
-                            <MoreVertical className="w-4 h-4" />
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end" className="bg-[var(--lt-card-bg)] border-[var(--lt-border)] text-zinc-700">
-                          {formation.status !== 'published' ? (
-                            <DropdownMenuItem onClick={() => handleSetStatus(formation, 'published')}>
-                              <BookOpen className="w-4 h-4 mr-2" /> Publier
-                            </DropdownMenuItem>
-                          ) : (
-                            <DropdownMenuItem onClick={() => handleSetStatus(formation, 'draft')}>
-                              <BookOpen className="w-4 h-4 mr-2" /> Mettre en brouillon
-                            </DropdownMenuItem>
-                          )}
-                          <DropdownMenuItem onClick={() => handleDuplicate(formation)}>
-                            <Copy className="w-4 h-4 mr-2" /> Dupliquer
-                          </DropdownMenuItem>
-                          <DropdownMenuItem onClick={() => navigate(`/studio/formation?editFormationId=${formation.id}`)}>
-                            <Sparkles className="w-4 h-4 mr-2" /> Éditer dans Studio
-                          </DropdownMenuItem>
-                          <DropdownMenuItem onClick={() => handleArchive(formation)}>
-                            <Archive className="w-4 h-4 mr-2" /> {formation.status === 'archived' ? 'Désarchiver' : 'Archiver'}
-                          </DropdownMenuItem>
-                          <DropdownMenuItem
-                            onClick={() => setAlertConfig({ open: true, type: 'delete', data: formation })}
-                            className="text-red-400 focus:text-red-400"
-                          >
-                            <Trash className="w-4 h-4 mr-2" /> Supprimer
-                          </DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
-                    </div>
-
-                    <div className="mt-4 pt-4 border-t border-[var(--lt-border)] text-center">
-                      <span className="text-xs text-zinc-400 transition-colors group-hover:text-[var(--lt-gold-ink)]">
-                        Cliquer pour voir les détails
+                      <span className="w-20 shrink-0 hidden sm:block">{statusBadge}</span>
+                      <span className="w-24 shrink-0 text-right text-xs text-zinc-500 hidden md:block">{getPriceLabel(formation)}</span>
+                      <span className="w-28 shrink-0 text-right text-xs text-zinc-500 tabular-nums hidden sm:block">
+                        {updatedLabel || '—'}
+                      </span>
+                      <span className="shrink-0" onClick={(e) => e.stopPropagation()}>
+                        {renderActionsMenu(formation)}
                       </span>
                     </div>
-                  </CardContent>
-                </Card>
-              </motion.div>
-            ))}
+                  </motion.div>
+                );
+              }
+
+              return (
+                <motion.div
+                  key={formation.id}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.4, delay: Math.min(index * 0.05, 0.6) }}
+                  whileHover={{ y: -4, scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                >
+                  <Card
+                    className="rounded-[14px] overflow-hidden border border-[var(--lt-border)] bg-[var(--lt-card-bg)] hover:border-[color-mix(in_srgb,var(--school-accent)_45%,transparent)] hover:shadow-[0_8px_24px_-12px_rgba(0,0,0,0.18)] transition-all group cursor-pointer"
+                    style={{ boxShadow: 'var(--lt-card-shadow)' }}
+                    onClick={() => openDetails(formation)}
+                    title={isOpening ? 'Ouverture…' : `Ouvrir « ${formation.title} »`}
+                  >
+                    <div className="h-44 relative overflow-hidden">
+                      {formation.thumbnail ? (
+                        <>
+                          <motion.img
+                            src={formation.thumbnail}
+                            alt={formation.title}
+                            className="w-full h-full object-cover"
+                            whileHover={{ scale: 1.08 }}
+                            transition={{ duration: 0.5 }}
+                          />
+                          {/* Voile de lisibilité UNIQUEMENT sur photo : sur l'aplat généré il grise pour rien. */}
+                          <div className="absolute inset-0 bg-gradient-to-t from-black/35 via-transparent to-transparent pointer-events-none" />
+                        </>
+                      ) : (
+                        renderGeneratedCover(formation, 'w-full h-full', 'text-4xl')
+                      )}
+                      <div className="absolute top-3 right-3 flex gap-2">
+                        {formation.year ? (
+                          <Badge className="bg-black/50 text-white backdrop-blur-xl border border-white/10">
+                            {formation.year}
+                          </Badge>
+                        ) : null}
+                        <Badge className="bg-black/55 text-[#f5f4ee] backdrop-blur-xl border border-white/10">
+                          {getAccessLabel(formation)}
+                        </Badge>
+                      </div>
+                      <div className="absolute bottom-3 left-3">{statusBadge}</div>
+                    </div>
+
+                    <CardContent className="p-4">
+                      <h3 className="text-base font-bold line-clamp-2 min-h-[2.6em] transition-colors group-hover:text-[var(--lt-gold-ink)]" style={{ color: 'var(--lt-text)' }} title={formation.title}>
+                        {formation.title}
+                      </h3>
+                      <div className="flex items-center justify-between gap-2 mt-2">
+                        {/* « Màj » abrégé : la version longue tronquait la date, qui est
+                            justement l'info qui distingue deux brouillons homonymes. */}
+                        <span className="text-xs text-zinc-500 tabular-nums truncate" title={updatedLabel ? `Dernière mise à jour : ${updatedLabel}` : undefined}>
+                          {updatedLabel ? `Màj ${updatedLabel}` : ''}
+                        </span>
+                        <div className="flex items-center gap-1 shrink-0">
+                          <button
+                            type="button"
+                            title="Ouvrir la structure (modules et leçons)"
+                            onClick={(e) => { e.stopPropagation(); openDetails(formation); }}
+                            disabled={isOpening}
+                            className="inline-flex items-center gap-1.5 text-xs text-zinc-500 px-2 py-1.5 rounded-md hover:text-[var(--school-accent)] hover:bg-[color-mix(in_srgb,var(--school-accent)_10%,transparent)] transition-colors disabled:opacity-60"
+                          >
+                            <Layers className="w-4 h-4" /> {isOpening ? 'Ouverture…' : 'Structure'}
+                          </button>
+                          {renderActionsMenu(formation)}
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                </motion.div>
+              );
+            })}
         </motion.div>
       </AnimatePresence>
       </div>
