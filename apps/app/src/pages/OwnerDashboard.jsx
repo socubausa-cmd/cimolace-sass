@@ -34,6 +34,8 @@ import SecretariatBillingPanel from '@/components/secretariat/SecretariatBilling
 import NgowazuluMentoratManagerTab from '@/components/ngowazulu/owner/NgowazuluMentoratManagerTab';
 import NgowazuluOperationsPanel from '@/components/ngowazulu/admin/NgowazuluOperationsPanel';
 import SiteReviewsModerationPanel from '@/components/marketing/SiteReviewsModerationPanel';
+import BookOrdersPanel from '@/components/boutique/BookOrdersPanel';
+import AccompanimentRequestsPanel from '@/components/boutique/AccompanimentRequestsPanel';
 import CommunicationShell from '@/components/school/CommunicationShell';
 import { SslThemeProvider, SSL_LIGHT_CLASS, ensureSslLightStyles } from '@/pages/school/student-school-life/sslTheme';
 import { useShellTint } from '@/lib/useShellTint';
@@ -85,6 +87,8 @@ export const OwnerDashboardBody = ({ activeTab, basePath = '/owner-dashboard' })
       case 'ngowazulu-mentorat': return <NgowazuluMentoratManagerTab />;
       case 'ngowazulu-operations': return <NgowazuluOperationsPanel />;
       case 'reviews': return <SiteReviewsModerationPanel />;
+      case 'book-orders': return <BookOrdersPanel />;
+      case 'accompaniment': return <AccompanimentRequestsPanel />;
       case 'support': return <SupportTab />;
       case 'school-life': return <SchoolLifeManagementTab />;
       case 'forum': {

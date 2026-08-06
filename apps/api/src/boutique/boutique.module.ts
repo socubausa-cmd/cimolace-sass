@@ -1,17 +1,23 @@
 import { Module } from '@nestjs/common';
 import { PawaPayModule } from '../pawapay/pawapay.module';
+import { SupabaseModule } from '../supabase/supabase.module';
+import { TenantModule } from '../tenant/tenant.module';
+import { AuthModule } from '../auth/auth.module';
 import { BoutiqueController } from './boutique.controller';
+import { BoutiqueAdminController } from './boutique-admin.controller';
 import { BoutiqueService } from './boutique.service';
+import { BoutiqueAdminService } from './boutique-admin.service';
 
 /**
- * Boutique numérique publique (vente de PDF + demandes d'accompagnement).
- * Aucune dépendance vers AuthModule/TenantModule : les visiteuses sont anonymes,
- * et un import de plus est un cycle potentiel dans le graphe de modules.
- * SupabaseModule est @Global → SupabaseService injectable sans import.
+ * Boutique numérique : la vitrine est PUBLIQUE (acheteuses anonymes), le suivi
+ * est réservé au staff du tenant.
+ *
+ * `TenantModule` + `AuthModule` sont nécessaires aux gardes du contrôleur admin.
+ * Combinaison déjà éprouvée par PublicReviewsModule — pas de cycle dans le graphe.
  */
 @Module({
-  imports: [PawaPayModule],
-  controllers: [BoutiqueController],
-  providers: [BoutiqueService],
+  imports: [PawaPayModule, SupabaseModule, TenantModule, AuthModule],
+  controllers: [BoutiqueController, BoutiqueAdminController],
+  providers: [BoutiqueService, BoutiqueAdminService],
 })
 export class BoutiqueModule {}

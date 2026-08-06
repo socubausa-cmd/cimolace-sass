@@ -76,6 +76,12 @@ export class SubmitReviewDto {
   website?: string;
 }
 
+/** Avancement d'une demande dans le pipeline (back-office). */
+export class UpdateRequestDto {
+  @IsIn(['nouvelle', 'contactee', 'planifiee', 'terminee', 'annulee'])
+  status: string;
+}
+
 /** Demande de rendez-vous pour l'accompagnement. */
 export class AccompanimentRequestDto {
   @IsOptional() @IsString() @Length(1, 40)

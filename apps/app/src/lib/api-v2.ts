@@ -1127,6 +1127,66 @@ export const boutiqueApi = {
     apiV2.post<ApiEnvelope<BoutiqueAck>>(`/boutique/accompagnement/${slug}/demande`, body).then(unwrap),
 };
 
+/**
+ * Suivi back-office de la boutique — réservé au staff DU TENANT (le serveur
+ * vérifie le rôle porté par l'appartenance, pas un rôle global).
+ */
+export interface BookOrder {
+  id: string;
+  productSlug: string;
+  provider: 'stripe' | 'pawapay';
+  amountCents: number;
+  displayAmount: number | null;
+  displayCurrency: string | null;
+  status: 'pending' | 'completed' | 'failed' | 'refunded';
+  buyerEmail: string;
+  buyerName: string | null;
+  buyerPhone: string | null;
+  country: string | null;
+  downloadCount: number;
+  downloadExpiresAt: string | null;
+  createdAt: string;
+  completedAt: string | null;
+}
+
+export interface AccompanimentRequest {
+  id: string;
+  programSlug: string;
+  formulaKey: string | null;
+  fullName: string;
+  email: string;
+  phone: string | null;
+  country: string | null;
+  preferredAt: string | null;
+  preferredNote: string | null;
+  channel: string | null;
+  message: string | null;
+  status: 'nouvelle' | 'contactee' | 'planifiee' | 'terminee' | 'annulee';
+  createdAt: string;
+  updatedAt: string;
+}
+
+export const boutiqueAdminApi = {
+  orders: (params?: { produit?: string; statut?: string }) =>
+    apiV2
+      .get<ApiEnvelope<{ orders: BookOrder[]; summary: Record<string, unknown> }>>(
+        '/boutique/admin/commandes', { params },
+      )
+      .then(unwrap),
+  resendLink: (orderId: string) =>
+    apiV2.post<ApiEnvelope<{ status: string; to: string }>>(
+      `/boutique/admin/commandes/${orderId}/renvoyer-lien`, {},
+    ).then(unwrap),
+  requests: (params?: { programme?: string; statut?: string }) =>
+    apiV2
+      .get<ApiEnvelope<{ requests: AccompanimentRequest[]; summary: Record<string, number> }>>(
+        '/boutique/admin/demandes', { params },
+      )
+      .then(unwrap),
+  updateRequest: (id: string, status: string) =>
+    apiV2.patch<ApiEnvelope<{ status: string }>>(`/boutique/admin/demandes/${id}`, { status }).then(unwrap),
+};
+
 // ── Boîte email org (infos@) — lecteur IMAP intégré (remplace les fonctions Netlify) ──
 export const orgMailboxApi = {
   sync: (body?: { maxMessages?: number; sinceDays?: number }) =>

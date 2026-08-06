@@ -2,7 +2,7 @@ import {
   LayoutDashboard, BookOpen, HeartHandshake as Handshake, Calendar, Library, CreditCard,
   Building2, Users, Settings, Bell, HelpCircle, Users as UsersIcon, Award, PieChart,
   Database, Users2, Sparkles, Link2, Megaphone, Flame, Star, ExternalLink, MessageCircle, Tags,
-  Film,
+  Film, ShoppingBag, HeartPulse,
 } from 'lucide-react';
 
 /**
@@ -65,6 +65,10 @@ export function buildOwnerMenuGroups(payoutTenantSlug, basePath = '/owner-dashbo
       items: [
         { id: 'catalog', icon: Tags, label: 'Catalogue & tarifs' },
         { id: 'payments', icon: CreditCard, label: 'Paiements' },
+        // Boutique numérique : ventes du livre + demandes d'accompagnement. Les deux
+        // arrivaient en base et par e-mail sans AUCUN écran de suivi.
+        { id: 'book-orders', icon: ShoppingBag, label: 'Ventes du livre' },
+        { id: 'accompaniment', icon: HeartPulse, label: 'Demandes d’accompagnement' },
         { id: 'tenant-encaissement', icon: ExternalLink, label: 'Encaissement (URL tenant)', href: isLiri ? '/liri/compte' : `/t/${payoutTenantSlug}/admin/settings` },
         { id: 'chariow-externes', icon: Link2, label: 'Chariow Externes', href: '/admin/billing?tab=external' },
       ],
