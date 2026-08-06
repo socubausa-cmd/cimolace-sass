@@ -27,6 +27,11 @@ let LiveController = class LiveController {
     async findAll(req) { return { data: await this.svc.findAll(req.tenant.id) }; }
     async findOne(req, id) { return { data: await this.svc.findOne(req.tenant.id, id) }; }
     async token(req, id, b) { return { data: await this.svc.generateToken(id, req.user.id, b?.role, req.tenant) }; }
+    async publicLink(req, id) { return { data: await this.svc.createPublicGuestPass(req.tenant.id, id, req.user.id) }; }
+    async createInvite(req, id, b) { return { data: await this.svc.createLiveSessionInvite(req.tenant.id, req.user.id, id, b || {}) }; }
+    async listInvites(req, id) { return { data: await this.svc.listLiveSessionInvites(req.tenant.id, id) }; }
+    async admitInvite(req, id, inviteId) { return { data: await this.svc.admitLiveSessionInvite(req.tenant.id, id, inviteId) }; }
+    async revokeInvite(req, id, inviteId) { return { data: await this.svc.revokeLiveSessionInvite(req.tenant.id, id, inviteId) }; }
     async start(req, id) { return { data: await this.svc.startSession(req.tenant.id, id) }; }
     async end(req, id) { return { data: await this.svc.endSession(req.tenant.id, id) }; }
     async recStart(req, id) { return { data: await this.svc.startRecording(req.tenant.id, id) }; }
@@ -68,6 +73,54 @@ __decorate([
     __metadata("design:paramtypes", [Object, String, Object]),
     __metadata("design:returntype", Promise)
 ], LiveController.prototype, "token", null);
+__decorate([
+    (0, common_1.Post)(":id/public-link"),
+    (0, roles_decorator_1.Roles)("owner", "admin", "teacher"),
+    __param(0, (0, common_1.Req)()),
+    __param(1, (0, common_1.Param)("id")),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, String]),
+    __metadata("design:returntype", Promise)
+], LiveController.prototype, "publicLink", null);
+__decorate([
+    (0, common_1.Post)(":id/invites"),
+    (0, roles_decorator_1.Roles)("owner", "admin", "teacher"),
+    __param(0, (0, common_1.Req)()),
+    __param(1, (0, common_1.Param)("id")),
+    __param(2, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, String, Object]),
+    __metadata("design:returntype", Promise)
+], LiveController.prototype, "createInvite", null);
+__decorate([
+    (0, common_1.Get)(":id/invites"),
+    (0, roles_decorator_1.Roles)("owner", "admin", "teacher"),
+    __param(0, (0, common_1.Req)()),
+    __param(1, (0, common_1.Param)("id")),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, String]),
+    __metadata("design:returntype", Promise)
+], LiveController.prototype, "listInvites", null);
+__decorate([
+    (0, common_1.Post)(":id/invites/:inviteId/admit"),
+    (0, roles_decorator_1.Roles)("owner", "admin", "teacher"),
+    __param(0, (0, common_1.Req)()),
+    __param(1, (0, common_1.Param)("id")),
+    __param(2, (0, common_1.Param)("inviteId")),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, String, String]),
+    __metadata("design:returntype", Promise)
+], LiveController.prototype, "admitInvite", null);
+__decorate([
+    (0, common_1.Post)(":id/invites/:inviteId/revoke"),
+    (0, roles_decorator_1.Roles)("owner", "admin", "teacher"),
+    __param(0, (0, common_1.Req)()),
+    __param(1, (0, common_1.Param)("id")),
+    __param(2, (0, common_1.Param)("inviteId")),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, String, String]),
+    __metadata("design:returntype", Promise)
+], LiveController.prototype, "revokeInvite", null);
 __decorate([
     (0, common_1.Post)(":id/start"),
     (0, roles_decorator_1.Roles)("owner", "admin", "teacher"),

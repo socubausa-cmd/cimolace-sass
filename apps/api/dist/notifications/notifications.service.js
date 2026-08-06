@@ -46,7 +46,7 @@ let NotificationsService = NotificationsService_1 = class NotificationsService {
     async send(tenantId, userId, payload) {
         const insert = (type) => this.supabase
             .from("notifications")
-            .insert({ tenant_id: tenantId, user_id: userId, type, title: payload.title, body: payload.body, is_read: false })
+            .insert({ tenant_id: tenantId, user_id: userId, type, title: payload.title, body: payload.body, is_read: false, action_url: payload.actionUrl ?? null })
             .select()
             .single();
         let { data, error } = await insert(payload.type);

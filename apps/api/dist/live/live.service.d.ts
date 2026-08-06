@@ -85,12 +85,43 @@ export declare class LiveService {
         userId: string;
         requestedRole: "student" | "host" | null;
     }>;
+    createPublicGuestPass(tenantId: string, sessionId: string, userId: string): Promise<{
+        passId: any;
+    }>;
+    private resolveGuestInvite;
     generateGuestLiveToken(sessionId: string, inviteId: string, tenantSlug?: string): Promise<{
         token: string;
         room: string;
         role: "guest";
         identity: string;
     }>;
+    getPublicGuestInfo(sessionId: string, inviteId: string, tenantSlug?: string): Promise<{
+        id: any;
+        title: any;
+        description: any;
+        session_type: any;
+        status: any;
+        scheduled_at: any;
+        started_at: any;
+        cover_image_url: any;
+        host_name: string | null;
+        tenant: {
+            slug: any;
+            name: any;
+        };
+    }>;
+    createLiveSessionInvite(tenantId: string, hostId: string, sessionId: string, dto: {
+        display_name?: string;
+        email?: string;
+        relationship?: string;
+        invited_user_id?: string;
+        kind?: "guest" | "member";
+    }): Promise<any>;
+    listLiveSessionInvites(tenantId: string, sessionId: string): Promise<any[]>;
+    private updateLiveInviteStatus;
+    admitLiveSessionInvite(tenantId: string, sessionId: string, inviteId: string): Promise<any>;
+    revokeLiveSessionInvite(tenantId: string, sessionId: string, inviteId: string): Promise<any>;
+    private sendLiveInviteEmail;
     maybeStartRecording(tenantId: string, sessionId: string): Promise<void>;
     roomNameFor(tenantSlug: string, externalRef: string): string;
     listRoomParticipants(tenantSlug: string, externalRef: string): Promise<string[]>;

@@ -13,12 +13,15 @@ const health_controller_1 = require("./health.controller");
 const supabase_module_1 = require("./supabase/supabase.module");
 const livekit_module_1 = require("./livekit/livekit.module");
 const auth_module_1 = require("./auth/auth.module");
+const password_reset_module_1 = require("./auth/password-reset.module");
 const tenant_module_1 = require("./tenant/tenant.module");
 const cimolace_module_1 = require("./cimolace/cimolace.module");
 const cimolace_backoffice_module_1 = require("./cimolace-backoffice/cimolace-backoffice.module");
 const cimolace_catalog_module_1 = require("./cimolace-catalog/cimolace-catalog.module");
 const billing_module_1 = require("./billing/billing.module");
 const checkout_module_1 = require("./checkout/checkout.module");
+const cagnotte_module_1 = require("./cagnotte/cagnotte.module");
+const boutique_module_1 = require("./boutique/boutique.module");
 const student_invite_module_1 = require("./student-invite/student-invite.module");
 const live_join_module_1 = require("./live-join/live-join.module");
 const live_module_1 = require("./live/live.module");
@@ -75,12 +78,15 @@ exports.AppModule = AppModule = __decorate([
             supabase_module_1.SupabaseModule,
             livekit_module_1.LiveKitModule,
             auth_module_1.AuthModule,
+            password_reset_module_1.PasswordResetModule,
             tenant_module_1.TenantModule,
             cimolace_module_1.CimolaceModule,
             cimolace_backoffice_module_1.CimolaceBackofficeModule,
             cimolace_catalog_module_1.CimolaceCatalogModule,
             billing_module_1.BillingModule,
             checkout_module_1.CheckoutModule,
+            cagnotte_module_1.CagnotteModule,
+            boutique_module_1.BoutiqueModule,
             student_invite_module_1.StudentInviteModule,
             live_join_module_1.LiveJoinModule,
             live_module_1.LiveModule,

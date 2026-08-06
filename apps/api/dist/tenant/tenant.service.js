@@ -12,6 +12,8 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.TenantService = void 0;
 exports.isEmbeddedTenant = isEmbeddedTenant;
 exports.isPlatformOrigin = isPlatformOrigin;
+exports.sanitizeTenantMetadata = sanitizeTenantMetadata;
+exports.nettoyerGlossaire = nettoyerGlossaire;
 const common_1 = require("@nestjs/common");
 const auth_service_1 = require("../auth/auth.service");
 const liri_entitlements_service_1 = require("../billing/liri-entitlements.service");
@@ -30,6 +32,78 @@ function isPlatformOrigin(originOrReferer) {
         return false;
     return /(^|\/\/|\.)cimolace\.space([/:]|$)/.test(s) || /localhost|127\.0\.0\.1/.test(s);
 }
+function sanitizeTenantMetadata(metadata) {
+    if (!metadata || typeof metadata !== "object" || Array.isArray(metadata))
+        return metadata;
+    const { social_apps: _secretApps, ...rest } = metadata;
+    return rest;
+}
+const GLO_MAX_ENTREES = 200;
+const GLO_MAX_VARIANTES = 12;
+const GLO_LONGUEUR_TERME = 80;
+const GLO_LONGUEUR_CATEGORIE = 40;
+const GLO_LONGUEUR_NOTE = 500;
+function cleGlossaire(mot) {
+    return String(mot ?? "")
+        .toLowerCase()
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "")
+        .replace(/[^a-z0-9]/g, "");
+}
+function nettoyerGlossaire(brut) {
+    if (!Array.isArray(brut))
+        return [];
+    const vues = new Set();
+    const sortie = [];
+    for (const item of brut) {
+        if (!item || typeof item !== "object")
+            continue;
+        const src = item;
+        const term = String(src.term ?? "").trim().slice(0, GLO_LONGUEUR_TERME);
+        if (!term)
+            continue;
+        const cle = cleGlossaire(term);
+        if (!cle || vues.has(cle))
+            continue;
+        vues.add(cle);
+        const brutesVariantes = Array.isArray(src.variants)
+            ? src.variants
+            : typeof src.variants === "string"
+                ? String(src.variants).split(/[,;\n]/)
+                : [];
+        const vuesVar = new Set([cle]);
+        const variants = [];
+        for (const v of brutesVariantes) {
+            const mot = String(v ?? "").trim().slice(0, GLO_LONGUEUR_TERME);
+            if (!mot)
+                continue;
+            const cv = cleGlossaire(mot);
+            if (!cv || vuesVar.has(cv))
+                continue;
+            vuesVar.add(cv);
+            variants.push(mot);
+            if (variants.length >= GLO_MAX_VARIANTES)
+                break;
+        }
+        sortie.push({
+            term,
+            variants,
+            category: String(src.category ?? "").trim().slice(0, GLO_LONGUEUR_CATEGORIE),
+            note: String(src.note ?? "").trim().slice(0, GLO_LONGUEUR_NOTE),
+            active: src.active === undefined ? true : !!src.active,
+        });
+        if (sortie.length >= GLO_MAX_ENTREES)
+            break;
+    }
+    return sortie;
+}
+function tableGlossaireAbsente(error) {
+    return error?.code === "42P01" || error?.code === "PGRST205";
+}
+const MSG_GLOSSAIRE_ABSENT = "Le vocabulaire n'est pas encore branché sur cette base : la table tenant_glossary "
+    + "n'existe pas. La migration 20260727180000_tenant_glossary.sql doit être appliquée "
+    + "(les migrations Cimolace passent par psql, hors-bande). En attendant, la relecture "
+    + "des sous-titres continue sans vocabulaire d'école.";
 let TenantService = class TenantService {
     constructor(authService, entitlements) {
         this.authService = authService;
@@ -60,6 +134,7 @@ let TenantService = class TenantService {
                 ...tenant,
                 role,
                 userRole: role,
+                metadata: sanitizeTenantMetadata(tenant.metadata),
                 data_region: tenant.data_region ?? "global",
             };
         }
@@ -77,6 +152,7 @@ let TenantService = class TenantService {
             ...tenant,
             role,
             userRole: role,
+            metadata: sanitizeTenantMetadata(tenant?.metadata),
             data_region: tenant?.data_region ?? "global",
         };
     }
@@ -107,6 +183,7 @@ let TenantService = class TenantService {
             ...tenant,
             role,
             userRole: role,
+            metadata: sanitizeTenantMetadata(tenant.metadata),
             data_region: tenant.data_region ?? "global",
         };
     }
@@ -387,6 +464,15 @@ let TenantService = class TenantService {
         if (dto.requiresStudentDossier !== undefined) {
             settings.requiresStudentDossier = dto.requiresStudentDossier;
         }
+        if (dto.memberDiscounts !== undefined) {
+            const clean = {};
+            for (const k of ['autonome', 'academique', 'prive', 'privilegie']) {
+                const v = Number(dto.memberDiscounts?.[k]);
+                if (Number.isFinite(v))
+                    clean[k] = Math.min(90, Math.max(0, Math.round(v)));
+            }
+            settings.memberDiscounts = clean;
+        }
         metadata.settings = settings;
         const { data } = await supabase
             .from("tenants")
@@ -395,6 +481,84 @@ let TenantService = class TenantService {
             .select("*")
             .single();
         return data;
+    }
+    async listInviteLinks(tenantId) {
+        const sb = this.authService.getClient();
+        const { data } = await sb
+            .from("tenant_invite_links")
+            .select("*")
+            .eq("tenant_id", tenantId)
+            .order("created_at", { ascending: false });
+        return data ?? [];
+    }
+    async createInviteLink(tenantId, body) {
+        const sb = this.authService.getClient();
+        const alphabet = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+        let code = "";
+        for (let i = 0; i < 8; i++)
+            code += alphabet[Math.floor(Math.random() * alphabet.length)];
+        const row = {
+            tenant_id: tenantId,
+            code,
+            label: String(body?.label || "").trim() || null,
+            expires_at: body?.expiresAt || null,
+            max_uses: body?.maxUses != null ? Math.max(1, Math.round(Number(body.maxUses))) : null,
+        };
+        const { data, error } = await sb
+            .from("tenant_invite_links")
+            .insert(row)
+            .select("*")
+            .single();
+        if (error)
+            throw new Error(error.message);
+        return data;
+    }
+    async updateInviteLink(tenantId, id, patch) {
+        const sb = this.authService.getClient();
+        const upd = {};
+        if (patch.isActive !== undefined)
+            upd.is_active = !!patch.isActive;
+        if (patch.label !== undefined)
+            upd.label = String(patch.label || "").trim() || null;
+        const { data, error } = await sb
+            .from("tenant_invite_links")
+            .update(upd)
+            .eq("id", id)
+            .eq("tenant_id", tenantId)
+            .select("*")
+            .single();
+        if (error)
+            throw new Error(error.message);
+        return data;
+    }
+    async deleteInviteLink(tenantId, id) {
+        const sb = this.authService.getClient();
+        const { error } = await sb
+            .from("tenant_invite_links")
+            .delete()
+            .eq("id", id)
+            .eq("tenant_id", tenantId);
+        if (error)
+            throw new Error(error.message);
+        return { ok: true };
+    }
+    async trackInviteUse(slug, code) {
+        const sb = this.authService.getClient();
+        const tenantId = await this.getActiveTenantIdBySlug(slug);
+        if (!tenantId)
+            return;
+        const { data: row } = await sb
+            .from("tenant_invite_links")
+            .select("id, uses")
+            .eq("tenant_id", tenantId)
+            .ilike("code", String(code).trim())
+            .maybeSingle();
+        if (!row)
+            return;
+        await sb
+            .from("tenant_invite_links")
+            .update({ uses: (row.uses || 0) + 1 })
+            .eq("id", row.id);
     }
     async updateOsKnowledge(tenantId, knowledge) {
         const supabase = this.authService.getClient();
@@ -412,6 +576,86 @@ let TenantService = class TenantService {
             .single();
         return data?.metadata
             ?.os_knowledge ?? null;
+    }
+    async getGlossaire(tenantId) {
+        const sb = this.authService.getClient();
+        const { data, error } = await sb
+            .from("tenant_glossary")
+            .select("term, variants, category, note, active")
+            .eq("tenant_id", tenantId)
+            .order("term", { ascending: true });
+        if (error) {
+            if (tableGlossaireAbsente(error)) {
+                return { entrees: [], indisponible: MSG_GLOSSAIRE_ABSENT };
+            }
+            throw new Error(error.message);
+        }
+        return { entrees: nettoyerGlossaire(data ?? []), indisponible: null };
+    }
+    async replaceGlossaire(tenantId, entrees, createdBy) {
+        const sb = this.authService.getClient();
+        const propre = nettoyerGlossaire(entrees);
+        const { data: existantes, error: erreurLecture } = await sb
+            .from("tenant_glossary")
+            .select("id, term")
+            .eq("tenant_id", tenantId);
+        if (erreurLecture) {
+            if (tableGlossaireAbsente(erreurLecture)) {
+                return { entrees: [], indisponible: MSG_GLOSSAIRE_ABSENT };
+            }
+            throw new Error(erreurLecture.message);
+        }
+        const parCle = new Map();
+        for (const l of (existantes ?? [])) {
+            const cle = cleGlossaire(l.term);
+            if (cle && !parCle.has(cle))
+                parCle.set(cle, l.id);
+        }
+        const gardes = new Set();
+        const aInserer = [];
+        for (const e of propre) {
+            const colonnes = {
+                term: e.term,
+                variants: e.variants,
+                category: e.category || null,
+                note: e.note || null,
+                active: e.active,
+            };
+            const id = parCle.get(cleGlossaire(e.term));
+            if (id) {
+                gardes.add(id);
+                const { error } = await sb
+                    .from("tenant_glossary")
+                    .update(colonnes)
+                    .eq("id", id)
+                    .eq("tenant_id", tenantId);
+                if (error)
+                    throw new Error(error.message);
+            }
+            else {
+                aInserer.push({
+                    tenant_id: tenantId,
+                    ...(createdBy ? { created_by: createdBy } : {}),
+                    ...colonnes,
+                });
+            }
+        }
+        if (aInserer.length > 0) {
+            const { error } = await sb.from("tenant_glossary").insert(aInserer);
+            if (error)
+                throw new Error(error.message);
+        }
+        const aSupprimer = [...parCle.values()].filter((id) => !gardes.has(id));
+        if (aSupprimer.length > 0) {
+            const { error } = await sb
+                .from("tenant_glossary")
+                .delete()
+                .eq("tenant_id", tenantId)
+                .in("id", aSupprimer);
+            if (error)
+                throw new Error(error.message);
+        }
+        return this.getGlossaire(tenantId);
     }
 };
 exports.TenantService = TenantService;

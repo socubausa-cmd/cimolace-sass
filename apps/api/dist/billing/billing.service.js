@@ -46,6 +46,58 @@ let BillingService = BillingService_1 = class BillingService {
             .emit(tenantId, event, data)
             .catch((e) => console.warn(`[billing webhook] émission tenant_webhooks échouée: ${e.message}`));
     }
+    async envoyerEmailTenant(tenantId, destinataire, sujet, corpsHtml) {
+        if (!destinataire)
+            return;
+        try {
+            const sb = this.supabase;
+            const { data: reglages } = tenantId
+                ? await sb
+                    .from("tenant_notification_settings")
+                    .select("email_from, email_from_name")
+                    .eq("tenant_id", tenantId)
+                    .maybeSingle()
+                : { data: null };
+            await sb.from("email_queue").insert({
+                tenant_id: tenantId ?? null,
+                to: destinataire,
+                from: reglages?.email_from ?? null,
+                from_name: reglages?.email_from_name ?? null,
+                subject: sujet,
+                html_body: corpsHtml,
+                status: "pending",
+            });
+        }
+        catch (e) {
+            this.logger.warn(`[billing email] mise en file échouée (${destinataire}): ${e.message}`);
+        }
+    }
+    async alerterCimolace(sujet, corpsHtml) {
+        const adresse = (process.env.CIMOLACE_BILLING_ALERT_EMAIL || "").trim();
+        if (!adresse) {
+            this.logger.warn(`[billing email] CIMOLACE_BILLING_ALERT_EMAIL non défini — alerte exploitant NON envoyée : « ${sujet} »`);
+            return;
+        }
+        await this.envoyerEmailTenant(null, adresse, sujet, corpsHtml);
+    }
+    static montantLisible(cents, devise) {
+        if (cents == null)
+            return "";
+        return `${(Number(cents) / 100).toFixed(2).replace(".", ",")} ${String(devise || "EUR").toUpperCase()}`;
+    }
+    async nomTenant(tenantId) {
+        try {
+            const { data } = await this.supabase
+                .from("tenants")
+                .select("name, slug")
+                .eq("id", tenantId)
+                .maybeSingle();
+            return data?.name || data?.slug || tenantId;
+        }
+        catch {
+            return tenantId;
+        }
+    }
     async getSubscription(tenantId) {
         const { data } = await this.supabase.from("subscriptions").select("*").eq("tenant_id", tenantId).single();
         return data;
@@ -1250,6 +1302,21 @@ let BillingService = BillingService_1 = class BillingService {
     unixToIso(unix) {
         return unix ? new Date(unix * 1000).toISOString() : null;
     }
+    static invoiceSubscriptionId(invoice) {
+        const line0 = invoice?.lines?.data?.[0] ?? {};
+        return (invoice?.subscription ??
+            invoice?.parent?.subscription_details?.subscription ??
+            line0?.parent?.subscription_item_details?.subscription ??
+            line0?.subscription ??
+            null);
+    }
+    static subscriptionPeriod(sub) {
+        const item0 = sub?.items?.data?.[0] ?? {};
+        return {
+            start: sub?.current_period_start ?? item0?.current_period_start ?? null,
+            end: sub?.current_period_end ?? item0?.current_period_end ?? null,
+        };
+    }
     mapStripeStatus(s) {
         switch (s) {
             case "active":
@@ -1359,10 +1426,11 @@ let BillingService = BillingService_1 = class BillingService {
         const customer = session.customer ?? sub?.customer ?? null;
         if (customer)
             patch.provider_customer_id = customer;
-        if (sub?.current_period_start)
-            patch.current_period_start = this.unixToIso(sub.current_period_start);
-        if (sub?.current_period_end)
-            patch.current_period_end = this.unixToIso(sub.current_period_end);
+        const periode = BillingService_1.subscriptionPeriod(sub);
+        if (periode.start)
+            patch.current_period_start = this.unixToIso(periode.start);
+        if (periode.end)
+            patch.current_period_end = this.unixToIso(periode.end);
         const matchCol = rowId ? "id" : "provider_checkout_id";
         const matchVal = rowId || session.id;
         const { data: updatedRows, error: updErr } = await sb.from("billing_subscriptions").update(patch).eq(matchCol, matchVal).select("id");
@@ -1397,17 +1465,36 @@ let BillingService = BillingService_1 = class BillingService {
                     currency: row.currency,
                     current_period_end: patch.current_period_end ?? null,
                 });
+                const emailClient = session.customer_details?.email || session.customer_email || null;
+                const montant = BillingService_1.montantLisible(row.amount_cents, row.currency);
+                const echeance = patch.current_period_end
+                    ? new Date(patch.current_period_end).toLocaleDateString("fr-FR")
+                    : null;
+                const espace = `${(process.env.FRONTEND_URL || "https://app.cimolace.space").replace(/\/$/, "")}/cimolace/billing`;
+                const nom = await this.nomTenant(row.tenant_id);
+                await this.envoyerEmailTenant(row.tenant_id, emailClient, "Votre abonnement Cimolace est actif", `<h2>Merci, votre abonnement est actif</h2>` +
+                    `<p>Nous avons bien reçu votre paiement${montant ? ` de <strong>${montant}</strong>` : ""}.</p>` +
+                    `<p>Votre abonnement est reconduit <strong>automatiquement</strong>${echeance ? `, prochain prélèvement le <strong>${echeance}</strong>` : ""}. Vous pouvez l'arrêter à tout moment depuis votre espace.</p>` +
+                    `<p style="margin:18px 0"><a href="${espace}" style="background:#d97757;color:#1f1e1c;padding:12px 22px;border-radius:8px;text-decoration:none;font-weight:600">Voir ma facturation</a></p>`);
+                await this.alerterCimolace(`Encaissement — ${nom}${montant ? ` — ${montant}` : ""}`, `<h2>Nouvel abonnement actif</h2>` +
+                    `<p><strong>${nom}</strong> vient de souscrire « ${row.plan_id} »${montant ? ` à <strong>${montant}</strong>` : ""}.</p>` +
+                    `<p>Payeur : ${emailClient ?? "inconnu"}<br>` +
+                    `Prochaine échéance : ${echeance ?? "non renseignée"}<br>` +
+                    `Abonnement Stripe : ${stripeSubId ?? "aucun"}</p>`);
             }
         }
     }
     async onInvoicePaid(invoice) {
-        const subId = invoice.subscription;
-        if (!subId)
+        const subId = BillingService_1.invoiceSubscriptionId(invoice);
+        if (!subId) {
+            this.logger.warn(`[billing webhook] invoice.paid sans id d'abonnement (facture=${invoice?.id ?? "?"}) — renouvellement NON enregistré`);
             return;
+        }
         const sub = await this.fetchStripeSubscription(subId);
         const patch = { status: "active", updated_at: new Date().toISOString() };
-        if (sub?.current_period_end)
-            patch.current_period_end = this.unixToIso(sub.current_period_end);
+        const fin = BillingService_1.subscriptionPeriod(sub).end;
+        if (fin)
+            patch.current_period_end = this.unixToIso(fin);
         else if (invoice?.lines?.data?.[0]?.period?.end)
             patch.current_period_end = this.unixToIso(invoice.lines.data[0].period.end);
         await this.supabase.from("billing_subscriptions").update(patch).eq("provider_subscription_id", subId);
@@ -1426,6 +1513,20 @@ let BillingService = BillingService_1 = class BillingService {
                 provider_invoice_id: invoice.id ?? null,
                 current_period_end: patch.current_period_end ?? null,
             });
+            if (invoice?.billing_reason !== "subscription_create") {
+                const montant = BillingService_1.montantLisible(invoice.amount_paid, invoice.currency);
+                const echeance = patch.current_period_end
+                    ? new Date(patch.current_period_end).toLocaleDateString("fr-FR")
+                    : null;
+                const nom = await this.nomTenant(row.tenant_id);
+                const emailClient = invoice.customer_email || null;
+                await this.envoyerEmailTenant(row.tenant_id, emailClient, "Votre abonnement Cimolace a été renouvelé", `<h2>Renouvellement confirmé</h2>` +
+                    `<p>Votre abonnement a été renouvelé${montant ? ` pour <strong>${montant}</strong>` : ""}.</p>` +
+                    `<p>${echeance ? `Prochain prélèvement le <strong>${echeance}</strong>.` : "Il se poursuit automatiquement."}</p>`);
+                await this.alerterCimolace(`Renouvellement — ${nom}${montant ? ` — ${montant}` : ""}`, `<h2>Abonnement renouvelé</h2>` +
+                    `<p><strong>${nom}</strong> — « ${row.plan_id} »${montant ? `, <strong>${montant}</strong>` : ""} encaissés.</p>` +
+                    `<p>Prochaine échéance : ${echeance ?? "non renseignée"}<br>Facture Stripe : ${invoice.id ?? "?"}</p>`);
+            }
         }
         await this.supabase
             .from("billing_invoices")
@@ -1433,9 +1534,11 @@ let BillingService = BillingService_1 = class BillingService {
             .eq("provider_transaction_id", invoice.id);
     }
     async onInvoiceFailed(invoice) {
-        const subId = invoice.subscription;
-        if (!subId)
+        const subId = BillingService_1.invoiceSubscriptionId(invoice);
+        if (!subId) {
+            this.logger.warn(`[billing webhook] invoice.payment_failed sans id d'abonnement (facture=${invoice?.id ?? "?"}) — impayé NON enregistré`);
             return;
+        }
         await this.supabase
             .from("billing_subscriptions")
             .update({ status: "past_due", updated_at: new Date().toISOString() })
@@ -1452,11 +1555,25 @@ let BillingService = BillingService_1 = class BillingService {
             currency: invoice.currency ?? null,
             provider_invoice_id: invoice.id ?? null,
         });
+        const montantDu = BillingService_1.montantLisible(invoice.amount_due, invoice.currency);
+        const nomDefaillant = row?.tenant_id ? await this.nomTenant(row.tenant_id) : "tenant inconnu";
+        const espaceFact = `${(process.env.FRONTEND_URL || "https://app.cimolace.space").replace(/\/$/, "")}/cimolace/billing`;
+        await this.envoyerEmailTenant(row?.tenant_id ?? null, invoice.customer_email || null, "Votre paiement Cimolace n'a pas abouti", `<h2>Le prélèvement a été refusé</h2>` +
+            `<p>Votre banque a refusé le prélèvement${montantDu ? ` de <strong>${montantDu}</strong>` : ""}. Votre accès reste ouvert pour le moment.</p>` +
+            `<p>Pour éviter toute interruption, mettez votre moyen de paiement à jour depuis votre espace.</p>` +
+            `<p style="margin:18px 0"><a href="${espaceFact}" style="background:#d97757;color:#1f1e1c;padding:12px 22px;border-radius:8px;text-decoration:none;font-weight:600">Mettre à jour ma carte</a></p>`);
+        await this.alerterCimolace(`IMPAYÉ — ${nomDefaillant}${montantDu ? ` — ${montantDu}` : ""}`, `<h2>Prélèvement refusé</h2>` +
+            `<p><strong>${nomDefaillant}</strong> est passé en <strong>past_due</strong>${montantDu ? ` (${montantDu} dus)` : ""}.</p>` +
+            `<p>Client : ${invoice.customer_email ?? "inconnu"}<br>` +
+            `Abonnement Stripe : ${subId}<br>` +
+            `Facture : ${invoice.id ?? "?"}</p>` +
+            `<p>Le service n'est pas coupé : la fenêtre de grâce court 7 jours après l'échéance.</p>`);
     }
     async onSubscriptionUpdated(sub) {
         const patch = { status: this.mapStripeStatus(sub.status), updated_at: new Date().toISOString() };
-        if (sub?.current_period_end)
-            patch.current_period_end = this.unixToIso(sub.current_period_end);
+        const finPeriode = BillingService_1.subscriptionPeriod(sub).end;
+        if (finPeriode)
+            patch.current_period_end = this.unixToIso(finPeriode);
         if (sub?.canceled_at)
             patch.canceled_at = this.unixToIso(sub.canceled_at);
         await this.supabase.from("billing_subscriptions").update(patch).eq("provider_subscription_id", sub.id);

@@ -20,6 +20,23 @@ export declare class LiveController {
             requestedRole: "student" | "host" | null;
         };
     }>;
+    publicLink(req: any, id: string): Promise<{
+        data: {
+            passId: any;
+        };
+    }>;
+    createInvite(req: any, id: string, b: any): Promise<{
+        data: any;
+    }>;
+    listInvites(req: any, id: string): Promise<{
+        data: any[];
+    }>;
+    admitInvite(req: any, id: string, inviteId: string): Promise<{
+        data: any;
+    }>;
+    revokeInvite(req: any, id: string, inviteId: string): Promise<{
+        data: any;
+    }>;
     start(req: any, id: string): Promise<{
         data: any;
     }>;

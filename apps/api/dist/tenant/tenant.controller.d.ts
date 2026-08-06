@@ -20,7 +20,7 @@ export declare class TenantController {
             tenants: any;
         }[];
     }>;
-    join(req: any, slug: string): Promise<{
+    join(req: any, slug: string, body: any): Promise<{
         data: {
             ok: boolean;
             joined: boolean;
@@ -29,6 +29,20 @@ export declare class TenantController {
             ok: boolean;
             joined: boolean;
             role?: undefined;
+        };
+    }>;
+    listInviteLinks(req: any): Promise<{
+        data: any;
+    }>;
+    createInviteLink(req: any, body: any): Promise<{
+        data: any;
+    }>;
+    updateInviteLink(req: any, id: string, body: any): Promise<{
+        data: any;
+    }>;
+    deleteInviteLink(req: any, id: string): Promise<{
+        data: {
+            ok: boolean;
         };
     }>;
     brandingBySlug(slug: string): Promise<{
@@ -81,6 +95,10 @@ export declare class TenantController {
     updateOwnOsKnowledge(req: any, body: {
         knowledge?: Record<string, unknown>;
     } | Record<string, unknown>): Promise<{} | null>;
+    currentVocabulaire(req: any): Promise<import("./tenant.service").GlossaireTenant>;
+    updateOwnVocabulaire(req: any, body: {
+        entrees?: unknown;
+    } | unknown[]): Promise<import("./tenant.service").GlossaireTenant>;
     updateOwnBranding(req: any, dto: UpdateBrandingDto): Promise<{
         data: any;
     }>;

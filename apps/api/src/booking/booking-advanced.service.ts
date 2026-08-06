@@ -6,6 +6,7 @@
 import { BadRequestException, ForbiddenException, Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { SupabaseService } from '../supabase/supabase.service';
+import { BookingService } from './booking.service';
 
 @Injectable()
 export class BookingAdvancedService {
@@ -14,6 +15,9 @@ export class BookingAdvancedService {
   constructor(
     private readonly supabase: SupabaseService,
     private readonly config: ConfigService,
+    // Journal d'audit + cloche staff : on passe par BookingService pour n'avoir
+    // qu'UN émetteur (jamais deux écritures d'audit divergentes).
+    private readonly booking: BookingService,
   ) {}
 
   // ═══════════════════════════════════════════════════════════════════════════
@@ -220,6 +224,11 @@ export class BookingAdvancedService {
       .single();
 
     if (error) throw new BadRequestException(error.message);
+    void this.booking.logAppointmentEvent(tenantId, input.appointment_id, 'note', {
+      actorType: 'client', actorId: user?.id ?? null,
+      summary: 'Demande de report déposée par le demandeur',
+      metadata: { reason: input.reason ?? null },
+    });
     return data;
   }
 
@@ -256,6 +265,15 @@ export class BookingAdvancedService {
       .single();
 
     if (error) throw new BadRequestException(error.message);
+    if ((data as any)?.appointment_id) {
+      void this.booking.logAppointmentEvent(tenantId, (data as any).appointment_id, 'note', {
+        actorType: 'staff', actorId: userId ?? null,
+        summary: input.decision === 'approved'
+          ? 'Demande de report approuvée par le staff'
+          : 'Demande de report refusée par le staff',
+        metadata: { note: input.note ?? null, new_slot_id: input.new_slot_id ?? null },
+      });
+    }
     return data;
   }
 
@@ -320,7 +338,110 @@ export class BookingAdvancedService {
       .select('*')
       .single();
 
+    // ⚠️ S'arrêter à booking_invitations laissait le système AVEUGLE : le RDV lié
+    // gardait son ancienne date/statut et personne n'était prévenu. On referme la
+    // boucle — best-effort : la réponse du demandeur est déjà enregistrée, elle ne
+    // doit jamais être perdue à cause d'un signal secondaire qui échoue.
+    if (invitation.appointment_id) {
+      try {
+        await this.settleInvitationOutcome(invitation, input.decision);
+      } catch (e) {
+        this.logger.warn(`respondInvitation settle: ${(e as Error).message}`);
+      }
+    }
+
     return { status: 'recorded', invitation: data };
+  }
+
+  /** Réponse d'invitation → mise à jour du RDV + journal + cloche staff + e-mail accueil. */
+  private async settleInvitationOutcome(
+    invitation: { id: string; tenant_id: string; appointment_id: string; slot_id?: string | null },
+    decision: 'accept' | 'decline',
+  ): Promise<void> {
+    const client = this.supabase.client as any;
+    const tenantId = invitation.tenant_id;
+    const appointmentId = invitation.appointment_id;
+    const accepted = decision === 'accept';
+
+    // Nouvelle date : celle du créneau proposé dans l'invitation (s'il y en a un).
+    let newStart: string | null = null;
+    if (accepted && invitation.slot_id) {
+      const { data: slot } = await client
+        .from('booking_slots')
+        .select('id, start_at')
+        .eq('id', invitation.slot_id)
+        .maybeSingle();
+      newStart = (slot as any)?.start_at ?? null;
+      if (slot) {
+        await client.from('booking_slots').update({ status: 'booked' }).eq('id', invitation.slot_id);
+      }
+    }
+
+    const patch: any = accepted
+      ? { status: 'confirmed', updated_at: new Date().toISOString() }
+      : { status: 'reschedule_declined', updated_at: new Date().toISOString() };
+    if (accepted && invitation.slot_id) patch.slot_id = invitation.slot_id;
+    await client
+      .from('appointments')
+      .update(patch)
+      .eq('id', appointmentId)
+      .eq('tenant_id', tenantId);
+
+    const whenTxt = newStart
+      ? new Intl.DateTimeFormat('fr-FR', { dateStyle: 'full', timeStyle: 'short', timeZone: 'Europe/Paris' }).format(new Date(newStart))
+      : '';
+
+    await this.booking.logAppointmentEvent(
+      tenantId,
+      appointmentId,
+      accepted ? 'client_responded' : 'reschedule_declined',
+      {
+        actorType: 'client',
+        summary: accepted
+          ? `Le demandeur a accepté le créneau proposé${whenTxt ? ` (${whenTxt})` : ''}`
+          : 'Le demandeur a refusé le report proposé',
+        metadata: { invitation_id: invitation.id, decision, newStart },
+      },
+    );
+
+    await this.booking.notifyStaff(tenantId, {
+      title: accepted ? 'Le demandeur a accepté le créneau ✓' : 'Le demandeur a refusé le report',
+      body: accepted
+        ? `Rendez-vous confirmé${whenTxt ? ` — ${whenTxt}` : ''}.`
+        : 'Le rendez-vous est passé en « Report refusé » : à recontacter.',
+      type: accepted ? 'success' : 'info',
+      email: true,
+      actionUrl: '/liri/rdv',
+    });
+
+    // E-mail à l'adresse d'accueil (notify_email) — même mécanique que l'accusé de
+    // sendRescheduleLink : file email_queue → worker → Resend (sender du tenant).
+    try {
+      const { data: ns } = await client
+        .from('tenant_notification_settings')
+        .select('email_from, email_from_name, notify_email')
+        .eq('tenant_id', tenantId)
+        .maybeSingle();
+      const to = String((ns as any)?.notify_email || '').trim();
+      if (!to) return;
+      const html = accepted
+        ? `<h2>Le demandeur a accepté le créneau ✓</h2>`
+          + `<p>Le rendez-vous est confirmé${whenTxt ? ` pour le <strong>${whenTxt}</strong>` : ''}.</p>`
+          + `<p style="color:#777;font-size:13px;">Prorascience — système de rendez-vous</p>`
+        : `<h2>Le demandeur a refusé le report</h2>`
+          + `<p>Le rendez-vous est passé en « Report refusé ». Vous pouvez le recontacter ou proposer un autre créneau.</p>`
+          + `<p style="color:#777;font-size:13px;">Prorascience — système de rendez-vous</p>`;
+      await client.from('email_queue').insert({
+        tenant_id: tenantId,
+        to,
+        from: (ns as any)?.email_from ?? null,
+        from_name: (ns as any)?.email_from_name ?? null,
+        subject: accepted ? 'RDV — le demandeur a accepté le créneau' : 'RDV — le demandeur a refusé le report',
+        html_body: html,
+      });
+    } catch (e) {
+      this.logger.warn(`respondInvitation email accueil: ${(e as Error).message}`);
+    }
   }
 
   // ═══════════════════════════════════════════════════════════════════════════

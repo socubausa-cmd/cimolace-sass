@@ -2,6 +2,19 @@ import { AuthService } from "../auth/auth.service";
 import { LiriEntitlementsService } from "../billing/liri-entitlements.service";
 export declare function isEmbeddedTenant(tenant: any): boolean;
 export declare function isPlatformOrigin(originOrReferer: string | undefined): boolean;
+export declare function sanitizeTenantMetadata(metadata: unknown): unknown;
+export interface EntreeGlossaire {
+    term: string;
+    variants: string[];
+    category: string;
+    note: string;
+    active: boolean;
+}
+export interface GlossaireTenant {
+    entrees: EntreeGlossaire[];
+    indisponible: string | null;
+}
+export declare function nettoyerGlossaire(brut: unknown): EntreeGlossaire[];
 export declare class TenantService {
     private authService;
     private entitlements;
@@ -92,6 +105,23 @@ export declare class TenantService {
     }): Promise<any>;
     updateTenantSettings(tenantId: string, dto: {
         requiresStudentDossier?: boolean;
+        memberDiscounts?: Record<string, number>;
     }): Promise<any>;
+    listInviteLinks(tenantId: string): Promise<any>;
+    createInviteLink(tenantId: string, body: {
+        label?: string;
+        expiresAt?: string;
+        maxUses?: number;
+    }): Promise<any>;
+    updateInviteLink(tenantId: string, id: string, patch: {
+        isActive?: boolean;
+        label?: string;
+    }): Promise<any>;
+    deleteInviteLink(tenantId: string, id: string): Promise<{
+        ok: boolean;
+    }>;
+    trackInviteUse(slug: string, code: string): Promise<void>;
     updateOsKnowledge(tenantId: string, knowledge: Record<string, unknown>): Promise<{} | null>;
+    getGlossaire(tenantId: string): Promise<GlossaireTenant>;
+    replaceGlossaire(tenantId: string, entrees: unknown, createdBy?: string): Promise<GlossaireTenant>;
 }

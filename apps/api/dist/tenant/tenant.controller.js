@@ -36,12 +36,27 @@ let TenantController = class TenantController {
         const memberships = await this.tenantService.getMineForUser(req.user.id);
         return { data: memberships };
     }
-    async join(req, slug) {
+    async join(req, slug, body) {
         const fromPlatformHost = (0, tenant_service_1.isPlatformOrigin)(req.headers?.origin || req.headers?.referer);
         const result = await this.tenantService.joinAsStudent(req.user.id, slug, fromPlatformHost);
         if (!result)
             throw new common_1.NotFoundException("École introuvable ou inactive.");
+        const invite = String(body?.invite || "").trim();
+        if (invite)
+            await this.tenantService.trackInviteUse(slug, invite).catch(() => undefined);
         return { data: result };
+    }
+    async listInviteLinks(req) {
+        return { data: await this.tenantService.listInviteLinks(req.tenant.id) };
+    }
+    async createInviteLink(req, body) {
+        return { data: await this.tenantService.createInviteLink(req.tenant.id, body ?? {}) };
+    }
+    async updateInviteLink(req, id, body) {
+        return { data: await this.tenantService.updateInviteLink(req.tenant.id, id, body ?? {}) };
+    }
+    async deleteInviteLink(req, id) {
+        return { data: await this.tenantService.deleteInviteLink(req.tenant.id, id) };
     }
     async brandingBySlug(slug) {
         const tenant = await this.tenantService.getTenantBySlug(slug);
@@ -109,6 +124,18 @@ let TenantController = class TenantController {
         }
         return this.tenantService.updateOsKnowledge(req.tenant.id, knowledge);
     }
+    async currentVocabulaire(req) {
+        return this.tenantService.getGlossaire(req.tenant.id);
+    }
+    async updateOwnVocabulaire(req, body) {
+        const entrees = Array.isArray(body)
+            ? body
+            : body?.entrees;
+        if (!Array.isArray(entrees)) {
+            throw new common_1.BadRequestException("Corps attendu : { entrees: [ { term, variants, category, note, active } ] }");
+        }
+        return this.tenantService.replaceGlossaire(req.tenant.id, entrees, req.user?.id);
+    }
     async updateOwnBranding(req, dto) {
         return {
             data: await this.tenantService.updateBranding(req.tenant.id, dto),
@@ -162,10 +189,51 @@ __decorate([
     (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
     __param(0, (0, common_1.Req)()),
     __param(1, (0, common_1.Param)("slug")),
+    __param(2, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, String, Object]),
+    __metadata("design:returntype", Promise)
+], TenantController.prototype, "join", null);
+__decorate([
+    (0, common_1.Get)("current/invite-links"),
+    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard, tenant_guard_1.TenantGuard, roles_guard_1.RolesGuard),
+    (0, roles_decorator_1.Roles)("owner", "admin"),
+    __param(0, (0, common_1.Req)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object]),
+    __metadata("design:returntype", Promise)
+], TenantController.prototype, "listInviteLinks", null);
+__decorate([
+    (0, common_1.Post)("current/invite-links"),
+    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard, tenant_guard_1.TenantGuard, roles_guard_1.RolesGuard),
+    (0, roles_decorator_1.Roles)("owner", "admin"),
+    __param(0, (0, common_1.Req)()),
+    __param(1, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, Object]),
+    __metadata("design:returntype", Promise)
+], TenantController.prototype, "createInviteLink", null);
+__decorate([
+    (0, common_1.Patch)("current/invite-links/:id"),
+    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard, tenant_guard_1.TenantGuard, roles_guard_1.RolesGuard),
+    (0, roles_decorator_1.Roles)("owner", "admin"),
+    __param(0, (0, common_1.Req)()),
+    __param(1, (0, common_1.Param)("id")),
+    __param(2, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, String, Object]),
+    __metadata("design:returntype", Promise)
+], TenantController.prototype, "updateInviteLink", null);
+__decorate([
+    (0, common_1.Delete)("current/invite-links/:id"),
+    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard, tenant_guard_1.TenantGuard, roles_guard_1.RolesGuard),
+    (0, roles_decorator_1.Roles)("owner", "admin"),
+    __param(0, (0, common_1.Req)()),
+    __param(1, (0, common_1.Param)("id")),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [Object, String]),
     __metadata("design:returntype", Promise)
-], TenantController.prototype, "join", null);
+], TenantController.prototype, "deleteInviteLink", null);
 __decorate([
     (0, common_1.Get)("by-slug/:slug/branding"),
     __param(0, (0, common_1.Param)("slug")),
@@ -227,6 +295,25 @@ __decorate([
     __metadata("design:paramtypes", [Object, Object]),
     __metadata("design:returntype", Promise)
 ], TenantController.prototype, "updateOwnOsKnowledge", null);
+__decorate([
+    (0, common_1.Get)("current/vocabulaire"),
+    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard, tenant_guard_1.TenantGuard, roles_guard_1.RolesGuard),
+    (0, roles_decorator_1.Roles)("owner", "admin"),
+    __param(0, (0, common_1.Req)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object]),
+    __metadata("design:returntype", Promise)
+], TenantController.prototype, "currentVocabulaire", null);
+__decorate([
+    (0, common_1.Put)("current/vocabulaire"),
+    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard, tenant_guard_1.TenantGuard, roles_guard_1.RolesGuard),
+    (0, roles_decorator_1.Roles)("owner", "admin"),
+    __param(0, (0, common_1.Req)()),
+    __param(1, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, Object]),
+    __metadata("design:returntype", Promise)
+], TenantController.prototype, "updateOwnVocabulaire", null);
 __decorate([
     (0, common_1.Patch)("current/branding"),
     (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard, tenant_guard_1.TenantGuard, roles_guard_1.RolesGuard),

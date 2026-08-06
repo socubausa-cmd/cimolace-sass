@@ -60,6 +60,7 @@ const STATUS = {
   requested: { label: 'À confirmer', dot: '#e6a23c', chip: 'border-amber-500/40 bg-amber-500/10 text-amber-300' },
   confirmed: { label: 'Confirmé', dot: '#5b9e6a', chip: 'border-emerald-500/40 bg-emerald-500/10 text-emerald-300' },
   cancelled: { label: 'Annulé', dot: '#c26565', chip: 'border-red-500/40 bg-red-500/10 text-red-300' },
+  reschedule_declined: { label: 'Report refusé', dot: '#c26565', chip: 'border-red-500/40 bg-red-500/10 text-red-300' },
   completed: { label: 'Terminé', dot: '#8a8f98', chip: 'border-white/15 bg-white/5 text-[#f5f4ee]/60' },
   no_show: { label: 'Absent', dot: '#8a8f98', chip: 'border-white/15 bg-white/5 text-[#f5f4ee]/60' },
 };
@@ -78,6 +79,8 @@ const EVENT_META = {
   requested: { dot: '#e6a23c' },
   reschedule_link_sent: { dot: '#e8a184' },
   client_rescheduled: { dot: '#5b9e6a' },
+  client_responded: { dot: '#5b9e6a' },
+  reschedule_declined: { dot: '#c26565' },
   host_rescheduled: { dot: '#5b9e6a' },
   confirmed: { dot: '#5b9e6a' },
   cancelled: { dot: '#c26565' },
@@ -89,6 +92,7 @@ const EVENT_META = {
 const EVENT_FALLBACK = {
   requested: 'Demande reçue', reschedule_link_sent: 'Lien de report envoyé',
   client_rescheduled: 'Le demandeur a reprogrammé', host_rescheduled: 'Report fixé par l’organisateur',
+  client_responded: 'Le demandeur a accepté le créneau', reschedule_declined: 'Le demandeur a refusé le report',
   confirmed: 'Confirmé', cancelled: 'Annulé / refusé', reminded: 'Relance envoyée',
   completed: 'Terminé', no_show: 'Absent', note: 'Note',
 };
@@ -144,7 +148,7 @@ function RdvBody() {
     requested: items.filter((a) => a.status === 'requested' && !isAwaiting(a)).length,
     reported: items.filter((a) => isAwaiting(a)).length,
     confirmed: items.filter((a) => a.status === 'confirmed' && !isAwaiting(a)).length,
-    cancelled: items.filter((a) => a.status === 'cancelled' && !isAwaiting(a)).length,
+    cancelled: items.filter((a) => (a.status === 'cancelled' || a.status === 'reschedule_declined') && !isAwaiting(a)).length,
     completed: items.filter((a) => (a.status === 'completed' || a.status === 'no_show') && !isAwaiting(a)).length,
     all: items.length,
   }), [items]);
@@ -153,7 +157,7 @@ function RdvBody() {
       case 'requested': return items.filter((a) => a.status === 'requested' && !isAwaiting(a));
       case 'reported': return items.filter((a) => isAwaiting(a));
       case 'confirmed': return items.filter((a) => a.status === 'confirmed' && !isAwaiting(a));
-      case 'cancelled': return items.filter((a) => a.status === 'cancelled' && !isAwaiting(a));
+      case 'cancelled': return items.filter((a) => (a.status === 'cancelled' || a.status === 'reschedule_declined') && !isAwaiting(a));
       case 'completed': return items.filter((a) => (a.status === 'completed' || a.status === 'no_show') && !isAwaiting(a));
       default: return items;
     }

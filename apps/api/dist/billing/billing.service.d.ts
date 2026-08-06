@@ -15,6 +15,10 @@ export declare class BillingService implements OnApplicationBootstrap {
     private get supabase();
     onApplicationBootstrap(): void;
     private notifyTenant;
+    private envoyerEmailTenant;
+    private alerterCimolace;
+    private static montantLisible;
+    private nomTenant;
     getSubscription(tenantId: string): Promise<any>;
     createSubscription(tenantId: string, plan: string, provider: string): Promise<any>;
     getInvoices(tenantId: string): Promise<any[]>;
@@ -237,6 +241,8 @@ export declare class BillingService implements OnApplicationBootstrap {
     private verifyStripeSignature;
     private fetchStripeSubscription;
     private unixToIso;
+    private static invoiceSubscriptionId;
+    private static subscriptionPeriod;
     private mapStripeStatus;
     private claimWebhookEvent;
     private releaseWebhookEvent;

@@ -41,7 +41,11 @@ let LiveService = LiveService_1 = class LiveService {
             "join_code", "production_live_type", "production_category", "room_mode",
             "timezone", "access_mode", "kind",
         ];
-        const row = { tenant_id: tenantId, status: "scheduled" };
+        const row = {
+            tenant_id: tenantId,
+            status: "scheduled",
+            scheduled_at: data?.scheduled_at || new Date().toISOString(),
+        };
         for (const k of COLS)
             if (data?.[k] !== undefined)
                 row[k] = data[k];
@@ -52,6 +56,8 @@ let LiveService = LiveService_1 = class LiveService {
             delete row.access_mode;
         if (!row.host_user_id && data?.teacher_id)
             row.host_user_id = data.teacher_id;
+        if (!row.teacher_id && row.host_user_id)
+            row.teacher_id = row.host_user_id;
         const { data: session, error } = await this.supabase
             .from("live_sessions")
             .insert(row)
@@ -150,6 +156,22 @@ let LiveService = LiveService_1 = class LiveService {
             .single();
         if (!data)
             throw new common_1.NotFoundException("Session introuvable");
+        const waitingClose = await this.supabase
+            .from('live_waiting_room_entries')
+            .update({ status: 'rejected' })
+            .eq('live_session_id', sessionId)
+            .eq('status', 'waiting');
+        if (waitingClose.error) {
+            this.logger.warn(`Fin live ${sessionId}: salle d'attente non vidée (${waitingClose.error.message})`);
+        }
+        const admittedClose = await this.supabase
+            .from('live_waiting_room_entries')
+            .update({ status: 'left' })
+            .eq('live_session_id', sessionId)
+            .eq('status', 'admitted');
+        if (admittedClose.error) {
+            this.logger.warn(`Fin live ${sessionId}: participants non clôturés (${admittedClose.error.message})`);
+        }
         return data;
     }
     async startRecording(tenantId, sessionId) {
@@ -588,18 +610,56 @@ let LiveService = LiveService_1 = class LiveService {
             : await this.liveKit.generateParticipantToken(roomName, userId, undefined, cappedTtlSeconds ?? "1h");
         return { token, room: roomName, role, userId, requestedRole: requestedRole ?? null };
     }
-    async generateGuestLiveToken(sessionId, inviteId, tenantSlug) {
+    async createPublicGuestPass(tenantId, sessionId, userId) {
+        const db = this.supabase;
+        const { data: session } = await db
+            .from("live_sessions").select("id, tenant_id").eq("id", sessionId).maybeSingle();
+        if (!session || session.tenant_id !== tenantId) {
+            throw new common_1.NotFoundException("Session introuvable");
+        }
+        const { data: existing } = await db
+            .from("access_passes")
+            .select("id")
+            .eq("resource_type", "live_session")
+            .eq("resource_id", sessionId)
+            .eq("status", "active")
+            .limit(1)
+            .maybeSingle();
+        if (existing?.id)
+            return { passId: existing.id };
+        const { data: created, error } = await db
+            .from("access_passes")
+            .insert({ user_id: userId, tenant_id: tenantId, resource_type: "live_session", resource_id: sessionId, status: "active" })
+            .select("id")
+            .maybeSingle();
+        if (error)
+            throw new common_1.BadRequestException(error.message);
+        return { passId: created?.id ?? null };
+    }
+    async resolveGuestInvite(sessionId, inviteId) {
         const { data: pass } = await this.supabase
             .from("access_passes")
             .select("id, user_id, tenant_id, resource_type, resource_id, status")
             .eq("id", inviteId)
             .maybeSingle();
-        if (!pass ||
-            pass.resource_type !== "live_session" ||
-            pass.resource_id !== sessionId ||
-            pass.status !== "active") {
-            throw new common_1.ForbiddenException("Lien d'accès invalide ou expiré.");
+        if (pass &&
+            pass.resource_type === "live_session" &&
+            pass.resource_id === sessionId &&
+            pass.status === "active") {
+            return { tenantId: pass.tenant_id, userId: pass.user_id ?? null, source: "pass" };
         }
+        const { data: inv } = await this.supabase
+            .from("live_session_invites")
+            .select("id, tenant_id, session_id, status, created_by")
+            .eq("id", inviteId)
+            .maybeSingle();
+        if (inv && inv.session_id === sessionId && inv.status !== "revoked") {
+            return { tenantId: inv.tenant_id, userId: inv.created_by ?? null, source: "invite" };
+        }
+        throw new common_1.ForbiddenException("Lien d'accès invalide ou expiré.");
+    }
+    async generateGuestLiveToken(sessionId, inviteId, tenantSlug) {
+        const invite = await this.resolveGuestInvite(sessionId, inviteId);
         const { data: session } = await this.supabase
             .from("live_sessions")
             .select("tenant_id, status, started_at, tenants(slug)")
@@ -607,7 +667,7 @@ let LiveService = LiveService_1 = class LiveService {
             .single();
         if (!session)
             throw new common_1.NotFoundException("Session introuvable");
-        if (session.tenant_id !== pass.tenant_id) {
+        if (session.tenant_id !== invite.tenantId) {
             throw new common_1.ForbiddenException("Accès refusé.");
         }
         const slug = tenantSlug ?? session?.tenants?.slug ?? sessionId;
@@ -637,9 +697,181 @@ let LiveService = LiveService_1 = class LiveService {
                 throw new common_1.ForbiddenException(`Forfait gratuit : ${limits.maxParticipants} participants maximum dans un live.`);
             }
         }
-        await this.liveKit.ensureRoom(roomName, sessionId, pass.user_id);
+        await this.liveKit.ensureRoom(roomName, sessionId, (invite.userId ?? undefined));
         const token = await this.liveKit.generateParticipantToken(roomName, identity, undefined, cappedTtlSeconds ?? "1h");
         return { token, room: roomName, role: "guest", identity };
+    }
+    async getPublicGuestInfo(sessionId, inviteId, tenantSlug) {
+        const invite = await this.resolveGuestInvite(sessionId, inviteId);
+        const { data: session } = await this.supabase
+            .from("live_sessions")
+            .select("id, tenant_id, title, description, session_type, status, scheduled_at, started_at, cover_image_url, host_user_id, tenants(slug, name)")
+            .eq("id", sessionId)
+            .single();
+        if (!session)
+            throw new common_1.NotFoundException("Session introuvable");
+        if (session.tenant_id !== invite.tenantId) {
+            throw new common_1.ForbiddenException("Accès refusé.");
+        }
+        let hostName = null;
+        if (session.host_user_id) {
+            try {
+                const { data: prof } = await this.supabase
+                    .from("profiles")
+                    .select("display_name, full_name")
+                    .eq("id", session.host_user_id)
+                    .maybeSingle();
+                hostName =
+                    prof?.display_name || prof?.full_name || null;
+            }
+            catch {
+                hostName = null;
+            }
+        }
+        return {
+            id: session.id,
+            title: session.title ?? null,
+            description: session.description ?? null,
+            session_type: session.session_type ?? null,
+            status: session.status ?? null,
+            scheduled_at: session.scheduled_at ?? null,
+            started_at: session.started_at ?? null,
+            cover_image_url: session.cover_image_url ?? null,
+            host_name: hostName,
+            tenant: {
+                slug: tenantSlug ?? session?.tenants?.slug ?? null,
+                name: session?.tenants?.name ?? null,
+            },
+        };
+    }
+    async createLiveSessionInvite(tenantId, hostId, sessionId, dto) {
+        const { data: session } = await this.supabase
+            .from("live_sessions")
+            .select("id, tenant_id, title, session_type, tenants(slug, name)")
+            .eq("id", sessionId)
+            .single();
+        if (!session || session.tenant_id !== tenantId) {
+            throw new common_1.NotFoundException("Session introuvable");
+        }
+        const isMember = dto.kind === "member" || !!dto.invited_user_id;
+        let displayName = String(dto.display_name || "").trim();
+        let email = String(dto.email || "").trim().toLowerCase();
+        if (isMember && dto.invited_user_id) {
+            try {
+                const { data: u } = await this.supabase.auth.admin.getUserById(dto.invited_user_id);
+                const meta = u?.user?.user_metadata || {};
+                if (!displayName)
+                    displayName = String(meta.full_name || meta.name || u?.user?.email || "Membre");
+                if (!email)
+                    email = String(u?.user?.email || "").toLowerCase();
+            }
+            catch {
+            }
+        }
+        if (!displayName)
+            displayName = isMember ? "Membre" : "Invité";
+        const { data, error } = await this.supabase
+            .from("live_session_invites")
+            .insert({
+            tenant_id: tenantId,
+            session_id: sessionId,
+            display_name: displayName,
+            relationship: String(dto.relationship || "").trim() || null,
+            invited_email: email || null,
+            invited_user_id: isMember ? dto.invited_user_id || null : null,
+            kind: isMember ? "member" : "guest",
+            status: isMember ? "admitted" : "invited",
+            created_by: hostId,
+        })
+            .select("*")
+            .single();
+        if (error || !data) {
+            throw new common_1.BadRequestException(error?.message || "Création de l'invitation impossible");
+        }
+        const emailStatus = await this.sendLiveInviteEmail(tenantId, data, session);
+        try {
+            await this.supabase
+                .from("live_session_invites")
+                .update({ email_status: emailStatus })
+                .eq("id", data.id);
+        }
+        catch {
+        }
+        return { ...data, email_status: emailStatus };
+    }
+    async listLiveSessionInvites(tenantId, sessionId) {
+        const { data: session } = await this.supabase
+            .from("live_sessions")
+            .select("id, tenant_id")
+            .eq("id", sessionId)
+            .single();
+        if (!session || session.tenant_id !== tenantId) {
+            throw new common_1.NotFoundException("Session introuvable");
+        }
+        const { data } = await this.supabase
+            .from("live_session_invites")
+            .select("*")
+            .eq("session_id", sessionId)
+            .order("created_at", { ascending: true });
+        return Array.isArray(data) ? data : [];
+    }
+    async updateLiveInviteStatus(tenantId, sessionId, inviteId, status) {
+        const { data: row } = await this.supabase
+            .from("live_session_invites")
+            .select("id, tenant_id, session_id")
+            .eq("id", inviteId)
+            .maybeSingle();
+        if (!row || row.tenant_id !== tenantId || row.session_id !== sessionId) {
+            throw new common_1.NotFoundException("Invitation introuvable");
+        }
+        const { data, error } = await this.supabase
+            .from("live_session_invites")
+            .update({ status, updated_at: new Date().toISOString() })
+            .eq("id", inviteId)
+            .select("*")
+            .single();
+        if (error)
+            throw new common_1.BadRequestException(error.message);
+        return data;
+    }
+    async admitLiveSessionInvite(tenantId, sessionId, inviteId) {
+        return this.updateLiveInviteStatus(tenantId, sessionId, inviteId, "admitted");
+    }
+    async revokeLiveSessionInvite(tenantId, sessionId, inviteId) {
+        return this.updateLiveInviteStatus(tenantId, sessionId, inviteId, "revoked");
+    }
+    async sendLiveInviteEmail(tenantId, invite, session) {
+        const to = String(invite?.invited_email || "").trim();
+        if (!to)
+            return "skipped";
+        try {
+            const { data: ns } = await this.supabase
+                .from("tenant_notification_settings")
+                .select("email_from, email_from_name")
+                .eq("tenant_id", tenantId)
+                .maybeSingle();
+            const slug = session?.tenants?.slug || "";
+            const orgName = session?.tenants?.name || "l'organisateur";
+            const base = process.env.SCHOOL_FRONTEND_URL || process.env.APP_URL || "https://prorascience.org";
+            const link = `${base}/live/${invite.session_id}/invite/${invite.id}${slug ? `?tenant=${encodeURIComponent(slug)}` : ""}`;
+            const title = session?.title || "un direct";
+            await this.supabase.from("email_queue").insert({
+                tenant_id: tenantId,
+                to,
+                from: ns?.email_from ?? null,
+                from_name: ns?.email_from_name ?? null,
+                subject: `Invitation — ${title}`,
+                html_body: `<h2>Vous êtes invité·e</h2>` +
+                    `<p>${String(invite.display_name || "Bonjour")}, ${orgName} vous invite à rejoindre « ${title} ».</p>` +
+                    `<p><a href="${link}" style="display:inline-block;background:#d97757;color:#000;padding:12px 22px;border-radius:6px;text-decoration:none;font-weight:700;">Rejoindre</a></p>` +
+                    `<p style="color:#888;font-size:12px;">Aucun compte requis. Si vous n'êtes pas concerné·e, ignorez cet email.</p>`,
+                status: "pending",
+            });
+            return "sent";
+        }
+        catch {
+            return "failed";
+        }
     }
     async maybeStartRecording(tenantId, sessionId) {
         if (!process.env.CF_R2_BUCKET)
