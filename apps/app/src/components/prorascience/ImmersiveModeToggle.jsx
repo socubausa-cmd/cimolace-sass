@@ -46,7 +46,7 @@ export default function ImmersiveModeToggle({ active = false, className = '', fl
         'transition-colors backdrop-blur',
         active
           ? 'border-white/20 bg-black/50 text-white/80 hover:bg-black/70'
-          : 'border-[color:var(--school-accent,#D4AF37)]/40 bg-[color:var(--school-accent,#D4AF37)]/12 text-[color:var(--school-accent,#D4AF37)] hover:bg-[color:var(--school-accent,#D4AF37)]/20',
+          : 'border-[color:var(--school-accent,#D4AF37)]/40 bg-[color:var(--school-accent,#D4AF37)]/[0.12] text-[color:var(--school-accent,#D4AF37)] hover:bg-[color:var(--school-accent,#D4AF37)]/20',
         className,
       ].join(' ')}
     >

@@ -96,7 +96,7 @@ export default function PublicPrayerBookingPage() {
         <div className="max-w-md text-center">
           <span className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-[#d97757]/20 text-[#e8a184]"><Check className="h-7 w-7" /></span>
           <h1 className="text-2xl font-extrabold">Votre séance est réservée 🙏</h1>
-          <p className="mt-3 text-[15px] leading-relaxed text-[#f5f4ee]/72">
+          <p className="mt-3 text-[15px] leading-relaxed text-[#f5f4ee]/[0.72]">
             {chosenLabel ? <>Nous vous attendons le <strong className="text-[#f5f4ee]">{chosenLabel}</strong>. </> : null}
             Vous recevrez une confirmation par e-mail et WhatsApp. Vous serez porté dans la prière.
           </p>
@@ -113,7 +113,7 @@ export default function PublicPrayerBookingPage() {
           <Sparkles className="h-3.5 w-3.5" /> Séance de prière · offerte
         </span>
         <h1 className="mt-4 text-3xl font-extrabold leading-tight sm:text-4xl">Réservez votre séance de prière</h1>
-        <p className="mt-3 text-[15px] leading-relaxed text-[#f5f4ee]/72">
+        <p className="mt-3 text-[15px] leading-relaxed text-[#f5f4ee]/[0.72]">
           En reconnaissance de votre offrande — un moment pour déposer votre requête et être porté dans la prière.
           Choisissez un créneau, nous vous confirmons par e-mail et WhatsApp.
         </p>

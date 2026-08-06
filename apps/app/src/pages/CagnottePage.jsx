@@ -288,7 +288,7 @@ export default function CagnottePage() {
           <h1 className="mt-5 max-w-3xl text-4xl font-extrabold leading-[1.05] tracking-tight sm:text-6xl" style={{ textWrap: 'balance' }}>
             Aidez-nous à <span className="text-[#e8a184]">filmer et enregistrer</span> chaque culte, en haute qualité.
           </h1>
-          <p className="mt-5 max-w-2xl text-[15px] leading-relaxed text-[#f5f4ee]/72 sm:text-lg">
+          <p className="mt-5 max-w-2xl text-[15px] leading-relaxed text-[#f5f4ee]/[0.72] sm:text-lg">
             Nous réunissons de quoi acheter <strong className="text-[#f5f4ee]">un {device}</strong> — un seul
             outil pour filmer les cultes, enregistrer les enseignements, et les stocker sans jamais rien effacer.
             Que vous soyez en Europe ou en Afrique, votre don compte.
@@ -373,7 +373,7 @@ export default function CagnottePage() {
                   { icon: Radio, t: 'Un seul outil, de bout en bout', d: 'Filmer, enregistrer, monter, diffuser en direct : tout tient dans l’appareil. Simple pour l’équipe, fiable pour la communauté.' },
                 ].map(({ icon: Icon, t, d }) => (
                   <div key={t} className="flex gap-4 rounded-xl border border-white/[0.06] bg-white/[0.02] p-4">
-                    <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-[#d97757]/12 text-[#e8a184]">
+                    <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-[#d97757]/[0.12] text-[#e8a184]">
                       <Icon className="h-5 w-5" />
                     </span>
                     <div>
@@ -391,11 +391,11 @@ export default function CagnottePage() {
                 <ShieldCheck className="h-5 w-5" />
                 <p className="font-semibold">Transparence</p>
               </div>
-              <p className="mt-2 text-[13.5px] leading-relaxed text-[#f5f4ee]/72">
+              <p className="mt-2 text-[13.5px] leading-relaxed text-[#f5f4ee]/[0.72]">
                 L’objectif couvre le <strong className="text-[#f5f4ee]">pack de captation complet</strong> —
                 chaque euro va à ce matériel, rien d’autre :
               </p>
-              <ul className="mt-3 space-y-1.5 text-[13px] text-[#f5f4ee]/72">
+              <ul className="mt-3 space-y-1.5 text-[13px] text-[#f5f4ee]/[0.72]">
                 {[
                   ['Samsung Galaxy S26 Ultra — 1 To', 'filmer en qualité pro, tout stocker'],
                   ['Coque renforcée magnétique', 'protéger l’appareil pendant les cultes'],

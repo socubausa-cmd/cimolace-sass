@@ -28,7 +28,7 @@ const STATUS_META = {
 };
 
 const inputCls =
-  'min-w-0 flex-1 rounded-lg border border-white/12 bg-black/25 px-3 py-2 text-[12.5px] text-white placeholder:text-white/35 outline-none focus:border-[#d4a36a]/60';
+  'min-w-0 flex-1 rounded-lg border border-white/[0.12] bg-black/25 px-3 py-2 text-[12.5px] text-white placeholder:text-white/35 outline-none focus:border-[#d4a36a]/60';
 
 function IconBtn({ title, onClick, children, tone }) {
   return (
@@ -37,7 +37,7 @@ function IconBtn({ title, onClick, children, tone }) {
       title={title}
       aria-label={title}
       onClick={onClick}
-      className="inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-lg border border-white/12 bg-white/[0.04] transition-colors hover:bg-white/[0.1]"
+      className="inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-lg border border-white/[0.12] bg-white/[0.04] transition-colors hover:bg-white/[0.1]"
       style={tone ? { color: tone } : undefined}
     >
       {children}
@@ -233,7 +233,7 @@ export default function LiveInviteManagePanel({ sessionId, sessionType, groupInv
           return (
             <div
               key={inv.id}
-              className="flex items-center gap-2.5 rounded-xl border border-white/8 bg-white/[0.03] px-2.5 py-2"
+              className="flex items-center gap-2.5 rounded-xl border border-white/[0.08] bg-white/[0.03] px-2.5 py-2"
             >
               <div
                 className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-[10.5px] font-bold text-[#2a2118]"
