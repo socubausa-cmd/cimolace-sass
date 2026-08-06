@@ -45,6 +45,8 @@ interface Stats { totalMembers: number; totalLives: number; totalCourses: number
 interface Org { name: string; slug: string; role?: string | null; plan?: string | null; billingStatus?: string | null; }
 
 interface Sub { status?: string; plan_id?: string; provider?: string; current_period_end?: string | null; }
+// Usage RÉEL du mois (GET /usage) : minutes live consommées (LiveKit) + quota inclus du plan.
+interface Usage { period?: string; live_minutes?: { used?: number; included?: number; extra?: number; remaining?: number }; }
 
 interface ResumeItem { id: string; icon: LucideIcon; title: string; sub: string; to: string; }
 interface ActivityItem { id: string; icon: LucideIcon; tint?: 'coral' | 'green' | 'muted'; title: string; sub: string; when: string; action?: string; to?: string; _at?: string; }
@@ -71,6 +73,7 @@ export function LiriPortalPage() {
 
   const [now, setNow] = useState(() => new Date());
   const [stats, setStats] = useState<Stats | null>(null);
+  const [usage, setUsage] = useState<Usage | null>(null);
   const [lives, setLives] = useState<Live[]>([]);
   const [org, setOrg] = useState<Org | null>(null);
   const [subs, setSubs] = useState<Sub[]>([]);
@@ -202,6 +205,11 @@ export function LiriPortalPage() {
       .then((r) => (r.ok ? r.json() : null))
       .then((d) => { const s = d?.data ?? d; if (s && typeof s.totalLives === 'number' && typeof s.totalMembers === 'number') setStats(s as Stats); })
       .catch(() => {});
+    // Usage RÉEL du mois (minutes live consommées + quota inclus du plan) → remplace l'estimation ×70.
+    fetch(`${base}/usage`, { headers: h })
+      .then((r) => (r.ok ? r.json() : null))
+      .then((d) => { let u: any = d; while (u && typeof u === 'object' && 'data' in u && !('live_minutes' in u)) u = u.data; if (u && u.live_minutes) setUsage(u as Usage); })
+      .catch(() => {});
     // Organisation réelle (nom, rôle, plan) pour l'en-tête + le menu compte.
     fetch(`${base}/tenants/current`, { headers: h })
       .then((r) => (r.ok ? r.json() : null))
@@ -275,7 +283,11 @@ export function LiriPortalPage() {
   // Rôle (créateur vs élève) — déclaré ICI car resumeItems/activityItems en dépendent.
   const isCreator = (isPreview && previewRole !== 'student') || isCreatorRole(tenantRole, org?.role);
 
-  const liveMinutes = (stats?.totalLives ?? 0) * 70;
+  // Minutes live RÉELLES du mois (LiveKit) + quota inclus du plan (null si non chargé).
+  const liveMinutes = Math.round(usage?.live_minutes?.used ?? 0);
+  const liveQuota = usage?.live_minutes?.included != null ? Math.round(usage.live_minutes.included) : null;
+  const liveOver = liveQuota != null && liveMinutes >= liveQuota;
+  const liveNear = liveQuota != null && !liveOver && liveMinutes >= liveQuota * 0.8;
 
   // Activité écosystème (créateur) : flux CRM global (membres/commandes/dons/deals) + RDV récents.
   useEffect(() => {
@@ -740,7 +752,7 @@ export function LiriPortalPage() {
                 {[
                   { v: stats?.totalLives ?? 0, l: 'sessions' },
                   { v: stats?.totalMembers ?? 0, l: 'membres' },
-                  { v: liveMinutes, l: 'min en live' },
+                  { v: liveQuota != null ? `${liveMinutes}/${liveQuota}` : liveMinutes, l: 'min en live' },
                   { v: `${euros(stats?.totalRevenueCents)} €`, l: 'revenus', coral: true },
                 ].map((s, i) => (
                   <div key={i} className="lp-soft rounded-2xl lp-line border lp-panel70 p-3">
@@ -780,7 +792,12 @@ export function LiriPortalPage() {
           <span className="hidden items-center gap-4 sm:flex">
             {isCreator && (
               <>
-                <span className="lp-faint">{liveMinutes} / 2 000 min ce mois</span>
+                <span
+                  className={liveOver ? 'text-red-400' : liveNear ? 'text-amber-400' : 'lp-faint'}
+                  title={liveOver ? 'Quota de minutes live épuisé — achetez un pack (Facturation)' : liveNear ? 'Proche du quota de minutes live du mois' : undefined}
+                >
+                  {liveMinutes}{liveQuota != null ? ` / ${liveQuota}` : ''} min ce mois{liveOver ? ' · épuisé' : ''}
+                </span>
                 <span className="h-3 w-px" style={{ background: 'rgba(255,255,255,.10)' }} />
               </>
             )}
