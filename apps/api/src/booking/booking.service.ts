@@ -18,7 +18,7 @@ import { DEEPSEEK_FAST_MODEL } from '../common/deepseek-models';
 import { buildAvailability, isSlotWithinRules } from './engine/availability';
 import { randomBytes } from 'crypto';
 import { NotificationsService } from '../notifications/notifications.service';
-import { isWhatsAppConfigured, sendWhatsAppTemplate } from '../common/whatsapp.util';
+import { isWhatsAppConfigured, resolveWaMsisdn, sendWhatsAppTemplate } from '../common/whatsapp.util';
 import type { TenantContext } from '../tenant/tenant.types';
 import type { CreateAppointmentDto, CreateSlotDto, SetPreparationDto, SubmitFeedbackDto, UpdateAppointmentDto } from './dto/booking.dto';
 
@@ -283,6 +283,7 @@ export class BookingService {
         .select('email_from, email_from_name')
         .eq('tenant_id', tenantId)
         .maybeSingle();
+      const bookingLink = process.env.BOOKING_PUBLIC_URL || 'https://prorascience.org/rendez-vous-priere';
       const html = `<h2>Votre demande de rendez-vous 🙏</h2><p>Bonjour,</p>`
         + `<p>Nous avons bien reçu votre demande « <strong>${sujet}</strong> »`
         + (whenClean ? ` pour le <strong>${whenClean}</strong>` : '')
@@ -290,6 +291,7 @@ export class BookingService {
         + (info.chosenStart
             ? `<p>Nous vous confirmerons ce créneau très prochainement.</p>`
             : `<p>Nous vous proposerons un créneau très prochainement.</p>`)
+        + `<p>Vous pouvez aussi choisir un créneau dès maintenant : <a href="${bookingLink}">${bookingLink}</a></p>`
         + `<p style="color:#777;font-size:13px;">Avec toute notre gratitude,<br/>Ngowazulu — Prorascience</p>`;
       await (this.supabase.client as any).from('email_queue').insert({
         tenant_id: tenantId,
@@ -323,6 +325,25 @@ export class BookingService {
       //    bien (accompagnement, décisions). Vaut pour la voie publique (anonyme) ET le chat
       //    élève → le client reçoit une vraie confirmation « demande bien reçue ».
       await this.queueRequesterAck(tenantId, info);
+
+      // Accusé WhatsApp au demandeur (best-effort) — renfort pour ceux qui ne lisent pas leurs
+      //    e-mails. UNIQUEMENT si WhatsApp est activé ET le numéro se normalise SANS ambiguïté
+      //    (resolveWaMsisdn → null pour un indicatif indevinable, on n'écrit jamais à un inconnu).
+      if (isWhatsAppConfigured()) {
+        const waMsisdn = resolveWaMsisdn(info.whatsapp);
+        if (waMsisdn) {
+          const lien = process.env.BOOKING_PUBLIC_URL || 'https://prorascience.org/rendez-vous-priere';
+          const phrase = info.chosenStart
+            ? `votre demande est bien reçue. Détails et report de votre créneau : ${lien}`
+            : `votre demande est bien reçue. Choisissez votre créneau ici : ${lien}`;
+          const r = await sendWhatsAppTemplate(waMsisdn, {
+            template: process.env.WHATSAPP_TEMPLATE_RDV || 'rdv_notification',
+            lang: process.env.WHATSAPP_TEMPLATE_LANG || 'fr',
+            bodyParams: [info.subject || 'votre rendez-vous', phrase],
+          });
+          if (!r.ok) this.logger.warn(`RDV ack WhatsApp KO: ${r.error}`);
+        }
+      }
 
       // Notif in-app « demande reçue » : seulement pour un vrai membre connecté (pas l'owner
       //    rattaché d'une demande anonyme). E-mail déjà couvert ci-dessus → email:false (0 doublon).

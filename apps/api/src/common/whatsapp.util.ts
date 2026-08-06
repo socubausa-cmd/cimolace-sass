@@ -31,6 +31,36 @@ export function normalizeWaMsisdn(raw: unknown): string {
   return String(raw ?? '').replace(/\D/g, '');
 }
 
+/**
+ * Résout un numéro SAISI (formulaire public) en MSISDN international pour Meta, SANS jamais
+ * deviner un indicatif au hasard — envoyer à un mauvais préfixe = écrire à un INCONNU. Règles :
+ *   - « +33… » ou « 0033… » → international explicite (on retire +/00)
+ *   - « 0X… » (local)       → on préfixe l'indicatif du tenant (`defaultCc`, ex. Gabon 241)
+ *   - déjà « <defaultCc>… »  → conservé tel quel
+ *   - sinon (ex. « 4385319012 » sans préfixe : indicatif indevinable) → null → ON N'ENVOIE PAS
+ * Renvoie null aussi si la longueur finale n'est pas plausible (10–15 chiffres) → l'e-mail
+ * reste alors le seul canal (best-effort, jamais de faux destinataire).
+ */
+export function resolveWaMsisdn(
+  raw: unknown,
+  defaultCc: string = process.env.WHATSAPP_DEFAULT_CC || '241',
+): string | null {
+  const s = String(raw ?? '').trim();
+  const digits = s.replace(/\D/g, '');
+  if (!digits) return null;
+  let msisdn: string | null = null;
+  if (s.startsWith('+')) msisdn = digits;
+  else if (digits.startsWith('00')) msisdn = digits.slice(2);
+  // Local commençant par 0 → indicatif du tenant. ⚠️ Le Gabon (241) CONSERVE le 0 dans le
+  // format international : « +241 06 86 33 36 » = MSISDN 24106863336 (confirmé par le wa_id qui
+  // livre). On NE retire donc PAS le 0. (Règle du plan gabonais ; à revoir si defaultCc change.)
+  else if (digits.startsWith('0')) msisdn = defaultCc + digits;
+  else if (digits.startsWith(defaultCc)) msisdn = digits;
+  else return null; // ni préfixe international, ni local avec 0, ni indicatif par défaut → ambigu
+  if (msisdn.length < 10 || msisdn.length > 15) return null;
+  return msisdn;
+}
+
 export async function sendWhatsAppTemplate(
   to: string,
   opts: { template: string; lang?: string; bodyParams?: string[] },
