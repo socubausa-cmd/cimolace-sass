@@ -245,7 +245,7 @@ export function LiriPortalPage() {
   // Le mini-agenda ne montrait que le scolaire → un RDV ou un live du jour était invisible.
   const fullAgenda = useMemo(() => {
     const rdv = (appts || [])
-      .filter((a) => a?.booking_slots?.start_at && a.status !== 'cancelled')
+      .filter((a) => a?.booking_slots?.start_at && a.status !== 'cancelled' && a.status !== 'reschedule_declined')
       .map((a) => {
         const notes = String(a.notes || '');
         const sujet = (notes.match(/Sujet\s*:\s*([\s\S]*?)(?:\s*Description\s*:|$)/i)?.[1] || 'Rendez-vous').trim();
@@ -268,7 +268,7 @@ export function LiriPortalPage() {
     const anns = (feed as any[]).filter((f) => f.kind === 'announcement');
     const datedFromFeed = (feed as any[]).filter((f) => f.kind !== 'announcement');
     const rdvFeed = (appts || [])
-      .filter((a) => a?.booking_slots?.start_at && a.status !== 'cancelled')
+      .filter((a) => a?.booking_slots?.start_at && a.status !== 'cancelled' && a.status !== 'reschedule_declined')
       .map((a) => {
         const notes = String(a.notes || '');
         const sujet = (notes.match(/Sujet\s*:\s*([\s\S]*?)(?:\s*Description\s*:|$)/i)?.[1] || 'Rendez-vous').trim();
@@ -359,6 +359,7 @@ export function LiriPortalPage() {
         const sujet = (notes.match(/Sujet\s*:\s*([\s\S]*?)(?:\s*Description\s*:|$)/i)?.[1] || 'Rendez-vous').trim();
         const st = a.status === 'confirmed' ? 'confirmé'
           : a.status === 'cancelled' ? 'annulé'
+          : a.status === 'reschedule_declined' ? 'report refusé'
           : a.status === 'completed' ? 'terminé'
           : a.status === 'no_show' ? 'absent'
           : a.status === 'booked' ? 'réservé'
