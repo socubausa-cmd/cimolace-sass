@@ -1,0 +1,22 @@
+name: Cagnotte — relance donateurs J+1
+
+# Relance quotidienne (max 3 par donateur) ceux qui ont donné mais n'ont pas encore
+# réservé leur séance de prière. La logique (24 h, max 3, « a pris un RDV ? ») vit côté API
+# dans CagnotteService.remindDonors — ce workflow ne fait que déclencher l'endpoint.
+on:
+  schedule:
+    - cron: '0 9 * * *' # tous les jours à 09:00 UTC
+  workflow_dispatch: {} # déclenchement manuel possible depuis l'onglet Actions
+
+jobs:
+  remind:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Déclenche la relance (API Cimolace)
+        run: |
+          code=$(curl -sS -o /tmp/out.json -w '%{http_code}' -X POST \
+            "https://api.cimolace.space/cagnotte/cron/remind-donors?key=${{ secrets.CAGNOTTE_CRON_KEY }}")
+          echo "HTTP $code"
+          cat /tmp/out.json 2>/dev/null || true
+          echo
+          test "$code" = "201" -o "$code" = "200"
