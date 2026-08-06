@@ -4,40 +4,50 @@
 -- Bloc 1 — Studio LIRI Migration
 -- ============================================================================
 
--- ── LIRI Course Workspaces (SmartBoard Designer + Course Builder) ────────────
+-- ── LIRI Course Workspaces — BLOC NEUTRALISÉ ────────────────────────────────
+-- ⛔ COLLISION DE SCHÉMA. La table `liri_course_workspaces` est créée par la migration
+-- ANTÉRIEURE 202604302290_liri_course_workspaces.sql (id / user_id / title / payload jsonb),
+-- qui est celle que le code utilise réellement (features/smartboard-konva-editor).
+-- Le bloc ci-dessous en déclarait une AUTRE (tenant_id / owner_id / slides_json…). Sur une
+-- base neuve, le `CREATE TABLE IF NOT EXISTS` était donc ignoré, puis
+-- `CREATE INDEX … (tenant_id)` échouait sur une colonne inexistante et CASSAIT toute la
+-- chaîne de migrations. Il est neutralisé ici plutôt que supprimé, pour garder la trace.
+-- ⚠️ Ne PAS le réactiver : il faudrait d'abord renommer la table ou migrer le code.
+-- (La clé étrangère `liri_render_jobs.workspace_id` plus bas reste valide : elle pointe sur
+--  la colonne `id` de la table 202604302290.)
 
-CREATE TABLE IF NOT EXISTS liri_course_workspaces (
-  id            UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  tenant_id     UUID NOT NULL REFERENCES tenants(id) ON DELETE CASCADE,
-  owner_id      UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
-  title         TEXT NOT NULL DEFAULT 'Nouveau workspace',
-  description   TEXT,
-  status        TEXT NOT NULL DEFAULT 'draft'
-                CHECK (status IN ('draft','in_progress','validated','live_ready','archived')),
-  pedagogical_model TEXT DEFAULT 'liri-v1'
-                CHECK (pedagogical_model IN ('liri-v1','failure-v2')),
-  theme         JSONB,
-  slides_json   JSONB,
-  copilot_json  JSONB,
-  source_text   TEXT,
-  source_type   TEXT DEFAULT 'text'
-                CHECK (source_type IN ('text','pdf','ppt','transcript')),
-  chapter_count INTEGER DEFAULT 0,
-  slide_count   INTEGER DEFAULT 0,
-  total_duration_min INTEGER,
-  quality_score REAL,
-  collaborators UUID[] DEFAULT '{}',
-  versions      JSONB DEFAULT '[]',
-  exported_formats TEXT[] DEFAULT '{}',
-  is_public     BOOLEAN DEFAULT false,
-  metadata      JSONB DEFAULT '{}',
-  created_at    TIMESTAMPTZ NOT NULL DEFAULT now(),
-  updated_at    TIMESTAMPTZ NOT NULL DEFAULT now()
-);
+-- CREATE TABLE IF NOT EXISTS liri_course_workspaces (
+--   id            UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+--   tenant_id     UUID NOT NULL REFERENCES tenants(id) ON DELETE CASCADE,
+--   owner_id      UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+--   title         TEXT NOT NULL DEFAULT 'Nouveau workspace',
+--   description   TEXT,
+--   status        TEXT NOT NULL DEFAULT 'draft'
+--                 CHECK (status IN ('draft','in_progress','validated','live_ready','archived')),
+--   pedagogical_model TEXT DEFAULT 'liri-v1'
+--                 CHECK (pedagogical_model IN ('liri-v1','failure-v2')),
+--   theme         JSONB,
+--   slides_json   JSONB,
+--   copilot_json  JSONB,
+--   source_text   TEXT,
+--   source_type   TEXT DEFAULT 'text'
+--                 CHECK (source_type IN ('text','pdf','ppt','transcript')),
+--   chapter_count INTEGER DEFAULT 0,
+--   slide_count   INTEGER DEFAULT 0,
+--   total_duration_min INTEGER,
+--   quality_score REAL,
+--   collaborators UUID[] DEFAULT '{}',
+--   versions      JSONB DEFAULT '[]',
+--   exported_formats TEXT[] DEFAULT '{}',
+--   is_public     BOOLEAN DEFAULT false,
+--   metadata      JSONB DEFAULT '{}',
+--   created_at    TIMESTAMPTZ NOT NULL DEFAULT now(),
+--   updated_at    TIMESTAMPTZ NOT NULL DEFAULT now()
+-- );
 
-CREATE INDEX idx_liri_workspaces_tenant ON liri_course_workspaces(tenant_id);
-CREATE INDEX idx_liri_workspaces_owner ON liri_course_workspaces(owner_id);
-CREATE INDEX idx_liri_workspaces_status ON liri_course_workspaces(status);
+-- CREATE INDEX idx_liri_workspaces_tenant ON liri_course_workspaces(tenant_id);
+-- CREATE INDEX idx_liri_workspaces_owner ON liri_course_workspaces(owner_id);
+-- CREATE INDEX idx_liri_workspaces_status ON liri_course_workspaces(status);
 
 -- ── LIRI Projects (Masterclass Factory, Formation Builder) ─────────────────
 
@@ -155,22 +165,24 @@ CREATE INDEX idx_liri_render_jobs_status ON liri_render_jobs(status);
 
 -- ── RLS ─────────────────────────────────────────────────────────────────────
 
-ALTER TABLE liri_course_workspaces ENABLE ROW LEVEL SECURITY;
+-- Neutralisé (voir collision de schéma en tête de fichier) :
+-- ALTER TABLE liri_course_workspaces ENABLE ROW LEVEL SECURITY;
 ALTER TABLE liri_projects ENABLE ROW LEVEL SECURITY;
 ALTER TABLE liri_formations ENABLE ROW LEVEL SECURITY;
 ALTER TABLE liri_assets ENABLE ROW LEVEL SECURITY;
 ALTER TABLE liri_render_jobs ENABLE ROW LEVEL SECURITY;
 
--- Workspaces: staff full access
-CREATE POLICY "staff_access_workspaces" ON liri_course_workspaces
-  FOR ALL USING (
-    EXISTS (
-      SELECT 1 FROM tenant_memberships tm
-      WHERE tm.tenant_id = liri_course_workspaces.tenant_id
-      AND tm.user_id = auth.uid()
-      AND tm.role IN ('owner','admin','teacher')
-    )
-  );
+-- Workspaces: staff full access — NEUTRALISÉ (la table réelle n'a pas de `tenant_id`,
+-- ses politiques RLS vivent dans 202604302290_liri_course_workspaces.sql).
+-- CREATE POLICY "staff_access_workspaces" ON liri_course_workspaces
+--   FOR ALL USING (
+--     EXISTS (
+--       SELECT 1 FROM tenant_memberships tm
+--       WHERE tm.tenant_id = liri_course_workspaces.tenant_id
+--       AND tm.user_id = auth.uid()
+--       AND tm.role IN ('owner','admin','teacher')
+--     )
+--   );
 
 -- Projects: staff full access
 CREATE POLICY "staff_access_projects" ON liri_projects
@@ -234,9 +246,11 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
-CREATE TRIGGER trg_liri_workspaces_updated_at
-  BEFORE UPDATE ON liri_course_workspaces
-  FOR EACH ROW EXECUTE FUNCTION update_liri_updated_at();
+-- NEUTRALISÉ : la table réelle a déjà son trigger `trg_liri_course_workspaces_updated_at`
+-- (202604302290) — c'est lui qui alimente le verrou de concurrence optimiste côté Designer.
+-- CREATE TRIGGER trg_liri_workspaces_updated_at
+--   BEFORE UPDATE ON liri_course_workspaces
+--   FOR EACH ROW EXECUTE FUNCTION update_liri_updated_at();
 
 CREATE TRIGGER trg_liri_projects_updated_at
   BEFORE UPDATE ON liri_projects
