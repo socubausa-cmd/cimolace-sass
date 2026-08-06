@@ -1520,7 +1520,6 @@ export default function LiveHostPage({ forceGuestRoute = false, joyKitSignalGran
         message={msg}
         phaseError={phaseError}
         liveShell={liveShell}
-        liriLiveUiLabel={liriLiveUiLabel}
       />
     );
   }
@@ -1530,7 +1529,6 @@ export default function LiveHostPage({ forceGuestRoute = false, joyKitSignalGran
       <LiveHostInvalidSessionScreen
         phaseError={phaseError}
         liveShell={liveShell}
-        liriLiveUiLabel={liriLiveUiLabel}
         onOpenStudio={() => navigate('/studio/live')}
       />
     );
@@ -1541,7 +1539,6 @@ export default function LiveHostPage({ forceGuestRoute = false, joyKitSignalGran
       <LiveHostEndedScreen
         isGuestUi={isGuestUi}
         liveShell={liveShell}
-        liriLiveUiLabel={liriLiveUiLabel}
         onContinue={() => (isGuestUi ? navigate('/app') : sessionId ? navigate(`/studio/live-post/${sessionId}`) : navigate(-1))}
       />
     );
