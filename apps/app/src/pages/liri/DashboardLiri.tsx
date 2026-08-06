@@ -308,13 +308,15 @@ export function DashboardLiri() {
 
   // Prompt transmis depuis la barre de commande de l'Accueil LIRI (/dashboard/liri?q=…)
   // → auto-envoi UNE seule fois. Rend la barre « Demandez à Prorascience » réellement connectée.
-  const [searchParams] = useSearchParams();
+  const [searchParams, setSearchParams] = useSearchParams();
   const autoSentRef = useRef(false);
   useEffect(() => {
     const q = searchParams.get('q');
     if (!q || autoSentRef.current || streaming) return;
     autoSentRef.current = true;
     void sendMessage(q);
+    // Retire ?q= de l'URL : sinon un F5 / retour navigateur re-déclenche l'envoi (prompt dupliqué).
+    setSearchParams((p) => { p.delete('q'); return p; }, { replace: true });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchParams]);
 

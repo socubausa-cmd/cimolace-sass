@@ -180,6 +180,9 @@ export function LiriPortalPage() {
 
   useEffect(() => { const t = setInterval(() => setNow(new Date()), 30_000); return () => clearInterval(t); }, []);
 
+  // Coupe la dictée si l'utilisateur quitte l'Accueil pendant l'écoute (fuite micro + setState post-unmount).
+  useEffect(() => () => { try { recognitionRef.current?.stop?.(); recognitionRef.current?.abort?.(); } catch { /* noop */ } }, []);
+
   // Ferme le menu compte au clic extérieur / Échap.
   useEffect(() => {
     if (!menuOpen) return;
@@ -278,13 +281,18 @@ export function LiriPortalPage() {
   // en cours, RÉEL) ; créateur = lives récents.
   const activityItems = useMemo<ActivityItem[]>(() => {
     if (isCreator) {
-      const liveRows: ActivityItem[] = recent.map((l) => ({
-        id: `live-${l.id}`, icon: l.ended_at ? Film : WandSparkles, tint: 'coral' as const,
-        title: l.title || 'Session live',
-        sub: l.ended_at ? 'replay disponible' : l.started_at ? 'en cours' : 'programmé',
-        when: fmtAgo(l.scheduled_at), _at: l.scheduled_at,
-        action: l.ended_at ? 'Ouvrir' : undefined, to: '/lives',
-      }));
+      const liveRows: ActivityItem[] = recent.map((l) => {
+        // Instant RÉEL de l'activité : fin > début > programmé (jamais un scheduled_at futur
+        // en tête du flux, ni epoch 1970 pour un live instantané sans scheduled_at).
+        const at = l.ended_at || l.started_at || l.scheduled_at || undefined;
+        return {
+          id: `live-${l.id}`, icon: l.ended_at ? Film : WandSparkles, tint: 'coral' as const,
+          title: l.title || 'Session live',
+          sub: l.ended_at ? 'replay disponible' : l.started_at ? 'en cours' : 'programmé',
+          when: fmtAgo(at), _at: at,
+          action: l.ended_at ? 'Ouvrir' : undefined, to: '/lives',
+        };
+      });
       const iconForType = (t: string): LucideIcon => {
         const s = String(t || '').toLowerCase();
         if (/member|contact|lead|inscription|adh[eé]s/.test(s)) return UserRound;
@@ -301,10 +309,16 @@ export function LiriPortalPage() {
       const apptRows: ActivityItem[] = apptActs.map((a) => {
         const notes = String(a.notes || '');
         const sujet = (notes.match(/Sujet\s*:\s*([\s\S]*?)(?:\s*Description\s*:|$)/i)?.[1] || 'Rendez-vous').trim();
+        const st = a.status === 'confirmed' ? 'confirmé'
+          : a.status === 'cancelled' ? 'annulé'
+          : a.status === 'completed' ? 'terminé'
+          : a.status === 'no_show' ? 'absent'
+          : a.status === 'booked' ? 'réservé'
+          : 'à confirmer';
         return {
           id: `appt-${a.id}`, icon: CalendarClock, tint: 'coral' as const,
           title: `RDV — ${sujet}`.slice(0, 58),
-          sub: a.status === 'confirmed' ? 'confirmé' : a.status === 'cancelled' ? 'annulé' : 'à confirmer',
+          sub: st,
           when: fmtAgo(a.created_at), _at: a.created_at, action: 'Voir', to: '/liri/rdv',
         };
       });
