@@ -3,7 +3,7 @@ import { LiriPortalShell } from '@/components/liri/LiriPortalShell';
 import { bookingApi } from '@/lib/api-v2';
 import {
   CalendarClock, Check, X, Mail, Phone, Loader2, RefreshCw, Inbox, MessageSquareText,
-  CalendarPlus, Radio, Send, ChevronRight, ArrowLeft, RotateCcw,
+  CalendarPlus, Radio, Send, ChevronRight, ArrowLeft, RotateCcw, Sparkles,
 } from 'lucide-react';
 
 const TZ = 'Europe/Paris';
@@ -84,6 +84,7 @@ function RdvBody() {
   const [reporterOpen, setReporterOpen] = useState(false);
   const [rStart, setRStart] = useState('');
   const [rReason, setRReason] = useState('');
+  const [drafting, setDrafting] = useState(false); // rédaction IA du mot de report en cours
 
   const load = useCallback(async () => {
     setLoading(true); setErr('');
@@ -153,13 +154,9 @@ function RdvBody() {
   // Envoie au demandeur un LIEN de re-planification (email + WhatsApp) : il choisit lui-même
   // un nouveau créneau parmi les disponibilités. C'est le flux « report par message + lien ».
   const sendLink = async (id) => {
-    const reason = window.prompt(
-      'Explication (optionnelle) envoyée au demandeur avec le lien pour choisir un nouveau créneau :',
-    );
-    if (reason === null) return; // annulé
     setBusyId(id); setErr(''); setMsg('');
     try {
-      const r = await bookingApi.sendRescheduleLink(id, reason.trim() || undefined);
+      const r = await bookingApi.sendRescheduleLink(id, rReason.trim() || undefined);
       const chans = [];
       if (r?.sentEmail) chans.push('email');
       if (r?.sentWhatsApp) chans.push('WhatsApp');
@@ -173,6 +170,17 @@ function RdvBody() {
     } finally { setBusyId(null); }
   };
 
+  // IA — rédige (ou réécrit à partir de ta note) le mot de report envoyé au demandeur.
+  const draftMessage = async (id) => {
+    setDrafting(true); setErr('');
+    try {
+      const r = await bookingApi.draftRescheduleMessage(id, rReason.trim() || undefined);
+      if (r?.message) setRReason(r.message);
+    } catch (e) {
+      setErr(e?.response?.data?.error?.message || e?.message || 'Rédaction IA indisponible.');
+    } finally { setDrafting(false); }
+  };
+
   const openRow = (a) => { setSelectedId(a.id); setMobileOpen(true); };
 
   const TABS = [
@@ -182,9 +190,9 @@ function RdvBody() {
   ];
 
   const detailProps = {
-    a: selected, busyId, err, reporterOpen, rStart, rReason,
+    a: selected, busyId, err, reporterOpen, rStart, rReason, drafting,
     setRStart, setRReason, confirm, cancel, startLive, sendLink, openReporter,
-    submitReschedule, closeReporter: () => setReporterOpen(false),
+    submitReschedule, draftMessage, closeReporter: () => setReporterOpen(false),
   };
 
   return (
@@ -310,8 +318,8 @@ function RdvRow({ a, selected, onOpen }) {
 
 /** Volet détail — message complet + contact + actions hiérarchisées. */
 function RdvDetail({
-  a, busyId, err, reporterOpen, rStart, rReason, setRStart, setRReason,
-  confirm, cancel, startLive, sendLink, openReporter, submitReschedule, closeReporter,
+  a, busyId, err, reporterOpen, rStart, rReason, drafting, setRStart, setRReason,
+  confirm, cancel, startLive, sendLink, openReporter, submitReschedule, draftMessage, closeReporter,
 }) {
   const st = statusOf(a);
   const info = parseNotes(a.notes);
@@ -411,23 +419,37 @@ function RdvDetail({
 
           {/* Reporter — dépliage progressif : lien au demandeur OU date manuelle */}
           {reporterOpen && (
-            <div className="rounded-xl border border-[#d97757]/25 bg-[#d97757]/[0.06] p-3.5">
+            <div className="space-y-3 rounded-xl border border-[#d97757]/25 bg-[#d97757]/[0.06] p-3.5">
+              {/* Mot au demandeur — partagé par les 2 options, rédigeable par l'IA */}
+              <div>
+                <div className="mb-1.5 flex items-center justify-between gap-2">
+                  <span className="text-[11px] font-semibold uppercase tracking-wide text-[#f5f4ee]/45">Mot au demandeur (optionnel)</span>
+                  <button type="button" disabled={drafting || isBusy} onClick={() => draftMessage(a.id)}
+                    className="inline-flex cursor-pointer items-center gap-1.5 rounded-lg border border-[#d97757]/45 bg-[#d97757]/10 px-2.5 py-1 text-[11.5px] font-semibold text-[#e8a184] transition-colors hover:bg-[#d97757]/20 disabled:opacity-60"
+                    title="L'IA rédige le message (ou le réécrit à partir de ta note)">
+                    {drafting ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Sparkles className="h-3.5 w-3.5" />} Rédiger avec l'IA
+                  </button>
+                </div>
+                <textarea value={rReason} onChange={(e) => setRReason(e.target.value)} rows={3}
+                  placeholder="Explication envoyée au demandeur — ou laisse l'IA la rédiger."
+                  className="w-full resize-y rounded-lg border border-white/10 bg-[#262624] px-3 py-2 text-sm leading-relaxed text-[#f5f4ee] outline-none placeholder:text-[#f5f4ee]/35 focus:border-[#d97757]" />
+              </div>
+
+              {/* Option A — le demandeur choisit son créneau parmi les disponibilités */}
               <button type="button" disabled={isBusy} onClick={() => sendLink(a.id)}
                 className="inline-flex min-h-[42px] w-full cursor-pointer items-center justify-center gap-1.5 rounded-lg border border-[#d97757]/40 bg-[#d97757]/10 px-3 text-[13px] font-semibold text-[#e8a184] transition-colors hover:bg-[#d97757]/20 disabled:opacity-60"
-                title="Le demandeur choisit lui-même un nouveau créneau (email + WhatsApp)">
+                title="Le demandeur choisit lui-même un nouveau créneau parmi tes disponibilités (email + WhatsApp)">
                 {isBusy ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />} Envoyer un lien au demandeur
               </button>
 
-              <div className="my-3 flex items-center gap-2 text-[11px] text-[#f5f4ee]/35">
-                <span className="h-px flex-1 bg-white/10" /> ou fixer la date <span className="h-px flex-1 bg-white/10" />
+              <div className="flex items-center gap-2 text-[11px] text-[#f5f4ee]/35">
+                <span className="h-px flex-1 bg-white/10" /> ou fixe la date toi-même <span className="h-px flex-1 bg-white/10" />
               </div>
 
+              {/* Option B — date fixée par l'hôte */}
               <div className="flex flex-col gap-2">
                 <input type="datetime-local" value={rStart} onChange={(e) => setRStart(e.target.value)}
                   className="h-10 rounded-lg border border-white/10 bg-[#262624] px-3 text-sm text-[#f5f4ee] outline-none focus:border-[#d97757] [color-scheme:dark]" />
-                <input type="text" value={rReason} onChange={(e) => setRReason(e.target.value)}
-                  placeholder="Explication envoyée au demandeur (optionnel)"
-                  className="h-10 rounded-lg border border-white/10 bg-[#262624] px-3 text-sm text-[#f5f4ee] outline-none placeholder:text-[#f5f4ee]/35 focus:border-[#d97757]" />
                 <button type="button" disabled={isBusy} onClick={() => submitReschedule(a.id)}
                   className="inline-flex min-h-[40px] cursor-pointer items-center justify-center gap-1.5 rounded-lg bg-[#d97757] px-4 text-[13px] font-bold text-[#1c1a18] transition-colors hover:bg-[#e08b6d] disabled:opacity-60">
                   {isBusy ? <Loader2 className="h-4 w-4 animate-spin" /> : <CalendarPlus className="h-4 w-4" />} Valider le report

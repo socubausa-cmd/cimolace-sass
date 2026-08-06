@@ -220,6 +220,18 @@ export class BookingController {
     return this.booking.sendRescheduleLink(id, tenant.id, { reason: body?.reason });
   }
 
+  // IA : rédige le petit mot de report envoyé au demandeur (Mistral → DeepSeek v4).
+  @Post('appointments/:id/draft-reschedule-message')
+  @UseGuards(RolesGuard)
+  @Roles('owner', 'admin', 'teacher', 'secretariat')
+  draftRescheduleMessage(
+    @Param('id') id: string,
+    @Body() body: { hint?: string },
+    @CurrentTenant() tenant: TenantContext,
+  ) {
+    return this.booking.draftRescheduleMessage(tenant.id, id, body?.hint);
+  }
+
   // Annulation par le propriétaire (élève/visiteur) — pas de rôle staff,
   // la propriété du RDV est vérifiée dans le service.
   @Post('appointments/:id/cancel')

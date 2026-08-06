@@ -14,6 +14,7 @@ import {
   regionStatus,
 } from './engine/secretary-matching';
 import { detectVisitorContext } from './engine/timezone-routing';
+import { DEEPSEEK_FAST_MODEL } from '../common/deepseek-models';
 import { buildAvailability, isSlotWithinRules } from './engine/availability';
 import { randomBytes } from 'crypto';
 import { NotificationsService } from '../notifications/notifications.service';
@@ -539,6 +540,91 @@ export class BookingService {
     }
 
     return { ok: true, link, token, hasEmail: !!email, hasWhatsApp: !!wa, sentEmail, sentWhatsApp };
+  }
+
+  /**
+   * IA — rédige le petit MOT de report envoyé au demandeur (2-3 phrases, FR, ton
+   * Prorascience). Fallback fournisseur : Mistral si `MISTRAL_API_KEY`, sinon
+   * DeepSeek v4-flash (⚠️ pas `deepseek-chat`, retiré → 400). Le lien n'est PAS
+   * inclus (ajouté automatiquement à l'envoi). Renvoie `{ message, provider }`.
+   */
+  async draftRescheduleMessage(tenantId: string, appointmentId: string, hint?: string) {
+    const client = this.supabase.client as any;
+    const { data: appt } = await client
+      .from('appointments')
+      .select('id, notes, booking_slots(start_at)')
+      .eq('id', appointmentId)
+      .eq('tenant_id', tenantId)
+      .maybeSingle();
+    if (!appt) throw new NotFoundException('Rendez-vous introuvable');
+
+    const notes = String((appt as any).notes || '');
+    const sujet = (notes.match(/Sujet\s*:\s*([\s\S]*?)(?:\s*Description\s*:|$)/i)?.[1] || 'votre rendez-vous').trim();
+    const description = (notes.match(/Description\s*:\s*([\s\S]*?)(?:\s*E-?mail\s*:|$)/i)?.[1] || '').trim();
+    const startAt = (appt as any)?.booking_slots?.start_at;
+    let whenStr: string | null = null;
+    if (startAt) {
+      const d = new Date(startAt);
+      if (!Number.isNaN(d.getTime())) {
+        try { whenStr = new Intl.DateTimeFormat('fr-FR', { dateStyle: 'full', timeStyle: 'short', timeZone: 'Africa/Libreville' }).format(d); } catch { whenStr = null; }
+      }
+    }
+    const { data: t } = await client.from('tenants').select('name').eq('id', tenantId).maybeSingle();
+    const org = (t as any)?.name || 'Prorascience';
+
+    const system =
+      `Tu es l'assistant de ${org}. Rédige un message COURT (2 à 3 phrases), chaleureux, ` +
+      `respectueux et sobre, en français, adressé à une personne dont le rendez-vous doit être ` +
+      `REPORTÉ. Le message s'excuse brièvement du report et l'invite à choisir elle-même un nouveau ` +
+      `créneau (NE mets PAS de lien : il sera ajouté automatiquement). Pas d'objet d'e-mail, pas de ` +
+      `formule de politesse lourde, pas de guillemets. Renvoie UNIQUEMENT le texte du message.`;
+    const user =
+      `Rendez-vous : « ${sujet} »${whenStr ? ` initialement prévu le ${whenStr}` : ''}.` +
+      (description ? ` Contexte de la demande : ${description.slice(0, 400)}.` : '') +
+      (hint && hint.trim() ? ` Précision de l'organisateur à intégrer : ${hint.trim()}.` : '');
+
+    const providers = [
+      { name: 'mistral', url: 'https://api.mistral.ai/v1/chat/completions', key: process.env.MISTRAL_API_KEY, model: 'mistral-large-latest' },
+      { name: 'deepseek', url: 'https://api.deepseek.com/chat/completions', key: process.env.DEEPSEEK_API_KEY, model: DEEPSEEK_FAST_MODEL },
+    ].filter((p) => !!p.key);
+    if (providers.length === 0) {
+      throw new BadRequestException('Aucun fournisseur IA configuré (MISTRAL_API_KEY / DEEPSEEK_API_KEY).');
+    }
+
+    let lastErr = '';
+    for (const p of providers) {
+      try {
+        const res = await fetch(p.url, {
+          method: 'POST',
+          headers: { Authorization: `Bearer ${p.key}`, 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            model: p.model,
+            max_tokens: 400,
+            temperature: 0.6,
+            messages: [
+              { role: 'system', content: system },
+              { role: 'user', content: user },
+            ],
+          }),
+        });
+        if (!res.ok) {
+          lastErr = `${p.name} HTTP ${res.status}`;
+          this.logger.warn(`draftRescheduleMessage ${lastErr}: ${(await res.text()).slice(0, 160)}`);
+          continue;
+        }
+        const j = await res.json();
+        const text = String(j?.choices?.[0]?.message?.content ?? '')
+          .trim()
+          .replace(/^["«»\s]+|["«»\s]+$/g, '')
+          .trim();
+        if (text) return { message: text, provider: p.name };
+        lastErr = `${p.name} réponse vide`;
+      } catch (e) {
+        lastErr = `${p.name}: ${(e as Error).message}`;
+        this.logger.warn(`draftRescheduleMessage ${lastErr}`);
+      }
+    }
+    throw new BadRequestException(`Rédaction IA indisponible pour le moment (${lastErr}).`);
   }
 
   /** Valide un token de report (booking_invitations) — lève si invalide/expiré/déjà utilisé. */

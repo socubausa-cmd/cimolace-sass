@@ -474,6 +474,9 @@ export const bookingApi = {
     apiV2.post<ApiEnvelope<any>>(`/booking/appointments/${id}/start-live`, {}).then(unwrap),
   sendRescheduleLink: (id: string, reason?: string) =>
     apiV2.post<ApiEnvelope<any>>(`/booking/appointments/${id}/reschedule-link`, { reason }).then(unwrap),
+  // IA — rédige le mot de report (Mistral → DeepSeek v4) : { message, provider }
+  draftRescheduleMessage: (id: string, hint?: string) =>
+    apiV2.post<ApiEnvelope<{ message: string; provider: string }>>(`/booking/appointments/${id}/draft-reschedule-message`, { hint }).then(unwrap),
   masterCalendar: (weekStart?: string) =>
     apiV2.get<ApiEnvelope<any>>('/booking/master-calendar' + (weekStart ? `?weekStart=${encodeURIComponent(weekStart)}` : '')).then(unwrap),
   getSettings: () => apiV2.get<ApiEnvelope<any>>('/booking/settings').then(unwrap),
