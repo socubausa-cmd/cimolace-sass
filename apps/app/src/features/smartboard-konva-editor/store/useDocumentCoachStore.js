@@ -4,9 +4,22 @@
  * Gère le cycle de vie complet de la création guidée d'un document :
  *   idle → detecting → questioning → generating → editing → reviewing
  *
- * Capacités :
- *  · document_architect — détecte le type, choisit le template, injecte les blocs
- *  · writing_coach     — questions guidées, reformulation, complétion, validation
+ * Ce qui est LOCAL (aucun réseau) :
+ *  · détection du type par mots-clés (DETECTION_MAP), rapprochement catalogue
+ *  · construction du plan de structure (buildDocumentPlan) — choix d'un modèle,
+ *    pas une rédaction
+ *  · pré-analyse de registre (analyserContexteLocal)
+ *
+ * Ce qui appelle réellement un modèle (via `lib/documentIntelligence.js`) :
+ *  · affinage du contexte (registre + formalité)
+ *  · rédaction intégrale du document (mode `auto`)
+ *  · reformulations, blocs de suggestion, terminologie
+ *
+ * ⛔ MODE CONTRÔLE LIBRE (`modeAssistance === 'libre'`) : le verrou est posé dans
+ *    documentIntelligence — aucune de ces fonctions ne part sur le réseau.
+ * ⛔ L'IA PROPOSE, elle n'écrit jamais : ce store ne touche pas au canvas.
+ *    Les propositions attendent dans `rewriteProposals` / `blocSuggestions` ;
+ *    l'insertion se fait côté interface via `consommerProposition(id)`.
  */
 import { create } from 'zustand';
 import {
@@ -15,6 +28,21 @@ import {
   searchTemplates,
   inferCoachTypeFromDomain,
 } from '@/features/smartboard-konva-editor/lib/documentTemplateLibrary';
+import {
+  MODES_ASSISTANCE,
+  REGISTRES,
+  definirModeAssistance,
+  analyserContexteLocal,
+  detecterContexte,
+  suggererBlocs,
+  suggererFormulation,
+  suggererMotTechnique,
+  regenererSuggestion as regenererSuggestionIA,
+  redigerDocumentComplet,
+} from '@/features/smartboard-konva-editor/lib/documentIntelligence';
+import { critiquerMiseEnPage } from '@/features/smartboard-konva-editor/lib/documentDesignCritique';
+
+export { MODES_ASSISTANCE };
 
 /* ─── Métadonnées des types de document ──────────────────────────── */
 export const DOC_TYPE_META = {
@@ -106,10 +134,11 @@ export const GUIDED_FLOWS = {
 };
 
 /* ─── Niveaux d'assistance ───────────────────────────────────────── */
+/** `mode` relie chaque niveau au verrou IA de documentIntelligence. */
 export const ASSISTANCE_LEVELS = [
-  { level: 1, label: 'Suggestion',      desc: 'L\'IA propose — vous rédigez',      icon: '💡' },
-  { level: 2, label: 'Co-rédaction',    desc: 'L\'IA construit section par section', icon: '✍️' },
-  { level: 3, label: 'Génération auto', desc: 'L\'IA rédige le document entier',   icon: '⚡' },
+  { level: 1, label: 'Suggestion',      desc: 'L\'IA propose — vous rédigez',      icon: '💡', mode: 'suggestions' },
+  { level: 2, label: 'Co-rédaction',    desc: 'L\'IA construit section par section', icon: '✍️', mode: 'suggestions' },
+  { level: 3, label: 'Génération auto', desc: 'L\'IA rédige le document entier',   icon: '⚡', mode: 'auto'        },
 ];
 
 /* ─── Détection d'intention ──────────────────────────────────────── */
@@ -173,7 +202,19 @@ const INITIAL = {
   validationIssues: [],
   coachMessages: [],
   isGenerating: false,
-  writingRequest: null,      // texte brut à reformuler
+  writingRequest: null,      // dernière demande de reformulation (instruction + mode)
+
+  /* ── Étage IA de rédaction ─────────────────────────────────────── */
+  modeAssistance: 'suggestions', // 'libre' | 'suggestions' | 'auto'
+  derniereDemande: '',           // dernier texte libre de l'utilisateur (source du contexte)
+  contexteDocument: null,        // sortie de detecterContexte
+  blocSuggestions: [],           // blocs prêts à insérer (tirer / coller / régénérer)
+  rewriteProposals: [],          // reformulations proposées — JAMAIS appliquées d'office
+  termeSuggestions: [],          // mots techniques proposés
+  documentRedige: null,          // sortie de redigerDocumentComplet
+  critiqueMiseEnPage: null,      // sortie de critiquerMiseEnPage (constats + corrections)
+  iaOccupee: null,               // libellé de la tâche IA en cours, sinon null
+  iaErreur: null,                // dernier échec IA, dit à l'utilisateur
 };
 
 /* ─── Store ──────────────────────────────────────────────────────── */
@@ -181,19 +222,54 @@ export const useDocumentCoachStore = create((set, get) => ({
   ...INITIAL,
 
   /* ── Mode ────────────────────────────────────────────────────── */
-  activateDocumentMode: () => {
-    set({ isDocumentMode: true });
+  activateDocumentMode: (modeAssistance) => {
+    const mode = modeAssistance ?? get().modeAssistance ?? 'suggestions';
+    definirModeAssistance(mode);
+    set({ isDocumentMode: true, modeAssistance: mode });
     get().addCoachMessage({
       role: 'ai',
-      text: '✦ **Architecte documentaire** activé — décrivez le document que vous souhaitez créer, ou choisissez un mode ci-dessous.',
+      text: mode === 'libre'
+        ? '✦ **Contrôle libre** — aucune IA ne sera appelée. Vous écrivez, je n’interviens que si vous basculez sur « Suggestions ».'
+        : '✦ **Architecte documentaire** activé — décrivez le document que vous souhaitez créer, ou choisissez un mode ci-dessous.',
     });
   },
-  deactivateDocumentMode: () => set({ ...INITIAL }),
+  deactivateDocumentMode: () => {
+    definirModeAssistance('suggestions');
+    set({ ...INITIAL });
+  },
   resetFlow: () => set({
     phase: 'idle', detectedType: null, guidedFlow: [], currentQIdx: 0,
     answers: {}, documentPlan: null, suggestions: [], validationIssues: [],
     isGenerating: false, writingRequest: null,
+    contexteDocument: null, blocSuggestions: [], rewriteProposals: [],
+    termeSuggestions: [], documentRedige: null, critiqueMiseEnPage: null,
+    iaOccupee: null, iaErreur: null,
   }),
+
+  /**
+   * Interrupteur du cahier des charges n°3.
+   * ⛔ 'libre' pose le verrou DANS documentIntelligence : plus aucun appel réseau,
+   *    y compris en arrière-plan (affinage de contexte, suggestions automatiques).
+   * @param {'libre'|'suggestions'|'auto'} mode
+   */
+  setModeAssistance: (mode) => {
+    const applique = definirModeAssistance(mode);
+    set({ modeAssistance: applique, iaErreur: null });
+    if (applique === 'libre') {
+      // Les propositions en attente ne sont pas jetées : elles restent visibles
+      // tant que l'utilisateur ne les a pas insérées ou effacées lui-même.
+      set({ iaOccupee: null });
+    }
+    get().addCoachMessage({
+      role: 'ai',
+      text: applique === 'libre'
+        ? '✦ **Contrôle libre** — je n’appelle plus aucun modèle. Rien ne part de votre navigateur.'
+        : applique === 'auto'
+          ? '✦ **Rédaction auto** — je rédigerai le document entier une fois vos réponses données.'
+          : '✦ **Suggestions** — je propose quand vous m’appelez, vous gardez la main.',
+    });
+    return applique;
+  },
 
   /* ── Détection d'intention ───────────────────────────────────── */
   detectIntent: (userText) => {
@@ -218,6 +294,10 @@ export const useDocumentCoachStore = create((set, get) => ({
         ? nearestTemplates
         : getTemplatesForCoachType(detected);
 
+    // Pré-analyse de registre : 100 % locale, elle ne coûte aucun aller-retour
+    // et sert de socle même en mode contrôle libre.
+    const contexteLocal = analyserContexteLocal(userText, detected);
+
     set({
       detectedType: detected,
       matchedTemplates: matched,
@@ -225,6 +305,8 @@ export const useDocumentCoachStore = create((set, get) => ({
       guidedFlow: flow,
       currentQIdx: 0,
       answers: {},
+      contexteDocument: contexteLocal,
+      derniereDemande: userText,
     });
 
     let prefix = '';
@@ -248,7 +330,40 @@ export const useDocumentCoachStore = create((set, get) => ({
         tplLine +
         `**${flow[0].q}**`,
     });
+
+    // Affinage du registre par le modèle — asynchrone, sans bloquer la question
+    // en cours. Verrouillé en mode libre par documentIntelligence.
+    void get().affinerContexte(userText, detected);
+
     return detected;
+  },
+
+  /* ── Point 4 du cahier : contexte administratif / commercial / juridique ── */
+  /**
+   * Affine registre + niveau de formalité. Ne remplace le contexte local que si
+   * le modèle a réellement répondu ; sinon on garde l'analyse locale et on le DIT
+   * (`contexteDocument.degrade`).
+   */
+  affinerContexte: async (texte, typeDoc) => {
+    if (get().modeAssistance === 'libre') return get().contexteDocument;
+    const type = typeDoc ?? get().detectedType ?? null;
+    set({ iaOccupee: 'contexte', iaErreur: null });
+    try {
+      const ctx = await detecterContexte(texte, type);
+      set({ contexteDocument: ctx, iaOccupee: null });
+      if (ctx?.source === 'llm') {
+        const reg = REGISTRES[ctx.registre];
+        get().addCoachMessage({
+          role: 'ai',
+          text: `✦ Contexte lu : **${reg?.label ?? ctx.registre}** · formalité **${ctx.formaliteLabel}** (${ctx.niveauFormalite}/5)`
+            + (ctx.intention ? `\n${ctx.intention}` : ''),
+        });
+      }
+      return ctx;
+    } catch (e) {
+      set({ iaOccupee: null, iaErreur: e?.message ?? 'Analyse du contexte impossible' });
+      return get().contexteDocument;
+    }
   },
 
   /* ── Répondre à une question guidée ─────────────────────────── */
@@ -264,15 +379,18 @@ export const useDocumentCoachStore = create((set, get) => ({
     set({ answers: newAnswers, currentQIdx: nextIdx });
 
     if (isLast) {
+      const auto = get().modeAssistance === 'auto';
       set({ phase: 'generating', isGenerating: true });
       get().addCoachMessage({
         role: 'ai',
-        text: `✦ Parfait, j'ai toutes les informations. **Construction du plan documentaire…**`,
+        text: auto
+          ? '✦ J’ai toutes les informations. **Je rédige le document…**'
+          : '✦ J’ai toutes les informations. **Choix de la structure…**',
       });
-      // Simuler la génération (en prod : appel API)
-      setTimeout(() => {
-        get().buildDocumentPlan(newAnswers);
-      }, 900);
+      // Le plan est LOCAL et immédiat (choix d'un modèle + liste des blocs).
+      // Seule la rédaction part sur le réseau, et uniquement en mode auto.
+      get().buildDocumentPlan(newAnswers);
+      if (auto) void get().genererDocumentComplet();
     } else {
       const next = guidedFlow[nextIdx];
       get().addCoachMessage({ role: 'ai', text: `✦ **${next.q}**` });
@@ -310,38 +428,114 @@ export const useDocumentCoachStore = create((set, get) => ({
       ? `\nModèle sélectionné : **${recommendedTpl.name}** · ${(recommendedTpl.style_variants?.length ?? 1)} variante${recommendedTpl.style_variants?.length > 1 ? 's' : ''} de style`
       : '';
 
+    // ⛔ Le libellé doit décrire ce qui vient RÉELLEMENT de se passer : à ce stade
+    //    une STRUCTURE a été choisie, aucun texte n'a été rédigé. L'ancien message
+    //    renvoyait vers un bouton « Générer le document » qui n'existait nulle part.
+    const modeAssistance = get().modeAssistance;
+    const suite =
+      modeAssistance === 'libre'
+        ? 'Contrôle libre : rien ne sera rédigé sans votre demande.'
+        : modeAssistance === 'auto'
+          ? 'Rédaction du contenu en cours…'
+          : 'Structure prête. Demandez-moi la rédaction d’un bloc quand vous le souhaitez.';
+
     get().addCoachMessage({
       role: 'ai',
       text:
-        `✦ **Plan créé** — ${plan.blocks.length} blocs · ${plan.pages} page${plan.pages > 1 ? 's' : ''} · Ton : ${plan.tone}${tplInfo}\n\n` +
+        `✦ **Structure choisie** — ${plan.blocks.length} blocs · ${plan.pages} page${plan.pages > 1 ? 's' : ''} · Ton : ${plan.tone}${tplInfo}\n\n` +
         `Mode : **${lvl?.label}**\n\n` +
-        `${assistanceLevel === 3 ? 'Cliquez **Générer le document** pour que je rédige le contenu complet.' : 'Les blocs sont prêts sur le canvas. Souhaitez-vous que je rédige le contenu ?'}`,
+        suite,
     });
 
     get()._generateSuggestions(plan);
     return plan;
   },
 
+  /* ── Point 2 du cahier : l'IA rédige TOUT le document ───────────── */
+  /**
+   * Rédige le contenu de tous les blocs requis du type détecté.
+   * ⛔ Le résultat est DÉPOSÉ dans `documentRedige` — il n'est jamais écrit
+   *    d'office sur le canvas ni par-dessus le texte de l'utilisateur.
+   *    L'interface propose l'insertion ; l'utilisateur la déclenche.
+   */
+  genererDocumentComplet: async () => {
+    const { modeAssistance, detectedType, documentPlan, answers, contexteDocument, derniereDemande } = get();
+    if (modeAssistance === 'libre') {
+      get().addCoachMessage({
+        role: 'ai',
+        text: '✦ Mode **contrôle libre** : je ne rédige rien. Basculez sur « Rédaction auto » si vous voulez que je m’en charge.',
+      });
+      return null;
+    }
+
+    const meta = DOC_TYPE_META[detectedType] ?? null;
+    const blocsRequis = meta?.requiredBlocks ?? documentPlan?.blocks ?? [];
+    const contexte =
+      contexteDocument ?? analyserContexteLocal(derniereDemande || '', detectedType);
+
+    set({ phase: 'generating', isGenerating: true, iaOccupee: 'redaction', iaErreur: null });
+
+    const res = await redigerDocumentComplet(detectedType, contexte, answers, {
+      blocsRequis,
+      titreDocument: documentPlan?.libraryTemplateName ?? meta?.label ?? 'Document',
+      modeleNom: documentPlan?.libraryTemplateName ?? null,
+      longueur: answers?.longueur ?? null,
+    });
+
+    if (!res?.ok) {
+      set({ phase: 'editing', isGenerating: false, iaOccupee: null, iaErreur: res?.message ?? 'Rédaction impossible' });
+      get().addCoachMessage({
+        role: 'ai',
+        text: `✦ **Rédaction impossible** — ${res?.message ?? 'modèle injoignable'}.\nLa structure reste en place ; réessayez ou rédigez à la main.`,
+      });
+      return res;
+    }
+
+    set({ documentRedige: res, phase: 'editing', isGenerating: false, iaOccupee: null });
+
+    const trous = res.blocsIncomplets?.length
+      ? `\n⚠️ ${res.blocsIncomplets.length} bloc(s) non rédigé(s) : ${res.blocsIncomplets.join(' · ')}`
+      : '';
+    get().addCoachMessage({
+      role: 'ai',
+      text:
+        `✦ **Document rédigé** — ${res.blocs.length} blocs prêts à insérer.${trous}\n\n` +
+        'Rien n’a été posé sur la page : à vous d’insérer les blocs que vous gardez.',
+    });
+    return res;
+  },
+
   /* ── Suggestions contextuelles ───────────────────────────────── */
+  /**
+   * Remarques locales sur la structure. `bloc` (quand il est présent) rend la
+   * remarque ACTIONNABLE : l'interface peut la brancher sur `demanderBlocs(bloc)`
+   * pour obtenir du texte prêt à insérer plutôt qu'un simple conseil.
+   */
   _generateSuggestions: (plan) => {
     const s = [];
     if (!plan.answers?.signature && plan.type !== 'cv') {
-      s.push({ type: 'suggest_signature', text: 'Ajouter une zone de signature',  severity: 'info'    });
+      s.push({ type: 'suggest_signature', text: 'Ajouter une zone de signature',  severity: 'info',    bloc: 'signature' });
     }
     if (plan.type === 'letter' && !plan.answers?.objet) {
-      s.push({ type: 'suggest_header',    text: 'Préciser l\'objet de la lettre', severity: 'warning' });
+      s.push({ type: 'suggest_header',    text: 'Préciser l\'objet de la lettre', severity: 'warning', bloc: 'objet' });
     }
     if (plan.pages > 1) {
       s.push({ type: 'suggest_page_break', text: 'Optimiser les sauts de page',   severity: 'info'    });
     }
     if (plan.type === 'report') {
-      s.push({ type: 'suggest_subtitle', text: 'Ajouter des sous-titres de sections', severity: 'info' });
+      s.push({ type: 'suggest_subtitle', text: 'Ajouter des sous-titres de sections', severity: 'info', bloc: 'sous-titres de sections' });
     }
     set({ suggestions: s });
   },
 
   /* ── Validation ──────────────────────────────────────────────── */
-  validateDocument: () => {
+  /**
+   * @param {Array<{x?:number,y?:number,width?:number,height?:number,type?:string,content?:{text?:string},style?:{fontSize?:number,fill?:string}}>} [objetsScene]
+   *   Objets réels de la page. ⛔ Sans eux, la validation ne regarde QUE le
+   *   questionnaire : un verdict « prêt pour export » sur une page dont les blocs
+   *   se superposent serait un mensonge. L'appelant doit passer la scène.
+   */
+  validateDocument: (objetsScene) => {
     const { documentPlan, answers } = get();
     const issues = [];
     if (!documentPlan) {
@@ -358,18 +552,71 @@ export const useDocumentCoachStore = create((set, get) => ({
       }
     }
 
+    /* ── Mise en page réelle ──────────────────────────────────────
+       ⛔ Aucun contrôle géométrique n'est réécrit ici : `critiquerMiseEnPage`
+          (lib/documentDesignCritique.js) mesure déjà débordement, marges,
+          chevauchement, contraste WCAG et hiérarchie typographique.
+          Deux validateurs vivants finiraient par rendre deux verdicts. */
+    const objets = Array.isArray(objetsScene) ? objetsScene : null;
+    let sceneLue = false;
+    if (objets) {
+      sceneLue = true;
+      const critique = critiquerMiseEnPage(objets, {}, {
+        typeDoc: documentPlan?.type ?? get().detectedType ?? null,
+        templateId: documentPlan?.libraryTemplateId ?? null,
+        registre: get().contexteDocument?.registre ?? null,
+      });
+      const gravites = { bloquant: 'error', majeur: 'error', mineur: 'warning', info: 'info' };
+      for (const c of critique.constats ?? []) {
+        issues.push({
+          type: c.regle,
+          message: c.mesure ? `${c.titre} — ${c.mesure}` : c.titre,
+          severity: gravites[c.gravite] ?? 'warning',
+          objetIds: c.objetIds ?? [],
+          correction: c.correction ?? null,
+        });
+      }
+      set({ critiqueMiseEnPage: critique });
+    } else {
+      // Un verdict qui n'a pas regardé la page ne peut pas dire « prêt pour export ».
+      issues.push({
+        type: 'scene_not_read',
+        message: 'Mise en page non analysée (scène non transmise au validateur)',
+        severity: 'warning',
+      });
+      set({ critiqueMiseEnPage: null });
+    }
+
     set({ validationIssues: issues, phase: 'reviewing' });
 
+    const bloquants = issues.filter((i) => i.severity === 'error').length;
     const msg = issues.length === 0
-      ? '✦ Document **validé** — aucun problème détecté. Prêt pour export PDF ✓'
-      : `✦ **${issues.length} point${issues.length > 1 ? 's' : ''} à vérifier** avant finalisation.`;
+      ? '✦ Document **validé** — structure et mise en page contrôlées. Prêt pour export PDF ✓'
+      : bloquants > 0
+        ? `✦ **${bloquants} problème${bloquants > 1 ? 's' : ''} bloquant${bloquants > 1 ? 's' : ''}** avant export` +
+          (issues.length > bloquants ? ` · ${issues.length - bloquants} point(s) à vérifier` : '')
+        : `✦ **${issues.length} point${issues.length > 1 ? 's' : ''} à vérifier** avant finalisation.` +
+          (sceneLue ? '' : '\n\n*Mise en page non contrôlée.*');
 
     get().addCoachMessage({ role: 'ai', text: msg });
     return issues;
   },
 
-  /* ── Reformulation ───────────────────────────────────────────── */
-  requestRewrite: (instruction, mode = 'formalize') => {
+  /* ── Reformulation (point 1 du cahier) ──────────────────────────── */
+  /**
+   * Reformule un extrait et DÉPOSE les propositions dans `rewriteProposals`.
+   *
+   * ⛔ Aucune écriture automatique : le texte collé par l'utilisateur n'est ni
+   *    remplacé ni perdu (il reste dans `writingRequest.instruction`).
+   *    L'insertion passe par `consommerProposition(id)` côté interface.
+   *
+   * @param {string} instruction — le texte à reformuler
+   * @param {'formalize'|'simplify'|'legalize'|'expand'|'compress'|'admin'} [mode]
+   */
+  requestRewrite: async (instruction, mode = 'formalize') => {
+    const source = String(instruction ?? '').trim();
+    if (!source) return null;
+
     const modeLabels = {
       formalize:   'Rendre plus formel',
       simplify:    'Simplifier',
@@ -378,16 +625,165 @@ export const useDocumentCoachStore = create((set, get) => ({
       compress:    'Résumer',
       admin:       'Style administratif',
     };
-    set({ writingRequest: { instruction, mode }, phase: 'editing' });
-    get().addCoachMessage({ role: 'user', text: `Reformuler : "${instruction}"` });
+    const modeIntentions = {
+      formalize: 'monter d’un cran en formalité, sans alourdir',
+      simplify:  'rendre immédiatement compréhensible, phrases courtes',
+      legalize:  'terminologie juridique rigoureuse, aucune ambiguïté',
+      expand:    'développer et préciser, sans inventer de fait nouveau',
+      compress:  'condenser en gardant tous les faits',
+      admin:     'style administratif français consacré',
+    };
+
+    set({ writingRequest: { instruction: source, mode }, phase: 'editing' });
+    get().addCoachMessage({ role: 'user', text: `Reformuler : "${source.slice(0, 160)}${source.length > 160 ? '…' : ''}"` });
+
+    if (get().modeAssistance === 'libre') {
+      get().addCoachMessage({
+        role: 'ai',
+        text: '✦ Mode **contrôle libre** : aucune reformulation n’est demandée à un modèle. Votre texte est intact.',
+      });
+      return null;
+    }
+
+    set({ iaOccupee: 'reformulation', iaErreur: null });
+    const contexte = get().contexteDocument ?? analyserContexteLocal(source, get().detectedType);
+    const res = await suggererFormulation(source, contexte, {
+      intention: modeIntentions[mode] ?? mode,
+      nombre: 3,
+    });
+
+    if (!res?.ok) {
+      set({ iaOccupee: null, iaErreur: res?.message ?? 'Reformulation indisponible' });
+      get().addCoachMessage({
+        role: 'ai',
+        text: `✦ **${modeLabels[mode] ?? mode}** — indisponible : ${res?.message ?? 'modèle injoignable'}.\nVotre texte est conservé tel quel.`,
+      });
+      return res;
+    }
+
+    set({ rewriteProposals: res.propositions, iaOccupee: null });
     get().addCoachMessage({
       role: 'ai',
-      text: `✦ **${modeLabels[mode] ?? mode}** — en cours de traitement.\n\n*(En production : le texte reformulé apparaîtra sur le bloc sélectionné.)*`,
+      text:
+        `✦ **${modeLabels[mode] ?? mode}** — ${res.propositions.length} proposition${res.propositions.length > 1 ? 's' : ''} :\n\n` +
+        res.propositions.map((p, i) => `**${i + 1}.** ${p.texte}${p.note ? `\n*${p.note}*` : ''}`).join('\n\n') +
+        (res.partiel ? '\n\n*(Repli : une seule variante disponible.)*' : '') +
+        '\n\nAucun bloc n’a été modifié — insérez celle que vous gardez.',
     });
+    return res;
   },
 
+  /* ── Blocs de suggestion (tirer / coller / régénérer) ───────────── */
+  /**
+   * @param {string} blocManquant — nom du bloc, ex. « objet », « formule de politesse »
+   */
+  demanderBlocs: async (blocManquant, opts = {}) => {
+    if (get().modeAssistance === 'libre') {
+      get().addCoachMessage({ role: 'ai', text: '✦ Mode **contrôle libre** : aucune suggestion n’est demandée.' });
+      return null;
+    }
+    const { detectedType, answers, documentPlan, derniereDemande } = get();
+    const contexte = get().contexteDocument ?? analyserContexteLocal(derniereDemande || '', detectedType);
+    set({ iaOccupee: 'blocs', iaErreur: null });
+
+    const res = await suggererBlocs(contexte, blocManquant, {
+      titreDocument: documentPlan?.libraryTemplateName ?? DOC_TYPE_META[detectedType]?.label,
+      reponses: answers,
+      nombre: opts.nombre ?? 3,
+    });
+
+    if (!res?.ok) {
+      set({ iaOccupee: null, iaErreur: res?.message ?? 'Suggestions indisponibles' });
+      return res;
+    }
+    // Remplacement par emplacement : deux demandes sur le même bloc ne s'empilent pas.
+    const autres = get().blocSuggestions.filter((s) => s.cle !== blocManquant);
+    set({ blocSuggestions: [...autres, ...res.propositions], iaOccupee: null });
+    return res;
+  },
+
+  /** Terminologie du domaine pour un extrait (le « mot juste » du point 1). */
+  demanderMotTechnique: async (extrait) => {
+    if (get().modeAssistance === 'libre') return null;
+    const contexte = get().contexteDocument ?? analyserContexteLocal(extrait, get().detectedType);
+    set({ iaOccupee: 'terminologie', iaErreur: null });
+    const res = await suggererMotTechnique(extrait, contexte);
+    if (!res?.ok) {
+      set({ iaOccupee: null, iaErreur: res?.message ?? 'Terminologie indisponible' });
+      return res;
+    }
+    set({ termeSuggestions: res.propositions, iaOccupee: null });
+    return res;
+  },
+
+  /**
+   * Régénère une suggestion EN PLACE (même identifiant) : la carte est remplacée,
+   * pas dupliquée, et le texte précédent est explicitement écarté.
+   * @param {string} suggestionId
+   */
+  regenererSuggestion: async (suggestionId) => {
+    if (get().modeAssistance === 'libre') return null;
+    const s = get()._trouverSuggestion(suggestionId);
+    if (!s) return null;
+
+    set({ iaOccupee: 'regeneration', iaErreur: null });
+    const res = await regenererSuggestionIA(s, {
+      contexte: get().contexteDocument,
+      reponses: get().answers,
+      extraitOrigine: get().writingRequest?.instruction,
+    });
+    if (!res?.ok || !res.propositions?.length) {
+      set({ iaOccupee: null, iaErreur: res?.message ?? 'Régénération indisponible' });
+      return res;
+    }
+    const nouvelle = res.propositions[0];
+    const remplacer = (liste) => liste.map((x) => (x.id === suggestionId ? nouvelle : x));
+    set({
+      blocSuggestions: remplacer(get().blocSuggestions),
+      rewriteProposals: remplacer(get().rewriteProposals),
+      termeSuggestions: remplacer(get().termeSuggestions),
+      iaOccupee: null,
+    });
+    return res;
+  },
+
+  /** Recherche une suggestion, toutes familles confondues. */
+  _trouverSuggestion: (id) => {
+    const s = get();
+    return (
+      s.blocSuggestions.find((x) => x.id === id) ??
+      s.rewriteProposals.find((x) => x.id === id) ??
+      s.termeSuggestions.find((x) => x.id === id) ??
+      null
+    );
+  },
+
+  /**
+   * Rend le texte d'une proposition pour insertion par l'interface.
+   *
+   * ⛔ Ce store ne touche pas au canvas : c'est l'appelant qui fait
+   *    `updateObject(id, { content: { text } })` ou `addObjects(...)`.
+   *    Séparer les deux garantit qu'aucune génération ne peut écraser le
+   *    travail de l'utilisateur sans un geste de sa part.
+   * @returns {string|null}
+   */
+  consommerProposition: (id) => {
+    const s = get()._trouverSuggestion(id);
+    if (!s) return null;
+    get().addCoachMessage({ role: 'ai', text: `✦ Proposition insérée par vos soins (${s.famille}).` });
+    return s.texte;
+  },
+
+  /** Efface les propositions en attente sans rien insérer. */
+  effacerPropositions: () => set({ blocSuggestions: [], rewriteProposals: [], termeSuggestions: [] }),
+
   /* ── Setters simples ─────────────────────────────────────────── */
-  setAssistanceLevel: (level) => set({ assistanceLevel: level }),
+  /** Le niveau porte son mode : choisir « Génération auto » arme réellement l'IA. */
+  setAssistanceLevel: (level) => {
+    const lvl = ASSISTANCE_LEVELS.find(l => l.level === level);
+    set({ assistanceLevel: level });
+    if (lvl?.mode) get().setModeAssistance(lvl.mode);
+  },
   setPhase:           (phase) => set({ phase }),
   selectTemplate:     (id)    => {
     set({ selectedTemplate: id });
@@ -414,6 +810,9 @@ export const useDocumentCoachStore = create((set, get) => ({
       currentQIdx: s.currentQIdx,
       answers: { ...s.answers },
       assistanceLevel: s.assistanceLevel,
+      modeAssistance: s.modeAssistance,
+      derniereDemande: s.derniereDemande,
+      contexteDocument: s.contexteDocument,
       matchedTemplateIds: (s.matchedTemplates || []).map((t) => t.id).filter(Boolean),
       coachMessages: s.coachMessages.slice(-32),
     };
@@ -430,6 +829,12 @@ export const useDocumentCoachStore = create((set, get) => ({
     const detected = snap.detectedType || 'letter';
     const fallbackMatched = matched.length ? matched : getTemplatesForCoachType(detected);
     const flow = GUIDED_FLOWS[detected] ?? GUIDED_FLOWS.default;
+    // ⛔ Le mode d'assistance doit être RÉARMÉ dans documentIntelligence à la
+    //    réouverture : sans ça, un espace de travail sauvé en « contrôle libre »
+    //    se rouvrirait avec le verrou IA levé.
+    const mode = definirModeAssistance(
+      typeof snap.modeAssistance === 'string' ? snap.modeAssistance : 'suggestions',
+    );
     set({
       isDocumentMode: true,
       phase: typeof snap.phase === 'string' ? snap.phase : 'idle',
@@ -438,6 +843,9 @@ export const useDocumentCoachStore = create((set, get) => ({
       currentQIdx: typeof snap.currentQIdx === 'number' ? snap.currentQIdx : 0,
       answers: snap.answers && typeof snap.answers === 'object' ? { ...snap.answers } : {},
       assistanceLevel: typeof snap.assistanceLevel === 'number' ? snap.assistanceLevel : 2,
+      modeAssistance: mode,
+      derniereDemande: typeof snap.derniereDemande === 'string' ? snap.derniereDemande : '',
+      contexteDocument: snap.contexteDocument && typeof snap.contexteDocument === 'object' ? snap.contexteDocument : null,
       matchedTemplates: fallbackMatched,
       guidedFlow: flow,
       coachMessages: Array.isArray(snap.coachMessages) ? snap.coachMessages : [],
@@ -446,6 +854,13 @@ export const useDocumentCoachStore = create((set, get) => ({
       validationIssues: [],
       isGenerating: false,
       writingRequest: null,
+      blocSuggestions: [],
+      rewriteProposals: [],
+      termeSuggestions: [],
+      documentRedige: null,
+      critiqueMiseEnPage: null,
+      iaOccupee: null,
+      iaErreur: null,
     });
   },
 }));

@@ -54,6 +54,21 @@ export function buildSchoolShellTheme(branding = defaultTenantBranding) {
         + `linear-gradient(90deg, rgba(${rgbTriplet(primary, '15 17 23')} / 0.16) 1px, transparent 1px)`,
       backgroundSize: '44px 44px',
     },
+    /* Plan de travail du Studio — VOLONTAIREMENT hors marque, contrairement à
+       gridBackground ci-dessus qui teinte les surfaces de coque aux couleurs du
+       tenant.
+       ⛔ Une paroi colorée fausse la perception des couleurs du document : on ne
+       juge pas une page blanche ni un aplat vert contre un mur corail à 30 %.
+       C'est pourquoi Word, Canva, Figma et InDesign posent tous leur page sur un
+       gris neutre. Le fond reste TRANSPARENT : la coque LIRI (#262624) le remplit,
+       et la grille passe en blanc très faible, comme celle du lanceur. */
+    canvasBackdrop: {
+      background: 'transparent',
+      backgroundImage:
+        'linear-gradient(rgba(255,255,255,0.045) 1px, transparent 1px),'
+        + 'linear-gradient(90deg, rgba(255,255,255,0.045) 1px, transparent 1px)',
+      backgroundSize: '44px 44px',
+    },
   };
 }
 

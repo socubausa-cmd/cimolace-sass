@@ -5,11 +5,11 @@
  * 4 modes : Template · Canvas Intelligent · Assistant guidé · Libre
  * 8 templates A4 avec objets Konva complets
  */
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useCallback, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   X, ChevronLeft, Sparkles, FileText, Layout, Bot, Zap,
-  CheckCircle2, ChevronRight, ArrowRight, Search,
+  CheckCircle2, ChevronRight, ArrowRight, Search, Building2, Settings2,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import {
@@ -17,6 +17,41 @@ import {
   searchTemplates, getTemplatesByDomain,
   templateToKonvaObjects,
 } from '@/features/smartboard-konva-editor/lib/documentTemplateLibrary';
+import {
+  appliquerIdentite,
+  identiteActive,
+  identiteEstVide,
+  listerIdentites,
+  normaliserCollection,
+  resumeIdentite,
+} from '@/features/smartboard-konva-editor/lib/documentIdentite';
+import {
+  useDocumentIdentiteStore,
+  selecteurCollection,
+} from '@/features/smartboard-konva-editor/store/useDocumentIdentiteStore';
+/* ⛔ CONTRAT INTER-MODULES : `DocumentIdentitePanel` appartient à un autre module.
+   Un import nommé qui ne correspond pas à son export ne casse PAS la compilation —
+   il vaut `undefined` et l'écran de configuration se vide sans le moindre message.
+   L'import d'espace de noms lit les deux conventions (défaut / nommé) et permet de
+   rendre une excuse explicite si aucune ne répond. */
+import * as ModuleIdentitePanel from '@/features/smartboard-konva-editor/components/DocumentIdentitePanel';
+
+const DocumentIdentitePanel =
+  ModuleIdentitePanel.default ?? ModuleIdentitePanel.DocumentIdentitePanel ?? null;
+
+/**
+ * ⛔ PIÈGE 6 — le raccourci d'annulation n'est PAS le même partout.
+ * `SmartboardKonvaEditorV1` calcule `const mod = isMac ? e.metaKey : e.ctrlKey` :
+ * sur Mac, Ctrl+Z ne déclenche RIEN. Le libellé est dérivé de la MÊME règle que
+ * l'écouteur, sinon l'écran désigne une touche morte.
+ */
+const RACCOURCI_ANNULER = (() => {
+  try {
+    return navigator.platform.toUpperCase().includes('MAC') ? '⌘Z' : 'Ctrl+Z';
+  } catch {
+    return 'Ctrl+Z';
+  }
+})();
 
 /* ─── A4 canvas constants (794×1123 @96dpi) ─────────────────── */
 const ML = 52;   // left margin
@@ -654,15 +689,222 @@ const ASSISTANT_QUESTIONS = [
 ];
 
 /* ═════════════════════════════════════════════════════════════════
+   IDENTITÉ D'ENTREPRISE — réglage TRANSVERSE du lanceur [ID-2]
+   ─────────────────────────────────────────────────────────────────
+   POURQUOI un bandeau et non une 5ᵉ carte : la question posée par cet écran est
+   « Comment souhaitez-vous CRÉER votre document ? ». L'identité n'est pas une
+   réponse à cette question — ce n'est pas une manière de créer, c'est une marque
+   posée sur le document QUEL QUE SOIT le mode choisi. En faire une 5ᵉ carte la
+   rendrait exclusive des quatre autres : choisir « mon identité » interdirait de
+   choisir « 100 modèles ». Elle est donc rangée au-dessus des quatre cartes, dans
+   les configurations du créateur, avec son propre écran de configuration.
+═════════════════════════════════════════════════════════════════ */
+
+/**
+ * Compose le PLAN rendu par `appliquerIdentite` en une liste d'objets prête à poser.
+ *
+ * ⛔ CONTRAINTE : `appliquerIdentite` ne rend pas des objets, il rend une MUTATION —
+ * `ajouts` (bandes + signature), `patches` (les blocs du corps qui descendent sous
+ * l'en-tête) et `suppressions` (les en-têtes déjà présents qu'il remplace). À la
+ * CRÉATION, rien n'est encore sur le canevas : la mutation se joue donc en mémoire,
+ * et le studio ne reçoit qu'un seul lot — donc un seul pas d'historique.
+ *
+ * @param {any[]} objets
+ * @param {{ajouts?: any[], patches?: {id: string, patch: object}[], suppressions?: string[]}} plan
+ */
+function composerMarquage(objets, plan) {
+  const supprimes = new Set(plan?.suppressions ?? []);
+  const parId = new Map((plan?.patches ?? []).map((p) => [p.id, p.patch]));
+  const corps = objets
+    .filter((o) => o && !supprimes.has(o.id))
+    .map((o) => (parId.has(o.id) ? { ...o, ...parId.get(o.id) } : o));
+  return [...corps, ...(plan?.ajouts ?? [])];
+}
+
+/**
+ * @param {{
+ *   compact?: boolean, identite: any, nbIdentites: number, utilisable: boolean,
+ *   marquer: boolean, onMarquer: (v: boolean) => void,
+ *   documentNonVide: boolean, onConfigurer: () => void,
+ * }} props
+ */
+function BandeauIdentite({
+  compact = false, identite, nbIdentites, utilisable, marquer, onMarquer, documentNonVide, onConfigurer,
+}) {
+  /* `libelle` nomme la CONFIGURATION (« Siège », « Marque B »), `raisonSociale`
+     nomme l'entreprise : l'un ou l'autre suffit à se reconnaître dans la liste. */
+  const nom = String(identite?.libelle || identite?.raisonSociale || '').trim();
+  const manquants = identite ? resumeIdentite(identite).manquants : [];
+
+  if (compact) {
+    return (
+      <div className="mb-4 flex items-center gap-2 rounded-xl border border-white/[0.07] bg-white/[0.025] px-3 py-2">
+        <Building2 className="h-3.5 w-3.5 shrink-0 text-[#e3aa6b]" />
+        <p className="min-w-0 flex-1 truncate text-[10px] text-white/45">
+          {identite && marquer
+            ? <>Marquage <span className="font-semibold text-[#e8a97f]">{nom || 'identité active'}</span> — en-tête, pied et signature seront posés.</>
+            : identite
+              ? <>Identité <span className="text-white/60">{nom || 'active'}</span> — marquage désactivé pour ce document.</>
+              : 'Aucune identité d\'entreprise configurée.'}
+        </p>
+        <button
+          type="button" onClick={onConfigurer}
+          className="shrink-0 rounded-lg border border-white/[0.09] px-2 py-1 text-[9.5px] font-semibold text-white/50 transition-colors hover:text-white/85"
+        >
+          Configurer
+        </button>
+      </div>
+    );
+  }
+
+  return (
+    <div className="mb-5 rounded-2xl border border-[#e3aa6b]/20 bg-[#e3aa6b]/[0.05] p-4">
+      <div className="flex items-start gap-3">
+        <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-[#e3aa6b]/25 bg-[#e3aa6b]/[0.12]">
+          <Building2 className="h-4 w-4 text-[#e3aa6b]" />
+        </span>
+        <div className="min-w-0 flex-1">
+          <div className="flex items-center gap-2">
+            <p className="text-[12.5px] font-bold text-white/85">Identité d'entreprise</p>
+            <span className="rounded-md border border-[#e3aa6b]/30 bg-[#e3aa6b]/[0.1] px-1.5 py-0.5 text-[8.5px] font-bold uppercase tracking-wider text-[#e3aa6b]">
+              Réglage transverse
+            </span>
+          </div>
+          <p className="mt-0.5 text-[10.5px] leading-relaxed text-white/40">
+            {identite
+              ? <>Logo, en-tête, pied de page et bloc de signature de <span className="font-semibold text-[#e8a97f]">{nom || 'l\'identité active'}</span> — posés sur le document, quel que soit le mode choisi ci-dessous.</>
+              : 'Aucune identité configurée : les documents naîtront nus. Configurez-la une fois, elle marquera tous les documents suivants.'}
+          </p>
+
+          <div className="mt-3 flex flex-wrap items-center gap-2">
+            {/* ⛔ Case grisée quand l'identité n'a rien à poser : une case qui se coche
+                sans rien changer se lit comme une panne. */}
+            {identite ? (
+              <label className={cn(
+                'flex items-center gap-2 rounded-xl border border-white/[0.09] bg-white/[0.03] px-2.5 py-1.5',
+                utilisable ? 'cursor-pointer' : 'cursor-not-allowed opacity-40',
+              )}>
+                <input
+                  type="checkbox"
+                  checked={marquer}
+                  disabled={!utilisable}
+                  onChange={(e) => onMarquer(e.target.checked)}
+                  className="h-3 w-3 accent-[#e3aa6b]"
+                />
+                <span className="text-[10.5px] text-white/65">
+                  {utilisable ? 'Marquer ce document' : 'Identité vide — rien à poser'}
+                </span>
+              </label>
+            ) : null}
+            <button
+              type="button" onClick={onConfigurer}
+              className="flex items-center gap-1.5 rounded-xl border border-white/[0.09] bg-white/[0.03] px-2.5 py-1.5 text-[10.5px] font-semibold text-white/60 transition-all hover:border-white/20 hover:text-white/90"
+            >
+              <Settings2 className="h-3 w-3" />
+              {nbIdentites > 0 ? `Configurer (${nbIdentites})` : 'Créer une identité'}
+            </button>
+          </div>
+
+          {/* ⛔ N'INVENTE RIEN : les champs vides restent vides. On dit ce qui manque,
+              on ne le remplit pas à la place de l'entreprise. */}
+          {identite && manquants.length ? (
+            <p className="mt-2 text-[9.5px] leading-relaxed text-white/30">
+              Champs encore vides : {manquants.join(', ')} — ils ne seront pas posés.
+            </p>
+          ) : null}
+
+          {/* ⛔ Le document ouvert n'est JAMAIS écrasé : le marquage AJOUTE des blocs.
+              Sur un document déjà rempli, le marquage part donc décoché. */}
+          {documentNonVide && identite ? (
+            <p className="mt-2 rounded-lg border border-amber-500/20 bg-amber-500/[0.07] px-2 py-1.5 text-[9.5px] leading-relaxed text-amber-300/80">
+              Ce document contient déjà des blocs. Le marquage n'efface rien : il ajoute
+              l'en-tête, le pied et la signature par-dessus — annulable d'un {RACCOURCI_ANNULER}.
+            </p>
+          ) : null}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ═════════════════════════════════════════════════════════════════
    COMPONENT — DocumentStudioLauncher
 ═════════════════════════════════════════════════════════════════ */
-export default function DocumentStudioLauncher({ onClose, onLaunch }) {
+export default function DocumentStudioLauncher({ onClose, onLaunch, documentNonVide = false }) {
   const [step,         setStep]         = useState('mode');
   const [assistQ,      setAssistQ]      = useState(0);
   const [answers,      setAnswers]      = useState({});
   const [textInput,    setTextInput]    = useState('');
   const [domainFilter, setDomainFilter] = useState('all');
   const [searchQuery,  setSearchQuery]  = useState('');
+
+  /* ── Identité d'entreprise ──────────────────────────────────────
+     Le store est la source RÉACTIVE (une identité créée dans l'écran de
+     configuration doit apparaître ici sans remontage). `normaliserCollection`
+     absorbe les deux rangements possibles : la collection sous `collection`, ou
+     l'état du store lui-même porteur de `identites`/`actifId`. */
+  const collectionStore = useDocumentIdentiteStore(selecteurCollection);
+  const chargerIdentites = useDocumentIdentiteStore((s) => s.charger);
+  /* ⛔ Sans cet appel, la collection reste VIDE au premier affichage et le lanceur
+     annonce « aucune identité » alors qu'elle est enregistrée. `charger` est
+     idempotent : rouvrir le lanceur ne relit rien. */
+  useEffect(() => { chargerIdentites?.(); }, [chargerIdentites]);
+
+  const collection = useMemo(() => {
+    try { return normaliserCollection(collectionStore); }
+    catch { return { identites: [], actifId: null }; }
+  }, [collectionStore]);
+
+  const identites = useMemo(() => {
+    try { return listerIdentites(collection); }
+    catch { return []; }
+  }, [collection]);
+
+  const identiteRetenue = useMemo(() => {
+    try { return identiteActive(collection) ?? null; }
+    catch { return null; }
+  }, [collection]);
+
+  /* Une identité SANS aucun champ rempli n'a rien à poser : proposer de marquer avec
+     elle promettrait un en-tête qui n'apparaîtrait jamais. */
+  const identiteUtilisable = Boolean(identiteRetenue) && !identiteEstVide(identiteRetenue);
+
+  /* `null` = l'utilisateur n'a rien décidé → valeur par défaut calculée.
+     Dès qu'il coche ou décoche, son choix l'emporte. On ne lui impose rien. */
+  const [marquerChoisi, setMarquerChoisi] = useState(/** @type {boolean|null} */ (null));
+  const marquer = (marquerChoisi ?? !documentNonVide) && identiteUtilisable;
+
+  /**
+   * [ID-3] Le document naît déjà marqué. Retourne les blocs marqués, ou les blocs
+   * d'origine si le module d'identité échoue — un document nu vaut mieux qu'un
+   * lanceur qui plante.
+   * @param {any[]} objets
+   */
+  const marquerBlocs = useCallback((objets) => {
+    const base = Array.isArray(objets) ? objets.filter(Boolean) : [];
+    if (!marquer || !identiteRetenue) return base;
+    try {
+      const plan = appliquerIdentite({
+        identite: identiteRetenue,
+        objets: base,
+        page: { nbPages: 1 },
+        poserSignature: true,
+      });
+      return composerMarquage(base, plan);
+    } catch (e) {
+      // eslint-disable-next-line no-console
+      console.error('[Identité] marquage impossible — document créé sans marque', e);
+      return base;
+    }
+  }, [marquer, identiteRetenue]);
+
+  /** Ce qui est réellement posé, pour le message de confirmation côté studio. */
+  const identiteAppliquee = marquer && identiteRetenue
+    ? {
+      id: identiteRetenue.id ?? null,
+      nom: String(identiteRetenue.libelle || identiteRetenue.raisonSociale || '').trim(),
+    }
+    : null;
 
   /* ── Templates filtrés (100 modèles) ────────────────────── */
   const filteredTemplates = useMemo(() => {
@@ -690,34 +932,36 @@ export default function DocumentStudioLauncher({ onClose, onLaunch }) {
       const dom = typeMap[newAnswers.type] ?? 'letters';
       const libMatch = getTemplatesByDomain(dom)[0];
       if (libMatch) {
-        onLaunch('assistant', libMatch.id, templateToKonvaObjects(libMatch), '#ffffff', newAnswers);
+        onLaunch('assistant', libMatch.id, marquerBlocs(templateToKonvaObjects(libMatch)), '#ffffff', newAnswers, identiteAppliquee);
       } else {
         const legacy = DOC_TEMPLATES.find(t => t.id === newAnswers.type) ?? DOC_TEMPLATES[0];
-        onLaunch('assistant', legacy.id, legacy.getBlocks(), '#ffffff', newAnswers);
+        onLaunch('assistant', legacy.id, marquerBlocs(legacy.getBlocks()), '#ffffff', newAnswers, identiteAppliquee);
       }
     }
   };
 
   /* ── Launch template (100 modèles) ──────────────────────── */
   const launchJsonTemplate = (tpl) => {
-    onLaunch('template', tpl.id, templateToKonvaObjects(tpl), '#ffffff', {});
+    onLaunch('template', tpl.id, marquerBlocs(templateToKonvaObjects(tpl)), '#ffffff', {}, identiteAppliquee);
   };
 
   /* ── Launch legacy template (8 modèles codés en dur) ──── */
   const launchTemplate = (tpl) => {
     if (tpl.getBlocks) {
-      onLaunch('template', tpl.id, tpl.getBlocks(), '#ffffff', {});
+      onLaunch('template', tpl.id, marquerBlocs(tpl.getBlocks()), '#ffffff', {}, identiteAppliquee);
     } else {
       launchJsonTemplate(tpl);
     }
   };
 
   const launchCanvas = () => {
-    onLaunch('canvas', 'smart', smartCanvasBlocks(), '#ffffff', {});
+    onLaunch('canvas', 'smart', marquerBlocs(smartCanvasBlocks()), '#ffffff', {}, identiteAppliquee);
   };
 
+  /* Le Mode Libre part d'une page blanche : marqué, il ne reçoit QUE la marque —
+     c'est exactement le papier à en-tête vierge de l'entreprise. */
   const launchLibre = () => {
-    onLaunch('libre', null, [], '#ffffff', {});
+    onLaunch('libre', null, marquerBlocs([]), '#ffffff', {}, identiteAppliquee);
   };
 
   return (
@@ -758,6 +1002,17 @@ export default function DocumentStudioLauncher({ onClose, onLaunch }) {
                 <h2 className="text-[20px] font-bold text-white/90">Studio Documentaire</h2>
                 <p className="mt-1 text-[12px] text-white/35">Comment souhaitez-vous créer votre document ?</p>
               </div>
+
+              {/* Identité d'entreprise — configuration transverse aux 4 modes */}
+              <BandeauIdentite
+                identite={identiteRetenue}
+                nbIdentites={identites.length}
+                utilisable={identiteUtilisable}
+                marquer={marquer}
+                onMarquer={setMarquerChoisi}
+                documentNonVide={documentNonVide}
+                onConfigurer={() => setStep('identite')}
+              />
 
               {/* 4 mode cards */}
               <div className="grid grid-cols-2 gap-4">
@@ -843,6 +1098,18 @@ export default function DocumentStudioLauncher({ onClose, onLaunch }) {
                   <p className="text-[11px] text-white/30">Choisissez un modèle prêt à l'emploi · A4 · export PDF</p>
                 </div>
               </div>
+
+              {/* Le marquage suit le choix du modèle : il reste visible ici. */}
+              <BandeauIdentite
+                compact
+                identite={identiteRetenue}
+                nbIdentites={identites.length}
+                utilisable={identiteUtilisable}
+                marquer={marquer}
+                onMarquer={setMarquerChoisi}
+                documentNonVide={documentNonVide}
+                onConfigurer={() => setStep('identite')}
+              />
 
               {/* Barre de recherche */}
               <div className="mb-4 flex items-center gap-2 rounded-xl border border-white/[0.09] bg-white/[0.03] px-3 py-2">
@@ -941,6 +1208,51 @@ export default function DocumentStudioLauncher({ onClose, onLaunch }) {
             </motion.div>
           )}
 
+          {/* ── STEP: IDENTITÉ D'ENTREPRISE ─────────────────────── */}
+          {step === 'identite' && (
+            <motion.div key="identite"
+              initial={{ opacity: 0, x: 24 }} animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: -24 }} transition={{ duration: 0.2 }}
+              className="w-full max-w-[620px]">
+
+              <div className="mb-5 flex items-center gap-3">
+                <button type="button" onClick={() => setStep('mode')}
+                  className="flex h-8 w-8 items-center justify-center rounded-xl border border-white/[0.08] text-white/35 transition-colors hover:text-white/70">
+                  <ChevronLeft className="h-4 w-4" />
+                </button>
+                <div className="min-w-0 flex-1">
+                  <h2 className="text-[18px] font-bold text-white/85">Identité d'entreprise</h2>
+                  {/* [SIG-2] La signature RÉUTILISABLE se règle ici : `DocumentIdentitePanel`
+                      monte lui-même `DocumentSignaturePanel`. On le dit pour qu'on la
+                      cherche au bon endroit — sans ouvrir une seconde saisie concurrente. */}
+                  <p className="text-[11px] text-white/30">
+                    Configurée une fois, elle marque tous les documents créés ensuite —
+                    en-tête, pied, numérotation et signature réutilisable.
+                  </p>
+                </div>
+              </div>
+
+              {DocumentIdentitePanel ? (
+                <div className="rounded-2xl border border-white/[0.07] bg-white/[0.02] p-1">
+                  <DocumentIdentitePanel />
+                </div>
+              ) : (
+                /* ⛔ Pas de bouton mort : si le module d'identité n'est pas branché,
+                   on le DIT au lieu d'afficher un cadre vide. */
+                <p className="rounded-2xl border border-amber-500/25 bg-amber-500/[0.07] px-4 py-3 text-[11px] leading-relaxed text-amber-300/85">
+                  Le panneau d'identité n'est pas disponible dans cette version
+                  (<code className="text-amber-200/70">DocumentIdentitePanel</code> introuvable).
+                  Les documents seront créés sans marque.
+                </p>
+              )}
+
+              <button type="button" onClick={() => setStep('mode')}
+                className="mt-4 flex w-full items-center justify-center gap-2 rounded-xl border border-white/[0.09] bg-white/[0.03] py-2.5 text-[11.5px] font-semibold text-white/60 transition-all hover:border-white/20 hover:text-white/90">
+                Revenir au choix du mode <ChevronRight className="h-3.5 w-3.5" />
+              </button>
+            </motion.div>
+          )}
+
           {/* ── STEP: ASSISTANT ──────────────────────────────────── */}
           {step === 'assistant' && (
             <motion.div key="assistant"
@@ -968,6 +1280,18 @@ export default function DocumentStudioLauncher({ onClose, onLaunch }) {
                   </div>
                 </div>
               </div>
+
+              {/* Le document produit par l'Assistant est marqué comme les autres. */}
+              <BandeauIdentite
+                compact
+                identite={identiteRetenue}
+                nbIdentites={identites.length}
+                utilisable={identiteUtilisable}
+                marquer={marquer}
+                onMarquer={setMarquerChoisi}
+                documentNonVide={documentNonVide}
+                onConfigurer={() => setStep('identite')}
+              />
 
               {/* LONGIA avatar */}
               <div className="mb-6 flex items-start gap-3">

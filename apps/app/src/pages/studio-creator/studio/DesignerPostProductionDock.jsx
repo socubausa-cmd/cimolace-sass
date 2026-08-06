@@ -330,7 +330,9 @@ export default function DesignerPostProductionDock({
         />
         <div
           className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden"
-          style={shellTheme.gridBackground}
+          /* Même règle que le plan de travail du Designer : on ne juge pas une
+             image de montage contre une paroi teintée. Cf. canvasBackdrop. */
+          style={shellTheme.canvasBackdrop || shellTheme.gridBackground}
         >
           {!parentValid ? (
             <div className="flex flex-1 flex-col items-center justify-center gap-4 px-4 py-6 text-center">

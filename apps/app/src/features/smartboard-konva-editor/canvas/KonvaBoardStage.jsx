@@ -10,13 +10,225 @@ import React, {
 } from 'react';
 import { Stage, Layer, Transformer, Rect, Text, Line, Circle, Group, Shape, Ellipse } from 'react-konva';
 import { useToast } from '@/components/ui/use-toast';
+import { uploadSmartboardCanvasImage } from '@/lib/uploadSmartboardCanvasImage';
 import KonvaBoardObject from './KonvaBoardObject';
 import { sortObjectsByLayer } from '../model/sceneModel';
-import { useSmartboardKonvaStore } from '../store/useSmartboardKonvaStore';
+import {
+  useSmartboardKonvaStore,
+  decoderPressePapiers,
+  pageDuCanevas,
+} from '../store/useSmartboardKonvaStore';
+import { normaliserMode, mesurerImage, MODES_AJUSTEMENT } from '../lib/documentImages';
+import { pairesDuTrace, localVersDocTrace } from '../lib/cheminsVectoriels';
+
+/**
+ * Une saisie est-elle en cours ? Les raccourcis du canevas ne doivent JAMAIS voler
+ * un ⌘C / ⌘V à un champ de texte (le collage natif y est déjà le bon comportement).
+ */
+function estSaisieEnCours(cible) {
+  const el = cible instanceof Element ? cible : null;
+  if (!el) return false;
+  const tag = el.tagName;
+  if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return true;
+  if (el.isContentEditable) return true;
+  return Boolean(el.closest('[contenteditable="true"], [role="textbox"]'));
+}
 
 export function transformerBoundBoxFunc(oldBox, newBox) {
   if (newBox.width < 14 || newBox.height < 14) return oldBox;
   return newBox;
+}
+
+/** Jeu complet des poignées du Transformer (ordre Konva). */
+export const TOUTES_LES_ANCRES = [
+  'top-left',
+  'top-right',
+  'bottom-left',
+  'bottom-right',
+  'middle-left',
+  'middle-right',
+  'top-center',
+  'bottom-center',
+];
+
+/**
+ * Taille d'une poignée en px ÉCRAN : anchorSize 8 + le trait de 1 px.
+ * ⛔ Konva compense l'échelle de la Stage : une poignée mesure toujours ~9 px à
+ * l'écran, alors qu'une ligne de tableau n'en fait que 16,8 (26 px × 0,645).
+ */
+const ANCRE_PX = 9;
+
+/**
+ * Décide des poignées du Transformer pour la sélection courante.
+ *
+ * ⛔ PIÈGE MESURÉ : les poignées `top-center`/`bottom-center` sont centrées sur le
+ * milieu horizontal de la boîte et mordent ANCRE_PX/2 vers l'intérieur. Sur un objet
+ * plus bas que 3 × ANCRE_PX (cas d'une cellule de tableau), les deux se rejoignent et
+ * tuent TOUTE la colonne médiane : `stage.getIntersection()` au centre renvoyait
+ * `Rect|bottom-center _anchor`, donc le double-clic n'atteignait jamais la cellule.
+ *
+ * @param {Array<object>} objets objets sélectionnés (déjà filtrés des verrouillés)
+ * @param {number} echelle échelle de la Stage
+ */
+export function reglerTransformerPourSelection(objets, echelle) {
+  const complet = {
+    ancres: TOUTES_LES_ANCRES,
+    redimensionnable: true,
+    rotatif: true,
+    ecoutePointeur: true,
+    garderRapport: false,
+  };
+  const liste = (objets || []).filter(Boolean);
+  if (!liste.length) return complet;
+
+  /* Une image garde ses proportions par DÉFAUT ; Maj les libère (convention
+     universelle — l'inverser reproduirait exactement le défaut mesuré : la 602×900
+     posée en 560×320). 'etirer' est le choix explicite d'écraser le rapport. */
+  const garderRapport =
+    liste.every((o) => o?.type === 'image') &&
+    liste.every((o) => normaliserMode(o?.style?.ajustement) !== MODES_AJUSTEMENT.ETIRER);
+
+  // ⛔ Une pièce de tableau ne se redimensionne PAS à la main : sa géométrie est
+  // reconstruite par documentTables (colonnes, filets, fonds de ligne). Une poignée
+  // ici ne désynchroniserait la grille que pour, en prime, confisquer le centre de
+  // la cellule. Le cadre de sélection reste visible, l'objet reste déplaçable.
+  if (liste.every((o) => o?.meta?.doc === 'tableau')) {
+    return { ancres: [], redimensionnable: false, rotatif: false, ecoutePointeur: false, garderRapport: false };
+  }
+
+  const sc = echelle || 1;
+  let x0 = Infinity;
+  let y0 = Infinity;
+  let x1 = -Infinity;
+  let y1 = -Infinity;
+  for (const o of liste) {
+    const x = Number(o.x) || 0;
+    const y = Number(o.y) || 0;
+    const w = Math.abs(Number(o.width) || 0);
+    const h = Math.abs(Number(o.height) || 0);
+    x0 = Math.min(x0, x);
+    y0 = Math.min(y0, y);
+    x1 = Math.max(x1, x + w);
+    y1 = Math.max(y1, y + h);
+  }
+  const largeurEcran = (x1 - x0) * sc;
+  const hauteurEcran = (y1 - y0) * sc;
+  const seuil = ANCRE_PX * 3;
+
+  const ancres = TOUTES_LES_ANCRES.filter((a) => {
+    if ((a === 'top-center' || a === 'bottom-center') && hauteurEcran < seuil) return false;
+    if ((a === 'middle-left' || a === 'middle-right') && largeurEcran < seuil) return false;
+    return true;
+  });
+  return { ancres, redimensionnable: true, rotatif: true, ecoutePointeur: true, garderRapport };
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   Guides d'alignement magnétiques
+   ═══════════════════════════════════════════════════════════════════ */
+
+/** Seuil d'accrochage, en px ÉCRAN (converti en unités document par l'échelle). */
+export const SEUIL_ACCROCHAGE_PX = 4;
+
+/** Bords + centre d'une boîte, sur un axe. */
+function reperesBoite(b, axe) {
+  return axe === 'V'
+    ? [b.x, b.x + (b.width ?? 0) / 2, b.x + (b.width ?? 0)]
+    : [b.y, b.y + (b.height ?? 0) / 2, b.y + (b.height ?? 0)];
+}
+
+/**
+ * Accrochage d'une boîte en cours de déplacement sur les repères des AUTRES objets
+ * et sur ceux de la page (bords, centres, marges).
+ *
+ * ⛔ Calcul PUR (aucun Konva, aucun store) : c'est ce qui sépare un éditeur amateur
+ * d'un Canva, donc c'est aussi ce qui doit rester vérifiable.
+ * ⛔ Le seuil est donné en unités DOCUMENT : à l'écran il doit rester constant quel
+ * que soit le zoom (4 px), sinon un canevas d'affiche à 0,18 collerait tout.
+ *
+ * @param {{ boite:{x:number,y:number,width:number,height:number},
+ *           cibles?: Array<{x:number,y:number,width:number,height:number}>,
+ *           lignes?: {V?: number[], H?: number[]}, seuil?: number }} p
+ * @returns {{ dx:number, dy:number, guides: Array<{axe:'V'|'H', valeur:number}> }}
+ */
+export function calculerAccrochage({ boite, cibles = [], lignes = {}, seuil = 4 } = {}) {
+  const vide = { dx: 0, dy: 0, guides: [] };
+  if (!boite || !Number.isFinite(boite.x) || !Number.isFinite(boite.y)) return vide;
+
+  const candidats = { V: [...(lignes.V ?? [])], H: [...(lignes.H ?? [])] };
+  for (const c of cibles) {
+    if (!c) continue;
+    candidats.V.push(...reperesBoite(c, 'V'));
+    candidats.H.push(...reperesBoite(c, 'H'));
+  }
+
+  const guides = [];
+  const meilleur = (axe) => {
+    const mobiles = reperesBoite(boite, axe);
+    let delta = 0;
+    let ecart = Infinity;
+    let valeur = null;
+    for (const cible of candidats[axe]) {
+      if (!Number.isFinite(cible)) continue;
+      for (const m of mobiles) {
+        const d = cible - m;
+        if (Math.abs(d) < ecart) {
+          ecart = Math.abs(d);
+          delta = d;
+          valeur = cible;
+        }
+      }
+    }
+    if (ecart > seuil || valeur === null) return 0;
+    guides.push({ axe, valeur });
+    return delta;
+  };
+
+  return { dx: meilleur('V'), dy: meilleur('H'), guides };
+}
+
+/** Repères de page : bords, centres et marges de la zone utile. */
+export function lignesDePage(canvas) {
+  const { page, marges } = pageDuCanevas(canvas);
+  const largeur = Number(canvas?.width) || page.largeur;
+  const hauteur = Number(canvas?.height) || page.hauteur;
+  const V = [0, largeur / 2, largeur, marges.gauche, largeur - marges.droite];
+  const H = [0, hauteur / 2, hauteur];
+  const pas = page.hauteur + page.ecartPages;
+  for (let i = 0; i < page.pages; i += 1) {
+    H.push(i * pas + marges.haut, (i + 1) * page.hauteur - marges.bas + i * page.ecartPages);
+  }
+  return { V, H };
+}
+
+/**
+ * Couleurs du cadre de sélection, selon la clarté du fond du canevas.
+ *
+ * ⛔ MESURÉ : sur une page A4 blanche, le trait blanc d'origine ne faisait bouger
+ * que ~12 niveaux sur 255 (diff pixel du canevas : 696 px modifiés, contraste max
+ * 55 toutes composantes cumulées). Le cadre était bien DESSINÉ et parfaitement
+ * invisible — sur un tableau, dont les poignées sont retirées, il ne restait donc
+ * aucun signe de sélection avant de tenter un déplacement.
+ *
+ * @param {string | undefined} fond couleur de fond du canevas
+ */
+export function couleursCadreSelection(fond) {
+  const clair = { trait: 'rgba(17,20,28,0.92)', ancre: 'rgba(17,20,28,0.95)', remplissage: '#ffffff' };
+  const sombre = { trait: 'rgba(255,255,255,0.92)', ancre: 'rgba(255,255,255,0.95)', remplissage: '#121318' };
+  const s = String(fond || '').trim().toLowerCase();
+  if (!s || s === 'transparent' || s === 'none') return sombre;
+  let r; let v; let b;
+  const hex = s.match(/^#([0-9a-f]{3}|[0-9a-f]{6})$/);
+  if (hex) {
+    const h = hex[1].length === 3 ? hex[1].replace(/./g, (c) => c + c) : hex[1];
+    r = parseInt(h.slice(0, 2), 16); v = parseInt(h.slice(2, 4), 16); b = parseInt(h.slice(4, 6), 16);
+  } else {
+    const rgb = s.match(/rgba?\(\s*(\d+)[,\s]+(\d+)[,\s]+(\d+)/);
+    if (!rgb) return sombre;
+    r = Number(rgb[1]); v = Number(rgb[2]); b = Number(rgb[3]);
+  }
+  // Luminance perçue (Rec. 601) : au-delà de la moitié, le fond est clair.
+  return (0.299 * r + 0.587 * v + 0.114 * b) > 140 ? clair : sombre;
 }
 
 function snapScalar(v, grid) {
@@ -427,6 +639,166 @@ function localCropBoxFromDocSelection(node, iw, ih, norm) {
   return { lx, ly, lw, lh };
 }
 
+/* ═══════════════════════════════════════════════════════════════════
+   Fond du canevas — traduction d'un dégradé CSS en remplissage Konva
+   ═══════════════════════════════════════════════════════════════════ */
+
+/** Découpe une liste CSS sur les virgules de PREMIER niveau (un `rgb(…)` reste entier). */
+function decouperArgumentsCss(texte) {
+  const morceaux = [];
+  let profondeur = 0;
+  let courant = '';
+  for (const c of String(texte)) {
+    if (c === '(') profondeur += 1;
+    if (c === ')') profondeur = Math.max(0, profondeur - 1);
+    if (c === ',' && profondeur === 0) {
+      morceaux.push(courant.trim());
+      courant = '';
+      continue;
+    }
+    courant += c;
+  }
+  if (courant.trim()) morceaux.push(courant.trim());
+  return morceaux;
+}
+
+/** Angle CSS (`135deg`, `0.25turn`, `to bottom right`…) en degrés — null si absent. */
+function angleCssEnDegres(brut, largeur, hauteur) {
+  const s = String(brut ?? '').trim().toLowerCase().replace(/\s+/g, ' ');
+  const m = s.match(/^(-?[\d.]+)(deg|grad|rad|turn)$/);
+  if (m) {
+    const v = Number(m[1]);
+    if (m[2] === 'grad') return (v * 360) / 400;
+    if (m[2] === 'rad') return (v * 180) / Math.PI;
+    if (m[2] === 'turn') return v * 360;
+    return v;
+  }
+  if (!s.startsWith('to ')) return null;
+  /* Coins : approximation par la diagonale (le « magic corner » CSS exact n'apporte
+     rien de visible sur un fond plein cadre). */
+  const coin = (Math.atan2(largeur, hauteur) * 180) / Math.PI;
+  const table = {
+    'to top': 0, 'to right': 90, 'to bottom': 180, 'to left': 270,
+    'to top right': coin, 'to right top': coin,
+    'to bottom right': 180 - coin, 'to right bottom': 180 - coin,
+    'to bottom left': 180 + coin, 'to left bottom': 180 + coin,
+    'to top left': 360 - coin, 'to left top': 360 - coin,
+  };
+  return table[s] ?? null;
+}
+
+/** « couleur [pos%] » → { couleur, pos 0..1 | null } (la couleur peut contenir des espaces). */
+function lireStopCss(brut) {
+  const s = String(brut).trim();
+  const m = s.match(/^(.*?)\s+(-?[\d.]+)%$/);
+  if (m) return { couleur: m[1].trim(), pos: Math.min(1, Math.max(0, Number(m[2]) / 100)) };
+  return { couleur: s, pos: null };
+}
+
+/**
+ * Remplissage Konva pour le fond du canevas.
+ *
+ * ⛔ MESURÉ (préréglages Fond « Royal / Forêt / Or ») : le store porte une chaîne CSS
+ * `linear-gradient(135deg,…)` et Konva la recevait dans `fill` — qui n'accepte qu'une
+ * COULEUR. Le dégradé était écrit au store, affiché dans le swatch du panneau… et
+ * jamais peint : pixels mesurés (0,0,0). Ici la chaîne est traduite en propriétés
+ * `fillLinearGradient*` / `fillRadialGradient*`. Couleur simple : rendue telle quelle.
+ * Dégradé illisible : première couleur trouvée — jamais un fond muet.
+ *
+ * @param {string} fond  couleur ou dégradé CSS du store
+ * @param {number} largeur @param {number} hauteur  dimensions du canevas (unités doc)
+ * @returns {object|null} props de remplissage à étaler sur le Rect de fond
+ */
+export function remplissageDuFond(fond, largeur, hauteur) {
+  const s = String(fond ?? '').trim();
+  if (!s || s === 'transparent' || s === 'none') return null;
+  const lin = s.match(/^linear-gradient\((.+)\)$/i);
+  const rad = s.match(/^radial-gradient\((.+)\)$/i);
+  if (!lin && !rad) return { fill: s };
+
+  const args = decouperArgumentsCss((lin ?? rad)[1]);
+  let angle = 180; // défaut CSS : `to bottom`
+  if (lin) {
+    const a = angleCssEnDegres(args[0], largeur, hauteur);
+    if (a !== null) {
+      angle = a;
+      args.shift();
+    }
+  } else if (/^(circle|ellipse|closest-|farthest-|at )/i.test(args[0] ?? '')) {
+    args.shift(); // forme/position du radial : le centre par défaut suffit pour un fond
+  }
+
+  const stops = args.map(lireStopCss).filter((st) => st.couleur);
+  if (stops.length < 2) return { fill: stops[0]?.couleur ?? s };
+
+  const colorStops = [];
+  stops.forEach((st, i) => {
+    colorStops.push(st.pos ?? i / (stops.length - 1), st.couleur);
+  });
+
+  const cx = largeur / 2;
+  const cy = hauteur / 2;
+  if (rad) {
+    return {
+      fillRadialGradientStartPoint: { x: cx, y: cy },
+      fillRadialGradientStartRadius: 0,
+      fillRadialGradientEndPoint: { x: cx, y: cy },
+      /* Rayon = distance centre → coin (le `farthest-corner` par défaut de CSS). */
+      fillRadialGradientEndRadius: Math.hypot(largeur, hauteur) / 2,
+      fillRadialGradientColorStops: colorStops,
+    };
+  }
+  const t = (angle * Math.PI) / 180;
+  const dx = Math.sin(t);
+  const dy = -Math.cos(t); // CSS : 0° pointe vers le HAUT, sens horaire
+  const demi = (Math.abs(largeur * dx) + Math.abs(hauteur * dy)) / 2;
+  return {
+    fillLinearGradientStartPoint: { x: cx - dx * demi, y: cy - dy * demi },
+    fillLinearGradientEndPoint: { x: cx + dx * demi, y: cy + dy * demi },
+    fillLinearGradientColorStops: colorStops,
+  };
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   Gomme — proximité d'un point à un tracé vectoriel
+   ═══════════════════════════════════════════════════════════════════ */
+
+/** Distance d'un point au segment [AB]. */
+function distanceAuSegment(px, py, ax, ay, bx, by) {
+  const dx = bx - ax;
+  const dy = by - ay;
+  const l2 = dx * dx + dy * dy;
+  if (l2 < 1e-12) return Math.hypot(px - ax, py - ay);
+  const t = Math.max(0, Math.min(1, ((px - ax) * dx + (py - ay) * dy) / l2));
+  return Math.hypot(px - (ax + t * dx), py - (ay + t * dy));
+}
+
+/**
+ * Le tracé (objet `line`) passe-t-il à moins de `tolerance` du point (coords document) ?
+ * ⛔ Les points d'un tracé sont stockés dans le repère LOCAL du nœud : une rotation de
+ * l'objet doit être défaite avant de mesurer, sinon la gomme rate tout tracé tourné.
+ */
+export function tracePresDuPoint(obj, pos, tolerance) {
+  const pts = obj?.content?.points;
+  if (!Array.isArray(pts) || pts.length < 4) return false;
+  const rot = ((Number(obj.rotation) || 0) * Math.PI) / 180;
+  const dx = (Number(pos?.x) || 0) - (Number(obj.x) || 0);
+  const dy = (Number(pos?.y) || 0) - (Number(obj.y) || 0);
+  const cos = Math.cos(rot);
+  const sin = Math.sin(rot);
+  const lx = dx * cos + dy * sin;
+  const ly = -dx * sin + dy * cos;
+  for (let i = 0; i + 3 < pts.length; i += 2) {
+    if (distanceAuSegment(lx, ly, pts[i], pts[i + 1], pts[i + 2], pts[i + 3]) <= tolerance) {
+      return true;
+    }
+  }
+  return false;
+}
+
+/** Rayon d'action de la gomme, en px ÉCRAN (constant quel que soit le zoom). */
+export const RAYON_GOMME_ECRAN = 10;
+
 /** @param {import('konva').Stage | null} stage */
 function clientToStage(stage, clientX, clientY) {
   if (!stage) return { x: 0, y: 0 };
@@ -472,6 +844,29 @@ const KonvaBoardStage = forwardRef(function KonvaBoardStage(
   const nodeRefs = useRef({});
   /** { x, y } modèle au début du drag — contrainte axe avec Maj */
   const dragOriginRef = useRef(null);
+  /**
+   * Nombre de nœuds en cours de glissement.
+   *
+   * ⛔ MESURÉ : sur une sélection multiple, Konva démarre un vrai drag sur CHAQUE
+   * nœud attaché au Transformer (journal d'évènements : 6 `dragstart` pour un clic).
+   * Sans ce compteur, l'historique encaisse un cliché par pièce et il faut six
+   * Ctrl+Z pour annuler un seul déplacement.
+   */
+  const glissementsEnCoursRef = useRef(0);
+  /**
+   * Id dont la réduction de sélection est REPORTÉE au relâchement.
+   * ⛔ Réduire dès le `mousedown` tuait le déplacement d'un tableau : la pièce
+   * attrapée devenait la seule sélectionnée avant même le premier `mousemove`.
+   */
+  const reductionDiffereeRef = useRef(null);
+  /** Guides d'alignement affichés pendant le déplacement — [{axe,valeur}] */
+  const [guidesAccrochage, setGuidesAccrochage] = useState([]);
+  /** Nœud dont on a coupé le `draggable` le temps d'atteindre une poignée. */
+  const draggableSuspenduRef = useRef(null);
+  /** id → { width, height } relevés au DÉBUT d'un redimensionnement. */
+  const taillesAvantTransformRef = useRef(new Map());
+  /** Nombre de nœuds en cours de redimensionnement (cf. glissementsEnCoursRef). */
+  const transformsEnCoursRef = useRef(0);
 
   // ── Studio workbench : sélection par région ─────────────────────────────
   const interactionTool = useSmartboardKonvaStore((s) => s.interactionTool);
@@ -480,6 +875,21 @@ const KonvaBoardStage = forwardRef(function KonvaBoardStage(
   const setSelectedIds = useSmartboardKonvaStore((s) => s.setSelectedIds);
   const setInteractionTool = useSmartboardKonvaStore((s) => s.setInteractionTool);
   const updateObject = useSmartboardKonvaStore((s) => s.updateObject);
+  const marquerBoiteImageManuelle = useSmartboardKonvaStore((s) => s.marquerBoiteImageManuelle);
+  const marquerHauteurTexteManuelle = useSmartboardKonvaStore((s) => s.marquerHauteurTexteManuelle);
+  const copierSelection = useSmartboardKonvaStore((s) => s.copierSelection);
+  const couperSelection = useSmartboardKonvaStore((s) => s.couperSelection);
+  const collerObjets = useSmartboardKonvaStore((s) => s.collerObjets);
+  const collerTexte = useSmartboardKonvaStore((s) => s.collerTexte);
+  const marquerPressePapiersSysteme = useSmartboardKonvaStore((s) => s.marquerPressePapiersSysteme);
+  const deplacerSelectionDansLaPile = useSmartboardKonvaStore((s) => s.deplacerSelectionDansLaPile);
+  const groupSelectedStore = useSmartboardKonvaStore((s) => s.groupSelected);
+  const ungroupSelectedStore = useSmartboardKonvaStore((s) => s.ungroupSelected);
+  const insererAncreTrace = useSmartboardKonvaStore((s) => s.insererAncreTrace);
+  const supprimerAncreTrace = useSmartboardKonvaStore((s) => s.supprimerAncreTrace);
+  const arrondirAncreTrace = useSmartboardKonvaStore((s) => s.arrondirAncreTrace);
+  const deplacerAncreTrace = useSmartboardKonvaStore((s) => s.deplacerAncreTrace);
+  const terminerDeplacementAncre = useSmartboardKonvaStore((s) => s.terminerDeplacementAncre);
   const { toast } = useToast();
 
   const isMarqueeMode =
@@ -487,7 +897,6 @@ const KonvaBoardStage = forwardRef(function KonvaBoardStage(
     interactionTool === 'marquee-ellipse' ||
     interactionTool === 'marquee-lasso';
   const isCropMode = interactionTool === 'crop-image';
-  const blockObjectHit = isMarqueeMode || isCropMode;
   const [marqueeDraft, setMarqueeDraft] = useState(null);
   const [cropDraft, setCropDraft] = useState(null);
 
@@ -497,16 +906,45 @@ const KonvaBoardStage = forwardRef(function KonvaBoardStage(
   const setPencilSize   = useSmartboardKonvaStore((s) => s.setPencilSize ?? (() => {}));
   const addObject        = useSmartboardKonvaStore((s) => s.addObject);
   const pushHistoryStore = useSmartboardKonvaStore((s) => s.pushHistory);
+  const effacerObjets    = useSmartboardKonvaStore((s) => s.effacerObjets);
   const isPenMode        = activeVectorTool === 'pen';
   const isPencilMode     = activeVectorTool === 'pencil';
+  const isEraserMode     = activeVectorTool === 'eraser';
   const isDirectSelect   = activeVectorTool === 'directSelect';
+  /**
+   * Outils qui ÉDITENT les ancres d'un tracé existant (content.points).
+   * ⛔ MESURÉ : ces quatre outils posaient un badge et rien d'autre — aucun clic
+   * n'atteignait les points. Ils vivent ici : sélection du tracé, poignées d'ancre,
+   * insertion/suppression/arrondi, glissement de nœud.
+   */
+  const outilAncres =
+    isDirectSelect ||
+    activeVectorTool === 'penAdd' ||
+    activeVectorTool === 'penRemove' ||
+    activeVectorTool === 'penConvert';
 
-  /** Points du tracé en cours [[x,y], …] */
+  /* ⛔ Un outil de DESSIN prend toute la surface : les objets cessent d'écouter le
+     pointeur, sinon un coup de crayon posé sur une forme la DÉPLACE, et la gomme ne
+     peut jamais atteindre un tracé recouvert. */
+  const blockObjectHit = isMarqueeMode || isCropMode || isPenMode || isPencilMode || isEraserMode;
+
+  /** Points du tracé en cours [[x,y], …] — APERÇU seulement (la vérité est en ref) */
   const [penPoints,      setPenPoints]     = useState([]);
   /** Position de la souris pour la ligne de preview */
   const [penPreview,     setPenPreview]    = useState(null);
-  /** true = le crayon est en train de dessiner (mousedown tenu) */
-  const [pencilActive,   setPencilActive]  = useState(false);
+  /**
+   * Tracé crayon en cours — SOURCE DE VÉRITÉ.
+   * ⛔ MESURÉ (tracé enregistré 24,7×49,7 px pour un geste de ~300×175, ancré à la FIN
+   * du geste) : quand l'accumulation dépendait de l'état React (`pencilActive` lu dans
+   * la closure du handler committé), tout mousemove arrivé avant le commit du mousedown
+   * était PERDU — un geste rapide ne gardait que sa fin. Les points vivent donc ici.
+   */
+  const traceCrayonRef = useRef(null);
+  /** Épaisseur crayon lue au relâchement (la molette peut bouger PENDANT le geste). */
+  const pencilSizeRef = useRef(pencilSize);
+  pencilSizeRef.current = pencilSize;
+  /** Geste gomme en cours : { aPousse, tues:Set } — null hors geste. */
+  const gommeRef = useRef(null);
 
   const setNodeRef = (id) => (node) => {
     if (node) nodeRefs.current[id] = node;
@@ -776,8 +1214,10 @@ const KonvaBoardStage = forwardRef(function KonvaBoardStage(
   useEffect(() => {
     const tr = trRef.current;
     if (!tr) return;
-    // Masquer le Transformer quand un outil vecteur de dessin ou sélection région est actif
-    if (isPenMode || isPencilMode || isMarqueeMode || isCropMode) {
+    // Masquer le Transformer quand un outil vecteur de dessin ou sélection région est actif.
+    // Les outils d'ancre aussi : leurs poignées de nœud remplacent le cadre, et une
+    // poignée du Transformer volerait les clics posés près d'une ancre.
+    if (isPenMode || isPencilMode || isEraserMode || isMarqueeMode || isCropMode || outilAncres) {
       tr.nodes([]);
       tr.getLayer()?.batchDraw();
       return;
@@ -787,9 +1227,15 @@ const KonvaBoardStage = forwardRef(function KonvaBoardStage(
       .filter((id) => !lockedIds.has(id))
       .map((id) => nodeRefs.current[id])
       .filter(Boolean);
+    /* ⛔ Ne PAS réattacher une liste identique : le Transformer est attaché à la main au
+       `mousedown` (cf. attraperPoigneeAuMousedown) et un `nodes()` de trop en plein
+       redimensionnement remettrait la géométrie à zéro sous le doigt. */
+    const actuels = tr.nodes() || [];
+    const memes = actuels.length === nodes.length && nodes.every((n, i) => actuels[i] === n);
+    if (memes) return;
     tr.nodes(nodes);
     tr.getLayer()?.batchDraw();
-  }, [selectedIds, sorted, lockedIds, isPenMode, isPencilMode, isMarqueeMode, isCropMode]);
+  }, [selectedIds, sorted, lockedIds, isPenMode, isPencilMode, isEraserMode, isMarqueeMode, isCropMode, outilAncres]);
 
   /** Coords souris dans l'espace document (sans scale) */
   const getStagePos = useCallback((e) => {
@@ -799,18 +1245,29 @@ const KonvaBoardStage = forwardRef(function KonvaBoardStage(
     return { x: pt.x / sc, y: pt.y / sc };
   }, []);
 
-  /** Finalise le tracé plume et crée l'objet line dans la scène */
-  const finalizePen = useCallback((pts) => {
-    if (pts.length < 2) { setPenPoints([]); return; }
+  /** Finalise un tracé (plume ou crayon) et crée l'objet line dans la scène */
+  const finalizePen = useCallback((pts, options = {}) => {
+    /* Doublons consécutifs écartés : le double-clic de fin (plume) pose deux ancres
+       confondues — deux points au même endroit ne tracent RIEN et polluaient la scène
+       (objets fantômes points:[0,0,0,0] mesurés par l'escouade T2). */
+    const propres = [];
+    for (const p of pts ?? []) {
+      const dernier = propres[propres.length - 1];
+      if (dernier && Math.hypot(p.x - dernier.x, p.y - dernier.y) < 0.75) continue;
+      propres.push(p);
+    }
+    setPenPoints([]);
+    setPenPreview(null);
+    if (propres.length < 2) return; // tracé dégénéré : pas d'objet, pas d'historique
     pushHistoryStore();
-    const xs   = pts.map((p) => p.x);
-    const ys   = pts.map((p) => p.y);
+    const xs   = propres.map((p) => p.x);
+    const ys   = propres.map((p) => p.y);
     const minX = Math.min(...xs);
     const minY = Math.min(...ys);
     const maxX = Math.max(...xs);
     const maxY = Math.max(...ys);
     // Les points doivent être relatifs à (minX, minY) — origin du nœud Konva
-    const relPoints = pts.flatMap((p) => [p.x - minX, p.y - minY]);
+    const relPoints = propres.flatMap((p) => [p.x - minX, p.y - minY]);
     addObject({
       id: `line_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`,
       type: 'line',
@@ -820,12 +1277,89 @@ const KonvaBoardStage = forwardRef(function KonvaBoardStage(
       height: Math.max(14, maxY - minY),
       rotation: 0,
       content: { points: relPoints },
-      style:   { stroke: '#ffffff', strokeWidth: 2 },
+      style:   { stroke: '#ffffff', strokeWidth: Math.max(0.5, Number(options.epaisseur) || 2) },
       opacity: 1,
     });
-    setPenPoints([]);
-    setPenPreview(null);
   }, [addObject, pushHistoryStore]);
+
+  /**
+   * Démarre un tracé crayon.
+   *
+   * ⛔ Les écouteurs sont posés AU GESTE (window), pas via useEffect : un commit React
+   * peut n'arriver qu'après plusieurs mousemove d'un geste rapide, et tout évènement
+   * d'avant-commit était perdu (cf. traceCrayonRef). La conversion écran → document
+   * passe par le rect du conteneur mesuré à CHAQUE évènement (clientToStage) — aucune
+   * dépendance au cache pointeur de Konva ni à l'état React.
+   */
+  const commencerCrayon = useCallback((e) => {
+    const stage = konvaStageRef.current;
+    if (!stage) return;
+    const depart = clientToStage(stage, e.evt.clientX, e.evt.clientY);
+    traceCrayonRef.current = [depart];
+    setPenPoints([depart]);
+    const surMouvement = (ev) => {
+      const st = konvaStageRef.current;
+      const pts = traceCrayonRef.current;
+      if (!st || !pts) return;
+      const pos = clientToStage(st, ev.clientX, ev.clientY);
+      const dernier = pts[pts.length - 1];
+      if (dernier && Math.hypot(pos.x - dernier.x, pos.y - dernier.y) < 0.5) return;
+      pts.push(pos);
+      setPenPoints([...pts]); // aperçu — la vérité reste dans la ref
+    };
+    const terminer = () => {
+      window.removeEventListener('mousemove', surMouvement);
+      window.removeEventListener('mouseup', terminer);
+      const pts = traceCrayonRef.current;
+      traceCrayonRef.current = null;
+      if (pts) finalizePen(pts, { epaisseur: pencilSizeRef.current });
+    };
+    window.addEventListener('mousemove', surMouvement);
+    window.addEventListener('mouseup', terminer);
+  }, [finalizePen]);
+
+  /** Efface les tracés (`line`) passant sous le pointeur — coords document. */
+  const effacerSousLePointeur = useCallback(
+    (pos) => {
+      const tolBase = RAYON_GOMME_ECRAN / (scale || 1);
+      const deja = gommeRef.current?.tues;
+      const ids = [];
+      for (const o of sorted) {
+        if (o.type !== 'line' || o.locked || o.hidden || deja?.has(o.id)) continue;
+        const tol = tolBase + (Number(o.style?.strokeWidth) || 2) / 2;
+        if (tracePresDuPoint(o, pos, tol)) ids.push(o.id);
+      }
+      if (!ids.length) return;
+      /* Un balayage = UN pas d'historique, poussé au premier tracé emporté. */
+      if (gommeRef.current && !gommeRef.current.aPousse) {
+        pushHistoryStore();
+        gommeRef.current.aPousse = true;
+      }
+      ids.forEach((id) => deja?.add(id));
+      effacerObjets(ids);
+    },
+    [sorted, scale, effacerObjets, pushHistoryStore],
+  );
+
+  /** Démarre un balayage de gomme (mêmes écouteurs imperatifs que le crayon). */
+  const commencerGomme = useCallback((e) => {
+    const stage = konvaStageRef.current;
+    if (!stage) return;
+    gommeRef.current = { aPousse: false, tues: new Set() };
+    effacerSousLePointeur(clientToStage(stage, e.evt.clientX, e.evt.clientY));
+    const surMouvement = (ev) => {
+      const st = konvaStageRef.current;
+      if (!st || !gommeRef.current) return;
+      effacerSousLePointeur(clientToStage(st, ev.clientX, ev.clientY));
+    };
+    const terminer = () => {
+      window.removeEventListener('mousemove', surMouvement);
+      window.removeEventListener('mouseup', terminer);
+      gommeRef.current = null;
+    };
+    window.addEventListener('mousemove', surMouvement);
+    window.addEventListener('mouseup', terminer);
+  }, [effacerSousLePointeur]);
 
   const onStageMouseDown = useCallback(
     (e) => {
@@ -837,12 +1371,16 @@ const KonvaBoardStage = forwardRef(function KonvaBoardStage(
         return;
       }
 
-      // ── Crayon : débute le tracé libre ───────────────────────────────
+      // ── Crayon : débute le tracé libre (écouteurs window, cf. commencerCrayon) ──
       if (isPencilMode) {
         if (e.target !== e.target.getStage()) return;
-        const pos = getStagePos(e);
-        setPencilActive(true);
-        setPenPoints([pos]);
+        commencerCrayon(e);
+        return;
+      }
+
+      // ── Gomme : efface les tracés balayés ────────────────────────────
+      if (isEraserMode) {
+        commencerGomme(e);
         return;
       }
 
@@ -894,12 +1432,15 @@ const KonvaBoardStage = forwardRef(function KonvaBoardStage(
       selectOnly,
       isPenMode,
       isPencilMode,
+      isEraserMode,
       isMarqueeMode,
       isCropMode,
       interactionTool,
       getStagePos,
       selectedIds,
       sorted,
+      commencerCrayon,
+      commencerGomme,
     ],
   );
 
@@ -907,40 +1448,37 @@ const KonvaBoardStage = forwardRef(function KonvaBoardStage(
     (e) => {
       if (isPenMode && penPoints.length > 0) {
         setPenPreview(getStagePos(e));
-        return;
-      }
-      if (isPencilMode && pencilActive) {
-        const pos = getStagePos(e);
-        setPenPoints((prev) => [...prev, pos]);
       }
     },
-    [isPenMode, isPencilMode, penPoints.length, pencilActive, getStagePos],
-  );
-
-  const onStageMouseUp = useCallback(
-    () => {
-      if (isPencilMode && pencilActive) {
-        setPencilActive(false);
-        finalizePen(penPoints);
-      }
-    },
-    [isPencilMode, pencilActive, penPoints, finalizePen],
+    [isPenMode, penPoints.length, getStagePos],
   );
 
   const onStageDblClick = useCallback(
-    (e) => {
-      if (isPenMode && penPoints.length >= 1) {
-        // Ajoute le point du dbl-clic et finalise
-        const pos = getStagePos(e);
-        finalizePen([...penPoints, pos]);
-      }
+    () => {
+      if (!isPenMode || penPoints.length < 3) return;
+      /* ⛔ MESURÉ : Konva émet un dblclick pour TOUTE paire de clics rapprochés dans le
+         TEMPS, même à 150 px l'un de l'autre — 4 ancres posées vite = 3 objets au lieu
+         d'un chemin. Un « double-clic de fin » authentique, ce sont deux clics au même
+         ENDROIT : les deux dernières ancres confondues (le mousedown du double a déjà
+         posé la sienne). Sinon, le chemin continue. */
+      const a = penPoints[penPoints.length - 1];
+      const b = penPoints[penPoints.length - 2];
+      if (Math.hypot(a.x - b.x, a.y - b.y) > 6 / (scale || 1)) return;
+      finalizePen(penPoints);
     },
-    [isPenMode, penPoints, finalizePen, getStagePos],
+    [isPenMode, penPoints, finalizePen, scale],
   );
 
-  // Escape annule le tracé en cours ou la sélection région
+  // Entrée termine le chemin plume ; Escape annule le tracé en cours ou la sélection région
   useEffect(() => {
     const onKey = (ev) => {
+      if (ev.key === 'Enter') {
+        if (!isPenMode || penPoints.length < 2) return;
+        if (estSaisieEnCours(ev.target) || estSaisieEnCours(document.activeElement)) return;
+        ev.preventDefault();
+        finalizePen(penPoints);
+        return;
+      }
       if (ev.key !== 'Escape') return;
       if (marqueeDraft) {
         ev.preventDefault();
@@ -960,10 +1498,11 @@ const KonvaBoardStage = forwardRef(function KonvaBoardStage(
         });
         return;
       }
-      if (isPenMode || isPencilMode) {
+      if (isPenMode || isPencilMode || isEraserMode) {
+        traceCrayonRef.current = null; // le mouseup window ne finalisera rien
+        gommeRef.current = null;
         setPenPoints([]);
         setPenPreview(null);
-        setPencilActive(false);
         return;
       }
       if (isMarqueeMode) {
@@ -988,6 +1527,7 @@ const KonvaBoardStage = forwardRef(function KonvaBoardStage(
   }, [
     isPenMode,
     isPencilMode,
+    isEraserMode,
     isMarqueeMode,
     isCropMode,
     marqueeDraft,
@@ -995,7 +1535,291 @@ const KonvaBoardStage = forwardRef(function KonvaBoardStage(
     clearRegionMarquee,
     setInteractionTool,
     toast,
+    penPoints,
+    finalizePen,
   ]);
+
+  /**
+   * Rattrape le glissement lancé JUSTE APRÈS le clic de sélection.
+   *
+   * ⛔ MESURÉ : un tel glissement DÉPLAÇAIT l'objet (bloc descendu de 100 px,
+   * recouvrement créé) au lieu de le redimensionner — parce qu'au `mousedown` l'objet
+   * n'était pas encore sélectionné : le Transformer n'était pas attaché, la poignée
+   * visée n'existait pas encore, et le clic tombait donc sur la forme. Sur un objet
+   * DÉJÀ sélectionné la même poignée redimensionnait bien (56 → 298 px).
+   *
+   * On attache donc le Transformer SYNCHRONEMENT (avant que React ne recommite) et, si
+   * le pointeur tombe sur une poignée, on annule le glissement de l'objet et on démarre
+   * le redimensionnement sur cette poignée.
+   *
+   * @returns {boolean} true si la poignée a pris la main
+   */
+  const attraperPoigneeAuMousedown = useCallback(
+    (e, id) => {
+      const tr = trRef.current;
+      const node = nodeRefs.current[id];
+      const stage = e.target?.getStage?.();
+      if (!tr || !node || !stage || blockObjectHit || isPenMode || isPencilMode || outilAncres) return false;
+      if (lockedIds.has(id)) return false;
+      try {
+        tr.nodes([node]);
+        tr.forceUpdate();
+        stage.setPointersPositions(e.evt);
+        const p = stage.getPointerPosition();
+        if (!p) return false;
+        const ancres = tr.find('._anchor').filter((a) => a.visible() && a.listening());
+        let cible = null;
+        let meilleure = Infinity;
+        for (const a of ancres) {
+          const r = a.getClientRect();
+          if (p.x < r.x || p.x > r.x + r.width || p.y < r.y || p.y > r.y + r.height) continue;
+          const d = Math.hypot(p.x - (r.x + r.width / 2), p.y - (r.y + r.height / 2));
+          if (d < meilleure) {
+            meilleure = d;
+            cible = a;
+          }
+        }
+        if (!cible) return false;
+        /* Coupe le glissement déjà armé par Konva au mousedown (`_dragElements`
+           passe de 'ready' à supprimé) ; on le rendra au relâchement. */
+        node.draggable(false);
+        draggableSuspenduRef.current = node;
+        cible.fire('mousedown', { evt: e.evt, target: cible });
+        return true;
+      } catch {
+        return false;
+      }
+    },
+    [blockObjectHit, isPenMode, isPencilMode, outilAncres, lockedIds],
+  );
+
+  /* Rend le `draggable` confisqué le temps d'un redimensionnement attrapé au vol. */
+  useEffect(() => {
+    const rendre = () => {
+      const n = draggableSuspenduRef.current;
+      if (!n) return;
+      draggableSuspenduRef.current = null;
+      try {
+        n.draggable(true);
+      } catch {
+        /* nœud démonté entre-temps */
+      }
+    };
+    window.addEventListener('mouseup', rendre);
+    window.addEventListener('touchend', rendre);
+    return () => {
+      window.removeEventListener('mouseup', rendre);
+      window.removeEventListener('touchend', rendre);
+    };
+  }, []);
+
+  /* ═══ Presse-papiers système + recouvrement ═══════════════════════════════ */
+
+  const collerImage = useCallback(
+    async (fichier) => {
+      let mesure = null;
+      let urlLocale = null;
+      try {
+        urlLocale = URL.createObjectURL(fichier);
+        /* Mesure AVANT le téléversement : le fichier local donne les dimensions natives
+           sans signature ni aller-retour réseau — la boîte est donc juste dès la pose. */
+        mesure = await mesurerImage(urlLocale, { cache: false });
+      } catch {
+        mesure = null;
+      } finally {
+        if (urlLocale) URL.revokeObjectURL(urlLocale);
+      }
+      try {
+        const { url } = await uploadSmartboardCanvasImage(fichier);
+        addObject({
+          type: 'image',
+          layer: 2,
+          rotation: 0,
+          opacity: 1,
+          style: { ajustement: MODES_AJUSTEMENT.CONTAIN },
+          content: {
+            src: url,
+            ...(mesure
+              ? { natif: { largeurNative: mesure.largeurNative, hauteurNative: mesure.hauteurNative, rapportNatif: mesure.rapportNatif } }
+              : {}),
+          },
+        });
+        toast({
+          title: 'Image collée',
+          description: mesure
+            ? `Posée au format natif ${mesure.largeurNative} × ${mesure.hauteurNative}.`
+            : 'Format natif mesuré au chargement.',
+        });
+      } catch (err) {
+        toast({
+          variant: 'destructive',
+          title: 'Collage impossible',
+          description: err?.message || 'Le téléversement de l’image a échoué.',
+        });
+      }
+    },
+    [addObject, toast],
+  );
+
+  useEffect(() => {
+    const onPaste = (e) => {
+      if (estSaisieEnCours(e.target) || estSaisieEnCours(document.activeElement)) return;
+      const dt = e.clipboardData;
+      if (!dt) return;
+
+      const fichier = Array.from(dt.items || [])
+        .filter((it) => it.kind === 'file' && String(it.type || '').startsWith('image/'))
+        .map((it) => it.getAsFile?.())
+        .find(Boolean);
+      if (fichier) {
+        e.preventDefault();
+        void collerImage(fichier);
+        return;
+      }
+
+      const texte = typeof dt.getData === 'function' ? dt.getData('text/plain') || '' : '';
+      const objets = decoderPressePapiers(texte);
+      if (objets?.length) {
+        e.preventDefault();
+        collerObjets(objets);
+        return;
+      }
+
+      /* Écriture système refusée à la copie : le presse-papiers interne fait foi,
+         sinon ⌘C suivi de ⌘V collerait un vieux texte venu d'une autre application. */
+      const interne = useSmartboardKonvaStore.getState().presseCanevas;
+      if (interne?.objets?.length && interne.systeme !== true) {
+        e.preventDefault();
+        collerObjets(interne.objets);
+        return;
+      }
+
+      if (texte.trim()) {
+        e.preventDefault();
+        collerTexte(texte);
+      }
+    };
+    window.addEventListener('paste', onPaste);
+    return () => window.removeEventListener('paste', onPaste);
+  }, [collerImage, collerObjets, collerTexte]);
+
+  useEffect(() => {
+    const onKey = (e) => {
+      if (e.defaultPrevented || e.repeat) return;
+      if (estSaisieEnCours(e.target) || estSaisieEnCours(document.activeElement)) return;
+      const mod = e.metaKey || e.ctrlKey;
+      if (!mod) return;
+
+      /* Recouvrement — ⌘⇧] premier plan / ⌘⇧[ arrière-plan.
+         ⛔ `preventDefault` est ici NÉCESSAIRE : `useSmartboardDesignKeyboardShortcuts`
+         (hors périmètre) écoute les mêmes touches pour un alignement centré et sort sur
+         `defaultPrevented`. Sans ça, un même appui ferait les deux. */
+      if (e.shiftKey && (e.code === 'BracketRight' || e.code === 'BracketLeft')) {
+        const n = deplacerSelectionDansLaPile(e.code === 'BracketRight' ? 'premier-plan' : 'arriere-plan');
+        if (!n) return;
+        e.preventDefault();
+        return;
+      }
+      const bas = String(e.key || '').toLowerCase();
+
+      /* ⌘G groupe / ⌘⇧G dégroupe — le sous-titre du bouton Grouper PROMETTAIT Ctrl+G
+         sans qu'aucun binding n'existe (mesuré : rien). `preventDefault` obligatoire :
+         ⌘G est « rechercher le suivant » dans le navigateur. */
+      if (bas === 'g' && !e.altKey) {
+        e.preventDefault();
+        if (e.shiftKey) {
+          const n = ungroupSelectedStore();
+          if (n) toast({ title: 'Dégroupé', description: `${n} groupe(s) dissous — les objets redeviennent indépendants.` });
+        } else {
+          const gid = groupSelectedStore();
+          if (gid) {
+            const nb = useSmartboardKonvaStore.getState().selectedIds.length;
+            toast({ title: 'Groupé', description: `${nb} objets liés — un clic sélectionne et déplace tout le groupe.` });
+          }
+        }
+        return;
+      }
+
+      if (e.shiftKey || e.altKey) return;
+      if (bas !== 'c' && bas !== 'x' && bas !== 'v') return;
+
+      /* ⛔ CONTRAINTE : `SmartboardKonvaEditorV1` (hors périmètre) tient un
+         presse-papiers interne sur ⌘C/⌘V. Laisser les deux vivre, c'est coller DEUX
+         fois. Ce composant étant monté SOUS l'éditeur, son écouteur est enregistré en
+         premier : `stopImmediatePropagation` neutralise l'ancien chemin, et le
+         presse-papiers système devient la source unique. `preventDefault` est
+         volontairement OMIS sur ⌘V — il empêcherait l'évènement `paste`. */
+      if (bas === 'v') {
+        e.stopImmediatePropagation();
+        return;
+      }
+
+      const { objets, texte } = bas === 'x' ? couperSelection() : copierSelection();
+      e.stopImmediatePropagation();
+      if (!objets.length) return;
+      e.preventDefault();
+      if (texte && navigator?.clipboard?.writeText) {
+        navigator.clipboard
+          .writeText(texte)
+          .then(() => marquerPressePapiersSysteme(true))
+          .catch(() => marquerPressePapiersSysteme(false));
+      } else {
+        marquerPressePapiersSysteme(false);
+      }
+      toast({
+        title: bas === 'x' ? 'Coupé' : 'Copié',
+        description: `${objets.length} objet(s) — ⌘V pour coller.`,
+      });
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [
+    copierSelection,
+    couperSelection,
+    marquerPressePapiersSysteme,
+    deplacerSelectionDansLaPile,
+    groupSelectedStore,
+    ungroupSelectedStore,
+    toast,
+  ]);
+
+  /** Ancre du tracé la plus proche d'un point document — -1 si aucune sous tolérance. */
+  const ancreLaPlusProche = useCallback((obj, posDoc, tolDoc) => {
+    const paires = pairesDuTrace(obj.content?.points);
+    let idx = -1;
+    let min = Infinity;
+    paires.forEach((p, i) => {
+      const doc = localVersDocTrace(obj, p);
+      const d = Math.hypot(posDoc.x - doc.x, posDoc.y - doc.y);
+      if (d < min) {
+        min = d;
+        idx = i;
+      }
+    });
+    return min <= tolDoc ? idx : -1;
+  }, []);
+
+  /** Action d'un outil d'ancre sur UNE ancre (clic poignée ou clic tracé proche). */
+  const agirSurAncre = useCallback(
+    (objId, index) => {
+      if (activeVectorTool === 'penRemove') {
+        const r = supprimerAncreTrace(objId, index);
+        if (!r.ok && r.raison === 'minimum') {
+          toast({ title: 'Suppr. ancre', description: 'Un tracé garde au moins deux ancres (trois s’il est fermé).' });
+        }
+        return;
+      }
+      if (activeVectorTool === 'penConvert') {
+        const r = arrondirAncreTrace(objId, index);
+        if (!r.ok && r.raison === 'extremite') {
+          toast({ title: 'Convertir point', description: 'Une extrémité de tracé ouvert ne s’arrondit pas — visez une ancre intérieure.' });
+        } else if (!r.ok && r.raison === 'colineaire') {
+          toast({ title: 'Convertir point', description: 'Ancre confondue avec sa voisine : rien à arrondir.' });
+        }
+      }
+    },
+    [activeVectorTool, supprimerAncreTrace, arrondirAncreTrace, toast],
+  );
 
   const onObjectMouseDown = useCallback(
     (e, id) => {
@@ -1005,33 +1829,158 @@ const KonvaBoardStage = forwardRef(function KonvaBoardStage(
         return;
       }
       if (e.evt.button !== 0) return;
+      const obj = sorted.find((o) => o.id === id);
+
+      /* ── Outils d'ancre sur un tracé : le clic ÉDITE, il ne glisse pas ─────── */
+      if (outilAncres && obj?.type === 'line' && !obj.locked) {
+        selectOnly?.(id);
+        onObjectPrimaryClick?.();
+        const pos = getStagePos(e);
+        const tol = 10 / (scale || 1);
+        if (activeVectorTool === 'penAdd') {
+          const r = insererAncreTrace(id, pos, tol + (Number(obj.style?.strokeWidth) || 2) / 2);
+          if (!r.ok && r.raison === 'loin') {
+            toast({ title: 'Ajouter ancre', description: 'Cliquez sur le tracé lui-même.' });
+          }
+          return;
+        }
+        if (activeVectorTool === 'penRemove' || activeVectorTool === 'penConvert') {
+          const idx = ancreLaPlusProche(obj, pos, tol);
+          if (idx === -1) {
+            toast({ title: activeVectorTool === 'penRemove' ? 'Suppr. ancre' : 'Convertir point', description: 'Cliquez une ancre (point cyan) du tracé sélectionné.' });
+            return;
+          }
+          agirSurAncre(id, idx);
+        }
+        return; // directSelect : les poignées d'ancre prennent le relais
+      }
+
       const mod = e.evt.shiftKey || e.evt.metaKey || e.evt.ctrlKey;
+      const dejaSelectionne = (selectedIds || []).includes(id);
+      if (!mod && !dejaSelectionne && attraperPoigneeAuMousedown(e, id)) {
+        selectOnly?.(id);
+        onObjectPrimaryClick?.();
+        return;
+      }
       if (mod) {
         toggleSelect?.(id);
+      } else if (dejaSelectionne && (selectedIds || []).length > 1) {
+        /* Sélection multiple : on ne la casse PAS au `mousedown`, sinon aucune
+           pièce d'un tableau ne peut entraîner les autres. Réduction reportée au
+           relâchement, et seulement si rien n'a glissé (usage des éditeurs). */
+        reductionDiffereeRef.current = id;
       } else {
-        selectOnly?.(id);
+        /* ── Groupe : cliquer un membre sélectionne TOUT le groupe ──────────────
+           ⛔ MESURÉ : `groupId` n'était LU nulle part dans le moteur — le drag d'un
+           membre déplaçait 1/3 du groupe. La sélection entière branche le groupe sur
+           le multi-drag existant (Konva glisse tous les nœuds du Transformer). Un
+           second clic sec sur un membre isole la pièce (réduction différée ci-dessus). */
+        const groupe = obj?.groupId
+          ? sorted.filter((o) => o.groupId === obj.groupId).map((o) => o.id)
+          : null;
+        if (groupe && groupe.length > 1) {
+          setSelectedIds(groupe);
+          /* Attache SYNCHRONE (avant le commit React) : sans elle, le drag entamé
+             dans le même geste que le clic n'emporterait que la pièce cliquée. */
+          const tr = trRef.current;
+          const nodes = groupe.map((gid) => nodeRefs.current[gid]).filter(Boolean);
+          if (tr && nodes.length) {
+            try {
+              tr.nodes(nodes);
+              tr.forceUpdate();
+            } catch {
+              /* nœuds en cours de (dé)montage : l'effet réattachera */
+            }
+          }
+        } else {
+          selectOnly?.(id);
+        }
       }
       onObjectPrimaryClick?.();
     },
-    [selectOnly, toggleSelect, onObjectPrimaryClick],
+    [
+      selectOnly,
+      toggleSelect,
+      onObjectPrimaryClick,
+      selectedIds,
+      attraperPoigneeAuMousedown,
+      sorted,
+      outilAncres,
+      activeVectorTool,
+      getStagePos,
+      scale,
+      insererAncreTrace,
+      ancreLaPlusProche,
+      agirSurAncre,
+      setSelectedIds,
+      toast,
+    ],
+  );
+
+  /** Clic sec (aucun glissement) sur une pièce déjà sélectionnée → on isole enfin. */
+  const onObjectMouseUp = useCallback(
+    (id) => {
+      if (reductionDiffereeRef.current === id) selectOnly?.(id);
+      reductionDiffereeRef.current = null;
+    },
+    [selectOnly],
   );
 
   const handleDragStart = useCallback(
     (obj) => {
       dragOriginRef.current = { x: obj.x, y: obj.y };
-      pushHistory?.();
-      onUserCanvasGesture?.({ kind: 'drag' });
+      reductionDiffereeRef.current = null;
+      glissementsEnCoursRef.current += 1;
+      /* Un seul cliché d'historique pour tout le geste (cf. glissementsEnCoursRef). */
+      if (glissementsEnCoursRef.current === 1) {
+        pushHistory?.();
+        onUserCanvasGesture?.({ kind: 'drag' });
+      }
     },
     [pushHistory, onUserCanvasGesture],
+  );
+
+  /**
+   * Accroche la boîte déplacée aux repères des autres objets et de la page.
+   *
+   * ⛔ UN SEUL objet à la fois : sur une sélection multiple Konva glisse CHAQUE nœud
+   * séparément (cf. glissementsEnCoursRef) ; accrocher chacun de son côté écarterait
+   * les pièces les unes des autres. Mieux vaut pas de magnétisme qu'un groupe cassé.
+   */
+  const accrocher = useCallback(
+    (obj, attrs, e) => {
+      if (glissementsEnCoursRef.current !== 1 || e?.evt?.altKey) {
+        if (guidesAccrochage.length) setGuidesAccrochage([]);
+        return attrs;
+      }
+      const boite = { x: attrs.x, y: attrs.y, width: attrs.width ?? 0, height: attrs.height ?? 0 };
+      const cibles = sorted
+        .filter((o) => o.id !== obj.id && !o.hidden && o.visible !== false)
+        .map((o) => ({ x: o.x ?? 0, y: o.y ?? 0, width: o.width ?? 0, height: o.height ?? 0 }));
+      const { dx, dy, guides } = calculerAccrochage({
+        boite,
+        cibles,
+        lignes: lignesDePage({ width, height }),
+        seuil: SEUIL_ACCROCHAGE_PX / (scale || 1),
+      });
+      const memes =
+        guides.length === guidesAccrochage.length &&
+        guides.every((g, i) => g.axe === guidesAccrochage[i].axe && g.valeur === guidesAccrochage[i].valeur);
+      if (!memes) setGuidesAccrochage(guides);
+      if (!dx && !dy) return attrs;
+      return { ...attrs, x: attrs.x + dx, y: attrs.y + dy };
+    },
+    [sorted, width, height, scale, guidesAccrochage],
   );
 
   const handleDragMove = useCallback(
     (obj, e) => {
       const raw = dragAttrs(obj, e.target);
-      const attrs = applyShiftAxisLock(raw, dragOriginRef.current, e.evt.shiftKey);
+      const cale = applyShiftAxisLock(raw, dragOriginRef.current, e.evt.shiftKey);
+      const attrs = accrocher(obj, cale, e);
       updateObjectTransform?.(obj.id, attrs);
     },
-    [updateObjectTransform],
+    [updateObjectTransform, accrocher],
   );
 
   const handleDragEnd = useCallback(
@@ -1042,6 +1991,8 @@ const KonvaBoardStage = forwardRef(function KonvaBoardStage(
         if (!clientRectIntersectsStage(box, width, height)) {
           onDeleteObject?.(obj.id);
           dragOriginRef.current = null;
+          glissementsEnCoursRef.current = Math.max(0, glissementsEnCoursRef.current - 1);
+          setGuidesAccrochage([]);
           return;
         }
       } catch {
@@ -1049,17 +2000,34 @@ const KonvaBoardStage = forwardRef(function KonvaBoardStage(
       }
       let attrs = dragAttrs(obj, e.target);
       attrs = applyShiftAxisLock(attrs, dragOriginRef.current, e.evt.shiftKey);
+      attrs = accrocher(obj, attrs, e);
       attrs = snapPosAttrs(attrs, snapGrid);
       updateObjectTransform?.(obj.id, attrs);
       dragOriginRef.current = null;
+      glissementsEnCoursRef.current = Math.max(0, glissementsEnCoursRef.current - 1);
+      setGuidesAccrochage([]);
     },
-    [updateObjectTransform, snapGrid, width, height, onDeleteObject],
+    [updateObjectTransform, snapGrid, width, height, onDeleteObject, accrocher],
   );
 
-  const handleTransformStart = useCallback(() => {
-    pushHistory?.();
-    onUserCanvasGesture?.({ kind: 'transform' });
-  }, [pushHistory, onUserCanvasGesture]);
+  /**
+   * ⛔ La taille est relevée AU DÉBUT du geste : pendant le redimensionnement,
+   * `updateObjectTransform` réécrit déjà l'objet à chaque `transform`, donc comparer à
+   * la fin avec l'objet du rendu courant ne montrerait plus aucun écart — et le bloc
+   * de texte reprendrait sa hauteur automatique juste après que l'utilisateur l'a fixée.
+   */
+  const handleTransformStart = useCallback(
+    (obj) => {
+      if (obj?.id) taillesAvantTransformRef.current.set(obj.id, { width: obj.width, height: obj.height });
+      transformsEnCoursRef.current += 1;
+      /* Même piège que le glissement : sur une sélection multiple, Konva émet un
+         `transformstart` par nœud attaché. Un seul cliché pour tout le geste. */
+      if (transformsEnCoursRef.current > 1) return;
+      pushHistory?.();
+      onUserCanvasGesture?.({ kind: 'transform' });
+    },
+    [pushHistory, onUserCanvasGesture],
+  );
 
   const handleTransform = useCallback(
     (obj, e) => {
@@ -1072,13 +2040,37 @@ const KonvaBoardStage = forwardRef(function KonvaBoardStage(
     (obj, e) => {
       const attrs = snapPosAttrs(finalizeTransformAttrs(obj, e.target), snapGrid);
       updateObjectTransform?.(obj.id, attrs);
+      /* La taille vient d'être posée à la main : ni la mesure native d'une image ni la
+         mesure du texte ne doivent la reprendre ensuite (on ne confisque pas un geste). */
+      transformsEnCoursRef.current = Math.max(0, transformsEnCoursRef.current - 1);
+      const avant = taillesAvantTransformRef.current.get(obj.id);
+      taillesAvantTransformRef.current.delete(obj.id);
+      if (obj.type === 'image') marquerBoiteImageManuelle?.(obj.id);
+      if (obj.type === 'text' && Math.abs((attrs.height ?? 0) - (avant?.height ?? obj.height ?? 0)) > 0.5) {
+        marquerHauteurTexteManuelle?.(obj.id);
+      }
     },
-    [updateObjectTransform, snapGrid],
+    [updateObjectTransform, snapGrid, marquerBoiteImageManuelle, marquerHauteurTexteManuelle],
   );
 
+  const couleursCadre = useMemo(() => couleursCadreSelection(background), [background]);
+  const remplissageFond = useMemo(
+    () => remplissageDuFond(background, width, height),
+    [background, width, height],
+  );
   const sw = width * scale;
   const sh = height * scale;
   const selSet = useMemo(() => new Set(selectedIds || []), [selectedIds]);
+
+  /** Poignées du Transformer adaptées à la sélection (voir reglerTransformerPourSelection). */
+  const reglageTransformer = useMemo(() => {
+    const parId = new Map(sorted.map((o) => [o.id, o]));
+    const objets = (selectedIds || [])
+      .filter((id) => !lockedIds.has(id))
+      .map((id) => parId.get(id))
+      .filter(Boolean);
+    return reglerTransformerPourSelection(objets, scale);
+  }, [selectedIds, sorted, lockedIds, scale]);
 
   const bindObjectMouseDown = useCallback(
     (obj) => (e) => {
@@ -1117,7 +2109,6 @@ const KonvaBoardStage = forwardRef(function KonvaBoardStage(
       scaleY={scale}
       onMouseDown={onStageMouseDown}
       onMouseMove={onStageMouseMove}
-      onMouseUp={onStageMouseUp}
       onDblClick={onStageDblClick}
       onAuxClick={(e) => {
         if (e.evt.button === 1) e.evt.preventDefault();
@@ -1140,21 +2131,25 @@ const KonvaBoardStage = forwardRef(function KonvaBoardStage(
             ? 'crosshair'
             : isPencilMode
               ? 'crosshair'
-              : isDirectSelect
-                ? 'default'
-                : 'default',
+              : isEraserMode
+                ? 'cell'
+                : outilAncres
+                  ? isDirectSelect
+                    ? 'default'
+                    : 'crosshair'
+                  : 'default',
       }}
       className="rounded-lg"
     >
       <Layer ref={layerRef}>
-        {/* Fond du document — seulement si une couleur est définie (pas transparent) */}
-        {background && background !== 'transparent' && background !== 'none' && (
+        {/* Fond du document — couleur OU dégradé CSS traduit (cf. remplissageDuFond) */}
+        {remplissageFond && (
           <Rect
             x={0}
             y={0}
             width={width}
             height={height}
-            fill={background}
+            {...remplissageFond}
             listening={false}
           />
         )}
@@ -1213,13 +2208,17 @@ const KonvaBoardStage = forwardRef(function KonvaBoardStage(
             selected={selSet.has(obj.id)}
             shapeProps={{
               ref: setNodeRef(obj.id),
-              draggable: !obj.locked && !blockObjectHit,
+              /* ⛔ MESURÉ (Sélection directe) : glisser une ancre déplaçait l'objet
+                 ENTIER — c'était le drag Konva du nœud. Sous un outil d'ancre, un
+                 tracé ne se glisse plus : seuls ses nœuds bougent. */
+              draggable: !obj.locked && !blockObjectHit && !(outilAncres && obj.type === 'line'),
               listening: !blockObjectHit,
               onMouseDown: bindObjectMouseDown(obj),
+              onMouseUp: () => onObjectMouseUp(obj.id),
               onDragStart: () => handleDragStart(obj),
               onDragMove: (e) => handleDragMove(obj, e),
               onDragEnd: (e) => handleDragEnd(obj, e),
-              onTransformStart: handleTransformStart,
+              onTransformStart: () => handleTransformStart(obj),
               onTransform: (e) => handleTransform(obj, e),
               onTransformEnd: (e) => handleTransformEnd(obj, e),
               onDblClick:
@@ -1241,11 +2240,11 @@ const KonvaBoardStage = forwardRef(function KonvaBoardStage(
             : flat;
           return (
             <Group listening={false}>
-              {/* Ligne de tracé */}
+              {/* Ligne de tracé — le crayon montre son épaisseur RÉELLE (molette) */}
               <Line
                 points={previewFlat}
                 stroke="#22d3ee"
-                strokeWidth={1.5 / (scale || 1)}
+                strokeWidth={isPencilMode ? Math.max(0.5, pencilSize) : 1.5 / (scale || 1)}
                 dash={isPenMode ? [6 / (scale || 1), 3 / (scale || 1)] : undefined}
                 lineCap="round"
                 lineJoin="round"
@@ -1278,6 +2277,54 @@ const KonvaBoardStage = forwardRef(function KonvaBoardStage(
                   perfectDrawEnabled={false}
                 />
               )}
+            </Group>
+          );
+        })()}
+
+        {/* ── Poignées d'ancre (Ajouter/Suppr./Convertir/Sélection directe) ────
+            Visibles dès qu'UN tracé est sélectionné sous un outil d'ancre. En
+            Sélection directe elles se GLISSENT : le geste pousse UN cliché
+            d'historique au départ (protocole du Crayon), écrit en live, puis la
+            boîte est rebasée au relâchement. */}
+        {outilAncres && (() => {
+          const sel = selectedIds || [];
+          if (sel.length !== 1) return null;
+          const obj = sorted.find((o) => o.id === sel[0]);
+          if (!obj || obj.type !== 'line' || obj.locked) return null;
+          const paires = pairesDuTrace(obj.content?.points);
+          if (paires.length < 2) return null;
+          const sc = scale || 1;
+          return (
+            <Group>
+              {paires.map((p, i) => {
+                const doc = localVersDocTrace(obj, p);
+                return (
+                  <Circle
+                    key={`ancre_${obj.id}_${i}`}
+                    x={doc.x}
+                    y={doc.y}
+                    radius={5 / sc}
+                    fill="#0a0b0f"
+                    stroke="#22d3ee"
+                    strokeWidth={1.5 / sc}
+                    hitStrokeWidth={8 / sc}
+                    draggable={isDirectSelect}
+                    onMouseDown={(ev) => {
+                      ev.cancelBubble = true;
+                      agirSurAncre(obj.id, i);
+                    }}
+                    onDragStart={(ev) => {
+                      ev.cancelBubble = true;
+                      pushHistoryStore();
+                    }}
+                    onDragMove={(ev) =>
+                      deplacerAncreTrace(obj.id, i, { x: ev.target.x(), y: ev.target.y() })
+                    }
+                    onDragEnd={() => terminerDeplacementAncre(obj.id)}
+                    perfectDrawEnabled={false}
+                  />
+                );
+              })}
             </Group>
           );
         })()}
@@ -1372,25 +2419,39 @@ const KonvaBoardStage = forwardRef(function KonvaBoardStage(
           );
         })()}
 
+        {/* Guides d'alignement — visibles seulement pendant le geste. */}
+        {guidesAccrochage.map((g, i) => (
+          <Line
+            key={`guide_${g.axe}_${g.valeur}_${i}`}
+            points={g.axe === 'V' ? [g.valeur, 0, g.valeur, height] : [0, g.valeur, width, g.valeur]}
+            stroke="#ff5c39"
+            strokeWidth={1 / (scale || 1)}
+            dash={[6 / (scale || 1), 4 / (scale || 1)]}
+            listening={false}
+            perfectDrawEnabled={false}
+          />
+        ))}
+
         <Transformer
           ref={trRef}
-          keepRatio={false}
-          shiftBehavior="default"
-          rotateEnabled
-          enabledAnchors={[
-            'top-left',
-            'top-right',
-            'bottom-left',
-            'bottom-right',
-            'middle-left',
-            'middle-right',
-            'top-center',
-            'bottom-center',
-          ]}
+          /* Image : proportions gardées par défaut, Maj les libère ('inverted' =
+             keepRatio && !shiftKey côté Konva). Ailleurs : comportement d'origine
+             (libre, Maj contraint). */
+          keepRatio={reglageTransformer.garderRapport}
+          shiftBehavior={reglageTransformer.garderRapport ? 'inverted' : 'default'}
+          /* ⛔ Les poignées sont dimensionnées en px ÉCRAN : sur une cellule de tableau
+             elles recouvraient le centre et volaient le double-clic. Le réglage est donc
+             calculé par sélection — jamais figé. */
+          listening={reglageTransformer.ecoutePointeur}
+          resizeEnabled={reglageTransformer.redimensionnable}
+          rotateEnabled={reglageTransformer.rotatif}
+          enabledAnchors={reglageTransformer.ancres}
           boundBoxFunc={transformerBoundBoxFunc}
-          borderStroke="rgba(255,255,255,0.92)"
-          anchorStroke="rgba(255,255,255,0.95)"
-          anchorFill="#121318"
+          /* Contraste du cadre : voir couleursCadreSelection (blanc sur blanc = invisible). */
+          borderStroke={couleursCadre.trait}
+          borderStrokeWidth={1.5}
+          anchorStroke={couleursCadre.ancre}
+          anchorFill={couleursCadre.remplissage}
           anchorSize={8}
         />
       </Layer>

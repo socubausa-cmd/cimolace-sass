@@ -52,11 +52,12 @@ export function applyLongiaDesignerCanvasActions(actions, api) {
       continue;
     }
 
-    /** Fusionne les bbox en un seul rectangle (destructif, simplifié) */
+    /** Fusionne les CONTOURS en un chemin fermé — peut refuser (texte, formes disjointes…) */
     if (t === 'unite_selected') {
       if (typeof uniteSelected === 'function' && selectedIds.length >= 2) {
-        uniteSelected();
-        n += 1;
+        const r = uniteSelected();
+        /* Ne compter que si l'union a EU LIEU : un refus compté ferait mentir LONGIA. */
+        if (r?.ok !== false) n += 1;
       }
       continue;
     }

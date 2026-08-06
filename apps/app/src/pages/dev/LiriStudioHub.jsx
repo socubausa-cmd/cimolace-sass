@@ -66,7 +66,7 @@ const TOOLS = [
     label: 'SmartBoard Designer',
     tagline: 'Perfectionner',
     desc: 'Studio graphique Konva complet. Design professionnel, collaboration temps réel, Coach IA + Architect IA, export vidéo.',
-    route: '/dev/smartboard-designer',
+    route: '/studio/smartboard-designer',
     color: GOLD,             // or
     glow: 'rgba(212,175,55,0.15)',
     features: ['Canvas Konva', 'Coach + Architect IA', 'Collaboration live', 'Export vidéo'],

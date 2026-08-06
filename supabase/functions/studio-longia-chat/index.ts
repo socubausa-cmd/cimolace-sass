@@ -4,6 +4,8 @@
  *
  * - mode `coach`  : Groq `LONGIA_GROQ_MODEL` (défaut `llama-3.3-70b-versatile`) puis OpenAI `LONGIA_OPENAI_COACH_MODEL` / `OPENAI_MODEL` (défaut `gpt-4o`).
  * - mode `architect` : chaîne lourde — Claude → DeepSeek → Grok puis repli aiChat.
+ * - **Rédaction documentaire** (`context.document_intelligence`) : Mistral en TÊTE de chaîne,
+ *   le reste de la cascade reste le filet — voir `mistralDocument()`.
  * - Routage automatique : upgrade coach→architect si message « lourd » (JSON, plan long, etc.) ; downgrade architect→coach pour salutations triviales.
  * - LONGIA Core (Edge) : analyse synchrone toujours ; intent Groq léger **uniquement en mode coach**. `LONGIA_INTENT_GROQ=0` le désactive.
  * - Response Composer v1 : champ `composed` (schéma longia_response_composer) — fusion caps/dedupe actions·suggestions, understanding, preview, render_hints.
@@ -148,6 +150,78 @@ async function openaiCoachFallback(system: string, messages: ChatMessage[]): Pro
   } : null;
 }
 
+/* ══════════════════════════════════════════════════════════════════
+   MISTRAL — moteur de la RÉDACTION DOCUMENTAIRE (créateur de document)
+══════════════════════════════════════════════════════════════════ */
+
+/**
+ * Route Mistral demandée par le front via `context.document_intelligence`.
+ *
+ * `poids` choisit le modèle, et ce choix est délibéré :
+ *  · `long`  → `mistral-large-latest` : rédaction intégrale, blocs, reformulation,
+ *              critique de mise en page — là où la structure et le registre comptent.
+ *  · `court` → `mistral-small-latest` : correction des fautes, mot juste, détection
+ *              de contexte — tâches courtes, répétées, où le gros modèle ne rend
+ *              rien de plus et coûte plus cher à chaque frappe.
+ */
+type RouteDocumentMistral = { actif: boolean; tache: string; model: string; poids: 'court' | 'long' };
+
+function resoudreRouteDocumentMistral(ctx: Record<string, unknown>): RouteDocumentMistral {
+  const vide: RouteDocumentMistral = { actif: false, tache: '', model: '', poids: 'court' };
+  // Interrupteur d'exploitation : remet la cascade d'origine sans redéployer le front.
+  if (env('LONGIA_MISTRAL_DOCUMENT') === '0') return vide;
+  const di = ctx?.document_intelligence;
+  if (!di || typeof di !== 'object') return vide;
+  const bloc = di as Record<string, unknown>;
+  const moteur = String(bloc.moteur ?? '').toLowerCase();
+  if (moteur && moteur !== 'mistral') return vide;
+  const tache = String(bloc.tache ?? '').trim();
+  if (!tache) return vide;
+  const poids = String(bloc.poids ?? '') === 'long' ? 'long' : 'court';
+  const model =
+    poids === 'long'
+      ? env('LONGIA_MISTRAL_LARGE_MODEL') || 'mistral-large-latest'
+      : env('LONGIA_MISTRAL_SMALL_MODEL') || 'mistral-small-latest';
+  return { actif: true, tache, model, poids };
+}
+
+/**
+ * Appel Mistral (API compatible OpenAI, `Authorization: Bearer`).
+ *
+ * ⚠️ `MISTRAL_API_KEY` peut ne PAS être dans les secrets Supabase de ce projet :
+ *    sans clé on rend `null`, l'appelant enchaîne sur le fournisseur suivant.
+ *    Une clé absente ne doit jamais faire tomber le créateur de document.
+ */
+async function mistralDocument(
+  system: string,
+  messages: ChatMessage[],
+  p: { model: string; max_tokens: number; temperature: number },
+): Promise<{ text: string; provider: string; usage: AiUsageInfo } | null> {
+  const key = env('MISTRAL_API_KEY');
+  if (!key) return null;
+  try {
+    const r = await openAICompatChat({
+      baseUrl: 'https://api.mistral.ai/v1',
+      apiKey: key,
+      model: p.model,
+      system,
+      messages,
+      max_tokens: p.max_tokens,
+      temperature: p.temperature,
+    });
+    return r
+      ? {
+          text: r.text,
+          provider: `mistral-${p.model}`,
+          usage: { provider: 'mistral', model: p.model, tokens_in: r.tokens_in, tokens_out: r.tokens_out },
+        }
+      : null;
+  } catch (e) {
+    console.warn('[studio-longia-chat] Mistral document failed:', (e as Error)?.message);
+    return null;
+  }
+}
+
 const COACH_SYSTEM = `${LONGIA_HUB_ORCHESTRATION_CORE}
 
 ### Mode COACH
@@ -209,12 +283,22 @@ Deno.serve(async (req: Request) => {
   const route = routeLongiaLlmMode(requestedMode, messages);
   const effectiveMode = route.effectiveMode;
 
+  /* Route Mistral résolue AVANT le préflight : sans cela l'estimation de crédits
+     porterait sur Groq/Claude alors que l'appel réel part chez Mistral. */
+  const routeDoc = resoudreRouteDocumentMistral(
+    (body.context && typeof body.context === 'object' ? body.context : {}) as Record<string, unknown>,
+  );
+
   // ─── LIRI Credits — Tenant + preflight ────────────────────────────────
   const billingCtx = await resolveTenant(req, body);
   if (billingCtx) {
     const lastUser = [...messages].reverse().find((m) => m.role === 'user')?.content || '';
-    const estProvider = effectiveMode === 'architect' ? 'anthropic' : 'groq';
-    const estModel = effectiveMode === 'architect' ? 'claude-haiku-4-5' : 'llama-3.3-70b-versatile';
+    const estProvider = routeDoc.actif ? 'mistral' : effectiveMode === 'architect' ? 'anthropic' : 'groq';
+    const estModel = routeDoc.actif
+      ? routeDoc.model
+      : effectiveMode === 'architect'
+        ? 'claude-haiku-4-5'
+        : 'llama-3.3-70b-versatile';
     const estimate = await estimateLlmCost(billingCtx, estProvider, estModel, lastUser, 8192);
     const reject = await preflightCheck(billingCtx, estimate);
     if (reject) {
@@ -290,12 +374,20 @@ Deno.serve(async (req: Request) => {
 
   if (effectiveMode === 'coach') {
     const system = `${COACH_SYSTEM}${designerLayer}${envelopeBlock}\n\n${orchestratorBrief}${ragBlock}\n\nContexte court (JSON) : ${ctxStr}${parsedCtx.handoffLine}`;
-    let out = await groqCoach(system, messages);
+    // Rédaction documentaire : Mistral d'abord. Groq puis OpenAI restent le filet.
+    let out = routeDoc.actif
+      ? await mistralDocument(system, messages, {
+          model: routeDoc.model,
+          max_tokens: 8192,
+          temperature: coachTemperature(),
+        })
+      : null;
+    if (!out) out = await groqCoach(system, messages);
     if (!out) out = await openaiCoachFallback(system, messages);
     if (!out) {
       return json(503, {
         error: 'Coach indisponible',
-        details: 'Définissez GROQ_API_KEY ou OPENAI_API_KEY sur le projet Supabase (Edge Functions secrets).',
+        details: 'Définissez MISTRAL_API_KEY, GROQ_API_KEY ou OPENAI_API_KEY sur le projet Supabase (Edge Functions secrets).',
       });
     }
     const coachBody = buildLongiaJsonBody({
@@ -308,6 +400,26 @@ Deno.serve(async (req: Request) => {
   }
 
   const system = `${ARCHITECT_SYSTEM}${designerLayer}${envelopeBlock}\n\n${orchestratorBrief}${ragBlock}\n\nContexte projet (JSON) : ${ctxStr}${parsedCtx.handoffLine}`;
+
+  // Rédaction documentaire lourde (document complet, critique de mise en page) :
+  // Mistral large en tête ; la chaîne Claude/DeepSeek/Grok reste derrière.
+  if (routeDoc.actif) {
+    const mistralArch = await mistralDocument(system, messages, {
+      model: routeDoc.model,
+      max_tokens: 16384,
+      temperature: 0.38,
+    });
+    if (mistralArch) {
+      const mBody = buildLongiaJsonBody({
+        rawAssistant: mistralArch.text,
+        provider: mistralArch.provider,
+        mode: effectiveMode,
+      }) as Record<string, unknown>;
+      const packed = packageLongiaSuccess(mBody, orchestration, routingMeta, effectiveMode);
+      return json(200, await attachBilling(packed, mistralArch.usage));
+    }
+  }
+
   const chain = await aiChatClaudeDeepSeekGrok({
     system,
     messages,

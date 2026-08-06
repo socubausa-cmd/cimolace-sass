@@ -30,7 +30,6 @@ import {
   useDocumentCoachStore,
   DOC_TYPE_META,
   GUIDED_FLOWS,
-  ASSISTANCE_LEVELS,
 } from '@/features/smartboard-konva-editor/store/useDocumentCoachStore';
 import {
   DOMAIN_META,
@@ -38,6 +37,23 @@ import {
 } from '@/features/smartboard-konva-editor/lib/documentTemplateLibrary';
 import { useSmartboardKonvaStore as _useKStore } from '@/features/smartboard-konva-editor/store/useSmartboardKonvaStore';
 import { useSmartboardKonvaStore } from '@/features/smartboard-konva-editor/store/useSmartboardKonvaStore';
+import DocumentSuggestionsPanel, {
+  DocumentAiModeSelector,
+  useDocumentAiModeStore,
+} from '@/features/smartboard-konva-editor/components/DocumentSuggestionsPanel';
+import { TextDiffPreview } from '@/features/smartboard-konva-editor/components/DocumentTextAiActions';
+import {
+  analyserContexteLocal,
+  suggererFormulation,
+} from '@/features/smartboard-konva-editor/lib/documentIntelligence';
+import {
+  DOC_PAGE,
+  nextFlowPosition,
+  estimateTextHeight,
+  makeDocumentTextObject,
+} from '@/features/smartboard-konva-editor/lib/documentBlockLayout';
+
+const EMPTY_OBJECTS = [];
 
 /* ─── Tokens locaux ─────────────────────────────────────────────── */
 const SEVERITY_STYLES = {
@@ -46,13 +62,14 @@ const SEVERITY_STYLES = {
   info:    { icon: Info,          cls: 'text-[#e6cc92]',   bg: 'bg-[#e6cc92]/[0.07] border-[#e6cc92]/25' },
 };
 
+/* Le mode choisi n'est plus décoratif : son `intention` part dans le prompt. */
 const REWRITE_MODES = [
-  { id: 'admin',     label: 'Administratif', icon: ScrollText },
-  { id: 'formalize', label: 'Formel',        icon: BookOpen   },
-  { id: 'simplify',  label: 'Simple',        icon: Lightbulb  },
-  { id: 'legalize',  label: 'Juridique',     icon: Layers     },
-  { id: 'expand',    label: 'Développer',    icon: Zap        },
-  { id: 'compress',  label: 'Résumer',       icon: ScanLine   },
+  { id: 'admin',     label: 'Administratif', icon: ScrollText, intention: 'registre administratif d\u2019usage, formulations consacrées' },
+  { id: 'formalize', label: 'Formel',        icon: BookOpen,   intention: 'plus formel : vouvoiement, tournures soutenues, aucune familiarité' },
+  { id: 'simplify',  label: 'Simple',        icon: Lightbulb,  intention: 'phrases courtes, vocabulaire accessible, aucune perte d\u2019information' },
+  { id: 'legalize',  label: 'Juridique',     icon: Layers,     intention: 'registre juridique : termes exacts, formulations opposables, aucune référence légale inventée' },
+  { id: 'expand',    label: 'Développer',    icon: Zap,        intention: 'version développée : précisions utiles uniquement, aucun fait inventé' },
+  { id: 'compress',  label: 'Résumer',       icon: ScanLine,   intention: 'deux phrases maximum, tous les faits conservés' },
 ];
 
 /* ─── Sous-composant : bulle de message ──────────────────────────── */
@@ -194,7 +211,6 @@ export default function DocumentCoachPanel() {
   /* Coach store */
   const phase             = useDocumentCoachStore(s => s.phase);
   const detectedType      = useDocumentCoachStore(s => s.detectedType);
-  const assistanceLevel   = useDocumentCoachStore(s => s.assistanceLevel);
   const guidedFlow        = useDocumentCoachStore(s => s.guidedFlow);
   const currentQIdx       = useDocumentCoachStore(s => s.currentQIdx);
   const documentPlan      = useDocumentCoachStore(s => s.documentPlan);
@@ -211,24 +227,55 @@ export default function DocumentCoachPanel() {
 
   const detectIntent       = useDocumentCoachStore(s => s.detectIntent);
   const answerQuestion     = useDocumentCoachStore(s => s.answerQuestion);
-  const setAssistanceLevel = useDocumentCoachStore(s => s.setAssistanceLevel);
   const resetFlow          = useDocumentCoachStore(s => s.resetFlow);
   const validateDocument   = useDocumentCoachStore(s => s.validateDocument);
-  const requestRewrite     = useDocumentCoachStore(s => s.requestRewrite);
   const buildDocumentPlan  = useDocumentCoachStore(s => s.buildDocumentPlan);
+
+  const addCoachMessage    = useDocumentCoachStore(s => s.addCoachMessage);
 
   /* Smartboard store — pour envoyer les messages au flux LONGIA */
   const addLongiaMessage = useSmartboardKonvaStore(s => s.addLongiaMessage);
+
+  /* Canevas — bloc sélectionné (cible prioritaire de la reformulation).
+     `addObjects` est déjà pris plus haut via _useKStore (même store). */
+  const updateObject = useSmartboardKonvaStore(s => s.updateObject);
+  const selectedIds  = useSmartboardKonvaStore(s => s.selectedIds);
+  const sceneObjects = useSmartboardKonvaStore(s => {
+    const p = s.project;
+    return p?.scenes?.find(sc => sc.id === p.activeSceneId)?.objects ?? EMPTY_OBJECTS;
+  });
+  const selectedTextObj = sceneObjects.find(o => o.id === selectedIds[0] && o.type === 'text') ?? null;
+
+  /* Mode d'assistance (Libre · Suggestions · Rédaction) */
+  const aiMode = useDocumentAiModeStore(s => s.mode);
+  const isFreeMode = aiMode === 'libre';
 
   /* Local input state (phase idle/detecting) */
   const [intentInput, setIntentInput] = useState('');
   const [rewriteInput, setRewriteInput] = useState('');
   const [rewriteMode, setRewriteMode] = useState('formalize');
+  const [pendingTplId, setPendingTplId] = useState(/** @type {string|null} */ (null));
+  const [rewriteBusy, setRewriteBusy] = useState(false);
+  const [rewriteError, setRewriteError] = useState('');
+  const [rewriteProposal, setRewriteProposal] = useState(
+    /** @type {{ before: string, after: string, targetId: string|null, label: string }|null} */ (null),
+  );
   const messagesEndRef = useRef(null);
+  const messagesBoxRef = useRef(null);
 
-  /* Auto-scroll aux messages */
+  /**
+   * Auto-défilement du fil de messages — CONFINÉ à sa propre boîte.
+   *
+   * ⛔ `scrollIntoView` remonte TOUS les ancêtres scrollables : depuis l'historique
+   * Architect (en bas du panneau), il faisait défiler le hub LONGIA de 184 px et
+   * sortait le sélecteur de mode (Libre / Suggestions / Rédaction auto) du champ
+   * visible dès l'ouverture de l'onglet — la pièce centrale du panneau devenait
+   * introuvable. On pilote donc `scrollTop` de la seule boîte des messages.
+   */
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    const box = messagesBoxRef.current;
+    if (!box) return;
+    box.scrollTop = box.scrollHeight;
   }, [coachMessages.length]);
 
   /* Sync dernier message coach → flux LONGIA */
@@ -253,6 +300,62 @@ export default function DocumentCoachPanel() {
     if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleIntentSubmit(); }
   };
 
+  /* ── Reformulation RÉELLE ──────────────────────────────────────
+     ⛔ PIÈGE corrigé : l'ancien chemin vidait le textarea puis n'appelait rien
+     (le texte collé était perdu). Ici le champ n'est vidé qu'APRÈS application. */
+  const rewriteSource = (selectedTextObj?.content?.text ?? '').trim() || rewriteInput.trim();
+
+  const runRewrite = useCallback(async () => {
+    const source = (selectedTextObj?.content?.text ?? '').trim() || rewriteInput.trim();
+    if (!source) return;
+    const mode = REWRITE_MODES.find(m => m.id === rewriteMode);
+    const label = mode?.label ?? rewriteMode;
+    setRewriteError('');
+    setRewriteBusy(true);
+    try {
+      const contexte = analyserContexteLocal(source, detectedType ?? undefined);
+      const res = await suggererFormulation(source, contexte, {
+        intention: mode?.intention,
+        nombre: 2,
+        titreDocument: documentPlan?.libraryTemplateName || DOC_TYPE_META[detectedType]?.label || 'Document',
+        eviter: rewriteProposal ? [rewriteProposal.after] : [],
+      });
+      if (!res?.ok || !res.propositions?.length) {
+        setRewriteError(res?.message || 'Reformulation indisponible.');
+        return;
+      }
+      setRewriteProposal({
+        before: source,
+        after: res.propositions[0].texte,
+        targetId: selectedTextObj?.id ?? null,
+        label,
+      });
+    } catch (e) {
+      setRewriteError(e?.message || 'Reformulation impossible.');
+    } finally {
+      setRewriteBusy(false);
+    }
+  }, [selectedTextObj, rewriteInput, rewriteMode, documentPlan, detectedType, rewriteProposal]);
+
+  /** Applique la proposition : PATCH du bloc sélectionné, sinon nouveau bloc sous le contenu. */
+  const applyRewrite = useCallback(() => {
+    if (!rewriteProposal) return;
+    const { after, targetId, label } = rewriteProposal;
+    if (targetId) {
+      updateObject(targetId, { content: { text: after } });
+    } else {
+      const h = estimateTextHeight(after, 13, DOC_PAGE.contentWidth);
+      const pos = nextFlowPosition(sceneObjects, h);
+      addObjects([makeDocumentTextObject({ text: after, x: pos.x, y: pos.y, width: pos.width })]);
+    }
+    addCoachMessage({
+      role: 'ai',
+      text: `✦ **${label}** appliqué ${targetId ? 'au bloc sélectionné' : 'en nouveau bloc'}.`,
+    });
+    setRewriteProposal(null);
+    setRewriteInput('');
+  }, [rewriteProposal, updateObject, addObjects, sceneObjects, addCoachMessage]);
+
   const currentQuestion = guidedFlow[currentQIdx];
   const progressPct = guidedFlow.length
     ? Math.round((currentQIdx / guidedFlow.length) * 100)
@@ -262,6 +365,15 @@ export default function DocumentCoachPanel() {
 
   return (
     <div className="space-y-2">
+      {/* ── Sélecteur de mode ÉPINGLÉ (Libre · Suggestions · Rédaction auto) ──
+          Il vivait au fil du panneau, sous le header : le moindre défilement le
+          sortait du champ visible alors que c'est lui qui pilote tout le reste
+          (points 1-3 du cahier). `sticky top-0` le garde sous les yeux, et il passe
+          en PREMIER : on choisit son niveau d'assistance avant de lire l'état. */}
+      <div className="sticky top-0 z-20 -mt-3 bg-[#1f1e1c] pb-1 pt-3">
+        <DocumentAiModeSelector className="mx-3" />
+      </div>
+
       {/* ── Header Document Coach ── */}
       <div className="mx-3 rounded-2xl border border-[#cf8059]/25 bg-[#cf8059]/[0.06] p-3">
         <div className="flex items-center justify-between mb-1.5">
@@ -300,39 +412,16 @@ export default function DocumentCoachPanel() {
         )}
       </div>
 
-      {/* ── Niveaux d'assistance ── */}
-      {phase === 'idle' && (
-        <div className="mx-3 space-y-1">
-          <p className="text-[9px] font-bold uppercase tracking-widest text-white/60 mb-1.5">Niveau d'assistance</p>
-          {ASSISTANCE_LEVELS.map(lvl => (
-            <button
-              key={lvl.level} type="button"
-              onClick={() => setAssistanceLevel(lvl.level)}
-              className={cn(
-                'flex w-full items-center gap-2.5 rounded-xl border px-3 py-2 text-left transition-all',
-                assistanceLevel === lvl.level
-                  ? 'border-[#e3aa6b]/35 bg-[#e3aa6b]/[0.08]'
-                  : 'border-white/[0.06] bg-white/[0.02] hover:bg-white/[0.05]',
-              )}
-            >
-              <span className="text-[13px]">{lvl.icon}</span>
-              <div className="min-w-0 flex-1">
-                <p className={cn(
-                  'text-[10.5px] font-semibold',
-                  assistanceLevel === lvl.level ? 'text-[#e3aa6b]' : 'text-white/65',
-                )}>{lvl.label}</p>
-                <p className="text-[9px] text-white/60">{lvl.desc}</p>
-              </div>
-              {assistanceLevel === lvl.level && (
-                <div className="h-1.5 w-1.5 rounded-full bg-[#e3aa6b] shrink-0" />
-              )}
-            </button>
-          ))}
-        </div>
-      )}
+      {/* Le sélecteur de mode (ex-« Niveau d'assistance ») est remonté ÉPINGLÉ en tête
+          de panneau — voir plus haut. */}
+
+      {/* ── Assistant IA (suggestions / rédaction / repos) ── */}
+      <div className="mx-3">
+        <DocumentSuggestionsPanel />
+      </div>
 
       {/* ── Input intention (idle / detecting) ── */}
-      {(phase === 'idle' || phase === 'detecting') && (
+      {!isFreeMode && (phase === 'idle' || phase === 'detecting') && (
         <div className="mx-3">
           <div className="flex items-center gap-1.5 rounded-xl border border-white/[0.09] bg-[#2b2a27] px-2.5 py-2">
             <MessageSquare className="h-3 w-3 shrink-0 text-white/50" />
@@ -374,7 +463,7 @@ export default function DocumentCoachPanel() {
 
       {/* ── Question guidée ── */}
       <AnimatePresence mode="wait">
-        {phase === 'questioning' && currentQuestion && (
+        {!isFreeMode && phase === 'questioning' && currentQuestion && (
           <div key={`q-${currentQIdx}`} className="mx-3">
             <GuidedQuestion
               question={currentQuestion}
@@ -387,7 +476,7 @@ export default function DocumentCoachPanel() {
 
       {/* ── Génération en cours ── */}
       <AnimatePresence>
-        {(phase === 'generating' || isGenerating) && (
+        {!isFreeMode && (phase === 'generating' || isGenerating) && (
           <motion.div
             initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
             className="mx-3 flex items-center gap-2.5 rounded-xl border border-amber-500/20 bg-amber-500/[0.06] px-3 py-3"
@@ -408,7 +497,7 @@ export default function DocumentCoachPanel() {
 
       {/* ── Plan documentaire (editing / reviewing) ── */}
       <AnimatePresence>
-        {documentPlan && (phase === 'editing' || phase === 'reviewing') && (
+        {!isFreeMode && documentPlan && (phase === 'editing' || phase === 'reviewing') && (
           <motion.div
             initial={{ opacity: 0, y: 4 }} animate={{ opacity: 1, y: 0 }}
             className="mx-3 rounded-2xl border border-white/[0.08] bg-white/[0.03] overflow-hidden"
@@ -440,6 +529,12 @@ export default function DocumentCoachPanel() {
                 <p className="text-[8.5px] font-bold uppercase tracking-widest text-white/60 mb-1.5">
                   Modèles recommandés ({matchedTemplates.length})
                 </p>
+                {pendingTplId ? (
+                  <p className="mb-1.5 rounded-lg border border-amber-500/25 bg-amber-500/[0.07] px-2 py-1.5 text-[9px] leading-relaxed text-amber-200/85">
+                    La page contient déjà {sceneObjects.length} bloc(s). Le modèle sera <strong>ajouté par-dessus</strong>,
+                    rien ne sera effacé. Recliquez pour confirmer.
+                  </p>
+                ) : null}
                 <div className="space-y-1 max-h-44 overflow-y-auto [scrollbar-width:thin] [scrollbar-color:rgba(255,255,255,0.07)_transparent]">
                   {matchedTemplates.slice(0, 8).map(tpl => {
                     const domMeta = DOMAIN_META[tpl.domain] ?? {};
@@ -449,6 +544,13 @@ export default function DocumentCoachPanel() {
                         key={tpl.id}
                         type="button"
                         onClick={() => {
+                          /* ⛔ Poser un 2e modèle par-dessus le 1er superpose deux en-têtes
+                             et deux signatures. On demande confirmation, on n'efface JAMAIS. */
+                          if (sceneObjects.length > 0 && pendingTplId !== tpl.id) {
+                            setPendingTplId(tpl.id);
+                            return;
+                          }
+                          setPendingTplId(null);
                           selectTemplate(tpl.id);
                           setCanvasBg('#ffffff');
                           addObjects(templateToKonvaObjects(tpl));
@@ -470,7 +572,9 @@ export default function DocumentCoachPanel() {
                             {tpl.style_variants?.length ?? 1} style{tpl.style_variants?.length > 1 ? 's' : ''} · {tpl.zones?.length ?? 0} zones
                           </p>
                         </div>
-                        {isSelected && <CheckCircle2 className="h-3 w-3 shrink-0 text-[#cf8059]" />}
+                        {pendingTplId === tpl.id
+                          ? <span className="shrink-0 text-[8.5px] font-bold text-amber-300">Cliquez pour confirmer</span>
+                          : isSelected && <CheckCircle2 className="h-3 w-3 shrink-0 text-[#cf8059]" />}
                       </button>
                     );
                   })}
@@ -504,9 +608,16 @@ export default function DocumentCoachPanel() {
       </AnimatePresence>
 
       {/* ── Outils de reformulation (editing) ── */}
-      {phase === 'editing' && (
+      {!isFreeMode && phase === 'editing' && (
         <div className="mx-3 space-y-2">
           <p className="text-[9px] font-bold uppercase tracking-widest text-white/60">Reformulation</p>
+
+          {/* Cible : le bloc sélectionné sur la page prime sur le texte collé. */}
+          <p className="text-[9px] leading-relaxed text-white/45">
+            {selectedTextObj
+              ? <>Cible : <strong className="text-[#e3aa6b]">bloc sélectionné</strong> sur la page.</>
+              : <>Aucun bloc sélectionné — le texte collé ci-dessous sera reformulé puis ajouté en nouveau bloc.</>}
+          </p>
 
           {/* Modes de réécriture */}
           <div className="grid grid-cols-3 gap-1">
@@ -532,30 +643,53 @@ export default function DocumentCoachPanel() {
 
           {/* Input reformulation */}
           <div className="space-y-1.5">
-            <textarea
-              value={rewriteInput}
-              onChange={e => setRewriteInput(e.target.value)}
-              placeholder="Collez le texte à reformuler…"
-              rows={3}
-              className="w-full resize-none rounded-xl border border-white/[0.08] bg-[#2b2a27] px-2.5 py-2 text-[10px] text-white/80 placeholder:text-white/50 outline-none focus:border-[#d97757]/45 transition-colors"
-            />
+            {!selectedTextObj && (
+              <textarea
+                value={rewriteInput}
+                onChange={e => setRewriteInput(e.target.value)}
+                placeholder="Collez le texte à reformuler…"
+                rows={3}
+                className="w-full resize-none rounded-xl border border-white/[0.08] bg-[#2b2a27] px-2.5 py-2 text-[10px] text-white/80 placeholder:text-white/50 outline-none focus:border-[#d97757]/45 transition-colors"
+              />
+            )}
             <button
               type="button"
-              onClick={() => { if (rewriteInput.trim()) { requestRewrite(rewriteInput.trim(), rewriteMode); setRewriteInput(''); } }}
-              disabled={!rewriteInput.trim()}
+              onClick={runRewrite}
+              disabled={!rewriteSource || rewriteBusy}
               className="flex w-full items-center justify-center gap-1.5 rounded-xl border border-[#d97757]/30 bg-[#d97757]/[0.09] py-2 text-[10px] font-semibold text-[#e08b6d] hover:bg-[#d97757]/20 disabled:opacity-30 disabled:cursor-not-allowed transition-all"
             >
-              <PenLine className="h-3 w-3" />
+              {rewriteBusy
+                ? <RotateCcw className="h-3 w-3 animate-spin" />
+                : <PenLine className="h-3 w-3" />}
               Reformuler en {REWRITE_MODES.find(m => m.id === rewriteMode)?.label}
             </button>
+
+            {rewriteError ? (
+              <p className="rounded-lg border border-red-500/25 bg-red-500/[0.07] px-2 py-1.5 text-[9.5px] leading-relaxed text-red-300">
+                {rewriteError}
+              </p>
+            ) : null}
+
+            {rewriteProposal ? (
+              <TextDiffPreview
+                title={`Reformulation — ${rewriteProposal.label}`}
+                before={rewriteProposal.before}
+                after={rewriteProposal.after}
+                busy={rewriteBusy}
+                applyLabel={rewriteProposal.targetId ? 'Remplacer le bloc' : 'Ajouter en nouveau bloc'}
+                onApply={applyRewrite}
+                onRegenerate={runRewrite}
+                onCancel={() => setRewriteProposal(null)}
+              />
+            ) : null}
           </div>
         </div>
       )}
 
-      {/* ── Suggestions intelligentes ── */}
-      {suggestions.length > 0 && (phase === 'editing' || phase === 'reviewing') && (
+      {/* ── Rappels du plan (heuristique locale, pas une analyse IA) ── */}
+      {!isFreeMode && suggestions.length > 0 && (phase === 'editing' || phase === 'reviewing') && (
         <div className="mx-3 space-y-1">
-          <p className="text-[9px] font-bold uppercase tracking-widest text-white/60">Suggestions</p>
+          <p className="text-[9px] font-bold uppercase tracking-widest text-white/60">Rappels du plan</p>
           {suggestions.map((s, i) => {
             const style = SEVERITY_STYLES[s.severity] ?? SEVERITY_STYLES.info;
             const Icon = style.icon;
@@ -603,7 +737,7 @@ export default function DocumentCoachPanel() {
       {coachMessages.length > 0 && (
         <div className="mx-3 space-y-1.5">
           <p className="text-[9px] font-bold uppercase tracking-widest text-white/60">Historique Architect</p>
-          <div className="max-h-52 space-y-1.5 overflow-y-auto [scrollbar-width:thin] [scrollbar-color:rgba(255,255,255,0.07)_transparent]">
+          <div ref={messagesBoxRef} className="max-h-52 space-y-1.5 overflow-y-auto [scrollbar-width:thin] [scrollbar-color:rgba(255,255,255,0.07)_transparent]">
             {coachMessages.map(msg => (
               <CoachBubble key={msg.id} msg={msg} />
             ))}

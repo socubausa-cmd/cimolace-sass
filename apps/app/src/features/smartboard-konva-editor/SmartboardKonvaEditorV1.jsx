@@ -15,8 +15,9 @@ import {
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { LiriWordmark } from '@/components/brand/LiriWordmark';
+/* `computeSmartboardCanvasScale` n'est plus importé : il logeait le gabarit
+   1037 × 750 quel que soit le canevas réel (cf. `echelleAjustementCanevas`). */
 import {
-  computeSmartboardCanvasScale,
   SMARTBOARD_DESIGN_WIDTH,
   SMARTBOARD_DESIGN_HEIGHT,
 } from '@/lib/smartboardDesignCanvas';
@@ -75,6 +76,11 @@ import LongiaDesignerChatSection from './components/LongiaDesignerChatSection';
 import { buildLongiaDesignerChatContext } from './lib/buildLongiaDesignerChatContext';
 import { applyLongiaDesignerCanvasActions } from './lib/applyLongiaDesignerCanvasActions';
 import { useDesignerCopilotPresenceStore } from './store/useDesignerCopilotPresenceStore';
+import CanvasZoomControl, {
+  bornerEchelle,
+  echelleAjustementCanevas,
+  echelleZoomee,
+} from './components/CanvasZoomControl';
 
 const FONT_OPTIONS = [
   { label: 'Inter', value: 'Inter, system-ui, sans-serif' },
@@ -120,9 +126,23 @@ const SmartboardKonvaEditorV1 = forwardRef(function SmartboardKonvaEditorV1({
   }));
   const containerRef = useRef(null);
   const workspaceRef = useRef(null);
+  /* Le gestionnaire clavier est monté une seule fois : il lit l'ajustement par ref,
+     sinon ⌘0 rappellerait une fermeture périmée (ancienne taille, ancien canevas). */
+  const ajusterEchelleRef = useRef(/** @type {null | (() => void)} */ (null));
   const [canvasPan, setCanvasPan] = useState({ x: 0, y: 0 });
+  /** Taille de l'espace de travail — sert au défilement vertical (voir `debordementY`). */
+  const [tailleEspace, setTailleEspace] = useState({ w: 0, h: 0 });
   const stageRef = useRef(null);
   const [scale, setScale] = useState(0.72);
+  /**
+   * L'ajustement automatique suit-il encore la taille de l'espace ?
+   *
+   * ⛔ CONTRAINTE : le ResizeObserver réécrivait `scale` à CHAQUE mesure. Un zoom
+   * posé à la main était donc effacé au premier redimensionnement (ouverture d'un
+   * panneau, bandeau de notification, barre de propriétés). Dès que l'utilisateur
+   * zoome, l'ajustement se met en retrait jusqu'à « Ajuster » / ⌘0.
+   */
+  const [zoomAuto, setZoomAuto] = useState(true);
   const [snapToGrid, setSnapToGrid] = useState(false);
   /** Module 3 - vue active: 'design' | 'student' | 'teacher' | 'live' */
   const [viewMode, setViewMode] = useState('design');
@@ -539,11 +559,14 @@ const SmartboardKonvaEditorV1 = forwardRef(function SmartboardKonvaEditorV1({
   useEffect(() => {
     const el = workspaceRef.current;
     if (!el) return;
-    const ro = new ResizeObserver(() => {
+    /* ⛔ Cet observateur ne fixe PLUS l'échelle : il mesure. L'ajustement se fait
+       plus bas, sur les dimensions RÉELLES du canevas (cf. `ajusterEchelle`). */
+    const mesurer = () => {
       const { width, height } = el.getBoundingClientRect();
-      const s = computeSmartboardCanvasScale(width - 32, height - 32);
-      setScale(Math.max(0.35, Math.min(s, 1.5)));
-    });
+      setTailleEspace((t) => (t.w === width && t.h === height ? t : { w: width, h: height }));
+    };
+    mesurer();
+    const ro = new ResizeObserver(mesurer);
     ro.observe(el);
     return () => ro.disconnect();
   }, []);
@@ -1193,14 +1216,16 @@ const SmartboardKonvaEditorV1 = forwardRef(function SmartboardKonvaEditorV1({
       // Cmd/Ctrl + = ou + — zoom in
       if (mod && (e.key === '=' || e.key === '+')) {
         e.preventDefault();
-        setScale((s) => Math.min(12, Math.round((s + 0.1) * 10) / 10));
+        setZoomAuto(false);
+        setScale((s) => echelleZoomee(s, +1));
         return;
       }
 
       // Cmd/Ctrl + - — zoom out
       if (mod && e.key === '-') {
         e.preventDefault();
-        setScale((s) => Math.max(0.2, Math.round((s - 0.1) * 10) / 10));
+        setZoomAuto(false);
+        setScale((s) => echelleZoomee(s, -1));
         return;
       }
 
@@ -1220,7 +1245,8 @@ const SmartboardKonvaEditorV1 = forwardRef(function SmartboardKonvaEditorV1({
         const { width, height } = workspaceRef.current.getBoundingClientRect();
         const pad = 36;
         const fit = Math.min((width - pad) / bw, (height - pad) / bh);
-        const nextScale = Math.max(0.2, Math.min(12, Math.round(fit * 10) / 10));
+        const nextScale = bornerEchelle(fit);
+        setZoomAuto(false);
         setScale(nextScale);
         const cx = minX + bw / 2;
         const cy = minY + bh / 2;
@@ -1231,12 +1257,7 @@ const SmartboardKonvaEditorV1 = forwardRef(function SmartboardKonvaEditorV1({
       // Cmd/Ctrl + 0 — zoom reset auto-fit
       if (mod && e.key === '0') {
         e.preventDefault();
-        if (workspaceRef.current) {
-          const { width, height } = workspaceRef.current.getBoundingClientRect();
-          const s = computeSmartboardCanvasScale(width - 32, height - 32);
-          setScale(Math.max(0.35, Math.min(s, 1.5)));
-          setCanvasPan({ x: 0, y: 0 });
-        }
+        ajusterEchelleRef.current?.();
         return;
       }
     };
@@ -1277,6 +1298,69 @@ const SmartboardKonvaEditorV1 = forwardRef(function SmartboardKonvaEditorV1({
   };
 
   const { width: cw, height: ch, background: cb } = project.canvas;
+
+  /**
+   * Ajustement « page entière » — mesuré sur le canevas réel, pas sur le gabarit
+   * de conception 1037 × 750. Voir `echelleAjustementCanevas`.
+   */
+  const ajusterEchelle = useCallback(() => {
+    const s = echelleAjustementCanevas(tailleEspace.w - 32, tailleEspace.h - 32, cw, ch);
+    if (s == null) return;
+    setScale(s);
+    /* Si la page dépasse encore en hauteur (document multi-pages, plancher de clic),
+       on se cale sur son SOMMET — pas sur son milieu, qui coupe la première ligne. */
+    setCanvasPan({ x: 0, y: Math.max(0, ch * s - tailleEspace.h) / 2 });
+    setZoomAuto(true);
+  }, [tailleEspace.w, tailleEspace.h, cw, ch]);
+  ajusterEchelleRef.current = ajusterEchelle;
+
+  /* Tant que l'utilisateur n'a pas zoomé lui-même, l'échelle suit l'espace. */
+  useEffect(() => {
+    if (!zoomAuto) return;
+    const s = echelleAjustementCanevas(tailleEspace.w - 32, tailleEspace.h - 32, cw, ch);
+    if (s == null) return;
+    setScale((prec) => (Math.abs(prec - s) < 0.0005 ? prec : s));
+  }, [zoomAuto, tailleEspace.w, tailleEspace.h, cw, ch]);
+
+  /** Zoom manuel : il PRIME sur l'ajustement automatique jusqu'à « Ajuster ». */
+  const zoomerManuel = useCallback((prochaine) => {
+    setZoomAuto(false);
+    setScale((s) => (typeof prochaine === 'function' ? bornerEchelle(prochaine(s)) : bornerEchelle(prochaine)));
+  }, []);
+
+  /**
+   * Débordement vertical du canevas mis à l'échelle, en px écran.
+   *
+   * ⛔ L'espace de travail est en `overflow-hidden` et CENTRE son contenu : dès que
+   * le canevas est plus haut que lui, la moitié du dépassement part au-dessus du
+   * bord supérieur et n'est atteignable ni au clic ni au défilement natif. C'est
+   * cette amputation qui obligeait l'ajustement à cadrer la PILE de pages entière,
+   * au prix de l'échelle. Le dépassement est donc rendu franchissable ici :
+   * `canvasPan.y` va de +moitié (haut du canevas au ras du bord) à −moitié.
+   */
+  const debordementY = Math.max(0, ch * scale - tailleEspace.h);
+  const panYMax = debordementY / 2;
+
+  /* Même amputation sur l'axe horizontal dès qu'on zoome au-delà de l'ajustement :
+     sans borne de déplacement en x, la moitié droite du canevas est inatteignable. */
+  const debordementX = Math.max(0, cw * scale - tailleEspace.w);
+  const panXMax = debordementX / 2;
+
+  /* Changement de canevas (page ajoutée/retirée, format) : on se recale sur le
+     HAUT du document, pas sur son milieu. */
+  useEffect(() => {
+    setCanvasPan((p) => ({ ...p, y: Math.max(0, ch * scale - tailleEspace.h) / 2 }));
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [cw, ch]);
+
+  /* Zoom / redimensionnement : on garde la position de lecture, on la borne. */
+  useEffect(() => {
+    setCanvasPan((p) => {
+      const y = Math.max(-panYMax, Math.min(panYMax, p.y));
+      const x = Math.max(-panXMax, Math.min(panXMax, p.x));
+      return y === p.y && x === p.x ? p : { x, y };
+    });
+  }, [panYMax, panXMax]);
 
   const showLeftDesignerRail =
     !isFullscreen && (!hideChrome || embedDesignerLeftRail);
@@ -1426,7 +1510,7 @@ const SmartboardKonvaEditorV1 = forwardRef(function SmartboardKonvaEditorV1({
           <div className="flex items-center gap-0.5 rounded-md border border-white/10 bg-black/30 text-[11px] text-[color-mix(in_srgb,var(--school-accent)_80%,transparent)]">
             <button
               type="button"
-              onClick={() => setScale((s) => Math.max(0.2, Math.round((s - 0.1) * 10) / 10))}
+              onClick={() => zoomerManuel((s) => echelleZoomee(s, -1))}
               className="flex h-7 w-6 items-center justify-center rounded-l-md hover:bg-white/10 hover:text-white"
               title="Zoom -  (Cmd -)"
             >−</button>
@@ -1436,7 +1520,7 @@ const SmartboardKonvaEditorV1 = forwardRef(function SmartboardKonvaEditorV1({
             </span>
             <button
               type="button"
-              onClick={() => setScale((s) => Math.min(2, Math.round((s + 0.1) * 10) / 10))}
+              onClick={() => zoomerManuel((s) => echelleZoomee(s, +1))}
               className="flex h-7 w-6 items-center justify-center rounded-r-md hover:bg-white/10 hover:text-white"
               title="Zoom +  (Cmd +)"
             >+</button>
@@ -1993,13 +2077,46 @@ const SmartboardKonvaEditorV1 = forwardRef(function SmartboardKonvaEditorV1({
               sendCursor(Math.round(e.clientX - rect.left), Math.round(e.clientY - rect.top), project.activeSceneId);
             } : undefined}
             onWheel={(e) => {
-              if (!e.ctrlKey && !e.metaKey) return;
+              if (e.ctrlKey || e.metaKey) {
+                e.preventDefault();
+                zoomerManuel((s) => echelleZoomee(s, e.deltaY > 0 ? -1 : +1));
+                return;
+              }
+              /* Maj + molette = défilement horizontal, comme partout ailleurs. */
+              if (e.shiftKey && debordementX > 0) {
+                e.preventDefault();
+                setCanvasPan((p) => ({
+                  ...p,
+                  x: Math.max(-panXMax, Math.min(panXMax, p.x - e.deltaY)),
+                }));
+                return;
+              }
+              /* Molette nue = défilement vertical du canevas, et SEULEMENT s'il
+                 dépasse : sans dépassement, laisser passer l'évènement (une coque
+                 externe peut défiler). */
+              if (debordementY <= 0) return;
               e.preventDefault();
-              const delta = e.deltaY > 0 ? -0.1 : 0.1;
-              setScale((s) => Math.max(0.2, Math.min(12, Math.round((s + delta) * 10) / 10)));
+              setCanvasPan((p) => ({
+                ...p,
+                y: Math.max(-panYMax, Math.min(panYMax, p.y - e.deltaY)),
+              }));
             }}
             style={{ background: 'transparent' }}
           >
+            {/* ⛔ Contrôle de zoom TOUJOURS rendu, dans l'espace de travail lui-même.
+                Le pourcentage ne vivait que dans la barre de scène de l'éditeur, que
+                la coque Studio ne monte pas (`hideChrome`) : aucun bouton, et une
+                affiche A4 @300 dpi restait écrêtée sans recours. */}
+            <div className="pointer-events-none absolute bottom-3 right-3 z-40">
+              <CanvasZoomControl
+                scale={scale}
+                onZoomIn={() => zoomerManuel((s) => echelleZoomee(s, +1))}
+                onZoomOut={() => zoomerManuel((s) => echelleZoomee(s, -1))}
+                onSetScale={(v) => zoomerManuel(v)}
+                onFit={ajusterEchelle}
+              />
+            </div>
+
             <div
               ref={containerRef}
               className="relative flex max-h-full max-w-full items-center justify-center overflow-visible bg-transparent"
