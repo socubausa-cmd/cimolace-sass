@@ -133,6 +133,16 @@ export class BookingService {
       void this.logAppointmentEvent(tenant.id, (data as any).id, 'requested', {
         actorType: 'client', actorId: userId, summary: 'Demande de rendez-vous',
       });
+      // La cloche staff doit sonner pour TOUTE demande entrante — ce chemin (avec créneau)
+      // n'alertait personne, seul le chemin sans créneau le faisait.
+      const whenTxt = slot?.start_at
+        ? ` — ${new Intl.DateTimeFormat('fr-FR', { dateStyle: 'full', timeStyle: 'short', timeZone: 'Europe/Paris' }).format(new Date(slot.start_at))}`
+        : '';
+      void this.notifyStaff(tenant.id, {
+        title: 'Nouvelle demande de rendez-vous',
+        body: `${slot?.title || 'Créneau réservé'}${whenTxt}`,
+        type: 'info', email: true, actionUrl: '/liri/rdv',
+      }, userId);
     }
     return data;
   }
@@ -251,6 +261,49 @@ export class BookingService {
     return { ok: true, requestId: data?.id ?? null, slotId, startAt };
   }
 
+  /** Accusé de réception e-mail au DEMANDEUR (adresse saisie), via la file FIABLE email_queue
+   *  → worker → Resend (sender du tenant). Envoyé à la CRÉATION d'une demande de RDV : sans lui,
+   *  le client (anonyme cagnotte ou élève) n'avait aucune confirmation avant la décision du staff.
+   *  Best-effort — ne bloque jamais la demande. */
+  private async queueRequesterAck(
+    tenantId: string,
+    info: { subject: string; email: string; chosenStart: Date | null },
+  ): Promise<void> {
+    try {
+      const email = String(info.email || '').trim();
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return;
+      const esc = (s: string) => String(s || '')
+        .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+      const sujet = esc(info.subject || 'votre rendez-vous');
+      const whenClean = info.chosenStart
+        ? esc(new Intl.DateTimeFormat('fr-FR', { dateStyle: 'full', timeStyle: 'short', timeZone: 'Europe/Paris' }).format(info.chosenStart))
+        : '';
+      const { data: ns } = await (this.supabase.client as any)
+        .from('tenant_notification_settings')
+        .select('email_from, email_from_name')
+        .eq('tenant_id', tenantId)
+        .maybeSingle();
+      const html = `<h2>Votre demande de rendez-vous 🙏</h2><p>Bonjour,</p>`
+        + `<p>Nous avons bien reçu votre demande « <strong>${sujet}</strong> »`
+        + (whenClean ? ` pour le <strong>${whenClean}</strong>` : '')
+        + `.</p>`
+        + (info.chosenStart
+            ? `<p>Nous vous confirmerons ce créneau très prochainement.</p>`
+            : `<p>Nous vous proposerons un créneau très prochainement.</p>`)
+        + `<p style="color:#777;font-size:13px;">Avec toute notre gratitude,<br/>Ngowazulu — Prorascience</p>`;
+      await (this.supabase.client as any).from('email_queue').insert({
+        tenant_id: tenantId,
+        to: email,
+        from: (ns as any)?.email_from ?? null,
+        from_name: (ns as any)?.email_from_name ?? null,
+        subject: 'Votre demande de rendez-vous — bien reçue ✓',
+        html_body: html,
+      });
+    } catch (e) {
+      this.logger.warn(`RDV ack demandeur: ${(e as Error).message}`);
+    }
+  }
+
   /** Confirme l'élève + alerte le secrétariat/staff d'une nouvelle demande de RDV. Best-effort. */
   private async notifyAppointmentRequest(
     tenantId: string,
@@ -261,16 +314,29 @@ export class BookingService {
       const whenTxt = info.chosenStart
         ? ` pour le ${new Intl.DateTimeFormat('fr-FR', { dateStyle: 'full', timeStyle: 'short', timeZone: 'Europe/Paris' }).format(info.chosenStart)}`
         : '';
-      // 1) Élève : confirmation.
-      await this.notifications.send(tenantId, userId, {
-        title: info.chosenStart ? 'Rendez-vous enregistré ✓' : 'Demande de rendez-vous reçue ✓',
-        body: info.chosenStart
-          ? `Ton rendez-vous « ${info.subject} »${whenTxt} est enregistré. Le secrétariat te confirme bientôt.`
-          : `Ta demande « ${info.subject} » est bien reçue. Le secrétariat te proposera un créneau.`,
-        type: 'success',
-        email: true,
-        actionUrl: '/liri/rendez-vous',
-      });
+      // Une demande PUBLIQUE (cagnotte) est rattachée à l'OWNER faute de compte demandeur.
+      const ownerUserId = await this.ownerOf(tenantId);
+      const isAnon = !!ownerUserId && userId === ownerUserId;
+
+      // 1) ACCUSÉ AU DEMANDEUR — e-mail FIABLE à l'adresse saisie via la file email_queue
+      //    (worker → Resend, sender du tenant). Même canal que les autres accusés qui partent
+      //    bien (accompagnement, décisions). Vaut pour la voie publique (anonyme) ET le chat
+      //    élève → le client reçoit une vraie confirmation « demande bien reçue ».
+      await this.queueRequesterAck(tenantId, info);
+
+      // Notif in-app « demande reçue » : seulement pour un vrai membre connecté (pas l'owner
+      //    rattaché d'une demande anonyme). E-mail déjà couvert ci-dessus → email:false (0 doublon).
+      if (!isAnon) {
+        await this.notifications.send(tenantId, userId, {
+          title: info.chosenStart ? 'Rendez-vous enregistré ✓' : 'Demande de rendez-vous reçue ✓',
+          body: info.chosenStart
+            ? `Ton rendez-vous « ${info.subject} »${whenTxt} est enregistré. Le secrétariat te confirme bientôt.`
+            : `Ta demande « ${info.subject} » est bien reçue. Le secrétariat te proposera un créneau.`,
+          type: 'success',
+          email: false,
+          actionUrl: '/liri/rendez-vous',
+        });
+      }
       // 2) Secrétariat / staff : alerte nouvelle demande.
       const { data: staff } = await (this.supabase.client as any)
         .from('tenant_memberships')
@@ -280,7 +346,8 @@ export class BookingService {
       const seen = new Set<string>();
       for (const m of (staff ?? []) as Array<{ user_id?: string }>) {
         const uid = m.user_id;
-        if (!uid || seen.has(uid) || uid === userId) continue;
+        // Sur une demande publique (isAnon), l'owner EST le destinataire à alerter → on ne l'exclut pas.
+        if (!uid || seen.has(uid) || (!isAnon && uid === userId)) continue;
         seen.add(uid);
         await this.notifications
           .send(tenantId, uid, {
@@ -297,8 +364,10 @@ export class BookingService {
     }
   }
 
-  /** Journalise un événement de RDV (audit → timeline « intelligente »). Best-effort. */
-  private async logAppointmentEvent(
+  /** Journalise un événement de RDV (audit → timeline « intelligente »). Best-effort.
+   *  Public : réutilisé par BookingAdvancedService (respondInvitation) — même journal,
+   *  jamais deux écritures d'audit divergentes. */
+  async logAppointmentEvent(
     tenantId: string,
     appointmentId: string,
     kind: string,
@@ -324,8 +393,9 @@ export class BookingService {
     }
   }
 
-  /** Notifie tout le staff (owner/admin/secrétariat) du tenant. Best-effort, jamais bloquant. */
-  private async notifyStaff(
+  /** Notifie tout le staff (owner/admin/secrétariat) du tenant. Best-effort, jamais bloquant.
+   *  Public : réutilisé par BookingAdvancedService (respondInvitation). */
+  async notifyStaff(
     tenantId: string,
     payload: { title: string; body: string; type?: string; email?: boolean; actionUrl?: string },
     exceptUserId?: string,
@@ -1011,6 +1081,15 @@ export class BookingService {
       .select('*')
       .single();
     if (error || !data) throw new NotFoundException('Rendez-vous introuvable');
+    // Annulation par le CLIENT : sans trace ni alerte, le staff préparerait une séance morte.
+    void this.logAppointmentEvent(tenantId, appointmentId, 'cancelled', {
+      actorType: 'client', actorId: userId, summary: 'Annulé par le demandeur',
+    });
+    void this.notifyStaff(tenantId, {
+      title: 'Rendez-vous annulé par le demandeur',
+      body: 'Un rendez-vous vient d’être annulé côté demandeur.',
+      type: 'info', email: true, actionUrl: '/liri/rdv',
+    }, userId);
     return data;
   }
 
