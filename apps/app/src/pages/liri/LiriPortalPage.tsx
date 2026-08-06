@@ -83,7 +83,7 @@ export function LiriPortalPage() {
   // Activité récente ÉCOSYSTÈME (créateur) : événements CRM (membres/commandes/dons/deals)
   // + demandes de RDV, fusionnés aux lives → plus seulement les lives.
   const [crmActs, setCrmActs] = useState<any[]>([]);
-  const [apptActs, setApptActs] = useState<any[]>([]);
+  const [appts, setAppts] = useState<any[]>([]); // RDV (activité récente + mini-agenda)
 
   // Menu compte / organisation (avatar).
   const [menuOpen, setMenuOpen] = useState(false);
@@ -233,7 +233,24 @@ export function LiriPortalPage() {
   // Mini-agenda du jour (carte horloge) : jour sélectionné + ses items, navigable ‹ Auj. ›.
   const [dayOffset, setDayOffset] = useState(0);
   const selectedDay = useMemo(() => { const d = new Date(now); d.setHours(0, 0, 0, 0); d.setDate(d.getDate() + dayOffset); return d; }, [now, dayOffset]);
-  const dayItems = useMemo(() => agenda.filter((it) => { const w = new Date(it.when); w.setHours(0, 0, 0, 0); return +w === +selectedDay; }), [agenda, selectedDay]);
+  // Calendrier COMPLET : événements/examens scolaires (hook) + RDV (booking) + lives programmés.
+  // Le mini-agenda ne montrait que le scolaire → un RDV ou un live du jour était invisible.
+  const fullAgenda = useMemo(() => {
+    const rdv = (appts || [])
+      .filter((a) => a?.booking_slots?.start_at && a.status !== 'cancelled')
+      .map((a) => {
+        const notes = String(a.notes || '');
+        const sujet = (notes.match(/Sujet\s*:\s*([\s\S]*?)(?:\s*Description\s*:|$)/i)?.[1] || 'Rendez-vous').trim();
+        return { id: `rdv-${a.id}`, title: `RDV — ${sujet}`, when: new Date(a.booking_slots.start_at), isRdv: true, to: '/liri/rdv' };
+      });
+    const liveEvents = (lives || [])
+      .filter((l) => l?.scheduled_at && !l.ended_at)
+      .map((l) => ({ id: `live-${l.id}`, title: l.title || 'Session live', when: new Date(l.scheduled_at!), isLive: true, to: '/lives' }));
+    return [...agenda, ...rdv, ...liveEvents]
+      .filter((it) => it.when instanceof Date && !Number.isNaN(+it.when))
+      .sort((a, b) => +a.when - +b.when);
+  }, [agenda, appts, lives]);
+  const dayItems = useMemo(() => fullAgenda.filter((it) => { const w = new Date(it.when); w.setHours(0, 0, 0, 0); return +w === +selectedDay; }), [fullAgenda, selectedDay]);
   const agendaLabel = dayOffset === 0 ? "Aujourd'hui" : selectedDay.toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'short' });
 
   // Rôle (créateur vs élève) — déclaré ICI car resumeItems/activityItems en dépendent.
@@ -246,7 +263,7 @@ export function LiriPortalPage() {
     if (!token || !isCreator) { setCrmActs([]); setApptActs([]); return undefined; }
     let alive = true;
     crmApi.listActivities({ limit: '10' }).then((r) => { if (alive) setCrmActs(Array.isArray(r) ? r : []); }).catch(() => {});
-    bookingApi.listAppointments().then((r) => { if (alive) setApptActs(Array.isArray(r) ? (r as any[]).slice(0, 8) : []); }).catch(() => {});
+    bookingApi.listAppointments().then((r) => { if (alive) setAppts(Array.isArray(r) ? (r as any[]) : []); }).catch(() => {});
     return () => { alive = false; };
   }, [token, isCreator, slug]);
 
@@ -306,7 +323,7 @@ export function LiriPortalPage() {
         title: a.title || a.type || 'Activité', sub: 'CRM',
         when: fmtAgo(a.created_at), _at: a.created_at, action: 'Voir', to: '/liri/crm',
       }));
-      const apptRows: ActivityItem[] = apptActs.map((a) => {
+      const apptRows: ActivityItem[] = appts.slice(0, 8).map((a) => {
         const notes = String(a.notes || '');
         const sujet = (notes.match(/Sujet\s*:\s*([\s\S]*?)(?:\s*Description\s*:|$)/i)?.[1] || 'Rendez-vous').trim();
         const st = a.status === 'confirmed' ? 'confirmé'
@@ -333,7 +350,7 @@ export function LiriPortalPage() {
       when: fmtAgo(c.whenIso || undefined), action: 'Ouvrir', to: '/liri/formations',
     }));
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isCreator, recent, courses, crmActs, apptActs]);
+  }, [isCreator, recent, courses, crmActs, appts]);
 
   function fmtWhen(iso?: string) {
     if (!iso) return '';
@@ -611,13 +628,19 @@ export function LiriPortalPage() {
               <div className="px-3 pb-3">
                 {dayItems.length > 0 ? (
                   <div className="flex flex-col gap-1">
-                    {dayItems.slice(0, 4).map((it) => (
-                      <button key={it.id} onClick={() => nav('/liri/agenda')} className="lp-tr lp-panelhov flex w-full items-center gap-2.5 rounded-lg px-2 py-1.5 text-left">
-                        <span className="shrink-0 text-[11px] font-semibold tabular-nums" style={{ color: 'var(--coral)' }}>{it.when.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}</span>
-                        <span className="truncate text-[12px] lp-ink">{it.title}</span>
-                        {it.isExam && <span className="ml-auto shrink-0 rounded px-1 py-0.5 text-[9px] font-bold uppercase lp-muted" style={{ background: 'rgba(255,255,255,.06)' }}>Éval</span>}
-                      </button>
-                    ))}
+                    {dayItems.slice(0, 5).map((it: any) => {
+                      const badge = it.isRdv ? { t: 'RDV', c: 'var(--coral)' }
+                        : it.isLive ? { t: 'Live', c: 'var(--live)' }
+                        : it.isExam ? { t: 'Éval', c: undefined }
+                        : null;
+                      return (
+                        <button key={it.id} onClick={() => nav(it.to || '/liri/agenda')} className="lp-tr lp-panelhov flex w-full items-center gap-2.5 rounded-lg px-2 py-1.5 text-left">
+                          <span className="shrink-0 text-[11px] font-semibold tabular-nums" style={{ color: 'var(--coral)' }}>{it.when.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}</span>
+                          <span className="truncate text-[12px] lp-ink">{it.title}</span>
+                          {badge && <span className="ml-auto shrink-0 rounded px-1 py-0.5 text-[9px] font-bold uppercase lp-muted" style={{ background: 'rgba(255,255,255,.06)', color: badge.c }}>{badge.t}</span>}
+                        </button>
+                      );
+                    })}
                   </div>
                 ) : (
                   <button onClick={() => nav('/liri/agenda')} className="lp-tr flex w-full items-center gap-2 rounded-lg px-2 py-2 text-left">
