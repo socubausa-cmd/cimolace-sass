@@ -22,6 +22,13 @@ const ROUTE_LIMITS: Record<string, { perIp: number; global: number }> = {
   'booking-public/:slug/appointment-request': { perIp: 4, global: 50 },
   'cagnotte/:slug/stripe': { perIp: 12, global: 150 },
   'cagnotte/:slug/pawapay': { perIp: 12, global: 150 },
+  // Boutique numérique : le paiement est large (une acheteuse peut s'y reprendre),
+  // le dépôt d'avis et la demande d'accompagnement sont serrés (spam + e-mails).
+  'boutique/produits/:slug/stripe': { perIp: 12, global: 150 },
+  'boutique/produits/:slug/pawapay': { perIp: 12, global: 150 },
+  'boutique/produits/:slug/avis': { perIp: 3, global: 40 },
+  'boutique/produits/:slug/renvoyer-lien': { perIp: 5, global: 60 },
+  'boutique/accompagnement/:slug/demande': { perIp: 4, global: 50 },
 };
 const DEFAULT_LIMIT = { perIp: 15, global: 200 };
 

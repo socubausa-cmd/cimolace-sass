@@ -361,6 +361,7 @@ const FormationsPage = lazy(() => import('@/pages/school/FormationsPage')); // N
 const HomePage = lazy(() => import('@/pages/HomePage'));
 const LandingPage = lazy(() => import('@/pages/LandingPage'));
 const CagnottePage = lazy(() => import('@/pages/CagnottePage'));
+const FemmeNouvellePage = lazy(() => import('@/pages/FemmeNouvellePage'));
 const PublicPrayerBookingPage = lazy(() => import('@/pages/PublicPrayerBookingPage'));
 const PublicReschedulePage = lazy(() => import('@/pages/PublicReschedulePage'));
 const PublicReservationPage = lazy(() => import('@/pages/PublicReservationPage'));
@@ -1436,6 +1437,9 @@ const AppContent = () => {
     '/cagnotte',        // Cagnotte publique = page de don autonome plein écran (à partager par lien),
                         // JAMAIS le header portail/vitrine par-dessus (chrome incohérent avant de payer).
     '/rendez-vous-priere', // Prise de RDV séance de prière PUBLIQUE (sans login) = page autonome.
+    '/femme-nouvelle',  // Vente du livre + accompagnement = page autonome à partager par lien.
+                        // Même raison que /cagnotte : le header portail avant de payer = chrome
+                        // incohérent, et la page a sa propre identité éditoriale.
     '/replanifier',        // Re-planification self-service par lien (token) = page publique autonome.
     '/reserver',           // Réservation multi-services PUBLIQUE (sans login) = page autonome.
     '/onboarding/eleve', // Dossier KYC élève = page autonome chaude (StudentEnrollmentOnboardingPage),
@@ -1996,6 +2000,7 @@ isLiriHostDevPreviewRoute;
           <Route path="/home" element={<Navigate to="/app" replace />} />
           <Route path="/landing" element={<LandingPage />} />
           <Route path="/cagnotte" element={<CagnottePage />} />
+          <Route path="/femme-nouvelle" element={<FemmeNouvellePage />} />
           <Route path="/rendez-vous-priere" element={<PublicPrayerBookingPage />} />
           <Route path="/replanifier/:token" element={<PublicReschedulePage />} />
           <Route path="/reserver" element={<PublicReservationPage />} />

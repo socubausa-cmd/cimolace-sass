@@ -1037,6 +1037,96 @@ export const cagnotteApi = {
     apiV2.get<ApiEnvelope<any>>(`/cagnotte/${slug}/pawapay/${depositId}`).then(unwrap),
 };
 
+/**
+ * Boutique numérique publique — vente d'un PDF à une visiteuse ANONYME (pas de login).
+ * Le prix vient du serveur : on n'envoie jamais de montant depuis le navigateur.
+ */
+export interface DigitalProduct {
+  slug: string;
+  title: string;
+  subtitle: string | null;
+  author: string | null;
+  description: string | null;
+  highlights: Array<{ title: string; body: string }>;
+  excerpts: Array<{ quote: string; source: string }>;
+  coverUrl: string | null;
+  pageCount: number | null;
+  format: string;
+  priceCents: number;
+  priceXaf: number | null;
+  currency: string;
+  active: boolean;
+  maxDownloads: number;
+  downloadDays: number;
+  reviewCount: number;
+  reviewAverage: number | null;
+  soldCount: number;
+}
+
+export interface ProductReview {
+  id: string;
+  authorName: string;
+  authorRole: string | null;
+  rating: number;
+  text: string;
+  verified: boolean;
+  at: string;
+}
+
+export interface AccompanimentProgram {
+  slug: string;
+  title: string;
+  tagline: string | null;
+  intro: string | null;
+  axes: Array<{ key: string; title: string; summary: string; topics: string[] }>;
+  disclaimer: string | null;
+  active: boolean;
+  formulas: Array<{
+    key: string; title: string; summary: string | null; includes: string[];
+    durationLabel: string | null; priceCents: number | null; priceXaf: number | null;
+    billingLabel: string | null; featured: boolean;
+  }>;
+}
+
+/** `downloadUrl` n'apparaît qu'une fois le paiement réellement confirmé. */
+export type PaymentStatus = { status: 'pending' | 'completed' | 'failed'; downloadUrl?: string };
+/** Accusé de réception générique (avis, renvoi de lien, demande de RDV). */
+export type BoutiqueAck = { status: string; message?: string; verified?: boolean; requestId?: string };
+
+export const boutiqueApi = {
+  product: (slug: string) =>
+    apiV2.get<ApiEnvelope<DigitalProduct>>(`/boutique/produits/${slug}`).then(unwrap),
+  /** Config pawaPay brute (forme variable côté fournisseur) → normalisée par l'appelant. */
+  providers: (slug: string, country?: string) =>
+    apiV2
+      .get<ApiEnvelope<unknown>>(`/boutique/produits/${slug}/providers${country ? `?country=${encodeURIComponent(country)}` : ''}`)
+      .then(unwrap),
+  reviews: (slug: string, limit?: number) =>
+    apiV2.get<ApiEnvelope<ProductReview[]>>(`/boutique/produits/${slug}/avis${limit ? `?limit=${limit}` : ''}`).then(unwrap),
+  submitReview: (
+    slug: string,
+    body: { authorName: string; authorRole?: string; rating: number; reviewText: string; buyerEmail?: string; website?: string },
+  ) => apiV2.post<ApiEnvelope<BoutiqueAck>>(`/boutique/produits/${slug}/avis`, body).then(unwrap),
+  stripe: (slug: string, body: { buyerEmail: string; buyerName?: string }) =>
+    apiV2.post<ApiEnvelope<{ checkoutUrl: string; orderId: string }>>(`/boutique/produits/${slug}/stripe`, body).then(unwrap),
+  confirmStripe: (slug: string, sessionId: string) =>
+    apiV2.post<ApiEnvelope<PaymentStatus>>(`/boutique/produits/${slug}/stripe/confirm`, { sessionId }).then(unwrap),
+  pawapay: (
+    slug: string,
+    body: { buyerEmail: string; buyerName?: string; phoneNumber: string; provider: string; country: string },
+  ) => apiV2.post<ApiEnvelope<{
+    depositId: string; orderId: string; status: string; displayAmount: number; displayCurrency: string;
+  }>>(`/boutique/produits/${slug}/pawapay`, body).then(unwrap),
+  pawapayStatus: (slug: string, depositId: string) =>
+    apiV2.get<ApiEnvelope<PaymentStatus>>(`/boutique/produits/${slug}/pawapay/${depositId}`).then(unwrap),
+  resendLink: (slug: string, email: string) =>
+    apiV2.post<ApiEnvelope<BoutiqueAck>>(`/boutique/produits/${slug}/renvoyer-lien`, { email }).then(unwrap),
+  program: (slug: string) =>
+    apiV2.get<ApiEnvelope<AccompanimentProgram>>(`/boutique/accompagnement/${slug}`).then(unwrap),
+  requestAccompaniment: (slug: string, body: Record<string, unknown>) =>
+    apiV2.post<ApiEnvelope<BoutiqueAck>>(`/boutique/accompagnement/${slug}/demande`, body).then(unwrap),
+};
+
 // ── Boîte email org (infos@) — lecteur IMAP intégré (remplace les fonctions Netlify) ──
 export const orgMailboxApi = {
   sync: (body?: { maxMessages?: number; sinceDays?: number }) =>
