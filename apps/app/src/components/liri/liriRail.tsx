@@ -3,6 +3,7 @@ import {
   House, Video, MessagesSquare, MessageCircle, WandSparkles, Library, GraduationCap, Sparkles,
   CalendarDays, BookOpen, Film, School, Calendar, FileText, Award, AlertTriangle, FolderOpen, Tag, Files,
   SquarePen, CreditCard, Flame, ShoppingBag, Megaphone, Package, ReceiptText, Link2, Landmark, Plug,
+  Mail,
 } from 'lucide-react';
 import { prefetchLiriPath } from '@/lib/prefetchLiriRoutes';
 
@@ -28,7 +29,7 @@ export type EngineKey = 'liri' | 'ecole' | 'mbolo' | 'medos' | 'studio' | 'crea'
 export type RailKey =
   | 'accueil' | 'forfaits' | 'rdv' | 'calendrier' | 'semaine' | 'formations'
   | 'vie-scolaire' | 'agenda' | 'notes' | 'evaluations' | 'absences' | 'videotheque' | 'atelier'
-  | 'lives' | 'forum' | 'messages'
+  | 'lives' | 'forum' | 'messages' | 'courrier'
   | 'biblio-eleve' | 'documents'
   | 'temple' | 'boutique' | 'marche' | 'produits' | 'commandes' | 'paiements' | 'factures' | 'compta'
   | 'studio' | 'ecole' | 'services' | 'crm' | 'pages' | 'contenu' | 'biblio' | 'brain' | 'integrations' | 'reglages';
@@ -54,6 +55,7 @@ export const ENGINES: EngineDef[] = [
         { key: 'temple', label: 'Temple', icon: Flame, to: '/liri/temple' },
         { key: 'rdv', label: 'Rendez-vous', icon: CalendarDays, to: '/liri/rdv', creator: true },
         { key: 'calendrier', label: 'Calendrier', icon: Calendar, to: '/liri/calendrier', creator: true },
+        { key: 'courrier', label: 'Courrier', icon: Mail, to: '/liri/courrier', creator: true },
         { key: 'forfaits', label: 'Forfaits', icon: CreditCard, to: '/liri/forfaits' },
         // Intégrations & canaux : clés OAuth des réseaux sociaux, paiements, e-mail.
         // ⚠️ CRÉATEUR SEUL — cet écran porte des secrets d'application.

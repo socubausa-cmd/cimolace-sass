@@ -792,6 +792,7 @@ const CommunityChatPage = lazy(() => import('@/pages/CommunityChatPage'));
 const RequestAppointmentPage = lazy(() => import('@/pages/RequestAppointmentPage'));
 const LiriRendezVousPage = lazy(() => import('@/pages/liri/LiriRendezVousPage'));
 const LiriRdvAdminPage = lazy(() => import('@/pages/liri/LiriRdvAdminPage'));
+const LiriCourrierPage = lazy(() => import('@/pages/liri/LiriCourrierPage'));
 const LiriCalendrierPage = lazy(() => import('@/pages/liri/LiriCalendrierPage'));
 const LiriAgendaReglagesPage = lazy(() => import('@/pages/liri/LiriAgendaReglagesPage'));
 const ImmersiveWaitingRoomPage = lazy(() => import('@/pages/ImmersiveWaitingRoomPage'));
@@ -2255,6 +2256,7 @@ isLiriHostDevPreviewRoute;
           {/* Prise de rendez-vous EMBARQUÉE dans LIRI (anti-fuite : la version standalone /appointment/request est une page ISNA pleine). */}
           <Route path="/liri/rendez-vous" element={<ProtectedLiriRoute allowedRoles={['owner', 'admin', 'teacher', 'secretariat', 'student', 'practitioner', 'clinic_admin']} allowTenantRole><LiriRendezVousPage /></ProtectedLiriRoute>} />
           <Route path="/liri/rdv" element={<ProtectedLiriRoute allowedRoles={['owner', 'admin', 'teacher', 'secretariat']} allowTenantRole><LiriRdvAdminPage /></ProtectedLiriRoute>} />
+          <Route path="/liri/courrier" element={<ProtectedLiriRoute allowedRoles={['owner', 'admin', 'teacher', 'secretariat']} allowTenantRole><LiriCourrierPage /></ProtectedLiriRoute>} />
           <Route path="/liri/calendrier" element={<ProtectedLiriRoute allowedRoles={['owner', 'admin', 'teacher', 'secretariat']} allowTenantRole><LiriCalendrierPage /></ProtectedLiriRoute>} />
           <Route path="/liri/calendrier/reglages" element={<ProtectedLiriRoute allowedRoles={['owner', 'admin', 'secretariat']} allowTenantRole><LiriAgendaReglagesPage /></ProtectedLiriRoute>} />
           <Route path="/liri/notes" element={<ProtectedLiriRoute allowedRoles={['owner', 'admin', 'teacher', 'secretariat', 'student', 'practitioner', 'clinic_admin']} allowTenantRole><LiriSchoolShell active="notes"><StudentNotesHubPage /></LiriSchoolShell></ProtectedLiriRoute>} />
