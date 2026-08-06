@@ -23,6 +23,10 @@ create index if not exists appointment_events_appt_idx
 
 alter table public.appointment_events enable row level security;
 
+-- ⚠️ Cloisonnement STRICT par tenant : on relie l'utilisateur à la LIGNE via
+-- tenant_memberships.tenant_id = appointment_events.tenant_id. PAS de branche
+-- profiles.role globale (profiles.role n'a pas de tenant → lecture inter-tenant
+-- de PII via PostgREST). Le chemin API (service-role) bypass de toute façon la RLS.
 drop policy if exists appt_events_staff_read on public.appointment_events;
 create policy appt_events_staff_read on public.appointment_events
   for select using (
@@ -30,7 +34,4 @@ create policy appt_events_staff_read on public.appointment_events
             where m.tenant_id = appointment_events.tenant_id
               and m.user_id = auth.uid()
               and m.role in ('owner','admin','secretariat'))
-    or exists (select 1 from public.profiles p
-               where p.id = auth.uid()
-                 and p.role in ('owner','admin','secretariat'))
   );

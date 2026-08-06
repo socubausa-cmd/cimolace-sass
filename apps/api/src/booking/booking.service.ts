@@ -930,12 +930,15 @@ export class BookingService {
           if (!iv) continue;
           const expired = iv.expires_at && new Date(iv.expires_at).getTime() < now;
           const open = ['sent', 'pending'].includes(String(iv.status)) && !expired;
+          // Un RDV annulé/terminé/absent n'est jamais « en attente d'un report » (sinon il
+          // resterait faussement dans l'onglet Reportés jusqu'à l'expiration du lien).
+          const terminal = ['cancelled', 'completed', 'no_show'].includes(String(a.status));
           a.reschedule = {
             status: iv.status,
             sent_at: iv.created_at,
             accepted_at: iv.accepted_at,
             expires_at: iv.expires_at,
-            state: iv.status === 'accepted' ? 'client_responded' : open ? 'awaiting_client' : null,
+            state: iv.status === 'accepted' ? 'client_responded' : (open && !terminal) ? 'awaiting_client' : null,
           };
         }
       } catch (e) {
@@ -962,25 +965,27 @@ export class BookingService {
         .eq('tenant_id', tenantId).eq('id', appointmentId).maybeSingle(),
     ]);
     const items: Array<{ kind: string; at: string; summary?: string; source: string; metadata?: any; actor_type?: string }> = [];
+    // Les repères DÉRIVÉS (objet + invitations) et les events d'AUDIT du même kind décrivent
+    // le même fait avec des horodatages DIFFÉRENTS (inserts distincts) → une dédup par instant
+    // ne matcherait jamais. On garde donc l'audit (plus précis) et on n'ajoute le repère dérivé
+    // QU'EN FALLBACK : si aucun event d'audit de ce kind n'existe (RDV antérieur à la table).
+    const auditKinds = new Set<string>(((evsRes?.data ?? []) as any[]).map((e) => e.kind));
     const appt = apptRes?.data;
-    if (appt?.created_at) items.push({ kind: 'requested', at: appt.created_at, summary: 'Demande reçue', source: 'appointment' });
+    if (appt?.created_at && !auditKinds.has('requested')) {
+      items.push({ kind: 'requested', at: appt.created_at, summary: 'Demande reçue', source: 'appointment' });
+    }
     for (const iv of (invRes?.data ?? []) as any[]) {
-      if (iv.created_at) items.push({ kind: 'reschedule_link_sent', at: iv.created_at, summary: 'Lien de report envoyé au demandeur', source: 'invitation' });
-      if (iv.accepted_at) items.push({ kind: 'client_rescheduled', at: iv.accepted_at, summary: 'Le demandeur a choisi un nouveau créneau', source: 'invitation' });
+      if (iv.created_at && !auditKinds.has('reschedule_link_sent')) {
+        items.push({ kind: 'reschedule_link_sent', at: iv.created_at, summary: 'Lien de report envoyé au demandeur', source: 'invitation' });
+      }
+      if (iv.accepted_at && !auditKinds.has('client_rescheduled')) {
+        items.push({ kind: 'client_rescheduled', at: iv.accepted_at, summary: 'Le demandeur a choisi un nouveau créneau', source: 'invitation' });
+      }
     }
     for (const e of (evsRes?.data ?? []) as any[]) {
       items.push({ kind: e.kind, at: e.created_at, summary: e.summary, source: 'event', metadata: e.metadata, actor_type: e.actor_type });
     }
-    // Dédup (même kind au même instant : repère dérivé + event d'audit) et tri chronologique.
-    const seen = new Set<string>();
-    return items
-      .filter((x) => {
-        const k = `${x.kind}|${x.at}`;
-        if (seen.has(k)) return false;
-        seen.add(k);
-        return true;
-      })
-      .sort((a, b) => new Date(a.at).getTime() - new Date(b.at).getTime());
+    return items.sort((a, b) => new Date(a.at).getTime() - new Date(b.at).getTime());
   }
 
   /**

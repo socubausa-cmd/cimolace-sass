@@ -44,7 +44,7 @@ export class NotificationsService {
     const insert = (type: string) =>
       this.supabase
         .from("notifications")
-        .insert({ tenant_id: tenantId, user_id: userId, type, title: payload.title, body: payload.body, is_read: false })
+        .insert({ tenant_id: tenantId, user_id: userId, type, title: payload.title, body: payload.body, is_read: false, action_url: payload.actionUrl ?? null })
         .select()
         .single();
     let { data, error } = await insert(payload.type);

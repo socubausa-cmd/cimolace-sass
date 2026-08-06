@@ -138,22 +138,23 @@ function RdvBody() {
   }, []);
   useEffect(() => { load(); }, [load]);
 
+  // Partition STRICTE : un RDV en attente de report ne vit QUE dans « Reportés »
+  // (sinon un RDV confirmé avec un nouveau lien de report compterait dans 2 onglets).
   const counts = useMemo(() => ({
-    // « À confirmer » = nouvelles demandes SANS report en attente (les reports ont leur onglet).
     requested: items.filter((a) => a.status === 'requested' && !isAwaiting(a)).length,
     reported: items.filter((a) => isAwaiting(a)).length,
-    confirmed: items.filter((a) => a.status === 'confirmed').length,
-    cancelled: items.filter((a) => a.status === 'cancelled').length,
-    completed: items.filter((a) => a.status === 'completed' || a.status === 'no_show').length,
+    confirmed: items.filter((a) => a.status === 'confirmed' && !isAwaiting(a)).length,
+    cancelled: items.filter((a) => a.status === 'cancelled' && !isAwaiting(a)).length,
+    completed: items.filter((a) => (a.status === 'completed' || a.status === 'no_show') && !isAwaiting(a)).length,
     all: items.length,
   }), [items]);
   const shown = useMemo(() => {
     switch (filter) {
       case 'requested': return items.filter((a) => a.status === 'requested' && !isAwaiting(a));
       case 'reported': return items.filter((a) => isAwaiting(a));
-      case 'confirmed': return items.filter((a) => a.status === 'confirmed');
-      case 'cancelled': return items.filter((a) => a.status === 'cancelled');
-      case 'completed': return items.filter((a) => a.status === 'completed' || a.status === 'no_show');
+      case 'confirmed': return items.filter((a) => a.status === 'confirmed' && !isAwaiting(a));
+      case 'cancelled': return items.filter((a) => a.status === 'cancelled' && !isAwaiting(a));
+      case 'completed': return items.filter((a) => (a.status === 'completed' || a.status === 'no_show') && !isAwaiting(a));
       default: return items;
     }
   }, [items, filter]);
@@ -171,6 +172,7 @@ function RdvBody() {
   useEffect(() => {
     if (!selectedId) { setEvents([]); return undefined; }
     let alive = true;
+    setEvents([]);          // évite d'afficher brièvement la timeline du RDV précédent
     setEventsLoading(true);
     bookingApi.listAppointmentEvents(selectedId)
       .then((r) => { if (alive) setEvents(Array.isArray(r) ? r : []); })
@@ -458,7 +460,7 @@ function RdvDetail({
       )}
 
       {/* État du report — le système n'est plus aveugle : on sait si le client a répondu. */}
-      {a.reschedule?.state && (
+      {reschedOf(a) && (
         <div className={`flex items-start gap-2 rounded-xl border px-3 py-2.5 text-[12.5px] ${reschedOf(a).chip}`}>
           <RotateCcw className="mt-0.5 h-3.5 w-3.5 shrink-0" />
           <span>
