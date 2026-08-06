@@ -79,3 +79,12 @@
 .lq-root .hover\:bg-stone-100:hover { background-color: rgba(255,247,240,.10) !important; }
 .lq-root .hover\:bg-stone-50:hover { background-color: rgba(255,247,240,.06) !important; }
 .lq-root .hover\:bg-white:hover { background-color: rgba(255,247,240,.08) !important; }
+/* ⚠️ Les variantes d'OPACITÉ de bg-white (bg-white/80…) ne sont PAS couvertes par .bg-white
+   ci-dessus → les bulles de réponse et la zone de saisie du chat restaient BLANCHES (texte
+   crème dessus = illisible). On les réaligne toutes sur une surface chaude sombre. */
+.lq-root .bg-white\/95, .lq-root .bg-white\/90, .lq-root .bg-white\/85,
+.lq-root .bg-white\/80, .lq-root .bg-white\/75, .lq-root .bg-white\/70,
+.lq-root .bg-white\/65, .lq-root .bg-white\/60, .lq-root .bg-white\/55,
+.lq-root .bg-white\/50, .lq-root .bg-white\/40, .lq-root .bg-white\/30 { background-color: rgba(255,247,240,.05) !important; }
+.lq-root .hover\:bg-white\/80:hover, .lq-root .hover\:bg-white\/70:hover,
+.lq-root .hover\:bg-white\/60:hover { background-color: rgba(255,247,240,.08) !important; }

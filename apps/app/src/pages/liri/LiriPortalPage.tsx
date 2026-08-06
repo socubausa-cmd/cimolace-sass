@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import {
   Sparkles, House, Video, MessagesSquare, MessageCircle, WandSparkles,
   Library, Settings2, Mic, ArrowUp, LogIn, CalendarPlus, PenTool,
-  ShoppingBag, Clock, ChevronRight, Film, ChevronLeft, UserRound,
+  ShoppingBag, Store, Clock, ChevronRight, Film, ChevronLeft, UserRound,
   Radio, GraduationCap, LogOut, ArrowUpRight, AlertTriangle, CalendarDays, Megaphone,
   BookOpen, CheckCircle2, CalendarClock, ShieldCheck, CreditCard,
 } from 'lucide-react';
@@ -397,7 +397,8 @@ export function LiriPortalPage() {
   // `creator` → réservé créateur ; `student` → réservé élève ; sans flag → tout le monde.
   const QUICK: { label: string; icon: LucideIcon; to: string; hero?: boolean; creator?: boolean; student?: boolean }[] = [
     { label: 'Démarrer', icon: Video, hero: true, to: '/lives', creator: true },
-    { label: 'Rejoindre', icon: LogIn, to: '/lives' },
+    // « Rejoindre » = participer à un live → ÉLÈVE. Le propriétaire, lui, DÉMARRE (il crée).
+    { label: 'Rejoindre', icon: LogIn, to: '/lives', student: true },
     { label: 'Forum', icon: MessagesSquare, to: '/liri/forum' },
     // Raccourcis APPRENTISSAGE / SCOLARITÉ (élève seulement).
     { label: 'Mes cours', icon: BookOpen, to: '/liri/formations', student: true },
@@ -411,8 +412,11 @@ export function LiriPortalPage() {
     // Le Précepteur — cours enseigné (narré + dessiné main), monté DANS le portail
     // (LiriPrecepteurPage → LiriPortalShell rail « École »). Route publique /liri/precepteur.
     // PARTAGÉ (sans flag) : pertinent pour l'élève (lancer une leçon) ET le créateur (démo).
-    { label: 'Précepteur', icon: GraduationCap, to: '/liri/precepteur' },
-    { label: 'Acheter', icon: ShoppingBag, to: '/liri/marche', creator: true },
+    // Le Précepteur (leçon narrée/dessinée dans l'OS) = expérience ÉLÈVE.
+    { label: 'Précepteur', icon: GraduationCap, to: '/liri/precepteur', student: true },
+    // Le propriétaire VEND (gère sa boutique) ; l'élève ACHÈTE (parcourt le marché).
+    { label: 'Vendre', icon: Store, to: '/liri/mbolo/produits', creator: true },
+    { label: 'Acheter', icon: ShoppingBag, to: '/liri/marche', student: true },
   ];
 
   const openMenu = () => setMenuOpen((v) => !v);
