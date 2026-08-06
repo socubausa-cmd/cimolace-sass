@@ -36,20 +36,14 @@ const FILTER_PILLS = [
   { value: 'converted', label: 'Convertis' },
 ];
 
-function pipelineBadgeClass(status) {
+/* Chips pipeline par VARIABLES --lt-* : le composant sert deux shells (secrétariat
+   clair/sombre + LIRI chaud) — toute couleur en dur casse l'un des deux. */
+function pipelineChipClass(status) {
   switch (status) {
-    case 'new':
-      return 'bg-violet-50 text-violet-700 border-violet-200';
-    case 'in_progress':
-      return 'bg-sky-50 text-sky-700 border-sky-200';
     case 'to_treat':
-      return 'bg-amber-50 text-amber-700 border-amber-200';
-    case 'converted':
-      return 'bg-emerald-50 text-emerald-700 border-emerald-200';
-    case 'closed':
-      return 'bg-zinc-100 text-zinc-600 border-zinc-200';
+      return 'border-[color-mix(in_srgb,var(--school-accent)_45%,transparent)] text-[var(--lt-gold-ink)] bg-[color-mix(in_srgb,var(--school-accent)_10%,transparent)]';
     default:
-      return 'bg-zinc-100 text-zinc-600 border-zinc-200';
+      return 'border-[var(--lt-border)] text-[var(--lt-sub)] bg-transparent';
   }
 }
 
@@ -57,6 +51,54 @@ function pipelineBadgeClass(status) {
  * Courrier infos@ — UI type Mail CRM (dossier messagerie) + thème premium secrétariat (sombre / or).
  * @param {{ embedded?: boolean }} props — si true (messagerie unifiée), en-tête compact sans doublon de page.
  */
+/**
+ * Iframe de mail à HAUTEUR AUTOMATIQUE — le courrier prend tout son gabarit,
+ * c'est le FIL qui défile (modèle Gmail), plus jamais une boîte de 300 px avec
+ * le vide en dessous.
+ *
+ * SÉCURITÉ, à ne pas défaire : le HTML entrant reste assaini par DOMPurify ET
+ * le sandbox n'accorde PAS `allow-scripts` — aucun JS du mail ne s'exécute.
+ * `allow-same-origin` est ajouté UNIQUEMENT pour pouvoir MESURER la hauteur du
+ * document (sans lui, l'iframe est d'origine opaque et sa hauteur reste figée).
+ * Sans script exécutable à l'intérieur, cette permission n'ouvre rien.
+ */
+function CadreMailAutoHauteur({ titre, srcDoc }) {
+  const ref = React.useRef(null);
+  const [hauteur, setHauteur] = React.useState(300);
+  const mesurer = React.useCallback(() => {
+    try {
+      const doc = ref.current?.contentDocument;
+      const h = Math.max(
+        doc?.body?.scrollHeight || 0,
+        doc?.documentElement?.scrollHeight || 0,
+      );
+      if (h > 0) setHauteur(h + 8);
+    } catch { /* iframe pas encore prête — la mesure suivante rattrapera */ }
+  }, []);
+  React.useEffect(() => {
+    const doc = ref.current?.contentDocument;
+    if (!doc?.documentElement || typeof ResizeObserver === 'undefined') return undefined;
+    /* Les images d'une newsletter chargent APRÈS l'onLoad : sans observation,
+       la hauteur mesurée trop tôt recouperait le bas du courrier. */
+    const ro = new ResizeObserver(mesurer);
+    ro.observe(doc.documentElement);
+    return () => ro.disconnect();
+  }, [mesurer, srcDoc]);
+  return (
+    <iframe
+      ref={ref}
+      title={titre}
+      sandbox="allow-same-origin"
+      referrerPolicy="no-referrer"
+      onLoad={mesurer}
+      className="w-full bg-white rounded-xl shadow-[0_2px_24px_-10px_rgba(0,0,0,0.55)]"
+      style={{ height: hauteur, border: 0 }}
+      scrolling="no"
+      srcDoc={srcDoc}
+    />
+  );
+}
+
 const OrgMailboxPage = ({ embedded = false }) => {
   const VITRINE_EMAIL = useVitrineContactEmail();
   const m = useOrgMailbox();
@@ -66,19 +108,20 @@ const OrgMailboxPage = ({ embedded = false }) => {
     m.mailbox?.last_synced_at && format(new Date(m.mailbox.last_synced_at), 'PPp', { locale: fr });
 
   return (
-    <div className={cn('w-full max-w-[1600px] mx-auto', !embedded && '-mt-1')}>
-      {/* Titre section (masqué ou compact en mode messagerie unifiée) */}
+    <div className={cn('w-full max-w-[1600px] mx-auto', !embedded && 'flex-1 min-h-0 flex flex-col')}>
+      {/* En-tête sur UNE ligne : titre + adresse + état de synchro (plus de bandeau vide) */}
       {!embedded ? (
-        <div className="flex items-center gap-2.5 mb-4 min-w-0">
-          <span className="inline-flex h-9 w-9 items-center justify-center rounded-xl bg-[color-mix(in_srgb,var(--school-accent)_16%,transparent)] text-[var(--lt-gold-ink)] shrink-0">
-            <Mail className="w-[18px] h-[18px]" />
+        <div className="flex flex-wrap items-center gap-x-2.5 gap-y-1 mb-3 min-w-0 shrink-0">
+          <span className="inline-flex h-8 w-8 items-center justify-center rounded-lg bg-[color-mix(in_srgb,var(--school-accent)_16%,transparent)] text-[var(--lt-gold-ink)] shrink-0">
+            <Mail className="w-4 h-4" />
           </span>
-          <div className="min-w-0">
-            <h2 className="text-lg md:text-xl font-bold text-[var(--lt-text)] leading-tight">Courrier</h2>
-            {VITRINE_EMAIL ? (
-              <p className="text-xs text-[var(--lt-muted)] font-mono truncate">{VITRINE_EMAIL}</p>
-            ) : null}
-          </div>
+          <h2 className="text-base md:text-lg font-bold text-[var(--lt-text)] leading-tight">Courrier</h2>
+          {VITRINE_EMAIL ? (
+            <p className="text-xs text-[var(--lt-muted)] font-mono truncate min-w-0">{VITRINE_EMAIL}</p>
+          ) : null}
+          <p className="ml-auto text-[11px] text-[var(--lt-muted)] font-mono shrink-0">
+            {m.mailbox?.last_synced_at ? `Dernier sync : ${lastSync}` : 'Pas encore synchronisé'}
+          </p>
         </div>
       ) : null}
 
@@ -87,7 +130,9 @@ const OrgMailboxPage = ({ embedded = false }) => {
           'flex flex-col lg:flex-row rounded-[14px] border border-[var(--lt-border)] bg-[var(--lt-card-bg)] overflow-hidden shadow-[var(--lt-card-shadow)]',
           embedded
             ? 'min-h-[min(640px,calc(100vh-14rem))] h-[min(720px,calc(100vh-12rem))]'
-            : 'min-h-[min(780px,calc(100vh-10rem))] h-[min(780px,calc(100vh-10rem))]'
+            : // min-h-[420px] (et pas min-h-0) : plancher si le parent ne borne pas la
+              // hauteur, tout en autorisant flex à rétrécir sous la taille du contenu.
+              'flex-1 min-h-[420px]'
         )}
       >
         {/* Rail icônes (comme le mock HTML) */}
@@ -142,9 +187,13 @@ const OrgMailboxPage = ({ embedded = false }) => {
           <>
             {/* Sidebar liste */}
             <aside className="w-full lg:w-[min(280px,32vw)] shrink-0 flex flex-col border-b lg:border-b-0 lg:border-r border-[var(--lt-border)] bg-[var(--lt-inner-bg)] min-h-0">
-              <div className="px-4 pt-4 pb-2 border-b border-[var(--lt-border)]">
+              <div className="px-4 pt-3.5 pb-2 border-b border-[var(--lt-border)] flex items-baseline gap-2 min-w-0">
                 <p className="text-sm font-bold text-[var(--lt-text)]">Conversations</p>
-                <p className="text-[11px] text-[var(--lt-muted)] font-mono mt-0.5">{VITRINE_EMAIL}</p>
+                <span className="text-[11px] text-[var(--lt-muted)] font-mono">{m.filteredThreads.length}</span>
+                {/* En mode intégré, la page ne montre pas l'en-tête Courrier : l'adresse vit ici. */}
+                {embedded && VITRINE_EMAIL ? (
+                  <span className="ml-auto text-[10px] text-[var(--lt-muted)] font-mono truncate min-w-0">{VITRINE_EMAIL}</span>
+                ) : null}
               </div>
               <div className="px-3 py-2 border-b border-[var(--lt-border)] relative">
                 <Search className="absolute left-6 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-[var(--lt-muted)]" />
@@ -156,29 +205,45 @@ const OrgMailboxPage = ({ embedded = false }) => {
                 />
               </div>
               <div className="px-2 py-2 border-b border-[var(--lt-border)] flex flex-wrap gap-1.5">
-                {FILTER_PILLS.map((f) => (
-                  <button
-                    key={f.value}
-                    type="button"
-                    onClick={() => m.setFilterPipeline(f.value)}
-                    className={cn(
-                      'px-2.5 py-1 rounded-full text-[11px] font-medium border transition-colors',
-                      m.filterPipeline === f.value
-                        ? 'bg-[color-mix(in_srgb,var(--school-accent)_15%,transparent)] border-[color-mix(in_srgb,var(--school-accent)_50%,transparent)] text-[var(--lt-gold-ink)]'
-                        : 'border-[var(--lt-border)] bg-[var(--lt-card-bg)] text-[var(--lt-sub)] hover:border-black/25 hover:text-[var(--lt-text)]'
-                    )}
-                  >
-                    {f.label}
-                  </button>
-                ))}
+                {FILTER_PILLS.map((f) => {
+                  const count =
+                    f.value === 'all'
+                      ? m.threads.length
+                      : m.threads.filter((t) => t.pipeline_status === f.value).length;
+                  return (
+                    <button
+                      key={f.value}
+                      type="button"
+                      onClick={() => m.setFilterPipeline(f.value)}
+                      className={cn(
+                        'px-2 py-1 rounded-full text-[11px] font-medium border transition-colors',
+                        m.filterPipeline === f.value
+                          ? 'bg-[color-mix(in_srgb,var(--school-accent)_15%,transparent)] border-[color-mix(in_srgb,var(--school-accent)_50%,transparent)] text-[var(--lt-gold-ink)]'
+                          : 'border-[var(--lt-border)] bg-[var(--lt-card-bg)] text-[var(--lt-sub)] hover:border-black/25 hover:text-[var(--lt-text)]'
+                      )}
+                    >
+                      {f.label}
+                      <span className="ml-1 font-mono text-[10px] opacity-70">{count}</span>
+                    </button>
+                  );
+                })}
               </div>
               <div className="flex-1 overflow-y-auto min-h-0">
                 {m.loading ? (
-                  <div className="p-10 flex justify-center">
-                    <Loader2 className="w-7 h-7 animate-spin text-[var(--lt-gold-ink)]" />
+                  <div className="p-3 space-y-2" aria-busy="true">
+                    {[0, 1, 2, 3, 4].map((i) => (
+                      <div
+                        key={i}
+                        className="h-14 rounded-lg animate-pulse bg-[color-mix(in_srgb,var(--lt-text)_7%,transparent)]"
+                      />
+                    ))}
                   </div>
                 ) : m.filteredThreads.length === 0 ? (
-                  <div className="p-8 text-center text-sm text-[var(--lt-muted)]">Aucun fil — lancez une sync IMAP.</div>
+                  <div className="p-8 text-center text-sm text-[var(--lt-muted)]">
+                    {m.threads.length === 0
+                      ? 'Boîte vide — « Synchroniser » ci-dessous rapatrie les mails IMAP.'
+                      : 'Aucun fil ne correspond à ce filtre ou à cette recherche.'}
+                  </div>
                 ) : (
                   m.filteredThreads.map((t) => {
                     const last = (m.emailsByThread[t.id] || []).slice(-1)[0];
@@ -186,46 +251,53 @@ const OrgMailboxPage = ({ embedded = false }) => {
                     const rel =
                       last?.received_at &&
                       formatDistanceToNow(new Date(last.received_at), { addSuffix: true, locale: fr });
+                    // Le nom de l'expéditeur est plus parlant que noreply@… (toujours identique).
+                    const senderLabel = last?.from_name || t.primary_contact_email || '—';
+                    const chipLabel =
+                      t.pipeline_status && t.pipeline_status !== 'new'
+                        ? PIPELINE.find((p) => p.value === t.pipeline_status)?.label || t.pipeline_status
+                        : null;
                     return (
                       <button
                         key={t.id}
                         type="button"
                         onClick={() => void m.openThread(t)}
                         className={cn(
-                          'w-full text-left px-3 py-3 border-b border-[var(--lt-border)] hover:bg-black/[0.03] transition-colors relative',
-                          m.selectedId === t.id && 'bg-[color-mix(in_srgb,var(--school-accent)_10%,transparent)] border-l-2 border-l-[var(--school-accent)] pl-[10px]',
-                          unread > 0 && m.selectedId !== t.id && 'border-l-2 border-l-violet-500/60'
+                          'w-full text-left px-3.5 py-2.5 border-b border-[var(--lt-border)] hover:bg-black/[0.03] transition-colors',
+                          m.selectedId === t.id && 'bg-[color-mix(in_srgb,var(--school-accent)_10%,transparent)]'
                         )}
                       >
-                        <div className="flex items-center gap-2 mb-0.5">
+                        <div className="flex items-center gap-2">
+                          {unread > 0 ? (
+                            <span
+                              className="w-1.5 h-1.5 rounded-full bg-[var(--school-accent)] shrink-0"
+                              aria-label="Non lu"
+                            />
+                          ) : null}
                           <span
                             className={cn(
-                              'text-xs truncate flex-1',
+                              'text-[13px] truncate flex-1 min-w-0',
                               unread ? 'font-semibold text-[var(--lt-text)]' : 'text-[var(--lt-sub)]'
                             )}
                           >
-                            {t.primary_contact_email || '—'}
+                            {t.subject || '(Sans objet)'}
                           </span>
                           <span className="text-[10px] text-[var(--lt-muted)] shrink-0">{rel || ''}</span>
                         </div>
-                        <p className={cn('text-[13px] truncate', unread ? 'text-[var(--lt-text)] font-medium' : 'text-[var(--lt-sub)]')}>
-                          {t.subject || '(Sans objet)'}
-                        </p>
-                        <p className="text-[11px] text-[var(--lt-muted)] mt-0.5 line-clamp-1">{last?.snippet || '—'}</p>
-                        <div className="flex flex-wrap gap-1 mt-1.5">
-                          <span
-                            className={cn(
-                              'text-[10px] px-2 py-0 rounded-full border',
-                              pipelineBadgeClass(t.pipeline_status)
-                            )}
-                          >
-                            {PIPELINE.find((p) => p.value === t.pipeline_status)?.label || t.pipeline_status}
-                          </span>
-                          {t.classification_label ? (
-                            <Badge variant="outline" className="text-[9px] h-5 border-violet-500/30 text-violet-200">
-                              <Sparkles className="w-3 h-3 mr-0.5" />
-                              {t.classification_label}
-                            </Badge>
+                        {last?.snippet ? (
+                          <p className="text-[11px] text-[var(--lt-muted)] mt-0.5 line-clamp-1">{last.snippet}</p>
+                        ) : null}
+                        <div className="flex items-center gap-1.5 mt-1 min-w-0">
+                          <span className="text-[11px] text-[var(--lt-muted)] truncate min-w-0">{senderLabel}</span>
+                          {chipLabel ? (
+                            <span
+                              className={cn(
+                                'ml-auto shrink-0 text-[10px] px-1.5 py-0 rounded-full border',
+                                pipelineChipClass(t.pipeline_status)
+                              )}
+                            >
+                              {chipLabel}
+                            </span>
                           ) : null}
                         </div>
                       </button>
@@ -233,22 +305,25 @@ const OrgMailboxPage = ({ embedded = false }) => {
                   })
                 )}
               </div>
-              <div className="p-3 border-t border-[var(--lt-border)] space-y-2 shrink-0">
-                <div className="flex gap-2">
+              {/* Pied de colonne : barre d'actions PROPRE (grid 2 col, libellés qui tiennent
+                  dans min(280px,32vw)) — plus de bouton tronqué ni flottant sur la liste. */}
+              <div className="p-2.5 border-t border-[var(--lt-border)] space-y-2 shrink-0 bg-[var(--lt-inner-bg)]">
+                <div className="grid grid-cols-2 gap-1.5">
                   <Button
                     variant="outline"
                     size="sm"
-                    className="flex-1 border-[var(--lt-border)] bg-[var(--lt-card-bg)] text-[var(--lt-text)] hover:opacity-80 justify-center gap-2"
+                    className="min-w-0 px-2 text-xs border-[var(--lt-border)] bg-[var(--lt-card-bg)] text-[var(--lt-text)] hover:opacity-80 justify-center gap-1.5"
                     onClick={() => void m.runImapSync()}
                     disabled={m.loading || m.syncing || !m.session}
                   >
-                    {m.syncing ? <Loader2 className="w-4 h-4 animate-spin" /> : <RefreshCw className="w-4 h-4" />}
-                    Synchroniser
+                    {/* Pas d'icône statique : à 127 px de colonne elle tronquait le libellé. */}
+                    {m.syncing ? <Loader2 className="w-3.5 h-3.5 animate-spin shrink-0" /> : null}
+                    <span className="truncate">Synchroniser</span>
                   </Button>
                   <Button
                     variant="outline"
                     size="sm"
-                    className="flex-1 justify-center gap-1.5 text-[var(--lt-gold-ink)]"
+                    className="min-w-0 px-2 text-xs justify-center gap-1.5 text-[var(--lt-gold-ink)]"
                     style={{
                       borderColor: 'color-mix(in srgb, var(--school-accent) 40%, transparent)',
                       background: 'color-mix(in srgb, var(--school-accent) 12%, transparent)',
@@ -257,8 +332,8 @@ const OrgMailboxPage = ({ embedded = false }) => {
                     disabled={m.summarizing}
                     title="Résumé IA de la boîte (Mistral)"
                   >
-                    {m.summarizing ? <Loader2 className="w-4 h-4 animate-spin" /> : <Sparkles className="w-4 h-4" />}
-                    Résumer
+                    {m.summarizing ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Sparkles className="w-3.5 h-3.5" />}
+                    <span className="truncate">Résumer IA</span>
                   </Button>
                 </div>
                 {m.summary ? (
@@ -279,9 +354,12 @@ const OrgMailboxPage = ({ embedded = false }) => {
                     <p className="whitespace-pre-line text-[12px] leading-relaxed text-[var(--lt-sub)]">{m.summary}</p>
                   </div>
                 ) : null}
-                <p className="text-[10px] text-center text-[var(--lt-muted)] font-mono">
-                  {m.mailbox?.last_synced_at ? `Dernier sync : ${lastSync}` : 'Pas encore synchronisé'}
-                </p>
+                {/* Hors mode intégré, l'état de synchro vit dans l'en-tête de page. */}
+                {embedded ? (
+                  <p className="text-[10px] text-center text-[var(--lt-muted)] font-mono">
+                    {m.mailbox?.last_synced_at ? `Dernier sync : ${lastSync}` : 'Pas encore synchronisé'}
+                  </p>
+                ) : null}
               </div>
             </aside>
 
@@ -299,7 +377,9 @@ const OrgMailboxPage = ({ embedded = false }) => {
                 </div>
               ) : (
                 <div className="flex flex-1 flex-col xl:flex-row min-h-0">
-                  <div className="flex-1 flex flex-col min-w-0 min-h-0">
+                  {/* overflow-hidden : AUCUN pixel de mail ne doit sortir du panneau —
+                      le corps scrolle dans la timeline, jamais sous la coque. */}
+                  <div className="flex-1 flex flex-col min-w-0 min-h-0 overflow-hidden">
                     {/* En-tête unifié du fil : sujet (1×) + expéditeur + date + actions */}
                     {(() => {
                       const lastIn = (m.threadTimeline || [])
@@ -435,11 +515,8 @@ const OrgMailboxPage = ({ embedded = false }) => {
                                 // 2) rendu dans une <iframe sandbox> SANS allow-scripts
                                 //    (isolation d'origine, aucun JS exécuté).
                                 <div className="p-3 sm:p-4">
-                                  <iframe
-                                    title={`Email de ${item.data.from_email || 'expéditeur inconnu'}`}
-                                    sandbox=""
-                                    referrerPolicy="no-referrer"
-                                    className="w-full min-h-[300px] bg-white rounded-xl shadow-[0_2px_24px_-10px_rgba(0,0,0,0.55)]"
+                                  <CadreMailAutoHauteur
+                                    titre={`Email de ${item.data.from_email || 'expéditeur inconnu'}`}
                                     srcDoc={`<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><base target="_blank"><style>html,body{margin:0}body{padding:28px 24px;font:15px/1.65 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;color:#1a1a1a;word-break:break-word;max-width:680px;margin:0 auto}img{max-width:100%;height:auto}a{color:#1d4ed8}p{margin:0 0 1em}</style></head><body>${DOMPurify.sanitize(
                                       String(item.data.body_html || ''),
                                       { USE_PROFILES: { html: true } }
@@ -457,9 +534,9 @@ const OrgMailboxPage = ({ embedded = false }) => {
                           ) : (
                             <div
                               key={`out-${item.data.id}`}
-                              className="rounded-xl border border-emerald-200 bg-emerald-50 overflow-hidden"
+                              className="rounded-xl border border-[color-mix(in_srgb,var(--school-accent)_35%,transparent)] bg-[color-mix(in_srgb,var(--school-accent)_7%,transparent)] overflow-hidden"
                             >
-                              <div className="px-4 py-2 flex justify-between text-[11px] text-emerald-700">
+                              <div className="px-4 py-2 flex justify-between text-[11px] text-[var(--lt-gold-ink)]">
                                 <span className="font-medium">Envoyé (Resend)</span>
                                 <span>
                                   {item.data.sent_at
@@ -467,7 +544,7 @@ const OrgMailboxPage = ({ embedded = false }) => {
                                     : item.data.created_at}
                                 </span>
                               </div>
-                              <div className="px-4 pb-3 text-sm text-[#3f3f46]">
+                              <div className="px-4 pb-3 text-sm text-[var(--lt-text)]">
                                 <p className="font-semibold">{item.data.subject}</p>
                                 <p className="text-xs text-[var(--lt-muted)] mt-1">À : {item.data.to_email}</p>
                                 <pre className="mt-2 whitespace-pre-wrap font-sans text-[var(--lt-sub)]">
@@ -510,7 +587,7 @@ const OrgMailboxPage = ({ embedded = false }) => {
                             </Button>
                             <Button
                               size="sm"
-                              className="bg-[var(--school-accent)] text-black hover:bg-[#c4a032]"
+                              className="bg-[var(--school-accent)] text-black hover:opacity-90"
                               onClick={(e) => void m.sendMail(e)}
                               disabled={m.sending}
                             >
@@ -566,7 +643,7 @@ function MetaPanel({ m }) {
   const tagIds = m.threadTagsByThread[m.selected.id] || [];
 
   return (
-    <aside className="hidden xl:flex w-[280px] shrink-0 flex-col border-l border-[var(--lt-border)] bg-[var(--lt-inner-bg)] overflow-y-auto">
+    <aside className="hidden xl:flex w-[280px] shrink-0 min-h-0 flex-col border-l border-[var(--lt-border)] bg-[var(--lt-inner-bg)] overflow-y-auto">
       <div className="p-4 space-y-5">
         <div>
           <p className="text-[10px] font-bold text-[var(--lt-muted)] uppercase tracking-wider font-mono mb-2">Attribution</p>
@@ -588,51 +665,65 @@ function MetaPanel({ m }) {
           </select>
         </div>
 
+        {/* Règle C-3 : une section sans donnée EXPLIQUE ce qu'elle attend — jamais de « — » nu. */}
         <div>
           <p className="text-[10px] font-bold text-[var(--lt-muted)] uppercase tracking-wider font-mono mb-2">Classification</p>
-          <div className="rounded-lg border border-violet-200 bg-violet-50 p-3">
-            <p className="text-sm font-semibold text-[var(--lt-text)]">
-              {m.selected.classification_label || '—'}
-            </p>
-            <p className="text-xs text-[var(--lt-muted)] mt-1">{getSuggestedOffer(m.selected.classification_label)}</p>
-            <div className="h-1 rounded-full bg-black/[0.08] mt-3 overflow-hidden">
-              <div
-                className="h-full rounded-full bg-gradient-to-r from-violet-500 to-[var(--school-accent)] transition-all"
-                style={{
-                  width: `${Math.min(100, Math.round(Number(m.selected.confidence_score || 0) * 100))}%`,
-                }}
-              />
+          {m.selected.classification_label ? (
+            <div className="rounded-lg border border-[var(--lt-border)] bg-[var(--lt-card-bg)] p-3">
+              <p className="text-sm font-semibold text-[var(--lt-text)]">{m.selected.classification_label}</p>
+              <p className="text-xs text-[var(--lt-muted)] mt-1">{getSuggestedOffer(m.selected.classification_label)}</p>
+              {m.selected.confidence_score != null ? (
+                <>
+                  <div className="h-1 rounded-full bg-black/[0.08] mt-3 overflow-hidden">
+                    <div
+                      className="h-full rounded-full bg-[var(--school-accent)] transition-all"
+                      style={{
+                        width: `${Math.min(100, Math.round(Number(m.selected.confidence_score) * 100))}%`,
+                      }}
+                    />
+                  </div>
+                  <p className="text-[10px] text-[var(--lt-muted)] mt-1 font-mono">
+                    Confiance : {Math.round(Number(m.selected.confidence_score) * 100)}%
+                  </p>
+                </>
+              ) : null}
             </div>
-            <p className="text-[10px] text-[var(--lt-muted)] mt-1 font-mono">
-              Confiance :{' '}
-              {m.selected.confidence_score != null
-                ? `${Math.round(Number(m.selected.confidence_score) * 100)}%`
-                : '—'}
+          ) : (
+            <p className="text-xs text-[var(--lt-muted)] leading-relaxed">
+              Pas encore classée — le bouton « Résumer IA » de la colonne analyse la boîte et propose une
+              catégorie.
             </p>
-          </div>
+          )}
         </div>
 
         <div>
           <p className="text-[10px] font-bold text-[var(--lt-muted)] uppercase tracking-wider font-mono mb-2">Tags</p>
-          <div className="flex flex-wrap gap-1.5">
-            {(m.allTags || []).map((tag) => {
-              const on = tagIds.includes(tag.id);
-              return (
-                <button
-                  key={tag.id}
-                  type="button"
-                  onClick={() => void m.toggleTagOnThread(tag.id)}
-                  className={cn(
-                    'text-[10px] px-2 py-0.5 rounded-full border transition-opacity',
-                    on ? 'opacity-100 border-[color-mix(in_srgb,var(--school-accent)_50%,transparent)] text-[var(--lt-gold-ink)]' : 'opacity-70 border-black/15 text-[var(--lt-sub)]'
-                  )}
-                  style={tag.color ? { borderColor: tag.color, color: tag.color } : undefined}
-                >
-                  {tag.name}
-                </button>
-              );
-            })}
-          </div>
+          {(m.allTags || []).length === 0 ? (
+            <p className="text-xs text-[var(--lt-muted)] leading-relaxed">
+              Aucun tag défini pour ce tenant — les tags créés côté CRM apparaîtront ici pour étiqueter les
+              fils.
+            </p>
+          ) : (
+            <div className="flex flex-wrap gap-1.5">
+              {(m.allTags || []).map((tag) => {
+                const on = tagIds.includes(tag.id);
+                return (
+                  <button
+                    key={tag.id}
+                    type="button"
+                    onClick={() => void m.toggleTagOnThread(tag.id)}
+                    className={cn(
+                      'text-[10px] px-2 py-0.5 rounded-full border transition-opacity',
+                      on ? 'opacity-100 border-[color-mix(in_srgb,var(--school-accent)_50%,transparent)] text-[var(--lt-gold-ink)]' : 'opacity-70 border-black/15 text-[var(--lt-sub)]'
+                    )}
+                    style={tag.color ? { borderColor: tag.color, color: tag.color } : undefined}
+                  >
+                    {tag.name}
+                  </button>
+                );
+              })}
+            </div>
+          )}
         </div>
 
         <div>
@@ -659,21 +750,33 @@ function MetaPanel({ m }) {
               <Calendar className="w-4 h-4 shrink-0" />
               Rendez-vous (voir calendrier)
             </button>
-            <button
-              type="button"
-              onClick={() => void m.markUrgent()}
-              className="w-full flex items-center gap-2 px-3 py-2 rounded-lg border border-[var(--lt-border)] bg-[var(--lt-card-bg)] text-sm text-[var(--lt-sub)] hover:bg-amber-50 hover:border-amber-300 text-left"
-            >
-              <Flame className="w-4 h-4 shrink-0" />
-              Marquer urgent
-            </button>
+            {m.selected.pipeline_status === 'to_treat' ? (
+              // État ACTIF lisible (accent, pas d'aplat brun) : le fil est déjà priorisé.
+              <div className="w-full flex items-center gap-2 px-3 py-2 rounded-lg border border-[color-mix(in_srgb,var(--school-accent)_45%,transparent)] bg-[color-mix(in_srgb,var(--school-accent)_12%,transparent)] text-sm text-[var(--lt-gold-ink)]">
+                <Flame className="w-4 h-4 shrink-0" />
+                Urgent — dans « À traiter »
+              </div>
+            ) : (
+              <button
+                type="button"
+                onClick={() => void m.markUrgent()}
+                className="w-full flex items-center gap-2 px-3 py-2 rounded-lg border border-[var(--lt-border)] bg-[var(--lt-card-bg)] text-sm text-[var(--lt-sub)] hover:bg-[color-mix(in_srgb,var(--school-accent)_12%,transparent)] hover:border-[color-mix(in_srgb,var(--school-accent)_35%,transparent)] hover:text-[var(--lt-gold-ink)] transition-colors text-left"
+              >
+                <Flame className="w-4 h-4 shrink-0" />
+                Marquer urgent
+              </button>
+            )}
           </div>
         </div>
 
         <div>
           <p className="text-[10px] font-bold text-[var(--lt-muted)] uppercase tracking-wider font-mono mb-2">Liaisons</p>
+          <p className="text-[11px] text-[var(--lt-muted)] leading-relaxed mb-2">
+            Relie ce fil à un dossier ou à un rendez-vous du calendrier secrétariat.
+          </p>
           <Label className="text-xs text-[var(--lt-muted)]">Réf. Ngowazulu</Label>
           <Input
+            placeholder="Ex. DOSSIER-2026-014"
             value={m.selected.ngowazulu_case_ref || ''}
             onChange={(e) => {
               const v = e.target.value;
@@ -695,7 +798,7 @@ function MetaPanel({ m }) {
             }}
             onBlur={(e) => void m.updateThread({ appointment_id: e.target.value.trim() || null })}
             className="mt-1 bg-[var(--lt-card-bg)] border-[var(--lt-border)] text-[var(--lt-text)] font-mono text-xs"
-            placeholder="UUID"
+            placeholder="UUID du rendez-vous (calendrier)"
           />
         </div>
 
@@ -707,7 +810,8 @@ function MetaPanel({ m }) {
             value={m.notesDraft}
             onChange={(e) => m.setNotesDraft(e.target.value)}
             rows={4}
-            className="bg-amber-50 border-amber-200 text-[var(--lt-text)] text-sm"
+            placeholder="Note visible par le staff uniquement…"
+            className="bg-[var(--lt-card-bg)] border-[var(--lt-border)] text-[var(--lt-text)] text-sm"
           />
           <Button
             type="button"
@@ -737,7 +841,7 @@ function AdminFullView({ m, syncStatusLabel, lastSync }) {
             {m.syncing ? <Loader2 className="w-4 h-4 animate-spin" /> : <RefreshCw className="w-4 h-4 mr-1" />}
             Sync maintenant
           </Button>
-          <Button size="sm" className="bg-[var(--school-accent)] text-black hover:bg-amber-500" onClick={() => void m.load()}>
+          <Button size="sm" className="bg-[var(--school-accent)] text-black hover:opacity-90" onClick={() => void m.load()}>
             Actualiser les données
           </Button>
         </div>
@@ -800,7 +904,7 @@ function LeadsFullView({ m }) {
               key={t.id}
               className="flex flex-wrap items-center gap-4 rounded-xl border border-[var(--lt-border)] bg-[var(--lt-card-bg)] shadow-[var(--lt-card-shadow)] p-4"
             >
-              <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[color-mix(in_srgb,var(--school-accent)_60%,transparent)] to-violet-500 flex items-center justify-center text-white font-bold text-sm">
+              <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[color-mix(in_srgb,var(--school-accent)_60%,transparent)] to-[color-mix(in_srgb,var(--school-accent)_40%,#000)] flex items-center justify-center text-white font-bold text-sm">
                 {(t.primary_contact_email || '?')[0].toUpperCase()}
               </div>
               <div className="flex-1 min-w-0">
@@ -808,7 +912,7 @@ function LeadsFullView({ m }) {
                 <p className="text-sm text-[var(--lt-sub)] truncate">{t.subject}</p>
                 <p className="text-xs text-[var(--lt-muted)] mt-1">{getSuggestedOffer(t.classification_label)}</p>
               </div>
-              <Button size="sm" className="bg-[var(--school-accent)] text-black hover:bg-amber-500" onClick={() => void m.openThread(t)}>
+              <Button size="sm" className="bg-[var(--school-accent)] text-black hover:opacity-90" onClick={() => void m.openThread(t)}>
                 Traiter
               </Button>
             </div>
@@ -820,6 +924,9 @@ function LeadsFullView({ m }) {
 }
 
 function ComposeFullView({ m }) {
+  // ⚠️ VITRINE_EMAIL est un état local d'OrgMailboxPage : le lire ici sans ce hook
+  // provoquait une ReferenceError au premier clic sur « Nouveau message ».
+  const VITRINE_EMAIL = useVitrineContactEmail();
   return (
     <div className="flex-1 overflow-y-auto p-6 md:p-10 flex flex-col items-center">
       <div className="w-full max-w-xl rounded-2xl border border-[var(--lt-border)] bg-[var(--lt-card-bg)] shadow-[var(--lt-card-shadow)] overflow-hidden">
@@ -867,7 +974,7 @@ function ComposeFullView({ m }) {
             />
           </div>
           <div className="flex flex-wrap gap-2 items-center">
-            <Button type="submit" className="bg-[var(--school-accent)] text-black hover:bg-amber-500" disabled={m.sending}>
+            <Button type="submit" className="bg-[var(--school-accent)] text-black hover:opacity-90" disabled={m.sending}>
               {m.sending ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Envoyer via Resend'}
             </Button>
             <Button type="button" variant="outline" className="border-[var(--lt-border)] bg-[var(--lt-card-bg)] text-[var(--lt-text)] hover:opacity-80" onClick={() => m.setMailView('inbox')}>

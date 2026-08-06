@@ -26,7 +26,10 @@ const LIRI_MAILBOX_THEME = {
 export default function LiriCourrierPage() {
   return (
     <LiriPortalShell active="courrier">
-      <div className="h-full min-h-0 overflow-y-auto px-4 py-5 md:px-7" style={LIRI_MAILBOX_THEME}>
+      {/* flex-col (et non overflow-y-auto) : la carte Courrier remplit EXACTEMENT la
+          hauteur restante — un calc(100vh-…) figé créait une bande de sous-défilement
+          où le mail (iframe blanche) affleurait sous la coque. */}
+      <div className="h-full min-h-0 flex flex-col overflow-y-auto px-4 py-4 md:px-7" style={LIRI_MAILBOX_THEME}>
         <OrgMailboxPage />
       </div>
     </LiriPortalShell>
