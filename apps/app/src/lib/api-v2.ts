@@ -468,6 +468,8 @@ export const bookingApi = {
     apiV2.get<ApiEnvelope<any[]>>('/booking/appointments').then(unwrap),
   getAppointment: (id: string) =>
     apiV2.get<ApiEnvelope<any>>(`/booking/appointments/${id}`).then(unwrap),
+  listAppointmentEvents: (id: string) =>
+    apiV2.get<ApiEnvelope<any[]>>(`/booking/appointments/${id}/events`).then(unwrap),
   updateAppointment: (id: string, body: Record<string, unknown>) =>
     apiV2.patch<ApiEnvelope<any>>(`/booking/appointments/${id}`, body).then(unwrap),
   startLive: (id: string) =>

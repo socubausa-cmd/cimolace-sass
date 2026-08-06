@@ -197,6 +197,14 @@ export class BookingController {
     return this.booking.getAppointment(id, tenant.id);
   }
 
+  // Timeline / historique d'un RDV (audit + repères dérivés). Staff seulement.
+  @Get('appointments/:id/events')
+  @UseGuards(RolesGuard)
+  @Roles('owner', 'admin', 'teacher', 'secretariat')
+  listAppointmentEvents(@Param('id') id: string, @CurrentTenant() tenant: TenantContext) {
+    return this.booking.listAppointmentEvents(tenant.id, id);
+  }
+
   @Patch('appointments/:id')
   @UseGuards(RolesGuard)
   @Roles('owner', 'admin', 'teacher', 'secretariat')

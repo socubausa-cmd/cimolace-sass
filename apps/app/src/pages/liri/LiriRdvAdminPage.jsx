@@ -3,7 +3,7 @@ import { LiriPortalShell } from '@/components/liri/LiriPortalShell';
 import { bookingApi } from '@/lib/api-v2';
 import {
   CalendarClock, Check, X, Mail, Phone, Loader2, RefreshCw, Inbox, MessageSquareText,
-  CalendarPlus, Radio, Send, ChevronRight, ArrowLeft, RotateCcw, Sparkles,
+  CalendarPlus, Radio, Send, ChevronRight, ArrowLeft, RotateCcw, Sparkles, History,
 } from 'lucide-react';
 
 const TZ = 'Europe/Paris';
@@ -59,9 +59,46 @@ function requesterLabel(info) {
 const STATUS = {
   requested: { label: 'À confirmer', dot: '#e6a23c', chip: 'border-amber-500/40 bg-amber-500/10 text-amber-300' },
   confirmed: { label: 'Confirmé', dot: '#5b9e6a', chip: 'border-emerald-500/40 bg-emerald-500/10 text-emerald-300' },
-  cancelled: { label: 'Refusé', dot: '#c26565', chip: 'border-red-500/40 bg-red-500/10 text-red-300' },
+  cancelled: { label: 'Annulé', dot: '#c26565', chip: 'border-red-500/40 bg-red-500/10 text-red-300' },
+  completed: { label: 'Terminé', dot: '#8a8f98', chip: 'border-white/15 bg-white/5 text-[#f5f4ee]/60' },
+  no_show: { label: 'Absent', dot: '#8a8f98', chip: 'border-white/15 bg-white/5 text-[#f5f4ee]/60' },
 };
 const statusOf = (a) => STATUS[a?.status] || { label: a?.status, dot: '#888', chip: 'border-white/15 bg-white/5 text-[#f5f4ee]/60' };
+
+/** État de report DÉRIVÉ (dernier lien de report envoyé) — rend l'écran « voyant ». */
+const RESCHED = {
+  awaiting_client: { label: 'Report — en attente', dot: '#e6a23c', chip: 'border-amber-500/40 bg-amber-500/10 text-amber-300' },
+  client_responded: { label: 'Client a reprogrammé', dot: '#5b9e6a', chip: 'border-emerald-500/40 bg-emerald-500/10 text-emerald-300' },
+};
+const reschedOf = (a) => (a?.reschedule?.state ? RESCHED[a.reschedule.state] : null);
+const isAwaiting = (a) => a?.reschedule?.state === 'awaiting_client';
+
+/** Repères visuels de la timeline d'historique. */
+const EVENT_META = {
+  requested: { dot: '#e6a23c' },
+  reschedule_link_sent: { dot: '#e8a184' },
+  client_rescheduled: { dot: '#5b9e6a' },
+  host_rescheduled: { dot: '#5b9e6a' },
+  confirmed: { dot: '#5b9e6a' },
+  cancelled: { dot: '#c26565' },
+  reminded: { dot: '#e8a184' },
+  completed: { dot: '#8a8f98' },
+  no_show: { dot: '#8a8f98' },
+  note: { dot: '#8a8f98' },
+};
+const EVENT_FALLBACK = {
+  requested: 'Demande reçue', reschedule_link_sent: 'Lien de report envoyé',
+  client_rescheduled: 'Le demandeur a reprogrammé', host_rescheduled: 'Report fixé par l’organisateur',
+  confirmed: 'Confirmé', cancelled: 'Annulé / refusé', reminded: 'Relance envoyée',
+  completed: 'Terminé', no_show: 'Absent', note: 'Note',
+};
+function fmtEventTime(iso) {
+  if (!iso) return '';
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return '';
+  try { return new Intl.DateTimeFormat('fr-FR', { dateStyle: 'medium', timeStyle: 'short', timeZone: TZ }).format(d); }
+  catch { return d.toISOString(); }
+}
 
 export default function LiriRdvAdminPage() {
   return (
@@ -76,7 +113,7 @@ function RdvBody() {
   const [loading, setLoading] = useState(true);
   const [err, setErr] = useState('');
   const [msg, setMsg] = useState('');
-  const [filter, setFilter] = useState('requested'); // requested | confirmed | all
+  const [filter, setFilter] = useState('requested'); // requested | reported | confirmed | cancelled | completed | all
   const [busyId, setBusyId] = useState(null);
   const [selectedId, setSelectedId] = useState(null);   // pilote le volet détail (desktop)
   const [mobileOpen, setMobileOpen] = useState(false);  // ouvre le tiroir détail (mobile)
@@ -85,6 +122,10 @@ function RdvBody() {
   const [rStart, setRStart] = useState('');
   const [rReason, setRReason] = useState('');
   const [drafting, setDrafting] = useState(false); // rédaction IA du mot de report en cours
+  // Historique / timeline du RDV sélectionné.
+  const [events, setEvents] = useState([]);
+  const [eventsLoading, setEventsLoading] = useState(false);
+  const [tick, setTick] = useState(0); // force le rechargement de la timeline après une action
 
   const load = useCallback(async () => {
     setLoading(true); setErr('');
@@ -98,14 +139,24 @@ function RdvBody() {
   useEffect(() => { load(); }, [load]);
 
   const counts = useMemo(() => ({
-    requested: items.filter((a) => a.status === 'requested').length,
+    // « À confirmer » = nouvelles demandes SANS report en attente (les reports ont leur onglet).
+    requested: items.filter((a) => a.status === 'requested' && !isAwaiting(a)).length,
+    reported: items.filter((a) => isAwaiting(a)).length,
     confirmed: items.filter((a) => a.status === 'confirmed').length,
+    cancelled: items.filter((a) => a.status === 'cancelled').length,
+    completed: items.filter((a) => a.status === 'completed' || a.status === 'no_show').length,
     all: items.length,
   }), [items]);
-  const shown = useMemo(
-    () => (filter === 'all' ? items : items.filter((a) => a.status === filter)),
-    [items, filter],
-  );
+  const shown = useMemo(() => {
+    switch (filter) {
+      case 'requested': return items.filter((a) => a.status === 'requested' && !isAwaiting(a));
+      case 'reported': return items.filter((a) => isAwaiting(a));
+      case 'confirmed': return items.filter((a) => a.status === 'confirmed');
+      case 'cancelled': return items.filter((a) => a.status === 'cancelled');
+      case 'completed': return items.filter((a) => a.status === 'completed' || a.status === 'no_show');
+      default: return items;
+    }
+  }, [items, filter]);
   // Sélection auto du 1er élément (volet desktop) — jamais d'ouverture auto du tiroir mobile.
   useEffect(() => {
     if (!shown.length) { setSelectedId(null); return; }
@@ -116,9 +167,21 @@ function RdvBody() {
   // Referme les panneaux de report quand on change de RDV.
   useEffect(() => { setReporterOpen(false); setErr(''); }, [selectedId]);
 
+  // Charge la timeline/historique du RDV sélectionné (rechargée après chaque action via `tick`).
+  useEffect(() => {
+    if (!selectedId) { setEvents([]); return undefined; }
+    let alive = true;
+    setEventsLoading(true);
+    bookingApi.listAppointmentEvents(selectedId)
+      .then((r) => { if (alive) setEvents(Array.isArray(r) ? r : []); })
+      .catch(() => { if (alive) setEvents([]); })
+      .finally(() => { if (alive) setEventsLoading(false); });
+    return () => { alive = false; };
+  }, [selectedId, tick]);
+
   const act = async (id, body) => {
     setBusyId(id); setErr('');
-    try { await bookingApi.updateAppointment(id, body); setReporterOpen(false); await load(); }
+    try { await bookingApi.updateAppointment(id, body); setReporterOpen(false); await load(); setTick((t) => t + 1); }
     catch (e) { setErr(e?.response?.data?.error?.message || 'Action impossible.'); }
     finally { setBusyId(null); }
   };
@@ -167,6 +230,7 @@ function RdvBody() {
       else setMsg('Lien généré, mais aucun contact (email/WhatsApp) trouvé sur ce RDV.');
       setReporterOpen(false);
       await load();
+      setTick((t) => t + 1);
     } catch (e) {
       setErr(e?.response?.data?.error?.message || 'Envoi du lien impossible.');
     } finally { setBusyId(null); }
@@ -187,12 +251,15 @@ function RdvBody() {
 
   const TABS = [
     { key: 'requested', label: 'À confirmer', n: counts.requested },
+    { key: 'reported', label: 'Reportés', n: counts.reported },
     { key: 'confirmed', label: 'Confirmés', n: counts.confirmed },
+    { key: 'cancelled', label: 'Annulés', n: counts.cancelled },
+    { key: 'completed', label: 'Terminés', n: counts.completed },
     { key: 'all', label: 'Tous', n: counts.all },
   ];
 
   const detailProps = {
-    a: selected, busyId, err, reporterOpen, rStart, rReason, drafting,
+    a: selected, busyId, err, reporterOpen, rStart, rReason, drafting, events, eventsLoading,
     setRStart, setRReason, confirm, cancel, startLive, sendLink, openReporter,
     submitReschedule, draftMessage, closeReporter: () => setReporterOpen(false),
   };
@@ -219,7 +286,7 @@ function RdvBody() {
         </div>
 
         {/* Onglets */}
-        <div className="mt-4 flex gap-1.5">
+        <div className="mt-4 flex flex-wrap gap-1.5">
           {TABS.map((t) => (
             <button key={t.key} type="button" onClick={() => setFilter(t.key)} aria-pressed={filter === t.key}
               className={`inline-flex cursor-pointer items-center gap-1.5 rounded-lg px-3 py-1.5 text-[13px] font-medium transition-colors ${
@@ -311,6 +378,11 @@ function RdvRow({ a, selected, onOpen }) {
           {info.description && (
             <span className="mt-1 block truncate text-[12px] text-[#f5f4ee]/55">{info.description}</span>
           )}
+          {reschedOf(a) && (
+            <span className={`mt-1.5 inline-flex items-center gap-1 rounded-full border px-1.5 py-0.5 text-[10px] font-semibold ${reschedOf(a).chip}`}>
+              <RotateCcw className="h-2.5 w-2.5" /> {reschedOf(a).label}
+            </span>
+          )}
         </span>
         <ChevronRight className="mt-1 h-4 w-4 shrink-0 text-[#f5f4ee]/30" />
       </button>
@@ -320,7 +392,7 @@ function RdvRow({ a, selected, onOpen }) {
 
 /** Volet détail — message complet + contact + actions hiérarchisées. */
 function RdvDetail({
-  a, busyId, err, reporterOpen, rStart, rReason, drafting, setRStart, setRReason,
+  a, busyId, err, reporterOpen, rStart, rReason, drafting, events, eventsLoading, setRStart, setRReason,
   confirm, cancel, startLive, sendLink, openReporter, submitReschedule, draftMessage, closeReporter,
 }) {
   const st = statusOf(a);
@@ -385,10 +457,22 @@ function RdvDetail({
         </div>
       )}
 
+      {/* État du report — le système n'est plus aveugle : on sait si le client a répondu. */}
+      {a.reschedule?.state && (
+        <div className={`flex items-start gap-2 rounded-xl border px-3 py-2.5 text-[12.5px] ${reschedOf(a).chip}`}>
+          <RotateCcw className="mt-0.5 h-3.5 w-3.5 shrink-0" />
+          <span>
+            {a.reschedule.state === 'awaiting_client'
+              ? `Lien de report envoyé${a.reschedule.sent_at ? ` le ${fmtEventTime(a.reschedule.sent_at)}` : ''} — en attente du choix du demandeur.`
+              : `Le demandeur a choisi un nouveau créneau${a.reschedule.accepted_at ? ` le ${fmtEventTime(a.reschedule.accepted_at)}` : ''}.`}
+          </span>
+        </div>
+      )}
+
       {err && <p className="rounded-lg bg-red-500/10 px-3 py-2 text-[13px] text-red-300">{err}</p>}
 
       {/* Actions — hiérarchisées : 1 primaire, puis Reporter / Refuser */}
-      {a.status !== 'cancelled' && (
+      {!['cancelled', 'completed', 'no_show'].includes(a.status) && (
         <div className="mt-1 flex flex-col gap-2.5 border-t border-white/[0.06] pt-4">
           {a.status === 'requested' && (
             <button type="button" disabled={isBusy} onClick={() => confirm(a.id)}
@@ -461,6 +545,33 @@ function RdvDetail({
           )}
         </div>
       )}
+
+      {/* Historique — timeline « intelligente » (demande, report envoyé, client a répondu, confirmé…) */}
+      <div className="mt-1 border-t border-white/[0.06] pt-4">
+        <p className="mb-2.5 flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wide text-[#f5f4ee]/40">
+          <History className="h-3.5 w-3.5" /> Historique
+        </p>
+        {eventsLoading ? (
+          <p className="text-[12px] text-[#f5f4ee]/40">Chargement…</p>
+        ) : !events || events.length === 0 ? (
+          <p className="text-[12px] italic text-[#f5f4ee]/35">Aucun événement enregistré pour l’instant.</p>
+        ) : (
+          <ol className="relative space-y-3 pl-4">
+            <span className="absolute left-[3px] top-1 bottom-1 w-px bg-white/[0.08]" aria-hidden />
+            {events.map((e, i) => {
+              const dot = (EVENT_META[e.kind] || {}).dot || '#8a8f98';
+              const label = e.summary || EVENT_FALLBACK[e.kind] || e.kind;
+              return (
+                <li key={`${e.kind}-${e.at}-${i}`} className="relative">
+                  <span className="absolute -left-4 top-[5px] h-[7px] w-[7px] rounded-full ring-2 ring-[#1f1d1b]" style={{ background: dot }} />
+                  <p className="text-[12.5px] leading-snug text-[#f5f4ee]/85">{label}</p>
+                  <p className="mt-0.5 text-[10.5px] text-[#f5f4ee]/35">{fmtEventTime(e.at)}</p>
+                </li>
+              );
+            })}
+          </ol>
+        )}
+      </div>
     </div>
   );
 }

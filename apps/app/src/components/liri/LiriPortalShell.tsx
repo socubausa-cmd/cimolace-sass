@@ -1,7 +1,7 @@
 import { useNavigate } from 'react-router-dom';
 import { useEffect, useRef, useState } from 'react';
 import {
-  Menu, Sparkles, Bell, Settings, House, Video, MessagesSquare, MessageCircle,
+  Menu, Sparkles, Settings, House, Video, MessagesSquare, MessageCircle,
   WandSparkles, Library, Settings2, GraduationCap, ChevronRight, ChevronDown, MoreHorizontal,
   CalendarDays, BookOpen, School, Calendar, FileText, Award, AlertTriangle, FolderOpen,
 } from 'lucide-react';
@@ -12,6 +12,7 @@ import { isCreatorRole } from '@/lib/liri/creatorRole';
 import { useSchoolActive } from '@/hooks/useSchoolActive';
 import { LiriRailGroups, getRailItems, LiriEngineSwitcher, getActiveEngine } from './liriRail';
 import type { RailKey } from './liriRail';
+import LiriBell from './LiriBell';
 import { getApiBaseUrl } from '@/lib/apiBase';
 import { prefetchLiriRoutes } from '@/lib/prefetchLiriRoutes';
 import activeTenantConfig from '@/lib/tenant/activeTenantConfig';
@@ -243,7 +244,7 @@ function LiriPortalShellInner({
               <span className="h-1.5 w-1.5 rounded-full" style={{ background: '#e2553f' }} /> EN DIRECT
             </span>
           )}
-          <button className="relative hidden h-8 w-8 place-items-center rounded-xl lp-muted lp-railbtn lp-tr sm:grid" aria-label="Notifications"><Bell size={17} /><span className="absolute right-2 top-1.5 h-1.5 w-1.5 rounded-full" style={{ background: 'var(--coral)' }} /></button>
+          <LiriBell />
           {/* Réglages du compte tenant (facturation, membres…) = créateur only. */}
           {isCreator && <button onClick={() => nav('/liri/compte')} className="hidden h-8 w-8 place-items-center rounded-xl lp-muted lp-railbtn lp-tr sm:grid" aria-label="Paramètres"><Settings size={17} /></button>}
           <span className="ml-1 grid h-8 w-8 place-items-center rounded-full text-[12px] font-semibold text-white lp-ember">{initials}</span>

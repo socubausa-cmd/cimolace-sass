@@ -129,6 +129,11 @@ export class BookingService {
       .update({ status: 'booked' })
       .eq('id', dto.slotId);
 
+    if ((data as any)?.id) {
+      void this.logAppointmentEvent(tenant.id, (data as any).id, 'requested', {
+        actorType: 'client', actorId: userId, summary: 'Demande de rendez-vous',
+      });
+    }
     return data;
   }
 
@@ -236,6 +241,13 @@ export class BookingService {
     // Notifications (in-app + email brandé tenant) — best-effort, ne bloque JAMAIS le RDV.
     void this.notifyAppointmentRequest(tenantId, userId, { subject, email, whatsapp, chosenStart });
 
+    if (data?.id) {
+      void this.logAppointmentEvent(tenantId, data.id, 'requested', {
+        actorType: 'client', summary: `Demande : ${subject}`,
+        metadata: { email, whatsapp, serviceKey: dto?.serviceKey || null, chosenStart: chosenStart?.toISOString() || null },
+      });
+    }
+
     return { ok: true, requestId: data?.id ?? null, slotId, startAt };
   }
 
@@ -276,12 +288,71 @@ export class BookingService {
             body: `« ${info.subject} »${whenTxt} — ${info.email} · ${info.whatsapp}`,
             type: 'info',
             email: true,
-            actionUrl: '/secretariat-space/rendez-vous', // liste RDV du secrétariat (staff/owner)
+            actionUrl: '/liri/rdv', // écran RDV du portail LIRI (staff/owner)
           })
           .catch(() => {});
       }
     } catch (e) {
       this.logger.warn(`RDV notif: ${(e as Error).message}`);
+    }
+  }
+
+  /** Journalise un événement de RDV (audit → timeline « intelligente »). Best-effort. */
+  private async logAppointmentEvent(
+    tenantId: string,
+    appointmentId: string,
+    kind: string,
+    opts: {
+      actorType?: 'system' | 'staff' | 'client';
+      actorId?: string | null;
+      summary?: string;
+      metadata?: Record<string, unknown>;
+    } = {},
+  ): Promise<void> {
+    try {
+      await (this.supabase.client as any).from('appointment_events').insert({
+        tenant_id: tenantId,
+        appointment_id: appointmentId,
+        kind,
+        actor_type: opts.actorType || 'system',
+        actor_id: opts.actorId ?? null,
+        summary: opts.summary ?? null,
+        metadata: opts.metadata ?? {},
+      });
+    } catch (e) {
+      this.logger.warn(`appointment_event(${kind}): ${(e as Error).message}`);
+    }
+  }
+
+  /** Notifie tout le staff (owner/admin/secrétariat) du tenant. Best-effort, jamais bloquant. */
+  private async notifyStaff(
+    tenantId: string,
+    payload: { title: string; body: string; type?: string; email?: boolean; actionUrl?: string },
+    exceptUserId?: string,
+  ): Promise<void> {
+    try {
+      const { data: staff } = await (this.supabase.client as any)
+        .from('tenant_memberships')
+        .select('user_id, role')
+        .eq('tenant_id', tenantId)
+        .in('role', ['secretariat', 'owner', 'admin']);
+      const seen = new Set<string>();
+      for (const m of (staff ?? []) as Array<{ user_id?: string }>) {
+        const uid = m.user_id;
+        if (!uid || seen.has(uid) || uid === exceptUserId) continue;
+        seen.add(uid);
+        await this.notifications
+          .send(tenantId, uid, {
+            title: payload.title,
+            body: payload.body,
+            type: payload.type || 'info',
+            email: payload.email ?? false,
+            actionUrl: payload.actionUrl || '/liri/rdv',
+          })
+          .catch(() => {});
+      }
+    } catch (e) {
+      this.logger.warn(`notifyStaff: ${(e as Error).message}`);
     }
   }
 
@@ -331,8 +402,21 @@ export class BookingService {
     // Notification (interne + demandeur externe) : reprogrammation, confirmation ou annulation.
     if (rescheduled) {
       void this.notifyAppointmentDecision(tenantId, data, { rescheduled: true, reason: dto.reason });
+      void this.logAppointmentEvent(tenantId, appointmentId, 'host_rescheduled', {
+        actorType: 'staff', summary: 'Report fixé par l’organisateur', metadata: { reason: dto.reason || null },
+      });
     } else if (dto.status === 'confirmed' || dto.status === 'cancelled') {
       void this.notifyAppointmentDecision(tenantId, data, { reason: dto.reason });
+      void this.logAppointmentEvent(
+        tenantId,
+        appointmentId,
+        dto.status === 'confirmed' ? 'confirmed' : 'cancelled',
+        {
+          actorType: 'staff',
+          summary: dto.status === 'confirmed' ? 'Rendez-vous confirmé' : 'Rendez-vous annulé / refusé',
+          metadata: { reason: dto.reason || null },
+        },
+      );
     }
     return data;
   }
@@ -493,6 +577,12 @@ export class BookingService {
       expires_at: expires,
       status: 'sent',
       metadata: { purpose: 'self_reschedule', reason: reason || null },
+    });
+
+    void this.logAppointmentEvent(tenantId, appointmentId, 'reschedule_link_sent', {
+      actorType: 'staff', actorId: opts.actorId ?? null,
+      summary: 'Lien de report envoyé au demandeur — en attente de son choix',
+      metadata: { reason: reason || null, email: email || null, whatsapp: wa || null },
     });
 
     const link = `${this.rescheduleBase()}/replanifier/${token}`;
@@ -784,6 +874,17 @@ export class BookingService {
     // Notifie la reprogrammation (email + WhatsApp au demandeur + notif interne). Best-effort.
     void this.notifyAppointmentDecision(tenantId, updated, { rescheduled: true });
 
+    // Audit + alerte STAFF : le demandeur a répondu au lien de report (le système n'est plus aveugle).
+    void this.logAppointmentEvent(tenantId, inv.appointment_id, 'client_rescheduled', {
+      actorType: 'client', summary: 'Le demandeur a choisi un nouveau créneau',
+      metadata: { newStart: start.toISOString() },
+    });
+    void this.notifyStaff(tenantId, {
+      title: 'Un demandeur a reprogrammé son rendez-vous 📅',
+      body: `Nouveau créneau choisi : ${new Intl.DateTimeFormat('fr-FR', { dateStyle: 'full', timeStyle: 'short', timeZone: 'Europe/Paris' }).format(start)}.`,
+      type: 'success', email: true, actionUrl: '/liri/rdv',
+    });
+
     return { ok: true, newStart: start.toISOString() };
   }
 
@@ -804,7 +905,82 @@ export class BookingService {
     }
 
     const { data } = await query;
-    return data ?? [];
+    const list = (data ?? []) as any[];
+
+    // Enrichit chaque RDV avec l'état de son DERNIER lien de report (booking_invitations) :
+    //  - `awaiting_client` : lien envoyé, pas encore utilisé (le RDV « attend » le demandeur) ;
+    //  - `client_responded` : le demandeur a choisi un créneau.
+    // Rend l'écran « voyant » sans nouveau statut de RDV (dérivé, zéro migration côté appointments).
+    if (list.length) {
+      try {
+        const ids = list.map((a) => a.id);
+        const { data: invs } = await (this.supabase.client as any)
+          .from('booking_invitations')
+          .select('appointment_id, status, created_at, accepted_at, expires_at')
+          .eq('tenant_id', tenantId)
+          .in('appointment_id', ids)
+          .order('created_at', { ascending: false });
+        const latest = new Map<string, any>();
+        for (const iv of (invs ?? []) as any[]) {
+          if (!latest.has(iv.appointment_id)) latest.set(iv.appointment_id, iv);
+        }
+        const now = Date.now();
+        for (const a of list) {
+          const iv = latest.get(a.id);
+          if (!iv) continue;
+          const expired = iv.expires_at && new Date(iv.expires_at).getTime() < now;
+          const open = ['sent', 'pending'].includes(String(iv.status)) && !expired;
+          a.reschedule = {
+            status: iv.status,
+            sent_at: iv.created_at,
+            accepted_at: iv.accepted_at,
+            expires_at: iv.expires_at,
+            state: iv.status === 'accepted' ? 'client_responded' : open ? 'awaiting_client' : null,
+          };
+        }
+      } catch (e) {
+        this.logger.warn(`listAppointments reschedule-enrich: ${(e as Error).message}`);
+      }
+    }
+    return list;
+  }
+
+  /**
+   * Timeline « intelligente » d'un RDV : fusionne le journal d'audit (appointment_events)
+   * avec des repères dérivés de l'objet (demande = created_at) et des invitations de report
+   * (lien envoyé = created_at, demandeur a répondu = accepted_at). Ainsi l'historique est
+   * utile IMMÉDIATEMENT, même pour les RDV antérieurs à la table d'audit. Ordre chronologique.
+   */
+  async listAppointmentEvents(tenantId: string, appointmentId: string) {
+    const client = this.supabase.client as any;
+    const [evsRes, invRes, apptRes] = await Promise.all([
+      client.from('appointment_events').select('*')
+        .eq('tenant_id', tenantId).eq('appointment_id', appointmentId),
+      client.from('booking_invitations').select('status, created_at, accepted_at')
+        .eq('tenant_id', tenantId).eq('appointment_id', appointmentId),
+      client.from('appointments').select('created_at, status')
+        .eq('tenant_id', tenantId).eq('id', appointmentId).maybeSingle(),
+    ]);
+    const items: Array<{ kind: string; at: string; summary?: string; source: string; metadata?: any; actor_type?: string }> = [];
+    const appt = apptRes?.data;
+    if (appt?.created_at) items.push({ kind: 'requested', at: appt.created_at, summary: 'Demande reçue', source: 'appointment' });
+    for (const iv of (invRes?.data ?? []) as any[]) {
+      if (iv.created_at) items.push({ kind: 'reschedule_link_sent', at: iv.created_at, summary: 'Lien de report envoyé au demandeur', source: 'invitation' });
+      if (iv.accepted_at) items.push({ kind: 'client_rescheduled', at: iv.accepted_at, summary: 'Le demandeur a choisi un nouveau créneau', source: 'invitation' });
+    }
+    for (const e of (evsRes?.data ?? []) as any[]) {
+      items.push({ kind: e.kind, at: e.created_at, summary: e.summary, source: 'event', metadata: e.metadata, actor_type: e.actor_type });
+    }
+    // Dédup (même kind au même instant : repère dérivé + event d'audit) et tri chronologique.
+    const seen = new Set<string>();
+    return items
+      .filter((x) => {
+        const k = `${x.kind}|${x.at}`;
+        if (seen.has(k)) return false;
+        seen.add(k);
+        return true;
+      })
+      .sort((a, b) => new Date(a.at).getTime() - new Date(b.at).getTime());
   }
 
   /**
