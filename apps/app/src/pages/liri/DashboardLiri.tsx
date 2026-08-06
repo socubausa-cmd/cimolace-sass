@@ -78,6 +78,7 @@ async function streamLiriBrain(
   onDone: () => void,
   onError: (e: string) => void,
   onToolConfirm: (c: { tool: string; args: Record<string, unknown> }) => void,
+  onProviderError: (e: { provider: string; reason: string; message: string; status?: number }) => void,
 ): Promise<void> {
   const base = getApiBaseUrl();
   const token = authStore.getToken();
@@ -123,9 +124,11 @@ async function streamLiriBrain(
         try {
           const parsed: { content: string; done: boolean } = JSON.parse(trimmed.slice(6));
           if (parsed.content) {
-            let tc: { type?: string; tool?: string; args?: Record<string, unknown> } | null = null;
-            try { const o = JSON.parse(parsed.content); if (o && o.type === 'tool_confirm') tc = o; } catch { /* texte normal */ }
-            if (tc?.tool) onToolConfirm({ tool: tc.tool, args: tc.args ?? {} });
+            let sig: { type?: string; tool?: string; args?: Record<string, unknown>; provider?: string; reason?: string; message?: string; status?: number } | null = null;
+            try { const o = JSON.parse(parsed.content); if (o && typeof o === 'object' && o.type) sig = o; } catch { /* texte normal */ }
+            if (sig?.type === 'tool_confirm' && sig.tool) { onToolConfirm({ tool: sig.tool, args: sig.args ?? {} }); }
+            // Signal d'erreur fournisseur : le caller grise le modèle et bascule (pas de onDone ici).
+            else if (sig?.type === 'provider_error') { onProviderError({ provider: sig.provider ?? '', reason: sig.reason ?? 'error', message: sig.message ?? 'Modèle indisponible.', status: sig.status }); return; }
             else onChunk(parsed.content);
           }
           if (parsed.done) { onDone(); return; }
@@ -140,8 +143,17 @@ async function streamLiriBrain(
 
 // ── Component ─────────────────────────────────────────────────────────────────
 
+// Ordre de repli automatique quand le modèle courant est indisponible : on privilégie
+// les fournisseurs dont la clé est active côté API (DeepSeek, puis Mistral). Claude reste
+// sélectionnable mais bascule tout seul s'il renvoie une erreur (ex. crédits épuisés).
+const FALLBACK_ORDER: LiriModel[] = ['deepseek-chat', 'mistral-large-latest', 'deepseek-reasoner', 'gpt-4o-mini'];
+
 export function DashboardLiri() {
-  const [model, setModel]                   = useState<LiriModel>('claude-sonnet-4-6');
+  // Défaut = DeepSeek V4 Flash (fournisseur disponible). Repasser sur 'claude-sonnet-4-6'
+  // une fois les crédits Anthropic rechargés — la bascule auto gère l'indisponibilité entre-temps.
+  const [model, setModel]                   = useState<LiriModel>('deepseek-chat');
+  // Fournisseurs détectés indisponibles pendant la session → grisés dans le sélecteur.
+  const [downProviders, setDownProviders]   = useState<Set<string>>(() => new Set());
   const [messages, setMessages]             = useState<Message[]>([]);
   const [input, setInput]                   = useState('');
   const [streaming, setStreaming]           = useState(false);
@@ -229,81 +241,117 @@ export function DashboardLiri() {
 
   const currentModel = MODEL_MAP[model];
 
+  // Choisit le prochain modèle de repli : premier de FALLBACK_ORDER dont le fournisseur
+  // n'a pas déjà échoué dans ce cycle d'envoi (`tried`). null = plus rien de disponible.
+  const pickFallback = (tried: Set<string>): LiriModel | null => {
+    for (const k of FALLBACK_ORDER) {
+      const info = MODEL_MAP[k];
+      if (info && !tried.has(info.provider)) return k;
+    }
+    return null;
+  };
+
   const sendMessage = async (override?: string) => {
     const text = (override ?? input).trim();
     if (!text || streaming) return;
 
     const prior = messagesRef.current;   // tours précédents (déjà settlés)
-    let assistantText = '';
 
     setInput('');
-    setMessages((prev) => [...prev, { role: 'user', content: text }]);
+    // user + bulle assistant vide (réutilisée par les éventuelles relances de repli)
+    setMessages((prev) => [...prev, { role: 'user', content: text }, { role: 'assistant', content: '', pending: true }]);
     setStreaming(true);
 
-    // Add empty assistant message that will fill in
-    setMessages((prev) => [...prev, { role: 'assistant', content: '', pending: true }]);
+    // Diffuse le message sur `useModel` ; en cas d'indisponibilité, bascule vers un
+    // fournisseur disponible et RELANCE dans la même bulle. `tried` évite toute boucle.
+    const runStream = async (useModel: LiriModel, tried: Set<string>, notePrefix: string) => {
+      let assistantText = '';
+      await streamLiriBrain(
+        text,
+        useModel,
+        activeConvId,
+        (chunk) => {
+          assistantText += chunk;
+          setMessages((prev) => {
+            const updated = [...prev];
+            const last = updated[updated.length - 1];
+            if (last?.role === 'assistant') {
+              updated[updated.length - 1] = { ...last, content: (notePrefix + assistantText), pending: false };
+            }
+            return updated;
+          });
+        },
+        () => {
+          setStreaming(false);
+          setMessages((prev) => {
+            const updated = [...prev];
+            const last = updated[updated.length - 1];
+            if (last?.role === 'assistant') updated[updated.length - 1] = { ...last, pending: false };
+            return updated;
+          });
+          // Persiste seulement la vraie réponse (sans la note de bascule).
+          if (assistantText.trim()) {
+            void persistConversation([
+              ...prior,
+              { role: 'user', content: text },
+              { role: 'assistant', content: assistantText },
+            ]);
+          }
+        },
+        (err) => {
+          setStreaming(false);
+          setMessages((prev) => {
+            const updated = [...prev];
+            updated[updated.length - 1] = { role: 'assistant', content: `⚠️ ${err}`, pending: false };
+            return updated;
+          });
+        },
+        (confirm) => {
+          // Action d'écriture proposée par l'IA → on attend la confirmation utilisateur.
+          setStreaming(false);
+          setPendingConfirm(confirm);
+          setMessages((prev) => {
+            const updated = [...prev];
+            const last = updated[updated.length - 1];
+            if (last?.role === 'assistant') {
+              updated[updated.length - 1] = {
+                ...last,
+                content: (notePrefix + (assistantText || 'Action prête — confirmation requise ci-dessous.')),
+                pending: false,
+              };
+            }
+            return updated;
+          });
+        },
+        (pe) => {
+          // Fournisseur indisponible (ex. crédits Anthropic épuisés) → griser + basculer.
+          if (pe.provider) setDownProviders((prev) => new Set(prev).add(pe.provider));
+          const nextTried = new Set(tried);
+          if (pe.provider) nextTried.add(pe.provider);
+          const fb = pickFallback(nextTried);
+          if (fb) {
+            setModel(fb);
+            const note = `_${pe.message} Bascule automatique vers ${MODEL_MAP[fb]?.name ?? fb}._\n\n`;
+            setMessages((prev) => {
+              const updated = [...prev];
+              const last = updated[updated.length - 1];
+              if (last?.role === 'assistant') updated[updated.length - 1] = { ...last, content: note, pending: true };
+              return updated;
+            });
+            void runStream(fb, nextTried, note);   // relance dans la même bulle
+          } else {
+            setStreaming(false);
+            setMessages((prev) => {
+              const updated = [...prev];
+              updated[updated.length - 1] = { role: 'assistant', content: `⚠️ ${pe.message} Aucun autre modèle n'est disponible pour le moment.`, pending: false };
+              return updated;
+            });
+          }
+        },
+      );
+    };
 
-    await streamLiriBrain(
-      text,
-      model,
-      activeConvId,
-      (chunk) => {
-        assistantText += chunk;
-        setMessages((prev) => {
-          const updated = [...prev];
-          const last = updated[updated.length - 1];
-          if (last?.role === 'assistant') {
-            updated[updated.length - 1] = { ...last, content: last.content + chunk, pending: false };
-          }
-          return updated;
-        });
-      },
-      () => {
-        setStreaming(false);
-        setMessages((prev) => {
-          const updated = [...prev];
-          const last = updated[updated.length - 1];
-          if (last?.role === 'assistant') {
-            updated[updated.length - 1] = { ...last, pending: false };
-          }
-          return updated;
-        });
-        // Persiste le tour (création/maj) — uniquement s'il y a une vraie réponse texte
-        // (la voie tool_confirm n'a pas encore de réponse → sauvegardée après confirmation).
-        if (assistantText.trim()) {
-          void persistConversation([
-            ...prior,
-            { role: 'user', content: text },
-            { role: 'assistant', content: assistantText },
-          ]);
-        }
-      },
-      (err) => {
-        setStreaming(false);
-        setMessages((prev) => {
-          const updated = [...prev];
-          updated[updated.length - 1] = { role: 'assistant', content: `⚠️ ${err}`, pending: false };
-          return updated;
-        });
-      },
-      (confirm) => {
-        // Action d'écriture proposée par l'IA → on attend la confirmation utilisateur.
-        setStreaming(false);
-        setPendingConfirm(confirm);
-        setMessages((prev) => {
-          const updated = [...prev];
-          const last = updated[updated.length - 1];
-          if (last?.role === 'assistant') {
-            updated[updated.length - 1] = {
-              ...last,
-              content: last.content || 'Action prête — confirmation requise ci-dessous.',
-              pending: false,
-            };
-          }
-          return updated;
-        });
-      },
-    );
+    await runStream(model, new Set(), '');
   };
 
   // Prompt transmis depuis la barre de commande de l'Accueil LIRI (/dashboard/liri?q=…)
@@ -475,13 +523,18 @@ export function DashboardLiri() {
               </button>
               {modelPickerOpen && (
                 <div className="absolute right-0 top-[112%] z-50 w-[300px] rounded-2xl lq-glass lq-hair lq-shadow-lift p-2">
-                  {MODELS.map((m) => (
-                    <button key={m.key} onClick={() => { setModel(m.key); setModelPickerOpen(false); }} className={`w-full text-left rounded-xl px-3 py-2.5 flex items-center gap-2.5 transition cursor-pointer ${model === m.key ? 'bg-stone-900/[0.05]' : 'hover:bg-white/70'}`}>
-                      <span className="grid place-items-center h-7 w-7 rounded-lg text-white shrink-0" style={{ background: `linear-gradient(135deg, ${m.color}, #cf7a52)` }}><Zap size={13} /></span>
-                      <div className="min-w-0 flex-1"><div className="text-[13px] font-semibold truncate">{m.name}</div><div className="text-[11px] text-stone-400 truncate">{m.description}</div></div>
-                      {providerBadge(m.provider)}
+                  {MODELS.map((m) => {
+                    const down = downProviders.has(m.provider);
+                    return (
+                    <button key={m.key} disabled={down} title={down ? 'Indisponible pour le moment' : undefined}
+                      onClick={() => { if (down) return; setModel(m.key); setModelPickerOpen(false); }}
+                      className={`w-full text-left rounded-xl px-3 py-2.5 flex items-center gap-2.5 transition ${down ? 'opacity-40 cursor-not-allowed' : model === m.key ? 'bg-stone-900/[0.05] cursor-pointer' : 'hover:bg-white/70 cursor-pointer'}`}>
+                      <span className="grid place-items-center h-7 w-7 rounded-lg text-white shrink-0" style={{ background: down ? 'linear-gradient(135deg, #9ca3af, #6b7280)' : `linear-gradient(135deg, ${m.color}, #cf7a52)` }}><Zap size={13} /></span>
+                      <div className="min-w-0 flex-1"><div className="text-[13px] font-semibold truncate">{m.name}</div><div className="text-[11px] text-stone-400 truncate">{down ? 'Indisponible · crédits épuisés' : m.description}</div></div>
+                      {down ? <span className="shrink-0 text-[10px] font-medium text-stone-400 px-1.5 py-0.5 rounded-md bg-stone-500/10">indispo</span> : providerBadge(m.provider)}
                     </button>
-                  ))}
+                    );
+                  })}
                 </div>
               )}
             </div>

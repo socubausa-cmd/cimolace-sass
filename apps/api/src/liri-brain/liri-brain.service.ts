@@ -313,6 +313,36 @@ export class LiriBrainService {
   }
 
   /**
+   * Construit un signal d'erreur fournisseur STRUCTURÉ (au lieu d'un « Erreur 400 »
+   * opaque). Le front peut alors GRISER le modèle concerné et BASCULER automatiquement
+   * vers un fournisseur disponible. `errText` = corps brut renvoyé par l'API du modèle.
+   * `reason` distingue notamment le cas « crédits épuisés » (à recharger côté fournisseur).
+   */
+  private providerErrorSignal(
+    provider: string,
+    status: number,
+    errText: string,
+  ): { content: string; done: boolean } {
+    const low = (errText || '').toLowerCase();
+    let reason: 'credit' | 'rate' | 'auth' | 'error' = 'error';
+    if (/credit balance|too low|billing|insufficient|quota exceeded|payment required/.test(low)) reason = 'credit';
+    else if (status === 429 || /rate limit|overloaded|too many requests/.test(low)) reason = 'rate';
+    else if (status === 401 || status === 403 || /invalid.*api key|unauthor/.test(low)) reason = 'auth';
+    const names: Record<string, string> = { anthropic: 'Claude', deepseek: 'DeepSeek', openai: 'GPT', mistral: 'Mistral' };
+    const name = names[provider] ?? provider;
+    const human: Record<string, string> = {
+      credit: `${name} est momentanément indisponible (crédits du fournisseur épuisés).`,
+      rate: `${name} est saturé (limite de débit atteinte).`,
+      auth: `${name} n'est pas configuré correctement (clé invalide).`,
+      error: `${name} a renvoyé une erreur (${status}).`,
+    };
+    return {
+      content: JSON.stringify({ type: 'provider_error', provider, status, reason, message: human[reason] }),
+      done: true,
+    };
+  }
+
+  /**
    * Variante function-calling (chemin OpenAI-compatible : DeepSeek + GPT).
    * Boucle EN STREAMING : le texte de la réponse est émis token par token ; le
    * modèle peut appeler des outils LECTURE (exécutés automatiquement via
@@ -377,8 +407,9 @@ export class LiriBrainService {
         }),
       });
       if (!resp.ok) {
-        this.logger.error(`${info.provider} tools error: ${await resp.text()}`);
-        yield { content: `⚠️ Erreur ${info.provider}: ${resp.status}`, done: true };
+        const errText = await resp.text();
+        this.logger.error(`${info.provider} tools error: ${errText}`);
+        yield this.providerErrorSignal(info.provider, resp.status, errText);
         return;
       }
 
@@ -500,8 +531,9 @@ export class LiriBrainService {
         body: JSON.stringify(body),
       });
       if (!resp.ok) {
-        this.logger.error(`Anthropic tools error: ${await resp.text()}`);
-        yield { content: `⚠️ Erreur Anthropic: ${resp.status}`, done: true };
+        const errText = await resp.text();
+        this.logger.error(`Anthropic tools error: ${errText}`);
+        yield this.providerErrorSignal('anthropic', resp.status, errText);
         return;
       }
 
@@ -604,7 +636,7 @@ export class LiriBrainService {
     if (!response.ok) {
       const err = await response.text();
       this.logger.error(`DeepSeek API error: ${err}`);
-      yield { content: `⚠️ Erreur DeepSeek: ${response.status}`, done: true };
+      yield this.providerErrorSignal('deepseek', response.status, err);
       return;
     }
 
@@ -675,7 +707,7 @@ export class LiriBrainService {
     if (!response.ok) {
       const err = await response.text();
       this.logger.error(`Anthropic API error: ${err}`);
-      yield { content: `⚠️ Erreur Anthropic: ${response.status}`, done: true };
+      yield this.providerErrorSignal('anthropic', response.status, err);
       return;
     }
 
@@ -740,7 +772,7 @@ export class LiriBrainService {
     if (!response.ok) {
       const err = await response.text();
       this.logger.error(`OpenAI API error: ${err}`);
-      yield { content: `⚠️ Erreur OpenAI: ${response.status}`, done: true };
+      yield this.providerErrorSignal('openai', response.status, err);
       return;
     }
 
@@ -805,7 +837,7 @@ export class LiriBrainService {
     if (!response.ok) {
       const err = await response.text();
       this.logger.error(`Mistral API error: ${err}`);
-      yield { content: `⚠️ Erreur Mistral: ${response.status}`, done: true };
+      yield this.providerErrorSignal('mistral', response.status, err);
       return;
     }
 
