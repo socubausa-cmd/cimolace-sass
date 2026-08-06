@@ -13,6 +13,11 @@ import {
   stripeAuth,
   stripeCreateCheckoutSession,
 } from '../billing/stripe-rest.util';
+import {
+  isWhatsAppConfigured,
+  resolveWaMsisdn,
+  sendWhatsAppTemplate,
+} from '../common/whatsapp.util';
 
 /**
  * Cagnotte PUBLIQUE (dons anonymes) — pas de JWT : n'importe quel visiteur de
@@ -240,6 +245,27 @@ export class CagnotteService {
     const session = (await res.json()) as any;
     const paid = session?.payment_status === 'paid' || session?.status === 'complete';
     if (!paid) return { status: 'pending' };
+    // CAPTURE AUTO des coordonnées RÉELLES du payeur (Stripe collecte l'e-mail au checkout ;
+    // le formulaire de don ne le capture pas toujours). On ne remplit que les champs VIDES →
+    // remerciement e-mail + WhatsApp fiables sans jamais écraser ce que le donateur a saisi.
+    try {
+      const cd = session?.customer_details || {};
+      const { data: cur } = await this.db
+        .from('cagnotte_donations')
+        .select('donor_email, donor_name, donor_phone')
+        .eq('provider', 'stripe').eq('provider_ref', sid).eq('status', 'pending')
+        .maybeSingle();
+      const patch: Record<string, unknown> = {};
+      if (cd.email && !(cur as any)?.donor_email) patch.donor_email = String(cd.email).slice(0, 200);
+      if (cd.name && !(cur as any)?.donor_name) patch.donor_name = String(cd.name).slice(0, 80);
+      if (cd.phone && !(cur as any)?.donor_phone) patch.donor_phone = String(cd.phone).replace(/[^\d+]/g, '').slice(0, 20);
+      if (Object.keys(patch).length) {
+        await this.db.from('cagnotte_donations').update(patch)
+          .eq('provider', 'stripe').eq('provider_ref', sid).eq('status', 'pending');
+      }
+    } catch (e) {
+      this.logger.warn(`Cagnotte capture Stripe KO: ${(e as Error).message}`);
+    }
     await this.markCompleted('stripe', sid);
     return { status: 'completed' };
   }
@@ -334,12 +360,10 @@ export class CagnotteService {
       .select('id, campaign_slug, donor_email, donor_name, donor_phone, display_amount, display_currency, amount_cents, provider');
     const row = (updated as any[])?.[0];
     if (!row) return;
-    // Tenant de la campagne résolu UNE fois, partagé par les 2 réactions (email + CRM).
+    // Tenant de la campagne résolu UNE fois, partagé par les réactions (email + WhatsApp + CRM).
     const tenantId = await this.resolveCampaignTenantId(row.campaign_slug);
-    if (row.donor_email) {
-      void this.sendThankYou(row, tenantId).catch((e) =>
-        this.logger.warn(`Cagnotte remerciement KO: ${(e as Error).message}`));
-    }
+    void this.notifyDonor(row, tenantId).catch((e) =>
+      this.logger.warn(`Cagnotte notif donateur KO: ${(e as Error).message}`));
     void this.ingestDonorToCrm(row, tenantId).catch((e) =>
       this.logger.warn(`Cagnotte→CRM KO: ${(e as Error).message}`));
   }
@@ -433,6 +457,127 @@ export class CagnotteService {
           `</div>` +
         `</div>`,
     });
+  }
+
+  /** Lien public de réservation de la séance (surchargeable via BOOKING_PUBLIC_URL). */
+  private bookingLink(): string {
+    return process.env.BOOKING_PUBLIC_URL || `${this.frontBase}/rendez-vous-priere`;
+  }
+
+  /** Notifie le donateur à la confirmation : e-mail de remerciement + WhatsApp (best-effort),
+   *  et marque thanked_at / wa_notified_at pour le suivi des relances J+1. */
+  private async notifyDonor(row: any, tenantId: string | null): Promise<void> {
+    if (row.donor_email) {
+      try {
+        await this.sendThankYou(row, tenantId);
+        await this.db.from('cagnotte_donations')
+          .update({ thanked_at: new Date().toISOString() }).eq('id', row.id);
+      } catch (e) {
+        this.logger.warn(`Cagnotte remerciement e-mail KO: ${(e as Error).message}`);
+      }
+    }
+    const wa = await this.resolveDonorWa(row, tenantId);
+    if (wa) {
+      const ok = await this.sendDonorWhatsApp(wa, `merci pour votre don 🙏 réservez votre séance ici : ${this.bookingLink()}`);
+      if (ok) {
+        await this.db.from('cagnotte_donations')
+          .update({ wa_notified_at: new Date().toISOString() }).eq('id', row.id);
+      }
+    }
+  }
+
+  /** Résout un MSISDN pour le donateur : téléphone direct (pawaPay) OU croisé depuis sa
+   *  demande de RDV (appointments.notes, match e-mail). null si rien de fiable (jamais d'inconnu). */
+  private async resolveDonorWa(row: any, tenantId: string | null): Promise<string | null> {
+    const direct = resolveWaMsisdn(row.donor_phone);
+    if (direct) return direct;
+    const email = String(row.donor_email || '').trim();
+    if (!email) return null;
+    let q = this.db.from('appointments').select('notes').ilike('notes', `%${email}%`).limit(1);
+    if (tenantId) q = q.eq('tenant_id', tenantId);
+    const { data } = await q;
+    const notes = String((data as any[])?.[0]?.notes || '');
+    const m = notes.match(/WhatsApp\s*:\s*([+0-9 ]{6,})/i);
+    return m ? resolveWaMsisdn(m[1]) : null;
+  }
+
+  /** A-t-il « fait signe » : une demande de RDV existe pour cet e-mail. */
+  private async donorHasRdv(email: string, tenantId: string | null): Promise<boolean> {
+    const e = String(email || '').trim();
+    if (!e) return false;
+    let q = this.db.from('appointments').select('id').ilike('notes', `%${e}%`).limit(1);
+    if (tenantId) q = q.eq('tenant_id', tenantId);
+    const { data } = await q;
+    return !!(data as any[])?.length;
+  }
+
+  /** Envoi WhatsApp via le gabarit RDV approuvé (best-effort). */
+  private async sendDonorWhatsApp(msisdn: string, phrase: string): Promise<boolean> {
+    if (!isWhatsAppConfigured()) return false;
+    const r = await sendWhatsAppTemplate(msisdn, {
+      template: process.env.WHATSAPP_TEMPLATE_RDV || 'rdv_notification',
+      lang: process.env.WHATSAPP_TEMPLATE_LANG || 'fr',
+      bodyParams: ['votre séance de prière', phrase],
+    });
+    if (!r.ok) this.logger.warn(`Cagnotte WhatsApp KO: ${r.error}`);
+    return r.ok;
+  }
+
+  /** E-mail de RELANCE (best-effort) au donateur qui n'a pas encore réservé sa séance. */
+  private async sendReminderEmail(row: any, tenantId: string | null): Promise<void> {
+    const email = String(row.donor_email || '').trim();
+    if (!email) return;
+    let from: string | null = null, fromName: string | null = null;
+    if (tenantId) {
+      const { data: ns } = await this.db.from('tenant_notification_settings')
+        .select('email_from, email_from_name').eq('tenant_id', tenantId).maybeSingle();
+      from = (ns as any)?.email_from ?? null;
+      fromName = (ns as any)?.email_from_name ?? null;
+    }
+    const name = String(row.donor_name || '').trim();
+    const lien = this.bookingLink();
+    await this.db.from('email_queue').insert({
+      tenant_id: tenantId, to: email, from, from_name: fromName,
+      subject: 'Votre séance de prière vous attend 🙏',
+      html_body:
+        `<h2>${name ? `Bonjour ${name}` : 'Bonjour'} 🙏</h2>`
+        + `<p>Nous vous remercions encore pour votre don à Prorascience.</p>`
+        + `<p>Votre <strong>séance de prière</strong> offerte n'est pas encore réservée — nous serions heureux de vous accueillir. Choisissez votre créneau ici :</p>`
+        + `<p><a href="${lien}">${lien}</a></p>`
+        + `<p style="color:#777;font-size:13px;">Avec toute notre gratitude,<br/>Ngowazulu — Prorascience</p>`,
+    });
+  }
+
+  /** RELANCE QUOTIDIENNE (cron) : relance par e-mail + WhatsApp les donateurs qui ont donné mais
+   *  n'ont PAS encore pris de RDV (« pas fait signe »), 24 h+ après le dernier contact, max 3 fois.
+   *  Idempotent : garde-fous last_reminder_at (>24 h) + reminder_count (<3). */
+  async remindDonors(): Promise<{ scanned: number; reminded: number }> {
+    const dayMs = 24 * 3600 * 1000;
+    const { data: rows } = await this.db
+      .from('cagnotte_donations')
+      .select('id, campaign_slug, donor_email, donor_name, donor_phone, display_amount, display_currency, thanked_at, reminder_count, last_reminder_at')
+      .eq('status', 'completed')
+      .lt('reminder_count', 3)
+      .not('thanked_at', 'is', null);
+    const list = (rows as any[]) || [];
+    let reminded = 0;
+    for (const row of list) {
+      const lastContact = row.last_reminder_at || row.thanked_at;
+      if (!lastContact || Date.now() - new Date(lastContact).getTime() < dayMs) continue;
+      const tenantId = await this.resolveCampaignTenantId(row.campaign_slug);
+      if (row.donor_email && await this.donorHasRdv(row.donor_email, tenantId)) continue; // a fait signe
+      if (row.donor_email) {
+        await this.sendReminderEmail(row, tenantId).catch((e) =>
+          this.logger.warn(`Cagnotte relance e-mail KO: ${(e as Error).message}`));
+      }
+      const wa = await this.resolveDonorWa(row, tenantId);
+      if (wa) await this.sendDonorWhatsApp(wa, `pensez à réserver votre séance de prière offerte : ${this.bookingLink()}`);
+      await this.db.from('cagnotte_donations')
+        .update({ reminder_count: (row.reminder_count || 0) + 1, last_reminder_at: new Date().toISOString() })
+        .eq('id', row.id);
+      reminded++;
+    }
+    return { scanned: list.length, reminded };
   }
 
   /**

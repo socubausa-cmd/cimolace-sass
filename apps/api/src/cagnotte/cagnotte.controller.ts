@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Param, Post, Query, UseGuards } from '@nestjs/common';
+import { Body, Controller, ForbiddenException, Get, Param, Post, Query, UseGuards } from '@nestjs/common';
 import { PublicRateLimitGuard } from '../common/public-rate-limit.guard';
 import { CagnotteService } from './cagnotte.service';
 import {
@@ -57,5 +57,14 @@ export class CagnotteController {
   @Get(':slug/pawapay/:depositId')
   pawapayStatus(@Param('slug') _slug: string, @Param('depositId') depositId: string) {
     return this.svc.pollPawapay(depositId);
+  }
+
+  /** RELANCE QUOTIDIENNE des donateurs sans RDV — déclenchée par un cron (GitHub Actions).
+   *  Aucune donnée tenant en entrée : appel machine protégé par une CLÉ partagée (CAGNOTTE_CRON_KEY). */
+  @Post('cron/remind-donors')
+  remindDonors(@Query('key') key?: string) {
+    const expected = process.env.CAGNOTTE_CRON_KEY || '';
+    if (!expected || key !== expected) throw new ForbiddenException('Clé cron invalide.');
+    return this.svc.remindDonors();
   }
 }
