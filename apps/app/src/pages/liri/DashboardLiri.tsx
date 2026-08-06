@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import {
   Sparkles, Plus, ArrowUpRight, ArrowUp, Search, MessageSquareText, Trash2,
   PanelLeft, ShieldCheck, ShieldAlert, Check, ChevronDown, Zap, Paperclip,
@@ -228,8 +229,8 @@ export function DashboardLiri() {
 
   const currentModel = MODEL_MAP[model];
 
-  const sendMessage = async () => {
-    const text = input.trim();
+  const sendMessage = async (override?: string) => {
+    const text = (override ?? input).trim();
     if (!text || streaming) return;
 
     const prior = messagesRef.current;   // tours précédents (déjà settlés)
@@ -304,6 +305,18 @@ export function DashboardLiri() {
       },
     );
   };
+
+  // Prompt transmis depuis la barre de commande de l'Accueil LIRI (/dashboard/liri?q=…)
+  // → auto-envoi UNE seule fois. Rend la barre « Demandez à Prorascience » réellement connectée.
+  const [searchParams] = useSearchParams();
+  const autoSentRef = useRef(false);
+  useEffect(() => {
+    const q = searchParams.get('q');
+    if (!q || autoSentRef.current || streaming) return;
+    autoSentRef.current = true;
+    void sendMessage(q);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchParams]);
 
   const confirmTool = async () => {
     if (!pendingConfirm) return;

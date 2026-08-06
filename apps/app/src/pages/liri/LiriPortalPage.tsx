@@ -1,13 +1,14 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
-  Menu, Sparkles, Settings, House, Video, MessagesSquare, MessageCircle, WandSparkles,
+  Sparkles, House, Video, MessagesSquare, MessageCircle, WandSparkles,
   Library, Settings2, Mic, ArrowUp, LogIn, CalendarPlus, PenTool,
   ShoppingBag, Clock, ChevronRight, Film, ChevronLeft, UserRound,
   Radio, GraduationCap, LogOut, ArrowUpRight, AlertTriangle, CalendarDays, Megaphone,
-  BookOpen, CheckCircle2, CalendarClock, ShieldCheck,
+  BookOpen, CheckCircle2, CalendarClock, ShieldCheck, CreditCard,
 } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
+import { crmApi, bookingApi } from '@/lib/api-v2';
 import { authStore } from '@/lib/auth-store';
 import { getCachedHostTenant } from '@/lib/tenantResolver';
 import { resolveTenantSlug } from '@/lib/tenant/activeBranding';
@@ -46,7 +47,7 @@ interface Org { name: string; slug: string; role?: string | null; plan?: string 
 interface Sub { status?: string; plan_id?: string; provider?: string; current_period_end?: string | null; }
 
 interface ResumeItem { id: string; icon: LucideIcon; title: string; sub: string; to: string; }
-interface ActivityItem { id: string; icon: LucideIcon; tint?: 'coral' | 'green' | 'muted'; title: string; sub: string; when: string; action?: string; to?: string; }
+interface ActivityItem { id: string; icon: LucideIcon; tint?: 'coral' | 'green' | 'muted'; title: string; sub: string; when: string; action?: string; to?: string; _at?: string; }
 
 export function LiriPortalPage() {
   const nav = useNavigate();
@@ -75,6 +76,14 @@ export function LiriPortalPage() {
   const [subs, setSubs] = useState<Sub[]>([]);
   const [starting, setStarting] = useState(false);
   const [showUpgrade, setShowUpgrade] = useState(false);
+  // Barre de commande RÉELLE (saisie + dictée) → transmet la question au Brain.
+  const [cmd, setCmd] = useState('');
+  const [listening, setListening] = useState(false);
+  const recognitionRef = useRef<any>(null);
+  // Activité récente ÉCOSYSTÈME (créateur) : événements CRM (membres/commandes/dons/deals)
+  // + demandes de RDV, fusionnés aux lives → plus seulement les lives.
+  const [crmActs, setCrmActs] = useState<any[]>([]);
+  const [apptActs, setApptActs] = useState<any[]>([]);
 
   // Menu compte / organisation (avatar).
   const [menuOpen, setMenuOpen] = useState(false);
@@ -144,6 +153,31 @@ export function LiriPortalPage() {
     }
   };
 
+  // Barre de commande : envoie la question au Brain (/dashboard/liri?q=…) qui l'auto-exécute.
+  const submitCmd = () => {
+    const q = cmd.trim();
+    nav(q ? `/dashboard/liri?q=${encodeURIComponent(q)}` : '/dashboard/liri');
+  };
+  // Dictée vocale (Web Speech API) — best-effort, silencieuse si non supportée.
+  const toggleMic = () => {
+    const SR: any = typeof window !== 'undefined' && ((window as any).SpeechRecognition || (window as any).webkitSpeechRecognition);
+    if (!SR) { if (typeof window !== 'undefined') window.alert('La dictée vocale n’est pas disponible sur ce navigateur.'); return; }
+    if (listening) { try { recognitionRef.current?.stop(); } catch { /* noop */ } setListening(false); return; }
+    try {
+      const rec = new SR();
+      rec.lang = 'fr-FR'; rec.interimResults = false; rec.continuous = false;
+      rec.onresult = (e: any) => {
+        const txt = Array.from(e.results).map((r: any) => r[0].transcript).join(' ').trim();
+        if (txt) setCmd((prev) => (prev ? `${prev} ${txt}` : txt));
+      };
+      rec.onend = () => setListening(false);
+      rec.onerror = () => setListening(false);
+      recognitionRef.current = rec;
+      rec.start();
+      setListening(true);
+    } catch { setListening(false); }
+  };
+
   useEffect(() => { const t = setInterval(() => setNow(new Date()), 30_000); return () => clearInterval(t); }, []);
 
   // Ferme le menu compte au clic extérieur / Échap.
@@ -204,6 +238,15 @@ export function LiriPortalPage() {
 
   const liveMinutes = (stats?.totalLives ?? 0) * 70;
 
+  // Activité écosystème (créateur) : flux CRM global (membres/commandes/dons/deals) + RDV récents.
+  useEffect(() => {
+    if (!token || !isCreator) { setCrmActs([]); setApptActs([]); return undefined; }
+    let alive = true;
+    crmApi.listActivities({ limit: '10' }).then((r) => { if (alive) setCrmActs(Array.isArray(r) ? r : []); }).catch(() => {});
+    bookingApi.listAppointments().then((r) => { if (alive) setApptActs(Array.isArray(r) ? (r as any[]).slice(0, 8) : []); }).catch(() => {});
+    return () => { alive = false; };
+  }, [token, isCreator, slug]);
+
   const fmtAgo = (iso?: string) => {
     if (!iso) return '';
     const diff = now.getTime() - new Date(iso).getTime();
@@ -235,14 +278,39 @@ export function LiriPortalPage() {
   // en cours, RÉEL) ; créateur = lives récents.
   const activityItems = useMemo<ActivityItem[]>(() => {
     if (isCreator) {
-      return recent.map((l) => ({
-        id: l.id, icon: l.ended_at ? Film : WandSparkles, tint: 'coral' as const,
+      const liveRows: ActivityItem[] = recent.map((l) => ({
+        id: `live-${l.id}`, icon: l.ended_at ? Film : WandSparkles, tint: 'coral' as const,
         title: l.title || 'Session live',
         sub: l.ended_at ? 'replay disponible' : l.started_at ? 'en cours' : 'programmé',
-        when: fmtAgo(l.scheduled_at),
-        action: l.ended_at ? 'Ouvrir' : undefined,
-        to: '/lives',
+        when: fmtAgo(l.scheduled_at), _at: l.scheduled_at,
+        action: l.ended_at ? 'Ouvrir' : undefined, to: '/lives',
       }));
+      const iconForType = (t: string): LucideIcon => {
+        const s = String(t || '').toLowerCase();
+        if (/member|contact|lead|inscription|adh[eé]s/.test(s)) return UserRound;
+        if (/order|commande|purchase|achat/.test(s)) return ShoppingBag;
+        if (/don|payment|paiement|invoice|facture|revenue|revenu/.test(s)) return CreditCard;
+        if (/deal|won|lost|stage|pipeline/.test(s)) return ArrowUpRight;
+        return Radio;
+      };
+      const crmRows: ActivityItem[] = crmActs.map((a) => ({
+        id: `crm-${a.id}`, icon: iconForType(a.type), tint: 'muted' as const,
+        title: a.title || a.type || 'Activité', sub: 'CRM',
+        when: fmtAgo(a.created_at), _at: a.created_at, action: 'Voir', to: '/liri/crm',
+      }));
+      const apptRows: ActivityItem[] = apptActs.map((a) => {
+        const notes = String(a.notes || '');
+        const sujet = (notes.match(/Sujet\s*:\s*([\s\S]*?)(?:\s*Description\s*:|$)/i)?.[1] || 'Rendez-vous').trim();
+        return {
+          id: `appt-${a.id}`, icon: CalendarClock, tint: 'coral' as const,
+          title: `RDV — ${sujet}`.slice(0, 58),
+          sub: a.status === 'confirmed' ? 'confirmé' : a.status === 'cancelled' ? 'annulé' : 'à confirmer',
+          when: fmtAgo(a.created_at), _at: a.created_at, action: 'Voir', to: '/liri/rdv',
+        };
+      });
+      return [...liveRows, ...crmRows, ...apptRows]
+        .sort((x, y) => +new Date(y._at ?? 0) - +new Date(x._at ?? 0))
+        .slice(0, 7);
     }
     return courses.slice(0, 4).map((c) => ({
       id: c.id, icon: c.status === 'completed' ? CheckCircle2 : BookOpen,
@@ -251,7 +319,7 @@ export function LiriPortalPage() {
       when: fmtAgo(c.whenIso || undefined), action: 'Ouvrir', to: '/liri/formations',
     }));
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isCreator, recent, courses]);
+  }, [isCreator, recent, courses, crmActs, apptActs]);
 
   function fmtWhen(iso?: string) {
     if (!iso) return '';
@@ -282,7 +350,7 @@ export function LiriPortalPage() {
     // (LiriPrecepteurPage → LiriPortalShell rail « École »). Route publique /liri/precepteur.
     // PARTAGÉ (sans flag) : pertinent pour l'élève (lancer une leçon) ET le créateur (démo).
     { label: 'Précepteur', icon: GraduationCap, to: '/liri/precepteur' },
-    { label: 'Acheter', icon: ShoppingBag, to: '/dashboard', creator: true },
+    { label: 'Acheter', icon: ShoppingBag, to: '/liri/marche', creator: true },
   ];
 
   const openMenu = () => setMenuOpen((v) => !v);
@@ -312,7 +380,6 @@ export function LiriPortalPage() {
       {/* ───── TOPBAR ───── */}
       <header className="z-30 flex min-h-14 items-center justify-between gap-2 lp-rail-bg border-b lp-line px-2.5 py-2 sm:gap-3 sm:px-4">
         <div className="flex min-w-0 shrink-0 items-center gap-2 sm:gap-2.5">
-          <button className="grid h-11 w-11 sm:h-8 sm:w-8 place-items-center rounded-xl lp-muted lp-railbtn lp-tr" aria-label="Menu"><Menu size={17} /></button>
           <span className="flex min-w-0 items-center gap-2">
             {PORTAL_IS_TENANT
               ? (PORTAL_LOGO ? <img src={PORTAL_LOGO} alt={PORTAL_BRAND} className="h-9 w-9 rounded-lg object-contain" /> : null)
@@ -326,7 +393,6 @@ export function LiriPortalPage() {
         </div>
         <div className="flex shrink-0 items-center gap-1 sm:gap-1.5">
           <LiriBell />
-          {isCreator && <button onClick={() => nav('/liri/compte')} className="hidden h-8 w-8 place-items-center rounded-xl lp-muted lp-railbtn lp-tr sm:grid" aria-label="Réglages de l’organisation"><Settings size={17} /></button>}
 
           {/* ── Avatar → menu compte / organisation ── */}
           <div className="relative" ref={menuRef}>
@@ -423,14 +489,27 @@ export function LiriPortalPage() {
               </button>
             )}
 
-            {/* command bar → Brain (créateur uniquement ; l'élève ne pilote pas d'actions) */}
+            {/* command bar RÉELLE → Brain (créateur uniquement) : saisie clavier + dictée vocale */}
             {isCreator && (
-              <button onClick={() => nav('/dashboard/liri')} className="lp-tr lp-soft group mt-7 flex h-14 w-full max-w-xl items-center gap-3 rounded-2xl lp-line border lp-panel px-4 text-left hover:border-[rgba(217,119,87,.4)]">
-                <span className="grid h-8 w-8 place-items-center rounded-xl lp-coral lp-coral-tint"><Sparkles size={18} /></span>
-                <span className="flex-1 text-[15px] lp-muted">Demandez à {PORTAL_BRAND} ou lancez une action…</span>
-                <span className="grid h-7 w-7 place-items-center rounded-lg lp-faint lp-railbtn lp-tr"><Mic size={16} /></span>
-                <span className="grid h-9 w-9 place-items-center rounded-xl text-white lp-ember"><ArrowUp size={18} /></span>
-              </button>
+              <form
+                onSubmit={(e) => { e.preventDefault(); submitCmd(); }}
+                className={`lp-tr lp-soft mt-7 flex h-14 w-full max-w-xl items-center gap-3 rounded-2xl border lp-panel px-4 ${listening ? 'border-[rgba(217,119,87,.6)]' : 'lp-line'}`}
+              >
+                <span className="grid h-8 w-8 shrink-0 place-items-center rounded-xl lp-coral lp-coral-tint"><Sparkles size={18} /></span>
+                <input
+                  value={cmd}
+                  onChange={(e) => setCmd(e.target.value)}
+                  placeholder={listening ? 'Parlez…' : `Demandez à ${PORTAL_BRAND} ou lancez une action…`}
+                  aria-label={`Demandez à ${PORTAL_BRAND}`}
+                  className="min-w-0 flex-1 bg-transparent text-[15px] text-white placeholder:text-[rgba(245,244,238,0.42)] focus:outline-none"
+                />
+                <button type="button" onClick={toggleMic} aria-label="Dictée vocale" aria-pressed={listening}
+                  className={`grid h-7 w-7 shrink-0 place-items-center rounded-lg lp-tr ${listening ? 'text-white lp-ember' : 'lp-faint lp-railbtn'}`}>
+                  <Mic size={16} />
+                </button>
+                <button type="submit" aria-label="Envoyer au Brain" disabled={false}
+                  className="grid h-9 w-9 shrink-0 place-items-center rounded-xl text-white lp-ember lp-tr lp-railbtn"><ArrowUp size={18} /></button>
+              </form>
             )}
 
             {/* quick actions */}
@@ -649,7 +728,7 @@ export function LiriPortalPage() {
                 <span className="h-3 w-px" style={{ background: 'rgba(255,255,255,.10)' }} />
               </>
             )}
-            <button onClick={() => nav('/dashboard')} className="lp-railbtn lp-tr rounded px-1">Aide</button>
+            <button onClick={() => nav('/liri/forum')} className="lp-railbtn lp-tr rounded px-1">Aide</button>
             <span className="lp-faint flex items-center gap-1.5"><Radio size={12} /> {PORTAL_BRAND} v2.0</span>
           </span>
         </footer>

@@ -32,10 +32,15 @@ export function useUpcomingSchoolFeed(upcomingLives = [], userId = null) {
         const startOfToday = new Date(); startOfToday.setHours(0, 0, 0, 0);
         const todayIso = startOfToday.toISOString();
         const todayDate = todayIso.slice(0, 10);
+        // Annonces PÉRIMÉES : une annonce « urgente » publiée il y a des mois ne doit plus
+        // trôner dans « À venir » (ex. examen du 11 juin encore affiché en août). Fenêtre
+        // de pertinence = 30 jours après publication.
+        const annCutoffIso = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString();
         const [ann, events, exams, prog] = await Promise.all([
           supabase.from('announcements')
             .select('id,title,summary,priority,published_at,status')
             .eq('status', 'published')
+            .gte('published_at', annCutoffIso)
             .order('published_at', { ascending: false })
             .limit(12),
           supabase.from('school_events')
