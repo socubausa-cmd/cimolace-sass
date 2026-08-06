@@ -65,6 +65,10 @@ export function useOrgMailbox() {
   const [notesDraft, setNotesDraft] = useState('');
   const [search, setSearch] = useState('');
   const [filterPipeline, setFilterPipeline] = useState('all');
+  // IA (Mistral → DeepSeek) : résumé de la boîte + assistance rédaction.
+  const [summary, setSummary] = useState('');
+  const [summarizing, setSummarizing] = useState(false);
+  const [drafting, setDrafting] = useState(false);
 
   const selected = useMemo(() => threads.find((t) => t.id === selectedId) || null, [threads, selectedId]);
 
@@ -414,6 +418,45 @@ export function useOrgMailbox() {
     return (a + b).toUpperCase().slice(0, 2);
   };
 
+  // ── IA : résumé de la boîte + brouillon de réponse (Mistral → DeepSeek) ──
+  const runSummary = async () => {
+    setSummarizing(true);
+    try {
+      const r = await orgMailboxApi.summarize(30);
+      setSummary(r?.summary || 'Aucun résumé disponible.');
+    } catch (e) {
+      toast({ title: 'Résumé IA', description: e?.message || 'Indisponible.', variant: 'destructive' });
+    } finally {
+      setSummarizing(false);
+    }
+  };
+  /** Rédige un brouillon de réponse au fil sélectionné → remplit le composeur. */
+  const draftReplyAI = async (instruction) => {
+    if (!selected?.id) {
+      toast({ title: 'Sélectionne un fil', variant: 'destructive' });
+      return;
+    }
+    setDrafting(true);
+    try {
+      const r = await orgMailboxApi.draftReply(selected.id, instruction);
+      if (r?.draft) {
+        const tm = emailsByThread[selected.id] || [];
+        const lastIn = [...tm].reverse().find((e) => !e.is_outbound);
+        const to = lastIn?.from_email || selected.primary_contact_email || '';
+        setForm({
+          to,
+          subject: selected.subject?.startsWith('Re:') ? selected.subject : `Re: ${selected.subject || ''}`,
+          text: r.draft,
+        });
+        setReplyOpen(true);
+      }
+    } catch (e) {
+      toast({ title: 'Rédaction IA', description: e?.message || 'Indisponible.', variant: 'destructive' });
+    } finally {
+      setDrafting(false);
+    }
+  };
+
   return {
     session,
     threads,
@@ -462,5 +505,12 @@ export function useOrgMailbox() {
     unreadInThread,
     contactInitials,
     setThreads,
+    // IA
+    summary,
+    setSummary,
+    summarizing,
+    drafting,
+    runSummary,
+    draftReplyAI,
   };
 }

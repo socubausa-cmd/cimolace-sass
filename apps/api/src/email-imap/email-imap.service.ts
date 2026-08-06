@@ -13,6 +13,7 @@ import {
   BadRequestException,
   Injectable,
   Logger,
+  NotFoundException,
   OnModuleInit,
   OnModuleDestroy,
 } from '@nestjs/common';
@@ -20,6 +21,7 @@ import { ConfigService } from '@nestjs/config';
 import { ImapFlow } from 'imapflow';
 import { simpleParser } from 'mailparser';
 import { SupabaseService } from '../supabase/supabase.service';
+import { DEEPSEEK_FAST_MODEL } from '../common/deepseek-models';
 
 const DEFAULT_MAILBOX_ID = 'a0000000-0000-4000-8000-000000000001';
 
@@ -308,5 +310,129 @@ export class EmailImapService implements OnModuleInit, OnModuleDestroy {
     }
 
     return { ok: true, resend_message_id: resendMessageId };
+  }
+
+  // ─── 4. IA : résumé de la boîte + assistance rédaction (Mistral → DeepSeek) ──
+
+  /** Appel chat générique avec repli fournisseur : Mistral si MISTRAL_API_KEY,
+   *  sinon DeepSeek v4-flash. Renvoie le texte, ou jette si aucun provider. */
+  private async chatComplete(system: string, user: string, maxTokens = 800): Promise<{ text: string; provider: string }> {
+    const providers = [
+      { name: 'mistral', url: 'https://api.mistral.ai/v1/chat/completions', key: process.env.MISTRAL_API_KEY, model: process.env.MISTRAL_MODEL || 'mistral-large-latest' },
+      { name: 'deepseek', url: 'https://api.deepseek.com/chat/completions', key: process.env.DEEPSEEK_API_KEY, model: DEEPSEEK_FAST_MODEL },
+    ].filter((p) => !!p.key);
+    if (providers.length === 0) {
+      throw new BadRequestException('Aucun fournisseur IA configuré (MISTRAL_API_KEY / DEEPSEEK_API_KEY).');
+    }
+    let lastErr = '';
+    for (const p of providers) {
+      try {
+        const res = await fetch(p.url, {
+          method: 'POST',
+          headers: { Authorization: `Bearer ${p.key}`, 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            model: p.model,
+            max_tokens: maxTokens,
+            temperature: 0.4,
+            messages: [
+              { role: 'system', content: system },
+              { role: 'user', content: user },
+            ],
+          }),
+          signal: AbortSignal.timeout(30000),
+        });
+        if (!res.ok) {
+          lastErr = `${p.name} HTTP ${res.status}`;
+          this.logger.warn(`chatComplete ${lastErr}: ${(await res.text()).slice(0, 120)}`);
+          continue;
+        }
+        const j = await res.json();
+        const text = String(j?.choices?.[0]?.message?.content ?? '').trim();
+        if (text) return { text, provider: p.name };
+        lastErr = `${p.name} réponse vide`;
+      } catch (e) {
+        lastErr = `${p.name}: ${(e as Error).message}`;
+        this.logger.warn(`chatComplete ${lastErr}`);
+      }
+    }
+    throw new BadRequestException(`IA indisponible (${lastErr}).`);
+  }
+
+  /** Résumé actionnable des N derniers emails de la boîte org. */
+  async summarizeInbox(_tenantId: string, opts?: { limit?: number }) {
+    const client = this.supabase.client as any;
+    const limit = Math.min(Math.max(Number(opts?.limit) || 30, 5), 60);
+    const { data: threads } = await client
+      .from('email_threads')
+      .select('id, subject, primary_contact_email, updated_at')
+      .eq('mailbox_id', DEFAULT_MAILBOX_ID)
+      .order('updated_at', { ascending: false })
+      .limit(limit);
+    const list = Array.isArray(threads) ? threads : [];
+    if (!list.length) return { summary: 'Aucun email à résumer pour le moment.', provider: 'none', count: 0 };
+
+    const ids = list.map((t: any) => t.id);
+    const { data: emails } = await client
+      .from('emails')
+      .select('thread_id, from_email, from_name, subject, snippet, received_at, is_read')
+      .in('thread_id', ids)
+      .order('received_at', { ascending: false });
+    const lastByThread = new Map<string, any>();
+    for (const e of emails || []) if (!lastByThread.has(e.thread_id)) lastByThread.set(e.thread_id, e);
+
+    const lines = list.map((t: any, i: number) => {
+      const e = lastByThread.get(t.id) || {};
+      const from = e.from_name || e.from_email || t.primary_contact_email || 'inconnu';
+      const unread = e.is_read === false ? '[non lu] ' : '';
+      return `${i + 1}. ${unread}De ${from} — « ${t.subject || e.subject || '(sans objet)'} » : ${String(e.snippet || '').slice(0, 160)}`;
+    });
+
+    const system =
+      `Tu es l'assistant du secrétariat de Prorascience. On te donne une liste d'emails reçus sur ` +
+      `infos@prorascience.org. Fais un RÉSUMÉ clair et actionnable en français : regroupe par nature ` +
+      `(À TRAITER / Demandes & questions / Notifications & automatique / Autres), signale d'abord les ` +
+      `non lus et les urgents, avec des puces courtes. N'invente rien, appuie-toi seulement sur la liste.`;
+    const user = `Emails (${lines.length}) :\n${lines.join('\n')}`;
+    const { text, provider } = await this.chatComplete(system, user, 900);
+    return { summary: text, provider, count: lines.length };
+  }
+
+  /** Brouillon de réponse à un fil (assistance rédaction). */
+  async draftReply(_tenantId: string, input: { threadId?: string; instruction?: string }) {
+    const client = this.supabase.client as any;
+    const threadId = String(input?.threadId || '');
+    if (!threadId) throw new BadRequestException('threadId requis');
+    const { data: thread } = await client
+      .from('email_threads')
+      .select('id, subject, primary_contact_email')
+      .eq('id', threadId)
+      .eq('mailbox_id', DEFAULT_MAILBOX_ID)
+      .maybeSingle();
+    if (!thread) throw new NotFoundException('Fil introuvable');
+
+    const { data: emails } = await client
+      .from('emails')
+      .select('from_name, from_email, body_text, snippet, received_at, is_outbound')
+      .eq('thread_id', threadId)
+      .order('received_at', { ascending: true });
+    const arr = Array.isArray(emails) ? emails : [];
+    const lastIncoming = [...arr].reverse().find((e: any) => !e.is_outbound) || arr[arr.length - 1];
+    const context = arr
+      .slice(-4)
+      .map((e: any) => `${e.is_outbound ? 'NOUS' : e.from_name || e.from_email || 'EUX'} : ${String(e.body_text || e.snippet || '').slice(0, 500)}`)
+      .join('\n---\n');
+
+    const system =
+      `Tu es l'assistant du secrétariat de Prorascience (institut spirituel et éducatif). Rédige une ` +
+      `RÉPONSE d'email professionnelle, chaleureuse et sobre, en français, prête à envoyer. Renvoie ` +
+      `UNIQUEMENT le corps du message (pas d'objet, pas de « De/À », pas de guillemets). Termine par ` +
+      `« — Le secrétariat, Prorascience ».`;
+    const who = lastIncoming?.from_name || lastIncoming?.from_email || (thread as any).primary_contact_email || 'le demandeur';
+    const user =
+      `Sujet : « ${(thread as any).subject || '(sans objet)'} ». Interlocuteur : ${who}.\n\n` +
+      `Derniers échanges :\n${context || '(pas de contenu)'}\n\n` +
+      `${input?.instruction && input.instruction.trim() ? `Consigne : ${input.instruction.trim()}` : 'Rédige une réponse adaptée et utile.'}`;
+    const { text, provider } = await this.chatComplete(system, user, 900);
+    return { draft: text, provider };
   }
 }

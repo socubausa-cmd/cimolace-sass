@@ -1045,6 +1045,15 @@ export const orgMailboxApi = {
     apiV2.post<ApiEnvelope<{ ok?: boolean; error?: string; resend_message_id?: string | null }>>(
       '/email-imap/send', body,
     ).then(unwrap),
+  // IA (Mistral → DeepSeek) : résumé de la boîte + brouillon de réponse.
+  summarize: (limit?: number) =>
+    apiV2.post<ApiEnvelope<{ summary: string; provider: string; count: number }>>(
+      '/email-imap/summarize', { limit },
+    ).then(unwrap),
+  draftReply: (threadId: string, instruction?: string) =>
+    apiV2.post<ApiEnvelope<{ draft: string; provider: string }>>(
+      '/email-imap/draft-reply', { threadId, instruction },
+    ).then(unwrap),
 };
 
 // ── Prise de RDV PUBLIQUE (sans login) — moteur booking LIRI ouvert au public ──

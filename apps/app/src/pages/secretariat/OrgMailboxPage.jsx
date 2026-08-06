@@ -244,20 +244,51 @@ const OrgMailboxPage = ({ embedded = false }) => {
                 )}
               </div>
               <div className="p-3 border-t border-[var(--lt-border)] space-y-2 shrink-0">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="w-full border-[var(--lt-border)] bg-[var(--lt-card-bg)] text-[var(--lt-text)] hover:opacity-80 justify-center gap-2"
-                  onClick={() => void m.runImapSync()}
-                  disabled={m.loading || m.syncing || !m.session}
-                >
-                  {m.syncing ? (
-                    <Loader2 className="w-4 h-4 animate-spin" />
-                  ) : (
-                    <RefreshCw className="w-4 h-4" />
-                  )}
-                  Synchroniser
-                </Button>
+                <div className="flex gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="flex-1 border-[var(--lt-border)] bg-[var(--lt-card-bg)] text-[var(--lt-text)] hover:opacity-80 justify-center gap-2"
+                    onClick={() => void m.runImapSync()}
+                    disabled={m.loading || m.syncing || !m.session}
+                  >
+                    {m.syncing ? <Loader2 className="w-4 h-4 animate-spin" /> : <RefreshCw className="w-4 h-4" />}
+                    Synchroniser
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="flex-1 justify-center gap-1.5 text-[var(--lt-gold-ink)]"
+                    style={{
+                      borderColor: 'color-mix(in srgb, var(--school-accent) 40%, transparent)',
+                      background: 'color-mix(in srgb, var(--school-accent) 12%, transparent)',
+                    }}
+                    onClick={() => void m.runSummary()}
+                    disabled={m.summarizing}
+                    title="Résumé IA de la boîte (Mistral)"
+                  >
+                    {m.summarizing ? <Loader2 className="w-4 h-4 animate-spin" /> : <Sparkles className="w-4 h-4" />}
+                    Résumer
+                  </Button>
+                </div>
+                {m.summary ? (
+                  <div className="rounded-lg border border-[var(--lt-border)] bg-[var(--lt-inner-bg)] p-2.5 max-h-[240px] overflow-y-auto">
+                    <div className="mb-1 flex items-center justify-between">
+                      <span className="flex items-center gap-1 text-[10px] font-bold uppercase tracking-wide text-[var(--lt-gold-ink)]">
+                        <Sparkles className="w-3 h-3" /> Résumé IA
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => m.setSummary('')}
+                        className="text-xs text-[var(--lt-muted)] hover:text-[var(--lt-text)]"
+                        aria-label="Fermer le résumé"
+                      >
+                        ✕
+                      </button>
+                    </div>
+                    <p className="whitespace-pre-line text-[12px] leading-relaxed text-[var(--lt-sub)]">{m.summary}</p>
+                  </div>
+                ) : null}
                 <p className="text-[10px] text-center text-[var(--lt-muted)] font-mono">
                   {m.mailbox?.last_synced_at ? `Dernier sync : ${lastSync}` : 'Pas encore synchronisé'}
                 </p>
@@ -453,6 +484,18 @@ const OrgMailboxPage = ({ embedded = false }) => {
                             placeholder="Votre message…"
                           />
                           <div className="flex flex-wrap gap-2 px-3 py-2 border-t border-[var(--lt-border)] bg-[var(--lt-inner-bg)]">
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              className="gap-1.5 text-[var(--lt-gold-ink)]"
+                              style={{ borderColor: 'color-mix(in srgb, var(--school-accent) 40%, transparent)' }}
+                              onClick={() => void m.draftReplyAI()}
+                              disabled={m.drafting}
+                              title="L'IA rédige un brouillon de réponse (Mistral)"
+                            >
+                              {m.drafting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Sparkles className="w-4 h-4" />}
+                              Rédiger avec l'IA
+                            </Button>
                             <Button
                               size="sm"
                               className="bg-[var(--school-accent)] text-black hover:bg-[#c4a032]"

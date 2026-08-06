@@ -54,4 +54,23 @@ export class EmailImapController {
     const userId = (req as any).user?.id ?? null;
     return this.svc.send(t.id, userId, body ?? {});
   }
+
+  /** IA — résumé actionnable de la boîte (Mistral → DeepSeek). */
+  @Post('summarize')
+  @UseGuards(JwtAuthGuard, TenantGuard, RolesGuard)
+  @Roles('owner', 'admin', 'secretariat')
+  async summarize(@CurrentTenant() t: TenantContext, @Body() body: { limit?: number }) {
+    return this.svc.summarizeInbox(t.id, body ?? {});
+  }
+
+  /** IA — brouillon de réponse à un fil (assistance rédaction). */
+  @Post('draft-reply')
+  @UseGuards(JwtAuthGuard, TenantGuard, RolesGuard)
+  @Roles('owner', 'admin', 'secretariat')
+  async draftReply(
+    @CurrentTenant() t: TenantContext,
+    @Body() body: { threadId?: string; instruction?: string },
+  ) {
+    return this.svc.draftReply(t.id, body ?? {});
+  }
 }
