@@ -4,6 +4,8 @@
   "outputDirectory": "apps/app/dist",
   "framework": "vite",
   "rewrites": [
+    { "source": "/femme-nouvelle(.*)", "has": [{ "type": "host", "value": "prorascience.org" }], "destination": "/index.html" },
+    { "source": "/femme-nouvelle(.*)", "has": [{ "type": "host", "value": "www.prorascience.org" }], "destination": "/index.html" },
     { "source": "/(.*)", "has": [{ "type": "host", "value": "prorascience.org" }], "destination": "/prorascience.html" },
     { "source": "/(.*)", "has": [{ "type": "host", "value": "www.prorascience.org" }], "destination": "/prorascience.html" },
     { "source": "/(.*)", "has": [{ "type": "host", "value": "cimolace.space" }], "destination": "/cimolace.html" },
