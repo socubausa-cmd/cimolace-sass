@@ -167,7 +167,7 @@ export class BoutiqueService {
    */
   async submitReview(slug: string, dto: any) {
     if (dto?.website) return { status: 'received' }; // pot de miel
-    await this.loadProduct(slug);
+    const product = await this.loadProduct(slug);
 
     let orderId: string | null = null;
     const email = String(dto.buyerEmail || '').trim().toLowerCase();
@@ -184,24 +184,125 @@ export class BoutiqueService {
       orderId = (order as any)?.id ?? null;
     }
 
-    const { error } = await this.db.from('site_reviews').insert({
+    const authorName = this.sanitize(dto.authorName, 80);
+    const text = this.sanitize(dto.reviewText, 2000) || '';
+    const rating = Math.min(5, Math.max(1, Number(dto.rating) || 5));
+    const spam = this.detectSpam(text);
+
+    const { data: created, error } = await this.db.from('site_reviews').insert({
       source: 'femme-nouvelle',
       product_slug: slug,
       order_id: orderId,
-      author_name: this.sanitize(dto.authorName, 80),
+      author_name: authorName,
       author_role: this.sanitize(dto.authorRole, 80),
-      rating: Math.min(5, Math.max(1, Number(dto.rating) || 5)),
-      review_text: this.sanitize(dto.reviewText, 2000),
+      rating,
+      review_text: text,
       is_verified: !!orderId,
       status: 'pending',
-    });
+      is_spam_suspected: !!spam,
+      spam_reason: spam,
+    }).select('id').single();
     if (error) throw new BadRequestException(error.message);
+
+    // Deux réactions, best-effort : la relectrice doit savoir qu'un témoignage
+    // attend, et l'autrice doit savoir qu'il est bien arrivé. Sans ça, un avis
+    // déposé dort en base et personne ne l'apprend.
+    const tenantId = await this.resolveTenantId(product.tenant_slug);
+    void this.notifyReview(
+      { id: (created as any)?.id, authorName, rating, text, verified: !!orderId, spam, email },
+      product, tenantId,
+    ).catch((e) => this.logger.warn(`Avis notif KO: ${(e as Error).message}`));
 
     return {
       status: 'received',
       verified: !!orderId,
       message: 'Merci. Votre témoignage sera publié après relecture.',
     };
+  }
+
+  /**
+   * Détection de spam volontairement grossière : elle ne REJETTE rien, elle
+   * hisse l'avis en haut de la file de modération avec un motif. Un faux positif
+   * ne coûte qu'un coup d'œil ; un faux négatif publie une pub sur la page.
+   */
+  private detectSpam(text: string): string | null {
+    const t = String(text || '');
+    if (/https?:\/\/|www\.|\.(com|net|org|ru|xyz|top)\b/i.test(t)) return 'lien dans le texte';
+    if (/\b(viagra|casino|crypto|bitcoin|forex|loan|prêt rapide|gagnez)\b/i.test(t)) return 'vocabulaire publicitaire';
+    const letters = t.replace(/[^A-Za-zÀ-ÿ]/g, '');
+    if (letters.length > 25 && letters === letters.toUpperCase()) return 'tout en majuscules';
+    return null;
+  }
+
+  /** Alerte au secrétariat + accusé de réception à l'autrice (si elle a laissé un e-mail). */
+  private async notifyReview(
+    review: { id?: string; authorName: string | null; rating: number; text: string; verified: boolean; spam: string | null; email: string },
+    product: any,
+    tenantId: string | null,
+  ): Promise<void> {
+    let from: string | null = null;
+    let fromName: string | null = null;
+    let staffTo: string | null = null;
+    if (tenantId) {
+      const { data: ns } = await this.db
+        .from('tenant_notification_settings')
+        .select('email_from, email_from_name, notify_email')
+        .eq('tenant_id', tenantId)
+        .maybeSingle();
+      from = (ns as any)?.email_from ?? null;
+      fromName = (ns as any)?.email_from_name ?? null;
+      staffTo = (ns as any)?.notify_email ?? null;
+    }
+
+    const who = this.escapeHtml(review.authorName || 'Anonyme');
+    const stars = '★'.repeat(review.rating) + '☆'.repeat(5 - review.rating);
+
+    if (staffTo) {
+      await this.db.from('email_queue').insert({
+        tenant_id: tenantId,
+        to: staffTo,
+        from,
+        from_name: fromName,
+        subject: `Nouveau témoignage à relire — ${review.authorName || 'Anonyme'} (${review.rating}/5)`,
+        html_body:
+          `<div style="max-width:600px;margin:0 auto;font-family:Arial,sans-serif;color:#2b2926;">` +
+            `<h2 style="color:#1c1a18;margin:0 0 6px;">Un témoignage attend votre relecture</h2>` +
+            `<p style="color:#8a857e;font-size:13px;margin:0 0 18px;">${this.escapeHtml(product.title)}</p>` +
+            (review.spam
+              ? `<p style="background:#fdf0e8;border:1px solid #e5b9a2;border-radius:8px;padding:11px 14px;font-size:13.5px;margin:0 0 16px;"><strong>⚠️ Spam suspecté</strong> — ${this.escapeHtml(review.spam)}. À lire avant d'approuver.</p>`
+              : '') +
+            `<p style="font-size:15px;margin:0 0 4px;"><strong>${who}</strong>` +
+              (review.verified ? ` <span style="color:#b0532f;">· achat vérifié</span>` : '') + `</p>` +
+            `<p style="font-size:17px;color:#c8893f;margin:0 0 12px;">${stars}</p>` +
+            `<blockquote style="margin:0 0 20px;padding:14px 16px;background:#f5f2ec;border-radius:8px;font-size:15px;line-height:1.6;white-space:pre-wrap;">${this.escapeHtml(review.text)}</blockquote>` +
+            `<p style="font-size:14px;line-height:1.6;">Rien n'est visible en ligne tant que vous n'avez pas approuvé. Ouvrez l'onglet <strong>Avis</strong> de votre tableau de bord pour publier ou rejeter.</p>` +
+            `<p style="font-size:12px;color:#8a857e;margin-top:18px;">Référence ${review.id ?? '—'}</p>` +
+          `</div>`,
+      });
+    }
+
+    if (review.email) {
+      await this.db.from('email_queue').insert({
+        tenant_id: tenantId,
+        to: review.email,
+        from,
+        from_name: fromName,
+        subject: 'Merci pour votre témoignage',
+        html_body:
+          `<div style="max-width:600px;margin:0 auto;font-family:'Helvetica Neue',Arial,sans-serif;">` +
+            `<div style="background:#262624;padding:26px 24px;text-align:center;border-radius:14px 14px 0 0;">` +
+              `<div style="color:#e6b878;font-family:Georgia,serif;font-size:19px;letter-spacing:2px;">LA FEMME NOUVELLE</div>` +
+            `</div>` +
+            `<div style="background:#faf8f4;padding:30px 28px;color:#2b2926;border-radius:0 0 14px 14px;">` +
+              `<h2 style="margin:0 0 14px;font-size:21px;color:#1c1a18;">Merci ${who}.</h2>` +
+              `<p style="font-size:15px;line-height:1.65;margin:0 0 14px;">Votre témoignage est bien arrivé. Il sera relu, puis publié sur la page du livre.</p>` +
+              `<blockquote style="margin:0 0 18px;padding:14px 16px;background:#f2ede4;border-radius:8px;font-size:14.5px;line-height:1.6;font-style:italic;white-space:pre-wrap;">${this.escapeHtml(review.text)}</blockquote>` +
+              `<p style="font-size:14px;line-height:1.6;color:#6b6560;">Si vous souhaitez le corriger ou le retirer, répondez simplement à ce message.</p>` +
+              `<p style="font-size:16px;font-weight:700;margin:18px 0 0;color:#1c1a18;">Ngowazulu</p>` +
+            `</div>` +
+          `</div>`,
+      });
+    }
   }
 
   // ───────────────────────────── ACHAT ─────────────────────────────

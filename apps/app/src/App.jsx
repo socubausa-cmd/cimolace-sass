@@ -362,6 +362,7 @@ const HomePage = lazy(() => import('@/pages/HomePage'));
 const LandingPage = lazy(() => import('@/pages/LandingPage'));
 const CagnottePage = lazy(() => import('@/pages/CagnottePage'));
 const FemmeNouvellePage = lazy(() => import('@/pages/FemmeNouvellePage'));
+const TemoignagePage = lazy(() => import('@/pages/TemoignagePage'));
 const PublicPrayerBookingPage = lazy(() => import('@/pages/PublicPrayerBookingPage'));
 const PublicReschedulePage = lazy(() => import('@/pages/PublicReschedulePage'));
 const PublicReservationPage = lazy(() => import('@/pages/PublicReservationPage'));
@@ -1437,6 +1438,8 @@ const AppContent = () => {
     '/cagnotte',        // Cagnotte publique = page de don autonome plein écran (à partager par lien),
                         // JAMAIS le header portail/vitrine par-dessus (chrome incohérent avant de payer).
     '/rendez-vous-priere', // Prise de RDV séance de prière PUBLIQUE (sans login) = page autonome.
+    '/temoignage',      // Dépôt d'avis SEUL, envoyé aux lectrices sollicitées : elles ne doivent
+                        // pas atterrir dans un argumentaire de vente (ni sous le header portail).
     '/femme-nouvelle',  // Vente du livre + accompagnement = page autonome à partager par lien.
                         // Même raison que /cagnotte : le header portail avant de payer = chrome
                         // incohérent, et la page a sa propre identité éditoriale.
@@ -2001,6 +2004,7 @@ isLiriHostDevPreviewRoute;
           <Route path="/landing" element={<LandingPage />} />
           <Route path="/cagnotte" element={<CagnottePage />} />
           <Route path="/femme-nouvelle" element={<FemmeNouvellePage />} />
+          <Route path="/temoignage" element={<TemoignagePage />} />
           <Route path="/rendez-vous-priere" element={<PublicPrayerBookingPage />} />
           <Route path="/replanifier/:token" element={<PublicReschedulePage />} />
           <Route path="/reserver" element={<PublicReservationPage />} />

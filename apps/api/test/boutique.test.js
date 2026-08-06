@@ -210,6 +210,51 @@ test('un avis est déposé en attente et ne stocke JAMAIS l’e-mail', async () 
   assert.doesNotMatch(serialized, /awa@example\.org/, 'l’e-mail ne doit pas atterrir dans site_reviews');
 });
 
+test('un avis contenant un lien est hissé en tête de file, PAS rejeté', async () => {
+  const db = makeDb({ rows: { digital_products: PRODUCT } });
+  const svc = makeService(db);
+  await svc.submitReview('femme-nouvelle', {
+    authorName: 'X', rating: 5, reviewText: 'Superbe livre, voir aussi https://boutique-pas-chere.xyz',
+  });
+  const row = db._inserted.find((i) => i.table === 'site_reviews').payload;
+  assert.equal(row.is_spam_suspected, true);
+  assert.match(row.spam_reason, /lien/);
+  assert.equal(row.status, 'pending', 'on signale, on ne jette pas : la relecture tranche');
+});
+
+test('un avis normal n’est pas marqué comme spam', async () => {
+  const db = makeDb({ rows: { digital_products: PRODUCT } });
+  await makeService(db).submitReview('femme-nouvelle', {
+    authorName: 'Awa', rating: 5, reviewText: 'Ce livre m’a remise debout, je le relis souvent.',
+  });
+  const row = db._inserted.find((i) => i.table === 'site_reviews').payload;
+  assert.equal(row.is_spam_suspected, false);
+  assert.equal(row.spam_reason, null);
+});
+
+test('un avis déposé alerte le secrétariat', async () => {
+  const db = makeDb({
+    rows: {
+      digital_products: PRODUCT,
+      tenants: { id: 'tenant-1' },
+      tenant_notification_settings: {
+        email_from: 'noreply@prorascience.org',
+        email_from_name: 'Prorascience',
+        notify_email: 'infos@prorascience.org',
+      },
+    },
+  });
+  await makeService(db).submitReview('femme-nouvelle', {
+    authorName: 'Awa', rating: 4, reviewText: 'Un livre qui remet debout.',
+  });
+  // La notification part en tâche de fond : on laisse le microtask s'écouler.
+  await new Promise((r) => setTimeout(r, 20));
+  const mails = db._inserted.filter((i) => i.table === 'email_queue');
+  assert.ok(mails.length >= 1, 'au moins un e-mail doit être mis en file');
+  assert.equal(mails[0].payload.to, 'infos@prorascience.org');
+  assert.match(mails[0].payload.subject, /témoignage/i);
+});
+
 test('le pot de miel fait taire le robot sans rien écrire', async () => {
   const db = makeDb({ rows: { digital_products: PRODUCT } });
   const svc = makeService(db);
