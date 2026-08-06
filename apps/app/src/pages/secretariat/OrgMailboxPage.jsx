@@ -69,28 +69,18 @@ const OrgMailboxPage = ({ embedded = false }) => {
     <div className={cn('w-full max-w-[1600px] mx-auto', !embedded && '-mt-1')}>
       {/* Titre section (masqué ou compact en mode messagerie unifiée) */}
       {!embedded ? (
-        <div className="flex flex-wrap items-start justify-between gap-3 mb-4">
-          <div>
-            <h2 className="text-xl md:text-2xl font-bold text-[var(--lt-text)] flex items-center gap-2">
-              <span className="inline-flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-[var(--school-accent)] to-amber-600 text-black font-bold text-sm shadow-sm">
-                ✦
-              </span>
-              {`Mail CRM — ${VITRINE_EMAIL}`}
-            </h2>
-            <p className="text-sm text-[var(--lt-sub)] mt-1">
-              IMAP Hostinger · Supabase · envoi Resend — même expérience que le reste du secrétariat
-            </p>
+        <div className="flex items-center gap-2.5 mb-4 min-w-0">
+          <span className="inline-flex h-9 w-9 items-center justify-center rounded-xl bg-[color-mix(in_srgb,var(--school-accent)_16%,transparent)] text-[var(--lt-gold-ink)] shrink-0">
+            <Mail className="w-[18px] h-[18px]" />
+          </span>
+          <div className="min-w-0">
+            <h2 className="text-lg md:text-xl font-bold text-[var(--lt-text)] leading-tight">Courrier</h2>
+            {VITRINE_EMAIL ? (
+              <p className="text-xs text-[var(--lt-muted)] font-mono truncate">{VITRINE_EMAIL}</p>
+            ) : null}
           </div>
         </div>
-      ) : (
-        <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
-          <p className="text-sm text-[var(--lt-sub)]">
-            <span className="text-[var(--lt-gold-ink)] font-mono font-medium">{VITRINE_EMAIL}</span>
-            <span className="mx-2 text-black/20">·</span>
-            IMAP → Supabase · envoi Resend
-          </p>
-        </div>
-      )}
+      ) : null}
 
       <div
         className={cn(
@@ -310,87 +300,104 @@ const OrgMailboxPage = ({ embedded = false }) => {
               ) : (
                 <div className="flex flex-1 flex-col xl:flex-row min-h-0">
                   <div className="flex-1 flex flex-col min-w-0 min-h-0">
-                    {/* Top bar fil */}
-                    <div className="flex flex-wrap items-center gap-2 px-4 py-3 border-b border-[var(--lt-border)] bg-[var(--lt-inner-bg)] shrink-0">
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="text-[var(--lt-sub)] hover:bg-black/[0.04] xl:hidden"
-                        onClick={() => m.setSelectedId(null)}
-                      >
-                        <ArrowLeft className="w-4 h-4 mr-1" /> Liste
-                      </Button>
-                      <p className="text-sm font-semibold text-[var(--lt-text)] truncate flex-1 min-w-0">
-                        {m.selected.subject || '(Sans objet)'}
-                      </p>
-                      <div className="flex flex-wrap gap-1.5">
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          className="border-[var(--lt-border)] bg-[var(--lt-card-bg)] text-[var(--lt-text)] hover:opacity-80 h-8 text-xs"
-                          onClick={() => void m.toggleThreadRead()}
-                        >
-                          <CheckCircle2 className="w-3.5 h-3.5 mr-1" />
-                          Lu / non lu
-                        </Button>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          className="border-[color-mix(in_srgb,var(--school-accent)_45%,transparent)] text-[var(--lt-gold-ink)] hover:bg-[color-mix(in_srgb,var(--school-accent)_12%,transparent)] h-8 text-xs"
-                          onClick={() => m.openReply()}
-                        >
-                          Répondre
-                        </Button>
-                        <select
-                          value={m.selected.pipeline_status || 'new'}
-                          onChange={(e) => void m.updateThread({ pipeline_status: e.target.value })}
-                          className="h-8 rounded-md border border-[var(--lt-border)] bg-[var(--lt-card-bg)] text-xs text-[var(--lt-text)] px-2"
-                        >
-                          {PIPELINE.map((p) => (
-                            <option key={p.value} value={p.value}>
-                              {p.label}
-                            </option>
-                          ))}
-                        </select>
-                      </div>
-                    </div>
-
-                    {/* En-tête contact */}
-                    <div className="px-5 py-4 border-b border-[var(--lt-border)] bg-[var(--lt-inner-bg)] shrink-0">
-                      <h3 className="text-lg font-bold text-[var(--lt-text)] leading-tight">{m.selected.subject || '(Sans objet)'}</h3>
-                      <div className="flex flex-wrap items-center gap-3 mt-3">
-                        <div
-                          className="w-9 h-9 rounded-full flex items-center justify-center text-xs font-bold text-white shrink-0"
-                          style={{
-                            background:
-                              'linear-gradient(135deg, rgba(212,175,55,.9), rgba(124,58,237,.85))',
-                          }}
-                        >
-                          {m.contactInitials(m.selected)}
+                    {/* En-tête unifié du fil : sujet (1×) + expéditeur + date + actions */}
+                    {(() => {
+                      const lastIn = (m.threadTimeline || [])
+                        .slice()
+                        .reverse()
+                        .find((i) => i.kind === 'in')?.data;
+                      const senderName =
+                        lastIn?.from_name || m.selected.primary_contact_email || 'Expéditeur';
+                      const senderEmail = lastIn?.from_email || m.selected.primary_contact_email || '';
+                      const dateLabel = lastIn?.received_at
+                        ? format(new Date(lastIn.received_at), "d MMM yyyy 'à' HH:mm", { locale: fr })
+                        : null;
+                      return (
+                        <div className="px-4 sm:px-5 py-3.5 border-b border-[var(--lt-border)] bg-[var(--lt-inner-bg)] shrink-0">
+                          <div className="flex items-start gap-2">
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="text-[var(--lt-sub)] hover:bg-black/[0.04] xl:hidden -ml-2 shrink-0 px-2"
+                              onClick={() => m.setSelectedId(null)}
+                            >
+                              <ArrowLeft className="w-4 h-4" />
+                            </Button>
+                            <h2 className="text-[17px] md:text-lg font-bold text-[var(--lt-text)] leading-snug flex-1 min-w-0 break-words">
+                              {m.selected.subject || '(Sans objet)'}
+                            </h2>
+                            <div className="flex flex-wrap items-center justify-end gap-1.5 shrink-0">
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                className="border-[var(--lt-border)] bg-transparent text-[var(--lt-sub)] hover:text-[var(--lt-text)] hover:bg-black/[0.04] h-8 text-xs"
+                                onClick={() => void m.toggleThreadRead()}
+                              >
+                                <CheckCircle2 className="w-3.5 h-3.5 mr-1" />
+                                Lu / non lu
+                              </Button>
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                className="border-[color-mix(in_srgb,var(--school-accent)_45%,transparent)] text-[var(--lt-gold-ink)] hover:bg-[color-mix(in_srgb,var(--school-accent)_12%,transparent)] h-8 text-xs"
+                                onClick={() => m.openReply()}
+                              >
+                                <Send className="w-3.5 h-3.5 mr-1" />
+                                Répondre
+                              </Button>
+                              <select
+                                value={m.selected.pipeline_status || 'new'}
+                                onChange={(e) => void m.updateThread({ pipeline_status: e.target.value })}
+                                className="h-8 rounded-md border border-[var(--lt-border)] bg-[var(--lt-card-bg)] text-xs text-[var(--lt-text)] px-2"
+                              >
+                                {PIPELINE.map((p) => (
+                                  <option key={p.value} value={p.value}>
+                                    {p.label}
+                                  </option>
+                                ))}
+                              </select>
+                            </div>
+                          </div>
+                          <div className="flex flex-wrap items-center gap-x-2.5 gap-y-1 mt-2.5">
+                            <div
+                              className="w-7 h-7 rounded-full flex items-center justify-center text-[11px] font-bold text-white shrink-0"
+                              style={{
+                                background:
+                                  'linear-gradient(135deg, var(--school-accent), color-mix(in srgb, var(--school-accent) 50%, #000))',
+                              }}
+                            >
+                              {m.contactInitials(m.selected)}
+                            </div>
+                            <span className="text-[13px] font-semibold text-[var(--lt-text)] truncate max-w-[220px]">
+                              {senderName}
+                            </span>
+                            {senderEmail ? (
+                              <span className="text-xs text-[var(--lt-muted)] truncate max-w-[240px]">
+                                {senderEmail}
+                              </span>
+                            ) : null}
+                            {dateLabel ? (
+                              <span className="text-xs text-[var(--lt-muted)] shrink-0">· {dateLabel}</span>
+                            ) : null}
+                            <div className="flex flex-wrap gap-1.5 ml-auto">
+                              {m.selected.lead_id ? (
+                                <Badge className="bg-[color-mix(in_srgb,var(--school-accent)_18%,transparent)] text-[var(--lt-gold-ink)] border-[color-mix(in_srgb,var(--school-accent)_35%,transparent)] text-[10px]">
+                                  Lead lié
+                                </Badge>
+                              ) : null}
+                              {m.selected.classification_label ? (
+                                <Badge variant="outline" className="text-[10px] border-black/15 text-[var(--lt-sub)]">
+                                  {m.selected.classification_label}
+                                  {m.selected.confidence_score != null
+                                    ? ` · ${Math.round(Number(m.selected.confidence_score) * 100)}%`
+                                    : ''}
+                                </Badge>
+                              ) : null}
+                            </div>
+                          </div>
                         </div>
-                        <div className="min-w-0">
-                          <p className="text-sm font-semibold text-[var(--lt-text)] truncate">
-                            {m.selected.primary_contact_email ? 'Contact' : '—'}
-                          </p>
-                          <p className="text-xs text-[var(--lt-muted)] truncate">{m.selected.primary_contact_email}</p>
-                        </div>
-                        <div className="flex flex-wrap gap-1.5 ml-auto">
-                          {m.selected.lead_id ? (
-                            <Badge className="bg-[color-mix(in_srgb,var(--school-accent)_18%,transparent)] text-[var(--lt-gold-ink)] border-[color-mix(in_srgb,var(--school-accent)_35%,transparent)] text-[10px]">
-                              Lead lié
-                            </Badge>
-                          ) : null}
-                          {m.selected.classification_label ? (
-                            <Badge variant="outline" className="text-[10px] border-black/15 text-[var(--lt-sub)]">
-                              {m.selected.classification_label}
-                              {m.selected.confidence_score != null
-                                ? ` · ${Math.round(Number(m.selected.confidence_score) * 100)}%`
-                                : ''}
-                            </Badge>
-                          ) : null}
-                        </div>
-                      </div>
-                    </div>
+                      );
+                    })()}
 
                     {/* Timeline messages */}
                     <div className="flex-1 overflow-y-auto p-4 space-y-3 min-h-0">
@@ -399,49 +406,54 @@ const OrgMailboxPage = ({ embedded = false }) => {
                       ) : (
                         m.threadTimeline.map((item) =>
                           item.kind === 'in' ? (
-                            <div
+                            <article
                               key={`in-${item.data.id}`}
                               className={cn(
-                                'rounded-xl border overflow-hidden',
+                                'rounded-2xl border overflow-hidden',
                                 item.data.is_read
-                                  ? 'border-[var(--lt-border)] bg-[var(--lt-card-bg)]'
-                                  : 'border-[color-mix(in_srgb,var(--school-accent)_30%,transparent)] bg-[color-mix(in_srgb,var(--school-accent)_8%,transparent)]'
+                                  ? 'border-[var(--lt-border)] bg-transparent'
+                                  : 'border-[color-mix(in_srgb,var(--school-accent)_28%,transparent)] bg-[color-mix(in_srgb,var(--school-accent)_6%,transparent)]'
                               )}
                             >
-                              <div className="px-4 py-2.5 bg-[var(--lt-inner-bg)] border-b border-[var(--lt-border)] flex flex-wrap gap-2 text-[11px] text-[var(--lt-muted)]">
-                                <span className="text-[var(--lt-text)] font-medium">
-                                  {item.data.from_name || item.data.from_email}
-                                </span>
-                                <span className="truncate">{item.data.from_email}</span>
-                                <span className="ml-auto shrink-0">
-                                  {item.data.received_at
-                                    ? format(new Date(item.data.received_at), 'PPp', { locale: fr })
-                                    : ''}
-                                </span>
-                              </div>
-                              <div className="p-4 text-sm text-[var(--lt-sub)] max-h-[320px] overflow-y-auto">
-                                {item.data.body_html ? (
-                                  // Email ENTRANT = non fiable. Double défense :
-                                  // 1) DOMPurify assainit le HTML ;
-                                  // 2) rendu dans une <iframe sandbox> SANS allow-scripts
-                                  //    (isolation d'origine, aucun JS exécuté).
+                              {/* Attribution par message uniquement si le fil en compte plusieurs
+                                  (sinon l'en-tête du fil porte déjà expéditeur + date). */}
+                              {m.threadTimeline.length > 1 ? (
+                                <div className="px-4 sm:px-5 pt-3 flex items-center justify-between gap-2 text-[11px] text-[var(--lt-muted)]">
+                                  <span className="font-medium text-[var(--lt-sub)] truncate">
+                                    {item.data.from_name || item.data.from_email}
+                                  </span>
+                                  <span className="shrink-0">
+                                    {item.data.received_at
+                                      ? format(new Date(item.data.received_at), 'PPp', { locale: fr })
+                                      : ''}
+                                  </span>
+                                </div>
+                              ) : null}
+                              {item.data.body_html ? (
+                                // Email ENTRANT = non fiable. Double défense :
+                                // 1) DOMPurify assainit le HTML ;
+                                // 2) rendu dans une <iframe sandbox> SANS allow-scripts
+                                //    (isolation d'origine, aucun JS exécuté).
+                                <div className="p-3 sm:p-4">
                                   <iframe
                                     title={`Email de ${item.data.from_email || 'expéditeur inconnu'}`}
                                     sandbox=""
                                     referrerPolicy="no-referrer"
-                                    className="w-full min-h-[200px] bg-white rounded-md"
-                                    srcDoc={`<!doctype html><html><head><meta charset="utf-8"><base target="_blank"><style>body{margin:0;padding:8px;font:14px/1.5 system-ui,sans-serif;color:#111;word-break:break-word}img{max-width:100%;height:auto}a{color:#1d4ed8}</style></head><body>${DOMPurify.sanitize(
+                                    className="w-full min-h-[300px] bg-white rounded-xl shadow-[0_2px_24px_-10px_rgba(0,0,0,0.55)]"
+                                    srcDoc={`<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><base target="_blank"><style>html,body{margin:0}body{padding:28px 24px;font:15px/1.65 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;color:#1a1a1a;word-break:break-word;max-width:680px;margin:0 auto}img{max-width:100%;height:auto}a{color:#1d4ed8}p{margin:0 0 1em}</style></head><body>${DOMPurify.sanitize(
                                       String(item.data.body_html || ''),
                                       { USE_PROFILES: { html: true } }
                                     )}</body></html>`}
                                   />
-                                ) : (
-                                  <pre className="whitespace-pre-wrap font-sans text-[var(--lt-sub)]">
+                                </div>
+                              ) : (
+                                <div className="px-5 sm:px-7 py-6">
+                                  <div className="mx-auto max-w-[68ch] whitespace-pre-wrap font-sans text-[15px] leading-[1.7] text-[var(--lt-text)]">
                                     {item.data.body_text || '—'}
-                                  </pre>
-                                )}
-                              </div>
-                            </div>
+                                  </div>
+                                </div>
+                              )}
+                            </article>
                           ) : (
                             <div
                               key={`out-${item.data.id}`}
