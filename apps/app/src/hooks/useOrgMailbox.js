@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { supabase } from '@/lib/customSupabaseClient';
+import { orgMailboxApi } from '@/lib/api-v2';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/components/ui/use-toast';
 import { getActiveTenantBranding } from '@/lib/tenant/activeBranding';
@@ -258,26 +259,20 @@ export function useOrgMailbox() {
   };
 
   const runImapSync = async () => {
-    if (!session?.access_token) return;
     setSyncing(true);
     try {
-      const res = await fetch('/.netlify/functions/mail-imap-sync', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${session.access_token}`,
-        },
-        body: JSON.stringify({ maxMessages: 50, sinceDays: 60 }),
-      });
-      const payload = await res.json();
-      if (!res.ok) {
-        const detail = [payload?.error, payload?.hint].filter(Boolean).join('\n\n');
-        throw new Error(detail || 'Sync échouée');
+      // Backend NestJS (/email-imap/sync) — remplace l'ancienne fonction Netlify morte.
+      const r = await orgMailboxApi.sync({ maxMessages: 50, sinceDays: 60 });
+      if (r?.ok === false) {
+        const detail = [r?.hint, r?.error].filter(Boolean).join('\n\n');
+        throw new Error(
+          detail ||
+            (r?.status === 'imap_not_configured'
+              ? 'Boîte non configurée : définir IMAP_PASSWORD sur Railway.'
+              : 'Synchronisation échouée.'),
+        );
       }
-      toast({
-        title: 'Synchronisation',
-        description: `${payload.synced ?? 0} nouveau(x) message(s)`,
-      });
+      toast({ title: 'Synchronisation', description: `${r?.synced ?? 0} nouveau(x) message(s)` });
       await load();
     } catch (e) {
       toast({ title: 'Sync IMAP', description: e?.message, variant: 'destructive' });
@@ -382,32 +377,24 @@ export function useOrgMailbox() {
 
   const sendMail = async (e) => {
     e?.preventDefault?.();
-    if (!session?.access_token) return;
     if (!form.to.trim() || !form.subject.trim() || !form.text.trim()) {
       toast({ title: 'Champs requis', variant: 'destructive' });
       return;
     }
     setSending(true);
     try {
-      const res = await fetch('/.netlify/functions/org-mailbox-send', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${session.access_token}`,
-        },
-        body: JSON.stringify({
-          to: form.to.trim(),
-          subject: form.subject.trim(),
-          text: form.text,
-          thread_id: selected?.id || undefined,
-          html: `<div style="font-family:system-ui,sans-serif;white-space:pre-wrap">${form.text
-            .replace(/&/g, '&amp;')
-            .replace(/</g, '&lt;')
-            .replace(/>/g, '&gt;')}</div>`,
-        }),
+      // Backend NestJS (/email-imap/send via Resend) — remplace la fonction Netlify morte.
+      const r = await orgMailboxApi.send({
+        to: form.to.trim(),
+        subject: form.subject.trim(),
+        text: form.text,
+        thread_id: selected?.id || undefined,
+        html: `<div style="font-family:system-ui,sans-serif;white-space:pre-wrap">${form.text
+          .replace(/&/g, '&amp;')
+          .replace(/</g, '&lt;')
+          .replace(/>/g, '&gt;')}</div>`,
       });
-      const payload = await res.json();
-      if (!res.ok) throw new Error(payload?.error || 'Envoi impossible');
+      if (r?.ok === false) throw new Error(r?.error || 'Envoi impossible');
       toast({ title: 'Message envoyé', description: 'Expéditeur Resend (infos@)' });
       setReplyOpen(false);
       setMailView('inbox');

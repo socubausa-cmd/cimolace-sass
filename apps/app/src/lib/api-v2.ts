@@ -1035,6 +1035,18 @@ export const cagnotteApi = {
     apiV2.get<ApiEnvelope<any>>(`/cagnotte/${slug}/pawapay/${depositId}`).then(unwrap),
 };
 
+// ── Boîte email org (infos@) — lecteur IMAP intégré (remplace les fonctions Netlify) ──
+export const orgMailboxApi = {
+  sync: (body?: { maxMessages?: number; sinceDays?: number }) =>
+    apiV2.post<ApiEnvelope<{ ok?: boolean; status?: string; synced?: number; hint?: string; error?: string }>>(
+      '/email-imap/sync', body ?? {},
+    ).then(unwrap),
+  send: (body: { to: string; subject: string; text?: string; html?: string; thread_id?: string }) =>
+    apiV2.post<ApiEnvelope<{ ok?: boolean; error?: string; resend_message_id?: string | null }>>(
+      '/email-imap/send', body,
+    ).then(unwrap),
+};
+
 // ── Prise de RDV PUBLIQUE (sans login) — moteur booking LIRI ouvert au public ──
 export const bookingPublicApi = {
   availability: (
