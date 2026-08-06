@@ -642,8 +642,17 @@ function Achat({ product, onPurchased }) {
 
 /* ───────────────────────────── TÉMOIGNAGES ───────────────────────────── */
 
+/** Lien d'invitation à témoigner : `…/femme-nouvelle#temoignages` (ou `?avis=1`). */
+function arriveePourTemoigner() {
+  if (typeof window === 'undefined') return false;
+  return window.location.hash === '#temoignages'
+    || new URLSearchParams(window.location.search).has('avis');
+}
+
 function Temoignages({ product, reviews, onSubmitted }) {
-  const [open, setOpen] = useState(false);
+  // Ouvert d'emblée quand on arrive par le lien d'invitation : la personne a été
+  // sollicitée pour témoigner, lui faire chercher un bouton de plus la perd.
+  const [open, setOpen] = useState(arriveePourTemoigner);
   const [form, setForm] = useState({ authorName: '', authorRole: '', rating: 5, reviewText: '', buyerEmail: '', website: '' });
   const [busy, setBusy] = useState(false);
   const [msg, setMsg] = useState('');
