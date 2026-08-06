@@ -251,6 +251,25 @@ export function LiriPortalPage() {
       .sort((a, b) => +a.when - +b.when);
   }, [agenda, appts, lives]);
   const dayItems = useMemo(() => fullAgenda.filter((it) => { const w = new Date(it.when); w.setHours(0, 0, 0, 0); return +w === +selectedDay; }), [fullAgenda, selectedDay]);
+
+  // Fil « À venir » COMPLET : on ajoute les RDV (≤14j) au fil scolaire+lives du hook
+  // (annonces en tête, puis items datés triés). Avant, aucun RDV n'y figurait.
+  const upcomingFeed = useMemo(() => {
+    const nowD = new Date();
+    const in14 = new Date(+nowD + 14 * 86_400_000);
+    const anns = (feed as any[]).filter((f) => f.kind === 'announcement');
+    const datedFromFeed = (feed as any[]).filter((f) => f.kind !== 'announcement');
+    const rdvFeed = (appts || [])
+      .filter((a) => a?.booking_slots?.start_at && a.status !== 'cancelled')
+      .map((a) => {
+        const notes = String(a.notes || '');
+        const sujet = (notes.match(/Sujet\s*:\s*([\s\S]*?)(?:\s*Description\s*:|$)/i)?.[1] || 'Rendez-vous').trim();
+        return { id: `rdv-${a.id}`, kind: 'rdv', urgent: false, title: `RDV — ${sujet}`, sub: 'Rendez-vous', when: new Date(a.booking_slots.start_at), to: '/liri/rdv' };
+      })
+      .filter((r) => r.when >= nowD && r.when <= in14);
+    const dated = [...datedFromFeed, ...rdvFeed].sort((a, b) => +new Date(a.when) - +new Date(b.when));
+    return [...anns, ...dated].slice(0, 5);
+  }, [feed, appts]);
   const agendaLabel = dayOffset === 0 ? "Aujourd'hui" : selectedDay.toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'short' });
 
   // Rôle (créateur vs élève) — déclaré ICI car resumeItems/activityItems en dépendent.
@@ -670,12 +689,12 @@ export function LiriPortalPage() {
           {/* à venir — fil VIE SCOLAIRE priorisé : annonces urgentes + événements ≤7j + examens + lives */}
           <div className="mb-2 mt-6 flex items-center justify-between">
             <h3 className="text-[11px] font-semibold uppercase tracking-[0.16em] lp-faint">À venir</h3>
-            {feed.length > 0 && <button onClick={() => nav('/liri/vie-scolaire')} className="lp-tr text-[11px] font-medium lp-muted">Tout voir</button>}
+            {upcomingFeed.length > 0 && <button onClick={() => nav('/liri/vie-scolaire')} className="lp-tr text-[11px] font-medium lp-muted">Tout voir</button>}
           </div>
-          {feed.length > 0 ? (
+          {upcomingFeed.length > 0 ? (
             <div className="flex flex-col gap-2">
-              {feed.map((it) => {
-                const Icon = it.kind === 'announcement' ? (it.urgent ? AlertTriangle : Megaphone) : it.kind === 'event' ? CalendarDays : it.kind === 'exam' ? GraduationCap : Radio;
+              {upcomingFeed.map((it: any) => {
+                const Icon = it.kind === 'announcement' ? (it.urgent ? AlertTriangle : Megaphone) : it.kind === 'event' ? CalendarDays : it.kind === 'exam' ? GraduationCap : it.kind === 'rdv' ? CalendarClock : Radio;
                 const t = it.when ? it.when.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' }) : null;
                 const dchip = it.when ? (it.when.toDateString() === now.toDateString() ? "auj." : it.when.toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })) : null;
                 const badge = it.urgent ? 'Urgent' : it.kind === 'announcement' ? 'Annonce' : (t ? `${dchip} · ${t}` : dchip);
