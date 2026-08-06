@@ -9,7 +9,13 @@
  * L'envoi (send) fonctionne via Resend si RESEND_API_KEY est défini.
  */
 
-import { BadRequestException, Injectable, Logger } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  Logger,
+  OnModuleInit,
+  OnModuleDestroy,
+} from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { ImapFlow } from 'imapflow';
 import { simpleParser } from 'mailparser';
@@ -18,13 +24,42 @@ import { SupabaseService } from '../supabase/supabase.service';
 const DEFAULT_MAILBOX_ID = 'a0000000-0000-4000-8000-000000000001';
 
 @Injectable()
-export class EmailImapService {
+export class EmailImapService implements OnModuleInit, OnModuleDestroy {
   private readonly logger = new Logger(EmailImapService.name);
+  private syncTimer: ReturnType<typeof setInterval> | null = null;
 
   constructor(
     private readonly supabase: SupabaseService,
     private readonly config: ConfigService,
   ) {}
+
+  // ─── 0. Auto-sync in-process (pas de scheduler externe) ───────────────────
+  onModuleInit() {
+    const min = Math.max(Number(this.config.get<string>('MAIL_IMAP_SYNC_INTERVAL_MIN')) || 30, 5);
+    // 1er passage ~60 s après le boot (ne bloque pas le démarrage), puis toutes les `min` minutes.
+    setTimeout(() => void this.autoSync(), 60_000);
+    this.syncTimer = setInterval(() => void this.autoSync(), min * 60_000);
+    this.logger.log(`Auto-sync IMAP boîte org activé (toutes les ${min} min).`);
+  }
+
+  onModuleDestroy() {
+    if (this.syncTimer) {
+      clearInterval(this.syncTimer);
+      this.syncTimer = null;
+    }
+  }
+
+  /** Passage automatique : silencieux si IMAP non configuré, ne jette jamais. */
+  private async autoSync() {
+    if (!this.config.get<string>('IMAP_PASSWORD')) return; // pas encore configuré → skip
+    try {
+      const r: any = await this.syncManual('', { maxMessages: 60, sinceDays: 7 });
+      if (r?.synced) this.logger.log(`Auto-sync IMAP : ${r.synced} nouveau(x) message(s).`);
+      else if (r?.status === 'error') this.logger.warn(`Auto-sync IMAP KO : ${r?.error}`);
+    } catch (e) {
+      this.logger.warn(`Auto-sync IMAP : ${(e as Error).message}`);
+    }
+  }
 
   // ─── 1. Sync manuel (admin) ───────────────────────────────────────────────
 
