@@ -216,8 +216,12 @@ export class BookingController {
     @Param('id') id: string,
     @Body() body: { reason?: string },
     @CurrentTenant() tenant: TenantContext,
+    @Req() req: Request,
   ) {
-    return this.booking.sendRescheduleLink(id, tenant.id, { reason: body?.reason });
+    return this.booking.sendRescheduleLink(id, tenant.id, {
+      reason: body?.reason,
+      actorId: (req as any).user?.id,
+    });
   }
 
   // IA : rédige le petit mot de report envoyé au demandeur (Mistral → DeepSeek v4).

@@ -461,8 +461,13 @@ export class BookingService {
     return (data as any)?.owner_user_id || null;
   }
 
-  /** Staff → génère un lien de report + l'envoie au demandeur (email + WhatsApp best-effort). */
-  async sendRescheduleLink(appointmentId: string, tenantId: string, opts: { reason?: string } = {}) {
+  /** Staff → génère un lien de report + l'envoie au demandeur (email + WhatsApp best-effort)
+   *  + un ACCUSÉ de réception à l'hôte (preuve dans son email Prorascience). */
+  async sendRescheduleLink(
+    appointmentId: string,
+    tenantId: string,
+    opts: { reason?: string; actorId?: string } = {},
+  ) {
     const client = this.supabase.client as any;
     const { data: appt } = await client
       .from('appointments')
@@ -539,7 +544,61 @@ export class BookingService {
       }
     }
 
-    return { ok: true, link, token, hasEmail: !!email, hasWhatsApp: !!wa, sentEmail, sentWhatsApp };
+    // (3) ACCUSÉ de réception à l'HÔTE — preuve dans SON email Prorascience.
+    let sentHostReceipt = false;
+    let hostEmail: string | null = null;
+    try {
+      const actorId = opts.actorId || (await this.ownerOf(tenantId));
+      if (actorId) {
+        const { data: u } = await client.auth.admin.getUserById(actorId);
+        hostEmail = String((u as any)?.user?.email || '').trim() || null;
+      }
+      if (hostEmail) {
+        const startAt = (appt as any)?.booking_slots?.start_at;
+        let whenStr = '';
+        if (startAt) {
+          const d = new Date(startAt);
+          if (!Number.isNaN(d.getTime())) {
+            try { whenStr = new Intl.DateTimeFormat('fr-FR', { dateStyle: 'full', timeStyle: 'short', timeZone: 'Africa/Libreville' }).format(d); } catch { whenStr = ''; }
+          }
+        }
+        const { data: ns2 } = await client
+          .from('tenant_notification_settings')
+          .select('email_from, email_from_name')
+          .eq('tenant_id', tenantId)
+          .maybeSingle();
+        const chan = [
+          sentEmail ? 'email ✓' : email ? 'email (mis en file)' : 'email — (aucune adresse)',
+          sentWhatsApp ? 'WhatsApp ✓' : wa ? 'WhatsApp — (non envoyé)' : 'WhatsApp — (pas de numéro)',
+        ].join(' · ');
+        const rhtml =
+          `<h2>Lien de report envoyé 📨</h2>`
+          + `<p>Vous avez envoyé un lien de reprogrammation pour le rendez-vous « <strong>${esc(sujet)}</strong> »`
+          + `${whenStr ? ` (initialement le ${esc(whenStr)})` : ''}.</p>`
+          + `<p><strong>Demandeur :</strong> ${esc(email || wa || 'contact inconnu')}<br/>`
+          + `<strong>Canaux :</strong> ${chan}</p>`
+          + (reason ? `<p><strong>Votre mot :</strong> ${esc(reason)}</p>` : '')
+          + `<p>Le demandeur choisira lui-même un nouveau créneau parmi vos disponibilités ; le rendez-vous repassera en « Confirmé » automatiquement.</p>`
+          + `<p style="color:#777;font-size:12px;">Lien transmis : ${esc(link)}</p>`;
+        await client.from('email_queue').insert({
+          tenant_id: tenantId,
+          to: hostEmail,
+          from: (ns2 as any)?.email_from ?? null,
+          from_name: (ns2 as any)?.email_from_name ?? null,
+          subject: `Report envoyé — ${sujet}`,
+          html_body: rhtml,
+        });
+        sentHostReceipt = true;
+      }
+    } catch (e) {
+      this.logger.warn(`Reschedule host receipt KO: ${(e as Error).message}`);
+    }
+
+    return {
+      ok: true, link, token,
+      hasEmail: !!email, hasWhatsApp: !!wa,
+      sentEmail, sentWhatsApp, sentHostReceipt, hostEmail,
+    };
   }
 
   /**

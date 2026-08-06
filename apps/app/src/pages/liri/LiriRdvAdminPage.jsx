@@ -157,11 +157,13 @@ function RdvBody() {
     setBusyId(id); setErr(''); setMsg('');
     try {
       const r = await bookingApi.sendRescheduleLink(id, rReason.trim() || undefined);
-      const chans = [];
-      if (r?.sentEmail) chans.push('email');
-      if (r?.sentWhatsApp) chans.push('WhatsApp');
-      if (chans.length) setMsg(`Lien de report envoyé par ${chans.join(' + ')}. 📨`);
-      else if (r?.hasEmail || r?.hasWhatsApp) setMsg('Lien généré, envoi en file (email).');
+      const parts = [];
+      if (r?.sentEmail) parts.push('email client ✓');
+      else if (r?.hasEmail) parts.push('email client en file');
+      if (r?.sentWhatsApp) parts.push('WhatsApp client ✓');
+      else if (r?.hasWhatsApp) parts.push('WhatsApp non envoyé');
+      if (r?.sentHostReceipt) parts.push(`copie chez toi${r?.hostEmail ? ` (${r.hostEmail})` : ''} ✓`);
+      if (parts.length) setMsg(`Lien de report envoyé — ${parts.join(' · ')}. 📨`);
       else setMsg('Lien généré, mais aucun contact (email/WhatsApp) trouvé sur ce RDV.');
       setReporterOpen(false);
       await load();
