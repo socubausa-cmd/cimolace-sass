@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
-  Menu, Sparkles, Bell, Settings, House, Video, MessagesSquare, MessageCircle, WandSparkles,
+  Menu, Sparkles, Settings, House, Video, MessagesSquare, MessageCircle, WandSparkles,
   Library, Settings2, Mic, ArrowUp, LogIn, CalendarPlus, PenTool,
   ShoppingBag, Clock, ChevronRight, Film, ChevronLeft, UserRound,
   Radio, GraduationCap, LogOut, ArrowUpRight, AlertTriangle, CalendarDays, Megaphone,
@@ -20,6 +20,7 @@ import { useUpcomingSchoolFeed } from '@/hooks/useUpcomingSchoolFeed';
 import { LiriRailGroups, getRailItems, LiriEngineSwitcher } from '@/components/liri/liriRail';
 import activeTenantConfig from '@/lib/tenant/activeTenantConfig';
 import LiriUpgradeWall from '@/components/liri/LiriUpgradeWall';
+import LiriBell from '@/components/liri/LiriBell';
 import ForfaitReminder from '@/components/liri/ForfaitReminder';
 import { isLaunchTrialActive, launchTrialDaysLeft } from '@/lib/liri/memberTier';
 import '../LiriPortal.css';
@@ -324,7 +325,7 @@ export function LiriPortalPage() {
           <LiriEngineSwitcher activeEngine="liri" isCreator={isCreator} schoolActive={schoolActive} onNav={nav} />
         </div>
         <div className="flex shrink-0 items-center gap-1 sm:gap-1.5">
-          <button className="relative hidden h-8 w-8 place-items-center rounded-xl lp-muted lp-railbtn lp-tr sm:grid" aria-label="Notifications"><Bell size={17} /><span className="absolute right-2 top-1.5 h-1.5 w-1.5 rounded-full" style={{ background: 'var(--coral)' }} /></button>
+          <LiriBell />
           {isCreator && <button onClick={() => nav('/liri/compte')} className="hidden h-8 w-8 place-items-center rounded-xl lp-muted lp-railbtn lp-tr sm:grid" aria-label="Réglages de l’organisation"><Settings size={17} /></button>}
 
           {/* ── Avatar → menu compte / organisation ── */}
