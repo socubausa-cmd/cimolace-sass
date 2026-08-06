@@ -548,10 +548,20 @@ export class BookingService {
     let sentHostReceipt = false;
     let hostEmail: string | null = null;
     try {
-      const actorId = opts.actorId || (await this.ownerOf(tenantId));
-      if (actorId) {
-        const { data: u } = await client.auth.admin.getUserById(actorId);
-        hostEmail = String((u as any)?.user?.email || '').trim() || null;
+      const { data: ns2 } = await client
+        .from('tenant_notification_settings')
+        .select('email_from, email_from_name, notify_email')
+        .eq('tenant_id', tenantId)
+        .maybeSingle();
+      // Destinataire de l'accusé : l'adresse Prorascience configurée (notify_email),
+      // sinon repli sur l'email de l'acteur (celui qui clique), sinon owner du tenant.
+      hostEmail = String((ns2 as any)?.notify_email || '').trim() || null;
+      if (!hostEmail) {
+        const actorId = opts.actorId || (await this.ownerOf(tenantId));
+        if (actorId) {
+          const { data: u } = await client.auth.admin.getUserById(actorId);
+          hostEmail = String((u as any)?.user?.email || '').trim() || null;
+        }
       }
       if (hostEmail) {
         const startAt = (appt as any)?.booking_slots?.start_at;
@@ -562,11 +572,6 @@ export class BookingService {
             try { whenStr = new Intl.DateTimeFormat('fr-FR', { dateStyle: 'full', timeStyle: 'short', timeZone: 'Africa/Libreville' }).format(d); } catch { whenStr = ''; }
           }
         }
-        const { data: ns2 } = await client
-          .from('tenant_notification_settings')
-          .select('email_from, email_from_name')
-          .eq('tenant_id', tenantId)
-          .maybeSingle();
         const chan = [
           sentEmail ? 'email ✓' : email ? 'email (mis en file)' : 'email — (aucune adresse)',
           sentWhatsApp ? 'WhatsApp ✓' : wa ? 'WhatsApp — (non envoyé)' : 'WhatsApp — (pas de numéro)',
