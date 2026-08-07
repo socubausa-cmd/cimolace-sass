@@ -3,9 +3,10 @@
 État au 7 août 2026. Bundle `org.prorascience.liri`, version 1.0.0.
 Compte Apple actif : **Judith Kalonji** (adhésion Developer Program valide).
 
-Tout ce qui suit est prêt à copier-coller. Les seules choses qui manquent
-ensuite sont les **captures d'écran** — voir la dernière section, elles ne
-peuvent pas être produites depuis ce Mac.
+Le build `1.0.0 (6)` est envoyé dans App Store Connect. Tout ce qui suit est
+prêt à copier-coller. Restent à renseigner manuellement dans App Store Connect :
+les captures d'écran, le compte de démonstration, la fiche App Privacy et la
+sélection du build 6 pour l'évaluation.
 
 ---
 

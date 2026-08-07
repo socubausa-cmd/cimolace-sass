@@ -60,7 +60,13 @@ manuellement dans la console.
 
 ## iOS — App Store
 
-✅ **Premier `.ipa` de production construit et vérifié le 7 août 2026.**
+✅ **`.ipa` de production courant construit, vérifié et envoyé le 7 août 2026.**
+
+- Build EAS : `b75301c9-782d-43e0-9841-26023a9028ca`
+- Soumission EAS : `b5bb7c19-6a27-4837-8db1-3acefb5de239`
+- App Store Connect : `6798961783`
+- SHA-256 de l'IPA inspecté :
+  `6a4f6bf47b1631a0c6fe2e7a609d657fe39f749cd76823621cdfee641798597b`
 
 Compte utilisé : **Judith Kalonji**, adhésion Developer Program active.
 **Team ID `2QCGWMC362`** (posé dans `eas.json`, il n'est pas secret — il est
@@ -71,7 +77,7 @@ Ce que l'inspection du binaire a confirmé (config ≠ binaire, cf. plus bas) :
 | Contrôle | Résultat |
 |---|---|
 | Bundle | `org.prorascience.liri` |
-| Version / build | 1.0.0 / 3 |
+| Version / build | 1.0.0 / 6 |
 | Signature | `iPhone Distribution: Judith Kalonji (2QCGWMC362)` |
 | Profil | **App Store** — 0 appareil listé, `get-task-allow: false` |
 | `UIBackgroundModes` | `audio` **présent** |
@@ -89,8 +95,8 @@ Program). Seul celui de Judith Kalonji a une adhésion valide.
 Tools) : aucun simulateur iOS, donc pas de capture d'écran produisible ici.
 Les builds EAS passent quand même — ils tournent sur les machines d'Expo.
 
-⚠️ Toutes les étapes ci-dessous demandent de **s'authentifier auprès d'Apple** :
-c'est à toi de les lancer, je ne saisis pas d'identifiants.
+La clé API App Store Connect est stockée dans les credentials EAS. Les builds
+et soumissions non interactifs fonctionnent sans saisir le mot de passe Apple.
 
 ### Installer sur ton iPhone
 
@@ -101,13 +107,14 @@ npx eas-cli build --platform ios --profile device
 
 ### TestFlight puis App Store
 
-1. Créer l'app dans App Store Connect avec le bundle `org.prorascience.liri`.
-2. `npx eas-cli build --platform ios --profile production`
-3. `npx eas-cli submit --platform ios --latest`
+1. `npx eas-cli build --platform ios --profile production`
+2. `npx eas-cli submit --platform ios --latest`
 
-`eas submit` demande l'identifiant Apple, le Team ID et l'ascAppId à la
-première exécution puis les mémorise. Ils ne sont **pas** écrits dans le
-dépôt.
+Le Team ID et l'`ascAppId` sont déclarés dans `eas.json` (ce ne sont pas des
+secrets). La clé privée App Store Connect reste uniquement chez EAS.
+
+Build 6 envoyé avec succès :
+https://appstoreconnect.apple.com/apps/6798961783/testflight/ios
 
 
 ```bash
