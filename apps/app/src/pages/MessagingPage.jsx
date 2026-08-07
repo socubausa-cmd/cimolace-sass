@@ -43,6 +43,7 @@ import {
   Globe,
   Plus,
   Unlock,
+  MoreHorizontal,
 } from 'lucide-react';
 import { useMessaging } from '@/contexts/MessagingContext';
 import { useMessagingTopics } from '@/hooks/useMessagingTopics';
@@ -655,6 +656,22 @@ function ImmersiveMessage({
   );
 }
 
+/**
+ * Libellés HUMAINS des statuts de rendez-vous — la valeur machine (`in_progress`…)
+ * ne s'affiche JAMAIS telle quelle. Un statut hors de cette liste = donnée
+ * incohérente (vu en prod : ligne « active » sans statut) → le bandeau ne se
+ * montre pas, plutôt qu'un « Statut : » nu.
+ */
+const APPOINTMENT_STATUS_LABELS = {
+  confirmed: 'Confirmé',
+  scheduled: 'Programmé',
+  preparing: 'En préparation',
+  ready: 'Prêt à démarrer',
+  in_progress: 'En cours',
+  chat_started: 'Discussion démarrée',
+  live_started: 'Live démarré',
+};
+
 function TypingOverlay({ remoteText, isTyping, senderProfile }) {
   if (!isTyping) return null;
   return (
@@ -741,20 +758,56 @@ function EmptyState({ onOpenPicker, conversations, onSelectConversation }) {
   );
 }
 
-function NoMessagesState({ recipientName }) {
+/**
+ * État vide d'une conversation SANS message — il ENSEIGNE (charte) : qui est la
+ * personne (avatar + rôle) et ce qu'on peut faire, avec des boutons qui AGISSENT
+ * réellement (focus composer / partage de lien / proposition de RDV).
+ */
+function NoMessagesState({ recipientProfile, roleLabel, onWrite, onShareLink, onScheduleCall }) {
+  const name = recipientProfile?.name || 'ce membre';
   return (
     <motion.div
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       className="flex flex-col items-center justify-center h-full text-center px-6"
     >
-      <div className="w-16 h-16 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center mb-4">
-        <Sparkles className="w-7 h-7 text-[color-mix(in_srgb,var(--school-accent)_50%,transparent)]" />
+      <div className="relative mb-4">
+        <UserAvatar user={recipientProfile} size="lg" />
+        <span className="absolute -bottom-1 -right-1 grid h-6 w-6 place-items-center rounded-full bg-[color-mix(in_srgb,var(--school-accent)_18%,#2b2926)] border border-white/10">
+          <Sparkles className="w-3.5 h-3.5 text-[var(--school-accent)]" />
+        </span>
       </div>
-      <p className="text-gray-400 text-sm">
-        Aucun message avec <span className="text-white font-medium">{recipientName}</span>
+      <p className="text-white text-sm font-semibold">{name}</p>
+      {roleLabel ? <p className="text-gray-500 text-[11px] mt-0.5">{roleLabel}</p> : null}
+      <p className="text-gray-400 text-sm mt-3 max-w-sm">
+        Aucun message pour l'instant — votre premier message ouvrira la conversation.
       </p>
-      <p className="text-gray-600 text-xs mt-1">Écrivez le premier message ci-dessous.</p>
+      <div className="mt-5 flex flex-wrap items-center justify-center gap-2">
+        <button
+          type="button"
+          onClick={onWrite}
+          className="inline-flex items-center gap-1.5 h-9 px-4 rounded-xl bg-[var(--school-accent)] text-black text-[12px] font-medium hover:opacity-90 transition-opacity"
+        >
+          <Pencil className="w-3.5 h-3.5" />
+          Écrire un message
+        </button>
+        <button
+          type="button"
+          onClick={onShareLink}
+          className="inline-flex items-center gap-1.5 h-9 px-4 rounded-xl border border-white/10 bg-white/[0.03] text-gray-300 text-[12px] hover:text-white hover:bg-white/5 transition-colors"
+        >
+          <Link2 className="w-3.5 h-3.5" />
+          Partager un lien
+        </button>
+        <button
+          type="button"
+          onClick={onScheduleCall}
+          className="inline-flex items-center gap-1.5 h-9 px-4 rounded-xl border border-white/10 bg-white/[0.03] text-gray-300 text-[12px] hover:text-white hover:bg-white/5 transition-colors"
+        >
+          <CalendarClock className="w-3.5 h-3.5" />
+          Proposer un rendez-vous
+        </button>
+      </div>
     </motion.div>
   );
 }
@@ -783,6 +836,10 @@ function ImmersiveComposer({
   immersiveLiveComposerChrome = false,
   /** SUJET : autorise l'envoi sans destinataire 1:1 (le fil cible est le sujet ouvert) */
   allowSendWithoutRecipient = false,
+  /** Signal impératif : incrément → focus du champ (boutons de l'état vide). */
+  focusTick = 0,
+  /** Signal impératif : incrément → déplie la rangée « Partager un lien » + focus. */
+  openShareTick = 0,
 }) {
   const [text, setText] = useState('');
   const [recording, setRecording] = useState(false);
@@ -803,6 +860,17 @@ function ImmersiveComposer({
     setText(next);
     onTyping?.(next);
   };
+
+  // Signaux de l'état vide : le tick 0 initial ne doit PAS voler le focus au montage.
+  useEffect(() => {
+    if (focusTick > 0) textareaRef.current?.focus();
+  }, [focusTick]);
+  useEffect(() => {
+    if (openShareTick > 0) {
+      setShareOpen(true);
+      textareaRef.current?.focus();
+    }
+  }, [openShareTick]);
 
   const makeAbsolute = (path) => {
     if (typeof window === 'undefined') return path;
@@ -942,12 +1010,15 @@ function ImmersiveComposer({
             transition={{ duration: 0.18 }}
             className="mb-1.5 flex items-center gap-2"
           >
+            {/* ⛔ Pas de croix ici : en conversation directe le destinataire n'est pas
+                « retirable » (ce n'est pas un multi-destinataires) — quitter la
+                conversation se fait par « Quitter conversation » dans la barre du haut.
+                Le préfixe « À : » dit ce que le chip EST : le destinataire du message. */}
             <div className="inline-flex items-center gap-2 h-7 pl-1.5 pr-3 rounded-full bg-[color-mix(in_srgb,var(--school-accent)_15%,transparent)] border border-[color-mix(in_srgb,var(--school-accent)_30%,transparent)]">
               <UserAvatar user={selectedRecipient} size="sm" />
-              <span className="text-xs font-medium text-[var(--school-accent)]">{selectedRecipient.name}</span>
-              <button onClick={onClearRecipient} className="ml-1 text-[color-mix(in_srgb,var(--school-accent)_60%,transparent)] hover:text-[var(--school-accent)]">
-                <X className="w-3 h-3" />
-              </button>
+              <span className="text-xs font-medium text-[var(--school-accent)]">
+                <span className="opacity-70">À :</span> {selectedRecipient.name}
+              </span>
             </div>
           </motion.div>
         )}
@@ -2413,6 +2484,45 @@ const MessagingPage = ({ embedded = false }) => {
   const [remoteSharingScreen, setRemoteSharingScreen] = useState(false);
   const [localStreamVersion, setLocalStreamVersion] = useState(0);
   const [liveAgendaOpen, setLiveAgendaOpen] = useState(false);
+  // ── Repli « Plus » de la barre d'actions du haut ──────────────────────────
+  // ⛔ Charte : une barre qui déborde se REPLIE, elle ne tronque pas ses boutons.
+  // Quand la place manque (mesuré, pas supposé), Recherche / Notifications
+  // sonores / Agenda live basculent dans un menu « Plus ».
+  const [topbarCollapsed, setTopbarCollapsed] = useState(false);
+  const [topbarMoreOpen, setTopbarMoreOpen] = useState(false);
+  const topbarHeaderRef = useRef(null);
+  const topbarActionsRef = useRef(null);
+  const topbarLeftRef = useRef(null);
+  const topbarCollapsedRef = useRef(false);
+  /** Largeur nécessaire de la rangée DÉPLIÉE — mémorisée avant repli (hystérésis anti-va-et-vient). */
+  const topbarFullWidthRef = useRef(0);
+  const mesurerTopbar = useCallback(() => {
+    const header = topbarHeaderRef.current;
+    const row = topbarActionsRef.current;
+    if (!header || !row) return;
+    // Place disponible = header − partie gauche − paddings/gap (48 px forfaitaires).
+    const dispo = header.clientWidth - (topbarLeftRef.current?.offsetWidth || 0) - 48;
+    if (!topbarCollapsedRef.current) {
+      // Déplié : scrollWidth = largeur réellement nécessaire (même si overflow).
+      topbarFullWidthRef.current = row.scrollWidth;
+      if (row.scrollWidth > dispo) {
+        topbarCollapsedRef.current = true;
+        setTopbarCollapsed(true);
+      }
+    } else if (topbarFullWidthRef.current && dispo > topbarFullWidthRef.current + 48) {
+      topbarCollapsedRef.current = false;
+      setTopbarCollapsed(false);
+      setTopbarMoreOpen(false);
+    }
+  }, []);
+  useEffect(() => {
+    mesurerTopbar();
+    if (typeof ResizeObserver === 'undefined') return undefined;
+    const ro = new ResizeObserver(mesurerTopbar);
+    if (topbarHeaderRef.current) ro.observe(topbarHeaderRef.current);
+    if (topbarActionsRef.current) ro.observe(topbarActionsRef.current);
+    return () => ro.disconnect();
+  }, [mesurerTopbar]);
   const [invitePanelOpen, setInvitePanelOpen] = useState(false);
   const [inviteScheduleAt, setInviteScheduleAt] = useState('');
   // incomingInvite / outgoingInvite / pendingInviteCount / inviteCountdown / sendingInvite
@@ -2422,6 +2532,10 @@ const MessagingPage = ({ embedded = false }) => {
   // Modal rapport post-appel
   const [postCallModal, setPostCallModal] = useState({ open: false, durationSeconds: 0 });
   const [scheduleCallModal, setScheduleCallModal] = useState({ open: false });
+  // Signaux impératifs vers le composer — les boutons de l'état vide AGISSENT
+  // (focus du champ / dépliage du partage de lien), pas de bouton décoratif.
+  const [composerFocusTick, setComposerFocusTick] = useState(0);
+  const [composerShareTick, setComposerShareTick] = useState(0);
   const callStartTimeRef = useRef(null);
   const [sonnerieOn, setSonnerieOn] = useState(() => {
     try { return localStorage.getItem('sonnerie-enabled') !== 'false'; } catch { return true; }
@@ -2523,6 +2637,20 @@ const MessagingPage = ({ embedded = false }) => {
     if (!currentUser?.id || !recipientId) { setActiveAppointment(null); return; }
     let alive = true;
     const ACTIVE = ['confirmed','scheduled','preparing','ready','in_progress','chat_started','live_started'];
+    /**
+     * ⛔ PIÈGE compat relais : `supabase.from('appointments')` est rerouté vers
+     * l'API (`GET /booking/appointments`) qui IGNORE `.or()`/`.in()`/`.maybeSingle()`
+     * et renvoie un TABLEAU. Sans ce déballage, `activeAppointment` était le tableau
+     * lui-même → bandeau « Rendez-vous actif / Statut : » nu (bug vu en prod).
+     * On refait donc ici les filtres perdus : statut actif + participant concerné.
+     */
+    const choisirRdvActif = (data) => {
+      const lignes = Array.isArray(data) ? data : (data ? [data] : []);
+      return lignes.find((l) =>
+        l && ACTIVE.includes(l.status)
+        && (!l.student_id || l.student_id === currentUser.id || l.student_id === recipientId)
+      ) || null;
+    };
     const loadActiveAppointment = async () => {
       try {
         const mode = appointmentsSchemaModeRef.current;
@@ -2539,7 +2667,7 @@ const MessagingPage = ({ embedded = false }) => {
           if (!primary.error) {
             appointmentsSchemaModeRef.current = 'full';
             try { sessionStorage.setItem('appt_schema_mode', 'full'); } catch { /* ignore */ }
-            if (alive) setActiveAppointment(primary.data || null);
+            if (alive) setActiveAppointment(choisirRdvActif(primary.data));
             return;
           }
           // 400 répétés observés en prod quand certaines colonnes n'existent pas.
@@ -2558,7 +2686,10 @@ const MessagingPage = ({ embedded = false }) => {
           .order('scheduled_at', { ascending: true })
           .limit(1)
           .maybeSingle();
-        if (alive) setActiveAppointment(fallback.data ? { ...fallback.data, subject: null } : null);
+        if (alive) {
+          const ligne = choisirRdvActif(fallback.data);
+          setActiveAppointment(ligne ? { ...ligne, subject: null } : null);
+        }
       } catch {
         if (alive) setActiveAppointment(null);
       }
@@ -5412,7 +5543,12 @@ const MessagingPage = ({ embedded = false }) => {
 
       <div
         className={cn(
-          'relative z-10 flex items-center justify-between px-4 md:px-6 h-14 flex-shrink-0 transition-colors duration-300',
+          'relative flex items-center justify-between px-4 md:px-6 h-14 flex-shrink-0 transition-colors duration-300',
+          // ⛔ PIÈGE stacking : la barre vit à z-10 mais le composer (z-30) et le bandeau
+          // RDV (z-20) sont des FRÈRES peints après elle → le menu « Plus » (z-50, DANS
+          // le contexte z-10 de la barre) passait dessous et ses clics étaient avalés.
+          // Menu ouvert = la barre monte à z-50 ; fermé = z-10 comme avant.
+          topbarMoreOpen ? 'z-50' : 'z-10',
           liveActive
             ? 'mx-3 md:mx-6 mt-3 rounded-2xl border border-white/[0.1] bg-[#090D14]/35 backdrop-blur-2xl shadow-[0_12px_40px_-24px_rgba(0,0,0,0.65)]'
             : embedded
@@ -5422,8 +5558,9 @@ const MessagingPage = ({ embedded = false }) => {
               : 'mx-3 md:mx-6 mt-3 rounded-2xl border border-white/[0.08] bg-[#0d1420]/65 backdrop-blur-xl',
           liriMobileLive && 'mx-1.5 mt-1.5 h-11 px-2 md:mx-3 md:px-4',
         )}
+        ref={topbarHeaderRef}
       >
-        <div className="flex items-center gap-3 min-w-0">
+        <div className="flex items-center gap-3 min-w-0" ref={topbarLeftRef}>
           {selectedRecipient ? (
             <>
               <button
@@ -5473,7 +5610,10 @@ const MessagingPage = ({ embedded = false }) => {
           )}
         </div>
 
-        <div className="flex min-w-0 items-center gap-2 overflow-x-auto">
+        {/* ⛔ Pas d'overflow-x-auto ici : la rangée se REPLIE (menu « Plus ») au lieu de
+            tronquer ses boutons — la taille du rang doit suivre son contenu pour que le
+            ResizeObserver déclenche la mesure. */}
+        <div className="relative flex shrink-0 items-center gap-2" ref={topbarActionsRef}>
           {selectedRecipient ? (
             <button
               type="button"
@@ -5529,52 +5669,135 @@ const MessagingPage = ({ embedded = false }) => {
               />
             ) : null}
           </button>
-          <button
-            onClick={() => setSearchOpen(!searchOpen)}
-            className={cn(
-              'h-8 px-2.5 rounded-lg border transition-all inline-flex items-center gap-1.5',
-              searchOpen
-                ? 'border-[color-mix(in_srgb,var(--school-accent)_40%,transparent)] bg-[color-mix(in_srgb,var(--school-accent)_10%,transparent)] text-[var(--school-accent)]'
-                : 'border-white/10 bg-white/[0.03] text-gray-300 hover:text-white hover:bg-white/5'
-            )}
-            aria-label="Recherche"
-          >
-            <Search className="w-3.5 h-3.5" />
-            <span className="hidden md:inline text-[11px]">Recherche</span>
-          </button>
-          <button
-            onClick={toggleSonnerie}
-            className={cn(
-              'h-8 px-2.5 rounded-lg border transition-all inline-flex items-center gap-1.5',
-              sonnerieOn
-                ? 'border-emerald-400/30 bg-emerald-500/10 text-emerald-300'
-                : 'border-white/10 bg-white/[0.03] text-gray-500 hover:text-white hover:bg-white/5'
-            )}
-            aria-label={sonnerieOn ? 'Désactiver la sonnerie' : 'Activer la sonnerie'}
-            title={sonnerieOn ? 'Sonnerie activée – cliquez pour couper' : 'Sonnerie désactivée – cliquez pour activer'}
-          >
-            {sonnerieOn ? <BellRing className="w-3.5 h-3.5" /> : <BellOff className="w-3.5 h-3.5" />}
-            <span className="hidden md:inline text-[11px]">{sonnerieOn ? 'Son ON' : 'Son OFF'}</span>
-          </button>
-          <button
-            onClick={() => setLiveAgendaOpen((v) => !v)}
-            className={cn(
-              'relative h-8 px-2.5 rounded-lg border transition-all inline-flex items-center gap-1.5',
-              liveAgendaOpen
-                ? 'border-[color-mix(in_srgb,var(--school-accent)_40%,transparent)] bg-[color-mix(in_srgb,var(--school-accent)_10%,transparent)] text-[var(--school-accent)]'
-                : 'border-white/10 bg-white/[0.03] text-gray-300 hover:text-white hover:bg-white/5'
-            )}
-            aria-label="Agenda live"
-            title="Ouvrir l'agenda des invitations live"
-          >
-            <CalendarClock className="w-3.5 h-3.5" />
-            <span className="hidden md:inline text-[11px]">Agenda live</span>
-            {pendingInviteCount > 0 ? (
-              <span className="absolute -top-1.5 -right-1.5 h-4 min-w-4 px-1 rounded-full bg-red-500 text-[9px] font-bold text-white flex items-center justify-center">
-                {pendingInviteCount}
-              </span>
-            ) : null}
-          </button>
+          {!topbarCollapsed ? (
+            <>
+              <button
+                onClick={() => setSearchOpen(!searchOpen)}
+                className={cn(
+                  'h-8 px-2.5 rounded-lg border transition-all inline-flex items-center gap-1.5',
+                  searchOpen
+                    ? 'border-[color-mix(in_srgb,var(--school-accent)_40%,transparent)] bg-[color-mix(in_srgb,var(--school-accent)_10%,transparent)] text-[var(--school-accent)]'
+                    : 'border-white/10 bg-white/[0.03] text-gray-300 hover:text-white hover:bg-white/5'
+                )}
+                aria-label="Recherche"
+              >
+                <Search className="w-3.5 h-3.5" />
+                <span className="hidden md:inline text-[11px]">Recherche</span>
+              </button>
+              <button
+                onClick={toggleSonnerie}
+                role="switch"
+                aria-checked={sonnerieOn}
+                className={cn(
+                  'h-8 px-2.5 rounded-lg border transition-all inline-flex items-center gap-1.5',
+                  sonnerieOn
+                    ? 'border-emerald-400/30 bg-emerald-500/10 text-emerald-300'
+                    : 'border-white/10 bg-white/[0.03] text-gray-500 hover:text-white hover:bg-white/5'
+                )}
+                aria-label={sonnerieOn ? 'Couper les notifications sonores' : 'Activer les notifications sonores'}
+                title={sonnerieOn ? 'Notifications sonores activées – cliquez pour couper' : 'Notifications sonores coupées – cliquez pour activer'}
+              >
+                {sonnerieOn ? <BellRing className="w-3.5 h-3.5" /> : <BellOff className="w-3.5 h-3.5" />}
+                <span className="hidden md:inline text-[11px]">Notifications sonores</span>
+                <span className={cn(
+                  'hidden md:inline rounded-full px-1.5 py-px text-[11px] font-medium',
+                  sonnerieOn ? 'bg-emerald-400/15 text-emerald-200' : 'bg-white/[0.06] text-gray-400',
+                )}>
+                  {sonnerieOn ? 'activées' : 'coupées'}
+                </span>
+              </button>
+              <button
+                onClick={() => setLiveAgendaOpen((v) => !v)}
+                className={cn(
+                  'relative h-8 px-2.5 rounded-lg border transition-all inline-flex items-center gap-1.5',
+                  liveAgendaOpen
+                    ? 'border-[color-mix(in_srgb,var(--school-accent)_40%,transparent)] bg-[color-mix(in_srgb,var(--school-accent)_10%,transparent)] text-[var(--school-accent)]'
+                    : 'border-white/10 bg-white/[0.03] text-gray-300 hover:text-white hover:bg-white/5'
+                )}
+                aria-label="Agenda live"
+                title="Ouvrir l'agenda des invitations live"
+              >
+                <CalendarClock className="w-3.5 h-3.5" />
+                <span className="hidden md:inline text-[11px]">Agenda live</span>
+                {pendingInviteCount > 0 ? (
+                  <span className="absolute -top-1.5 -right-1.5 h-4 min-w-4 px-1 rounded-full bg-red-500 text-[9px] font-bold text-white flex items-center justify-center">
+                    {pendingInviteCount}
+                  </span>
+                ) : null}
+              </button>
+            </>
+          ) : (
+            <>
+              {/* Repli : les actions secondaires vivent dans « Plus » — rien n'est tronqué. */}
+              <button
+                onClick={() => setTopbarMoreOpen((v) => !v)}
+                aria-expanded={topbarMoreOpen}
+                aria-haspopup="menu"
+                aria-label="Plus d'actions"
+                className={cn(
+                  'relative h-8 px-2.5 rounded-lg border transition-all inline-flex items-center gap-1.5',
+                  topbarMoreOpen
+                    ? 'border-[color-mix(in_srgb,var(--school-accent)_40%,transparent)] bg-[color-mix(in_srgb,var(--school-accent)_10%,transparent)] text-[var(--school-accent)]'
+                    : 'border-white/10 bg-white/[0.03] text-gray-300 hover:text-white hover:bg-white/5'
+                )}
+              >
+                <MoreHorizontal className="w-3.5 h-3.5" />
+                <span className="text-[11px]">Plus</span>
+                {pendingInviteCount > 0 ? (
+                  <span className="absolute -top-1.5 -right-1.5 h-4 min-w-4 px-1 rounded-full bg-red-500 text-[9px] font-bold text-white flex items-center justify-center">
+                    {pendingInviteCount}
+                  </span>
+                ) : null}
+              </button>
+              {topbarMoreOpen ? (
+                <>
+                  {/* Voile de fermeture — clic hors menu = fermer. */}
+                  <div className="fixed inset-0 z-40" onClick={() => setTopbarMoreOpen(false)} aria-hidden="true" />
+                  <div
+                    role="menu"
+                    className="absolute right-0 top-full z-50 mt-2 w-60 rounded-xl border border-white/10 bg-[#2b2926] p-1.5 shadow-[0_16px_48px_-16px_rgba(0,0,0,0.85)]"
+                  >
+                    <button
+                      role="menuitem"
+                      onClick={() => { setSearchOpen(!searchOpen); setTopbarMoreOpen(false); }}
+                      className="flex w-full items-center gap-2.5 rounded-lg px-2.5 py-2 text-left text-[12px] text-gray-200 hover:bg-white/[0.06] hover:text-white transition-colors"
+                    >
+                      <Search className="w-4 h-4 text-gray-400" />
+                      Recherche
+                    </button>
+                    <button
+                      role="menuitemcheckbox"
+                      aria-checked={sonnerieOn}
+                      onClick={toggleSonnerie}
+                      className="flex w-full items-center gap-2.5 rounded-lg px-2.5 py-2 text-left text-[12px] text-gray-200 hover:bg-white/[0.06] hover:text-white transition-colors"
+                    >
+                      {sonnerieOn ? <BellRing className="w-4 h-4 text-emerald-300" /> : <BellOff className="w-4 h-4 text-gray-400" />}
+                      <span className="flex-1">Notifications sonores</span>
+                      <span className={cn(
+                        'rounded-full px-1.5 py-px text-[11px] font-medium',
+                        sonnerieOn ? 'bg-emerald-400/15 text-emerald-200' : 'bg-white/[0.06] text-gray-400',
+                      )}>
+                        {sonnerieOn ? 'activées' : 'coupées'}
+                      </span>
+                    </button>
+                    <button
+                      role="menuitem"
+                      onClick={() => { setLiveAgendaOpen((v) => !v); setTopbarMoreOpen(false); }}
+                      className="flex w-full items-center gap-2.5 rounded-lg px-2.5 py-2 text-left text-[12px] text-gray-200 hover:bg-white/[0.06] hover:text-white transition-colors"
+                    >
+                      <CalendarClock className="w-4 h-4 text-gray-400" />
+                      <span className="flex-1">Agenda live</span>
+                      {pendingInviteCount > 0 ? (
+                        <span className="h-4 min-w-4 px-1 rounded-full bg-red-500 text-[9px] font-bold text-white flex items-center justify-center">
+                          {pendingInviteCount}
+                        </span>
+                      ) : null}
+                    </button>
+                  </div>
+                </>
+              ) : null}
+            </>
+          )}
         </div>
       </div>
 
@@ -5884,7 +6107,15 @@ const MessagingPage = ({ embedded = false }) => {
               }}
             >
               {convMessages.length === 0 ? (
-                !isRemoteTyping ? <NoMessagesState recipientName={recipientProfile?.name || 'ce membre'} /> : null
+                !isRemoteTyping ? (
+                  <NoMessagesState
+                    recipientProfile={recipientProfile}
+                    roleLabel={roleLabels[recipientProfile?.role] || ''}
+                    onWrite={() => setComposerFocusTick((t) => t + 1)}
+                    onShareLink={() => setComposerShareTick((t) => t + 1)}
+                    onScheduleCall={() => setScheduleCallModal({ open: true })}
+                  />
+                ) : null
               ) : (
                 <div className="flex flex-col pb-4">
                   {messageTimeline.map((item) => {
@@ -6223,7 +6454,9 @@ const MessagingPage = ({ embedded = false }) => {
         )}
 
         <AnimatePresence>
-          {activeAppointment && !liveActive && (
+          {/* ⛔ Un RDV « actif » sans statut connu = donnée incohérente → pas de bandeau
+              (le fallback ancien schéma peut renvoyer une ligne sans statut exploitable). */}
+          {activeAppointment && APPOINTMENT_STATUS_LABELS[activeAppointment.status] && !liveActive && (
             <motion.div
               initial={{ opacity: 0, y: 8 }}
               animate={{ opacity: 1, y: 0 }}
@@ -6235,8 +6468,8 @@ const MessagingPage = ({ embedded = false }) => {
                 <p className="text-xs font-medium text-[var(--school-accent)] truncate">
                   {activeAppointment.subject || 'Rendez-vous actif'}
                 </p>
-                <p className="text-[10px] text-white/40">
-                  Statut : {activeAppointment.status}
+                <p className="text-[11px] text-white/60">
+                  Statut : {APPOINTMENT_STATUS_LABELS[activeAppointment.status]}
                 </p>
               </div>
               <button
@@ -6269,6 +6502,8 @@ const MessagingPage = ({ embedded = false }) => {
           liveSettingsOpen={liveSettingsOpen}
           onToggleLiveSettings={() => setLiveSettingsOpen((v) => !v)}
           showQuickShareLinks={!liveActive && !activeTopic}
+          focusTick={composerFocusTick}
+          openShareTick={composerShareTick}
           messagePlaceholder={
             activeTopic
               ? (activeTopic.status === 'closed' ? 'Sujet clôturé — rouvrez-le pour écrire' : `Message dans « ${activeTopic.subject} »…`)

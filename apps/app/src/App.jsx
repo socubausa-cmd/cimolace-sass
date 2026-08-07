@@ -1681,7 +1681,10 @@ isLiriHostDevPreviewRoute;
       {/* Discovery Chat — pages publiques. Exclu de l'espace élève (collision avec le FAB de la sidebar) et des embeds. */}
       {/* CLOISON MEDOS : jamais l'assistant portail LIRI/prorascience par-dessus la
           salle de téléconsultation santé (`/teleconsult*`), ni pendant ni à la fin. */}
-      {!isAdminRoute && !isImmersiveEmbed && !isEmbedRoute && !isLiveArenaRoute && !location.pathname.startsWith('/teleconsult') && !isEleveMobileRoute && !isCimolaceRoute && !isStudentSpaceShell && !location.pathname.startsWith('/creer-organisation/agent') && !isCimolaceAssistantRoot(location.pathname) && resolveHostPortal(window.location.hostname) !== 'prorascience' && (
+      {/* ⛔ Messagerie exclue : la bulle flottante RECOUVRAIT le bouton « Envoyer » du
+          composer (même coin bas-droit) — bouton inatteignable au clic, prouvé par
+          elementFromPoint. */}
+      {!isAdminRoute && !isImmersiveEmbed && !isEmbedRoute && !isLiveArenaRoute && !location.pathname.startsWith('/teleconsult') && !location.pathname.startsWith('/messages') && !location.pathname.startsWith('/liri/messages') && !isEleveMobileRoute && !isCimolaceRoute && !isStudentSpaceShell && !location.pathname.startsWith('/creer-organisation/agent') && !isCimolaceAssistantRoot(location.pathname) && resolveHostPortal(window.location.hostname) !== 'prorascience' && (
         <LazyShell>
           <DiscoveryChat />
         </LazyShell>

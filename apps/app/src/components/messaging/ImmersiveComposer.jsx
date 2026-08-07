@@ -7,7 +7,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import {
-  X, Users, Mic, Video, Settings, Send, Link2, Image as ImageIcon,
+  Users, Mic, Video, Settings, Send, Link2, Image as ImageIcon,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { applyAutoCorrection } from '@/lib/messagingUtils';
@@ -191,12 +191,14 @@ export function ImmersiveComposer({
             transition={{ duration: 0.18 }}
             className="mb-1.5 flex items-center gap-2"
           >
+            {/* ⛔ Pas de croix : en conversation directe le destinataire n'est pas
+                « retirable » (pas un multi-destinataires) — on quitte la conversation
+                par la barre du haut. (Aligné sur la version vivante dans MessagingPage.) */}
             <div className="inline-flex items-center gap-2 h-7 pl-1.5 pr-3 rounded-full bg-[color-mix(in_srgb,var(--school-accent)_15%,transparent)] border border-[color-mix(in_srgb,var(--school-accent)_30%,transparent)]">
               <UserAvatar user={selectedRecipient} size="sm" />
-              <span className="text-xs font-medium text-[var(--school-accent)]">{selectedRecipient.name}</span>
-              <button onClick={onClearRecipient} className="ml-1 text-[color-mix(in_srgb,var(--school-accent)_60%,transparent)] hover:text-[var(--school-accent)]">
-                <X className="w-3 h-3" />
-              </button>
+              <span className="text-xs font-medium text-[var(--school-accent)]">
+                <span className="opacity-70">À :</span> {selectedRecipient.name}
+              </span>
             </div>
           </motion.div>
         )}
