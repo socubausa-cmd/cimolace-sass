@@ -23,7 +23,10 @@ export const TENANT_SLUG = process.env.EXPO_PUBLIC_TENANT_SLUG ?? 'isna';
  */
 export const PORTAL_URL = (process.env.EXPO_PUBLIC_PORTAL_URL ?? 'https://app.prorascience.org').replace(/\/+$/, '');
 export const DEV_TOKEN = process.env.EXPO_PUBLIC_DEV_TOKEN ?? '';
-export const DEFAULT_MODEL = 'claude-haiku-4-5-20251001';
+// Défaut = DeepSeek V4 Flash (fournisseur disponible). Anthropic (Claude) reste appelable
+// mais bascule via le signal `provider_error` s'il est indisponible (crédits épuisés).
+// Repasser sur un modèle Claude une fois les crédits Anthropic rechargés.
+export const DEFAULT_MODEL = 'deepseek-chat';
 
 /** UUID du tenant ISNA — même valeur que le web (tenants/isna/tenant.config). */
 export const ISNA_TENANT_ID =
@@ -82,15 +85,19 @@ export function streamBrain(
       return false;
     }
     if (obj.content) {
-      let confirm: { type?: string } | null = null;
+      let sig: { type?: string; message?: string } | null = null;
       try {
         const inner = JSON.parse(obj.content);
-        if (inner && inner.type === 'tool_confirm') confirm = inner;
+        if (inner && typeof inner === 'object' && inner.type) sig = inner;
       } catch {
         /* contenu texte normal */
       }
-      if (confirm) h.onToolConfirm?.(confirm);
-      else h.onToken(obj.content);
+      if (sig?.type === 'tool_confirm') h.onToolConfirm?.(sig);
+      // Fournisseur IA indisponible (ex. crédits Anthropic épuisés) → message clair, pas de JSON brut.
+      else if (sig?.type === 'provider_error') {
+        h.onError(sig.message || 'Ce modèle IA est momentanément indisponible.');
+        return true;
+      } else h.onToken(obj.content);
     }
     if (obj.done) {
       h.onDone();
