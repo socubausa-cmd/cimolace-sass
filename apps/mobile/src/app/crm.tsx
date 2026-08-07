@@ -67,7 +67,7 @@ export default function CrmScreen() {
     <SafeAreaView style={s.safe} edges={['top']}>
       <View style={s.header}>
         <Text style={s.h1}>CRM</Text>
-        <Text style={s.sub}>Tes contacts et l'activité de l'écosystème.</Text>
+        <Text style={s.sub}>{"Tes contacts et l'activité de l'écosystème."}</Text>
       </View>
 
       {/* Chiffres-clés */}

@@ -175,3 +175,13 @@ test('la connexion offre une sortie en cas de mot de passe oublié', async () =>
   const api = await source('lib/liri-api.ts');
   assert.match(api, /EXPO_PUBLIC_PORTAL_URL/, "l'URL du portail doit être configurable");
 });
+
+test('les réglages exposent les liens légaux et la gestion du compte', async () => {
+  // Ces accès doivent rester visibles dans l'app livrée : ils font partie des
+  // informations de confidentialité et d'assistance vérifiées par Apple.
+  const code = await source('app/reglages.tsx');
+  assert.match(code, /prorascience\.org\/politique-confidentialite/);
+  assert.match(code, /prorascience\.org\/nous-contacter/);
+  assert.match(code, /\$\{PORTAL_URL\}\/liri\/compte/);
+  assert.match(code, /Gérer ou supprimer mon compte/);
+});

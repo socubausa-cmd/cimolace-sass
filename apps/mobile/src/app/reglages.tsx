@@ -1,12 +1,13 @@
 import { Feather } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { useMemo } from 'react';
-import { Pressable, ScrollView, StyleSheet, Switch, Text, View } from 'react-native';
+import { Linking, Pressable, ScrollView, StyleSheet, Switch, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { ThemeToggle } from '@/components/theme-toggle';
 import { LiriFonts as F, softShadow, type LiriPalette } from '@/constants/liri-theme';
 import { useAuth } from '@/lib/auth';
+import { PORTAL_URL } from '@/lib/liri-api';
 import { LIVE_TYPES, usePreferences } from '@/lib/preferences';
 import { useTheme } from '@/lib/theme';
 
@@ -38,7 +39,7 @@ export default function ReglagesScreen() {
             <View style={styles.avatar}><Text style={styles.avatarTxt}>{initials}</Text></View>
             <View style={{ flex: 1, minWidth: 0 }}>
               <Text style={styles.name} numberOfLines={1}>{email ?? 'Mon compte'}</Text>
-              <Text style={styles.sub}>Espace Isna · LIRI v2.0</Text>
+              <Text style={styles.sub}>Espace Isna · LIRI 1.0</Text>
             </View>
           </View>
 
@@ -97,6 +98,36 @@ export default function ReglagesScreen() {
             value={prefs.waitingRoom}
             onValueChange={(v) => setPref('waitingRoom', v)}
           />
+
+          <Text style={styles.sectionTitle}>Aide et confidentialité</Text>
+          {([
+            {
+              icon: 'shield',
+              label: 'Politique de confidentialité',
+              url: 'https://prorascience.org/politique-confidentialite',
+            },
+            {
+              icon: 'help-circle',
+              label: 'Assistance',
+              url: 'https://prorascience.org/nous-contacter',
+            },
+            {
+              icon: 'settings',
+              label: 'Gérer ou supprimer mon compte',
+              url: `${PORTAL_URL}/liri/compte`,
+            },
+          ] as { icon: IconName; label: string; url: string }[]).map((row) => (
+            <Pressable
+              key={row.label}
+              accessibilityRole="link"
+              onPress={() => { void Linking.openURL(row.url); }}
+              style={({ pressed }) => [styles.row, pressed && styles.pressed]}
+            >
+              <View style={styles.rowIcon}><Feather name={row.icon} size={16} color={C.muted} /></View>
+              <Text style={styles.rowLabel}>{row.label}</Text>
+              <Feather name="external-link" size={16} color={C.faint} />
+            </Pressable>
+          ))}
 
           <Pressable style={({ pressed }) => [styles.signout, pressed && styles.pressed]} onPress={signOut}>
             <Feather name="log-out" size={17} color={C.live} />
