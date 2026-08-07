@@ -73,7 +73,8 @@
         "releaseStatus": "draft"
       },
       "ios": {
-        "language": "fr-FR"
+        "language": "fr-FR",
+        "appleTeamId": "2QCGWMC362"
       }
     }
   }

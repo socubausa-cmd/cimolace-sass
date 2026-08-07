@@ -60,8 +60,34 @@ manuellement dans la console.
 
 ## iOS — App Store
 
-**Le compte Apple Developer existe** (contrat signé le 27 juillet 2026, identifiant
-`manikongo5@icloud.com`). L'iPhone réel et TestFlight sont donc débloqués.
+✅ **Premier `.ipa` de production construit et vérifié le 7 août 2026.**
+
+Compte utilisé : **Judith Kalonji**, adhésion Developer Program active.
+**Team ID `2QCGWMC362`** (posé dans `eas.json`, il n'est pas secret — il est
+embarqué dans tout binaire signé distribué).
+
+Ce que l'inspection du binaire a confirmé (config ≠ binaire, cf. plus bas) :
+
+| Contrôle | Résultat |
+|---|---|
+| Bundle | `org.prorascience.liri` |
+| Version / build | 1.0.0 / 3 |
+| Signature | `iPhone Distribution: Judith Kalonji (2QCGWMC362)` |
+| Profil | **App Store** — 0 appareil listé, `get-task-allow: false` |
+| `UIBackgroundModes` | `audio` **présent** |
+| `ITSAppUsesNonExemptEncryption` | `0` → pas de formulaire export |
+| Icônes | **sans canal alpha** (l'alpha fait rejeter) |
+| Permissions | caméra + micro, textes en français |
+| ATS | `NSAllowsArbitraryLoads: 0` |
+
+⚠️ **Comptes Apple à ne pas confondre** — deux ne marchent pas :
+`manikongo5@icloud.com` (contrat signé mais paiement jamais encaissé) et
+`mintsajohan94@gmail.com` (compte gratuit, **jamais inscrit** au Developer
+Program). Seul celui de Judith Kalonji a une adhésion valide.
+
+⚠️ **Xcode n'est pas installé sur ce Mac** (`xcode-select` → Command Line
+Tools) : aucun simulateur iOS, donc pas de capture d'écran produisible ici.
+Les builds EAS passent quand même — ils tournent sur les machines d'Expo.
 
 ⚠️ Toutes les étapes ci-dessous demandent de **s'authentifier auprès d'Apple** :
 c'est à toi de les lancer, je ne saisis pas d'identifiants.
