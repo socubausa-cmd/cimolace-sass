@@ -20,6 +20,7 @@ test-results/
 # Other monorepo applications and backend assets are not mobile build inputs.
 apps/api/
 apps/app/
+apps/desktop/
 apps/med-app/
 apps/patient-portal/
 apps/public-site/
@@ -35,3 +36,8 @@ tools/
 .vercel.disabled/
 .isna-opus-consolidated/
 .deepseek/
+
+# Local delivery/audit payloads. These were making the iOS upload almost 1 GB
+# even though the actual mobile project is under 4 MB.
+.git/
+artifacts/
