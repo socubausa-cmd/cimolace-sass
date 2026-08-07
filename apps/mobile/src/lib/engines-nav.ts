@@ -61,6 +61,7 @@ export const ENGINES: EngineDef[] = [
       // Gestion des demandes de RDV — réservé au propriétaire/secrétariat.
       { route: 'rdv', label: 'Rendez-vous', icon: 'calendar', creator: true },
       { route: 'crm', label: 'CRM', icon: 'users', creator: true },
+      { route: 'courrier', label: 'Courrier', icon: 'mail', creator: true },
     ],
   },
   {

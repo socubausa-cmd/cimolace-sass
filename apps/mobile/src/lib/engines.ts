@@ -74,6 +74,7 @@ export const ENGINES: Engine[] = [
   { key: 'notifications', label: 'Notifications', icon: 'bell', category: 'communication', status: 'done', route: '/notifications', webRef: 'NotificationCenter', backend: 'notifications (Supabase RLS)' },
   { key: 'rdv-admin', label: 'Rendez-vous (gestion)', icon: 'calendar', category: 'communication', status: 'done', route: '/rdv', webRef: '/liri/rdv · LiriRdvAdminPage', backend: 'GET/PATCH /booking/appointments + reschedule-link' },
   { key: 'crm', label: 'CRM', icon: 'users', category: 'communication', status: 'done', route: '/crm', webRef: '/liri/crm · CrmPage', backend: '/crm/contacts · /crm/activities · /crm/summary' },
+  { key: 'courrier', label: 'Courrier (infos@)', icon: 'mail', category: 'communication', status: 'done', route: '/courrier', webRef: '/liri/courrier · OrgMailbox', backend: 'email_threads/emails (Supabase) + /email-imap/sync' },
   { key: 'profil', label: 'Profil élève', icon: 'user', category: 'communication', status: 'partial', route: '/profil', webRef: 'EleveProfileScreen', backend: 'student_progress (Supabase)', gap: 'Réalisations et plusieurs menus restent incomplets.' },
 
   // ── COMMERCE ───────────────────────────────────────────────────────────

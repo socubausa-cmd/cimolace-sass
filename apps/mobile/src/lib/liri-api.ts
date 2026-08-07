@@ -308,6 +308,11 @@ export const fetchCrmActivities = () =>
     pluckArray<CrmActivity>(r, 'activities'),
   );
 
+// ── Courrier (boîte IMAP infos@) ─────────────────────────────────────────────
+/** Déclenche une synchro IMAP → base (les e-mails se lisent ensuite via Supabase). */
+export const syncMailbox = () =>
+  postJson<{ ok?: boolean; synced?: number; error?: string; hint?: string }>('/email-imap/sync', {});
+
 /**
  * Vidéothèque — enregistrements de séances publiés (`published_videos`, Zoom → R2),
  * distincts des replays de sessions live (cf. fetchReplays plus bas).
