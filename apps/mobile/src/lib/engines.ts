@@ -72,6 +72,7 @@ export const ENGINES: Engine[] = [
   // ── COMMUNICATION ──────────────────────────────────────────────────────
   { key: 'messages', label: 'Messagerie', icon: 'send', category: 'communication', status: 'partial', route: '/messages', webRef: 'MessagingPage', backend: '/messaging/*', gap: 'API et polling alignés; nouveau destinataire, groupes et temps réel push à compléter.' },
   { key: 'notifications', label: 'Notifications', icon: 'bell', category: 'communication', status: 'done', route: '/notifications', webRef: 'NotificationCenter', backend: 'notifications (Supabase RLS)' },
+  { key: 'rdv-admin', label: 'Rendez-vous (gestion)', icon: 'calendar', category: 'communication', status: 'done', route: '/rdv', webRef: '/liri/rdv · LiriRdvAdminPage', backend: 'GET/PATCH /booking/appointments + reschedule-link' },
   { key: 'profil', label: 'Profil élève', icon: 'user', category: 'communication', status: 'partial', route: '/profil', webRef: 'EleveProfileScreen', backend: 'student_progress (Supabase)', gap: 'Réalisations et plusieurs menus restent incomplets.' },
 
   // ── COMMERCE ───────────────────────────────────────────────────────────

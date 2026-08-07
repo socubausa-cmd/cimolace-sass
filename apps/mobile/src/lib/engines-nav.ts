@@ -58,6 +58,8 @@ export const ENGINES: EngineDef[] = [
       { route: 'forum', label: 'Forum', icon: 'message-square' },
       { route: 'bibliotheque', label: 'Biblio.', icon: 'book-open' },
       { route: 'brain', label: 'Brain', icon: 'zap' },
+      // Gestion des demandes de RDV — réservé au propriétaire/secrétariat.
+      { route: 'rdv', label: 'Rendez-vous', icon: 'calendar', creator: true },
     ],
   },
   {

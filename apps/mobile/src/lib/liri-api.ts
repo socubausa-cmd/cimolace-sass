@@ -228,6 +228,48 @@ async function getJson<T>(path: string): Promise<T | null> {
 
 export const fetchStats = () => getJson<Stats>('/growth/stats');
 
+// ── Gestion des rendez-vous (propriétaire / secrétariat) ─────────────────────
+// L'écran de gestion voit TOUTES les demandes du tenant (staff-gated côté API),
+// contrairement à rendez-vous.tsx (côté élève, ses propres demandes via Supabase).
+export interface AdminAppointment {
+  id: string;
+  status: string;
+  notes: string | null;
+  created_at: string;
+  slot_id?: string | null;
+  booking_slots?: { start_at?: string | null; end_at?: string | null; title?: string | null } | null;
+  reschedule_state?: string | null;
+}
+
+async function patchJson<T>(path: string, body?: unknown): Promise<T | null> {
+  const token = currentToken();
+  if (!token) return null;
+  try {
+    const res = await fetch(`${API_BASE}${path}`, {
+      method: 'PATCH',
+      headers: { ...authHeaders(token), 'Content-Type': 'application/json' },
+      body: body === undefined ? undefined : JSON.stringify(body),
+    });
+    if (!res.ok) return null;
+    const json: unknown = await res.json();
+    return ((json as { data?: T })?.data ?? (json as T)) ?? null;
+  } catch {
+    return null;
+  }
+}
+
+/** Toutes les demandes de RDV du tenant (staff/owner) — écran de gestion. */
+export const fetchAdminAppointments = () =>
+  getJson<AdminAppointment[]>('/booking/appointments').then((r) => r ?? []);
+/** Confirmer / annuler / mettre à jour un RDV (PATCH /booking/appointments/:id). */
+export const updateAppointment = (
+  id: string,
+  patch: { status?: string; newStartAt?: string; reason?: string; notes?: string },
+) => patchJson<AdminAppointment>(`/booking/appointments/${id}`, patch);
+/** Envoyer au demandeur un lien de report self-service. */
+export const sendRescheduleLink = (id: string, reason?: string) =>
+  postJson<{ ok?: boolean }>(`/booking/appointments/${id}/reschedule-link`, { reason });
+
 /**
  * Vidéothèque — enregistrements de séances publiés (`published_videos`, Zoom → R2),
  * distincts des replays de sessions live (cf. fetchReplays plus bas).

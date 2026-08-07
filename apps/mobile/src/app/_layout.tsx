@@ -51,7 +51,7 @@ const HIDDEN = [
   'integrations', 'reglages', 'creer-formation', 'creer-masterclass',
   'creer-arena', 'creer-discussion', 'engines', 'notifications', 'profil',
   'messages', 'nouveau-message', 'forum/[topicId]', 'calendrier-annuel',
-  'rendez-vous', 'waiting-room', 'export', 'orchestrator-live',
+  'rendez-vous', 'rdv', 'waiting-room', 'export', 'orchestrator-live',
 ];
 /** Coques immersives : hors barre ET barre masquée à l'affichage. */
 const IMMERSIVE = [
