@@ -60,6 +60,7 @@ export const ENGINES: EngineDef[] = [
       { route: 'brain', label: 'Brain', icon: 'zap' },
       // Gestion des demandes de RDV — réservé au propriétaire/secrétariat.
       { route: 'rdv', label: 'Rendez-vous', icon: 'calendar', creator: true },
+      { route: 'crm', label: 'CRM', icon: 'users', creator: true },
     ],
   },
   {

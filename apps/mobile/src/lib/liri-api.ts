@@ -270,6 +270,44 @@ export const updateAppointment = (
 export const sendRescheduleLink = (id: string, reason?: string) =>
   postJson<{ ok?: boolean }>(`/booking/appointments/${id}/reschedule-link`, { reason });
 
+// ── CRM (propriétaire) ───────────────────────────────────────────────────────
+export interface CrmContact {
+  id: string;
+  full_name?: string | null;
+  name?: string | null;
+  email?: string | null;
+  phone?: string | null;
+  company_name?: string | null;
+  source?: string | null;
+  created_at?: string | null;
+}
+export interface CrmActivity {
+  id: string;
+  type?: string | null;
+  title?: string | null;
+  description?: string | null;
+  created_at?: string | null;
+}
+
+const pluckArray = <T>(r: unknown, key: string): T[] => {
+  const inner = (r as Record<string, unknown>)?.[key];
+  if (Array.isArray(inner)) return inner as T[];
+  return Array.isArray(r) ? (r as T[]) : [];
+};
+
+/** Chiffres-clés du CRM (contacts, sociétés, deals, montants). */
+export const fetchCrmSummary = () => getJson<Record<string, unknown>>('/crm/summary');
+/** Liste des contacts (recherche optionnelle). */
+export const fetchCrmContacts = (search?: string) =>
+  getJson<{ contacts?: CrmContact[] }>(
+    `/crm/contacts?limit=60${search ? `&search=${encodeURIComponent(search)}` : ''}`,
+  ).then((r) => pluckArray<CrmContact>(r, 'contacts'));
+/** Fil d'activité récent (contacts créés, dons, RDV…). */
+export const fetchCrmActivities = () =>
+  getJson<{ activities?: CrmActivity[] }>('/crm/activities?limit=40').then((r) =>
+    pluckArray<CrmActivity>(r, 'activities'),
+  );
+
 /**
  * Vidéothèque — enregistrements de séances publiés (`published_videos`, Zoom → R2),
  * distincts des replays de sessions live (cf. fetchReplays plus bas).
