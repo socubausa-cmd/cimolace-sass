@@ -49,7 +49,25 @@ export default function CimolaceAdminFinances() {
     // Cockpit de coût : ce que chaque tenant CONSOMME (IA + live + dépassement)
     apiV2.get('/admin/ai-billing/cost-overview').then((r) => setCost(unwrap(r))).catch(() => {});
   };
-  useEffect(load, []);
+
+  /**
+   * Relit le statut des retraits CHEZ PAWAPAY avant d'afficher la liste.
+   * Sans ça, un retrait dont le callback s'est perdu resterait « accepted »
+   * indéfiniment alors que l'argent est bel et bien parti : l'écran mentirait.
+   */
+  const syncThenLoad = () =>
+    apiV2.post('/cimolace-backoffice/finances/payouts/sync').catch(() => {}).then(load);
+
+  useEffect(() => { syncThenLoad(); }, []);
+
+  // Un retrait se règle en quelques secondes : on relance la lecture tant qu'il
+  // reste une ligne non terminale, puis on s'arrête (pas de sondage perpétuel).
+  useEffect(() => {
+    const enCours = payouts.some((p) => !['completed', 'failed', 'rejected'].includes(String(p.status || '').toLowerCase()));
+    if (!enCours) return undefined;
+    const t = setTimeout(syncThenLoad, 8000);
+    return () => clearTimeout(t);
+  }, [payouts]);
 
   const submit = async () => {
     if (sending || amountCents() <= 0 || !phone.trim()) return;
@@ -57,8 +75,8 @@ export default function CimolaceAdminFinances() {
     try {
       const r = await apiV2.post('/cimolace-backoffice/finances/payout', { amountCents: amountCents(), currency: 'XAF', phoneNumber: phone.trim(), mno, wallet: walletKey || undefined, reason: reason.trim() || undefined });
       const d = unwrap(r);
-      setMsg({ ok: true, text: `Retrait initié (${d?.status || 'pending'}) — ${money(amountCents(), 'XAF')}.` });
-      setAmount(''); setPhone(''); setReason(''); setConfirm(false); load();
+      setMsg({ ok: true, text: `Retrait initié (${d?.status || 'pending'}) — ${money(amountCents(), 'XAF')}. Le statut se confirme dans quelques secondes.` });
+      setAmount(''); setPhone(''); setReason(''); setConfirm(false); syncThenLoad();
     } catch (e) {
       setMsg({ ok: false, text: e?.response?.data?.error?.message || e?.response?.data?.message || e?.message || 'Retrait impossible.' });
       setConfirm(false);
