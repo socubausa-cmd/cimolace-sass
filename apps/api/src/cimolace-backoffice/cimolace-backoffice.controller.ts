@@ -3,12 +3,16 @@ import type { Request } from 'express';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { CimolaceStaffGuard } from './cimolace-staff.guard';
 import { CimolaceBackofficeService } from './cimolace-backoffice.service';
+import { BillingService } from '../billing/billing.service';
 import { CreateClientDto, UpdateClientDto } from './dto/backoffice.dto';
 
 @Controller('cimolace-backoffice')
 @UseGuards(JwtAuthGuard, CimolaceStaffGuard)
 export class CimolaceBackofficeController {
-  constructor(private readonly svc: CimolaceBackofficeService) {}
+  constructor(
+    private readonly svc: CimolaceBackofficeService,
+    private readonly billing: BillingService,
+  ) {}
 
   @Get('stats') getStats() { return this.svc.getStats(); }
 
@@ -16,6 +20,9 @@ export class CimolaceBackofficeController {
   @Get('finances') getFinances() { return this.svc.getPlatformFinances(); }
   @Get('finances/payouts') listFinancePayouts() { return this.svc.getPlatformPayouts(); }
   @Post('finances/payout') createFinancePayout(@Req() req: any, @Body() b: any) { return this.svc.createPlatformPayout(req.user?.id ?? null, b); }
+  // Réconciliation immédiate : re-lit le statut des retraits plateforme chez
+  // PawaPay au lieu d'attendre un callback qui peut ne jamais venir.
+  @Post('finances/payouts/sync') syncFinancePayouts() { return this.billing.syncPendingPayouts(null); }
   // Porte-monnaie par produit (afritrack, liri, mbolo, medos…)
   @Get('finances/wallets') listWallets() { return this.svc.listWallets(); }
   @Post('finances/wallets') createWallet(@Body() b: any) { return this.svc.createWallet(b); }

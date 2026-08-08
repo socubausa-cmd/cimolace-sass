@@ -64,6 +64,11 @@ export class BillingController {
   @Post("payouts") @UseGuards(RolesGuard) @Roles("owner", "admin") async createPayout(@Req() req: any, @Body() b: any) {
     return this.svc.createPayout(req.tenant.id, req.user?.id ?? null, b);
   }
+  // Réconciliation immédiate des retraits non terminés (le front l'appelle après
+  // un envoi, sans attendre la passe automatique de 2 min ni le callback PawaPay).
+  @Post("payouts/sync") @Roles("owner", "admin") async syncPayouts(@Req() req: any) {
+    return this.svc.syncPendingPayouts(req.tenant.id);
+  }
 }
 
 /**

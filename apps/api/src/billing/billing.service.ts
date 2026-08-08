@@ -32,6 +32,18 @@ export class BillingService implements OnApplicationBootstrap {
         .catch((e) => this.logger.warn(`renewDueSubscriptions: ${(e as Error).message}`));
     // 1er passage 60 s après le boot, puis toutes les 24 h.
     setTimeout(() => { void run(); setInterval(() => void run(), DAY_MS); }, 60_000);
+
+    // ── Réconciliation des RETRAITS (toutes les 2 min) ──────────────────────
+    // Un payout se règle en quelques secondes ; jusqu'ici seul le callback
+    // PawaPay nous l'apprenait. S'il n'est pas déclaré chez eux pour les
+    // payouts — ou s'il se perd — l'argent part et la ligne reste `accepted`
+    // à vie. Cette passe re-lit le statut à la source, donc le retrait finit
+    // TOUJOURS par refléter la réalité, callback ou pas.
+    const syncPayouts = () =>
+      this.syncPendingPayouts(undefined)
+        .then((r) => { if (r.changed) this.logger.log(`[payouts] ${r.changed}/${r.checked} réconcilié(s)`); })
+        .catch((e) => this.logger.warn(`syncPendingPayouts: ${(e as Error).message}`));
+    setTimeout(() => { void syncPayouts(); setInterval(() => void syncPayouts(), 120_000); }, 20_000);
   }
 
   /**
@@ -1437,6 +1449,50 @@ export class BillingService implements OnApplicationBootstrap {
   async listPayouts(tenantId: string) {
     const { data } = await this.supabase.from("billing_payouts").select("*").eq("tenant_id", tenantId).order("created_at", { ascending: false });
     return data ?? [];
+  }
+
+  /** Statuts terminaux d'un retrait : plus rien à réconcilier au-delà. */
+  private static PAYOUT_FINAL = new Set(["completed", "failed", "rejected"]);
+
+  /**
+   * RÉCONCILIATION DES RETRAITS — le webhook n'est PAS une garantie.
+   *
+   * Un payout accepté par PawaPay se règle en quelques secondes, mais la seule
+   * chose qui nous l'apprenait était le callback `POST /billing/webhook/pawapay`.
+   * Si ce callback n'est pas déclaré chez PawaPay pour les payouts, ou s'il se
+   * perd, l'argent part et la ligne reste `accepted` à vie : **l'argent bouge et
+   * l'interface ment**. On re-lit donc le statut À LA SOURCE, exactement comme
+   * le fait le webhook (jamais le corps d'une requête entrante).
+   *
+   * `scope` : un tenantId, ou `null` pour les retraits PLATEFORME (tenant_id nul).
+   * `undefined` = tout, pour la passe automatique.
+   */
+  async syncPendingPayouts(scope: string | null | undefined, limit = 40) {
+    const sb = this.supabase;
+    let q = sb
+      .from("billing_payouts")
+      .select("payout_id, status, tenant_id, created_at")
+      .order("created_at", { ascending: false })
+      .limit(200);
+    if (scope === null) q = q.is("tenant_id", null);
+    else if (typeof scope === "string") q = q.eq("tenant_id", scope);
+
+    const { data } = await q;
+    const pending = (data ?? [])
+      .filter((r: any) => !BillingService.PAYOUT_FINAL.has(String(r.status || "").toLowerCase()))
+      .slice(0, limit);
+
+    const synced: Array<{ payoutId: string; from: string; to: string }> = [];
+    for (const row of pending) {
+      const before = String((row as any).status || "");
+      // Réutilise la voie « re-lue à la source » du webhook : une seule logique
+      // de mapping de statut, donc aucune dérive possible entre les deux.
+      const res = await this.applyPayoutCallbackFromWebhook({ payoutId: (row as any).payout_id })
+        .catch(() => null);
+      const after = String((res as any)?.status ?? "unverified");
+      if (after !== before) synced.push({ payoutId: (row as any).payout_id, from: before, to: after });
+    }
+    return { checked: pending.length, changed: synced.length, synced };
   }
 
   /**
