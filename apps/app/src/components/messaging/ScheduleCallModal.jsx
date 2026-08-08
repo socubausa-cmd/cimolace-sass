@@ -66,7 +66,8 @@ export default function ScheduleCallModal({ open, onClose, recipientName, onSche
     }
   };
 
-  const card = 'rounded-2xl border border-white/10 bg-white/[0.03]';
+  // Charte LIRI chaude : surfaces #2b2926 / #33322e, accent corail — le navy est banni.
+  const card = 'rounded-2xl border border-white/10 bg-[#33322e]';
   const dtInput = 'bg-transparent text-sm text-gray-100 outline-none [color-scheme:dark]';
 
   return (
@@ -78,19 +79,19 @@ export default function ScheduleCallModal({ open, onClose, recipientName, onSche
           onClick={onClose}
         >
           <motion.div
-            className="max-h-[92vh] w-full overflow-y-auto rounded-t-3xl border border-white/10 bg-[#0b0f16] shadow-2xl sm:max-w-lg sm:rounded-3xl"
+            className="max-h-[92vh] w-full overflow-y-auto rounded-t-3xl border border-white/10 bg-[#2b2926] shadow-2xl sm:max-w-lg sm:rounded-3xl"
             initial={{ y: 48, opacity: 0 }} animate={{ y: 0, opacity: 1 }} exit={{ y: 48, opacity: 0 }}
             onClick={(e) => e.stopPropagation()}
           >
             {/* header */}
-            <div className="sticky top-0 z-10 flex items-center justify-between border-b border-white/10 bg-[#0b0f16] px-4 py-3">
+            <div className="sticky top-0 z-10 flex items-center justify-between border-b border-white/10 bg-[#2b2926] px-4 py-3">
               <button type="button" onClick={onClose} className="text-sm text-gray-400 transition-colors hover:text-gray-200">Annuler</button>
               <div className="flex items-center gap-2 text-sm font-semibold text-gray-100">
-                <CalendarClock className="h-4 w-4 text-[var(--school-accent)]" /> Programmer un appel
+                <CalendarClock className="h-4 w-4 text-[#d97757]" /> Programmer un appel
               </div>
               <button
                 type="button" onClick={submit} disabled={submitting}
-                className="text-sm font-semibold text-[var(--school-accent)] transition-opacity disabled:opacity-50"
+                className="text-sm font-semibold text-[#d97757] transition-opacity disabled:opacity-50"
               >
                 {submitting ? 'Envoi…' : 'Envoyer'}
               </button>
@@ -125,7 +126,7 @@ export default function ScheduleCallModal({ open, onClose, recipientName, onSche
                 )}
                 <label className="flex cursor-pointer items-center justify-between gap-3 px-4 py-3">
                   <span className="text-sm text-gray-200">Inclure l'heure de fin</span>
-                  <input type="checkbox" checked={includeEnd} onChange={(e) => setIncludeEnd(e.target.checked)} className="h-4 w-4 accent-[var(--school-accent)]" />
+                  <input type="checkbox" checked={includeEnd} onChange={(e) => setIncludeEnd(e.target.checked)} className="h-4 w-4 accent-[#d97757]" />
                 </label>
               </div>
 
@@ -136,13 +137,13 @@ export default function ScheduleCallModal({ open, onClose, recipientName, onSche
                   <div className="flex items-center gap-1 rounded-full bg-white/5 p-0.5">
                     <button
                       type="button" onClick={() => setCallType('video')}
-                      className={`flex items-center gap-1 rounded-full px-3 py-1 text-xs transition-colors ${callType === 'video' ? 'bg-[var(--school-accent)] font-semibold text-black' : 'text-gray-400 hover:text-gray-200'}`}
+                      className={`flex items-center gap-1 rounded-full px-3 py-1 text-xs transition-colors ${callType === 'video' ? 'bg-[#d97757] font-semibold text-white' : 'text-gray-400 hover:text-gray-200'}`}
                     >
                       <Video className="h-3.5 w-3.5" /> Vidéo
                     </button>
                     <button
                       type="button" onClick={() => setCallType('audio')}
-                      className={`flex items-center gap-1 rounded-full px-3 py-1 text-xs transition-colors ${callType === 'audio' ? 'bg-[var(--school-accent)] font-semibold text-black' : 'text-gray-400 hover:text-gray-200'}`}
+                      className={`flex items-center gap-1 rounded-full px-3 py-1 text-xs transition-colors ${callType === 'audio' ? 'bg-[#d97757] font-semibold text-white' : 'text-gray-400 hover:text-gray-200'}`}
                     >
                       <Phone className="h-3.5 w-3.5" /> Audio
                     </button>
@@ -150,7 +151,7 @@ export default function ScheduleCallModal({ open, onClose, recipientName, onSche
                 </div>
                 <label className="flex cursor-pointer items-center justify-between gap-3 px-4 py-3">
                   <span className="text-sm text-gray-200">Exiger l'approbation pour rejoindre</span>
-                  <input type="checkbox" checked={requireApproval} onChange={(e) => setRequireApproval(e.target.checked)} className="h-4 w-4 accent-[var(--school-accent)]" />
+                  <input type="checkbox" checked={requireApproval} onChange={(e) => setRequireApproval(e.target.checked)} className="h-4 w-4 accent-[#d97757]" />
                 </label>
               </div>
 

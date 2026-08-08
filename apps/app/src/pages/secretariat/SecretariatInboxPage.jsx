@@ -844,7 +844,7 @@ const SecretariatInboxPage = () => {
 
       <div className="fixed inset-0 pointer-events-none -z-10">
         <div className="absolute top-1/4 left-1/2 -translate-x-1/2 w-[500px] h-[300px] bg-[color-mix(in_srgb,var(--school-accent)_4%,transparent)] rounded-full blur-[100px]" />
-        <div className="absolute bottom-1/4 right-1/4 w-[250px] h-[250px] bg-violet-500/[0.03] rounded-full blur-[80px]" />
+        <div className="absolute bottom-1/4 right-1/4 w-[250px] h-[250px] bg-[#d97757]/[0.03] rounded-full blur-[80px]" />
       </div>
 
       <div className="space-y-6 relative">
@@ -977,8 +977,9 @@ const SecretariatInboxPage = () => {
           </TabsContent>
 
           <TabsContent value="appels" className="mt-0 space-y-4">
-            <div className="rounded-xl border border-violet-200 bg-violet-50 px-4 py-3 flex gap-2 text-sm text-violet-800">
-              <Video className="w-5 h-5 shrink-0 text-violet-500" />
+            {/* Charte LIRI chaude : corail pour l'accent — le violet est banni. */}
+            <div className="rounded-xl border border-[#d97757]/[0.35] bg-[#d97757]/[0.08] px-4 py-3 flex gap-2 text-sm text-[var(--lt-sub)]">
+              <Video className="w-5 h-5 shrink-0 text-[#d97757]" />
               <p>
                 <strong className="text-[var(--lt-text)]">Sessions live / visio</strong> à venir (table{' '}
                 <span className="font-mono text-xs">live_sessions</span>).
@@ -997,7 +998,7 @@ const SecretariatInboxPage = () => {
                     <div className="space-y-3">
                       {liveSessions.map((item, i) => (
                         <MessageCard key={item.id} index={i}>
-                          <motion.div className="p-2.5 rounded-xl bg-violet-500/20 text-violet-300">
+                          <motion.div className="p-2.5 rounded-xl bg-[#d97757]/[0.18] text-[#d97757]">
                             <Video className="w-5 h-5" />
                           </motion.div>
                           <div className="flex-1 min-w-0">
@@ -1013,7 +1014,7 @@ const SecretariatInboxPage = () => {
                             </p>
                           </div>
                           <div className="flex flex-col items-end gap-1 shrink-0">
-                            <Badge variant="secondary" className="bg-violet-50 text-violet-700 border-violet-200">
+                            <Badge variant="secondary" className="bg-[#d97757]/[0.12] text-[#d97757] border-[#d97757]/[0.35]">
                               {item.status}
                             </Badge>
                             {item.video_room_url ? (
@@ -1040,7 +1041,7 @@ const SecretariatInboxPage = () => {
                     <div className="space-y-3">
                       {contactCallHints.map((item, i) => (
                         <MessageCard key={item.id} index={i}>
-                          <motion.div className="p-2.5 rounded-xl bg-purple-500/20 text-purple-400">
+                          <motion.div className="p-2.5 rounded-xl bg-[#d97757]/[0.18] text-[#d97757]">
                             <Phone className="w-5 h-5" />
                           </motion.div>
                           <div className="flex-1 min-w-0">

@@ -4,7 +4,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import SecretariatDashboardLayout from '@/components/secretariat/SecretariatDashboardLayout';
 import SecretariatOverview from '@/components/secretariat/SecretariatOverview';
 import SecretariatStudentDashboard from '@/components/secretariat/SecretariatStudentDashboard';
-import { useSchoolYear } from '@/hooks/useSchoolYear';
+import { useSchoolYear, buildYearOptions } from '@/hooks/useSchoolYear';
 
 // Mêmes composants que OwnerDashboard (accès restreints par RLS)
 import OwnerFormationsTab from '@/components/owner/OwnerFormationsTab';
@@ -174,8 +174,11 @@ const SecretariatDashboard = () => {
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="2024-2025">2024-2025</SelectItem>
-                <SelectItem value="2023-2024">2023-2024</SelectItem>
+                {/* Années CALCULÉES (sept → août) — même source que l'Aperçu du propriétaire ;
+                    une liste en dur mentirait dès la rentrée suivante. */}
+                {buildYearOptions(currentYear).map((year) => (
+                  <SelectItem key={year} value={year}>{year}</SelectItem>
+                ))}
               </SelectContent>
             </Select>
           </div>
