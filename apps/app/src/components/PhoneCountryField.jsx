@@ -50,11 +50,11 @@ export default function PhoneCountryField({ onChange, onEnter, label = 'WhatsApp
             onChange={(e) => changerLocal(e.target.value)}
             onKeyDown={(e) => { if (e.key === 'Enter' && onEnter) { e.preventDefault(); onEnter(); } }}
             placeholder={autre ? '+indicatif puis numéro' : pays.iso === 'GA' ? '06 00 00 00 0' : 'numéro local'}
-            className="w-full min-w-0 bg-transparent px-2 py-2.5 text-sm text-[#f5f4ee] outline-none placeholder:text-[#f5f4ee]/35" />
+            className="w-full min-w-0 bg-transparent px-2 py-2.5 text-sm text-[#f5f4ee] outline-none placeholder:text-[#f5f4ee]/50" />
           {verdict.ok && <Check className="mr-2.5 h-4 w-4 shrink-0 text-[#7fb98a]" />}
         </div>
       </div>
-      <p className={`mt-1 min-h-[16px] text-[11px] ${local && !verdict.ok ? 'text-[#e8a184]' : 'text-[#f5f4ee]/40'}`}>
+      <p aria-live="polite" className={`mt-1 min-h-[16px] text-[11px] ${local && !verdict.ok ? 'text-[#e8a184]' : 'text-[#f5f4ee]/50'}`}>
         {local && !verdict.ok
           ? verdict.message
           : verdict.ok

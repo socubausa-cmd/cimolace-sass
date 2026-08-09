@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { Sparkles, Loader2, Check, ArrowRight, Calendar, Clock, HeartHandshake, Video, GraduationCap, CalendarClock } from 'lucide-react';
+import { Sparkles, Loader2, Check, ArrowRight, Calendar, Clock, HeartHandshake, Video, GraduationCap, CalendarClock, X } from 'lucide-react';
 import { bookingPublicApi } from '@/lib/api-v2';
 import PhoneCountryField from '@/components/PhoneCountryField';
 
@@ -31,6 +31,7 @@ export default function PublicReservationPage() {
   const [email, setEmail] = useState('');
   const [whatsapp, setWhatsapp] = useState('');
   const [waOk, setWaOk] = useState(false);
+  const [emailTouche, setEmailTouche] = useState(false);
   const [days, setDays] = useState([]);
   const [activeDay, setActiveDay] = useState(0);
   const [chosenIso, setChosenIso] = useState(null);
@@ -67,6 +68,12 @@ export default function PublicReservationPage() {
   const svc = useMemo(() => services.find((s) => s.key === serviceKey) || null, [services, serviceKey]);
   const emailOk = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim());
   const canSubmit = !!serviceKey && emailOk && waOk;
+  // Ce qu'il reste à renseigner — un bouton désactivé ne doit jamais être un mystère.
+  const manque = [
+    !serviceKey && 'le type de séance',
+    !emailOk && 'un e-mail valide',
+    !waOk && 'votre numéro WhatsApp',
+  ].filter(Boolean);
 
   const submit = async () => {
     setError('');
@@ -137,13 +144,21 @@ export default function PublicReservationPage() {
             <span className="mb-1.5 block text-[12px] font-semibold uppercase tracking-wide text-[#f5f4ee]/50">Votre message {svc ? `(${svc.label})` : ''}</span>
             <textarea rows={3} value={message} onChange={(e) => setMessage(e.target.value)} maxLength={600}
               placeholder="Ce que vous souhaitez partager, votre demande…"
-              className="w-full resize-none rounded-lg border border-white/10 bg-[#262624] px-3 py-2.5 text-sm text-[#f5f4ee] outline-none placeholder:text-[#f5f4ee]/40 focus:border-[#d97757]" />
+              className="w-full resize-none rounded-lg border border-white/10 bg-[#262624] px-3 py-2.5 text-sm text-[#f5f4ee] outline-none placeholder:text-[#f5f4ee]/50 focus:border-[#d97757]" />
           </label>
           <div className="grid gap-3 sm:grid-cols-[1fr_1.45fr]">
             <label className="block">
               <span className="mb-1.5 block text-[12px] font-semibold uppercase tracking-wide text-[#f5f4ee]/50">E-mail</span>
-              <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="vous@exemple.com"
-                className="w-full rounded-lg border border-white/10 bg-[#262624] px-3 py-2.5 text-sm text-[#f5f4ee] outline-none placeholder:text-[#f5f4ee]/40 focus:border-[#d97757]" />
+              <div className={`flex items-center rounded-lg border bg-[#262624] transition-colors focus-within:border-[#d97757] ${
+                email && !emailOk && emailTouche ? 'border-[#d97757]/70' : emailOk ? 'border-[#7fb98a]/50' : 'border-white/10'}`}>
+                <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} onBlur={() => setEmailTouche(true)}
+                  placeholder="vous@exemple.com"
+                  className="w-full min-w-0 bg-transparent px-3 py-2.5 text-sm text-[#f5f4ee] outline-none placeholder:text-[#f5f4ee]/50" />
+                {emailOk && <Check className="mr-2.5 h-4 w-4 shrink-0 text-[#7fb98a]" />}
+              </div>
+              <p className="mt-1 min-h-[16px] text-[11px] text-[#e8a184]" aria-live="polite">
+                {email && !emailOk && emailTouche ? 'Cette adresse semble incomplète (ex : vous@exemple.com).' : ''}
+              </p>
             </label>
             <PhoneCountryField label="WhatsApp" onChange={(e164, meta) => { setWhatsapp(e164); setWaOk(meta.ok); }} />
           </div>
@@ -153,7 +168,14 @@ export default function PublicReservationPage() {
               <Calendar className="h-3.5 w-3.5" /> Choisissez un créneau
             </span>
             {loadingSlots ? (
-              <div className="flex items-center gap-2 py-4 text-sm text-[#f5f4ee]/50"><Loader2 className="h-4 w-4 animate-spin" /> Chargement des disponibilités…</div>
+              <div aria-label="Chargement des disponibilités">
+                <div className="flex gap-2 overflow-hidden pb-1">
+                  {[0, 1, 2, 3, 4].map((i) => <span key={i} className="h-8 w-24 shrink-0 animate-pulse rounded-lg bg-white/5" />)}
+                </div>
+                <div className="mt-3 grid grid-cols-3 gap-2 sm:grid-cols-4">
+                  {[0, 1, 2, 3, 4, 5, 6, 7].map((i) => <span key={i} className="h-9 animate-pulse rounded-lg bg-white/5" />)}
+                </div>
+              </div>
             ) : days.length === 0 ? (
               <p className="py-3 text-[13px] text-[#f5f4ee]/50">Aucun créneau pour l'instant — envoyez quand même, nous vous proposerons un horaire.</p>
             ) : (
@@ -180,7 +202,22 @@ export default function PublicReservationPage() {
             )}
           </div>
 
-          {error && <p className="rounded-lg bg-red-500/10 px-3 py-2 text-[13px] text-red-300">{error}</p>}
+          {chosenLabel && (
+            <div className="flex items-center justify-between gap-2 rounded-lg border border-[#d97757]/40 bg-[#d97757]/10 px-3 py-2">
+              <span className="text-[13px] font-semibold text-[#e8a184]">Créneau choisi : <span className="capitalize">{chosenLabel}</span></span>
+              <button type="button" onClick={() => setChosenIso(null)} aria-label="Retirer ce créneau"
+                className="rounded p-1 text-[#f5f4ee]/55 transition-colors hover:text-[#f5f4ee]">
+                <X className="h-3.5 w-3.5" />
+              </button>
+            </div>
+          )}
+
+          {error && <p role="alert" className="rounded-lg bg-red-500/10 px-3 py-2 text-[13px] text-red-300">{error}</p>}
+          {!error && !canSubmit && (
+            <p className="text-[12px] text-[#f5f4ee]/50" aria-live="polite">
+              Pour envoyer, il reste : {manque.join(' · ')}.
+            </p>
+          )}
 
           <button type="button" disabled={submitting || !canSubmit} onClick={submit}
             className="flex w-full items-center justify-center gap-2 rounded-xl bg-[#d97757] py-3.5 text-[15px] font-bold text-[#1c1a18] shadow-[0_10px_30px_rgba(217,119,87,0.3)] transition-all hover:bg-[#e08b6d] disabled:cursor-not-allowed disabled:opacity-50">
