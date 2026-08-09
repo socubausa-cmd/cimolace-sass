@@ -38,14 +38,14 @@ export default function PhoneCountryField({ onChange, onEnter, label = 'WhatsApp
       <span className="mb-1.5 block text-[12px] font-semibold uppercase tracking-wide text-[#f5f4ee]/50">{label}</span>
       <div className="flex gap-2">
         <select value={iso} onChange={(e) => changerPays(e.target.value)} aria-label="Pays du numéro"
-          className="w-[42%] min-w-0 shrink-0 rounded-lg border border-white/10 bg-[#262624] px-2 py-2.5 text-sm text-[#f5f4ee] outline-none focus:border-[#d97757]">
+          className="w-[36%] min-w-0 shrink-0 rounded-lg border border-white/10 bg-[#262624] px-1.5 py-2.5 text-sm text-[#f5f4ee] outline-none focus:border-[#d97757] sm:w-[42%] sm:px-2">
           {PAYS_TEL.map((p) => (
             <option key={p.iso} value={p.iso}>{p.drapeau} {p.nom}</option>
           ))}
           <option value={PAYS_AUTRE.iso}>{PAYS_AUTRE.drapeau} {PAYS_AUTRE.nom}</option>
         </select>
         <div className={`relative flex min-w-0 flex-1 items-center rounded-lg border bg-[#262624] transition-colors focus-within:border-[#d97757] ${bordure}`}>
-          {!autre && <span className="shrink-0 pl-3 text-sm font-semibold text-[#f5f4ee]/60">+{pays.cc}</span>}
+          {!autre && <span className="shrink-0 pl-2.5 text-sm font-semibold text-[#f5f4ee]/60 sm:pl-3">+{pays.cc}</span>}
           <input type="tel" inputMode="tel" value={local} autoFocus={autoFocus} aria-label="Numéro de téléphone local"
             onChange={(e) => changerLocal(e.target.value)}
             onKeyDown={(e) => { if (e.key === 'Enter' && onEnter) { e.preventDefault(); onEnter(); } }}
