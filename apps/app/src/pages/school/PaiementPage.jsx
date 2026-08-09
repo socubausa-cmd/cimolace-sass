@@ -56,6 +56,17 @@ export default function PaiementPage() {
     if (planSlug === NGOWAZULU_CONSULTATION_PLAN_SLUG) {
       return { kind: 'consultation', title: 'Consultation Ngowazulu', subtitle: 'Séance individuelle de 90 minutes', amountEditable: true, fixedLabel: null };
     }
+    // Consultation générique venue de /reserver (ex : Consultation avec le Manikongo) :
+    // titre et montant portés par l'URL, le règlement confirme le rendez-vous.
+    if (typeParam === 'consultation') {
+      return {
+        kind: 'consultation',
+        title: searchParams.get('label') || 'Consultation',
+        subtitle: 'Séance individuelle — le règlement confirme votre rendez-vous',
+        amountEditable: true,
+        fixedLabel: null,
+      };
+    }
     const mentorat = getNgowazuluMentoratOffer(planSlug);
     if (mentorat) {
       return {
@@ -84,7 +95,11 @@ export default function PaiementPage() {
   }, [planSlug, typeParam, searchParams]);
 
   const [method, setMethod] = useState('card'); // 'card' (Stripe) | 'mobile_money' (PawaPay)
-  const [amountEur, setAmountEur] = useState('');
+  // Montant pré-rempli par l'URL (ex : /reserver → consultation 50 €) — reste modifiable.
+  const [amountEur, setAmountEur] = useState(() => {
+    const a = searchParams.get('amount') || '';
+    return /^\d{1,5}([.,]\d{1,2})?$/.test(a) ? a.replace(',', '.') : '';
+  });
   const [promoCode, setPromoCode] = useState(searchParams.get('promo') || '');
   const [phone, setPhone] = useState('');
   const [status, setStatus] = useState({ state: 'idle', message: '', depositId: null });

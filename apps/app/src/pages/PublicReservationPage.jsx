@@ -8,6 +8,15 @@ const SLUG = 'isna';
 const TZ = (() => { try { return Intl.DateTimeFormat().resolvedOptions().timeZone; } catch { return 'UTC'; } })();
 const ICONS = { priere: HeartHandshake, teleconsult: Video, formation: GraduationCap };
 
+// Fiche de consultation : champs déclarés par le service (metadata.booking_services[].champs).
+const CHAMPS_FICHE = {
+  age: { label: 'Âge', type: 'number', placeholder: 'Ex : 34' },
+  taille: { label: 'Taille (cm)', type: 'number', placeholder: 'Ex : 175' },
+  pointure: { label: 'Pointure', type: 'number', placeholder: 'Ex : 42' },
+  naissance: { label: 'Date de naissance', type: 'date', placeholder: '' },
+  probleme: { label: 'Racontez votre problème', type: 'textarea', placeholder: 'Ce qui vous amène : votre situation, vos questions…' },
+};
+
 const dayLabel = (d) => d.toLocaleDateString('fr-FR', { weekday: 'short', day: 'numeric', month: 'short' });
 const timeLabel = (d) => d.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
 
@@ -32,6 +41,7 @@ export default function PublicReservationPage() {
   const [whatsapp, setWhatsapp] = useState('');
   const [waOk, setWaOk] = useState(false);
   const [emailTouche, setEmailTouche] = useState(false);
+  const [fiche, setFiche] = useState({ age: '', taille: '', pointure: '', naissance: '', probleme: '' });
   const [days, setDays] = useState([]);
   const [activeDay, setActiveDay] = useState(0);
   const [chosenIso, setChosenIso] = useState(null);
@@ -67,12 +77,16 @@ export default function PublicReservationPage() {
 
   const svc = useMemo(() => services.find((s) => s.key === serviceKey) || null, [services, serviceKey]);
   const emailOk = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim());
-  const canSubmit = !!serviceKey && emailOk && waOk;
+  // Champs de fiche exigés par le service sélectionné (ex : consultation Manikongo).
+  const champsRequis = useMemo(() => (Array.isArray(svc?.champs) ? svc.champs.filter((k) => CHAMPS_FICHE[k]) : []), [svc]);
+  const ficheOk = champsRequis.every((k) => (k === 'probleme' ? fiche[k].trim().length >= 10 : String(fiche[k]).trim().length > 0));
+  const canSubmit = !!serviceKey && emailOk && waOk && ficheOk;
   // Ce qu'il reste à renseigner — un bouton désactivé ne doit jamais être un mystère.
   const manque = [
     !serviceKey && 'le type de séance',
     !emailOk && 'un e-mail valide',
     !waOk && 'votre numéro WhatsApp',
+    champsRequis.length > 0 && !ficheOk && 'votre fiche de consultation',
   ].filter(Boolean);
 
   const submit = async () => {
@@ -80,9 +94,14 @@ export default function PublicReservationPage() {
     if (!canSubmit) { setError('Choisissez un service, puis renseignez un e-mail et un WhatsApp valides.'); return; }
     setSubmitting(true);
     try {
+      // Fiche de consultation → lignes structurées, lisibles par le secrétariat
+      // (elles atterrissent dans le récap notes du RDV).
+      const lignesFiche = champsRequis.filter((k) => k !== 'probleme').map((k) => `${CHAMPS_FICHE[k].label} : ${String(fiche[k]).trim()}`);
+      const probleme = champsRequis.includes('probleme') ? fiche.probleme.trim() : '';
+      const description = [probleme || message.trim() || '—', lignesFiche.length ? `\n${lignesFiche.join(' · ')}` : ''].join('');
       await bookingPublicApi.request(SLUG, {
         subject: svc?.label || 'Rendez-vous',
-        description: message.trim() || '—',
+        description,
         email: email.trim(),
         whatsapp: whatsapp.trim(),
         preferredIso: chosenIso || undefined,
@@ -108,6 +127,16 @@ export default function PublicReservationPage() {
             {svc?.label ? <><strong className="text-[#f5f4ee]">{svc.label}</strong>{chosenLabel ? <> — {chosenLabel}</> : ''}. </> : null}
             Vous recevrez une confirmation par e-mail et WhatsApp.
           </p>
+          {svc?.priceEur ? (
+            <>
+              <p className="mt-4 text-[14px] font-semibold text-[#f5f4ee]">Dernière étape : le règlement de {svc.priceEur} € confirme votre séance.</p>
+              <a href={`/paiement?type=consultation&plan=${encodeURIComponent(svc.key)}&label=${encodeURIComponent(svc.label)}&amount=${svc.priceEur}`}
+                className="mt-3 inline-flex items-center justify-center gap-2 rounded-xl bg-[#d97757] px-6 py-3 text-[15px] font-bold text-[#1c1a18] shadow-[0_10px_30px_rgba(217,119,87,0.3)] transition-all hover:bg-[#e08b6d]">
+                Régler la consultation — {svc.priceEur} € <ArrowRight className="h-4 w-4" />
+              </a>
+              <p className="mt-2 text-[12px] text-[#f5f4ee]/50">Carte bancaire ou mobile money — au nom de l'adresse e-mail indiquée.</p>
+            </>
+          ) : null}
         </div>
       </div>
     );
@@ -134,18 +163,63 @@ export default function PublicReservationPage() {
                 <span className={`grid h-9 w-9 place-items-center rounded-xl ${active ? 'bg-[#d97757]/20 text-[#e8a184]' : 'bg-white/5 text-[#f5f4ee]/60'}`}><Icon className="h-4.5 w-4.5" /></span>
                 <span className="text-[14px] font-bold text-[#f5f4ee]">{s.label}</span>
                 {s.desc && <span className="text-[12px] leading-snug text-[#f5f4ee]/60">{s.desc}</span>}
+                {(s.priceEur || s.durationMin) && (
+                  <span className={`mt-auto inline-flex items-center gap-1 rounded-md border px-2 py-0.5 text-[11px] font-semibold ${
+                    active ? 'border-[#d97757]/50 bg-[#d97757]/15 text-[#e8a184]' : 'border-white/10 text-[#f5f4ee]/60'}`}>
+                    {s.priceEur ? `${s.priceEur} €` : 'Offert'}{s.durationMin ? ` · ${s.durationMin} min` : ''}
+                  </span>
+                )}
               </button>
             );
           })}
         </div>
 
+        {svc?.apropos && (
+          <div className="mt-4 rounded-2xl border border-[#d97757]/25 bg-[#d97757]/[0.06] p-4">
+            <p className="text-[13px] leading-relaxed text-[#f5f4ee]/80">{svc.apropos}</p>
+            {svc.priceEur && <p className="mt-2 text-[12.5px] font-semibold text-[#e8a184]">La séance est à {svc.priceEur} € · {svc.durationMin || 30} minutes — règlement par carte ou mobile money après la réservation.</p>}
+          </div>
+        )}
+
         <div className="mt-6 space-y-5 rounded-2xl border border-white/10 bg-[#2f2d2a] p-5 sm:p-6">
+          {champsRequis.length > 0 && (
+            <div>
+              <span className="mb-2 block text-[12px] font-semibold uppercase tracking-wide text-[#f5f4ee]/50">Votre fiche de consultation</span>
+              <div className="grid gap-3 sm:grid-cols-2">
+                {champsRequis.filter((k) => CHAMPS_FICHE[k].type !== 'textarea').map((k) => {
+                  const def = CHAMPS_FICHE[k];
+                  return (
+                    <label key={k} className="block">
+                      <span className="mb-1.5 block text-[12px] font-semibold text-[#f5f4ee]/60">{def.label}</span>
+                      <input type={def.type} inputMode={def.type === 'number' ? 'numeric' : undefined} value={fiche[k]}
+                        onChange={(e) => setFiche((f) => ({ ...f, [k]: e.target.value }))} placeholder={def.placeholder}
+                        className="w-full rounded-lg border border-white/10 bg-[#262624] px-3 py-2.5 text-sm text-[#f5f4ee] outline-none placeholder:text-[#f5f4ee]/50 focus:border-[#d97757] [color-scheme:dark]" />
+                    </label>
+                  );
+                })}
+              </div>
+              {champsRequis.includes('probleme') && (
+                <label className="mt-3 block">
+                  <span className="mb-1.5 block text-[12px] font-semibold text-[#f5f4ee]/60">{CHAMPS_FICHE.probleme.label}</span>
+                  <textarea rows={4} value={fiche.probleme} maxLength={1200}
+                    onChange={(e) => setFiche((f) => ({ ...f, probleme: e.target.value }))}
+                    placeholder={CHAMPS_FICHE.probleme.placeholder}
+                    className="w-full resize-none rounded-lg border border-white/10 bg-[#262624] px-3 py-2.5 text-sm text-[#f5f4ee] outline-none placeholder:text-[#f5f4ee]/50 focus:border-[#d97757]" />
+                  <p className="mt-1 min-h-[16px] text-[11px] text-[#f5f4ee]/50" aria-live="polite">
+                    {fiche.probleme.trim().length > 0 && fiche.probleme.trim().length < 10 ? 'Quelques mots de plus — au moins 10 caractères.' : ''}
+                  </p>
+                </label>
+              )}
+            </div>
+          )}
+          {champsRequis.length === 0 && (
           <label className="block">
             <span className="mb-1.5 block text-[12px] font-semibold uppercase tracking-wide text-[#f5f4ee]/50">Votre message {svc ? `(${svc.label})` : ''}</span>
             <textarea rows={3} value={message} onChange={(e) => setMessage(e.target.value)} maxLength={600}
               placeholder="Ce que vous souhaitez partager, votre demande…"
               className="w-full resize-none rounded-lg border border-white/10 bg-[#262624] px-3 py-2.5 text-sm text-[#f5f4ee] outline-none placeholder:text-[#f5f4ee]/50 focus:border-[#d97757]" />
           </label>
+          )}
           <div className="grid gap-3 sm:grid-cols-[1fr_1.45fr]">
             <label className="block">
               <span className="mb-1.5 block text-[12px] font-semibold uppercase tracking-wide text-[#f5f4ee]/50">E-mail</span>
