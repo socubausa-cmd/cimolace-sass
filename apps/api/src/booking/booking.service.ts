@@ -167,10 +167,16 @@ export class BookingService {
   ) {
     const subject = String(dto?.subject || '').trim();
     const email = String(dto?.email || '').trim();
-    const whatsapp = String(dto?.whatsapp || '').trim();
+    // Le formulaire envoie désormais l'international canonique « +241… » (pays choisi →
+    // indicatif imposé). On le canonise (+ suivi de chiffres seuls) et on valide strictement ;
+    // un numéro SANS « + » (vieux bundle en cache) garde l'ancien seuil laxiste ≥ 8 chiffres.
+    const whatsappBrut = String(dto?.whatsapp || '').trim();
+    const whatsapp = whatsappBrut.startsWith('+') ? `+${whatsappBrut.replace(/\D/g, '')}` : whatsappBrut;
     if (subject.length < 3) throw new BadRequestException('Sujet trop court (3 caractères minimum).');
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) throw new BadRequestException('E-mail invalide.');
-    if (whatsapp.replace(/\D/g, '').length < 8) throw new BadRequestException('Numéro WhatsApp invalide.');
+    const chiffresWa = whatsapp.replace(/\D/g, '').length;
+    const waValide = whatsapp.startsWith('+') ? chiffresWa >= 8 && chiffresWa <= 15 : chiffresWa >= 8;
+    if (!waValide) throw new BadRequestException('Numéro WhatsApp invalide (indicatif pays + numéro).');
 
     // Créneau choisi ? On le MATÉRIALISE : un booking_slot est créé à l'heure demandée puis
     // réservé, et le RDV y est rattaché (slot_id). Sinon → demande sans créneau (le secrétariat

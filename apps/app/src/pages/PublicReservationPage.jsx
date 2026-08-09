@@ -1,6 +1,7 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { Sparkles, Loader2, Check, ArrowRight, Calendar, Clock, HeartHandshake, Video, GraduationCap, CalendarClock } from 'lucide-react';
 import { bookingPublicApi } from '@/lib/api-v2';
+import PhoneCountryField from '@/components/PhoneCountryField';
 
 // Tenant qui reçoit les demandes (prorascience = isna).
 const SLUG = 'isna';
@@ -29,6 +30,7 @@ export default function PublicReservationPage() {
   const [message, setMessage] = useState('');
   const [email, setEmail] = useState('');
   const [whatsapp, setWhatsapp] = useState('');
+  const [waOk, setWaOk] = useState(false);
   const [days, setDays] = useState([]);
   const [activeDay, setActiveDay] = useState(0);
   const [chosenIso, setChosenIso] = useState(null);
@@ -64,7 +66,6 @@ export default function PublicReservationPage() {
 
   const svc = useMemo(() => services.find((s) => s.key === serviceKey) || null, [services, serviceKey]);
   const emailOk = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim());
-  const waOk = whatsapp.replace(/\D/g, '').length >= 8;
   const canSubmit = !!serviceKey && emailOk && waOk;
 
   const submit = async () => {
@@ -138,17 +139,13 @@ export default function PublicReservationPage() {
               placeholder="Ce que vous souhaitez partager, votre demande…"
               className="w-full resize-none rounded-lg border border-white/10 bg-[#262624] px-3 py-2.5 text-sm text-[#f5f4ee] outline-none placeholder:text-[#f5f4ee]/40 focus:border-[#d97757]" />
           </label>
-          <div className="grid gap-3 sm:grid-cols-2">
+          <div className="grid gap-3 sm:grid-cols-[1fr_1.45fr]">
             <label className="block">
               <span className="mb-1.5 block text-[12px] font-semibold uppercase tracking-wide text-[#f5f4ee]/50">E-mail</span>
               <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="vous@exemple.com"
                 className="w-full rounded-lg border border-white/10 bg-[#262624] px-3 py-2.5 text-sm text-[#f5f4ee] outline-none placeholder:text-[#f5f4ee]/40 focus:border-[#d97757]" />
             </label>
-            <label className="block">
-              <span className="mb-1.5 block text-[12px] font-semibold uppercase tracking-wide text-[#f5f4ee]/50">WhatsApp</span>
-              <input type="tel" value={whatsapp} onChange={(e) => setWhatsapp(e.target.value)} placeholder="+241 6 00 00 00 00"
-                className="w-full rounded-lg border border-white/10 bg-[#262624] px-3 py-2.5 text-sm text-[#f5f4ee] outline-none placeholder:text-[#f5f4ee]/40 focus:border-[#d97757]" />
-            </label>
+            <PhoneCountryField label="WhatsApp" onChange={(e164, meta) => { setWhatsapp(e164); setWaOk(meta.ok); }} />
           </div>
 
           <div>

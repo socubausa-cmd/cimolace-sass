@@ -19,6 +19,7 @@ import { Sparkles, Check, ArrowRight, ArrowLeft, ShieldCheck, RefreshCw, Calenda
 import LiriSchoolShell from '@/pages/liri/LiriSchoolShell';
 import { useAuth } from '@/hooks/useAuth';
 import { api, bookingApi } from '@/lib/api';
+import PhoneCountryField from '@/components/PhoneCountryField';
 
 const C = {
   ink: '#f5f1e9', muted: 'rgba(245,241,233,0.64)', faint: 'rgba(245,241,233,0.42)',
@@ -34,8 +35,8 @@ const STEPS = [
     validate: () => true },
   { key: 'email', short: 'E-mail', title: 'À quelle adresse e-mail te confirmer ?', hint: 'Tu recevras la confirmation ici.', placeholder: 'toi@exemple.com', kind: 'email',
     validate: (v) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v.trim()) || "Cette adresse ne semble pas valide." },
-  { key: 'whatsapp', short: 'WhatsApp', title: 'Ton numéro WhatsApp ?', hint: 'Format international (ex : +241…), pour te joindre facilement.', placeholder: '+241 00 00 00 00', kind: 'tel',
-    validate: (v) => v.replace(/\D/g, '').length >= 8 || "Numéro trop court — indique un numéro complet." },
+  { key: 'whatsapp', short: 'WhatsApp', title: 'Ton numéro WhatsApp ?', hint: 'Choisis ton pays — l’indicatif est ajouté automatiquement, saisis uniquement ton numéro.', placeholder: '', kind: 'tel',
+    validate: (v) => /^\+\d{8,15}$/.test(v) || "Choisis ton pays puis saisis ton numéro complet." },
 ];
 
 const SLOT_STEP = STEPS.length;      // 4 — choisir un créneau
@@ -218,6 +219,13 @@ export default function LiriRendezVousPage() {
                 <h2 style={{ fontSize: 25, fontWeight: 800, color: C.ink, lineHeight: 1.2, letterSpacing: '-0.01em', textWrap: 'balance', margin: 0 }}>{cur.title}</h2>
                 {cur.hint && <p style={{ fontSize: 14, color: C.muted, marginTop: 8 }}>{cur.hint}</p>}
 
+                {cur.kind === 'tel' ? (
+                  <div style={{ marginTop: 20 }}>
+                    <PhoneCountryField label="Ton numéro WhatsApp" autoFocus
+                      onChange={(e164) => { setInput(e164); if (errorMsg) setErrorMsg(''); }}
+                      onEnter={goNext} />
+                  </div>
+                ) : (
                 <div style={{ marginTop: 20, background: C.surface, border: `1px solid ${errorMsg ? C.userLine : C.line}`, borderRadius: 14, padding: cur.kind === 'textarea' ? '10px 14px' : '4px 14px' }}>
                   {cur.kind === 'textarea' ? (
                     <textarea ref={inputRef} className="rdv-field" value={input} onChange={(e) => { setInput(e.target.value); if (errorMsg) setErrorMsg(''); }} placeholder={cur.placeholder}
@@ -230,6 +238,7 @@ export default function LiriRendezVousPage() {
                       style={{ width: '100%', background: 'transparent', border: 'none', outline: 'none', color: C.ink, fontSize: 16, padding: '12px 0' }} />
                   )}
                 </div>
+                )}
                 {errorMsg && <p style={{ marginTop: 8, fontSize: 12.5, color: C.coral }}>{errorMsg}</p>}
 
                 <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginTop: 22 }}>
