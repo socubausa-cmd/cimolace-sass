@@ -308,7 +308,7 @@ const makeStyles = (C: LiriPalette) => StyleSheet.create({
   ctaProgress: { color: '#fff', fontSize: 13, fontWeight: '600', fontFamily: F.sans },
 
   successCard: { flexDirection: 'row', alignItems: 'center', gap: 12, padding: 14, borderRadius: 16, marginBottom: 4, backgroundColor: 'rgba(52,211,153,0.10)', borderWidth: 1, borderColor: 'rgba(52,211,153,0.3)' },
-  successIcon: { width: 38, height: 38, borderRadius: 19, backgroundColor: '#34D399', alignItems: 'center', justifyContent: 'center' },
+  successIcon: { width: 38, height: 38, borderRadius: 19, backgroundColor: C.emeraldB, alignItems: 'center', justifyContent: 'center' },
   successTitle: { color: C.ink, fontSize: 14.5, fontWeight: '700', fontFamily: F.sans },
   successSub: { color: C.muted, fontSize: 12.5, marginTop: 2, fontFamily: F.sans },
 

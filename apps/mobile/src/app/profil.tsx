@@ -166,7 +166,7 @@ export default function ProfilScreen() {
           {/* Stats */}
           <View style={st.statsRow}>
             <Stat icon="book-open" label="Cours suivis" value={statSuivis} color="#c2683f" />
-            <Stat icon="check-circle" label="Terminés" value={statDone} color="#22C55E" />
+            <Stat icon="check-circle" label="Terminés" value={statDone} color={C.emeraldB} />
             <Stat icon="zap" label="Jours" value={statStreak} color="#F97316" />
             <Stat icon="award" label="Points XP" value={statXp} color="#d97757" />
           </View>

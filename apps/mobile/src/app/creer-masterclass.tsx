@@ -223,7 +223,7 @@ const makeStyles = (C: LiriPalette) => StyleSheet.create({
   pipelineTitle: { color: C.ink, fontSize: 13, fontWeight: '800', letterSpacing: 0.4, marginBottom: 12, textTransform: 'uppercase', fontFamily: F.sans },
   phaseRow: { flexDirection: 'row', alignItems: 'center', gap: 10, paddingVertical: 6 },
   phaseDot: { width: 22, height: 22, borderRadius: 11, borderWidth: 1, borderColor: C.line, alignItems: 'center', justifyContent: 'center', backgroundColor: C.panel2 },
-  phaseDotDone: { backgroundColor: '#34D399', borderColor: '#34D399' },
+  phaseDotDone: { backgroundColor: C.emeraldB, borderColor: C.emeraldB },
   phaseDotCur: { backgroundColor: C.coral, borderColor: C.coral },
   phaseNum: { color: C.faint, fontSize: 11, fontWeight: '700' },
   phaseTxt: { color: C.faint, fontSize: 13.5, fontFamily: F.sans },

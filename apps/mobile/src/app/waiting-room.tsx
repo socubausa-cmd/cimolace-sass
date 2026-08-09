@@ -4,7 +4,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-import { type LiriPalette } from '@/constants/liri-theme';
+import { LiriFonts as F, type LiriPalette } from '@/constants/liri-theme';
 import { useTheme } from '@/lib/theme';
 
 /**
@@ -84,7 +84,7 @@ const makeStyles = (C: LiriPalette) => StyleSheet.create({
   pulse: { width: 76, height: 76, borderRadius: 38, backgroundColor: 'rgba(217,119,87,0.12)', borderWidth: 1, borderColor: 'rgba(217,119,87,0.4)', alignItems: 'center', justifyContent: 'center' },
   pulseRing: { position: 'absolute', width: 76, height: 76, borderRadius: 38, borderWidth: 2, borderColor: 'rgba(217,119,87,0.25)' },
   kicker: { color: C.coral, fontSize: 11, fontWeight: '800', letterSpacing: 1.8, marginTop: 18 },
-  title: { color: C.ink, fontSize: 24, fontWeight: '800', textAlign: 'center', marginTop: 8 },
+  title: { color: C.ink, fontSize: 24, fontWeight: '800', textAlign: 'center', marginTop: 8, fontFamily: F.serif },
   sub: { color: C.muted, fontSize: 14, textAlign: 'center', marginTop: 8 },
   timer: { flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 14, backgroundColor: C.panelTint, borderWidth: 1, borderColor: C.line, borderRadius: 20, paddingHorizontal: 14, paddingVertical: 8 },
   timerTxt: { color: C.muted, fontSize: 13, fontWeight: '600', fontVariant: ['tabular-nums'] },
