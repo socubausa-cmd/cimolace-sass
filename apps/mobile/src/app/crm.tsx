@@ -6,20 +6,18 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { LiriFonts as F, type LiriPalette } from '@/constants/liri-theme';
+import { useTheme } from '@/lib/theme';
 import {
   fetchCrmActivities, fetchCrmContacts, fetchCrmSummary,
   type CrmActivity, type CrmContact,
 } from '@/lib/liri-api';
 
-const C = {
-  bg: '#262624', card: 'rgba(255,255,255,.045)', cardOn: 'rgba(224,138,95,.12)',
-  ink: '#F5F1E9', muted: 'rgba(245,241,233,.62)', faint: 'rgba(245,241,233,.40)',
-  line: 'rgba(255,255,255,.09)', coral: '#E08A5F',
-};
+const ON_CORAL = '#1c1a18'; // texte lisible sur pastille corail (sombre ET crème)
 
 type Tab = 'contacts' | 'activity';
 const nameOf = (c: CrmContact) => (c.full_name || c.name || c.email || 'Contact').trim();
-const initials = (s: string) => s.split(/\s+/).slice(0, 2).map((w) => w[0]?.toUpperCase() ?? '').join('') || '•';
+const initials = (str: string) => str.split(/\s+/).slice(0, 2).map((w) => w[0]?.toUpperCase() ?? '').join('') || '•';
 const num = (v: unknown) => (typeof v === 'number' ? v : Number(v)) || 0;
 
 const ACTIVITY_LABEL: Record<string, string> = {
@@ -29,6 +27,8 @@ const ACTIVITY_LABEL: Record<string, string> = {
 };
 
 export default function CrmScreen() {
+  const { colors: C } = useTheme();
+  const s = useMemo(() => makeStyles(C), [C]);
   const [tab, setTab] = useState<Tab>('contacts');
   const [contacts, setContacts] = useState<CrmContact[] | null>(null);
   const [activities, setActivities] = useState<CrmActivity[] | null>(null);
@@ -37,10 +37,10 @@ export default function CrmScreen() {
   const [refreshing, setRefreshing] = useState(false);
 
   const load = useCallback(async (search?: string) => {
-    const [c, a, s] = await Promise.all([
+    const [c, a, sum] = await Promise.all([
       fetchCrmContacts(search), fetchCrmActivities(), fetchCrmSummary(),
     ]);
-    setContacts(c); setActivities(a); setSummary(s);
+    setContacts(c); setActivities(a); setSummary(sum);
   }, []);
   useEffect(() => { void load(); }, [load]);
 
@@ -55,11 +55,11 @@ export default function CrmScreen() {
   }, [load, query]);
 
   const stats = useMemo(() => {
-    const s = summary ?? {};
+    const sm = summary ?? {};
     return [
-      { label: 'Contacts', value: num(s.contacts ?? s.contacts_count ?? (contacts?.length ?? 0)) },
-      { label: 'Sociétés', value: num(s.companies ?? s.companies_count) },
-      { label: 'Deals', value: num(s.deals ?? s.deals_count ?? s.open_deals) },
+      { label: 'Contacts', value: num(sm.contacts ?? sm.contacts_count ?? (contacts?.length ?? 0)) },
+      { label: 'Sociétés', value: num(sm.companies ?? sm.companies_count) },
+      { label: 'Deals', value: num(sm.deals ?? sm.deals_count ?? sm.open_deals) },
     ];
   }, [summary, contacts]);
 
@@ -107,7 +107,7 @@ export default function CrmScreen() {
           contacts === null ? (
             <View style={s.center}><ActivityIndicator color={C.coral} /></View>
           ) : contacts.length === 0 ? (
-            <Empty icon="users" text="Aucun contact." />
+            <Empty icon="users" text="Aucun contact." s={s} C={C} />
           ) : (
             contacts.map((c) => {
               const nm = nameOf(c);
@@ -144,7 +144,7 @@ export default function CrmScreen() {
         ) : activities === null ? (
           <View style={s.center}><ActivityIndicator color={C.coral} /></View>
         ) : activities.length === 0 ? (
-          <Empty icon="activity" text="Aucune activité récente." />
+          <Empty icon="activity" text="Aucune activité récente." s={s} C={C} />
         ) : (
           activities.map((a) => (
             <View key={a.id} style={s.actItem}>
@@ -165,7 +165,7 @@ export default function CrmScreen() {
   );
 }
 
-function Empty({ icon, text }: { icon: React.ComponentProps<typeof Feather>['name']; text: string }) {
+function Empty({ icon, text, s, C }: { icon: React.ComponentProps<typeof Feather>['name']; text: string; s: ReturnType<typeof makeStyles>; C: LiriPalette }) {
   return (
     <View style={s.empty}>
       <Feather name={icon} size={28} color={C.faint} />
@@ -174,37 +174,37 @@ function Empty({ icon, text }: { icon: React.ComponentProps<typeof Feather>['nam
   );
 }
 
-const s = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: C.bg },
+const makeStyles = (C: LiriPalette) => StyleSheet.create({
+  safe: { flex: 1, backgroundColor: C.base },
   header: { paddingHorizontal: 20, paddingTop: 8, paddingBottom: 6 },
-  h1: { color: C.ink, fontSize: 26, fontWeight: '700', letterSpacing: -0.3 },
-  sub: { color: C.muted, fontSize: 13.5, marginTop: 2 },
+  h1: { color: C.ink, fontSize: 26, fontWeight: '700', letterSpacing: -0.3, fontFamily: F.serif },
+  sub: { color: C.muted, fontSize: 13.5, marginTop: 2, fontFamily: F.sans },
   statsRow: { flexDirection: 'row', gap: 10, paddingHorizontal: 16, paddingVertical: 10 },
-  stat: { flex: 1, backgroundColor: C.card, borderRadius: 14, borderWidth: 1, borderColor: C.line, paddingVertical: 13, alignItems: 'center' },
-  statVal: { color: C.ink, fontSize: 22, fontWeight: '700' },
-  statLbl: { color: C.muted, fontSize: 11.5, marginTop: 2 },
+  stat: { flex: 1, backgroundColor: C.panelTint, borderRadius: 14, borderWidth: 1, borderColor: C.line, paddingVertical: 13, alignItems: 'center' },
+  statVal: { color: C.ink, fontSize: 22, fontWeight: '700', fontFamily: F.sans },
+  statLbl: { color: C.muted, fontSize: 11.5, marginTop: 2, fontFamily: F.sans },
   tabs: { flexDirection: 'row', gap: 8, paddingHorizontal: 16, paddingBottom: 8 },
-  tab: { paddingHorizontal: 15, paddingVertical: 8, borderRadius: 999, backgroundColor: C.card, borderWidth: 1, borderColor: C.line },
+  tab: { paddingHorizontal: 15, paddingVertical: 8, borderRadius: 999, backgroundColor: C.panelTint, borderWidth: 1, borderColor: C.line },
   tabOn: { backgroundColor: C.coral, borderColor: C.coral },
-  tabTxt: { color: C.muted, fontSize: 13, fontWeight: '600' },
-  tabTxtOn: { color: '#1c1a18' },
-  searchWrap: { flexDirection: 'row', alignItems: 'center', gap: 8, marginHorizontal: 16, marginBottom: 8, paddingHorizontal: 13, paddingVertical: 9, backgroundColor: C.card, borderRadius: 12, borderWidth: 1, borderColor: C.line },
-  search: { flex: 1, color: C.ink, fontSize: 14.5, padding: 0 },
+  tabTxt: { color: C.muted, fontSize: 13, fontWeight: '600', fontFamily: F.sans },
+  tabTxtOn: { color: ON_CORAL },
+  searchWrap: { flexDirection: 'row', alignItems: 'center', gap: 8, marginHorizontal: 16, marginBottom: 8, paddingHorizontal: 13, paddingVertical: 9, backgroundColor: C.panelTint, borderRadius: 12, borderWidth: 1, borderColor: C.line },
+  search: { flex: 1, color: C.ink, fontSize: 14.5, padding: 0, fontFamily: F.sans },
   center: { alignItems: 'center', justifyContent: 'center', paddingVertical: 48 },
   list: { paddingHorizontal: 16, paddingTop: 2 },
   empty: { alignItems: 'center', gap: 10, paddingVertical: 56 },
-  emptyTxt: { color: C.faint, fontSize: 14 },
-  item: { flexDirection: 'row', alignItems: 'center', gap: 12, backgroundColor: C.card, borderRadius: 14, borderWidth: 1, borderColor: C.line, padding: 12, marginBottom: 10 },
-  avatar: { width: 42, height: 42, borderRadius: 21, backgroundColor: 'rgba(224,138,95,.18)', alignItems: 'center', justifyContent: 'center' },
-  avatarTxt: { color: C.coral, fontSize: 15, fontWeight: '700' },
-  name: { color: C.ink, fontSize: 15, fontWeight: '600' },
-  meta: { color: C.muted, fontSize: 12.5, marginTop: 1 },
-  srcPill: { alignSelf: 'flex-start', marginTop: 5, paddingHorizontal: 8, paddingVertical: 2, borderRadius: 999, backgroundColor: 'rgba(245,241,233,.08)' },
-  srcTxt: { color: C.muted, fontSize: 10.5, fontWeight: '600' },
+  emptyTxt: { color: C.faint, fontSize: 14, fontFamily: F.sans },
+  item: { flexDirection: 'row', alignItems: 'center', gap: 12, backgroundColor: C.panelTint, borderRadius: 14, borderWidth: 1, borderColor: C.line, padding: 12, marginBottom: 10 },
+  avatar: { width: 42, height: 42, borderRadius: 21, backgroundColor: C.coralTint, alignItems: 'center', justifyContent: 'center' },
+  avatarTxt: { color: C.coral, fontSize: 15, fontWeight: '700', fontFamily: F.sans },
+  name: { color: C.ink, fontSize: 15, fontWeight: '600', fontFamily: F.sans },
+  meta: { color: C.muted, fontSize: 12.5, marginTop: 1, fontFamily: F.sans },
+  srcPill: { alignSelf: 'flex-start', marginTop: 5, paddingHorizontal: 8, paddingVertical: 2, borderRadius: 999, backgroundColor: C.coralTint2 },
+  srcTxt: { color: C.muted, fontSize: 10.5, fontWeight: '600', fontFamily: F.sans },
   contactActs: { flexDirection: 'row', gap: 7 },
-  round: { width: 36, height: 36, borderRadius: 18, alignItems: 'center', justifyContent: 'center', backgroundColor: 'rgba(255,255,255,.05)', borderWidth: 1, borderColor: C.line },
+  round: { width: 36, height: 36, borderRadius: 18, alignItems: 'center', justifyContent: 'center', backgroundColor: C.panelTint, borderWidth: 1, borderColor: C.line },
   actItem: { flexDirection: 'row', gap: 12, paddingVertical: 11, borderBottomWidth: 1, borderBottomColor: C.line },
   actDot: { width: 8, height: 8, borderRadius: 4, backgroundColor: C.coral, marginTop: 6 },
-  actTitle: { color: C.ink, fontSize: 14.5, fontWeight: '600' },
-  actDate: { color: C.faint, fontSize: 11.5, marginTop: 3 },
+  actTitle: { color: C.ink, fontSize: 14.5, fontWeight: '600', fontFamily: F.sans },
+  actDate: { color: C.faint, fontSize: 11.5, marginTop: 3, fontFamily: F.sans },
 });

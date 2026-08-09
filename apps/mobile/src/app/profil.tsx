@@ -5,7 +5,7 @@ import { Image, Pressable, ScrollView, StyleSheet, Text, View } from 'react-nati
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Svg, { Circle, Defs, LinearGradient, Polygon, Stop } from 'react-native-svg';
 
-import { type LiriPalette } from '@/constants/liri-theme';
+import { LiriFonts as F, type LiriPalette } from '@/constants/liri-theme';
 import { useAuth } from '@/lib/auth';
 import { useTheme } from '@/lib/theme';
 import { useStudentProgress } from '@/features/eleve/useStudentProgress';
@@ -135,8 +135,8 @@ export default function ProfilScreen() {
               <Text style={st.h1sub}>Ton espace personnel</Text>
             </View>
             <View style={st.headerBtns}>
-              <Pressable style={st.iconBtn} onPress={() => router.push('/notifications')}><Feather name="bell" size={18} color="#fff" /></Pressable>
-              <Pressable style={st.iconBtn} onPress={() => router.push('/reglages')}><Feather name="settings" size={18} color="#fff" /></Pressable>
+              <Pressable style={st.iconBtn} onPress={() => router.push('/notifications')}><Feather name="bell" size={18} color={C.ink} /></Pressable>
+              <Pressable style={st.iconBtn} onPress={() => router.push('/reglages')}><Feather name="settings" size={18} color={C.ink} /></Pressable>
             </View>
           </View>
 
@@ -151,7 +151,7 @@ export default function ProfilScreen() {
               <View style={st.heroInfo}>
                 <Text style={st.name} numberOfLines={1}>{fullName}</Text>
                 <View style={st.roleBadge}><Feather name="award" size={11} color={C.coral} /><Text style={st.roleTxt}>Élève</Text></View>
-                <View style={st.schoolRow}><Feather name="home" size={12} color="#fff" /><Text style={st.school} numberOfLines={1}>{school}</Text></View>
+                <View style={st.schoolRow}><Feather name="home" size={12} color={C.muted} /><Text style={st.school} numberOfLines={1}>{school}</Text></View>
                 <Text style={st.class}>{classLabel}</Text>
               </View>
             </View>
@@ -180,7 +180,7 @@ export default function ProfilScreen() {
               <Text style={st.progressSub}>Tu es sur la bonne voie.</Text>
               <Text style={st.progressChapters}>{chDone} / {chTotal} chapitres</Text>
             </View>
-            <Feather name="chevron-right" size={20} color="rgba(255,255,255,0.25)" />
+            <Feather name="chevron-right" size={20} color={C.faint} />
           </View>
 
           {/* Réalisations */}
@@ -215,13 +215,13 @@ export default function ProfilScreen() {
                   </View>
                   <Text style={st.menuSub}>{m.sub}</Text>
                 </View>
-                <Feather name="chevron-right" size={18} color="#9ca3af" />
+                <Feather name="chevron-right" size={18} color={C.faint} />
               </Pressable>
             ))}
           </View>
 
           <Pressable style={({ pressed }) => [st.logout, pressed && st.pressed]} onPress={logout}>
-            <Feather name="log-out" size={16} color="#FB7185" />
+            <Feather name="log-out" size={16} color={C.live} />
             <Text style={st.logoutTxt}>Se déconnecter</Text>
           </Pressable>
           <Text style={st.footer}>LIRI · Profil élève</Text>
@@ -250,69 +250,69 @@ const makeStyles = (C: LiriPalette) => StyleSheet.create({
   scroll: { padding: 16, paddingBottom: 40 },
 
   header: { flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 16 },
-  kicker: { color: 'rgba(255,255,255,0.4)', fontSize: 11, fontWeight: '800', letterSpacing: 2 },
-  h1: { color: C.ink, fontSize: 24, fontWeight: '800', marginTop: 2 },
-  h1sub: { color: C.muted, fontSize: 13, marginTop: 2 },
+  kicker: { color: C.faint, fontSize: 11, fontWeight: '800', letterSpacing: 2, fontFamily: F.sans },
+  h1: { color: C.ink, fontSize: 24, fontWeight: '800', marginTop: 2, fontFamily: F.serif },
+  h1sub: { color: C.muted, fontSize: 13, marginTop: 2, fontFamily: F.sans },
   headerBtns: { flexDirection: 'row', gap: 8 },
-  iconBtn: { width: 40, height: 40, borderRadius: 20, borderWidth: 1, borderColor: C.line, backgroundColor: 'rgba(255,255,255,0.05)', alignItems: 'center', justifyContent: 'center' },
+  iconBtn: { width: 40, height: 40, borderRadius: 20, borderWidth: 1, borderColor: C.line, backgroundColor: C.panelTint, alignItems: 'center', justifyContent: 'center' },
 
-  hero: { flexDirection: 'row', gap: 10, borderRadius: 20, borderWidth: 1, borderColor: 'rgba(224,146,106,0.18)', backgroundColor: 'rgba(33,33,31,0.6)', padding: 14, marginBottom: 16 },
+  hero: { flexDirection: 'row', gap: 10, borderRadius: 20, borderWidth: 1, borderColor: C.coralTint, backgroundColor: C.panelTint, padding: 14, marginBottom: 16 },
   heroLeft: { flex: 1, flexDirection: 'row', gap: 12, minWidth: 0 },
   avatarRing: { width: 84, height: 84, borderRadius: 42, padding: 2.5, backgroundColor: C.coral },
-  avatar: { flex: 1, borderRadius: 40, backgroundColor: '#262624', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' },
+  avatar: { flex: 1, borderRadius: 40, backgroundColor: C.rail, alignItems: 'center', justifyContent: 'center', overflow: 'hidden' },
   avatarImg: { width: '100%', height: '100%' },
-  avatarTxt: { color: 'rgba(255,255,255,0.9)', fontSize: 24, fontWeight: '800' },
+  avatarTxt: { color: C.ink, fontSize: 24, fontWeight: '800', fontFamily: F.sans },
   heroInfo: { flex: 1, minWidth: 0, paddingTop: 2 },
-  name: { color: C.ink, fontSize: 17, fontWeight: '800' },
-  roleBadge: { alignSelf: 'flex-start', flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 6, borderWidth: 1, borderColor: 'rgba(217,119,87,0.25)', backgroundColor: '#30302e', borderRadius: 20, paddingHorizontal: 8, paddingVertical: 2 },
-  roleTxt: { color: '#EDE9FE', fontSize: 9.5, fontWeight: '700' },
+  name: { color: C.ink, fontSize: 17, fontWeight: '800', fontFamily: F.sans },
+  roleBadge: { alignSelf: 'flex-start', flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 6, borderWidth: 1, borderColor: C.coralTint, backgroundColor: C.coralTint2, borderRadius: 20, paddingHorizontal: 8, paddingVertical: 2 },
+  roleTxt: { color: C.coral, fontSize: 9.5, fontWeight: '700', fontFamily: F.sans },
   schoolRow: { flexDirection: 'row', alignItems: 'center', gap: 5, marginTop: 6 },
-  school: { color: '#fff', fontSize: 12, fontWeight: '500', flex: 1 },
-  class: { color: 'rgba(255,255,255,0.5)', fontSize: 12, marginTop: 2 },
-  levelBox: { width: '30%', maxWidth: 110, borderRadius: 16, borderWidth: 1, borderColor: 'rgba(217,119,87,0.2)', backgroundColor: '#30302e', paddingVertical: 8, paddingHorizontal: 6, alignItems: 'center', justifyContent: 'center' },
-  levelLabel: { color: 'rgba(255,255,255,0.45)', fontSize: 9, fontWeight: '500' },
-  levelN: { color: C.ink, fontSize: 34, fontWeight: '800', lineHeight: 38 },
-  levelNext: { color: 'rgba(255,255,255,0.4)', fontSize: 8, fontWeight: '500', marginTop: 4 },
-  levelXp: { color: '#fff', fontSize: 11, fontWeight: '700' },
+  school: { color: C.muted, fontSize: 12, fontWeight: '500', flex: 1, fontFamily: F.sans },
+  class: { color: C.faint, fontSize: 12, marginTop: 2, fontFamily: F.sans },
+  levelBox: { width: '30%', maxWidth: 110, borderRadius: 16, borderWidth: 1, borderColor: C.coralTint, backgroundColor: C.base, paddingVertical: 8, paddingHorizontal: 6, alignItems: 'center', justifyContent: 'center' },
+  levelLabel: { color: C.faint, fontSize: 9, fontWeight: '500', fontFamily: F.sans },
+  levelN: { color: C.ink, fontSize: 34, fontWeight: '800', lineHeight: 38, fontFamily: F.sans },
+  levelNext: { color: C.faint, fontSize: 8, fontWeight: '500', marginTop: 4, fontFamily: F.sans },
+  levelXp: { color: C.ink, fontSize: 11, fontWeight: '700', fontFamily: F.sans },
 
   statsRow: { flexDirection: 'row', gap: 8, marginBottom: 18 },
-  statPill: { flex: 1, alignItems: 'center', borderRadius: 14, borderWidth: 1, borderColor: 'rgba(224,146,106,0.14)', backgroundColor: 'rgba(33,33,31,0.7)', paddingVertical: 12, paddingHorizontal: 4 },
-  statIcon: { width: 32, height: 32, borderRadius: 9, borderWidth: 1, borderColor: 'rgba(255,255,255,0.1)', alignItems: 'center', justifyContent: 'center', marginBottom: 6 },
-  statValue: { color: C.ink, fontSize: 18, fontWeight: '800', fontVariant: ['tabular-nums'] },
-  statLabel: { color: 'rgba(255,255,255,0.45)', fontSize: 8.5, fontWeight: '600', textTransform: 'uppercase', marginTop: 3, textAlign: 'center' },
+  statPill: { flex: 1, alignItems: 'center', borderRadius: 14, borderWidth: 1, borderColor: C.line, backgroundColor: C.panelTint, paddingVertical: 12, paddingHorizontal: 4 },
+  statIcon: { width: 32, height: 32, borderRadius: 9, borderWidth: 1, borderColor: C.line, alignItems: 'center', justifyContent: 'center', marginBottom: 6 },
+  statValue: { color: C.ink, fontSize: 18, fontWeight: '800', fontVariant: ['tabular-nums'], fontFamily: F.sans },
+  statLabel: { color: C.faint, fontSize: 8.5, fontWeight: '600', textTransform: 'uppercase', marginTop: 3, textAlign: 'center', fontFamily: F.sans },
 
-  section: { color: 'rgba(255,255,255,0.4)', fontSize: 10, fontWeight: '800', letterSpacing: 1.6, marginBottom: 10 },
-  progressCard: { flexDirection: 'row', alignItems: 'center', gap: 12, borderRadius: 20, borderWidth: 1, borderColor: 'rgba(224,146,106,0.18)', backgroundColor: 'rgba(37,37,35,0.7)', padding: 14, marginBottom: 18 },
+  section: { color: C.faint, fontSize: 10, fontWeight: '800', letterSpacing: 1.6, marginBottom: 10, fontFamily: F.sans },
+  progressCard: { flexDirection: 'row', alignItems: 'center', gap: 12, borderRadius: 20, borderWidth: 1, borderColor: C.coralTint, backgroundColor: C.panelTint, padding: 14, marginBottom: 18 },
   ringWrap: { width: 86, height: 86, alignItems: 'center', justifyContent: 'center' },
   ringCenter: { ...StyleSheet.absoluteFillObject, alignItems: 'center', justifyContent: 'center' },
-  ringPct: { color: C.ink, fontSize: 20, fontWeight: '800' },
+  ringPct: { color: C.ink, fontSize: 20, fontWeight: '800', fontFamily: F.sans },
   progressMid: { flex: 1, minWidth: 0 },
-  progressTitle: { color: C.ink, fontSize: 14, fontWeight: '700' },
-  progressSub: { color: 'rgba(255,255,255,0.5)', fontSize: 12, marginTop: 2 },
-  progressChapters: { color: '#d97757', fontSize: 11.5, fontWeight: '600', marginTop: 6 },
+  progressTitle: { color: C.ink, fontSize: 14, fontWeight: '700', fontFamily: F.sans },
+  progressSub: { color: C.muted, fontSize: 12, marginTop: 2, fontFamily: F.sans },
+  progressChapters: { color: C.coral, fontSize: 11.5, fontWeight: '600', marginTop: 6, fontFamily: F.sans },
 
-  emptyAch: { alignItems: 'center', gap: 8, borderRadius: 14, borderWidth: 1, borderColor: 'rgba(255,255,255,0.08)', backgroundColor: 'rgba(255,255,255,0.03)', paddingVertical: 20, paddingHorizontal: 16, marginBottom: 18 },
-  emptyAchTxt: { color: C.muted, fontSize: 12.5, textAlign: 'center' },
+  emptyAch: { alignItems: 'center', gap: 8, borderRadius: 14, borderWidth: 1, borderColor: C.line, backgroundColor: C.panelTint, paddingVertical: 20, paddingHorizontal: 16, marginBottom: 18 },
+  emptyAchTxt: { color: C.muted, fontSize: 12.5, textAlign: 'center', fontFamily: F.sans },
   achRow: { gap: 10, paddingBottom: 4, marginBottom: 14 },
-  achCard: { width: 150, borderRadius: 18, borderWidth: 1, borderColor: 'rgba(224,146,106,0.14)', backgroundColor: 'rgba(35,35,33,0.8)', padding: 12 },
+  achCard: { width: 150, borderRadius: 18, borderWidth: 1, borderColor: C.line, backgroundColor: C.panelTint, padding: 12 },
   hexWrap: { width: 48, height: 48, alignItems: 'center', justifyContent: 'center', marginBottom: 8 },
   hexCenter: { ...StyleSheet.absoluteFillObject, alignItems: 'center', justifyContent: 'center' },
-  hexTxt: { color: '#fff', fontSize: 17, fontWeight: '800' },
-  achTitle: { color: C.ink, fontSize: 12.5, fontWeight: '700', lineHeight: 16 },
-  achSub: { color: 'rgba(255,255,255,0.45)', fontSize: 10, marginTop: 2 },
-  achXp: { fontSize: 10.5, fontWeight: '800', marginTop: 8 },
+  hexTxt: { color: '#fff', fontSize: 17, fontWeight: '800', fontFamily: F.sans },
+  achTitle: { color: C.ink, fontSize: 12.5, fontWeight: '700', lineHeight: 16, fontFamily: F.sans },
+  achSub: { color: C.faint, fontSize: 10, marginTop: 2, fontFamily: F.sans },
+  achXp: { fontSize: 10.5, fontWeight: '800', marginTop: 8, fontFamily: F.sans },
 
-  menu: { marginTop: 4, borderRadius: 18, borderWidth: 1, borderColor: 'rgba(224,146,106,0.16)', backgroundColor: 'rgba(31,31,29,0.8)', overflow: 'hidden' },
+  menu: { marginTop: 4, borderRadius: 18, borderWidth: 1, borderColor: C.coralTint, backgroundColor: C.panelTint, overflow: 'hidden' },
   menuRow: { flexDirection: 'row', alignItems: 'center', gap: 14, paddingHorizontal: 16, paddingVertical: 14 },
-  menuDivider: { borderTopWidth: 1, borderTopColor: 'rgba(255,255,255,0.07)' },
+  menuDivider: { borderTopWidth: 1, borderTopColor: C.line },
   menuMid: { flex: 1, minWidth: 0 },
   menuTitleRow: { flexDirection: 'row', alignItems: 'center', gap: 6 },
-  menuTitle: { color: C.ink, fontSize: 15, fontWeight: '600' },
-  menuBadge: { backgroundColor: '#c2683f', borderRadius: 20, paddingHorizontal: 6, paddingVertical: 2 },
-  menuBadgeTxt: { color: '#fff', fontSize: 7, fontWeight: '800', letterSpacing: 0.5 },
-  menuSub: { color: C.muted, fontSize: 12, marginTop: 2 },
+  menuTitle: { color: C.ink, fontSize: 15, fontWeight: '600', fontFamily: F.sans },
+  menuBadge: { backgroundColor: C.coral, borderRadius: 20, paddingHorizontal: 6, paddingVertical: 2 },
+  menuBadgeTxt: { color: '#fff', fontSize: 7, fontWeight: '800', letterSpacing: 0.5, fontFamily: F.sans },
+  menuSub: { color: C.muted, fontSize: 12, marginTop: 2, fontFamily: F.sans },
 
-  logout: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, marginTop: 16, borderRadius: 16, borderWidth: 1, borderColor: 'rgba(239,68,68,0.2)', backgroundColor: 'rgba(239,68,68,0.06)', paddingVertical: 14 },
-  logoutTxt: { color: 'rgba(253,164,175,0.9)', fontSize: 14, fontWeight: '500' },
-  footer: { color: 'rgba(255,255,255,0.3)', fontSize: 11.5, textAlign: 'center', marginTop: 20 },
+  logout: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, marginTop: 16, borderRadius: 16, borderWidth: 1, borderColor: C.liveBorder, backgroundColor: C.liveTint, paddingVertical: 14 },
+  logoutTxt: { color: C.live, fontSize: 14, fontWeight: '600', fontFamily: F.sans },
+  footer: { color: C.faint, fontSize: 11.5, textAlign: 'center', marginTop: 20, fontFamily: F.sans },
 });

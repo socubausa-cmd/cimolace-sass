@@ -3,6 +3,8 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { LiriFonts as F, type LiriPalette } from '@/constants/liri-theme';
+import { useTheme } from '@/lib/theme';
 import { myUserId } from '@/lib/liri-api';
 import { supabase } from '@/lib/supabase';
 
@@ -10,10 +12,9 @@ import { supabase } from '@/lib/supabase';
  * Vie scolaire (natif) — hub à onglets : Notes · Absences · Évaluations ·
  * Documents · Agenda. Les requêtes reprennent les contrats utilisés par le web
  * afin qu'un même enregistrement soit visible sur les deux plateformes.
+ * Teinte : useTheme() (crème ⇄ sombre), accents chauds par onglet.
  */
-// Palette alignée sur la charte chaude du portail (fond #262624, accent coral
-// #d97757) — plus de violet/navy hors-thème (directive « tout chaud », zéro fuite).
-const EV = { bg: '#262624', card: '#2e2b28', muted: '#a8a29a', accent: '#d97757', line: 'rgba(245,244,238,0.08)', ink: '#FFFFFF' };
+const ON_CORAL = '#1c1a18'; // texte sur bouton corail — lisible sombre ET crème
 
 type TabKey = 'notes' | 'absences' | 'evaluations' | 'documents' | 'agenda';
 type IconName = React.ComponentProps<typeof Feather>['name'];
@@ -145,6 +146,8 @@ const str = (r: Row, keys: string[], fallback = ''): string => {
 };
 
 export default function VieScolaireScreen() {
+  const { colors: C } = useTheme();
+  const s = useMemo(() => makeStyles(C), [C]);
   const [tab, setTab] = useState<TabKey>('notes');
   const [rows, setRows] = useState<Row[] | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
@@ -177,15 +180,15 @@ export default function VieScolaireScreen() {
             const on = t.key === tab;
             return (
               <Pressable key={t.key} style={[s.tab, on && { backgroundColor: t.color + '22', borderColor: t.color }]} onPress={() => setTab(t.key)}>
-                <Feather name={t.icon} size={14} color={on ? t.color : EV.muted} />
-                <Text style={[s.tabTxt, on && { color: EV.ink }]}>{t.label}</Text>
+                <Feather name={t.icon} size={14} color={on ? t.color : C.muted} />
+                <Text style={[s.tabTxt, on && { color: C.ink }]}>{t.label}</Text>
               </Pressable>
             );
           })}
         </ScrollView>
 
         {rows === null ? (
-          <View style={s.fill}><ActivityIndicator color={EV.accent} /></View>
+          <View style={s.fill}><ActivityIndicator color={C.coral} /></View>
         ) : errorMessage ? (
           <View style={s.fill}>
             <View style={[s.emptyMark, { backgroundColor: '#d46a5f22' }]}><Feather name="alert-triangle" size={26} color="#d46a5f" /></View>
@@ -224,27 +227,27 @@ export default function VieScolaireScreen() {
   );
 }
 
-const s = StyleSheet.create({
-  root: { flex: 1, backgroundColor: EV.bg },
+const makeStyles = (C: LiriPalette) => StyleSheet.create({
+  root: { flex: 1, backgroundColor: C.base },
   safe: { flex: 1 },
   fill: { flex: 1, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 36, paddingBottom: 80 },
   header: { paddingHorizontal: 18, paddingTop: 14, paddingBottom: 6 },
-  kicker: { color: 'rgba(255,255,255,0.4)', fontSize: 11, fontWeight: '800', letterSpacing: 1.6 },
-  h1: { color: EV.ink, fontSize: 26, fontWeight: '800', marginTop: 2 },
+  kicker: { color: C.faint, fontSize: 11, fontWeight: '800', letterSpacing: 1.6, fontFamily: F.sans },
+  h1: { color: C.ink, fontSize: 26, fontWeight: '800', marginTop: 2, fontFamily: F.serif },
   tabsWrap: { maxHeight: 56, flexGrow: 0 },
   tabs: { gap: 8, paddingHorizontal: 18, paddingVertical: 12 },
-  tab: { flexDirection: 'row', alignItems: 'center', gap: 6, borderWidth: 1, borderColor: EV.line, borderRadius: 20, paddingHorizontal: 13, paddingVertical: 8, backgroundColor: 'rgba(255,255,255,0.04)' },
-  tabTxt: { color: EV.muted, fontSize: 13, fontWeight: '600' },
+  tab: { flexDirection: 'row', alignItems: 'center', gap: 6, borderWidth: 1, borderColor: C.line, borderRadius: 20, paddingHorizontal: 13, paddingVertical: 8, backgroundColor: C.panelTint },
+  tabTxt: { color: C.muted, fontSize: 13, fontWeight: '600', fontFamily: F.sans },
   scroll: { paddingHorizontal: 18, paddingBottom: 36 },
-  row: { flexDirection: 'row', alignItems: 'center', gap: 12, padding: 14, borderRadius: 16, borderWidth: 1, borderColor: EV.line, backgroundColor: EV.card, marginBottom: 9 },
+  row: { flexDirection: 'row', alignItems: 'center', gap: 12, padding: 14, borderRadius: 16, borderWidth: 1, borderColor: C.line, backgroundColor: C.panelTint, marginBottom: 9 },
   rowIcon: { width: 38, height: 38, borderRadius: 11, alignItems: 'center', justifyContent: 'center' },
   rowMid: { flex: 1, minWidth: 0 },
-  rowTitle: { color: EV.ink, fontSize: 14.5, fontWeight: '700' },
-  rowSub: { color: EV.muted, fontSize: 12.5, marginTop: 2 },
-  rowVal: { fontSize: 18, fontWeight: '800' },
+  rowTitle: { color: C.ink, fontSize: 14.5, fontWeight: '700', fontFamily: F.sans },
+  rowSub: { color: C.muted, fontSize: 12.5, marginTop: 2, fontFamily: F.sans },
+  rowVal: { fontSize: 18, fontWeight: '800', fontFamily: F.sans },
   emptyMark: { width: 60, height: 60, borderRadius: 20, alignItems: 'center', justifyContent: 'center' },
-  emptyTitle: { color: EV.ink, fontSize: 18, fontWeight: '700', marginTop: 16 },
-  emptySub: { color: EV.muted, fontSize: 13.5, textAlign: 'center', marginTop: 6 },
-  retry: { marginTop: 16, borderRadius: 12, backgroundColor: EV.accent, paddingHorizontal: 18, paddingVertical: 10 },
-  retryTxt: { color: '#fff', fontSize: 13.5, fontWeight: '700' },
+  emptyTitle: { color: C.ink, fontSize: 18, fontWeight: '700', marginTop: 16, fontFamily: F.sans },
+  emptySub: { color: C.muted, fontSize: 13.5, textAlign: 'center', marginTop: 6, fontFamily: F.sans },
+  retry: { marginTop: 16, borderRadius: 12, backgroundColor: C.coral, paddingHorizontal: 18, paddingVertical: 10 },
+  retryTxt: { color: ON_CORAL, fontSize: 13.5, fontWeight: '700', fontFamily: F.sans },
 });

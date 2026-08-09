@@ -1,16 +1,21 @@
 import { Feather } from '@expo/vector-icons';
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { LiriFonts as F, type LiriPalette } from '@/constants/liri-theme';
+import { useTheme } from '@/lib/theme';
 import { useAuth } from '@/lib/auth';
 import { supabase } from '@/lib/supabase';
 
+const ON_CORAL = '#21140E'; // texte/icône sur bouton corail — lisible sombre ET crème
+
 type Appointment = { id: string; status: string; notes: string | null; created_at: string; booking_slots?: { start_at?: string; end_at?: string; title?: string } | null };
-const C = { bg: '#262624', card: 'rgba(255,255,255,.045)', ink: '#F5F1E9', muted: 'rgba(245,241,233,.62)', line: 'rgba(255,255,255,.09)', coral: '#E08A5F' };
 const statusLabel: Record<string, string> = { requested: 'Demandé', confirmed: 'Confirmé', scheduled: 'Planifié', rescheduled: 'Replanifié', completed: 'Terminé', cancelled: 'Annulé', no_show: 'Absent' };
 
 export default function RendezVousScreen() {
+  const { colors: C } = useTheme();
+  const s = useMemo(() => makeStyles(C), [C]);
   const { session, email } = useAuth();
   const [appointments, setAppointments] = useState<Appointment[] | null>(null);
   const [subject, setSubject] = useState('');
@@ -47,11 +52,11 @@ export default function RendezVousScreen() {
       <View><Text style={s.kicker}>LIRI · ÉCOLE</Text><Text style={s.title}>Rendez-vous</Text><Text style={s.lead}>Demande un entretien au secrétariat, puis suis son statut ici.</Text></View>
       <View style={s.card}>
         <Text style={s.cardTitle}>Nouvelle demande</Text>
-        <TextInput value={subject} onChangeText={setSubject} placeholder="Sujet de l’entretien" placeholderTextColor={C.muted} style={s.input} />
-        <TextInput value={details} onChangeText={setDetails} placeholder="Détails (facultatif)" placeholderTextColor={C.muted} multiline style={[s.input, s.multiline]} />
-        <TextInput value={whatsapp} onChangeText={setWhatsapp} placeholder="WhatsApp (facultatif)" placeholderTextColor={C.muted} keyboardType="phone-pad" style={s.input} />
+        <TextInput value={subject} onChangeText={setSubject} placeholder="Sujet de l’entretien" placeholderTextColor={C.faint} style={s.input} />
+        <TextInput value={details} onChangeText={setDetails} placeholder="Détails (facultatif)" placeholderTextColor={C.faint} multiline style={[s.input, s.multiline]} />
+        <TextInput value={whatsapp} onChangeText={setWhatsapp} placeholder="WhatsApp (facultatif)" placeholderTextColor={C.faint} keyboardType="phone-pad" style={s.input} />
         <Pressable disabled={sending} style={[s.cta, sending && { opacity: .6 }]} onPress={() => void submit()}>
-          {sending ? <ActivityIndicator color="#21140E" /> : <><Feather name="send" size={15} color="#21140E" /><Text style={s.ctaText}>Transmettre</Text></>}
+          {sending ? <ActivityIndicator color={ON_CORAL} /> : <><Feather name="send" size={15} color={ON_CORAL} /><Text style={s.ctaText}>Transmettre</Text></>}
         </Pressable>
         {message ? <Text selectable style={s.message}>{message}</Text> : null}
       </View>
@@ -71,14 +76,14 @@ export default function RendezVousScreen() {
   </SafeAreaView></View>;
 }
 
-const s = StyleSheet.create({
-  root: { flex: 1, backgroundColor: C.bg }, safe: { flex: 1 }, scroll: { padding: 18, paddingBottom: 44, gap: 16 },
-  kicker: { color: C.coral, fontSize: 10, fontWeight: '800', letterSpacing: 1.6 }, title: { color: C.ink, fontSize: 27, fontWeight: '800' }, lead: { color: C.muted, fontSize: 13, marginTop: 5, lineHeight: 19 },
-  card: { borderWidth: 1, borderColor: C.line, backgroundColor: C.card, borderRadius: 18, padding: 14, gap: 10 }, cardTitle: { color: C.ink, fontSize: 16, fontWeight: '800' },
-  input: { color: C.ink, borderWidth: 1, borderColor: C.line, borderRadius: 12, backgroundColor: 'rgba(0,0,0,.12)', paddingHorizontal: 13, paddingVertical: 11, fontSize: 14 }, multiline: { minHeight: 76, textAlignVertical: 'top' },
-  cta: { minHeight: 44, borderRadius: 12, backgroundColor: C.coral, alignItems: 'center', justifyContent: 'center', flexDirection: 'row', gap: 8 }, ctaText: { color: '#21140E', fontWeight: '800' }, message: { color: C.coral, fontSize: 12.5 },
-  section: { color: C.ink, fontSize: 17, fontWeight: '800' }, empty: { color: C.muted, textAlign: 'center', paddingVertical: 22 },
-  appt: { flexDirection: 'row', alignItems: 'center', gap: 10, padding: 12, borderWidth: 1, borderColor: C.line, backgroundColor: C.card, borderRadius: 15 },
-  apptIcon: { width: 38, height: 38, borderRadius: 11, backgroundColor: 'rgba(224,138,95,.13)', alignItems: 'center', justifyContent: 'center' }, apptBody: { flex: 1, gap: 3 },
-  apptTitle: { color: C.ink, fontSize: 13.5, fontWeight: '700' }, apptSub: { color: C.muted, fontSize: 11.5 }, status: { color: C.coral, fontSize: 11, fontWeight: '800' },
+const makeStyles = (C: LiriPalette) => StyleSheet.create({
+  root: { flex: 1, backgroundColor: C.base }, safe: { flex: 1 }, scroll: { padding: 18, paddingBottom: 44, gap: 16 },
+  kicker: { color: C.coral, fontSize: 10, fontWeight: '800', letterSpacing: 1.6, fontFamily: F.sans }, title: { color: C.ink, fontSize: 27, fontWeight: '800', fontFamily: F.serif }, lead: { color: C.muted, fontSize: 13, marginTop: 5, lineHeight: 19, fontFamily: F.sans },
+  card: { borderWidth: 1, borderColor: C.line, backgroundColor: C.panelTint, borderRadius: 18, padding: 14, gap: 10 }, cardTitle: { color: C.ink, fontSize: 16, fontWeight: '800', fontFamily: F.sans },
+  input: { color: C.ink, borderWidth: 1, borderColor: C.line, borderRadius: 12, backgroundColor: C.base, paddingHorizontal: 13, paddingVertical: 11, fontSize: 14, fontFamily: F.sans }, multiline: { minHeight: 76, textAlignVertical: 'top' },
+  cta: { minHeight: 44, borderRadius: 12, backgroundColor: C.coral, alignItems: 'center', justifyContent: 'center', flexDirection: 'row', gap: 8 }, ctaText: { color: ON_CORAL, fontWeight: '800', fontFamily: F.sans }, message: { color: C.coral, fontSize: 12.5, fontFamily: F.sans },
+  section: { color: C.ink, fontSize: 17, fontWeight: '800', fontFamily: F.sans }, empty: { color: C.muted, textAlign: 'center', paddingVertical: 22, fontFamily: F.sans },
+  appt: { flexDirection: 'row', alignItems: 'center', gap: 10, padding: 12, borderWidth: 1, borderColor: C.line, backgroundColor: C.panelTint, borderRadius: 15 },
+  apptIcon: { width: 38, height: 38, borderRadius: 11, backgroundColor: C.coralTint, alignItems: 'center', justifyContent: 'center' }, apptBody: { flex: 1, gap: 3 },
+  apptTitle: { color: C.ink, fontSize: 13.5, fontWeight: '700', fontFamily: F.sans }, apptSub: { color: C.muted, fontSize: 11.5, fontFamily: F.sans }, status: { color: C.coral, fontSize: 11, fontWeight: '800', fontFamily: F.sans },
 });

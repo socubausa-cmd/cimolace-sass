@@ -1,19 +1,17 @@
 import { Feather } from '@expo/vector-icons';
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   ActivityIndicator, Linking, Pressable, RefreshControl,
   ScrollView, StyleSheet, Text, View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { LiriFonts as F, type LiriPalette } from '@/constants/liri-theme';
+import { useTheme } from '@/lib/theme';
 import { syncMailbox } from '@/lib/liri-api';
 import { supabase } from '@/lib/supabase';
 
-const C = {
-  bg: '#262624', card: 'rgba(255,255,255,.045)',
-  ink: '#F5F1E9', muted: 'rgba(245,241,233,.62)', faint: 'rgba(245,241,233,.40)',
-  line: 'rgba(255,255,255,.09)', coral: '#E08A5F',
-};
+const ON_CORAL = '#1c1a18'; // texte/icône lisible sur bouton corail (sombre ET crème)
 
 type Thread = {
   id: string; subject: string | null; primary_contact_email: string | null;
@@ -29,6 +27,8 @@ const fmt = (d: string | null) =>
   d ? new Date(d).toLocaleString('fr-FR', { dateStyle: 'medium', timeStyle: 'short' }) : '';
 
 export default function CourrierScreen() {
+  const { colors: C } = useTheme();
+  const s = useMemo(() => makeStyles(C), [C]);
   const [threads, setThreads] = useState<Thread[] | null>(null);
   const [unread, setUnread] = useState<Set<string>>(new Set());
   const [selected, setSelected] = useState<Thread | null>(null);
@@ -124,8 +124,8 @@ export default function CourrierScreen() {
           <Text style={s.sub}>Boîte infos@prorascience.org</Text>
         </View>
         <Pressable style={s.syncBtn} onPress={() => void doSync()} disabled={syncing}>
-          {syncing ? <ActivityIndicator color="#1c1a18" size="small" />
-            : <><Feather name="refresh-cw" size={14} color="#1c1a18" /><Text style={s.syncTxt}>Synchroniser</Text></>}
+          {syncing ? <ActivityIndicator color={ON_CORAL} size="small" />
+            : <><Feather name="refresh-cw" size={14} color={ON_CORAL} /><Text style={s.syncTxt}>Synchroniser</Text></>}
         </Pressable>
       </View>
       {msg && <View style={s.note}><Text style={s.noteTxt}>{msg}</Text></View>}
@@ -167,36 +167,36 @@ export default function CourrierScreen() {
   );
 }
 
-const s = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: C.bg },
+const makeStyles = (C: LiriPalette) => StyleSheet.create({
+  safe: { flex: 1, backgroundColor: C.base },
   header: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingHorizontal: 20, paddingTop: 8, paddingBottom: 8 },
-  h1: { color: C.ink, fontSize: 26, fontWeight: '700', letterSpacing: -0.3 },
-  sub: { color: C.muted, fontSize: 13, marginTop: 2 },
+  h1: { color: C.ink, fontSize: 26, fontWeight: '700', letterSpacing: -0.3, fontFamily: F.serif },
+  sub: { color: C.muted, fontSize: 13, marginTop: 2, fontFamily: F.sans },
   syncBtn: { flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: C.coral, paddingHorizontal: 13, paddingVertical: 9, borderRadius: 10, minWidth: 44, justifyContent: 'center' },
-  syncTxt: { color: '#1c1a18', fontSize: 13, fontWeight: '700' },
-  note: { marginHorizontal: 16, marginBottom: 6, backgroundColor: 'rgba(224,138,95,.12)', borderRadius: 10, paddingVertical: 8, paddingHorizontal: 13, borderWidth: 1, borderColor: 'rgba(224,138,95,.3)' },
-  noteTxt: { color: C.coral, fontSize: 12.5, fontWeight: '600' },
+  syncTxt: { color: ON_CORAL, fontSize: 13, fontWeight: '700', fontFamily: F.sans },
+  note: { marginHorizontal: 16, marginBottom: 6, backgroundColor: C.coralTint, borderRadius: 10, paddingVertical: 8, paddingHorizontal: 13, borderWidth: 1, borderColor: C.coral },
+  noteTxt: { color: C.coral, fontSize: 12.5, fontWeight: '600', fontFamily: F.sans },
   center: { flex: 1, alignItems: 'center', justifyContent: 'center', paddingVertical: 48 },
   list: { paddingHorizontal: 16, paddingTop: 2 },
   empty: { alignItems: 'center', gap: 10, paddingVertical: 56 },
-  emptyTxt: { color: C.faint, fontSize: 14 },
+  emptyTxt: { color: C.faint, fontSize: 14, fontFamily: F.sans },
   thread: { flexDirection: 'row', alignItems: 'center', gap: 10, paddingVertical: 13, paddingHorizontal: 12, borderBottomWidth: 1, borderBottomColor: C.line },
   unreadDot: { width: 8, height: 8, borderRadius: 4, backgroundColor: C.coral },
-  threadSubject: { color: C.muted, fontSize: 14.5, fontWeight: '500' },
+  threadSubject: { color: C.muted, fontSize: 14.5, fontWeight: '500', fontFamily: F.sans },
   threadUnread: { color: C.ink, fontWeight: '700' },
-  threadFrom: { color: C.faint, fontSize: 12, marginTop: 2 },
-  threadDate: { color: C.faint, fontSize: 11 },
+  threadFrom: { color: C.faint, fontSize: 12, marginTop: 2, fontFamily: F.sans },
+  threadDate: { color: C.faint, fontSize: 11, fontFamily: F.sans },
   // détail
   detailHead: { flexDirection: 'row', alignItems: 'center', gap: 8, paddingHorizontal: 12, paddingTop: 6, paddingBottom: 12, borderBottomWidth: 1, borderBottomColor: C.line },
   back: { width: 36, height: 36, alignItems: 'center', justifyContent: 'center' },
-  detailSubject: { color: C.ink, fontSize: 17, fontWeight: '700', lineHeight: 21 },
-  detailFrom: { color: C.muted, fontSize: 12.5, marginTop: 2 },
-  round: { width: 38, height: 38, borderRadius: 19, alignItems: 'center', justifyContent: 'center', backgroundColor: 'rgba(255,255,255,.05)', borderWidth: 1, borderColor: C.line },
+  detailSubject: { color: C.ink, fontSize: 17, fontWeight: '700', lineHeight: 21, fontFamily: F.sans },
+  detailFrom: { color: C.muted, fontSize: 12.5, marginTop: 2, fontFamily: F.sans },
+  round: { width: 38, height: 38, borderRadius: 19, alignItems: 'center', justifyContent: 'center', backgroundColor: C.panelTint, borderWidth: 1, borderColor: C.line },
   detailBody: { padding: 16 },
-  bubble: { backgroundColor: C.card, borderRadius: 14, borderWidth: 1, borderColor: C.line, padding: 14, marginBottom: 12 },
-  bubbleOut: { backgroundColor: 'rgba(224,138,95,.10)', borderColor: 'rgba(224,138,95,.22)' },
+  bubble: { backgroundColor: C.panelTint, borderRadius: 14, borderWidth: 1, borderColor: C.line, padding: 14, marginBottom: 12 },
+  bubbleOut: { backgroundColor: C.coralTint2, borderColor: C.coralTint },
   bubbleHead: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', gap: 8, marginBottom: 7 },
-  bubbleFrom: { flex: 1, color: C.ink, fontSize: 14, fontWeight: '700' },
-  bubbleDate: { color: C.faint, fontSize: 11 },
-  bubbleText: { color: C.muted, fontSize: 14, lineHeight: 20 },
+  bubbleFrom: { flex: 1, color: C.ink, fontSize: 14, fontWeight: '700', fontFamily: F.sans },
+  bubbleDate: { color: C.faint, fontSize: 11, fontFamily: F.sans },
+  bubbleText: { color: C.muted, fontSize: 14, lineHeight: 20, fontFamily: F.sans },
 });

@@ -6,17 +6,14 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { LiriFonts as F, type LiriPalette } from '@/constants/liri-theme';
+import { useTheme } from '@/lib/theme';
 import {
   fetchAdminAppointments, sendRescheduleLink, updateAppointment,
   type AdminAppointment,
 } from '@/lib/liri-api';
 
-const C = {
-  bg: '#262624', card: 'rgba(255,255,255,.045)', cardOn: 'rgba(224,138,95,.12)',
-  ink: '#F5F1E9', muted: 'rgba(245,241,233,.62)', faint: 'rgba(245,241,233,.40)',
-  line: 'rgba(255,255,255,.09)', coral: '#E08A5F',
-  ok: '#6CC08A', warn: '#E0A44E', off: 'rgba(245,241,233,.45)',
-};
+const ON_CORAL = '#1c1a18'; // texte/icône lisible sur bouton corail (sombre ET crème)
 
 type Tab = 'requested' | 'reported' | 'confirmed' | 'all';
 const TABS: { key: Tab; label: string }[] = [
@@ -43,6 +40,8 @@ const isReported = (a: AdminAppointment): boolean =>
   !!a.reschedule_state || a.status === 'rescheduled' || a.status === 'reschedule_declined';
 
 export default function RdvAdminScreen() {
+  const { colors: C } = useTheme();
+  const s = useMemo(() => makeStyles(C), [C]);
   const [items, setItems] = useState<AdminAppointment[] | null>(null);
   const [tab, setTab] = useState<Tab>('requested');
   const [busy, setBusy] = useState<string | null>(null);
@@ -176,7 +175,7 @@ export default function RdvAdminScreen() {
                     <View style={s.actions}>
                       {a.status !== 'confirmed' && (
                         <Pressable style={[s.btn, s.btnPrimary]} onPress={() => void act(a, 'confirm')}>
-                          <Feather name="check" size={15} color="#1c1a18" /><Text style={s.btnPrimaryTxt}>Confirmer</Text>
+                          <Feather name="check" size={15} color={ON_CORAL} /><Text style={s.btnPrimaryTxt}>Confirmer</Text>
                         </Pressable>
                       )}
                       <Pressable style={[s.btn, s.btnGhost]} onPress={() => confirmThen(a, 'reschedule')}>
@@ -184,7 +183,7 @@ export default function RdvAdminScreen() {
                       </Pressable>
                       {a.status !== 'cancelled' && (
                         <Pressable style={[s.btn, s.btnGhost]} onPress={() => confirmThen(a, 'cancel')}>
-                          <Feather name="x" size={14} color={C.warn} /><Text style={[s.btnGhostTxt, { color: C.warn }]}>Annuler</Text>
+                          <Feather name="x" size={14} color={C.live} /><Text style={[s.btnGhostTxt, { color: C.live }]}>Annuler</Text>
                         </Pressable>
                       )}
                     </View>
@@ -200,46 +199,46 @@ export default function RdvAdminScreen() {
   );
 }
 
-const s = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: C.bg },
+const makeStyles = (C: LiriPalette) => StyleSheet.create({
+  safe: { flex: 1, backgroundColor: C.base },
   header: { paddingHorizontal: 20, paddingTop: 8, paddingBottom: 6 },
-  h1: { color: C.ink, fontSize: 26, fontWeight: '700', letterSpacing: -0.3 },
-  sub: { color: C.muted, fontSize: 13.5, marginTop: 2 },
+  h1: { color: C.ink, fontSize: 26, fontWeight: '700', letterSpacing: -0.3, fontFamily: F.serif },
+  sub: { color: C.muted, fontSize: 13.5, marginTop: 2, fontFamily: F.sans },
   tabsWrap: { flexGrow: 0 },
   tabs: { paddingHorizontal: 16, paddingVertical: 10, gap: 8 },
-  tab: { flexDirection: 'row', alignItems: 'center', gap: 7, paddingHorizontal: 13, paddingVertical: 8, borderRadius: 999, backgroundColor: C.card, borderWidth: 1, borderColor: C.line },
+  tab: { flexDirection: 'row', alignItems: 'center', gap: 7, paddingHorizontal: 13, paddingVertical: 8, borderRadius: 999, backgroundColor: C.panelTint, borderWidth: 1, borderColor: C.line },
   tabOn: { backgroundColor: C.coral, borderColor: C.coral },
-  tabTxt: { color: C.muted, fontSize: 13, fontWeight: '600' },
-  tabTxtOn: { color: '#1c1a18' },
-  badge: { minWidth: 20, paddingHorizontal: 6, paddingVertical: 1, borderRadius: 999, backgroundColor: 'rgba(255,255,255,.08)', alignItems: 'center' },
+  tabTxt: { color: C.muted, fontSize: 13, fontWeight: '600', fontFamily: F.sans },
+  tabTxtOn: { color: ON_CORAL },
+  badge: { minWidth: 20, paddingHorizontal: 6, paddingVertical: 1, borderRadius: 999, backgroundColor: C.coralTint2, alignItems: 'center' },
   badgeOn: { backgroundColor: 'rgba(0,0,0,.18)' },
-  badgeTxt: { color: C.muted, fontSize: 11, fontWeight: '700' },
-  badgeTxtOn: { color: '#1c1a18' },
-  note: { marginHorizontal: 16, marginBottom: 4, backgroundColor: C.cardOn, borderRadius: 10, paddingVertical: 9, paddingHorizontal: 13, borderWidth: 1, borderColor: 'rgba(224,138,95,.3)' },
-  noteTxt: { color: C.coral, fontSize: 13, fontWeight: '600' },
+  badgeTxt: { color: C.muted, fontSize: 11, fontWeight: '700', fontFamily: F.sans },
+  badgeTxtOn: { color: ON_CORAL },
+  note: { marginHorizontal: 16, marginBottom: 4, backgroundColor: C.coralTint, borderRadius: 10, paddingVertical: 9, paddingHorizontal: 13, borderWidth: 1, borderColor: C.coral },
+  noteTxt: { color: C.coral, fontSize: 13, fontWeight: '600', fontFamily: F.sans },
   center: { flex: 1, alignItems: 'center', justifyContent: 'center' },
   list: { paddingHorizontal: 16, paddingTop: 4 },
   empty: { alignItems: 'center', gap: 10, paddingVertical: 56 },
-  emptyTxt: { color: C.faint, fontSize: 14 },
-  item: { backgroundColor: C.card, borderRadius: 16, borderWidth: 1, borderColor: C.line, padding: 15, marginBottom: 12 },
+  emptyTxt: { color: C.faint, fontSize: 14, fontFamily: F.sans },
+  item: { backgroundColor: C.panelTint, borderRadius: 16, borderWidth: 1, borderColor: C.line, padding: 15, marginBottom: 12 },
   itemTop: { flexDirection: 'row', alignItems: 'flex-start', gap: 10, marginBottom: 8 },
-  itemTitle: { flex: 1, color: C.ink, fontSize: 15.5, fontWeight: '700', lineHeight: 20 },
+  itemTitle: { flex: 1, color: C.ink, fontSize: 15.5, fontWeight: '700', lineHeight: 20, fontFamily: F.sans },
   pill: { paddingHorizontal: 9, paddingVertical: 3, borderRadius: 999 },
-  pillTxt: { fontSize: 10.5, fontWeight: '700', color: C.ink },
-  pillOk: { backgroundColor: 'rgba(108,192,138,.16)' },
-  pillWarn: { backgroundColor: 'rgba(224,164,78,.16)' },
-  pillNeutral: { backgroundColor: 'rgba(245,241,233,.10)' },
+  pillTxt: { fontSize: 10.5, fontWeight: '700', color: C.ink, fontFamily: F.sans },
+  pillOk: { backgroundColor: 'rgba(108,192,138,.18)' },
+  pillWarn: { backgroundColor: 'rgba(224,164,78,.18)' },
+  pillNeutral: { backgroundColor: C.coralTint },
   metaRow: { flexDirection: 'row', alignItems: 'center', gap: 7, marginTop: 3 },
-  meta: { color: C.muted, fontSize: 12.5 },
-  desc: { color: C.muted, fontSize: 13, marginTop: 8, lineHeight: 18 },
+  meta: { color: C.muted, fontSize: 12.5, fontFamily: F.sans },
+  desc: { color: C.muted, fontSize: 13, marginTop: 8, lineHeight: 18, fontFamily: F.sans },
   contactRow: { flexDirection: 'row', gap: 8, marginTop: 12 },
-  ghost: { flexDirection: 'row', alignItems: 'center', gap: 6, paddingHorizontal: 11, paddingVertical: 7, borderRadius: 9, backgroundColor: 'rgba(255,255,255,.05)', borderWidth: 1, borderColor: C.line },
-  ghostTxt: { color: C.ink, fontSize: 12.5, fontWeight: '600' },
+  ghost: { flexDirection: 'row', alignItems: 'center', gap: 6, paddingHorizontal: 11, paddingVertical: 7, borderRadius: 9, backgroundColor: C.panelTint, borderWidth: 1, borderColor: C.line },
+  ghostTxt: { color: C.ink, fontSize: 12.5, fontWeight: '600', fontFamily: F.sans },
   actLoading: { paddingVertical: 12, alignItems: 'center' },
   actions: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginTop: 12 },
   btn: { flexDirection: 'row', alignItems: 'center', gap: 6, paddingHorizontal: 14, paddingVertical: 9, borderRadius: 10 },
   btnPrimary: { backgroundColor: C.coral },
-  btnPrimaryTxt: { color: '#1c1a18', fontSize: 13.5, fontWeight: '700' },
-  btnGhost: { backgroundColor: 'rgba(255,255,255,.05)', borderWidth: 1, borderColor: C.line },
-  btnGhostTxt: { color: C.ink, fontSize: 13.5, fontWeight: '600' },
+  btnPrimaryTxt: { color: ON_CORAL, fontSize: 13.5, fontWeight: '700', fontFamily: F.sans },
+  btnGhost: { backgroundColor: C.panelTint, borderWidth: 1, borderColor: C.line },
+  btnGhostTxt: { color: C.ink, fontSize: 13.5, fontWeight: '600', fontFamily: F.sans },
 });
