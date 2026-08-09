@@ -35,6 +35,12 @@ export class CrmController {
     return this.svc.summary(t.id);
   }
 
+  // Suivi « demandeur » (calendrier maître) : e-mail → fiche CRM + dons + RDV + compte.
+  @Get('suivi')
+  suivi(@CurrentTenant() t: TenantContext, @Query('email') email?: string) {
+    return this.svc.suiviParEmail(t.id, String(email || ''));
+  }
+
   // Recherche globale (Cmd-K) : contacts + sociétés + deals.
   @Get('search')
   search(@CurrentTenant() t: TenantContext, @Query('q') q?: string, @Query('limit') limit?: string) {

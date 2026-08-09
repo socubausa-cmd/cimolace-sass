@@ -979,6 +979,86 @@ export class CrmService {
   }
 
   /**
+   * Suivi « personne » pour le calendrier maître : à partir de l'e-mail d'un demandeur
+   * (RDV public, donateur cagnotte), réunit en UN appel la fiche CRM du tenant,
+   * l'historique de dons, le volume de RDV et le compte plateforme. PII-safe : comme
+   * getContactPlatformLink, l'identité (userId, nom) n'est exposée QUE pour un membre
+   * ACTIF de CE tenant — jamais d'oracle sur les comptes des autres tenants.
+   */
+  async suiviParEmail(tenantId: string, emailBrut: string) {
+    const email = String(emailBrut || '').trim().toLowerCase();
+    if (!email || !email.includes('@')) throw new BadRequestException('email requis');
+    const emailLike = CrmService.escapeLike(email);
+
+    const out = {
+      email,
+      contact: null as null | { id: string; name: string; phone: string | null },
+      donations: { count: 0, lastAt: null as string | null, totaux: [] as Array<{ currency: string; total: number }> },
+      appointments: { count: 0, lastAt: null as string | null },
+      account: { hasAccount: false, userId: null as string | null, name: null as string | null },
+    };
+
+    // 1) Fiche CRM du tenant (les dons cagnotte en créent une automatiquement).
+    const contacts = await this.safeRows(() =>
+      this.db().from('crm_contacts').select('id, first_name, last_name, email, phone')
+        .eq('tenant_id', tenantId).ilike('email', emailLike).limit(1));
+    const c = contacts[0];
+    if (c) {
+      out.contact = {
+        id: c.id,
+        name: [c.first_name, c.last_name].filter(Boolean).join(' ') || c.email,
+        phone: c.phone || null,
+      };
+    }
+
+    // 2) Dons aboutis — campagnes de CE tenant uniquement (cagnotte_campaigns.tenant_slug).
+    const { data: t } = await this.db().from('tenants').select('slug').eq('id', tenantId).maybeSingle();
+    const tenantSlug = (t as any)?.slug;
+    if (tenantSlug) {
+      const camps = await this.safeRows(() =>
+        this.db().from('cagnotte_campaigns').select('slug').eq('tenant_slug', tenantSlug));
+      const slugs = camps.map((x: any) => x?.slug).filter(Boolean);
+      if (slugs.length) {
+        const dons = await this.safeRows(() =>
+          this.db().from('cagnotte_donations')
+            .select('display_amount, display_currency, amount_cents, completed_at, created_at')
+            .in('campaign_slug', slugs).eq('status', 'completed').ilike('donor_email', emailLike)
+            .order('created_at', { ascending: false }).limit(100));
+        out.donations.count = dons.length;
+        out.donations.lastAt = dons[0]?.completed_at || dons[0]?.created_at || null;
+        const totaux = new Map<string, number>();
+        for (const d of dons) {
+          const cur = String(d.display_currency || 'EUR').toUpperCase();
+          const brut = d.display_amount ?? Number(d.amount_cents || 0) / 100;
+          const montant = Number(brut);
+          if (Number.isFinite(montant)) totaux.set(cur, (totaux.get(cur) || 0) + montant);
+        }
+        out.donations.totaux = [...totaux.entries()].map(([currency, total]) => ({ currency, total: Math.round(total * 100) / 100 }));
+      }
+    }
+
+    // 3) RDV du tenant portés par cet e-mail (metadata des demandes publiques).
+    const rdvs = await this.safeRows(() =>
+      this.db().from('appointments').select('id, created_at')
+        .eq('tenant_id', tenantId).ilike('metadata->>email', emailLike)
+        .order('created_at', { ascending: false }).limit(100));
+    out.appointments.count = rdvs.length;
+    out.appointments.lastAt = rdvs[0]?.created_at || null;
+
+    // 4) Compte plateforme → permet de LANCER la messagerie immersive (deep-link ?to=).
+    const profiles = await this.safeRows(() =>
+      this.db().from('profiles').select('id, name, full_name').ilike('email', emailLike).limit(1));
+    const prof = profiles[0];
+    if (prof?.id) {
+      const memberships = await this.safeRows(() =>
+        this.db().from('tenant_memberships').select('role, status')
+          .eq('tenant_id', tenantId).eq('user_id', prof.id).eq('status', 'active').limit(1));
+      if (memberships[0]) out.account = { hasAccount: true, userId: prof.id, name: prof.full_name || prof.name || null };
+    }
+    return out;
+  }
+
+  /**
    * Résout l'identité plateforme d'un contact (email → user_id + membership active),
    * puis enrichit sa fiche en éventail : commandes mbolo, RDV (LIRI + MEDOS), services
    * achetés, activité forum. Tenant-scopé, read-only, tout best-effort (une brique

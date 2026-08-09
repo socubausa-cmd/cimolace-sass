@@ -803,6 +803,10 @@ export const growthApi = {
 export const crmApi = {
   summary: () => apiV2.get<ApiEnvelope<any>>('/crm/summary').then(unwrap),
 
+  // Suivi « demandeur » (calendrier maître) : e-mail → fiche CRM + dons + RDV + compte plateforme.
+  suivi: (email: string) =>
+    apiV2.get<ApiEnvelope<any>>('/crm/suivi', { params: { email } }).then(unwrap),
+
   // Timeline d'activités — GET renvoie { activities: [...] } (flux récent ou filtré par entité).
   listActivities: (params?: Record<string, string>): Promise<any[]> =>
     apiV2.get<ApiEnvelope<{ activities?: any[] }>>('/crm/activities', { params }).then(unwrap)

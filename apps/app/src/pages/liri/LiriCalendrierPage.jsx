@@ -1,9 +1,10 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { LiriPortalShell } from '@/components/liri/LiriPortalShell';
-import { bookingApi } from '@/lib/api-v2';
+import { bookingApi, crmApi } from '@/lib/api-v2';
 import {
   CalendarRange, ChevronLeft, ChevronRight, Loader2, RefreshCw, Settings2,
   Search, LayoutList, LayoutGrid, X, ExternalLink, CalendarX2,
+  MessageCircle, Phone, ContactRound, HandHeart,
 } from 'lucide-react';
 
 /* ═══════════════════════════════════════════════════════════════════════════
@@ -478,6 +479,7 @@ function VoletDetail({ ev, onClose }) {
           <p className="mt-3 whitespace-pre-wrap text-[12.5px] leading-relaxed text-[#f5f4ee]/80">{ev.description}</p>
         ) : null}
       </div>
+      {ev.demandeur?.email && <SuiviDemandeur demandeur={ev.demandeur} />}
       {KINDS_GERABLES.has(ev.kind) && (
         <div className="border-t border-white/[0.08] p-3">
           <a href="/liri/rdv" className="flex items-center justify-center gap-1.5 rounded-xl bg-[#d97757] px-3 py-2 text-[12.5px] font-semibold text-white transition-opacity hover:opacity-90">
@@ -486,6 +488,99 @@ function VoletDetail({ ev, onClose }) {
         </div>
       )}
     </aside>
+  );
+}
+
+/* Montant lisible pour les totaux de dons ({currency,total}[]). */
+const fmtDons = (totaux) => (totaux || [])
+  .map(({ currency, total }) => `${new Intl.NumberFormat('fr-FR').format(total)} ${currency === 'EUR' ? '€' : currency}`)
+  .join(' + ');
+
+/* ── Suivi du demandeur : le pont calendrier → CRM / messagerie ────────────
+   À partir de l'e-mail porté par l'événement (demande publique de RDV), on
+   réunit la fiche CRM, l'historique de dons cagnotte, le volume de RDV et le
+   compte plateforme. S'il a un compte, la messagerie immersive se lance
+   directement (deep-link /liri/messages?to=…). */
+function SuiviDemandeur({ demandeur }) {
+  const [suivi, setSuivi] = useState(null);
+  const [chargement, setChargement] = useState(true);
+  const [creation, setCreation] = useState(false);
+
+  useEffect(() => {
+    let ok = true;
+    setChargement(true); setSuivi(null);
+    (async () => {
+      try { const s = await crmApi.suivi(demandeur.email); if (ok) setSuivi(s); }
+      catch { /* suivi best-effort : le volet reste utilisable sans */ }
+      finally { if (ok) setChargement(false); }
+    })();
+    return () => { ok = false; };
+  }, [demandeur.email]);
+
+  const creerFiche = async () => {
+    setCreation(true);
+    try {
+      const contact = await crmApi.createContact({ email: demandeur.email, phone: demandeur.whatsapp || undefined });
+      const id = contact?.id || contact?.contact?.id;
+      if (id) window.location.href = `/liri/crm?view=contacts&contact=${id}`;
+    } catch { setCreation(false); }
+  };
+
+  const waDigits = String(demandeur.whatsapp || '').replace(/\D/g, '');
+  const btn = 'flex items-center justify-center gap-1.5 rounded-lg border border-white/10 px-2.5 py-1.5 text-[12px] font-semibold text-[#f5f4ee]/80 transition-colors hover:border-[#d97757]/60 hover:text-[#f5f4ee]';
+
+  return (
+    <div className="border-t border-white/[0.08] px-3.5 py-3">
+      <p className="text-[10.5px] font-bold uppercase tracking-wide text-[#f5f4ee]/45">Suivi du demandeur</p>
+      <p className="mt-1 break-all text-[12.5px] text-[#f5f4ee]/80">{suivi?.contact?.name && suivi.contact.name !== demandeur.email ? `${suivi.contact.name} · ` : ''}{demandeur.email}</p>
+
+      {chargement ? (
+        <div className="mt-2 space-y-1.5" aria-label="Chargement du suivi">
+          <span className="block h-5 w-3/4 animate-pulse rounded bg-white/5" />
+          <span className="block h-8 animate-pulse rounded-lg bg-white/5" />
+        </div>
+      ) : suivi ? (
+        <>
+          <div className="mt-2 flex flex-wrap gap-1.5">
+            <span className="rounded-md bg-white/[0.06] px-2 py-0.5 text-[11px] text-[#f5f4ee]/75">
+              {suivi.appointments.count} rendez-vous
+            </span>
+            <span className={`inline-flex items-center gap-1 rounded-md px-2 py-0.5 text-[11px] ${suivi.donations.count ? 'bg-[#d97757]/15 text-[#e8a184]' : 'bg-white/[0.06] text-[#f5f4ee]/55'}`}>
+              <HandHeart className="h-3 w-3" />
+              {suivi.donations.count ? `${suivi.donations.count} don${suivi.donations.count > 1 ? 's' : ''} · ${fmtDons(suivi.donations.totaux)}` : 'aucun don'}
+            </span>
+            {suivi.account.hasAccount && (
+              <span className="rounded-md bg-[#6f9e6a]/20 px-2 py-0.5 text-[11px] text-[#dcedd8]">compte actif</span>
+            )}
+          </div>
+
+          <div className="mt-2.5 grid gap-1.5">
+            {suivi.account.hasAccount && (
+              <a href={`/liri/messages?to=${suivi.account.userId}&name=${encodeURIComponent(suivi.account.name || suivi.contact?.name || '')}`}
+                className="flex items-center justify-center gap-1.5 rounded-lg bg-[#d97757] px-2.5 py-1.5 text-[12px] font-semibold text-white transition-opacity hover:opacity-90">
+                <MessageCircle className="h-3.5 w-3.5" /> Écrire — messagerie immersive
+              </a>
+            )}
+            {suivi.contact ? (
+              <a href={`/liri/crm?view=contacts&contact=${suivi.contact.id}`} className={btn}>
+                <ContactRound className="h-3.5 w-3.5" /> Ouvrir la fiche CRM
+              </a>
+            ) : (
+              <button type="button" onClick={creerFiche} disabled={creation} className={`${btn} disabled:opacity-50`}>
+                <ContactRound className="h-3.5 w-3.5" /> {creation ? 'Création…' : 'Créer la fiche CRM'}
+              </button>
+            )}
+            {waDigits.length >= 8 && (
+              <a href={`https://wa.me/${waDigits}`} target="_blank" rel="noreferrer" className={btn}>
+                <Phone className="h-3.5 w-3.5" /> WhatsApp
+              </a>
+            )}
+          </div>
+        </>
+      ) : (
+        <p className="mt-2 text-[11.5px] text-[#f5f4ee]/45">Suivi indisponible pour le moment.</p>
+      )}
+    </div>
   );
 }
 

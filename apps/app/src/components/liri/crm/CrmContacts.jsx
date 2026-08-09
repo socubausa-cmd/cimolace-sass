@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { Search, Plus, Pencil, Trash2, X, Users, Building2, UserPlus, Upload, Download } from 'lucide-react';
 import { crmApi } from '@/lib/api-v2';
 import { useToast } from '@/components/ui/use-toast';
@@ -77,6 +78,17 @@ export default function CrmContacts() {
   const [deleting, setDeleting] = useState(false);
   const [detail, setDetail] = useState(null); // contact ouvert dans le drawer de détail
   const [importOpen, setImportOpen] = useState(false);
+
+  // Deep-link ?contact=<id> (venu du calendrier maître) : ouvre la fiche dès que la liste arrive.
+  const [searchParams] = useSearchParams();
+  const deepLinkRef = useRef(false);
+  useEffect(() => {
+    if (deepLinkRef.current) return;
+    const cible = searchParams.get('contact');
+    if (!cible || !contacts.length) return;
+    const c = contacts.find((x) => String(x.id) === String(cible));
+    if (c) { deepLinkRef.current = true; setDetail(c); }
+  }, [contacts, searchParams]);
 
   const fetchContacts = useCallback(
     async (q) => {
