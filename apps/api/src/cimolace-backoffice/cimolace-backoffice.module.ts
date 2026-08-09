@@ -7,6 +7,7 @@ import { CimolaceBackofficeController } from './cimolace-backoffice.controller';
 import { BillingModule } from '../billing/billing.module';
 import { CimolaceBackofficeService } from './cimolace-backoffice.service';
 import { CimolaceStaffGuard } from './cimolace-staff.guard';
+import { InfraService } from './infra.service';
 import { SchoolOnboardingController } from './school-onboarding.controller';
-@Module({ imports: [SupabaseModule, PawaPayModule, AirtelModule, AuthModule, BillingModule], providers: [CimolaceBackofficeService, CimolaceStaffGuard], controllers: [CimolaceBackofficeController, SchoolOnboardingController], exports: [CimolaceBackofficeService] })
+@Module({ imports: [SupabaseModule, PawaPayModule, AirtelModule, AuthModule, BillingModule], providers: [CimolaceBackofficeService, CimolaceStaffGuard, InfraService], controllers: [CimolaceBackofficeController, SchoolOnboardingController], exports: [CimolaceBackofficeService, InfraService] })
 export class CimolaceBackofficeModule {}

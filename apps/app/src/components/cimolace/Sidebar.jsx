@@ -28,6 +28,7 @@ const navItems = [
   { name: 'Sites', path: '/cimolace/admin/sites', Icon: Globe },
   { name: 'Facturation', path: '/cimolace/admin/billing', Icon: CreditCard },
   { name: 'Finances', path: '/cimolace/admin/finances', Icon: Wallet },
+  { name: 'Infrastructure', path: '/cimolace/admin/infrastructure', Icon: Activity },
   { name: 'Clés IA', path: '/cimolace/admin/ai-keys', Icon: KeyRound },
   { name: 'Tarification IA', path: '/cimolace/admin/ai-pricing', Icon: Calculator },
   { name: 'Support', path: '/cimolace/admin/support', Icon: LifeBuoy },

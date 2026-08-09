@@ -55,6 +55,7 @@ import CimolaceAdminCrm from '@/pages/cimolace/admin/crm/index';
 import CimolaceAdminSchoolProvisioning from '@/pages/cimolace/admin/school-provisioning/index';
 import CimolaceAdminSites from '@/pages/cimolace/admin/sites/index';
 import CimolaceAdminFinances from '@/pages/cimolace/admin/finances/index';
+import CimolaceAdminInfrastructure from '@/pages/cimolace/admin/infrastructure/index';
 import CimolaceAdminSupport from '@/pages/cimolace/admin/support/index';
 import CimolaceAdminMonitoring from '@/pages/cimolace/admin/monitoring/index';
 import CimolaceAdminAiKeys from '@/pages/cimolace/admin/ai-keys/index';
@@ -138,6 +139,7 @@ export default function CimolaceRouter() {
               (cimolace-backoffice/finances : revenus, payouts, wallets réels). */}
           <Route path="admin/billing" element={<Navigate to="/cimolace/admin/finances" replace />} />
           <Route path="admin/finances" element={<CimolaceProtectedOwnerRoute><CimolaceAdminFinances /></CimolaceProtectedOwnerRoute>} />
+          <Route path="admin/infrastructure" element={<CimolaceProtectedOwnerRoute><CimolaceAdminInfrastructure /></CimolaceProtectedOwnerRoute>} />
           <Route path="admin/support" element={<CimolaceProtectedOwnerRoute><CimolaceAdminSupport /></CimolaceProtectedOwnerRoute>} />
           <Route path="admin/monitoring" element={<CimolaceProtectedOwnerRoute><CimolaceAdminMonitoring /></CimolaceProtectedOwnerRoute>} />
           <Route path="admin/ai-keys" element={<CimolaceProtectedOwnerRoute><CimolaceAdminAiKeys /></CimolaceProtectedOwnerRoute>} />

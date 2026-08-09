@@ -1,8 +1,9 @@
-import { Body, Controller, Get, Param, Patch, Post, Req, UseGuards } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, Patch, Post, Req, UseGuards } from '@nestjs/common';
 import type { Request } from 'express';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { CimolaceStaffGuard } from './cimolace-staff.guard';
 import { CimolaceBackofficeService } from './cimolace-backoffice.service';
+import { InfraService } from './infra.service';
 import { BillingService } from '../billing/billing.service';
 import { CreateClientDto, UpdateClientDto } from './dto/backoffice.dto';
 
@@ -12,6 +13,7 @@ export class CimolaceBackofficeController {
   constructor(
     private readonly svc: CimolaceBackofficeService,
     private readonly billing: BillingService,
+    private readonly infra: InfraService,
   ) {}
 
   @Get('stats') getStats() { return this.svc.getStats(); }
@@ -55,6 +57,14 @@ export class CimolaceBackofficeController {
   @Post('clients/:id/school-model/prepare') smPrepare(@Param('id') id: string, @Body() body: any) { return this.svc.prepareSchoolModel(id, body); }
   @Post('clients/:id/school-model/apply-quotas') smQuotas(@Param('id') id: string, @Body() body: any) { return this.svc.applySchoolModelQuotas(id, body); }
   @Post('clients/:id/school-model/prepare-providers') smProviders(@Param('id') id: string, @Body() body: any) { return this.svc.prepareSchoolModelProviders(id, body); }
+  // ── Infrastructure : registre des fournisseurs, engagement et dépense ──────
+  @Get('infra') infraOverview() { return this.infra.overview(); }
+  @Post('infra/services') infraUpsert(@Body() b: any) { return this.infra.upsertService(b); }
+  @Delete('infra/services/:key') infraRemove(@Param('key') key: string) { return this.infra.removeService(key); }
+  @Post('infra/expenses') infraExpense(@Req() req: any, @Body() b: any) { return this.infra.recordExpense(b, req.user?.id ?? null); }
+  @Delete('infra/expenses/:id') infraExpenseRemove(@Param('id') id: string) { return this.infra.removeExpense(id); }
+  @Post('infra/health') infraHealth() { return this.infra.runHealthChecks(); }
+
   @Get('monitoring/overview') monitoringOverview() { return this.svc.getMonitoringOverview(); }
   @Post('monitoring/run-all') monitoringRunAll() { return this.svc.runAllHealthChecks(); }
 }
