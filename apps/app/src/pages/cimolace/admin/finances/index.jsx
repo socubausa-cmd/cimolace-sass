@@ -58,6 +58,23 @@ const nouvelleCle = () => (
   })
 );
 
+/**
+ * Traduit une erreur axios en phrase utile.
+ *
+ * ⛔ « Network Error » est le message d'axios quand la requête n'a JAMAIS abouti :
+ * l'API n'a pas répondu. Le recracher tel quel au milieu d'une phrase désignait
+ * pawaPay comme coupable alors que pawaPay n'avait même pas été contacté — le
+ * même travers que celui qu'on corrige partout ailleurs sur cet écran.
+ */
+const erreurLisible = (e) => {
+  const api = e?.response?.data?.error?.message || e?.response?.data?.message;
+  if (api) return api;
+  if (e?.code === 'ECONNABORTED') return "L'API n'a pas répondu dans les temps.";
+  if (e?.message === 'Network Error' || !e?.response) return "L'API est injoignable depuis ce navigateur.";
+  if (e?.response?.status) return `L'API a répondu ${e.response.status}.`;
+  return 'Lecture impossible.';
+};
+
 const depuis = (iso) => {
   if (!iso) return '—';
   const s = Math.max(0, Math.round((Date.now() - new Date(iso).getTime()) / 1000));
@@ -137,14 +154,17 @@ export default function CimolaceAdminFinances() {
   const [compact, setCompact] = useState(false);
 
   const load = useCallback(() => {
-    apiV2.get('/cimolace-backoffice/finances')
+    // 15 s : au-delà, ce n'est plus de la latence, c'est une panne. Sans plafond,
+    // une requête suspendue laisse l'écran en « Chargement… » indéfiniment.
+    const opt = { timeout: 15000 };
+    apiV2.get('/cimolace-backoffice/finances', opt)
       .then((r) => { setFin(unwrap(r)); setFinErr(null); })
-      .catch((e) => setFinErr(e?.response?.data?.error?.message || e?.message || 'Lecture des soldes impossible.'));
-    apiV2.get('/cimolace-backoffice/finances/payouts')
+      .catch((e) => setFinErr(erreurLisible(e)));
+    apiV2.get('/cimolace-backoffice/finances/payouts', opt)
       .then((r) => { const d = unwrap(r); setPayouts(Array.isArray(d) ? d : []); setPayoutsErr(null); })
-      .catch((e) => { setPayouts([]); setPayoutsErr(e?.response?.data?.error?.message || e?.message || 'Journal illisible.'); });
-    apiV2.get('/admin/ai-billing/cost-overview').then((r) => setCost(unwrap(r))).catch(() => setCost(null));
-    apiV2.get('/cimolace-backoffice/finances/payout-options').then((r) => setOpts(unwrap(r))).catch(() => setOpts(null));
+      .catch((e) => { setPayouts([]); setPayoutsErr(erreurLisible(e)); });
+    apiV2.get('/admin/ai-billing/cost-overview', opt).then((r) => setCost(unwrap(r))).catch(() => setCost(null));
+    apiV2.get('/cimolace-backoffice/finances/payout-options', opt).then((r) => setOpts(unwrap(r))).catch(() => setOpts(null));
   }, []);
 
   /**
@@ -198,7 +218,12 @@ export default function CimolaceAdminFinances() {
             dispo={dispo}
             zone={zone}
             fin={fin}
-            erreur={finErr || fin?.walletBalancesError}
+            // Deux pannes distinctes, deux remèdes distincts : soit NOTRE API n'a
+            // pas répondu, soit elle a répondu et c'est pawaPay qui n'a pas su
+            // lire le wallet. Les confondre accusait pawaPay d'une panne réseau
+            // locale — et envoyait l'utilisateur chercher au mauvais endroit.
+            erreurTransport={finErr}
+            erreurSolde={fin?.walletBalancesError}
             chargement={!fin && !finErr}
             compact={compact}
             onReload={syncThenLoad}
@@ -252,7 +277,12 @@ export default function CimolaceAdminFinances() {
  * illisible — parce qu'un zéro fabriqué à partir d'une panne se lit comme une
  * faillite et fait prendre de mauvaises décisions.
  */
-function Compteur({ dispo, zone, fin, erreur, chargement, compact, onReload, onVoirRepartition }) {
+function Compteur({ dispo, zone, fin, erreurTransport, erreurSolde, chargement, compact, onReload, onVoirRepartition }) {
+  const erreur = erreurTransport
+    ? `Chiffres indisponibles — ${erreurTransport} Rien n'a pu être lu, ni les soldes ni le journal.`
+    : erreurSolde
+      ? `Solde illisible — l'API a répondu, mais pawaPay n'a pas rendu le solde : ${erreurSolde}`
+      : null;
   const nonRattache = fin?.unallocatedXaf;
   const pct = nonRattache != null && fin?.physicalXaf ? Math.round((nonRattache / fin.physicalXaf) * 100) : null;
   const autresPays = (zone?.countries || []).filter((c) => Number(c.balance) <= 0).length;
@@ -265,10 +295,7 @@ function Compteur({ dispo, zone, fin, erreur, chargement, compact, onReload, onV
       transition: 'padding .18s ease',
     }}>
       {erreur ? (
-        <Panne
-          texte={`Solde illisible — pawaPay injoignable. ${typeof erreur === 'string' ? erreur : ''} Aucun retrait possible tant que le solde n'est pas vérifié.`}
-          onRetry={onReload}
-        />
+        <Panne texte={`${erreur} Aucun retrait possible tant que le solde n'est pas vérifié.`} onRetry={onReload} />
       ) : chargement ? (
         <div style={{ display: 'grid', gap: 8 }}><Squelette h={14} w={150} /><Squelette h={38} w={230} /></div>
       ) : compact ? (
