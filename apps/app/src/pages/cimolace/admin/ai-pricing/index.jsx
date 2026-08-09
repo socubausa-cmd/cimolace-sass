@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import CimolaceHeader from '@/components/cimolace/Header';
 import CimolaceSidebar from '@/components/cimolace/Sidebar';
 import { aiPricingAdminApi } from '@/lib/api-v2';
+import { C_LEGACY } from '../../theme';
 
 /**
  * TARIFICATION IA — pilotage de la logique métier SANS repasser par le code.
@@ -19,11 +20,7 @@ import { aiPricingAdminApi } from '@/lib/api-v2';
  * « trous de tarification » en haut de page rend ce cas VISIBLE en permanence.
  */
 
-const C = {
-  bg: '#0d1117', panel: '#161b22', panel2: '#1c2128', border: '#21262d', border2: '#30363d',
-  green: '#10b981', orange: '#f59e0b', red: '#ef4444', blue: '#3b82f6',
-  text: '#f0f6fc', muted: '#8b949e', muted2: '#6e7681',
-};
+const C = C_LEGACY;
 
 const eur = (cents) => `${(Number(cents || 0) / 100).toFixed(2)} €`;
 

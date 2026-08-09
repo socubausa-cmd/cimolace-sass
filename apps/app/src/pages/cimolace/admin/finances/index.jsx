@@ -42,8 +42,21 @@ const STATUTS = {
   rejected: { label: 'Refusé', c: T.danger, terminal: true },
   accepted: { label: 'En cours de règlement', c: T.warn, terminal: false },
   pending: { label: 'En cours de règlement', c: T.warn, terminal: false },
+  // Le serveur n'a pas su si le virement était parti (timeout, 5xx). Ce n'est
+  // PAS un échec : le dire serait affirmer que l'argent est resté. Non terminal,
+  // donc le réconciliateur ira demander la vérité à pawaPay.
+  unverified: { label: 'Sort à vérifier', c: T.warn, terminal: false },
 };
 const statut = (s) => STATUTS[String(s || '').toLowerCase()] || { label: s || '—', c: T.warn, terminal: false };
+
+/** UUID v4 — `crypto.randomUUID` n'existe pas hors contexte sécurisé/vieux navigateurs. */
+const nouvelleCle = () => (
+  globalThis.crypto?.randomUUID?.()
+  ?? 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => {
+    const r = (Math.random() * 16) | 0;
+    return (c === 'x' ? r : (r & 0x3) | 0x8).toString(16);
+  })
+);
 
 const depuis = (iso) => {
   if (!iso) return '—';
@@ -311,6 +324,13 @@ function OngletRetraits({ dispo, zone, soldeLisible, opts, wallets, payouts, pay
   const [sending, setSending] = useState(false);
   const [msg, setMsg] = useState(null);
   const confirmRef = useRef(null);
+  /**
+   * CLÉ D'IDEMPOTENCE, forgée à l'OUVERTURE de la confirmation et gardée jusqu'à
+   * la réussite. La garde `sending` ne suffit pas : c'est une fermeture figée,
+   * deux clics rapides la franchissent tous les deux. Avec cette clé, un double
+   * envoi renvoie le MÊME retrait au lieu d'en faire un second.
+   */
+  const cleRef = useRef(null);
 
   const operateurs = opts?.operators || [];
   // Tant que la liste réelle n'est pas lue, on ne propose rien plutôt que de
@@ -337,9 +357,16 @@ function OngletRetraits({ dispo, zone, soldeLisible, opts, wallets, payouts, pay
       const r = await apiV2.post('/cimolace-backoffice/finances/payout', {
         amountCents: montant, currency: op?.currency || 'XAF',
         phoneNumber: phone.trim(), mno, wallet: walletKey || undefined, reason: reason.trim() || undefined,
+        payoutId: cleRef.current,
       });
       const d = unwrap(r);
-      setMsg({ ok: true, text: `Retrait enregistré (${statut(d?.status).label}) — ${money(montant, op?.currency || 'XAF')}.` });
+      setMsg({
+        ok: true,
+        text: d?.idempotent
+          ? `Ce retrait avait déjà été envoyé — aucun second virement (${statut(d?.status).label}).`
+          : `Retrait enregistré (${statut(d?.status).label}) — ${money(montant, op?.currency || 'XAF')}.`,
+      });
+      cleRef.current = null;
       setAmount(''); setPhone(''); setReason(''); setConfirm(false); setOuvert(false); onDone();
     } catch (e) {
       setMsg({ ok: false, text: e?.response?.data?.error?.message || e?.response?.data?.message || e?.message || 'Retrait impossible.' });
@@ -442,7 +469,14 @@ function OngletRetraits({ dispo, zone, soldeLisible, opts, wallets, payouts, pay
             ) : (
               <div style={{ marginTop: 16, display: 'flex', gap: 9, alignItems: 'center', flexWrap: 'wrap' }}>
                 <button type="button" className="cml-btn cml-btn-primary" disabled={!!bloque}
-                  onClick={() => { setMsg(null); setConfirm(true); }}>
+                  onClick={() => {
+                    setMsg(null);
+                    // La clé naît ICI, avec l'intention. Elle survit à un échec
+                    // réseau et à un second clic : c'est ce qui rend l'envoi rejouable
+                    // sans risque de virement en double.
+                    cleRef.current = cleRef.current || nouvelleCle();
+                    setConfirm(true);
+                  }}>
                   <Send size={15} /> Vérifier et envoyer
                 </button>
                 <button type="button" className="cml-btn cml-btn-ghost" onClick={() => { setOuvert(false); setMsg(null); }}>Annuler</button>

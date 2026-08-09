@@ -36,6 +36,37 @@ export const T = {
   danger: '#b3372f',  // irréversible ; encre claire dessus, contraste vérifié
 };
 
+/**
+ * TABLE DE CORRESPONDANCE HÉRITÉE.
+ *
+ * Quatre pages admin déclaraient chacune leur propre `const C = { bg:'#0d1117',
+ * violet:'#7c3aed', … }` — mêmes noms de clés, mêmes valeurs recopiées à la
+ * main. Elles importent maintenant cet objet : un seul endroit à corriger, et
+ * les couleurs bannies (violet, bleu) sont ramenées sur le corail d'action sans
+ * qu'il faille toucher une ligne de JSX dans chaque page.
+ *
+ * ⚠️ Ce n'est PAS un jeu de jetons à étendre : c'est un pont, à faire
+ * disparaître au fur et à mesure que les pages passent aux jetons `T`.
+ */
+export const C_LEGACY = {
+  bg: T.bg,
+  panel: T.panel,
+  panel2: T.panel2,
+  border: T.line,
+  border2: T.line2,
+  text: T.ink,
+  muted: T.muted,
+  muted2: T.faint,
+  // Bannis par la charte → ramenés sur l'accent unique.
+  violet: T.coral,
+  violetLt: '#e08663',
+  blue: T.coral,
+  // Sémantiques conservées, mais désaturées pour tenir sur un fond chaud.
+  green: T.ok,
+  orange: T.warn,
+  red: T.danger,
+};
+
 /** Échelle typographique fermée — pas de 12,5 px décidé à l'œil. */
 export const FS = { xs: 11, sm: 12, base: 13, md: 14, lg: 16, xl: 20, hero: 26, mega: 46 };
 

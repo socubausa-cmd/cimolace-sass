@@ -2,13 +2,10 @@ import { useCallback, useEffect, useState } from 'react';
 import CimolaceHeader from '@/components/cimolace/Header';
 import CimolaceSidebar from '@/components/cimolace/Sidebar';
 import { supabase } from '@/lib/customSupabaseClient';
+import { C_LEGACY } from '../../theme';
 
 // Palette back-office (cohérente avec /cimolace/admin).
-const C = {
-  bg: '#0d1117', panel: '#161b22', panel2: '#1c2128', border: '#21262d', border2: '#30363d',
-  violet: '#7c3aed', green: '#10b981', orange: '#f59e0b', red: '#ef4444', blue: '#3b82f6',
-  text: '#f0f6fc', muted: '#8b949e', muted2: '#6e7681',
-};
+const C = C_LEGACY;
 
 const PROVIDER_HINTS = {
   deepseek: 'Économie — travail de fond + réponses rapides. Clé sur platform.deepseek.com.',

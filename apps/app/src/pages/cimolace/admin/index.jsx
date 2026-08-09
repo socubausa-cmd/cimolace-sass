@@ -24,24 +24,10 @@ import { cimolaceBackofficeApi } from '@/lib/api-v2';
 import { clientEngine } from '@/modules/cimolace/clients/clientEngine.js';
 import { siteEngine } from '@/modules/cimolace/sites/siteEngine.js';
 import { ticketEngine } from '@/modules/cimolace/support/ticketEngine.js';
+import { C_LEGACY } from '../theme';
 
 // ── Design tokens ────────────────────────────────────────────────────────────
-const C = {
-  bg:       '#0d1117',
-  panel:    '#161b22',
-  panel2:   '#1c2128',
-  border:   '#21262d',
-  border2:  '#30363d',
-  violet:   '#7c3aed',
-  violetLt: '#8b5cf6',
-  green:    '#10b981',
-  orange:   '#f59e0b',
-  red:      '#ef4444',
-  blue:     '#3b82f6',
-  text:     '#f0f6fc',
-  muted:    '#8b949e',
-  muted2:   '#6e7681',
-};
+const C = C_LEGACY;
 
 // ── Skeleton loader ───────────────────────────────────────────────────────────
 function Skeleton({ w = '100%', h = '20px', r = '6px' }) {

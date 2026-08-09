@@ -109,6 +109,8 @@ export class CimolaceBackofficeService {
 
   // ─── Finances PLATEFORME (console SaaS Cimolace) ──────────────────────────
   private static ZERO_DECIMAL = new Set(['XAF', 'XOF', 'XPF', 'BIF', 'CLP', 'DJF', 'GNF', 'JPY', 'KMF', 'KRW', 'MGA', 'PYG', 'RWF', 'UGX', 'VND', 'VUV']);
+  /** Clé d'idempotence fournie par le client : un UUID, rien d'autre. */
+  private static UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
   /**
    * Parité CFA FIXE (accord monétaire) : 1 € = 655,957 XAF = 655,957 XOF, et XOF = XAF.
@@ -288,7 +290,7 @@ export class CimolaceBackofficeService {
   /** Retrait PLATEFORME : envoie depuis le wallet pawaPay Cimolace vers un mobile money (owner SaaS). */
   async createPlatformPayout(
     createdBy: string | null,
-    dto: { amountCents?: number; currency?: string; phoneNumber?: string; mno?: string; recipientName?: string; reason?: string; wallet?: string },
+    dto: { amountCents?: number; currency?: string; phoneNumber?: string; mno?: string; recipientName?: string; reason?: string; wallet?: string; payoutId?: string },
   ) {
     const amountCents = Math.round(Number(dto?.amountCents) || 0);
     if (amountCents <= 0) throw new BadRequestException('amountCents (> 0) requis');
@@ -318,12 +320,41 @@ export class CimolaceBackofficeService {
     }
 
     const sb = this.supabase.client as any;
-    const payoutId = randomUUID();
-    await sb.from('billing_payouts').insert({
+
+    // ── IDEMPOTENCE ──────────────────────────────────────────────────────────
+    // `payoutId` était généré ICI, donc deux requêtes identiques faisaient DEUX
+    // virements. La garde `sending` du front est une fermeture figée : deux clics
+    // rapides passent tous les deux. La clé vient donc du client, et `payout_id`
+    // porte déjà une contrainte UNIQUE — l'idempotence tient à deux niveaux,
+    // chez nous ET chez pawaPay qui refuse un payoutId déjà vu.
+    const payoutId = CimolaceBackofficeService.UUID_RE.test(String(dto?.payoutId ?? ''))
+      ? String(dto.payoutId)
+      : randomUUID();
+    const { data: deja } = await sb
+      .from('billing_payouts')
+      .select('payout_id, status, amount_cents, currency')
+      .eq('payout_id', payoutId)
+      .maybeSingle();
+    if (deja) {
+      return { payout_id: deja.payout_id, status: deja.status, amount_cents: deja.amount_cents, currency: deja.currency, idempotent: true };
+    }
+
+    const { error: insErr } = await sb.from('billing_payouts').insert({
       tenant_id: null, payout_id: payoutId, provider: 'pawapay', status: 'pending',
       amount_cents: amountCents, currency, phone_number: dto.phoneNumber, mno: dto.mno,
       recipient_name: dto.recipientName ?? null, reason: dto.reason ?? 'Retrait plateforme Cimolace', created_by: createdBy, wallet: dto.wallet ?? null,
     });
+    // Course entre deux requêtes simultanées : la contrainte UNIQUE tranche.
+    // Le perdant ne rejoue pas le virement, il rend la ligne du gagnant.
+    if (insErr) {
+      const { data: gagnant } = await sb
+        .from('billing_payouts')
+        .select('payout_id, status, amount_cents, currency')
+        .eq('payout_id', payoutId)
+        .maybeSingle();
+      if (gagnant) return { payout_id: gagnant.payout_id, status: gagnant.status, amount_cents: gagnant.amount_cents, currency: gagnant.currency, idempotent: true };
+      throw new BadRequestException(insErr.message || 'Enregistrement du retrait impossible.');
+    }
     const amount = CimolaceBackofficeService.ZERO_DECIMAL.has(currency) ? String(amountCents) : (amountCents / 100).toFixed(2);
     let initStatus = 'pending';
     try {
@@ -339,7 +370,20 @@ export class CimolaceBackofficeService {
         await sb.from('cimolace_wallet_entries').insert({ wallet_key: dto.wallet, amount_cents: -amountCents, currency, kind: 'payout', note: dto.reason ?? 'Retrait', ref_id: payoutId, created_by: createdBy });
       }
     } catch (e) {
-      await sb.from('billing_payouts').update({ status: 'failed', failure_message: (e as Error).message, updated_at: new Date().toISOString() }).eq('payout_id', payoutId);
+      // ⛔ « Échoué » est une AFFIRMATION : l'argent n'est pas parti. On n'a le
+      // droit de l'écrire que sur un refus EXPLICITE de pawaPay. Un timeout ou
+      // un 5xx ne dit rien du sort du virement — et `failed` étant terminal
+      // (BillingService.PAYOUT_FINAL), la ligne n'aurait plus JAMAIS été relue
+      // alors que l'argent a pu partir. `unverified` reste dans le champ du
+      // réconciliateur, qui ira demander la vérité à la source.
+      const definitif = (e as any)?.pawapayDefinitive === true;
+      await sb.from('billing_payouts').update({
+        status: definitif ? 'failed' : 'unverified',
+        failure_message: definitif
+          ? (e as Error).message
+          : `Sort inconnu (erreur de transport) — vérification automatique en cours : ${(e as Error).message}`,
+        updated_at: new Date().toISOString(),
+      }).eq('payout_id', payoutId);
       throw e;
     }
     return { payout_id: payoutId, status: initStatus, amount_cents: amountCents, currency };

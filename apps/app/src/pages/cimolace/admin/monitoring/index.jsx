@@ -1,13 +1,9 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { cimolaceBackofficeApi } from '@/lib/api-v2';
+import { C_LEGACY } from '../../theme';
 
-const C = {
-  bg: '#0d1117', panel: '#161b22', border: '#21262d',
-  violet: '#7c3aed', green: '#10b981', orange: '#f59e0b',
-  red: '#ef4444', muted: '#8b949e', text: '#f0f6fc',
-  blue: '#3b82f6',
-};
+const C = C_LEGACY;
 
 const STATUS_CONFIG = {
   ok:      { color: C.green,  label: 'OK',       dot: '#10b981' },
@@ -51,7 +47,7 @@ function StatusDot({ status, latency, checkedAt, errorMessage, evidence }) {
       {hover && (
         <div style={{
           position: 'absolute', bottom: '16px', left: '50%', transform: 'translateX(-50%)',
-          background: '#0d1117', border: `1px solid ${C.border}`,
+          background: C.bg, border: `1px solid ${C.border}`,
           padding: '4px 8px', borderRadius: '6px', whiteSpace: 'normal',
           minWidth: '180px', maxWidth: '280px',
           fontSize: '11px', color: C.text, zIndex: 100,
@@ -87,7 +83,7 @@ function SkeletonRow() {
       {Array.from({ length: 8 }).map((_, i) => (
         <div key={i} style={{
           height: '14px', borderRadius: '4px',
-          background: 'linear-gradient(90deg, #161b22 25%, #21262d 50%, #161b22 75%)',
+          background: `linear-gradient(90deg, ${C.panel} 25%, ${C.panel2} 50%, ${C.panel} 75%)`,
           backgroundSize: '200% 100%', animation: 'shimmer 1.5s infinite',
         }} />
       ))}
@@ -251,7 +247,7 @@ export default function MonitoringPage() {
           gridTemplateColumns: '200px 80px repeat(5, 1fr) 120px',
           gap: '12px', alignItems: 'center',
           padding: '10px 24px',
-          background: '#0d1117',
+          background: C.bg,
           borderBottom: `1px solid ${C.border}`,
           position: 'sticky', top: 0, zIndex: 10,
         }}>
@@ -283,7 +279,7 @@ export default function MonitoringPage() {
                 borderBottom: `1px solid ${C.border}`,
                 transition: 'background 0.15s',
               }}
-              onMouseEnter={(e) => { e.currentTarget.style.background = '#161b22'; }}
+              onMouseEnter={(e) => { e.currentTarget.style.background = C.panel; }}
               onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; }}
             >
               {/* Name */}

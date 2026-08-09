@@ -8,6 +8,7 @@ import CrmAnalytics from '@/components/liri/crm/CrmAnalytics';
 import CrmContacts from '@/components/liri/crm/CrmContacts';
 import CrmCompanies from '@/components/liri/crm/CrmCompanies';
 import CrmActivity from '@/components/liri/crm/CrmActivity';
+import { T } from '../../theme';
 
 /**
  * CRM de gestion des TENANTS-CLIENTS, DANS le back-office propriétaire Cimolace.
@@ -47,7 +48,10 @@ export default function CimolaceAdminCrmPage() {
   }, []);
 
   return (
-    <div style={{ minHeight: '100vh', backgroundColor: '#f3f4f6', display: 'flex', flexDirection: 'column' }}>
+    // Le contenu vient du moteur CRM, déjà en charte chaude (LiriPortal.css) :
+    // seul le fond de page était resté en gris clair, ce qui encadrait des
+    // cartes sombres d'un halo blanc. Une ligne, et la page redevient cohérente.
+    <div style={{ minHeight: '100vh', backgroundColor: T.bg, display: 'flex', flexDirection: 'column' }}>
       <CimolaceHeader />
       <div style={{ display: 'flex', flex: 1, minHeight: 0 }}>
         <CimolaceSidebar />

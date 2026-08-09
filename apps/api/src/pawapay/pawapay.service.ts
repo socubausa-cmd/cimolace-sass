@@ -372,9 +372,15 @@ export class PawaPayService {
     if (!response.ok) {
       const text = await response.text().catch(() => '');
       this.logger.error(`pawaPay initiatePayout ${response.status}: ${text}`);
-      throw new BadRequestException(
+      const err: any = new BadRequestException(
         `Erreur pawaPay payout (${response.status}): ${text || 'inconnu'}`,
       );
+      // ⭐ 4xx = pawaPay a COMPRIS et REFUSÉ : l'argent n'est pas parti, c'est définitif.
+      //    5xx / timeout = on ne sait PAS si le virement a été pris en compte.
+      //    Confondre les deux faisait écrire « échoué » sur un retrait peut-être
+      //    exécuté, et la ligne n'était alors plus jamais relue (statut terminal).
+      err.pawapayDefinitive = response.status >= 400 && response.status < 500;
+      throw err;
     }
 
     const json = (await response.json()) as PawaPayPayoutInitResponse;
@@ -388,9 +394,11 @@ export class PawaPayService {
       this.logger.error(
         `pawaPay payout ${status} payoutId=${(payload as any)?.payoutId} reason=${reason}`,
       );
-      throw new BadRequestException(
+      const err: any = new BadRequestException(
         `Payout refusé par PawaPay (${status}) : ${reason}`,
       );
+      err.pawapayDefinitive = true; // refus explicite, lu dans la réponse
+      throw err;
     }
 
     return json;

@@ -1418,7 +1418,21 @@ export class BillingService implements OnApplicationBootstrap {
     if (!dto?.phoneNumber || !dto?.mno) throw new BadRequestException("phoneNumber et mno (opérateur, ex: MTN_MOMO_CMR) requis");
     const currency = (dto.currency || "XAF").toUpperCase();
     const sb = this.supabase;
-    const payoutId = randomUUID();
+
+    // IDEMPOTENCE — même règle que le retrait plateforme : la clé vient du
+    // client, sinon deux clics rapides font deux virements. `payout_id` porte
+    // une contrainte UNIQUE, donc la course est tranchée par la base.
+    const payoutId = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(String((dto as any)?.payoutId ?? ""))
+      ? String((dto as any).payoutId)
+      : randomUUID();
+    const { data: deja } = await sb
+      .from("billing_payouts")
+      .select("payout_id, status, amount_cents, currency")
+      .eq("payout_id", payoutId)
+      .maybeSingle();
+    if (deja) {
+      return { payout_id: (deja as any).payout_id, status: (deja as any).status, amount_cents: (deja as any).amount_cents, currency: (deja as any).currency, idempotent: true };
+    }
 
     // 1) tracer d'abord (même si l'appel PawaPay échoue ensuite)
     await sb.from("billing_payouts").insert({
@@ -1440,7 +1454,17 @@ export class BillingService implements OnApplicationBootstrap {
       initStatus = (init.status || "ACCEPTED").toLowerCase();
       await sb.from("billing_payouts").update({ status: initStatus, updated_at: new Date().toISOString() }).eq("payout_id", payoutId);
     } catch (e) {
-      await sb.from("billing_payouts").update({ status: "failed", failure_message: (e as Error).message, updated_at: new Date().toISOString() }).eq("payout_id", payoutId);
+      // « Échoué » n'est écrit que sur un refus EXPLICITE de pawaPay. Un timeout
+      // ne dit rien du sort du virement, et `failed` est terminal (PAYOUT_FINAL) :
+      // la ligne ne serait plus jamais relue alors que l'argent a pu partir.
+      const definitif = (e as any)?.pawapayDefinitive === true;
+      await sb.from("billing_payouts").update({
+        status: definitif ? "failed" : "unverified",
+        failure_message: definitif
+          ? (e as Error).message
+          : `Sort inconnu (erreur de transport) — vérification automatique en cours : ${(e as Error).message}`,
+        updated_at: new Date().toISOString(),
+      }).eq("payout_id", payoutId);
       throw e;
     }
     return { payout_id: payoutId, status: initStatus, amount_cents: amountCents, currency };
