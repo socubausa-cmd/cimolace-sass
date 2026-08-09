@@ -194,7 +194,8 @@ const makeStyles = (C: LiriPalette) => StyleSheet.create({
   },
   playIcon: { color: '#fff', fontSize: 20, marginLeft: 3 },
   dur: {
-    position: 'absolute', right: 8, bottom: 8, color: C.ink, fontSize: 11.5, fontWeight: '700',
+    // Badge posé sur l'aperçu (overlay noir constant) → texte fixe clair dans les DEUX teintes.
+    position: 'absolute', right: 8, bottom: 8, color: '#fff', fontSize: 11.5, fontWeight: '700',
     backgroundColor: 'rgba(0,0,0,.66)', paddingHorizontal: 8, paddingVertical: 3, borderRadius: 8, overflow: 'hidden',
   },
   cardTitle: { color: C.ink, fontSize: 15.5, fontWeight: '600', fontFamily: F.sans, paddingHorizontal: 14, paddingTop: 12 },

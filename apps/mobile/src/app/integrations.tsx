@@ -1,6 +1,6 @@
 import { Feather } from '@expo/vector-icons';
 import { useEffect, useMemo, useState } from 'react';
-import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { LiriFonts as F, softShadow, type LiriPalette } from '@/constants/liri-theme';
@@ -62,6 +62,9 @@ export default function IntegrationsScreen() {
             </Pressable>
           </View>
           <View style={styles.panel}>
+            {loading ? (
+              <View style={styles.keyEmpty}><ActivityIndicator color={C.coral} /></View>
+            ) : null}
             {!loading && keys.length === 0 ? (
               <View style={styles.keyEmpty}>
                 <Text style={styles.keyEmptyTxt}>Aucune clé API. Génères-en une pour intégrer LIRI.</Text>
@@ -135,12 +138,13 @@ const makeStyles = (C: LiriPalette) => StyleSheet.create({
   keyAction: { color: C.coral, fontSize: 12, fontWeight: '600', fontFamily: F.sans },
 
   hookRow: { flexDirection: 'row', alignItems: 'center', gap: 10, paddingHorizontal: 12, paddingTop: 13 },
-  dot: { width: 7, height: 7, borderRadius: 4, backgroundColor: '#34D399' },
+  dot: { width: 7, height: 7, borderRadius: 4, backgroundColor: C.emeraldB },
   hookUrl: { flex: 1, color: C.muted, fontSize: 12.5, fontFamily: 'monospace' },
   hookTags: { flexDirection: 'row', gap: 6, paddingHorizontal: 12, paddingVertical: 11 },
-  tag: { paddingHorizontal: 8, paddingVertical: 4, borderRadius: 7, backgroundColor: 'rgba(255,255,255,0.05)' },
+  tag: { paddingHorizontal: 8, paddingVertical: 4, borderRadius: 7, backgroundColor: C.base, borderWidth: 1, borderColor: C.line },
   tagTxt: { color: C.faint, fontSize: 10.5, fontFamily: F.sans },
 
+  // Bloc de code = terminal, TOUJOURS sombre → texte fixe clair dans les deux teintes.
   codeBox: { borderRadius: 18, backgroundColor: '#1c1b1a', borderWidth: 1, borderColor: C.line, padding: 16 },
-  code: { color: C.muted, fontSize: 11.5, lineHeight: 18, fontFamily: 'monospace' },
+  code: { color: 'rgba(245,244,238,0.82)', fontSize: 11.5, lineHeight: 18, fontFamily: 'monospace' },
 });

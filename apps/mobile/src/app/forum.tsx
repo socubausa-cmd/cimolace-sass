@@ -1,7 +1,7 @@
 import { Feather } from '@expo/vector-icons';
 import { useFocusEffect, useRouter, type Href } from 'expo-router';
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { Pressable, RefreshControl, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import { ActivityIndicator, Pressable, RefreshControl, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { LiriFonts as F, softShadow, type LiriPalette } from '@/constants/liri-theme';
@@ -56,7 +56,10 @@ export default function ForumScreen() {
   const [refreshing, setRefreshing] = useState(false);
 
   const load = useCallback(async () => {
-    setTopics(await fetchForumTopics());
+    // Filet : en cas d'échec réseau, retomber sur [] (état vide honnête) plutôt
+    // que de laisser topics=null → écran blanc perpétuel.
+    try { setTopics(await fetchForumTopics()); }
+    catch { setTopics([]); }
   }, []);
   useEffect(() => {
     void load();
@@ -108,7 +111,12 @@ export default function ForumScreen() {
           showsVerticalScrollIndicator={false}
           refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={C.coral} />}
         >
-          {/* État vide / chargement — vraie donnée (forum_topics), pas de maquette */}
+          {/* Chargement — évite l'écran blanc pendant le fetch */}
+          {loading ? (
+            <View style={styles.empty}><ActivityIndicator color={C.coral} /></View>
+          ) : null}
+
+          {/* État vide — vraie donnée (forum_topics), pas de maquette */}
           {!loading && items.length === 0 ? (
             <View style={styles.empty}>
               <View style={styles.emptyIcon}>
@@ -186,7 +194,7 @@ const makeStyles = (C: LiriPalette) => StyleSheet.create({
   avatar: { width: 44, height: 44, borderRadius: 22, alignItems: 'center', justifyContent: 'center', backgroundColor: C.coralTint, ...softShadow },
   avatarLive: { backgroundColor: C.live },
   avatarInitials: { color: C.coral, fontSize: 14, fontWeight: '700', fontFamily: F.sans },
-  onlineDot: { position: 'absolute', bottom: 0, right: 0, width: 11, height: 11, borderRadius: 6, backgroundColor: '#34D399', borderWidth: 2, borderColor: C.base },
+  onlineDot: { position: 'absolute', bottom: 0, right: 0, width: 11, height: 11, borderRadius: 6, backgroundColor: C.emeraldB, borderWidth: 2, borderColor: C.base },
 
   rowBody: { flex: 1, minWidth: 0 },
   rowTop: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },

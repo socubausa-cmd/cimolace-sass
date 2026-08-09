@@ -60,7 +60,7 @@ export default function WaitingRoomScreen() {
                 <Text style={s.checkLabel}>{c.label}</Text>
                 <Text style={s.checkHint}>{c.hint}</Text>
               </View>
-              <Feather name="check-circle" size={18} color="#34D399" />
+              <Feather name="check-circle" size={18} color={C.emeraldB} />
             </View>
           ))}
         </View>
@@ -86,7 +86,7 @@ const makeStyles = (C: LiriPalette) => StyleSheet.create({
   kicker: { color: C.coral, fontSize: 11, fontWeight: '800', letterSpacing: 1.8, marginTop: 18 },
   title: { color: C.ink, fontSize: 24, fontWeight: '800', textAlign: 'center', marginTop: 8 },
   sub: { color: C.muted, fontSize: 14, textAlign: 'center', marginTop: 8 },
-  timer: { flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 14, backgroundColor: 'rgba(255,255,255,0.05)', borderRadius: 20, paddingHorizontal: 14, paddingVertical: 8 },
+  timer: { flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 14, backgroundColor: C.panelTint, borderWidth: 1, borderColor: C.line, borderRadius: 20, paddingHorizontal: 14, paddingVertical: 8 },
   timerTxt: { color: C.muted, fontSize: 13, fontWeight: '600', fontVariant: ['tabular-nums'] },
   checks: { marginTop: 32, borderRadius: 20, borderWidth: 1, borderColor: C.line, backgroundColor: C.panel, padding: 16 },
   checksTitle: { color: C.ink, fontSize: 13, fontWeight: '800', letterSpacing: 0.4, marginBottom: 12, textTransform: 'uppercase' },

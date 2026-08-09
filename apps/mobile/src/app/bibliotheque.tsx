@@ -1,7 +1,7 @@
 import { Feather } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { Pressable, RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, Pressable, RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { LiriFonts as F, softShadow, type LiriPalette } from '@/constants/liri-theme';
@@ -167,6 +167,9 @@ export default function BibliothequeScreen() {
           showsVerticalScrollIndicator={false}
           refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={C.coral} />}
         >
+          {loading ? (
+            <View style={styles.empty}><ActivityIndicator color={C.coral} /></View>
+          ) : null}
           {!loading && items.length === 0 ? (
             <View style={styles.empty}>
               <View style={styles.emptyIcon}><Feather name="folder" size={26} color={C.faint} /></View>

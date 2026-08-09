@@ -84,9 +84,9 @@ export default function CalendrierAnnuelScreen() {
         <View style={s.header}>
           <View><Text style={s.kicker}>LIRI · ÉCOLE</Text><Text style={s.title}>Calendrier annuel</Text></View>
           <View style={s.yearPicker}>
-            <Pressable accessibilityLabel="Année précédente" onPress={() => setYear((v) => v - 1)}><Feather name="chevron-left" size={20} color={C.ink} /></Pressable>
+            <Pressable accessibilityLabel="Année précédente" hitSlop={12} onPress={() => setYear((v) => v - 1)}><Feather name="chevron-left" size={20} color={C.ink} /></Pressable>
             <Text style={s.year}>{year}</Text>
-            <Pressable accessibilityLabel="Année suivante" onPress={() => setYear((v) => v + 1)}><Feather name="chevron-right" size={20} color={C.ink} /></Pressable>
+            <Pressable accessibilityLabel="Année suivante" hitSlop={12} onPress={() => setYear((v) => v + 1)}><Feather name="chevron-right" size={20} color={C.ink} /></Pressable>
           </View>
         </View>
         {items === null ? <View style={s.center}><ActivityIndicator color={C.coral} /></View> :

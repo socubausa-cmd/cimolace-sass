@@ -68,7 +68,7 @@ export default function MessagesScreen() {
       <SafeAreaView edges={['top']} style={s.safe}>
         <View style={s.header}>
           <Text style={s.h1}>Messagerie</Text>
-          <Pressable onPress={() => router.push('/nouveau-message' as Href)} style={s.newButton}>
+          <Pressable onPress={() => router.push('/nouveau-message' as Href)} style={s.newButton} hitSlop={8}>
             <Feather name="edit" size={18} color={C.coral} />
           </Pressable>
         </View>

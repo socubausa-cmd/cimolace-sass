@@ -320,7 +320,7 @@ const makeStyles = (C: LiriPalette) => StyleSheet.create({
   upIcon: { width: 36, height: 36, borderRadius: 11, backgroundColor: C.coralTint, alignItems: 'center', justifyContent: 'center' },
   upTitle: { color: C.ink, fontSize: 14, fontWeight: '600', fontFamily: F.sans },
   upMeta: { color: C.faint, fontSize: 12, marginTop: 2, fontFamily: F.sans },
-  upTag: { backgroundColor: 'rgba(255,255,255,0.05)', borderRadius: 8, paddingHorizontal: 8, paddingVertical: 4 },
+  upTag: { backgroundColor: C.coralTint2, borderRadius: 8, paddingHorizontal: 8, paddingVertical: 4 },
   upTagTxt: { color: C.muted, fontSize: 10.5, fontWeight: '700', fontFamily: F.sans },
 
   // empty state

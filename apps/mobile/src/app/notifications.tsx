@@ -27,7 +27,7 @@ function iconFor(type: string | null | undefined, C: LiriPalette): { name: IconN
       return { name: 'volume-2', color: '#e0926a' };
     case 'event':
     case 'calendar':
-      return { name: 'calendar', color: '#34D399' };
+      return { name: 'calendar', color: C.emeraldB };
     default:
       return { name: 'bell', color: C.coral };
   }

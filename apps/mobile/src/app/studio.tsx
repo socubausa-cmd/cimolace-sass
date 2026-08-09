@@ -97,7 +97,7 @@ const makeStyles = (C: LiriPalette) => StyleSheet.create({
   toolIcon: { width: 42, height: 42, borderRadius: 13, backgroundColor: C.coralTint, alignItems: 'center', justifyContent: 'center', marginBottom: 12 },
   toolTitle: { color: C.ink, fontSize: 15, fontWeight: '600', fontFamily: F.sans },
   toolSub: { color: C.faint, fontSize: 12, lineHeight: 16, marginTop: 3, fontFamily: F.sans },
-  soon: { alignSelf: 'flex-start', marginTop: 11, paddingHorizontal: 9, paddingVertical: 4, borderRadius: 999, backgroundColor: 'rgba(255,255,255,0.05)', borderWidth: 1, borderColor: C.line },
+  soon: { alignSelf: 'flex-start', marginTop: 11, paddingHorizontal: 9, paddingVertical: 4, borderRadius: 999, backgroundColor: C.coralTint2, borderWidth: 1, borderColor: C.line },
   soonTxt: { color: C.faint, fontSize: 10.5, fontWeight: '700', fontFamily: F.sans },
   go: { marginTop: 11, width: 26, height: 26, borderRadius: 9, backgroundColor: C.coralTint, alignItems: 'center', justifyContent: 'center' },
 });
