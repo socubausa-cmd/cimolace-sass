@@ -417,12 +417,17 @@ export class PawaPayService {
    */
   async getActiveConfig(
     country?: string,
+    operationType: 'DEPOSIT' | 'PAYOUT' | 'REFUND' = 'DEPOSIT',
   ): Promise<PawaPayActiveConfig | null> {
     this.assertConfigured();
 
+    // ⚠️ Le type d'opération n'est PAS cosmétique : un compte peut encaisser
+    // partout et ne décaisser nulle part (c'était notre cas jusqu'au 2026-08-07).
+    // Interroger avec DEPOSIT pour peupler un formulaire de RETRAIT proposerait
+    // des opérateurs qui refuseront le versement.
     const url = country
-      ? `${this.baseUrl}/v2/active-conf?country=${country}&operationType=DEPOSIT`
-      : `${this.baseUrl}/v2/active-conf?operationType=DEPOSIT`;
+      ? `${this.baseUrl}/v2/active-conf?country=${country}&operationType=${operationType}`
+      : `${this.baseUrl}/v2/active-conf?operationType=${operationType}`;
 
     const response = await fetch(url, {
       headers: { Authorization: `Bearer ${this.apiToken}` },

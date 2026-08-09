@@ -155,11 +155,51 @@ export class CimolaceBackofficeService {
     return { xaf, byCurrency: [...per.values()].sort((a, b) => (b.xaf ?? 0) - (a.xaf ?? 0)), unconvertible };
   }
 
+  /**
+   * Opérateurs réellement ouverts au PAYOUT, avec leurs bornes de montant.
+   *
+   * L'écran listait 4 opérateurs codés en dur alors que 24 couples
+   * opérateur-devise sont ouverts, et n'affichait AUCUNE borne : un montant hors
+   * limites partait quand même, était écrit `pending`, puis rejeté par pawaPay.
+   * Les bornes viennent donc de la source, jamais du code.
+   */
+  async getPayoutOptions() {
+    const conf = await this.pawapay.getActiveConfig(undefined, 'PAYOUT').catch(() => null);
+    if (!conf) return { operators: [], error: 'Configuration pawaPay illisible.' };
+    const operators: Array<{
+      provider: string; label: string; country: string; currency: string;
+      min: number; max: number;
+    }> = [];
+    for (const c of (conf as any).countries ?? []) {
+      for (const p of c.providers ?? []) {
+        for (const cur of p.currencies ?? []) {
+          const payout = cur.operationTypes?.PAYOUT;
+          if (!payout) continue; // opérateur ouvert au dépôt mais pas au versement
+          operators.push({
+            provider: p.provider,
+            label: `${p.displayName || p.provider} — ${c.displayName?.fr || c.country}`,
+            country: c.country,
+            currency: cur.currency,
+            min: Number(payout.minAmount ?? 0),
+            max: Number(payout.maxAmount ?? 0),
+          });
+        }
+      }
+    }
+    operators.sort((a, b) => a.label.localeCompare(b.label, 'fr'));
+    return { operators, error: null };
+  }
+
   /** Vue financière SaaS : VRAIS soldes wallet pawaPay + revenus tenants payés + retraits plateforme. */
   async getPlatformFinances() {
     const sb = this.supabase.client as any;
     let walletBalances: Array<{ country: string; balance: string; currency: string; provider?: string }> = [];
-    try { walletBalances = await this.pawapay.getWalletBalances(); } catch { walletBalances = []; }
+    // ⛔ Une panne pawaPay ne doit PAS se lire comme « tu n'as plus d'argent ».
+    // Avaler l'exception en liste vide rendait « Aucun solde disponible » — soit
+    // exactement l'écran d'un compte à zéro. On remonte l'échec tel quel.
+    let walletBalancesError: string | null = null;
+    try { walletBalances = await this.pawapay.getWalletBalances(); }
+    catch (e) { walletBalancesError = (e as Error)?.message || 'Solde pawaPay illisible.'; }
     const { data: invoices } = await sb.from('billing_invoices').select('amount_cents, status, currency');
     const revenue = CimolaceBackofficeService.aggregateXaf(
       (invoices ?? []).filter((i: any) => String(i.status || '').toLowerCase() === 'paid'),
@@ -170,21 +210,42 @@ export class CimolaceBackofficeService {
     );
     const wallets = await this.listWallets();
 
+    // ZONES MONÉTAIRES — XAF et XOF ne sont PAS fongibles : un retrait au Sénégal
+    // ne peut pas puiser dans le solde du Gabon. Les additionner produirait un
+    // « disponible » qu'aucune opération ne peut honorer. On les sépare donc, et
+    // la règle dure est : un solde affiché = un montant retirable en UNE opération.
+    const zonesMap = new Map<string, { currency: string; total: number; countries: Array<{ country: string; balance: number }> }>();
+    for (const w of walletBalances) {
+      const currency = String(w.currency || '').toUpperCase();
+      const z = zonesMap.get(currency) ?? { currency, total: 0, countries: [] };
+      const balance = Number(w.balance || 0);
+      z.total += balance;
+      z.countries.push({ country: w.country, balance });
+      zonesMap.set(currency, z);
+    }
+    const zones = [...zonesMap.values()]
+      .map((z) => ({ ...z, countries: z.countries.sort((a, b) => b.balance - a.balance) }))
+      .sort((a, b) => b.total - a.total);
+
     // NON ATTRIBUÉ : l'argent qui dort dans le wallet physique sans étiquette produit.
     // Les porte-monnaie (afritrack, liri…) ne se remplissent QUE par attribution manuelle ;
     // sans cette ligne, on croit que le wallet est réparti alors qu'il ne l'est presque pas.
+    // ⛔ Si la lecture physique a échoué, on renvoie null : pas de 0 fabriqué à partir d'une absence.
     const isCfa = (c?: string) => ['XAF', 'XOF'].includes(String(c || 'XAF').toUpperCase());
     const physicalCfa = walletBalances.filter((w) => isCfa(w.currency)).reduce((s, w) => s + Number(w.balance || 0), 0);
     const allocatedCfa = wallets.filter((w: any) => isCfa(w.currency)).reduce((s: number, w: any) => s + Number(w.balanceCents || 0), 0);
 
     return {
       walletBalances,
+      walletBalancesError,
+      readAt: new Date().toISOString(),
+      zones,
       wallets,
       revenue,
       withdrawn,
-      unallocatedXaf: Math.round(physicalCfa - allocatedCfa),
+      unallocatedXaf: walletBalancesError ? null : Math.round(physicalCfa - allocatedCfa),
       allocatedXaf: Math.round(allocatedCfa),
-      physicalXaf: Math.round(physicalCfa),
+      physicalXaf: walletBalancesError ? null : Math.round(physicalCfa),
       // Compat : mêmes noms qu'avant, mais désormais CONVERTIS (donc justes).
       revenuePaidCents: revenue.xaf,
       withdrawnCents: withdrawn.xaf,
@@ -205,7 +266,7 @@ export class CimolaceBackofficeService {
     const key = String(dto?.key || '').trim().toLowerCase().replace(/[^a-z0-9_-]/g, '-');
     const label = String(dto?.label || '').trim();
     if (!key || !label) throw new BadRequestException('key et label requis');
-    const { data, error } = await (this.supabase.client as any).from('cimolace_wallets').insert({ key, label, color: dto?.color || '#7c3aed' }).select('*').single();
+    const { data, error } = await (this.supabase.client as any).from('cimolace_wallets').insert({ key, label, color: dto?.color || '#d97757' }).select('*').single();
     if (error) throw new BadRequestException(error.message);
     return data;
   }
@@ -233,6 +294,29 @@ export class CimolaceBackofficeService {
     if (amountCents <= 0) throw new BadRequestException('amountCents (> 0) requis');
     if (!dto?.phoneNumber || !dto?.mno) throw new BadRequestException('phoneNumber et mno (opérateur) requis');
     const currency = (dto.currency || 'XAF').toUpperCase();
+
+    // ── GARDE-FOU AVANT TOUT APPEL RÉSEAU ────────────────────────────────────
+    // Le service n'a longtemps validé que « montant > 0 » : un retrait supérieur
+    // au wallet partait, s'écrivait `pending` en base, puis se faisait refuser
+    // par pawaPay — l'écran affichait un retrait en cours qui n'existerait jamais.
+    // On refuse ici, avec le chiffre en clair, plutôt que d'inventer une ligne.
+    let zoneBalance: number | null = null;
+    try {
+      const balances = await this.pawapay.getWalletBalances();
+      zoneBalance = balances
+        .filter((w) => String(w.currency || '').toUpperCase() === currency)
+        .reduce((s, w) => s + Number(w.balance || 0), 0);
+    } catch {
+      // Solde illisible : on laisse passer plutôt que de bloquer un retrait
+      // légitime sur une panne de lecture. pawaPay reste l'arbitre final.
+      zoneBalance = null;
+    }
+    if (zoneBalance !== null && amountCents > zoneBalance) {
+      throw new BadRequestException(
+        `Montant supérieur au solde disponible en ${currency} : ${Math.round(zoneBalance).toLocaleString('fr-FR')} ${currency} au maximum.`,
+      );
+    }
+
     const sb = this.supabase.client as any;
     const payoutId = randomUUID();
     await sb.from('billing_payouts').insert({

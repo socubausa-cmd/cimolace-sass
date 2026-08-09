@@ -1,122 +1,92 @@
 /**
- * ═══════════════════════════════════════════════════════════════
- * CIMOLACE SIDEBAR
- * Sidebar navigation pour CIMOLACE Back-Office
- * ═══════════════════════════════════════════════════════════════
+ * BARRE LATÉRALE — console SaaS Cimolace.
+ *
+ * Les entrées portaient des emoji système (📊 💰 🔑) : rendus par la police de
+ * l'OS, ils changent de forme d'un poste à l'autre, imposent leurs couleurs
+ * saturées — le 💰 est doré, et l'or est banni par la charte — et ne peuvent pas
+ * hériter de la couleur du lien actif. Remplacés par lucide-react, monochromes.
+ *
+ * Les couleurs viennent des jetons partagés (../../pages/cimolace/theme) : la
+ * coque et le corps se ressemblaient si peu qu'on voyait deux produits sur un
+ * même écran.
  */
 
 import { Link, useLocation } from 'react-router-dom';
+import {
+  LayoutDashboard, Radar, Users, Contact, GraduationCap, Plus, Globe,
+  CreditCard, Wallet, KeyRound, Calculator, LifeBuoy,
+} from 'lucide-react';
+import { T, FS, R, useConsoleCss } from '../../pages/cimolace/theme';
 
 const navItems = [
-  { name: 'Dashboard', path: '/cimolace/admin', icon: '📊' },
-  { name: 'Monitoring', path: '/cimolace/admin/monitoring', icon: '🔭' },
-  { name: 'Clients', path: '/cimolace/admin/clients', icon: '👥' },
-  { name: 'CRM', path: '/cimolace/admin/crm', icon: '📇' },
-  { name: 'Écoles', path: '/cimolace/admin/school-provisioning', icon: '🎓' },
-  { name: 'Créer une école', path: '/cimolace/create-school', icon: '➕' },
-  { name: 'Sites', path: '/cimolace/admin/sites', icon: '🌐' },
-  { name: 'Billing', path: '/cimolace/admin/billing', icon: '💳' },
-  { name: 'Finances', path: '/cimolace/admin/finances', icon: '💰' },
-  { name: 'Clés IA', path: '/cimolace/admin/ai-keys', icon: '🔑' },
-  { name: 'Tarification IA', path: '/cimolace/admin/ai-pricing', icon: '🧮' },
-  { name: 'Support', path: '/cimolace/admin/support', icon: '🎫' },
+  { name: 'Dashboard', path: '/cimolace/admin', Icon: LayoutDashboard },
+  { name: 'Monitoring', path: '/cimolace/admin/monitoring', Icon: Radar },
+  { name: 'Clients', path: '/cimolace/admin/clients', Icon: Users },
+  { name: 'CRM', path: '/cimolace/admin/crm', Icon: Contact },
+  { name: 'Écoles', path: '/cimolace/admin/school-provisioning', Icon: GraduationCap },
+  { name: 'Créer une école', path: '/cimolace/create-school', Icon: Plus },
+  { name: 'Sites', path: '/cimolace/admin/sites', Icon: Globe },
+  { name: 'Facturation', path: '/cimolace/admin/billing', Icon: CreditCard },
+  { name: 'Finances', path: '/cimolace/admin/finances', Icon: Wallet },
+  { name: 'Clés IA', path: '/cimolace/admin/ai-keys', Icon: KeyRound },
+  { name: 'Tarification IA', path: '/cimolace/admin/ai-pricing', Icon: Calculator },
+  { name: 'Support', path: '/cimolace/admin/support', Icon: LifeBuoy },
 ];
 
 export default function CimolaceSidebar() {
   const location = useLocation();
+  useConsoleCss();
 
   return (
     <aside style={{
-      width: '240px',
-      backgroundColor: '#1e293b',
-      borderRight: '1px solid #334155',
+      width: 232,
+      flexShrink: 0,
+      background: T.rail,
+      borderRight: `1px solid ${T.line}`,
       display: 'flex',
       flexDirection: 'column',
-      padding: '16px',
+      padding: 14,
       position: 'sticky',
-      top: '64px',
+      top: 64,
       height: 'calc(100vh - 64px)',
       overflowY: 'auto',
+      fontFamily: "'Inter', system-ui, sans-serif",
     }}>
-      {/* Logo section */}
-      <div style={{
-        marginBottom: '24px',
-        paddingBottom: '16px',
-        borderBottom: '1px solid #334155',
-      }}>
-        <div style={{
-          fontSize: '20px',
-          fontWeight: 'bold',
-          color: 'white',
-          letterSpacing: '0.5px',
-        }}>
-          CIMOLACE
-        </div>
-        <div style={{
-          fontSize: '11px',
-          color: '#94a3b8',
-          marginTop: '4px',
-        }}>
-          Back-Office
-        </div>
+      <div style={{ marginBottom: 20, paddingBottom: 14, borderBottom: `1px solid ${T.line}` }}>
+        <div style={{ fontSize: FS.xl, fontWeight: 700, color: T.ink, letterSpacing: '.02em' }}>Cimolace</div>
+        <div style={{ fontSize: FS.xs, color: T.faint, marginTop: 2 }}>Console propriétaire</div>
       </div>
 
-      {/* Navigation */}
-      <nav style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-        {navItems.map((item) => {
-          const isActive = location.pathname === item.path || 
-                          (item.path !== '/cimolace/admin' && location.pathname.startsWith(item.path));
-          
+      <nav style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+        {navItems.map(({ name, path, Icon }) => {
+          const isActive = location.pathname === path
+            || (path !== '/cimolace/admin' && location.pathname.startsWith(path));
           return (
             <Link
-              key={item.name}
-              to={item.path}
+              key={name}
+              to={path}
+              aria-current={isActive ? 'page' : undefined}
+              className="cml-focus"
               style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: '12px',
-                padding: '12px',
-                borderRadius: '8px',
-                textDecoration: 'none',
-                fontSize: '14px',
-                fontWeight: '500',
-                color: isActive ? 'white' : '#94a3b8',
-                backgroundColor: isActive ? '#3b82f6' : 'transparent',
-                transition: 'all 0.2s',
+                display: 'flex', alignItems: 'center', gap: 11,
+                padding: '9px 11px', borderRadius: R.control, textDecoration: 'none',
+                fontSize: FS.base, fontWeight: isActive ? 600 : 500,
+                color: isActive ? T.coral : T.muted,
+                background: isActive ? T.coralSoft : 'transparent',
+                transition: 'background-color .15s ease, color .15s ease',
               }}
-              onMouseEnter={(e) => {
-                if (!isActive) {
-                  e.target.style.backgroundColor = '#334155';
-                  e.target.style.color = 'white';
-                }
-              }}
-              onMouseLeave={(e) => {
-                if (!isActive) {
-                  e.target.style.backgroundColor = 'transparent';
-                  e.target.style.color = '#94a3b8';
-                }
-              }}
+              onMouseEnter={(e) => { if (!isActive) e.currentTarget.style.color = T.ink; }}
+              onMouseLeave={(e) => { if (!isActive) e.currentTarget.style.color = T.muted; }}
             >
-              <span style={{ fontSize: '18px' }}>{item.icon}</span>
-              {item.name}
+              <Icon size={16} style={{ flexShrink: 0 }} />
+              {name}
             </Link>
           );
         })}
       </nav>
 
-      {/* Footer */}
-      <div style={{
-        marginTop: 'auto',
-        paddingTop: '16px',
-        borderTop: '1px solid #334155',
-      }}>
-        <div style={{
-          fontSize: '12px',
-          color: '#64748b',
-          textAlign: 'center',
-        }}>
-          v1.0.0
-        </div>
+      <div style={{ marginTop: 'auto', paddingTop: 14, borderTop: `1px solid ${T.line}` }}>
+        <div style={{ fontSize: FS.xs, color: T.faint, textAlign: 'center' }}>v1.0.0</div>
       </div>
     </aside>
   );

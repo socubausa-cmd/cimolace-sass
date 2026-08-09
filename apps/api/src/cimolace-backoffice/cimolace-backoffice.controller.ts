@@ -24,6 +24,8 @@ export class CimolaceBackofficeController {
   // PawaPay au lieu d'attendre un callback qui peut ne jamais venir.
   @Post('finances/payouts/sync') syncFinancePayouts() { return this.billing.syncPendingPayouts(null); }
   // Porte-monnaie par produit (afritrack, liri, mbolo, medos…)
+  // Opérateurs réellement ouverts au versement + bornes de montant, lus chez pawaPay.
+  @Get('finances/payout-options') payoutOptions() { return this.svc.getPayoutOptions(); }
   @Get('finances/wallets') listWallets() { return this.svc.listWallets(); }
   @Post('finances/wallets') createWallet(@Body() b: any) { return this.svc.createWallet(b); }
   @Post('finances/wallets/:key/allocate') allocateWallet(@Req() req: any, @Param('key') key: string, @Body() b: any) { return this.svc.allocateWallet(key, b, req.user?.id ?? null); }

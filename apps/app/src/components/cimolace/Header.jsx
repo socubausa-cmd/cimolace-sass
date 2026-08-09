@@ -1,75 +1,49 @@
 /**
- * ═══════════════════════════════════════════════════════════════
- * CIMOLACE HEADER
- * Header spécifique pour CIMOLACE Back-Office
- * ═══════════════════════════════════════════════════════════════
+ * EN-TÊTE — console SaaS Cimolace.
+ *
+ * Même socle de jetons que la barre latérale et les pages : la coque était en
+ * slate-navy avec un accent bleu, le corps en GitHub-dark avec un accent violet.
+ * Deux produits sur un même écran.
  */
+
+import { T, FS, R } from '../../pages/cimolace/theme';
 
 export default function CimolaceHeader() {
   return (
     <header style={{
-      backgroundColor: '#1e293b',
-      borderBottom: '1px solid #334155',
-      padding: '0 24px',
-      height: '64px',
+      background: T.rail,
+      borderBottom: `1px solid ${T.line}`,
+      padding: '0 22px',
+      height: 64,
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'space-between',
       position: 'sticky',
       top: 0,
       zIndex: 50,
+      fontFamily: "'Inter', system-ui, sans-serif",
     }}>
-      {/* Logo */}
-      <div style={{
-        display: 'flex',
-        alignItems: 'center',
-        color: 'white',
-      }}>
-        <div style={{
-          fontSize: '24px',
-          fontWeight: 'bold',
-          letterSpacing: '0.5px',
-        }}>
-          CIMOLACE
-        </div>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 9, color: T.ink }}>
+        <span style={{ fontSize: FS.xl, fontWeight: 700, letterSpacing: '.01em' }}>Cimolace</span>
         <span style={{
-          marginLeft: '8px',
-          fontSize: '12px',
-          backgroundColor: '#3b82f6',
-          padding: '2px 8px',
-          borderRadius: '4px',
-          fontWeight: '500',
+          fontSize: FS.xs, fontWeight: 600, color: T.coral,
+          background: T.coralSoft, border: `1px solid rgba(217,119,87,.32)`,
+          padding: '2px 8px', borderRadius: R.pill,
         }}>
-          Back-Office
+          Console propriétaire
         </span>
       </div>
 
-      {/* User Menu */}
-      <div style={{
-        display: 'flex',
-        alignItems: 'center',
-        gap: '12px',
-      }}>
-        <div style={{
-          width: '36px',
-          height: '36px',
-          borderRadius: '50%',
-          backgroundColor: '#3b82f6',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          color: 'white',
-          fontWeight: 'bold',
-          fontSize: '14px',
+      <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+        <div aria-hidden style={{
+          width: 32, height: 32, borderRadius: R.pill,
+          background: T.coralSoft, border: `1px solid rgba(217,119,87,.32)`,
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          color: T.coral, fontWeight: 700, fontSize: FS.base,
         }}>
           A
         </div>
-        <div style={{
-          color: '#e2e8f0',
-          fontSize: '14px',
-        }}>
-          Admin
-        </div>
+        <span style={{ color: T.muted, fontSize: FS.base }}>Admin</span>
       </div>
     </header>
   );
