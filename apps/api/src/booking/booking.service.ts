@@ -1403,7 +1403,7 @@ export class BookingService {
     try {
       const { data: appts } = await client
         .from('appointments')
-        .select('id, status, notes, metadata, booking_slots(start_at, end_at, title, type)')
+        .select('id, status, notes, booking_slots(start_at, end_at, title, type)')
         .eq('tenant_id', tenant.id);
       for (const a of appts ?? []) {
         const s = (a as any).booking_slots;
@@ -1413,11 +1413,10 @@ export class BookingService {
         const notes = String((a as any).notes || '');
         const sujet = (notes.match(/Sujet\s*:\s*([\s\S]*?)(?:\s*Description\s*:|$)/i)?.[1] || s.title || 'Rendez-vous').trim();
         const kind = KIND_BY_TYPE[String(s.type || '')] || 'rdv';
-        // Identité du demandeur (metadata des demandes publiques, sinon les lignes du
-        // récap dans notes) → le calendrier peut ouvrir le suivi CRM / la messagerie.
-        const md = (a as any).metadata || {};
-        const demEmail = String(md.email || notes.match(/E-?mail\s*:\s*(\S+@\S+)/i)?.[1] || '').trim().toLowerCase() || null;
-        const demWa = String(md.whatsapp || notes.match(/WhatsApp\s*:\s*([+\d][\d\s]{5,})/i)?.[1] || '').trim() || null;
+        // Identité du demandeur — ⚠️ appointments N'A PAS de colonne metadata : le
+        // contact vit dans les lignes du récap notes (« E-mail : … », « WhatsApp : … »).
+        const demEmail = String(notes.match(/E-?mail\s*:\s*(\S+@\S+)/i)?.[1] || '').trim().toLowerCase() || null;
+        const demWa = String(notes.match(/WhatsApp\s*:\s*([+\d][\d\s]{5,})/i)?.[1] || '').trim() || null;
         events.push({
           kind, title: sujet, start: s.start_at, end: s.end_at || null, status: (a as any).status, id: (a as any).id, service: s.type || null,
           demandeur: demEmail || demWa ? { email: demEmail, whatsapp: demWa } : null,

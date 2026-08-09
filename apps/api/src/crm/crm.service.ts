@@ -1028,19 +1028,27 @@ export class CrmService {
         out.donations.lastAt = dons[0]?.completed_at || dons[0]?.created_at || null;
         const totaux = new Map<string, number>();
         for (const d of dons) {
-          const cur = String(d.display_currency || 'EUR').toUpperCase();
-          const brut = d.display_amount ?? Number(d.amount_cents || 0) / 100;
-          const montant = Number(brut);
-          if (Number.isFinite(montant)) totaux.set(cur, (totaux.get(cur) || 0) + montant);
+          // ⚠️ display_amount n'est fiable QUE pour les devises sans décimales (XAF/XOF,
+          // pawapay) ; côté Stripe il a pu recevoir les CENTIMES bruts (constaté en prod :
+          // 100 € stocké display_amount=10000/display_currency=EUR). amount_cents (centimes
+          // EUR normalisés) est le canon pour tout le reste.
+          const curBrut = String(d.display_currency || '').toUpperCase();
+          const sansDecimales = curBrut === 'XAF' || curBrut === 'XOF';
+          const montant = sansDecimales && Number.isFinite(Number(d.display_amount))
+            ? Number(d.display_amount)
+            : Number(d.amount_cents || 0) / 100;
+          const devise = sansDecimales ? curBrut : 'EUR';
+          if (Number.isFinite(montant) && montant > 0) totaux.set(devise, (totaux.get(devise) || 0) + montant);
         }
         out.donations.totaux = [...totaux.entries()].map(([currency, total]) => ({ currency, total: Math.round(total * 100) / 100 }));
       }
     }
 
-    // 3) RDV du tenant portés par cet e-mail (metadata des demandes publiques).
+    // 3) RDV du tenant portés par cet e-mail — ⚠️ appointments n'a PAS de colonne
+    //    metadata : le contact vit dans le récap notes (« E-mail : … »).
     const rdvs = await this.safeRows(() =>
       this.db().from('appointments').select('id, created_at')
-        .eq('tenant_id', tenantId).ilike('metadata->>email', emailLike)
+        .eq('tenant_id', tenantId).ilike('notes', `%${emailLike}%`)
         .order('created_at', { ascending: false }).limit(100));
     out.appointments.count = rdvs.length;
     out.appointments.lastAt = rdvs[0]?.created_at || null;
