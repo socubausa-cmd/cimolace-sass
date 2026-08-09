@@ -110,17 +110,85 @@ export class CimolaceBackofficeService {
   // ─── Finances PLATEFORME (console SaaS Cimolace) ──────────────────────────
   private static ZERO_DECIMAL = new Set(['XAF', 'XOF', 'XPF', 'BIF', 'CLP', 'DJF', 'GNF', 'JPY', 'KMF', 'KRW', 'MGA', 'PYG', 'RWF', 'UGX', 'VND', 'VUV']);
 
+  /**
+   * Parité CFA FIXE (accord monétaire) : 1 € = 655,957 XAF = 655,957 XOF, et XOF = XAF.
+   * Ce n'est PAS un taux de marché : rien à interroger, aucune dérive dans le temps.
+   */
+  private static XAF_PER_EUR = 655.957;
+
+  /**
+   * Ramène un montant vers des XAF entiers.
+   *
+   * ⚠️ `amount_cents` ne veut PAS dire « centimes » pour toutes les devises : celles sans
+   * décimale (XAF, XOF…) y rangent l'unité MAJEURE directe — 3000 = 3000 FCFA, pas 30.
+   * Additionner cette colonne sans regarder `currency` mélange donc des euros et des
+   * francs. C'est exactement ce qui affichait « 14 100 XAF » de revenus (11 100 centimes
+   * d'euro + 3 000 francs) là où il y en avait ~75 800.
+   *
+   * Renvoie `null` quand la devise n'a pas de parité fixe (USD…) : on ne DEVINE jamais un
+   * taux. Le montant est alors remonté à part plutôt que noyé dans un total faux.
+   */
+  private static minorToXaf(amountMinor: number, currency?: string): number | null {
+    const c = String(currency || 'XAF').toUpperCase();
+    if (c === 'XAF' || c === 'XOF') return Math.round(amountMinor);
+    if (c === 'EUR') return Math.round((amountMinor / 100) * CimolaceBackofficeService.XAF_PER_EUR);
+    return null;
+  }
+
+  /** Agrège des lignes {amount_cents, currency} : total XAF + détail honnête par devise. */
+  private static aggregateXaf(rows: Array<{ amount_cents?: any; currency?: any }>) {
+    const per = new Map<string, { currency: string; amountMinor: number; count: number; xaf: number | null }>();
+    for (const r of rows) {
+      const currency = String(r?.currency || 'XAF').toUpperCase();
+      const e = per.get(currency) ?? { currency, amountMinor: 0, count: 0, xaf: 0 };
+      e.amountMinor += Number(r?.amount_cents || 0);
+      e.count += 1;
+      per.set(currency, e);
+    }
+    let xaf = 0;
+    const unconvertible: Array<{ currency: string; amountMinor: number }> = [];
+    for (const e of per.values()) {
+      e.xaf = CimolaceBackofficeService.minorToXaf(e.amountMinor, e.currency);
+      if (e.xaf === null) unconvertible.push({ currency: e.currency, amountMinor: e.amountMinor });
+      else xaf += e.xaf;
+    }
+    return { xaf, byCurrency: [...per.values()].sort((a, b) => (b.xaf ?? 0) - (a.xaf ?? 0)), unconvertible };
+  }
+
   /** Vue financière SaaS : VRAIS soldes wallet pawaPay + revenus tenants payés + retraits plateforme. */
   async getPlatformFinances() {
     const sb = this.supabase.client as any;
     let walletBalances: Array<{ country: string; balance: string; currency: string; provider?: string }> = [];
     try { walletBalances = await this.pawapay.getWalletBalances(); } catch { walletBalances = []; }
-    const { data: invoices } = await sb.from('billing_invoices').select('amount_cents, status');
-    const revenuePaidCents = (invoices ?? []).filter((i: any) => String(i.status || '').toLowerCase() === 'paid').reduce((s: number, i: any) => s + Number(i.amount_cents || 0), 0);
-    const { data: payouts } = await sb.from('billing_payouts').select('amount_cents, status').is('tenant_id', null);
-    const withdrawnCents = (payouts ?? []).filter((p: any) => !['failed', 'rejected'].includes(String(p.status || '').toLowerCase())).reduce((s: number, p: any) => s + Number(p.amount_cents || 0), 0);
+    const { data: invoices } = await sb.from('billing_invoices').select('amount_cents, status, currency');
+    const revenue = CimolaceBackofficeService.aggregateXaf(
+      (invoices ?? []).filter((i: any) => String(i.status || '').toLowerCase() === 'paid'),
+    );
+    const { data: payouts } = await sb.from('billing_payouts').select('amount_cents, status, currency').is('tenant_id', null);
+    const withdrawn = CimolaceBackofficeService.aggregateXaf(
+      (payouts ?? []).filter((p: any) => !['failed', 'rejected'].includes(String(p.status || '').toLowerCase())),
+    );
     const wallets = await this.listWallets();
-    return { walletBalances, revenuePaidCents, withdrawnCents, wallets };
+
+    // NON ATTRIBUÉ : l'argent qui dort dans le wallet physique sans étiquette produit.
+    // Les porte-monnaie (afritrack, liri…) ne se remplissent QUE par attribution manuelle ;
+    // sans cette ligne, on croit que le wallet est réparti alors qu'il ne l'est presque pas.
+    const isCfa = (c?: string) => ['XAF', 'XOF'].includes(String(c || 'XAF').toUpperCase());
+    const physicalCfa = walletBalances.filter((w) => isCfa(w.currency)).reduce((s, w) => s + Number(w.balance || 0), 0);
+    const allocatedCfa = wallets.filter((w: any) => isCfa(w.currency)).reduce((s: number, w: any) => s + Number(w.balanceCents || 0), 0);
+
+    return {
+      walletBalances,
+      wallets,
+      revenue,
+      withdrawn,
+      unallocatedXaf: Math.round(physicalCfa - allocatedCfa),
+      allocatedXaf: Math.round(allocatedCfa),
+      physicalXaf: Math.round(physicalCfa),
+      // Compat : mêmes noms qu'avant, mais désormais CONVERTIS (donc justes).
+      revenuePaidCents: revenue.xaf,
+      withdrawnCents: withdrawn.xaf,
+    };
   }
 
   /** Porte-monnaie (couche logique par produit : afritrack, liri, mbolo, medos…). Solde = Σ entries. */

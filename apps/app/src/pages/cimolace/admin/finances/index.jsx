@@ -172,8 +172,22 @@ export default function CimolaceAdminFinances() {
           </div>
 
           {/* Porte-monnaie par produit (couche logique) */}
-          <div style={{ marginBottom: 8, fontSize: 12, textTransform: 'uppercase', letterSpacing: 1, color: C.muted }}>Porte-monnaie (par produit)</div>
+          <div style={{ marginBottom: 4, fontSize: 12, textTransform: 'uppercase', letterSpacing: 1, color: C.muted }}>Porte-monnaie (par produit)</div>
+          <p style={{ margin: '0 0 10px', fontSize: 12.5, color: C.muted, lineHeight: 1.5, maxWidth: 720 }}>
+            Étiquettes comptables, pas des caisses : l'argent est <b style={{ color: C.text }}>un seul tas</b> dans
+            le wallet pawaPay ci-dessus. Elles ne se remplissent que par « Attribuer » — aucun encaissement ne s'y
+            range tout seul, et elles ne limitent pas un retrait.
+          </p>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(160px,1fr))', gap: 12, marginBottom: 10 }}>
+            {fin && (
+              <div style={{ ...card, borderLeft: `3px solid ${C.orange}`, borderStyle: 'dashed' }}>
+                <div style={{ fontSize: 13, fontWeight: 600, color: C.muted }}>Non attribué</div>
+                <div style={{ fontSize: 20, fontWeight: 700, marginTop: 2, color: C.orange }}>{money(fin.unallocatedXaf || 0, 'XAF')}</div>
+                <div style={{ fontSize: 11, color: C.muted, marginTop: 6, lineHeight: 1.4 }}>
+                  du wallet physique, rattaché à aucun produit
+                </div>
+              </div>
+            )}
             {(fin?.wallets || []).map((w) => (
               <div key={w.key} style={{ ...card, borderLeft: `3px solid ${w.color || C.violet}` }}>
                 <div style={{ fontSize: 13, fontWeight: 600 }}>{w.label}</div>
@@ -197,7 +211,13 @@ export default function CimolaceAdminFinances() {
             {wMsg && <span style={{ fontSize: 12, color: wMsg.ok ? C.green : C.red }}>{wMsg.text}</span>}
           </div>
 
-          <div style={{ marginBottom: 8, fontSize: 12, textTransform: 'uppercase', letterSpacing: 1, color: C.muted }}>Solde réel (wallet pawaPay physique)</div>
+          <div style={{ marginBottom: 4, fontSize: 12, textTransform: 'uppercase', letterSpacing: 1, color: C.muted }}>Solde réel (wallet pawaPay physique) — par pays</div>
+          <p style={{ margin: '0 0 10px', fontSize: 12.5, color: C.muted, lineHeight: 1.5, maxWidth: 720 }}>
+            Le vrai argent chez pawaPay, rangé par <b style={{ color: C.text }}>pays</b>. Les pays à zéro sont
+            masqués : {(fin?.walletBalances?.length || 0) - balances.length} pays sans solde sur {fin?.walletBalances?.length || 0}.
+            Ce compte est <b style={{ color: C.text }}>partagé avec AfriTrack</b> — les encaissements des deux activités
+            se mélangent ici.
+          </p>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(180px,1fr))', gap: 12, marginBottom: 8 }}>
             {balances.length === 0 ? (
               <div style={{ ...card, color: C.muted, fontSize: 14 }}>{fin ? 'Aucun solde disponible.' : 'Chargement…'}</div>
@@ -208,15 +228,33 @@ export default function CimolaceAdminFinances() {
               </div>
             ))}
           </div>
-          <div style={{ display: 'flex', gap: 20, marginBottom: 24, fontSize: 13, color: C.muted }}>
-            <span>Revenus tenants payés : <b style={{ color: C.text }}>{fin ? money(fin.revenuePaidCents || 0, 'XAF') : '—'}</b></span>
-            <span>Total retiré : <b style={{ color: C.text }}>{fin ? money(fin.withdrawnCents || 0, 'XAF') : '—'}</b></span>
+          {/* Revenus & retraits — DÉTAILLÉS PAR DEVISE.
+              Un total unique mentait : les factures sont en EUR *et* en XAF, et la colonne
+              amount_cents ne porte pas la même unité selon la devise (les devises sans
+              décimale y rangent l'unité majeure). On montre donc le détail, puis
+              l'équivalent XAF à parité CFA fixe — jamais un total muet. */}
+          <div style={{ display: 'flex', gap: 28, marginBottom: 24, fontSize: 13, color: C.muted, flexWrap: 'wrap' }}>
+            {[['Revenus tenants payés', fin?.revenue], ['Total retiré', fin?.withdrawn]].map(([label, agg]) => (
+              <span key={label}>
+                {label} : <b style={{ color: C.text }}>{fin ? money(agg?.xaf || 0, 'XAF') : '—'}</b>
+                {(agg?.byCurrency?.length > 1) && (
+                  <span style={{ color: C.muted }}>
+                    {' '}({agg.byCurrency.map((c) => `${money(c.amountMinor, c.currency)}`).join(' + ')}, converti à 1 € = 655,957 XAF)
+                  </span>
+                )}
+                {agg?.unconvertible?.map((u) => (
+                  <span key={u.currency} style={{ color: C.orange }}> · +{money(u.amountMinor, u.currency)} non converti</span>
+                ))}
+              </span>
+            ))}
           </div>
 
           <div style={{ ...card, marginBottom: 24 }}>
             <div style={{ fontSize: 15, fontWeight: 600, marginBottom: 12 }}>Retirer vers mobile money</div>
             <div style={{ marginBottom: 12 }}>
-              <label style={{ fontSize: 12, color: C.muted }}>Depuis quel porte-monnaie ?</label>
+              <label style={{ fontSize: 12, color: C.muted }}>
+                Imputer ce retrait à quel produit ? <span style={{ color: C.orange }}>(étiquette — l'argent sort du wallet physique)</span>
+              </label>
               <select value={walletKey} onChange={(e) => setWalletKey(e.target.value)} style={{ ...input, marginTop: 6 }}>
                 <option value="">— (non attribué)</option>
                 {(fin?.wallets || []).map((w) => <option key={w.key} value={w.key}>{w.label} · {money(w.balanceCents || 0, w.currency || 'XAF')}</option>)}
