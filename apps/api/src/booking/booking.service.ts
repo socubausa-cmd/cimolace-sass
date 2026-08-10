@@ -1539,6 +1539,19 @@ export class BookingService {
       const priceEur = Number(s?.priceEur);
       const champsConnus = ['age', 'taille', 'pointure', 'naissance', 'probleme'];
       const champs = Array.isArray(s?.champs) ? s.champs.filter((c: any) => champsConnus.includes(String(c))).slice(0, 10) : [];
+      // Motifs de consultation (prière, libation, songe, questions, couple, sagesse…).
+      const motifs = Array.isArray(s?.motifs)
+        ? s.motifs.slice(0, 12).map((mo: any) => {
+            const moLabel = String(mo?.label || '').trim().slice(0, 60);
+            if (!moLabel) return null;
+            return {
+              key: (String(mo?.key || '').trim() || moLabel.toLowerCase().replace(/[^a-z0-9]+/g, '-')).slice(0, 40),
+              label: moLabel,
+              desc: String(mo?.desc || '').trim().slice(0, 160),
+              ...(mo?.duo === true ? { duo: true } : {}),
+            };
+          }).filter(Boolean)
+        : [];
       return {
         key,
         label,
@@ -1548,6 +1561,7 @@ export class BookingService {
         ...(Number.isFinite(priceEur) && priceEur > 0 ? { priceEur: Math.min(10000, Math.round(priceEur * 100) / 100) } : {}),
         ...(String(s?.apropos || '').trim() ? { apropos: String(s.apropos).trim().slice(0, 1200) } : {}),
         ...(champs.length ? { champs } : {}),
+        ...(motifs.length ? { motifs } : {}),
       };
     }).filter(Boolean);
   }
