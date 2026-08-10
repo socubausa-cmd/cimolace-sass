@@ -307,6 +307,14 @@ export const fetchCrmActivities = () =>
   getJson<{ activities?: CrmActivity[] }>('/crm/activities?limit=40').then((r) =>
     pluckArray<CrmActivity>(r, 'activities'),
   );
+/** Crée un contact CRM (POST /crm/contacts). Renvoie le contact créé, ou null en cas d'échec. */
+export const createCrmContact = (body: {
+  first_name?: string;
+  last_name?: string;
+  email?: string;
+  phone?: string;
+  company_name?: string;
+}) => postJson<CrmContact>('/crm/contacts', body);
 
 // ── Courrier (boîte IMAP infos@) ─────────────────────────────────────────────
 /** Déclenche une synchro IMAP → base (les e-mails se lisent ensuite via Supabase). */

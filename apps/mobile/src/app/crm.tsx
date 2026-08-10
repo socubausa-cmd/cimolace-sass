@@ -1,15 +1,15 @@
 import { Feather } from '@expo/vector-icons';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import {
-  ActivityIndicator, Linking, Pressable, RefreshControl,
-  ScrollView, StyleSheet, Text, TextInput, View,
+  ActivityIndicator, Alert, KeyboardAvoidingView, Linking, Modal, Platform, Pressable,
+  RefreshControl, ScrollView, StyleSheet, Text, TextInput, View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { LiriFonts as F, type LiriPalette } from '@/constants/liri-theme';
 import { useTheme } from '@/lib/theme';
 import {
-  fetchCrmActivities, fetchCrmContacts, fetchCrmSummary,
+  createCrmContact, fetchCrmActivities, fetchCrmContacts, fetchCrmSummary,
   type CrmActivity, type CrmContact,
 } from '@/lib/liri-api';
 
@@ -35,6 +35,9 @@ export default function CrmScreen() {
   const [summary, setSummary] = useState<Record<string, unknown> | null>(null);
   const [query, setQuery] = useState('');
   const [refreshing, setRefreshing] = useState(false);
+  const [showNew, setShowNew] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [form, setForm] = useState({ firstName: '', lastName: '', email: '', phone: '' });
 
   const load = useCallback(async (search?: string) => {
     const [c, a, sum] = await Promise.all([
@@ -54,6 +57,30 @@ export default function CrmScreen() {
     setRefreshing(true); await load(query); setRefreshing(false);
   }, [load, query]);
 
+  const submitNew = useCallback(async () => {
+    const { firstName, lastName, email, phone } = form;
+    if (!firstName.trim() && !lastName.trim() && !email.trim()) {
+      Alert.alert('Contact', 'Indique au moins un nom ou un e-mail.');
+      return;
+    }
+    setSaving(true);
+    const created = await createCrmContact({
+      first_name: firstName.trim() || undefined,
+      last_name: lastName.trim() || undefined,
+      email: email.trim() || undefined,
+      phone: phone.trim() || undefined,
+    });
+    setSaving(false);
+    if (created) {
+      setShowNew(false);
+      setForm({ firstName: '', lastName: '', email: '', phone: '' });
+      setTab('contacts');
+      await load();
+    } else {
+      Alert.alert('Contact', "Création impossible. Vérifie ta connexion et réessaie.");
+    }
+  }, [form, load]);
+
   const stats = useMemo(() => {
     const sm = summary ?? {};
     return [
@@ -66,8 +93,14 @@ export default function CrmScreen() {
   return (
     <SafeAreaView style={s.safe} edges={['top']}>
       <View style={s.header}>
-        <Text style={s.h1}>CRM</Text>
-        <Text style={s.sub}>{"Tes contacts et l'activité de l'écosystème."}</Text>
+        <View style={{ flex: 1 }}>
+          <Text style={s.h1}>CRM</Text>
+          <Text style={s.sub}>{"Tes contacts et l'activité de l'écosystème."}</Text>
+        </View>
+        <Pressable style={s.newBtn} onPress={() => setShowNew(true)}>
+          <Feather name="user-plus" size={15} color={ON_CORAL} />
+          <Text style={s.newBtnTxt}>Nouveau</Text>
+        </Pressable>
       </View>
 
       {/* Chiffres-clés */}
@@ -161,6 +194,32 @@ export default function CrmScreen() {
         )}
         <View style={{ height: 32 }} />
       </ScrollView>
+
+      {/* Création d'un contact — POST /crm/contacts */}
+      <Modal visible={showNew} transparent animationType="slide" onRequestClose={() => setShowNew(false)}>
+        <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={s.modalWrap}>
+          <Pressable style={s.modalBackdrop} onPress={() => setShowNew(false)} />
+          <View style={s.sheet}>
+            <View style={s.sheetHead}>
+              <Text style={s.sheetTitle}>Nouveau contact</Text>
+              <Pressable onPress={() => setShowNew(false)} hitSlop={10}><Feather name="x" size={20} color={C.muted} /></Pressable>
+            </View>
+            <View style={s.row2}>
+              <TextInput style={[s.field, { flex: 1 }]} placeholder="Prénom" placeholderTextColor={C.faint}
+                value={form.firstName} onChangeText={(v) => setForm((p) => ({ ...p, firstName: v }))} />
+              <TextInput style={[s.field, { flex: 1 }]} placeholder="Nom" placeholderTextColor={C.faint}
+                value={form.lastName} onChangeText={(v) => setForm((p) => ({ ...p, lastName: v }))} />
+            </View>
+            <TextInput style={s.field} placeholder="E-mail" placeholderTextColor={C.faint} autoCapitalize="none" autoCorrect={false}
+              keyboardType="email-address" value={form.email} onChangeText={(v) => setForm((p) => ({ ...p, email: v }))} />
+            <TextInput style={s.field} placeholder="Téléphone" placeholderTextColor={C.faint} keyboardType="phone-pad"
+              value={form.phone} onChangeText={(v) => setForm((p) => ({ ...p, phone: v }))} />
+            <Pressable style={[s.saveBtn, saving && { opacity: 0.6 }]} disabled={saving} onPress={() => void submitNew()}>
+              {saving ? <ActivityIndicator color={ON_CORAL} /> : <Text style={s.saveTxt}>Créer le contact</Text>}
+            </Pressable>
+          </View>
+        </KeyboardAvoidingView>
+      </Modal>
     </SafeAreaView>
   );
 }
@@ -176,7 +235,18 @@ function Empty({ icon, text, s, C }: { icon: React.ComponentProps<typeof Feather
 
 const makeStyles = (C: LiriPalette) => StyleSheet.create({
   safe: { flex: 1, backgroundColor: C.base },
-  header: { paddingHorizontal: 20, paddingTop: 8, paddingBottom: 6 },
+  header: { flexDirection: 'row', alignItems: 'flex-start', gap: 12, paddingHorizontal: 20, paddingTop: 8, paddingBottom: 6 },
+  newBtn: { flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: C.coral, paddingHorizontal: 12, paddingVertical: 8, borderRadius: 10, marginTop: 2 },
+  newBtnTxt: { color: ON_CORAL, fontSize: 13, fontWeight: '700', fontFamily: F.sans },
+  modalWrap: { flex: 1, justifyContent: 'flex-end' },
+  modalBackdrop: { ...StyleSheet.absoluteFillObject, backgroundColor: 'rgba(0,0,0,0.5)' },
+  sheet: { backgroundColor: C.panel, borderTopLeftRadius: 22, borderTopRightRadius: 22, padding: 20, paddingBottom: 34, gap: 12, borderWidth: 1, borderColor: C.line },
+  sheetHead: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 4 },
+  sheetTitle: { color: C.ink, fontSize: 18, fontWeight: '700', fontFamily: F.serif },
+  row2: { flexDirection: 'row', gap: 10 },
+  field: { backgroundColor: C.base, borderWidth: 1, borderColor: C.line, borderRadius: 12, paddingHorizontal: 13, paddingVertical: 12, color: C.ink, fontSize: 14.5, fontFamily: F.sans },
+  saveBtn: { backgroundColor: C.coral, borderRadius: 12, paddingVertical: 14, alignItems: 'center', marginTop: 4 },
+  saveTxt: { color: ON_CORAL, fontSize: 14.5, fontWeight: '700', fontFamily: F.sans },
   h1: { color: C.ink, fontSize: 26, fontWeight: '700', letterSpacing: -0.3, fontFamily: F.serif },
   sub: { color: C.muted, fontSize: 13.5, marginTop: 2, fontFamily: F.sans },
   statsRow: { flexDirection: 'row', gap: 10, paddingHorizontal: 16, paddingVertical: 10 },
