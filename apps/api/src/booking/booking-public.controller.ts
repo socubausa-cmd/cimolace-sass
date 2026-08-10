@@ -71,6 +71,13 @@ export class BookingPublicController {
     return this.booking.listBookingServices(id);
   }
 
+  /** Liens de navigation de la vitrine (gérés dans LIRI → Vitrine) — public. */
+  @Get(':slug/vitrine-nav')
+  async vitrineNav(@Param('slug') slug: string) {
+    const { id } = await this.tenantBySlug(slug);
+    return this.booking.publicVitrineNav(id);
+  }
+
   /** Contexte d'un report self-service (token) — public, sans login. */
   @Get('reschedule/:token')
   rescheduleContext(@Param('token') token: string) {

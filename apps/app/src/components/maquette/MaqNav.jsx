@@ -1,13 +1,47 @@
-import React, { useState } from 'react';
-import { Menu, X, ChevronDown } from 'lucide-react';
+import React, { useEffect, useMemo, useState } from 'react';
+import { Menu, X, ChevronDown, HeartHandshake, HandCoins, BookOpen, Sparkles } from 'lucide-react';
 import { MAQ_NAV } from '@/components/maquette/maqTheme';
+import { bookingPublicApi } from '@/lib/api-v2';
+
+// ── Groupe « Services » : liens GÉRÉS depuis LIRI (Réglages agenda → Vitrine). ──
+// Les défauts s'affichent instantanément ; la version back-office les remplace
+// dès qu'elle répond (et si elle est vide, les défauts restent — jamais de trou).
+const SERVICES_DEFAUT = [
+  { label: 'Consultation', href: '/reserver', desc: 'Avec le Manikongo — 50 € · 30 min' },
+  { label: 'Cagnotte & projets', href: '/cagnotte', desc: 'Soutenir les projets du temple' },
+  { label: 'La Revue', href: '/femme-nouvelle', desc: 'La Femme Nouvelle' },
+];
+const iconePourLien = (l) => {
+  const t = `${l.label} ${l.href}`.toLowerCase();
+  if (t.includes('consult') || t.includes('reserv')) return HeartHandshake;
+  if (t.includes('cagnotte') || t.includes('don') || t.includes('projet')) return HandCoins;
+  if (t.includes('revue') || t.includes('livre') || t.includes('femme')) return BookOpen;
+  return Sparkles;
+};
 
 // Header collant partagé — menus déroulants (mega-menu) adapté de navigation-menu-4 (21st.dev),
 // version légère (pas de @radix-ui) + charte PRORASCIENCE (or/sombre).
 export function MaqNav() {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [openMenu, setOpenMenu] = useState(null);
+  const [liensServices, setLiensServices] = useState(SERVICES_DEFAUT);
   const gold = { color: 'var(--gold)' };
+
+  useEffect(() => {
+    let vivant = true;
+    bookingPublicApi.vitrineNav('isna')
+      .then((r) => { const nav = Array.isArray(r?.nav) ? r.nav : []; if (vivant && nav.length) setLiensServices(nav); })
+      .catch(() => {});
+    return () => { vivant = false; };
+  }, []);
+
+  const navComplet = useMemo(() => {
+    const groupe = { label: 'Services', items: liensServices.map((l) => ({ ...l, icon: iconePourLien(l) })) };
+    // Après « Le Temple », avant le lien simple « Offres ».
+    const simples = MAQ_NAV.filter((g) => !g.items);
+    const groupes = MAQ_NAV.filter((g) => g.items);
+    return [...groupes, groupe, ...simples];
+  }, [liensServices]);
 
   return (
     <header className="sticky top-0 z-50 border-b backdrop-blur-md" style={{ borderColor: 'var(--border)', background: 'rgba(13,11,9,0.78)' }}>
@@ -18,7 +52,7 @@ export function MaqNav() {
 
         {/* Nav desktop — déroulants au survol */}
         <nav className="hidden items-center gap-1 xl:flex">
-          {MAQ_NAV.map((group) =>
+          {navComplet.map((group) =>
             group.items ? (
               <div
                 key={group.label}
@@ -89,7 +123,7 @@ export function MaqNav() {
       {mobileOpen && (
         <div className="border-t xl:hidden" style={{ borderColor: 'var(--border)', background: 'rgba(13,11,9,0.98)' }}>
           <nav className="mx-auto max-w-7xl px-6 py-4">
-            {MAQ_NAV.map((group) => (
+            {navComplet.map((group) => (
               <div key={group.label} className="border-b py-2 last:border-b-0" style={{ borderColor: 'var(--border)' }}>
                 {group.items ? (
                   <>

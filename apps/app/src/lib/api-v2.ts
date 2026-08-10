@@ -1226,6 +1226,8 @@ export const bookingPublicApi = {
       .then(unwrap),
   services: (slug: string) =>
     apiV2.get<ApiEnvelope<any>>(`/booking-public/${slug}/services`).then(unwrap),
+  vitrineNav: (slug: string) =>
+    apiV2.get<ApiEnvelope<any>>(`/booking-public/${slug}/vitrine-nav`).then(unwrap),
   request: (
     slug: string,
     body: { subject?: string; description?: string; email: string; whatsapp: string; preferredIso?: string; serviceKey?: string },

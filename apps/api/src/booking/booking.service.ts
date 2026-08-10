@@ -1485,12 +1485,13 @@ export class BookingService {
       availability: m.booking_availability || { timezone: 'Africa/Libreville', slotMinutes: 30, bufferMinutes: 30, weekly: {}, blackoutDates: [] },
       services: Array.isArray(m.booking_services) ? m.booking_services : [],
       activities: Array.isArray(m.weekly_activities) ? m.weekly_activities : [],
+      vitrineNav: Array.isArray(m.vitrine_nav) ? m.vitrine_nav : [],
     };
   }
 
   async updateBookingSettings(
     tenantId: string,
-    dto: { availability?: any; services?: any; activities?: any },
+    dto: { availability?: any; services?: any; activities?: any; vitrineNav?: any },
   ) {
     const client = this.supabase.client as any;
     const { data: t } = await client.from('tenants').select('metadata').eq('id', tenantId).maybeSingle();
@@ -1498,6 +1499,7 @@ export class BookingService {
     if (dto.availability !== undefined) m.booking_availability = this.sanitizeAvailability(dto.availability);
     if (dto.services !== undefined) m.booking_services = this.sanitizeServices(dto.services);
     if (dto.activities !== undefined) m.weekly_activities = this.sanitizeActivities(dto.activities);
+    if (dto.vitrineNav !== undefined) m.vitrine_nav = this.sanitizeVitrineNav(dto.vitrineNav);
     const { error } = await client.from('tenants').update({ metadata: m }).eq('id', tenantId);
     if (error) throw new BadRequestException(error.message);
     return this.getBookingSettings(tenantId);
@@ -1532,14 +1534,50 @@ export class BookingService {
       const label = String(s?.label || '').trim().slice(0, 60);
       if (!label) return null;
       const key = (String(s?.key || '').trim() || label.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '')).slice(0, 40) || 'service';
+      // ⚠️ Ne pas PERDRE les champs riches (consultation Manikongo) quand on
+      // ré-enregistre les réglages agenda : prix, texte long, fiche déclarée.
+      const priceEur = Number(s?.priceEur);
+      const champsConnus = ['age', 'taille', 'pointure', 'naissance', 'probleme'];
+      const champs = Array.isArray(s?.champs) ? s.champs.filter((c: any) => champsConnus.includes(String(c))).slice(0, 10) : [];
       return {
         key,
         label,
         kind: ['priere', 'teleconsult', 'formation', 'consultation'].includes(String(s?.kind)) ? s.kind : 'consultation',
         durationMin: Math.max(10, Math.min(240, Number(s?.durationMin) || 30)),
         desc: String(s?.desc || '').trim().slice(0, 200),
+        ...(Number.isFinite(priceEur) && priceEur > 0 ? { priceEur: Math.min(10000, Math.round(priceEur * 100) / 100) } : {}),
+        ...(String(s?.apropos || '').trim() ? { apropos: String(s.apropos).trim().slice(0, 1200) } : {}),
+        ...(champs.length ? { champs } : {}),
       };
     }).filter(Boolean);
+  }
+
+  /** Liens de navigation de la VITRINE (gérés no-code depuis LIRI). */
+  private sanitizeVitrineNav(arr: any) {
+    if (!Array.isArray(arr)) return [];
+    return arr.slice(0, 12).map((l: any) => {
+      const label = String(l?.label || '').trim().slice(0, 40);
+      const href = String(l?.href || '').trim().slice(0, 200);
+      if (!label || !href) return null;
+      if (!/^(\/|#|https:\/\/)/.test(href)) return null; // relatif, ancre ou https uniquement
+      return {
+        label,
+        href,
+        desc: String(l?.desc || '').trim().slice(0, 80),
+        visible: l?.visible !== false,
+      };
+    }).filter(Boolean);
+  }
+
+  /** Nav vitrine PUBLIQUE d'un tenant (liens visibles uniquement). */
+  async publicVitrineNav(tenantId: string) {
+    try {
+      const { data: t } = await (this.supabase.client as any).from('tenants').select('metadata').eq('id', tenantId).maybeSingle();
+      const nav = this.sanitizeVitrineNav((t as any)?.metadata?.vitrine_nav);
+      return { nav: nav.filter((l: any) => l.visible) };
+    } catch {
+      return { nav: [] };
+    }
   }
 
   private sanitizeActivities(arr: any) {
