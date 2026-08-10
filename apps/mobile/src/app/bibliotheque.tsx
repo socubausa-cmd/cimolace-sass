@@ -46,6 +46,7 @@ function replayToAsset(r: Replay): Asset {
     title: r.title || 'Session enregistrée',
     meta: `Replay · ${when}`,
     kind: 'Replays',
+    href: `/replay-player?id=${encodeURIComponent(r.id)}&title=${encodeURIComponent(r.title || 'Replay')}`,
   };
 }
 

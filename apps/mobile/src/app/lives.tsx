@@ -172,7 +172,11 @@ export default function LivesScreen() {
               <>
                 <Text style={styles.section}>REPLAYS</Text>
                 {replays.map((l) => (
-                  <Pressable key={l.id} style={({ pressed }) => [styles.card, pressed && styles.pressed]}>
+                  <Pressable
+                    key={l.id}
+                    style={({ pressed }) => [styles.card, pressed && styles.pressed]}
+                    onPress={() => router.push(`/replay-player?id=${encodeURIComponent(l.id)}&title=${encodeURIComponent(l.title ?? 'Replay')}` as never)}
+                  >
                     <View style={styles.iconBox}><Feather name="play" size={16} color={C.coral} /></View>
                     <View style={{ flex: 1, minWidth: 0 }}>
                       <Text style={styles.cardTitle} numberOfLines={1}>{l.title || 'Session live'}</Text>

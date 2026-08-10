@@ -600,6 +600,14 @@ export async function fetchReplays(): Promise<Replay[]> {
   return data as Replay[];
 }
 
+/**
+ * URL présignée (R2, TTL 1h) pour lire le replay d'une session live.
+ * GET /lives/:id/replay/file — garde JWT seul, contrôle d'accès dérivé de la
+ * session côté API (fail-closed). Renvoie null si aucun enregistrement complété.
+ */
+export const fetchReplayFileUrl = (sessionId: string) =>
+  getJson<{ url?: string }>(`/lives/${sessionId}/replay/file`).then((r) => r?.url ?? null);
+
 // ── Intégrations / Clés API ─────────────────────────────────────────────────
 export interface ApiKey {
   id: string;
