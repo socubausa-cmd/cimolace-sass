@@ -325,6 +325,8 @@ export class InfraService implements OnApplicationBootstrap {
       .not('health_url', 'is', null);
     const cibles = (services ?? []).filter((s: any) => s.statut === 'actif');
     const resultats: any[] = [];
+    const erreursEcriture: string[] = [];
+    let enregistrees = 0;
 
     for (const s of cibles) {
       const t0 = Date.now();
@@ -341,13 +343,28 @@ export class InfraService implements OnApplicationBootstrap {
         error_message = (e as Error)?.name === 'AbortError' ? 'Aucune réponse en 10 s' : (e as Error)?.message || 'injoignable';
       }
       const latency_ms = Date.now() - t0;
-      resultats.push({ provider_key: s.key, label: s.label, status, latency_ms, error_message });
-      await this.sb.from('cimolace_provider_health_checks').insert({
+
+      // ⛔ VÉRIFIER L'ÉCRITURE. Supabase RENVOIE ses erreurs, il ne les lève pas :
+      // sans ce contrôle, `client_id NOT NULL` faisait échouer chaque insertion
+      // pendant que la méthode annonçait « 2 services sondés ». Un compte-rendu
+      // de succès au-dessus de zéro écriture est pire que pas de sonde du tout.
+      const { error } = await this.sb.from('cimolace_provider_health_checks').insert({
+        client_id: null, // sonde PLATEFORME — un tenant renseignerait cette colonne
         provider_key: s.key, status, latency_ms, error_message,
         checked_at: new Date().toISOString(),
       });
+      if (error) {
+        this.log.error(`[infra] sonde ${s.key} NON ENREGISTRÉE : ${error.message}`);
+        erreursEcriture.push(`${s.label} : ${error.message}`);
+      } else {
+        enregistrees += 1;
+      }
+      resultats.push({ provider_key: s.key, label: s.label, status, latency_ms, error_message });
     }
-    this.log.log(`[infra] ${resultats.length} sonde(s) — ${resultats.filter((r) => r.status !== 'ok').length} anomalie(s)`);
-    return { checked: resultats.length, resultats };
+    this.log.log(`[infra] ${resultats.length} sonde(s), ${enregistrees} enregistrée(s) — ${resultats.filter((r) => r.status !== 'ok').length} anomalie(s)`);
+    // `checked` = ce qui a été sondé ; `enregistrees` = ce qui a réellement été
+    // écrit. Deux nombres, parce qu'ils peuvent différer et que l'appelant doit
+    // pouvoir le savoir.
+    return { checked: resultats.length, enregistrees, erreursEcriture, resultats };
   }
 }

@@ -90,9 +90,15 @@ export default function CimolaceAdminInfrastructure() {
     try {
       const r = unwrap(await apiV2.post('/cimolace-backoffice/infra/health', {}, { timeout: 60000 }));
       const ko = (r?.resultats || []).filter((x) => x.status !== 'ok');
-      flash(ko.length === 0, ko.length === 0
+      // Sonder et ENREGISTRER sont deux choses : une insertion refusée laissait
+      // annoncer « tous répondent » alors que rien n'était écrit et que l'écran
+      // continuerait d'afficher les résultats de la veille.
+      const perdues = (r?.checked ?? 0) - (r?.enregistrees ?? 0);
+      const texte = ko.length === 0
         ? `${r?.checked ?? 0} service(s) sondé(s), tous répondent.`
-        : `${ko.length} anomalie(s) sur ${r?.checked ?? 0} : ${ko.map((x) => x.label).join(', ')}.`);
+        : `${ko.length} anomalie(s) sur ${r?.checked ?? 0} : ${ko.map((x) => x.label).join(', ')}.`;
+      flash(ko.length === 0 && perdues === 0,
+        perdues > 0 ? `${texte} ⚠ ${perdues} résultat(s) NON enregistré(s) : ${(r?.erreursEcriture || []).join(' · ')}` : texte);
       load();
     } catch (e) { flash(false, erreurLisible(e)); }
     setBusy('');
