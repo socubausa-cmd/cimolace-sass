@@ -13,17 +13,24 @@ import { SitePlan, SiteStatus } from '@/modules/cimolace/sites/siteTypes.js';
 const inputStyle = {
   padding: '8px 10px',
   borderRadius: '6px',
-  border: '1px solid #d1d5db',
+  border: '1px solid rgba(245,244,238,.16)',
   fontSize: '14px',
+  // Sans fond ni encre, le champ dépendait entièrement du navigateur :
+  // il héritait l'encre claire de la racine tout en gardant un fond
+  // décidé par l'agent utilisateur. On pose les deux, et `colorScheme`
+  // aligne aussi ce que le navigateur peint lui-même (curseur, listes).
+  backgroundColor: '#262624',
+  color: '#f5f4ee',
+  colorScheme: 'dark',
 };
 
 const CARD = {
   flex: '1',
   minWidth: '120px',
   padding: '14px 16px',
-  backgroundColor: '#f9fafb',
+  backgroundColor: '#2b2926',
   borderRadius: '8px',
-  border: '1px solid #e5e7eb',
+  border: '1px solid rgba(245,244,238,.09)',
 };
 
 function statusBadgeStyle(status) {
@@ -32,8 +39,8 @@ function statusBadgeStyle(status) {
     padding: '4px 12px',
     borderRadius: '12px',
     fontSize: '12px',
-    backgroundColor: active ? '#dcfce7' : '#fef3c7',
-    color: active ? '#166534' : '#92400e',
+    backgroundColor: active ? 'rgba(111,158,111,.16)' : 'rgba(217,154,91,.16)',
+    color: active ? '#8fbf8f' : '#e0b07a',
   };
 }
 
@@ -144,13 +151,13 @@ export default function CimolaceAdminSites() {
   }
 
   return (
-    <div style={{ minHeight: '100vh', backgroundColor: '#f3f4f6', display: 'flex', flexDirection: 'column' }}>
+    <div style={{ minHeight: '100vh', backgroundColor: '#262624', color: '#f5f4ee', display: 'flex', flexDirection: 'column' }}>
       <CimolaceHeader />
       <div style={{ display: 'flex', flex: 1 }}>
         <CimolaceSidebar />
         <div style={{ padding: '20px', flex: 1, maxWidth: '1000px' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px', marginBottom: '16px' }}>
-            <h1 style={{ fontSize: '24px', fontWeight: 'bold', color: '#111827', margin: 0 }}>Sites</h1>
+            <h1 style={{ fontSize: '24px', fontWeight: 'bold', color: '#f5f4ee', margin: 0 }}>Sites</h1>
             <button
               type="button"
               onClick={() => {
@@ -161,8 +168,8 @@ export default function CimolaceAdminSites() {
                 padding: '10px 18px',
                 borderRadius: '8px',
                 border: 'none',
-                backgroundColor: '#2563eb',
-                color: 'white',
+                backgroundColor: '#d97757',
+                color: '#20140f',
                 fontWeight: 600,
                 cursor: 'pointer',
                 fontSize: '14px',
@@ -173,21 +180,21 @@ export default function CimolaceAdminSites() {
           </div>
 
           {error ? (
-            <div style={{ backgroundColor: '#fef2f2', color: '#b91c1c', padding: '12px 16px', borderRadius: '8px', marginBottom: '16px', fontSize: '14px' }}>{error}</div>
+            <div style={{ backgroundColor: 'rgba(179,55,47,.16)', color: '#ea8878', padding: '12px 16px', borderRadius: '8px', marginBottom: '16px', fontSize: '14px' }}>{error}</div>
           ) : null}
 
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: '12px', marginBottom: '16px' }}>
             <div style={CARD}>
-              <div style={{ fontSize: '22px', fontWeight: 'bold', color: '#111827' }}>{loading ? '…' : stats.total}</div>
-              <div style={{ fontSize: '13px', color: '#6b7280', marginTop: '4px' }}>Sites</div>
+              <div style={{ fontSize: '22px', fontWeight: 'bold', color: '#f5f4ee' }}>{loading ? '…' : stats.total}</div>
+              <div style={{ fontSize: '13px', color: '#a8a49a', marginTop: '4px' }}>Sites</div>
             </div>
             <div style={CARD}>
-              <div style={{ fontSize: '22px', fontWeight: 'bold', color: '#111827' }}>{loading ? '…' : stats.active}</div>
-              <div style={{ fontSize: '13px', color: '#6b7280', marginTop: '4px' }}>Actifs</div>
+              <div style={{ fontSize: '22px', fontWeight: 'bold', color: '#f5f4ee' }}>{loading ? '…' : stats.active}</div>
+              <div style={{ fontSize: '13px', color: '#a8a49a', marginTop: '4px' }}>Actifs</div>
             </div>
             <div style={CARD}>
-              <div style={{ fontSize: '22px', fontWeight: 'bold', color: '#111827' }}>{loading ? '…' : tenants.length}</div>
-              <div style={{ fontSize: '13px', color: '#6b7280', marginTop: '4px' }}>Tenants techniques</div>
+              <div style={{ fontSize: '22px', fontWeight: 'bold', color: '#f5f4ee' }}>{loading ? '…' : tenants.length}</div>
+              <div style={{ fontSize: '13px', color: '#a8a49a', marginTop: '4px' }}>Tenants techniques</div>
             </div>
           </div>
 
@@ -200,9 +207,9 @@ export default function CimolaceAdminSites() {
                 style={{
                   padding: '8px 14px',
                   borderRadius: '8px',
-                  border: '1px solid #e5e7eb',
-                  backgroundColor: filterStatus === st ? '#1d4ed8' : 'white',
-                  color: filterStatus === st ? 'white' : '#374151',
+                  border: '1px solid rgba(245,244,238,.09)',
+                  backgroundColor: filterStatus === st ? '#d97757' : '#2b2926',
+                  color: filterStatus === st ? '#20140f' : '#f5f4ee',
                   fontSize: '13px',
                   fontWeight: 500,
                   cursor: 'pointer',
@@ -217,25 +224,25 @@ export default function CimolaceAdminSites() {
             <div style={{ display: 'grid', gap: '16px', marginBottom: '20px' }}>
               <form
                 onSubmit={handleCreateTenant}
-                style={{ backgroundColor: 'white', padding: '18px', borderRadius: '8px', border: '1px solid #e5e7eb' }}
+                style={{ backgroundColor: '#2b2926', padding: '18px', borderRadius: '8px', border: '1px solid rgba(245,244,238,.09)' }}
               >
-                <h2 style={{ fontSize: '15px', fontWeight: 600, margin: '0 0 12px 0', color: '#111827' }}>Nouveau tenant technique</h2>
-                <p style={{ fontSize: '12px', color: '#6b7280', margin: '0 0 12px 0' }}>
+                <h2 style={{ fontSize: '15px', fontWeight: 600, margin: '0 0 12px 0', color: '#f5f4ee' }}>Nouveau tenant technique</h2>
+                <p style={{ fontSize: '12px', color: '#a8a49a', margin: '0 0 12px 0' }}>
                   Un site doit être rattaché à un tenant <code>cimolace_tenants</code> (hébergement). Les clients métier sont dans <code>cimolace_clients</code> puis liés par contrat.
                 </p>
-                {formError ? <p style={{ color: '#b91c1c', fontSize: '13px', marginBottom: '8px' }}>{formError}</p> : null}
+                {formError ? <p style={{ color: '#ea8878', fontSize: '13px', marginBottom: '8px' }}>{formError}</p> : null}
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))', gap: '10px', marginBottom: '10px' }}>
                   <input required placeholder="Nom" value={tenantForm.name} onChange={(e) => setTenantForm((x) => ({ ...x, name: e.target.value }))} style={inputStyle} />
                   <input required type="email" placeholder="Email" value={tenantForm.email} onChange={(e) => setTenantForm((x) => ({ ...x, email: e.target.value }))} style={inputStyle} />
                   <input placeholder="Téléphone" value={tenantForm.phone} onChange={(e) => setTenantForm((x) => ({ ...x, phone: e.target.value }))} style={inputStyle} />
                 </div>
-                <button type="submit" disabled={savingTenant} style={{ padding: '8px 16px', backgroundColor: savingTenant ? '#93c5fd' : '#1d4ed8', color: 'white', border: 'none', borderRadius: '8px', fontWeight: 600, cursor: 'pointer' }}>
+                <button type="submit" disabled={savingTenant} style={{ padding: '8px 16px', backgroundColor: savingTenant ? 'rgba(217,119,87,.14)' : '#d97757', color: savingTenant ? '#a8a49a' : '#20140f', border: 'none', borderRadius: '8px', fontWeight: 600, cursor: 'pointer' }}>
                   {savingTenant ? '…' : 'Créer le tenant'}
                 </button>
               </form>
 
-              <form onSubmit={handleCreateSite} style={{ backgroundColor: 'white', padding: '18px', borderRadius: '8px', border: '1px solid #e5e7eb' }}>
-                <h2 style={{ fontSize: '15px', fontWeight: 600, margin: '0 0 12px 0', color: '#111827' }}>Nouveau site</h2>
+              <form onSubmit={handleCreateSite} style={{ backgroundColor: '#2b2926', padding: '18px', borderRadius: '8px', border: '1px solid rgba(245,244,238,.09)' }}>
+                <h2 style={{ fontSize: '15px', fontWeight: 600, margin: '0 0 12px 0', color: '#f5f4ee' }}>Nouveau site</h2>
                 <div style={{ display: 'grid', gap: '10px', marginBottom: '10px' }}>
                   <select
                     required
@@ -259,18 +266,18 @@ export default function CimolaceAdminSites() {
                   </div>
                   <input placeholder="Domaine (optionnel)" value={siteForm.domain} onChange={(e) => setSiteForm((f) => ({ ...f, domain: e.target.value }))} style={inputStyle} />
                 </div>
-                <button type="submit" disabled={savingSite} style={{ padding: '8px 16px', backgroundColor: savingSite ? '#93c5fd' : '#1d4ed8', color: 'white', border: 'none', borderRadius: '8px', fontWeight: 600, cursor: 'pointer' }}>
+                <button type="submit" disabled={savingSite} style={{ padding: '8px 16px', backgroundColor: savingSite ? 'rgba(217,119,87,.14)' : '#d97757', color: savingSite ? '#a8a49a' : '#20140f', border: 'none', borderRadius: '8px', fontWeight: 600, cursor: 'pointer' }}>
                   {savingSite ? '…' : 'Créer le site'}
                 </button>
               </form>
             </div>
           ) : null}
 
-          <div style={{ backgroundColor: 'white', padding: '18px', borderRadius: '8px', border: '1px solid #e5e7eb' }}>
+          <div style={{ backgroundColor: '#2b2926', padding: '18px', borderRadius: '8px', border: '1px solid rgba(245,244,238,.09)' }}>
             {loading ? (
-              <p style={{ color: '#6b7280' }}>Chargement…</p>
+              <p style={{ color: '#a8a49a' }}>Chargement…</p>
             ) : filteredSites.length === 0 ? (
-              <p style={{ color: '#6b7280', margin: 0 }}>
+              <p style={{ color: '#a8a49a', margin: 0 }}>
                 Aucun site{filterStatus !== 'all' ? ' pour ce filtre' : ''}. Crée un tenant puis un site, ou rattache les contrats côté client.
               </p>
             ) : (
@@ -282,24 +289,24 @@ export default function CimolaceAdminSites() {
                       key={site.id}
                       style={{
                         padding: '14px 16px',
-                        backgroundColor: '#f9fafb',
+                        backgroundColor: '#262624',
                         borderRadius: '8px',
                         display: 'flex',
                         justifyContent: 'space-between',
                         alignItems: 'flex-start',
                         gap: '12px',
-                        border: '1px solid #e5e7eb',
+                        border: '1px solid rgba(245,244,238,.09)',
                       }}
                     >
                       <div>
-                        <div style={{ fontWeight: 'bold', marginBottom: '4px', color: '#111827' }}>{site.name}</div>
-                        <div style={{ fontSize: '13px', color: '#6b7280' }}>{site.domain || site.subdomain || 'Pas de domaine'}</div>
+                        <div style={{ fontWeight: 'bold', marginBottom: '4px', color: '#f5f4ee' }}>{site.name}</div>
+                        <div style={{ fontSize: '13px', color: '#a8a49a' }}>{site.domain || site.subdomain || 'Pas de domaine'}</div>
                         {ten ? (
-                          <div style={{ fontSize: '12px', color: '#4b5563', marginTop: '6px' }}>
+                          <div style={{ fontSize: '12px', color: '#a8a49a', marginTop: '6px' }}>
                             Tenant&nbsp;: {ten.name} · {ten.email}
                           </div>
                         ) : null}
-                        <div style={{ fontSize: '12px', color: '#9ca3af', marginTop: '4px' }}>
+                        <div style={{ fontSize: '12px', color: '#807c74', marginTop: '4px' }}>
                           Plan {site.plan} · env {site.environment || '—'}
                         </div>
                       </div>

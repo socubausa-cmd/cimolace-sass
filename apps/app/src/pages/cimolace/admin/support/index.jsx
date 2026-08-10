@@ -14,9 +14,9 @@ const CARD = {
   flex: '1',
   minWidth: '120px',
   padding: '14px 16px',
-  backgroundColor: '#f9fafb',
+  backgroundColor: '#2b2926',
   borderRadius: '8px',
-  border: '1px solid #e5e7eb',
+  border: '1px solid rgba(245,244,238,.09)',
 };
 
 const STATUS_OPTIONS = [
@@ -89,38 +89,38 @@ export default function CimolaceAdminSupport() {
   const tabBtn = (active) => ({
     padding: '8px 14px',
     borderRadius: '8px',
-    border: '1px solid #e5e7eb',
-    backgroundColor: active ? '#1d4ed8' : 'white',
-    color: active ? 'white' : '#374151',
+    border: '1px solid rgba(245,244,238,.09)',
+    backgroundColor: active ? '#d97757' : '#2b2926',
+    color: active ? '#20140f' : '#f5f4ee',
     fontSize: '13px',
     fontWeight: 500,
     cursor: 'pointer',
   });
 
   return (
-    <div style={{ minHeight: '100vh', backgroundColor: '#f3f4f6', display: 'flex', flexDirection: 'column' }}>
+    <div style={{ minHeight: '100vh', backgroundColor: '#262624', color: '#f5f4ee', display: 'flex', flexDirection: 'column' }}>
       <CimolaceHeader />
       <div style={{ display: 'flex', flex: 1 }}>
         <CimolaceSidebar />
         <div style={{ padding: '20px', flex: 1, maxWidth: '1000px' }}>
-          <h1 style={{ fontSize: '24px', fontWeight: 'bold', marginBottom: '12px', color: '#111827' }}>Support</h1>
+          <h1 style={{ fontSize: '24px', fontWeight: 'bold', marginBottom: '12px', color: '#f5f4ee' }}>Support</h1>
 
           {error ? (
-            <div style={{ backgroundColor: '#fef2f2', color: '#b91c1c', padding: '12px 16px', borderRadius: '8px', marginBottom: '16px', fontSize: '14px' }}>{error}</div>
+            <div style={{ backgroundColor: 'rgba(179,55,47,.16)', color: '#ea8878', padding: '12px 16px', borderRadius: '8px', marginBottom: '16px', fontSize: '14px' }}>{error}</div>
           ) : null}
 
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: '12px', marginBottom: '16px' }}>
             <div style={CARD}>
               <div style={{ fontSize: '22px', fontWeight: 'bold' }}>{loading ? '…' : stats.displayed}</div>
-              <div style={{ fontSize: '12px', color: '#6b7280', marginTop: '4px' }}>Tickets (liste)</div>
+              <div style={{ fontSize: '12px', color: '#a8a49a', marginTop: '4px' }}>Tickets (liste)</div>
             </div>
             <div style={CARD}>
-              <div style={{ fontSize: '22px', fontWeight: 'bold', color: '#b45309' }}>{loading ? '…' : stats.open}</div>
-              <div style={{ fontSize: '12px', color: '#6b7280', marginTop: '4px' }}>Ouverts (liste)</div>
+              <div style={{ fontSize: '22px', fontWeight: 'bold', color: '#e0b07a' }}>{loading ? '…' : stats.open}</div>
+              <div style={{ fontSize: '12px', color: '#a8a49a', marginTop: '4px' }}>Ouverts (liste)</div>
             </div>
             <div style={CARD}>
               <div style={{ fontSize: '22px', fontWeight: 'bold' }}>{loading ? '…' : stats.progress}</div>
-              <div style={{ fontSize: '12px', color: '#6b7280', marginTop: '4px' }}>En cours (liste)</div>
+              <div style={{ fontSize: '12px', color: '#a8a49a', marginTop: '4px' }}>En cours (liste)</div>
             </div>
           </div>
 
@@ -131,11 +131,11 @@ export default function CimolaceAdminSupport() {
             <button type="button" style={tabBtn(filter === TicketStatus.RESOLVED)} onClick={() => setFilter(TicketStatus.RESOLVED)}>Résolus</button>
           </div>
 
-          <div style={{ backgroundColor: 'white', padding: '18px', borderRadius: '8px', border: '1px solid #e5e7eb' }}>
+          <div style={{ backgroundColor: '#2b2926', padding: '18px', borderRadius: '8px', border: '1px solid rgba(245,244,238,.09)' }}>
             {loading ? (
-              <p style={{ color: '#6b7280' }}>Chargement…</p>
+              <p style={{ color: '#a8a49a' }}>Chargement…</p>
             ) : tickets.length === 0 ? (
-              <p style={{ color: '#6b7280', margin: 0 }}>Aucun ticket pour ce filtre.</p>
+              <p style={{ color: '#a8a49a', margin: 0 }}>Aucun ticket pour ce filtre.</p>
             ) : (
               <div style={{ display: 'grid', gap: '12px' }}>
                 {tickets.map((ticket) => {
@@ -147,21 +147,21 @@ export default function CimolaceAdminSupport() {
                       style={{
                         padding: '14px 16px',
                         borderRadius: '8px',
-                        border: '1px solid #e5e7eb',
-                        backgroundColor: '#fafafa',
+                        border: '1px solid rgba(245,244,238,.09)',
+                        backgroundColor: '#262624',
                       }}
                     >
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '12px', flexWrap: 'wrap' }}>
                         <div style={{ flex: '1', minWidth: '200px' }}>
-                          <div style={{ fontWeight: 700, color: '#111827' }}>{ticket.ticket_number}</div>
-                          <div style={{ fontSize: '14px', color: '#374151', marginTop: '4px' }}>{ticket.subject}</div>
-                          <div style={{ fontSize: '12px', color: '#6b7280', marginTop: '6px' }}>
+                          <div style={{ fontWeight: 700, color: '#f5f4ee' }}>{ticket.ticket_number}</div>
+                          <div style={{ fontSize: '14px', color: '#f5f4ee', marginTop: '4px' }}>{ticket.subject}</div>
+                          <div style={{ fontSize: '12px', color: '#a8a49a', marginTop: '6px' }}>
                             {site ? `${site.name}${tenant ? ` · ${tenant.name}` : ''}` : 'Sans site'} · priorité&nbsp;{' '}
                             <strong>{ticket.priority}</strong> · cat. {ticket.category}
                           </div>
                         </div>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                          <label style={{ fontSize: '12px', color: '#6b7280' }}>
+                          <label style={{ fontSize: '12px', color: '#a8a49a' }}>
                             Statut
                             <select
                               disabled={busyId === ticket.id}
@@ -171,8 +171,15 @@ export default function CimolaceAdminSupport() {
                                 marginLeft: '8px',
                                 padding: '6px 10px',
                                 borderRadius: '6px',
-                                border: '1px solid #d1d5db',
+                                border: '1px solid rgba(245,244,238,.16)',
                                 fontSize: '13px',
+                                // Seul contrôle mutant de la page. Sans fond ni encre, il
+                                // héritait l'encre claire de la racine sur un fond décidé
+                                // par le navigateur ; `colorScheme` aligne aussi la liste
+                                // déroulante native, que le style en ligne n'atteint pas.
+                                backgroundColor: '#33322e',
+                                color: '#f5f4ee',
+                                colorScheme: 'dark',
                               }}
                             >
                               {STATUS_OPTIONS.map((s) => (

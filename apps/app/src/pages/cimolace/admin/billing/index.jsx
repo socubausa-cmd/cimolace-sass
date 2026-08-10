@@ -33,9 +33,9 @@ const CARD = {
   flex: '1',
   minWidth: '130px',
   padding: '14px 16px',
-  backgroundColor: '#f9fafb',
+  backgroundColor: '#2b2926',
   borderRadius: '8px',
-  border: '1px solid #e5e7eb',
+  border: '1px solid rgba(245,244,238,.09)',
 };
 
 export default function CimolaceAdminBilling() {
@@ -81,27 +81,27 @@ export default function CimolaceAdminBilling() {
   const tabBtn = (active) => ({
     padding: '8px 16px',
     borderRadius: '8px',
-    border: '1px solid #e5e7eb',
-    backgroundColor: active ? '#1d4ed8' : 'white',
-    color: active ? 'white' : '#374151',
+    border: '1px solid rgba(245,244,238,.09)',
+    backgroundColor: active ? '#d97757' : '#2b2926',
+    color: active ? '#20140f' : '#f5f4ee',
     fontSize: '14px',
     fontWeight: 600,
     cursor: 'pointer',
   });
 
   return (
-    <div style={{ minHeight: '100vh', backgroundColor: '#f3f4f6', display: 'flex', flexDirection: 'column' }}>
+    <div style={{ minHeight: '100vh', backgroundColor: '#262624', color: '#f5f4ee', display: 'flex', flexDirection: 'column' }}>
       <CimolaceHeader />
       <div style={{ display: 'flex', flex: 1 }}>
         <CimolaceSidebar />
         <div style={{ padding: '20px', flex: 1, maxWidth: '1100px' }}>
-          <h1 style={{ fontSize: '24px', fontWeight: 'bold', marginBottom: '8px', color: '#111827' }}>Facturation</h1>
-          <p style={{ fontSize: '13px', color: '#6b7280', marginBottom: '16px' }}>
+          <h1 style={{ fontSize: '24px', fontWeight: 'bold', marginBottom: '8px', color: '#f5f4ee' }}>Facturation</h1>
+          <p style={{ fontSize: '13px', color: '#a8a49a', marginBottom: '16px' }}>
             Factures (montants stockés en <strong>centimes</strong> côté base). Paiements en euros décimaux.
           </p>
 
           {error ? (
-            <div style={{ backgroundColor: '#fef2f2', color: '#b91c1c', padding: '12px 16px', borderRadius: '8px', marginBottom: '16px', fontSize: '14px' }}>{error}</div>
+            <div style={{ backgroundColor: 'rgba(179,55,47,.16)', color: '#ea8878', padding: '12px 16px', borderRadius: '8px', marginBottom: '16px', fontSize: '14px' }}>{error}</div>
           ) : null}
 
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', marginBottom: '16px' }}>
@@ -118,22 +118,22 @@ export default function CimolaceAdminBilling() {
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: '12px', marginBottom: '16px' }}>
                 <div style={CARD}>
                   <div style={{ fontSize: '22px', fontWeight: 'bold' }}>{loading ? '…' : invStats.total}</div>
-                  <div style={{ fontSize: '12px', color: '#6b7280', marginTop: '4px' }}>Factures</div>
+                  <div style={{ fontSize: '12px', color: '#a8a49a', marginTop: '4px' }}>Factures</div>
                 </div>
                 <div style={CARD}>
-                  <div style={{ fontSize: '22px', fontWeight: 'bold', color: '#b45309' }}>{loading ? '…' : invStats.overdueish}</div>
-                  <div style={{ fontSize: '12px', color: '#6b7280', marginTop: '4px' }}>À suivre / en retard</div>
+                  <div style={{ fontSize: '22px', fontWeight: 'bold', color: '#e0b07a' }}>{loading ? '…' : invStats.overdueish}</div>
+                  <div style={{ fontSize: '12px', color: '#a8a49a', marginTop: '4px' }}>À suivre / en retard</div>
                 </div>
                 <div style={CARD}>
-                  <div style={{ fontSize: '22px', fontWeight: 'bold', color: '#166534' }}>{loading ? '…' : invStats.paid}</div>
-                  <div style={{ fontSize: '12px', color: '#6b7280', marginTop: '4px' }}>Payées</div>
+                  <div style={{ fontSize: '22px', fontWeight: 'bold', color: '#8fbf8f' }}>{loading ? '…' : invStats.paid}</div>
+                  <div style={{ fontSize: '12px', color: '#a8a49a', marginTop: '4px' }}>Payées</div>
                 </div>
               </div>
-              <div style={{ backgroundColor: 'white', padding: '18px', borderRadius: '8px', border: '1px solid #e5e7eb' }}>
+              <div style={{ backgroundColor: '#2b2926', padding: '18px', borderRadius: '8px', border: '1px solid rgba(245,244,238,.09)' }}>
                 {loading ? (
-                  <p style={{ color: '#6b7280' }}>Chargement…</p>
+                  <p style={{ color: '#a8a49a' }}>Chargement…</p>
                 ) : invoices.length === 0 ? (
-                  <p style={{ color: '#6b7280', margin: 0 }}>Aucune facture.</p>
+                  <p style={{ color: '#a8a49a', margin: 0 }}>Aucune facture.</p>
                 ) : (
                   <div style={{ display: 'grid', gap: '10px' }}>
                     {invoices.map((invoice) => {
@@ -145,8 +145,8 @@ export default function CimolaceAdminBilling() {
                         borderRadius: '999px',
                         fontSize: '11px',
                         fontWeight: 600,
-                        backgroundColor: st === 'paid' ? '#dcfce7' : st === 'overdue' ? '#ffedd5' : '#f3f4f6',
-                        color: st === 'paid' ? '#166534' : st === 'overdue' ? '#9a3412' : '#374151',
+                        backgroundColor: st === 'paid' ? 'rgba(111,158,111,.16)' : st === 'overdue' ? 'rgba(217,154,91,.16)' : '#262624',
+                        color: st === 'paid' ? '#8fbf8f' : st === 'overdue' ? '#e0b07a' : '#f5f4ee',
                       };
                       return (
                         <div
@@ -154,8 +154,8 @@ export default function CimolaceAdminBilling() {
                           style={{
                             padding: '14px',
                             borderRadius: '8px',
-                            border: '1px solid #e5e7eb',
-                            backgroundColor: '#fafafa',
+                            border: '1px solid rgba(245,244,238,.09)',
+                            backgroundColor: '#262624',
                             display: 'flex',
                             justifyContent: 'space-between',
                             alignItems: 'flex-start',
@@ -164,11 +164,11 @@ export default function CimolaceAdminBilling() {
                           }}
                         >
                           <div>
-                            <div style={{ fontWeight: 700, color: '#111827' }}>{invoice.invoice_number}</div>
-                            <div style={{ fontSize: '15px', color: '#374151', marginTop: '4px' }}>
+                            <div style={{ fontWeight: 700, color: '#f5f4ee' }}>{invoice.invoice_number}</div>
+                            <div style={{ fontSize: '15px', color: '#f5f4ee', marginTop: '4px' }}>
                               {formatInvoiceEUR(invoice.amount, invoice.currency)}
                             </div>
-                            <div style={{ fontSize: '12px', color: '#6b7280', marginTop: '6px' }}>
+                            <div style={{ fontSize: '12px', color: '#a8a49a', marginTop: '6px' }}>
                               {site ? `${site.name}${tenant ? ` · ${tenant.name}` : ''}` : 'Site inconnu'} ·{' '}
                               échéance {invoice.due_date ? new Date(invoice.due_date).toLocaleDateString('fr-FR') : '—'} ·{' '}
                               {invoice.type}
@@ -187,18 +187,18 @@ export default function CimolaceAdminBilling() {
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: '12px', marginBottom: '16px' }}>
                 <div style={CARD}>
                   <div style={{ fontSize: '22px', fontWeight: 'bold' }}>{loading ? '…' : payStats.total}</div>
-                  <div style={{ fontSize: '12px', color: '#6b7280', marginTop: '4px' }}>Paiements</div>
+                  <div style={{ fontSize: '12px', color: '#a8a49a', marginTop: '4px' }}>Paiements</div>
                 </div>
                 <div style={CARD}>
-                  <div style={{ fontSize: '22px', fontWeight: 'bold', color: '#b45309' }}>{loading ? '…' : payStats.pending}</div>
-                  <div style={{ fontSize: '12px', color: '#6b7280', marginTop: '4px' }}>En attente / traitement</div>
+                  <div style={{ fontSize: '22px', fontWeight: 'bold', color: '#e0b07a' }}>{loading ? '…' : payStats.pending}</div>
+                  <div style={{ fontSize: '12px', color: '#a8a49a', marginTop: '4px' }}>En attente / traitement</div>
                 </div>
               </div>
-              <div style={{ backgroundColor: 'white', padding: '18px', borderRadius: '8px', border: '1px solid #e5e7eb' }}>
+              <div style={{ backgroundColor: '#2b2926', padding: '18px', borderRadius: '8px', border: '1px solid rgba(245,244,238,.09)' }}>
                 {loading ? (
-                  <p style={{ color: '#6b7280' }}>Chargement…</p>
+                  <p style={{ color: '#a8a49a' }}>Chargement…</p>
                 ) : payments.length === 0 ? (
-                  <p style={{ color: '#6b7280', margin: 0 }}>Aucun paiement.</p>
+                  <p style={{ color: '#a8a49a', margin: 0 }}>Aucun paiement.</p>
                 ) : (
                   <div style={{ display: 'grid', gap: '10px' }}>
                     {payments.map((p) => {
@@ -210,8 +210,8 @@ export default function CimolaceAdminBilling() {
                         borderRadius: '999px',
                         fontSize: '11px',
                         fontWeight: 600,
-                        backgroundColor: st === 'confirmed' ? '#dcfce7' : st === 'failed' ? '#fee2e2' : '#fef3c7',
-                        color: st === 'confirmed' ? '#166534' : st === 'failed' ? '#991b1b' : '#92400e',
+                        backgroundColor: st === 'confirmed' ? 'rgba(111,158,111,.16)' : st === 'failed' ? 'rgba(179,55,47,.16)' : 'rgba(217,154,91,.16)',
+                        color: st === 'confirmed' ? '#8fbf8f' : st === 'failed' ? '#ea8878' : '#e0b07a',
                       };
                       return (
                         <div
@@ -219,8 +219,8 @@ export default function CimolaceAdminBilling() {
                           style={{
                             padding: '14px',
                             borderRadius: '8px',
-                            border: '1px solid #e5e7eb',
-                            backgroundColor: '#fafafa',
+                            border: '1px solid rgba(245,244,238,.09)',
+                            backgroundColor: '#262624',
                             display: 'flex',
                             justifyContent: 'space-between',
                             alignItems: 'flex-start',
@@ -230,11 +230,11 @@ export default function CimolaceAdminBilling() {
                         >
                           <div>
                             <div style={{ fontWeight: 700 }}>{formatPaymentEUR(p.amount, p.currency)}</div>
-                            <div style={{ fontSize: '12px', color: '#6b7280', marginTop: '4px' }}>
+                            <div style={{ fontSize: '12px', color: '#a8a49a', marginTop: '4px' }}>
                               {p.type} · {p.provider}
                               {p.invoice_number ? ` · ${p.invoice_number}` : ''}
                             </div>
-                            <div style={{ fontSize: '12px', color: '#6b7280', marginTop: '4px' }}>
+                            <div style={{ fontSize: '12px', color: '#a8a49a', marginTop: '4px' }}>
                               {site ? `${site.name}${tenant ? ` · ${tenant.name}` : ''}` : 'Pas de site'}
                             </div>
                           </div>

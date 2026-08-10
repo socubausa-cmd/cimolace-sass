@@ -80,13 +80,13 @@ export default function CimolaceAdminClients() {
   }
 
   return (
-    <div style={{ minHeight: '100vh', backgroundColor: '#f3f4f6', display: 'flex', flexDirection: 'column' }}>
+    <div style={{ minHeight: '100vh', backgroundColor: '#262624', color: '#f5f4ee', display: 'flex', flexDirection: 'column' }}>
       <CimolaceHeader />
       <div style={{ display: 'flex', flex: 1 }}>
         <CimolaceSidebar />
         <div style={{ padding: '20px', flex: 1, maxWidth: '960px' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', flexWrap: 'wrap', gap: '12px' }}>
-            <h1 style={{ fontSize: '24px', fontWeight: 'bold', color: '#111827', margin: 0 }}>Clients</h1>
+            <h1 style={{ fontSize: '24px', fontWeight: 'bold', color: '#f5f4ee', margin: 0 }}>Clients</h1>
             <button
               type="button"
               onClick={() => {
@@ -97,8 +97,8 @@ export default function CimolaceAdminClients() {
                 padding: '10px 18px',
                 borderRadius: '8px',
                 border: 'none',
-                backgroundColor: '#2563eb',
-                color: 'white',
+                backgroundColor: '#d97757',
+                color: '#20140f',
                 fontWeight: 600,
                 cursor: 'pointer',
                 fontSize: '14px',
@@ -112,20 +112,20 @@ export default function CimolaceAdminClients() {
             <form
               onSubmit={handleCreate}
               style={{
-                backgroundColor: 'white',
+                backgroundColor: '#2b2926',
                 padding: '20px',
                 borderRadius: '8px',
                 marginBottom: '20px',
-                border: '1px solid #e5e7eb',
+                border: '1px solid rgba(245,244,238,.09)',
                 display: 'grid',
                 gap: '12px',
               }}
             >
-              <h2 style={{ fontSize: '16px', fontWeight: 600, margin: '0 0 4px 0', color: '#111827' }}>Nouveau client</h2>
+              <h2 style={{ fontSize: '16px', fontWeight: 600, margin: '0 0 4px 0', color: '#f5f4ee' }}>Nouveau client</h2>
               {formError ? (
-                <p style={{ margin: 0, color: '#b91c1c', fontSize: '13px' }}>{formError}</p>
+                <p style={{ margin: 0, color: '#ea8878', fontSize: '13px' }}>{formError}</p>
               ) : null}
-              <label style={{ display: 'flex', flexDirection: 'column', gap: '4px', fontSize: '13px', color: '#374151' }}>
+              <label style={{ display: 'flex', flexDirection: 'column', gap: '4px', fontSize: '13px', color: '#f5f4ee' }}>
                 Nom *
                 <input
                   required
@@ -134,16 +134,16 @@ export default function CimolaceAdminClients() {
                   style={inputStyle}
                 />
               </label>
-              <label style={{ display: 'flex', flexDirection: 'column', gap: '4px', fontSize: '13px', color: '#374151' }}>
+              <label style={{ display: 'flex', flexDirection: 'column', gap: '4px', fontSize: '13px', color: '#f5f4ee' }}>
                 Email *
                 <input type="email" required value={form.email} onChange={(ev) => setForm((f) => ({ ...f, email: ev.target.value }))} style={inputStyle} />
               </label>
-              <label style={{ display: 'flex', flexDirection: 'column', gap: '4px', fontSize: '13px', color: '#374151' }}>
+              <label style={{ display: 'flex', flexDirection: 'column', gap: '4px', fontSize: '13px', color: '#f5f4ee' }}>
                 Raison sociale
                 <input value={form.business_name} onChange={(ev) => setForm((f) => ({ ...f, business_name: ev.target.value }))} style={inputStyle} />
               </label>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
-                <label style={{ display: 'flex', flexDirection: 'column', gap: '4px', fontSize: '13px', color: '#374151' }}>
+                <label style={{ display: 'flex', flexDirection: 'column', gap: '4px', fontSize: '13px', color: '#f5f4ee' }}>
                   Type
                   <select value={form.client_type} onChange={(ev) => setForm((f) => ({ ...f, client_type: ev.target.value }))} style={inputStyle}>
                     {clientTypeOptions.map((o) => (
@@ -151,7 +151,7 @@ export default function CimolaceAdminClients() {
                     ))}
                   </select>
                 </label>
-                <label style={{ display: 'flex', flexDirection: 'column', gap: '4px', fontSize: '13px', color: '#374151' }}>
+                <label style={{ display: 'flex', flexDirection: 'column', gap: '4px', fontSize: '13px', color: '#f5f4ee' }}>
                   Statut
                   <select value={form.status} onChange={(ev) => setForm((f) => ({ ...f, status: ev.target.value }))} style={inputStyle}>
                     <option value={ClientStatus.PROSPECT}>Prospect</option>
@@ -162,7 +162,7 @@ export default function CimolaceAdminClients() {
                   </select>
                 </label>
               </div>
-              <label style={{ display: 'flex', flexDirection: 'column', gap: '4px', fontSize: '13px', color: '#374151' }}>
+              <label style={{ display: 'flex', flexDirection: 'column', gap: '4px', fontSize: '13px', color: '#f5f4ee' }}>
                 Portal slug (URL portail&nbsp;: /cimolace/client/… )
                 <input
                   placeholder="ex. isna"
@@ -179,8 +179,8 @@ export default function CimolaceAdminClients() {
                   padding: '10px 18px',
                   borderRadius: '8px',
                   border: 'none',
-                  backgroundColor: saving ? '#93c5fd' : '#1d4ed8',
-                  color: 'white',
+                  backgroundColor: saving ? 'rgba(217,119,87,.14)' : '#d97757',
+                  color: saving ? '#a8a49a' : '#20140f',
                   fontWeight: 600,
                   cursor: saving ? 'not-allowed' : 'pointer',
                 }}
@@ -190,11 +190,11 @@ export default function CimolaceAdminClients() {
             </form>
           ) : null}
 
-          <div style={{ backgroundColor: 'white', padding: '20px', borderRadius: '8px', border: '1px solid #e5e7eb' }}>
+          <div style={{ backgroundColor: '#2b2926', padding: '20px', borderRadius: '8px', border: '1px solid rgba(245,244,238,.09)' }}>
             {loading ? (
-              <p style={{ color: '#6b7280' }}>Chargement...</p>
+              <p style={{ color: '#a8a49a' }}>Chargement...</p>
             ) : clients.length === 0 ? (
-              <p style={{ color: '#6b7280' }}>Aucun client pour le moment. Utilise « Nouveau client » ci-dessus.</p>
+              <p style={{ color: '#a8a49a' }}>Aucun client pour le moment. Utilise « Nouveau client » ci-dessus.</p>
             ) : (
               <div style={{ display: 'grid', gap: '16px' }}>
                 {clients.map((client) => (
@@ -203,21 +203,21 @@ export default function CimolaceAdminClients() {
                     to={`/cimolace/admin/clients/${client.id}`}
                     style={{
                       padding: '16px',
-                      backgroundColor: '#f9fafb',
+                      backgroundColor: '#262624',
                       borderRadius: '8px',
                       display: 'flex',
                       justifyContent: 'space-between',
                       alignItems: 'center',
                       textDecoration: 'none',
                       color: 'inherit',
-                      border: '1px solid #e5e7eb',
+                      border: '1px solid rgba(245,244,238,.09)',
                     }}
                   >
                     <div>
                       <div style={{ fontWeight: 'bold', marginBottom: '4px' }}>{client.name}</div>
-                      <div style={{ fontSize: '14px', color: '#6b7280' }}>{client.email}</div>
+                      <div style={{ fontSize: '14px', color: '#a8a49a' }}>{client.email}</div>
                       {client.portal_slug ? (
-                        <div style={{ fontSize: '12px', color: '#2563eb', marginTop: '6px' }}>
+                        <div style={{ fontSize: '12px', color: '#d97757', marginTop: '6px' }}>
                           slug&nbsp;: /cimolace/client/{client.portal_slug}
                         </div>
                       ) : null}
@@ -226,8 +226,8 @@ export default function CimolaceAdminClients() {
                       padding: '4px 12px',
                       borderRadius: '12px',
                       fontSize: '12px',
-                      backgroundColor: client.status === 'active' ? '#dcfce7' : '#fef3c7',
-                      color: client.status === 'active' ? '#166534' : '#92400e',
+                      backgroundColor: client.status === 'active' ? 'rgba(111,158,111,.16)' : 'rgba(217,154,91,.16)',
+                      color: client.status === 'active' ? '#8fbf8f' : '#e0b07a',
                     }}>
                       {client.status}
                     </div>
@@ -245,6 +245,13 @@ export default function CimolaceAdminClients() {
 const inputStyle = {
   padding: '8px 10px',
   borderRadius: '6px',
-  border: '1px solid #d1d5db',
+  border: '1px solid rgba(245,244,238,.16)',
   fontSize: '14px',
+  // Sans fond ni encre, le champ dépendait entièrement du navigateur :
+  // il héritait l'encre claire de la racine tout en gardant un fond
+  // décidé par l'agent utilisateur. On pose les deux, et `colorScheme`
+  // aligne aussi ce que le navigateur peint lui-même (curseur, listes).
+  backgroundColor: '#262624',
+  color: '#f5f4ee',
+  colorScheme: 'dark',
 };
