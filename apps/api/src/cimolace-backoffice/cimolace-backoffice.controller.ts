@@ -64,6 +64,7 @@ export class CimolaceBackofficeController {
   @Post('infra/expenses') infraExpense(@Req() req: any, @Body() b: any) { return this.infra.recordExpense(b, req.user?.id ?? null); }
   @Delete('infra/expenses/:id') infraExpenseRemove(@Param('id') id: string) { return this.infra.removeExpense(id); }
   @Post('infra/health') infraHealth() { return this.infra.runHealthChecks(); }
+  @Get('infra/railway-usage') infraRailway() { return this.infra.railwayUsage(); }
 
   @Get('monitoring/overview') monitoringOverview() { return this.svc.getMonitoringOverview(); }
   @Post('monitoring/run-all') monitoringRunAll() { return this.svc.runAllHealthChecks(); }

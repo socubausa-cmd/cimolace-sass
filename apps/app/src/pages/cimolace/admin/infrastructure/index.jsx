@@ -72,10 +72,14 @@ export default function CimolaceAdminInfrastructure() {
   const [depFor, setDepFor] = useState(null);  // service dont on saisit la dépense
   const [filtre, setFiltre] = useState('tous');
 
+  const [railway, setRailway] = useState(null);
+
   const load = useCallback(() => {
     apiV2.get('/cimolace-backoffice/infra', { timeout: 20000 })
       .then((r) => { setData(unwrap(r)); setErr(null); })
       .catch((e) => setErr(erreurLisible(e)));
+    apiV2.get('/cimolace-backoffice/infra/railway-usage', { timeout: 20000 })
+      .then((r) => setRailway(unwrap(r))).catch(() => setRailway(null));
   }, []);
   useEffect(() => { load(); }, [load]);
 
@@ -151,7 +155,8 @@ export default function CimolaceAdminInfrastructure() {
             </div>
           ) : (
             <>
-              <Charge t={t} parMois={data.parMois} />
+              <Charge t={t} parMois={data.parMois} revenus={data.revenus} />
+              <Railway r={railway} />
 
               <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', margin: '26px 0 18px' }}>
                 <Puce actif={filtre === 'tous'} onClick={() => setFiltre('tous')}>Tout ({services.length})</Puce>
@@ -212,8 +217,36 @@ function Puce({ actif, onClick, children }) {
   );
 }
 
+/**
+ * Le seul chiffre lu automatiquement. Quand le jeton manque, l'écran dit
+ * comment l'obtenir au lieu d'afficher une case vide qu'on croirait cassée.
+ */
+function Railway({ r }) {
+  if (!r) return null;
+  return (
+    <div style={{ marginTop: 14, padding: '12px 15px', borderRadius: R.card, border: `1px solid ${T.line}`, background: T.panel }}>
+      <p style={{ margin: 0, fontSize: FS.sm, color: T.muted }}>Usage Railway lu automatiquement</p>
+      {!r.configure ? (
+        <p style={{ margin: '5px 0 0', fontSize: FS.base, color: T.muted, lineHeight: 1.55, maxWidth: 700 }}>{r.raison}</p>
+      ) : r.erreur ? (
+        <p style={{ margin: '5px 0 0', fontSize: FS.base, color: T.warn }}>{r.erreur}</p>
+      ) : (
+        <>
+          <p style={{ margin: '3px 0 0', fontSize: FS.xl, fontWeight: 700, ...NUM }}>
+            {r.estimationUsd != null ? `${Number(r.estimationUsd).toFixed(2)} $` : '—'}
+            <span style={{ fontSize: FS.sm, fontWeight: 400, color: T.faint }}> estimés depuis le {r.depuis}</span>
+          </p>
+          <p style={{ margin: '5px 0 0', fontSize: FS.xs, color: T.faint, lineHeight: 1.5 }}>
+            Estimation Railway en dollars — non convertie et non ajoutée aux totaux en euros, faute de parité fixe.
+          </p>
+        </>
+      )}
+    </div>
+  );
+}
+
 /** La charge : engagement d'un côté, dépense réelle de l'autre. Jamais un seul chiffre. */
-function Charge({ t, parMois }) {
+function Charge({ t, parMois, revenus }) {
   if (!t) return null;
   const max = Math.max(1, ...(parMois || []).map((m) => m.eur));
   return (
@@ -255,6 +288,25 @@ function Charge({ t, parMois }) {
             ))}
           </div>
         )}
+      </div>
+
+      {/* La charge en face de ce qu'elle produit : un engagement de 200 € est
+          confortable à 2 000 € encaissés et mortel à 150 €. */}
+      <div style={{ background: T.panel, borderRadius: R.card, border: `1px solid ${revenus?.margeEur < 0 ? T.warn : T.line}`, padding: 18 }}>
+        <p style={{ margin: 0, fontSize: FS.sm, color: T.muted }}>Face aux revenus</p>
+        <p style={{ margin: '3px 0 0', fontSize: 34, fontWeight: 700, lineHeight: 1.1, ...NUM, color: revenus?.margeEur < 0 ? T.warn : T.ink }}>
+          {revenus?.partInfraPct != null ? `${revenus.partInfraPct} %` : '—'}
+        </p>
+        <p style={{ margin: '7px 0 0', fontSize: FS.sm, color: T.muted, lineHeight: 1.5 }}>
+          {revenus?.partInfraPct != null ? (
+            <>
+              des <b style={{ color: T.ink, ...NUM }}>{eur(revenus.encaisseEur)}</b> encaissés partent dans l&apos;infrastructure.
+              Reste <b style={{ color: revenus.margeEur < 0 ? T.warn : T.ink, ...NUM }}>{eur(revenus.margeEur)}</b>.
+            </>
+          ) : (
+            'Aucun revenu encaissé : le ratio n’a pas de sens tant que le dénominateur est nul.'
+          )}
+        </p>
       </div>
 
       <div style={{ background: T.panel, borderRadius: R.card, border: `1px solid ${T.line}`, padding: 18 }}>

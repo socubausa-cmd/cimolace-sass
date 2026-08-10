@@ -1,4 +1,4 @@
-import { BadRequestException, Injectable, Logger } from '@nestjs/common';
+import { BadRequestException, Injectable, Logger, type OnApplicationBootstrap } from '@nestjs/common';
 import { SupabaseService } from '../supabase/supabase.service';
 
 /**
@@ -17,9 +17,23 @@ import { SupabaseService } from '../supabase/supabase.service';
  * prévu et le payé — qui est l'information utile.
  */
 @Injectable()
-export class InfraService {
+export class InfraService implements OnApplicationBootstrap {
   private readonly log = new Logger(InfraService.name);
   constructor(private readonly supabase: SupabaseService) {}
+
+  /**
+   * Sonde planifiée. Déclenchée à la main, elle ne servait qu'aux jours où l'on
+   * y pensait — donc jamais la nuit où un fournisseur tombe. Une passe horaire,
+   * dans le `onApplicationBootstrap` déjà utilisé ailleurs dans ce repo
+   * (pas de `@nestjs/schedule` ici, ne pas en introduire un pour une boucle).
+   */
+  onApplicationBootstrap() {
+    const HEURE = 60 * 60 * 1000;
+    // Décalage au démarrage : ne pas sonder pendant que l'instance boote,
+    // sinon un redéploiement se signale lui-même comme une panne.
+    setTimeout(() => { void this.runHealthChecks().catch(() => {}); }, 90 * 1000);
+    setInterval(() => { void this.runHealthChecks().catch(() => {}); }, HEURE).unref?.();
+  }
 
   /** Parité CFA FIXE (accord monétaire), pas un taux de marché. */
   private static XAF_PER_EUR = 655.957;
@@ -47,6 +61,73 @@ export class InfraService {
   }
 
   private get sb() { return this.supabase.client as any; }
+
+  /**
+   * USAGE RÉEL RAILWAY — la seule automatisation crédible du lot.
+   *
+   * Railway injecte déjà `RAILWAY_PROJECT_ID` dans le conteneur ; il ne manque
+   * qu'un jeton d'API, qui n'est PAS fourni automatiquement (les variables
+   * RAILWAY_* natives ne contiennent aucune clé). Sans lui, on renvoie
+   * `configure: false` avec la marche à suivre — jamais un chiffre inventé pour
+   * remplir la case.
+   */
+  async railwayUsage() {
+    const token = process.env.RAILWAY_API_TOKEN;
+    const projectId = process.env.RAILWAY_PROJECT_ID;
+    if (!token) {
+      return {
+        configure: false,
+        raison: "Aucun RAILWAY_API_TOKEN sur le service. Crée un jeton sur railway.com (Account → Tokens) et pose-le en variable pour lire l'usage réel.",
+      };
+    }
+    if (!projectId) return { configure: false, raison: 'RAILWAY_PROJECT_ID absent du conteneur.' };
+
+    // Fenêtre = mois courant, pour se comparer à la dépense saisie du même mois.
+    const debut = new Date();
+    debut.setUTCDate(1); debut.setUTCHours(0, 0, 0, 0);
+    const requete = {
+      query: `query($projectId: String!, $startDate: DateTime!) {
+        estimatedUsage(projectId: $projectId, startDate: $startDate) {
+          estimatedValue measurement
+        }
+      }`,
+      variables: { projectId, startDate: debut.toISOString() },
+    };
+    try {
+      const r = await fetch('https://backboard.railway.com/graphql/v2', {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify(requete),
+      });
+      if (!r.ok) return { configure: true, erreur: `Railway a répondu ${r.status}.` };
+      const j: any = await r.json();
+      if (j?.errors?.length) return { configure: true, erreur: String(j.errors[0]?.message || 'requête refusée') };
+      const lignes = (j?.data?.estimatedUsage ?? []).map((u: any) => ({
+        mesure: u.measurement, valeur: Number(u.estimatedValue || 0),
+      }));
+      const cout = lignes.find((l: any) => String(l.mesure).toUpperCase().includes('CREDIT'));
+      return { configure: true, depuis: debut.toISOString().slice(0, 10), lignes, estimationUsd: cout?.valeur ?? null };
+    } catch (e) {
+      return { configure: true, erreur: (e as Error)?.message || 'Railway injoignable.' };
+    }
+  }
+
+  /**
+   * Revenus encaissés, ramenés en euros — pour mettre la charge en face de ce
+   * qu'elle produit. Lecture ciblée de billing_invoices : appeler
+   * getPlatformFinances aurait traîné un aller-retour pawaPay de ~3 s dans un
+   * écran qui n'en a pas besoin.
+   */
+  private async revenusEur() {
+    const { data } = await this.sb.from('billing_invoices').select('amount_cents, status, currency');
+    let eur = 0;
+    for (const i of (data ?? [])) {
+      if (String(i.status || '').toLowerCase() !== 'paid') continue;
+      const v = InfraService.toEur(Number(i.amount_cents || 0), i.currency);
+      if (v !== null) eur += v;
+    }
+    return eur;
+  }
 
   /** Vue complète : registre, santé, engagement, dépense du mois et sur 12 mois. */
   async overview() {
@@ -125,7 +206,20 @@ export class InfraService {
       categories.set(cat, e);
     }
 
+    // CHARGE FACE AUX REVENUS. Un engagement de 200 € ne veut rien dire seul :
+    // il est confortable à 2 000 € encaissés, mortel à 150 €.
+    const revenus = await this.revenusEur().catch(() => 0);
+    const chargeMensuelle = engagementEur + depenseMoisEur;
+
     return {
+      revenus: {
+        encaisseEur: revenus,
+        // Part des revenus mangée par l'infrastructure. `null` tant qu'aucun
+        // revenu n'est encaissé : diviser par zéro donnerait « ∞ % », un chiffre
+        // spectaculaire qui ne dit rien.
+        partInfraPct: revenus > 0 ? Math.round((chargeMensuelle / revenus) * 100) : null,
+        margeEur: revenus - chargeMensuelle,
+      },
       services: liste.map((s) => ({
         ...s,
         mensuelEur: InfraService.toEur(InfraService.mensuel(Number(s.amount_cents || 0), s.cycle), s.currency),
