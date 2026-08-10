@@ -9,8 +9,8 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { LiriFonts as F, type LiriPalette } from '@/constants/liri-theme';
 import { useTheme } from '@/lib/theme';
 import {
-  createCrmContact, fetchCrmActivities, fetchCrmContacts, fetchCrmSummary,
-  type CrmActivity, type CrmContact,
+  createCrmContact, deleteCrmContact, fetchCrmActivities, fetchCrmContacts, fetchCrmSummary,
+  updateCrmContact, type CrmActivity, type CrmContact,
 } from '@/lib/liri-api';
 
 const ON_CORAL = '#1c1a18'; // texte lisible sur pastille corail (sombre ET crème)
@@ -38,6 +38,7 @@ export default function CrmScreen() {
   const [showNew, setShowNew] = useState(false);
   const [saving, setSaving] = useState(false);
   const [form, setForm] = useState({ firstName: '', lastName: '', email: '', phone: '' });
+  const [editingId, setEditingId] = useState<string | null>(null);
 
   const load = useCallback(async (search?: string) => {
     const [c, a, sum] = await Promise.all([
@@ -57,6 +58,13 @@ export default function CrmScreen() {
     setRefreshing(true); await load(query); setRefreshing(false);
   }, [load, query]);
 
+  const closeSheet = useCallback(() => { setShowNew(false); setEditingId(null); }, []);
+  const openCreate = useCallback(() => {
+    setEditingId(null);
+    setForm({ firstName: '', lastName: '', email: '', phone: '' });
+    setShowNew(true);
+  }, []);
+
   const submitNew = useCallback(async () => {
     const { firstName, lastName, email, phone } = form;
     if (!firstName.trim() && !lastName.trim() && !email.trim()) {
@@ -64,22 +72,51 @@ export default function CrmScreen() {
       return;
     }
     setSaving(true);
-    const created = await createCrmContact({
+    const body = {
       first_name: firstName.trim() || undefined,
       last_name: lastName.trim() || undefined,
       email: email.trim() || undefined,
       phone: phone.trim() || undefined,
-    });
+    };
+    const res = editingId ? await updateCrmContact(editingId, body) : await createCrmContact(body);
     setSaving(false);
-    if (created) {
+    if (res) {
       setShowNew(false);
+      setEditingId(null);
       setForm({ firstName: '', lastName: '', email: '', phone: '' });
       setTab('contacts');
       await load();
     } else {
-      Alert.alert('Contact', "Création impossible. Vérifie ta connexion et réessaie.");
+      Alert.alert('Contact', editingId ? 'Mise à jour impossible. Réessaie.' : "Création impossible. Vérifie ta connexion et réessaie.");
     }
-  }, [form, load]);
+  }, [form, load, editingId]);
+
+  const openEdit = useCallback((c: CrmContact) => {
+    const parts = (c.full_name || c.name || '').trim().split(/\s+/).filter(Boolean);
+    setForm({ firstName: parts[0] ?? '', lastName: parts.slice(1).join(' '), email: c.email ?? '', phone: c.phone ?? '' });
+    setEditingId(c.id);
+    setShowNew(true);
+  }, []);
+
+  const rowMenu = useCallback((c: CrmContact) => {
+    Alert.alert(nameOf(c), undefined, [
+      { text: 'Modifier', onPress: () => openEdit(c) },
+      {
+        text: 'Supprimer', style: 'destructive', onPress: () => {
+          Alert.alert('Supprimer ce contact ?', nameOf(c), [
+            { text: 'Annuler', style: 'cancel' },
+            {
+              text: 'Supprimer', style: 'destructive', onPress: async () => {
+                const ok = await deleteCrmContact(c.id);
+                if (ok) await load(); else Alert.alert('Contact', 'Suppression impossible.');
+              },
+            },
+          ]);
+        },
+      },
+      { text: 'Annuler', style: 'cancel' },
+    ]);
+  }, [openEdit, load]);
 
   const stats = useMemo(() => {
     const sm = summary ?? {};
@@ -97,7 +134,7 @@ export default function CrmScreen() {
           <Text style={s.h1}>CRM</Text>
           <Text style={s.sub}>{"Tes contacts et l'activité de l'écosystème."}</Text>
         </View>
-        <Pressable style={s.newBtn} onPress={() => setShowNew(true)}>
+        <Pressable style={s.newBtn} onPress={openCreate}>
           <Feather name="user-plus" size={15} color={ON_CORAL} />
           <Text style={s.newBtnTxt}>Nouveau</Text>
         </Pressable>
@@ -145,7 +182,7 @@ export default function CrmScreen() {
             contacts.map((c) => {
               const nm = nameOf(c);
               return (
-                <View key={c.id} style={s.item}>
+                <Pressable key={c.id} style={s.item} onLongPress={() => rowMenu(c)} delayLongPress={300}>
                   <View style={s.avatar}><Text style={s.avatarTxt}>{initials(nm)}</Text></View>
                   <View style={{ flex: 1 }}>
                     <Text style={s.name} numberOfLines={1}>{nm}</Text>
@@ -170,7 +207,7 @@ export default function CrmScreen() {
                       </Pressable>
                     )}
                   </View>
-                </View>
+                </Pressable>
               );
             })
           )
@@ -196,13 +233,13 @@ export default function CrmScreen() {
       </ScrollView>
 
       {/* Création d'un contact — POST /crm/contacts */}
-      <Modal visible={showNew} transparent animationType="slide" onRequestClose={() => setShowNew(false)}>
+      <Modal visible={showNew} transparent animationType="slide" onRequestClose={closeSheet}>
         <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={s.modalWrap}>
-          <Pressable style={s.modalBackdrop} onPress={() => setShowNew(false)} />
+          <Pressable style={s.modalBackdrop} onPress={closeSheet} />
           <View style={s.sheet}>
             <View style={s.sheetHead}>
-              <Text style={s.sheetTitle}>Nouveau contact</Text>
-              <Pressable onPress={() => setShowNew(false)} hitSlop={10}><Feather name="x" size={20} color={C.muted} /></Pressable>
+              <Text style={s.sheetTitle}>{editingId ? 'Modifier le contact' : 'Nouveau contact'}</Text>
+              <Pressable onPress={closeSheet} hitSlop={10}><Feather name="x" size={20} color={C.muted} /></Pressable>
             </View>
             <View style={s.row2}>
               <TextInput style={[s.field, { flex: 1 }]} placeholder="Prénom" placeholderTextColor={C.faint}
@@ -215,7 +252,7 @@ export default function CrmScreen() {
             <TextInput style={s.field} placeholder="Téléphone" placeholderTextColor={C.faint} keyboardType="phone-pad"
               value={form.phone} onChangeText={(v) => setForm((p) => ({ ...p, phone: v }))} />
             <Pressable style={[s.saveBtn, saving && { opacity: 0.6 }]} disabled={saving} onPress={() => void submitNew()}>
-              {saving ? <ActivityIndicator color={ON_CORAL} /> : <Text style={s.saveTxt}>Créer le contact</Text>}
+              {saving ? <ActivityIndicator color={ON_CORAL} /> : <Text style={s.saveTxt}>{editingId ? 'Enregistrer' : 'Créer le contact'}</Text>}
             </Pressable>
           </View>
         </KeyboardAvoidingView>

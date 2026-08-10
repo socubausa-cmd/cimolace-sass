@@ -1,11 +1,12 @@
 import { Feather } from '@expo/vector-icons';
-import { useEffect, useMemo, useState } from 'react';
-import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { useCallback, useEffect, useMemo, useState } from 'react';
+import { ActivityIndicator, Alert, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import * as Clipboard from 'expo-clipboard';
 
 import { LiriFonts as F, softShadow, type LiriPalette } from '@/constants/liri-theme';
 import { useTheme } from '@/lib/theme';
-import { fetchApiKeys, type ApiKey } from '@/lib/liri-api';
+import { createApiKey, fetchApiKeys, type ApiKey } from '@/lib/liri-api';
 
 interface KeyRow {
   value: string;
@@ -39,9 +40,33 @@ export default function IntegrationsScreen() {
   const { colors: C } = useTheme();
   const styles = useMemo(() => makeStyles(C), [C]);
   const [apiKeys, setApiKeys] = useState<ApiKey[] | null>(null);
-  useEffect(() => {
-    void fetchApiKeys().then(setApiKeys);
+  const [generating, setGenerating] = useState(false);
+  const [copied, setCopied] = useState<string | null>(null);
+  const reload = useCallback(() => fetchApiKeys().then(setApiKeys), []);
+  useEffect(() => { void reload(); }, [reload]);
+
+  const genKey = useCallback(async () => {
+    if (generating) return;
+    setGenerating(true);
+    const created = await createApiKey(`Clé mobile ${new Date().toLocaleDateString('fr-FR')}`);
+    setGenerating(false);
+    await reload();
+    if (created?.key) {
+      Alert.alert('Clé API créée', `Copie-la maintenant — elle ne sera plus affichée :\n\n${created.key}`, [
+        { text: 'Copier', onPress: () => void Clipboard.setStringAsync(String(created.key)) },
+        { text: 'OK', style: 'cancel' },
+      ]);
+    } else {
+      Alert.alert('Clé API', "Impossible de générer la clé. Vérifie ta connexion et réessaie.");
+    }
+  }, [generating, reload]);
+
+  const copyKey = useCallback(async (value: string) => {
+    await Clipboard.setStringAsync(value);
+    setCopied(value);
+    setTimeout(() => setCopied((c) => (c === value ? null : c)), 1500);
   }, []);
+
   const loading = apiKeys === null;
   const keys = useMemo<KeyRow[]>(() => (apiKeys ? apiKeys.map(apiKeyToRow) : []), [apiKeys]);
 
@@ -57,8 +82,8 @@ export default function IntegrationsScreen() {
           {/* Clés API */}
           <View style={styles.sectionHead}>
             <Text style={styles.sectionTitle}>Clés API</Text>
-            <Pressable style={({ pressed }) => [styles.cta, pressed && styles.pressed]}>
-              <Text style={styles.ctaTxt}>Générer une clé</Text>
+            <Pressable style={({ pressed }) => [styles.cta, pressed && styles.pressed]} onPress={() => void genKey()} disabled={generating}>
+              {generating ? <ActivityIndicator color="#fff" size="small" /> : <Text style={styles.ctaTxt}>Générer une clé</Text>}
             </Pressable>
           </View>
           <View style={styles.panel}>
@@ -75,7 +100,7 @@ export default function IntegrationsScreen() {
                 <Feather name="key" size={16} color={k.live ? C.coral : C.faint} />
                 <Text style={styles.keyCode} numberOfLines={1}>{k.value}</Text>
                 <Text style={styles.keyMeta}>{k.meta}</Text>
-                <Pressable hitSlop={8}><Text style={styles.keyAction}>Copier</Text></Pressable>
+                <Pressable hitSlop={8} onPress={() => void copyKey(k.value)}><Text style={styles.keyAction}>{copied === k.value ? 'Copié ✓' : 'Copier'}</Text></Pressable>
               </View>
             ))}
           </View>

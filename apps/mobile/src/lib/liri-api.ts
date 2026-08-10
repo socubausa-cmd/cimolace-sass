@@ -258,6 +258,19 @@ async function patchJson<T>(path: string, body?: unknown): Promise<T | null> {
   }
 }
 
+async function delJson<T>(path: string): Promise<T | null> {
+  const token = currentToken();
+  if (!token) return null;
+  try {
+    const res = await fetch(`${API_BASE}${path}`, { method: 'DELETE', headers: { ...authHeaders(token) } });
+    if (!res.ok) return null;
+    const json: unknown = await res.json().catch(() => ({}));
+    return ((json as { data?: T })?.data ?? (json as T)) ?? null;
+  } catch {
+    return null;
+  }
+}
+
 /** Toutes les demandes de RDV du tenant (staff/owner) — écran de gestion. */
 export const fetchAdminAppointments = () =>
   getJson<AdminAppointment[]>('/booking/appointments').then((r) => r ?? []);
@@ -315,6 +328,12 @@ export const createCrmContact = (body: {
   phone?: string;
   company_name?: string;
 }) => postJson<CrmContact>('/crm/contacts', body);
+/** Met à jour un contact (PATCH /crm/contacts/:id). */
+export const updateCrmContact = (id: string, patch: {
+  first_name?: string; last_name?: string; email?: string; phone?: string; company_name?: string;
+}) => patchJson<CrmContact>(`/crm/contacts/${id}`, patch);
+/** Supprime un contact (DELETE /crm/contacts/:id). */
+export const deleteCrmContact = (id: string) => delJson<{ ok?: boolean }>(`/crm/contacts/${id}`);
 
 // ── Courrier (boîte IMAP infos@) ─────────────────────────────────────────────
 /** Déclenche une synchro IMAP → base (les e-mails se lisent ensuite via Supabase). */
@@ -597,6 +616,13 @@ export interface ApiKey {
 export async function fetchApiKeys(): Promise<ApiKey[]> {
   return asArray(await getJson<{ data?: ApiKey[] } | ApiKey[]>('/tenants/api-keys'));
 }
+
+/** Crée une clé API (POST /tenants/api-keys). La clé en clair (`key`) n'est renvoyée qu'UNE fois. */
+export const createApiKey = (label: string) =>
+  postJson<{ id?: string; label?: string; key_prefix?: string; key?: string; created_at?: string }>(
+    '/tenants/api-keys',
+    { label },
+  );
 
 // ── Formations / Cours ──────────────────────────────────────────────────────
 export interface Course {
