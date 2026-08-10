@@ -7,6 +7,7 @@ import {
 import { SupabaseService } from '../../supabase/supabase.service';
 import type { TenantContext } from '../../tenant/tenant.types';
 import { decryptJson, encryptJson } from '../../common/crypto.util';
+import { validatePawapaySigning } from '../../pawapay/pawapay-signing';
 import {
   PAYMENT_PROVIDERS,
   type PaymentProvider,
@@ -40,7 +41,7 @@ export type MaskedPaymentMethod = {
  */
 const SECRET_FIELDS: Record<PaymentProvider, string[]> = {
   stripe: ['secret_key', 'webhook_secret'],
-  pawapay: ['api_token', 'signing_secret'],
+  pawapay: ['api_token', 'signing_secret', 'key_id', 'private_key'],
   chariow: ['api_key', 'webhook_secret'],
   paypal: ['client_id', 'client_secret', 'webhook_id'],
   cinetpay: ['api_key', 'site_id', 'secret_key'],
@@ -408,13 +409,21 @@ export class TenantPaymentConfigService {
       const res = await doFetch(`${base}/v2/active-conf`, {
         Authorization: `Bearer ${token}`,
       });
-      if (res.ok) {
-        return { ok: true, message: `Connexion PawaPay OK (${isSandbox ? 'sandbox' : 'production'}).` };
+      if (!res.ok) {
+        const body = await res.text().catch(() => '');
+        return {
+          ok: false,
+          message: `PawaPay a refusé le token (HTTP ${res.status}). ${body.slice(0, 200)}`,
+        };
       }
-      const body = await res.text().catch(() => '');
+      // Token OK → on exerce EN PLUS le chemin de signature DU TENANT : parse la
+      // clé privée + génère une signature localement (aucun appel financier,
+      // aucun mouvement de fonds, aucun secret dans le message). Détecte une clé
+      // malformée avant qu'un vrai encaissement ne soit refusé par PawaPay.
+      const sig = validatePawapaySigning(creds.private_key, creds.key_id);
       return {
-        ok: false,
-        message: `PawaPay a refusé le token (HTTP ${res.status}). ${body.slice(0, 200)}`,
+        ok: sig.ok,
+        message: `Connexion PawaPay OK (${isSandbox ? 'sandbox' : 'production'}). ${sig.message}`,
       };
     }
 

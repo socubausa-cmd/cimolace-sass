@@ -5,7 +5,12 @@ import {
   ServiceUnavailableException,
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { createHash, createHmac, createSign } from 'crypto';
+import { createHmac } from 'crypto';
+import {
+  buildPawapaySignatureHeaders,
+  decodePrivateKeyPem,
+  type PawapaySigning,
+} from './pawapay-signing';
 import type {
   PawaPayActiveConfig,
   PawaPayDepositCallback,
@@ -65,47 +70,16 @@ export class PawaPayService {
     url: string,
     body: string,
     contentType: string,
+    signing?: PawapaySigning,
   ): Record<string, string> {
-    if (!this.privateKeyPem || !this.keyId) return {};
+    // Clés PAR APPEL : celles fournies (tenant) sinon celles de la plateforme.
+    // Un appelant qui utilise le compte d'un tenant passe explicitement les clés
+    // du tenant — éventuellement vides (→ requête non signée) — pour NE JAMAIS
+    // retomber sur la clé plateforme avec un token tenant.
+    const keys: PawapaySigning =
+      signing ?? { privateKeyPem: this.privateKeyPem, keyId: this.keyId };
     try {
-      const u = new URL(url);
-      const created = Math.floor(Date.now() / 1000);
-      const expires = created + 60;
-      const sigDate = new Date().toISOString();
-      const contentDigest = `sha-512=:${createHash('sha512').update(body).digest('base64')}:`;
-      const contentLength = Buffer.byteLength(body).toString();
-      const components = [
-        '@method',
-        '@authority',
-        '@path',
-        'signature-date',
-        'content-digest',
-        'content-type',
-        'content-length',
-      ];
-      const params = `(${components.map((c) => `"${c}"`).join(' ')});alg="ecdsa-p256-sha256";keyid="${this.keyId}";created=${created};expires=${expires}`;
-      const base = [
-        `"@method": ${method.toUpperCase()}`,
-        `"@authority": ${u.host}`,
-        `"@path": ${u.pathname}`,
-        `"signature-date": ${sigDate}`,
-        `"content-digest": ${contentDigest}`,
-        `"content-type": ${contentType}`,
-        `"content-length": ${contentLength}`,
-        `"@signature-params": ${params}`,
-      ].join('\n');
-      // PawaPay vérifie la signature ECDSA en DER (encodage par DÉFAUT de crypto.sign,
-      // cf. leur exemple officiel signed-deposit-example.js), PAS en IEEE-P1363.
-      const signature = createSign('SHA256')
-        .update(base)
-        .sign(this.privateKeyPem, 'base64');
-      return {
-        'Content-Digest': contentDigest,
-        'Content-Length': contentLength,
-        'Signature-Date': sigDate,
-        'Signature-Input': `sig-pp=${params}`,
-        Signature: `sig-pp=:${signature}:`,
-      };
+      return buildPawapaySignatureHeaders(method, url, body, contentType, keys);
     } catch (e) {
       this.logger.error(`pawaPay signHeaders échec: ${(e as Error).message}`);
       return {};
@@ -134,7 +108,12 @@ export class PawaPayService {
    */
   async initiateDeposit(
     payload: PawaPayDepositRequest,
-    override?: { apiToken?: string; baseUrl?: string },
+    override?: {
+      apiToken?: string;
+      baseUrl?: string;
+      keyId?: string;
+      privateKeyB64?: string;
+    },
   ): Promise<PawaPayDepositInitResponse> {
     const apiToken = override?.apiToken || this.apiToken;
     const baseUrl = override?.baseUrl || this.baseUrl;
@@ -148,6 +127,17 @@ export class PawaPayService {
       );
     }
 
+    // Signature : compte TENANT → clés DU TENANT (jamais celles de la plateforme,
+    // sinon PawaPay rejette un token tenant signé plateforme). Clés tenant
+    // absentes → requête non signée (marche si le compte n'exige pas la
+    // signature). Compte plateforme (pas d'override) → clés de l'env.
+    const signing: PawapaySigning | undefined = override?.apiToken
+      ? {
+          privateKeyPem: decodePrivateKeyPem(override.privateKeyB64),
+          keyId: override.keyId ?? '',
+        }
+      : undefined;
+
     const body = JSON.stringify(payload);
     const url = `${baseUrl}/v2/deposits`;
     const response = await fetch(url, {
@@ -155,7 +145,7 @@ export class PawaPayService {
       headers: {
         Authorization: `Bearer ${apiToken}`,
         'Content-Type': 'application/json',
-        ...this.signHeaders('POST', url, body, 'application/json'),
+        ...this.signHeaders('POST', url, body, 'application/json', signing),
       },
       body,
     });

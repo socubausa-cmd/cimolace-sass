@@ -19,6 +19,8 @@ export default function LiriMobileMoneySettings() {
   const [reconfig, setReconfig] = useState(false);
   const [apiToken, setApiToken] = useState('');
   const [signingSecret, setSigningSecret] = useState('');
+  const [keyId, setKeyId] = useState('');
+  const [privateKey, setPrivateKey] = useState('');
   const [mode, setMode] = useState('live');
   const [busy, setBusy] = useState(null); // 'save' | 'test' | 'toggle'
   const [msg, setMsg] = useState(null); // {ok, text}
@@ -46,9 +48,14 @@ export default function LiriMobileMoneySettings() {
       await paymentMethodsApi.save({
         provider: 'pawapay',
         mode,
-        credentials: { api_token: apiToken.trim(), ...(signingSecret.trim() ? { signing_secret: signingSecret.trim() } : {}) },
+        credentials: {
+          api_token: apiToken.trim(),
+          ...(signingSecret.trim() ? { signing_secret: signingSecret.trim() } : {}),
+          ...(keyId.trim() ? { key_id: keyId.trim() } : {}),
+          ...(privateKey.trim() ? { private_key: privateKey.trim() } : {}),
+        },
       });
-      setApiToken(''); setSigningSecret(''); setReconfig(false);
+      setApiToken(''); setSigningSecret(''); setKeyId(''); setPrivateKey(''); setReconfig(false);
       setMsg({ ok: true, text: 'Mobile Money connecté — vos élèves peuvent payer en Orange Money, MTN MoMo, Moov…' });
       await load();
     } catch (e) { setMsg({ ok: false, text: e?.message || 'Enregistrement impossible.' }); }
@@ -135,6 +142,29 @@ export default function LiriMobileMoneySettings() {
                 type="password"
                 autoComplete="off"
                 className="mt-1 w-full rounded-lg border bg-transparent px-3 py-2 text-sm lp-ink"
+                style={{ borderColor: 'rgba(245,244,238,.14)' }}
+              />
+            </label>
+            <label className="block">
+              <span className="text-[11px] lp-faint">Key ID de signature (requis si votre compte PawaPay exige des requêtes signées)</span>
+              <input
+                value={keyId}
+                onChange={(e) => setKeyId(e.target.value)}
+                placeholder="nom de la clé publique déclarée chez PawaPay"
+                autoComplete="off"
+                className="mt-1 w-full rounded-lg border bg-transparent px-3 py-2 text-sm lp-ink"
+                style={{ borderColor: 'rgba(245,244,238,.14)' }}
+              />
+            </label>
+            <label className="block">
+              <span className="text-[11px] lp-faint">Clé privée de signature — base64 du PEM ECDSA P-256 (idem)</span>
+              <textarea
+                value={privateKey}
+                onChange={(e) => setPrivateKey(e.target.value)}
+                placeholder="LS0tLS1CRUdJTiBQUklWQVRFIEtFWS0tLS0t…"
+                autoComplete="off"
+                rows={3}
+                className="mt-1 w-full rounded-lg border bg-transparent px-3 py-2 font-mono text-[12px] lp-ink"
                 style={{ borderColor: 'rgba(245,244,238,.14)' }}
               />
             </label>

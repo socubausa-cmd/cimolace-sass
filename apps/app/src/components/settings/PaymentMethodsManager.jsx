@@ -71,7 +71,9 @@ const PROVIDERS = {
     hasMode: true,
     secrets: [
       { key: 'api_token', label: 'Token API (api_token)', placeholder: 'pp_tk_…', required: true },
-      { key: 'signing_secret', label: 'Secret de signature (signing_secret)', placeholder: 'optionnel', required: false },
+      { key: 'signing_secret', label: 'Secret de signature du webhook (signing_secret)', placeholder: 'optionnel', required: false },
+      { key: 'key_id', label: 'ID de clé de signature (key_id)', placeholder: 'nom de la clé publique déclarée chez PawaPay', required: false },
+      { key: 'private_key', label: 'Clé privée de signature (base64 PEM)', placeholder: 'base64 du PEM ECDSA P-256 — requis si votre compte exige des requêtes signées', required: false },
     ],
   },
   chariow: {

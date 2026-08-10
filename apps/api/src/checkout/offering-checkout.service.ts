@@ -169,7 +169,15 @@ export class OfferingCheckoutService {
 
     // 5) Appel pawaPay — token tenant si présent, sinon env (override undefined).
     const ppOverride = tenantPpToken
-      ? { apiToken: tenantPpToken, baseUrl: this.pawapayBaseFromMode(tenantPp?.mode ?? null) }
+      ? {
+          apiToken: tenantPpToken,
+          baseUrl: this.pawapayBaseFromMode(tenantPp?.mode ?? null),
+          // Clés de signature DU TENANT (RFC 9421). Le compte tenant peut exiger
+          // des requêtes signées ; sans ses clés → non signé (jamais celles de la
+          // plateforme). `private_key` = base64 PEM, comme la variable d'env.
+          keyId: tenantPp?.creds?.key_id || undefined,
+          privateKeyB64: tenantPp?.creds?.private_key || undefined,
+        }
       : undefined;
     const result = await this.pawapay.initiateDeposit(
       {
