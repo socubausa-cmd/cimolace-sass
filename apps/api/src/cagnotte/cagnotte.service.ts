@@ -152,6 +152,232 @@ export class CagnotteService {
     }));
   }
 
+  // ── STUDIO PÉDAGOGIQUE — financement participatif PAR ÉQUIPEMENT ──────────
+  // Architecture : chaque équipement = UNE campagne cagnotte (slug `studio-*`,
+  // objectif = prix) + `studio-fonds` pour la contribution libre. Les montants
+  // viennent donc des transactions réellement enregistrées (Stripe/pawaPay),
+  // et le catalogue riche (image, utilité, ordre, achat réel, preuve) vit dans
+  // tenants.metadata.studio_campaign — géré no-code dans /liri/studio.
+
+  private static readonly STUDIO_TENANT = 'isna';
+  private static readonly STUDIO_FONDS = 'studio-fonds';
+
+  private async studioMeta() {
+    const { data: t } = await this.db.from('tenants').select('id, metadata').eq('slug', CagnotteService.STUDIO_TENANT).maybeSingle();
+    const sc = (t as any)?.metadata?.studio_campaign || {};
+    return {
+      tenantId: (t as any)?.id || null,
+      tenantMeta: (t as any)?.metadata || {},
+      titre: String(sc.titre || 'Ensemble, construisons notre studio pédagogique'),
+      intro: String(sc.intro || ''),
+      cloturee: sc.cloturee === true,
+      equipements: Array.isArray(sc.equipements) ? sc.equipements : [],
+      dejaDisponibles: Array.isArray(sc.dejaDisponibles) ? sc.dejaDisponibles : [],
+    };
+  }
+
+  /** Sommes confirmées par campagne (centimes EUR normalisés). */
+  private async studioSommes(slugs: string[]) {
+    const parSlug = new Map<string, number>();
+    if (!slugs.length) return parSlug;
+    const { data } = await this.db
+      .from('cagnotte_donations')
+      .select('campaign_slug, amount_cents')
+      .in('campaign_slug', slugs)
+      .eq('status', 'completed');
+    for (const d of data || []) {
+      parSlug.set(d.campaign_slug, (parSlug.get(d.campaign_slug) || 0) + Number(d.amount_cents || 0));
+    }
+    return parSlug;
+  }
+
+  /** Vue PUBLIQUE du studio : équipements + progressions + stats + mur. */
+  async studioOverview() {
+    const meta = await this.studioMeta();
+    const slugs = meta.equipements.map((e: any) => String(e.slug)).concat(CagnotteService.STUDIO_FONDS);
+    const sommes = await this.studioSommes(slugs);
+
+    const equipements = meta.equipements
+      .slice()
+      .sort((a: any, b: any) => (Number(a.ordre) || 99) - (Number(b.ordre) || 99))
+      .map((e: any) => {
+        const objectifCents = Math.round(Number(e.prixEur || 0) * 100);
+        const collecteCents = sommes.get(String(e.slug)) || 0;
+        const restantCents = Math.max(0, objectifCents - collecteCents);
+        const finance = objectifCents > 0 && collecteCents >= objectifCents;
+        return {
+          slug: String(e.slug),
+          label: String(e.label || ''),
+          desc: String(e.desc || ''),
+          utilite: String(e.utilite || ''),
+          image: String(e.image || ''),
+          prixEur: Number(e.prixEur || 0),
+          objectifCents,
+          collecteCents,
+          restantCents,
+          pct: objectifCents > 0 ? Math.min(100, Math.round((collecteCents / objectifCents) * 100)) : 0,
+          finance,
+          achete: e.achete && typeof e.achete === 'object' ? e.achete : null,
+        };
+      });
+
+    const fondsCents = sommes.get(CagnotteService.STUDIO_FONDS) || 0;
+    const objectifCents = equipements.reduce((s: number, e: any) => s + e.objectifCents, 0);
+    const collecteCents = equipements.reduce((s: number, e: any) => s + e.collecteCents, 0) + fondsCents;
+    const depenseCents = equipements.reduce((s: number, e: any) => s + Math.round(Number(e.achete?.prixPayeEur || 0) * 100), 0);
+
+    // Mur des contributeurs — le nom n'apparaît QUE s'il a été donné (case
+    // explicite côté formulaire) ; sinon « Anonyme ».
+    const { data: dons } = await this.db
+      .from('cagnotte_donations')
+      .select('donor_name, amount_cents, display_amount, display_currency, campaign_slug, completed_at, created_at')
+      .in('campaign_slug', slugs)
+      .eq('status', 'completed')
+      .order('completed_at', { ascending: false, nullsFirst: false })
+      .limit(40);
+    const parLabel = new Map(equipements.map((e: any) => [e.slug, e.label]));
+
+    return {
+      titre: meta.titre,
+      intro: meta.intro,
+      cloturee: meta.cloturee,
+      objectifCents,
+      collecteCents,
+      fondsCents,
+      depenseCents,
+      disponibleCents: Math.max(0, collecteCents - depenseCents),
+      pct: objectifCents > 0 ? Math.min(100, Math.round((collecteCents / objectifCents) * 100)) : 0,
+      nbFinances: equipements.filter((e: any) => e.finance).length,
+      nbRestants: equipements.filter((e: any) => !e.finance).length,
+      equipements,
+      dejaDisponibles: meta.dejaDisponibles,
+      donateurs: (dons || []).map((d: any) => ({
+        name: String(d.donor_name || '').trim() || 'Anonyme',
+        amountCents: d.amount_cents,
+        displayAmount: d.display_amount,
+        displayCurrency: d.display_currency,
+        equipement: parLabel.get(d.campaign_slug) || (d.campaign_slug === CagnotteService.STUDIO_FONDS ? 'Fonds général' : d.campaign_slug),
+        at: d.completed_at || d.created_at,
+      })),
+    };
+  }
+
+  /** Garde anti-dépassement : une contribution fléchée sur un équipement ne peut
+   *  pas excéder le restant à financer (l'excédent va au fonds général, choix
+   *  explicite du contributeur côté page). Le fonds général reste libre. */
+  private async garantirPlafondStudio(slug: string, amountCents: number) {
+    if (!slug.startsWith('studio-') || slug === CagnotteService.STUDIO_FONDS) return;
+    const { data: camp } = await this.db.from('cagnotte_campaigns').select('goal_cents').eq('slug', slug).maybeSingle();
+    const objectif = Number((camp as any)?.goal_cents || 0);
+    if (!objectif) return;
+    const sommes = await this.studioSommes([slug]);
+    const restant = Math.max(0, objectif - (sommes.get(slug) || 0));
+    if (restant <= 0) throw new BadRequestException('Cet équipement est déjà entièrement financé — merci ! Vous pouvez soutenir le fonds général du studio.');
+    if (amountCents > restant) {
+      throw new BadRequestException(
+        `Il ne reste que ${(restant / 100).toFixed(0)} € à financer pour cet équipement. Contribuez ce montant, ou versez librement au fonds général du studio.`,
+      );
+    }
+  }
+
+  /** Catalogue + contributions — vue ADMIN (LIRI → Studio). */
+  async studioAdmin() {
+    const meta = await this.studioMeta();
+    const slugs = meta.equipements.map((e: any) => String(e.slug)).concat(CagnotteService.STUDIO_FONDS);
+    const { data: dons } = await this.db
+      .from('cagnotte_donations')
+      .select('id, campaign_slug, provider, amount_cents, display_amount, display_currency, status, donor_name, donor_email, donor_phone, created_at, completed_at')
+      .in('campaign_slug', slugs.length ? slugs : ['studio-fonds'])
+      .order('created_at', { ascending: false })
+      .limit(300);
+    const publicVue = await this.studioOverview();
+    return { ...publicVue, contributions: dons || [] };
+  }
+
+  /** Sauvegarde ADMIN : catalogue assaini + upsert des campagnes par équipement. */
+  async studioAdminSave(dto: { titre?: string; intro?: string; cloturee?: boolean; equipements?: any; dejaDisponibles?: any }) {
+    const meta = await this.studioMeta();
+    if (!meta.tenantId) throw new NotFoundException('Tenant du studio introuvable.');
+
+    const equipements = Array.isArray(dto.equipements)
+      ? dto.equipements.slice(0, 30).map((e: any, i: number) => {
+          const label = String(e?.label || '').trim().slice(0, 80);
+          if (!label) return null;
+          const brut = String(e?.slug || '').trim() || label.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+          const slug = (brut.startsWith('studio-') ? brut : `studio-${brut}`).slice(0, 60);
+          if (slug === CagnotteService.STUDIO_FONDS) return null;
+          const image = String(e?.image || '').trim().slice(0, 300);
+          const achete = e?.achete && typeof e.achete === 'object'
+            ? {
+                date: String(e.achete.date || '').slice(0, 10),
+                prixPayeEur: Math.max(0, Math.min(20000, Number(e.achete.prixPayeEur) || 0)),
+                photo: String(e.achete.photo || '').trim().slice(0, 300),
+                facture: String(e.achete.facture || '').trim().slice(0, 300),
+                installe: e.achete.installe === true,
+              }
+            : null;
+          return {
+            slug,
+            label,
+            prixEur: Math.max(1, Math.min(20000, Number(e?.prixEur) || 1)),
+            desc: String(e?.desc || '').trim().slice(0, 300),
+            utilite: String(e?.utilite || '').trim().slice(0, 700),
+            image: /^(\/|https:\/\/)/.test(image) ? image : '',
+            ordre: Number.isFinite(Number(e?.ordre)) ? Number(e.ordre) : i + 1,
+            ...(achete && (achete.date || achete.prixPayeEur || achete.photo) ? { achete } : {}),
+          };
+        }).filter(Boolean)
+      : undefined;
+
+    const dejaDisponibles = Array.isArray(dto.dejaDisponibles)
+      ? dto.dejaDisponibles.slice(0, 20).map((d: any) => ({
+          label: String(d?.label || '').trim().slice(0, 80),
+          desc: String(d?.desc || '').trim().slice(0, 200),
+        })).filter((d: any) => d.label)
+      : undefined;
+
+    const sc = { ...(meta.tenantMeta.studio_campaign || {}) };
+    if (dto.titre !== undefined) sc.titre = String(dto.titre).trim().slice(0, 120);
+    if (dto.intro !== undefined) sc.intro = String(dto.intro).trim().slice(0, 800);
+    if (dto.cloturee !== undefined) sc.cloturee = dto.cloturee === true;
+    if (equipements !== undefined) sc.equipements = equipements;
+    if (dejaDisponibles !== undefined) sc.dejaDisponibles = dejaDisponibles;
+
+    const { error } = await this.db.from('tenants')
+      .update({ metadata: { ...meta.tenantMeta, studio_campaign: sc } })
+      .eq('id', meta.tenantId);
+    if (error) throw new BadRequestException(error.message);
+
+    // Upsert des campagnes réelles (une par équipement + le fonds général) :
+    // c'est LÀ que les paiements Stripe/pawaPay s'enregistrent.
+    const cible = equipements !== undefined ? equipements : (sc.equipements || []);
+    const lignes = cible.map((e: any) => ({
+      slug: e.slug,
+      title: e.label,
+      device_name: e.label,
+      goal_cents: Math.round(e.prixEur * 100),
+      currency: 'EUR',
+      is_active: sc.cloturee !== true && !(e.achete && e.achete.date),
+      image_url: e.image || null,
+      tenant_slug: CagnotteService.STUDIO_TENANT,
+    })).concat([{
+      slug: CagnotteService.STUDIO_FONDS,
+      title: 'Fonds général du studio pédagogique',
+      device_name: 'Fonds général du studio',
+      // ⚠️ contrainte goal_cents > 0 en base ; le fonds n'affiche jamais d'objectif.
+      goal_cents: 100,
+      currency: 'EUR',
+      is_active: sc.cloturee !== true,
+      image_url: null,
+      tenant_slug: CagnotteService.STUDIO_TENANT,
+    }]);
+    for (const l of lignes) {
+      const { error: e2 } = await this.db.from('cagnotte_campaigns').upsert(l, { onConflict: 'slug' });
+      if (e2) this.logger.warn(`upsert campagne ${l.slug}: ${e2.message}`);
+    }
+    return this.studioAdmin();
+  }
+
   /** Liste des opérateurs Mobile Money actifs (pour le sélecteur front). */
   async getProviders(country?: string) {
     try {
@@ -194,6 +420,7 @@ export class CagnotteService {
       throw new ServiceUnavailableException('Paiement carte momentanément indisponible.');
     }
     const amountCents = this.clampEurCents(dto.amountCents);
+    await this.garantirPlafondStudio(slug, amountCents);
     const donorName = this.sanitize(dto.donorName, 80);
     const donorMessage = this.sanitize(dto.donorMessage, 300);
 
@@ -277,6 +504,7 @@ export class CagnotteService {
   }) {
     const campaign = await this.loadActiveCampaign(slug);
     const amountCents = this.clampEurCents(dto.amountCents);
+    await this.garantirPlafondStudio(slug, amountCents);
     const provider = String(dto.provider ?? '').trim();
     const country = String(dto.country ?? '').trim().toUpperCase();
     const phone = this.normalizeMsisdn(dto.phoneNumber, country);

@@ -1039,6 +1039,10 @@ export const cagnotteApi = {
   ) => apiV2.post<ApiEnvelope<any>>(`/cagnotte/${slug}/pawapay`, body).then(unwrap),
   pawapayStatus: (slug: string, depositId: string) =>
     apiV2.get<ApiEnvelope<any>>(`/cagnotte/${slug}/pawapay/${depositId}`).then(unwrap),
+  // Studio pédagogique — financement participatif par équipement.
+  studioOverview: () => apiV2.get<ApiEnvelope<any>>('/cagnotte/studio/overview').then(unwrap),
+  studioAdmin: () => apiV2.get<ApiEnvelope<any>>('/cagnotte/studio/admin').then(unwrap),
+  studioAdminSave: (body: Record<string, unknown>) => apiV2.put<ApiEnvelope<any>>('/cagnotte/studio/admin', body).then(unwrap),
 };
 
 /**

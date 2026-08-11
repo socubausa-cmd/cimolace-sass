@@ -1,5 +1,9 @@
-import { Body, Controller, ForbiddenException, Get, Param, Post, Query, UseGuards } from '@nestjs/common';
+import { Body, Controller, ForbiddenException, Get, Param, Post, Put, Query, UseGuards } from '@nestjs/common';
 import { PublicRateLimitGuard } from '../common/public-rate-limit.guard';
+import { JwtAuthGuard } from '../auth/jwt-auth.guard';
+import { Roles } from '../common/decorators/roles.decorator';
+import { RolesGuard } from '../common/guards/roles.guard';
+import { TenantGuard } from '../tenant/tenant.guard';
 import { CagnotteService } from './cagnotte.service';
 import {
   CreateCagnotteStripeDto,
@@ -14,6 +18,32 @@ import {
 @Controller('cagnotte')
 export class CagnotteController {
   constructor(private readonly svc: CagnotteService) {}
+
+  // ── Studio pédagogique (financement par équipement) ──────────────────────
+  // ⚠️ Routes à DEUX segments : elles ne peuvent pas entrer en collision avec
+  // le motif générique `:slug` (un seul segment).
+
+  /** Vue publique : équipements, progressions, stats, mur des contributeurs. */
+  @Get('studio/overview')
+  studioOverview() {
+    return this.svc.studioOverview();
+  }
+
+  /** Vue admin (catalogue + contributions détaillées) — LIRI → Studio. */
+  @Get('studio/admin')
+  @UseGuards(JwtAuthGuard, TenantGuard, RolesGuard)
+  @Roles('owner', 'admin', 'secretariat')
+  studioAdmin() {
+    return this.svc.studioAdmin();
+  }
+
+  /** Sauvegarde admin : catalogue + upsert des campagnes par équipement. */
+  @Put('studio/admin')
+  @UseGuards(JwtAuthGuard, TenantGuard, RolesGuard)
+  @Roles('owner', 'admin', 'secretariat')
+  studioAdminSave(@Body() dto: { titre?: string; intro?: string; cloturee?: boolean; equipements?: any; dejaDisponibles?: any }) {
+    return this.svc.studioAdminSave(dto ?? {});
+  }
 
   /** Campagne + total collecté (barre de progression). */
   @Get(':slug')

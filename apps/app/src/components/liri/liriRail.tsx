@@ -3,7 +3,7 @@ import {
   House, Video, MessagesSquare, MessageCircle, WandSparkles, Library, GraduationCap, Sparkles,
   CalendarDays, BookOpen, Film, School, Calendar, FileText, Award, AlertTriangle, FolderOpen, Tag, Files,
   SquarePen, CreditCard, Flame, ShoppingBag, Megaphone, Package, ReceiptText, Link2, Landmark, Plug,
-  Mail, Globe,
+  Mail, Globe, Clapperboard,
 } from 'lucide-react';
 import { prefetchLiriPath } from '@/lib/prefetchLiriRoutes';
 
@@ -57,6 +57,7 @@ export const ENGINES: EngineDef[] = [
         { key: 'calendrier', label: 'Calendrier', icon: Calendar, to: '/liri/calendrier', creator: true },
         { key: 'courrier', label: 'Courrier', icon: Mail, to: '/liri/courrier', creator: true },
         { key: 'vitrine', label: 'Vitrine', icon: Globe, to: '/liri/vitrine', creator: true },
+        { key: 'studio-cagnotte', label: 'Studio', icon: Clapperboard, to: '/liri/studio-cagnotte', creator: true },
         { key: 'forfaits', label: 'Forfaits', icon: CreditCard, to: '/liri/forfaits' },
         // Intégrations & canaux : clés OAuth des réseaux sociaux, paiements, e-mail.
         // ⚠️ CRÉATEUR SEUL — cet écran porte des secrets d'application.

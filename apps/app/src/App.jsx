@@ -798,6 +798,8 @@ const LiriCourrierPage = lazy(() => import('@/pages/liri/LiriCourrierPage'));
 const LiriCalendrierPage = lazy(() => import('@/pages/liri/LiriCalendrierPage'));
 const LiriAgendaReglagesPage = lazy(() => import('@/pages/liri/LiriAgendaReglagesPage'));
 const LiriVitrinePage = lazy(() => import('@/pages/liri/LiriVitrinePage'));
+const LiriStudioCagnottePage = lazy(() => import('@/pages/liri/LiriStudioCagnottePage'));
+const StudioCagnottePage = lazy(() => import('@/pages/StudioCagnottePage'));
 const ImmersiveWaitingRoomPage = lazy(() => import('@/pages/ImmersiveWaitingRoomPage'));
 const SatisfactionPage = lazy(() => import('@/pages/SatisfactionPage'));
 const ModuleCatalogPageNew = lazy(() => import('@/pages/modules/ModuleCatalogPage'));
@@ -2007,6 +2009,7 @@ isLiriHostDevPreviewRoute;
           <Route path="/home" element={<Navigate to="/app" replace />} />
           <Route path="/landing" element={<LandingPage />} />
           <Route path="/cagnotte" element={<CagnottePage />} />
+          <Route path="/studio-pedagogique" element={<StudioCagnottePage />} />
           <Route path="/femme-nouvelle" element={<FemmeNouvellePage />} />
           <Route path="/temoignage" element={<TemoignagePage />} />
           <Route path="/rendez-vous-priere" element={<PublicPrayerBookingPage />} />
@@ -2273,6 +2276,7 @@ isLiriHostDevPreviewRoute;
           <Route path="/liri/calendrier" element={<ProtectedLiriRoute allowedRoles={['owner', 'admin', 'teacher', 'secretariat']} allowTenantRole><LiriCalendrierPage /></ProtectedLiriRoute>} />
           <Route path="/liri/calendrier/reglages" element={<ProtectedLiriRoute allowedRoles={['owner', 'admin', 'secretariat']} allowTenantRole><LiriAgendaReglagesPage /></ProtectedLiriRoute>} />
           <Route path="/liri/vitrine" element={<ProtectedLiriRoute allowedRoles={['owner', 'admin', 'secretariat']} allowTenantRole><LiriVitrinePage /></ProtectedLiriRoute>} />
+          <Route path="/liri/studio-cagnotte" element={<ProtectedLiriRoute allowedRoles={['owner', 'admin', 'secretariat']} allowTenantRole><LiriStudioCagnottePage /></ProtectedLiriRoute>} />
           <Route path="/liri/notes" element={<ProtectedLiriRoute allowedRoles={['owner', 'admin', 'teacher', 'secretariat', 'student', 'practitioner', 'clinic_admin']} allowTenantRole><LiriSchoolShell active="notes"><StudentNotesHubPage /></LiriSchoolShell></ProtectedLiriRoute>} />
           <Route path="/liri/evaluations" element={<ProtectedLiriRoute allowedRoles={['owner', 'admin', 'teacher', 'secretariat', 'student', 'practitioner', 'clinic_admin']} allowTenantRole><LiriSchoolShell active="evaluations"><StudentEvaluationsPage /></LiriSchoolShell></ProtectedLiriRoute>} />
           <Route path="/liri/absences" element={<ProtectedLiriRoute allowedRoles={['owner', 'admin', 'teacher', 'secretariat', 'student', 'practitioner', 'clinic_admin']} allowTenantRole><LiriSchoolShell active="absences"><StudentAbsencesPage /></LiriSchoolShell></ProtectedLiriRoute>} />

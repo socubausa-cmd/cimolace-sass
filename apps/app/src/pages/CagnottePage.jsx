@@ -6,7 +6,13 @@ import {
 import { cagnotteApi } from '@/lib/api-v2';
 import { authStore } from '@/lib/auth-store';
 
-const SLUG = 'smartforme-culte';
+// Campagne par défaut ; le studio pédagogique route ses équipements ici via
+// /cagnotte?slug=studio-…&amount=…&retour=/studio-pedagogique (mêmes rails de
+// paiement Stripe + Mobile Money, transactions réelles par campagne).
+const PARAMS = typeof window !== 'undefined' ? new URLSearchParams(window.location.search) : new URLSearchParams();
+const SLUG = /^[a-z0-9-]{3,60}$/.test(PARAMS.get('slug') || '') ? PARAMS.get('slug') : 'smartforme-culte';
+const MONTANT_URL = /^\d{1,5}$/.test(PARAMS.get('amount') || '') ? Number(PARAMS.get('amount')) : null;
+const RETOUR_URL = (PARAMS.get('retour') || '').startsWith('/') ? PARAMS.get('retour') : null;
 
 // Détecte une session PROPRIÉTAIRE (LIRI) — pour n'activer le lien vers le CRM QUE pour l'owner
 // connecté (le mur reste une vitrine publique sans donnée perso pour les visiteurs anonymes).
@@ -90,7 +96,7 @@ export default function CagnottePage() {
   const [campaign, setCampaign] = useState(null);
   const [donors, setDonors] = useState(/** @type {Array<any>} */ ([]));
   const [region, setRegion] = useState(/** @type {'eu'|'afrique'} */ ('eu'));
-  const [amountEur, setAmountEur] = useState(50);
+  const [amountEur, setAmountEur] = useState(MONTANT_URL || 50);
   const [customEur, setCustomEur] = useState('');
   const [donorName, setDonorName] = useState('');
   const [donorMessage, setDonorMessage] = useState('');
@@ -273,7 +279,31 @@ export default function CagnottePage() {
         </div>
       )}
 
-      {/* ── HERO ── */}
+      {/* ── HERO — studio pédagogique : en-tête contextuel compact ── */}
+      {SLUG.startsWith('studio-') ? (
+        <header className="relative overflow-hidden">
+          <div className="absolute inset-0 opacity-[0.15]"
+            style={{ background: 'radial-gradient(900px 400px at 70% -10%, #d97757 0%, transparent 60%)' }} />
+          <div className="relative mx-auto max-w-5xl px-5 pt-12 pb-8">
+            {RETOUR_URL && (
+              <a href={RETOUR_URL} className="text-[13px] font-semibold text-[#e8a184] hover:underline">← Retour au studio pédagogique</a>
+            )}
+            <span className="mt-4 inline-flex items-center gap-2 rounded-full border border-[#d97757]/40 bg-[#d97757]/10 px-3 py-1 text-[11px] font-semibold uppercase tracking-wide text-[#e8a184]">
+              <Heart className="h-3.5 w-3.5" /> Studio pédagogique · financement participatif
+            </span>
+            <h1 className="mt-4 max-w-3xl text-3xl font-extrabold leading-tight tracking-tight sm:text-4xl" style={{ textWrap: 'balance' }}>
+              Vous contribuez au financement de :{' '}
+              <span className="text-[#e8a184]">{campaign?.title || 'un équipement du studio'}</span>
+            </h1>
+            {campaign?.goalCents > 100 && (
+              <p className="mt-3 text-[14px] text-[#f5f4ee]/70">
+                Objectif de cet équipement : <strong className="text-[#f5f4ee]">{Math.round(campaign.goalCents / 100)} €</strong> —
+                chaque contribution est enregistrée et affectée exclusivement à cet achat.
+              </p>
+            )}
+          </div>
+        </header>
+      ) : (
       <header className="relative overflow-hidden">
         <div className="absolute inset-0 opacity-[0.18]"
           style={{ background: 'radial-gradient(1200px 500px at 70% -10%, #d97757 0%, transparent 60%), radial-gradient(900px 500px at 10% 10%, #b5642f 0%, transparent 55%)' }} />
@@ -295,6 +325,7 @@ export default function CagnottePage() {
           </p>
         </div>
       </header>
+      )}
 
       <main className="mx-auto max-w-5xl px-5 pb-24">
         {/* Offre POST-DON : séance de prière gratuite (RDV) en remerciement de l'offrande.
