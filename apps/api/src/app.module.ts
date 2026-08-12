@@ -13,6 +13,7 @@ import { BillingModule } from './billing/billing.module';
 import { CheckoutModule } from './checkout/checkout.module';
 import { CagnotteModule } from './cagnotte/cagnotte.module';
 import { BoutiqueModule } from './boutique/boutique.module';
+import { ServiceEngineModule } from './service-engine/service-engine.module';
 import { StudentInviteModule } from './student-invite/student-invite.module';
 import { LiveJoinModule } from './live-join/live-join.module';
 import { LiveModule } from './live/live.module';
@@ -89,6 +90,7 @@ import { UsageModule } from './usage/usage.module';
     CheckoutModule,
     CagnotteModule,
     BoutiqueModule,
+    ServiceEngineModule,
     StudentInviteModule,
     LiveJoinModule,
     LiveModule,
