@@ -6,6 +6,13 @@ apps/med-app/
 apps/patient-portal/
 apps/worker/
 apps/mobile/
+# apps/desktop = coque Electron (dépendances + binaires .dmg/.exe construits).
+# Oubli coûteux : 1,8 Go partaient à CHAQUE déploiement et faisaient expirer
+# `railway up` (5 tentatives de suite). Le Dockerfile ne copie qu'apps/api/src.
+apps/desktop/
+artifacts/
+playwright-report/
+test-results/
 .claude/
 .wrangler/
 tools/
