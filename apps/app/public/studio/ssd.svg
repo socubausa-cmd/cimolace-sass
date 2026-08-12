@@ -1,5 +1,5 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 500"><rect width="800" height="500" fill="#1d1b19"/><rect width="800" height="500" fill="url(#g)"/><defs><radialGradient id="g" cx="50%" cy="35%" r="80%"><stop offset="0%" stop-color="#2e2b27"/><stop offset="100%" stop-color="#1d1b19"/></radialGradient></defs>
-<g><rect x="280" y="150" width="240" height="160" rx="22" fill="#d8b468" fill-opacity="0.15" stroke="#d8b468" stroke-width="7"/>
-<rect x="315" y="190" width="115" height="14" rx="7" fill="#f5f4ee" opacity="0.7"/><rect x="315" y="220" width="80" height="14" rx="7" fill="#f5f4ee" opacity="0.4"/>
-<circle cx="482" cy="272" r="14" fill="none" stroke="#e8a184" stroke-width="6"/><path d="M 258 230 C 220 230 220 180 258 180" stroke="#d8b468" stroke-width="6" fill="none" stroke-linecap="round"/></g>
-<g fill="#f5f4ee" font-family="Inter,system-ui" text-anchor="middle"><text x="400" y="465" font-size="26" font-weight="700" opacity="0.85">SSD externe 2 To — les cours et productions en sécurité</text></g></svg>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 500"><rect width="800" height="500" fill="#f2efe9"/><rect width="800" height="500" fill="url(#g)"/><defs><radialGradient id="g" cx="50%" cy="35%" r="80%"><stop offset="0%" stop-color="#ffffff"/><stop offset="100%" stop-color="#f2efe9"/></radialGradient></defs>
+<g><rect x="280" y="150" width="240" height="160" rx="22" fill="#a97b2f" fill-opacity="0.15" stroke="#a97b2f" stroke-width="7"/>
+<rect x="315" y="190" width="115" height="14" rx="7" fill="#4a453e" opacity="0.7"/><rect x="315" y="220" width="80" height="14" rx="7" fill="#4a453e" opacity="0.4"/>
+<circle cx="482" cy="272" r="14" fill="none" stroke="#c2553f" stroke-width="6"/><path d="M 258 230 C 220 230 220 180 258 180" stroke="#a97b2f" stroke-width="6" fill="none" stroke-linecap="round"/></g>
+<g fill="#4a453e" font-family="Inter,system-ui" text-anchor="middle"><text x="400" y="465" font-size="26" font-weight="700" opacity="0.85">SSD externe 2 To — les cours et productions en sécurité</text></g></svg>

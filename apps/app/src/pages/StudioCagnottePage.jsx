@@ -98,9 +98,13 @@ function ModalContribution({ equipement, onClose }) {
 function CarteEquipement({ e, onParticiper }) {
   return (
     <article className={`flex flex-col overflow-hidden rounded-2xl border transition-colors ${e.finance ? 'border-[#7fb98a]/40 bg-[#7fb98a]/[0.05]' : 'border-white/10 bg-[#2b2926]'}`}>
-      <div className="relative aspect-[8/5] w-full overflow-hidden bg-[#1d1b19]">
+      {/* Zone image CLAIRE et uniforme : les photos produit (fonds blancs/transparents)
+          et les compositions de packs y restent lisibles et homogènes sur carte sombre. */}
+      <div className="relative aspect-[8/5] w-full overflow-hidden bg-[#f2efe9]">
         {e.image ? (
-          <img src={e.image} alt={e.label} loading="lazy" className="h-full w-full object-contain p-3" />
+          // eager (pas de loading=lazy) : le lazy natif ne se déclenche pas dans
+          // cette coque (constaté) — 10 images légères n'ont rien à différer.
+          <img src={e.image} alt={e.label} className="h-full w-full object-contain p-3" />
         ) : (
           <div className="grid h-full w-full place-items-center text-[#f5f4ee]/25"><Camera className="h-10 w-10" /></div>
         )}

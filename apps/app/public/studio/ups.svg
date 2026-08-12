@@ -1,5 +1,5 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 500"><rect width="800" height="500" fill="#1d1b19"/><rect width="800" height="500" fill="url(#g)"/><defs><radialGradient id="g" cx="50%" cy="35%" r="80%"><stop offset="0%" stop-color="#2e2b27"/><stop offset="100%" stop-color="#1d1b19"/></radialGradient></defs>
-<g><rect x="290" y="110" width="220" height="280" rx="18" fill="#d8b468" fill-opacity="0.13" stroke="#d8b468" stroke-width="7"/>
-<path d="M 415 155 L 375 250 L 405 250 L 385 340 L 445 230 L 412 230 Z" fill="#e8a184"/>
-<circle cx="330" cy="360" r="9" fill="#7fb98a"/><rect x="355" y="352" width="90" height="16" rx="8" fill="#f5f4ee" opacity="0.35"/></g>
-<g fill="#f5f4ee" font-family="Inter,system-ui" text-anchor="middle"><text x="400" y="465" font-size="26" font-weight="700" opacity="0.85">Onduleur 1500 VA — le direct survit aux coupures</text></g></svg>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 500"><rect width="800" height="500" fill="#f2efe9"/><rect width="800" height="500" fill="url(#g)"/><defs><radialGradient id="g" cx="50%" cy="35%" r="80%"><stop offset="0%" stop-color="#ffffff"/><stop offset="100%" stop-color="#f2efe9"/></radialGradient></defs>
+<g><rect x="290" y="110" width="220" height="280" rx="18" fill="#a97b2f" fill-opacity="0.13" stroke="#a97b2f" stroke-width="7"/>
+<path d="M 415 155 L 375 250 L 405 250 L 385 340 L 445 230 L 412 230 Z" fill="#c2553f"/>
+<circle cx="330" cy="360" r="9" fill="#7fb98a"/><rect x="355" y="352" width="90" height="16" rx="8" fill="#4a453e" opacity="0.35"/></g>
+<g fill="#4a453e" font-family="Inter,system-ui" text-anchor="middle"><text x="400" y="465" font-size="26" font-weight="700" opacity="0.85">Onduleur 1500 VA — le direct survit aux coupures</text></g></svg>
