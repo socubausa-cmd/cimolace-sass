@@ -31,7 +31,7 @@ export type RailKey =
   | 'vie-scolaire' | 'agenda' | 'notes' | 'evaluations' | 'absences' | 'videotheque' | 'atelier'
   | 'lives' | 'forum' | 'messages' | 'courrier'
   | 'biblio-eleve' | 'documents'
-  | 'temple' | 'boutique' | 'marche' | 'produits' | 'commandes' | 'paiements' | 'factures' | 'compta'
+  | 'temple' | 'prendre-rdv' | 'boutique' | 'marche' | 'produits' | 'commandes' | 'paiements' | 'factures' | 'compta'
   | 'studio' | 'ecole' | 'services' | 'crm' | 'pages' | 'contenu' | 'biblio' | 'brain' | 'integrations' | 'reglages';
 
 export type RailItem = { key: RailKey; label: string; icon: typeof House; to: string; creator?: boolean; school?: boolean; schoolAll?: boolean };
@@ -53,6 +53,11 @@ export const ENGINES: EngineDef[] = [
       ] },
       { section: 'Espace', items: [
         { key: 'temple', label: 'Temple', icon: Flame, to: '/liri/temple' },
+        // Parcours CLIENT — sans `creator`, donc visible par TOUT membre. La page
+        // (choix du service, créneau réel, confirmation) existait déjà et était
+        // atteignable UNIQUEMENT en tapant l'URL : aucune entrée n'y menait.
+        // L'entrée « Rendez-vous » ci-dessous mène, elle, à l'écran d'ADMINISTRATION.
+        { key: 'prendre-rdv', label: 'Prendre RDV', icon: CalendarDays, to: '/liri/rendez-vous' },
         { key: 'rdv', label: 'Rendez-vous', icon: CalendarDays, to: '/liri/rdv', creator: true },
         { key: 'calendrier', label: 'Calendrier', icon: Calendar, to: '/liri/calendrier', creator: true },
         { key: 'courrier', label: 'Courrier', icon: Mail, to: '/liri/courrier', creator: true },
