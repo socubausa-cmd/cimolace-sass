@@ -14,8 +14,10 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { LiriMark } from '@/components/liri-mark';
 import { LiriFonts as F, softShadow, type LiriPalette } from '@/constants/liri-theme';
-import { hasToken, streamBrain } from '@/lib/liri-api';
+import { executeBrainTool, hasToken, streamBrain } from '@/lib/liri-api';
 import { useTheme } from '@/lib/theme';
+
+const ON_CORAL = '#1c1a18'; // texte/icône sur bouton corail (lisible sombre ET crème)
 
 interface Msg {
   id: string;
@@ -39,6 +41,7 @@ export default function BrainScreen() {
   const [messages, setMessages] = useState<Msg[]>([]);
   const [input, setInput] = useState('');
   const [pending, setPending] = useState(false);
+  const [pendingConfirm, setPendingConfirm] = useState<{ tool: string; args: Record<string, unknown> } | null>(null);
   const scrollRef = useRef<ScrollView>(null);
   const cancelRef = useRef<null | (() => void)>(null);
 
@@ -83,8 +86,12 @@ export default function BrainScreen() {
           apply(acc, false);
           scrollToEnd();
         },
-        onToolConfirm: () => {
-          acc += '\n\n⚙️ Action nécessitant une confirmation (bientôt sur mobile).';
+        onToolConfirm: (sig) => {
+          // L'IA propose une action d'ÉCRITURE : on la met en attente et on affiche
+          // un encart Confirmer/Annuler (le flux SSE se ferme juste après, done:true).
+          const p = (sig ?? {}) as { tool?: string; args?: Record<string, unknown> };
+          setPendingConfirm({ tool: p.tool || 'action', args: p.args || {} });
+          acc += (acc ? '\n\n' : '') + 'Action prête — confirme-la ci-dessous.';
           apply(acc, false);
         },
         onDone: () => {
@@ -100,9 +107,48 @@ export default function BrainScreen() {
     );
   };
 
+  // Exécute l'action mise en attente (POST /liri/brain/tools/execute — RBAC re-vérifié serveur).
+  const confirmTool = async () => {
+    if (!pendingConfirm) return;
+    const { tool, args } = pendingConfirm;
+    setPendingConfirm(null);
+    const runId = nextId();
+    setMessages((m) => [...m, { id: runId, role: 'assistant', content: '', pending: true }]);
+    setPending(true);
+    scrollToEnd();
+    const res = await executeBrainTool(tool, args);
+    const ok = res != null;
+    const r = (res && typeof res === 'object' ? (res as Record<string, unknown>) : null);
+    const summary = r
+      ? String(r.message ?? r.title ?? (r.id ? `id ${r.id}` : '') ?? '')
+      : typeof res === 'string' ? res : '';
+    setMessages((m) =>
+      m.map((x) =>
+        x.id === runId
+          ? {
+              ...x,
+              pending: false,
+              content: ok
+                ? `✅ Action « ${tool} » exécutée.${summary ? `\n${summary}` : ''}`
+                : `⚠️ L’action « ${tool} » a échoué (droits insuffisants ou erreur serveur).`,
+            }
+          : x,
+      ),
+    );
+    setPending(false);
+    scrollToEnd();
+  };
+
+  const cancelTool = () => {
+    setPendingConfirm(null);
+    setMessages((m) => [...m, { id: nextId(), role: 'assistant', content: 'Action annulée.' }]);
+    scrollToEnd();
+  };
+
   const newChat = () => {
     cancelRef.current?.();
     setPending(false);
+    setPendingConfirm(null);
     setMessages([]);
   };
 
@@ -172,6 +218,28 @@ export default function BrainScreen() {
                 ),
               )}
             </ScrollView>
+          )}
+
+          {/* ENCART DE CONFIRMATION D'ACTION IA */}
+          {pendingConfirm && (
+            <View style={styles.confirmCard}>
+              <View style={styles.confirmHead}>
+                <Feather name="alert-circle" size={15} color={C.coral} />
+                <Text style={styles.confirmTitle} numberOfLines={1}>Action à confirmer · {pendingConfirm.tool}</Text>
+              </View>
+              <ScrollView style={styles.confirmArgs} contentContainerStyle={{ padding: 10 }}>
+                <Text style={styles.confirmArgsTxt}>{JSON.stringify(pendingConfirm.args, null, 2)}</Text>
+              </ScrollView>
+              <View style={styles.confirmBtns}>
+                <Pressable style={[styles.confirmBtn, styles.confirmCancel]} onPress={cancelTool}>
+                  <Text style={styles.confirmCancelTxt}>Annuler</Text>
+                </Pressable>
+                <Pressable style={[styles.confirmBtn, styles.confirmOk]} onPress={() => void confirmTool()}>
+                  <Feather name="check" size={15} color={ON_CORAL} />
+                  <Text style={styles.confirmOkTxt}>Confirmer</Text>
+                </Pressable>
+              </View>
+            </View>
           )}
 
           {/* INPUT */}
@@ -248,4 +316,17 @@ const makeStyles = (C: LiriPalette) => StyleSheet.create({
   input: { flex: 1, color: C.ink, fontSize: 15, lineHeight: 20, paddingVertical: 7, maxHeight: 120, fontFamily: F.sans },
   sendBtn: { width: 38, height: 38, borderRadius: 13, backgroundColor: C.coral, alignItems: 'center', justifyContent: 'center' },
   sendBtnOff: { opacity: 0.4 },
+
+  // encart de confirmation d'action IA
+  confirmCard: { marginHorizontal: 14, marginBottom: 8, borderRadius: 16, borderWidth: 1, borderColor: C.coral, backgroundColor: C.coralTint, overflow: 'hidden' },
+  confirmHead: { flexDirection: 'row', alignItems: 'center', gap: 7, paddingHorizontal: 12, paddingTop: 10, paddingBottom: 6 },
+  confirmTitle: { flex: 1, color: C.ink, fontSize: 13.5, fontWeight: '700', fontFamily: F.sans },
+  confirmArgs: { maxHeight: 120, marginHorizontal: 10, borderRadius: 10, backgroundColor: C.base, borderWidth: 1, borderColor: C.line },
+  confirmArgsTxt: { color: C.muted, fontSize: 12, fontFamily: 'monospace', lineHeight: 17 },
+  confirmBtns: { flexDirection: 'row', gap: 8, padding: 10 },
+  confirmBtn: { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, paddingVertical: 11, borderRadius: 11 },
+  confirmCancel: { backgroundColor: C.panel, borderWidth: 1, borderColor: C.line },
+  confirmCancelTxt: { color: C.muted, fontSize: 14, fontWeight: '600', fontFamily: F.sans },
+  confirmOk: { backgroundColor: C.coral },
+  confirmOkTxt: { color: ON_CORAL, fontSize: 14, fontWeight: '700', fontFamily: F.sans },
 });
