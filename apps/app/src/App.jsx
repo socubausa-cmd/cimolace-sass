@@ -800,6 +800,7 @@ const LiriAgendaReglagesPage = lazy(() => import('@/pages/liri/LiriAgendaReglage
 const LiriVitrinePage = lazy(() => import('@/pages/liri/LiriVitrinePage'));
 const LiriStudioCagnottePage = lazy(() => import('@/pages/liri/LiriStudioCagnottePage'));
 const StudioCagnottePage = lazy(() => import('@/pages/StudioCagnottePage'));
+const StudioEquipementPage = lazy(() => import('@/pages/StudioEquipementPage'));
 const ImmersiveWaitingRoomPage = lazy(() => import('@/pages/ImmersiveWaitingRoomPage'));
 const SatisfactionPage = lazy(() => import('@/pages/SatisfactionPage'));
 const ModuleCatalogPageNew = lazy(() => import('@/pages/modules/ModuleCatalogPage'));
@@ -2010,6 +2011,7 @@ isLiriHostDevPreviewRoute;
           <Route path="/landing" element={<LandingPage />} />
           <Route path="/cagnotte" element={<CagnottePage />} />
           <Route path="/studio-pedagogique" element={<StudioCagnottePage />} />
+          <Route path="/studio-pedagogique/:slug" element={<StudioEquipementPage />} />
           <Route path="/femme-nouvelle" element={<FemmeNouvellePage />} />
           <Route path="/temoignage" element={<TemoignagePage />} />
           <Route path="/rendez-vous-priere" element={<PublicPrayerBookingPage />} />

@@ -148,6 +148,15 @@ function Corps() {
                         <span className="mb-1 block text-[11px] font-semibold uppercase tracking-wide text-[#f5f4ee]/45">Utilité dans le studio</span>
                         <textarea rows={2} className={`${INPUT} w-full resize-none`} value={e.utilite} maxLength={700} onChange={(ev) => maj(i, { utilite: ev.target.value })} />
                       </label>
+                      <label className="block sm:col-span-2">
+                        <span className="mb-1 block text-[11px] font-semibold uppercase tracking-wide text-[#f5f4ee]/45">Présentation longue (fiche portfolio — paragraphes séparés par une ligne vide)</span>
+                        <textarea rows={4} className={`${INPUT} w-full resize-none`} value={e.presentation || ''} maxLength={2500} onChange={(ev) => maj(i, { presentation: ev.target.value })} />
+                      </label>
+                      <label className="block sm:col-span-2">
+                        <span className="mb-1 block text-[11px] font-semibold uppercase tracking-wide text-[#f5f4ee]/45">Galerie de la fiche (une image par ligne — /studio/… ou https://, 8 max)</span>
+                        <textarea rows={2} className={`${INPUT} w-full resize-none`} value={(e.images || []).join('\n')} maxLength={2500}
+                          onChange={(ev) => maj(i, { images: ev.target.value.split('\n').map((u) => u.trim()).filter(Boolean) })} />
+                      </label>
                     </div>
                     <div className="flex shrink-0 flex-col items-end gap-1.5">
                       <div className="flex items-center gap-1.5">

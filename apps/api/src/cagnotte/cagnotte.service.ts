@@ -211,6 +211,8 @@ export class CagnotteService {
           desc: String(e.desc || ''),
           utilite: String(e.utilite || ''),
           image: String(e.image || ''),
+          images: Array.isArray(e.images) ? e.images : [],
+          presentation: String(e.presentation || ''),
           prixEur: Number(e.prixEur || 0),
           objectifCents,
           collecteCents,
@@ -307,6 +309,12 @@ export class CagnotteService {
           const slug = (brut.startsWith('studio-') ? brut : `studio-${brut}`).slice(0, 60);
           if (slug === CagnotteService.STUDIO_FONDS) return null;
           const image = String(e?.image || '').trim().slice(0, 300);
+          // Galerie de la fiche portfolio : jusqu'à 8 visuels (relatifs ou https).
+          const images = Array.isArray(e?.images)
+            ? e.images.map((u: any) => String(u || '').trim().slice(0, 300))
+                .filter((u: string) => /^(\/|https:\/\/)/.test(u)).slice(0, 8)
+            : [];
+          const presentation = String(e?.presentation || '').trim().slice(0, 2500);
           const achete = e?.achete && typeof e.achete === 'object'
             ? {
                 date: String(e.achete.date || '').slice(0, 10),
@@ -323,6 +331,8 @@ export class CagnotteService {
             desc: String(e?.desc || '').trim().slice(0, 300),
             utilite: String(e?.utilite || '').trim().slice(0, 700),
             image: /^(\/|https:\/\/)/.test(image) ? image : '',
+            ...(images.length ? { images } : {}),
+            ...(presentation ? { presentation } : {}),
             ordre: Number.isFinite(Number(e?.ordre)) ? Number(e.ordre) : i + 1,
             ...(achete && (achete.date || achete.prixPayeEur || achete.photo) ? { achete } : {}),
           };

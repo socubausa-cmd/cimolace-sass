@@ -11,9 +11,9 @@ import { cagnotteApi } from '@/lib/api-v2';
  * L'objectif global est CALCULÉ depuis les équipements — jamais codé en dur.
  */
 
-const eur = (cents) => `${Math.round((cents || 0) / 100).toLocaleString('fr-FR')} €`;
+export const eur = (cents) => `${Math.round((cents || 0) / 100).toLocaleString('fr-FR')} €`;
 
-function Progression({ pct, fine = false }) {
+export function Progression({ pct, fine = false }) {
   return (
     <div className={`w-full overflow-hidden rounded-full bg-white/[0.07] ${fine ? 'h-2' : 'h-3'}`} role="progressbar" aria-valuenow={pct} aria-valuemin={0} aria-valuemax={100}>
       <div className="h-full rounded-full bg-gradient-to-r from-[#b5642f] to-[#d97757] transition-[width] duration-700 ease-out" style={{ width: `${Math.min(100, pct)}%` }} />
@@ -22,7 +22,7 @@ function Progression({ pct, fine = false }) {
 }
 
 /** Fenêtre de contribution : montants proposés + libre + « financer le reste ». */
-function ModalContribution({ equipement, onClose }) {
+export function ModalContribution({ equipement, onClose, retour = '/studio-pedagogique' }) {
   const [montant, setMontant] = useState(equipement.presetReste ? Math.ceil((equipement.restantCents || 0) / 100) : null);
   const [libre, setLibre] = useState('');
   const libreN = Number(String(libre).replace(',', '.'));
@@ -41,7 +41,7 @@ function ModalContribution({ equipement, onClose }) {
 
   const contribuer = () => {
     if (!valide) return;
-    window.location.href = `/cagnotte?slug=${encodeURIComponent(equipement.slug)}&amount=${plafonne}&retour=${encodeURIComponent('/studio-pedagogique')}`;
+    window.location.href = `/cagnotte?slug=${encodeURIComponent(equipement.slug)}&amount=${plafonne}&retour=${encodeURIComponent(retour)}`;
   };
 
   return (
@@ -100,7 +100,7 @@ function CarteEquipement({ e, onParticiper }) {
     <article className={`flex flex-col overflow-hidden rounded-2xl border transition-colors ${e.finance ? 'border-[#7fb98a]/40 bg-[#7fb98a]/[0.05]' : 'border-white/10 bg-[#2b2926]'}`}>
       {/* Zone image CLAIRE et uniforme : les photos produit (fonds blancs/transparents)
           et les compositions de packs y restent lisibles et homogènes sur carte sombre. */}
-      <div className="relative aspect-[8/5] w-full overflow-hidden bg-[#f2efe9]">
+      <a href={`/studio-pedagogique/${e.slug}`} className="relative block aspect-[8/5] w-full overflow-hidden bg-[#f2efe9]" aria-label={`Voir la fiche : ${e.label}`}>
         {e.image ? (
           // eager (pas de loading=lazy) : le lazy natif ne se déclenche pas dans
           // cette coque (constaté) — 10 images légères n'ont rien à différer.
@@ -118,12 +118,17 @@ function CarteEquipement({ e, onParticiper }) {
             <BadgeCheck className="h-3.5 w-3.5" /> Installé dans le studio
           </span>
         )}
-      </div>
+      </a>
       <div className="flex flex-1 flex-col p-5">
         <div className="flex items-start justify-between gap-3">
-          <h3 className="text-[16px] font-extrabold leading-snug text-[#f5f4ee]">{e.label}</h3>
+          <h3 className="text-[16px] font-extrabold leading-snug text-[#f5f4ee]">
+            <a href={`/studio-pedagogique/${e.slug}`} className="transition-colors hover:text-[#e8a184]">{e.label}</a>
+          </h3>
           <span className="shrink-0 rounded-md border border-white/10 px-2 py-0.5 text-[13px] font-bold text-[#f5f4ee]/80">{e.prixEur.toLocaleString('fr-FR')} €</span>
         </div>
+        <a href={`/studio-pedagogique/${e.slug}`} className="mt-0.5 inline-flex items-center gap-1 text-[12px] font-semibold text-[#e8a184]/80 transition-colors hover:text-[#e8a184]">
+          Voir la fiche complète <ArrowRight className="h-3 w-3" />
+        </a>
         {e.desc && <p className="mt-1 text-[13px] font-semibold text-[#e8a184]">{e.desc}</p>}
         {e.utilite && <p className="mt-1.5 text-[12.5px] leading-relaxed text-[#f5f4ee]/65">{e.utilite}</p>}
 
