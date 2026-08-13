@@ -74,12 +74,40 @@ export class NotificationsService {
     const { data } = await this.supabase.auth.admin.getUserById(userId);
     const to = (data as any)?.user?.email as string | undefined;
     if (!to) return;
+    const ctaUrl = NotificationsService.lienAbsolu(payload.actionUrl);
     const html = this.email.brandedHtml({
       title: payload.title,
       body: payload.body,
-      ctaUrl: payload.actionUrl,
-      ctaLabel: payload.actionUrl ? "Ouvrir mon espace" : undefined,
+      ctaUrl,
+      ctaLabel: ctaUrl ? "Ouvrir mon espace" : undefined,
     });
     await this.email.sendRaw(tenantId, to, payload.title, html);
+  }
+
+  /**
+   * Rend un lien de notification ABSOLU avant de le mettre dans un e-mail.
+   *
+   * ⚠️ DÉFAUT VÉCU, ET IL EST SOURNOIS. Le même `actionUrl` sert DEUX canaux :
+   *   • la cloche in-app, où `/liri/rdv` est CORRECT (navigation interne du SPA) ;
+   *   • l'e-mail, où un chemin relatif n'a AUCUNE page de base pour se résoudre.
+   * Dans un e-mail, `href="/liri/rendez-vous"` est lu par le navigateur comme le
+   * DOMAINE `liri` suivi du chemin `/rendez-vous` → `ERR_NAME_NOT_RESOLVED`.
+   * Aggravant : Resend réécrit le lien pour son suivi de clics
+   * (`…resend-clicks-a.com/CL0/%2Fliri%2Frendez-vous/…`), servi en HTTP — le
+   * destinataire voit d'abord un avertissement « site non sécurisé », puis une
+   * page d'erreur. Un lien mort qui a l'air d'une alerte de sécurité.
+   *
+   * On normalise ICI, au seul point où l'URL part par e-mail, et PAS à la source :
+   * les 7 `actionUrl` relatifs du module rendez-vous doivent rester relatifs pour
+   * la cloche. Corriger les appelants aurait cassé la navigation in-app, et le
+   * 8e ajouté demain serait reparti cassé.
+   */
+  private static lienAbsolu(url?: string | null): string | undefined {
+    const u = String(url ?? '').trim();
+    if (!u) return undefined;
+    if (/^https?:\/\//i.test(u)) return u;           // déjà absolu — on ne touche pas
+    if (/^mailto:|^tel:/i.test(u)) return u;         // schémas légitimes en e-mail
+    const base = (process.env.FRONTEND_URL || 'https://app.cimolace.space').replace(/\/$/, '');
+    return `${base}/${u.replace(/^\/+/, '')}`;
   }
 }
