@@ -63,6 +63,14 @@ export interface BrainHandlers {
   onError: (message: string) => void;
 }
 
+/**
+ * Exécute un outil Brain APRÈS confirmation de l'utilisateur (actions d'écriture
+ * mises en attente par la boucle via `{type:'tool_confirm'}`). RBAC + tenant
+ * re-vérifiés côté API. POST /liri/brain/tools/execute.
+ */
+export const executeBrainTool = (name: string, args: Record<string, unknown>) =>
+  postJson<Record<string, unknown>>('/liri/brain/tools/execute', { name, args });
+
 /** Stream une réponse LIRI Brain. Retourne une fonction d'annulation. */
 export function streamBrain(
   opts: { message: string; conversationId?: string; model?: string; token?: string },
